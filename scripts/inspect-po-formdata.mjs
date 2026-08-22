@@ -17,20 +17,14 @@ function getDbUrl() {
 }
 
 async function main() {
-  const dbUrl = getDbUrl();
-  console.log("DB URL exists:", !!dbUrl);
-  if (!dbUrl) return;
-  const sql = postgres(dbUrl, { max: 1 });
-  
-  const countries = await sql`select id, name, iso2, iso3, currency_code from countries order by name`;
-  console.log("Countries:", countries);
-
-  const branches = await sql`select id, name, code, country_id from city_branches limit 10`;
-  console.log("Branches:", branches);
-
-  const pos = await sql`select id, purchase_order_no, payment_status, advance_paid, remaining_due, created_at from purchase_orders order by created_at desc limit 5`;
-  console.log("Existing POs:", pos);
-
+  const sql = postgres(getDbUrl(), { max: 1 });
+  const pos = await sql`select id, purchase_order_no, form_data from purchase_orders where form_data->'form'->>'totalAmount' is not null limit 1`;
+  if (pos[0]) {
+    console.log("Full PO form_data:", JSON.stringify(pos[0].form_data, null, 2));
+  } else {
+    const all = await sql`select id, purchase_order_no, form_data from purchase_orders limit 3`;
+    console.log("All sample form_data:", JSON.stringify(all, null, 2));
+  }
   await sql.end();
 }
 

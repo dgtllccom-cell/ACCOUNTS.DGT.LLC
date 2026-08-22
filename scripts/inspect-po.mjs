@@ -17,20 +17,10 @@ function getDbUrl() {
 }
 
 async function main() {
-  const dbUrl = getDbUrl();
-  console.log("DB URL exists:", !!dbUrl);
-  if (!dbUrl) return;
-  const sql = postgres(dbUrl, { max: 1 });
-  
-  const countries = await sql`select id, name, iso2, iso3, currency_code from countries order by name`;
-  console.log("Countries:", countries);
-
-  const branches = await sql`select id, name, code, country_id from city_branches limit 10`;
-  console.log("Branches:", branches);
-
-  const pos = await sql`select id, purchase_order_no, payment_status, advance_paid, remaining_due, created_at from purchase_orders order by created_at desc limit 5`;
-  console.log("Existing POs:", pos);
-
+  const sql = postgres(getDbUrl(), { max: 1 });
+  const [po] = await sql`select * from purchase_orders order by created_at desc limit 1`;
+  console.log("Sample PO Columns:", Object.keys(po));
+  console.log("Sample PO Form Data:", JSON.stringify(po.form_data, null, 2));
   await sql.end();
 }
 

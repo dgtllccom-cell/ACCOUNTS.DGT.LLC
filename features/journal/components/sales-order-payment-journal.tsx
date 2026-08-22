@@ -1452,7 +1452,7 @@ function DashboardSummaryHeader({
 }) {
   const [activeStep, setActiveStep] = useState<1 | 2 | 3 | 4>(1);
   const [expandedSummaryCountries, setExpandedSummaryCountries] = useState<Record<string, boolean>>({});
-  const [showAllCountries, setShowAllCountries] = useState(true);
+  const [showAllCountries, setShowAllCountries] = useState(false);
 
   if (!summary) return null;
 
@@ -2144,16 +2144,16 @@ function DashboardSummaryHeader({
     return (
       <div className="flex flex-col mb-6 space-y-4">
         {/* 4 Panels Container */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2.5">
           {/* Panel 1: Branch & User Details */}
           <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-blue-50/50 dark:bg-blue-900/10">
+            <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100 dark:border-slate-800 bg-blue-50/50 dark:bg-blue-900/10">
               <div className="bg-blue-600 p-1 rounded-full text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               </div>
               <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">1. {th("BRANCH & USER DETAILS")}</h4>
             </div>
-            <div className="p-4 flex flex-col gap-2.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+            <div className="p-3 flex flex-col gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
               <div className="flex justify-between items-center">
                 <span>{th("Country")}</span>
                 <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">{getFlag(adminCountry)} {tData(adminCountry, lang)}</span>
@@ -2187,13 +2187,13 @@ function DashboardSummaryHeader({
 
           {/* Panel 2: Global Financial Summary */}
           <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-emerald-50/50 dark:bg-emerald-900/10">
+            <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100 dark:border-slate-800 bg-emerald-50/50 dark:bg-emerald-900/10">
               <div className="bg-emerald-600 p-1 rounded-full text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
               </div>
               <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">2. {th("GLOBAL FINANCIAL SUMMARY (USD)")}</h4>
             </div>
-            <div className="p-4 flex flex-col gap-3 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+            <div className="p-3 flex flex-col gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
               <div className="flex justify-between items-center">
                 <span>{th("Total Global Entries")}</span>
                 <span className="font-black text-slate-800 dark:text-slate-200">{totalGlobalEntries}</span>
@@ -2215,13 +2215,13 @@ function DashboardSummaryHeader({
 
           {/* Panel 3: Bill Entries Summary */}
           <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-purple-50/50 dark:bg-purple-900/10">
+            <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100 dark:border-slate-800 bg-purple-50/50 dark:bg-purple-900/10">
               <div className="bg-purple-600 p-1 rounded-full text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
               </div>
               <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400 truncate">3. {th("BILL ENTRIES SUMMARY")}</h4>
             </div>
-            <div className="p-4 flex flex-col gap-3 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+            <div className="p-3 flex flex-col gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
               <div className="flex justify-between items-center">
                 <span>{th("Total Bill Entries")}</span>
                 <span className="font-black text-purple-700 dark:text-purple-400 font-mono">{totalGlobalEntries}</span>
@@ -2253,7 +2253,7 @@ function DashboardSummaryHeader({
           >
             <div className="flex flex-col h-full outline-none">
               <div className={cn(
-                "flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800 transition-colors",
+                "flex items-center gap-2 px-3 py-2 border-b border-slate-100 dark:border-slate-800 transition-colors",
                 showAllCountries 
                   ? "bg-orange-100/80 dark:bg-orange-900/40" 
                   : "bg-orange-50/50 dark:bg-orange-900/10 group-hover:bg-orange-100/50 dark:group-hover:bg-orange-900/30"
@@ -2324,11 +2324,11 @@ function DashboardSummaryHeader({
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{th("Paid Advance")}</span>
-                        <span className="font-black text-emerald-600 font-mono text-[11px]">{formatMoney(r.sale)}</span>
+                        <span className="font-black text-emerald-600 font-mono text-[11px]">{formatMoney(r.paidAdvance)}</span>
                       </div>
                       <div className="mt-1 flex justify-between items-center border-t border-slate-200 pt-2 dark:border-slate-800">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{th("Remaining Balance")}</span>
-                        <span className="font-black text-slate-800 dark:text-slate-200 font-mono text-sm">{formatMoney(r.finalTotal)}</span>
+                        <span className="font-black text-slate-800 dark:text-slate-200 font-mono text-sm">{formatMoney(r.remainingDue)}</span>
                       </div>
                     </div>
                     
@@ -4928,9 +4928,9 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                   </div>
 
                   {/* TOP 4 SUMMARY CARDS GRID (matches Purchase Payment Entry modal) */}
-                  <div className="px-5 pt-3.5 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3.5">
+                  <div className="px-5 pt-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2.5">
                     {/* Card 1: 1. PAYMENT SUMMARY */}
-                    <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950 flex flex-col justify-between">
+                    <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-sm dark:border-slate-800 dark:bg-slate-950 flex flex-col justify-between">
                       <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
                         <div className="flex items-center gap-2">
                           <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-black text-white">1</span>
@@ -4938,7 +4938,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                         </div>
                       </div>
                       <div className="flex items-start gap-3 mt-2.5">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-100 dark:border-blue-900/40">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-100 dark:border-blue-900/40">
                           <FileText className="h-5 w-5" />
                         </div>
                         <div className="space-y-1 text-xs w-full">
@@ -4962,7 +4962,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                     </div>
 
                     {/* Card 2: 2. SALES / INVOICE SUMMARY */}
-                    <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950 flex flex-col justify-between">
+                    <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-sm dark:border-slate-800 dark:bg-slate-950 flex flex-col justify-between">
                       <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
                         <div className="flex items-center gap-2">
                           <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-black text-white">2</span>
@@ -4970,7 +4970,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                         </div>
                       </div>
                       <div className="flex items-start gap-3 mt-2.5">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40">
                           <ShoppingCart className="h-5 w-5" />
                         </div>
                         <div className="space-y-1 text-xs w-full">
@@ -4999,7 +4999,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                     </div>
 
                     {/* Card 3: 3. ACCOUNTING SUMMARY (Highlighted Active Blue Border) */}
-                    <div className="rounded-xl border-2 border-blue-500 bg-white p-3.5 shadow-md ring-2 ring-blue-500/20 dark:bg-slate-950 flex flex-col justify-between">
+                    <div className="rounded-xl border-2 border-blue-500 bg-white p-2.5 shadow-md ring-2 ring-blue-500/20 dark:bg-slate-950 flex flex-col justify-between">
                       <div className="flex items-center justify-between pb-2 border-b border-blue-100 dark:border-blue-900/40">
                         <div className="flex items-center gap-2">
                           <span className="flex h-5 w-5 items-center justify-center rounded-full bg-purple-600 text-[10px] font-black text-white">3</span>
@@ -5007,7 +5007,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                         </div>
                       </div>
                       <div className="flex items-start gap-3 mt-2.5">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400 border border-purple-100 dark:border-purple-900/40">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400 border border-purple-100 dark:border-purple-900/40">
                           <Scale className="h-5 w-5" />
                         </div>
                         <div className="space-y-1 text-xs w-full">
@@ -5034,7 +5034,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                     </div>
 
                     {/* Card 4: 4. REPORT / BRANCH DETAILS */}
-                    <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950 flex flex-col justify-between">
+                    <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-sm dark:border-slate-800 dark:bg-slate-950 flex flex-col justify-between">
                       <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
                         <div className="flex items-center gap-2">
                           <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-600 text-[10px] font-black text-white">4</span>
@@ -5042,7 +5042,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                         </div>
                       </div>
                       <div className="flex items-start gap-3 mt-2.5">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-100 dark:border-amber-900/40">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-100 dark:border-amber-900/40">
                           <Building className="h-5 w-5" />
                         </div>
                         <div className="space-y-1 text-xs w-full">
@@ -5326,7 +5326,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                   return (
                     <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm overflow-hidden">
                       {/* Header */}
-                      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60">
+                      <div className="flex items-center justify-between px-3 py-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60">
                         <div className="flex items-center gap-2">
                           <Landmark className="h-4 w-4 text-blue-500" />
                           <h3 className="text-[11px] font-black tracking-wider uppercase text-slate-800 dark:text-slate-200">
@@ -6534,7 +6534,7 @@ function Metric({ label, value, sublabel, icon, tone }: KpiCard) {
 
   return (
     <div className="flex items-center gap-3 rounded-xl border border-slate-100 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
-      <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", colorClasses.iconBg, colorClasses.iconText)}>
+      <div className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-lg", colorClasses.iconBg, colorClasses.iconText)}>
         {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement<any>, { className: "h-5 w-5" }) : icon}
       </div>
       <div className="min-w-0 flex-1">
