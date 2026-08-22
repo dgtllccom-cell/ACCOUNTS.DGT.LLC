@@ -5163,7 +5163,13 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                         <div className="space-y-1 text-xs font-semibold">
                           <div className="flex justify-between"><span className="text-slate-400">Total Payments:</span><span className="font-mono font-bold text-slate-800 dark:text-slate-200">{historyWithBalance.length}</span></div>
                           <div className="flex justify-between"><span className="text-slate-400">This Payment:</span><span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{money(statCurrentPayFC, poCurrencyHeader)} ({statCurrentPayPct}%)</span></div>
-                          <div className="flex justify-between"><span className="text-slate-400">Remainin                  {/* 1. ACCOUNTING ENTRIES (DOUBLE ENTRY) Section (Matches Screenshot 2) */}
+                          <div className="flex justify-between"><span className="text-slate-400">Remaining:</span><span className="font-mono font-black text-rose-600 dark:text-rose-400">{money(statRemainingFC, poCurrencyHeader)} ({Math.max(0, 100 - Number(statTotalPaidPct)).toFixed(2)}%)</span></div>
+                          <div className="text-[9px] text-slate-400 text-right pt-1 border-t border-slate-100 dark:border-slate-800 mt-1">As of: {date(paymentDate || selected.created_at)}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* 1. ACCOUNTING ENTRIES (DOUBLE ENTRY) Section (Matches Screenshot 2) */}
                   <div className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950 overflow-hidden">
                     <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60">
                       <div className="flex items-center gap-2">
