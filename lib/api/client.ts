@@ -1,9 +1,6 @@
 export type ApiOk<T> = { ok: true; data: T };
 export type ApiErr = { ok: false; error: { code: string; message: string; details?: unknown } };
 
-const DEFAULT_TIMEOUT_MS = 15000;
-const MAX_RETRIES = 2;
-
 async function parseJsonSafe(res: Response) {
   try {
     return await res.json();
@@ -15,137 +12,68 @@ async function parseJsonSafe(res: Response) {
 function messageFromBody(body: unknown) {
   if (!body || typeof body !== "object") return null;
   const anyBody = body as any;
+  // Standard format: { error: { message: "..." } }
   if (anyBody?.error?.message) return anyBody.error.message;
+  // Legacy format: { error: "..." }
   if (typeof anyBody?.error === "string") return anyBody.error;
+  // Fallback: top-level message
   if (anyBody?.message) return anyBody.message;
   return null;
 }
 
-function getActiveLanguage(): string {
-  if (typeof document === "undefined") return "en";
-  try {
-    return localStorage.getItem("erp_lang") || document.documentElement.lang || "en";
-  } catch {
-    return "en";
-  }
-}
+export async function apiFetch<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
+  const res = await fetch(input, { credentials: "include", ...init });
+  const body = (await parseJsonSafe(res)) as ApiOk<T> | ApiErr | unknown;
 
-export async function apiFetch<T>(
-  input: RequestInfo | URL,
-  init?: RequestInit & { timeoutMs?: number; retries?: number }
-): Promise<T> {
-  const timeoutMs = init?.timeoutMs ?? DEFAULT_TIMEOUT_MS;
-  const maxRetries = init?.retries ?? (init?.method === "POST" || init?.method === "PUT" || init?.method === "DELETE" ? 0 : MAX_RETRIES);
-
-  let attempt = 0;
-  let lastError: Error | null = null;
-
-  while (attempt <= maxRetries) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-
-    try {
-      const res = await fetch(input, {
-        credentials: "include",
-        signal: controller.signal,
-        ...init
-      });
-
-      clearTimeout(timer);
-
-      // If server returned 502/503/504, retry if we have attempts left
-      if ((res.status === 502 || res.status === 503 || res.status === 504) && attempt < maxRetries) {
-        attempt++;
-        await new Promise((r) => setTimeout(r, attempt * 400));
-        continue;
-      }
-
-      const body = (await parseJsonSafe(res)) as ApiOk<T> | ApiErr | unknown;
-
-      if (!res.ok) {
-        throw new Error(messageFromBody(body) || `Request failed: ${res.status}`);
-      }
-
-      if (body && typeof body === "object" && (body as any).ok === false) {
-        throw new Error(messageFromBody(body) || "Request failed");
-      }
-
-      if (body && typeof body === "object" && (body as any).ok === true) {
-        return (body as ApiOk<T>).data;
-      }
-
-      return body as T;
-    } catch (err: any) {
-      clearTimeout(timer);
-      const isAbort = err?.name === "AbortError" || err?.message?.includes("aborted");
-      const isNetwork = !window.navigator.onLine || err?.message?.includes("Failed to fetch") || isAbort;
-
-      lastError = isAbort ? new Error("Network request timed out. Please verify your connection.") : err;
-
-      if (attempt < maxRetries && isNetwork) {
-        attempt++;
-        await new Promise((r) => setTimeout(r, attempt * 500));
-        continue;
-      }
-
-      break;
-    }
+  if (!res.ok) {
+    throw new Error(messageFromBody(body) || `Request failed: ${res.status}`);
   }
 
-  throw lastError || new Error("Request failed after retries");
+  if (body && typeof body === "object" && (body as any).ok === false) {
+    throw new Error(messageFromBody(body) || "Request failed");
+  }
+
+  // Our ERP APIs usually wrap payload in { ok: true, data }, but some legacy routes return raw JSON.
+  if (body && typeof body === "object" && (body as any).ok === true) {
+    return (body as ApiOk<T>).data;
+  }
+
+  return body as T;
 }
 
-export async function apiGet<T>(url: string, options?: { timeoutMs?: number; retries?: number }) {
-  const lang = getActiveLanguage();
+export async function apiGet<T>(url: string) {
   const separator = url.includes("?") ? "&" : "?";
-  const hasLang = url.includes("lang=");
-  const fullUrl = `${url}${separator}_t=${Date.now()}${hasLang ? "" : `&lang=${lang}`}`;
-  return apiFetch<T>(fullUrl, { cache: "no-store", ...options });
+  const cacheBustUrl = `${url}${separator}_t=${Date.now()}`;
+  return apiFetch<T>(cacheBustUrl, { cache: "no-store" });
 }
 
-export async function apiPost<T>(url: string, payload: unknown, options?: { timeoutMs?: number }) {
-  const lang = getActiveLanguage();
-  const separator = url.includes("?") ? "&" : "?";
-  const hasLang = url.includes("lang=");
-  const fullUrl = `${url}${hasLang ? "" : `${separator}lang=${lang}`}`;
-  return apiFetch<T>(fullUrl, {
+export async function apiPost<T>(url: string, payload: unknown) {
+  return apiFetch<T>(url, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify(payload),
-    ...options
+    body: JSON.stringify(payload)
   });
 }
 
-export async function apiPatch<T>(url: string, payload: unknown, options?: { timeoutMs?: number }) {
-  const lang = getActiveLanguage();
-  const separator = url.includes("?") ? "&" : "?";
-  const hasLang = url.includes("lang=");
-  const fullUrl = `${url}${hasLang ? "" : `${separator}lang=${lang}`}`;
-  return apiFetch<T>(fullUrl, {
+export async function apiPatch<T>(url: string, payload: unknown) {
+  return apiFetch<T>(url, {
     method: "PATCH",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify(payload),
-    ...options
+    body: JSON.stringify(payload)
   });
 }
 
-export async function apiPut<T>(url: string, payload: unknown, options?: { timeoutMs?: number }) {
-  const lang = getActiveLanguage();
-  const separator = url.includes("?") ? "&" : "?";
-  const hasLang = url.includes("lang=");
-  const fullUrl = `${url}${hasLang ? "" : `${separator}lang=${lang}`}`;
-  return apiFetch<T>(fullUrl, {
+export async function apiPut<T>(url: string, payload: unknown) {
+  return apiFetch<T>(url, {
     method: "PUT",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify(payload),
-    ...options
+    body: JSON.stringify(payload)
   });
 }
 
-export async function apiDelete<T>(url: string, options?: { timeoutMs?: number }) {
+export async function apiDelete<T>(url: string) {
   return apiFetch<T>(url, {
-    method: "DELETE",
-    ...options
+    method: "DELETE"
   });
 }
 

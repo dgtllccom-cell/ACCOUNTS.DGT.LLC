@@ -4657,6 +4657,9 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
           className="h-[calc(100dvh-1.5rem)] w-[calc(100vw-1.5rem)] max-w-[1760px] rounded-2xl shadow-2xl"
         >
           <div className="space-y-4 text-[12px]">
+            <div className="-mt-3 -mb-1 text-xs text-slate-500 font-semibold">
+              {activeMode === "advance" ? "Purchase Advance Payment Entry" : activeMode === "credit" ? "Purchase Credit Payment Entry" : "Purchase Payment Entry"}
+            </div>
             {/* Already Transferred / Overpaid Warning Banner */}
             {(() => {
               const form = selected.form_data?.form || {};
@@ -4848,28 +4851,160 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
 
               return (
                 <div className="space-y-4">
-                  {/* TOP HEADER SUMMARY BAR (Matches Screenshot 1 Header) */}
-                  <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950 flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex flex-wrap items-center gap-6">
-                      <div>
-                        <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">PAYMENT ENTRY NO.</div>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="font-mono text-sm font-black text-slate-900 dark:text-slate-100">{selected.purchase_order_no}</span>
-                          <span className="rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[9px] font-black uppercase text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">Active</span>
+                  {/* TOP 4 SUMMARY CARDS GRID (Matches User's Image 2) */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3.5">
+                    {/* Card 1: 1. PAYMENT SUMMARY */}
+                    <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950 flex flex-col justify-between">
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center gap-2">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-black text-white">1</span>
+                          <span className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">PAYMENT SUMMARY</span>
                         </div>
                       </div>
-                      <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
-                      <div>
-                        <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">ENTRY DATE</div>
-                        <div className="font-semibold text-xs text-slate-800 dark:text-slate-200 mt-0.5">{date(selected.created_at)}</div>
-                      </div>
-                      <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
-                      <div>
-                        <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">TOTAL AMOUNT</div>
-                        <div className="font-mono text-sm font-black text-rose-600 dark:text-rose-400 mt-0.5">{money(statementPurchaseForeign, poCurrencyHeader)}</div>
+                      <div className="flex items-start gap-3 mt-2.5">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-100 dark:border-blue-900/40">
+                          <FileText className="h-5 w-5" />
+                        </div>
+                        <div className="space-y-1 text-xs w-full">
+                          <div>
+                            <span className="text-[9.5px] font-semibold text-slate-400 block">Payment No.</span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-mono font-black text-slate-900 dark:text-slate-100">{selected.purchase_order_no}</span>
+                              <span className="rounded-full bg-emerald-100 text-emerald-700 px-1.5 py-0.2 text-[8px] font-black uppercase dark:bg-emerald-950 dark:text-emerald-300">ACTIVE</span>
+                            </div>
+                          </div>
+                          <div className="pt-0.5">
+                            <span className="text-[9.5px] font-semibold text-slate-400 block">Entry Date</span>
+                            <span className="font-semibold text-slate-700 dark:text-slate-300">{date(selected.created_at)}</span>
+                          </div>
+                          <div className="pt-0.5">
+                            <span className="text-[9.5px] font-semibold text-slate-400 block">Total Amount</span>
+                            <span className="font-mono font-black text-rose-600 dark:text-rose-400">{money(statementPurchaseForeign, poCurrencyHeader)}</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
+                    {/* Card 2: 2. PURCHASE / INVOICE SUMMARY */}
+                    <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950 flex flex-col justify-between">
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center gap-2">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-black text-white">2</span>
+                          <span className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">PURCHASE / INVOICE SUMMARY</span>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3 mt-2.5">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40">
+                          <ShoppingCart className="h-5 w-5" />
+                        </div>
+                        <div className="space-y-1 text-xs w-full">
+                          <div className="grid grid-cols-2 gap-1">
+                            <div>
+                              <span className="text-[9.5px] font-semibold text-slate-400 block">PO / Bill No.</span>
+                              <span className="font-mono font-black text-slate-900 dark:text-slate-100 text-[11px] truncate block">{selected.purchase_order_no}</span>
+                            </div>
+                            <div>
+                              <span className="text-[9.5px] font-semibold text-slate-400 block">Supplier</span>
+                              <span className="font-extrabold text-slate-800 dark:text-slate-200 text-[11px] truncate block" title={supplierHeader}>{supplierHeader}</span>
+                            </div>
+                          </div>
+                          <div className="pt-0.5">
+                            <span className="text-[9.5px] font-semibold text-slate-400 block">Against</span>
+                            <button
+                              type="button"
+                              onClick={() => setViewingRow(selected)}
+                              className="text-blue-600 dark:text-blue-400 font-bold hover:underline text-[11px]"
+                            >
+                              Against Bill / Invoice
+                            </button>
+                          </div>
+                          <div className="pt-0.5">
+                            <span className="text-[9.5px] font-semibold text-slate-400 block">Payment Method</span>
+                            <span className="font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider">{paymentMethodDisplay}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card 3: 3. ACCOUNTING SUMMARY (Highlighted Active Blue Border) */}
+                    <div className="rounded-xl border-2 border-blue-500 bg-white p-3.5 shadow-md ring-2 ring-blue-500/20 dark:bg-slate-950 flex flex-col justify-between">
+                      <div className="flex items-center justify-between pb-2 border-b border-blue-100 dark:border-blue-900/40">
+                        <div className="flex items-center gap-2">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-purple-600 text-[10px] font-black text-white">3</span>
+                          <span className="text-[11px] font-black uppercase tracking-wider text-purple-900 dark:text-purple-300">ACCOUNTING SUMMARY</span>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3 mt-2.5">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400 border border-purple-100 dark:border-purple-900/40">
+                          <Scale className="h-5 w-5" />
+                        </div>
+                        <div className="space-y-1 text-xs w-full">
+                          <div>
+                            <span className="text-[9.5px] font-semibold text-slate-400 block">Total Payment ({baseCurrency})</span>
+                            <span className="font-mono font-black text-emerald-600 dark:text-emerald-400 text-xs">{money(activePaymentAmountLocal, baseCurrency)}</span>
+                          </div>
+                          <div className="pt-0.5">
+                            <span className="text-[9.5px] font-semibold text-slate-400 block">Equivalent ({poCurrencyHeader})</span>
+                            <span className="font-mono font-black text-slate-900 dark:text-slate-100">{money(activePaymentAmountUSD, poCurrencyHeader)}</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-1 pt-0.5 text-[10.5px]">
+                            <div>
+                              <span className="text-[9px] font-semibold text-slate-400 block">Exchange Rate</span>
+                              <span className="font-mono font-extrabold">{Number(exchangeRate || exRate || 1).toFixed(4)}</span>
+                            </div>
+                            <div>
+                              <span className="text-[9px] font-semibold text-slate-400 block">Payment Currency</span>
+                              <span className="font-mono font-extrabold">{baseCurrency}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card 4: 4. REPORT / BRANCH DETAILS */}
+                    <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950 flex flex-col justify-between">
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center gap-2">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-600 text-[10px] font-black text-white">4</span>
+                          <span className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">REPORT / BRANCH DETAILS</span>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3 mt-2.5">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-100 dark:border-amber-900/40">
+                          <Building className="h-5 w-5" />
+                        </div>
+                        <div className="space-y-1 text-xs w-full">
+                          <div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-[9.5px] font-semibold text-slate-400 block">Branch</span>
+                              <span className="text-[9px] font-mono text-slate-400">Branch Code: {selected.branch_code || form.branchCode || "BR-001"}</span>
+                            </div>
+                            <span className="font-extrabold text-slate-900 dark:text-slate-100 text-[11px] truncate block">{branchHeader}</span>
+                          </div>
+                          <div className="pt-0.5">
+                            <span className="text-[9.5px] font-semibold text-slate-400 block">Country</span>
+                            <span className="font-semibold text-slate-700 dark:text-slate-300">{rowCountryName(selected) || "UAE"}</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-1 pt-0.5 text-[10.5px]">
+                            <div>
+                              <span className="text-[9px] font-semibold text-slate-400 block">Prepared By</span>
+                              <span className="font-bold text-slate-800 dark:text-slate-200">{selected.audit?.userName || "ERP USER"}</span>
+                            </div>
+                            <div>
+                              <span className="text-[9px] font-semibold text-slate-400 block">Printed / Created</span>
+                              <span className="text-[9.5px] font-mono text-slate-600 dark:text-slate-400">{date(selected.created_at)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions Header Bar */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                    <div className="text-xs font-bold text-slate-500">
+                      Transaction Audit & Entry Reference: <span className="font-mono text-slate-800 dark:text-slate-200">{selected.purchase_order_no}</span>
+                    </div>
                     <div className="flex items-center gap-2">
                       <Button
                         type="button"
@@ -4878,7 +5013,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                         onClick={() => setViewingRow(selected)}
                         className="h-8 text-xs font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
                       >
-                        VIEW PO
+                        <Eye className="h-3.5 w-3.5 mr-1" /> VIEW PO
                       </Button>
                       <Button
                         type="button"
@@ -4887,7 +5022,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                         onClick={() => handleOpenA4PDF(selected, true)}
                         className="h-8 text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 border-emerald-200"
                       >
-                        PRINT ENTRY
+                        <Printer className="h-3.5 w-3.5 mr-1" /> PRINT ENTRY
                       </Button>
                       <Button
                         type="button"
@@ -4939,69 +5074,11 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                     </section>
                   )}
 
-                  {/* PAYMENT RECEIVER / VENDOR & PAYMENT METHOD CARD (Matches Screenshot 1) */}
-                  <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900/40">
-                    <div className="text-[9px] font-black uppercase tracking-wider text-slate-400 mb-2.5">
-                      PAYMENT RECEIVER / VENDOR & PAYMENT METHOD
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-                      <div>
-                        <span className="text-[9px] font-semibold text-slate-400 block uppercase tracking-wider">Name</span>
-                        <span className="font-extrabold text-slate-900 dark:text-slate-100">{supplierHeader}</span>
-                      </div>
-                      <div>
-                        <span className="text-[9px] font-semibold text-slate-400 block uppercase tracking-wider">Payment Method (A/C, etc.)</span>
-                        <span className="font-extrabold text-slate-800 dark:text-slate-200">{paymentMethodDisplay}</span>
-                      </div>
-                      <div>
-                        <span className="text-[9px] font-semibold text-slate-400 block uppercase tracking-wider">Remarks / In Brief</span>
-                        <span className="font-semibold text-slate-700 dark:text-slate-300 truncate block" title={remarks || "Payment for Purchase"}>{remarks || "Payment for Purchase"}</span>
-                      </div>
-                      <div>
-                        <span className="text-[9px] font-semibold text-slate-400 block uppercase tracking-wider">PO / BILL NO.</span>
-                        <div className="font-mono font-black text-slate-900 dark:text-slate-100">{selected.purchase_order_no}</div>
-                        <div className="text-[9px] text-blue-600 dark:text-blue-400 font-semibold">Against Bill / Invoice</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* BLUE SECTION HEADER BANNER (Matches Screenshot 1) */}
-                  <div className="rounded-xl border border-blue-500/30 bg-gradient-to-r from-blue-600 to-indigo-600 p-3 text-white shadow-sm flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/15 font-extrabold text-xs shadow-sm">
-                        <Landmark className="h-4 w-4 text-white" />
-                      </span>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-sm font-black">{selected.purchase_order_no}</span>
-                          <span className="rounded-full bg-white/20 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider">Payment Entry</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-[10px] text-blue-100 mt-0.5">
-                          <span>Payment Purpose: <strong className="text-white font-bold">{activeMode === "advance" ? "Purchase Advance" : "Purchase Payment"}</strong></span>
-                          <span>•</span>
-                          <span>Total Amount: <strong className="text-white font-mono font-bold">{money(statementPurchaseForeign, poCurrencyHeader)}</strong></span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span className="rounded-full bg-emerald-500 text-white px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider shadow-sm">
-                        {statusHeader}
-                      </span>
-                      <button
-                        type="button"
-                        className="rounded-lg border border-white/30 bg-white/10 px-2.5 py-1 text-[10px] font-bold text-white hover:bg-white/20 transition"
-                      >
-                        Charges (0)
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* 1. PAYMENT ENTRY HISTORY (ALL TRANSACTIONS) Section (Matches Screenshot 1) */}
+                  {/* OVERVIEW (ALL TRANSACTIONS) Section (Matches Screenshot 2) */}
                   <div className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950 overflow-hidden">
                     <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60">
                       <h3 className="text-xs font-black uppercase tracking-wider text-blue-700 dark:text-blue-300">
-                        1. PAYMENT ENTRY HISTORY (ALL TRANSACTIONS)
+                        OVERVIEW (ALL TRANSACTIONS)
                       </h3>
                       <div className="flex items-center gap-2">
                         <Button
@@ -5026,172 +5103,72 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                     </div>
 
                     {/* 4 Stats Summary Boxes */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-3 bg-slate-50/40 border-b border-slate-100 dark:border-slate-800 dark:bg-slate-900/20">
-                      {/* Box 1: PREVIOUS BALANCE / DUE (DR) */}
-                      <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                        <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-wider text-slate-500 mb-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 p-3.5 bg-slate-50/40 dark:bg-slate-900/20">
+                      {/* Box 1: PREVIOUS BALANCE / DUE */}
+                      <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2">
+                          <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
+                            <Wallet className="h-3.5 w-3.5" />
+                          </div>
                           <span>PREVIOUS BALANCE / DUE</span>
-                          <span className="rounded bg-blue-100 text-blue-700 px-1 py-0.2 text-[8px] font-black dark:bg-blue-950 dark:text-blue-300">DR</span>
                         </div>
-                        <div className="space-y-0.5 text-[10px] font-semibold">
+                        <div className="space-y-1 text-xs font-semibold">
                           <div className="flex justify-between"><span className="text-slate-400">Local:</span><span className="font-mono font-bold text-slate-800 dark:text-slate-100">{money(statPreviousDueLC, baseCurrency)}</span></div>
                           <div className="flex justify-between"><span className="text-slate-400">Equivalent ({poCurrencyHeader}):</span><span className="font-mono font-bold text-slate-700 dark:text-slate-300">{money(statPreviousDueFC, poCurrencyHeader)}</span></div>
-                          <div className="flex justify-between"><span className="text-slate-400">Unpaid:</span><span className="font-mono font-bold text-rose-600 dark:text-rose-400">{money(statPreviousDueFC, poCurrencyHeader)}</span></div>
-                          <div className="text-[8px] text-slate-400 text-right pt-0.5">As of: {date(selected.created_at)}</div>
+                          <div className="flex justify-between"><span className="text-slate-400">Unpaid:</span><span className="font-mono font-black text-rose-600 dark:text-rose-400">{money(statRemainingFC, poCurrencyHeader)}</span></div>
+                          <div className="text-[9px] text-slate-400 text-right pt-1 border-t border-slate-100 dark:border-slate-800 mt-1">As of: {date(selected.created_at)}</div>
                         </div>
                       </div>
 
-                      {/* Box 2: TOTAL PAYMENT (CURRENT ENTRY) (CR) */}
-                      <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                        <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-wider text-slate-500 mb-1">
-                          <span>TOTAL PAYMENT (CURRENT ENTRY)</span>
-                          <span className="rounded bg-emerald-100 text-emerald-700 px-1 py-0.2 text-[8px] font-black dark:bg-emerald-950 dark:text-emerald-300">CR</span>
+                      {/* Box 2: CURRENT PAYMENT (THIS ENTRY) */}
+                      <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 mb-2">
+                          <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400">
+                            <DollarSign className="h-3.5 w-3.5" />
+                          </div>
+                          <span>CURRENT PAYMENT (THIS ENTRY)</span>
                         </div>
-                        <div className="space-y-0.5 text-[10px] font-semibold">
-                          <div className="flex justify-between"><span className="text-slate-400">Local:</span><span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{money(statCurrentPayLC, baseCurrency)}</span></div>
-                          <div className="flex justify-between"><span className="text-slate-400">Equivalent ({poCurrencyHeader}):</span><span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{money(statCurrentPayFC, poCurrencyHeader)}</span></div>
-                          <div className="flex justify-between"><span className="text-slate-400">Unpaid:</span><span className="font-mono font-bold text-slate-700 dark:text-slate-300">{money(statCurrentPayFC, poCurrencyHeader)}</span></div>
-                          <div className="text-[8px] text-slate-400 text-right pt-0.5">As of: {date(paymentDate || selected.created_at)}</div>
+                        <div className="space-y-1 text-xs font-semibold">
+                          <div className="flex justify-between"><span className="text-slate-400">Local:</span><span className="font-mono font-black text-emerald-600 dark:text-emerald-400">{money(statCurrentPayLC, baseCurrency)}</span></div>
+                          <div className="flex justify-between"><span className="text-slate-400">Equivalent ({poCurrencyHeader}):</span><span className="font-mono font-black text-emerald-600 dark:text-emerald-400">{money(statCurrentPayFC, poCurrencyHeader)}</span></div>
+                          <div className="flex justify-between"><span className="text-slate-400">Payment %:</span><span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{statCurrentPayPct}%</span></div>
+                          <div className="text-[9px] text-slate-400 text-right pt-1 border-t border-slate-100 dark:border-slate-800 mt-1">As of: {date(paymentDate || selected.created_at)}</div>
                         </div>
                       </div>
 
-                      {/* Box 3: OVERALL BALANCE (DR) */}
-                      <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                        <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-wider text-slate-500 mb-1">
-                          <span>OVERALL BALANCE</span>
-                          <span className="rounded bg-blue-100 text-blue-700 px-1 py-0.2 text-[8px] font-black dark:bg-blue-950 dark:text-blue-300">DR</span>
+                      {/* Box 3: OVERALL BALANCE (AFTER THIS PAYMENT) */}
+                      <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-purple-700 dark:text-purple-400 mb-2">
+                          <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-purple-50 text-purple-600 dark:bg-purple-950 dark:text-purple-400">
+                            <Scale className="h-3.5 w-3.5" />
+                          </div>
+                          <span>OVERALL BALANCE (AFTER THIS PAYMENT)</span>
                         </div>
-                        <div className="space-y-0.5 text-[10px] font-semibold">
+                        <div className="space-y-1 text-xs font-semibold">
                           <div className="flex justify-between"><span className="text-slate-400">Local:</span><span className="font-mono font-bold text-slate-800 dark:text-slate-100">{money(statRemainingLC, baseCurrency)}</span></div>
                           <div className="flex justify-between"><span className="text-slate-400">Equivalent ({poCurrencyHeader}):</span><span className="font-mono font-bold text-slate-700 dark:text-slate-300">{money(statRemainingFC, poCurrencyHeader)}</span></div>
-                          <div className="flex justify-between"><span className="text-slate-400">Unpaid:</span><span className="font-mono font-bold text-rose-600 dark:text-rose-400">{money(statRemainingFC, poCurrencyHeader)}</span></div>
-                          <div className="text-[8px] text-slate-400 text-right pt-0.5">As of: {date(paymentDate || selected.created_at)}</div>
+                          <div className="flex justify-between"><span className="text-slate-400">Remaining:</span><span className="font-mono font-black text-rose-600 dark:text-rose-400">{money(statRemainingFC, poCurrencyHeader)}</span></div>
+                          <div className="text-[9px] text-slate-400 text-right pt-1 border-t border-slate-100 dark:border-slate-800 mt-1">As of: {date(paymentDate || selected.created_at)}</div>
                         </div>
                       </div>
 
                       {/* Box 4: PAYMENT HISTORY COUNT */}
-                      <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                        <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-wider text-slate-500 mb-1">
+                      <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400 mb-2">
+                          <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400">
+                            <ClipboardList className="h-3.5 w-3.5" />
+                          </div>
                           <span>PAYMENT HISTORY COUNT</span>
-                          <span className="font-mono text-xs font-black text-slate-900 dark:text-slate-100">{historyWithBalance.length}</span>
                         </div>
-                        <div className="space-y-0.5 text-[10px] font-semibold">
-                          <div className="flex justify-between"><span className="text-slate-400">Total Payments:</span><span className="font-mono font-bold text-slate-800 dark:text-slate-200">{money(statTotalPaidFC, poCurrencyHeader)} ({statTotalPaidPct}%)</span></div>
+                        <div className="space-y-1 text-xs font-semibold">
+                          <div className="flex justify-between"><span className="text-slate-400">Total Payments:</span><span className="font-mono font-bold text-slate-800 dark:text-slate-200">{historyWithBalance.length}</span></div>
                           <div className="flex justify-between"><span className="text-slate-400">This Payment:</span><span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{money(statCurrentPayFC, poCurrencyHeader)} ({statCurrentPayPct}%)</span></div>
-                          <div className="text-[8px] text-slate-400 text-right pt-0.5">As of: {date(paymentDate || selected.created_at)}</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Payment History Table */}
-                    <div className="max-h-[360px] overflow-auto">
-                      <table className="w-full min-w-[1200px] text-left text-xs border-collapse">
-                        <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900 text-[9px] uppercase font-black tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
-                          <tr>
-                            <Th className="px-3 py-2 text-center w-10">#</Th>
-                            <Th className="px-3 py-2">PAYMENT DATE</Th>
-                            <Th className="px-3 py-2">PAYMENT NO.</Th>
-                            <Th className="px-3 py-2">PAYMENT METHOD</Th>
-                            <Th className="px-3 py-2">PAID BY / FROM</Th>
-                            <Th className="px-3 py-2 text-right">EXCHANGE RATE</Th>
-                            <Th className="px-3 py-2 text-right">LOCAL AMOUNT</Th>
-                            <Th className="px-3 py-2 text-right">EQUIVALENT ({poCurrencyHeader})</Th>
-                            <Th className="px-3 py-2 text-right">DISCOUNT</Th>
-                            <Th className="px-3 py-2 text-right">PAYMENT AMOUNT ({poCurrencyHeader})</Th>
-                            <Th className="px-3 py-2 text-center">STATUS</Th>
-                            <Th className="px-3 py-2 text-center w-14">ACTION</Th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                          {historyWithBalance.length === 0 ? (
-                            <tr>
-                              <td colSpan={12} className="px-4 py-6 text-center text-xs text-slate-400 italic">
-                                No previous payment records found. Record a new payment entry below.
-                              </td>
-                            </tr>
-                          ) : (
-                            historyWithBalance.map((payment: any) => {
-                              const drLedger = ledgers.find((l) => ledgerId(l) === payment.debit_ledger_id);
-                              const crLedger = ledgers.find((l) => ledgerId(l) === payment.credit_ledger_id);
-                              const re = payment.roznamcha_entries || {};
-                              const method = payment.typeDetails?.method || payment.payment_method || payment.typeDetails?.bankName || payment.bank_name || "Bank Transfer";
-                              const sourceName = crLedger ? ledgerName(crLedger) : payment.typeDetails?.bankName || "Bank Account";
-                              const sourceCode = crLedger ? ledgerCode(crLedger) : (payment.typeDetails?.refNo ? `A/C: ${payment.typeDetails.refNo}` : "-");
-
-                              return (
-                                <tr key={payment.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-900/30 text-xs transition">
-                                  <td className="px-3 py-2.5 text-center font-bold text-slate-600 dark:text-slate-400">{payment.paymentNo}</td>
-                                  <td className="px-3 py-2.5 whitespace-nowrap text-slate-700 dark:text-slate-300 font-semibold">
-                                    {date(payment.entry_date || payment.created_at)}
-                                  </td>
-                                  <td className="px-3 py-2.5 font-mono font-bold text-slate-900 dark:text-slate-100">
-                                    {re.super_admin_serial_number || payment.super_admin_serial_number || payment.reference_no || `AE-${String(payment.paymentNo).padStart(3, '0')}-0001`}
-                                  </td>
-                                  <td className="px-3 py-2.5">
-                                    <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300">
-                                      {method}
-                                    </span>
-                                  </td>
-                                  <td className="px-3 py-2.5">
-                                    <div className="font-bold text-slate-800 dark:text-slate-200">{sourceName}</div>
-                                    <div className="font-mono text-[9px] text-slate-400">{sourceCode}</div>
-                                  </td>
-                                  <td className="px-3 py-2.5 text-right font-mono font-semibold text-slate-700 dark:text-slate-300">
-                                    {Number(payment.exchange_rate || exRate || 1).toFixed(4)}
-                                  </td>
-                                  <td className="px-3 py-2.5 text-right font-mono font-extrabold text-emerald-600 dark:text-emerald-400">
-                                    {money(payment.amtAED, baseCurrency)}
-                                  </td>
-                                  <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-800 dark:text-slate-200">
-                                    {money(payment.amtUSD, poCurrencyHeader)}
-                                  </td>
-                                  <td className="px-3 py-2.5 text-right font-mono font-bold text-rose-500">
-                                    0.00 {poCurrencyHeader}
-                                  </td>
-                                  <td className="px-3 py-2.5 text-right font-mono font-black text-blue-600 dark:text-blue-400">
-                                    {money(payment.amtUSD, poCurrencyHeader)}
-                                  </td>
-                                  <td className="px-3 py-2.5 text-center">
-                                    <span className="rounded-full bg-emerald-100 text-emerald-700 px-2 py-0.5 text-[9px] font-black uppercase dark:bg-emerald-950 dark:text-emerald-300">
-                                      Posted
-                                    </span>
-                                  </td>
-                                  <td className="px-3 py-2.5 text-center">
-                                    <NestedRowActions payment={payment} row={selected} ledgers={ledgers} localCurrency={baseCurrency} />
-                                  </td>
-                                </tr>
-                              );
-                            })
-                          )}
-                        </tbody>
-                        <tfoot>
-                          <tr className="bg-slate-100 dark:bg-slate-900 border-t-2 border-slate-300 dark:border-slate-700 text-xs font-black text-slate-800 dark:text-slate-200">
-                            <td colSpan={6} className="px-3 py-2 uppercase tracking-wide text-center">TOTALS</td>
-                            <td className="px-3 py-2 text-right font-mono text-emerald-700 dark:text-emerald-400 font-black">
-                              {money(historyWithBalance.reduce((sum, p) => sum + p.amtAED, 0) || statCurrentPayLC, baseCurrency)}
-                            </td>
-                            <td className="px-3 py-2 text-right font-mono font-black">
-                              {money(historyWithBalance.reduce((sum, p) => sum + p.amtUSD, 0) || statCurrentPayFC, poCurrencyHeader)}
-                            </td>
-                            <td className="px-3 py-2 text-right font-mono font-bold text-rose-600">
-                              0.00 {poCurrencyHeader}
-                            </td>
-                            <td className="px-3 py-2 text-right font-mono text-blue-700 dark:text-blue-400 font-black">
-                              {money(historyWithBalance.reduce((sum, p) => sum + p.amtUSD, 0) || statCurrentPayFC, poCurrencyHeader)}
-                            </td>
-                            <td colSpan={2} />
-                          </tr>
-                        </tfoot>
-                      </table>
-                    </div>
-                  </div>
-
-                  {/* 2. ACCOUNTING ENTRIES (DOUBLE ENTRY) Section (Matches Screenshot 1) */}
+                          <div className="flex justify-between"><span className="text-slate-400">Remainin                  {/* 1. ACCOUNTING ENTRIES (DOUBLE ENTRY) Section (Matches Screenshot 2) */}
                   <div className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950 overflow-hidden">
                     <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60">
                       <div className="flex items-center gap-2">
                         <h3 className="text-xs font-black uppercase tracking-wider text-blue-700 dark:text-blue-300">
-                          2. ACCOUNTING ENTRIES (DOUBLE ENTRY)
+                          1. ACCOUNTING ENTRIES (DOUBLE ENTRY)
                         </h3>
                         <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-black text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300">
                           BALANCED
@@ -5351,199 +5328,93 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                                     }
                                   }}
                                 />
-                                {selectedSourceLedger && (
-                                  <div className="mt-0.5 text-[9.5px] font-semibold text-slate-500 flex justify-between">
-                                    <span>{currentLanguage === "en" ? "Bal: " : "بیلنس: "}{sourceBalanceText}</span>
-                                    <span>{currentLanguage === "en" ? "Cur: " : "کرنسی: "}{selectedSourceLedger.currency || baseCurrency}</span>
-                                  </div>
-                                )}
                               </FieldBlock>
 
-                              <FieldBlock label={t("roznamcha_type_label", currentLanguage)} required>
-                                <SearchableSelect
-                                  value={roznamchaType}
-                                  onChange={(val) => {
-                                    setRoznamchaType(val);
-                                    if (val === "Cash Book No.") {
-                                      setPaymentType("cash");
-                                      const cashLed = ledgers.find((l) => ledgerName(l).toLowerCase().includes("cash") || ledgerCode(l).toLowerCase().includes("cash"));
-                                      if (cashLed) setPaymentSourceLedgerId(ledgerId(cashLed) || "");
-                                    } else if (val === "Roznamcha Book No.") {
-                                      setPaymentType("bank");
-                                      const bankLed = ledgers.find((l) => ledgerName(l).toLowerCase().includes("bank") || ledgerCode(l).toLowerCase().includes("bank"));
-                                      if (bankLed) setPaymentSourceLedgerId(ledgerId(bankLed) || "");
-                                    }
-                                  }}
-                                  options={[
-                                    { label: currentLanguage === "en" ? "Cash Book No." : "کیش بک نمبر", value: "Cash Book No." },
-                                    { label: currentLanguage === "en" ? "Roznamcha Book No." : "روزنامچہ بک نمبر", value: "Roznamcha Book No." },
-                                    { label: currentLanguage === "en" ? "Receipt No." : "رسید نمبر", value: "Receipt No." }
-                                  ]}
-                                  placeholder={currentLanguage === "en" ? "Select Type" : "قسم منتخب کریں"}
-                                  className="relative z-[45] text-xs font-semibold text-slate-800 dark:text-slate-100 h-8"
+                              <FieldBlock label={t("payment_destination_party", currentLanguage)} required>
+                                <Input
+                                  disabled
+                                  className="bg-slate-100 font-bold dark:bg-slate-800 text-xs text-slate-900 dark:text-slate-100"
+                                  value={doubleEntry.debitName ? `${doubleEntry.debitName} (${doubleEntry.debitCode})` : (supplierHeader || "Trade Payable / Supplier")}
                                 />
                               </FieldBlock>
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                              <FieldBlock label={t("roznamcha_number_label", currentLanguage)} required>
+                              <FieldBlock label={t("payment_date", currentLanguage)} required>
                                 <Input
-                                  className="h-8 text-xs font-semibold w-full"
-                                  value={roznamchaNumber}
-                                  onChange={(e) => setRoznamchaNumber(e.target.value)}
-                                  placeholder="e.g. 000123"
-                                />
-                              </FieldBlock>
-
-                              <FieldBlock label={t("payment_date_label", currentLanguage)} required>
-                                <Input
-                                  className="h-8 text-xs font-semibold w-full"
                                   type="date"
+                                  className="h-8 text-xs font-semibold"
                                   value={paymentDate}
                                   onChange={(e) => setPaymentDate(e.target.value)}
                                 />
                               </FieldBlock>
 
-                              <FieldBlock label={t("currency_label", currentLanguage)} required>
-                                <SearchableSelect
-                                  value={currency}
-                                  onChange={(val) => setCurrency(val)}
-                                  options={[
-                                    { label: "USD", value: "USD" },
-                                    { label: "AED", value: "AED" },
-                                    { label: "PKR", value: "PKR" },
-                                    { label: "INR", value: "INR" },
-                                    { label: "AFN", value: "AFN" },
-                                    { label: "IRR", value: "IRR" }
-                                  ]}
-                                  placeholder={currentLanguage === "en" ? "Select Currency" : "کرنسی منتخب کریں"}
-                                  className="relative z-[45] text-xs font-semibold text-slate-800 dark:text-slate-100 h-8"
+                              <FieldBlock label={t("exchange_rate", currentLanguage)} required>
+                                <Input
+                                  type="number"
+                                  step="0.0001"
+                                  min="0"
+                                  className="h-8 font-mono text-xs font-bold"
+                                  value={exchangeRate}
+                                  onChange={(e) => setExchangeRate(e.target.value)}
+                                  placeholder={String(exRate || 1)}
                                 />
+                              </FieldBlock>
+
+                              <FieldBlock label={t("payment_amount_usd", currentLanguage)} required>
+                                <div className="relative">
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">
+                                    {poCurrencyHeader}
+                                  </span>
+                                  <Input
+                                    className="h-8 pl-12 text-right text-xs font-black font-mono text-blue-600 dark:text-blue-400"
+                                    value={amount}
+                                    onChange={(e) => setAmount(e.target.value)}
+                                    placeholder="0.00"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                  />
+                                </div>
                               </FieldBlock>
                             </div>
 
-                            {/* Dynamic Type Panel (Bank / Cash) */}
-                            {paymentType && (
-                              <div className="rounded-lg border bg-slate-50/60 p-2.5 dark:bg-slate-900/30">
-                                <div className="mb-1.5 text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300">
-                                  {paymentType === "cash" && (currentLanguage === "en" ? "Cash Details" : "کیش کی تفصیلات")}
-                                  {paymentType === "bank" && (currentLanguage === "en" ? "Bank Details" : "بینک کی تفصیلات")}
-                                  {paymentType === "business" && (currentLanguage === "en" ? "Business Details" : "بزنس کی تفصیلات")}
-                                  {paymentType === "invoice" && (currentLanguage === "en" ? "Invoice Details" : "انکوائس کی تفصیلات")}
-                                  {paymentType === "transfer" && (currentLanguage === "en" ? "Transfer Details" : "منتقلی کی تفصیلات")}
-                                </div>
-                                
-                                {paymentType === "bank" && (
-                                  <div className="space-y-2">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                      <div className="space-y-1 relative z-[46]">
-                                        <span className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                                          {currentLanguage === "en" ? "Bank Name" : "بینک کا نام"}
-                                        </span>
-                                        <SearchableSelect
-                                          value={typeDetails.bankName || ""}
-                                          onChange={(val) => {
-                                            if (val === "__ADD_NEW__") {
-                                              openAddOption("bank");
-                                            } else {
-                                              setTypeDetails((prev) => ({ ...prev, bankName: val }));
-                                            }
-                                          }}
-                                          options={[
-                                            { label: currentLanguage === "en" ? "Select Bank" : "بینک منتخب کریں", value: "" },
-                                            ...(selected ? getCountryBankList(rowCountryName(selected)) : getCountryBankList(session?.countryName || "")).map((bank) => ({ label: bank, value: bank })),
-                                            ...savedBanks.map((bank) => ({ label: bank.name, value: bank.name }))
-                                          ]}
-                                          placeholder={currentLanguage === "en" ? "Select Bank" : "بینک منتخب کریں"}
-                                          addOptionLabel={currentLanguage === "en" ? "New Bank" : "نیا بینک"}
-                                          className="text-xs font-semibold text-slate-800 dark:text-slate-100 h-8"
-                                        />
-                                      </div>
+                            {/* Additional Optional Calculation helper */}
+                            <div className="flex items-center justify-between pt-1">
+                              <button
+                                type="button"
+                                onClick={() => setShowCalcPanel(!showCalcPanel)}
+                                className="text-[11px] font-bold text-blue-600 hover:underline flex items-center gap-1 cursor-pointer"
+                              >
+                                <Calculator className="h-3.5 w-3.5" />
+                                <span>{showCalcPanel ? "Hide Rate Calculator" : "Advanced Rate / Currency Conversion"}</span>
+                              </button>
+                            </div>
 
-                                      <div className="space-y-1 relative z-[46]">
-                                        <span className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                                          {currentLanguage === "en" ? "Payment Method" : "ادائیگی کا طریقہ"}
-                                        </span>
-                                        <SearchableSelect
-                                          value={typeDetails.method || ""}
-                                          onChange={(val) => {
-                                            if (val === "__ADD_NEW__") {
-                                              openAddOption("method");
-                                            } else {
-                                              setTypeDetails((prev) => ({ ...prev, method: val }));
-                                            }
-                                          }}
-                                          options={[
-                                            { label: currentLanguage === "en" ? "Select Method" : "طریقہ منتخب کریں", value: "" },
-                                            ...["Cheque", "Mobile Transfer", "Online Transfer", "Bank Transfer"].map((method) => ({ label: method, value: method })),
-                                            ...savedMethods.map((method) => ({ label: method, value: method }))
-                                          ]}
-                                          placeholder={currentLanguage === "en" ? "Select Method" : "طریقہ منتخب کریں"}
-                                          addOptionLabel={currentLanguage === "en" ? "New Method" : "نیا طریقہ"}
-                                          className="text-xs font-semibold text-slate-800 dark:text-slate-100 h-8"
-                                        />
-                                      </div>
-
-                                      <FieldBlock label={currentLanguage === "en" ? "Reference No." : "حوالہ نمبر"}>
-                                        <Input
-                                          className="h-8 text-xs font-semibold w-full"
-                                          value={typeDetails.refNo || ""}
-                                          onChange={(e) => setTypeDetails((prev) => ({ ...prev, refNo: e.target.value }))}
-                                          placeholder={currentLanguage === "en" ? "Cheque/Tx No" : "چیک یا ٹرانزیکشن نمبر"}
-                                        />
-                                      </FieldBlock>
-                                      
-                                      <FieldBlock label={currentLanguage === "en" ? "Attachment Upload" : "فائل منسلک اپ لوڈ"}>
-                                        <div className="flex items-center gap-2">
-                                          <Label className="cursor-pointer flex w-max items-center justify-center h-8 px-3 rounded-md bg-slate-100 hover:bg-slate-200 border text-slate-500 shadow-sm transition gap-1.5 text-[10px] font-semibold">
-                                            <Paperclip className="h-3 w-3" />
-                                            <span>{currentLanguage === "en" ? "Attach" : "منسلک کریں"}</span>
-                                            <Input
-                                              type="file"
-                                              className="hidden"
-                                              onChange={(e) => {
-                                                const file = e.target.files?.[0] ?? null;
-                                                setAttachmentFile(file);
-                                                setTypeDetails((p) => ({ ...p, bankAttachmentName: file?.name || "" }));
-                                              }}
-                                            />
-                                          </Label>
-                                          {typeDetails.bankAttachmentName && <span className="text-[10px] font-mono text-slate-500 bg-slate-50 px-2 py-1 rounded border truncate max-w-[120px]">{typeDetails.bankAttachmentName}</span>}
-                                        </div>
-                                      </FieldBlock>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {paymentType === "cash" && (
-                                  <div className="grid gap-2.5 sm:grid-cols-2">
-                                    <FieldBlock label={t("receiver_sender_name", currentLanguage)}>
-                                      <Input className="h-8 text-xs font-semibold" value={typeDetails.receiverSenderName || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, receiverSenderName: e.target.value }))} placeholder={currentLanguage === "en" ? "Receiver/Sender" : "وصول کنندہ / بھیجنے والا"} />
-                                    </FieldBlock>
-                                    <FieldBlock label={t("mobile_number", currentLanguage)}>
-                                      <Input className="h-8 text-xs font-semibold" value={typeDetails.mobileNumber || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, mobileNumber: e.target.value }))} placeholder="03xxxxxxxxx" />
-                                    </FieldBlock>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-
-                            {/* Currency Rate / Calculations */}
-                            {currency && showCalcPanel && (
-                              <div className="rounded-lg border bg-slate-50/60 p-2.5 dark:bg-slate-900/30">
-                                <div className="mb-1.5 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                                  {t("transaction_conversion_details", currentLanguage)} ({selected?.currency_code || "USD"} ➔ {baseCurrency})
-                                </div>
-                                <div className="grid gap-2.5 sm:grid-cols-3">
-                                  <FieldBlock label={`${t("purchase_currency_amount", currentLanguage)} (${selected?.currency_code || "USD"})`} required>
-                                    <Input className="h-8 text-xs font-semibold" value={calcAmount} onChange={(e) => setCalcAmount(e.target.value)} type="number" step="0.0001" min="0" placeholder="e.g. 100" />
+                            {showCalcPanel && (
+                              <div className="rounded-lg border border-slate-200 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-950 space-y-2">
+                                <div className="grid grid-cols-3 gap-2">
+                                  <FieldBlock label="Foreign Amount">
+                                    <Input
+                                      className="h-7 text-xs font-mono"
+                                      value={calcAmount}
+                                      onChange={(e) => setCalcAmount(e.target.value)}
+                                      placeholder="0.00"
+                                      type="number"
+                                    />
                                   </FieldBlock>
-                                  <FieldBlock label={t("exchange_rate_label", currentLanguage)} required>
-                                    <Input className="h-8 text-xs font-semibold" value={exchangeRate} onChange={(e) => setExchangeRate(e.target.value)} type="number" step="0.0001" min="0" disabled={selected?.currency_code === baseCurrency && currency === baseCurrency} />
+                                  <FieldBlock label="Conversion Rate">
+                                    <Input
+                                      className="h-7 text-xs font-mono"
+                                      value={calcRate}
+                                      onChange={(e) => setCalcRate(e.target.value)}
+                                      placeholder="3.6725"
+                                      type="number"
+                                    />
                                   </FieldBlock>
-                                  <FieldBlock label={t("operation_label", currentLanguage)}>
+                                  <FieldBlock label="Operation">
                                     <select
-                                      className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs font-semibold outline-none"
+                                      className="flex h-7 w-full rounded-md border border-input bg-background px-2 text-xs font-semibold"
                                       value={calcOp}
                                       onChange={(e) => setCalcOp(e.target.value as any)}
                                     >
@@ -5712,13 +5583,148 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                     )}
                   </div>
 
-                  {/* 3. NARRATION / REMARKS Section (Matches Screenshot 1) */}
+                  {/* 2. PAYMENT ENTRIES (THIS ENTRY) Section (Matches Screenshot 2) */}
+                  <div className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950 overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-xs font-black uppercase tracking-wider text-blue-700 dark:text-blue-300">
+                          2. PAYMENT ENTRIES (THIS ENTRY)
+                        </h3>
+                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-black text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300">
+                          BALANCED
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setIsDoubleEntryExpanded(!isDoubleEntryExpanded)}
+                          className="flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-700 hover:bg-blue-100 transition dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300"
+                        >
+                          <Plus className="h-3 w-3" />
+                          <span>Add Entry</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Payment History Table */}
+                    <div className="max-h-[360px] overflow-auto">
+                      <table className="w-full min-w-[1200px] text-left text-xs border-collapse">
+                        <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900 text-[9px] uppercase font-black tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                          <tr>
+                            <Th className="px-3 py-2 text-center w-10">#</Th>
+                            <Th className="px-3 py-2">PAYMENT DATE</Th>
+                            <Th className="px-3 py-2">PAYMENT NO.</Th>
+                            <Th className="px-3 py-2">PAYMENT METHOD</Th>
+                            <Th className="px-3 py-2">PAID BY / FROM</Th>
+                            <Th className="px-3 py-2 text-right">EXCHANGE RATE</Th>
+                            <Th className="px-3 py-2 text-right">LOCAL AMOUNT</Th>
+                            <Th className="px-3 py-2 text-right">EQUIVALENT ({poCurrencyHeader})</Th>
+                            <Th className="px-3 py-2 text-right">DISCOUNT</Th>
+                            <Th className="px-3 py-2 text-right">PAYMENT AMOUNT ({poCurrencyHeader})</Th>
+                            <Th className="px-3 py-2 text-center">STATUS</Th>
+                            <Th className="px-3 py-2 text-center w-14">ACTION</Th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                          {historyWithBalance.length === 0 ? (
+                            <tr>
+                              <td colSpan={12} className="px-4 py-6 text-center text-xs text-slate-400 italic">
+                                No previous payment records found. Record a new payment entry above.
+                              </td>
+                            </tr>
+                          ) : (
+                            historyWithBalance.map((payment: any) => {
+                              const drLedger = ledgers.find((l) => ledgerId(l) === payment.debit_ledger_id);
+                              const crLedger = ledgers.find((l) => ledgerId(l) === payment.credit_ledger_id);
+                              const re = payment.roznamcha_entries || {};
+                              const method = payment.typeDetails?.method || payment.payment_method || payment.typeDetails?.bankName || payment.bank_name || "Bank Transfer";
+                              const sourceName = crLedger ? ledgerName(crLedger) : payment.typeDetails?.bankName || "Bank Account";
+                              const sourceCode = crLedger ? ledgerCode(crLedger) : (payment.typeDetails?.refNo ? `A/C: ${payment.typeDetails.refNo}` : "-");
+
+                              return (
+                                <tr key={payment.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-900/30 text-xs transition">
+                                  <td className="px-3 py-2.5 text-center font-bold text-slate-600 dark:text-slate-400">{payment.paymentNo}</td>
+                                  <td className="px-3 py-2.5 whitespace-nowrap text-slate-700 dark:text-slate-300 font-semibold">
+                                    {date(payment.entry_date || payment.created_at)}
+                                  </td>
+                                  <td className="px-3 py-2.5 font-mono font-bold text-slate-900 dark:text-slate-100">
+                                    {re.super_admin_serial_number || payment.super_admin_serial_number || payment.reference_no || `AE-${String(payment.paymentNo).padStart(3, '0')}-0001`}
+                                  </td>
+                                  <td className="px-3 py-2.5">
+                                    <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300">
+                                      {method}
+                                    </span>
+                                  </td>
+                                  <td className="px-3 py-2.5">
+                                    <div className="font-bold text-slate-800 dark:text-slate-200">{sourceName}</div>
+                                    <div className="font-mono text-[9px] text-slate-400">{sourceCode}</div>
+                                  </td>
+                                  <td className="px-3 py-2.5 text-right font-mono font-semibold text-slate-700 dark:text-slate-300">
+                                    {Number(payment.exchange_rate || exRate || 1).toFixed(4)}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-right font-mono font-extrabold text-emerald-600 dark:text-emerald-400">
+                                    {money(payment.amtAED, baseCurrency)}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-800 dark:text-slate-200">
+                                    {money(payment.amtUSD, poCurrencyHeader)}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-right font-mono font-bold text-rose-500">
+                                    0.00 {poCurrencyHeader}
+                                  <td className="px-3 py-2.5 text-center">
+                                    <span className="rounded-full bg-emerald-100 text-emerald-700 px-2 py-0.5 text-[9px] font-black uppercase dark:bg-emerald-950 dark:text-emerald-300">
+                                      Posted
+                                    </span>
+                                  </td>
+                                  <td className="px-3 py-2.5 text-center">
+                                    <NestedRowActions payment={payment} row={selected} ledgers={ledgers} localCurrency={baseCurrency} />
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          )}
+                        </tbody>
+                        <tfoot>
+                          <tr className="bg-slate-100 dark:bg-slate-900 border-t-2 border-slate-300 dark:border-slate-700 text-xs font-black text-slate-800 dark:text-slate-200">
+                            <td colSpan={6} className="px-3 py-2 uppercase tracking-wide text-center">TOTALS</td>
+                            <td className="px-3 py-2 text-right font-mono text-emerald-700 dark:text-emerald-400 font-black">
+                              {money(historyWithBalance.reduce((sum, p) => sum + p.amtAED, 0) || statCurrentPayLC, baseCurrency)}
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono font-black">
+                              {money(historyWithBalance.reduce((sum, p) => sum + p.amtUSD, 0) || statCurrentPayFC, poCurrencyHeader)}
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono font-bold text-rose-600">
+                              0.00 {poCurrencyHeader}
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono text-blue-700 dark:text-blue-400 font-black">
+                              {money(historyWithBalance.reduce((sum, p) => sum + p.amtUSD, 0) || statCurrentPayFC, poCurrencyHeader)}
+                            </td>
+                            <td colSpan={2} />
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* 3. NARRATION / REMARKS Section (Matches Screenshot 2) */}
                   <div className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950 p-3.5">
                     <div className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300 mb-1.5">
                       3. NARRATION / REMARKS
                     </div>
                     <div className="text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800">
                       {remarks.trim() || `Payment for Purchase Order No. ${selected.purchase_order_no} against ${supplierHeader}.`}
+                    </div>
+                  </div>
+
+                  {/* Bottom Audit Metadata (Matches Screenshot 2) */}
+                  <div className="flex justify-between items-center text-[10px] font-semibold text-slate-400 px-1 pt-1 border-t border-slate-100 dark:border-slate-800">
+                    <div>
+                      <span>Created By: </span>
+                      <strong className="text-slate-700 dark:text-slate-300 font-bold">{selected.audit?.userName || "ERP USER"}</strong>
+                    </div>
+                    <div>
+                      <span>Created On: </span>
+                      <strong className="text-slate-700 dark:text-slate-300 font-bold">{date(selected.created_at)} {new Date(selected.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}</strong>
                     </div>
                   </div>
                 </div>

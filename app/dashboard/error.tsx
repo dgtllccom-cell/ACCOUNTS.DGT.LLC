@@ -1,7 +1,58 @@
 "use client";
 
-import React, { useEffect } from "react";
-import { AlertCircle, RefreshCw, LayoutDashboard } from "lucide-react";
+import { useEffect } from "react";
+import { AlertCircle, RefreshCcw, LayoutDashboard } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+function clearChunkReloadCache() {
+  try {
+    if (typeof window !== "undefined") {
+      try {
+        sessionStorage.removeItem("chunk_reload_attempt");
+        sessionStorage.removeItem("chunk_reload_timestamp");
+        sessionStorage.removeItem("erp_chunk_reload_timestamp");
+        sessionStorage.removeItem("erp_auto_chunk_cnt");
+        sessionStorage.removeItem("erp_auto_chunk_ts");
+        for (let i = sessionStorage.length - 1; i >= 0; i--) {
+          const key = sessionStorage.key(i);
+          if (
+            key &&
+            (key.startsWith("chunk_reload") ||
+              key.startsWith("erp_chunk_reload") ||
+              key.startsWith("erp_auto_chunk"))
+          ) {
+            sessionStorage.removeItem(key);
+          }
+        }
+      } catch (e) {}
+
+      if (window.isSecureContext && "serviceWorker" in navigator) {
+        navigator.serviceWorker.getRegistrations().then((regs) => {
+          regs.forEach((reg) => reg.unregister());
+        }).catch(() => {});
+      }
+      if ("caches" in window) {
+        caches.keys().then((keys) => {
+          keys.forEach((key) => caches.delete(key));
+        }).catch(() => {});
+      }
+    }
+  } catch (e) {}
+}
+
+function extractTargetRouteFromChunkError(msg: string): string | null {
+  try {
+    const match = msg.match(/_next\/static\/chunks\/app(\/[^.\?]+?)(?:\/page|\/layout|\/route|-[a-f0-9]+|\.js)/i);
+    if (match && match[1]) {
+      let route = match[1];
+      if (route.endsWith("/page")) route = route.slice(0, -5);
+      if (route.endsWith("/layout")) route = route.slice(0, -7);
+      if (route.endsWith("/route")) route = route.slice(0, -6);
+      return route || "/dashboard";
+    }
+  } catch (e) {}
+  return null;
+}
 
 export default function DashboardError({
   error,
@@ -11,47 +62,91 @@ export default function DashboardError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("Dashboard Route Exception:", error);
+    console.error("Dashboard client-side exception caught:", error);
+    
+    const msg = String(error?.message || error || "");
+    const isChunkError =
+      error?.name === "ChunkLoadError" ||
+      msg.includes("Loading chunk") ||
+      msg.includes("ChunkLoadError") ||
+      msg.includes("failed to fetch") ||
+      msg.includes("Failed to fetch dynamically imported module") ||
+      (msg.toLowerCase().includes("failed to fetch") && msg.includes("_next/static"));
+
+    if (isChunkError) {
+      const countKey = "erp_auto_chunk_cnt";
+      const tsKey = "erp_auto_chunk_ts";
+      const now = Date.now();
+      const lastTs = parseInt(sessionStorage.getItem(tsKey) || "0", 10);
+      let currentCount = parseInt(sessionStorage.getItem(countKey) || "0", 10);
+
+      if (now - lastTs > 15000) {
+        currentCount = 0;
+      }
+
+      if (currentCount < 3) {
+        clearChunkReloadCache();
+        sessionStorage.setItem(countKey, String(currentCount + 1));
+        sessionStorage.setItem(tsKey, String(now));
+        const targetRoute = extractTargetRouteFromChunkError(msg) || window.location.pathname;
+        const cleanRoute = targetRoute.replace(/\/page$/, "");
+        window.location.replace(cleanRoute + (cleanRoute.includes("?") ? "&" : "?") + "_v=" + now);
+        return;
+      }
+    }
   }, [error]);
 
+  const msg = String(error?.message || error || "");
+
+  const handleTryAgain = () => {
+    clearChunkReloadCache();
+    const targetRoute = extractTargetRouteFromChunkError(msg) || window.location.pathname;
+    const cleanRoute = targetRoute.replace(/\/page$/, "");
+    window.location.href = cleanRoute + (cleanRoute.includes("?") ? "&" : "?") + "_t=" + Date.now();
+  };
+
   return (
-    <div className="min-h-[70vh] flex items-center justify-center p-6">
-      <div className="max-w-md w-full rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-lg dark:border-slate-800 dark:bg-slate-900">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400 mb-4">
-          <AlertCircle className="h-7 w-7" />
+    <div className="p-6 max-w-xl mx-auto my-12 text-center">
+      <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400">
+          <AlertCircle className="h-6 w-6" />
         </div>
-        <h2 className="text-lg font-black text-slate-900 dark:text-slate-100">
+        <h3 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">
           Module Temporary Exception
-        </h2>
-        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+        </h3>
+        <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
           This dashboard module encountered a temporary chunk loading error after a system update. Click below to reload fresh assets.
         </p>
-
-        {process.env.NODE_ENV === "development" && (
-          <div className="mt-4 p-3 rounded-lg bg-slate-950 text-left font-mono text-[10px] text-rose-400 overflow-x-auto">
-            {error.message || "Unknown error"}
+        {error && (
+          <div className="mt-4 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 text-left font-mono text-[10.5px] text-rose-600 dark:text-rose-400 overflow-x-auto">
+            {typeof error.message === "string"
+              ? error.message
+              : typeof error.message === "object" && error.message !== null
+              ? JSON.stringify(error.message)
+              : typeof error === "string"
+              ? error
+              : JSON.stringify(error)}
           </div>
         )}
-
-        <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <button
+        <div className="mt-6 flex items-center justify-center gap-3">
+          <Button
             type="button"
-            onClick={() => reset()}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition"
+            onClick={handleTryAgain}
+            className="h-9 bg-blue-600 hover:bg-blue-700 font-bold text-xs gap-1.5"
           >
-            <RefreshCw className="h-4 w-4" />
-            Try Again (Reload)
-          </button>
-          <button
+            <RefreshCcw className="h-3.5 w-3.5" /> Try Again (Reload)
+          </Button>
+          <Button
             type="button"
+            variant="outline"
             onClick={() => {
+              clearChunkReloadCache();
               window.location.href = "/dashboard";
             }}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition"
+            className="h-9 font-bold text-xs gap-1.5"
           >
-            <LayoutDashboard className="h-4 w-4" />
-            Go to Dashboard
-          </button>
+            <LayoutDashboard className="h-3.5 w-3.5" /> Go to Dashboard
+          </Button>
         </div>
       </div>
     </div>
