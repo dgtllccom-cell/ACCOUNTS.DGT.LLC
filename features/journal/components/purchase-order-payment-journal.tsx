@@ -5671,6 +5671,10 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                                   </td>
                                   <td className="px-3 py-2.5 text-right font-mono font-bold text-rose-500">
                                     0.00 {poCurrencyHeader}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-right font-mono font-black text-blue-600 dark:text-blue-400">
+                                    {money(payment.amtUSD, poCurrencyHeader)}
+                                  </td>
                                   <td className="px-3 py-2.5 text-center">
                                     <span className="rounded-full bg-emerald-100 text-emerald-700 px-2 py-0.5 text-[9px] font-black uppercase dark:bg-emerald-950 dark:text-emerald-300">
                                       Posted
