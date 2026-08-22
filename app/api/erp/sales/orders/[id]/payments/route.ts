@@ -1,12 +1,11 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
+import { apiCreated, apiOk, apiError, handleApiError } from "@/lib/api/response";
 import { uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
-import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { withLocalPg } from "@/lib/db/local-postgres";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { assertBalancedPostedLines, assertDistinctBookingLedgers, assertPostedRoznamchaTrace } from "@/lib/services/posting-verification";
 import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
@@ -91,31 +90,25 @@ function buildSalesGoodsAuditRemark(orderRow: any, fallbackReference?: string | 
   return `Sales Bill: ${billNo} | Goods: ${goodsName} | Qty: ${formatAuditNumber(totalQty)}${unit ? ` ${unit}` : ""} | Gross WT: ${formatAuditNumber(grossWeight)} KG | Net WT: ${formatAuditNumber(netWeight)} KG | Sales Price: ${formatAuditNumber(salesAmount)} ${salesCurrency}`;
 }
 
-async function assertLedgerMatchesSalesScope(supabase: any, ledgerId: string, orderRow: any, label: string) {
-  let { data: ledger, error } = await supabase
-    .from("ledgers")
-    .select("id, code, name, country_id, country_branch_id, city_branch_id")
-    .eq("id", ledgerId)
-    .is("deleted_at", null)
-    .maybeSingle();
+async function assertLedgerMatchesSalesScope(sql: any, ledgerId: string, orderRow: any, label: string) {
+  let rows = await sql`
+    select id, code, name, country_id, country_branch_id, city_branch_id
+    from ledgers where id = ${ledgerId}::uuid and deleted_at is null
+  `;
+  let ledger = rows[0];
 
-  if ((error || !ledger) && ledgerId) {
+  if (!ledger && ledgerId) {
     // Compatibility fallback: some callers pass an accounts.id instead of the ledger's own id
     // (ledgers.account_id is a separate FK, not the same UUID as ledgers.id). Resolve the
     // ledger linked to that account rather than failing outright.
-    const byAccount = await supabase
-      .from("ledgers")
-      .select("id, code, name, country_id, country_branch_id, city_branch_id")
-      .eq("account_id", ledgerId)
-      .is("deleted_at", null)
-      .maybeSingle();
-    if (!byAccount.error && byAccount.data) {
-      ledger = byAccount.data;
-      error = null;
-    }
+    const byAccount = await sql`
+      select id, code, name, country_id, country_branch_id, city_branch_id
+      from ledgers where account_id = ${ledgerId}::uuid and deleted_at is null
+    `;
+    if (byAccount[0]) ledger = byAccount[0];
   }
 
-  if (error || !ledger) {
+  if (!ledger) {
     throw new Error(label + " ledger was not found.");
   }
 
@@ -136,15 +129,35 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     const params = paramsSchema.parse(await context.params);
     const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
 
-    const supabase = (await createApiSupabaseClient()) as any;
-    const order = await requireSupabaseData(
-      supabase
-        .from("sales_orders")
-        .select("id, sales_order_no, sales_contract_no, country_id, country_branch_id, city_branch_id, currency_code, exchange_rate, order_total, paid_amount, remaining_amount, form_data, ledger_posting_status, payment_status")
-        .eq("id", params.id)
-        .is("deleted_at", null)
-        .maybeSingle()
-    );
+    // withLocalPg, not the RLS-gated Supabase client — see the POST handler for why.
+    const { order, rows } = (await withLocalPg(async (sql) => {
+      const orderRows = await sql`
+        select id, sales_order_no, sales_contract_no, country_id, country_branch_id, city_branch_id,
+               currency_code, exchange_rate, order_total, paid_amount, remaining_amount, form_data,
+               ledger_posting_status, payment_status
+        from sales_orders where id = ${params.id}::uuid and deleted_at is null
+        limit 1
+      `;
+      const paymentRows = await sql`
+        select
+          p.id, p.sales_order_id, p.payment_kind, p.payment_date, p.amount, p.currency_code, p.exchange_rate,
+          p.roznamcha_entry_id, p.status, p.remarks, p.created_at,
+          case when re.id is not null then jsonb_build_object(
+            'id', re.id,
+            'super_admin_serial_number', re.super_admin_serial_number,
+            'country_transaction_serial_number', re.country_transaction_serial_number,
+            'branch_transaction_serial_number', re.branch_transaction_serial_number,
+            'profiles', case when pr.id is not null then jsonb_build_object('full_name', pr.full_name) else null end
+          ) else null end as roznamcha_entries
+        from sales_order_payments p
+        left join roznamcha_entries re on re.id = p.roznamcha_entry_id
+        left join profiles pr on pr.id = re.created_by
+        where p.sales_order_id = ${params.id}::uuid and p.deleted_at is null
+        order by p.created_at desc
+        limit 200
+      `;
+      return { order: orderRows[0] ?? null, rows: paymentRows };
+    }))!;
 
     authorizeApiScope(session, {
       resource: "sales",
@@ -154,28 +167,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       cityBranchId: (order as any)?.city_branch_id ?? null
     });
 
-    const rows = (await requireSupabaseData(
-      supabase
-        .from("sales_order_payments")
-        .select(`
-          id, sales_order_id, payment_kind, payment_date, amount, currency_code, exchange_rate, 
-          roznamcha_entry_id, status, remarks, created_at,
-          roznamcha_entries (
-            id,
-            super_admin_serial_number,
-            country_transaction_serial_number,
-            branch_transaction_serial_number,
-            profiles!roznamcha_entries_created_by_fkey ( full_name )
-          )
-        `)
-        .eq("sales_order_id", params.id)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false })
-        .limit(200)
-    )) as any[];
-
     const localizedRows = await localizeRecordNames(
-      (rows ?? []) as Array<{ id: string; remarks?: string | null }>,
+      (rows ?? []) as unknown as Array<{ id: string; remarks?: string | null }>,
       "sales_order_payments",
       "remarks",
       lang
@@ -228,15 +221,21 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       throw new Error("Supabase is not configured. Sales posting requires a real Supabase login.");
     }
 
-    const supabase = (await createApiSupabaseClient()) as any;
-    const order = await requireSupabaseData(
-      supabase
-        .from("sales_orders")
-        .select("id, sales_order_no, sales_contract_no, country_id, country_branch_id, city_branch_id, currency_code, exchange_rate, order_total, paid_amount, remaining_amount, form_data, ledger_posting_status, payment_status")
-        .eq("id", params.id)
-        .is("deleted_at", null)
-        .maybeSingle()
-    );
+    // withLocalPg, not the RLS-gated Supabase client (createApiSupabaseClient falls back to a
+    // session-cookie client when no real service-role secret is configured, and the dev
+    // bootstrap login has no real Supabase JWT for RLS to authorize against — same root cause
+    // as the purchase order payments route, same fix). post_sales_booking_transfer is
+    // SECURITY DEFINER and already bypasses RLS internally by design.
+    const order = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        select id, sales_order_no, sales_contract_no, country_id, country_branch_id, city_branch_id,
+               currency_code, exchange_rate, order_total, paid_amount, remaining_amount, form_data,
+               ledger_posting_status, payment_status
+        from sales_orders where id = ${params.id}::uuid and deleted_at is null
+        limit 1
+      `;
+      return rows[0] ?? null;
+    });
 
     authorizeApiScope(session, {
       resource: "sales",
@@ -245,6 +244,10 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       countryBranchId: (order as any)?.country_branch_id ?? null,
       cityBranchId: (order as any)?.city_branch_id ?? null
     });
+
+    if (!order) {
+      return apiError("NOT_FOUND", "Sales order not found.", 404);
+    }
 
     const orderRow = order as any;
     const form = orderRow.form_data?.form || {};
@@ -268,8 +271,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const remainingAdvanceUSD = Math.max(0, requiredAdvanceUSD - paidAmountUSD);
     const tolerance = 0.01;
 
-    const debitLedger = await assertLedgerMatchesSalesScope(supabase, body.debitLedgerId, orderRow, "Debit");
-    const creditLedger = await assertLedgerMatchesSalesScope(supabase, body.creditLedgerId, orderRow, "Credit");
+    const debitLedger = await withLocalPg((sql) => assertLedgerMatchesSalesScope(sql, body.debitLedgerId, orderRow, "Debit")) as any;
+    const creditLedger = await withLocalPg((sql) => assertLedgerMatchesSalesScope(sql, body.creditLedgerId, orderRow, "Credit")) as any;
     // Use the resolved ledger rows' own ids from here on — the client may have sent an
     // accounts.id (see the compatibility fallback above), which is a different UUID.
     const resolvedDebitLedgerId = debitLedger.id;
@@ -312,70 +315,67 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
 
     const effectiveRoznamchaExchangeRate = isForeignCurrency ? Number(body.exchangeRate || 1) : 1;
 
-    // Transaction-safe posting via RPC using the wrapper post_sales_booking_transfer
-    const { data, error } = await supabase.rpc("post_sales_booking_transfer", {
-      p_actor_id: session.userId,
-      p_sales_order_id: params.id,
-      p_payment_kind: body.kind,
-      p_entry_date: body.entryDate,
-      p_amount: body.amount,
-      p_currency_code: body.currencyCode,
-      p_exchange_rate: effectiveRoznamchaExchangeRate,
-      p_debit_ledger_id: resolvedDebitLedgerId,
-      p_credit_ledger_id: resolvedCreditLedgerId,
-      p_reference_no: postingReferenceNo,
-      p_narration: postingNarration || null
-    });
+    // Transaction-safe posting via the SECURITY DEFINER wrapper post_sales_booking_transfer,
+    // called directly over the raw Postgres connection (equivalent to, and more reliable
+    // than, the Supabase RPC call).
+    const { paymentId, paymentRecord, journalRecord, journalLines } = await withLocalPg(async (sql) => {
+      const idRows = await sql`
+        select post_sales_booking_transfer(
+          p_actor_id => ${session.userId}::uuid,
+          p_sales_order_id => ${params.id}::uuid,
+          p_payment_kind => ${body.kind},
+          p_entry_date => ${body.entryDate}::date,
+          p_amount => ${body.amount},
+          p_currency_code => ${body.currencyCode},
+          p_exchange_rate => ${effectiveRoznamchaExchangeRate},
+          p_debit_ledger_id => ${resolvedDebitLedgerId}::uuid,
+          p_credit_ledger_id => ${resolvedCreditLedgerId}::uuid,
+          p_reference_no => ${postingReferenceNo},
+          p_narration => ${postingNarration || null}
+        ) as id
+      `;
+      const paymentId = idRows[0]?.id as string;
 
-    if (error) {
-      throw new Error(error.message);
-    }
+      // 4-level serial (Global/Country/Branch/Entry) — additive metadata only, applied
+      // AFTER the atomic posting RPC. Does NOT touch the posting/ledger/roznamcha logic.
+      try {
+        const s = await allocateFormSerials("payment_sales", { countryId: orderRow.country_id, branchKey: orderRow.country_branch_id ?? orderRow.city_branch_id ?? null });
+        await sql`update sales_order_payments set super_admin_serial = ${s.superAdminSerial}, country_serial = ${s.countrySerial}, branch_serial = ${s.branchSerial}, entry_serial = ${s.entrySerial} where id = ${paymentId}::uuid`;
+      } catch { /* non-fatal — never affects posting */ }
 
-    const paymentId = data as string;
+      const paymentRows = await sql`
+        select id, sales_order_id, payment_kind, amount, currency_code, exchange_rate, roznamcha_entry_id, status
+        from sales_order_payments where id = ${paymentId}::uuid and sales_order_id = ${params.id}::uuid
+        limit 1
+      `;
+      const paymentRecord = paymentRows[0] as any;
 
-    // 4-level serial (Global/Country/Branch/Entry) — additive metadata only, applied
-    // AFTER the atomic posting RPC. Does NOT touch the posting/ledger/roznamcha logic.
-    try {
-      const s = await allocateFormSerials("payment_sales", { countryId: orderRow.country_id, branchKey: orderRow.country_branch_id ?? orderRow.city_branch_id ?? null });
-      await supabase.from("sales_order_payments").update({ super_admin_serial: s.superAdminSerial, country_serial: s.countrySerial, branch_serial: s.branchSerial, entry_serial: s.entrySerial }).eq("id", paymentId);
-    } catch { /* non-fatal — never affects posting */ }
+      let rozType = "super_admin";
+      if (orderRow.city_branch_id) rozType = "branch";
+      else if (orderRow.country_branch_id || orderRow.country_id) rozType = "country";
 
-    // Retrieve ledger entry to extract serial numbers and profile information
-    const paymentRecord = await requireSupabaseData(
-      supabase
-        .from("sales_order_payments")
-        .select("id, sales_order_id, payment_kind, amount, currency_code, exchange_rate, roznamcha_entry_id, status")
-        .eq("id", paymentId)
-        .eq("sales_order_id", params.id)
-        .maybeSingle()
-    ) as any;
+      await sql`
+        update roznamcha_entries set
+          country_id = ${orderRow.country_id || null}::uuid,
+          country_branch_id = ${orderRow.country_branch_id || null}::uuid,
+          city_branch_id = ${orderRow.city_branch_id || null}::uuid,
+          type = ${rozType}
+        where id = ${paymentRecord.roznamcha_entry_id}::uuid
+      `;
 
-    let rozType = "super_admin";
-    if (orderRow.city_branch_id) rozType = "branch";
-    else if (orderRow.country_branch_id || orderRow.country_id) rozType = "country";
+      const journalRows = await sql`
+        select id, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number
+        from roznamcha_entries where id = ${paymentRecord.roznamcha_entry_id}::uuid
+        limit 1
+      `;
+      const journalRecord = journalRows[0] as any;
 
-    const adminSupabase = createSupabaseAdminClient() as any;
-    await adminSupabase.from("roznamcha_entries").update({
-      country_id: orderRow.country_id || null,
-      country_branch_id: orderRow.country_branch_id || null,
-      city_branch_id: orderRow.city_branch_id || null,
-      type: rozType
-    }).eq("id", paymentRecord.roznamcha_entry_id);
+      const journalLines = await sql`
+        select ledger_id, debit, credit from roznamcha_lines where roznamcha_entry_id = ${paymentRecord.roznamcha_entry_id}::uuid
+      `;
 
-    const journalRecord = await requireSupabaseData(
-      supabase
-        .from("roznamcha_entries")
-        .select("id, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number")
-        .eq("id", paymentRecord.roznamcha_entry_id)
-        .maybeSingle()
-    ) as any;
-
-    const journalLines = await requireSupabaseData(
-      supabase
-        .from("roznamcha_lines")
-        .select("ledger_id, debit, credit")
-        .eq("roznamcha_entry_id", paymentRecord.roznamcha_entry_id)
-    ) as any[];
+      return { paymentId, paymentRecord, journalRecord, journalLines };
+    }) as any;
 
     const exRate = Number(body.exchangeRate || (orderRow as any)?.exchange_rate || 1) || 1;
     assertDistinctBookingLedgers(resolvedDebitLedgerId, resolvedCreditLedgerId, "Sales payment");
@@ -418,39 +418,35 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     };
 
     // Update order row details
-    await requireSupabaseData(
-      supabase
-        .from("sales_orders")
-        .update({
-          form_data: {
-            ...(orderRow.form_data || {}),
-            workflow: postedWorkflow,
-            lastPaymentTrace: {
-              paymentId,
-              roznamchaEntryId: paymentRecord.roznamcha_entry_id,
-              debitLedgerId: resolvedDebitLedgerId,
-              creditLedgerId: resolvedCreditLedgerId,
-              originalCurrencyCode: body.currencyCode,
-              currencyName: body.currencyCode,
-              exchangeRate: body.exchangeRate,
-              superAdminSerialNumber: journalRecord.super_admin_serial_number,
-              countryTransactionSerialNumber: journalRecord.country_transaction_serial_number,
-              branchTransactionSerialNumber: journalRecord.branch_transaction_serial_number,
-              systemBillNumber: trace.systemBillNumber,
-              manualBillNumber: trace.manualBillNumber,
-              partyName: trace.partyName,
-              referenceNo: postingReferenceNo,
-              narration: postingNarration,
-              debitLedgerCode: debitLedger.code,
-              creditLedgerCode: creditLedger.code
-            }
-          },
-          updated_at: new Date().toISOString()
-        })
-        .eq("id", params.id)
-        .select("id")
-        .single()
-    );
+    await withLocalPg(async (sql) => {
+      const nextFormData = {
+        ...(orderRow.form_data || {}),
+        workflow: postedWorkflow,
+        lastPaymentTrace: {
+          paymentId,
+          roznamchaEntryId: paymentRecord.roznamcha_entry_id,
+          debitLedgerId: resolvedDebitLedgerId,
+          creditLedgerId: resolvedCreditLedgerId,
+          originalCurrencyCode: body.currencyCode,
+          currencyName: body.currencyCode,
+          exchangeRate: body.exchangeRate,
+          superAdminSerialNumber: journalRecord.super_admin_serial_number,
+          countryTransactionSerialNumber: journalRecord.country_transaction_serial_number,
+          branchTransactionSerialNumber: journalRecord.branch_transaction_serial_number,
+          systemBillNumber: trace.systemBillNumber,
+          manualBillNumber: trace.manualBillNumber,
+          partyName: trace.partyName,
+          referenceNo: postingReferenceNo,
+          narration: postingNarration,
+          debitLedgerCode: debitLedger.code,
+          creditLedgerCode: creditLedger.code
+        }
+      };
+      await sql`
+        update sales_orders set form_data = ${sql.json(nextFormData)}, updated_at = now()
+        where id = ${params.id}::uuid
+      `;
+    });
 
     const resPayload = {
       paymentId,

@@ -299,7 +299,7 @@ export async function transferPurchaseBookingViaLocalPg(input: {
             advance_paid = ${existingAdvance},
             remaining_due = ${newRemainingDue},
             updated_at = ${now},
-            form_data = ${JSON.stringify(updatedFormData)}::jsonb
+            form_data = ${tx.json(updatedFormData)}
         where id = ${orderId}::uuid
       `;
 

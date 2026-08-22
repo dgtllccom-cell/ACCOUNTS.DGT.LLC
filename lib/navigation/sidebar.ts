@@ -562,19 +562,24 @@ export const sidebarTree: SidebarNode[] = [
             href: "/dashboard/purchase/new-purchase-booking-order" as Route
           },
           {
-            key: "country-local-purchase",
-            labelKey: "nav.country_local_purchase",
-            href: "/dashboard/purchase/local-purchase" as Route
-          },
-          {
             key: "country-transfer",
             labelKey: "nav.country_transfer",
+            href: "/dashboard/purchase/country-transfer" as Route
+          },
+          {
+            key: "country-transport-loading",
+            labelKey: "nav.country_transport_loading",
             href: "/dashboard/purchase/purchase-loading-records" as Route
           },
           {
-            key: "country-loading",
-            labelKey: "nav.country_loading",
-            href: "/dashboard/purchase/purchase-loading-records" as Route
+            key: "country-receiving",
+            labelKey: "nav.country_receiving",
+            href: "/dashboard/purchase/purchase-loading-records?focus=receiving" as Route
+          },
+          {
+            key: "country-reports",
+            labelKey: "nav.country_reports",
+            href: "/dashboard/purchase/country-purchase-reports" as Route
           }
         ]
       }

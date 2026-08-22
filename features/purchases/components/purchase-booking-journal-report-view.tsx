@@ -1599,28 +1599,45 @@ export function PurchaseBookingJournalReportView({
     });
 
     return filtered.sort((a, b) => {
-      const isPostedA = a.status === "Posted"
-        || (a as any).ledgerPostingStatus === "Posted"
-        || (a as any).ledger_posting_status === "Posted"
-        || (a as any).ledger_posting_status === "posted"
-        || (a as any).journalStatus === "Posted"
+      const isPostedA = 
+        String(a.status || "").toLowerCase() === "posted"
+        || String(a.status || "").toLowerCase() === "transferred"
+        || String(a.status || "").toLowerCase() === "completed"
+        || String((a as any).ledgerPostingStatus || "").toLowerCase() === "posted"
+        || String((a as any).ledger_posting_status || "").toLowerCase() === "posted"
+        || String((a as any).ledgerPostingStatus || "").toLowerCase() === "transferred"
+        || String((a as any).ledger_posting_status || "").toLowerCase() === "transferred"
         || String((a as any).journalStatus || "").toLowerCase() === "posted"
-        || a.form_data?.workflow?.journalStatus === "Posted"
+        || String((a as any).journalStatus || "").toLowerCase() === "transferred"
         || String(a.form_data?.workflow?.journalStatus || "").toLowerCase() === "posted"
-        || (a as any).ledger_posting_status === "transferred";
+        || String(a.form_data?.workflow?.journalStatus || "").toLowerCase() === "transferred"
+        || (a as any).is_transferred === true
+        || a.form_data?.workflow?.is_transferred === true;
       
-      const isPostedB = b.status === "Posted"
-        || (b as any).ledgerPostingStatus === "Posted"
-        || (b as any).ledger_posting_status === "Posted"
-        || (b as any).ledger_posting_status === "posted"
-        || (b as any).journalStatus === "Posted"
+      const isPostedB = 
+        String(b.status || "").toLowerCase() === "posted"
+        || String(b.status || "").toLowerCase() === "transferred"
+        || String(b.status || "").toLowerCase() === "completed"
+        || String((b as any).ledgerPostingStatus || "").toLowerCase() === "posted"
+        || String((b as any).ledger_posting_status || "").toLowerCase() === "posted"
+        || String((b as any).ledgerPostingStatus || "").toLowerCase() === "transferred"
+        || String((b as any).ledger_posting_status || "").toLowerCase() === "transferred"
         || String((b as any).journalStatus || "").toLowerCase() === "posted"
-        || b.form_data?.workflow?.journalStatus === "Posted"
+        || String((b as any).journalStatus || "").toLowerCase() === "transferred"
         || String(b.form_data?.workflow?.journalStatus || "").toLowerCase() === "posted"
-        || (b as any).ledger_posting_status === "transferred";
+        || String(b.form_data?.workflow?.journalStatus || "").toLowerCase() === "transferred"
+        || (b as any).is_transferred === true
+        || b.form_data?.workflow?.is_transferred === true;
 
-      if (isPostedA === isPostedB) return 0;
-      return isPostedA ? 1 : -1;
+      // Untransferred / Pending (Red) come first at TOP (-1)
+      // Transferred / Posted (Black) come last at BOTTOM (1)
+      if (isPostedA !== isPostedB) {
+        return isPostedA ? 1 : -1;
+      }
+
+      const dateA = new Date(a.bookingDate || a.purchaseDate || a.createdAt || 0).getTime();
+      const dateB = new Date(b.bookingDate || b.purchaseDate || b.createdAt || 0).getTime();
+      return dateB - dateA;
     });
   }, [filters.branch, filters.country, filters.currency, filters.draftStatus, filters.status, filters.supplier, searchText, sourceReports]);
 
@@ -2363,46 +2380,31 @@ export function PurchaseBookingJournalReportView({
                   const bookingDateStr = formatShortDate(report.bookingDate || report.purchaseDate);
                   const totalAmountNum = Number(report.totalPurchaseAmount || report.purchaseAmount || 0);
 
-                  const isPosted = report.status === "Posted"
-                    || (report as any).ledgerPostingStatus === "Posted"
-                    || (report as any).ledger_posting_status === "Posted"
-                    || (report as any).ledgerPostingStatus === "Transferred"
-                    || (report as any).ledger_posting_status === "Transferred"
+                  const isPosted = 
+                    String(report.status || "").toLowerCase() === "posted"
+                    || String(report.status || "").toLowerCase() === "transferred"
+                    || String(report.status || "").toLowerCase() === "completed"
+                    || String((report as any).ledgerPostingStatus || "").toLowerCase() === "posted"
+                    || String((report as any).ledger_posting_status || "").toLowerCase() === "posted"
+                    || String((report as any).ledgerPostingStatus || "").toLowerCase() === "transferred"
+                    || String((report as any).ledger_posting_status || "").toLowerCase() === "transferred"
+                    || String((report as any).journalStatus || "").toLowerCase() === "posted"
+                    || String((report as any).journalStatus || "").toLowerCase() === "transferred"
+                    || String(report.form_data?.workflow?.journalStatus || "").toLowerCase() === "posted"
+                    || String(report.form_data?.workflow?.journalStatus || "").toLowerCase() === "transferred"
                     || (report as any).is_transferred === true
-                    || report.status === "Transferred"
-                    || report.status === "transferred";
+                    || report.form_data?.workflow?.is_transferred === true;
 
-                  const isAccepted = !isPosted && (
-                    report.status === "Accepted"
-                    || report.status === "BOOKING CONFIRMED"
-                    || report.confirmationStatus === "Confirmed"
-                    || report.form_data?.workflow?.confirmationStatus === "Confirmed"
-                    || report.form_data?.workflow?.lifecycleStatus === "Accepted"
-                    || (report.status !== "Draft" && report.status !== "draft" && report.status !== "Open")
-                  );
+                  let statusLabel = t(activeLang, "pb_register.accepted_not_transferred", "Accepted (Not Transferred)");
+                  let statusBadgeClass = "bg-red-600 text-white border-red-700 font-black shadow-sm";
+                  let rowBgClass = "bg-red-50/80 text-red-600 font-bold dark:bg-red-950/30 dark:text-red-400 border-l-4 border-l-red-600";
+                  let rowTextColor = "text-red-600 font-bold dark:text-red-400";
 
-                  const isCompleted = report.status === "Completed" || report.status === "completed";
-
-                  let statusLabel = t(activeLang, "pb_register.status_draft", "Draft");
-                  let statusBadgeClass = "bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300";
-                  let rowBgClass = "bg-white text-slate-900 font-semibold dark:bg-slate-950 dark:text-slate-100";
-                  let rowTextColor = "text-slate-900 font-semibold";
-
-                  if (isCompleted) {
-                    statusLabel = t(activeLang, "pb_register.status_completed", "Completed");
-                    statusBadgeClass = "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 font-bold";
-                    rowBgClass = "bg-white text-slate-900 font-bold dark:bg-slate-950 dark:text-slate-100";
-                    rowTextColor = "text-slate-900 font-bold";
-                  } else if (isPosted) {
+                  if (isPosted) {
                     statusLabel = t(activeLang, "pb_register.status_transferred", "Transferred");
                     statusBadgeClass = "bg-slate-900 text-white border-slate-900 dark:bg-slate-100 dark:text-slate-900 font-black";
-                    rowBgClass = "bg-white text-slate-900 font-bold dark:bg-slate-950 dark:text-slate-100";
-                    rowTextColor = "text-slate-900 font-bold";
-                  } else if (isAccepted) {
-                    statusLabel = t(activeLang, "pb_register.accepted_not_transferred", "Accepted (Not Transferred)");
-                    statusBadgeClass = "bg-red-600 text-white border-red-700 font-black shadow-sm";
-                    rowBgClass = "bg-red-50/80 text-red-600 font-bold dark:bg-red-950/30 dark:text-red-400 border-l-4 border-l-red-600";
-                    rowTextColor = "text-red-600 font-bold";
+                    rowBgClass = "bg-white text-slate-900 font-bold hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-100";
+                    rowTextColor = "text-slate-900 font-bold dark:text-slate-100";
                   }
 
                   const userName = report.audit?.userName || (report as any).createdByName || "ADMIN";
@@ -2417,7 +2419,7 @@ export function PurchaseBookingJournalReportView({
                       )}
                     >
                       <Td center className={cn("font-bold text-[10px]", rowTextColor)}>{srNo}</Td>
-                      <Td center className={cn("font-mono font-bold text-[10px]", isAccepted ? "text-red-600 font-black" : "text-blue-600 dark:text-blue-400")}>{sysBillNo}</Td>
+                      <Td center className={cn("font-mono font-bold text-[10px]", !isPosted ? "text-red-600 font-black" : "text-slate-900 dark:text-slate-100")}>{sysBillNo}</Td>
                       <Td center className={cn("font-mono text-[10px]", rowTextColor)}>{manualBillNo}</Td>
                       <Td className={cn("text-[10px] whitespace-nowrap", rowTextColor)}>
                         <span className="mr-1.5">{countryFlag}</span>
@@ -2428,13 +2430,13 @@ export function PurchaseBookingJournalReportView({
                       <Td className={cn("font-mono text-[10px] whitespace-nowrap", rowTextColor)}>{purchaseAcc}</Td>
                       <Td className={cn("font-mono text-[10px] whitespace-nowrap", rowTextColor)}>{salesAcc}</Td>
                       <Td center className={cn("font-semibold whitespace-nowrap text-[10px]", rowTextColor)}>{bookingDateStr}</Td>
-                      <Td right className={cn("font-mono font-bold text-[10px]", isAccepted ? "text-red-600 font-black" : "text-slate-900")}>{formatMoney(totalAmountNum)}</Td>
+                      <Td right className={cn("font-mono font-bold text-[10px]", !isPosted ? "text-red-600 font-black" : "text-slate-900 dark:text-slate-100")}>{formatMoney(totalAmountNum)}</Td>
                       <Td center>
                         <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-[9px] uppercase tracking-wider ${statusBadgeClass}`}>
                           {statusLabel}
                         </span>
                       </Td>
-                      <Td center className={cn("font-bold text-[10px] uppercase", isAccepted ? "text-red-600 font-black" : "text-slate-700 dark:text-slate-300")}>{userName}</Td>
+                      <Td center className={cn("font-bold text-[10px] uppercase", !isPosted ? "text-red-600 font-black" : "text-slate-700 dark:text-slate-300")}>{userName}</Td>
                       <Td center onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-center gap-1">
                           {(!isPosted || isSuperAdmin || isCountryAdmin) && <button
@@ -2723,28 +2725,25 @@ export function PurchaseBookingJournalReportView({
                 const ctyName = report.countryName || report.form_data?.form?.countryName || (report as any).country_name || "UAE";
                 const brName = report.branchName || report.form_data?.form?.branchName || (report as any).city_branch_name || (report as any).branch_name || "-";
 
-                const isPosted = report.status === "Posted"
-                  || (report as any).ledgerPostingStatus === "Posted"
-                  || (report as any).ledger_posting_status === "Posted"
-                  || (report as any).ledgerPostingStatus === "Transferred"
-                  || (report as any).ledger_posting_status === "Transferred"
+                const isPosted = 
+                  String(report.status || "").toLowerCase() === "posted"
+                  || String(report.status || "").toLowerCase() === "transferred"
+                  || String(report.status || "").toLowerCase() === "completed"
+                  || String((report as any).ledgerPostingStatus || "").toLowerCase() === "posted"
+                  || String((report as any).ledger_posting_status || "").toLowerCase() === "posted"
+                  || String((report as any).ledgerPostingStatus || "").toLowerCase() === "transferred"
+                  || String((report as any).ledger_posting_status || "").toLowerCase() === "transferred"
+                  || String((report as any).journalStatus || "").toLowerCase() === "posted"
+                  || String((report as any).journalStatus || "").toLowerCase() === "transferred"
+                  || String(report.form_data?.workflow?.journalStatus || "").toLowerCase() === "posted"
+                  || String(report.form_data?.workflow?.journalStatus || "").toLowerCase() === "transferred"
                   || (report as any).is_transferred === true
-                  || report.status === "Transferred"
-                  || report.status === "transferred";
+                  || report.form_data?.workflow?.is_transferred === true;
 
-                const isAccepted = !isPosted && (
-                  report.status === "Accepted"
-                  || report.status === "BOOKING CONFIRMED"
-                  || report.confirmationStatus === "Confirmed"
-                  || report.form_data?.workflow?.confirmationStatus === "Confirmed"
-                  || report.form_data?.workflow?.lifecycleStatus === "Accepted"
-                  || (report.status !== "Draft" && report.status !== "draft" && report.status !== "Open")
-                );
-
-                const rowBgClass = isAccepted
-                  ? "bg-red-50/80 text-red-600 font-bold hover:bg-red-100/90 border-l-4 border-l-red-600"
-                  : "bg-white text-slate-900 font-bold hover:bg-slate-100";
-                const rowTextColor = isAccepted ? "text-red-600 font-bold" : "text-slate-900 font-bold";
+                const rowBgClass = isPosted
+                  ? "bg-white text-slate-900 font-bold hover:bg-slate-50 dark:bg-slate-950 dark:text-slate-100"
+                  : "bg-red-50/80 text-red-600 font-bold hover:bg-red-100/90 border-l-4 border-l-red-600 dark:bg-red-950/30 dark:text-red-400";
+                const rowTextColor = isPosted ? "text-slate-900 font-bold dark:text-slate-100" : "text-red-600 font-bold dark:text-red-400";
 
                 const f = report.form_data?.form || {};
                 const exRate = Number(report.exchange_rate || f.exchangeRate || g0?.exchangeRate || 1);
@@ -2803,8 +2802,8 @@ export function PurchaseBookingJournalReportView({
                     <Td className={cn("text-[10px]", rowTextColor)}>{trField(report, "receivedCountry", rcvCountry)}</Td>
                     <Td className={cn("text-[10px]", rowTextColor)}>{rcvPort}</Td>
                     <Td center className={cn("text-[10px]", rowTextColor)}>{rcvDate}</Td>
-                    <Td center><span className={cn("rounded px-2 py-0.5 text-[8px] font-bold", isAccepted ? "bg-red-100 text-red-700 border border-red-300" : "bg-emerald-50 text-emerald-700")}>{isAccepted ? "NO (PENDING)" : "YES"}</span></Td>
-                    <Td center><span className={cn("rounded px-2 py-0.5 text-[8px] font-semibold", isAccepted ? "bg-red-100 text-red-800" : "bg-slate-50 text-slate-700")}>{isAccepted ? t(activeLang, "pb_register.status_accepted", "Accepted") : "Confirmed"}</span></Td>
+                    <Td center><span className={cn("rounded px-2 py-0.5 text-[8px] font-bold", !isPosted ? "bg-red-100 text-red-700 border border-red-300" : "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-black")}>{!isPosted ? "NO (PENDING)" : "YES (TRANSFERRED)"}</span></Td>
+                    <Td center><span className={cn("rounded px-2 py-0.5 text-[8px] font-semibold", !isPosted ? "bg-red-100 text-red-800" : "bg-slate-100 text-slate-800 font-bold")}>{!isPosted ? t(activeLang, "pb_register.status_accepted", "Accepted (Not Transferred)") : t(activeLang, "pb_register.status_transferred", "Transferred")}</span></Td>
                     <Td center><span className="rounded bg-slate-50 text-slate-700 px-2 py-0.5 text-[8px]">{payStatus}</span></Td>
                     <Td center><span className="rounded bg-slate-50 text-slate-700 px-2 py-0.5 text-[8px]">{loadStatus}</span></Td>
                     <Td center onClick={(e) => e.stopPropagation()}>

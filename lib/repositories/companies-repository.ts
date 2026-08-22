@@ -302,9 +302,9 @@ export class CompaniesRepository {
             ${(payload.area_name as string) || null},
             ${(payload.zip_code as string) || null},
             ${(payload.address as string) || null},
-            ${JSON.stringify(payload.contacts || [])}::jsonb,
-            ${JSON.stringify(payload.registrations || [])}::jsonb,
-            ${JSON.stringify(payload.owner_ids || [])}::jsonb,
+            ${localSql.json((payload.contacts || []) as any)},
+            ${localSql.json((payload.registrations || []) as any)},
+            ${localSql.json((payload.owner_ids || []) as any)},
             true, ${now}, ${now}
           )
           RETURNING id
@@ -357,9 +357,9 @@ export class CompaniesRepository {
             area_name = COALESCE(${payload.area_name !== undefined ? (payload.area_name as string) : null}, area_name),
             zip_code = COALESCE(${payload.zip_code !== undefined ? (payload.zip_code as string) : null}, zip_code),
             address = COALESCE(${payload.address !== undefined ? (payload.address as string) : null}, address),
-            contacts = COALESCE(${payload.contacts !== undefined ? JSON.stringify(payload.contacts) : null}::jsonb, contacts),
-            registrations = COALESCE(${payload.registrations !== undefined ? JSON.stringify(payload.registrations) : null}::jsonb, registrations),
-            owner_ids = COALESCE(${payload.owner_ids !== undefined ? JSON.stringify(payload.owner_ids) : null}::jsonb, owner_ids),
+            contacts = COALESCE(${payload.contacts !== undefined ? localSql.json(payload.contacts as any) : null}, contacts),
+            registrations = COALESCE(${payload.registrations !== undefined ? localSql.json(payload.registrations as any) : null}, registrations),
+            owner_ids = COALESCE(${payload.owner_ids !== undefined ? localSql.json(payload.owner_ids as any) : null}, owner_ids),
             is_active = COALESCE(${payload.is_active !== undefined ? Boolean(payload.is_active) : null}, is_active),
             updated_at = ${now}
           WHERE id = ${id}::uuid AND deleted_at IS NULL

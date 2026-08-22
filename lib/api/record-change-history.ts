@@ -35,7 +35,7 @@ export async function writeRecordChangeHistory(input: {
   const viaPg = await withLocalPg(async (sql) => {
     await sql`
       INSERT INTO public.record_change_history (record_table, record_id, action, country_id, city_branch_id, actor_id, approval_request_id, before_data, after_data)
-      VALUES (${row.record_table}, ${row.record_id}::uuid, ${row.action}, ${row.country_id}::uuid, ${row.city_branch_id}::uuid, ${row.actor_id}::uuid, ${row.approval_request_id}::uuid, ${beforeData === null ? null : JSON.stringify(beforeData)}::jsonb, ${afterData === null ? null : JSON.stringify(afterData)}::jsonb)
+      VALUES (${row.record_table}, ${row.record_id}::uuid, ${row.action}, ${row.country_id}::uuid, ${row.city_branch_id}::uuid, ${row.actor_id}::uuid, ${row.approval_request_id}::uuid, ${beforeData === null ? null : sql.json(beforeData as any)}, ${afterData === null ? null : sql.json(afterData as any)})
     `;
     return true;
   });

@@ -138,6 +138,11 @@ const nextConfig: NextConfig = {
         destination: "/dashboard/purchase",
         permanent: false,
       },
+      {
+        source: "/dashboard/purchase/purchase-booking-demo",
+        destination: "/dashboard/purchase/new-purchase-booking-order",
+        permanent: false,
+      },
     ];
   },
   async headers() {

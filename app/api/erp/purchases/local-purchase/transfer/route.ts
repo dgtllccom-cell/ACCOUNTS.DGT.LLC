@@ -359,7 +359,7 @@ export async function POST(request: NextRequest) {
               ${null},
               ${journalSerialNo},
               ${`Local Purchase: ${purchase.goods_name} - ${purchase.supplier_name || "Local Vendor"} | ${postingCurrency} ${finalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} [${purchase.payment_mode || "Cash"}]`},
-              ${JSON.stringify(lines)}::jsonb
+              ${tx.json(lines)}
             ) as id;
           `;
           roznamchaEntryId = String(createdRoznamchaRows[0]?.id ?? "");

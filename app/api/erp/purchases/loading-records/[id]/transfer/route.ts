@@ -159,7 +159,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
           set
             loading_status = ${loadingStatus},
             shipment_status = ${shipmentStatus},
-            report_payload = ${JSON.stringify(updatedPayload)}::jsonb,
+            report_payload = ${tx.json(updatedPayload)},
             updated_at = now()
           where id = ${params.id}::uuid;
         `;
@@ -185,7 +185,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
             form_data = jsonb_set(
               coalesce(form_data, '{}'::jsonb),
               '{workflow}',
-              ${JSON.stringify(workflow)}::jsonb,
+              ${tx.json(workflow)},
               true
             ),
             updated_at = now()

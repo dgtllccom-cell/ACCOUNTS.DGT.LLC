@@ -262,6 +262,7 @@ export function LoginForm({ lang: initialLang }: { lang?: SupportedLanguage }) {
                 if (typeof window !== "undefined") {
                   try {
                     localStorage.setItem("erp_lang", l.code);
+                    document.cookie = `erp_lang=${encodeURIComponent(l.code)}; Path=/; Max-Age=${60 * 60 * 24 * 365}; SameSite=Lax`;
                     const isRtl = ["ar", "ur", "fa", "ps"].includes(l.code);
                     document.documentElement.lang = l.code;
                     document.documentElement.dir = isRtl ? "rtl" : "ltr";

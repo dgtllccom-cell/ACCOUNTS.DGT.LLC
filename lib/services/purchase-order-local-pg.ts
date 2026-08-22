@@ -36,7 +36,7 @@ async function saveTranslations(tx: any, input: {
         ${verified.translations.ar ?? null},
         ${verified.translations.fa ?? null},
         ${verified.translations.ps ?? null},
-        ${JSON.stringify(verified.translations)}::jsonb,
+        ${tx.json(verified.translations)},
         ${input.source ?? "auto"},
         ${verified.status},
         ${verified.engine},

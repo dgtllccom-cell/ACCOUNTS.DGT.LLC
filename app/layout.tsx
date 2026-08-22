@@ -58,8 +58,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   } catch {}
   try {
     const rtl = new Set(['ar','ur','fa','ps']);
+    const allowedLangs = new Set(['en','ar','ur','fa','ps']);
+    // The cookie (erp_lang) is what server components read via getRequestLanguage() to
+    // decide what language to fetch/render page data in — it is the only language source
+    // visible to SSR. localStorage is a client-only cache. If the two ever drift apart
+    // (localStorage cleared, a new browser profile/tab, manual edits) the page would
+    // render with server-fetched data in one language and client-rendered chrome in
+    // another. Treat the cookie as authoritative and self-heal localStorage to match it
+    // on every load, so there is exactly one active-language source in practice.
+    var cookieMatch = document.cookie.match(/(?:^|; )erp_lang=([^;]*)/);
+    var cookieLang = cookieMatch ? decodeURIComponent(cookieMatch[1]) : null;
     const storedLang = localStorage.getItem('erp_lang');
-    const lang = storedLang || 'en';
+    const lang = (cookieLang && allowedLangs.has(cookieLang)) ? cookieLang
+      : (storedLang && allowedLangs.has(storedLang)) ? storedLang
+      : 'en';
+    if (storedLang !== lang) localStorage.setItem('erp_lang', lang);
+    if (cookieLang !== lang) document.cookie = 'erp_lang=' + encodeURIComponent(lang) + '; Path=/; Max-Age=' + (60 * 60 * 24 * 365) + '; SameSite=Lax';
     document.documentElement.lang = lang;
     document.documentElement.dir = rtl.has(lang) ? 'rtl' : 'ltr';
     if (rtl.has(lang)) {

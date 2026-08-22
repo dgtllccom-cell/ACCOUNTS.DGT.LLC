@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import { useSearchParams } from "next/navigation";
 import { openLoadingRecordsPrintReport } from "@/lib/reports/open-loading-records-print-report";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Download, FileText, Link2, MoreVertical, Plus, Printer, RefreshCcw, Search, Ship, Building2, ArrowDownLeft, ArrowUpRight, Pencil, Trash2, ChevronDown, ChevronRight } from "lucide-react";
@@ -2522,6 +2523,11 @@ function emptyForm() {
 export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: string }) {
   const activeLang = useActiveLanguage();
   const tt = buildTt(activeLang);
+  const searchParams = useSearchParams();
+  // Country Receiving nav entry links here with ?focus=receiving — same page, same data,
+  // just pre-filtered to the records that still have something left to receive, instead of
+  // building a second, parallel "receiving" system.
+  const receivingFocus = searchParams?.get("focus") === "receiving";
   const [actionsSlot, setActionsSlot] = useState<Element | null>(null);
 
   useEffect(() => {
@@ -2713,6 +2719,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
     const q = query.trim().toLowerCase();
     return records.filter((record) => {
       if (status !== "all" && record.loading_status !== status) return false;
+      if (receivingFocus && !RECEIVABLE_STATUSES.has(String(record.loading_status || ""))) return false;
       if (!q) return true;
       return [
         record.loading_record_no,
@@ -2726,7 +2733,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(q));
     });
-  }, [query, records, status]);
+  }, [query, records, status, receivingFocus]);
 
   async function loadRecords() {
     setLoading(true);
