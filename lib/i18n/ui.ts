@@ -1,5 +1,4 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
-import { translationPendingLabel } from "@/lib/i18n/verified-record-translations";
 
 export type UiKey =
   | "nav.super_admin_menu"
@@ -22237,7 +22236,11 @@ export function t(lang: SupportedLanguage | string | null | undefined, key: stri
   const dict = dictionaries[safeLang] || dictionaries.en;
   const localized = dict?.[dictKey];
   if (localized) return localized;
-  if (safeLang !== "en") return translationPendingLabel(safeLang);
-  return en[dictKey] ?? defaultValue ?? key;
+  // A missing dictionary entry must never surface as a literal "Translation pending" string
+  // to a real user — that was strictly worse than the honest English fallback the caller
+  // already provided. Fall back to the caller's defaultValue, then the English dict entry,
+  // then the raw key — same graceful-degradation contract every other resolver in this
+  // codebase (translateHeader, localizeRecordNames) already follows.
+  return defaultValue ?? en[dictKey] ?? key;
 }
 
