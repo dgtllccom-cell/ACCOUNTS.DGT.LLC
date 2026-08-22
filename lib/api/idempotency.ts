@@ -120,7 +120,42 @@ export async function acquireIdempotencyLock(options: IdempotencyOptions): Promi
       return { acquired: false, isReplayed: false, idempotencyKey: key, tenantHash };
     }
 
-    // Fallback: Direct DB query if RPC is not yet applied
+    // Fallback: Direct DB query if RPC is not yet applied.
+    //
+    // This MUST be a plain INSERT relying on the (tenant_hash, idempotency_key) unique index to
+    // atomically reject a concurrent duplicate — not a SELECT-then-upsert. Two requests carrying
+    // the same idempotency key can arrive genuinely concurrently (a double-click, or a client
+    // retry racing the original), and a SELECT-then-upsert has a window between the two where
+    // both callers see "no existing lock" and both proceed to acquire=true, defeating the whole
+    // point of idempotency (verified: this exact race let two identical sales-payment POSTs both
+    // post as separate accounting entries in testing). unique_violation (23505) on the insert is
+    // the atomic signal that someone else already holds — or held — the lock.
+    const expiresAt = new Date(Date.now() + 90 * 1000).toISOString();
+    const { error: insertError } = await (admin as any).from("idempotency_keys").insert({
+      idempotency_key: key,
+      tenant_hash: tenantHash,
+      scope_module: options.scopeModule,
+      user_id: options.userId || null,
+      country_id: options.countryId || null,
+      city_branch_id: options.cityBranchId || null,
+      business_reference: options.businessReference || null,
+      request_hash: requestHash,
+      status: "PROCESSING",
+      locked_at: new Date().toISOString(),
+      expires_at: expiresAt
+    });
+
+    if (!insertError) {
+      return { acquired: true, isReplayed: false, idempotencyKey: key, tenantHash };
+    }
+
+    if (insertError.code !== "23505") {
+      // Unexpected DB error (not a conflict) — fail open rather than block business operations.
+      console.error("[Idempotency] Unexpected insert error:", insertError);
+      return { acquired: true, isReplayed: false, idempotencyKey: key, tenantHash };
+    }
+
+    // Someone else holds (or held) this key. Inspect it.
     const { data: existing } = await (admin as any)
       .from("idempotency_keys")
       .select("*")
@@ -128,43 +163,47 @@ export async function acquireIdempotencyLock(options: IdempotencyOptions): Promi
       .eq("idempotency_key", key)
       .maybeSingle();
 
-    if (existing) {
-      if (existing.status === "COMPLETED") {
-        return {
-          acquired: false,
-          isReplayed: true,
-          idempotencyKey: key,
-          tenantHash,
-          responseCode: existing.response_code || 200,
-          responseBody: existing.response_body || { ok: true, isReplayed: true }
-        };
-      }
-      const isLockExpired = new Date(existing.expires_at).getTime() < Date.now();
-      if (existing.status === "PROCESSING" && !isLockExpired) {
-        return { acquired: false, isReplayed: false, idempotencyKey: key, tenantHash };
-      }
+    if (existing?.status === "COMPLETED") {
+      return {
+        acquired: false,
+        isReplayed: true,
+        idempotencyKey: key,
+        tenantHash,
+        responseCode: existing.response_code || 200,
+        responseBody: existing.response_body || { ok: true, isReplayed: true }
+      };
     }
 
-    // Insert or update processing lock
-    const expiresAt = new Date(Date.now() + 90 * 1000).toISOString();
-    await (admin as any).from("idempotency_keys").upsert(
-      {
-        idempotency_key: key,
-        tenant_hash: tenantHash,
-        scope_module: options.scopeModule,
-        user_id: options.userId || null,
-        country_id: options.countryId || null,
-        city_branch_id: options.cityBranchId || null,
-        business_reference: options.businessReference || null,
-        request_hash: requestHash,
+    const isLockExpired = existing ? new Date(existing.expires_at).getTime() < Date.now() : false;
+    if (!isLockExpired) {
+      // Still genuinely in flight — the caller must not proceed.
+      return { acquired: false, isReplayed: false, idempotencyKey: key, tenantHash };
+    }
+
+    // The prior lock expired (crashed/timed-out request) — atomically steal it. The WHERE clause
+    // keeps this conditional-update race-safe too: only one concurrent stealer can match a row
+    // still in the expired PROCESSING state.
+    const { data: stolen } = await (admin as any)
+      .from("idempotency_keys")
+      .update({
         status: "PROCESSING",
+        request_hash: requestHash,
         locked_at: new Date().toISOString(),
         expires_at: expiresAt
-      },
-      { onConflict: "tenant_hash,idempotency_key" }
-    );
+      })
+      .eq("tenant_hash", tenantHash)
+      .eq("idempotency_key", key)
+      .eq("status", "PROCESSING")
+      .lt("expires_at", new Date().toISOString())
+      .select("id")
+      .maybeSingle();
 
-    return { acquired: true, isReplayed: false, idempotencyKey: key, tenantHash };
+    if (stolen) {
+      return { acquired: true, isReplayed: false, idempotencyKey: key, tenantHash };
+    }
+
+    // Another caller stole it first, or it completed in the interim — do not proceed.
+    return { acquired: false, isReplayed: false, idempotencyKey: key, tenantHash };
   } catch (err) {
     console.error("[Idempotency] Failed to acquire lock:", err);
     // On unexpected error, permit processing to avoid blocking business operations

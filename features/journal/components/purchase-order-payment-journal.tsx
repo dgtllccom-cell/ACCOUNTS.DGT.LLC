@@ -2805,15 +2805,19 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
     return row.exchange_rate || form.exchangeRate || 1;
   }, [liveRates]);
 
-  const [urlParamPurchaseOrderNo, setUrlParamPurchaseOrderNo] = useState("");
-  const [fromLoadingParam, setFromLoadingParam] = useState(false);
+  const [urlParamPurchaseOrderNo, setUrlParamPurchaseOrderNo] = useState(() =>
+    typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("purchaseOrderNo") || "" : ""
+  );
+  const [fromLoadingParam, setFromLoadingParam] = useState(() =>
+    typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("fromLoading") === "true" : false
+  );
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const pNo = params.get("purchaseOrderNo") || "";
-      setUrlParamPurchaseOrderNo(pNo);
-      setFromLoadingParam(params.get("fromLoading") === "true");
+      if (pNo) setUrlParamPurchaseOrderNo(pNo);
+      if (params.get("fromLoading") === "true") setFromLoadingParam(true);
     }
   }, []);
 
@@ -2830,7 +2834,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
       // Auto-select by URL param
       const urlOrderNo = urlParamPurchaseOrderNo || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("purchaseOrderNo") || "" : "");
       if (urlOrderNo) {
-        const match = rows.find((r) => r.purchase_order_no === urlOrderNo);
+        const match = rows.find((r) => r.purchase_order_no === urlOrderNo || r.id === urlOrderNo);
         if (match) setSelectedId(match.id);
       }
     } catch (err) {
@@ -2861,9 +2865,9 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     const draft = draftFilter.trim().toLowerCase();
-    const urlOrderNo = urlParamPurchaseOrderNo;
+    const urlOrderNo = urlParamPurchaseOrderNo || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("purchaseOrderNo") || "" : "");
     return orders.filter((row) => {
-      if (urlOrderNo && row.purchase_order_no === urlOrderNo) return true;
+      if (urlOrderNo && (row.purchase_order_no === urlOrderNo || row.id === urlOrderNo)) return true;
       const postingStatus = row.ledger_posting_status?.toLowerCase();
       const workflowTransferStatus = row.form_data?.workflow?.transferStatus?.toLowerCase();
       const hasTransferAudit = Boolean(row.form_data?.form?.transferAudit);
@@ -2884,7 +2888,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
       if (currencyFilter && rowCurrency(row) !== currencyFilter) return false;
 
       const urlPurchaseOrderNo = urlOrderNo;
-      const isUrlLoadingScope = activeMode === "remaining" && fromLoadingParam && (!urlPurchaseOrderNo || row.purchase_order_no === urlPurchaseOrderNo);
+      const isUrlLoadingScope = activeMode === "remaining" && (fromLoadingParam || (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("fromLoading") === "true")) && (!urlPurchaseOrderNo || row.purchase_order_no === urlPurchaseOrderNo);
       if (activeMode === "remaining" && urlPurchaseOrderNo && row.purchase_order_no !== urlPurchaseOrderNo) return false;
 
       const form = row.form_data?.form || {};
@@ -2932,19 +2936,16 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
         if (remainingAdvance > 0.01) return false; // Not yet cleared
         if (paidAdvance <= 0) return false; // Not paid anything
       } else if (activeMode === "remaining") {
-        // Required advance must be fully cleared first before appearing in remaining payments
-        if (advancePercent > 0 && remainingAdvance > 0.01 && !isUrlLoadingScope) return false;
-        if (remainingDue <= 0.01 && !isUrlLoadingScope) return false; // Already cleared
+        // If arriving directly via loading transfer link or search
+        if (isUrlLoadingScope) return true;
+        if (urlPurchaseOrderNo && row.purchase_order_no === urlPurchaseOrderNo) return true;
 
-        // STRICT BUSINESS RULE: Remaining payment requires Transfer to Loading first.
-        // An order must have been transferred (dispatched) before remaining payment is allowed.
-        const workflow = row.form_data?.workflow || {};
-        const hasTransferStatus = (workflow.transferStatus || "").toLowerCase() === "transferred";
-        const hasTransferAudit  = Boolean(row.form_data?.form?.transferAudit || workflow.transferAudit);
-        const hasLoadingRecord  = Number((row as any).loading_record_count || 0) > 0
-          || Boolean(workflow.loadedQuantity && Number(workflow.loadedQuantity) > 0);
-        const hasContainerMovement = hasTransferStatus || hasTransferAudit || hasLoadingRecord;
-        if (!hasContainerMovement) return false; // Block: not yet transferred to loading
+        // Required advance must be fully cleared first before appearing in remaining payments
+        if (advancePercent > 0 && remainingAdvance > 0.01) return false;
+        
+        // Show remaining if not fully settled
+        const isFullyCleared = (row.payment_status || "").toLowerCase() === "paid" || (row.payment_status || "").toLowerCase() === "completed";
+        if (isFullyCleared && remainingDue <= 0.01) return false;
       } else if (activeMode === "credit") {
         if (isCreditPaid) return false; // Already cleared
       } else if (activeMode === "history") {

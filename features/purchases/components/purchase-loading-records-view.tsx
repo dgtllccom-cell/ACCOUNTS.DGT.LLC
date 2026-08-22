@@ -322,28 +322,47 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
   } | null>(null);
 
   const handleInitiateTransfer = (hRecord: any) => {
-    const poRow = (Array.isArray(hRecord.purchase_orders) ? hRecord.purchase_orders[0] : hRecord.purchase_orders) || {};
-    const finance = calcLoadingFinance(hRecord, poRow, form);
-    const loadedQty = Number(hRecord.report_payload?.loadedQuantity || hRecord.loadedQuantity || 0);
-    const grossWeight = Number(hRecord.report_payload?.grossWeight || finance.grossWeight || 0);
-    const netWeight = Number(hRecord.report_payload?.netWeight || finance.netWeight || 0);
-    const priceRate = Number(hRecord.report_payload?.priceRateC1 || finance.priceRate || 0);
-    const contractPurchaseAmount = Number(poRow?.order_total || poData.totals?.grandFinal || form.totalAmount || 0);
+    const isOverallRecord = !hRecord || hRecord.id === record.id || !hRecord.report_payload?.loadedQuantity;
+    const poRow = (Array.isArray(hRecord?.purchase_orders) ? hRecord.purchase_orders[0] : hRecord?.purchase_orders) || (Array.isArray(record.purchase_orders) ? record.purchase_orders[0] : record.purchase_orders) || record || {};
+    const finance = calcLoadingFinance(hRecord || record, poRow, form);
     
-    const poAdvanceAmt = normalizeAdvanceToPurchaseCurrency(Number(poRow.advance_paid || form.advanceAmount || 0), contractPurchaseAmount, finance.exRate || 1);
+    const loadedQty = isOverallRecord
+      ? (totalLoadedQuantity > 0 ? totalLoadedQuantity : Number(hRecord?.report_payload?.loadedQuantity || hRecord?.loadedQuantity || totalQuantity || 0))
+      : Number(hRecord?.report_payload?.loadedQuantity || hRecord?.loadedQuantity || 0);
 
-    const loadedAdvanceUSD = (finance.proRataRatio || 0) * poAdvanceAmt;
-    const loadedAdvanceLocal = Math.min(loadedAdvanceUSD * finance.exRate, Math.max(0, finance.amountPKR));
-    const remainingLC = Math.max(0, finance.amountPKR - loadedAdvanceLocal);
+    const grossWeight = isOverallRecord
+      ? (loadedGrossWeight > 0 ? loadedGrossWeight : Number(hRecord?.report_payload?.grossWeight || finance.grossWeight || 0))
+      : Number(hRecord?.report_payload?.grossWeight || finance.grossWeight || 0);
+
+    const netWeight = isOverallRecord
+      ? (loadedNetWeight > 0 ? loadedNetWeight : Number(hRecord?.report_payload?.netWeight || finance.netWeight || 0))
+      : Number(hRecord?.report_payload?.netWeight || finance.netWeight || 0);
+
+    const priceRate = Number(hRecord?.report_payload?.priceRateC1 || finance.priceRate || (totalQuantity > 0 ? contractPurchaseAmount / totalQuantity : 0));
+    const contractPurchaseAmount = Number(poRow?.order_total || poData.totals?.grandFinal || form.totalAmount || 0);
+    const exRate = Number(finance.exRate || exchangeRatePKR || form.exchangeRate || 1);
+
+    const loadedPurchaseFC = isOverallRecord
+      ? (totalQuantity > 0 ? (loadedQty / totalQuantity) * contractPurchaseAmount : contractPurchaseAmount)
+      : (finance.amountUSD > 0 ? finance.amountUSD : (priceRate > 0 ? loadedQty * priceRate : 0));
+    const loadedPurchaseLC = loadedPurchaseFC * exRate;
+
+    const poAdvanceAmt = normalizeAdvanceToPurchaseCurrency(Number(poRow.advance_paid || form.advanceAmount || 0), contractPurchaseAmount, exRate);
+    const proRata = totalQuantity > 0 ? (loadedQty / totalQuantity) : 1;
+    const loadedAdvanceUSD = Math.min(loadedPurchaseFC, proRata * poAdvanceAmt);
+    const loadedAdvanceLocal = loadedAdvanceUSD * exRate;
+    const remainingLC = Math.max(0, loadedPurchaseLC - loadedAdvanceLocal);
 
     const debitAccountName = form.purchaseAccountName || "Purchase Account";
     const debitAccountCode = form.purchaseAccountNumber || form.purchaseAccountNo || "DR-001";
     const creditAccountName = form.salesAccountName || form.supplierName || "Supplier Account";
     const creditAccountCode = form.salesAccountNumber || form.salesAccountNo || "CR-001";
 
+    const targetPoNo = hRecord?.purchase_order_no || record.purchase_order_no || poRow.purchase_order_no || "";
+
     setTransferConfirmData({
       loadedQty,
-      loadedPurchaseAmountFC: finance.amountUSD,
+      loadedPurchaseAmountFC: loadedPurchaseFC,
       advancePaidLC: loadedAdvanceLocal,
       remainingLC,
       debitAccountName,
@@ -351,10 +370,10 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
       creditAccountName,
       creditAccountCode,
       finalCurrency: localCurrency,
-      purchaseCurrency: finance.currency || "USD",
-      exchangeRate: finance.exRate,
-      loadingRecordId: hRecord.id,
-      purchaseOrderNo: hRecord.purchase_order_no || record.purchase_order_no || "",
+      purchaseCurrency: finance.currency || contractPurchaseCurrency || "USD",
+      exchangeRate: exRate,
+      loadingRecordId: isOverallRecord ? (history[0]?.id || record.id || "") : (hRecord?.id || record.id || ""),
+      purchaseOrderNo: targetPoNo,
       grossWeight,
       netWeight,
       priceRate

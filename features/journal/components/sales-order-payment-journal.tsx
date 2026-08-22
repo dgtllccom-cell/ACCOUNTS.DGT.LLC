@@ -35,7 +35,10 @@ import {
   Shield,
   Home,
   Globe,
-  Fingerprint
+  Fingerprint,
+  ShoppingCart,
+  Scale,
+  Building
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -80,6 +83,12 @@ type PurchaseOrderRow = {
   currency?: string | null;
   exchange_rate: number | null;
   order_total: number | null;
+  // Real sales_orders columns: running totals across every payment kind combined.
+  paid_amount?: number | null;
+  remaining_amount?: number | null;
+  // The four fields below are NOT real sales_orders columns (they only exist on
+  // purchase_orders) — kept here only because older code in this file still reads them via
+  // fallback chains; every live call site now reads paid_amount/remaining_amount instead.
   advance_paid: number | null;
   remaining_paid: number | null;
   credit_amount: number | null;
@@ -522,7 +531,7 @@ function orderTotal(row: PurchaseOrderRow) {
 function requiredAdvanceAmount(row: PurchaseOrderRow) {
   const form = rowForm(row);
   const pct = Number(form.advancePercent || 0);
-  return pct > 0 ? (orderTotal(row) * pct) / 100 : Number(row.advance_paid || 0);
+  return pct > 0 ? (orderTotal(row) * pct) / 100 : Number(row.paid_amount || 0);
 }
 
 function resolvePurchaseCalculations(row: PurchaseOrderRow, liveRates: any[] = []) {
@@ -559,7 +568,7 @@ function resolvePurchaseCalculations(row: PurchaseOrderRow, liveRates: any[] = [
   if (advancePercent > 0) {
     advanceAmountFC = (totalPurchaseFC * advancePercent) / 100;
   } else {
-    const rawAdv = Number(row.advance_paid || form.advanceAmount || 0);
+    const rawAdv = Number(row.paid_amount || form.advanceAmount || 0);
     if (exRate > 1 && rawAdv > totalPurchaseFC * 1.05) {
       advanceAmountFC = rawAdv / exRate;
     } else {
@@ -676,11 +685,11 @@ function getDashboardSummaryData(rows: PurchaseOrderRow[], session: any, mode: s
     const invoiceAmountFC = (conversionRate > 1 && invoiceAmountRaw > 1000000) ? invoiceAmountRaw / conversionRate : invoiceAmountRaw;
     const invoiceAmountLC = invoiceAmountFC * conversionRate;
 
-    const advancePaidRaw = parseNumber(row.advance_paid || 0);
+    const advancePaidRaw = parseNumber(row.paid_amount || 0);
     const advancePaidFC = (conversionRate > 1 && advancePaidRaw > invoiceAmountFC * 1.05) ? advancePaidRaw / conversionRate : advancePaidRaw;
     const advancePaidLC = advancePaidFC * conversionRate;
 
-    const explicitRemainingRaw = parseNumber(row.remaining_due || 0);
+    const explicitRemainingRaw = parseNumber(row.remaining_amount || 0);
     const explicitRemainingFC = (conversionRate > 1 && explicitRemainingRaw > invoiceAmountFC * 1.05) ? explicitRemainingRaw / conversionRate : explicitRemainingRaw;
     const explicitRemainingLC = explicitRemainingFC * conversionRate;
 
@@ -770,7 +779,7 @@ function kpis(rows: PurchaseOrderRow[], baseCurrency: string): KpiCard[] {
     totalInvoiceValueLC += calcs.totalPurchaseLC; // local currency (e.g. PKR/AED)
     
     const conversionRate = calcs.exRate;
-    const paidAdvanceLC = Number(row.advance_paid || 0) * conversionRate;
+    const paidAdvanceLC = Number(row.paid_amount || 0) * conversionRate;
     totalAdvancePaidLC += paidAdvanceLC;
 
     // Remaining local currency balance (outstanding)
@@ -844,9 +853,9 @@ function exportRows(rows: PurchaseOrderRow[], mode: PaymentMode) {
         date(row.created_at),
         row.currency_code ?? "-",
         money(row.order_total),
-        money(row.advance_paid),
-        money(row.remaining_due),
-        money(row.credit_amount),
+        money((row as any).paid_amount),
+        money((row as any).remaining_amount),
+        "-",
         row.payment_status ?? "Pending",
         row.ledger_posting_status ?? "Pending"
       ].map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")
@@ -1519,10 +1528,14 @@ function DashboardSummaryHeader({
       const form = row.form_data?.form || {};
       const advancePercent = Number(form.advancePercent || 0);
       const requiredAdvance = finalTotal * advancePercent / 100;
-      const paidAdvance = Number(row.advance_paid || 0) * conversionRate;
+      // sales_orders only has paid_amount/remaining_amount (running totals across every payment
+      // kind combined) — no advance_paid/remaining_due/remaining_paid columns exist on this
+      // table (those are purchase_orders fields this block was copy-pasted from).
+      const totalPaidLocal = Number((row as any).paid_amount || 0) * conversionRate;
+      const paidAdvance = Math.min(requiredAdvance, totalPaidLocal);
       const remainingAdvance = Math.max(0, requiredAdvance - paidAdvance);
-      const remainingDue = Number(row.remaining_due || 0) * conversionRate;
-      const remPaid = Number(row.remaining_paid || 0) * conversionRate;
+      const remainingDue = Number((row as any).remaining_amount ?? 0) * conversionRate;
+      const remPaid = Math.max(0, totalPaidLocal - requiredAdvance);
 
       if (!groups[country]) {
         groups[country] = {
@@ -2727,7 +2740,13 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       const body = await response.json();
       if (!response.ok || body?.ok === false) throw new Error(body?.error?.message ?? body?.message ?? "Unable to load sales orders.");
       const payload = (body?.data ?? body) as OrdersPayload | PurchaseOrderRow[];
-      const rows = Array.isArray(payload) ? payload : payload.orders ?? [];
+      // The API actually returns { data: { salesOrders: [...] } } (see app/api/erp/sales/orders
+      // route.ts) — this previously read payload.orders, a key that has never existed on the
+      // sales response, so `rows` silently resolved to [] on every load and every mode
+      // (Advance/Remaining/Credit/History) always rendered "0 records" regardless of real data.
+      const rows: PurchaseOrderRow[] = Array.isArray(payload)
+        ? payload
+        : (payload as any).salesOrders ?? (payload as any).orders ?? [];
       setOrders(rows);
       // Auto-select by URL param
       const urlOrderNo = getInitialPurchaseOrderNo();
@@ -2799,19 +2818,21 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
         if (Number.isNaN(rowDate.getTime()) || rowDate > end) return false;
       }
 
-      // Extract form values for clearance calculation
+      // Extract form values for clearance calculation.
+      // sales_orders has no advance_paid/remaining_due/remaining_paid columns (those are
+      // purchase_orders-only field names — this whole block was copy-pasted from the purchase
+      // journal without adapting to the sales schema, so every eligibility check below always
+      // read undefined/0 and treated every order as if nothing had ever been paid). The real,
+      // always-populated columns are paid_amount (total across every payment kind) and
+      // remaining_amount (kept in sync by recalc_sales_order_payment_totals on every posting).
       const finalAmount = orderTotal(row);
       const advancePercent = Number(form.advancePercent || 0);
       const requiredAdvance = (finalAmount * advancePercent) / 100;
-      const paidAdvance = Number(row.advance_paid || 0);
+      const totalPaid = Number((row as any).paid_amount || 0);
+      const paidAdvance = Math.min(requiredAdvance, totalPaid);
       const remainingAdvance = requiredAdvance - paidAdvance;
-      let remainingDue = Number(row.remaining_due || 0);
-      if (remainingDue === 0) {
-        // Fallback calculation if db field is not populated
-        const remPaid = Number(row.remaining_paid || 0);
-        remainingDue = finalAmount - paidAdvance - remPaid;
-      }
-      
+      const remainingDue = Number((row as any).remaining_amount ?? (finalAmount - totalPaid));
+
       const isCreditPaid = (row.payment_status || "").toLowerCase().includes("posted") || 
                            (row.payment_status || "").toLowerCase().includes("paid");
 
@@ -2957,7 +2978,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
     const loadingRequiredAdvance = (loadingPurchaseAmount * advancePercent) / 100;
 
     // Advance already paid for this loading: pro-rated share of actual advance paid on the PO
-    const poAdvancePaid = Number(selected.advance_paid || 0);
+    const poAdvancePaid = Number(selected.paid_amount || 0);
     const loadingAdvancePaid = fromLoading
       ? (totalPOQuantity > 0 ? (cLoadedQty / totalPOQuantity) * poAdvancePaid : poAdvancePaid)
       : poAdvancePaid;
@@ -3083,7 +3104,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
     const poRow = selected || {};
     const finance = calcLoadingFinance(lr, poRow, poRow.form_data?.form || {});
     const loadedQty = lr.report_payload?.loadedQuantity || lr.loadedQuantity || 0;
-    const poAdvanceAmt = Number(poRow.advance_paid || poRow.form_data?.form?.advanceAmount || 0);
+    const poAdvanceAmt = Number(poRow.paid_amount || poRow.form_data?.form?.advanceAmount || 0);
     
     const goods = poRow.form_data?.goodsEntries || [];
     const totalPOQuantity = Number(
@@ -3442,7 +3463,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       : Number(form.totalAmount || 0);
     const advancePercent = Number(form.advancePercent || 0);
     const requiredAdvanceBC = (totalPrice * advancePercent) / 100;
-    const paidAdvanceBC = Number(selected.advance_paid || 0);
+    const paidAdvanceBC = Number(selected.paid_amount || 0);
     return Math.max(0, requiredAdvanceBC - paidAdvanceBC);
   }, [selected]);
 
@@ -4023,7 +4044,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                     const calcs = resolvePurchaseCalculations(row);
                     sumPurchaseLocal += calcs.totalPurchaseLC;
                     sumReqAdvanceLocal += calcs.advanceAmountLC;
-                    sumPaidLocal += Number(row.advance_paid || 0) * calcs.exRate;
+                    sumPaidLocal += Number(row.paid_amount || 0) * calcs.exRate;
                     sumFinalLocal += calcs.remainingPurchaseLC;
                     sumRemAdvanceLocal += calcs.remainingPurchaseLC;
                   });
@@ -4111,14 +4132,20 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                                     const totalAmountLocal = totalAmountBC * conversionRate;
                                     const advancePercent = Number(form.advancePercent || 0);
                                     const requiredAdvanceBC = (totalAmountBC * advancePercent) / 100;
-                                    const paidAdvanceBC = Number(row.advance_paid || 0);
+                                    // sales_orders only tracks paid_amount/remaining_amount as running totals
+                                    // across every payment kind combined (no per-kind advance_paid /
+                                    // remaining_paid / credit_amount columns exist — those are
+                                    // purchase_orders-only fields this block was copy-pasted from without
+                                    // adapting). Derive each mode's figure from the real totals instead.
+                                    const totalPaidBC = Number((row as any).paid_amount || 0);
+                                    const remainingDueBC = Number((row as any).remaining_amount ?? Math.max(0, totalAmountBC - totalPaidBC));
+                                    const paidAdvanceBC = Math.min(requiredAdvanceBC, totalPaidBC);
                                     const remainingAdvanceBC = Math.max(0, requiredAdvanceBC - paidAdvanceBC);
-                                    
+
                                     const requiredAdvance = (totalAmountLocal * advancePercent) / 100;
                                     const paidAdvance = paidAdvanceBC * conversionRate;
                                     const remainingAdvance = Math.max(0, requiredAdvance - paidAdvance);
-                                    
-                                    const remainingDueBC = Number(row.remaining_due || 0);
+
                                     let paidAmountBC = 0;
                                     let paidAmountLocal = 0;
                                     let balanceAmountBC = 0;
@@ -4128,26 +4155,20 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                                       paidAmountLocal = paidAdvance;
                                       balanceAmountBC = Math.max(0, requiredAdvanceBC - paidAdvanceBC);
                                       balanceAmountLocal = remainingAdvance;
-                                    } else if (activeMode === "remaining") {
-                                      const remPaidBC = Number(row.remaining_paid || 0);
-                                      paidAmountBC = remPaidBC;
-                                      paidAmountLocal = remPaidBC * conversionRate;
+                                    } else if (activeMode === "remaining" || activeMode === "credit") {
+                                      // Whatever was paid beyond the advance requirement is this mode's
+                                      // (remaining/credit) contribution — the schema doesn't separate the
+                                      // two, so both read the same post-advance paid/balance figures.
+                                      const postAdvancePaidBC = Math.max(0, totalPaidBC - requiredAdvanceBC);
+                                      paidAmountBC = postAdvancePaidBC;
+                                      paidAmountLocal = postAdvancePaidBC * conversionRate;
                                       balanceAmountBC = remainingDueBC;
                                       balanceAmountLocal = remainingDueBC * conversionRate;
-                                    } else if (activeMode === "credit") {
-                                      const credPaidBC = Number(row.credit_amount || 0);
-                                      paidAmountBC = credPaidBC;
-                                      paidAmountLocal = credPaidBC * conversionRate;
-                                      balanceAmountBC = Math.max(0, totalAmountBC - paidAmountBC);
-                                      balanceAmountLocal = balanceAmountBC * conversionRate;
                                     } else {
-                                      // History (and any other mode): total paid must include every
-                                      // payment kind — advance + remaining + credit — not credit_amount
-                                      // alone, matching the same fix applied to the purchase-side screen.
-                                      const totalPaidBC = Number(row.advance_paid || 0) + Number(row.remaining_paid || 0) + Number(row.credit_amount || 0);
+                                      // History (and any other mode): total paid across every kind.
                                       paidAmountBC = totalPaidBC;
                                       paidAmountLocal = totalPaidBC * conversionRate;
-                                      balanceAmountBC = Math.max(0, Number(row.remaining_due ?? (totalAmountBC - totalPaidBC)));
+                                      balanceAmountBC = remainingDueBC;
                                       balanceAmountLocal = balanceAmountBC * conversionRate;
                                     }
                                     
@@ -4499,9 +4520,9 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                 : Number(form.totalAmount || 0);
               const advancePercent = Number(form.advancePercent || 0);
               const requiredAdvanceBC = (totalPrice * advancePercent) / 100;
-              const paidAdvanceBC = Number(selected.advance_paid || 0);
+              const paidAdvanceBC = Number(selected.paid_amount || 0);
               const remainingAdvanceBC = Math.max(0, requiredAdvanceBC - paidAdvanceBC);
-              const remainingDue = Number(selected.remaining_due || 0);
+              const remainingDue = Number(selected.remaining_amount || 0);
               const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
               const fromLoading = searchParams.get("fromLoading") === "true";
               if (activeMode === "advance" && advancePercent > 0 && remainingAdvanceBC <= 0.01) {
@@ -4528,8 +4549,8 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
               const poCurrencyHeader = String(form.currencyType || form.currency || selected.currency_code || "USD").toUpperCase();
               const exRateHeader = Number(selected.exchange_rate || form.exchangeRate || 1);
               const purchaseTotalHeader = Number(selected.order_total || form.totalAmount || goods.reduce((sum: number, g: any) => sum + Number(g.totalAmount || 0), 0));
-              const advanceHeader = Number(selected.advance_paid || form.advanceAmount || ((purchaseTotalHeader * Number(form.advancePercent || 0)) / 100));
-              const remainingHeader = Math.max(0, Number(selected.remaining_due ?? (purchaseTotalHeader - advanceHeader)));
+              const advanceHeader = Number(selected.paid_amount || form.advanceAmount || ((purchaseTotalHeader * Number(form.advancePercent || 0)) / 100));
+              const remainingHeader = Math.max(0, Number(selected.remaining_amount ?? (purchaseTotalHeader - advanceHeader)));
               const supplierHeader = form.salesAccountName || form.supplierName || form.salesCompanyName || "-";
               const companyHeader = form.purchaseCompanyName || form.salesCompanyName || form.companyName || "-";
               const branchHeader = rowBranchName(selected) || form.branchName || "-";
@@ -4810,7 +4831,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
               const loadingRequiredAdvance = (loadingPurchaseAmount * advancePercent) / 100;
 
               // Advance already paid for this loading: pro-rated share of actual advance paid on the PO
-              const poAdvancePaid = Number(selected.advance_paid || 0);
+              const poAdvancePaid = Number(selected.paid_amount || 0);
               const loadingAdvancePaid = fromLoading
                 ? (totalPOQuantity > 0 ? (cLoadedQty / totalPOQuantity) * poAdvancePaid : poAdvancePaid)
                 : poAdvancePaid;
@@ -4906,62 +4927,143 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                     )}
                   </div>
 
-                  {/* Multi-Currency Endorsement & Payment Summary Panels */}
-                  <div className="hidden">
-                    {/* Box 2: Purchase & Endorsement Summary (Transaction Currency) */}
-                    <div className="bg-white border border-slate-200/80 rounded-xl p-4 dark:bg-slate-950 dark:border-slate-800 shadow-sm space-y-3">
-                      <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800/80 pb-2">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">
-                          2. Purchase & Endorsement Summary ({poCurrency})
-                        </span>
-                        <span className="text-[10px] font-bold bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded uppercase font-mono">{poCurrency}</span>
+                  {/* TOP 4 SUMMARY CARDS GRID (matches Purchase Payment Entry modal) */}
+                  <div className="px-5 pt-3.5 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3.5">
+                    {/* Card 1: 1. PAYMENT SUMMARY */}
+                    <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950 flex flex-col justify-between">
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center gap-2">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-black text-white">1</span>
+                          <span className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">PAYMENT SUMMARY</span>
+                        </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-3 text-xs">
-                        <div className="bg-slate-50/60 border border-slate-100 p-2.5 rounded-lg dark:bg-slate-900/50 dark:border-slate-900 shadow-inner">
-                          <span className="text-[9px] font-semibold text-slate-400 block uppercase tracking-wider">Total Purchase Amount</span>
-                          <span className="font-extrabold text-slate-800 dark:text-slate-200 font-mono text-sm">{money(loadingPurchaseAmount, poCurrency)}</span>
+                      <div className="flex items-start gap-3 mt-2.5">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-100 dark:border-blue-900/40">
+                          <FileText className="h-5 w-5" />
                         </div>
-                        <div className="bg-slate-50/60 border border-slate-100 p-2.5 rounded-lg dark:bg-slate-900/50 dark:border-slate-900 shadow-inner">
-                          <span className="text-[9px] font-semibold text-slate-400 block uppercase tracking-wider">Endorsement Percentage</span>
-                          <span className="font-extrabold text-slate-800 dark:text-slate-200 font-mono text-sm">{advancePercent.toFixed(2)}%</span>
-                        </div>
-                        <div className="bg-slate-50/60 border border-slate-100 p-2.5 rounded-lg dark:bg-slate-900/50 dark:border-slate-900 shadow-inner">
-                          <span className="text-[9px] font-semibold text-slate-400 block uppercase tracking-wider">Endorsement Amount</span>
-                          <span className="font-extrabold text-slate-800 dark:text-slate-200 font-mono text-sm">{money(loadingRequiredAdvance, poCurrency)}</span>
-                        </div>
-                        <div className="bg-slate-50/60 border border-slate-100 p-2.5 rounded-lg dark:bg-slate-900/50 dark:border-slate-900 shadow-inner">
-                          <span className="text-[9px] font-semibold text-slate-400 block uppercase tracking-wider">Remaining Amount</span>
-                          <span className="font-extrabold text-slate-800 dark:text-slate-200 font-mono text-sm">{money(loadingPurchaseAmount - loadingRequiredAdvance, poCurrency)}</span>
+                        <div className="space-y-1 text-xs w-full">
+                          <div>
+                            <span className="text-[9.5px] font-semibold text-slate-400 block">Payment No.</span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-mono font-black text-slate-900 dark:text-slate-100">{selected.sales_order_no}</span>
+                              <span className="rounded-full bg-emerald-100 text-emerald-700 px-1.5 py-0.2 text-[8px] font-black uppercase dark:bg-emerald-950 dark:text-emerald-300">ACTIVE</span>
+                            </div>
+                          </div>
+                          <div className="pt-0.5">
+                            <span className="text-[9.5px] font-semibold text-slate-400 block">Entry Date</span>
+                            <span className="font-semibold text-slate-700 dark:text-slate-300">{date(selected.created_at)}</span>
+                          </div>
+                          <div className="pt-0.5">
+                            <span className="text-[9.5px] font-semibold text-slate-400 block">Total Amount</span>
+                            <span className="font-mono font-black text-rose-600 dark:text-rose-400">{money(loadingPurchaseAmount, poCurrency)}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Box 3: Final Payment Summary (Final Currency) */}
-                    <div className="bg-white border border-slate-200/80 rounded-xl p-4 dark:bg-slate-950 dark:border-slate-800 shadow-sm space-y-3">
-                      <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800/80 pb-2">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">
-                          3. Final Payment Summary ({baseCurrency})
-                        </span>
-                        <span className="text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded uppercase font-mono">{baseCurrency}</span>
+                    {/* Card 2: 2. SALES / INVOICE SUMMARY */}
+                    <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950 flex flex-col justify-between">
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center gap-2">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-black text-white">2</span>
+                          <span className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">SALES / INVOICE SUMMARY</span>
+                        </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-3 text-xs">
-                        <div className="bg-slate-50/60 border border-slate-100 p-2.5 rounded-lg dark:bg-slate-900/50 dark:border-slate-900 shadow-inner">
-                          <span className="text-[9px] font-semibold text-slate-400 block uppercase tracking-wider">Total Final Amount</span>
-                          <span className="font-extrabold text-slate-855 dark:text-slate-200 font-mono text-sm">{money(loadingPurchaseAmount * exRate, baseCurrency)}</span>
+                      <div className="flex items-start gap-3 mt-2.5">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40">
+                          <ShoppingCart className="h-5 w-5" />
                         </div>
-                        <div className="bg-slate-50/60 border border-slate-100 p-2.5 rounded-lg dark:bg-slate-900/50 dark:border-slate-900 shadow-inner">
-                          <span className="text-[9px] font-semibold text-slate-400 block uppercase tracking-wider">Advance Amount</span>
-                          <span className="font-extrabold text-slate-855 dark:text-slate-200 font-mono text-sm">{money(loadingRequiredAdvance * exRate, baseCurrency)}</span>
+                        <div className="space-y-1 text-xs w-full">
+                          <div className="grid grid-cols-2 gap-1">
+                            <div>
+                              <span className="text-[9.5px] font-semibold text-slate-400 block">SO / Bill No.</span>
+                              <span className="font-mono font-black text-slate-900 dark:text-slate-100 text-[11px] truncate block">{selected.sales_order_no}</span>
+                            </div>
+                            <div>
+                              <span className="text-[9.5px] font-semibold text-slate-400 block">Customer</span>
+                              <span className="font-extrabold text-slate-800 dark:text-slate-200 text-[11px] truncate block" title={form.customerAccountName || form.customerName || form.salesAccountName || "-"}>{form.customerAccountName || form.customerName || form.salesAccountName || "-"}</span>
+                            </div>
+                          </div>
+                          <div className="pt-0.5">
+                            <span className="text-[9.5px] font-semibold text-slate-400 block">Endorsement % / Amount</span>
+                            <span className="font-black text-slate-900 dark:text-slate-100">{advancePercent.toFixed(2)}% ({money(loadingRequiredAdvance, poCurrency)})</span>
+                          </div>
+                          {advancePercent > 0 && form.advancePaymentDate && (
+                            <div className="pt-0.5">
+                              <span className="text-[9.5px] font-semibold text-slate-400 block">Advance Payment Due Date</span>
+                              <span className="font-bold text-amber-600 dark:text-amber-400">{String(form.advancePaymentDate)}</span>
+                            </div>
+                          )}
                         </div>
-                        <div className="bg-slate-50/60 border border-slate-100 p-2.5 rounded-lg dark:bg-slate-900/50 dark:border-slate-900 shadow-inner">
-                          <span className="text-[9px] font-semibold text-slate-400 block uppercase tracking-wider">Remaining Amount</span>
-                          <span className="font-extrabold text-slate-855 dark:text-slate-200 font-mono text-sm">{money((loadingPurchaseAmount - loadingRequiredAdvance) * exRate, baseCurrency)}</span>
+                      </div>
+                    </div>
+
+                    {/* Card 3: 3. ACCOUNTING SUMMARY (Highlighted Active Blue Border) */}
+                    <div className="rounded-xl border-2 border-blue-500 bg-white p-3.5 shadow-md ring-2 ring-blue-500/20 dark:bg-slate-950 flex flex-col justify-between">
+                      <div className="flex items-center justify-between pb-2 border-b border-blue-100 dark:border-blue-900/40">
+                        <div className="flex items-center gap-2">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-purple-600 text-[10px] font-black text-white">3</span>
+                          <span className="text-[11px] font-black uppercase tracking-wider text-purple-900 dark:text-purple-300">ACCOUNTING SUMMARY</span>
                         </div>
-                        <div className="bg-slate-50/60 border border-slate-100 p-2.5 rounded-lg dark:bg-slate-900/50 dark:border-slate-900 shadow-inner">
-                          <span className="text-[9px] font-semibold text-slate-400 block uppercase tracking-wider">Exchange Rate</span>
-                          <span className="font-bold text-[10.5px] text-slate-700 dark:text-slate-350 block truncate font-mono mt-0.5" title={`1 ${poCurrency} = ${Number(exRate).toFixed(4)} ${baseCurrency}`}>
-                            1 {poCurrency} = {Number(exRate).toFixed(4)} {baseCurrency}
-                          </span>
+                      </div>
+                      <div className="flex items-start gap-3 mt-2.5">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400 border border-purple-100 dark:border-purple-900/40">
+                          <Scale className="h-5 w-5" />
+                        </div>
+                        <div className="space-y-1 text-xs w-full">
+                          <div>
+                            <span className="text-[9.5px] font-semibold text-slate-400 block">Total Final Amount ({baseCurrency})</span>
+                            <span className="font-mono font-black text-emerald-600 dark:text-emerald-400 text-xs">{money(loadingPurchaseAmount * exRate, baseCurrency)}</span>
+                          </div>
+                          <div className="pt-0.5">
+                            <span className="text-[9.5px] font-semibold text-slate-400 block">Remaining Balance ({baseCurrency})</span>
+                            <span className="font-mono font-black text-slate-900 dark:text-slate-100">{money(outstandingBalance * exRate, baseCurrency)}</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-1 pt-0.5 text-[10.5px]">
+                            <div>
+                              <span className="text-[9px] font-semibold text-slate-400 block">Exchange Rate</span>
+                              <span className="font-mono font-extrabold">{Number(exRate || 1).toFixed(4)}</span>
+                            </div>
+                            <div>
+                              <span className="text-[9px] font-semibold text-slate-400 block">Payment Currency</span>
+                              <span className="font-mono font-extrabold">{baseCurrency}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card 4: 4. REPORT / BRANCH DETAILS */}
+                    <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950 flex flex-col justify-between">
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center gap-2">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-600 text-[10px] font-black text-white">4</span>
+                          <span className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">REPORT / BRANCH DETAILS</span>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3 mt-2.5">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-100 dark:border-amber-900/40">
+                          <Building className="h-5 w-5" />
+                        </div>
+                        <div className="space-y-1 text-xs w-full">
+                          <div>
+                            <span className="text-[9.5px] font-semibold text-slate-400 block">Branch</span>
+                            <span className="font-extrabold text-slate-900 dark:text-slate-100 text-[11px] truncate block">{rowBranchName(selected) || form.branchName || "-"}</span>
+                          </div>
+                          <div className="pt-0.5">
+                            <span className="text-[9.5px] font-semibold text-slate-400 block">Country</span>
+                            <span className="font-semibold text-slate-700 dark:text-slate-300">{rowCountryName(selected) || "-"}</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-1 pt-0.5 text-[10.5px]">
+                            <div>
+                              <span className="text-[9px] font-semibold text-slate-400 block">Prepared By</span>
+                              <span className="font-bold text-slate-800 dark:text-slate-200">{selected.audit?.userName || "ERP USER"}</span>
+                            </div>
+                            <div>
+                              <span className="text-[9px] font-semibold text-slate-400 block">Created</span>
+                              <span className="text-[9.5px] font-mono text-slate-600 dark:text-slate-400">{date(selected.created_at)}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -5005,7 +5107,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                       const finance = calcLoadingFinance(lr, poRow, poRow.form_data?.form || {});
                       
                       const loadedQty = lr.report_payload?.loadedQuantity || lr.loadedQuantity || 0;
-                      const poAdvanceAmt = Number(poRow.advance_paid || poRow.form_data?.form?.advanceAmount || 0);
+                      const poAdvanceAmt = Number(poRow.paid_amount || poRow.form_data?.form?.advanceAmount || 0);
                       const goods = poRow.form_data?.goodsEntries || [];
                       const totalPOQuantity = Number(
                         poRow.form_data?.totals?.totalQuantity ||
@@ -5107,7 +5209,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                   
                   if (fromLoading && cLoadingRecordId) {
                     // 1. Synthetic pro-rated advance deduction row
-                    const poAdvancePaid = Number(selected.advance_paid || 0);
+                    const poAdvancePaid = Number(selected.paid_amount || 0);
                     const loadingAdvancePaid = totalPOQuantity > 0 ? (cLoadedQty / totalPOQuantity) * poAdvancePaid : poAdvancePaid;
                     
                     const poAdvancePayment = selectedOrderPayments.find((p: any) => p.kind === "advance");
@@ -5498,6 +5600,9 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
 
               {/* Payment Entry Form */}
               <div className="xl:col-span-7 space-y-4">
+                <div className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300">
+                  2. PAYMENT ENTRIES
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FieldBlock label={t("payment_source_account", currentLanguage)} required>
                     <SearchSelect
@@ -5850,6 +5955,10 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
 
                   </div>
 
+                  {/* 1. ACCOUNTING ENTRIES (DOUBLE ENTRY) */}
+                  <div className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300 pt-1">
+                    1. ACCOUNTING ENTRIES (DOUBLE ENTRY)
+                  </div>
                   {/* DR ACCOUNTS & CR ACCOUNTS Live Preview Cards */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
                     {/* DR ACCOUNT (Debit Destination) */}
@@ -5933,6 +6042,9 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                     </div>
                   </div>
 
+                <div className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300">
+                  3. NARRATION / REMARKS
+                </div>
                 <FieldBlock label={t("comments_label", currentLanguage)}>
                   <textarea
                     rows={3}
@@ -5942,6 +6054,18 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                     placeholder={currentLanguage === "en" ? "Manually add additional descriptions, comments, explanations, or transaction notes..." : "تفصیلات، کمنٹس، وضاحت، یا ٹرانزیکشن نوٹس شامل کریں..."}
                   />
                 </FieldBlock>
+
+                {/* Bottom Audit Metadata (matches Purchase Payment Entry modal) */}
+                <div className="flex justify-between items-center text-[10px] font-semibold text-slate-400 px-1 pt-1 border-t border-slate-100 dark:border-slate-800">
+                  <div>
+                    <span>Created By: </span>
+                    <strong className="text-slate-700 dark:text-slate-300 font-bold">{selected.audit?.userName || "ERP USER"}</strong>
+                  </div>
+                  <div>
+                    <span>Created On: </span>
+                    <strong className="text-slate-700 dark:text-slate-300 font-bold">{date(selected.created_at)} {selected.created_at ? new Date(selected.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : ""}</strong>
+                  </div>
+                </div>
 
                 {/* Summary & Action */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-2 border-t border-border">
@@ -5960,9 +6084,9 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                             : Number(form.totalAmount || 0);
                           const advancePercent = Number(form.advancePercent || 0);
                           const requiredAdvanceBC = (totalPrice * advancePercent) / 100;
-                          const paidAdvanceBC = Number(selected.advance_paid || 0);
+                          const paidAdvanceBC = Number(selected.paid_amount || 0);
                           const remainingAdvanceBC = Math.max(0, requiredAdvanceBC - paidAdvanceBC);
-                          const remainingDue = Number(selected.remaining_due || 0);
+                          const remainingDue = Number(selected.remaining_amount || 0);
 
                           if (activeMode === "advance") {
                             const displayAdvance = remainingAdvanceBC > 0 ? remainingAdvanceBC : remainingDue;
