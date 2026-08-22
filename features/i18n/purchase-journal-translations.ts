@@ -917,6 +917,237 @@ export const UI_TRANSLATIONS: Record<string, Record<LanguageCode, string>> = {
     ar: "حالة الدفع",
     fa: "وضعیت پرداخت",
     ps: "د تادیې حالت"
+  },
+  "receipt_payment_receipt": {
+    en: "PAYMENT RECEIPT",
+    ur: "رسید ادائیگی",
+    ar: "إيصال الدفع",
+    fa: "رسید پرداخت",
+    ps: "د تادیې رسید"
+  },
+  "receipt_purchase_payment_receipt": {
+    en: "Purchase Payment Receipt",
+    ur: "پرچیز پیمنٹ رسید",
+    ar: "إيصال دفع الشراء",
+    fa: "رسید پرداخت خرید",
+    ps: "د پیرود تادیې رسید"
+  },
+  "receipt_no": {
+    en: "No",
+    ur: "نمبر",
+    ar: "رقم",
+    fa: "شماره",
+    ps: "شمیره"
+  },
+  "receipt_printed": {
+    en: "Printed",
+    ur: "پرنٹ کیا گیا",
+    ar: "تمت الطباعة",
+    fa: "چاپ شده",
+    ps: "چاپ شوی"
+  },
+  "receipt_purchase_vendor_details": {
+    en: "Purchase & Vendor Details",
+    ur: "پرچیز اور وینڈر کی تفصیلات",
+    ar: "تفاصيل الشراء والمورد",
+    fa: "جزئیات خرید و تأمین‌کننده",
+    ps: "د پیرود او پلورونکي توضیحات"
+  },
+  "receipt_purchase_order_no": {
+    en: "Purchase Order No",
+    ur: "پرچیز آرڈر نمبر",
+    ar: "رقم أمر الشراء",
+    fa: "شماره سفارش خرید",
+    ps: "د پیرود امر شمیره"
+  },
+  "receipt_contract_grn_no": {
+    en: "Contract / GRN No",
+    ur: "معاہدہ / جی آر این نمبر",
+    ar: "رقم العقد / إيصال الاستلام",
+    fa: "شماره قرارداد / رسید کالا",
+    ps: "د قرارداد / GRN شمیره"
+  },
+  "receipt_supplier_name": {
+    en: "Supplier Name",
+    ur: "سپلائر کا نام",
+    ar: "اسم المورد",
+    fa: "نام تأمین‌کننده",
+    ps: "د چمتو کونکي نوم"
+  },
+  "receipt_purchase_date": {
+    en: "Purchase Date",
+    ur: "خریداری کی تاریخ",
+    ar: "تاريخ الشراء",
+    fa: "تاریخ خرید",
+    ps: "د پیرود نیټه"
+  },
+  "receipt_currency": {
+    en: "Currency",
+    ur: "کرنسی",
+    ar: "العملة",
+    fa: "ارز",
+    ps: "اسعارې"
+  },
+  "receipt_purchase_financial_summary": {
+    en: "Purchase Financial Summary",
+    ur: "پرچیز کا مالی خلاصہ",
+    ar: "الملخص المالي للشراء",
+    fa: "خلاصه مالی خرید",
+    ps: "د پیرود مالي لنډیز"
+  },
+  "receipt_goods_total_amount": {
+    en: "Goods Total Amount",
+    ur: "سامان کی کل رقم",
+    ar: "إجمالي مبلغ البضائع",
+    fa: "مبلغ کل کالا",
+    ps: "د توکو ټول مقدار"
+  },
+  "receipt_discount": {
+    en: "Discount",
+    ur: "ڈسکاؤنٹ",
+    ar: "الخصم",
+    fa: "تخفیف",
+    ps: "تخفیف"
+  },
+  "receipt_freight_charges": {
+    en: "Freight Charges",
+    ur: "مال برداری کے اخراجات",
+    ar: "رسوم الشحن",
+    fa: "هزینه حمل و نقل",
+    ps: "د لېږد لګښتونه"
+  },
+  "receipt_grand_total": {
+    en: "Grand Total",
+    ur: "کل مجموعی رقم",
+    ar: "المجموع الكلي",
+    fa: "مجموع کل",
+    ps: "ټول مجموعه"
+  },
+  "receipt_accounting_audit_trail": {
+    en: "Accounting & Audit Trail",
+    ur: "اکاؤنٹنگ اور آڈٹ ٹریل",
+    ar: "المحاسبة ومسار التدقيق",
+    fa: "حسابداری و ردیابی حسابرسی",
+    ps: "محاسبه او تدقیق لاره"
+  },
+  "receipt_debit_ledger": {
+    en: "Debit Ledger (Dr)",
+    ur: "ڈیبٹ لیجر (Dr)",
+    ar: "دفتر الأستاذ المدين (Dr)",
+    fa: "دفتر بدهکار (Dr)",
+    ps: "د ډیبیټ لیجر (Dr)"
+  },
+  "receipt_credit_ledger": {
+    en: "Credit Ledger (Cr)",
+    ur: "کریڈٹ لیجر (Cr)",
+    ar: "دفتر الأستاذ الدائن (Cr)",
+    fa: "دفتر بستانکار (Cr)",
+    ps: "د کریډیټ لیجر (Cr)"
+  },
+  "receipt_posted_by": {
+    en: "Posted By",
+    ur: "پوسٹ کنندہ",
+    ar: "نُشر بواسطة",
+    fa: "ثبت شده توسط",
+    ps: "لخوا پوسټ شوی"
+  },
+  "receipt_journal_serial": {
+    en: "Journal Serial",
+    ur: "جرنل سیریل",
+    ar: "الرقم التسلسلي لليومية",
+    fa: "شماره سریال دفتر روزنامه",
+    ps: "د ژورنال سیریل"
+  },
+  "receipt_remarks": {
+    en: "Remarks",
+    ur: "تبصرے",
+    ar: "ملاحظات",
+    fa: "توضیحات",
+    ps: "تبصرې"
+  },
+  "receipt_payment_summary": {
+    en: "Payment Summary",
+    ur: "ادائیگی کا خلاصہ",
+    ar: "ملخص الدفع",
+    fa: "خلاصه پرداخت",
+    ps: "د تادیې لنډیز"
+  },
+  "receipt_previously_paid": {
+    en: "Previously Paid",
+    ur: "پہلے ادا کی گئی رقم",
+    ar: "المبلغ المدفوع سابقاً",
+    fa: "قبلاً پرداخت شده",
+    ps: "مخکې تادیه شوی"
+  },
+  "receipt_current_payment": {
+    en: "Current Payment",
+    ur: "موجودہ ادائیگی",
+    ar: "الدفعة الحالية",
+    fa: "پرداخت فعلی",
+    ps: "اوسنۍ تادیه"
+  },
+  "receipt_total_paid_to_date": {
+    en: "Total Paid to Date",
+    ur: "تاریخ تک کل ادا شدہ رقم",
+    ar: "إجمالي المدفوع حتى الآن",
+    fa: "مجموع پرداخت شده تاکنون",
+    ps: "تر نن پورې ټول تادیه شوی"
+  },
+  "receipt_running_purchase_balance": {
+    en: "Running Purchase Balance",
+    ur: "رواں پرچیز بیلنس",
+    ar: "رصيد الشراء الجاري",
+    fa: "مانده جاری خرید",
+    ps: "روان د پیرود بیلانس"
+  },
+  "receipt_prepared_by": {
+    en: "Prepared By",
+    ur: "تیار کنندہ",
+    ar: "أعده",
+    fa: "تهیه شده توسط",
+    ps: "چمتو شوی لخوا"
+  },
+  "receipt_company_stamp": {
+    en: "Company Stamp",
+    ur: "کمپنی کی مہر",
+    ar: "ختم الشركة",
+    fa: "مهر شرکت",
+    ps: "د شرکت مهر"
+  },
+  "receipt_authorized_signatory": {
+    en: "Authorized Signatory",
+    ur: "مجاز دستخط کنندہ",
+    ar: "الموقّع المعتمد",
+    fa: "امضاکننده مجاز",
+    ps: "مجاز لاسلیک کوونکی"
+  },
+  "receipt_receiver_signature": {
+    en: "Receiver Signature",
+    ur: "وصول کنندہ کے دستخط",
+    ar: "توقيع المستلم",
+    fa: "امضای دریافت‌کننده",
+    ps: "د ترلاسه کوونکي لاسلیک"
+  },
+  "receipt_system_generated_document": {
+    en: "*** THIS IS A SYSTEM GENERATED DOCUMENT ***",
+    ur: "*** یہ سسٹم سے تیار کردہ دستاویز ہے ***",
+    ar: "*** هذا مستند تم إنشاؤه بواسطة النظام ***",
+    fa: "*** این یک سند تولید شده توسط سیستم است ***",
+    ps: "*** دا د سیسټم لخوا تولید شوی سند دی ***"
+  },
+  "receipt_exchange_rate_applied": {
+    en: "Exchange Rate Applied",
+    ur: "لاگو کردہ زر مبادلہ کی شرح",
+    ar: "سعر الصرف المطبق",
+    fa: "نرخ ارز اعمال شده",
+    ps: "پلي شوی د تبادلې نرخ"
+  },
+  "receipt_super_admin": {
+    en: "SUPER ADMIN",
+    ur: "سپر ایڈمن",
+    ar: "المشرف العام",
+    fa: "سوپر ادمین",
+    ps: "سوپر اډمین"
   }
 };
 

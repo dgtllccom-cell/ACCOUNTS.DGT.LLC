@@ -29,6 +29,8 @@ export interface ReportColumn<T = any> {
   align?: "left" | "center" | "right";
   format?: (value: any, row: T) => React.ReactNode;
   isNumeric?: boolean;
+  /** Numeric column holds a monetary amount — totals row appends a currency code. Plain counts/quantities should leave this unset. */
+  isCurrency?: boolean;
 }
 
 export interface ReportFilter {
@@ -358,21 +360,28 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
                       {columns.slice(1).map(col => {
                         let totalVal: React.ReactNode = null;
                         let totalCurrency: string | null = null;
+                        const isMoney = col.isCurrency || col.key === "debit" || col.key === "debit_amount" ||
+                          col.key === "credit" || col.key === "credit_amount" ||
+                          col.key === "balance" || col.key === "net_balance" ||
+                          col.key === "amount" || col.key === "total_amount";
                         if (col.key === "debit" || col.key === "debit_amount") {
-                          totalVal = (debitTotal ?? data.reduce((acc, r) => acc + (Number(r[col.key]) || 0), 0)).toLocaleString("en-US", { minimumFractionDigits: 2 });
+                          totalVal = debitTotal ?? data.reduce((acc, r) => acc + (Number(r[col.key]) || 0), 0);
+                        } else if (col.key === "credit" || col.key === "credit_amount") {
+                          totalVal = creditTotal ?? data.reduce((acc, r) => acc + (Number(r[col.key]) || 0), 0);
                         } else if (col.key === "balance" || col.key === "net_balance") {
-                          totalVal = (balanceTotal ?? grandTotal ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 });
-                        } else if (col.key === "quantity" || col.key === "qty") {
-                          totalVal = data.reduce((acc, r) => acc + (Number(r[col.key]) || 0), 0);
+                          totalVal = balanceTotal ?? grandTotal ?? 0;
                         } else if (col.isNumeric) {
-                          // Generic fallback: sum any numeric column so custom key names
-                          // (e.g. order_total, advance_paid, remaining_due) still get a real total
-                          // instead of silently rendering blank.
-                          totalVal = (col.key === "credit" || col.key === "credit_amount" ? creditTotal : undefined) ??
-                            data.reduce((acc, r) => acc + (Number(r[col.key]) || 0), 0);
-                          totalVal = Number(totalVal).toLocaleString("en-US", { minimumFractionDigits: 2 });
-                          const rowCurrencies = new Set(data.map(r => r.currency_code || r.currency).filter(Boolean));
-                          if (rowCurrencies.size === 1) totalCurrency = [...rowCurrencies][0] as string;
+                          // Sum any other numeric column so custom key names (e.g. order_total,
+                          // advance_paid, remaining_due) still get a real total instead of rendering blank.
+                          totalVal = data.reduce((acc, r) => acc + (Number(r[col.key]) || 0), 0);
+                        }
+
+                        if (totalVal !== null) {
+                          totalVal = Number(totalVal).toLocaleString("en-US", { minimumFractionDigits: isMoney ? 2 : 0 });
+                          if (isMoney) {
+                            const rowCurrencies = new Set(data.map(r => r.currency_code || r.currency).filter(Boolean));
+                            totalCurrency = rowCurrencies.size === 1 ? ([...rowCurrencies][0] as string) : currency;
+                          }
                         }
 
                         return (
@@ -382,7 +391,7 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
                               col.align === "right" || col.isNumeric ? "text-right" : "text-left"
                             }`}
                           >
-                            {totalVal ? `${totalVal} ${totalCurrency ?? currency}` : ""}
+                            {totalVal ? (totalCurrency ? `${totalVal} ${totalCurrency}` : `${totalVal}`) : ""}
                           </td>
                         );
                       })}

@@ -37,7 +37,14 @@ import {
   Shield,
   Home,
   Globe,
-  Fingerprint
+  Fingerprint,
+  ShoppingCart,
+  Scale,
+  Building,
+  Wallet,
+  DollarSign,
+  ClipboardList,
+  Calculator
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -59,6 +66,7 @@ import { t, tData, type LanguageCode } from "@/features/i18n/purchase-journal-tr
 import { t as tGlobal } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { rtlLanguages } from "@/lib/i18n/languages";
 function isUuid(value: any): boolean {
   if (!value || typeof value !== "string") return false;
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.trim());
@@ -104,16 +112,19 @@ type PurchaseOrderRow = {
   form_data?: any;
 };
 
-function handlePrintReceipt(payment: any, orderRow: any, ledgers: any[], localCurrency: string, autoPrint = true) {
+function handlePrintReceipt(payment: any, orderRow: any, ledgers: any[], localCurrency: string, autoPrint = true, lang: LanguageCode = "en") {
+  const isRtl = rtlLanguages.includes(lang as any);
+  const dir = isRtl ? "rtl" : "ltr";
+  const rt = (key: string) => t(key, lang);
   const drLedger = ledgers.find((l) => (l.id || l.account_id) === payment.debit_ledger_id);
   const crLedger = ledgers.find((l) => (l.id || l.account_id) === payment.credit_ledger_id);
   const drLabel = drLedger ? (drLedger.account_name || drLedger.name) : "-";
   const crLabel = crLedger ? (crLedger.account_name || crLedger.name) : "-";
   const re = payment.roznamcha_entries || {};
   const form = orderRow?.form_data?.form || {};
-  
+
   const companyName = "DAMAAN BUSINESS GROUP";
-  const receiptTitle = "PAYMENT RECEIPT";
+  const receiptTitle = rt("receipt_payment_receipt");
   const receiptNo = payment.reference_no || re.super_admin_serial_number || "N/A";
   const printDate = new Date().toLocaleString();
   const paymentDate = new Date(payment.entry_date || payment.created_at).toLocaleDateString();
@@ -139,31 +150,36 @@ function handlePrintReceipt(payment: any, orderRow: any, ledgers: any[], localCu
   
   let displayNarration = payment.narration || "-";
 
+  const startAlign = isRtl ? "right" : "left";
+  const endAlign = isRtl ? "left" : "right";
+  const startBorder = isRtl ? "border-right" : "border-left";
+  const endFloat = isRtl ? "left" : "right";
+
   const html = `
     <!DOCTYPE html>
-    <html lang="en">
+    <html lang="${lang}" dir="${dir}">
     <head>
       <meta charset="UTF-8">
       <title>${receiptTitle} - ${receiptNo}</title>
       <style>
         @page { size: A4; margin: 15mm; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 11px; color: #1e293b; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 11px; color: #1e293b; margin: 0; padding: 0; direction: ${dir}; }
         .container { width: 100%; max-width: 800px; margin: 0 auto; }
         .header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 3px solid #1e3a8a; padding-bottom: 10px; margin-bottom: 20px; }
         .header-left h1 { margin: 0; font-size: 26px; color: #1e3a8a; letter-spacing: 1px; text-transform: uppercase; font-weight: 900; }
         .header-left p { margin: 4px 0 0; font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; }
-        .header-right { text-align: right; }
+        .header-right { text-align: ${endAlign}; }
         .header-right h2 { margin: 0; font-size: 20px; color: #334155; font-weight: 800; }
         .header-right p { margin: 4px 0 0; font-size: 11px; font-weight: bold; color: #1e293b; }
-        .section-title { background: #f1f5f9; padding: 6px 10px; font-weight: 800; font-size: 11px; border: 1px solid #cbd5e1; border-left: 4px solid #1e3a8a; margin: 20px 0 10px; text-transform: uppercase; color: #0f172a; }
+        .section-title { background: #f1f5f9; padding: 6px 10px; font-weight: 800; font-size: 11px; border: 1px solid #cbd5e1; ${startBorder}: 4px solid #1e3a8a; margin: 20px 0 10px; text-transform: uppercase; color: #0f172a; }
         table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-        th, td { border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; font-size: 11px; }
+        th, td { border: 1px solid #cbd5e1; padding: 8px 10px; text-align: ${startAlign}; font-size: 11px; }
         th { background: #f8fafc; font-weight: 700; color: #475569; width: 25%; }
-        .text-right { text-align: right; }
+        .text-right { text-align: ${endAlign}; }
         .font-bold { font-weight: bold; }
         .summary-box { display: flex; border: 1px solid #cbd5e1; border-radius: 4px; overflow: hidden; margin-top: 15px; }
-        .summary-item { flex: 1; padding: 12px; text-align: center; background: #f8fafc; border-right: 1px solid #cbd5e1; }
-        .summary-item:last-child { border-right: none; }
+        .summary-item { flex: 1; padding: 12px; text-align: center; background: #f8fafc; border-${isRtl ? "left" : "right"}: 1px solid #cbd5e1; }
+        .summary-item:last-child { border-${isRtl ? "left" : "right"}: none; }
         .summary-item .lbl { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; }
         .summary-item .val { font-size: 16px; font-weight: 900; margin-top: 5px; color: #0f172a; }
         .summary-item.highlight { background: #eff6ff; }
@@ -174,7 +190,7 @@ function handlePrintReceipt(payment: any, orderRow: any, ledgers: any[], localCu
         .sig-line { border-top: 1px solid #94a3b8; padding-top: 5px; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-top: 50px; }
         .stamp-box { width: 90px; height: 90px; border: 2px dashed #cbd5e1; display: flex; align-items: center; justify-content: center; color: #cbd5e1; font-weight: 900; margin: 0 auto; border-radius: 50%; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
         .sys-gen { text-align: center; font-size: 9px; color: #94a3b8; margin-top: 30px; font-style: italic; border-top: 1px dashed #cbd5e1; padding-top: 10px; }
-        .qr-placeholder { width: 60px; height: 60px; background: #f1f5f9; border: 1px solid #cbd5e1; float: right; margin-left: 15px; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #94a3b8; text-align: center; font-weight: bold; }
+        .qr-placeholder { width: 60px; height: 60px; background: #f1f5f9; border: 1px solid #cbd5e1; float: ${endFloat}; margin-${isRtl ? "right" : "left"}: 15px; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #94a3b8; text-align: center; font-weight: bold; }
       </style>
     </head>
     <body>
@@ -182,102 +198,102 @@ function handlePrintReceipt(payment: any, orderRow: any, ledgers: any[], localCu
         <div class="header">
           <div class="header-left">
             <h1>${companyName}</h1>
-            <p>Purchase Payment Receipt</p>
+            <p>${rt("receipt_purchase_payment_receipt")}</p>
           </div>
           <div class="header-right">
-            <h2>RECEIPT</h2>
-            <p>No: ${receiptNo}</p>
-            <p style="font-weight: normal; color: #64748b; font-size: 10px;">Printed: ${printDate}</p>
+            <h2>${receiptTitle}</h2>
+            <p>${rt("receipt_no")}: ${receiptNo}</p>
+            <p style="font-weight: normal; color: #64748b; font-size: 10px;">${rt("receipt_printed")}: ${printDate}</p>
           </div>
         </div>
 
-        <div class="section-title">Purchase & Vendor Details</div>
+        <div class="section-title">${rt("receipt_purchase_vendor_details")}</div>
         <table>
           <tr>
-            <Th>Purchase Order No</Th><td><strong>${poNo}</strong></td>
-            <Th>Contract / GRN No</Th><td>${contractNo}</td>
+            <Th>${rt("receipt_purchase_order_no")}</Th><td><strong>${poNo}</strong></td>
+            <Th>${rt("receipt_contract_grn_no")}</Th><td>${contractNo}</td>
           </tr>
           <tr>
-            <Th>Supplier Name</Th><td colspan="3"><strong>${vendorName}</strong></td>
+            <Th>${rt("receipt_supplier_name")}</Th><td colspan="3"><strong>${vendorName}</strong></td>
           </tr>
           <tr>
-            <Th>Purchase Date</Th><td>${purchaseDate}</td>
-            <Th>Currency</Th><td><strong>${currency}</strong></td>
+            <Th>${rt("receipt_purchase_date")}</Th><td>${purchaseDate}</td>
+            <Th>${rt("receipt_currency")}</Th><td><strong>${currency}</strong></td>
           </tr>
         </table>
 
-        <div class="section-title">Purchase Financial Summary</div>
+        <div class="section-title">${rt("receipt_purchase_financial_summary")}</div>
         <table>
           <tr>
-            <Th>Goods Total Amount</Th><td class="text-right">${Number(goodsTotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-            <Th>Discount</Th><td class="text-right">${Number(discount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <Th>${rt("receipt_goods_total_amount")}</Th><td class="text-right">${Number(goodsTotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <Th>${rt("receipt_discount")}</Th><td class="text-right">${Number(discount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
           </tr>
           <tr>
-            <Th>Freight Charges</Th><td class="text-right">${Number(freight).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-            <Th>Grand Total (${currency})</Th><td class="text-right font-bold">${Number(grandTotalFC).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <Th>${rt("receipt_freight_charges")}</Th><td class="text-right">${Number(freight).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <Th>${rt("receipt_grand_total")} (${currency})</Th><td class="text-right font-bold">${Number(grandTotalFC).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
           </tr>
         </table>
 
-        <div class="section-title">Accounting & Audit Trail</div>
+        <div class="section-title">${rt("receipt_accounting_audit_trail")}</div>
         <table>
           <tr>
-            <Th>Debit Ledger (Dr)</Th><td colspan="3">${drLabel}</td>
+            <Th>${rt("receipt_debit_ledger")}</Th><td colspan="3">${drLabel}</td>
           </tr>
           <tr>
-            <Th>Credit Ledger (Cr)</Th><td colspan="3">${crLabel}</td>
+            <Th>${rt("receipt_credit_ledger")}</Th><td colspan="3">${crLabel}</td>
           </tr>
           <tr>
-            <Th>Payment Date</Th><td>${paymentDate}</td>
-            <Th>Posted By</Th><td>${re.profiles?.full_name ? re.profiles.full_name.toUpperCase() : "SUPER ADMIN"}</td>
+            <Th>${rt("payment_date")}</Th><td>${paymentDate}</td>
+            <Th>${rt("receipt_posted_by")}</Th><td>${re.profiles?.full_name ? re.profiles.full_name.toUpperCase() : rt("receipt_super_admin")}</td>
           </tr>
           <tr>
-            <Th>Reference No</Th><td>${payment.reference_no || "-"}</td>
-            <Th>Journal Serial</Th><td>${re.super_admin_serial_number || "-"}</td>
+            <Th>${rt("reference_no")}</Th><td>${payment.reference_no || "-"}</td>
+            <Th>${rt("receipt_journal_serial")}</Th><td>${re.super_admin_serial_number || "-"}</td>
           </tr>
           <tr>
-            <Th>Remarks</Th><td colspan="3">${displayNarration || "-"}</td>
+            <Th>${rt("receipt_remarks")}</Th><td colspan="3">${displayNarration || "-"}</td>
           </tr>
         </table>
 
-        <div class="section-title">Payment Summary</div>
+        <div class="section-title">${rt("receipt_payment_summary")}</div>
         <div class="summary-box">
           <div class="summary-item">
-            <div class="lbl">Previously Paid</div>
+            <div class="lbl">${rt("receipt_previously_paid")}</div>
             <div class="val">${Number(prevPaid).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
           </div>
           <div class="summary-item highlight">
-            <div class="lbl">Current Payment</div>
+            <div class="lbl">${rt("receipt_current_payment")}</div>
             <div class="val">${Number(paymentAmt).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
           </div>
           <div class="summary-item">
-            <div class="lbl">Total Paid to Date</div>
+            <div class="lbl">${rt("receipt_total_paid_to_date")}</div>
             <div class="val">${Number(totalPaid).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
           </div>
           <div class="summary-item">
-            <div class="lbl" style="color: #be123c;">Running Purchase Balance</div>
+            <div class="lbl" style="color: #be123c;">${rt("receipt_running_purchase_balance")}</div>
             <div class="val" style="color: #be123c;">${Number(outstanding).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
           </div>
         </div>
 
         <div class="footer">
           <div class="sig-block">
-            <div class="sig-line">Prepared By</div>
+            <div class="sig-line">${rt("receipt_prepared_by")}</div>
           </div>
           <div class="sig-block" style="width: auto;">
-            <div class="stamp-box">COMPANY<br/>STAMP</div>
+            <div class="stamp-box">${rt("receipt_company_stamp")}</div>
           </div>
           <div class="sig-block">
-            <div class="sig-line">Authorized Signatory</div>
+            <div class="sig-line">${rt("receipt_authorized_signatory")}</div>
           </div>
           <div class="sig-block">
-            <div class="sig-line">Receiver Signature</div>
+            <div class="sig-line">${rt("receipt_receiver_signature")}</div>
           </div>
         </div>
-        
+
         <div class="sys-gen">
           <div class="qr-placeholder">VERIFY<br/>QR</div>
-          *** THIS IS A SYSTEM GENERATED DOCUMENT ***<br/>
-          UUID: ${payment.id || "N/A"} | Exchange Rate Applied: ${paymentExRate.toFixed(4)}
+          ${rt("receipt_system_generated_document")}<br/>
+          UUID: ${payment.id || "N/A"} | ${rt("receipt_exchange_rate_applied")}: ${paymentExRate.toFixed(4)}
         </div>
       </div>
       <script>
@@ -989,6 +1005,7 @@ function FieldBlock({ label, required, children, className }: { label: string; r
 }
 
 function NestedRowActions({ payment, row, ledgers, localCurrency }: any) {
+  const currentLanguage = useActiveLanguage() as LanguageCode;
   function handleAction(fn: () => void) {
     fn();
     const details = document.activeElement?.closest("details");
@@ -1000,9 +1017,9 @@ function NestedRowActions({ payment, row, ledgers, localCurrency }: any) {
         <MoreVertical className="h-4 w-4" />
       </summary>
       <div className="absolute right-0 z-30 mt-1 w-40 rounded-xl border border-border bg-popover p-1 text-sm text-popover-foreground shadow-xl">
-        <MenuAction icon={<Eye />} label="View Details" onClick={() => handleAction(() => handlePrintReceipt(payment, row, ledgers, localCurrency, false))} />
+        <MenuAction icon={<Eye />} label="View Details" onClick={() => handleAction(() => handlePrintReceipt(payment, row, ledgers, localCurrency, false, currentLanguage))} />
         <MenuAction icon={<Edit3 />} label="Edit Line" onClick={() => handleAction(() => window.dispatchEvent(new CustomEvent("open-edit-payment", { detail: { payment, row } })))} />
-        <MenuAction icon={<Printer />} label="Print Receipt" onClick={() => handleAction(() => handlePrintReceipt(payment, row, ledgers, localCurrency, true))} />
+        <MenuAction icon={<Printer />} label="Print Receipt" onClick={() => handleAction(() => handlePrintReceipt(payment, row, ledgers, localCurrency, true, currentLanguage))} />
       </div>
     </details>
   );
@@ -3303,7 +3320,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
       if (name.includes("cash") || code.includes("cash")) {
         setPaymentType("cash");
         setRoznamchaType("Cash Book No.");
-      } else if (name.includes("bank") || code.includes("bank")) {
+      } else {
         setPaymentType("bank");
         setRoznamchaType("Roznamcha Book No.");
       }
@@ -4307,11 +4324,22 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                                       paidAmountLocal = remPaidBC * conversionRate;
                                       balanceAmountBC = remainingDueBC;
                                       balanceAmountLocal = remainingDueBC * conversionRate;
-                                    } else {
+                                    } else if (activeMode === "credit") {
                                       const credPaidBC = Number(row.credit_amount || 0);
                                       paidAmountBC = credPaidBC;
                                       paidAmountLocal = credPaidBC * conversionRate;
                                       balanceAmountBC = Math.max(0, totalAmountBC - paidAmountBC);
+                                      balanceAmountLocal = balanceAmountBC * conversionRate;
+                                    } else {
+                                      // History (and any other mode): total paid must include every
+                                      // payment kind — advance + remaining + credit — not credit_amount
+                                      // alone. Using row.remaining_due (the authoritative DB balance)
+                                      // for the outstanding figure avoids re-deriving it and drifting
+                                      // out of sync with what was actually posted.
+                                      const totalPaidBC = Number(row.advance_paid || 0) + Number(row.remaining_paid || 0) + Number(row.credit_amount || 0);
+                                      paidAmountBC = totalPaidBC;
+                                      paidAmountLocal = totalPaidBC * conversionRate;
+                                      balanceAmountBC = Math.max(0, Number(row.remaining_due ?? (totalAmountBC - totalPaidBC)));
                                       balanceAmountLocal = balanceAmountBC * conversionRate;
                                     }
                                     
@@ -4673,7 +4701,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
               const remainingDue = Number(selected.remaining_due || 0);
               const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
               const fromLoading = searchParams.get("fromLoading") === "true";
-              if (activeMode === "advance" && remainingAdvanceBC <= 0.01) {
+              if (activeMode === "advance" && advancePercent > 0 && remainingAdvanceBC <= 0.01) {
                 return (
                   <div className="bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold p-3.5 rounded-xl flex items-center gap-2 dark:bg-amber-950/20 dark:border-amber-900/30 dark:text-amber-400 animate-in fade-in duration-300">
                     <XCircle className="h-5 w-5 shrink-0" /> Already Transferred: The advance payment for PO {selected.purchase_order_no} has already been fully paid.
@@ -4784,7 +4812,11 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                 });
                 displayPayments = [advanceSynthetic, ...loadingRemainingPayments];
               } else {
-                displayPayments = [...selectedOrderPayments];
+                // Exclude "booking" entries — that's the initial purchase posting (Dr Purchase / Cr
+                // Payable), not a payment against the balance. Counting it here made every order
+                // look 100% paid immediately after booking, before any real advance/remaining
+                // payment was ever made.
+                displayPayments = selectedOrderPayments.filter((p: any) => p.kind !== "booking");
               }
 
               const chronological = displayPayments.sort((a: any, b: any) =>
@@ -4831,8 +4863,11 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
               const latestHistory = historyWithBalance[historyWithBalance.length - 1];
               const statPreviousDueFC = statementPurchaseForeign;
               const statPreviousDueLC = statementPurchaseLocal;
-              const statCurrentPayFC = Number(latestHistory?.amtUSD || (amount > 0 ? (showCalcPanel && calcAmount ? Number(calcAmount) : amount / exRate) : statementPurchaseForeign));
-              const statCurrentPayLC = Number(latestHistory?.amtAED || (amount > 0 ? amount : statementPurchaseLocal));
+              // No history AND nothing typed yet means nothing has been paid in this entry —
+              // must default to 0, not the full purchase total (that previously made every
+              // freshly-booked order display as "100% paid" before any real payment existed).
+              const statCurrentPayFC = Number(latestHistory?.amtUSD || (amount > 0 ? (showCalcPanel && calcAmount ? Number(calcAmount) : amount / exRate) : 0));
+              const statCurrentPayLC = Number(latestHistory?.amtAED || (amount > 0 ? amount : 0));
               const statRemainingFC = Number(latestHistory?.showRemainUSD ?? Math.max(0, statPreviousDueFC - statCurrentPayFC));
               const statRemainingLC = Number(latestHistory?.showRemainAED ?? Math.max(0, statPreviousDueLC - statCurrentPayLC));
               const statTotalPaidFC = historyWithBalance.reduce((sum, p) => sum + p.amtUSD, 0) || statCurrentPayFC;
@@ -4842,10 +4877,10 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
 
               const activePaymentAmountUSD = amount > 0
                 ? (showCalcPanel && calcAmount ? Number(calcAmount) : amount / Number(exchangeRate || exRate || 1))
-                : (latestHistory?.amtUSD || statementPurchaseForeign);
+                : (latestHistory?.amtUSD || 0);
               const activePaymentAmountLocal = amount > 0
                 ? amount
-                : (latestHistory?.amtAED || statementPurchaseLocal);
+                : (latestHistory?.amtAED || 0);
 
               const paymentMethodDisplay = typeDetails.method || typeDetails.bankName || paymentType?.toUpperCase() || "Bank";
 
@@ -4977,7 +5012,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                           <div>
                             <div className="flex justify-between items-center">
                               <span className="text-[9.5px] font-semibold text-slate-400 block">Branch</span>
-                              <span className="text-[9px] font-mono text-slate-400">Branch Code: {selected.branch_code || form.branchCode || "BR-001"}</span>
+                              <span className="text-[9px] font-mono text-slate-400">Branch Code: {selected.audit?.branchCode || form.branchCode || "-"}</span>
                             </div>
                             <span className="font-extrabold text-slate-900 dark:text-slate-100 text-[11px] truncate block">{branchHeader}</span>
                           </div>
@@ -5327,7 +5362,12 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                                       if (name.includes("cash") || code.includes("cash")) {
                                         setPaymentType("cash");
                                         setRoznamchaType("Cash Book No.");
-                                      } else if (name.includes("bank") || code.includes("bank")) {
+                                      } else {
+                                        // Default to "bank" for any other ledger name — a selected
+                                        // ledger must always resolve to a payment type. Previously
+                                        // this stayed empty whenever the ledger's name/code didn't
+                                        // literally contain "bank", silently disabling Save with no
+                                        // visible reason for perfectly valid, real ledgers.
                                         setPaymentType("bank");
                                         setRoznamchaType("Roznamcha Book No.");
                                       }
@@ -5367,35 +5407,28 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                                 />
                               </FieldBlock>
 
-                              <FieldBlock label={t("payment_amount_usd", currentLanguage)} required>
+                              <FieldBlock label={`${t("payment_amount_usd", currentLanguage)} (auto)`}>
                                 <div className="relative">
                                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">
                                     {poCurrencyHeader}
                                   </span>
                                   <Input
-                                    className="h-8 pl-12 text-right text-xs font-black font-mono text-blue-600 dark:text-blue-400"
-                                    value={amount}
-                                    onChange={(e) => setAmount(e.target.value)}
-                                    placeholder="0.00"
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
+                                    disabled
+                                    className="h-8 pl-12 text-right text-xs font-black font-mono text-blue-600 dark:text-blue-400 bg-slate-50 dark:bg-slate-900"
+                                    value={amount.toFixed(2)}
+                                    readOnly
                                   />
                                 </div>
                               </FieldBlock>
                             </div>
 
-                            {/* Additional Optional Calculation helper */}
-                            <div className="flex items-center justify-between pt-1">
-                              <button
-                                type="button"
-                                onClick={() => setShowCalcPanel(!showCalcPanel)}
-                                className="text-[11px] font-bold text-blue-600 hover:underline flex items-center gap-1 cursor-pointer"
-                              >
+                            {/* Currency conversion helper — shown automatically when the payment currency differs from the PO/base currency */}
+                            {showCalcPanel && (
+                              <div className="flex items-center gap-1 pt-1 text-[11px] font-bold text-blue-600">
                                 <Calculator className="h-3.5 w-3.5" />
-                                <span>{showCalcPanel ? "Hide Rate Calculator" : "Advanced Rate / Currency Conversion"}</span>
-                              </button>
-                            </div>
+                                <span>Rate / Currency Conversion</span>
+                              </div>
+                            )}
 
                             {showCalcPanel && (
                               <div className="rounded-lg border border-slate-200 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-950 space-y-2">
@@ -5412,8 +5445,8 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                                   <FieldBlock label="Conversion Rate">
                                     <Input
                                       className="h-7 text-xs font-mono"
-                                      value={calcRate}
-                                      onChange={(e) => setCalcRate(e.target.value)}
+                                      value={exchangeRate}
+                                      onChange={(e) => setExchangeRate(e.target.value)}
                                       placeholder="3.6725"
                                       type="number"
                                     />
@@ -5734,7 +5767,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                     </div>
                     <div>
                       <span>Created On: </span>
-                      <strong className="text-slate-700 dark:text-slate-300 font-bold">{date(selected.created_at)} {new Date(selected.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}</strong>
+                      <strong className="text-slate-700 dark:text-slate-300 font-bold">{date(selected.created_at)} {selected.created_at ? new Date(selected.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : ""}</strong>
                     </div>
                   </div>
                 </div>

@@ -132,11 +132,11 @@ export function CountryPurchaseReportsView() {
     { key: "in_transit_qty", label: tt("creports.in_transit", "In Transit"), isNumeric: true, format: (v) => num(v).toLocaleString() },
     { key: "received_qty", label: tt("creports.received_qty", "Received Qty"), isNumeric: true, format: (v) => num(v).toLocaleString() },
     { key: "remaining_qty", label: tt("creports.remaining_qty", "Remaining Qty"), isNumeric: true, format: (_v, r) => Math.max(0, num(r.purchased_qty) - num(r.received_qty)).toLocaleString() },
-    { key: "order_total", label: tt("creports.purchase_amount", "Purchase Amount"), isNumeric: true, format: (v, r) => money(v, r.currency_code) },
-    { key: "advance_paid", label: tt("creports.advance", "Advance"), isNumeric: true, format: (v, r) => money(v, r.currency_code) },
-    { key: "remaining_paid", label: tt("creports.paid", "Paid"), isNumeric: true, format: (v, r) => money(v, r.currency_code) },
-    { key: "credit_amount", label: tt("creports.credit", "Credit"), isNumeric: true, format: (v, r) => money(v, r.currency_code) },
-    { key: "remaining_due", label: tt("creports.remaining_payment", "Remaining Payment"), isNumeric: true, format: (v, r) => money(v, r.currency_code) },
+    { key: "order_total", label: tt("creports.purchase_amount", "Purchase Amount"), isNumeric: true, isCurrency: true, format: (v, r) => money(v, r.currency_code) },
+    { key: "advance_paid", label: tt("creports.advance", "Advance"), isNumeric: true, isCurrency: true, format: (v, r) => money(v, r.currency_code) },
+    { key: "remaining_paid", label: tt("creports.paid", "Paid"), isNumeric: true, isCurrency: true, format: (v, r) => money(v, r.currency_code) },
+    { key: "credit_amount", label: tt("creports.credit", "Credit"), isNumeric: true, isCurrency: true, format: (v, r) => money(v, r.currency_code) },
+    { key: "remaining_due", label: tt("creports.remaining_payment", "Remaining Payment"), isNumeric: true, isCurrency: true, format: (v, r) => money(v, r.currency_code) },
     { key: "transport_modes", label: tt("creports.transportation", "Transportation"), format: (v) => renderTransportModes(tt, v as string | null) },
     { key: "payment_status", label: tt("common.status", "Status"), format: (v) => renderStatus(tt, v as string | null) }
   ];
