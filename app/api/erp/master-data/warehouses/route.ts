@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     // resolves to the anon key in this environment, so RLS silently filters this list to
     // zero rows even for a super-admin session — same root cause fixed elsewhere this pass.
     const countryIds = !session.isSuperAdmin ? session.countryIds : null;
-    let data = await withLocalPg(async (sql) => {
+    const rows = await withLocalPg(async (sql) => {
       return sql`
         select id, country_id, state_province_id, district_id, city_id, area_id, owner_name,
                warehouse_code, warehouse_name, warehouse_type, full_address, contact_number,
@@ -37,8 +37,9 @@ export async function GET(request: NextRequest) {
         order by warehouse_name asc
       `;
     });
-    data = await localizeRecordNames((data ?? []) as any[], "warehouses", "warehouse_name", lang);
-    data = await localizeRecordNames((data ?? []) as any[], "warehouses", "owner_name", lang);
+    let data: any[] = (rows ?? []) as any[];
+    data = await localizeRecordNames(data, "warehouses", "warehouse_name", lang);
+    data = await localizeRecordNames(data, "warehouses", "owner_name", lang);
     return NextResponse.json({ warehouses: data || [] });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

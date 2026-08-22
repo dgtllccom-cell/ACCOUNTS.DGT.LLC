@@ -297,7 +297,7 @@ export type UiKey =
   | "wh.status_all" | "wh.status_under_maintenance" | "wh.status_closed" | "wh.print_report"
   | "wh.new_warehouse" | "wh.kpi_total" | "wh.kpi_nonactive" | "wh.kpi_owner_linked"
   | "wh.col_warehouse" | "wh.col_owner" | "wh.col_city_area" | "wh.col_type" | "wh.loading"
-  | "wh.report_title" | "wh.state_city_area" | "wh.address"
+  | "wh.report_title" | "wh.state_city_area" | "wh.address" | "wh.no_results" | "wh.no_address"
   | "acct.company_name" | "acct.customer_code" | "acct.company_code" | "acct.phone" | "acct.email"
   | "acct.address" | "acct.city" | "acct.country" | "acct.business_type" | "acct.registration_no"
   | "acct.tax_registration_no" | "acct.ntn_gst" | "acct.bank_name" | "acct.branch_name"
@@ -5310,6 +5310,8 @@ const en: Dict = {
   "wh.report_title": "Warehouse Registry Report",
   "wh.state_city_area": "State / City / Area",
   "wh.address": "Address",
+  "wh.no_results": "No warehouse records matched the current search and filter.",
+  "wh.no_address": "No address recorded",
   "acct.account_type": "Account Type",
   "acct.customer_name": "Customer Name",
   "acct.company_name": "Company Name",
@@ -10190,6 +10192,8 @@ const ur: Dict = {
   "wh.report_title": "گودام رجسٹری رپورٹ",
   "wh.state_city_area": "صوبہ / شہر / علاقہ",
   "wh.address": "پتہ",
+  "wh.no_results": "موجودہ تلاش اور فلٹر سے کوئی گودام ریکارڈ مطابقت نہیں رکھتا۔",
+  "wh.no_address": "کوئی پتہ درج نہیں",
   "acct.account_type": "اکاؤنٹ کی قسم",
   "acct.customer_name": "کسٹمر کا نام",
   "acct.company_name": "کمپنی کا نام",
@@ -14043,6 +14047,8 @@ const ar: Dict = {
   "wh.report_title": "تقرير سجل المستودعات",
   "wh.state_city_area": "الولاية / المدينة / المنطقة",
   "wh.address": "العنوان",
+  "wh.no_results": "لا توجد سجلات مستودعات مطابقة لعملية البحث والتصفية الحالية.",
+  "wh.no_address": "لا يوجد عنوان مسجل",
   "acct.account_type": "نوع الحساب",
   "acct.customer_name": "اسم العميل",
   "acct.company_name": "اسم الشركة",
@@ -17883,6 +17889,8 @@ const fa: Dict = {
   "wh.report_title": "گزارش دفتر ثبت انبار",
   "wh.state_city_area": "استان / شهر / منطقه",
   "wh.address": "آدرس",
+  "wh.no_results": "هیچ رکورد انباری با جستجو و فیلتر فعلی مطابقت ندارد.",
+  "wh.no_address": "آدرسی ثبت نشده",
   "acct.account_type": "نوع حساب",
   "acct.customer_name": "نام مشتری",
   "acct.company_name": "نام شرکت",
@@ -21750,6 +21758,8 @@ const ps: Dict = {
   "wh.report_title": "د ګدام راجستر راپور",
   "wh.state_city_area": "ایالت / ښار / سیمه",
   "wh.address": "پته",
+  "wh.no_results": "د اوسنۍ لټون او فلټر سره هیڅ د ګدام ریکارډ سمون ونه موند.",
+  "wh.no_address": "هیڅ پته ثبت شوې نه ده",
   "acct.account_type": "د حساب ډول",
   "acct.customer_name": "د پیرودونکي نوم",
   "acct.company_name": "د شرکت نوم",

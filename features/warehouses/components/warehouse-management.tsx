@@ -51,6 +51,16 @@ export function WarehouseManagement() {
   const lang = useActiveLanguage();
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang || "en");
+  const renderStatus = (status: string | null | undefined) => {
+    const key: Record<string, [string, string]> = {
+      Active: ["creg.status_active", "Active"],
+      Inactive: ["creg.status_inactive", "Inactive"],
+      "Under Maintenance": ["wh.status_under_maintenance", "Under Maintenance"],
+      Closed: ["wh.status_closed", "Closed"]
+    };
+    const found = status ? key[status] : null;
+    return found ? tt(found[0], found[1]) : status || "-";
+  };
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [warehouses, setWarehouses] = useState<WarehouseRecord[]>([]);
@@ -354,7 +364,7 @@ export function WarehouseManagement() {
                 ) : filteredWarehouses.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-4 py-10 text-center text-xs text-slate-400">
-                      No warehouse records matched the current search and filter.
+                      {tt("wh.no_results", "No warehouse records matched the current search and filter.")}
                     </td>
                   </tr>
                 ) : (
@@ -366,7 +376,7 @@ export function WarehouseManagement() {
                       <tr key={warehouse.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors border-b border-slate-100 dark:border-slate-800/80">
                         <td className="px-4 py-2.5">
                           <div className="font-bold text-slate-900 dark:text-slate-100">{warehouse.warehouse_name}</div>
-                          <div className="text-[10.5px] text-slate-400">{warehouse.full_address || "No address recorded"}</div>
+                          <div className="text-[10.5px] text-slate-400">{warehouse.full_address || tt("wh.no_address", "No address recorded")}</div>
                         </td>
                         <td className="px-4 py-2.5">
                           <div className="font-semibold text-slate-800 dark:text-slate-200">{warehouse.owner_name || "—"}</div>
@@ -387,7 +397,7 @@ export function WarehouseManagement() {
                                 : "bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800/40"
                             }`}
                           >
-                            {warehouse.status}
+                            {renderStatus(warehouse.status)}
                           </span>
                         </td>
                         <td className="px-4 py-2.5 text-right">
