@@ -109,8 +109,26 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       destination: { countryId: order.dest_country_id, countryBranchId: order.dest_country_branch_id, cityBranchId: order.dest_city_branch_id }
     });
 
-    const sourceScope = [order.source_country_name, order.source_branch_name].filter(Boolean).join(" / ") || null;
-    const destScope = [order.dest_country_name, order.dest_branch_name].filter(Boolean).join(" / ") || null;
+    // Country/branch names have real record_translations coverage — resolve them, not raw.
+    const countryLookup: { id: string; name: string | null }[] = [];
+    if (order.country_id) countryLookup.push({ id: order.country_id, name: order.source_country_name });
+    if (order.dest_country_id) countryLookup.push({ id: order.dest_country_id, name: order.dest_country_name });
+    const localizedCountries = await localizeRecordNames(countryLookup, "countries", "name", lang);
+    const countryNameById = new Map(localizedCountries.map((c) => [c.id, c.name]));
+
+    const branchLookup: { id: string; name: string | null }[] = [];
+    if (order.country_branch_id) branchLookup.push({ id: order.country_branch_id, name: order.source_branch_name });
+    if (order.dest_country_branch_id) branchLookup.push({ id: order.dest_country_branch_id, name: order.dest_branch_name });
+    const localizedBranches = await localizeRecordNames(branchLookup, "country_branches", "name", lang);
+    const branchNameById = new Map(localizedBranches.map((b) => [b.id, b.name]));
+
+    const sourceCountryName = (order.country_id && countryNameById.get(order.country_id)) || order.source_country_name;
+    const sourceBranchName = (order.country_branch_id && branchNameById.get(order.country_branch_id)) || order.source_branch_name;
+    const destCountryName = (order.dest_country_id && countryNameById.get(order.dest_country_id)) || order.dest_country_name;
+    const destBranchName = (order.dest_country_branch_id && branchNameById.get(order.dest_country_branch_id)) || order.dest_branch_name;
+
+    const sourceScope = [sourceCountryName, sourceBranchName].filter(Boolean).join(" / ") || null;
+    const destScope = [destCountryName, destBranchName].filter(Boolean).join(" / ") || null;
     const form = order.form_data?.form || {};
     const referenceNo = [order.purchase_order_no, order.purchase_contract_no].filter(Boolean).join(" / ");
 
