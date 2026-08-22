@@ -46,6 +46,7 @@ import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-se
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { OpenFullBillModal } from "@/components/invoices/open-full-bill-modal";
+import { GoodsPopoverCell } from "@/components/ui/goods-popover-cell";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -4355,7 +4356,9 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                                           {/* Details */}
                                           <td className={cn("px-2 py-3 border-r border-slate-100 dark:border-slate-800/50 font-bold uppercase tracking-wide align-middle text-left", getRowColor())}>{branchName}</td>
                                           <td className={cn("px-2 py-3 border-r border-slate-100 dark:border-slate-800/50 font-bold uppercase align-middle text-left", getRowColor())}>{userName}</td>
-                                          <td className={cn("px-2 py-3 border-r border-slate-100 dark:border-slate-800/50 font-bold align-middle text-left", getRowColor())}>{goodsName}</td>
+                                          <td className={cn("px-2 py-3 border-r border-slate-100 dark:border-slate-800/50 font-bold align-middle text-left", getRowColor())}>
+                                             <GoodsPopoverCell goods={goods} fallbackName={goodsName} textColorClass={getRowColor()} />
+                                           </td>
                                           {/* Cargo */}
                                           <td className={cn("px-2 py-3 border-r border-slate-100 dark:border-slate-800/50 font-mono font-black align-middle text-right", getRowColor())}>{totalQty.toLocaleString()}</td>
                                           <td className={cn("px-2 py-3 border-r border-slate-100 dark:border-slate-800/50 font-mono align-middle text-right", getRowColor())}>{grossWeight.toLocaleString()}</td>
