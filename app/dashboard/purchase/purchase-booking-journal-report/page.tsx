@@ -1,7 +1,7 @@
-import { PurchaseBookingViewRedesign } from "@/components/purchase-booking-view-redesign";
+import { PurchaseBookingJournalReportView } from "@/features/purchases/components/purchase-booking-journal-report-view";
 
 export const dynamic = "force-dynamic";
 
 export default function PurchaseBookingJournalReportPage() {
-  return <PurchaseBookingViewRedesign chrome={false} />;
+  return <PurchaseBookingJournalReportView />;
 }
