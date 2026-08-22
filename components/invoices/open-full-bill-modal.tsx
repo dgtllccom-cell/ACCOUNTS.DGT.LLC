@@ -415,7 +415,7 @@ export function OpenFullBillModal({
                 </div>
                 <div className="rounded-xl bg-slate-800/80 px-3.5 py-2 text-center border border-slate-700 min-w-[75px]">
                   <div className="text-[9px] font-bold uppercase text-slate-400">{t("LOCAL")}</div>
-                  <div className="text-sm font-black text-white">{currency}</div>
+                  <div className="text-sm font-black text-white">{localCurrency}</div>
                 </div>
               </div>
             </div>
@@ -463,62 +463,62 @@ export function OpenFullBillModal({
               </div>
             </div>
 
-            {/* Card 3: BILL SUMMARY */}
+            {/* Card 3: BILL & REMAINING BALANCE (Combined) */}
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                {t("BILL SUMMARY")}
+              <div className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex justify-between items-center">
+                <span>{t("BILL & BALANCE SUMMARY")}</span>
+                <span className="text-[9px] font-mono text-slate-400">1 {currency} = {exchangeRate.toFixed(4)} {localCurrency}</span>
               </div>
-              <div className="mt-2.5 space-y-1.5 text-xs">
+              <div className="mt-2.5 space-y-1 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">{t("Total Purchase (FC)")}</span>
+                  <span className="text-slate-500">{t("Total Purchase")}:</span>
                   <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
                     {totalPurchaseFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">{t("Exchange Rate")}</span>
-                  <span className="font-mono font-bold text-slate-600 dark:text-slate-400">
-                    1 {currency} = {exchangeRate.toFixed(4)}
+                  <span className="text-slate-500">{t("Total Paid")}:</span>
+                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                    {totalPaidFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}
                   </span>
                 </div>
-                <div className="flex justify-between border-t border-slate-100 dark:border-slate-800 pt-1.5 font-bold">
-                  <span className="text-slate-700 dark:text-slate-300">{t("Final Converted")} ({currency})</span>
-                  <span className="font-mono text-blue-600 dark:text-blue-400">
-                    {totalPurchaseFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}
+                <div className="flex justify-between font-bold">
+                  <span className="text-slate-600 dark:text-slate-300">{t("Remaining Balance")}:</span>
+                  <span className="font-mono font-black text-red-600 dark:text-red-400">
+                    {remainingFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}
+                  </span>
+                </div>
+                <div className="flex justify-between border-t border-slate-100 dark:border-slate-800 pt-1 text-[10.5px]">
+                  <span className="text-slate-400">{t("Local Converted")}:</span>
+                  <span className="font-mono font-bold text-blue-600 dark:text-blue-400">
+                    {totalPurchaseLC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {localCurrency}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Card 4: REMAINING BALANCE */}
+            {/* Card 4: BRANCH & USER AUDIT */}
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                {t("REMAINING BALANCE")}
+              <div className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex justify-between items-center">
+                <span>{t("BRANCH & USER AUDIT")}</span>
+                <span className="text-[9px] px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 font-bold dark:bg-blue-950 dark:text-blue-300">{statusBadge}</span>
               </div>
-              <div className="mt-2.5 space-y-1.5 text-xs">
+              <div className="mt-2.5 space-y-1 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">{t("Total Payable")}</span>
-                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                    {totalPurchaseFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}
-                  </span>
+                  <span className="text-slate-500">{t("Country")}:</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">{countryName}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">{t("Total Paid")}</span>
-                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                    {totalPaidFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}
-                  </span>
+                  <span className="text-slate-500">{t("Branch")}:</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">{branchName}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500 font-bold">{t("Remaining")}</span>
-                  <span className="font-mono font-black text-red-600 dark:text-red-400">
-                    {remainingFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}
-                  </span>
+                  <span className="text-slate-500">{t("User Name")}:</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">{order.audit?.userName || form.userName || session?.fullName || "Super Admin"}</span>
                 </div>
-                <div className="flex justify-between border-t border-slate-100 dark:border-slate-800 pt-1.5 text-[11px]">
-                  <span className="text-slate-400">{t("Local Balance")}</span>
-                  <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
-                    {remainingLC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {localCurrency}
-                  </span>
+                <div className="flex justify-between border-t border-slate-100 dark:border-slate-800 pt-1 text-[10.5px]">
+                  <span className="text-slate-400">{t("Date & Time")}:</span>
+                  <span className="font-semibold text-slate-600 dark:text-slate-400">{dateFormatted}</span>
                 </div>
               </div>
             </div>
@@ -589,23 +589,30 @@ export function OpenFullBillModal({
 
           {/* ── TAB 2: GOODS & WEIGHTS DETAILS ──────────────────── */}
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:border-slate-800 dark:bg-slate-900">
-            <div className="bg-slate-50 dark:bg-slate-800/60 px-4 py-2.5 border-b border-slate-200 dark:border-slate-800">
+            <div className="bg-slate-50 dark:bg-slate-800/60 px-4 py-2.5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
               <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                 {t("GOODS & WEIGHTS DETAILS")}
+              </span>
+              <span className="text-[10px] font-bold text-slate-500">
+                {t("Advance Rate")}: <strong className="text-blue-600 dark:text-blue-400">{Number(form.advancePercent || order.advancePercent || 0)}%</strong>
               </span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-slate-100/60 dark:bg-slate-800/40 text-slate-500 font-bold uppercase text-[10px] border-b border-slate-200 dark:border-slate-800">
+                  <tr className="bg-slate-100/60 dark:bg-slate-800/40 text-slate-500 font-bold uppercase text-[9.5px] border-b border-slate-200 dark:border-slate-800">
                     <th className="px-3 py-2.5 text-center w-10">#</th>
                     <th className="px-4 py-2.5">{t("GOODS NAME")}</th>
-                    <th className="px-4 py-2.5 text-right">{t("QTY")}</th>
-                    <th className="px-4 py-2.5 text-right">{t("GROSS WT")}</th>
-                    <th className="px-4 py-2.5 text-right">{t("NET WT")}</th>
-                    <th className="px-4 py-2.5 text-right">{t("UNIT PRICE")} ({currency})</th>
-                    <th className="px-4 py-2.5 text-right">{t("TOTAL")} ({currency})</th>
-                    <th className="px-4 py-2.5 text-right">{t("FINAL AMOUNT")} ({currency})</th>
+                    <th className="px-3 py-2.5 text-right">{t("QTY")}</th>
+                    <th className="px-3 py-2.5 text-right">{t("GROSS WT")}</th>
+                    <th className="px-3 py-2.5 text-right">{t("NET WT")}</th>
+                    <th className="px-3 py-2.5 text-right">{t("UNIT PRICE")} ({currency})</th>
+                    <th className="px-3 py-2.5 text-right">{t("TOTAL")} ({currency})</th>
+                    <th className="px-3 py-2.5 text-center">{t("EXCHANGE RATE")}</th>
+                    <th className="px-3 py-2.5 text-right">{t("FINAL AMOUNT")} ({localCurrency})</th>
+                    <th className="px-3 py-2.5 text-center">{t("ADVANCE %")}</th>
+                    <th className="px-3 py-2.5 text-right">{t("ADVANCE")} ({currency})</th>
+                    <th className="px-3 py-2.5 text-right">{t("ADVANCE")} ({localCurrency})</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -614,8 +621,12 @@ export function OpenFullBillModal({
                     const gross = Number(g.grossWeight || 0);
                     const net = Number(g.netWeight || 0);
                     const price = Number(g.coursePrice || g.unitPrice || 0);
-                    const total = Number(g.totalAmount || (qty * price) || 0);
-                    const finalAmt = Number(g.finalAmount || (total * exchangeRate) || total);
+                    const isPerKg = g.priceType === "P/KGs" || String(g.priceType || "").toLowerCase().includes("kg");
+                    const totalFC = Number(g.totalAmount || (isPerKg ? net * price : qty * price) || (qty * price) || 0);
+                    const finalLC = totalFC * exchangeRate;
+                    const advPct = Number(form.advancePercent || order.advancePercent || 0);
+                    const advFC = (totalFC * advPct) / 100;
+                    const advLC = advFC * exchangeRate;
 
                     return (
                       <tr key={index} className="border-b last:border-b-0 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition">
@@ -624,12 +635,16 @@ export function OpenFullBillModal({
                           {g.goodsName || g.productName || "Cargo Item"}
                           {g.spec && <span className="block text-[10px] font-normal text-slate-400">({g.spec})</span>}
                         </td>
-                        <td className="px-4 py-2 text-right font-mono font-semibold">{qty.toLocaleString()}</td>
-                        <td className="px-4 py-2 text-right font-mono font-semibold">{gross.toLocaleString()}</td>
-                        <td className="px-4 py-2 text-right font-mono font-semibold">{net.toLocaleString()}</td>
-                        <td className="px-4 py-2 text-right font-mono font-semibold">{price.toFixed(2)}</td>
-                        <td className="px-4 py-2 text-right font-mono font-bold text-slate-900 dark:text-slate-100">{total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td className="px-4 py-2 text-right font-mono font-bold text-slate-900 dark:text-slate-100">{total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td className="px-3 py-2 text-right font-mono font-semibold">{qty.toLocaleString()}</td>
+                        <td className="px-3 py-2 text-right font-mono font-semibold">{gross.toLocaleString()}</td>
+                        <td className="px-3 py-2 text-right font-mono font-semibold">{net.toLocaleString()}</td>
+                        <td className="px-3 py-2 text-right font-mono font-semibold">{price.toFixed(2)}</td>
+                        <td className="px-3 py-2 text-right font-mono font-bold text-slate-900 dark:text-slate-100">{totalFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td className="px-3 py-2 text-center font-mono text-slate-600 dark:text-slate-400">{exchangeRate.toFixed(4)}</td>
+                        <td className="px-3 py-2 text-right font-mono font-bold text-blue-600 dark:text-blue-400">{finalLC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td className="px-3 py-2 text-center font-mono font-bold text-amber-600 dark:text-amber-400">{advPct}%</td>
+                        <td className="px-3 py-2 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">{advFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td className="px-3 py-2 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">{advLC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                       </tr>
                     );
                   })}
@@ -637,12 +652,20 @@ export function OpenFullBillModal({
                 <tfoot>
                   <tr className="bg-slate-50 dark:bg-slate-800/60 font-black border-t border-slate-200 dark:border-slate-800 text-xs">
                     <td colSpan={2} className="px-4 py-2.5 uppercase text-slate-700 dark:text-slate-300">{t("TOTAL")}</td>
-                    <td className="px-4 py-2.5 text-right font-mono">{sumQty.toLocaleString()}</td>
-                    <td className="px-4 py-2.5 text-right font-mono">{sumGrossWt.toLocaleString()}</td>
-                    <td className="px-4 py-2.5 text-right font-mono">{sumNetWt.toLocaleString()}</td>
-                    <td className="px-4 py-2.5 text-right"></td>
-                    <td className="px-4 py-2.5 text-right font-mono text-emerald-600 dark:text-emerald-400">{sumTotalAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    <td className="px-4 py-2.5 text-right font-mono text-emerald-600 dark:text-emerald-400">{sumTotalAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td className="px-3 py-2.5 text-right font-mono">{sumQty.toLocaleString()}</td>
+                    <td className="px-3 py-2.5 text-right font-mono">{sumGrossWt.toLocaleString()}</td>
+                    <td className="px-3 py-2.5 text-right font-mono">{sumNetWt.toLocaleString()}</td>
+                    <td className="px-3 py-2.5 text-right"></td>
+                    <td className="px-3 py-2.5 text-right font-mono text-slate-900 dark:text-slate-100">{sumTotalAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td className="px-3 py-2.5 text-center font-mono">{exchangeRate.toFixed(4)}</td>
+                    <td className="px-3 py-2.5 text-right font-mono text-blue-600 dark:text-blue-400">{sumFinalAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td className="px-3 py-2.5 text-center font-mono">{Number(form.advancePercent || order.advancePercent || 0)}%</td>
+                    <td className="px-3 py-2.5 text-right font-mono text-emerald-600 dark:text-emerald-400">
+                      {((sumTotalAmt * Number(form.advancePercent || order.advancePercent || 0)) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </td>
+                    <td className="px-3 py-2.5 text-right font-mono text-emerald-600 dark:text-emerald-400">
+                      {(((sumTotalAmt * Number(form.advancePercent || order.advancePercent || 0)) / 100) * exchangeRate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </td>
                   </tr>
                 </tfoot>
               </table>
@@ -682,7 +705,9 @@ export function OpenFullBillModal({
                           <td className="px-3 py-2 text-center font-mono font-bold text-slate-400">{d.srNo}</td>
                           <td className="px-3 py-2 whitespace-nowrap font-medium text-slate-700 dark:text-slate-300">{d.date}</td>
                           <td className="px-3 py-2 font-mono font-bold text-blue-600 dark:text-blue-400">{d.voucherNo}</td>
-                          <td className="px-3 py-2 font-semibold text-slate-800 dark:text-slate-200">{d.narration}</td>
+                          <td className="px-3 py-2 font-semibold text-slate-800 dark:text-slate-200">
+                            <span className="truncate max-w-[200px] block" title={d.narration}>{d.narration}</span>
+                          </td>
                           <td className="px-3 py-2 text-right font-mono font-bold text-slate-900 dark:text-slate-100">
                             {d.amountFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
@@ -739,7 +764,9 @@ export function OpenFullBillModal({
                             <td className="px-3 py-2 text-center font-mono font-bold text-slate-400">{c.srNo}</td>
                             <td className="px-3 py-2 whitespace-nowrap font-medium text-slate-700 dark:text-slate-300">{c.date}</td>
                             <td className="px-3 py-2 font-mono font-bold text-emerald-600 dark:text-emerald-400">{c.voucherNo}</td>
-                            <td className="px-3 py-2 font-semibold text-slate-800 dark:text-slate-200">{c.narration}</td>
+                            <td className="px-3 py-2 font-semibold text-slate-800 dark:text-slate-200">
+                              <span className="truncate max-w-[200px] block" title={c.narration}>{c.narration}</span>
+                            </td>
                             <td className="px-3 py-2 text-right font-mono font-bold text-slate-900 dark:text-slate-100">
                               {c.amountFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </td>
@@ -813,7 +840,9 @@ export function OpenFullBillModal({
                         <td className="px-3 py-2 whitespace-nowrap">{r.date}</td>
                         <td className="px-3 py-2 font-semibold">{r.userName}</td>
                         <td className="px-3 py-2 font-mono font-bold text-purple-600 dark:text-purple-400">{r.roznamchaNo}</td>
-                        <td className="px-3 py-2 font-semibold">{r.narration}</td>
+                        <td className="px-3 py-2 font-semibold text-slate-800 dark:text-slate-200">
+                          <span className="truncate max-w-[180px] block" title={r.narration}>{r.narration}</span>
+                        </td>
                         <td className="px-3 py-2 font-bold text-blue-600 dark:text-blue-400">{r.drAccount}</td>
                         <td className="px-3 py-2 text-right font-mono font-bold">{r.drAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td className="px-3 py-2 font-bold text-emerald-600 dark:text-emerald-400">{r.crAccount}</td>
