@@ -2186,6 +2186,7 @@ export function PurchaseOrderWizard({ session }) {
       ...prev,
       {
         allotName: form.allotName || `ALT-${Math.floor(1000 + Math.random() * 9000)}`,
+        goodsId: selectedGood?.id || null,
         goodsName: form.goodsName,
         size: form.size || "-",
         brand: form.brand || "-",
@@ -2427,6 +2428,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
         const totOrig = Number(g.totalAmount || 0);
         const totLoc = Number(g.finalAmount || totOrig * usdRate);
         return {
+          productId: g.goodsId || g.productId || null,
           goodsName: g.goodsName,
           hsCode: g.hsCode,
           size: g.size,

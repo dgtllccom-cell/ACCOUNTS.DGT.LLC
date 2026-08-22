@@ -6,8 +6,11 @@ import { apiOk, apiError, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScopeEither } from "@/lib/api/scope-middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { localizeRecordNames } from "@/lib/i18n/localize-records";
 
 const paramsSchema = z.object({ id: z.string().uuid() });
+const querySchema = z.object({ lang: z.string().trim().max(5).optional() });
 
 type TimelineEvent = {
   stage: string;
@@ -40,11 +43,15 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
   try {
     const session = await requireErpSession();
     const params = paramsSchema.parse(await context.params);
+    const { searchParams } = new URL(request.url);
+    const lang = normalizeLanguage(querySchema.parse({ lang: searchParams.get("lang") || undefined }).lang);
 
     const result = await withLocalPg(async (sql) => {
       const orderRows = await sql`
         select po.*, c.name as source_country_name, cb.name as source_branch_name,
-               dc.name as dest_country_name, dcb.name as dest_branch_name
+               dc.name as dest_country_name, dcb.name as dest_branch_name,
+               (select poi.product_id from purchase_order_items poi
+                where poi.purchase_order_id = po.id and poi.product_id is not null limit 1) as goods_id
         from purchase_orders po
         left join countries c on c.id = po.country_id
         left join country_branches cb on cb.id = po.country_branch_id
@@ -281,14 +288,35 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       return new Date(a.at).getTime() - new Date(b.at).getTime();
     });
 
+    let goodsName: string | null = form.goodsName || null;
+    if (order.goods_id) {
+      const localizedGoods = await localizeRecordNames(
+        [{ id: order.goods_id as string, goods_name: goodsName }],
+        "goods",
+        "goods_name",
+        lang
+      );
+      goodsName = localizedGoods[0]?.goods_name ?? goodsName;
+    }
+    let supplierName: string | null = form.supplierName || null;
+    if (order.supplier_company_id) {
+      const localizedCompanies = await localizeRecordNames(
+        [{ id: order.supplier_company_id as string, name: supplierName }],
+        "companies",
+        "name",
+        lang
+      );
+      supplierName = localizedCompanies[0]?.name ?? supplierName;
+    }
+
     return apiOk({
       purchaseOrderId: order.id,
       purchaseOrderNo: order.purchase_order_no,
       referenceNo,
       sourceScope,
       destScope,
-      goodsName: form.goodsName || null,
-      supplierName: form.supplierName || null,
+      goodsName,
+      supplierName,
       orderTotal: Number(order.order_total || 0),
       advancePaid: Number(order.advance_paid || 0),
       remainingDue: Number(order.remaining_due || 0),

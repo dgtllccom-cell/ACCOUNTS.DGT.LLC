@@ -64,6 +64,12 @@ const KIND_LABEL_KEYS: Record<string, [string, string]> = {
   payment: ["ctimeline.kind_payment", "Payment"]
 };
 
+const TRANSPORT_MODE_LABEL_KEYS: Record<string, [string, string]> = {
+  "by road": ["plr.by_road", "By Road"],
+  "by sea": ["plr.by_sea", "By Sea"],
+  "by air": ["plr.by_air", "By Air"]
+};
+
 function renderAction(tt: (key: string, fb: string) => string, actionKey: string, actionData: Record<string, any>) {
   const template = ACTION_TEMPLATES[actionKey];
   if (!template) return actionKey;
@@ -71,6 +77,10 @@ function renderAction(tt: (key: string, fb: string) => string, actionKey: string
   if (typeof resolvedData.kind === "string") {
     const kindKey = KIND_LABEL_KEYS[resolvedData.kind.trim()];
     if (kindKey) resolvedData.kind = tt(kindKey[0], kindKey[1]);
+  }
+  if (typeof resolvedData.mode === "string") {
+    const modeKey = TRANSPORT_MODE_LABEL_KEYS[resolvedData.mode.trim().toLowerCase()];
+    if (modeKey) resolvedData.mode = tt(modeKey[0], modeKey[1]);
   }
   let text = tt(template[0], template[1]);
   for (const [param, value] of Object.entries(resolvedData || {})) {
@@ -137,7 +147,7 @@ export function CountryPurchaseTimelineView({ purchaseOrderId }: { purchaseOrder
       setLoading(true);
       setError("");
       try {
-        const res = await fetch(`/api/erp/purchases/${purchaseOrderId}/country-timeline`, { cache: "no-store" });
+        const res = await fetch(`/api/erp/purchases/${purchaseOrderId}/country-timeline?lang=${encodeURIComponent(activeLang || "en")}`, { cache: "no-store" });
         const body = await res.json().catch(() => ({}));
         if (!res.ok || !body.ok) throw new Error(body?.error?.message || "Failed to load timeline.");
         setData(body.data);
@@ -147,7 +157,7 @@ export function CountryPurchaseTimelineView({ purchaseOrderId }: { purchaseOrder
         setLoading(false);
       }
     })();
-  }, [purchaseOrderId]);
+  }, [purchaseOrderId, activeLang]);
 
   if (loading) {
     return <div className="p-6 text-sm text-slate-500">{tt("common.loading", "Loading...")}</div>;

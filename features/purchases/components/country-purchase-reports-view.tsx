@@ -43,6 +43,35 @@ function money(v: unknown, currency?: string | null) {
   return `${num(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}${currency ? " " + currency : ""}`;
 }
 
+const STATUS_LABEL_KEYS: Record<string, [string, string]> = {
+  pending: ["ctimeline.status_pending", "Pending"],
+  partial: ["ctimeline.status_partial", "Partial"],
+  unpaid: ["ctimeline.status_unpaid", "Unpaid"],
+  paid: ["ctimeline.status_paid", "Paid"],
+  completed: ["ctimeline.status_completed", "Completed"]
+};
+function renderStatus(tt: (k: string, f: string) => string, status: string | null | undefined) {
+  const key = STATUS_LABEL_KEYS[String(status || "pending").trim().toLowerCase()];
+  return key ? tt(key[0], key[1]) : String(status || "pending").replace(/_/g, " ");
+}
+
+const TRANSPORT_LABEL_KEYS: Record<string, [string, string]> = {
+  "by road": ["plr.by_road", "By Road"],
+  "by sea": ["plr.by_sea", "By Sea"],
+  "by air": ["plr.by_air", "By Air"]
+};
+function renderTransportModes(tt: (k: string, f: string) => string, modes: string | null | undefined) {
+  if (!modes) return "-";
+  return modes
+    .split(",")
+    .map((m) => {
+      const trimmed = m.trim();
+      const key = TRANSPORT_LABEL_KEYS[trimmed.toLowerCase()];
+      return key ? tt(key[0], key[1]) : trimmed;
+    })
+    .join(", ");
+}
+
 export function CountryPurchaseReportsView() {
   const activeLang = useActiveLanguage();
   const tt = buildTt(activeLang);
@@ -108,8 +137,8 @@ export function CountryPurchaseReportsView() {
     { key: "remaining_paid", label: tt("creports.paid", "Paid"), isNumeric: true, format: (v, r) => money(v, r.currency_code) },
     { key: "credit_amount", label: tt("creports.credit", "Credit"), isNumeric: true, format: (v, r) => money(v, r.currency_code) },
     { key: "remaining_due", label: tt("creports.remaining_payment", "Remaining Payment"), isNumeric: true, format: (v, r) => money(v, r.currency_code) },
-    { key: "transport_modes", label: tt("creports.transportation", "Transportation"), format: (v) => v || "-" },
-    { key: "payment_status", label: tt("common.status", "Status"), format: (v) => String(v || "pending").replace(/_/g, " ") }
+    { key: "transport_modes", label: tt("creports.transportation", "Transportation"), format: (v) => renderTransportModes(tt, v as string | null) },
+    { key: "payment_status", label: tt("common.status", "Status"), format: (v) => renderStatus(tt, v as string | null) }
   ];
 
   return (

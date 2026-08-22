@@ -9,25 +9,20 @@ function buildTt(lang: string) {
   return (key: string, fb: string) => t((lang || "en") as any, key as any, fb);
 }
 
-type OrderRow = {
-  id: string;
+type ReportRow = {
+  purchase_order_id: string;
   purchase_order_no: string;
   purchase_contract_no?: string | null;
-  country_id?: string | null;
-  country_branch_id?: string | null;
-  dest_country_id?: string | null;
-  dest_country_branch_id?: string | null;
   currency_code?: string | null;
   order_total?: string | number | null;
   advance_paid?: string | number | null;
   remaining_due?: string | number | null;
   payment_status?: string | null;
-  created_at?: string | null;
-  countries?: { name?: string } | null;
-  country_branches?: { name?: string } | null;
-  dest_countries?: { name?: string } | null;
-  dest_country_branches?: { name?: string } | null;
-  form_data?: { form?: Record<string, any> } | null;
+  source_country_name?: string | null;
+  source_branch_name?: string | null;
+  dest_country_name?: string | null;
+  dest_branch_name?: string | null;
+  goods_name?: string | null;
 };
 
 function money(value: unknown, currency?: string | null) {
@@ -35,22 +30,35 @@ function money(value: unknown, currency?: string | null) {
   return currency ? `${amount} ${currency}` : amount;
 }
 
+const STATUS_LABEL_KEYS: Record<string, [string, string]> = {
+  pending: ["ctimeline.status_pending", "Pending"],
+  partial: ["ctimeline.status_partial", "Partial"],
+  unpaid: ["ctimeline.status_unpaid", "Unpaid"],
+  paid: ["ctimeline.status_paid", "Paid"],
+  completed: ["ctimeline.status_completed", "Completed"]
+};
+function renderStatus(tt: (k: string, f: string) => string, status: string | null | undefined) {
+  const key = STATUS_LABEL_KEYS[String(status || "pending").trim().toLowerCase()];
+  return key ? tt(key[0], key[1]) : String(status || "pending").replace(/_/g, " ");
+}
+
 export function CountryTransferRegisterView() {
   const activeLang = useActiveLanguage();
   const tt = buildTt(activeLang);
   const isRtl = ["ur", "ar", "fa", "ps"].includes(activeLang || "en");
 
-  const [orders, setOrders] = useState<OrderRow[]>([]);
+  const [orders, setOrders] = useState<ReportRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
 
   async function load() {
     setLoading(true);
     try {
-      const res = await fetch("/api/erp/purchases/orders?limit=500", { cache: "no-store" });
+      const params = new URLSearchParams({ limit: "500", lang: activeLang || "en" });
+      const res = await fetch(`/api/erp/purchases/country-purchase-reports?${params.toString()}`, { cache: "no-store" });
       const body = await res.json().catch(() => ({}));
-      const list: OrderRow[] = Array.isArray(body?.data) ? body.data : (body?.data?.orders || []);
-      setOrders(list.filter((o) => o.dest_country_id));
+      const list: ReportRow[] = Array.isArray(body?.data?.rows) ? body.data.rows : [];
+      setOrders(list);
     } finally {
       setLoading(false);
     }
@@ -58,17 +66,17 @@ export function CountryTransferRegisterView() {
 
   useEffect(() => {
     void load();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeLang]);
 
   const filtered = useMemo(() => {
     if (!query.trim()) return orders;
     const q = query.trim().toLowerCase();
-    return orders.filter((o) => {
-      const form = o.form_data?.form || {};
-      return [o.purchase_order_no, o.purchase_contract_no, form.goodsName, form.supplierName, form.purchaseAccountName]
+    return orders.filter((o) =>
+      [o.purchase_order_no, o.purchase_contract_no, o.goods_name]
         .filter(Boolean)
-        .some((v) => String(v).toLowerCase().includes(q));
-    });
+        .some((v) => String(v).toLowerCase().includes(q))
+    );
   }, [orders, query]);
 
   const totalTransferValue = filtered.reduce((sum, o) => sum + Number(o.order_total || 0), 0);
@@ -143,43 +151,40 @@ export function CountryTransferRegisterView() {
                 </td>
               </tr>
             )}
-            {filtered.map((o) => {
-              const form = o.form_data?.form || {};
-              return (
-                <tr key={o.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/50">
-                  <td className="px-3 py-2 font-mono font-bold text-indigo-700 dark:text-indigo-300">
-                    {o.purchase_order_no}
-                    {o.purchase_contract_no ? <div className="text-slate-400">{o.purchase_contract_no}</div> : null}
-                  </td>
-                  <td className="px-3 py-2 font-semibold text-slate-700 dark:text-slate-200">
-                    {o.countries?.name || "-"}
-                    <div className="text-slate-400">{o.country_branches?.name || ""}</div>
-                  </td>
-                  <td className="px-3 py-2"><ArrowRight className="h-3.5 w-3.5 text-indigo-500" /></td>
-                  <td className="px-3 py-2 font-semibold text-emerald-700 dark:text-emerald-300">
-                    {o.dest_countries?.name || "-"}
-                    <div className="text-slate-400">{o.dest_country_branches?.name || ""}</div>
-                  </td>
-                  <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{form.goodsName || "-"}</td>
-                  <td className="px-3 py-2 text-end font-mono font-bold">{money(o.order_total, o.currency_code)}</td>
-                  <td className="px-3 py-2 text-end font-mono text-emerald-700 dark:text-emerald-300">{money(o.advance_paid, o.currency_code)}</td>
-                  <td className="px-3 py-2 text-end font-mono text-amber-700 dark:text-amber-300">{money(o.remaining_due, o.currency_code)}</td>
-                  <td className="px-3 py-2">
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                      {(o.payment_status || "pending").replace(/_/g, " ")}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2">
-                    <a
-                      href={`/dashboard/purchase/purchase-loading-records?openRecordId=&purchaseOrderNo=${encodeURIComponent(o.purchase_order_no)}`}
-                      className="text-[11px] font-bold text-indigo-600 hover:underline"
-                    >
-                      {tt("ctransfer.view_loading", "View Loading / Transport")}
-                    </a>
-                  </td>
-                </tr>
-              );
-            })}
+            {filtered.map((o) => (
+              <tr key={o.purchase_order_id} className="hover:bg-slate-50 dark:hover:bg-slate-900/50">
+                <td className="px-3 py-2 font-mono font-bold text-indigo-700 dark:text-indigo-300">
+                  {o.purchase_order_no}
+                  {o.purchase_contract_no ? <div className="text-slate-400">{o.purchase_contract_no}</div> : null}
+                </td>
+                <td className="px-3 py-2 font-semibold text-slate-700 dark:text-slate-200">
+                  {o.source_country_name || "-"}
+                  <div className="text-slate-400">{o.source_branch_name || ""}</div>
+                </td>
+                <td className="px-3 py-2"><ArrowRight className="h-3.5 w-3.5 text-indigo-500" /></td>
+                <td className="px-3 py-2 font-semibold text-emerald-700 dark:text-emerald-300">
+                  {o.dest_country_name || "-"}
+                  <div className="text-slate-400">{o.dest_branch_name || ""}</div>
+                </td>
+                <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{o.goods_name || "-"}</td>
+                <td className="px-3 py-2 text-end font-mono font-bold">{money(o.order_total, o.currency_code)}</td>
+                <td className="px-3 py-2 text-end font-mono text-emerald-700 dark:text-emerald-300">{money(o.advance_paid, o.currency_code)}</td>
+                <td className="px-3 py-2 text-end font-mono text-amber-700 dark:text-amber-300">{money(o.remaining_due, o.currency_code)}</td>
+                <td className="px-3 py-2">
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                    {renderStatus(tt, o.payment_status)}
+                  </span>
+                </td>
+                <td className="px-3 py-2">
+                  <a
+                    href={`/dashboard/purchase/country-purchase-timeline/${o.purchase_order_id}`}
+                    className="text-[11px] font-bold text-indigo-600 hover:underline"
+                  >
+                    {tt("ctransfer.view_loading", "View Loading / Transport")}
+                  </a>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
