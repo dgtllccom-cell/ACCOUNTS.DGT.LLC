@@ -2867,7 +2867,6 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
     const draft = draftFilter.trim().toLowerCase();
     const urlOrderNo = urlParamPurchaseOrderNo || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("purchaseOrderNo") || "" : "");
     return orders.filter((row) => {
-      if (urlOrderNo && (row.purchase_order_no === urlOrderNo || row.id === urlOrderNo)) return true;
       const postingStatus = row.ledger_posting_status?.toLowerCase();
       const workflowTransferStatus = row.form_data?.workflow?.transferStatus?.toLowerCase();
       const hasTransferAudit = Boolean(row.form_data?.form?.transferAudit);
@@ -2925,27 +2924,33 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
       const isRemainingCleared = remainingDue <= 0.01;
 
       if (activeMode === "advance") {
-        // Show all pending POs even if advancePercent is 0, so users can make manual advance payments
+        // Show in Advance if advance is required and not yet cleared
         const isFullyPaid = (row.payment_status || "").toLowerCase() === "paid" || (row.payment_status || "").toLowerCase() === "completed";
         if (isFullyPaid) return false;
         
-        if (advancePercent > 0 && remainingAdvance <= 0.01) return false; // Already cleared required advance
+        if (advancePercent > 0 && remainingAdvance <= 0.01) return false; // Already cleared required advance -> moves to Loading
 
       } else if (activeMode === "advance_completed") {
-        if (advancePercent === 0) return false;
-        if (remainingAdvance > 0.01) return false; // Not yet cleared
+        if (advancePercent === 0 && paidAdvance <= 0) return false;
+        if (advancePercent > 0 && remainingAdvance > 0.01) return false; // Not yet cleared
         if (paidAdvance <= 0) return false; // Not paid anything
       } else if (activeMode === "remaining") {
-        // If arriving directly via loading transfer link or search
-        if (isUrlLoadingScope) return true;
-        if (urlPurchaseOrderNo && row.purchase_order_no === urlPurchaseOrderNo) return true;
+        // Strict Business Rule: Required advance must be fully cleared first before appearing in remaining payments
+        if (advancePercent > 0 && remainingAdvance > 0.01 && !isUrlLoadingScope) return false;
 
-        // Required advance must be fully cleared first before appearing in remaining payments
-        if (advancePercent > 0 && remainingAdvance > 0.01) return false;
-        
+        // Strict Business Rule: Remaining payment requires Transfer to Loading first.
+        const workflow = row.form_data?.workflow || {};
+        const hasTransferStatus = (workflow.transferStatus || "").toLowerCase() === "transferred";
+        const hasTransferAudit = Boolean(row.form_data?.form?.transferAudit || workflow.transferAudit);
+        const hasLoadingRecord = Number((row as any).loading_record_count || 0) > 0
+          || Boolean(workflow.loadedQuantity && Number(workflow.loadedQuantity) > 0)
+          || Boolean(workflow.transferredToRemaining);
+        const hasContainerMovement = hasTransferStatus || hasTransferAudit || hasLoadingRecord || isUrlLoadingScope;
+        if (!hasContainerMovement) return false; // Block: not yet transferred from loading
+
         // Show remaining if not fully settled
         const isFullyCleared = (row.payment_status || "").toLowerCase() === "paid" || (row.payment_status || "").toLowerCase() === "completed";
-        if (isFullyCleared && remainingDue <= 0.01) return false;
+        if (isFullyCleared && remainingDue <= 0.01 && !isUrlLoadingScope) return false;
       } else if (activeMode === "credit") {
         if (isCreditPaid) return false; // Already cleared
       } else if (activeMode === "history") {
@@ -4735,7 +4740,47 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
           className="h-[calc(100dvh-1.5rem)] w-[calc(100vw-1.5rem)] max-w-[1760px] rounded-2xl shadow-2xl"
         >
           <div className="space-y-4 text-[12px]">
-            <div className="-mt-3 -mb-1 text-xs text-slate-500 font-semibold">
+            {/* Info bar: Purchase No / User / Date / Type / Country / Branch / Status */}
+            <div className="-mt-3 -mb-1 flex flex-wrap items-center gap-x-6 gap-y-1.5 rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 dark:border-slate-800 dark:bg-slate-900/60">
+              <div>
+                <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Purchase No.</div>
+                <div className="text-xs font-black text-slate-900 dark:text-slate-100">{selected.purchase_order_no}</div>
+              </div>
+              <div>
+                <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">User</div>
+                <div className="text-xs font-bold text-slate-700 dark:text-slate-300">{selected.audit?.userName || "ERP USER"}</div>
+              </div>
+              <div>
+                <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Date</div>
+                <div className="text-xs font-bold text-slate-700 dark:text-slate-300">{date(selected.created_at)}</div>
+              </div>
+              <div>
+                <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Type</div>
+                <span className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-black uppercase text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                  {activeMode === "advance" ? "Advance" : activeMode === "credit" ? "Credit" : activeMode === "remaining" ? "Remaining" : "History"}
+                </span>
+              </div>
+              <div>
+                <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Country</div>
+                <div className="text-xs font-bold text-slate-700 dark:text-slate-300">{rowCountryName(selected) || "-"}</div>
+              </div>
+              <div>
+                <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Branch</div>
+                <div className="text-xs font-bold text-slate-700 dark:text-slate-300">{rowBranchName(selected) || "-"}</div>
+              </div>
+              <div className="ms-auto">
+                <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Status</div>
+                <span className={cn(
+                  "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black uppercase",
+                  (selected.ledger_posting_status || "").toLowerCase() === "posted" || (selected.ledger_posting_status || "").toLowerCase() === "transferred"
+                    ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+                    : "bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                )}>
+                  {selected.ledger_posting_status === "posted" || selected.ledger_posting_status === "transferred" ? "Transferred" : (selected.ledger_posting_status || "Pending")}
+                </span>
+              </div>
+            </div>
+            <div className="-mb-1 text-xs text-slate-500 font-semibold">
               {activeMode === "advance" ? "Purchase Advance Payment Entry" : activeMode === "credit" ? "Purchase Credit Payment Entry" : "Purchase Payment Entry"}
             </div>
             {/* Already Transferred / Overpaid Warning Banner */}

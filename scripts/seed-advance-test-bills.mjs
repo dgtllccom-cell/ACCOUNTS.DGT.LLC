@@ -230,12 +230,7 @@ async function seed() {
         branchName: b.branchName,
         branchCode: b.branchCode,
         countryName: b.countryName,
-        paymentType: "Advance",
-        transferAudit: {
-          transferredAt: new Date().toISOString(),
-          transferredBy: "ERP Super Admin",
-          status: "transferred"
-        }
+        paymentType: "Advance"
       },
       goodsEntries: [
         {
@@ -259,8 +254,8 @@ async function seed() {
       },
       workflow: {
         journalStatus: "Posted",
-        transferStatus: "transferred",
-        transferredToLoading: true,
+        transferStatus: "pending_advance",
+        transferredToLoading: false,
         loadedQuantity: 0,
         advancePaymentStatus: "pending"
       }
@@ -278,7 +273,7 @@ async function seed() {
           order_total = ${b.totalUSD},
           advance_paid = 0,
           remaining_paid = 0,
-          remaining_due = ${b.totalUSD - reqAdvUSD},
+          remaining_due = 0,
           payment_status = 'unpaid',
           ledger_posting_status = 'posted',
           status = 'Posted',
@@ -298,7 +293,7 @@ async function seed() {
         ) values (
           ${newId}, ${countryId}, ${branchId}, ${b.orderNo}, ${b.billNo},
           ${b.currency}, ${b.exRate}, ${b.totalUSD}, 0, 0,
-          ${b.totalUSD - reqAdvUSD}, 'unpaid', 'posted', 'Posted', ${sql.json(formData)},
+          0, 'unpaid', 'posted', 'Posted', ${sql.json(formData)},
           now(), now()
         )
       `;
