@@ -31,6 +31,8 @@ import { cn } from "@/lib/utils";
 import { apiGet, apiDelete } from "@/lib/api/client";
 import type { CompanyRow } from "@/lib/repositories/companies-repository";
 import { printStore } from "@/lib/store/print-store";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 export type CompanyRegistryItem = {
   id: string;
@@ -205,6 +207,9 @@ const INITIAL_DEMO_COMPANIES: CompanyRegistryItem[] = [
 
 export function CompanyRegistry() {
   const router = useRouter();
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang || "en");
 
   const [companies, setCompanies] = useState<CompanyRegistryItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -227,7 +232,7 @@ export function CompanyRegistry() {
   const loadCompaniesFromDb = async () => {
     setLoading(true);
     try {
-      const res: any = await apiGet("/api/erp/companies");
+      const res: any = await apiGet(`/api/erp/companies?lang=${encodeURIComponent(lang || "en")}`);
       const rawList: any[] = Array.isArray(res?.companies) 
         ? res.companies 
         : Array.isArray(res?.data?.companies) 
@@ -264,7 +269,8 @@ export function CompanyRegistry() {
 
   useEffect(() => {
     loadCompaniesFromDb();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang]);
 
   // Filtered Companies
   const filteredCompanies = useMemo(() => {
@@ -339,8 +345,8 @@ export function CompanyRegistry() {
   };
 
   return (
-    <div className="space-y-6 text-slate-900 dark:text-slate-100 pb-16">
-      
+    <div dir={isRtl ? "rtl" : "ltr"} className="space-y-6 text-slate-900 dark:text-slate-100 pb-16">
+
       {/* ── TOP HEADER MATCHING SCREENSHOT 1 ── */}
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
         {/* Left: Icon + Title */}
@@ -350,10 +356,10 @@ export function CompanyRegistry() {
           </div>
           <div>
             <h1 className="text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-              Company Management Registry
+              {tt("creg.title", "Company Management Registry")}
             </h1>
             <p className="text-xs text-muted-foreground">
-              Complete registry of company accounts, branches, contracts and related information.
+              {tt("creg.subtitle", "Complete registry of company accounts, branches, contracts and related information.")}
             </p>
           </div>
         </div>
@@ -362,42 +368,42 @@ export function CompanyRegistry() {
         <div className="flex flex-wrap items-center gap-2">
           {/* Company Type Dropdown */}
           <div className="flex flex-col">
-            <span className="text-[9px] font-bold text-muted-foreground uppercase px-1">Company Type</span>
+            <span className="text-[9px] font-bold text-muted-foreground uppercase px-1">{tt("creg.company_type", "Company Type")}</span>
             <select
               value={companyTypeFilter}
               onChange={(e) => setCompanyTypeFilter(e.target.value)}
               className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/50 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
             >
-              <option value="all">All Types</option>
-              <option value="trading">Trading</option>
-              <option value="clearing">Clearing</option>
-              <option value="logistics">Logistics</option>
+              <option value="all">{tt("creg.all_types", "All Types")}</option>
+              <option value="trading">{tt("creg.type_trading", "Trading")}</option>
+              <option value="clearing">{tt("creg.type_clearing", "Clearing")}</option>
+              <option value="logistics">{tt("creg.type_logistics", "Logistics")}</option>
             </select>
           </div>
 
           {/* Status Dropdown */}
           <div className="flex flex-col">
-            <span className="text-[9px] font-bold text-muted-foreground uppercase px-1">Status</span>
+            <span className="text-[9px] font-bold text-muted-foreground uppercase px-1">{tt("common.status", "Status")}</span>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/50 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
             >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
+              <option value="all">{tt("creg.all_status", "All Status")}</option>
+              <option value="active">{tt("creg.status_active", "Active")}</option>
+              <option value="inactive">{tt("creg.status_inactive", "Inactive")}</option>
             </select>
           </div>
 
           {/* Country Dropdown */}
           <div className="flex flex-col">
-            <span className="text-[9px] font-bold text-muted-foreground uppercase px-1">Country</span>
+            <span className="text-[9px] font-bold text-muted-foreground uppercase px-1">{tt("common.country", "Country")}</span>
             <select
               value={countryFilter}
               onChange={(e) => setCountryFilter(e.target.value)}
               className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/50 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
             >
-              <option value="all">All Countries</option>
+              <option value="all">{tt("creg.all_countries", "All Countries")}</option>
               <option value="pakistan">Pakistan</option>
               <option value="uae">United Arab Emirates</option>
               <option value="afghanistan">Afghanistan</option>
@@ -406,13 +412,13 @@ export function CompanyRegistry() {
 
           {/* Branch Dropdown */}
           <div className="flex flex-col">
-            <span className="text-[9px] font-bold text-muted-foreground uppercase px-1">Branch</span>
+            <span className="text-[9px] font-bold text-muted-foreground uppercase px-1">{tt("common.branch", "Branch")}</span>
             <select
               value={branchFilter}
               onChange={(e) => setBranchFilter(e.target.value)}
               className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/50 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
             >
-              <option value="all">All Branches</option>
+              <option value="all">{tt("creg.all_branches", "All Branches")}</option>
               <option value="main">Main Headquarters</option>
               <option value="lahore">Lahore Hub</option>
               <option value="dubai">Dubai Regional Hub</option>
@@ -421,10 +427,10 @@ export function CompanyRegistry() {
 
           {/* Date Range Picker */}
           <div className="flex flex-col">
-            <span className="text-[9px] font-bold text-muted-foreground uppercase px-1">Select Date Range</span>
+            <span className="text-[9px] font-bold text-muted-foreground uppercase px-1">{tt("creg.select_date_range", "Select Date Range")}</span>
             <div className="h-8.5 flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/50 px-2.5 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
               <Calendar className="h-3.5 w-3.5 text-slate-500" />
-              <span>Select Date Range</span>
+              <span>{tt("creg.select_date_range", "Select Date Range")}</span>
             </div>
           </div>
 
@@ -443,7 +449,7 @@ export function CompanyRegistry() {
               className="h-8.5 rounded-xl border-slate-200 bg-white text-xs font-bold px-3 gap-1 shadow-xs hover:bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300"
             >
               <RotateCcw className="h-3 w-3" />
-              Reset
+              {tt("common.reset", "Reset")}
             </Button>
 
             <Button
@@ -451,7 +457,7 @@ export function CompanyRegistry() {
               className="h-8.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3.5 gap-1.5 shadow-xs"
             >
               <Search className="h-3.5 w-3.5" />
-              Search
+              {tt("common.search", "Search")}
             </Button>
 
             <Button
@@ -460,7 +466,7 @@ export function CompanyRegistry() {
               className="h-8.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 gap-1.5 shadow-sm"
             >
               <Plus className="h-3.5 w-3.5" />
-              + New Company
+              + {tt("creg.new_company", "New Company")}
             </Button>
           </div>
         </div>
@@ -474,9 +480,9 @@ export function CompanyRegistry() {
             <Building2 className="h-5 w-5" />
           </div>
           <div>
-            <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">TOTAL COMPANIES</div>
+            <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">{tt("creg.kpi_total_companies", "Total Companies")}</div>
             <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{stats.totalCompanies}</div>
-            <div className="text-[10px] text-muted-foreground">All Registered Companies</div>
+            <div className="text-[10px] text-muted-foreground">{tt("creg.kpi_total_companies_sub", "All Registered Companies")}</div>
           </div>
         </div>
 
@@ -486,9 +492,9 @@ export function CompanyRegistry() {
             <Building2 className="h-5 w-5" />
           </div>
           <div>
-            <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">TOTAL BRANCHES</div>
+            <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">{tt("creg.kpi_total_branches", "Total Branches")}</div>
             <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{stats.totalBranches}</div>
-            <div className="text-[10px] text-muted-foreground">All Company Branches</div>
+            <div className="text-[10px] text-muted-foreground">{tt("creg.kpi_total_branches_sub", "All Company Branches")}</div>
           </div>
         </div>
 
@@ -498,9 +504,9 @@ export function CompanyRegistry() {
             <Users className="h-5 w-5" />
           </div>
           <div>
-            <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">TOTAL ACCOUNTS</div>
+            <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">{tt("creg.kpi_total_accounts", "Total Accounts")}</div>
             <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{stats.totalAccounts}</div>
-            <div className="text-[10px] text-muted-foreground">Company Accounts</div>
+            <div className="text-[10px] text-muted-foreground">{tt("creg.kpi_total_accounts_sub", "Company Accounts")}</div>
           </div>
         </div>
 
@@ -510,9 +516,9 @@ export function CompanyRegistry() {
             <FileText className="h-5 w-5" />
           </div>
           <div>
-            <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">TOTAL CONTRACTS</div>
+            <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">{tt("creg.kpi_total_contracts", "Total Contracts")}</div>
             <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{stats.totalContracts}</div>
-            <div className="text-[10px] text-muted-foreground">Active Contracts</div>
+            <div className="text-[10px] text-muted-foreground">{tt("creg.kpi_total_contracts_sub", "Active Contracts")}</div>
           </div>
         </div>
 
@@ -522,9 +528,9 @@ export function CompanyRegistry() {
             <DollarSign className="h-5 w-5" />
           </div>
           <div>
-            <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">TOTAL COMPANIES IN ACCOUNTS</div>
+            <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">{tt("creg.kpi_total_in_accounts", "Total Companies in Accounts")}</div>
             <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{stats.totalInAccounts}</div>
-            <div className="text-[10px] text-muted-foreground">Sum of Companies in All Accounts</div>
+            <div className="text-[10px] text-muted-foreground">{tt("creg.kpi_total_in_accounts_sub", "Sum of Companies in All Accounts")}</div>
           </div>
         </div>
       </div>
@@ -536,16 +542,16 @@ export function CompanyRegistry() {
             <thead className="bg-slate-50/80 dark:bg-slate-950 text-slate-500 uppercase font-black text-[10px] tracking-wider border-b border-slate-200/80 dark:border-slate-800">
               <tr>
                 <th className="p-3.5 text-center w-12">#</th>
-                <th className="p-3.5">Account No.</th>
-                <th className="p-3.5">Consortium</th>
-                <th className="p-3.5">Branch Rules</th>
-                <th className="p-3.5">Account Name</th>
-                <th className="p-3.5 text-center">Companies Count</th>
-                <th className="p-3.5 text-center">Contracts</th>
-                <th className="p-3.5">Primary Contact (Mobile)</th>
-                <th className="p-3.5">E-Mail</th>
-                <th className="p-3.5 text-center">Preview</th>
-                <th className="p-3.5 text-center">Actions</th>
+                <th className="p-3.5">{tt("creg.col_account_no", "Account No.")}</th>
+                <th className="p-3.5">{tt("creg.col_consortium", "Consortium")}</th>
+                <th className="p-3.5">{tt("creg.col_branch_rules", "Branch Rules")}</th>
+                <th className="p-3.5">{tt("creg.col_account_name", "Account Name")}</th>
+                <th className="p-3.5 text-center">{tt("creg.col_companies_count", "Companies Count")}</th>
+                <th className="p-3.5 text-center">{tt("creg.col_contracts", "Contracts")}</th>
+                <th className="p-3.5">{tt("creg.col_primary_contact", "Primary Contact (Mobile)")}</th>
+                <th className="p-3.5">{tt("creg.col_email", "E-Mail")}</th>
+                <th className="p-3.5 text-center">{tt("creg.col_preview", "Preview")}</th>
+                <th className="p-3.5 text-center">{tt("common.actions", "Actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
@@ -553,13 +559,13 @@ export function CompanyRegistry() {
                 <tr>
                   <td colSpan={11} className="py-12 text-center text-muted-foreground">
                     <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-600 mb-2" />
-                    Loading company registry...
+                    {tt("creg.loading", "Loading company registry...")}
                   </td>
                 </tr>
               ) : paginatedCompanies.length === 0 ? (
                 <tr>
                   <td colSpan={11} className="py-12 text-center text-muted-foreground">
-                    No company accounts found matching your filters.
+                    {tt("creg.no_results", "No company accounts found matching your filters.")}
                   </td>
                 </tr>
               ) : (
@@ -593,14 +599,14 @@ export function CompanyRegistry() {
                     {/* Companies Count Badge */}
                     <td className="p-3.5 text-center">
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-900">
-                        <span className="font-mono font-black">{String(c.companiesCount).padStart(2, "0")}</span> Companies
+                        <span className="font-mono font-black">{String(c.companiesCount).padStart(2, "0")}</span> {tt("creg.companies_suffix", "Companies")}
                       </span>
                     </td>
 
                     {/* Contracts Badge */}
                     <td className="p-3.5 text-center">
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-900">
-                        <span className="font-mono font-black">{String(c.contractsCount).padStart(2, "0")}</span> Contracts
+                        <span className="font-mono font-black">{String(c.contractsCount).padStart(2, "0")}</span> {tt("creg.contracts_suffix", "Contracts")}
                       </span>
                     </td>
 
@@ -669,7 +675,7 @@ export function CompanyRegistry() {
         {/* Footer Showing Count & Pagination */}
         <div className="p-3.5 bg-slate-50/50 dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground font-medium">
           <div>
-            Showing {filteredCompanies.length ? (page - 1) * pageSize + 1 : 0} to {Math.min(page * pageSize, filteredCompanies.length)} of {filteredCompanies.length} entries
+            {tt("creg.showing", "Showing")} {filteredCompanies.length ? (page - 1) * pageSize + 1 : 0} {tt("creg.to", "to")} {Math.min(page * pageSize, filteredCompanies.length)} {tt("creg.of", "of")} {filteredCompanies.length} {tt("creg.entries", "entries")}
           </div>
           <div className="flex items-center gap-1">
             <button
@@ -735,49 +741,49 @@ export function CompanyRegistry() {
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-3 rounded-2xl space-y-1">
           <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
             <FileText className="h-3.5 w-3.5 text-blue-600" />
-            Account No.
+            {tt("creg.tip_account_no", "Account No.")}
           </div>
-          <div className="text-[11px] text-muted-foreground">Unique account identifier</div>
+          <div className="text-[11px] text-muted-foreground">{tt("creg.tip_account_no_desc", "Unique account identifier")}</div>
         </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-3 rounded-2xl space-y-1">
           <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
             <Building2 className="h-3.5 w-3.5 text-blue-600" />
-            Companies Count
+            {tt("creg.tip_companies_count", "Companies Count")}
           </div>
-          <div className="text-[11px] text-muted-foreground">Total companies under this account</div>
+          <div className="text-[11px] text-muted-foreground">{tt("creg.tip_companies_count_desc", "Total companies under this account")}</div>
         </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-3 rounded-2xl space-y-1">
           <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
             <FileText className="h-3.5 w-3.5 text-purple-600" />
-            Contracts
+            {tt("creg.tip_contracts", "Contracts")}
           </div>
-          <div className="text-[11px] text-muted-foreground">Total active contracts</div>
+          <div className="text-[11px] text-muted-foreground">{tt("creg.tip_contracts_desc", "Total active contracts")}</div>
         </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-3 rounded-2xl space-y-1">
           <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
             <Layers className="h-3.5 w-3.5 text-emerald-600" />
-            Branch Rules
+            {tt("creg.tip_branch_rules", "Branch Rules")}
           </div>
-          <div className="text-[11px] text-muted-foreground">Rules applied for branches</div>
+          <div className="text-[11px] text-muted-foreground">{tt("creg.tip_branch_rules_desc", "Rules applied for branches")}</div>
         </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-3 rounded-2xl space-y-1">
           <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
             <Eye className="h-3.5 w-3.5 text-indigo-600" />
-            Preview
+            {tt("creg.tip_preview", "Preview")}
           </div>
-          <div className="text-[11px] text-muted-foreground">View complete details</div>
+          <div className="text-[11px] text-muted-foreground">{tt("creg.tip_preview_desc", "View complete details")}</div>
         </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-3 rounded-2xl space-y-1">
           <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
             <PencilLine className="h-3.5 w-3.5 text-purple-600" />
-            Actions
+            {tt("creg.tip_actions", "Actions")}
           </div>
-          <div className="text-[11px] text-muted-foreground">Edit, Duplicate or Delete</div>
+          <div className="text-[11px] text-muted-foreground">{tt("creg.tip_actions_desc", "Edit, Duplicate or Delete")}</div>
         </div>
       </div>
 
