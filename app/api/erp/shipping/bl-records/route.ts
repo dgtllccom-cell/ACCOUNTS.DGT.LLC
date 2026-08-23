@@ -6,6 +6,7 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
 
 const querySchema = z.object({
   countryId: uuidSchema.optional(),
@@ -353,6 +354,18 @@ export async function POST(request: NextRequest) {
       supabase.from("shipping_bl_records").insert(payload).select("id, bl_number").single()
     );
 
+    void saveVerifiedEnterpriseRecordTranslations({
+      recordTable: "shipping_bl_records",
+      recordId: (inserted as any).id,
+      originalLanguage: session.preferredLanguage ?? "en",
+      fields: [
+        { fieldName: "shipping_line_name", value: body.shippingLineName, mode: "transliterate" },
+        { fieldName: "vessel_name", value: body.vesselName ?? "", mode: "transliterate" }
+      ],
+      actorId: session.userId,
+      source: "auto"
+    });
+
     await writeAuditLog({
       action: "shipping_bl_records.create",
       entityTable: "shipping_bl_records",
@@ -449,6 +462,20 @@ export async function PATCH(request: NextRequest) {
 
     if (updateError) {
       return NextResponse.json({ ok: false, error: { message: updateError.message } }, { status: 400 });
+    }
+
+    if (shippingLineName !== undefined || vesselName !== undefined) {
+      void saveVerifiedEnterpriseRecordTranslations({
+        recordTable: "shipping_bl_records",
+        recordId: id,
+        originalLanguage: session.preferredLanguage ?? "en",
+        fields: [
+          { fieldName: "shipping_line_name", value: payload.shipping_line_name ?? "", mode: "transliterate" },
+          { fieldName: "vessel_name", value: payload.vessel_name ?? "", mode: "transliterate" }
+        ],
+        actorId: session.userId,
+        source: "auto"
+      });
     }
 
     await writeAuditLog({

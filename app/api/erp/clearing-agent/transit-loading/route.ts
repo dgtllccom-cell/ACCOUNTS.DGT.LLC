@@ -3,6 +3,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { allocateFormSerials } from "@/lib/services/form-serials";
+import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
 
 /** Clearing Agent — Transit Loading (secure CRUD). Table: transit_truck_loadings. */
 const COLS =
@@ -68,6 +69,19 @@ export async function POST(req: Request) {
     const supabase = createSupabaseAdminClient();
     const { data, error } = await supabase.from("transit_truck_loadings").insert(row).select(COLS).single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    void saveVerifiedEnterpriseRecordTranslations({
+      recordTable: "transit_truck_loadings",
+      recordId: (data as any).id,
+      originalLanguage: session.preferredLanguage ?? "en",
+      fields: [
+        { fieldName: "goods_name", value: String(row.goods_name ?? ""), mode: "translate" },
+        { fieldName: "driver_name", value: String(row.driver_name ?? ""), mode: "transliterate" }
+      ],
+      actorId: session.userId,
+      source: "auto"
+    });
+
     return NextResponse.json({ record: data });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

@@ -59,12 +59,8 @@ export async function POST(request: NextRequest) {
       postalCode?: string | null;
     };
 
-    if (!body.countryId || !body.cityId || !body.name?.trim()) {
-      throw new Error("countryId, cityId and name are required");
-    }
-
-    if (session && !session.isSuperAdmin && session.countryIds?.length > 0 && !session.countryIds.includes(body.countryId)) {
-      throw new Error("Country scope is not allowed.");
+    if (!body.cityId || !body.name?.trim()) {
+      throw new Error("City and Area Name are required.");
     }
 
     const area = await locationsRepository.createArea({

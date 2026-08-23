@@ -3,6 +3,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { allocateFormSerials } from "@/lib/services/form-serials";
+import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
 
 /** Clearing Agent — Import Loading (secure, scoped CRUD). Table: import_truck_loadings. */
 const COLS =
@@ -69,6 +70,21 @@ export async function POST(req: Request) {
     const supabase = createSupabaseAdminClient();
     const { data, error } = await supabase.from("import_truck_loadings").insert(row).select(COLS).single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    void saveVerifiedEnterpriseRecordTranslations({
+      recordTable: "import_truck_loadings",
+      recordId: (data as any).id,
+      originalLanguage: session.preferredLanguage ?? "en",
+      fields: [
+        { fieldName: "goods_name", value: String(row.goods_name ?? ""), mode: "translate" },
+        { fieldName: "supplier_name", value: String(row.supplier_name ?? ""), mode: "transliterate" },
+        { fieldName: "importer_name", value: String(row.importer_name ?? ""), mode: "transliterate" },
+        { fieldName: "driver_name", value: String(row.driver_name ?? ""), mode: "transliterate" }
+      ],
+      actorId: session.userId,
+      source: "auto"
+    });
+
     return NextResponse.json({ record: data });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

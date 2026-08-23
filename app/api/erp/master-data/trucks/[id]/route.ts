@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
 
 const COLS =
   "id, country_id, country_branch_id, city_branch_id, super_admin_serial, country_serial, branch_serial, entry_serial, truck_serial, truck_number, registration_number, registration_country_id, truck_type, make, model, manufacturing_year, color, chassis_number, engine_number, capacity, owner_name, owner_mobile, transport_company, driver_name, driver_mobile, driver_cnic_passport, registration_expiry_date, insurance_expiry_date, driver_docs_expiry_date, base_state_province_id, base_district_id, base_city_id, status, notes, is_active, created_at, updated_at";
@@ -34,6 +35,21 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     const supabase = createSupabaseAdminClient() as any;
     const { data, error } = await supabase.from("trucks").update(patch).eq("id", id).is("deleted_at", null).select(COLS).single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    if (patch.driver_name !== undefined || patch.owner_name !== undefined) {
+      void saveVerifiedEnterpriseRecordTranslations({
+        recordTable: "trucks",
+        recordId: id,
+        originalLanguage: session.preferredLanguage ?? "en",
+        fields: [
+          { fieldName: "driver_name", value: String((data as any).driver_name ?? ""), mode: "transliterate" },
+          { fieldName: "owner_name", value: String((data as any).owner_name ?? ""), mode: "transliterate" }
+        ],
+        actorId: session.userId,
+        source: "auto"
+      });
+    }
+
     return NextResponse.json({ truck: data });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

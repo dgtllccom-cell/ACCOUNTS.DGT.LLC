@@ -1,6 +1,7 @@
 import type { ErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
+import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
+import { localizeRecordNames, searchRecordIdsByTranslation } from "@/lib/i18n/localize-records";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 
@@ -12,6 +13,35 @@ export type ProductTranslationInput = {
   productBrand?: string | null;
   productSpecifications?: string | null;
 };
+
+// Builds the `fields` array saveVerifiedEnterpriseRecordTranslations expects, carrying
+// forward any manually-supplied per-language overrides (previously written to the now-removed
+// `product_translations` table) as `translations` on each field so a human correction is never
+// silently discarded — it flows into the SAME central record_translations store as every other
+// table, instead of a disconnected, product-only translation table.
+function buildProductTranslationFields(
+  productName: string,
+  productDescription: string | null | undefined,
+  manualTranslations?: ProductTranslationInput[]
+) {
+  const supplied: Record<string, Partial<Record<SupportedLanguage, string>>> = {
+    product_name: {},
+    product_description: {}
+  };
+  for (const t of manualTranslations ?? []) {
+    const lang = t.languageCode as SupportedLanguage;
+    if (t.productName?.trim()) supplied.product_name[lang] = t.productName.trim();
+    if (t.productDescription?.trim()) supplied.product_description[lang] = t.productDescription.trim();
+  }
+  const fields: Array<{ fieldName: string; value: string; mode: "translate"; translations?: Partial<Record<SupportedLanguage, string>> }> = [];
+  if (productName?.trim()) {
+    fields.push({ fieldName: "product_name", value: productName.trim(), mode: "translate", translations: supplied.product_name });
+  }
+  if (productDescription?.trim()) {
+    fields.push({ fieldName: "product_description", value: productDescription.trim(), mode: "translate", translations: supplied.product_description });
+  }
+  return fields;
+}
 
 export type ProductRow = {
   id: string;
@@ -76,7 +106,12 @@ export class ProductsRepository {
   }) {
     const supabase = createSupabaseAdminClient() as any;
     const limit = Math.min(Math.max(input.limit ?? 50, 1), 500);
-    const lang = input.languageCode ?? input.session.preferredLanguage ?? "en";
+    const lang = (input.languageCode ?? input.session.preferredLanguage ?? "en") as SupportedLanguage;
+
+    // Multilingual search: an approved translation of a product name/description should
+    // also match. Central resolver, same as goods/customers/banks/companies search.
+    const q = cleanQuery(input.query);
+    const translatedMatchIds = q ? await searchRecordIdsByTranslation("products", ["product_name", "product_description"], q) : [];
 
     let query = supabase
       .from("products")
@@ -87,12 +122,10 @@ export class ProductsRepository {
           "hs_code, size, origin_country_id, image_url, original_language_code, is_active, created_at, updated_at",
           "product_categories(category_name)",
           "product_brands(brand_name)",
-          "product_units(unit_code, unit_name)",
-          "product_translations!left(language_code, product_name, product_description, product_category, product_brand, product_specifications)"
+          "product_units(unit_code, unit_name)"
         ].join(", ")
       )
       .is("deleted_at", null)
-      .eq("product_translations.language_code", lang)
       .order("product_name", { ascending: true });
 
     query = applySessionScope(query, input.session);
@@ -102,39 +135,53 @@ export class ProductsRepository {
     if (input.countryBranchId) query = query.eq("country_branch_id", input.countryBranchId);
     if (input.cityBranchId) query = query.eq("city_branch_id", input.cityBranchId);
 
-    const q = cleanQuery(input.query);
     if (q) {
       const like = `%${q}%`;
+      const idList = translatedMatchIds.length ? `,id.in.(${translatedMatchIds.map((id) => `"${id}"`).join(",")})` : "";
       query = query.or(
         [
           `product_name.ilike.${like}`,
           `product_code.ilike.${like}`,
           `sku.ilike.${like}`,
           `hs_code.ilike.${like}`
-        ].join(",")
+        ].join(",") + idList
       );
     }
 
     const { data, error } = await query.limit(limit);
     if (error) throw new Error(error.message);
 
+    // Central resolver, in place of the removed product_translations join (that table was
+    // a disconnected parallel translation store, confirmed to hold zero rows — see
+    // upsertTranslations() comment above).
+    const nameRows: Array<{ id: string; product_name: string }> = (data ?? []).map((row: any) => ({
+      id: row.id as string,
+      product_name: row.product_name as string
+    }));
+    const descriptionRows: Array<{ id: string; product_description: string }> = (data ?? []).map((row: any) => ({
+      id: row.id as string,
+      product_description: row.product_description as string
+    }));
+    const localizedNames = await localizeRecordNames(nameRows, "products", "product_name", lang);
+    const localizedDescriptions = await localizeRecordNames(descriptionRows, "products", "product_description", lang);
+    const nameById = new Map(localizedNames.map((r) => [r.id, r.product_name]));
+    const descById = new Map(localizedDescriptions.map((r) => [r.id, r.product_description]));
+
     const products = (data ?? []).map((row: any) => {
-      const translation = Array.isArray(row.product_translations) ? row.product_translations[0] : row.product_translations;
       return {
         ...row,
-        translated_name: translation?.product_name ?? null,
-        translated_description: translation?.product_description ?? null,
-        translated_category: translation?.product_category ?? null,
-        translated_brand: translation?.product_brand ?? null,
-        translated_specifications: translation?.product_specifications ?? null,
+        translated_name: nameById.get(row.id) ?? null,
+        translated_description: descById.get(row.id) ?? null,
+        translated_category: null,
+        translated_brand: null,
+        translated_specifications: null,
         category_name: row.product_categories?.category_name ?? null,
         brand_name: row.product_brands?.brand_name ?? null,
         unit_code: row.product_units?.unit_code ?? null,
         unit_name: row.product_units?.unit_name ?? null,
         product_categories: undefined,
         product_brands: undefined,
-        product_units: undefined,
-        product_translations: undefined
+        product_units: undefined
       };
     }) as ProductListRow[];
 
@@ -179,6 +226,7 @@ export class ProductsRepository {
     imageUrl?: string | null;
     originalLanguageCode: string;
     actorId?: string | null;
+    manualTranslations?: ProductTranslationInput[];
   }) {
     const supabase = createSupabaseAdminClient() as any;
     const { data, error } = await supabase
@@ -207,7 +255,14 @@ export class ProductsRepository {
       .select("id")
       .single();
     if (error) throw new Error(error.message);
-    void translateMasterRecord("products", data.id as string, { product_name: input.productName }, (input.originalLanguageCode as SupportedLanguage) || "en");
+    void saveVerifiedEnterpriseRecordTranslations({
+      recordTable: "products",
+      recordId: data.id as string,
+      originalLanguage: (input.originalLanguageCode as SupportedLanguage) || "en",
+      fields: buildProductTranslationFields(input.productName, input.productDescription, input.manualTranslations),
+      actorId: input.actorId ?? null,
+      source: "auto"
+    });
     try {
       const s = await allocateFormSerials("products", { countryId: input.countryId ?? null });
       await supabase.from("products").update({ super_admin_serial: s.superAdminSerial, country_serial: s.countrySerial, branch_serial: s.branchSerial, entry_serial: s.entrySerial }).eq("id", data.id as string);
@@ -237,6 +292,8 @@ export class ProductsRepository {
       imageUrl: string | null;
       originalLanguageCode: string;
       isActive: boolean;
+      manualTranslations: ProductTranslationInput[];
+      actorId: string | null;
     }>
   ) {
     const supabase = createSupabaseAdminClient() as any;
@@ -263,7 +320,16 @@ export class ProductsRepository {
 
     const { error } = await supabase.from("products").update(patch).eq("id", id).is("deleted_at", null);
     if (error) throw new Error(error.message);
-    void translateMasterRecord("products", id, { product_name: input.productName }, (input.originalLanguageCode as SupportedLanguage) || "en");
+    if (input.productName !== undefined || input.productDescription !== undefined || input.manualTranslations?.length) {
+      void saveVerifiedEnterpriseRecordTranslations({
+        recordTable: "products",
+        recordId: id,
+        originalLanguage: (input.originalLanguageCode as SupportedLanguage) || "en",
+        fields: buildProductTranslationFields(input.productName ?? "", input.productDescription, input.manualTranslations),
+        actorId: input.actorId ?? null,
+        source: "auto"
+      });
+    }
   }
 
   async softDelete(id: string) {
@@ -276,37 +342,14 @@ export class ProductsRepository {
     if (error) throw new Error(error.message);
   }
 
-  async upsertTranslations(productId: string, translations: ProductTranslationInput[], actorId?: string | null) {
-    if (!translations.length) return;
-    const supabase = createSupabaseAdminClient() as any;
-    for (const translation of translations) {
-      const row = {
-        product_id: productId,
-        language_code: translation.languageCode,
-        product_name: translation.productName,
-        product_description: translation.productDescription ?? null,
-        product_category: translation.productCategory ?? null,
-        product_brand: translation.productBrand ?? null,
-        product_specifications: translation.productSpecifications ?? null,
-        corrected_by: actorId ?? null,
-        corrected_at: actorId ? new Date().toISOString() : null,
-        updated_at: new Date().toISOString()
-      };
-
-      const { data: updated, error: updateError } = await supabase
-        .from("product_translations")
-        .update(row)
-        .eq("product_id", productId)
-        .eq("language_code", translation.languageCode)
-        .is("deleted_at", null)
-        .select("id");
-      if (updateError) throw new Error(updateError.message);
-      if (Array.isArray(updated) && updated.length) continue;
-
-      const { error: insertError } = await supabase.from("product_translations").insert(row);
-      if (insertError) throw new Error(insertError.message);
-    }
-  }
+  // upsertTranslations() into the standalone `product_translations` table was removed
+  // (2026-08-23) — that table was a disconnected, pre-refactor parallel translation
+  // implementation, confirmed to hold zero rows (its Supabase-admin-client writes were
+  // silently failing, same RLS/anon-key root cause found and fixed across this whole
+  // session), and duplicated what the central record_translations engine already does.
+  // Manual per-language overrides now flow into saveVerifiedEnterpriseRecordTranslations
+  // via buildProductTranslationFields() in create()/update() above — same central store,
+  // same resolver, same Correct Translations UI as every other table in the ERP.
 }
 
 export const productsRepository = new ProductsRepository();

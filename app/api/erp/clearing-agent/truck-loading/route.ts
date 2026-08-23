@@ -4,6 +4,7 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { handleApiError } from "@/lib/api/response";
+import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
 
 /**
  * Clearing Agent — Truck Loading form (secure, scoped CRUD).
@@ -80,6 +81,21 @@ export async function POST(req: Request) {
     const supabase = createSupabaseAdminClient();
     const { data, error } = await supabase.from("truck_loadings").insert(row).select(COLS).single();
     if (error) throw error;
+
+    void saveVerifiedEnterpriseRecordTranslations({
+      recordTable: "truck_loadings",
+      recordId: (data as any).id,
+      originalLanguage: session.preferredLanguage ?? "en",
+      fields: [
+        { fieldName: "goods_name", value: String(row.goods_name ?? ""), mode: "translate" },
+        { fieldName: "driver_name", value: String(row.driver_name ?? ""), mode: "transliterate" },
+        { fieldName: "truck_name", value: String(row.truck_name ?? ""), mode: "transliterate" },
+        { fieldName: "truck_owner_name", value: String(row.truck_owner_name ?? ""), mode: "transliterate" }
+      ],
+      actorId: session.userId,
+      source: "auto"
+    });
+
     return NextResponse.json({ record: data });
   } catch (err: any) {
     return handleApiError(err);

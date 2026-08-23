@@ -2943,7 +2943,7 @@ export function CashEntryForm({
           <h3 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-300 flex items-center gap-2">
             <span>📋 {t(lang, "roz.journal_roznamcha_entry_table", "JOURNAL ROZNAMCHA — ENTRY TABLE")}</span>
             <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-              {recentEntriesSummary.count} {lang === "ur" ? "اندراجات" : "Entries"}
+              {recentEntriesSummary.count} {t(lang, "creg.entries", "Entries")}
             </span>
           </h3>
 

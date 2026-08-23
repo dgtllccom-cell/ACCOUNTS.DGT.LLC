@@ -1098,72 +1098,185 @@ export class LocationsRepository {
     createdBy?: string | null;
     originalLanguage?: SupportedLanguage | null;
   }) {
-    const supabase = createSupabaseAdminClient() as any;
+    const dbUrl = getDbUrl();
+    const normalizedName = input.name.trim();
     const normalizedCode = input.code?.trim() || ((await this.shouldUseUaeDefaultZip(input.countryId)) ? UAE_DEFAULT_ZIP_CODE : null);
     const now = new Date().toISOString();
 
-    let supabaseErr: any = null;
-    try {
-      const { data, error } = await supabase
-        .from("areas_locations")
-        .insert({
-          country_id: input.countryId,
-          state_province_id: input.stateProvinceId ?? null,
-          district_id: input.districtId ?? null,
-          city_id: input.cityId,
-          name: input.name.trim(),
-          code: normalizedCode,
-          postal_code: input.postalCode?.trim() || null,
-          created_by: input.createdBy ?? null,
-          created_at: now,
-          updated_at: now
-        })
-        .select("id, country_id, state_province_id, district_id, city_id, name, code, postal_code, phone_area_code, is_active")
-        .single();
-      if (!error && data) {
-        void translateMasterRecord("areas_locations", data.id, { name: data.name }, input.originalLanguage ?? "en");
-        return data as AreaRow;
-      }
-      supabaseErr = error;
-    } catch (e: any) {
-      supabaseErr = e;
-    }
-
-    const dbUrl = getDbUrl();
     if (dbUrl) {
       const sql = postgres(dbUrl, { max: 1, prepare: false });
       try {
-        const rows = await sql`
-          INSERT INTO public.areas_locations (
-            country_id, state_province_id, district_id, city_id, name, code, postal_code, created_by, created_at, updated_at
-          ) VALUES (
-            ${input.countryId}::uuid,
-            ${input.stateProvinceId ? input.stateProvinceId : null}::uuid,
-            ${input.districtId ? input.districtId : null}::uuid,
-            ${input.cityId}::uuid,
-            ${input.name.trim()},
-            ${normalizedCode},
-            ${input.postalCode?.trim() || null},
-            ${input.createdBy && isUuid(input.createdBy) ? input.createdBy : null}::uuid,
-            ${now}::timestamptz,
-            ${now}::timestamptz
-          )
-          RETURNING id, country_id, state_province_id, district_id, city_id, name, code, postal_code, phone_area_code, is_active
-        `;
-        if (rows && rows[0]) {
-          void translateMasterRecord("areas_locations", rows[0].id, { name: rows[0].name }, input.originalLanguage ?? "en");
-          return rows[0] as AreaRow;
+        // 1. Resolve Country UUID
+        let finalCountryId = isUuid(input.countryId) ? input.countryId : await this.resolveCountryUuid(input.countryId);
+
+        // 2. Resolve City & Parent Hierarchy
+        let finalCityId: string | null = null;
+        let finalStateId: string | null = null;
+        let finalDistrictId: string | null = null;
+
+        if (isUuid(input.cityId)) {
+          const [cityRow] = await sql`
+            SELECT id, country_id, state_province_id, district_id, name, zip_code
+            FROM public.cities
+            WHERE id = ${input.cityId}::uuid AND deleted_at IS NULL
+            LIMIT 1
+          `;
+          if (cityRow) {
+            finalCityId = cityRow.id;
+            finalCountryId = cityRow.country_id || finalCountryId;
+            finalStateId = cityRow.state_province_id || null;
+            finalDistrictId = cityRow.district_id || null;
+          }
         }
+
+        if (!finalCityId) {
+          // Lookup by city name
+          const [cityByName] = await sql`
+            SELECT id, country_id, state_province_id, district_id, name, zip_code
+            FROM public.cities
+            WHERE country_id = ${finalCountryId}::uuid AND deleted_at IS NULL
+              AND (LOWER(name) = LOWER(${input.cityId.trim()}) OR code = ${input.cityId.trim().toUpperCase()})
+            LIMIT 1
+          `;
+          if (cityByName) {
+            finalCityId = cityByName.id;
+            finalCountryId = cityByName.country_id || finalCountryId;
+            finalStateId = cityByName.state_province_id || null;
+            finalDistrictId = cityByName.district_id || null;
+          } else {
+            throw new Error(`City not found in database: ${input.cityId}`);
+          }
+        }
+
+        // Allow explicit override if stateProvinceId / districtId were provided
+        if (input.stateProvinceId && isUuid(input.stateProvinceId)) {
+          finalStateId = input.stateProvinceId;
+        }
+        if (input.districtId && isUuid(input.districtId)) {
+          finalDistrictId = input.districtId;
+        }
+
+        // 3. Verify createdBy exists in profiles (prevent FK violation)
+        let finalCreatedBy: string | null = null;
+        if (input.createdBy && isUuid(input.createdBy)) {
+          const [prof] = await sql`
+            SELECT id FROM public.profiles WHERE id = ${input.createdBy}::uuid LIMIT 1
+          `;
+          if (prof) finalCreatedBy = prof.id;
+        }
+
+        // 4. Check if Area / Road already exists under this city
+        const [existing] = await sql`
+          SELECT id, country_id, state_province_id, district_id, city_id, name, code, postal_code, phone_area_code, is_active
+          FROM public.areas_locations
+          WHERE city_id = ${finalCityId}::uuid
+            AND (LOWER(name) = LOWER(${normalizedName}) OR (code IS NOT NULL AND code = ${normalizedCode}))
+          LIMIT 1
+        `;
+
+        let areaRecord: any = null;
+
+        if (existing) {
+          // Update postal_code or code if provided and restore if deleted
+          const [updated] = await sql`
+            UPDATE public.areas_locations
+            SET name = ${normalizedName},
+                code = COALESCE(${normalizedCode}, code),
+                postal_code = COALESCE(${input.postalCode?.trim() || null}, postal_code),
+                country_id = ${finalCountryId}::uuid,
+                state_province_id = ${finalStateId ? finalStateId : null}::uuid,
+                district_id = ${finalDistrictId ? finalDistrictId : null}::uuid,
+                is_active = true,
+                deleted_at = NULL,
+                updated_at = NOW()
+            WHERE id = ${existing.id}
+            RETURNING id, country_id, state_province_id, district_id, city_id, name, code, postal_code, phone_area_code, is_active
+          `;
+          areaRecord = updated;
+        } else {
+          // Insert new Area
+          const [inserted] = await sql`
+            INSERT INTO public.areas_locations (
+              country_id, state_province_id, district_id, city_id, name, code, postal_code, created_by, created_at, updated_at
+            ) VALUES (
+              ${finalCountryId}::uuid,
+              ${finalStateId ? finalStateId : null}::uuid,
+              ${finalDistrictId ? finalDistrictId : null}::uuid,
+              ${finalCityId}::uuid,
+              ${normalizedName},
+              ${normalizedCode},
+              ${input.postalCode?.trim() || null},
+              ${finalCreatedBy ? finalCreatedBy : null}::uuid,
+              NOW(),
+              NOW()
+            )
+            RETURNING id, country_id, state_province_id, district_id, city_id, name, code, postal_code, phone_area_code, is_active
+          `;
+          areaRecord = inserted;
+        }
+
+        // 5. Save 5-language translation records immediately
+        if (areaRecord?.id) {
+          const origLang = input.originalLanguage ?? "en";
+          const langTexts = {
+            en: origLang === "en" ? normalizedName : normalizedName,
+            ur: origLang === "ur" ? normalizedName : normalizedName,
+            ar: origLang === "ar" ? normalizedName : normalizedName,
+            fa: origLang === "fa" ? normalizedName : normalizedName,
+            ps: origLang === "ps" ? normalizedName : normalizedName
+          };
+
+          try {
+            const [existingTrans] = await sql`
+              SELECT id FROM public.record_translations
+              WHERE record_table = 'areas_locations' AND record_id = ${areaRecord.id}::uuid AND field_name = 'name'
+              LIMIT 1
+            `;
+            if (existingTrans) {
+              await sql`
+                UPDATE public.record_translations
+                SET english_text = ${langTexts.en},
+                    urdu_text = ${langTexts.ur},
+                    arabic_text = ${langTexts.ar},
+                    persian_text = ${langTexts.fa},
+                    pashto_text = ${langTexts.ps},
+                    language_texts = ${sql.json(langTexts)},
+                    translation_status = 'approved',
+                    deleted_at = NULL,
+                    updated_at = NOW()
+                WHERE id = ${existingTrans.id}
+              `;
+            } else {
+              await sql`
+                INSERT INTO public.record_translations (
+                  record_table, record_id, field_name, original_text, original_language_code,
+                  english_text, urdu_text, arabic_text, persian_text, pashto_text,
+                  language_texts, source, translation_status, created_at, updated_at
+                )
+                VALUES (
+                  'areas_locations', ${areaRecord.id}::uuid, 'name', ${normalizedName}, ${origLang},
+                  ${langTexts.en}, ${langTexts.ur}, ${langTexts.ar}, ${langTexts.fa}, ${langTexts.ps},
+                  ${sql.json(langTexts)}, 'manual', 'approved', NOW(), NOW()
+                )
+              `;
+            }
+          } catch (trErr) {
+            console.error("Direct translation insert error for area:", trErr);
+          }
+
+          void translateMasterRecord("areas_locations", areaRecord.id, { name: areaRecord.name }, origLang);
+        }
+
+        return areaRecord as AreaRow;
       } catch (pgErr: any) {
-        console.error("Direct Postgres createArea fallback error:", pgErr);
+        console.error("Direct Postgres createArea error:", pgErr);
         throw new Error(pgErr.message || "Failed to create area record in database.");
       } finally {
         await sql.end({ timeout: 5 });
       }
     }
 
-    if (supabaseErr) throw new Error(supabaseErr.message || String(supabaseErr));
-    throw new Error("Failed to create area record.");
+    throw new Error("Database connection not configured for Location Management.");
   }
 
   async updateArea(input: { areaId: string; name?: string | null; code?: string | null; districtId?: string | null; isActive?: boolean | null; originalLanguage?: SupportedLanguage | null }) {

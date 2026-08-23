@@ -3,6 +3,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { allocateFormSerials } from "@/lib/services/form-serials";
+import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
 
 /**
  * Truck Registration master (Settings -> Truck Management).
@@ -87,6 +88,19 @@ export async function POST(req: Request) {
     const supabase = createSupabaseAdminClient() as any;
     const { data, error } = await supabase.from("trucks").insert(row).select(COLS).single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    void saveVerifiedEnterpriseRecordTranslations({
+      recordTable: "trucks",
+      recordId: (data as any).id,
+      originalLanguage: session.preferredLanguage ?? "en",
+      fields: [
+        { fieldName: "driver_name", value: String(row.driver_name ?? ""), mode: "transliterate" },
+        { fieldName: "owner_name", value: String(row.owner_name ?? ""), mode: "transliterate" }
+      ],
+      actorId: session.userId,
+      source: "auto"
+    });
+
     return NextResponse.json({ truck: data });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

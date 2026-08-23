@@ -10,6 +10,7 @@ import { ReportActions } from "@/components/ui/report-actions";
 import { TruckAttachments } from "@/features/clearing-agent/components/truck-attachments";
 import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 type Loading = {
   id: string;
@@ -199,17 +200,17 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
         <div>
           <h1 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
             <Truck className="h-6 w-6 text-blue-600" />
-            Truck Loading & Clearing Booking
+            {t(lang, "tl.page_title")}
           </h1>
           <p className="text-xs font-medium text-slate-500">
-            Create complete truck loading entry with live mini journal report and inventory breakdown
+            {t(lang, "tl.subtitle")}
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <ReportActions title="Truck Loading Report" rows={filtered} columns={[{ key: "loading_serial", label: "Serial" }, { key: "loading_date", label: "Date" }, { key: "truck_number", label: "Truck" }, { key: "driver_name", label: "Driver" }, { key: "goods_name", label: "Goods" }, { key: "quantity", label: "Qty" }, { key: "destination", label: "Destination" }]} lang={lang} />
+          <ReportActions title={t(lang, "tl.report_title")} rows={filtered} columns={[{ key: "loading_serial", label: translateHeader(lang, "Serial #") }, { key: "loading_date", label: translateHeader(lang, "Loading Date") }, { key: "truck_number", label: translateHeader(lang, "Truck #") }, { key: "driver_name", label: translateHeader(lang, "Driver") }, { key: "goods_name", label: translateHeader(lang, "Goods") }, { key: "quantity", label: translateHeader(lang, "Qty") }, { key: "destination", label: translateHeader(lang, "Destination") }]} lang={lang} />
           <button onClick={startAdd} className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-2 text-sm font-bold text-white hover:bg-blue-800 shadow-md transition">
-            <Plus className="h-4 w-4" /> New Loading Entry
+            <Plus className="h-4 w-4" /> {t(lang, "tl.new_entry")}
           </button>
         </div>
       </div>
@@ -217,14 +218,14 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
       {/* Workflow Selection: Transport Mode & Movement Type */}
       <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 shadow-sm space-y-3">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
-          <span className="text-xs font-bold uppercase text-slate-500">1. Transport Mode:</span>
+          <span className="text-xs font-bold uppercase text-slate-500">{t(lang, "tl.transport_mode")}</span>
           <div className="flex flex-wrap items-center gap-1.5">
             {[
-              { key: "all", label: "All Modes" },
-              { key: "by_sea", label: "By Sea" },
-              { key: "by_road", label: "By Road" },
-              { key: "by_truck", label: "By Truck" },
-              { key: "by_air", label: "By Air" },
+              { key: "all", label: t(lang, "tl.mode_all") },
+              { key: "by_sea", label: t(lang, "tl.mode_sea") },
+              { key: "by_road", label: t(lang, "tl.mode_road") },
+              { key: "by_truck", label: t(lang, "tl.mode_truck") },
+              { key: "by_air", label: t(lang, "tl.mode_air") },
             ].map(({ key, label }) => (
               <button
                 key={key}
@@ -242,13 +243,13 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
         </div>
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <span className="text-xs font-bold uppercase text-slate-500">2. Movement Type:</span>
+          <span className="text-xs font-bold uppercase text-slate-500">{t(lang, "tl.movement_type")}</span>
           <div className="flex flex-wrap items-center gap-1.5">
             {[
-              { key: "all", label: "All Types" },
-              { key: "import", label: "Import Loading" },
-              { key: "transit", label: "Transit Loading" },
-              { key: "export", label: "Export Loading" },
+              { key: "all", label: t(lang, "tl.type_all") },
+              { key: "import", label: t(lang, "tl.type_import") },
+              { key: "transit", label: t(lang, "tl.type_transit") },
+              { key: "export", label: t(lang, "tl.type_export") },
             ].map(({ key, label }) => (
               <button
                 key={key}
@@ -272,9 +273,9 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase text-amber-500 flex items-center gap-2">
               <FileText className="w-4 h-4" />
-              Pending Customer Orders Ready for Loading ({pendingOrders.length})
+              {t(lang, "tl.pending_orders_ready")} ({pendingOrders.length})
             </span>
-            <span className="text-[11px] text-amber-400">Click to autofill loading entry</span>
+            <span className="text-[11px] text-amber-400">{t(lang, "tl.autofill_hint")}</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
             {pendingOrders.map((ord) => (
@@ -340,7 +341,7 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
             {loading ? (
               <tr><td colSpan={8} className="px-4 py-10 text-center text-slate-400"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></td></tr>
             ) : filtered.length === 0 ? (
-              <tr><td colSpan={8} className="px-4 py-10 text-center text-slate-400">No loading entries found. Click "+ New Loading Entry" to create one.</td></tr>
+              <tr><td colSpan={8} className="px-4 py-10 text-center text-slate-400">{t(lang, "tl.no_entries")}</td></tr>
             ) : filtered.map((r) => (
               <tr key={r.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-950/40 transition">
                 <td className="px-4 py-3 font-mono font-bold text-indigo-600 dark:text-indigo-400">{r.loading_serial || "-"}</td>
@@ -372,7 +373,7 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
               <div className="flex items-center gap-2">
                 <div className="h-3 w-3 rounded-full bg-cyan-500" />
                 <h2 className="text-lg font-black uppercase text-slate-900 dark:text-slate-100">
-                  {form.id ? "Edit Truck Loading & BL Entry" : "New Truck Loading & Customer Account Booking"}
+                  {form.id ? t(lang, "tl.edit_title") : t(lang, "tl.new_title")}
                 </h2>
               </div>
 
@@ -384,7 +385,7 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
                   className="inline-flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 px-5 py-2 text-xs font-black text-white shadow-md transition"
                 >
                   {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                  Save Loading Record
+                  {t(lang, "tl.save_loading_record")}
                 </button>
 
                 <button
@@ -405,25 +406,25 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
                 
                 {/* Module Loading Category Selector */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase text-slate-500">Loading Category / Shipment Type</label>
+                  <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.loading_category")}</label>
                   <select
                     value={form.loading_type ?? "local"}
                     onChange={(e) => setForm({ ...form, loading_type: e.target.value })}
                     className="w-full rounded-xl border border-indigo-200 bg-white px-3 py-2 text-xs font-bold text-indigo-900 dark:border-indigo-900 dark:bg-slate-900 dark:text-indigo-300 outline-none focus:ring-2 focus:ring-indigo-500"
                   >
-                    <option value="local">🚛 Local Truck Loading (داخلی بارگیری)</option>
-                    <option value="import">🛃 Import Loading (امپورٹ بارگیری / Customs Clearing)</option>
-                    <option value="transit">🌐 Transit Loading (ٹرانزٹ بارگیری / Border Transit)</option>
+                    <option value="local">{t(lang, "tl.option_local")}</option>
+                    <option value="import">{t(lang, "tl.option_import")}</option>
+                    <option value="transit">{t(lang, "tl.option_transit")}</option>
                   </select>
                 </div>
 
                 {/* 4 Step Tabs */}
                 <div className="grid grid-cols-4 gap-1">
                   {[
-                    { id: "parties", label: "1) Parties" },
-                    { id: "bl", label: "2) BL Entry" },
-                    { id: "goods", label: "3) Goods" },
-                    { id: "carrier", label: "4) Carrier" }
+                    { id: "parties", label: t(lang, "tl.tab_parties") },
+                    { id: "bl", label: t(lang, "tl.tab_bl") },
+                    { id: "goods", label: t(lang, "tl.tab_goods") },
+                    { id: "carrier", label: t(lang, "tl.tab_carrier") }
                   ].map((tab) => (
                     <button
                       key={tab.id}
@@ -444,10 +445,10 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
                 {/* TAB 1: PARTIES & BOOKING */}
                 {activeTab === "parties" && (
                   <div className="space-y-3 animate-in fade-in duration-150">
-                    <div className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400">SR#: 1 - Parties & Booking</div>
-                    
+                    <div className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400">{t(lang, "tl.step1_title")}</div>
+
                     <div>
-                      <label className="text-[10px] font-black uppercase text-slate-500">Customer Account No *</label>
+                      <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.customer_account_no")}</label>
                       <input
                         type="text"
                         value={form.customerAccountNo || "CUST-1001"}
@@ -458,56 +459,56 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[10px] font-black uppercase text-slate-500">Shipping Type *</label>
+                        <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.shipping_type")}</label>
                         <select
                           value={form.shippingType || "By Sea"}
                           onChange={e => setForm({ ...form, shippingType: e.target.value })}
                           className="w-full rounded-xl border border-slate-200 bg-white px-2 py-2 text-xs font-semibold dark:border-slate-800 dark:bg-slate-900"
                         >
-                          <option value="By Sea">By Sea</option>
-                          <option value="By Road">By Road</option>
-                          <option value="By Air">By Air</option>
+                          <option value="By Sea">{t(lang, "tl.mode_sea")}</option>
+                          <option value="By Road">{t(lang, "tl.mode_road")}</option>
+                          <option value="By Air">{t(lang, "tl.mode_air")}</option>
                         </select>
                       </div>
                       <div>
-                        <label className="text-[10px] font-black uppercase text-slate-500">Shipment Type *</label>
+                        <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.shipment_type")}</label>
                         <select
                           value={form.shipmentType || "Import"}
                           onChange={e => setForm({ ...form, shipmentType: e.target.value })}
                           className="w-full rounded-xl border border-slate-200 bg-white px-2 py-2 text-xs font-semibold dark:border-slate-800 dark:bg-slate-900"
                         >
-                          <option value="Import">Import</option>
-                          <option value="Export">Export</option>
-                          <option value="Transit">Transit</option>
+                          <option value="Import">{t(lang, "tl.shipment_import")}</option>
+                          <option value="Export">{t(lang, "tl.shipment_export")}</option>
+                          <option value="Transit">{t(lang, "tl.shipment_transit")}</option>
                         </select>
                       </div>
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-black uppercase text-slate-500">Importer Name *</label>
+                      <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.importer_name")}</label>
                       <input
                         type="text"
                         value={form.importer || ""}
                         onChange={e => setForm({ ...form, importer: e.target.value })}
-                        placeholder="Importer Name"
+                        placeholder={t(lang, "tl.importer_placeholder")}
                         className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold dark:border-slate-800 dark:bg-slate-900"
                       />
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-black uppercase text-slate-500">Exporter Name *</label>
+                      <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.exporter_name")}</label>
                       <input
                         type="text"
                         value={form.exporter || ""}
                         onChange={e => setForm({ ...form, exporter: e.target.value })}
-                        placeholder="Exporter Name"
+                        placeholder={t(lang, "tl.exporter_placeholder")}
                         className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold dark:border-slate-800 dark:bg-slate-900"
                       />
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[10px] font-black uppercase text-slate-500">Booking No *</label>
+                        <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.booking_no")}</label>
                         <input
                           type="text"
                           value={form.bookingNo || "BK-2026-001"}
@@ -516,7 +517,7 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] font-black uppercase text-slate-500">Company Name *</label>
+                        <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.company_name_label")}</label>
                         <input
                           type="text"
                           value={form.bookingCompanyName || "DGT Logistics"}
@@ -532,7 +533,7 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
                         onClick={() => setActiveTab("bl")}
                         className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-black text-white hover:bg-blue-700"
                       >
-                        Next: BL Entry →
+                        {t(lang, "tl.next_bl_entry")}
                       </button>
                     </div>
                   </div>
@@ -541,11 +542,11 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
                 {/* TAB 2: BL & ROUTE DETAILS */}
                 {activeTab === "bl" && (
                   <div className="space-y-3 animate-in fade-in duration-150">
-                    <div className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400">SR#: 2 - Transport & Route Details</div>
+                    <div className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400">{t(lang, "tl.step2_title")}</div>
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[10px] font-black uppercase text-slate-500">Issue Date *</label>
+                        <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.issue_date")}</label>
                         <input
                           type="date"
                           value={form.issueDate || ""}
@@ -554,7 +555,7 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] font-black uppercase text-slate-500">Issue Serial *</label>
+                        <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.issue_serial")}</label>
                         <input
                           type="text"
                           value={form.issueSerial || "ISS-671867"}
@@ -566,18 +567,18 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[10px] font-black uppercase text-slate-500">BL Type</label>
+                        <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.bl_type")}</label>
                         <select
                           value={form.blType || "New BL"}
                           onChange={e => setForm({ ...form, blType: e.target.value })}
                           className="w-full rounded-xl border border-slate-200 bg-white px-2 py-2 text-xs font-semibold dark:border-slate-800 dark:bg-slate-900"
                         >
-                          <option value="New BL">New BL</option>
-                          <option value="Old BL">Old BL</option>
+                          <option value="New BL">{t(lang, "tl.new_bl")}</option>
+                          <option value="Old BL">{t(lang, "tl.old_bl")}</option>
                         </select>
                       </div>
                       <div>
-                        <label className="text-[10px] font-black uppercase text-slate-500">BL No</label>
+                        <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.bl_no")}</label>
                         <input
                           type="text"
                           value={form.blNo || "BL-671867"}
@@ -588,10 +589,10 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
                     </div>
 
                     <div className="rounded-xl border border-cyan-200 bg-cyan-50/50 p-3 dark:border-cyan-900/40 dark:bg-slate-900 space-y-2">
-                      <p className="text-[10px] font-black uppercase text-cyan-700 dark:text-cyan-300">Loading & Receiving Borders</p>
+                      <p className="text-[10px] font-black uppercase text-cyan-700 dark:text-cyan-300">{t(lang, "tl.loading_receiving_borders")}</p>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="text-[9px] font-bold text-slate-500">Loading Country</label>
+                          <label className="text-[9px] font-bold text-slate-500">{t(lang, "tl.loading_country")}</label>
                           <input
                             type="text"
                             value={form.loadCountry || "Pakistan"}
@@ -600,7 +601,7 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
                           />
                         </div>
                         <div>
-                          <label className="text-[9px] font-bold text-slate-500">Loading Border/Port</label>
+                          <label className="text-[9px] font-bold text-slate-500">{t(lang, "tl.loading_border_port")}</label>
                           <input
                             type="text"
                             value={form.loadPlace || "Karachi Port"}
@@ -609,7 +610,7 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
                           />
                         </div>
                         <div>
-                          <label className="text-[9px] font-bold text-slate-500">Receiving Country</label>
+                          <label className="text-[9px] font-bold text-slate-500">{t(lang, "tl.receiving_country")}</label>
                           <input
                             type="text"
                             value={form.receiveCountry || "UAE"}
@@ -618,7 +619,7 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
                           />
                         </div>
                         <div>
-                          <label className="text-[9px] font-bold text-slate-500">Receiving Border/Port</label>
+                          <label className="text-[9px] font-bold text-slate-500">{t(lang, "tl.receiving_border_port")}</label>
                           <input
                             type="text"
                             value={form.receivePlace || "Dubai Border"}
@@ -635,7 +636,7 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
                         onClick={() => setActiveTab("goods")}
                         className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-black text-white hover:bg-blue-700"
                       >
-                        Next: Goods Entry →
+                        {t(lang, "tl.next_goods_entry")}
                       </button>
                     </div>
                   </div>
@@ -644,16 +645,16 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
                 {/* TAB 3: GOODS ENTRY */}
                 {activeTab === "goods" && (
                   <div className="space-y-3 animate-in fade-in duration-150">
-                    <div className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400">SR#: 3 - Goods & Inventory Entry</div>
+                    <div className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400">{t(lang, "tl.step3_title")}</div>
 
                     <div>
-                      <label className="text-[10px] font-black uppercase text-slate-500">Select Registered Truck *</label>
+                      <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.select_registered_truck")}</label>
                       <select
                         value={form.truck_id ?? ""}
                         onChange={(e) => onSelectTruck(e.target.value)}
                         className="w-full rounded-xl border border-blue-200 bg-blue-50/50 px-3 py-2 text-xs font-bold text-blue-900 dark:border-blue-900 dark:bg-slate-900 dark:text-blue-300"
                       >
-                        <option value="">Select registered truck from DB...</option>
+                        <option value="">{t(lang, "tl.select_truck_placeholder")}</option>
                         {trucks.map((tr) => (
                           <option key={tr.id} value={tr.id}>
                             {tr.truck_number} {tr.driver_name ? `(${tr.driver_name})` : ""}
@@ -663,7 +664,7 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-black uppercase text-slate-500">Goods Name *</label>
+                      <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.goods_name_label")}</label>
                       <input
                         type="text"
                         value={form.goods_name || "PISTACHIOS KERNEL"}
@@ -674,7 +675,7 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[9px] font-bold text-slate-500">Size</label>
+                        <label className="text-[9px] font-bold text-slate-500">{t(lang, "tl.size")}</label>
                         <input
                           type="text"
                           value={form.goodsSize || "Large"}
@@ -683,7 +684,7 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
                         />
                       </div>
                       <div>
-                        <label className="text-[9px] font-bold text-slate-500">Brand</label>
+                        <label className="text-[9px] font-bold text-slate-500">{t(lang, "tl.brand")}</label>
                         <input
                           type="text"
                           value={form.goodsBrand || "Premium"}
@@ -692,7 +693,7 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
                         />
                       </div>
                       <div>
-                        <label className="text-[9px] font-bold text-slate-500">Quantity (Bags)</label>
+                        <label className="text-[9px] font-bold text-slate-500">{t(lang, "tl.quantity_bags")}</label>
                         <input
                           type="number"
                           value={form.quantity || "100"}
@@ -701,7 +702,7 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
                         />
                       </div>
                       <div>
-                        <label className="text-[9px] font-bold text-slate-500">Gross Weight (KG)</label>
+                        <label className="text-[9px] font-bold text-slate-500">{t(lang, "tl.gross_weight_kg")}</label>
                         <input
                           type="number"
                           value={form.gross_weight || "5000"}
@@ -714,11 +715,11 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
                     {/* Weight summary box */}
                     <div className="rounded-xl border border-slate-200 bg-white p-2 text-[10px] space-y-1 dark:border-slate-800 dark:bg-slate-950">
                       <div className="flex justify-between text-slate-500">
-                        <span>Total Empty Wt:</span>
+                        <span>{t(lang, "tl.total_empty_wt")}</span>
                         <span className="font-bold">{totalEmptyKg} KG</span>
                       </div>
                       <div className="flex justify-between text-amber-600 font-bold">
-                        <span>Net Weight:</span>
+                        <span>{t(lang, "tl.net_weight_colon")}</span>
                         <span>{computedNetKg} KG</span>
                       </div>
                     </div>
@@ -729,7 +730,7 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
                         onClick={() => setActiveTab("carrier")}
                         className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-black text-white hover:bg-blue-700"
                       >
-                        Next: Carrier Details →
+                        {t(lang, "tl.next_carrier_details")}
                       </button>
                     </div>
                   </div>
@@ -738,23 +739,23 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
                 {/* TAB 4: CARRIER & CONTAINER DETAILS */}
                 {activeTab === "carrier" && (
                   <div className="space-y-3 animate-in fade-in duration-150">
-                    <div className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400">SR#: 4 - Carrier / Container Details</div>
+                    <div className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400">{t(lang, "tl.step4_title")}</div>
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[10px] font-black uppercase text-slate-500">Carrier Type</label>
+                        <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.carrier_type")}</label>
                         <select
                           value={form.carrierType || "container"}
                           onChange={e => setForm({ ...form, carrierType: e.target.value })}
                           className="w-full rounded-xl border border-slate-200 bg-white px-2 py-2 text-xs font-semibold dark:border-slate-800 dark:bg-slate-900"
                         >
-                          <option value="container">Container</option>
-                          <option value="truck">Truck Trailer</option>
-                          <option value="air">Air Cargo</option>
+                          <option value="container">{t(lang, "tl.container")}</option>
+                          <option value="truck">{t(lang, "tl.truck_trailer")}</option>
+                          <option value="air">{t(lang, "tl.air_cargo")}</option>
                         </select>
                       </div>
                       <div>
-                        <label className="text-[10px] font-black uppercase text-slate-500">Container / Sub Type</label>
+                        <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.container_sub_type")}</label>
                         <input
                           type="text"
                           value={form.carrierSubType || "Dry Container 20FT"}
@@ -766,17 +767,17 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[10px] font-black uppercase text-slate-500">Container / Truck No *</label>
+                        <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.container_truck_no")}</label>
                         <input
                           type="text"
                           value={form.truck_number || "CONT-123456"}
                           onChange={e => setForm({ ...form, truck_number: e.target.value })}
-                          placeholder="e.g. CONT-123456"
+                          placeholder={t(lang, "tl.container_no_placeholder")}
                           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold dark:border-slate-800 dark:bg-slate-900 font-mono"
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] font-black uppercase text-slate-500">Seal Number</label>
+                        <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.seal_number")}</label>
                         <input
                           type="text"
                           value={form.sealNumber || "SEAL-7788"}
@@ -788,12 +789,12 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-black uppercase text-slate-500">Driver Name</label>
+                      <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.driver_name_label")}</label>
                       <input
                         type="text"
                         value={form.driver_name || ""}
                         onChange={e => setForm({ ...form, driver_name: e.target.value })}
-                        placeholder="Driver Name"
+                        placeholder={t(lang, "tl.driver_name_placeholder")}
                         className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold dark:border-slate-800 dark:bg-slate-900"
                       />
                     </div>
@@ -801,17 +802,17 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
                     {/* Dynamic Import/Transit fields */}
                     {(form.loading_type === "import" || form.loading_type === "transit") && (
                       <div className="rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 p-2.5 space-y-2">
-                        <p className="text-[10px] font-black text-amber-800 dark:text-amber-300 uppercase">Customs & Transit Details</p>
+                        <p className="text-[10px] font-black text-amber-800 dark:text-amber-300 uppercase">{t(lang, "tl.customs_transit_details")}</p>
                         <input
                           type="text"
-                          placeholder="Clearing Agent Name"
+                          placeholder={t(lang, "tl.clearing_agent_name")}
                           value={form.customs_agent_name || ""}
                           onChange={e => setForm({ ...form, customs_agent_name: e.target.value })}
                           className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs dark:border-slate-800 dark:bg-slate-950"
                         />
                         <input
                           type="text"
-                          placeholder="Declaration / GD Number"
+                          placeholder={t(lang, "tl.declaration_gd_number")}
                           value={form.declaration_no || ""}
                           onChange={e => setForm({ ...form, declaration_no: e.target.value })}
                           className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs dark:border-slate-800 dark:bg-slate-950"
@@ -831,12 +832,12 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
                     <div>
                       <h3 className="text-sm font-black uppercase text-slate-900 dark:text-slate-100 flex items-center gap-2">
                         <FileText className="h-4 w-4 text-blue-600" />
-                        Board / BL / Loading Report
+                        {t(lang, "tl.board_bl_report")}
                       </h3>
-                      <p className="text-[10px] font-medium text-slate-400">One Page Live Mini Journal Summary</p>
+                      <p className="text-[10px] font-medium text-slate-400">{t(lang, "tl.one_page_summary")}</p>
                     </div>
                     <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
-                      ● LIVE UPDATING
+                      {t(lang, "tl.live_updating")}
                     </span>
                   </div>
 
@@ -898,14 +899,14 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-sm font-black uppercase text-slate-900 dark:text-slate-100">
-                        Goods Loading Report
+                        {t(lang, "tl.goods_loading_report")}
                       </h3>
-                      <p className="text-[10px] font-medium text-slate-400">Live Inventory Breakdown</p>
+                      <p className="text-[10px] font-medium text-slate-400">{t(lang, "tl.live_inventory_breakdown")}</p>
                     </div>
 
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-700">
-                        Live Inventory
+                        {t(lang, "tl.live_inventory")}
                       </span>
                     </div>
                   </div>
@@ -948,11 +949,11 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
                   {/* Totals strip */}
                   <div className="flex justify-end items-center gap-8 rounded-xl bg-slate-50 dark:bg-slate-950 p-3 border border-slate-200 dark:border-slate-800 text-right">
                     <div>
-                      <span className="block text-[9px] font-black uppercase text-slate-400">Total Gross Weight</span>
+                      <span className="block text-[9px] font-black uppercase text-slate-400">{t(lang, "tl.total_gross_weight")}</span>
                       <span className="text-base font-black text-slate-900 dark:text-slate-100 font-mono">{grossKg.toLocaleString()} KG</span>
                     </div>
                     <div>
-                      <span className="block text-[9px] font-black uppercase text-slate-400">Total Net Weight</span>
+                      <span className="block text-[9px] font-black uppercase text-slate-400">{t(lang, "tl.total_net_weight")}</span>
                       <span className="text-base font-black text-amber-600 dark:text-amber-400 font-mono">{computedNetKg.toLocaleString()} KG</span>
                     </div>
                   </div>

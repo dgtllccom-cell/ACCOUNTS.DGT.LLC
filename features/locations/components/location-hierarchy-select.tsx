@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ExternalLink, Plus } from "lucide-react";
+import { ExternalLink, Plus, MapPin, AlertCircle } from "lucide-react";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { Button } from "@/components/ui/button";
 import { SimpleModal } from "@/components/ui/simple-modal";
@@ -515,10 +515,14 @@ export function LocationHierarchySelect({
       {openCreateType ? (
         <LocationQuickCreateModal
           type={openCreateType}
-          countryId={value.countryId}
-          stateProvinceId={value.stateProvinceId}
-          districtId={value.districtId}
-          cityId={value.cityId}
+          countryId={selectedCountry?.id || value.countryId}
+          stateProvinceId={selectedState?.id || value.stateProvinceId}
+          districtId={selectedDistrict?.id || value.districtId}
+          cityId={selectedCity?.id || value.cityId}
+          countryName={selectedCountry?.name}
+          stateName={selectedState?.name}
+          districtName={selectedDistrict?.name}
+          cityName={selectedCity?.name}
           onClose={() => setOpenCreateType(null)}
           onCreated={(newId, item) => {
             if (openCreateType === "country") {
@@ -592,6 +596,10 @@ export function LocationQuickCreateModal({
   stateProvinceId,
   districtId,
   cityId,
+  countryName,
+  stateName,
+  districtName,
+  cityName,
   onClose,
   onCreated
 }: {
@@ -600,6 +608,10 @@ export function LocationQuickCreateModal({
   stateProvinceId?: string;
   districtId?: string;
   cityId?: string;
+  countryName?: string;
+  stateName?: string;
+  districtName?: string;
+  cityName?: string;
   onClose: () => void;
   onCreated: (newId: string, item: any) => void;
 }) {
@@ -619,15 +631,20 @@ export function LocationQuickCreateModal({
     type === "area" ? "Area / Town / Locality / Road" :
     type ? type.charAt(0).toUpperCase() + type.slice(1) : "";
 
+  const missingParentMessage = useMemo(() => {
+    if (type === "state" && !countryId) return "Please select a Country before adding a State / Province.";
+    if (type === "district" && (!countryId || !stateProvinceId)) return "Please select Country and State / Province before adding a District.";
+    if (type === "city" && !countryId) return "Please select a Country and State before adding a City.";
+    if (type === "area" && (!countryId || !cityId)) return "Please select Country, State, and City before adding a new Area / Road.";
+    return null;
+  }, [type, countryId, stateProvinceId, cityId]);
+
   const canSave = useMemo(() => {
     if (!name.trim()) return false;
+    if (missingParentMessage) return false;
     if (type === "country") return Boolean(iso2.trim());
-    if (type === "state") return Boolean(countryId);
-    if (type === "district") return Boolean(countryId && stateProvinceId);
-    if (type === "city") return Boolean(countryId);
-    if (type === "area") return Boolean(countryId && cityId);
     return true;
-  }, [type, countryId, stateProvinceId, cityId, name, iso2]);
+  }, [type, missingParentMessage, name, iso2]);
 
   async function handleSave() {
     if (!canSave || !type) return;
@@ -658,7 +675,7 @@ export function LocationQuickCreateModal({
       } else if (type === "city") {
         const res = await apiPost<{ city: LocationCity }>("/api/erp/locations/cities", {
           countryId,
-          stateProvinceId,
+          stateProvinceId: stateProvinceId || null,
           districtId: districtId || null,
           name: name.trim(),
           code: code.trim() || null,
@@ -699,10 +716,35 @@ export function LocationQuickCreateModal({
   return (
     <SimpleModal title={title} onClose={onClose} className="max-w-md">
       {error ? (
-        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800">
+        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300">
           {error}
         </div>
       ) : null}
+
+      {missingParentMessage ? (
+        <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-800 flex items-center gap-2 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300">
+          <AlertCircle className="h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400" />
+          <span>{missingParentMessage}</span>
+        </div>
+      ) : null}
+
+      {type !== "country" && !missingParentMessage && (
+        <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50/70 p-3 text-xs dark:border-blue-900/50 dark:bg-blue-950/40">
+          <div className="font-bold text-blue-900 dark:text-blue-200 mb-1.5 flex items-center gap-1.5">
+            <MapPin className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+            Parent Location Hierarchy:
+          </div>
+          <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] text-slate-700 dark:text-slate-300">
+            <div><span className="font-semibold text-slate-500 dark:text-slate-400">Country:</span> {countryName || "Selected"}</div>
+            {type !== "state" && <div><span className="font-semibold text-slate-500 dark:text-slate-400">State / Province:</span> {stateName || "Selected"}</div>}
+            {type === "area" && districtName && <div><span className="font-semibold text-slate-500 dark:text-slate-400">District:</span> {districtName}</div>}
+            {type === "area" && <div><span className="font-semibold text-slate-500 dark:text-slate-400">City / Town:</span> {cityName || "Selected"}</div>}
+          </div>
+          <div className="mt-2 pt-1.5 border-t border-blue-200/60 dark:border-blue-900/40 text-[10.5px] font-semibold text-blue-700 dark:text-blue-300">
+            Adding: <span className="underline">{typeLabel}</span> under {type === "area" ? (cityName || "selected City") : type === "city" ? (stateName || "selected State") : type === "district" ? (stateName || "selected State") : (countryName || "selected Country")}
+          </div>
+        </div>
+      )}
 
       <div className="space-y-4">
         <div className="space-y-2">
@@ -743,7 +785,7 @@ export function LocationQuickCreateModal({
             <Input
               value={zipCode}
               onChange={(e) => setZipCode(e.target.value)}
-              placeholder="e.g. 10001"
+              placeholder="e.g. 86000"
             />
             {type === "area" && (
               <p className="text-[10px] text-slate-500 leading-tight">

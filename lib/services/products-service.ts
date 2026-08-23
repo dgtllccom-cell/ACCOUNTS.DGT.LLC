@@ -1,6 +1,5 @@
 import type { ErpSession } from "@/lib/auth/session";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
-import { supportedLanguages } from "@/lib/i18n/languages";
 import { productsRepository, type ProductTranslationInput } from "@/lib/repositories/products-repository";
 
 type ProductInput = {
@@ -24,30 +23,6 @@ type ProductInput = {
   originalLanguage: SupportedLanguage;
   translations?: ProductTranslationInput[];
 };
-
-function stringifySpecifications(value?: Record<string, unknown>) {
-  if (!value || !Object.keys(value).length) return null;
-  return Object.entries(value)
-    .map(([key, val]) => `${key}: ${typeof val === "string" ? val : JSON.stringify(val)}`)
-    .join("\n");
-}
-
-function buildTranslationShell(input: ProductInput) {
-  const supplied = new Map((input.translations ?? []).map((row) => [row.languageCode, row]));
-  const specs = stringifySpecifications(input.productSpecifications);
-
-  return supportedLanguages.map((language) => {
-    const manual = supplied.get(language.code);
-    return {
-      languageCode: language.code,
-      productName: manual?.productName || input.productName,
-      productDescription: manual?.productDescription ?? input.productDescription ?? null,
-      productCategory: manual?.productCategory ?? null,
-      productBrand: manual?.productBrand ?? null,
-      productSpecifications: manual?.productSpecifications ?? specs
-    } satisfies ProductTranslationInput;
-  });
-}
 
 export class ProductsService {
   async search(input: {
@@ -89,10 +64,10 @@ export class ProductsService {
       originCountryId: input.originCountryId ?? null,
       imageUrl: input.imageUrl ?? null,
       originalLanguageCode: input.originalLanguage,
-      actorId
+      actorId,
+      manualTranslations: input.translations
     });
 
-    await productsRepository.upsertTranslations(productId, buildTranslationShell(input), actorId);
     return productId;
   }
 
@@ -115,21 +90,10 @@ export class ProductsService {
       size: input.size,
       originCountryId: input.originCountryId,
       imageUrl: input.imageUrl,
-      originalLanguageCode: input.originalLanguage
+      originalLanguageCode: input.originalLanguage,
+      manualTranslations: input.translations,
+      actorId: actorId ?? null
     });
-
-    if (input.productName || input.productDescription || input.productSpecifications || input.translations?.length) {
-      const shellInput: ProductInput = {
-        countryId: input.countryId ?? "00000000-0000-0000-0000-000000000000",
-        productCode: input.productCode ?? "",
-        productName: input.productName ?? "",
-        productDescription: input.productDescription ?? null,
-        productSpecifications: input.productSpecifications ?? {},
-        originalLanguage: input.originalLanguage ?? "en",
-        translations: input.translations ?? []
-      };
-      await productsRepository.upsertTranslations(id, buildTranslationShell(shellInput), actorId);
-    }
   }
 
   async softDelete(id: string) {
