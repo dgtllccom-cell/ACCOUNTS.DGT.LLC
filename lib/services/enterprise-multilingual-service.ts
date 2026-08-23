@@ -6,6 +6,7 @@ import { multilingualService } from "@/lib/services/multilingual-service";
 import { buildVerifiedTranslationSet, type VerifiedTranslationMap } from "@/lib/i18n/verified-record-translations";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { lookupApprovedDictionary } from "@/lib/i18n/localize-records";
+import { translateToAllLanguages } from "@/lib/i18n/machine-translation-client";
 
 const LANG_KEYS: SupportedLanguage[] = ["en", "ur", "ar", "fa", "ps"];
 
@@ -242,9 +243,32 @@ export async function saveVerifiedEnterpriseRecordTranslations(
       if (dictVal) verified.translations[lng] = dictVal;
     }
 
-    // Complete any remaining missing language using autoTranslate5Languages — this is an
-    // UNVERIFIED machine guess (no dictionary hit, no human input), so any field that needed
-    // it gets flagged needs_review rather than silently marked complete.
+    // Machine-translation tier: for genuinely free text (mode "translate" — narration,
+    // remarks, descriptions), any language still missing after the dictionary gets a real
+    // translation from the configured MT provider (lib/i18n/machine-translation-client.ts),
+    // not a word-substitution guess. This is qualitatively different from the crude fallback
+    // below — a real MT engine understands grammar/context — so a fully-resolved field is
+    // marked "complete", not "needs_review". Never used for mode "transliterate" (proper
+    // nouns: company/person/place names) — translating a name is wrong regardless of engine
+    // quality, so those keep the existing no-guess/needs_review policy untouched.
+    let usedMachineTranslation = false;
+    if (field.mode === "translate") {
+      const stillMissing = LANG_KEYS.some((lng) => !verified.translations[lng]?.trim());
+      if (stillMissing) {
+        const mtResults = await translateToAllLanguages(originalText, originalLanguage);
+        for (const lng of LANG_KEYS) {
+          if (verified.translations[lng]?.trim()) continue;
+          if (mtResults[lng]) {
+            verified.translations[lng] = mtResults[lng]!;
+            usedMachineTranslation = true;
+          }
+        }
+      }
+    }
+
+    // Last resort: autoTranslate5Languages is an UNVERIFIED word-substitution guess (no
+    // dictionary hit, no MT result, no human input), so any field that still needed it after
+    // MT gets flagged needs_review rather than silently marked complete.
     let usedUnverifiedFallback = false;
     const auto5 = autoTranslate5Languages(originalText, originalLanguage);
     for (const lng of LANG_KEYS) {
@@ -256,7 +280,13 @@ export async function saveVerifiedEnterpriseRecordTranslations(
 
     const isManual = verified.engine === "manual";
     const writeStatus = isManual ? "complete" : usedUnverifiedFallback ? "needs_review" : "complete";
-    const writeEngine = isManual ? "manual" : usedUnverifiedFallback ? "auto_unverified" : "local_dictionary";
+    const writeEngine = isManual
+      ? "manual"
+      : usedUnverifiedFallback
+        ? "auto_unverified"
+        : usedMachineTranslation
+          ? "machine_translation"
+          : "local_dictionary";
 
     await upsertRecordTranslationRpc({
       recordTable: input.recordTable,

@@ -59,6 +59,7 @@ const sql = postgres(dbUrl, { max: 1, prepare: false, connect_timeout: 30 });
 import { buildVerifiedTranslationSet } from "../lib/i18n/verified-record-translations";
 import { lookupApprovedDictionary } from "../lib/i18n/localize-records";
 import { autoTranslate5Languages, detectScriptType } from "../lib/i18n/multilingual-translator";
+import { translateToAllLanguages } from "../lib/i18n/machine-translation-client";
 import type { SupportedLanguage } from "../lib/i18n/languages";
 
 const LANG_KEYS: SupportedLanguage[] = ["en", "ur", "ar", "fa", "ps"];
@@ -114,6 +115,24 @@ async function resolveField(table: string, originalText: string, mode: Mode) {
     if (dictVal) verified.translations[lng] = dictVal;
   }
 
+  // Same MT tier as the live save path (lib/services/enterprise-multilingual-service.ts) —
+  // duplicated here rather than shared because this script's resolve+write loop is its own
+  // implementation; flagged as a follow-up to unify into one call site.
+  let usedMachineTranslation = false;
+  if (mode === "translate") {
+    const stillMissing = LANG_KEYS.some((lng) => !verified.translations[lng]?.trim());
+    if (stillMissing) {
+      const mtResults = await translateToAllLanguages(originalText, originalLanguage);
+      for (const lng of LANG_KEYS) {
+        if (verified.translations[lng]?.trim()) continue;
+        if (mtResults[lng]) {
+          verified.translations[lng] = mtResults[lng]!;
+          usedMachineTranslation = true;
+        }
+      }
+    }
+  }
+
   let usedUnverifiedFallback = false;
   const auto5 = autoTranslate5Languages(originalText, originalLanguage);
   for (const lng of LANG_KEYS) {
@@ -124,7 +143,7 @@ async function resolveField(table: string, originalText: string, mode: Mode) {
   }
 
   const status = usedUnverifiedFallback ? "needs_review" : "complete";
-  const engine = usedUnverifiedFallback ? "auto_unverified" : "local_dictionary";
+  const engine = usedUnverifiedFallback ? "auto_unverified" : usedMachineTranslation ? "machine_translation" : "local_dictionary";
   return { originalLanguage, translations: verified.translations, status, engine };
 }
 

@@ -1,6 +1,7 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { searchRecordIdsByTranslation } from "@/lib/i18n/localize-records";
 
 export type GoodsVariationRow = {
   id: string;
@@ -61,11 +62,17 @@ export class GoodsRepository {
     const q = cleanQuery(input.query ?? "");
     const like = q ? `%${q}%` : null;
 
+    // Multilingual search: a user searching in Urdu/Arabic/Farsi/Pashto types the term in
+    // that language, but goods_name is stored in whatever language it was entered in — a
+    // plain ILIKE on the raw column misses it. Widen with any goods whose translated name
+    // matches in ANY language, via the central resolver (lib/i18n/localize-records.ts).
+    const translatedMatchIds = q ? await searchRecordIdsByTranslation("goods", ["goods_name"], q) : [];
+
     const viaPg = await withLocalPg(async (sql) => {
       const goodsRows = await sql`
         SELECT ${sql(GOODS_COLUMNS)} FROM public.goods
         WHERE deleted_at IS NULL
-          AND (${like ? sql`(chs_code ILIKE ${like} OR goods_name ILIKE ${like} OR id IN (SELECT goods_id FROM public.goods_variations WHERE deleted_at IS NULL AND (size ILIKE ${like} OR brand ILIKE ${like})))` : sql`true`})
+          AND (${like ? sql`(chs_code ILIKE ${like} OR goods_name ILIKE ${like} OR id IN (SELECT goods_id FROM public.goods_variations WHERE deleted_at IS NULL AND (size ILIKE ${like} OR brand ILIKE ${like})) OR id = ANY(${translatedMatchIds}::uuid[]))` : sql`true`})
         ORDER BY goods_name ASC
         LIMIT ${limit}
       `;
@@ -91,9 +98,10 @@ export class GoodsRepository {
         .select("goods_id")
         .or(`size.ilike.${likeSql},brand.ilike.${likeSql}`)
         .is("deleted_at", null);
-      const matchedIds = Array.isArray(varMatches) ? [...new Set(varMatches.map((v: any) => v.goods_id))] : [];
-      if (matchedIds.length > 0) {
-        const idList = matchedIds.map((id) => `"${id}"`).join(",");
+      const matchedIds = new Set(Array.isArray(varMatches) ? varMatches.map((v: any) => v.goods_id) : []);
+      for (const id of translatedMatchIds) matchedIds.add(id);
+      if (matchedIds.size > 0) {
+        const idList = [...matchedIds].map((id) => `"${id}"`).join(",");
         query = query.or(`chs_code.ilike.${likeSql},goods_name.ilike.${likeSql},id.in.(${idList})`);
       } else {
         query = query.or(`chs_code.ilike.${likeSql},goods_name.ilike.${likeSql}`);

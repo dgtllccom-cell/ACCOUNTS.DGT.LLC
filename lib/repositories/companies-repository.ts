@@ -1,5 +1,6 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import postgres from "postgres";
+import { searchRecordIdsByTranslation } from "@/lib/i18n/localize-records";
 
 function getDbUrl(): string {
   if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
@@ -197,16 +198,21 @@ export class CompaniesRepository {
     const limit = Math.min(Math.max(input.limit ?? 500, 1), 500);
     const q = cleanQuery(input.query ?? "");
     const localDbUrl = getDbUrl();
+    // Multilingual search: an approved translation/transliteration of a company name
+    // should also match. Central resolver, same as goods/customers/accounts/banks search.
+    const translatedMatchIds = q
+      ? await searchRecordIdsByTranslation("companies", ["name", "legal_name", "owner_name"], q)
+      : [];
 
     if (localDbUrl) {
       const localSql = postgres(localDbUrl, { max: 1, prepare: false });
       try {
         const rows = q
           ? await localSql`
-              SELECT * FROM public.companies 
-              WHERE deleted_at IS NULL 
-                AND (name ILIKE ${'%' + q + '%'} OR legal_name ILIKE ${'%' + q + '%'} OR owner_name ILIKE ${'%' + q + '%'} OR country_name ILIKE ${'%' + q + '%'} OR city_name ILIKE ${'%' + q + '%'})
-              ORDER BY name ASC 
+              SELECT * FROM public.companies
+              WHERE deleted_at IS NULL
+                AND (name ILIKE ${'%' + q + '%'} OR legal_name ILIKE ${'%' + q + '%'} OR owner_name ILIKE ${'%' + q + '%'} OR country_name ILIKE ${'%' + q + '%'} OR city_name ILIKE ${'%' + q + '%'} OR id = ANY(${translatedMatchIds}::uuid[]))
+              ORDER BY name ASC
               LIMIT ${limit}
             `
           : await localSql`

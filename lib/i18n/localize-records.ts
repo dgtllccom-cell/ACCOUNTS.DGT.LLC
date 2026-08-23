@@ -263,3 +263,48 @@ export async function localizeRecordNames<T extends { id: string }>(
     await sql.end({ timeout: 2 }).catch(() => undefined);
   }
 }
+
+/**
+ * Central multilingual-search resolver. A user searching in Urdu/Arabic/Farsi/Pashto types
+ * the term in THAT language, but the master record's own column is stored in whatever
+ * language it was originally entered in (often English/the creator's language) — a plain
+ * ILIKE on the raw column never matches. This checks `record_translations` for a match in
+ * ANY of the 5 language columns and returns the underlying `record_id`s, so callers can
+ * UNION them with their own direct-column ILIKE matches and resolve to the same records
+ * regardless of which language the search term or the stored value happens to be in.
+ *
+ * One shared implementation for the whole ERP — every search endpoint (goods, customers,
+ * accounts, banks, warehouses, ...) should call this rather than reimplementing per-page
+ * multilingual matching.
+ */
+export async function searchRecordIdsByTranslation(
+  table: string,
+  fields: string[],
+  searchTerm: string,
+  limit = 200
+): Promise<string[]> {
+  const term = (searchTerm || "").trim();
+  if (!term || fields.length === 0) return [];
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) return [];
+
+  const sql = postgres(dbUrl, { max: 1, prepare: false, idle_timeout: 5, connect_timeout: 8 });
+  try {
+    const like = `%${term}%`;
+    const rows = await sql.unsafe(
+      `select distinct record_id
+       from record_translations
+       where record_table = $1 and field_name = any($2::text[]) and deleted_at is null
+         and (english_text ilike $3 or urdu_text ilike $3 or arabic_text ilike $3
+              or persian_text ilike $3 or pashto_text ilike $3 or original_text ilike $3)
+       limit $4`,
+      [table, fields, like, limit]
+    );
+    return (rows as unknown as Array<{ record_id: string }>).map((r) => r.record_id);
+  } catch {
+    // Search-widening is a nice-to-have; a lookup failure should never break the base search.
+    return [];
+  } finally {
+    await sql.end({ timeout: 2 }).catch(() => undefined);
+  }
+}

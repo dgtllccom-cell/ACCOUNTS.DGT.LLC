@@ -2,6 +2,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { searchRecordIdsByTranslation } from "@/lib/i18n/localize-records";
 
 export type BankRow = {
   id: string;
@@ -55,13 +56,19 @@ export class BanksRepository {
     const q = cleanQuery(input.query ?? "");
     const like = q ? `%${q}%` : null;
 
+    // Multilingual search: an approved translation/transliteration of a bank/branch name
+    // should also match. Central resolver, same as goods/customers/accounts search.
+    const translatedMatchIds = q
+      ? await searchRecordIdsByTranslation("banks", ["bank_name", "branch_name", "short_name", "account_title"], q)
+      : [];
+
     const viaPg = await withLocalPg(async (sql) => {
       const rows = await sql`
         SELECT ${sql(BANK_COLUMNS.split(", "))} FROM public.banks
         WHERE deleted_at IS NULL
           AND is_active = true
           AND (${input.countryId ? sql`country_id = ${input.countryId}` : sql`true`})
-          AND (${like ? sql`(bank_name ILIKE ${like} OR account_title ILIKE ${like} OR account_number ILIKE ${like} OR branch_name ILIKE ${like} OR branch_code ILIKE ${like} OR short_name ILIKE ${like} OR iban_number ILIKE ${like})` : sql`true`})
+          AND (${like ? sql`(bank_name ILIKE ${like} OR account_title ILIKE ${like} OR account_number ILIKE ${like} OR branch_name ILIKE ${like} OR branch_code ILIKE ${like} OR short_name ILIKE ${like} OR iban_number ILIKE ${like} OR id = ANY(${translatedMatchIds}::uuid[]))` : sql`true`})
         ORDER BY bank_name ASC
         LIMIT ${limit}
       `;

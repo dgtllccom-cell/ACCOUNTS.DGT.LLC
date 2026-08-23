@@ -1,6 +1,7 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { searchRecordIdsByTranslation } from "@/lib/i18n/localize-records";
 
 export type CustomerRow = {
   id: string;
@@ -68,12 +69,19 @@ export class CustomersRepository {
     const q = cleanQuery(input.query ?? "");
     const like = q ? `%${q}%` : null;
 
+    // Multilingual search: an approved transliteration of a customer/company name (never a
+    // guess — see the master-data no-guess policy) should also match. Central resolver,
+    // same as goods-repository.ts.
+    const translatedMatchIds = q
+      ? await searchRecordIdsByTranslation("customers", ["customer_name", "company_name", "contact_person"], q)
+      : [];
+
     const viaPg = await withLocalPg(async (sql) => {
       const rows = await sql`
         SELECT ${sql(CUSTOMER_COLUMNS)} FROM public.customers
         WHERE deleted_at IS NULL
           AND (${input.countryId ? sql`country_id = ${input.countryId}` : sql`true`})
-          AND (${like ? sql`(customer_name ILIKE ${like} OR first_name ILIKE ${like} OR last_name ILIKE ${like} OR company_name ILIKE ${like} OR email ILIKE ${like} OR mobile ILIKE ${like} OR whatsapp ILIKE ${like})` : sql`true`})
+          AND (${like ? sql`(customer_name ILIKE ${like} OR first_name ILIKE ${like} OR last_name ILIKE ${like} OR company_name ILIKE ${like} OR email ILIKE ${like} OR mobile ILIKE ${like} OR whatsapp ILIKE ${like} OR id = ANY(${translatedMatchIds}::uuid[]))` : sql`true`})
         ORDER BY customer_name ASC
         LIMIT ${limit}
       `;

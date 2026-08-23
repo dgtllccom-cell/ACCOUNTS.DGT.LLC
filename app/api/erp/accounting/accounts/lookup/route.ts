@@ -6,6 +6,7 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { ledgerReportService, type LedgerReportScope } from "@/lib/services/ledger-report-service";
+import { searchRecordIdsByTranslation } from "@/lib/i18n/localize-records";
 
 const querySchema = z.object({
   q: z.string().trim().min(1).max(200),
@@ -147,6 +148,15 @@ async function findLedgerIdsFromAccountMaster(query: string, limit: number) {
     if (res.error) throw new Error(res.error.message);
   }
 
+  // Multilingual search: an approved translation/transliteration of an account or ledger
+  // name should also match a search typed in Urdu/Arabic/Farsi/Pashto. Central resolver,
+  // same as goods-repository.ts / customers-repository.ts.
+  const [translatedEnterpriseAccountIds, translatedLegacyAccountIds, translatedLedgerIds] = await Promise.all([
+    searchRecordIdsByTranslation("enterprise_accounts", ["name", "code"], value),
+    searchRecordIdsByTranslation("accounts", ["name", "code"], value),
+    searchRecordIdsByTranslation("ledgers", ["name", "code"], value)
+  ]);
+
   const enterpriseAccountIds = [
     ...(accountNoRes.data ?? []),
     ...(manualRefRes.data ?? []),
@@ -154,9 +164,13 @@ async function findLedgerIdsFromAccountMaster(query: string, limit: number) {
     ...(codeRes.data ?? []),
     ...(nameRes.data ?? []),
     ...(customerAccountRes.data ?? [])
-  ].map((row: { id: string }) => row.id);
-  const legacyAccountIds = [...(legacyCodeRes.data ?? []), ...(legacyNameRes.data ?? [])].map((row: { id: string }) => row.id);
-  const ledgerIds = [...(ledgerCodeRes.data ?? []), ...(ledgerNameRes.data ?? [])].map((row: { id: string }) => row.id);
+  ].map((row: { id: string }) => row.id).concat(translatedEnterpriseAccountIds);
+  const legacyAccountIds = [...(legacyCodeRes.data ?? []), ...(legacyNameRes.data ?? [])]
+    .map((row: { id: string }) => row.id)
+    .concat(translatedLegacyAccountIds);
+  const ledgerIds = [...(ledgerCodeRes.data ?? []), ...(ledgerNameRes.data ?? [])]
+    .map((row: { id: string }) => row.id)
+    .concat(translatedLedgerIds);
 
   const [enterpriseLedgerRes, legacyLedgerRes] = await Promise.all([
     enterpriseAccountIds.length
