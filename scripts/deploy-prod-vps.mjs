@@ -83,10 +83,6 @@ pm2 delete dgt-nextjs 2>/dev/null || true
 pm2 start ecosystem.config.cjs || pm2 start npm --name "dgt-nextjs" -- start
 pm2 save
 sudo systemctl reload nginx || systemctl reload nginx 2>/dev/null || true
-echo "[VPS 6/6] Populating official location master tables in VPS database..."
-node scripts/populate-vps-locations.mjs || true
-echo "[VPS 7/7] Seeding 6 Advance test bills into VPS database..."
-node scripts/seed-advance-test-bills.mjs || true
 
 echo "=== PRODUCTION DEPLOYMENT COMPLETED ON THIS VPS (${BRANCH} branch) ==="
 `;

@@ -101,7 +101,8 @@ export async function POST(request: NextRequest) {
       stateProvinceId: resolvedStateId,
       name: body.name,
       code: body.code ?? null,
-      createdBy: isUuid(session.userId) ? session.userId : null
+      createdBy: isUuid(session.userId) ? session.userId : null,
+      originalLanguage: session.preferredLanguage ?? "en"
     });
 
     return apiOk({ district });

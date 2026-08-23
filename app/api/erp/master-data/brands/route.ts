@@ -69,7 +69,7 @@ export async function POST(req: Request) {
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    void translateMasterRecord("product_brands", data.id, { brand_name: data.brand_name }, "en", session.userId);
+    void translateMasterRecord("product_brands", data.id, { brand_name: data.brand_name }, session.preferredLanguage ?? "en", session.userId);
 
     return NextResponse.json({
       id: data.id,

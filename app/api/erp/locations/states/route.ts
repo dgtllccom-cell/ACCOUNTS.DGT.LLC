@@ -54,7 +54,8 @@ export async function POST(request: NextRequest) {
       countryId: resolvedCountryId,
       name: body.name,
       code: body.code ?? null,
-      createdBy: isUuid(session.userId) ? session.userId : null
+      createdBy: isUuid(session.userId) ? session.userId : null,
+      originalLanguage: session.preferredLanguage ?? "en"
     });
 
     return apiOk({ state });

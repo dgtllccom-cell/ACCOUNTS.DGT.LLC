@@ -46,7 +46,8 @@ export async function POST(request: NextRequest) {
       {
         goodsId: body.goodsId,
         size: body.size,
-        brand: body.brand
+        brand: body.brand,
+        originalLanguage: session.preferredLanguage
       },
       session.userId
     );

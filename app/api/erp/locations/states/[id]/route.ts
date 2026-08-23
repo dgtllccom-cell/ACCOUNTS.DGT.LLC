@@ -14,7 +14,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       stateId: id,
       name: body.name,
       code: body.code,
-      isActive: body.isActive
+      isActive: body.isActive,
+      originalLanguage: session.preferredLanguage ?? "en"
     });
 
     if (!session.isSuperAdmin && !session.countryIds.includes(state.country_id)) {

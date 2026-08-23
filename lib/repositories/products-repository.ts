@@ -1,6 +1,7 @@
 import type { ErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 
 export type ProductTranslationInput = {
@@ -206,7 +207,7 @@ export class ProductsRepository {
       .select("id")
       .single();
     if (error) throw new Error(error.message);
-    void translateMasterRecord("products", data.id as string, { product_name: input.productName }, "en");
+    void translateMasterRecord("products", data.id as string, { product_name: input.productName }, (input.originalLanguageCode as SupportedLanguage) || "en");
     try {
       const s = await allocateFormSerials("products", { countryId: input.countryId ?? null });
       await supabase.from("products").update({ super_admin_serial: s.superAdminSerial, country_serial: s.countrySerial, branch_serial: s.branchSerial, entry_serial: s.entrySerial }).eq("id", data.id as string);
@@ -262,7 +263,7 @@ export class ProductsRepository {
 
     const { error } = await supabase.from("products").update(patch).eq("id", id).is("deleted_at", null);
     if (error) throw new Error(error.message);
-    void translateMasterRecord("products", id, { product_name: input.productName }, "en");
+    void translateMasterRecord("products", id, { product_name: input.productName }, (input.originalLanguageCode as SupportedLanguage) || "en");
   }
 
   async softDelete(id: string) {

@@ -43,7 +43,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    void translateMasterRecord("warehouses", id, { warehouse_name: data.warehouse_name }, "en", session.userId);
+    void translateMasterRecord("warehouses", id, { warehouse_name: data.warehouse_name }, session.preferredLanguage ?? "en", session.userId);
 
     return NextResponse.json({ warehouse: data });
   } catch (err: any) {

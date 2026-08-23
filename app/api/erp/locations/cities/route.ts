@@ -76,7 +76,8 @@ export async function POST(request: NextRequest) {
       name: body.name,
       code: body.code ?? null,
       zipCode: body.zipCode ?? null,
-      createdBy: isUuid(session.userId) ? session.userId : null
+      createdBy: isUuid(session.userId) ? session.userId : null,
+      originalLanguage: session.preferredLanguage ?? "en"
     });
 
     return apiOk({ city });

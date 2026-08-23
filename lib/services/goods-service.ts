@@ -18,6 +18,7 @@ export type GoodsVariationInput = {
   goodsId: string;
   size: string;
   brand: string;
+  originalLanguage?: SupportedLanguage;
 };
 
 export class GoodsService {
@@ -142,7 +143,7 @@ export class GoodsService {
     });
 
     // Translate size and brand if needed
-    await this.upsertVariationTranslations(variationId, input.size, input.brand, actorId ?? null);
+    await this.upsertVariationTranslations(variationId, input.size, input.brand, actorId ?? null, input.originalLanguage);
     const current = await goodsRepository.getById(input.goodsId);
     const variation = current?.variations?.find((item: any) => item.id === variationId) ?? null;
     await writeRecordChangeHistory({
@@ -164,6 +165,7 @@ export class GoodsService {
       size?: string;
       brand?: string;
       isActive?: boolean;
+      originalLanguage?: SupportedLanguage;
     },
     actorId?: string | null
   ) {
@@ -184,7 +186,7 @@ export class GoodsService {
     });
 
     if (input.size || input.brand) {
-      await this.upsertVariationTranslations(id, input.size || "", input.brand || "", actorId ?? null);
+      await this.upsertVariationTranslations(id, input.size || "", input.brand || "", actorId ?? null, input.originalLanguage);
     }
   }
 
@@ -206,11 +208,11 @@ export class GoodsService {
     await translateMasterRecord("goods", goodsId, { goods_name: goodsName }, lang, actorId);
   }
 
-  private async upsertVariationTranslations(variationId: string, size: string, brand: string, actorId: string | null) {
+  private async upsertVariationTranslations(variationId: string, size: string, brand: string, actorId: string | null, lang?: SupportedLanguage) {
     // Registry (lib/i18n/translatable-fields.ts) only tracks "brand" for goods_variations —
     // "size" values are unit/measurement strings (e.g. "500g") and are intentionally left
     // untranslated, same as other technical/standard values.
-    await translateMasterRecord("goods_variations", variationId, { brand }, "en", actorId);
+    await translateMasterRecord("goods_variations", variationId, { brand }, lang || "en", actorId);
   }
 }
 

@@ -69,7 +69,7 @@ export async function POST(req: Request) {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
     // Registry-driven: syncs category_name + description into record_translations (all 5 languages).
-    void syncRecordTranslations({ table: "product_categories", recordId: data.id, record: data, originalLanguage: "en", actorId: session.userId });
+    void syncRecordTranslations({ table: "product_categories", recordId: data.id, record: data, originalLanguage: session.preferredLanguage ?? "en", actorId: session.userId });
 
     return NextResponse.json({
       id: data.id,

@@ -611,7 +611,7 @@ async function postRoznamchaWithErpSessionPg(sql: any, input: {
   const entryId = entryRows[0].id as string;
 
   if (body.narration) {
-    void translateMasterRecord("roznamcha_entries", entryId, { narration: body.narration }, "en", actorId);
+    void translateMasterRecord("roznamcha_entries", entryId, { narration: body.narration }, input.session?.preferredLanguage ?? "en", actorId);
   }
 
   try {

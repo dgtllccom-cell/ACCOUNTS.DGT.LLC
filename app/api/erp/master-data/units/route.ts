@@ -71,7 +71,7 @@ export async function POST(req: Request) {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
     // Centralized 5-language write (fire-and-forget; never blocks the request).
-    void translateMasterRecord("product_units", data.id, { unit_name: data.unit_name, unit_code: data.unit_code }, "en", session.userId);
+    void translateMasterRecord("product_units", data.id, { unit_name: data.unit_name, unit_code: data.unit_code }, session.preferredLanguage ?? "en", session.userId);
 
     return NextResponse.json({
       id: data.id,

@@ -1,5 +1,6 @@
 import { createApiSupabaseClient } from "@/lib/api/supabase";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type PortRow = {
   id: string;
@@ -104,7 +105,7 @@ export class LoadingPortsRepository {
     return data as PortRow;
   }
 
-  async create(input: PortInput, actorId?: string | null) {
+  async create(input: PortInput, actorId?: string | null, originalLanguage?: SupportedLanguage | null) {
     const supabase = (await createApiSupabaseClient()) as any;
     const { data, error } = await supabase
       .from("ports")
@@ -119,11 +120,11 @@ export class LoadingPortsRepository {
       .select("id")
       .single();
     if (error) throw new Error(error.message);
-    void translateMasterRecord("ports", (data as { id: string }).id, { port_name: input.portName }, "en", actorId ?? null);
+    void translateMasterRecord("ports", (data as { id: string }).id, { port_name: input.portName }, originalLanguage ?? "en", actorId ?? null);
     return (data as { id: string }).id;
   }
 
-  async update(id: string, input: Partial<PortInput>, _actorId?: string | null) {
+  async update(id: string, input: Partial<PortInput>, _actorId?: string | null, originalLanguage?: SupportedLanguage | null) {
     const supabase = (await createApiSupabaseClient()) as any;
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if ("portName" in input) patch.port_name = input.portName;
@@ -139,7 +140,7 @@ export class LoadingPortsRepository {
       .is("deleted_at", null);
     if (error) throw new Error(error.message);
     if (typeof patch.port_name === "string") {
-      void translateMasterRecord("ports", id, { port_name: patch.port_name }, "en", _actorId ?? null);
+      void translateMasterRecord("ports", id, { port_name: patch.port_name }, originalLanguage ?? "en", _actorId ?? null);
     }
   }
 
@@ -233,7 +234,7 @@ export class ReceivedPortsRepository {
     return data as PortRow;
   }
 
-  async create(input: PortInput, actorId?: string | null) {
+  async create(input: PortInput, actorId?: string | null, originalLanguage?: SupportedLanguage | null) {
     const supabase = (await createApiSupabaseClient()) as any;
     const { data, error } = await supabase
       .from("ports")
@@ -248,11 +249,11 @@ export class ReceivedPortsRepository {
       .select("id")
       .single();
     if (error) throw new Error(error.message);
-    void translateMasterRecord("ports", (data as { id: string }).id, { port_name: input.portName }, "en", actorId ?? null);
+    void translateMasterRecord("ports", (data as { id: string }).id, { port_name: input.portName }, originalLanguage ?? "en", actorId ?? null);
     return (data as { id: string }).id;
   }
 
-  async update(id: string, input: Partial<PortInput>, _actorId?: string | null) {
+  async update(id: string, input: Partial<PortInput>, _actorId?: string | null, originalLanguage?: SupportedLanguage | null) {
     const supabase = (await createApiSupabaseClient()) as any;
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if ("portName" in input) patch.port_name = input.portName;
@@ -268,7 +269,7 @@ export class ReceivedPortsRepository {
       .is("deleted_at", null);
     if (error) throw new Error(error.message);
     if (typeof patch.port_name === "string") {
-      void translateMasterRecord("ports", id, { port_name: patch.port_name }, "en", _actorId ?? null);
+      void translateMasterRecord("ports", id, { port_name: patch.port_name }, originalLanguage ?? "en", _actorId ?? null);
     }
   }
 

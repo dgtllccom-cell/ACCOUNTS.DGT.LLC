@@ -1,4 +1,5 @@
 import { loadingPortsRepository, receivedPortsRepository, PortInput } from "@/lib/repositories/ports-repository";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export class LoadingPortsService {
   async search(input: {
@@ -15,12 +16,12 @@ export class LoadingPortsService {
     return await loadingPortsRepository.getById(id);
   }
 
-  async create(input: PortInput, actorId?: string | null) {
-    return await loadingPortsRepository.create(input, actorId);
+  async create(input: PortInput, actorId?: string | null, originalLanguage?: SupportedLanguage | null) {
+    return await loadingPortsRepository.create(input, actorId, originalLanguage);
   }
 
-  async update(id: string, input: Partial<PortInput>, actorId?: string | null) {
-    return await loadingPortsRepository.update(id, input, actorId);
+  async update(id: string, input: Partial<PortInput>, actorId?: string | null, originalLanguage?: SupportedLanguage | null) {
+    return await loadingPortsRepository.update(id, input, actorId, originalLanguage);
   }
 
   async softDelete(id: string) {
@@ -43,12 +44,12 @@ export class ReceivedPortsService {
     return await receivedPortsRepository.getById(id);
   }
 
-  async create(input: PortInput, actorId?: string | null) {
-    return await receivedPortsRepository.create(input, actorId);
+  async create(input: PortInput, actorId?: string | null, originalLanguage?: SupportedLanguage | null) {
+    return await receivedPortsRepository.create(input, actorId, originalLanguage);
   }
 
-  async update(id: string, input: Partial<PortInput>, actorId?: string | null) {
-    return await receivedPortsRepository.update(id, input, actorId);
+  async update(id: string, input: Partial<PortInput>, actorId?: string | null, originalLanguage?: SupportedLanguage | null) {
+    return await receivedPortsRepository.update(id, input, actorId, originalLanguage);
   }
 
   async softDelete(id: string) {

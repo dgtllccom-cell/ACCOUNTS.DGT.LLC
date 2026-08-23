@@ -526,20 +526,28 @@ function normalizeOrder(row: any) {
       const orderIds = reports.map((r: any) => r.id).filter(Boolean);
       if (orderIds.length > 0) {
         try {
-          const recTrans = supabase
-            ? (await supabase
-                .from("record_translations")
-                .select("record_id, field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text, language_texts, translation_status, original_language_code")
-                .in("record_id", orderIds)
-                .eq("record_table", "purchase_orders")
-                .is("deleted_at", null)).data
-            : await withLocalPg(async (sql) => sql`
+          // record_translations sits over per-language base tables with RLS gated on
+          // auth.uid()/is_super_admin(), always NULL under this app's temp-session bootstrap —
+          // the Supabase admin client silently returns zero rows here (same root cause fixed
+          // in lib/services/ledger-report-service.ts). Direct Postgres MUST be tried first —
+          // `supabase` above is truthy whenever the client construction itself succeeds
+          // (unrelated to RLS), so a "supabase ? supabase-path : pg-path" ordering never
+          // actually reaches the working bypass.
+          const viaPg = await withLocalPg(async (sql) => sql`
                 select record_id, field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text, language_texts, translation_status, original_language_code
                 from public.record_translations
                 where record_table = 'purchase_orders'
                   and deleted_at is null
                   and record_id = any(${orderIds})
               `);
+          const recTrans = viaPg ?? (supabase
+            ? (await supabase
+                .from("record_translations")
+                .select("record_id, field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text, language_texts, translation_status, original_language_code")
+                .in("record_id", orderIds)
+                .eq("record_table", "purchase_orders")
+                .is("deleted_at", null)).data
+            : null);
 
           if (recTrans && recTrans.length > 0) {
             const transMapByOrder: Record<string, Record<string, any>> = {};

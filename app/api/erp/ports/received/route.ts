@@ -42,7 +42,8 @@ export async function POST(request: NextRequest) {
         transportType: body.transportType,
         isActive: body.isActive
       },
-      session.userId
+      session.userId,
+      session.preferredLanguage ?? "en"
     );
 
     await auditApiAction(request, {

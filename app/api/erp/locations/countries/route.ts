@@ -92,7 +92,8 @@ export async function POST(request: NextRequest) {
       phoneCode: details.phoneCode,
       officialEmail: body.officialEmail || details.officialEmail,
       adminEmail: body.adminEmail || details.adminEmail,
-      whatsappNumber: body.whatsappNumber || null
+      whatsappNumber: body.whatsappNumber || null,
+      originalLanguage: session.preferredLanguage ?? "en"
     });
 
     await linkEmailAccount({

@@ -82,7 +82,20 @@ const TARGETS: Array<[string, string, Mode]> = ([
   ["city_branches", "name", "transliterate"],
   ["city_branches", "city_name", "transliterate"],
   ["city_branches", "owner_name", "transliterate"],
-  ["city_branches", "address", "translate"]
+  ["city_branches", "address", "translate"],
+  // Round 2 (2026-08-23): the same hardcoded-"en"/never-synced write-path bug fixed across
+  // 29 call sites this round — backfilling every table whose CREATE/UPDATE only just started
+  // correctly detecting the real session language.
+  ["countries", "name", "transliterate"],
+  ["states_provinces", "name", "transliterate"],
+  ["districts", "name", "transliterate"],
+  ["cities", "name", "transliterate"],
+  ["areas_locations", "name", "transliterate"],
+  ["ports", "port_name", "transliterate"],
+  ["products", "product_name", "translate"],
+  ["products", "product_description", "translate"],
+  ["goods_variations", "brand", "translate"],
+  ["expenses_bills", "bill_title", "translate"]
 ] as Array<[string, string, Mode]>).filter(
   ([table, field]) => (!onlyTable || table === onlyTable) && (!onlyField || field === onlyField)
 );

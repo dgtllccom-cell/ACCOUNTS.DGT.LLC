@@ -37489,3 +37489,5 @@ Error: Cannot coerce the result to a single JSON object
     at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
 2026-08-23T09:16:03.089Z - SERVER_ERROR - Cannot coerce the result to a single JSON object - {}
 2026-08-23T09:16:03.470Z - SERVER_ERROR - Cannot coerce the result to a single JSON object - {}
+2026-08-23T14:47:38.046Z - SERVER_ERROR - Unexpected server error - {}
+2026-08-23T14:47:46.775Z - SERVER_ERROR - Unexpected server error - {}

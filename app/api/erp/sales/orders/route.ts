@@ -17,13 +17,26 @@ import { salesOrderTranslationFields } from "@/lib/i18n/sales-order-translations
 async function attachSalesOrderTranslations(rows: any[]) {
   const ids = rows.map((order) => order.id).filter(Boolean);
   if (!ids.length) return rows;
-  const admin = createSupabaseAdminClient() as any;
-  const { data: translationRows, error } = await admin.from("record_translations")
-    .select("record_id, field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text")
-    .eq("record_table", "sales_orders")
-    .in("record_id", ids)
-    .is("deleted_at", null);
-  if (error) throw new Error(error.message);
+  // record_translations sits over per-language base tables with RLS gated on
+  // auth.uid()/is_super_admin(), always NULL under this app's temp-session bootstrap —
+  // the Supabase admin client silently returns zero rows here (same root cause fixed in
+  // lib/services/ledger-report-service.ts). Try direct Postgres first.
+  const viaPg = await withLocalPg(async (sql) => sql`
+    select record_id, field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text
+    from public.record_translations
+    where record_table = 'sales_orders' and record_id = any(${ids}::uuid[]) and deleted_at is null
+  `);
+  let translationRows: any[] | null = viaPg;
+  if (!translationRows) {
+    const admin = createSupabaseAdminClient() as any;
+    const { data, error } = await admin.from("record_translations")
+      .select("record_id, field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text")
+      .eq("record_table", "sales_orders")
+      .in("record_id", ids)
+      .is("deleted_at", null);
+    if (error) throw new Error(error.message);
+    translationRows = data;
+  }
   for (const row of translationRows || []) {
     const order = rows.find((item) => item.id === row.record_id);
     if (order) {

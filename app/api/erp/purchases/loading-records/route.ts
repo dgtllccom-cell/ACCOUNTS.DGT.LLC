@@ -644,7 +644,7 @@ export async function POST(request: NextRequest) {
       table: "purchase_loading_records",
       recordId: (inserted as any).id,
       record: payload,
-      originalLanguage: "en",
+      originalLanguage: session.preferredLanguage ?? "en",
       actorId: session.userId
     });
 

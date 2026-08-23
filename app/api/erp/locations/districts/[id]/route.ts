@@ -49,7 +49,8 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       districtId: id,
       name: body.name ?? undefined,
       code: body.code ?? undefined,
-      isActive: body.isActive ?? undefined
+      isActive: body.isActive ?? undefined,
+      originalLanguage: session.preferredLanguage ?? "en"
     });
 
     return apiOk({ district: updated });

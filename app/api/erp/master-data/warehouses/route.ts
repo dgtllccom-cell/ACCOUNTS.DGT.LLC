@@ -82,7 +82,7 @@ export async function POST(req: Request) {
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    void translateMasterRecord("warehouses", data.id, { warehouse_name: data.warehouse_name }, "en", session.userId);
+    void translateMasterRecord("warehouses", data.id, { warehouse_name: data.warehouse_name }, session.preferredLanguage ?? "en", session.userId);
 
     // 4-level serial (Global/Country/Branch/Entry) — independent 'warehouses' sequence.
     try {

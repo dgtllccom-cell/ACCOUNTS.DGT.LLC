@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
     // ledger in a different language later gets a resolved value instead of always
     // seeing the original-language text (registered in translatable-fields.ts as
     // mode:"transliterate"); non-blocking, never affects the already-committed create.
-    void translateMasterRecord("ledgers", ledgerId, { name: body.name }, "en", session.userId ?? null);
+    void translateMasterRecord("ledgers", ledgerId, { name: body.name }, session.preferredLanguage ?? "en", session.userId ?? null);
 
     return apiCreated({
       ledgerId

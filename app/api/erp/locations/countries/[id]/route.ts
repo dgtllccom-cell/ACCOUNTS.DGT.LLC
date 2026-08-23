@@ -34,7 +34,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       isActive: body.isActive,
       officialEmail: body.officialEmail,
       adminEmail: body.adminEmail,
-      whatsappNumber: body.whatsappNumber
+      whatsappNumber: body.whatsappNumber,
+      originalLanguage: session.preferredLanguage ?? "en"
     });
 
     // Link/Upsert central email accounts

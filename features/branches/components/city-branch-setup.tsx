@@ -1,7 +1,6 @@
 "use client";
 
-import type { FormEvent } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Pencil, Eye, ArrowLeft, ArrowRight, Printer, Download, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -1438,8 +1437,10 @@ function CityBranchSetupContent() {
           </span>
         </div>
       </div>
-      <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
-        <Card className="border-slate-200/80 shadow-sm">
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full max-w-[1600px] mx-auto items-start">
+        <div className={cn(activeStep === 9 ? "col-span-12" : "lg:col-span-7 xl:col-span-7", "space-y-6 w-full")}>
+          <Card className="border-slate-200/80 shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle>City Branch Setup</CardTitle>
           </CardHeader>
@@ -2273,8 +2274,9 @@ function CityBranchSetupContent() {
             </form>
           </CardContent>
         </Card>
+      </div>
 
-        <div hidden={activeStep === 9} className="space-y-3 lg:sticky lg:top-4">
+        <div hidden={activeStep === 9} className="lg:col-span-5 xl:col-span-5 w-full space-y-3 lg:sticky lg:top-4">
           {/* ── Compact Right-Side Summary Panel ─────────────────── */}
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950 overflow-hidden">
 

@@ -52,7 +52,8 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       code: body.code ?? undefined,
       zipCode: body.zipCode ?? undefined,
       isActive: body.isActive ?? undefined,
-      updatedBy: isUuid(session.userId) ? session.userId : null
+      updatedBy: isUuid(session.userId) ? session.userId : null,
+      originalLanguage: session.preferredLanguage ?? "en"
     });
 
     return apiOk({ city: updated });

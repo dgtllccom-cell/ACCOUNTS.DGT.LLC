@@ -28,7 +28,7 @@ export async function PATCH(
     const { id } = await params;
     const body = portUpdateSchema.parse(await request.json());
 
-    await receivedPortsService.update(id, body, session.userId);
+    await receivedPortsService.update(id, body, session.userId, session.preferredLanguage ?? "en");
 
     await auditApiAction(request, {
       action: "received_ports.update.api",

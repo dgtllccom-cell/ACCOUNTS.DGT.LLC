@@ -2,6 +2,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import postgres from "postgres";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 function getDbUrl(): string {
   if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
@@ -333,6 +334,7 @@ export class LocationsRepository {
     officialEmail: string;
     adminEmail: string;
     whatsappNumber?: string | null;
+    originalLanguage?: SupportedLanguage | null;
   }) {
     const supabase = createSupabaseAdminClient() as any;
     const nameClean = input.name.trim();
@@ -397,7 +399,7 @@ export class LocationsRepository {
     }
 
     if (data?.id) {
-      void translateMasterRecord("countries", data.id, { name: data.name }, "en");
+      void translateMasterRecord("countries", data.id, { name: data.name }, input.originalLanguage ?? "en");
     }
     return data as CountryRow;
   }
@@ -413,6 +415,7 @@ export class LocationsRepository {
     officialEmail?: string | null;
     adminEmail?: string | null;
     whatsappNumber?: string | null;
+    originalLanguage?: SupportedLanguage | null;
   }) {
     const supabase = createSupabaseAdminClient() as any;
     const patch: Record<string, any> = {
@@ -437,7 +440,7 @@ export class LocationsRepository {
       .select("id, name, iso2, iso3, currency_code, default_language_code, phone_code, is_active, official_email, admin_email, whatsapp_number")
       .single();
     if (error) throw new Error(error.message);
-    void translateMasterRecord("countries", data.id, { name: data.name }, "en");
+    void translateMasterRecord("countries", data.id, { name: data.name }, input.originalLanguage ?? "en");
     return data as CountryRow;
   }
 
@@ -746,7 +749,7 @@ export class LocationsRepository {
     return (await this.shouldUseUaeDefaultZip(countryId)) ? UAE_DEFAULT_ZIP_CODE : null;
   }
 
-  async createState(input: { countryId: string; name: string; code?: string | null; createdBy?: string | null }) {
+  async createState(input: { countryId: string; name: string; code?: string | null; createdBy?: string | null; originalLanguage?: SupportedLanguage | null }) {
     const supabase = createSupabaseAdminClient() as any;
     const normalizedName = input.name.trim();
     const normalizedCode = input.code ? input.code.trim() : null;
@@ -799,11 +802,11 @@ export class LocationsRepository {
       }
       throw new Error(error.message);
     }
-    void translateMasterRecord("states_provinces", data.id, { name: data.name }, "en");
+    void translateMasterRecord("states_provinces", data.id, { name: data.name }, input.originalLanguage ?? "en");
     return data as StateRow;
   }
 
-  async updateState(input: { stateId: string; name?: string | null; code?: string | null; isActive?: boolean | null }) {
+  async updateState(input: { stateId: string; name?: string | null; code?: string | null; isActive?: boolean | null; originalLanguage?: SupportedLanguage | null }) {
     const supabase = createSupabaseAdminClient() as any;
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (input.name !== undefined) patch.name = input.name?.trim();
@@ -818,7 +821,7 @@ export class LocationsRepository {
       .select("id, country_id, name, code, postal_code, phone_area_code, is_active")
       .single();
     if (error) throw new Error(error.message);
-    void translateMasterRecord("states_provinces", data.id, { name: data.name }, "en");
+    void translateMasterRecord("states_provinces", data.id, { name: data.name }, input.originalLanguage ?? "en");
     return data as StateRow;
   }
 
@@ -828,6 +831,7 @@ export class LocationsRepository {
     name: string;
     code?: string | null;
     createdBy?: string | null;
+    originalLanguage?: SupportedLanguage | null;
   }) {
     const supabase = createSupabaseAdminClient() as any;
     const normalizedName = input.name.trim();
@@ -884,7 +888,7 @@ export class LocationsRepository {
       }
       throw new Error(error.message);
     }
-    void translateMasterRecord("districts", data.id, { name: data.name }, "en");
+    void translateMasterRecord("districts", data.id, { name: data.name }, input.originalLanguage ?? "en");
     return data as DistrictRow;
   }
 
@@ -897,11 +901,16 @@ export class LocationsRepository {
       .is("deleted_at", null)
       .single();
     if (error) throw new Error(error.message);
-    void translateMasterRecord("districts", data.id, { name: data.name }, "en");
+    // No translateMasterRecord call here: this is a hot read path (called on every
+    // district GET/PATCH lookup), the write already synced translations at
+    // create/update time, and this call's result was never even used in the response
+    // below — it was a per-request write attempt with zero effect on what the caller
+    // gets back. Old rows that predate the create/update fix are backfilled via
+    // scripts/backfill-master-translations.ts, not opportunistically on every read.
     return data as DistrictRow;
   }
 
-  async updateDistrict(input: { districtId: string; name?: string | null; code?: string | null; isActive?: boolean | null }) {
+  async updateDistrict(input: { districtId: string; name?: string | null; code?: string | null; isActive?: boolean | null; originalLanguage?: SupportedLanguage | null }) {
     const supabase = createSupabaseAdminClient() as any;
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (input.name !== undefined) patch.name = input.name?.trim();
@@ -916,7 +925,7 @@ export class LocationsRepository {
       .select("id, country_id, state_province_id, name, code, postal_code, phone_area_code, is_active")
       .single();
     if (error) throw new Error(error.message);
-    void translateMasterRecord("districts", data.id, { name: data.name }, "en");
+    void translateMasterRecord("districts", data.id, { name: data.name }, input.originalLanguage ?? "en");
     return data as DistrictRow;
   }
 
@@ -928,6 +937,7 @@ export class LocationsRepository {
     code?: string | null;
     zipCode?: string | null;
     createdBy?: string | null;
+    originalLanguage?: SupportedLanguage | null;
   }) {
     const supabase = createSupabaseAdminClient() as any;
     const normalizedCode = input.code ? input.code.trim().toUpperCase() : null;
@@ -984,7 +994,7 @@ export class LocationsRepository {
       .select("id, country_id, state_province_id, district_id, name, code, zip_code, phone_area_code, is_active")
       .single();
     if (error) throw new Error(error.message);
-    void translateMasterRecord("cities", data.id, { name: data.name }, "en");
+    void translateMasterRecord("cities", data.id, { name: data.name }, input.originalLanguage ?? "en");
     return data as CityRow;
   }
 
@@ -996,6 +1006,7 @@ export class LocationsRepository {
     isActive?: boolean | null;
     districtId?: string | null;
     updatedBy?: string | null;
+    originalLanguage?: SupportedLanguage | null;
   }) {
     const supabase = createSupabaseAdminClient() as any;
     const { data: currentCity, error: currentCityError } = await supabase
@@ -1072,7 +1083,7 @@ export class LocationsRepository {
       .select("id, country_id, state_province_id, district_id, name, code, zip_code, phone_area_code, is_active")
       .single();
     if (error) throw new Error(error.message);
-    void translateMasterRecord("cities", data.id, { name: data.name }, "en");
+    void translateMasterRecord("cities", data.id, { name: data.name }, input.originalLanguage ?? "en");
     return data as CityRow;
   }
 
@@ -1085,6 +1096,7 @@ export class LocationsRepository {
     code?: string | null;
     postalCode?: string | null;
     createdBy?: string | null;
+    originalLanguage?: SupportedLanguage | null;
   }) {
     const supabase = createSupabaseAdminClient() as any;
     const normalizedCode = input.code?.trim() || ((await this.shouldUseUaeDefaultZip(input.countryId)) ? UAE_DEFAULT_ZIP_CODE : null);
@@ -1109,7 +1121,7 @@ export class LocationsRepository {
         .select("id, country_id, state_province_id, district_id, city_id, name, code, postal_code, phone_area_code, is_active")
         .single();
       if (!error && data) {
-        void translateMasterRecord("areas_locations", data.id, { name: data.name }, "en");
+        void translateMasterRecord("areas_locations", data.id, { name: data.name }, input.originalLanguage ?? "en");
         return data as AreaRow;
       }
       supabaseErr = error;
@@ -1139,7 +1151,7 @@ export class LocationsRepository {
           RETURNING id, country_id, state_province_id, district_id, city_id, name, code, postal_code, phone_area_code, is_active
         `;
         if (rows && rows[0]) {
-          void translateMasterRecord("areas_locations", rows[0].id, { name: rows[0].name }, "en");
+          void translateMasterRecord("areas_locations", rows[0].id, { name: rows[0].name }, input.originalLanguage ?? "en");
           return rows[0] as AreaRow;
         }
       } catch (pgErr: any) {
@@ -1154,7 +1166,7 @@ export class LocationsRepository {
     throw new Error("Failed to create area record.");
   }
 
-  async updateArea(input: { areaId: string; name?: string | null; code?: string | null; districtId?: string | null; isActive?: boolean | null }) {
+  async updateArea(input: { areaId: string; name?: string | null; code?: string | null; districtId?: string | null; isActive?: boolean | null; originalLanguage?: SupportedLanguage | null }) {
     const supabase = createSupabaseAdminClient() as any;
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (input.name !== undefined) patch.name = input.name?.trim();
@@ -1172,7 +1184,7 @@ export class LocationsRepository {
         .select("id, country_id, state_province_id, district_id, city_id, name, code, postal_code, phone_area_code, is_active")
         .single();
       if (!error && data) {
-        void translateMasterRecord("areas_locations", data.id, { name: data.name }, "en");
+        void translateMasterRecord("areas_locations", data.id, { name: data.name }, input.originalLanguage ?? "en");
         return data as AreaRow;
       }
       supabaseErr = error;
@@ -1200,7 +1212,7 @@ export class LocationsRepository {
           RETURNING id, country_id, state_province_id, district_id, city_id, name, code, postal_code, phone_area_code, is_active
         `;
         if (rows && rows[0]) {
-          void translateMasterRecord("areas_locations", rows[0].id, { name: rows[0].name }, "en");
+          void translateMasterRecord("areas_locations", rows[0].id, { name: rows[0].name }, input.originalLanguage ?? "en");
           return rows[0] as unknown as AreaRow;
         }
       } catch (pgErr: any) {
