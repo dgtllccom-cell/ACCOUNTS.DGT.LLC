@@ -25,15 +25,62 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { listCountries, listCities, type LocationCountry, type LocationCity } from "@/features/master-forms";
 
-type LoginTab = "super_admin" | "country" | "city" | "branch" | "agent";
+export type LoginTab = "super_admin" | "country" | "city" | "branch" | "agent";
 
-const TABS: { id: LoginTab; label: string }[] = [
-  { id: "super_admin", label: "Super Admin" },
-  { id: "country", label: "Country" },
-  { id: "city", label: "City" },
-  { id: "branch", label: "Branch" },
-  { id: "agent", label: "Agent" },
+const TABS: { id: LoginTab; label: string; short: string }[] = [
+  { id: "super_admin", label: "Super Admin", short: "Admin" },
+  { id: "country", label: "Country Admin", short: "Country" },
+  { id: "city", label: "City Branch", short: "City" },
+  { id: "branch", label: "Branch User", short: "Branch" },
+  { id: "agent", label: "Clearing Agent", short: "Agent" },
 ];
+
+const ACCESS_PROFILES: Record<
+  LoginTab,
+  {
+    eyebrow: string;
+    title: string;
+    subtitle: string;
+    note: string;
+    scopeLabel: string;
+  }
+> = {
+  super_admin: {
+    eyebrow: "Global ERP Control",
+    title: "Super Admin Access",
+    subtitle: "Full system visibility for configuration, audit, reporting, and cross-country administration.",
+    note: "Use this entry point for global ERP operations and security oversight.",
+    scopeLabel: "All countries, all branches",
+  },
+  country: {
+    eyebrow: "Country Workspace",
+    title: "Country Admin Access",
+    subtitle: "Scoped access for country-level operations, master data, and business oversight.",
+    note: "Choose the exact country before signing in to keep branch scope consistent.",
+    scopeLabel: "Country-level access",
+  },
+  city: {
+    eyebrow: "City Branch Workspace",
+    title: "City Branch Access",
+    subtitle: "Operational entry for city-specific teams with branch-aware ERP workflows.",
+    note: "Use this path when your work belongs to a specific city branch.",
+    scopeLabel: "City branch access",
+  },
+  branch: {
+    eyebrow: "Branch Operations",
+    title: "Branch User Access",
+    subtitle: "Focused access for branch users handling local transactions, reports, and approvals.",
+    note: "Branch users see the same ERP, but only within their assigned scope.",
+    scopeLabel: "Branch-level access",
+  },
+  agent: {
+    eyebrow: "Shipping & Clearing",
+    title: "Clearing Agent Access",
+    subtitle: "Workflow access for shipping line and clearing operations with linked order visibility.",
+    note: "Designed for operational agents who work on the logistics side of the ERP.",
+    scopeLabel: "Agent workflow access",
+  },
+};
 
 const LANGUAGES = [
   { code: "en", name: "English", flag: "🇺🇸" },
@@ -96,8 +143,16 @@ function SelectField({
   );
 }
 
-export function LoginForm({ lang: initialLang }: { lang?: SupportedLanguage }) {
-  const [activeTab, setActiveTab] = useState<LoginTab>("super_admin");
+export function LoginForm({
+  lang: initialLang,
+  initialTab = "super_admin",
+  showRoleTabs = true,
+}: {
+  lang?: SupportedLanguage;
+  initialTab?: LoginTab;
+  showRoleTabs?: boolean;
+}) {
+  const [activeTab, setActiveTab] = useState<LoginTab>(initialTab);
   const [selectedLang, setSelectedLang] = useState<string>(initialLang || "en");
   const [showPassword, setShowPassword] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState("");
@@ -113,6 +168,10 @@ export function LoginForm({ lang: initialLang }: { lang?: SupportedLanguage }) {
 
   const [masterCountries, setMasterCountries] = useState<LocationCountry[]>([]);
   const [masterCities, setMasterCities] = useState<LocationCity[]>([]);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   useEffect(() => {
     let cancelled = false;
@@ -302,40 +361,69 @@ export function LoginForm({ lang: initialLang }: { lang?: SupportedLanguage }) {
       </div>
 
       {/* ── Role Scope Pills ── */}
-      <div
-        className="mb-4 flex overflow-x-auto gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-800/60 no-scrollbar"
-        style={{ display: "flex", flexWrap: "nowrap", gap: "4px", padding: "4px", backgroundColor: "#f1f5f9", borderRadius: "12px", border: "1px solid #e2e8f0", overflowX: "auto" }}
-      >
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => handleTabChange(tab.id)}
-            style={{
-              flex: "1 1 0%",
-              padding: "8px 10px",
-              borderRadius: "8px",
-              fontSize: "10px",
-              fontWeight: 800,
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              textAlign: "center",
-              whiteSpace: "nowrap",
-              cursor: "pointer",
-              backgroundColor: activeTab === tab.id ? "#0f172a" : "transparent",
-              color: activeTab === tab.id ? "#ffffff" : "#64748b",
-              border: "none",
-            }}
-            className={cn(
-              "shrink-0 flex-1 rounded-lg px-2.5 py-2 text-[9px] sm:text-[9.5px] font-black uppercase tracking-wider transition-all duration-200 text-center whitespace-nowrap cursor-pointer",
-              activeTab === tab.id
-                ? "bg-slate-900 text-white shadow-xs dark:bg-white dark:text-slate-900"
-                : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
+      {showRoleTabs && (
+        <div
+          className="mb-4 flex overflow-x-auto gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-800/60 no-scrollbar"
+          style={{ display: "flex", flexWrap: "nowrap", gap: "4px", padding: "4px", backgroundColor: "#f1f5f9", borderRadius: "12px", border: "1px solid #e2e8f0", overflowX: "auto" }}
+        >
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              aria-label={tab.label}
+              title={tab.label}
+              onClick={() => handleTabChange(tab.id)}
+              style={{
+                flex: "1 1 0%",
+                padding: "8px 10px",
+                borderRadius: "8px",
+                fontSize: "10px",
+                fontWeight: 800,
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+                textAlign: "center",
+                whiteSpace: "nowrap",
+                cursor: "pointer",
+                backgroundColor: activeTab === tab.id ? "#0f172a" : "transparent",
+                color: activeTab === tab.id ? "#ffffff" : "#64748b",
+                border: "none",
+              }}
+              className={cn(
+                "shrink-0 flex-1 rounded-lg px-2.5 py-2 text-[9px] sm:text-[9.5px] font-black uppercase tracking-wider transition-all duration-200 text-center whitespace-nowrap cursor-pointer",
+                activeTab === tab.id
+                  ? "bg-slate-900 text-white shadow-xs dark:bg-white dark:text-slate-900"
+                  : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+              )}
+            >
+              {tab.short}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="mb-4 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 p-4 shadow-xs dark:border-slate-800 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-700 dark:text-blue-300">
+              {ACCESS_PROFILES[activeTab].eyebrow}
+            </p>
+            <h3 className="mt-1 text-lg font-black tracking-tight text-slate-900 dark:text-white">
+              {ACCESS_PROFILES[activeTab].title}
+            </h3>
+            <p className="mt-1 text-xs leading-5 font-medium text-slate-600 dark:text-slate-400">
+              {ACCESS_PROFILES[activeTab].subtitle}
+            </p>
+          </div>
+          <div className="hidden sm:flex flex-col items-end gap-1 rounded-xl border border-blue-100 bg-white px-3 py-2 text-right dark:border-blue-900/40 dark:bg-slate-900">
+            <span className="text-[9px] font-black uppercase tracking-[0.22em] text-slate-400">Scope</span>
+            <span className="text-[11px] font-extrabold text-blue-700 dark:text-blue-300">
+              {ACCESS_PROFILES[activeTab].scopeLabel}
+            </span>
+          </div>
+        </div>
+        <p className="mt-3 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+          {ACCESS_PROFILES[activeTab].note}
+        </p>
       </div>
 
       {/* ── Error Banner ── */}
