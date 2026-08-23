@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Building2,
@@ -261,8 +261,6 @@ function ChipList({
     </div>
   );
 }
-
-import { Suspense } from "react";
 
 function SuperAdminBranchSetupContent() {
   const searchParams = useSearchParams();

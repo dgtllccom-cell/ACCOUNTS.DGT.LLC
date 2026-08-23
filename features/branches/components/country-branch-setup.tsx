@@ -163,8 +163,6 @@ function asIso3(country: LocationCountry | null) {
   return iso.slice(0, 3).toUpperCase() || "CTR";
 }
 
-import { Suspense } from "react";
-
 function CountryBranchSetupContent() {
   const searchParams = useSearchParams();
   const editId = searchParams.get("editId") ?? "";

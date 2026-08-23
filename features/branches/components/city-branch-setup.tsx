@@ -187,8 +187,6 @@ function normalizeSearch(value: string) {
     .trim();
 }
 
-import { Suspense } from "react";
-
 function CityBranchSetupContent() {
   const searchParams = useSearchParams();
   const editId = searchParams.get("editId") ?? "";
