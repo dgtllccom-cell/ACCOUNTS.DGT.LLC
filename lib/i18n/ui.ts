@@ -745,6 +745,7 @@ export type UiKey =
   | "roz.select_a_country"
   | "common.new"
   | "common.refresh"
+  | "common.system"
   | "common.user"
   | "pa.default_title"
   | "pa.back_to_previous_page"
@@ -812,6 +813,8 @@ export type UiKey =
   | "pay.payment_actions"
   | "pay.remaining_workflow_warning"
   | "pay.remaining_workflow_steps"
+  | "roz.creator"
+  | "roz.location"
   | "roz.total_credit_label"
   | "roz.money_paid"
   | "roz.total_debit_label"
@@ -2182,6 +2185,23 @@ export type UiKey =
   | "common.amount"
   | "common.remarks"
   | "common.close"
+  | "correction.trigger_button"
+  | "correction.dialog_title"
+  | "correction.dialog_subtitle"
+  | "correction.loading"
+  | "correction.no_fields"
+  | "correction.original_label"
+  | "correction.source_suffix"
+  | "correction.copied_not_verified"
+  | "correction.save_button"
+  | "correction.saving"
+  | "correction.footer_hint"
+  | "correction.copied_values_suffix"
+  | "correction.load_failed"
+  | "correction.unchanged_source_prefix"
+  | "correction.all_verified"
+  | "correction.saved_pending"
+  | "correction.save_failed"
   | "common.yes"
   | "common.no"
   | "report.filters"
@@ -4208,6 +4228,23 @@ const en: Dict = {
   "bank.saved_success_message": "Bank \"{name}\" saved successfully!",
   "bank.save_failed": "Failed to save bank.",
   "common.close": "Close",
+  "correction.trigger_button": "Correct translations",
+  "correction.dialog_title": "Five-language record corrections",
+  "correction.dialog_subtitle": "Original source text is preserved. Empty values remain pending.",
+  "correction.loading": "Loading translations…",
+  "correction.no_fields": "No enrolled translatable fields were found for this record.",
+  "correction.original_label": "Original",
+  "correction.source_suffix": " · source",
+  "correction.copied_not_verified": "Copied source is not verified.",
+  "correction.save_button": "Save corrections",
+  "correction.saving": "Saving…",
+  "correction.footer_hint": "Only authorized users within the record scope can save.",
+  "correction.copied_values_suffix": "copied target value(s) must be corrected.",
+  "correction.load_failed": "Translations could not be loaded.",
+  "correction.unchanged_source_prefix": "Unchanged source text is not a verified translation: ",
+  "correction.all_verified": "All five translations are verified.",
+  "correction.saved_pending": "Saved. Missing translations remain pending.",
+  "correction.save_failed": "Translations could not be saved.",
   "common.yes": "Yes",
   "common.no": "No",
   // ── hr.* — Employee / HR module ──
@@ -4836,6 +4873,7 @@ const en: Dict = {
   "roz.select_a_country": "Select a country",
   "common.new": "New",
   "common.refresh": "Refresh",
+  "common.system": "System",
   "common.user": "User",
   "nav.toggle_submenu": "Toggle submenu",
   "dashboard.owner": "Owner",
@@ -5441,6 +5479,8 @@ const en: Dict = {
   "pay.payment_actions": "Payment actions",
   "pay.remaining_workflow_warning": "Warning: Workflow Rule: Remaining Payment requires Transfer to Loading first.",
   "pay.remaining_workflow_steps": "Orders only appear here after: Booking → Advance Payment → Transfer to Loading → Loading Confirmation. Ensure the order has been transferred to loading before making a remaining payment.",
+  "roz.creator": "Creator",
+  "roz.location": "Location",
   "roz.total_credit_label": "Total Credit",
   "roz.money_paid": "(Money Paid)",
   "roz.total_debit_label": "Total Debit",
@@ -8734,6 +8774,23 @@ const ur: Dict = {
   "bank.saved_success_message": "بینک \"{name}\" کامیابی سے محفوظ ہوگیا!",
   "bank.save_failed": "بینک محفوظ کرنے میں ناکامی۔",
   "common.close": "بند کریں",
+  "correction.trigger_button": "ترجمے درست کریں",
+  "correction.dialog_title": "پانچ زبانوں میں ریکارڈ کی اصلاحات",
+  "correction.dialog_subtitle": "اصل ماخذ متن محفوظ رہتا ہے۔ خالی اقدار زیر التواء رہیں گی۔",
+  "correction.loading": "ترجمے لوڈ ہو رہے ہیں…",
+  "correction.no_fields": "اس ریکارڈ کے لیے کوئی قابل ترجمہ فیلڈز نہیں ملیں۔",
+  "correction.original_label": "اصل",
+  "correction.source_suffix": " · ماخذ",
+  "correction.copied_not_verified": "کاپی شدہ ماخذ تصدیق شدہ نہیں ہے۔",
+  "correction.save_button": "اصلاحات محفوظ کریں",
+  "correction.saving": "محفوظ ہو رہا ہے…",
+  "correction.footer_hint": "صرف ریکارڈ کے دائرہ کار میں مجاز صارفین ہی محفوظ کر سکتے ہیں۔",
+  "correction.copied_values_suffix": "کاپی شدہ ٹارگٹ ویلیو(ز) کو درست کرنا ضروری ہے۔",
+  "correction.load_failed": "ترجمے لوڈ نہیں ہو سکے۔",
+  "correction.unchanged_source_prefix": "غیر تبدیل شدہ ماخذ متن ایک تصدیق شدہ ترجمہ نہیں ہے: ",
+  "correction.all_verified": "پانچوں زبانوں کے ترجمے تصدیق شدہ ہیں۔",
+  "correction.saved_pending": "محفوظ ہو گیا۔ کچھ ترجمے تاحال زیر التواء ہیں۔",
+  "correction.save_failed": "ترجمے محفوظ نہیں ہو سکے۔",
   "common.yes": "جی ہاں",
   "common.no": "نہیں",
   "hr.title_master": "ماسٹر سیٹ اپ — ملازمین کا انتظام",
@@ -9752,6 +9809,7 @@ const ur: Dict = {
   "roz.select_a_country": "ایک ملک منتخب کریں",
   "common.new": "نیا",
   "common.refresh": "تازہ کریں",
+  "common.system": "سسٹم",
   "common.user": "صارف",
   "nav.toggle_submenu": "سب مینیو ٹوگل کریں",
   "dashboard.owner": "مالک",
@@ -10323,6 +10381,8 @@ const ur: Dict = {
   "pay.payment_actions": "ادائیگی کی کارروائیاں",
   "pay.remaining_workflow_warning": "انتباہ: ورک فلو اصول: بقایا ادائیگی کے لیے پہلے لوڈنگ ٹرانسفر ضروری ہے۔",
   "pay.remaining_workflow_steps": "آرڈرز یہاں صرف اس ترتیب کے بعد ظاہر ہوتے ہیں: بکنگ → ایڈوانس ادائیگی → لوڈنگ ٹرانسفر → لوڈنگ کی تصدیق۔ بقایا ادائیگی کرنے سے پہلے یقینی بنائیں کہ آرڈر لوڈنگ کے لیے ٹرانسفر ہو چکا ہے۔",
+  "roz.creator": "تخلیق کار",
+  "roz.location": "مقام",
   "roz.total_credit_label": "کل جمع",
   "roz.money_paid": "(ادا کی گئی رقم)",
   "roz.total_debit_label": "کل بنام",
@@ -12602,6 +12662,23 @@ const ar: Dict = {
   "bank.saved_success_message": "تم حفظ البنك \"{name}\" بنجاح!",
   "bank.save_failed": "فشل حفظ البنك.",
   "common.close": "إغلاق",
+  "correction.trigger_button": "تصحيح الترجمات",
+  "correction.dialog_title": "تصحيحات السجل بخمس لغات",
+  "correction.dialog_subtitle": "يتم الحفاظ على النص المصدر الأصلي. القيم الفارغة تبقى معلقة.",
+  "correction.loading": "جارٍ تحميل الترجمات…",
+  "correction.no_fields": "لم يتم العثور على حقول قابلة للترجمة مسجلة لهذا السجل.",
+  "correction.original_label": "الأصل",
+  "correction.source_suffix": " · المصدر",
+  "correction.copied_not_verified": "النص المصدر المنسوخ غير موثّق.",
+  "correction.save_button": "حفظ التصحيحات",
+  "correction.saving": "جارٍ الحفظ…",
+  "correction.footer_hint": "يمكن فقط للمستخدمين المخوّلين ضمن نطاق السجل الحفظ.",
+  "correction.copied_values_suffix": "قيمة (قيم) مستهدفة منسوخة يجب تصحيحها.",
+  "correction.load_failed": "تعذّر تحميل الترجمات.",
+  "correction.unchanged_source_prefix": "النص المصدر غير المُعدَّل ليس ترجمة موثّقة: ",
+  "correction.all_verified": "الترجمات الخمس جميعها موثّقة.",
+  "correction.saved_pending": "تم الحفظ. لا تزال بعض الترجمات معلّقة.",
+  "correction.save_failed": "تعذّر حفظ الترجمات.",
   "common.yes": "نعم",
   "common.no": "لا",
   "hr.title_master": "الإعداد الرئيسي — إدارة الموظفين",
@@ -13607,6 +13684,7 @@ const ar: Dict = {
   "roz.select_a_country": "اختر دولة",
   "common.new": "جديد",
   "common.refresh": "تحديث",
+  "common.system": "النظام",
   "common.user": "المستخدم",
   "nav.toggle_submenu": "تبديل القائمة الفرعية",
   "dashboard.owner": "المالك",
@@ -14178,6 +14256,8 @@ const ar: Dict = {
   "pay.payment_actions": "إجراءات الدفع",
   "pay.remaining_workflow_warning": "تحذير: قاعدة سير العمل: الدفعة المتبقية تتطلب ترحيل التحميل أولاً.",
   "pay.remaining_workflow_steps": "تظهر الطلبات هنا فقط بعد: الحجز ← الدفعة المقدمة ← ترحيل التحميل ← تأكيد التحميل. تأكد من ترحيل الطلب إلى التحميل قبل إجراء الدفعة المتبقية.",
+  "roz.creator": "المُنشئ",
+  "roz.location": "الموقع",
   "roz.total_credit_label": "إجمالي الدائن",
   "roz.money_paid": "(المبلغ المدفوع)",
   "roz.total_debit_label": "إجمالي المدين",
@@ -16465,6 +16545,23 @@ const fa: Dict = {
   "bank.saved_success_message": "بانک \"{name}\" با موفقیت ذخیره شد!",
   "bank.save_failed": "ذخیره بانک ناموفق بود.",
   "common.close": "بستن",
+  "correction.trigger_button": "اصلاح ترجمه‌ها",
+  "correction.dialog_title": "اصلاحات رکورد به پنج زبان",
+  "correction.dialog_subtitle": "متن منبع اصلی حفظ می‌شود. مقادیر خالی در انتظار باقی می‌مانند.",
+  "correction.loading": "در حال بارگذاری ترجمه‌ها…",
+  "correction.no_fields": "هیچ فیلد قابل ترجمه‌ای برای این رکورد ثبت نشده است.",
+  "correction.original_label": "اصلی",
+  "correction.source_suffix": " · منبع",
+  "correction.copied_not_verified": "متن منبع کپی‌شده تأیید نشده است.",
+  "correction.save_button": "ذخیره اصلاحات",
+  "correction.saving": "در حال ذخیره…",
+  "correction.footer_hint": "فقط کاربران مجاز در محدوده رکورد می‌توانند ذخیره کنند.",
+  "correction.copied_values_suffix": "مقدار (مقادیر) هدف کپی‌شده باید اصلاح شود.",
+  "correction.load_failed": "ترجمه‌ها بارگذاری نشدند.",
+  "correction.unchanged_source_prefix": "متن منبع تغییرنیافته یک ترجمه تأییدشده نیست: ",
+  "correction.all_verified": "هر پنج ترجمه تأیید شده‌اند.",
+  "correction.saved_pending": "ذخیره شد. برخی ترجمه‌ها همچنان در انتظار هستند.",
+  "correction.save_failed": "ترجمه‌ها ذخیره نشدند.",
   "common.yes": "بله",
   "common.no": "خیر",
   "hr.title_master": "تنظیم اصلی — مدیریت کارمندان",
@@ -17449,6 +17546,7 @@ const fa: Dict = {
   "roz.select_a_country": "یک کشور انتخاب کنید",
   "common.new": "جدید",
   "common.refresh": "بروزرسانی",
+  "common.system": "سیستم",
   "common.user": "کاربر",
   "nav.toggle_submenu": "زیرمنو را تغییر دهید",
   "dashboard.owner": "مالک",
@@ -18020,6 +18118,8 @@ const fa: Dict = {
   "pay.payment_actions": "عملیات پرداخت",
   "pay.remaining_workflow_warning": "هشدار: قانون گردش کار: پرداخت باقیمانده ابتدا نیاز به انتقال بارگیری دارد.",
   "pay.remaining_workflow_steps": "سفارش‌ها فقط پس از این مراحل نمایش داده می‌شوند: رزرو ← پیش‌پرداخت ← انتقال بارگیری ← تأیید بارگیری. قبل از پرداخت باقیمانده، مطمئن شوید سفارش به بارگیری منتقل شده است.",
+  "roz.creator": "ایجادکننده",
+  "roz.location": "موقعیت",
   "roz.total_credit_label": "مجموع بستانکار",
   "roz.money_paid": "(مبلغ پرداخت‌شده)",
   "roz.total_debit_label": "مجموع بدهکار",
@@ -20323,6 +20423,23 @@ const ps: Dict = {
   "bank.saved_success_message": "بانک \"{name}\" په بریالیتوب سره خوندي شو!",
   "bank.save_failed": "د بانک خوندي کول ناکام شول.",
   "common.close": "بندول",
+  "correction.trigger_button": "ژباړې سمې کړئ",
+  "correction.dialog_title": "د پنځو ژبو ریکارډ اصلاحات",
+  "correction.dialog_subtitle": "اصلي سرچینه متن خوندي پاتې کیږي. خالي ارزښتونه انتظار کې پاتې کیږي.",
+  "correction.loading": "ژباړې بارېږي…",
+  "correction.no_fields": "د دې ریکارډ لپاره کوم ثبت شوي د ژباړې وړ ساحې ونه موندل شوې.",
+  "correction.original_label": "اصلي",
+  "correction.source_suffix": " · سرچینه",
+  "correction.copied_not_verified": "کاپي شوې سرچینه تایید شوې نه ده.",
+  "correction.save_button": "اصلاحات خوندي کړئ",
+  "correction.saving": "خوندي کیږي…",
+  "correction.footer_hint": "یوازې د ریکارډ ساحې کې واکمن کاروونکي کولی شي خوندي کړي.",
+  "correction.copied_values_suffix": "کاپي شوي هدف ارزښت (ونه) باید سم شي.",
+  "correction.load_failed": "ژباړې بار نشوې.",
+  "correction.unchanged_source_prefix": "بدلون نه شوی سرچینه متن یوه تایید شوې ژباړه نه ده: ",
+  "correction.all_verified": "ټولې پنځه ژباړې تایید شوې دي.",
+  "correction.saved_pending": "خوندي شو. ځینې ژباړې لاهم انتظار کې دي.",
+  "correction.save_failed": "ژباړې خوندي نشوې.",
   "common.yes": "هو",
   "common.no": "نه",
   "hr.title_master": "ماسټر تنظیم — د کارمندانو مدیریت",
@@ -21312,6 +21429,7 @@ const ps: Dict = {
   "roz.select_a_country": "یو هیواد وټاکئ",
   "common.new": "نوی",
   "common.refresh": "تازه کول",
+  "common.system": "سیسټم",
   "common.user": "کارن",
   "nav.toggle_submenu": "فرعي مینو بدل کړئ",
   "dashboard.owner": "مالک",
@@ -21889,6 +22007,8 @@ const ps: Dict = {
   "pay.payment_actions": "د تادیې کړنې",
   "pay.remaining_workflow_warning": "خبرداری: د کاري بهیر قانون: پاتې تادیه لومړی د لوډنګ لیږد ته اړتیا لري.",
   "pay.remaining_workflow_steps": "امرونه یوازې له دې ترتیب وروسته ښکاره کیږي: بکینګ ← پیش تادیه ← د لوډنګ لیږد ← د لوډنګ تایید. د پاتې تادیې کولو دمخه ډاډ ترلاسه کړئ چې امر لوډنګ ته لیږدول شوی دی.",
+  "roz.creator": "جوړونکی",
+  "roz.location": "ځای",
   "roz.total_credit_label": "ټول کریډیټ",
   "roz.money_paid": "(ورکړل شوی مقدار)",
   "roz.total_debit_label": "ټول ډیبٹ",

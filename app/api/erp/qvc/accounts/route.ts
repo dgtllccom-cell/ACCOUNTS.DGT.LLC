@@ -3,6 +3,7 @@ import { apiOk, handleApiError, apiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { invalidateSystemDictionaryCache } from "@/lib/i18n/localize-records";
+import { withLocalPg } from "@/lib/db/local-postgres";
 
 // QVC Review Queue — database-driven. Lists imported/pending accounts with their
 // per-account 5-language translation status, for one-by-one manual review & approval.
@@ -36,12 +37,25 @@ export async function GET(request: NextRequest) {
     const ids = (accounts ?? []).map((a: any) => a.id);
     let transByAcct: Record<string, any[]> = {};
     if (ids.length) {
-      const { data: trans } = await db
-        .from("record_translations")
-        .select("record_id, field_name, english_text, urdu_text, pashto_text, persian_text, arabic_text, translation_status")
-        .eq("record_table", "enterprise_accounts")
-        .in("record_id", ids)
-        .is("deleted_at", null);
+      // record_translations sits over per-language base tables with RLS gated on
+      // auth.uid()/is_super_admin(), always NULL under this app's temp-session bootstrap —
+      // the Supabase admin client silently returns zero rows here (same root cause fixed in
+      // lib/services/ledger-report-service.ts). Try direct Postgres first.
+      const viaPg = await withLocalPg(async (sql) => sql`
+        select record_id, field_name, english_text, urdu_text, pashto_text, persian_text, arabic_text, translation_status
+        from public.record_translations
+        where record_table = 'enterprise_accounts'
+          and record_id = any(${ids}::uuid[])
+          and deleted_at is null
+      `);
+      const trans = viaPg ?? (
+        await db
+          .from("record_translations")
+          .select("record_id, field_name, english_text, urdu_text, pashto_text, persian_text, arabic_text, translation_status")
+          .eq("record_table", "enterprise_accounts")
+          .in("record_id", ids)
+          .is("deleted_at", null)
+      ).data;
       for (const t of trans ?? []) (transByAcct[t.record_id] ??= []).push(t);
     }
 

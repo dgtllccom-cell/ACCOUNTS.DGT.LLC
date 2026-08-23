@@ -1231,10 +1231,23 @@ export async function GET(request: NextRequest) {
     const entries = data ?? [];
     const entryIds = entries.map((entry: any) => entry.id);
     if (entryIds.length) {
-      const { data: translationRows, error: translationError } = await supabase.from("record_translations")
-        .select("record_id, field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text")
-        .eq("record_table", "roznamcha_entries").in("record_id", entryIds).is("deleted_at", null);
-      if (translationError) throw new Error(translationError.message);
+      // record_translations sits over per-language base tables with RLS gated on
+      // auth.uid()/is_super_admin(), always NULL under this app's temp-session bootstrap —
+      // any Supabase client (admin or per-request) silently returns zero rows here (same
+      // root cause fixed in lib/services/ledger-report-service.ts). Try direct Postgres first.
+      const viaPg = await withLocalPg(async (sql) => sql`
+        select record_id, field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text
+        from public.record_translations
+        where record_table = 'roznamcha_entries' and record_id = any(${entryIds}::uuid[]) and deleted_at is null
+      `);
+      let translationRows: any[] | null = viaPg;
+      if (!translationRows) {
+        const { data, error: translationError } = await supabase.from("record_translations")
+          .select("record_id, field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text")
+          .eq("record_table", "roznamcha_entries").in("record_id", entryIds).is("deleted_at", null);
+        if (translationError) throw new Error(translationError.message);
+        translationRows = data;
+      }
       for (const row of translationRows || []) {
         const entry = entries.find((item: any) => item.id === row.record_id) as any;
         if (entry) {

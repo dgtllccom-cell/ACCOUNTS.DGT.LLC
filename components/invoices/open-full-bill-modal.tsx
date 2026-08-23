@@ -1,14 +1,17 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { 
   X, Printer, Eye, ArrowUpRight, ArrowDownLeft, 
   Calendar, Building2, User, Wallet, DollarSign, FileText, CheckCircle2, AlertCircle, 
-  ChevronRight, Shield, Layers, Scale, Truck, Anchor, Package
+  ChevronRight, Shield, Layers, Scale, Truck, Anchor, Package, MoreVertical, WalletCards
 } from "lucide-react";
 import { SimpleModal } from "@/components/ui/simple-modal";
+import { ViewportActionMenu } from "@/components/ui/viewport-action-menu";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
-import { translateHeader, LanguageCode } from "@/lib/i18n/table-headers";
+import { translateHeader } from "@/lib/i18n/table-headers";
+import type { SupportedLanguage as LanguageCode } from "@/lib/i18n/languages";
 import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
 import { openPurchaseBookingOrderPrintReport } from "@/lib/reports/open-purchase-booking-print-report";
 import { cn } from "@/lib/utils";
@@ -19,6 +22,7 @@ export interface OpenFullBillModalProps {
   order: any;
   payments?: any[];
   onPaymentAdded?: () => void;
+  onOpenPaymentEntry?: (order: any) => void;
   lang?: LanguageCode;
 }
 
@@ -28,8 +32,10 @@ export function OpenFullBillModal({
   order,
   payments: initialPayments,
   onPaymentAdded,
+  onOpenPaymentEntry,
   lang: propLang
 }: OpenFullBillModalProps) {
+  const router = useRouter();
   const activeLang = (propLang || useActiveLanguage() || "en") as LanguageCode;
   const isRtl = ["ur", "ar", "fa", "ps"].includes(activeLang);
 
@@ -276,10 +282,10 @@ export function OpenFullBillModal({
         countryName,
         branchName,
         shippingMode: form.shippingMode || "By Sea",
-        totalPurchaseAmount: totalPurchaseFC,
-        currency,
-        exchangeRate,
-        finalAmount: totalPurchaseLC,
+        totalPurchaseFc: totalPurchaseFC,
+        currencyFc: currency,
+        totalPurchaseLc: totalPurchaseLC,
+        currencyLc: localCurrency,
         advancePercent: Number(form.advancePercent || 0),
         advanceAmountFc: totalPaidFC,
         advanceAmountLc: totalPaidLC,
@@ -716,9 +722,25 @@ export function OpenFullBillModal({
                     <ArrowUpRight className="h-4 w-4" />
                     {t("CREDIT ENTRIES (CR) - PAYMENTS MADE TO SUPPLIER")}
                   </span>
-                  <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300">
-                    {creditEntries.length} {t("Payments")}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300">
+                      {creditEntries.length} {t("Payments")}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (onOpenPaymentEntry) {
+                          onOpenPaymentEntry(order);
+                        } else {
+                          router.push(`/dashboard/journal/purchase-order-payment/advance?purchaseOrderNo=${encodeURIComponent(poNumber)}`);
+                        }
+                      }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] uppercase shadow-sm transition"
+                    >
+                      <WalletCards className="h-3 w-3" />
+                      <span>{t("Payment Entry")}</span>
+                    </button>
+                  </div>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse text-xs">
@@ -730,6 +752,7 @@ export function OpenFullBillModal({
                         <th className="px-3 py-2">{t("NARRATION")}</th>
                         <th className="px-3 py-2 text-right">{t("AMOUNT")} ({currency})</th>
                         <th className="px-3 py-2 text-right">{t("FINAL AMOUNT")} ({localCurrency})</th>
+                        <th className="px-3 py-2 text-center w-12">{t("ACTION")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -746,11 +769,50 @@ export function OpenFullBillModal({
                             <td className="px-3 py-2 text-right font-mono font-bold text-slate-900 dark:text-slate-100">
                               {c.amountLC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </td>
+                            <td className="px-3 py-2 text-center">
+                              <ViewportActionMenu
+                                ariaLabel="Payment Actions"
+                                buttonClassName="inline-flex items-center justify-center h-6 w-6 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition"
+                                trigger={<MoreVertical className="h-3.5 w-3.5" />}
+                                menuClassName="font-semibold p-0 w-44 shadow-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-lg overflow-hidden"
+                              >
+                                {(close) => (
+                                  <div className="py-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        close();
+                                        if (onOpenPaymentEntry) {
+                                          onOpenPaymentEntry(order);
+                                        } else {
+                                          router.push(`/dashboard/journal/purchase-order-payment/advance?purchaseOrderNo=${encodeURIComponent(poNumber)}`);
+                                        }
+                                      }}
+                                      className="flex w-full items-center px-3.5 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30 transition"
+                                    >
+                                      <WalletCards className="mr-2 h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                                      {t("Payment Entry")}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        close();
+                                        handlePrint();
+                                      }}
+                                      className="flex w-full items-center px-3.5 py-2 text-xs text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition"
+                                    >
+                                      <Printer className="mr-2 h-3.5 w-3.5 text-slate-500" />
+                                      {t("Print Statement")}
+                                    </button>
+                                  </div>
+                                )}
+                              </ViewportActionMenu>
+                            </td>
                           </tr>
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={6} className="px-4 py-8 text-center text-slate-400 font-semibold italic">
+                          <td colSpan={7} className="px-4 py-8 text-center text-slate-400 font-semibold italic">
                             {t("No payments recorded yet.")}
                           </td>
                         </tr>
@@ -803,6 +865,7 @@ export function OpenFullBillModal({
                     <th className="px-3 py-2 text-center">{t("EXCHANGE RATE")}</th>
                     <th className="px-3 py-2 text-right">{t("FINAL AMOUNT")} ({localCurrency})</th>
                     <th className="px-3 py-2 text-right">{t("BALANCE AFTER")} ({currency})</th>
+                    <th className="px-3 py-2 text-center w-12">{t("ACTION")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -823,11 +886,39 @@ export function OpenFullBillModal({
                         <td className={cn("px-3 py-2 text-right font-mono font-black", r.balanceAfter < 0 ? "text-red-600 dark:text-red-400" : "text-slate-800 dark:text-slate-200")}>
                           {r.balanceAfter.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
+                        <td className="px-3 py-2 text-center">
+                          <ViewportActionMenu
+                            ariaLabel="Roznamcha Actions"
+                            buttonClassName="inline-flex items-center justify-center h-6 w-6 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition"
+                            trigger={<MoreVertical className="h-3.5 w-3.5" />}
+                            menuClassName="font-semibold p-0 w-44 shadow-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-lg overflow-hidden"
+                          >
+                            {(close) => (
+                              <div className="py-1">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    close();
+                                    if (onOpenPaymentEntry) {
+                                      onOpenPaymentEntry(order);
+                                    } else {
+                                      router.push(`/dashboard/journal/purchase-order-payment/advance?purchaseOrderNo=${encodeURIComponent(poNumber)}`);
+                                    }
+                                  }}
+                                  className="flex w-full items-center px-3.5 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30 transition"
+                                >
+                                  <WalletCards className="mr-2 h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                                  {t("Payment Entry")}
+                                </button>
+                              </div>
+                            )}
+                          </ViewportActionMenu>
+                        </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={12} className="px-4 py-8 text-center text-slate-400 font-semibold italic">
+                      <td colSpan={13} className="px-4 py-8 text-center text-slate-400 font-semibold italic">
                         {t("No Roznamcha cash entries posted for this purchase.")}
                       </td>
                     </tr>
@@ -842,6 +933,7 @@ export function OpenFullBillModal({
                       <td className="px-3 py-2 text-right font-mono">{totalCreditFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                       <td></td>
                       <td className="px-3 py-2 text-right font-mono">{totalCreditLC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      <td></td>
                       <td></td>
                     </tr>
                   </tfoot>
@@ -873,6 +965,7 @@ export function OpenFullBillModal({
                     <th className="px-3 py-2 text-right">{t("FINAL AMOUNT")} ({localCurrency})</th>
                     <th className="px-3 py-2 text-right">{t("REMAINING BALANCE")} ({currency})</th>
                     <th className="px-3 py-2 text-center">{t("STATUS")}</th>
+                    <th className="px-3 py-2 text-center w-12">{t("ACTION")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -897,11 +990,50 @@ export function OpenFullBillModal({
                             {e.status}
                           </span>
                         </td>
+                        <td className="px-3 py-2 text-center">
+                          <ViewportActionMenu
+                            ariaLabel="Endorsement Actions"
+                            buttonClassName="inline-flex items-center justify-center h-6 w-6 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition"
+                            trigger={<MoreVertical className="h-3.5 w-3.5" />}
+                            menuClassName="font-semibold p-0 w-44 shadow-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-lg overflow-hidden"
+                          >
+                            {(close) => (
+                              <div className="py-1">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    close();
+                                    if (onOpenPaymentEntry) {
+                                      onOpenPaymentEntry(order);
+                                    } else {
+                                      router.push(`/dashboard/journal/purchase-order-payment/advance?purchaseOrderNo=${encodeURIComponent(poNumber)}`);
+                                    }
+                                  }}
+                                  className="flex w-full items-center px-3.5 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30 transition"
+                                >
+                                  <WalletCards className="mr-2 h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                                  {t("Payment Entry")}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    close();
+                                    handlePrint();
+                                  }}
+                                  className="flex w-full items-center px-3.5 py-2 text-xs text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition"
+                                >
+                                  <Printer className="mr-2 h-3.5 w-3.5 text-slate-500" />
+                                  {t("Print Statement")}
+                                </button>
+                              </div>
+                            )}
+                          </ViewportActionMenu>
+                        </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={12} className="px-4 py-8 text-center text-slate-400 font-semibold italic">
+                      <td colSpan={13} className="px-4 py-8 text-center text-slate-400 font-semibold italic">
                         {t("No endorsement history recorded yet.")}
                       </td>
                     </tr>

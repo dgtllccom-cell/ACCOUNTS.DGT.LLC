@@ -53,6 +53,7 @@ import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
 import { RoznamchaReportsDropdown } from "@/features/roznamcha/components/roznamcha-reports-dropdown";
 import { Th } from "@/components/ui/translated-th";
 import { resolveVerifiedTranslation } from "@/lib/i18n/verified-record-translations";
+import { translateNarrationBlock } from "@/lib/i18n/table-headers";
 import { RecordTranslationCorrectionDialog } from "@/features/translations/components/record-translation-correction-dialog";
 
 function getRoznamchaCategoryLabel(row: any) {
@@ -1600,7 +1601,7 @@ export function CashEntryForm({
       { label: "Date", value: header.entry_date || "-" },
       { label: "Voucher No", value: header.voucher_no || "-" },
       { label: "Journal No", value: header.journal_no || "-" },
-      { label: "Narration", value: resolveVerifiedTranslation(header.translations?.narration, lang) || header.narration || "-" },
+      { label: "Narration", value: resolveVerifiedTranslation(header.translations?.narration, lang) || translateNarrationBlock(header.narration, lang) || "-" },
       { label: "Status", value: header.status || "-" }
     ];
     
@@ -2934,58 +2935,18 @@ export function CashEntryForm({
 
     {/* Recent Cash Entries Table Card */}
     <Card className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
-      <div className="border-b border-slate-200 bg-gradient-to-r from-blue-50 to-white px-4 py-3 dark:border-slate-800 dark:from-slate-900 dark:to-slate-950 flex items-center justify-between">
-        <div className="flex items-center gap-6">
-          <h3 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-300">
-            📋 {t(lang, "roz.journal_roznamcha_entry_table", "JOURNAL ROZNAMCHA — ENTRY TABLE")}
-          </h3>
-          <div className="flex items-center gap-3 text-[10px] font-semibold text-slate-600 dark:text-slate-400">
-            <span className="bg-white border border-slate-200 shadow-sm dark:bg-slate-900 dark:border-slate-800 px-2.5 py-1 rounded flex gap-1 items-center">
-              {t(lang, "roz.total_entries_colon", "Total Entries:")} <span className="font-bold text-slate-900 dark:text-slate-100">{recentEntriesSummary.count}</span>
-            </span>
-            <span className="bg-emerald-50 border border-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:border-emerald-900 dark:text-emerald-300 px-2.5 py-1 rounded flex gap-1 items-center">
-              {t(lang, "roz.total_cr", "Total CR:")} <span className="font-bold">{fmtAmount(recentEntriesSummary.totalCredit)}</span>
-            </span>
-            <span className="bg-rose-50 border border-rose-100 text-rose-700 dark:bg-rose-950/40 dark:border-rose-900 dark:text-rose-300 px-2.5 py-1 rounded flex gap-1 items-center">
-              {t(lang, "roz.total_dr", "Total DR:")} <span className="font-bold">{fmtAmount(recentEntriesSummary.totalDebit)}</span>
-            </span>
-            <span className="bg-blue-50 border border-blue-100 text-blue-700 dark:bg-blue-950/40 dark:border-blue-900 dark:text-blue-300 px-2.5 py-1 rounded flex gap-1 items-center">
-              {t(lang, "roz.balance_colon", "Balance:")} <span className="font-bold">{fmtAmount(recentEntriesSummary.balance)}</span> <span className="text-[9px] uppercase">{recentEntriesSummary.balanceType}</span>
-            </span>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="default"
-            size="sm"
-            className="h-8 px-3.5 text-xs font-black bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
-            onClick={() => {
-              resetPaymentDraft();
-              setEditEntryId(null);
-              setShowPaymentWorkReport(true);
-            }}
-          >
-            + {t(lang, "roz.new_entry", "New Entry")}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-8 px-3 text-xs font-bold"
-            onClick={fetchRecentEntries}
-            disabled={loadingEntries}
-          >
-            <RefreshCw className={cn("h-3.5 w-3.5 mr-1", loadingEntries ? "animate-spin" : "")} />
-            {t(lang, "common.refresh", "Refresh")}
-          </Button>
-        </div>
-      </div>
 
       {/* Date Filter & Day-by-Day Scope Toolbar */}
       <div className="border-b border-slate-200 bg-slate-50/80 px-4 py-2.5 dark:border-slate-800 dark:bg-slate-900/60 flex flex-wrap items-center justify-between gap-3">
-        {/* Left: Filter Mode Switcher */}
-        <div className="flex items-center gap-2">
+        {/* Left: Table Title & Filter Mode Switcher */}
+        <div className="flex flex-wrap items-center gap-3">
+          <h3 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-300 flex items-center gap-2">
+            <span>📋 {t(lang, "roz.journal_roznamcha_entry_table", "JOURNAL ROZNAMCHA — ENTRY TABLE")}</span>
+            <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+              {recentEntriesSummary.count} {lang === "ur" ? "اندراجات" : "Entries"}
+            </span>
+          </h3>
+
           <div className="inline-flex rounded-lg bg-slate-200/80 p-1 dark:bg-slate-800">
             <button
               type="button"
@@ -3204,8 +3165,8 @@ export function CashEntryForm({
                       <tr key={`${row.id}-${line.id || idx}`} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/50">
                         <td className="p-3 border border-slate-200 dark:border-slate-800 align-top">
                           <div className="font-semibold text-slate-900 dark:text-slate-100">{new Date(row.created_at).toLocaleString()}</div>
-                          <div className="text-[10px] text-muted-foreground mt-1">Creator: {row.profiles?.full_name || row.created_by || "System"}</div>
-                          <div className="text-[10px] text-muted-foreground">Location: {row.countries?.name || "-"} | {row.city_branches?.name || row.country_branches?.name || "-"}</div>
+                          <div className="text-[10px] text-muted-foreground mt-1">{t(lang, "roz.creator", "Creator")}: {row.profiles?.full_name || row.created_by || t(lang, "common.system", "System")}</div>
+                          <div className="text-[10px] text-muted-foreground">{t(lang, "roz.location", "Location")}: {row.countries?.name || "-"} | {row.city_branches?.name || row.country_branches?.name || "-"}</div>
                         </td>
                         <td className="p-3 font-mono text-[10.5px] border border-slate-200 dark:border-slate-800 align-top">
                           <div className="flex flex-col gap-1.5">
@@ -3303,9 +3264,9 @@ export function CashEntryForm({
                               ) : null}
                             </div>
                           </td>
-                            <td className="p-3 text-[11px] font-medium leading-relaxed text-slate-600 dark:text-slate-400 max-w-[200px] border border-slate-200 dark:border-slate-800" title={line.description || row.narration || ""}>
+                            <td className="p-3 text-[11px] font-medium leading-relaxed text-slate-600 dark:text-slate-400 max-w-[200px] border border-slate-200 dark:border-slate-800" title={translateNarrationBlock(line.description || row.narration, lang) || ""}>
                               <div className="line-clamp-3">
-                                {resolveVerifiedTranslation(row.translations?.[`lines.${idx}.description`] || row.translations?.narration, lang) || line.description || row.narration || "-"}
+                                {resolveVerifiedTranslation(row.translations?.[`lines.${idx}.description`] || row.translations?.narration, lang) || translateNarrationBlock(line.description || row.narration, lang) || "-"}
                               </div>
                             </td>
                           <td className="p-3 text-center whitespace-nowrap border border-slate-200 dark:border-slate-800">
@@ -3331,7 +3292,7 @@ export function CashEntryForm({
                                     className="h-7 px-2 text-[10px] font-bold border-slate-200 text-blue-600 hover:bg-slate-50 dark:border-slate-800"
                                     onClick={() => handleEditEntry(row)}
                                   >
-                                    Edit
+                                    {t(lang, "common.edit", "Edit")}
                                   </Button>
                                 )}
                                 

@@ -92,6 +92,7 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
   country_branches: [
     { field: "name", mode: "transliterate" },
     { field: "owner_name", mode: "transliterate" },
+    { field: "address", mode: "translate" },
     { field: "branding_company_name", mode: "translate" },
     { field: "branding_address", mode: "translate" },
     { field: "branding_report_header", mode: "translate" },
@@ -105,6 +106,7 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "name", mode: "transliterate" },
     { field: "city_name", mode: "transliterate" },
     { field: "owner_name", mode: "transliterate" },
+    { field: "address", mode: "translate" },
     { field: "branding_company_name", mode: "translate" },
     { field: "branding_address", mode: "translate" },
     { field: "branding_report_header", mode: "translate" },

@@ -9,6 +9,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { supportedLanguageSchema } from "@/lib/api/erp-validation";
 import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
 import { salesOrderTranslationFields } from "@/lib/i18n/sales-order-translations";
+import { withLocalPg } from "@/lib/db/local-postgres";
 
 const paramsSchema = z.object({
   id: uuidSchema
@@ -72,10 +73,23 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       cityBranchId: (row as any).city_branch_id
     });
 
-    const admin = createSupabaseAdminClient() as any;
-    const { data: translationRows } = await admin.from("record_translations")
-      .select("field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text")
-      .eq("record_table", "sales_orders").eq("record_id", params.id).is("deleted_at", null);
+    // record_translations sits over per-language base tables with RLS gated on
+    // auth.uid()/is_super_admin(), always NULL under this app's temp-session bootstrap —
+    // the Supabase admin client silently returns zero rows here (same root cause fixed in
+    // lib/services/ledger-report-service.ts). Try direct Postgres first.
+    const viaPg = await withLocalPg(async (sql) => sql`
+      select field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text
+      from public.record_translations
+      where record_table = 'sales_orders' and record_id = ${params.id}::uuid and deleted_at is null
+    `);
+    let translationRows: any[] | null = viaPg;
+    if (!translationRows) {
+      const admin = createSupabaseAdminClient() as any;
+      const { data } = await admin.from("record_translations")
+        .select("field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text")
+        .eq("record_table", "sales_orders").eq("record_id", params.id).is("deleted_at", null);
+      translationRows = data;
+    }
     return apiOk({ order: { ...(row as any), translations: Object.fromEntries((translationRows || []).map((item: any) => [item.field_name, { en: item.english_text, ur: item.urdu_text, ar: item.arabic_text, fa: item.persian_text, ps: item.pashto_text }])) } });
   } catch (error) {
     return handleApiError(error);

@@ -105,24 +105,57 @@ async function loadTranslations(input: {
 
   const CHUNK_SIZE = 100;
   let allData: any[] = [];
-  for (let i = 0; i < validTargets.length; i += CHUNK_SIZE) {
-    const chunk = validTargets.slice(i, i + CHUNK_SIZE);
-    const chunkIds = chunk.map((t) => t.id);
-    const chunkTables = Array.from(new Set(chunk.map((t) => t.table)));
-    const chunkFields = Array.from(new Set(chunk.map((t) => t.field)));
 
-    const { data, error } = await input.supabase
-      .from("record_translations")
-      .select(
-        "record_table, record_id, field_name, original_text, english_text, urdu_text, arabic_text, persian_text, pashto_text"
-      )
-      .in("record_table", chunkTables)
-      .in("record_id", chunkIds)
-      .in("field_name", chunkFields)
-      .is("deleted_at", null);
+  // record_translations sits over per-language base tables with RLS gated on
+  // auth.uid()/is_super_admin(), always NULL under this app's temp-session bootstrap —
+  // same root cause already documented on LedgerReportService.listLedgers above. The
+  // Supabase "admin" client silently returns zero translation rows here, which the
+  // catch-and-fall-back-to-English below quietly absorbed as "no translation available"
+  // instead of "the read was blocked". Try direct Postgres first (bypasses RLS), and
+  // only fall back to the Supabase client when DATABASE_URL isn't configured.
+  const viaPg = await withLocalPg(async (sql) => {
+    const rows: any[] = [];
+    for (let i = 0; i < validTargets.length; i += CHUNK_SIZE) {
+      const chunk = validTargets.slice(i, i + CHUNK_SIZE);
+      const chunkIds = chunk.map((t) => t.id);
+      const chunkTables = Array.from(new Set(chunk.map((t) => t.table)));
+      const chunkFields = Array.from(new Set(chunk.map((t) => t.field)));
+      const chunkRows = await sql`
+        select record_table, record_id, field_name, original_text, english_text,
+               urdu_text, arabic_text, persian_text, pashto_text
+        from public.record_translations
+        where record_table = any(${chunkTables}::text[])
+          and record_id = any(${chunkIds}::uuid[])
+          and field_name = any(${chunkFields}::text[])
+          and deleted_at is null
+      `;
+      rows.push(...(chunkRows as any[]));
+    }
+    return rows;
+  });
 
-    if (error) throw new Error(error.message);
-    if (data) allData = allData.concat(data);
+  if (viaPg) {
+    allData = viaPg;
+  } else {
+    for (let i = 0; i < validTargets.length; i += CHUNK_SIZE) {
+      const chunk = validTargets.slice(i, i + CHUNK_SIZE);
+      const chunkIds = chunk.map((t) => t.id);
+      const chunkTables = Array.from(new Set(chunk.map((t) => t.table)));
+      const chunkFields = Array.from(new Set(chunk.map((t) => t.field)));
+
+      const { data, error } = await input.supabase
+        .from("record_translations")
+        .select(
+          "record_table, record_id, field_name, original_text, english_text, urdu_text, arabic_text, persian_text, pashto_text"
+        )
+        .in("record_table", chunkTables)
+        .in("record_id", chunkIds)
+        .in("field_name", chunkFields)
+        .is("deleted_at", null);
+
+      if (error) throw new Error(error.message);
+      if (data) allData = allData.concat(data);
+    }
   }
 
   const langCol: Record<SupportedLanguage, keyof TranslationRow> = {
@@ -426,8 +459,14 @@ export class LedgerReportService {
     const targets: Array<{ table: string; id: string; field: string }> = [];
     for (const row of result) {
       if (row.countryId) targets.push({ table: "countries", id: row.countryId, field: "name" });
-      if (row.countryBranchId) targets.push({ table: "country_branches", id: row.countryBranchId, field: "name" });
-      if (row.cityBranchId) targets.push({ table: "city_branches", id: row.cityBranchId, field: "name" });
+      if (row.countryBranchId) {
+        targets.push({ table: "country_branches", id: row.countryBranchId, field: "name" });
+        targets.push({ table: "country_branches", id: row.countryBranchId, field: "address" });
+      }
+      if (row.cityBranchId) {
+        targets.push({ table: "city_branches", id: row.cityBranchId, field: "name" });
+        targets.push({ table: "city_branches", id: row.cityBranchId, field: "address" });
+      }
       if (row.companyId) targets.push({ table: "companies", id: row.companyId, field: "name" });
       if (row.stateId) targets.push({ table: "states_provinces", id: row.stateId, field: "name" });
       if (row.cityId) targets.push({ table: "cities", id: row.cityId, field: "name" });
@@ -460,6 +499,11 @@ export class LedgerReportService {
       const cityBranchName =
         (row.cityBranchId && translations.get(translationKey("city_branches", row.cityBranchId, "name"))) ||
         row.cityBranchName;
+      const address =
+        (row.cityBranchId && translations.get(translationKey("city_branches", row.cityBranchId, "address"))) ||
+        (row.countryBranchId &&
+          translations.get(translationKey("country_branches", row.countryBranchId, "address"))) ||
+        row.address;
       const companyName =
         (row.companyId && translations.get(translationKey("companies", row.companyId, "name"))) || row.companyName;
       const stateName =
@@ -479,7 +523,7 @@ export class LedgerReportService {
 
       const ledgerName = translations.get(translationKey("ledgers", row.ledgerId, "name")) || row.ledgerName;
 
-      return { ...row, countryName, countryBranchName, cityBranchName, companyName, stateName, cityName, accountName, accountCode, ledgerName };
+      return { ...row, countryName, countryBranchName, cityBranchName, address, companyName, stateName, cityName, accountName, accountCode, ledgerName };
     });
   }
 
@@ -716,8 +760,14 @@ export class LedgerReportService {
     const targets: Array<{ table: string; id: string; field: string }> = [];
     for (const row of result) {
       if (row.countryId) targets.push({ table: "countries", id: row.countryId, field: "name" });
-      if (row.countryBranchId) targets.push({ table: "country_branches", id: row.countryBranchId, field: "name" });
-      if (row.cityBranchId) targets.push({ table: "city_branches", id: row.cityBranchId, field: "name" });
+      if (row.countryBranchId) {
+        targets.push({ table: "country_branches", id: row.countryBranchId, field: "name" });
+        targets.push({ table: "country_branches", id: row.countryBranchId, field: "address" });
+      }
+      if (row.cityBranchId) {
+        targets.push({ table: "city_branches", id: row.cityBranchId, field: "name" });
+        targets.push({ table: "city_branches", id: row.cityBranchId, field: "address" });
+      }
       if (row.companyId) targets.push({ table: "companies", id: row.companyId, field: "name" });
       if (row.stateId) targets.push({ table: "states_provinces", id: row.stateId, field: "name" });
       if (row.cityId) targets.push({ table: "cities", id: row.cityId, field: "name" });
@@ -745,6 +795,11 @@ export class LedgerReportService {
       const cityBranchName =
         (row.cityBranchId && translations.get(translationKey("city_branches", row.cityBranchId, "name"))) ||
         row.cityBranchName;
+      const address =
+        (row.cityBranchId && translations.get(translationKey("city_branches", row.cityBranchId, "address"))) ||
+        (row.countryBranchId &&
+          translations.get(translationKey("country_branches", row.countryBranchId, "address"))) ||
+        row.address;
       const companyName =
         (row.companyId && translations.get(translationKey("companies", row.companyId, "name"))) || row.companyName;
       const stateName =
@@ -770,6 +825,7 @@ export class LedgerReportService {
         countryName,
         countryBranchName,
         cityBranchName,
+        address,
         companyName,
         stateName,
         cityName,

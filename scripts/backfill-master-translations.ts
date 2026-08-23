@@ -70,7 +70,19 @@ const TARGETS: Array<[string, string, Mode]> = ([
   ["product_categories", "category_name", "translate"],
   ["product_brands", "brand_name", "translate"],
   ["product_units", "unit_name", "translate"],
-  ["shipping_line_records", "shipping_line_name", "transliterate"]
+  ["shipping_line_records", "shipping_line_name", "transliterate"],
+  // country_branches/city_branches CREATE+UPDATE never called the translation sync at all
+  // (confirmed via code audit — translateMasterRecord was invoked with a hardcoded "en" source
+  // and only { name, owner_name } / { name, city_name, owner_name }, silently excluding
+  // "address"). Fixed going forward in app/api/branch-management/{city,country}-branches/route.ts;
+  // these targets backfill every existing row across all four now-registered fields.
+  ["country_branches", "name", "transliterate"],
+  ["country_branches", "owner_name", "transliterate"],
+  ["country_branches", "address", "translate"],
+  ["city_branches", "name", "transliterate"],
+  ["city_branches", "city_name", "transliterate"],
+  ["city_branches", "owner_name", "transliterate"],
+  ["city_branches", "address", "translate"]
 ] as Array<[string, string, Mode]>).filter(
   ([table, field]) => (!onlyTable || table === onlyTable) && (!onlyField || field === onlyField)
 );

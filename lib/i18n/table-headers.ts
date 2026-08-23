@@ -539,6 +539,80 @@ export const HEADER_TRANSLATIONS: Record<string, Row> = {
   "EMP CODE": { ur: "ملازم کوڈ", ar: "رمز الموظف", fa: "کد کارمند", ps: "د کارمند کوډ" },
   "EMPLOYEE NAME": { ur: "ملازم کا نام", ar: "اسم الموظف", fa: "نام کارمند", ps: "د کارمند نوم" },
   "FINAL AMOUNT": { ur: "حتمی رقم", ar: "المبلغ النهائي", fa: "مبلغ نهایی", ps: "وروستۍ اندازه" },
+  "AUDIT TRAIL": { ur: "آڈٹ ٹریل", ar: "سجل التدقيق", fa: "ردیابی حسابرسی", ps: "د پلټنې لاره" },
+  "ACCOUNTING SUMMARY": { ur: "اکاؤنٹنگ خلاصہ", ar: "ملخص المحاسبة", fa: "خلاصه حسابداری", ps: "د محاسبې لنډیز" },
+  "ACCOUNT NO.": { ur: "اکاؤنٹ نمبر", ar: "رقم الحساب", fa: "شماره حساب", ps: "د حساب شمیره" },
+  "ADMIN": { ur: "ایڈمن", ar: "المسؤول", fa: "مدیر", ps: "اډمین" },
+  "ADVANCE / ENDORSE REQUIRED": { ur: "درکار ایڈوانس / انڈورس", ar: "السلفة / التظهير المطلوب", fa: "پیش‌پرداخت / ظهرنویسی مورد نیاز", ps: "اړین پیش تادیه / انډورس" },
+  "ADVANCE PAYMENT DUE DATE": { ur: "ایڈوانس ادائیگی کی مقررہ تاریخ", ar: "تاريخ استحقاق الدفعة المقدمة", fa: "تاریخ سررسید پیش‌پرداخت", ps: "د پیش تادیې د پای نیټه" },
+  "ADVANCE (AED)": { ur: "ایڈوانس (AED)", ar: "السلفة (AED)", fa: "پیش‌پرداخت (AED)", ps: "پیش تادیه (AED)" },
+  "AMOUNT (AED)": { ur: "رقم (AED)", ar: "المبلغ (AED)", fa: "مبلغ (AED)", ps: "اندازه (AED)" },
+  "BALANCED": { ur: "متوازن", ar: "متوازن", fa: "متعادل", ps: "متوازن" },
+  "BRIDGE": { ur: "برج", ar: "الجسر", fa: "پل", ps: "پل" },
+  "COLLAPSE DETAILS": { ur: "تفصیلات سکیڑیں", ar: "طي التفاصيل", fa: "بستن جزئیات", ps: "تفصیلات ودانګول" },
+  "CONTAINER LOAD QTY": { ur: "کنٹینر لوڈ مقدار", ar: "كمية تحميل الحاوية", fa: "مقدار بارگیری کانتینر", ps: "د کانتینر بار مقدار" },
+  "CREDIT A/C": { ur: "کریڈٹ اکاؤنٹ", ar: "حساب الدائن", fa: "حساب بستانکار", ps: "کریډیټ حساب" },
+  "CREDIT ENTRIES": { ur: "کریڈٹ اندراجات", ar: "قيود الدائن", fa: "ثبت‌های بستانکار", ps: "کریډیټ ننوتنې" },
+  "CURRENT BALANCE": { ur: "موجودہ بیلنس", ar: "الرصيد الحالي", fa: "موجودی فعلی", ps: "اوسنی بیلانس" },
+  "DEBIT A/C": { ur: "ڈیبٹ اکاؤنٹ", ar: "حساب المدين", fa: "حساب بدهکار", ps: "ډیبیټ حساب" },
+  "DEBIT ENTRIES": { ur: "ڈیبٹ اندراجات", ar: "قيود المدين", fa: "ثبت‌های بدهکار", ps: "ډیبیټ ننوتنې" },
+  "END DATE": { ur: "اختتامی تاریخ", ar: "تاريخ الانتهاء", fa: "تاریخ پایان", ps: "د پای نیټه" },
+  "ENDORSEMENT AUDIT CONSOLE": { ur: "انڈورسمنٹ آڈٹ کنسول", ar: "لوحة تدقيق التظهير", fa: "کنسول حسابرسی ظهرنویسی", ps: "د انډورسمنټ پلټنې کنسول" },
+  "ENTRY DATE": { ur: "اندراج کی تاریخ", ar: "تاريخ القيد", fa: "تاریخ ثبت", ps: "د ننوتنې نیټه" },
+  "EXPAND DETAILS": { ur: "تفصیلات پھیلائیں", ar: "توسيع التفاصيل", fa: "باز کردن جزئیات", ps: "تفصیلات غځول" },
+  "FINAL (AED)": { ur: "حتمی (AED)", ar: "النهائي (AED)", fa: "نهایی (AED)", ps: "وروستی (AED)" },
+  "FINAL ADVANCE BALANCE": { ur: "حتمی ایڈوانس بیلنس", ar: "رصيد السلفة النهائي", fa: "موجودی نهایی پیش‌پرداخت", ps: "وروستی پیش تادیه بیلانس" },
+  "FINAL DIGITAL BALANCE STATEMENT": { ur: "حتمی ڈیجیٹل بیلنس اسٹیٹمنٹ", ar: "كشف الرصيد الرقمي النهائي", fa: "صورتحساب موجودی دیجیتال نهایی", ps: "وروستی ډیجیټل بیلانس بیان" },
+  "FULLY PAID": { ur: "مکمل ادا شدہ", ar: "مدفوع بالكامل", fa: "کاملاً پرداخت‌شده", ps: "بشپړ تادیه شوی" },
+  "GOODS / SIZE / BRAND / ORIGIN": { ur: "سامان / سائز / برانڈ / اصل", ar: "البضاعة / الحجم / العلامة / المنشأ", fa: "کالا / اندازه / برند / مبدأ", ps: "توکي / اندازه / برانډ / اصل" },
+  "INDUSTRIAL REPORT SUMMARY": { ur: "صنعتی رپورٹ خلاصہ", ar: "ملخص التقرير الصناعي", fa: "خلاصه گزارش صنعتی", ps: "د صنعتي راپور لنډیز" },
+  "INSTALLMENT": { ur: "قسط", ar: "القسط", fa: "قسط", ps: "قسط" },
+  "INVOICE TOTAL": { ur: "انوائس کل رقم", ar: "إجمالي الفاتورة", fa: "مجموع فاکتور", ps: "د انوائس ټول" },
+  "LEDGER ROUTE": { ur: "لیجر روٹ", ar: "مسار دفتر الأستاذ", fa: "مسیر دفتر کل", ps: "د لیجر لار" },
+  "MANUAL": { ur: "دستی", ar: "يدوي", fa: "دستی", ps: "لاسي" },
+  "ORDER SUMMARY": { ur: "آرڈر کا خلاصہ", ar: "ملخص الطلب", fa: "خلاصه سفارش", ps: "د امر لنډیز" },
+  "PRINT (PDF)": { ur: "پرنٹ (PDF)", ar: "طباعة (PDF)", fa: "چاپ (PDF)", ps: "چاپ (PDF)" },
+  "PARTY NAME": { ur: "پارٹی کا نام", ar: "اسم الطرف", fa: "نام طرف", ps: "د اړخ نوم" },
+  "PAYMENT (AED)": { ur: "ادائیگی (AED)", ar: "الدفع (AED)", fa: "پرداخت (AED)", ps: "تادیه (AED)" },
+  "PAYMENT (USD)": { ur: "ادائیگی (USD)", ar: "الدفع (USD)", fa: "پرداخت (USD)", ps: "تادیه (USD)" },
+  "PAYMENT CONDITION": { ur: "ادائیگی کی شرط", ar: "شرط الدفع", fa: "شرط پرداخت", ps: "د تادیې شرط" },
+  "PAYMENT CURRENCY": { ur: "ادائیگی کی کرنسی", ar: "عملة الدفع", fa: "ارز پرداخت", ps: "د تادیې اسعار" },
+  "PAYMENT NO.": { ur: "ادائیگی نمبر", ar: "رقم الدفعة", fa: "شماره پرداخت", ps: "د تادیې شمیره" },
+  "PAYMENT SOURCE / CR": { ur: "ادائیگی سورس / کریڈٹ", ar: "مصدر الدفع / الدائن", fa: "منبع پرداخت / بستانکار", ps: "د تادیې سرچینه / کریډیټ" },
+  "PAYMENT SOURCE LEDGER POSTINGS": { ur: "ادائیگی سورس لیجر پوسٹنگز", ar: "ترحيلات دفتر مصدر الدفع", fa: "ثبت‌های دفتر منبع پرداخت", ps: "د تادیې سرچینې لیجر پوسټینګونه" },
+  "PERCENT": { ur: "فیصد", ar: "النسبة المئوية", fa: "درصد", ps: "سلنه" },
+  "POSTING": { ur: "پوسٹنگ", ar: "الترحيل", fa: "ثبت سند", ps: "پوسټینګ" },
+  "PURCHASE ACCOUNT DETAILS": { ur: "خریداری اکاؤنٹ کی تفصیلات", ar: "تفاصيل حساب الشراء", fa: "جزئیات حساب خرید", ps: "د پیرود حساب تفصیلات" },
+  "PURCHASE NO.": { ur: "خریداری نمبر", ar: "رقم الشراء", fa: "شماره خرید", ps: "د پیرود شمیره" },
+  "PURCHASE PRICE RATE": { ur: "خریداری قیمت کی شرح", ar: "معدل سعر الشراء", fa: "نرخ قیمت خرید", ps: "د پیرود نرخ" },
+  "PURCHASE REQUIRED": { ur: "درکار خریداری", ar: "الشراء المطلوب", fa: "خرید مورد نیاز", ps: "اړین پیرود" },
+  "PURCHASE SIDE LEDGER POSTINGS": { ur: "خریداری سائیڈ لیجر پوسٹنگز", ar: "ترحيلات دفتر جانب الشراء", fa: "ثبت‌های دفتر سمت خرید", ps: "د پیرود اړخ لیجر پوسټینګونه" },
+  "PURCHASER (PURCHASE A/C)": { ur: "خریدار (خریداری اکاؤنٹ)", ar: "المشتري (حساب الشراء)", fa: "خریدار (حساب خرید)", ps: "پیرودونکی (پیرود حساب)" },
+  "R NAME": { ur: "آر نام", ar: "اسم السجل", fa: "نام سند", ps: "آر نوم" },
+  "REPORT / BRANCH DETAILS": { ur: "رپورٹ / برانچ کی تفصیلات", ar: "تفاصيل التقرير / الفرع", fa: "جزئیات گزارش / شعبه", ps: "د راپور / څانګې تفصیلات" },
+  "RECEIVED / PAID": { ur: "وصول / ادا شدہ", ar: "مستلم / مدفوع", fa: "دریافت‌شده / پرداخت‌شده", ps: "ترلاسه شوی / تادیه شوی" },
+  "RECEIVED DATE": { ur: "وصولی کی تاریخ", ar: "تاريخ الاستلام", fa: "تاریخ دریافت", ps: "د ترلاسه کولو نیټه" },
+  "ROZ #": { ur: "روز #", ar: "روزنامچة #", fa: "روزنامچه #", ps: "روزنامچه #" },
+  "SALES / INVOICE SUMMARY": { ur: "سیلز / انوائس خلاصہ", ar: "ملخص المبيعات / الفاتورة", fa: "خلاصه فروش / فاکتور", ps: "پلور / انوائس لنډیز" },
+  "SO / BILL NO.": { ur: "SO / بل نمبر", ar: "رقم أمر البيع / الفاتورة", fa: "شماره سفارش فروش / صورتحساب", ps: "د پلور امر / بل شمیره" },
+  "SALES ACCOUNT DETAILS": { ur: "سیلز اکاؤنٹ کی تفصیلات", ar: "تفاصيل حساب المبيعات", fa: "جزئیات حساب فروش", ps: "د پلور حساب تفصیلات" },
+  "SALES NO.": { ur: "سیلز نمبر", ar: "رقم المبيعات", fa: "شماره فروش", ps: "د پلور شمیره" },
+  "SALES ORDER DETAILS": { ur: "سیلز آرڈر کی تفصیلات", ar: "تفاصيل أمر البيع", fa: "جزئیات سفارش فروش", ps: "د پلور امر تفصیلات" },
+  "SELECTED SOURCE ACCOUNT": { ur: "منتخب سورس اکاؤنٹ", ar: "حساب المصدر المحدد", fa: "حساب منبع انتخاب‌شده", ps: "ټاکل شوی سرچینه حساب" },
+  "SELLER (SUPPLIER)": { ur: "بیچنے والا (سپلائر)", ar: "البائع (المورد)", fa: "فروشنده (تأمین‌کننده)", ps: "پلورونکی (عرضه کوونکی)" },
+  "SUPPLIER": { ur: "سپلائر", ar: "المورد", fa: "تأمین‌کننده", ps: "عرضه کوونکی" },
+  "TOTAL (AED)": { ur: "کل (AED)", ar: "الإجمالي (AED)", fa: "مجموع (AED)", ps: "ټول (AED)" },
+  "TOTAL AMOUNT (AED)": { ur: "کل رقم (AED)", ar: "المبلغ الإجمالي (AED)", fa: "مبلغ کل (AED)", ps: "ټوله اندازه (AED)" },
+  "TOTAL FINAL CURRENCY": { ur: "کل حتمی کرنسی", ar: "إجمالي العملة النهائية", fa: "مجموع ارز نهایی", ps: "ټول وروستی اسعار" },
+  "TOTAL QUANTITY": { ur: "کل مقدار", ar: "الكمية الإجمالية", fa: "مقدار کل", ps: "ټوله مقدار" },
+  "TOTAL RECEIVED / PAID": { ur: "کل وصول / ادا شدہ", ar: "إجمالي المستلم / المدفوع", fa: "مجموع دریافت‌شده / پرداخت‌شده", ps: "ټول ترلاسه شوی / تادیه شوی" },
+  "TRANSFERRED.": { ur: "منتقل شدہ۔", ar: "تم التحويل.", fa: "منتقل شد.", ps: "لیږدول شوی." },
+  "TRANSFERRED CONTAINER SPECIFICATIONS": { ur: "منتقل شدہ کنٹینر کی تفصیلات", ar: "مواصفات الحاوية المحولة", fa: "مشخصات کانتینر منتقل‌شده", ps: "لیږدول شوی کانتینر مشخصات" },
+  "USER ROLE": { ur: "صارف کا کردار", ar: "دور المستخدم", fa: "نقش کاربر", ps: "د کارن رول" },
+  "WEIGHTS": { ur: "وزن", ar: "الأوزان", fa: "وزن‌ها", ps: "وزنونه" },
+  "LOCAL CURRENCY ENTRY": { ur: "مقامی کرنسی اندراج", ar: "قيد بالعملة المحلية", fa: "ثبت ارز محلی", ps: "د سیمه‌ییز اسعارو ننوت" },
+  "OP": { ur: "عمل", ar: "العملية", fa: "عملیات", ps: "عملیه" },
+  "CONVERTED": { ur: "تبدیل شدہ", ar: "المحوَّل", fa: "تبدیل‌شده", ps: "بدل شوی" },
   "LOADED QTY": { ur: "لوڈ شدہ مقدار", ar: "الكمية المحملة", fa: "مقدار بارگیری‌شده", ps: "بارشوې مقدار" },
   "LOADED": { ur: "لوڈ شدہ", ar: "محمّل", fa: "بارگیری‌شده", ps: "بارشوی" },
   "CONTRACT QTY": { ur: "معاہدہ مقدار", ar: "كمية العقد", fa: "مقدار قرارداد", ps: "د تړون مقدار" },
@@ -1096,9 +1170,59 @@ export const HEADER_TRANSLATIONS: Record<string, Row> = {
   "CURRENCY WISE PURCHASE TOTAL (ORIGINAL CURRENCY)": { ur: "کرنسی کے لحاظ سے کل خریداری (اصل کرنسی)", ar: "إجمالي المشتريات حسب العملة (العملة الأصلية)", fa: "مجموع خرید بر اساس ارز (ارز اصلی)", ps: "د اسعارو له مخې د پیرودلو ټول (اصلي اسعار)" },
   "CURRENCY WISE SALES TOTAL (ORIGINAL CURRENCY)": { ur: "کرنسی کے لحاظ سے کل فروخت (اصل کرنسی)", ar: "إجمالي المبيعات حسب العملة (العملة الأصلية)", fa: "مجموع فروش بر اساس ارز (ارز اصلی)", ps: "د اسعارو له مخې د پلورلو ټول (اصلي اسعار)" },
   "DOES NOT MIX CURRENCIES": { ur: "مختلف کرنسیوں کو ملایا نہیں جاتا", ar: "لا يتم خلط العملات المختلفة", fa: "ارزهای مختلف با هم ترکیب نمی‌شوند", ps: "بېلابېل اسعار سره نه ګډېږي" },
-  "TOTAL": { ur: "ٹوٹل", ar: "الإجمالي", fa: "مجموع", ps: "ټول" },
-  "ADVANCE PAID": { ur: "ادا شدہ ایڈوانس", ar: "الدفعة المقدمة المدفوعة", fa: "پیش‌پرداخت پرداخت‌شده", ps: "ورکړل شوی پیشکي" },
-  "REMAINING": { ur: "باقی", ar: "المتبقي", fa: "باقیمانده", ps: "پاتې" },
+  "COUNTRY CODE": { ur: "ملک کوڈ", ar: "رمز البلد", fa: "کد کشور", ps: "د هیواد کوډ" },
+  "ALL COUNTRIES ENTRY": { ur: "تمام ممالک اندراج", ar: "إدخال جميع الدول", fa: "ثبت همه کشورها", ps: "د ټولو هیوادونو ننوتنه" },
+  "DATE RANGE": { ur: "تاریخ کی حد", ar: "النطاق الزمني", fa: "بازه تاریخ", ps: "د نېټې سلسله" },
+  "ALL COUNTRIES": { ur: "تمام ممالک", ar: "جميع الدول", fa: "همه کشورها", ps: "ټول هیوادونه" },
+  "ALL CURRENCIES": { ur: "تمام کرنسیاں", ar: "جميع العملات", fa: "همه ارزها", ps: "ټول اسعار" },
+  "TRANSFERRED TO LEDGER": { ur: "لیجر میں منتقل", ar: "تم النقل إلى دفتر الأستاذ", fa: "منتقل شده به دفتر کل", ps: "لېجر ته لیږدول شوی" },
+  "TRANSFERRED TO BUILDING": { ur: "بلڈنگ میں منتقل", ar: "تم النقل إلى المبنى", fa: "منتقل شده به ساختمان", ps: "ودانۍ ته لیږدول شوی" },
+  "ALL COMPLETED": { ur: "تمام مکمل", ar: "اكتمل الكل", fa: "همه تکمیل شد", ps: "ټول بشپړ شوي" },
+  "ALL COUNTRIES SUMMARY": { ur: "تمام ممالک کا خلاصہ", ar: "ملخص جميع الدول", fa: "خلاصه همه کشورها", ps: "د ټولو هیوادونو لنډیز" },
+  "VIEW ALL": { ur: "سب دیکھیں", ar: "عرض الكل", fa: "مشاهده همه", ps: "ټول وګورئ" },
+  "CURRENCY WISE PURCHASE TOTAL": { ur: "کرنسی کے لحاظ سے کل خریداری", ar: "إجمالي المشتريات حسب العملة", fa: "مجموع خرید بر اساس ارز", ps: "د اسعارو له مخې د پیرودلو ټول" },
+  "CURRENCY WISE SALES TOTAL": { ur: "کرنسی کے لحاظ سے کل فروخت", ar: "إجمالي المبيعات حسب العملة", fa: "مجموع فروش بر اساس ارز", ps: "د اسعارو له مخې د پلورلو ټول" },
+  "ORIGINAL CURRENCY": { ur: "اصل کرنسی", ar: "العملة الأصلية", fa: "ارز اصلی", ps: "اصلي اسعار" },
+  "BRANCH / COUNTRY WISE SUMMARY": { ur: "برانچ / ملک کے لحاظ سے خلاصہ", ar: "ملخص حسب الفرع / الدولة", fa: "خلاصه بر اساس شعبه / کشور", ps: "د څانګې / هیواد له مخې لنډیز" },
+  "FINAL ADVANCE AMOUNT": { ur: "حتمی ایڈوانس رقم", ar: "مبلغ الدفعة المقدمة النهائي", fa: "مبلغ نهایی پیش‌پرداخت", ps: "وروستی پیشکي مقدار" },
+  "OTHERS": { ur: "دیگر", ar: "أخرى", fa: "سایر", ps: "نور" },
+  "NOTE: PURCHASE AMOUNTS ARE SHOWN IN ORIGINAL CURRENCIES. DO NOT MIX DIFFERENT CURRENCIES.": { ur: "نوٹ: خریداری کی رقوم اصل کرنسیوں میں دکھائی گئی ہیں۔ مختلف کرنسیوں کو ملایا نہ جائے۔", ar: "ملاحظة: تُعرض مبالغ الشراء بالعملات الأصلية. لا تخلط بين عملات مختلفة.", fa: "توجه: مبالغ خرید به ارزهای اصلی نمایش داده شده‌اند. ارزهای مختلف را با هم ترکیب نکنید.", ps: "یادونه: د پیرودلو مقدارونه په اصلي اسعارو کې ښودل شوي دي. بېلابېل اسعار سره مه ګډوئ." },
+  "NOTE: FINAL AMOUNTS ARE CONVERTED INTO BRANCH FINAL CURRENCY": { ur: "نوٹ: حتمی رقوم برانچ کی حتمی کرنسی میں تبدیل کی گئی ہیں", ar: "ملاحظة: يتم تحويل المبالغ النهائية إلى العملة النهائية للفرع", fa: "توجه: مبالغ نهایی به ارز نهایی شعبه تبدیل شده‌اند", ps: "یادونه: وروستي مقدارونه د څانګې وروستي اسعارو ته بدل شوي دي" },
+  "TOTAL SALES": { ur: "کل فروخت", ar: "إجمالي المبيعات", fa: "مجموع فروش", ps: "ټول پلورنه" },
+  "NOTE: SALES AMOUNTS ARE SHOWN IN ORIGINAL CURRENCIES. DO NOT MIX DIFFERENT CURRENCIES.": { ur: "نوٹ: فروخت کی رقوم اصل کرنسیوں میں دکھائی گئی ہیں۔ مختلف کرنسیوں کو ملایا نہ جائے۔", ar: "ملاحظة: تُعرض مبالغ المبيعات بالعملات الأصلية. لا تخلط بين عملات مختلفة.", fa: "توجه: مبالغ فروش به ارزهای اصلی نمایش داده شده‌اند. ارزهای مختلف را با هم ترکیب نکنید.", ps: "یادونه: د پلورنې مقدارونه په اصلي اسعارو کې ښودل شوي دي. بېلابېل اسعار سره مه ګډوئ." },
+  "BILL #": { ur: "بل نمبر", ar: "رقم الفاتورة", fa: "شماره صورتحساب", ps: "د بل شمیره" },
+  "A/C / PARTY": { ur: "اکاؤنٹ / پارٹی", ar: "الحساب / الطرف", fa: "حساب / طرف", ps: "حساب / لوری" },
+  "TOTAL PURCHASE AMOUNT (ORIGINAL CURRENCY)": { ur: "کل خریداری رقم (اصل کرنسی)", ar: "إجمالي مبلغ الشراء (العملة الأصلية)", fa: "مبلغ کل خرید (ارز اصلی)", ps: "د پیرودلو ټول مقدار (اصلي اسعار)" },
+  "ADVANCE %": { ur: "ایڈوانس فیصد", ar: "نسبة الدفعة المقدمة", fa: "درصد پیش‌پرداخت", ps: "د پیشکي سلنه" },
+  "PURCHASE ADVANCE AMOUNT (ORIGINAL CURRENCY)": { ur: "خریداری ایڈوانس رقم (اصل کرنسی)", ar: "مبلغ دفعة الشراء المقدمة (العملة الأصلية)", fa: "مبلغ پیش‌پرداخت خرید (ارز اصلی)", ps: "د پیرودلو پیشکي مقدار (اصلي اسعار)" },
+  "REMAINING PURCHASE AMOUNT (ORIGINAL CURRENCY)": { ur: "بقایا خریداری رقم (اصل کرنسی)", ar: "مبلغ الشراء المتبقي (العملة الأصلية)", fa: "مبلغ باقیمانده خرید (ارز اصلی)", ps: "د پیرودلو پاتې مقدار (اصلي اسعار)" },
+  "ADVANCE PAYMENT DUE DATE (DATE 1)": { ur: "ایڈوانس ادائیگی کی مقررہ تاریخ", ar: "تاريخ استحقاق الدفعة المقدمة", fa: "تاریخ سررسید پیش‌پرداخت", ps: "د پیشکي تادیې نېټه" },
+  "FINAL CURRENCY (BRANCH)": { ur: "حتمی کرنسی (برانچ)", ar: "العملة النهائية (الفرع)", fa: "ارز نهایی (شعبه)", ps: "وروستي اسعار (څانګه)" },
+  "FINAL ADVANCE AMOUNT (BRANCH CURRENCY)": { ur: "حتمی ایڈوانس رقم (برانچ کرنسی)", ar: "مبلغ الدفعة المقدمة النهائي (عملة الفرع)", fa: "مبلغ نهایی پیش‌پرداخت (ارز شعبه)", ps: "وروستی پیشکي مقدار (د څانګې اسعار)" },
+  "P CODE": { ur: "پی کوڈ", ar: "رمز الشراء", fa: "کد خرید", ps: "د پیرود کوډ" },
+  "S CODE": { ur: "ایس کوڈ", ar: "رمز البيع", fa: "کد فروش", ps: "د پلور کوډ" },
+  "LOADING COUNTRY": { ur: "لوڈنگ ملک", ar: "بلد التحميل", fa: "کشور بارگیری", ps: "د بارولو هیواد" },
+  "RECEIVING COUNTRY": { ur: "وصول کنندہ ملک", ar: "بلد الاستلام", fa: "کشور دریافت", ps: "د ترلاسه کولو هیواد" },
+  "RECEIVING PORT": { ur: "وصولی بندرگاہ", ar: "ميناء الاستلام", fa: "بندر دریافت", ps: "د ترلاسه کولو بندر" },
+  "RECEIVING DATE": { ur: "وصولی کی تاریخ", ar: "تاريخ الاستلام", fa: "تاریخ دریافت", ps: "د ترلاسه کولو نېټه" },
+  "BANK DETAILS": { ur: "بینک تفصیلات", ar: "تفاصيل البنك", fa: "جزئیات بانک", ps: "د بانک جزئیات" },
+  "CASH DETAILS": { ur: "نقد تفصیلات", ar: "تفاصيل نقدية", fa: "جزئیات نقدی", ps: "د نغدو جزئیات" },
+  "TRANSFER DETAILS": { ur: "منتقلی کی تفصیلات", ar: "تفاصيل التحويل", fa: "جزئیات انتقال", ps: "د لېږد جزئیات" },
+  "INVOICE/BUSINESS DETAILS": { ur: "انوائس/کاروبار کی تفصیلات", ar: "تفاصيل الفاتورة/العمل", fa: "جزئیات فاکتور/کسب‌وکار", ps: "د انوائس/سوداګرۍ جزئیات" },
+  "INVOICE DETAILS": { ur: "انوائس کی تفصیلات", ar: "تفاصيل الفاتورة", fa: "جزئیات فاکتور", ps: "د انوائس جزئیات" },
+  "TRANSFER TYPE": { ur: "منتقلی کی قسم", ar: "نوع التحويل", fa: "نوع انتقال", ps: "د لېږد ډول" },
+  "TRANSFER NUMBER": { ur: "منتقلی نمبر", ar: "رقم التحويل", fa: "شماره انتقال", ps: "د لېږد شمیره" },
+  "ATTACHMENT": { ur: "منسلکہ", ar: "مرفق", fa: "پیوست", ps: "ضمیمه" },
+  "RECEIVER/SENDER": { ur: "وصول کنندہ/بھیجنے والا", ar: "المستلم/المرسل", fa: "گیرنده/فرستنده", ps: "ترلاسه کوونکی/لیږدونکی" },
+  "MOBILE": { ur: "موبائل", ar: "الجوال", fa: "موبایل", ps: "موبایل" },
+  "PURCHASE INFO": { ur: "خریداری کی معلومات", ar: "معلومات الشراء", fa: "اطلاعات خرید", ps: "د پیرود معلومات" },
+  "TRANSFER INFO": { ur: "منتقلی کی معلومات", ar: "معلومات التحويل", fa: "اطلاعات انتقال", ps: "د لېږد معلومات" },
+  "REFERENCE": { ur: "حوالہ", ar: "مرجع", fa: "مرجع", ps: "حواله" },
+  "METHOD": { ur: "طریقہ", ar: "الطريقة", fa: "روش", ps: "طریقه" },
+  "REF": { ur: "حوالہ نمبر", ar: "المرجع", fa: "مرجع", ps: "حواله" },
+  "INVOICE #": { ur: "انوائس نمبر", ar: "رقم الفاتورة", fa: "شماره فاکتور", ps: "د انوائس شمیره" },
+  "INFO": { ur: "معلومات", ar: "معلومات", fa: "اطلاعات", ps: "معلومات" },
+  "CALCULATION": { ur: "حساب", ar: "الحساب", fa: "محاسبه", ps: "حساب" },
 };
 
 /** Normalize an English header for lookup: trim, collapse whitespace, uppercase. */
@@ -1153,4 +1277,80 @@ export function hasHeaderTranslation(label: string | null | undefined): boolean 
   if (!label || !label.trim()) return false;
   const norm = normalize(label);
   return Boolean(HEADER_TRANSLATIONS[norm] || HEADER_TRANSLATIONS[norm.replace(/:$/, "")]);
+}
+
+/**
+ * Cash Entry / Roznamcha narration lines are built at save time as fixed English label
+ * fragments concatenated with real user data, e.g.
+ * "Cash Details: Receiver/Sender: Ahmed Ali | Mobile: 0300..." — never stored per-language.
+ * Rather than translate the saved string at write time (baking in whichever language the
+ * writer happened to use), this parses the KNOWN label fragments back out at *display* time
+ * and re-renders them in the viewer's own active language via the same header dictionary —
+ * leaving every data value (names, numbers, account codes) exactly as entered, per this file's
+ * "translate labels/chrome, not data" rule. Works retroactively on already-saved records too,
+ * since it only ever looks at fixed label text, never the data.
+ */
+export function translateNarrationLine(
+  line: string | null | undefined,
+  lang: SupportedLanguage | string | null | undefined
+): string {
+  const original = line ?? "";
+  if (!original.trim()) return original;
+  const code = (lang || "en") as string;
+  if (code === "en") return original;
+
+  // Bracketed audit-trail line, e.g. "[Audit Trail - Final Amount: 100.00 AED (Local Currency Entry)]"
+  const auditMatch = original.match(/^\[Audit Trail - ([\s\S]*)\]$/);
+  if (auditMatch) {
+    const [, inner] = auditMatch;
+    const translatedInner = inner
+      .split(" | ")
+      .map((segment) => {
+        const parenMatch = segment.match(/^([\s\S]*)\s\(([A-Za-z /#]+)\)$/);
+        if (parenMatch) {
+          const [, before, parenLabel] = parenMatch;
+          if (hasHeaderTranslation(parenLabel)) {
+            segment = `${before} (${translateHeader(code, parenLabel)})`;
+          }
+        }
+        const inner2 = segment.match(/^([A-Za-z /#]+):\s*([\s\S]*)$/);
+        if (!inner2) return segment;
+        const [, innerLabel, innerValue] = inner2;
+        if (!hasHeaderTranslation(innerLabel)) return segment;
+        return `${translateHeader(code, innerLabel)}: ${innerValue}`;
+      })
+      .join(" | ");
+    return `[${translateHeader(code, "Audit Trail")} - ${translatedInner}]`;
+  }
+
+  // Outer label, e.g. "Cash Details: <rest>"
+  const outerMatch = original.match(/^([A-Za-z /#]+):\s*([\s\S]*)$/);
+  if (!outerMatch) return original;
+  const [, outerLabel, rest] = outerMatch;
+  if (!hasHeaderTranslation(outerLabel)) return original;
+  const translatedOuter = translateHeader(code, outerLabel);
+
+  // Inner " | "-separated "SubLabel: value" segments within the rest.
+  const segments = rest.split(" | ").map((segment) => {
+    const inner = segment.match(/^([A-Za-z /#]+):\s*([\s\S]*)$/);
+    if (!inner) return segment;
+    const [, innerLabel, innerValue] = inner;
+    if (!hasHeaderTranslation(innerLabel)) return segment;
+    return `${translateHeader(code, innerLabel)}: ${innerValue}`;
+  });
+
+  return `${translatedOuter}: ${segments.join(" | ")}`;
+}
+
+/**
+ * Applies translateNarrationLine to every line of a full multi-line narration/remarks block
+ * (audit-trail and calculation lines pass through the same per-line label lookup).
+ */
+export function translateNarrationBlock(
+  narration: string | null | undefined,
+  lang: SupportedLanguage | string | null | undefined
+): string {
+  const original = narration ?? "";
+  if (!original) return original;
+  return original.split("\n").map((line) => translateNarrationLine(line, lang)).join("\n");
 }

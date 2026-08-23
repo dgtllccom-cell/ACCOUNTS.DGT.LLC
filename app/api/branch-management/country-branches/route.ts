@@ -6,7 +6,7 @@ import { auditApiAction } from "@/lib/api/audit";
 import { allPermissionGroupKeys } from "@/lib/permissions/catalog";
 import { linkEmailAccount } from "@/lib/api/email-link";
 import { translateToUrdu } from "@/lib/api/response";
-import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
+import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { withLocalPg } from "@/lib/db/local-postgres";
@@ -231,7 +231,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: formatError(error.message, session.isSuperAdmin) }, { status: 403 });
     }
 
-    void translateMasterRecord("country_branches", data.id, { name: payload.name, owner_name: payload.owner_name }, "en");
+    void syncRecordTranslations({
+      table: "country_branches",
+      recordId: data.id,
+      record: payload,
+      originalLanguage: session.preferredLanguage ?? "en",
+      actorId: session.userId
+    }).catch(() => {});
 
     // Link/Upsert central email account
     await linkEmailAccount({
@@ -345,7 +351,13 @@ export async function PUT(request: Request) {
       .single();
 
     if (!error && data?.id) {
-      void translateMasterRecord("country_branches", data.id, { name: payload.name, owner_name: payload.owner_name }, "en");
+      void syncRecordTranslations({
+      table: "country_branches",
+      recordId: data.id,
+      record: payload,
+      originalLanguage: session.preferredLanguage ?? "en",
+      actorId: session.userId
+    }).catch(() => {});
     }
 
     if (error) {

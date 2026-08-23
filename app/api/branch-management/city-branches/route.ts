@@ -8,7 +8,7 @@ import { linkEmailAccount } from "@/lib/api/email-link";
 import { linkWhatsAppAccount } from "@/lib/api/whatsapp-link";
 import { encrypt } from "@/lib/crypto";
 import { translateToUrdu } from "@/lib/api/response";
-import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
+import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { withLocalPg } from "@/lib/db/local-postgres";
@@ -263,7 +263,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: formatError(error.message, session.isSuperAdmin) }, { status: 403 });
     }
 
-    void translateMasterRecord("city_branches", data.id, { name: payload.name, city_name: payload.city_name, owner_name: payload.owner_name }, "en");
+    void syncRecordTranslations({
+      table: "city_branches",
+      recordId: data.id,
+      record: payload,
+      originalLanguage: session.preferredLanguage ?? "en",
+      actorId: session.userId
+    }).catch(() => {});
 
     // Link/Upsert central email account
     const encryptedSmtpPass = parsed.data.emailServerSettings?.smtpPass
@@ -426,7 +432,13 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: formatError(error.message, session.isSuperAdmin) }, { status: 403 });
     }
 
-    void translateMasterRecord("city_branches", data.id, { name: payload.name, city_name: payload.city_name, owner_name: payload.owner_name }, "en");
+    void syncRecordTranslations({
+      table: "city_branches",
+      recordId: data.id,
+      record: payload,
+      originalLanguage: session.preferredLanguage ?? "en",
+      actorId: session.userId
+    }).catch(() => {});
 
     // Link/Upsert central email account
     const encryptedSmtpPass = parsed.data.emailServerSettings?.smtpPass

@@ -1,0 +1,491 @@
+{
+  "mode": "dry-run",
+  "database": {
+    "host": "aws-1-ap-southeast-2.pooler.supabase.com",
+    "database": "postgres",
+    "ref": "inmayhrxucimxqhgseqi",
+    "fingerprint": "fbdeed54ad10"
+  },
+  "backup": null,
+  "preserved": {
+    "countries": [
+      {
+        "id": "935dd0b9-8228-43b3-b53d-c06e9ae2882f",
+        "name": "United Arab Emirates",
+        "code": "AE",
+        "currency_code": "AED"
+      },
+      {
+        "id": "8366fa0e-dcf6-4acd-8602-2819f103dd63",
+        "name": "Afghanistan",
+        "code": "AF",
+        "currency_code": "AFN"
+      },
+      {
+        "id": "96ab1da1-12f6-470a-85d5-a681424559ab",
+        "name": "India",
+        "code": "IN",
+        "currency_code": "INR"
+      },
+      {
+        "id": "fb021716-a2e7-4141-9c1a-bd1ddd92eb14",
+        "name": "Pakistan",
+        "code": "PK",
+        "currency_code": "PKR"
+      }
+    ],
+    "mainBranches": [
+      {
+        "id": "87c2e253-b6c1-482d-a808-272337f3ffda",
+        "country_id": "935dd0b9-8228-43b3-b53d-c06e9ae2882f",
+        "name": "United Arab Emirates Main Branch",
+        "code": "ARE-MAIN-001",
+        "status": "active",
+        "created_at": "2026-07-14T12:12:23.173Z"
+      },
+      {
+        "id": "0842bdac-4c33-4b9e-ada5-e21aa8176151",
+        "country_id": "8366fa0e-dcf6-4acd-8602-2819f103dd63",
+        "name": "Afghanistan Main Branch",
+        "code": "AFG-MAIN-001",
+        "status": "active",
+        "created_at": "2026-07-14T12:38:15.990Z"
+      },
+      {
+        "id": "798ae034-999d-4d63-ae17-8e8e737256da",
+        "country_id": "96ab1da1-12f6-470a-85d5-a681424559ab",
+        "name": "India Main Branch",
+        "code": "IND-MAIN-001",
+        "status": "active",
+        "created_at": "2026-07-27T13:01:41.121Z"
+      },
+      {
+        "id": "5269c1cb-92a1-4aa8-aad8-d4c7260badaa",
+        "country_id": "fb021716-a2e7-4141-9c1a-bd1ddd92eb14",
+        "name": "Pakistan Main Branch",
+        "code": "PAK-MAIN-001",
+        "status": "active",
+        "created_at": "2026-07-14T12:23:56.655Z"
+      }
+    ],
+    "selectedUsers": [
+      {
+        "user_id": "724319b1-cf66-4179-8365-1cd3ce20955b",
+        "full_name": "ASMATULLAH",
+        "role": "super_admin",
+        "reason": "super_admin"
+      },
+      {
+        "user_id": "00000000-0000-4000-8000-000000000001",
+        "full_name": "Super Admin",
+        "role": "super_admin",
+        "reason": "super_admin"
+      },
+      {
+        "country": "AE",
+        "user_id": "3f970255-af4a-4300-9d3b-871259f34e1c",
+        "full_name": "HAJI ASMATULLAH",
+        "role": "country_admin",
+        "reason": "country-main-user"
+      },
+      {
+        "country": "AF",
+        "user_id": "9667b381-dba3-43d1-8911-d7f519427a56",
+        "full_name": "najeeb",
+        "role": "country_admin",
+        "reason": "country-main-user"
+      },
+      {
+        "country": "IN",
+        "user_id": "ae8b517e-d822-465f-88e9-5c6afa74b65e",
+        "full_name": "IMPORTS EXPORTS",
+        "role": "country_admin",
+        "reason": "country-main-user"
+      },
+      {
+        "country": "PK",
+        "user_id": "3b7f6a85-6201-43fb-a3ce-f1312a5f3e82",
+        "full_name": "asmat",
+        "role": "country_admin",
+        "reason": "country-main-user"
+      }
+    ],
+    "keepCountryIds": [
+      "935dd0b9-8228-43b3-b53d-c06e9ae2882f",
+      "8366fa0e-dcf6-4acd-8602-2819f103dd63",
+      "96ab1da1-12f6-470a-85d5-a681424559ab",
+      "fb021716-a2e7-4141-9c1a-bd1ddd92eb14"
+    ],
+    "keepBranchIds": [
+      "87c2e253-b6c1-482d-a808-272337f3ffda",
+      "0842bdac-4c33-4b9e-ada5-e21aa8176151",
+      "798ae034-999d-4d63-ae17-8e8e737256da",
+      "5269c1cb-92a1-4aa8-aad8-d4c7260badaa"
+    ]
+  },
+  "cleanupTargets": {
+    "masterDeleteTables": [
+      "ledgers",
+      "accounts",
+      "branches",
+      "account_companies",
+      "account_banks",
+      "account_warehouses",
+      "account_customer_owners",
+      "company_banks",
+      "bank_accounts",
+      "companies",
+      "company_parameters",
+      "company_settings",
+      "customer_contacts",
+      "customer_registrations",
+      "customers",
+      "employees",
+      "suppliers",
+      "supplier_contacts",
+      "warehouses",
+      "banks",
+      "enterprise_accounts"
+    ],
+    "transactionalDeleteTables": [
+      "ledger_transaction_audit_trail",
+      "stock_movements",
+      "inter_branch_ledger_transfers",
+      "bank_cheque_transactions",
+      "purchase_loading_records",
+      "shipping_bl_records",
+      "purchase_order_expenses",
+      "purchase_order_items",
+      "purchase_order_reports",
+      "purchase_order_payments",
+      "purchase_orders",
+      "local_purchases",
+      "sales_order_payments",
+      "sales_orders",
+      "shipping_line_records",
+      "shipment_documents",
+      "roznamcha_reversals",
+      "ledger_entries",
+      "journal_lines",
+      "journal_entries",
+      "ledger_balances",
+      "ledger_posting_lines",
+      "ledger_posting_batches",
+      "ledger_opening_balances",
+      "enterprise_ledger_reversals",
+      "enterprise_account_history",
+      "cash_transactions",
+      "roznamcha_entries",
+      "roznamcha_lines",
+      "transactions",
+      "daily_usd_rates",
+      "usd_purchase_sales",
+      "exchange_rate_history",
+      "approval_status_history",
+      "approval_request_items",
+      "approval_requests",
+      "record_locks",
+      "record_change_history",
+      "soft_delete_logs",
+      "attachments",
+      "audit_logs",
+      "erp_activity_events",
+      "erp_record_transfers",
+      "erp_pdf_email_jobs",
+      "erp_assignments",
+      "product_inventory_balances",
+      "voucher_sequences",
+      "transaction_serial_sequences",
+      "module_number_sequences"
+    ],
+    "translationTargets": [
+      "ledgers",
+      "accounts",
+      "branches",
+      "account_companies",
+      "account_banks",
+      "account_warehouses",
+      "account_customer_owners",
+      "company_banks",
+      "bank_accounts",
+      "companies",
+      "company_parameters",
+      "company_settings",
+      "customer_contacts",
+      "customer_registrations",
+      "customers",
+      "employees",
+      "suppliers",
+      "supplier_contacts",
+      "warehouses",
+      "banks",
+      "enterprise_accounts",
+      "ledger_transaction_audit_trail",
+      "stock_movements",
+      "inter_branch_ledger_transfers",
+      "bank_cheque_transactions",
+      "purchase_loading_records",
+      "shipping_bl_records",
+      "purchase_order_expenses",
+      "purchase_order_items",
+      "purchase_order_reports",
+      "purchase_order_payments",
+      "purchase_orders",
+      "local_purchases",
+      "sales_order_payments",
+      "sales_orders",
+      "shipping_line_records",
+      "shipment_documents",
+      "roznamcha_reversals",
+      "ledger_entries",
+      "journal_lines",
+      "journal_entries",
+      "ledger_balances",
+      "ledger_posting_lines",
+      "ledger_posting_batches",
+      "ledger_opening_balances",
+      "enterprise_ledger_reversals",
+      "enterprise_account_history",
+      "cash_transactions",
+      "roznamcha_entries",
+      "roznamcha_lines",
+      "transactions",
+      "daily_usd_rates",
+      "usd_purchase_sales",
+      "exchange_rate_history",
+      "approval_status_history",
+      "approval_request_items",
+      "approval_requests",
+      "record_locks",
+      "record_change_history",
+      "soft_delete_logs",
+      "attachments",
+      "audit_logs",
+      "erp_activity_events",
+      "erp_record_transfers",
+      "erp_pdf_email_jobs",
+      "erp_assignments",
+      "product_inventory_balances",
+      "voucher_sequences",
+      "transaction_serial_sequences",
+      "module_number_sequences"
+    ],
+    "extraMainBranches": [],
+    "cityBranches": [
+      {
+        "id": "c7265408-2085-4e29-bcf2-1301eadc4e79",
+        "country_id": "fb021716-a2e7-4141-9c1a-bd1ddd92eb14",
+        "country_branch_id": "5269c1cb-92a1-4aa8-aad8-d4c7260badaa",
+        "code": "DEV-PK-CITY-001",
+        "name": "DEV Demo Karachi City Branch"
+      },
+      {
+        "id": "f9161810-f78d-471c-8805-b442968a4f9c",
+        "country_id": "8366fa0e-dcf6-4acd-8602-2819f103dd63",
+        "country_branch_id": "0842bdac-4c33-4b9e-ada5-e21aa8176151",
+        "code": "DEV-AF-CITY-001",
+        "name": "DEV Demo Kabul City Branch"
+      },
+      {
+        "id": "79b31aba-45f1-4aba-9068-fb3eb2102a81",
+        "country_id": "935dd0b9-8228-43b3-b53d-c06e9ae2882f",
+        "country_branch_id": "87c2e253-b6c1-482d-a808-272337f3ffda",
+        "code": "DEV-AE-CITY-001",
+        "name": "DEV Demo Dubai City Branch"
+      },
+      {
+        "id": "d8bdaa63-94fd-43ff-8b7f-e1ed79d10bbb",
+        "country_id": "96ab1da1-12f6-470a-85d5-a681424559ab",
+        "country_branch_id": "798ae034-999d-4d63-ae17-8e8e737256da",
+        "code": "DEV-IN-CITY-001",
+        "name": "DEV Demo Delhi City Branch"
+      },
+      {
+        "id": "7d7d42fe-ddd1-4bec-8703-3911ad14fa8b",
+        "country_id": "fb021716-a2e7-4141-9c1a-bd1ddd92eb14",
+        "country_branch_id": "5269c1cb-92a1-4aa8-aad8-d4c7260badaa",
+        "code": "DEV-PK-QUETTA",
+        "name": "Quetta City Branch"
+      },
+      {
+        "id": "322351af-732f-4351-a89b-ba34cfe598cf",
+        "country_id": "fb021716-a2e7-4141-9c1a-bd1ddd92eb14",
+        "country_branch_id": "5269c1cb-92a1-4aa8-aad8-d4c7260badaa",
+        "code": "DEV-PK-CHAMAN",
+        "name": "Chaman City Branch"
+      },
+      {
+        "id": "b5e94645-05c1-4420-8ecb-141ca7d84f12",
+        "country_id": "935dd0b9-8228-43b3-b53d-c06e9ae2882f",
+        "country_branch_id": "87c2e253-b6c1-482d-a808-272337f3ffda",
+        "code": "DEV-AE-DEIRA",
+        "name": "Deira Dubai City Branch"
+      },
+      {
+        "id": "ea8f1cd7-7a41-4b50-bc10-dfbfbc1cecca",
+        "country_id": "96ab1da1-12f6-470a-85d5-a681424559ab",
+        "country_branch_id": "798ae034-999d-4d63-ae17-8e8e737256da",
+        "code": "DEV-IN-MUMBAI",
+        "name": "Mumbai City Branch"
+      },
+      {
+        "id": "5502b7aa-851d-4b28-9927-7da96ca2d8ba",
+        "country_id": "8366fa0e-dcf6-4acd-8602-2819f103dd63",
+        "country_branch_id": "0842bdac-4c33-4b9e-ada5-e21aa8176151",
+        "code": "DEV-AF-KANDAHAR",
+        "name": "Kandahar City Branch"
+      },
+      {
+        "id": "6867d9b1-d6c0-4aed-aff9-e924d04ef202",
+        "country_id": "935dd0b9-8228-43b3-b53d-c06e9ae2882f",
+        "country_branch_id": "87c2e253-b6c1-482d-a808-272337f3ffda",
+        "code": "DEV-AE-TEST-DUBAI-001",
+        "name": "DEV TEST Dubai City Branch"
+      },
+      {
+        "id": "79af12e1-a7c5-422e-9790-3ed088c1025d",
+        "country_id": "fb021716-a2e7-4141-9c1a-bd1ddd92eb14",
+        "country_branch_id": "5269c1cb-92a1-4aa8-aad8-d4c7260badaa",
+        "code": "DEV-PK-TEST-KARACHI-001",
+        "name": "DEV TEST Karachi City Branch"
+      },
+      {
+        "id": "eb5d115d-69b9-4394-9968-5d114edaf67a",
+        "country_id": "8366fa0e-dcf6-4acd-8602-2819f103dd63",
+        "country_branch_id": "0842bdac-4c33-4b9e-ada5-e21aa8176151",
+        "code": "DEV-AF-TEST-KABUL-001",
+        "name": "DEV TEST Kabul City Branch"
+      },
+      {
+        "id": "57687d96-9cdb-4b25-8bd7-ce44ab52e157",
+        "country_id": "96ab1da1-12f6-470a-85d5-a681424559ab",
+        "country_branch_id": "798ae034-999d-4d63-ae17-8e8e737256da",
+        "code": "DEV-IN-TEST-MUMBAI-001",
+        "name": "DEV TEST Mumbai City Branch"
+      },
+      {
+        "id": "30242f96-8df9-4388-8c31-a8cfdb2e6d95",
+        "country_id": "fb021716-a2e7-4141-9c1a-bd1ddd92eb14",
+        "country_branch_id": "5269c1cb-92a1-4aa8-aad8-d4c7260badaa",
+        "code": "DEV-PK-TEST-QUETTA-001",
+        "name": "DEV TEST Quetta City Branch"
+      }
+    ],
+    "branchReferenceImpact": {
+      "extraMainBranches": [],
+      "cityBranches": [
+        {
+          "table": "user_role_assignments",
+          "column": "city_branch_id",
+          "references": 13,
+          "deleteRule": "NO ACTION",
+          "nullable": true
+        },
+        {
+          "table": "shipping_expense_transfers",
+          "column": "origin_city_branch_id",
+          "references": 1,
+          "deleteRule": "NO ACTION",
+          "nullable": true
+        },
+        {
+          "table": "shipping_expense_transfers",
+          "column": "dest_city_branch_id",
+          "references": 1,
+          "deleteRule": "NO ACTION",
+          "nullable": true
+        }
+      ]
+    }
+  },
+  "before": {
+    "countries": 8,
+    "country_branches": 4,
+    "city_branches": 14,
+    "profiles": 18,
+    "user_role_assignments": 20,
+    "branches": 0,
+    "companies": 203,
+    "banks": 149,
+    "customers": 208,
+    "employees": 54,
+    "warehouses": 169,
+    "account_companies": 7,
+    "account_banks": 4,
+    "account_warehouses": 4,
+    "account_customer_owners": 4,
+    "ledger_transaction_audit_trail": 0,
+    "stock_movements": 9,
+    "inter_branch_ledger_transfers": 0,
+    "bank_cheque_transactions": 12,
+    "purchase_loading_records": 156,
+    "shipping_bl_records": 0,
+    "purchase_order_expenses": 2,
+    "purchase_order_items": 393,
+    "purchase_order_reports": null,
+    "purchase_order_payments": 245,
+    "purchase_orders": 224,
+    "local_purchases": 0,
+    "sales_order_payments": 7,
+    "sales_orders": 6,
+    "shipping_line_records": 4,
+    "shipment_documents": 0,
+    "roznamcha_reversals": 0,
+    "ledger_entries": 0,
+    "journal_lines": 0,
+    "journal_entries": 0,
+    "ledger_balances": 335,
+    "ledger_posting_lines": 0,
+    "ledger_posting_batches": 0,
+    "ledger_opening_balances": 0,
+    "enterprise_ledger_reversals": 0,
+    "enterprise_account_history": 5,
+    "cash_transactions": null,
+    "roznamcha_entries": 608,
+    "roznamcha_lines": 1212,
+    "transactions": 0,
+    "daily_usd_rates": 64,
+    "usd_purchase_sales": 0,
+    "exchange_rate_history": 0,
+    "approval_status_history": 0,
+    "approval_request_items": 0,
+    "approval_requests": 0,
+    "record_locks": 0,
+    "record_change_history": 4,
+    "soft_delete_logs": 0,
+    "attachments": 0,
+    "audit_logs": 606,
+    "erp_activity_events": 0,
+    "erp_record_transfers": 0,
+    "erp_pdf_email_jobs": 0,
+    "erp_assignments": 0,
+    "product_inventory_balances": 3,
+    "voucher_sequences": 0,
+    "transaction_serial_sequences": 85,
+    "module_number_sequences": 0
+  },
+  "preserveTablesBefore": {
+    "countries": 8,
+    "states_provinces": 177,
+    "cities": 664494,
+    "areas_locations": 20,
+    "postal_codes": 0,
+    "profiles": 18,
+    "user_role_assignments": 20,
+    "roles": 0,
+    "permissions": 105,
+    "role_permissions": 0,
+    "erp_modules": 0,
+    "languages": 5,
+    "translation_keys": 0,
+    "translation_values": 0,
+    "settings": null,
+    "app_settings": 0,
+    "system_settings": null
+  },
+  "translationCountBefore": {
+    "record_translations": 12914,
+    "record_translation_events": null,
+    "enterprise_record_translations": null
+  }
+}

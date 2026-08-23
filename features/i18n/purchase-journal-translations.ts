@@ -764,6 +764,377 @@ export const UI_TRANSLATIONS: Record<string, Record<LanguageCode, string>> = {
     fa: "نظرات",
     ps: "تبصرو"
   },
+  "cash_details": {
+    en: "Cash Details",
+    ur: "کیش کی تفصیلات",
+    ar: "تفاصيل النقد",
+    fa: "جزئیات نقدی",
+    ps: "د نغدو جزئیات"
+  },
+  "bank_details": {
+    en: "Bank Details",
+    ur: "بینک کی تفصیلات",
+    ar: "تفاصيل البنك",
+    fa: "جزئیات بانکی",
+    ps: "د بانک جزئیات"
+  },
+  "business_details": {
+    en: "Business Details",
+    ur: "بزنس کی تفصیلات",
+    ar: "تفاصيل العمل",
+    fa: "جزئیات کسب‌وکار",
+    ps: "د سوداګرۍ جزئیات"
+  },
+  "invoice_details": {
+    en: "Invoice Details",
+    ur: "انوائس کی تفصیلات",
+    ar: "تفاصيل الفاتورة",
+    fa: "جزئیات فاکتور",
+    ps: "د انوائس جزئیات"
+  },
+  "transfer_details": {
+    en: "Transfer Details",
+    ur: "منتقلی کی تفصیلات",
+    ar: "تفاصيل التحويل",
+    fa: "جزئیات انتقال",
+    ps: "د لیږد جزئیات"
+  },
+  "select_currency": {
+    en: "Select Currency",
+    ur: "کرنسی منتخب کریں",
+    ar: "اختر العملة",
+    fa: "انتخاب ارز",
+    ps: "اسعار وټاکئ"
+  },
+  "search_payment_source_account": {
+    en: "Search Payment Source Account...",
+    ur: "ادائیگی کا سورس اکاؤنٹ تلاش کریں...",
+    ar: "ابحث عن حساب مصدر الدفع...",
+    fa: "جستجوی حساب منبع پرداخت...",
+    ps: "د تادیې سرچینې حساب لټون..."
+  },
+  "search_credit_account_cash_bank": {
+    en: "Search & Select Credit Account (Cash / Bank)...",
+    ur: "کریڈٹ اکاؤنٹ منتخب کریں (کیش / بینک)...",
+    ar: "ابحث واختر حساب الدائن (نقد / بنك)...",
+    fa: "جستجو و انتخاب حساب بستانکار (نقد / بانک)...",
+    ps: "د کریډیټ حساب لټون او ټاکل (نغدي / بانک)..."
+  },
+  "balance_colon": {
+    en: "Balance: ",
+    ur: "بیلنس: ",
+    ar: "الرصيد: ",
+    fa: "موجودی: ",
+    ps: "بیلانس: "
+  },
+  "currency_colon": {
+    en: "Currency: ",
+    ur: "کرنسی: ",
+    ar: "العملة: ",
+    fa: "ارز: ",
+    ps: "اسعار: "
+  },
+  "receipt_no_full_label": {
+    en: "Receipt No.",
+    ur: "رسید نمبر",
+    ar: "رقم الإيصال",
+    fa: "شماره رسید",
+    ps: "د رسید شمیره"
+  },
+  "select_type": {
+    en: "Select Type",
+    ur: "قسم منتخب کریں",
+    ar: "اختر النوع",
+    fa: "انتخاب نوع",
+    ps: "ډول وټاکئ"
+  },
+  "select_category": {
+    en: "Select Category",
+    ur: "زمرہ منتخب کریں",
+    ar: "اختر الفئة",
+    fa: "انتخاب دسته",
+    ps: "ډله وټاکئ"
+  },
+  "cash_roznamcha": {
+    en: "Cash Roznamcha",
+    ur: "کیش روزنامچہ",
+    ar: "روزنامچة النقد",
+    fa: "روزنامچه نقدی",
+    ps: "د نغدو روزنامچه"
+  },
+  "bank_roznamcha": {
+    en: "Bank Roznamcha",
+    ur: "بینک روزنامچہ",
+    ar: "روزنامچة البنك",
+    fa: "روزنامچه بانکی",
+    ps: "د بانک روزنامچه"
+  },
+  "business_roznamcha": {
+    en: "Business Roznamcha",
+    ur: "بزنس روزنامچہ",
+    ar: "روزنامچة العمل",
+    fa: "روزنامچه کسب‌وکار",
+    ps: "د سوداګرۍ روزنامچه"
+  },
+  "invoice_journal": {
+    en: "Invoice Journal",
+    ur: "انوائس جرنل",
+    ar: "دفتر يومية الفاتورة",
+    fa: "دفتر روزنامه فاکتور",
+    ps: "د انوائس جرنل"
+  },
+  "transfer_label": {
+    en: "Transfer",
+    ur: "منتقلی",
+    ar: "تحويل",
+    fa: "انتقال",
+    ps: "لیږد"
+  },
+  "receiver_or_sender_name_placeholder": {
+    en: "Receiver or sender name",
+    ur: "وصول کنندہ یا بھیجنے والے کا نام",
+    ar: "اسم المستلم أو المرسل",
+    fa: "نام گیرنده یا فرستنده",
+    ps: "د ترلاسه کونکي یا لیږونکي نوم"
+  },
+  "attach_label": {
+    en: "Attach",
+    ur: "منسلک کریں",
+    ar: "إرفاق",
+    fa: "پیوست",
+    ps: "منسلکول"
+  },
+  "select_bank": {
+    en: "Select Bank",
+    ur: "بینک منتخب کریں",
+    ar: "اختر البنك",
+    fa: "انتخاب بانک",
+    ps: "بانک وټاکئ"
+  },
+  "new_bank": {
+    en: "New Bank",
+    ur: "نیا بینک",
+    ar: "بنك جديد",
+    fa: "بانک جدید",
+    ps: "نوی بانک"
+  },
+  "select_method": {
+    en: "Select Method",
+    ur: "طریقہ منتخب کریں",
+    ar: "اختر الطريقة",
+    fa: "انتخاب روش",
+    ps: "طریقه وټاکئ"
+  },
+  "new_method": {
+    en: "New Method",
+    ur: "نیا طریقہ",
+    ar: "طريقة جديدة",
+    fa: "روش جدید",
+    ps: "نوې طریقه"
+  },
+  "cheque_mobile_transaction_number": {
+    en: "Cheque/Mobile transaction number",
+    ur: "چیک یا ٹرانزیکشن نمبر",
+    ar: "رقم معاملة الشيك/الجوال",
+    fa: "شماره تراکنش چک/موبایل",
+    ps: "د چک/ګرځنده معاملې شمیره"
+  },
+  "invoice_number_label": {
+    en: "Invoice Number",
+    ur: "انوائس نمبر",
+    ar: "رقم الفاتورة",
+    fa: "شماره فاکتور",
+    ps: "د انوائس شمیره"
+  },
+  "purchase_information": {
+    en: "Purchase Information",
+    ur: "خریداری کی معلومات",
+    ar: "معلومات الشراء",
+    fa: "اطلاعات خرید",
+    ps: "د پیرودلو معلومات"
+  },
+  "from_label": {
+    en: "From",
+    ur: "سے",
+    ar: "من",
+    fa: "از",
+    ps: "له"
+  },
+  "to_label": {
+    en: "To",
+    ur: "کو",
+    ar: "إلى",
+    fa: "به",
+    ps: "ته"
+  },
+  "reference_label": {
+    en: "Reference",
+    ur: "حوالہ",
+    ar: "المرجع",
+    fa: "مرجع",
+    ps: "حواله"
+  },
+  "multiply_op": {
+    en: "Multiply (*)",
+    ur: "ضرب کریں (*)",
+    ar: "ضرب (*)",
+    fa: "ضرب (*)",
+    ps: "ضرب (*)"
+  },
+  "divide_op": {
+    en: "Divide (/)",
+    ur: "تقسیم کریں (/)",
+    ar: "قسمة (/)",
+    fa: "تقسیم (/)",
+    ps: "ویش (/)"
+  },
+  "manual_notes_placeholder": {
+    en: "Manually add additional descriptions, comments, explanations, or transaction notes...",
+    ur: "تفصیلات، کمنٹس، وضاحت، یا ٹرانزیکشن نوٹس شامل کریں...",
+    ar: "أضف يدويًا أوصافًا إضافية أو تعليقات أو توضيحات أو ملاحظات المعاملة...",
+    fa: "توضیحات، نظرات، شرح یا یادداشت‌های تراکنش را به‌صورت دستی اضافه کنید...",
+    ps: "لاسي ډول اضافي تشریحات، تبصرې، وضاحتونه، یا د معاملې یادښتونه ورنغاړئ..."
+  },
+  "add_transaction_narration_example": {
+    en: "Add transaction narration / comments (e.g. 22000 USD x 3.6725 = 80,740.00 AED | Bank TT to Supplier)",
+    ur: "تفصیلات، کمنٹس، یا ٹرانزیکشن نوٹس شامل کریں...",
+    ar: "أضف وصف المعاملة / التعليقات (مثال: 22000 USD x 3.6725 = 80,740.00 AED | تحويل بنكي للمورد)",
+    fa: "شرح تراکنش / نظرات را اضافه کنید (مثال: 22000 USD x 3.6725 = 80,740.00 AED | حواله بانکی به تأمین‌کننده)",
+    ps: "د معاملې تشریح / تبصرې ورزیاتئ (مثال: 22000 USD x 3.6725 = 80,740.00 AED | بانکي لیږد پلورونکي ته)"
+  },
+  "posting_colon": {
+    en: "Posting: ",
+    ur: "پوسٹنگ: ",
+    ar: "الترحيل: ",
+    fa: "ثبت سند: ",
+    ps: "پوسټینګ: "
+  },
+  "amount_colon": {
+    en: "Amount: ",
+    ur: "رقم: ",
+    ar: "المبلغ: ",
+    fa: "مبلغ: ",
+    ps: "اندازه: "
+  },
+  "total_remaining_bill_colon": {
+    en: "Total Remaining Bill: ",
+    ur: "کل بقایا بل: ",
+    ar: "إجمالي رصيد الفاتورة المتبقي: ",
+    fa: "مجموع مانده صورتحساب: ",
+    ps: "د پاتې بل ټول اندازه: "
+  },
+  "remaining_bill_balance_baqaya_colon": {
+    en: "Remaining Bill Balance (Baqaya): ",
+    ur: "باقی بل بقایا: ",
+    ar: "رصيد الفاتورة المتبقي (باقايا): ",
+    fa: "مانده صورتحساب (باقیا): ",
+    ps: "د بل پاتې بیلانس (باقي): "
+  },
+  "roznamcha_voucher_number": {
+    en: "Roznamcha / Voucher Number",
+    ur: "روزنامچہ / واؤچر نمبر",
+    ar: "رقم روزنامچة / السند",
+    fa: "شماره روزنامچه / سند",
+    ps: "د روزنامچې / واوچر شمیره"
+  },
+  "debit_account_party_supplier": {
+    en: "Debit Account (Party/Supplier)",
+    ur: "ڈیبٹ اکاؤنٹ",
+    ar: "حساب المدين (الطرف/المورد)",
+    fa: "حساب بدهکار (طرف/تأمین‌کننده)",
+    ps: "د ډیبیټ حساب (کوونکی/عرضه کوونکی)"
+  },
+  "payment_type_label": {
+    en: "Payment Type",
+    ur: "ادائیگی کی قسم",
+    ar: "نوع الدفع",
+    fa: "نوع پرداخت",
+    ps: "د تادیې ډول"
+  },
+  "payment_type_select_source_hint": {
+    en: "Payment Type (select a source account to set this)",
+    ur: "ادائیگی کی قسم (سیٹ کرنے کے لیے سورس اکاؤنٹ منتخب کریں)",
+    ar: "نوع الدفع (اختر حساب المصدر لتعيين هذا)",
+    fa: "نوع پرداخت (برای تنظیم، حساب منبع را انتخاب کنید)",
+    ps: "د تادیې ډول (د دې ټاکلو لپاره سرچینه حساب وټاکئ)"
+  },
+  "payment_amount_label": {
+    en: "Payment Amount",
+    ur: "ادائیگی کی رقم",
+    ar: "مبلغ الدفع",
+    fa: "مبلغ پرداخت",
+    ps: "د تادیې اندازه"
+  },
+  "payment_amount_gt_zero": {
+    en: "Payment Amount (must be greater than 0)",
+    ur: "ادائیگی کی رقم (0 سے زیادہ ہونی چاہیے)",
+    ar: "مبلغ الدفع (يجب أن يكون أكبر من 0)",
+    fa: "مبلغ پرداخت (باید بزرگتر از 0 باشد)",
+    ps: "د تادیې اندازه (باید له 0 څخه زیاته وي)"
+  },
+  "processing_label": {
+    en: "Processing...",
+    ur: "پروسیسنگ ہو رہی ہے...",
+    ar: "جارٍ المعالجة...",
+    fa: "در حال پردازش...",
+    ps: "پروسس کیږي..."
+  },
+  "post_credit_payment": {
+    en: "Post Credit Payment",
+    ur: "کریڈٹ ادائیگی پوسٹ کریں",
+    ar: "ترحيل الدفعة الآجلة",
+    fa: "ثبت پرداخت اعتباری",
+    ps: "د کریډیټ تادیې پوسټ کول"
+  },
+  "post_remaining_payment": {
+    en: "Post Remaining Payment",
+    ur: "باقی ادائیگی پوسٹ کریں",
+    ar: "ترحيل الدفعة المتبقية",
+    fa: "ثبت پرداخت باقیمانده",
+    ps: "د پاتې تادیې پوسټ کول"
+  },
+  "save_disabled_prefix": {
+    en: "Save is disabled — still needed: ",
+    ur: "محفوظ کرنا غیر فعال ہے — ابھی درکار ہے: ",
+    ar: "الحفظ معطل — لا يزال مطلوبًا: ",
+    fa: "ذخیره غیرفعال است — هنوز نیاز است: ",
+    ps: "خوندي کول غیرفعال دي — لاهم اړین دي: "
+  },
+  "list_separator": {
+    en: ", ",
+    ur: "، ",
+    ar: "، ",
+    fa: "، ",
+    ps: "، "
+  },
+  "payment_posted_successfully": {
+    en: "Payment Posted Successfully",
+    ur: "ادائیگی کامیابی سے پوسٹ ہو گئی",
+    ar: "تم ترحيل الدفعة بنجاح",
+    fa: "پرداخت با موفقیت ثبت شد",
+    ps: "تادیه په بریالیتوب سره پوسټ شوه"
+  },
+  "professional_payment_summary": {
+    en: "Professional Payment Summary",
+    ur: "پیمنٹ کی پیشہ ورانہ تفصیلات",
+    ar: "ملخص الدفع الاحترافي",
+    fa: "خلاصه حرفه‌ای پرداخت",
+    ps: "مسلکي د تادیې لنډیز"
+  },
+  "account_label": {
+    en: "Account",
+    ur: "اکاؤنٹ",
+    ar: "الحساب",
+    fa: "حساب",
+    ps: "حساب"
+  },
+  "amount_label": {
+    en: "Amount",
+    ur: "رقم",
+    ar: "المبلغ",
+    fa: "مبلغ",
+    ps: "اندازه"
+  },
   "receiver_sender_name": {
     en: "Receiver / Sender Name",
     ur: "وصول کنندہ / بھیجنے والے کا نام",

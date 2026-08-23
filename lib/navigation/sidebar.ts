@@ -216,26 +216,6 @@ export const sidebarTree: SidebarNode[] = [
     ]
   },
   {
-    key: "general-office",
-    labelKey: "nav.general_office_management",
-    iconKey: "users",
-    href: "/dashboard/general-office/employees" as Route,
-    roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"],
-    children: [
-      { key: "go-master-setup", labelKey: "nav.employee_master_setup", iconKey: "users", href: "/dashboard/general-office/employees?tab=master-setup" as Route },
-      { key: "go-emp-mgmt", labelKey: "nav.employee_management", iconKey: "users", href: "/dashboard/general-office/employees?tab=management" as Route },
-      { key: "go-departments", labelKey: "nav.departments", iconKey: "building-2", href: "/dashboard/general-office/employees?tab=departments" as Route },
-      { key: "go-designations", labelKey: "nav.designations", iconKey: "scroll-text", href: "/dashboard/general-office/employees?tab=designations" as Route },
-      { key: "go-attendance", labelKey: "nav.attendance", iconKey: "clock", href: "/dashboard/general-office/employees?tab=attendance" as Route },
-      { key: "go-leave", labelKey: "nav.leave_management", iconKey: "calendar", href: "/dashboard/general-office/employees?tab=leave" as Route },
-      { key: "go-payroll", labelKey: "nav.payroll_salary", iconKey: "banknote", href: "/dashboard/general-office/employees?tab=payroll" as Route },
-      { key: "go-assets", labelKey: "nav.office_assets", iconKey: "clipboard-list", href: "/dashboard/general-office/employees?tab=assets" as Route },
-      { key: "go-documents", labelKey: "nav.office_documents", iconKey: "file-text", href: "/dashboard/general-office/employees?tab=documents" as Route },
-      { key: "go-id-cards", labelKey: "nav.employee_id_cards", iconKey: "badge", href: "/dashboard/general-office/employees?tab=id-cards" as Route },
-      { key: "go-reports", labelKey: "nav.employee_reports", iconKey: "bar-chart", href: "/dashboard/general-office/employees?tab=reports" as Route }
-    ]
-  },
-  {
     key: "ledgers",
     labelKey: "nav.ledgers",
     iconKey: "book-open",
@@ -831,6 +811,26 @@ export const sidebarTree: SidebarNode[] = [
     labelKey: "nav.tax",
     iconKey: "banknote",
     href: "/dashboard/tax" as Route
+  },
+  {
+    key: "general-office",
+    labelKey: "nav.general_office_management",
+    iconKey: "users",
+    href: "/dashboard/general-office/employees" as Route,
+    roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"],
+    children: [
+      { key: "go-master-setup", labelKey: "nav.employee_master_setup", iconKey: "users", href: "/dashboard/general-office/employees?tab=master-setup" as Route },
+      { key: "go-emp-mgmt", labelKey: "nav.employee_management", iconKey: "users", href: "/dashboard/general-office/employees?tab=management" as Route },
+      { key: "go-departments", labelKey: "nav.departments", iconKey: "building-2", href: "/dashboard/general-office/employees?tab=departments" as Route },
+      { key: "go-designations", labelKey: "nav.designations", iconKey: "scroll-text", href: "/dashboard/general-office/employees?tab=designations" as Route },
+      { key: "go-attendance", labelKey: "nav.attendance", iconKey: "clock", href: "/dashboard/general-office/employees?tab=attendance" as Route },
+      { key: "go-leave", labelKey: "nav.leave_management", iconKey: "calendar", href: "/dashboard/general-office/employees?tab=leave" as Route },
+      { key: "go-payroll", labelKey: "nav.payroll_salary", iconKey: "banknote", href: "/dashboard/general-office/employees?tab=payroll" as Route },
+      { key: "go-assets", labelKey: "nav.office_assets", iconKey: "clipboard-list", href: "/dashboard/general-office/employees?tab=assets" as Route },
+      { key: "go-documents", labelKey: "nav.office_documents", iconKey: "file-text", href: "/dashboard/general-office/employees?tab=documents" as Route },
+      { key: "go-id-cards", labelKey: "nav.employee_id_cards", iconKey: "badge", href: "/dashboard/general-office/employees?tab=id-cards" as Route },
+      { key: "go-reports", labelKey: "nav.employee_reports", iconKey: "bar-chart", href: "/dashboard/general-office/employees?tab=reports" as Route }
+    ]
   },
   {
     key: "super-admin-menu",

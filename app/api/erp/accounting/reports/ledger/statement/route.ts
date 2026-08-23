@@ -15,7 +15,7 @@ const querySchema = ledgerStatementQuerySchema.extend({
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
-    const language = await getRequestLanguage();
+    const language = await getRequestLanguage(request.nextUrl.searchParams.get("language"));
     const allLedgerIds = request.nextUrl.searchParams.getAll("ledgerId").filter(Boolean);
     const rawLedgerId = allLedgerIds.length > 0 ? allLedgerIds.join(",") : (request.nextUrl.searchParams.get("ledgerId") ?? "");
 
