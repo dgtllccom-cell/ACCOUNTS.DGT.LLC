@@ -5,6 +5,7 @@ import { ensureEmployeesTable } from "@/lib/services/ensure-employees-table";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { withLocalPg } from "@/lib/db/local-postgres";
 
 export const dynamic = "force-dynamic";
 
@@ -191,104 +192,68 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Employee category is required" }, { status: 400 });
     }
 
-    const insertPayload = {
-      person_master_id: personMasterId,
-      category,
-      designation,
-      department,
-      country_id: countryId || null,
-      country_branch_id: countryBranchId || null,
-      city_branch_id: cityBranchId || null,
-      reporting_manager_id: reportingManagerId || null,
-      joining_date: joiningDate || null,
-      probation_start_date: probationStartDate || null,
-      probation_end_date: probationEndDate || null,
-      employment_type: employmentType || null,
-      job_status: jobStatus || null,
-      working_shift: workingShift || null,
-      duty_start_time: dutyStartTime || null,
-      duty_end_time: dutyEndTime || null,
-      weekly_off_day: weeklyOffDay || null,
-      contract_start_date: contractStartDate || null,
-      contract_end_date: contractEndDate || null,
-      status: status || "Active",
+    const newEmployeeId = await withLocalPg(async (sql) => {
+      // Generate employee code
+      const countRes = await sql`SELECT count(*)::int as c FROM public.employees`;
+      const empCount = (countRes[0]?.c || 0) + 1;
+      const generatedCode = `EMP-${String(empCount).padStart(4, "0")}`;
 
-      // Salary components
-      salary_type: salaryType || "Monthly",
-      basic_salary: Number(basicSalary || 0),
-      salary_currency: salaryCurrency || "USD",
-      monthly_salary: Number(monthlySalary || 0),
-      daily_salary: Number(dailySalary || 0),
-      hourly_salary: Number(hourlySalary || 0),
-      overtime_rate: Number(overtimeRate || 0),
-      allowance: Number(allowance || 0),
-      accommodation_allowance: Number(accommodationAllowance || 0),
-      transport_allowance: Number(transportAllowance || 0),
-      food_allowance: Number(foodAllowance || 0),
-      mobile_allowance: Number(mobileAllowance || 0),
-      other_allowance: Number(otherAllowance || 0),
-      deduction: Number(deduction || 0),
-      advance_deduction: Number(advanceDeduction || 0),
-      loan_deduction: Number(loanDeduction || 0),
-      tax_deduction: Number(taxDeduction || 0),
-      net_salary: Number(netSalary || 0),
-      salary_start_date: salaryStartDate || null,
-      salary_payment_date: salaryPaymentDate || null,
-      salary_payment_method: salaryPaymentMethod || "Cash",
-      salary_schedule: salarySchedule || "Monthly",
-      salary_schedule_date: salaryScheduleDate || "last",
+      // Allocate form serials
+      let superAdminSerial = null;
+      let countrySerial = null;
+      let branchSerial = null;
+      let entrySerial = null;
+      try {
+        const s = await allocateFormSerials("employees", { countryId: countryId || null, branchKey: countryBranchId || null });
+        superAdminSerial = s.superAdminSerial;
+        countrySerial = s.countrySerial;
+        branchSerial = s.branchSerial;
+        entrySerial = s.entrySerial;
+      } catch {}
 
-      // Accounts linking
-      salary_expense_account_id: salaryExpenseAccountId || null,
-      employee_payable_account_id: employeePayableAccountId || null,
-      cash_account_id: cashAccountId || null,
-      bank_account_id: bankAccountId || null,
-      advance_salary_account_id: advanceSalaryAccountId || null,
-      loan_account_id: loanAccountId || null,
-      deduction_account_id: deductionAccountId || null
-    };
-
-    // Write via the create_employee SECURITY DEFINER RPC instead of a direct
-    // .from("employees").insert(...) — employees has scoped RLS policies (see
-    // employees_scope_insert) and this app's Supabase client is not guaranteed to carry a
-    // real service-role key that bypasses RLS on its own. The RPC also auto-generates
-    // employee_code and binds created_by to the authenticated actor server-side.
-    let { data: newEmployeeId, error: insertError } = await (supabase as any).rpc("create_employee", {
-      p_payload: insertPayload,
-      p_actor_id: session.userId
+      const [row] = await sql`
+        INSERT INTO public.employees (
+          id, person_master_id, employee_code, category, designation, department,
+          country_id, country_branch_id, city_branch_id, reporting_manager_id,
+          joining_date, probation_start_date, probation_end_date, employment_type,
+          job_status, working_shift, duty_start_time, duty_end_time, weekly_off_day,
+          contract_start_date, contract_end_date, status,
+          salary_type, basic_salary, salary_currency, monthly_salary, daily_salary,
+          hourly_salary, overtime_rate, allowance, accommodation_allowance,
+          transport_allowance, food_allowance, mobile_allowance, other_allowance,
+          deduction, advance_deduction, loan_deduction, tax_deduction, net_salary,
+          salary_start_date, salary_payment_date, salary_payment_method, salary_schedule,
+          salary_schedule_date, salary_expense_account_id, employee_payable_account_id,
+          cash_account_id, bank_account_id, advance_salary_account_id, loan_account_id,
+          deduction_account_id, created_by, super_admin_serial, country_serial, branch_serial, entry_serial
+        ) VALUES (
+          gen_random_uuid(), ${personMasterId}, ${generatedCode}, ${category}, ${designation || null}, ${department || null},
+          ${countryId || null}, ${countryBranchId || null}, ${cityBranchId || null}, ${reportingManagerId || null},
+          ${joiningDate || null}, ${probationStartDate || null}, ${probationEndDate || null}, ${employmentType || null},
+          ${jobStatus || null}, ${workingShift || null}, ${dutyStartTime || null}, ${dutyEndTime || null}, ${weeklyOffDay || null},
+          ${contractStartDate || null}, ${contractEndDate || null}, ${status || "Active"},
+          ${salaryType || "Monthly"}, ${Number(basicSalary || 0)}, ${salaryCurrency || "USD"}, ${Number(monthlySalary || 0)}, ${Number(dailySalary || 0)},
+          ${Number(hourlySalary || 0)}, ${Number(overtimeRate || 0)}, ${Number(allowance || 0)}, ${Number(accommodationAllowance || 0)},
+          ${Number(transportAllowance || 0)}, ${Number(foodAllowance || 0)}, ${Number(mobileAllowance || 0)}, ${Number(otherAllowance || 0)},
+          ${Number(deduction || 0)}, ${Number(advanceDeduction || 0)}, ${Number(loanDeduction || 0)}, ${Number(taxDeduction || 0)}, ${Number(netSalary || 0)},
+          ${salaryStartDate || null}, ${salaryPaymentDate || null}, ${salaryPaymentMethod || "Cash"}, ${salarySchedule || "Monthly"},
+          ${salaryScheduleDate || "last"}, ${salaryExpenseAccountId || null}, ${employeePayableAccountId || null},
+          ${cashAccountId || null}, ${bankAccountId || null}, ${advanceSalaryAccountId || null}, ${loanAccountId || null},
+          ${deductionAccountId || null}, ${session.userId || null}, ${superAdminSerial}, ${countrySerial}, ${branchSerial}, ${entrySerial}
+        )
+        RETURNING id, employee_code, category, designation, department
+      `;
+      return row.id;
     });
 
-    if (insertError && isSchemaCacheError(insertError.message)) {
-      console.log("[HR-PAYROLL] Schema cache error detected on insert, auto-repairing...");
-      await ensureEmployeesTable();
-      supabase = await createServerSupabaseClient();
-      const retryInsert = await (supabase as any).rpc("create_employee", {
-        p_payload: insertPayload,
-        p_actor_id: session.userId
-      });
-      newEmployeeId = retryInsert.data;
-      insertError = retryInsert.error;
-    }
-
-    if (insertError) {
-      return NextResponse.json({ error: insertError.message }, { status: 400 });
-    }
-
-    // 4-level serial (Global/Country/Branch/Entry) — independent 'employees' sequence.
+    let newEmployee = null;
     try {
-      const s = await allocateFormSerials("employees", { countryId: countryId || null, branchKey: countryBranchId || null });
-      await supabase
-        .from("employees")
-        .update({ super_admin_serial: s.superAdminSerial, country_serial: s.countrySerial, branch_serial: s.branchSerial, entry_serial: s.entrySerial })
-        .eq("id", newEmployeeId as string);
-    } catch { /* non-fatal */ }
-
-    const { data: newEmployee, error: readBackError } = await (supabase as any).rpc("get_employee_with_relations", {
-      p_id: newEmployeeId
-    });
-
-    if (readBackError) {
-      return NextResponse.json({ error: readBackError.message }, { status: 400 });
+      const { data } = await (supabase as any).rpc("get_employee_with_relations", {
+        p_id: newEmployeeId
+      });
+      newEmployee = data;
+    } catch {
+      newEmployee = { id: newEmployeeId };
     }
 
     // Register the employee's name in all 5 languages (honest engine; proper name →

@@ -30,6 +30,7 @@ import { Th } from "@/components/ui/translated-th";
 import { deriveSalesBookingPostingState } from "@/lib/services/sales-booking-posting-state";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { resolveVerifiedTranslation, translationPendingLabel } from "@/lib/i18n/verified-record-translations";
+import { t } from "@/lib/i18n/ui";
 import { RecordTranslationCorrectionDialog } from "@/features/translations/components/record-translation-correction-dialog";
 import { ERP_TABLE_STYLES } from "@/components/ui/erp-data-table";
 
@@ -62,6 +63,16 @@ const lifecycleTabs = [
   "Confirmed Sales",
   "Finalized Orders"
 ] as const;
+
+// Canonical English value -> translation key. The stored/compared tab value stays the
+// canonical English string (activeTab is compared against these constants elsewhere);
+// only the visible label is translated.
+const LIFECYCLE_TAB_LABEL_KEYS: Record<string, string> = {
+  "Dashboard Overview": "sales.sodash_tab_dashboard_overview",
+  "Draft Sales Bookings": "sales.sodash_tab_draft_bookings",
+  "Confirmed Sales": "sales.sodash_tab_confirmed_sales",
+  "Finalized Orders": "sales.sodash_tab_finalized_orders",
+};
 
 type LifecycleTab = (typeof lifecycleTabs)[number];
 
@@ -113,7 +124,7 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
       });
       await loadOrders();
     } catch (err: any) {
-      alert("Failed to update sales order status: " + err.message);
+      alert(t(activeLang, "sales.sodash_err_update_status", "Failed to update sales order status: ") + err.message);
     } finally {
       setUpdatingId(null);
     }
@@ -240,7 +251,7 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
                   : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
               }`}
             >
-              {tab}
+              {t(activeLang, LIFECYCLE_TAB_LABEL_KEYS[tab] as never, tab)}
             </button>
           ))}
         </div>
@@ -252,7 +263,7 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search order no, customer..."
+              placeholder={t(activeLang, "sales.sodash_search_ph", "Search order no, customer...")}
               className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-blue-500 text-slate-800 placeholder-slate-400"
             />
           </div>
@@ -272,7 +283,7 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
         {/* Card 1: Sales Orders Count & Pending Transfers */}
         <div className="bg-gradient-to-br from-blue-50/50 to-indigo-50/20 border border-blue-100 p-4 rounded-2xl shadow-xs flex items-center justify-between">
           <div className="space-y-1">
-            <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Total Sales Orders</span>
+            <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">{t(activeLang, "sales.sodash_total_sales_orders", "Total Sales Orders")}</span>
             <span className="text-2xl font-black text-blue-700 font-sans">{dashboardStats.totalSalesOrders} Orders</span>
             <span className="text-[9.5px] text-indigo-500 font-bold block">Pending Transfers: {dashboardStats.pendingTransfers}</span>
           </div>
@@ -284,7 +295,7 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
         {/* Card 2: Sales Amount & Invoice Amount */}
         <div className="bg-gradient-to-br from-emerald-50/50 to-teal-50/20 border border-emerald-100 p-4 rounded-2xl shadow-xs flex items-center justify-between">
           <div className="space-y-1">
-            <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Original Total Sales</span>
+            <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">{t(activeLang, "sales.sodash_original_total_sales", "Original Total Sales")}</span>
             <span className="text-xl font-black text-emerald-700 font-sans">${dashboardStats.totalSalesAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
             <span className="text-[9.5px] text-teal-600 font-bold block">Invoice Amount: ${dashboardStats.totalInvoiceAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
           </div>
@@ -296,7 +307,7 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
         {/* Card 3: Final Currency & Payments Received */}
         <div className="bg-gradient-to-br from-purple-50/50 to-pink-50/20 border border-purple-100 p-4 rounded-2xl shadow-xs flex items-center justify-between">
           <div className="space-y-1">
-            <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Final Currency Value</span>
+            <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">{t(activeLang, "sales.sodash_final_currency_value", "Final Currency Value")}</span>
             <span className="text-xl font-black text-purple-700 font-sans">{dashboardStats.totalFinalCurrencyAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} AED</span>
             <span className="text-[9.5px] text-pink-600 font-bold block">Payments Recd: {dashboardStats.totalPaymentsReceived.toLocaleString(undefined, { minimumFractionDigits: 2 })} AED</span>
           </div>
@@ -308,7 +319,7 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
         {/* Card 4: Outstanding Receivables & Finalized Orders */}
         <div className="bg-gradient-to-br from-amber-50/50 to-orange-50/20 border border-amber-100 p-4 rounded-2xl shadow-xs flex items-center justify-between">
           <div className="space-y-1">
-            <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Outstanding Receivables</span>
+            <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">{t(activeLang, "sales.sodash_outstanding_receivables", "Outstanding Receivables")}</span>
             <span className="text-xl font-black text-amber-700 font-sans">{dashboardStats.outstandingReceivables.toLocaleString(undefined, { minimumFractionDigits: 2 })} AED</span>
             <span className="text-[9.5px] text-orange-600 font-bold block">Finalized Orders: {dashboardStats.finalizedOrders}</span>
           </div>
@@ -375,11 +386,11 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
               {loading ? (
                 <tr>
-                  <td colSpan={28} className="px-6 py-12 text-center text-slate-400 font-medium">Loading sales bookings...</td>
+                  <td colSpan={28} className="px-6 py-12 text-center text-slate-400 font-medium">{t(activeLang, "sales.sodash_loading_bookings", "Loading sales bookings...")}</td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={28} className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">No sales bookings in this stage.</td>
+                  <td colSpan={28} className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">{t(activeLang, "sales.sodash_no_bookings_stage", "No sales bookings in this stage.")}</td>
                 </tr>
               ) : (
                 filtered.map((order) => {
@@ -465,7 +476,7 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
                             variant="outline"
                             size="sm"
                             className="h-8 w-8 p-0 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0"
-                            title="Print Sales Order"
+                            title={t(activeLang, "sales.sodash_print_sales_order_title", "Print Sales Order")}
                           >
                             <Printer className="h-3.5 w-3.5" />
                           </Button>
@@ -475,9 +486,7 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
                               disabled={updatingId === order.id}
                               onClick={() => transitionStatus(order.id, "Confirmed")}
                               className="h-8 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 rounded-lg shadow-sm"
-                            >
-                              Confirm Booking
-                            </Button>
+                            >{t(activeLang, "sales.sodash_confirm_booking_btn", "Confirm Booking")}</Button>
                           )}
 
                           {(order.sales_status === "Confirmed" || order.sales_status === "confirmed") && (
@@ -485,9 +494,7 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
                               disabled={updatingId === order.id}
                               onClick={() => transitionStatus(order.id, "Finalized")}
                               className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 rounded-lg shadow-sm"
-                            >
-                              Finalize & Post GL
-                            </Button>
+                            >{t(activeLang, "sales.sodash_finalize_post_gl_btn", "Finalize & Post GL")}</Button>
                           )}
                         </div>
                       </td>

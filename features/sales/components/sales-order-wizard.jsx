@@ -53,6 +53,8 @@ import { openSalesA4ReportWindow } from "@/lib/reports/open-sales-a4-report-wind
 import { resolveSalesBookingPaymentRoute } from "@/lib/services/sales-booking-routing";
 import { SalesBookingJournalReportView } from "./sales-booking-journal-report-view";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 // --- Non-location constants (static values, not from master forms) ---
 const CURRENCY_OPTIONS = ["USD", "AED", "EUR", "GBP", "PKR", "AFN", "INR", "CNY", "SAR"];
@@ -136,7 +138,7 @@ async function lookupAccountMaster(query, countryId, countryBranchId, cityBranch
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok || !payload.ok) {
-    throw new Error(payload?.error?.message || payload?.error || "Account lookup failed.");
+    throw new Error(payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_account_lookup", "Account lookup failed."));
   }
   return payload.data?.found ? payload.data.account : null;
 }
@@ -159,7 +161,7 @@ async function lookupSalesBookingReport(query, countryId, countryBranchId, cityB
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok || !payload.ok) {
-    throw new Error(payload?.error?.message || payload?.error || "Sales Booking lookup failed.");
+    throw new Error(payload?.error?.message || payload?.error || t(lang, "sales.err_sales_booking_lookup", "Sales Booking lookup failed."));
   }
   return payload.data?.reports?.[0] ?? null;
 }
@@ -474,6 +476,7 @@ function LightStatusBadge({ status }) {
 }
 
 export function SalesOrderWizard({ session }) {
+  const lang = useActiveLanguage();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState("booking"); // "booking" | "goods" | "others" | "reports"
@@ -995,15 +998,17 @@ export function SalesOrderWizard({ session }) {
     try {
       const account = await lookupAccountMaster(query, form.countryId, form.countryBranchId, form.cityBranchId, isSuperAdmin);
       if (!account) {
-        setAccountLookupMessage(`Account not found: ${query}.`);
+        setAccountLookupMessage(t(lang, "purchase.wiz_account_not_found", "Account not found: {0}.").replace("{0}", query));
         return;
       }
       applyAccountMaster(type, account);
       setAccountLookupMessage(
-        `${type === "purchase" ? "Customer" : "Sales"} account loaded: ${account.accountName}`
+        t(lang, "purchase.wiz_account_loaded", "{0} account loaded: {1}")
+          .replace("{0}", type === "purchase" ? t(lang, "sales.wiz_type_customer", "Customer") : t(lang, "purchase.wiz_type_sales", "Sales"))
+          .replace("{1}", account.accountName)
       );
     } catch (error) {
-      setAccountLookupMessage(error instanceof Error ? error.message : "Account lookup failed.");
+      setAccountLookupMessage(error instanceof Error ? error.message : t(lang, "purchase.wiz_err_account_lookup", "Account lookup failed."));
     } finally {
       setAccountLookupLoading(null);
     }
@@ -1290,7 +1295,7 @@ export function SalesOrderWizard({ session }) {
 
     async function loadSO() {
       setSavingOrder(true);
-      setSaveMessage("Loading sales order details...");
+      setSaveMessage(t(lang, "sales.loading_order_details", "Loading sales order details..."));
       try {
         let soData = null;
         if (orderId) {
@@ -1301,7 +1306,7 @@ export function SalesOrderWizard({ session }) {
           if (res.ok && payload.ok) {
             soData = payload.data?.order ?? payload.order ?? null;
           } else {
-            throw new Error(payload?.error?.message || payload?.error || "Failed to load sales order by ID.");
+            throw new Error(payload?.error?.message || payload?.error || t(lang, "sales.err_load_sales_order_by_id", "Failed to load sales order by ID."));
           }
         } else if (soNo) {
           soData = await lookupSalesBookingReport(
@@ -1355,7 +1360,7 @@ export function SalesOrderWizard({ session }) {
           setIsTransferred(false);
           setTransferredData(null);
           setActiveTab("booking");
-          setSaveMessage("Sales order loaded successfully.");
+          setSaveMessage(t(lang, "sales.order_loaded_success", "Sales order loaded successfully."));
         } else {
           setSaveMessage(`Sales order not found.`);
         }
@@ -1444,7 +1449,7 @@ export function SalesOrderWizard({ session }) {
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.ok) {
         const errDetails = payload?.error?.details ? JSON.stringify(payload.error.details) : "";
-        throw new Error(`${payload?.error?.message || payload?.error || "Sales order failed to save."} ${errDetails}`);
+        throw new Error(`${payload?.error?.message || payload?.error || t(lang, "sales.err_sales_order_save", "Sales order failed to save.")} ${errDetails}`);
       }
       const returnedOrderId = payload.data?.salesOrderId || savedOrderId || payload.data?.id;
       const returnedOrderNo = payload.data?.salesOrderNo || savedOrderNo || form.salesOrderNo;
@@ -1485,7 +1490,7 @@ export function SalesOrderWizard({ session }) {
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.ok) {
         const errDetails = payload?.error?.details ? JSON.stringify(payload.error.details) : "";
-        throw new Error(`${payload?.error?.message || payload?.error || "Sales order failed to save."} ${errDetails}`);
+        throw new Error(`${payload?.error?.message || payload?.error || t(lang, "sales.err_sales_order_save", "Sales order failed to save.")} ${errDetails}`);
       }
       const returnedOrderId = payload.data?.salesOrderId || savedOrderId || payload.data?.id;
       const returnedOrderNo = payload.data?.salesOrderNo || savedOrderNo || form.salesOrderNo;
@@ -1501,7 +1506,7 @@ export function SalesOrderWizard({ session }) {
         });
         const transferPayloadData = await transferResponse.json().catch(() => ({}));
         if (!transferResponse.ok || !transferPayloadData.ok) {
-          throw new Error(transferPayloadData?.error?.message || transferPayloadData?.error || "Roznamcha/Ledger Transfer failed.");
+          throw new Error(transferPayloadData?.error?.message || transferPayloadData?.error || t(lang, "purchase.wiz_err_roznamcha_transfer", "Roznamcha/Ledger Transfer failed."));
         }
       }
 
@@ -1586,13 +1591,13 @@ export function SalesOrderWizard({ session }) {
     setSavedOrderNo("");
     setIsTransferred(false);
     setTransferredData(null);
-    setSaveMessage("All inputs and goods listings cleared.");
+    setSaveMessage(t(lang, "sales.inputs_cleared_msg", "All inputs and goods listings cleared."));
   };
 
   const handleNewReportSubmit = (e) => {
     e.preventDefault();
     if (!newReportForm.name.trim()) {
-      alert("Report name is required.");
+      alert(t(lang, "sales.report_name_required_alert", "Report name is required."));
       return;
     }
     const newReport = {
@@ -1617,7 +1622,7 @@ export function SalesOrderWizard({ session }) {
   };
 
   const handleDeleteReport = (id) => {
-    if (!window.confirm("Are you sure you want to delete this report?")) return;
+    if (!window.confirm(t(lang, "sales.confirm_delete_report", "Are you sure you want to delete this report?"))) return;
     const updatedReports = reportsList.filter(r => r.id !== id);
     setReportsList(updatedReports);
     if (selectedReportId === id) setSelectedReportId("");
@@ -1631,7 +1636,7 @@ export function SalesOrderWizard({ session }) {
   const handleAddGoodsEntry = async () => {
     const searchName = (form.goodsName || "").trim().toUpperCase();
     if (!searchName) {
-      alert("Please select or enter Goods Name before adding an item to the list.");
+      alert(t(lang, "sales.select_enter_goods_name_alert", "Please select or enter Goods Name before adding an item to the list."));
       return;
     }
     const selectedGood = dbGoods.find(g =>
@@ -1696,7 +1701,7 @@ export function SalesOrderWizard({ session }) {
         finalAmount: form.manualFinalAmount !== undefined && form.manualFinalAmount !== "" ? Number(form.manualFinalAmount) : calculated.finalAmount
       }
     ]);
-    setSaveMessage("Item added to live report draft list.");
+    setSaveMessage(t(lang, "sales.item_added_draft_msg", "Item added to live report draft list."));
     // Clear/reset item fields
     setForm((prev) => ({
       ...prev,
@@ -1757,13 +1762,13 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
     }));
     setGoodsEntries((prev) => prev.filter((_, idx) => idx !== index));
     setActiveTab("goods");
-    setSaveMessage("Item moved to form for editing.");
+    setSaveMessage(t(lang, "sales.item_moved_edit_msg", "Item moved to form for editing."));
   };
 
   const handleAddNewCountry = async () => {
     const { name } = newCountryForm;
     if (!name.trim()) {
-      setNewCountryError("Country name is required.");
+      setNewCountryError(t(lang, "purchase.wiz_country_name_required", "Country name is required."));
       return;
     }
     setNewCountryLoading(true);
@@ -1788,7 +1793,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.ok) {
-        throw new Error(payload?.error?.message || payload?.error || "Failed to create country.");
+        throw new Error(payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_create_country", "Failed to create country."));
       }
       const created = payload.data?.country;
       if (created) {
@@ -1816,7 +1821,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
       setNewCountryForm({ name: "" });
       setSaveMessage(`Country "${trimmed}" saved to master.`);
     } catch (err) {
-      setNewCountryError(err instanceof Error ? err.message : "Failed to create country.");
+      setNewCountryError(err instanceof Error ? err.message : t(lang, "purchase.wiz_err_create_country", "Failed to create country."));
     } finally {
       setNewCountryLoading(false);
     }
@@ -1825,7 +1830,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
   const handleAddNewGood = async () => {
     const { goodsName, chsCode } = newGoodForm;
     if (!goodsName.trim() || !chsCode.trim()) {
-      setNewGoodError("Goods name and HS code are required.");
+      setNewGoodError(t(lang, "purchase.wiz_goods_hscode_required", "Goods name and HS code are required."));
       return;
     }
     setNewGoodLoading(true);
@@ -1842,7 +1847,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.ok) {
-        throw new Error(payload?.error?.message || payload?.error || "Failed to create good.");
+        throw new Error(payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_create_good", "Failed to create good."));
       }
       const reloadRes = await fetch("/api/erp/goods?limit=500").then(r => r.json()).catch(() => ({}));
       const goodsData = reloadRes?.data?.goods || reloadRes?.goods;
@@ -1853,7 +1858,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
       setNewGoodForm({ goodsName: "", chsCode: "" });
       setSaveMessage(`Good "${goodsName.trim().toUpperCase()}" saved to master.`);
     } catch (err) {
-      setNewGoodError(err instanceof Error ? err.message : "Failed to create good.");
+      setNewGoodError(err instanceof Error ? err.message : t(lang, "purchase.wiz_err_create_good", "Failed to create good."));
     } finally {
       setNewGoodLoading(false);
     }
@@ -1880,7 +1885,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
   const handleAddNewAccount = async () => {
     const { code, name, kind, currency, parentId, isControlAccount } = createAccountForm;
     if (!name.trim() || !code.trim()) {
-      setCreateAccountError("Account name and code are required.");
+      setCreateAccountError(t(lang, "purchase.wiz_account_name_code_required", "Account name and code are required."));
       return;
     }
     setCreateAccountLoading(true);
@@ -1911,7 +1916,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
       });
       const payloadData = await response.json().catch(() => ({}));
       if (!response.ok || !payloadData.ok) {
-        throw new Error(payloadData?.error?.message || payloadData?.error || "Failed to create account.");
+        throw new Error(payloadData?.error?.message || payloadData?.error || t(lang, "purchase.wiz_err_create_account", "Failed to create account."));
       }
 
       const reloadRes = await fetch("/api/erp/accounting/accounts?limit=1000").then(r => r.json()).catch(() => ({}));
@@ -1935,7 +1940,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
       setCreateAccountModalOpen(false);
     } catch (err) {
-      setCreateAccountError(err instanceof Error ? err.message : "Failed to create account.");
+      setCreateAccountError(err instanceof Error ? err.message : t(lang, "purchase.wiz_err_create_account", "Failed to create account."));
     } finally {
       setCreateAccountLoading(false);
     }
@@ -1944,7 +1949,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
   const handleAddNewCompany = async () => {
     const { name, legalName, baseCurrency } = createCompanyForm;
     if (!name.trim()) {
-      setCreateCompanyError("Company name is required.");
+      setCreateCompanyError(t(lang, "purchase.wiz_company_name_required", "Company name is required."));
       return;
     }
     setCreateCompanyLoading(true);
@@ -1967,7 +1972,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
       const payloadData = await response.json().catch(() => ({}));
       if (!response.ok || !payloadData.ok) {
-        throw new Error(payloadData?.error?.message || payloadData?.error || "Failed to create company.");
+        throw new Error(payloadData?.error?.message || payloadData?.error || t(lang, "purchase.wiz_err_create_company", "Failed to create company."));
       }
 
       const createdId = payloadData.companyId || payloadData.data?.companyId;
@@ -1996,7 +2001,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
       setCreateCompanyForm({ name: "", legalName: "", baseCurrency: "USD" });
       setSaveMessage(`Company "${finalName}" created successfully.`);
     } catch (err) {
-      setCreateCompanyError(err instanceof Error ? err.message : "Failed to create company.");
+      setCreateCompanyError(err instanceof Error ? err.message : t(lang, "purchase.wiz_err_create_company", "Failed to create company."));
     } finally {
       setCreateCompanyLoading(false);
     }
@@ -2005,7 +2010,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
   const handleSaveCustomVariation = async () => {
     const { goodsName, brand, size } = customVariationForm;
     if (!brand.trim() || !size.trim()) {
-      alert("Please fill both Brand and Size.");
+      alert(t(lang, "purchase.wiz_fill_brand_size", "Please fill both Brand and Size."));
       return;
     }
 
@@ -2045,7 +2050,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
         });
         const createData = await createRes.json().catch(() => ({}));
         if (!createRes.ok || !createData.ok) {
-          throw new Error(createData?.error?.message || createData?.error || "Failed to create Good in master.");
+          throw new Error(createData?.error?.message || createData?.error || t(lang, "purchase.wiz_err_create_good_master", "Failed to create Good in master."));
         }
         targetGoodsId = createData.goodsId || createData.data?.goodsId;
       } catch (err) {
@@ -2070,7 +2075,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
         const payload = await response.json().catch(() => ({}));
         if (!response.ok || !payload.ok) {
-          throw new Error(payload?.error?.message || payload?.error || "Failed to save variation.");
+          throw new Error(payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_save_variation", "Failed to save variation."));
         }
       } catch (err) {
         setSavingOrder(false);
@@ -2110,7 +2115,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
     if (!selectedGood) return;
     
     setSavingOrder(true);
-    setSaveMessage("Updating HS Code...");
+    setSaveMessage(t(lang, "sales.updating_hs_code_msg", "Updating HS Code..."));
     try {
       const response = await fetch(`/api/erp/goods/${selectedGood.id}`, {
         method: "PATCH",
@@ -2118,13 +2123,13 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
         body: JSON.stringify({ chsCode: form.hsCode })
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data.ok) throw new Error(data?.error || data?.error?.message || "Failed to update HS Code.");
+      if (!response.ok || !data.ok) throw new Error(data?.error || data?.error?.message || t(lang, "purchase.wiz_err_update_hs_code", "Failed to update HS Code."));
       
       const reloadRes = await fetch("/api/erp/goods?limit=500").then(r => r.json()).catch(() => ({}));
       const goodsData = reloadRes?.data?.goods || reloadRes?.goods;
       if (goodsData) setDbGoods(goodsData);
       
-      setSaveMessage("HS Code updated successfully.");
+      setSaveMessage(t(lang, "sales.hs_code_updated_msg", "HS Code updated successfully."));
     } catch (err) {
       alert(err instanceof Error ? err.message : "Error updating HS Code.");
     } finally {
@@ -2203,7 +2208,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
           })
         });
         const payload = await response.json().catch(() => ({}));
-        if (!response.ok || !payload.ok) throw new Error(payload?.error?.message || payload?.error || "Failed to create country.");
+        if (!response.ok || !payload.ok) throw new Error(payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_create_country", "Failed to create country."));
         
         const reloadRes = await fetch("/api/erp/locations/countries?all=true&limit=500").then(r => r.json()).catch(() => ({}));
         const countriesData = reloadRes?.data?.countries || reloadRes?.countries;
@@ -2257,7 +2262,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
           })
         });
         const payload = await response.json().catch(() => ({}));
-        if (!response.ok || !payload.ok) throw new Error(payload?.error?.message || payload?.error || "Failed to create port.");
+        if (!response.ok || !payload.ok) throw new Error(payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_create_port", "Failed to create port."));
 
         const [loadRes, recRes] = await Promise.all([
           fetch("/api/erp/ports/loading?all=true&limit=500"),
@@ -2402,19 +2407,19 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   <span className="p-1 rounded-md bg-primary/10 text-primary dark:bg-primary/20">
                     <Building2 className="h-3.5 w-3.5" />
                   </span>
-                  <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Branch Login Details</h4>
+                  <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t(lang, "purchase.card_branch_login_details", "Branch Login Details")}</h4>
                 </div>
                 <div className="space-y-1.5 text-[10px]">
                   <div className="space-y-0.5 border-b border-border/40 pb-1.5 mb-1.5">
-                    <span className="text-muted-foreground block text-[8px] uppercase font-bold">Branch Name</span>
+                    <span className="text-muted-foreground block text-[8px] uppercase font-bold">{t(lang, "cdash.col_branch_name", "Branch Name")}</span>
                     <span className="font-black text-primary block truncate text-xs" title={loginBranchName}>{loginBranchName || "N/A"}</span>
                   </div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Branch Code:</span> <span className="font-semibold text-foreground font-mono">{loginBranchCode || "N/A"}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">User Admin:</span> <span className="font-black text-emerald-600 dark:text-emerald-450 uppercase">{form.userName}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">User ID:</span> <span className="font-semibold text-foreground font-mono text-[9px]">{form.userId || "N/A"}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Role:</span> <span className="font-semibold text-foreground capitalize text-[9px]">{primaryRole}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Location:</span> <span className="font-semibold text-foreground truncate" title={`${loginCityName || "N/A"}, ${loginCountryName || "N/A"}`}>{loginCityName || "N/A"}, {loginCountryName || "N/A"}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Country:</span> <span className="font-semibold text-foreground truncate" title={loginCountryName}>{loginCountryName || "N/A"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_branch_code_colon", "Branch Code:")}</span> <span className="font-semibold text-foreground font-mono">{loginBranchCode || "N/A"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_user_admin_colon", "User Admin:")}</span> <span className="font-black text-emerald-600 dark:text-emerald-450 uppercase">{form.userName}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_user_id_colon", "User ID:")}</span> <span className="font-semibold text-foreground font-mono text-[9px]">{form.userId || "N/A"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_role_colon", "Role:")}</span> <span className="font-semibold text-foreground capitalize text-[9px]">{primaryRole}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_location_colon", "Location:")}</span> <span className="font-semibold text-foreground truncate" title={`${loginCityName || "N/A"}, ${loginCountryName || "N/A"}`}>{loginCityName || "N/A"}, {loginCountryName || "N/A"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_country_colon", "Country:")}</span> <span className="font-semibold text-foreground truncate" title={loginCountryName}>{loginCountryName || "N/A"}</span></div>
                 </div>
               </div>
 
@@ -2424,18 +2429,18 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   <span className="p-1 rounded-md bg-primary/10 text-primary dark:bg-primary/20">
                     <FileText className="h-3.5 w-3.5" />
                   </span>
-                  <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Bill Details</h4>
+                  <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t(lang, "purchase.card_bill_details", "Bill Details")}</h4>
                 </div>
                 <div className="space-y-1.5 text-[10px]">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Booking Date:</span> <span className="font-semibold text-foreground">{form.salesDate}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Fiscal Year:</span> <span className="font-semibold">2025-26</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground font-bold">Booking Branch:</span> <span className="font-bold text-emerald-600 dark:text-emerald-450 truncate" title={loginBranchName}>{loginBranchName || "N/A"}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Status:</span> <span className="inline-flex items-center rounded-full bg-yellow-500/10 px-1.5 py-0.2 text-[8px] font-bold text-yellow-600 dark:text-yellow-450 uppercase">{form.salesStatus}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">System Serial:</span> <span className="font-bold text-foreground truncate font-mono" title={form.salesOrderNo}>{form.salesOrderNo}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground font-bold text-primary">Branch Serial:</span> <span className="font-bold text-primary truncate font-mono" title={form.billNo}>{form.billNo}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Contract No:</span> <span className="font-semibold text-foreground truncate font-mono" title={form.salesContractNo}>{form.salesContractNo}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Loading Mode:</span> <span className="font-semibold text-foreground truncate" title={form.shippingMode}>{form.shippingMode || "N/A"}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Origin Country:</span> <span className="font-semibold text-foreground truncate" title={form.origin || form.branchCountry}>{form.origin || form.branchCountry || "N/A"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_booking_date_colon", "Booking Date:")}</span> <span className="font-semibold text-foreground">{form.salesDate}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_fiscal_year_colon", "Fiscal Year:")}</span> <span className="font-semibold">2025-26</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground font-bold">{t(lang, "purchase.card_booking_branch_colon", "Booking Branch:")}</span> <span className="font-bold text-emerald-600 dark:text-emerald-450 truncate" title={loginBranchName}>{loginBranchName || "N/A"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_status_colon", "Status:")}</span> <span className="inline-flex items-center rounded-full bg-yellow-500/10 px-1.5 py-0.2 text-[8px] font-bold text-yellow-600 dark:text-yellow-450 uppercase">{form.salesStatus}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_system_serial_colon", "System Serial:")}</span> <span className="font-bold text-foreground truncate font-mono" title={form.salesOrderNo}>{form.salesOrderNo}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground font-bold text-primary">{t(lang, "purchase.card_branch_serial_colon", "Branch Serial:")}</span> <span className="font-bold text-primary truncate font-mono" title={form.billNo}>{form.billNo}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_contract_no_colon", "Contract No:")}</span> <span className="font-semibold text-foreground truncate font-mono" title={form.salesContractNo}>{form.salesContractNo}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_loading_mode_colon", "Loading Mode:")}</span> <span className="font-semibold text-foreground truncate" title={form.shippingMode}>{form.shippingMode || "N/A"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_origin_country_colon", "Origin Country:")}</span> <span className="font-semibold text-foreground truncate" title={form.origin || form.branchCountry}>{form.origin || form.branchCountry || "N/A"}</span></div>
                 </div>
               </div>
 
@@ -2445,27 +2450,27 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   <span className="p-1 rounded-md bg-primary/10 text-primary dark:bg-primary/20">
                     <ArrowUpRight className="h-3.5 w-3.5" />
                   </span>
-                  <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Sales Account (CR)</h4>
+                  <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t(lang, "purchase.sales_account_cr_badge", "Sales Account (CR)")}</h4>
                 </div>
                 <div className="space-y-1.5 text-[10px]">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Account Code:</span> <span className="font-bold text-foreground truncate block w-full text-right font-mono" title={form.salesAccountNo}>{form.salesAccountNo}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span> <span className="font-bold text-foreground truncate block w-full text-right font-mono" title={form.salesAccountNo}>{form.salesAccountNo}</span></div>
                   <div className="space-y-0.5 pt-1">
-                    <span className="text-muted-foreground block text-[9px]">Account Name:</span>
+                    <span className="text-muted-foreground block text-[9px]">{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span>
                     <span className="font-semibold text-foreground block truncate text-xs text-primary" title={form.salesAccountName}>{form.salesAccountName}</span>
                   </div>
-                  <div className="flex justify-between pt-1"><span className="text-muted-foreground">Branch:</span> <span className="font-semibold text-foreground truncate" title={form.salesAccountBranch}>{form.salesAccountBranch}</span></div>
-                  <div className="flex justify-between pt-0.5"><span className="text-muted-foreground">Currency:</span> <span className="font-bold text-foreground">{form.salesAccountCurrency || form.salesCurrency || form.secondaryCurrency || "-"}</span></div>
+                  <div className="flex justify-between pt-1"><span className="text-muted-foreground">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> <span className="font-semibold text-foreground truncate" title={form.salesAccountBranch}>{form.salesAccountBranch}</span></div>
+                  <div className="flex justify-between pt-0.5"><span className="text-muted-foreground">{t(lang, "purchase.currency_colon_label", "Currency:")}</span> <span className="font-bold text-foreground">{form.salesAccountCurrency || form.salesCurrency || form.secondaryCurrency || "-"}</span></div>
                   <div className="flex justify-between items-center pt-0.5 border-t border-border/20 mt-1 relative" ref={salesCompanyDropdownRef}>
-                    <span className="text-muted-foreground font-semibold">Company:</span>
+                    <span className="text-muted-foreground font-semibold">{t(lang, "purchase.card_company_colon", "Company:")}</span>
                     <div className="flex items-center gap-1">
-                      <span className="font-bold text-foreground truncate max-w-[100px] text-[8.5px] text-right font-mono" title={form.salesCompanyName ? `${form.salesCompanyName} (${form.salesCompanyCode || "COM-N/A"})` : "None"}>
-                        {form.salesCompanyName ? `${form.salesCompanyName} (${form.salesCompanyCode || "COM-N/A"})` : "None"}
+                      <span className="font-bold text-foreground truncate max-w-[100px] text-[8.5px] text-right font-mono" title={form.salesCompanyName ? `${form.salesCompanyName} (${form.salesCompanyCode || "COM-N/A"})` : t(lang, "purchase.card_none_label", "None")}>
+                        {form.salesCompanyName ? `${form.salesCompanyName} (${form.salesCompanyCode || "COM-N/A"})` : t(lang, "purchase.card_none_label", "None")}
                       </span>
                       <button
                         type="button"
                         onClick={() => setSalesCompanySelectOpen(prev => !prev)}
                         className="p-0.5 rounded hover:bg-muted text-muted-foreground hover:text-primary transition-colors shrink-0"
-                        title="Select Company"
+                        title={t(lang, "purchase.card_select_company_title", "Select Company")}
                       >
                         <Pin className={`h-2.5 w-2.5 ${salesCompanySelectOpen ? "text-primary fill-primary/25" : ""}`} />
                       </button>
@@ -2474,12 +2479,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     {salesCompanySelectOpen && (
                       <div className="absolute right-0 top-6 w-48 rounded-xl bg-card border border-border shadow-2xl z-[60] p-1.5 animate-in fade-in slide-in-from-top-2 duration-150 text-left">
                         <div className="px-2 py-0.5 text-[8px] font-black uppercase text-primary tracking-wider border-b border-border/40 mb-1">
-                          Select Company
+                          {t(lang, "purchase.card_select_company_title", "Select Company")}
                         </div>
                         <div className="max-h-32 overflow-y-auto space-y-0.5 scrollbar-thin">
                           {dbCompanies.length === 0 ? (
                             <div className="px-2 py-2 text-center text-muted-foreground text-[8px] italic">
-                              No companies found.
+                              {t(lang, "purchase.card_no_companies_found", "No companies found.")}
                             </div>
                           ) : (
                             dbCompanies.map((c) => {
@@ -2515,29 +2520,29 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   <span className="p-1 rounded-md bg-rose-100 text-rose-700 dark:bg-rose-950/30">
                     <ArrowDownLeft className="h-3.5 w-3.5" />
                   </span>
-                  <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Customer Account (DR)</h4>
+                  <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t(lang, "sales.customer_account_dr_badge", "Customer Account (DR)")}</h4>
                 </div>
                 <div className="space-y-1.5 text-[10px]">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Account Code:</span>
+                    <span className="text-muted-foreground">{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span>
                     <span className="font-bold text-foreground truncate block font-mono text-right" title={form.customerAccountNo}>{form.customerAccountNo || "N/A"}</span>
                   </div>
                   <div className="space-y-0.5 pt-1">
-                    <span className="text-muted-foreground block text-[9px]">Account Name:</span>
+                    <span className="text-muted-foreground block text-[9px]">{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span>
                     <span className="font-semibold text-rose-700 dark:text-rose-400 block truncate text-xs" title={form.customerAccountName}>{form.customerAccountName || "N/A"}</span>
                   </div>
                   <div className="flex justify-between pt-1">
-                    <span className="text-muted-foreground">Branch:</span>
+                    <span className="text-muted-foreground">{t(lang, "purchase.branch_colon_label", "Branch:")}</span>
                     <span className="font-semibold text-foreground truncate" title={form.customerAccountBranch}>{form.customerAccountBranch || "N/A"}</span>
                   </div>
                   <div className="flex justify-between pt-0.5">
-                    <span className="text-muted-foreground">Currency:</span>
+                    <span className="text-muted-foreground">{t(lang, "purchase.currency_colon_label", "Currency:")}</span>
                     <span className="font-bold text-foreground">{form.customerAccountCurrency || form.salesCurrency || form.secondaryCurrency || "-"}</span>
                   </div>
                   <div className="flex justify-between items-center pt-0.5 border-t border-border/20 mt-1">
-                    <span className="text-muted-foreground font-semibold">Company:</span>
-                    <span className="font-bold text-foreground truncate max-w-[120px] text-[8.5px] text-right font-mono" title={form.salesCompanyName || "None"}>
-                      {form.salesCompanyName || "None"}
+                    <span className="text-muted-foreground font-semibold">{t(lang, "purchase.card_company_colon", "Company:")}</span>
+                    <span className="font-bold text-foreground truncate max-w-[120px] text-[8.5px] text-right font-mono" title={form.salesCompanyName || t(lang, "purchase.card_none_label", "None")}>
+                      {form.salesCompanyName || t(lang, "purchase.card_none_label", "None")}
                     </span>
                   </div>
                 </div>
@@ -2555,16 +2560,16 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
         <SimpleModal
           isOpen={true}
           onClose={() => {}} // Cannot close without selecting
-          title="Super Admin: Select Working Scope"
+          title={t(lang, "sales.super_admin_select_scope_title", "Super Admin: Select Working Scope")}
           width="md"
         >
           <div className="space-y-4 p-2">
             <p className="text-xs text-slate-600 dark:text-slate-400">
-              Please select the Country, Branch, and City Branch you want to work in for Sales Orders.
+              {t(lang, "sales.select_scope_msg", "Please select the Country, Branch, and City Branch you want to work in for Sales Orders.")}
             </p>
             <div className="space-y-3">
               <div>
-                <label className="text-xs font-black">Country</label>
+                <label className="text-xs font-black">{t(lang, "report.country", "Country")}</label>
                 <select
                   value={form.countryId || ""}
                   onChange={(e) => {
@@ -2582,35 +2587,35 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   }}
                   className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-xs font-semibold outline-none"
                 >
-                  <option value="">Select Country...</option>
+                  <option value="">{t(lang, "purchase.select_country_ellipsis", "Select Country...")}</option>
                   {countries.map((c) => (
                     <option key={c.id} value={c.id}>{c.name} ({c.currency_code})</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="text-xs font-black">Branch</label>
+                <label className="text-xs font-black">{t(lang, "report.branch", "Branch")}</label>
                 <select
                   value={form.countryBranchId || ""}
                   onChange={(e) => setForm(p => ({ ...p, countryBranchId: e.target.value, cityBranchId: "" }))}
                   disabled={!form.countryId}
                   className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-xs font-semibold outline-none"
                 >
-                  <option value="">Select Branch...</option>
+                  <option value="">{t(lang, "purchase.select_branch_ellipsis", "Select Branch...")}</option>
                   {mainBranches.map((b) => (
                     <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="text-xs font-black">City Branch</label>
+                <label className="text-xs font-black">{t(lang, "report.scope_city_branch", "City Branch")}</label>
                 <select
                   value={form.cityBranchId || ""}
                   onChange={(e) => setForm(p => ({ ...p, cityBranchId: e.target.value }))}
                   disabled={!form.countryBranchId}
                   className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-xs font-semibold outline-none"
                 >
-                  <option value="">Select City Branch...</option>
+                  <option value="">{t(lang, "purchase.select_city_branch_ellipsis", "Select City Branch...")}</option>
                   {cityBranches.map((b) => (
                     <option key={b.id} value={b.id}>{b.city_name || b.name} ({b.code || b.branch_code})</option>
                   ))}
@@ -2637,12 +2642,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   <div className="flex items-center gap-2">
                     <Building2 className="h-4 w-4 text-primary" />
                     <h2 className="text-[11px] sm:text-xs font-black tracking-tight uppercase text-foreground">
-                      Sales Booking Order
+                      {t(lang, "sales.booking_order_title", "Sales Booking Order")}
                     </h2>
                   </div>
                   <div className="h-4 w-px bg-border/60"></div>
                   <h2 className="text-[11px] sm:text-xs font-black tracking-tight uppercase text-primary/80">
-                    Sales Booking Report
+                    {t(lang, "sales.booking_report_title", "Sales Booking Report")}
                   </h2>
                 </div>,
                 titlePortal
@@ -2661,7 +2666,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                     </span>
-                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider pr-1">Live</span>
+                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider pr-1">{t(lang, "purchase.live_badge", "Live")}</span>
                   </div>
                   <Button
                     type="button"
@@ -2679,14 +2684,14 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     }}
                     className="flex items-center gap-1 h-7.5 px-2.5 bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-md font-bold text-[10px]"
                   >
-                    <FileText className="h-3.5 w-3.5" /> Report
+                    <FileText className="h-3.5 w-3.5" /> {t(lang, "purchase.report_short", "Report")}
                   </Button>
                   <Button
                     type="button"
                     onClick={() => setViewDropdownOpen(!viewDropdownOpen)}
                     className="flex items-center gap-1 h-7.5 px-2 bg-slate-800 text-white hover:bg-slate-700 transition"
                   >
-                    Actions <ChevronDown className="h-3 w-3" />
+                    {t(lang, "form.actions", "Actions")}<ChevronDown className="h-3 w-3" />
                   </Button>
 
                   {viewDropdownOpen && (
@@ -2700,7 +2705,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
                       >
                         <span className="h-3.5 w-3.5 flex items-center justify-center font-bold text-sm text-primary">+</span>
-                        <span>New Booking</span>
+                        <span>{t(lang, "purchase.dd_new_booking", "New Booking")}</span>
                       </button>
                       <button
                         type="button"
@@ -2711,7 +2716,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 text-left transition"
                       >
                         <Trash2 className="h-3.5 w-3.5 text-red-500" />
-                        <span>Clear Goods</span>
+                        <span>{t(lang, "purchase.dd_clear_goods", "Clear Goods")}</span>
                       </button>
                       <button
                         type="button"
@@ -2726,7 +2731,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-900 text-left transition border-b border-border/40 pb-2 mb-1"
                       >
                         <X className="h-3.5 w-3.5 text-slate-500" />
-                        <span>Close Form</span>
+                        <span>{t(lang, "purchase.dd_close_form", "Close Form")}</span>
                       </button>
                       <button
                         type="button"
@@ -2737,7 +2742,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition border-b border-border/40 pb-2 mb-1"
                       >
                         <Printer className="h-3.5 w-3.5 text-blue-500" />
-                        <span>Print Screen</span>
+                        <span>{t(lang, "purchase.dd_print_screen", "Print Screen")}</span>
                       </button>
                       <button
                         type="button"
@@ -2748,7 +2753,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
                       >
                         <Eye className="h-3.5 w-3.5 text-sky-500" />
-                        <span>Open Large Preview</span>
+                        <span>{t(lang, "purchase.dd_open_large_preview", "Open Large Preview")}</span>
                       </button>
                       <button
                         type="button"
@@ -2759,7 +2764,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition border-b border-border/40 pb-2 mb-1"
                       >
                         <Download className="h-3.5 w-3.5 text-blue-500" />
-                        <span>Open A4 / PDF Template</span>
+                        <span>{t(lang, "purchase.dd_open_a4_template", "Open A4 / PDF Template")}</span>
                       </button>
 
                       <button
@@ -2773,7 +2778,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition border-b border-border/40 pb-2 mb-1"
                       >
                         <Eye className="h-3.5 w-3.5 text-emerald-500 animate-pulse" />
-                        <span className="font-bold text-emerald-600 dark:text-emerald-400">View / Check Entry</span>
+                        <span className="font-bold text-emerald-600 dark:text-emerald-400">{t(lang, "purchase.dd_view_check_entry", "View / Check Entry")}</span>
                       </button>
                       <button
                         type="button"
@@ -2784,7 +2789,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
                       >
                         <Save className="h-3.5 w-3.5 text-blue-500" />
-                        <span>Save Draft</span>
+                        <span>{t(lang, "pb.save_draft", "Save Draft")}</span>
                       </button>
                       <button
                         type="button"
@@ -2795,7 +2800,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
                       >
                         <Check className="h-3.5 w-3.5 text-emerald-500" />
-                        <span>Save & Close</span>
+                        <span>{t(lang, "sales.save_close_btn", "Save & Close")}</span>
                       </button>
                     </div>
                   )}
@@ -2809,12 +2814,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 <div className="flex items-center gap-2">
                   <Building2 className="h-4 w-4 text-primary" />
                   <h2 className="text-[11px] sm:text-xs font-black tracking-tight uppercase text-foreground">
-                    Sales Booking Order
+                    {t(lang, "sales.booking_order_title", "Sales Booking Order")}
                   </h2>
                 </div>
                 <div className="h-4 w-px bg-border/60"></div>
                 <h2 className="text-[11px] sm:text-xs font-black tracking-tight uppercase text-primary/80">
-                  Sales Booking Report
+                  {t(lang, "sales.booking_report_title", "Sales Booking Report")}
                 </h2>
               </div>
               <div className="flex items-center gap-1.5 shrink-0 relative" ref={dropdownRef}>
@@ -2830,7 +2835,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                   </span>
-                  <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider pr-1">Live</span>
+                  <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider pr-1">{t(lang, "purchase.live_badge", "Live")}</span>
                 </div>
                 <Button
                   type="button"
@@ -2848,14 +2853,14 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   }}
                   className="flex items-center gap-1 h-7.5 px-2.5 bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-md font-bold text-[10px]"
                 >
-                  <FileText className="h-3.5 w-3.5" /> Report
+                  <FileText className="h-3.5 w-3.5" /> {t(lang, "purchase.report_short", "Report")}
                 </Button>
                 <Button
                   type="button"
                   onClick={() => setViewDropdownOpen(!viewDropdownOpen)}
                   className="flex items-center gap-1 h-7.5 px-2 bg-slate-800 text-white hover:bg-slate-700 transition"
                 >
-                  Actions <ChevronDown className="h-3 w-3" />
+                  {t(lang, "form.actions", "Actions")}<ChevronDown className="h-3 w-3" />
                 </Button>
 
                 {viewDropdownOpen && (
@@ -2869,7 +2874,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
                     >
                       <span className="h-3.5 w-3.5 flex items-center justify-center font-bold text-sm text-primary">+</span>
-                      <span>New Booking</span>
+                      <span>{t(lang, "purchase.dd_new_booking", "New Booking")}</span>
                     </button>
                     <button
                       type="button"
@@ -2880,7 +2885,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 text-left transition"
                     >
                       <Trash2 className="h-3.5 w-3.5 text-red-500" />
-                      <span>Clear Goods</span>
+                      <span>{t(lang, "purchase.dd_clear_goods", "Clear Goods")}</span>
                     </button>
                     <button
                       type="button"
@@ -2895,7 +2900,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-900 text-left transition border-b border-border/40 pb-2 mb-1"
                     >
                       <X className="h-3.5 w-3.5 text-slate-500" />
-                      <span>Close Form</span>
+                      <span>{t(lang, "purchase.dd_close_form", "Close Form")}</span>
                     </button>
                     <button
                       type="button"
@@ -2906,7 +2911,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition border-b border-border/40 pb-2 mb-1"
                     >
                       <Printer className="h-3.5 w-3.5 text-blue-500" />
-                      <span>Print Screen</span>
+                      <span>{t(lang, "purchase.dd_print_screen", "Print Screen")}</span>
                     </button>
                     <button
                       type="button"
@@ -2917,7 +2922,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
                     >
                       <Eye className="h-3.5 w-3.5 text-sky-500" />
-                      <span>Open Large Preview</span>
+                      <span>{t(lang, "purchase.dd_open_large_preview", "Open Large Preview")}</span>
                     </button>
                     <button
                       type="button"
@@ -2928,7 +2933,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition border-b border-border/40 pb-2 mb-1"
                     >
                       <Download className="h-3.5 w-3.5 text-blue-500" />
-                      <span>Open A4 / PDF Template</span>
+                      <span>{t(lang, "purchase.dd_open_a4_template", "Open A4 / PDF Template")}</span>
                     </button>
 
                     <button
@@ -2942,7 +2947,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition border-b border-border/40 pb-2 mb-1"
                     >
                       <Eye className="h-3.5 w-3.5 text-emerald-500 animate-pulse" />
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400">View / Check Entry</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">{t(lang, "purchase.dd_view_check_entry", "View / Check Entry")}</span>
                     </button>
                     <button
                       type="button"
@@ -2953,7 +2958,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
                     >
                       <Save className="h-3.5 w-3.5 text-blue-500" />
-                      <span>Save Draft</span>
+                      <span>{t(lang, "pb.save_draft", "Save Draft")}</span>
                     </button>
                     <button
                       type="button"
@@ -2964,7 +2969,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
                     >
                       <Check className="h-3.5 w-3.5 text-emerald-500" />
-                      <span>Save & Close</span>
+                      <span>{t(lang, "sales.save_close_btn", "Save & Close")}</span>
                     </button>
                   </div>
                 )}
@@ -2982,7 +2987,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     disabled={savingOrder || isTransferred}
                     className="h-10 text-[11px] font-black tracking-wider uppercase px-8 bg-blue-600 hover:bg-blue-700 text-white shadow-[0_4px_14px_0_rgb(37,99,235,0.39)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.23)] hover:-translate-y-0.5 transition-all duration-200"
                   >
-                    <CheckCircle2 className="h-4 w-4"/> CONFIRM & TRANSFER
+                    <CheckCircle2 className="h-4 w-4"/> {t(lang, "sales.confirm_transfer_btn", "CONFIRM & TRANSFER")}
                   </Button>
                 </div>
               )}
@@ -3001,7 +3006,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   <div className="rounded-2xl border border-border bg-card p-4 shadow-sm animate-in fade-in zoom-in-95 duration-200">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3 border-b border-border pb-2">
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-primary">Lot Stock Panel</p>
+                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-primary">{t(lang, "sales.lot_stock_panel_title", "Lot Stock Panel")}</p>
                         <h4 className="text-sm font-black text-foreground">{selectedSaleSource.label}</h4>
                       </div>
                       <div className="flex items-center gap-2">
@@ -3009,7 +3014,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                           type="text"
                           value={lotSearch}
                           onChange={(e) => setLotSearch(e.target.value)}
-                          placeholder="Search lot no, goods, stock ref..."
+                          placeholder={t(lang, "sales.search_lot_ph", "Search lot no, goods, stock ref...")}
                           className="h-8 w-56 rounded-lg border border-input bg-background px-3 text-[10px] outline-none focus:border-primary"
                         />
                         <button type="button" onClick={() => setLotPanelOpen(false)} className="flex h-8 w-8 items-center justify-center rounded-lg border border-border hover:bg-muted">
@@ -3021,13 +3026,13 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       <table className="w-full text-[10px] text-foreground border-collapse text-left whitespace-nowrap">
                         <thead className="bg-slate-950 text-white">
                           <tr className="font-bold uppercase tracking-wider text-[9px]">
-                            <Th className="px-3 py-2.5 text-left">Lot No</Th>
-                            <Th className="px-3 py-2.5 text-left">Goods / Brand</Th>
-                            <Th className="px-3 py-2.5 text-right">Available</Th>
-                            <Th className="px-3 py-2.5 text-right">Net KG</Th>
-                            <Th className="px-3 py-2.5 text-left">Location</Th>
-                            <Th className="px-3 py-2.5 text-left">Status</Th>
-                            <Th className="px-3 py-2.5 text-center w-36">Action</Th>
+                            <Th className="px-3 py-2.5 text-left">{t(lang, "sales.lot_no_label", "Lot No")}</Th>
+                            <Th className="px-3 py-2.5 text-left">{t(lang, "sales.goods_brand_label", "Goods / Brand")}</Th>
+                            <Th className="px-3 py-2.5 text-right">{t(lang, "god.as_available", "Available")}</Th>
+                            <Th className="px-3 py-2.5 text-right">{t(lang, "sales.net_kg_label", "Net KG")}</Th>
+                            <Th className="px-3 py-2.5 text-left">{t(lang, "company_form.section_location", "Location")}</Th>
+                            <Th className="px-3 py-2.5 text-left">{t(lang, "log.tbl_status", "Status")}</Th>
+                            <Th className="px-3 py-2.5 text-center w-36">{t(lang, "purchase.th_action", "Action")}</Th>
                           </tr>
                         </thead>
                         <tbody>
@@ -3063,7 +3068,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                         }}
                                         className="rounded-lg bg-sky-600 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-white shadow-sm hover:bg-sky-700 transition shrink-0"
                                       >
-                                        Use Lot
+                                        {t(lang, "sales.use_lot_btn", "Use Lot")}
                                       </button>
                                       <button
                                         type="button"
@@ -3072,7 +3077,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                         }}
                                         className="rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider transition shrink-0"
                                       >
-                                        {checkedLotNo === lot.lotNo ? "Hide" : "Check Stock"}
+                                        {checkedLotNo === lot.lotNo ? t(lang, "sales.hide_word", "Hide") : t(lang, "sales.check_stock_btn", "Check Stock")}
                                       </button>
                                     </div>
                                   </td>
@@ -3087,7 +3092,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                             Stock Utilization History & Balance for {lot.lotNo}
                                           </h5>
                                           <div className="text-[9px] font-bold text-slate-500">
-                                            Original Capacity: <span className="font-mono text-slate-800">{originalQty.toLocaleString()} {lot.qtyName}</span> ({originalWeight.toLocaleString()} KG)
+                                            {t(lang, "sales.original_capacity_colon", "Original Capacity:")}<span className="font-mono text-slate-800">{originalQty.toLocaleString()} {lot.qtyName}</span> ({originalWeight.toLocaleString()} KG)
                                           </div>
                                         </div>
 
@@ -3095,23 +3100,23 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                           <table className="w-full text-[9px] text-slate-700 border-collapse">
                                             <thead className="bg-slate-100 text-slate-600 font-bold uppercase tracking-wider text-[8px] border-b border-slate-200">
                                               <tr>
-                                                <Th className="px-3 py-1.5 text-left">Transaction Ref</Th>
-                                                <Th className="px-3 py-1.5 text-left">Sale Date</Th>
-                                                <Th className="px-3 py-1.5 text-left">Customer / Debtor</Th>
-                                                <Th className="px-3 py-1.5 text-right">Qty Deducted</Th>
-                                                <Th className="px-3 py-1.5 text-right">Weight Deducted</Th>
-                                                <Th className="px-3 py-1.5 text-left">Status</Th>
+                                                <Th className="px-3 py-1.5 text-left">{t(lang, "sales.transaction_ref_label", "Transaction Ref")}</Th>
+                                                <Th className="px-3 py-1.5 text-left">{t(lang, "sales.sale_date_label", "Sale Date")}</Th>
+                                                <Th className="px-3 py-1.5 text-left">{t(lang, "sales.customer_debtor_label", "Customer / Debtor")}</Th>
+                                                <Th className="px-3 py-1.5 text-right">{t(lang, "sales.qty_deducted_label", "Qty Deducted")}</Th>
+                                                <Th className="px-3 py-1.5 text-right">{t(lang, "sales.weight_deducted_label", "Weight Deducted")}</Th>
+                                                <Th className="px-3 py-1.5 text-left">{t(lang, "log.tbl_status", "Status")}</Th>
                                               </tr>
                                             </thead>
                                             <tbody>
                                               {/* Initial import/purchase record */}
                                               <tr className="border-b border-slate-100 font-semibold bg-emerald-50/20 text-emerald-800">
                                                 <td className="px-3 py-1.5 font-mono">{lot.stockRef}</td>
-                                                <td className="px-3 py-1.5">Intake Date</td>
-                                                <td className="px-3 py-1.5 italic text-emerald-700">Initial Import / Stock Inbound</td>
+                                                <td className="px-3 py-1.5">{t(lang, "sales.intake_date_label", "Intake Date")}</td>
+                                                <td className="px-3 py-1.5 italic text-emerald-700">{t(lang, "sales.initial_import_inbound", "Initial Import / Stock Inbound")}</td>
                                                 <td className="px-3 py-1.5 text-right font-mono font-bold text-emerald-600">+{originalQty.toLocaleString()}</td>
                                                 <td className="px-3 py-1.5 text-right font-mono font-bold text-emerald-600">+{originalWeight.toLocaleString()} KG</td>
-                                                <td className="px-3 py-1.5"><span className="text-[8px] font-black uppercase bg-emerald-100 text-emerald-800 px-1 py-0.5 rounded">Inbound</span></td>
+                                                <td className="px-3 py-1.5"><span className="text-[8px] font-black uppercase bg-emerald-100 text-emerald-800 px-1 py-0.5 rounded">{t(lang, "sales.inbound_word", "Inbound")}</span></td>
                                               </tr>
 
                                               {/* Deduction history */}
@@ -3122,14 +3127,14 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                                   <td className="px-3 py-1.5 font-semibold text-slate-800">{d.customer}</td>
                                                   <td className="px-3 py-1.5 text-right font-mono font-bold">-{d.quantity.toLocaleString()}</td>
                                                   <td className="px-3 py-1.5 text-right font-mono font-bold">-{d.weight.toLocaleString()} KG</td>
-                                                  <td className="px-3 py-1.5"><span className="text-[8px] font-black uppercase bg-red-100 text-red-800 px-1 py-0.5 rounded">Sold Out</span></td>
+                                                  <td className="px-3 py-1.5"><span className="text-[8px] font-black uppercase bg-red-100 text-red-800 px-1 py-0.5 rounded">{t(lang, "sales.sold_out_word", "Sold Out")}</span></td>
                                                 </tr>
                                               ))}
 
                                               {/* Total Sold Summary row */}
                                               {deductions.length > 0 && (
                                                 <tr className="bg-slate-50/50 border-t border-slate-150 font-bold">
-                                                  <td colSpan={3} className="px-3 py-1.5 text-right text-slate-500 uppercase tracking-wider text-[8px]">Total Outward Deductions:</td>
+                                                  <td colSpan={3} className="px-3 py-1.5 text-right text-slate-500 uppercase tracking-wider text-[8px]">{t(lang, "sales.total_outward_deductions_colon", "Total Outward Deductions:")}</td>
                                                   <td className="px-3 py-1.5 text-right font-mono text-red-600 font-black">-{totalDeductedQty.toLocaleString()} {lot.qtyName}</td>
                                                   <td className="px-3 py-1.5 text-right font-mono text-red-600 font-black">-{totalDeductedWeight.toLocaleString()} KG</td>
                                                   <td className="px-3 py-1.5 text-slate-400 font-semibold">—</td>
@@ -3138,10 +3143,10 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
                                               {/* Net Remaining Balance row */}
                                               <tr className="bg-sky-50 border-t border-slate-200 font-black text-sky-950">
-                                                <td colSpan={3} className="px-3 py-1.5 text-right uppercase tracking-wider text-[8px]">Net Available Balance:</td>
+                                                <td colSpan={3} className="px-3 py-1.5 text-right uppercase tracking-wider text-[8px]">{t(lang, "sales.net_available_balance_colon", "Net Available Balance:")}</td>
                                                 <td className="px-3 py-1.5 text-right font-mono text-[10px] font-black text-sky-700">{lot.availableQty.toLocaleString()} {lot.qtyName}</td>
                                                 <td className="px-3 py-1.5 text-right font-mono text-[10px] font-black text-sky-700">{lot.netWeight.toLocaleString()} KG</td>
-                                                <td className="px-3 py-1.5"><span className="text-[8px] font-black uppercase bg-sky-200 text-sky-800 px-1 py-0.5 rounded animate-pulse">Live Stock</span></td>
+                                                <td className="px-3 py-1.5"><span className="text-[8px] font-black uppercase bg-sky-200 text-sky-800 px-1 py-0.5 rounded animate-pulse">{t(lang, "sales.live_stock_title", "Live Stock")}</span></td>
                                               </tr>
                                             </tbody>
                                           </table>
@@ -3156,7 +3161,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                           {filteredSaleLots.length === 0 && (
                             <tr>
                               <td colSpan={7} className="px-3 py-6 text-center text-muted-foreground italic font-semibold">
-                                No lots found for this source.
+                                {t(lang, "sales.no_lots_found_source", "No lots found for this source.")}
                               </td>
                             </tr>
                           )}
@@ -3174,25 +3179,25 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         <thead>
                           <tr className="bg-muted/80 text-muted-foreground border-b border-border font-bold uppercase tracking-wider">
                             <Th className="px-3 py-2.5 text-center w-8">#</Th>
-                            <Th className="px-3 py-2.5">Goods Name</Th>
-                            <Th className="px-3 py-2.5 text-center">Size</Th>
-                            <Th className="px-3 py-2.5 text-center">Brand</Th>
-                            <Th className="px-3 py-2.5 text-center">HS Code</Th>
-                            <Th className="px-3 py-2.5 text-center">Origin</Th>
-                            <Th className="px-3 py-2.5 text-right">Qty</Th>
-                            <Th className="px-3 py-2.5 text-center">Unit</Th>
+                            <Th className="px-3 py-2.5">{t(lang, "purchase.th_goods_name", "Goods Name")}</Th>
+                            <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.th_size", "Size")}</Th>
+                            <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.th_brand", "Brand")}</Th>
+                            <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.th_hs_code", "HS Code")}</Th>
+                            <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.th_origin", "Origin")}</Th>
+                            <Th className="px-3 py-2.5 text-right">{t(lang, "purchase.th_qty", "Qty")}</Th>
+                            <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.th_unit", "Unit")}</Th>
                             <Th className="px-3 py-2.5 text-right">Price ({form.currencyType || "USD"})</Th>
                             <Th className="px-3 py-2.5 text-right">Amount ({form.currencyType || "USD"})</Th>
-                            <Th className="px-3 py-2.5 text-center">Ex. Rate</Th>
+                            <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.th_ex_rate", "Ex. Rate")}</Th>
                             <Th className="px-3 py-2.5 text-right bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">Final ({form.secondaryCurrency || "PKR"})</Th>
-                            <Th className="px-3 py-2.5 text-center w-10">Action</Th>
+                            <Th className="px-3 py-2.5 text-center w-10">{t(lang, "purchase.th_action", "Action")}</Th>
                           </tr>
                         </thead>
                         <tbody>
                           {goodsEntries.length === 0 ? (
                             <tr>
                               <td colSpan={13} className="px-3 py-6 text-center text-muted-foreground italic font-semibold text-[10px]">
-                                No goods added yet. Add an item above to see it here.
+                                {t(lang, "purchase.goods_table_empty", "No goods added yet. Add an item above to see it here.")}
                               </td>
                             </tr>
                           ) : (
@@ -3218,25 +3223,25 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                       type="button"
                                       onClick={() => handleViewGoodsEntry(index)}
                                       className="flex items-center gap-1 px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[9px] font-bold transition-colors"
-                                      title="View"
+                                      title={t(lang, "branch.view", "View")}
                                     >
-                                      <Eye className="h-3 w-3" /> View
+                                      <Eye className="h-3 w-3" /> {t(lang, "branch.view", "View")}
                                     </button>
                                     <button
                                       type="button"
                                       onClick={() => handleEditGoodsEntry(index)}
                                       className="flex items-center gap-1 px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded text-[9px] font-bold transition-colors shadow-sm border border-blue-200"
-                                      title="Edit"
+                                      title={t(lang, "branch.edit", "Edit")}
                                     >
-                                      <Edit3 className="h-3 w-3" /> Edit
+                                      <Edit3 className="h-3 w-3" /> {t(lang, "branch.edit", "Edit")}
                                     </button>
                                     <button
                                       type="button"
                                       onClick={() => setGoodsEntries(prev => prev.filter((_, idx) => idx !== index))}
                                       className="flex items-center gap-1 px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded text-[9px] font-bold transition-colors shadow-sm border border-red-100"
-                                      title="Delete"
+                                      title={t(lang, "common.delete", "Delete")}
                                     >
-                                      <Trash2 className="h-3 w-3" /> Delete
+                                      <Trash2 className="h-3 w-3" /> {t(lang, "common.delete", "Delete")}
                                     </button>
                                   </div>
                                 </td>
@@ -3255,12 +3260,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               {activeTab === "booking" && (
                 <fieldset disabled={isTransferred && !session?.scopes?.isSuperAdmin} className="space-y-3 order-2 w-full mt-0 rounded-2xl border border-border bg-card p-4 shadow-sm">
                   <div className="border-b border-border pb-2">
-                    <h3 className="text-xs font-black uppercase tracking-wider text-foreground">Sales Booking / Bill Info</h3>
+                    <h3 className="text-xs font-black uppercase tracking-wider text-foreground">{t(lang, "sales.booking_bill_info_title", "Sales Booking / Bill Info")}</h3>
                   </div>
 
                   <div className="grid grid-cols-1 gap-4">
                     <div className="relative" ref={customerDropdownRef}>
-                      <label className="block text-[10px] font-bold text-foreground mb-1">Customer Account (DR)*</label>
+                      <label className="block text-[10px] font-bold text-foreground mb-1">{t(lang, "sales.customer_account_dr_star", "Customer Account (DR)*")}</label>
                       <div className="relative flex items-center">
                         <input
                           type="text"
@@ -3290,14 +3295,14 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       {customerDropdownOpen && (
                         <div className="absolute left-0 mt-1.5 w-full min-w-[290px] sm:min-w-[440px] md:min-w-[520px] rounded-2xl bg-card border-2 border-primary/40 shadow-2xl z-[80] p-2 overflow-hidden backdrop-blur-md">
                           <div className="flex justify-between items-center px-2.5 py-1.5 bg-primary/5 rounded-lg mb-1.5 border border-primary/10">
-                            <span className="text-[10px] font-black uppercase text-primary tracking-wider">Select Customer Account (DR)</span>
+                            <span className="text-[10px] font-black uppercase text-primary tracking-wider">{t(lang, "sales.select_customer_account_dr_header", "Select Customer Account (DR)")}</span>
                             <span className="text-[9px] font-mono font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
                               {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, customerSearch)).length} found
                             </span>
                           </div>
                           <div className="max-h-64 overflow-y-auto space-y-1.5 pr-0.5">
                             {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, customerSearch)).map((acc) => {
-                              const compName = acc.companyName || acc.company_name || (acc.companyId && dbCompanies.find(c => c.id === acc.companyId)?.name) || dbCompanies[0]?.name || "None";
+                              const compName = acc.companyName || acc.company_name || (acc.companyId && dbCompanies.find(c => c.id === acc.companyId)?.name) || dbCompanies[0]?.name || t(lang, "purchase.card_none_label", "None");
                               return (
                                 <button
                                   key={acc.accountCode}
@@ -3314,21 +3319,21 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                     <span className="font-mono text-[9.5px] font-black bg-primary/10 text-primary px-1.5 py-0.5 rounded shrink-0">System: {acc.accountCode}</span>
                                   </div>
                                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 text-[9px] text-muted-foreground">
-                                    <div><span className="font-semibold text-foreground/80">Branch:</span> {acc.cityBranchName || "Main Branch"}</div>
+                                    <div><span className="font-semibold text-foreground/80">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> {acc.cityBranchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}</div>
                                     <div>
                                       {acc.manualReferenceNumber && (
-                                        <div className="mb-0.5"><span className="font-semibold text-foreground/80">Manual A/C:</span> <span className="font-bold text-slate-700 dark:text-slate-300">{acc.manualReferenceNumber}</span></div>
+                                        <div className="mb-0.5"><span className="font-semibold text-foreground/80">{t(lang, "purchase.manual_ac_colon", "Manual A/C:")}</span> <span className="font-bold text-slate-700 dark:text-slate-300">{acc.manualReferenceNumber}</span></div>
                                       )}
-                                      <div><span className="font-semibold text-foreground/80">Curr:</span> <span className="font-bold text-emerald-600 dark:text-emerald-400">{acc.ledgerCurrency || "PKR"}</span></div>
+                                      <div><span className="font-semibold text-foreground/80">{t(lang, "purchase.curr_colon", "Curr:")}</span> <span className="font-bold text-emerald-600 dark:text-emerald-400">{acc.ledgerCurrency || "PKR"}</span></div>
                                     </div>
-                                    <div><span className="font-semibold text-foreground/80">Company:</span> <span className="truncate inline-block max-w-[120px] align-bottom">{compName}</span></div>
+                                    <div><span className="font-semibold text-foreground/80">{t(lang, "purchase.card_company_colon", "Company:")}</span> <span className="truncate inline-block max-w-[120px] align-bottom">{compName}</span></div>
                                   </div>
                                 </button>
                               );
                             })}
                             {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, customerSearch)).length === 0 && (
                               <div className="p-4 text-center text-muted-foreground text-xs italic">
-                                No matching accounts found. Try searching by Code, Name, Currency, or Phone.
+                                {t(lang, "purchase.no_matching_accounts", "No matching accounts found. Try searching by Code, Name, Currency, or Phone.")}
                               </div>
                             )}
                           </div>
@@ -3337,7 +3342,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     </div>
 
                     <div className="relative" ref={salesDropdownRef}>
-                      <label className="block text-[10px] font-bold text-foreground mb-1">Sales Account (CR)*</label>
+                      <label className="block text-[10px] font-bold text-foreground mb-1">{t(lang, "purchase.sales_account_cr_star", "Sales Account (CR)*")}</label>
                       <div className="relative flex items-center">
                         <input
                           type="text"
@@ -3366,14 +3371,14 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       {salesDropdownOpen && (
                         <div className="absolute left-0 mt-1.5 w-full min-w-[290px] sm:min-w-[440px] md:min-w-[520px] rounded-2xl bg-card border-2 border-primary/40 shadow-2xl z-[80] p-2 overflow-hidden backdrop-blur-md">
                           <div className="flex justify-between items-center px-2.5 py-1.5 bg-primary/5 rounded-lg mb-1.5 border border-primary/10">
-                            <span className="text-[10px] font-black uppercase text-primary tracking-wider">Select Sales Account (CR)</span>
+                            <span className="text-[10px] font-black uppercase text-primary tracking-wider">{t(lang, "purchase.select_sales_account_cr_header", "Select Sales Account (CR)")}</span>
                             <span className="text-[9px] font-mono font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
                               {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).length} found
                             </span>
                           </div>
                           <div className="max-h-64 overflow-y-auto space-y-1.5 pr-0.5">
                             {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).map((acc) => {
-                              const compName = acc.companyName || acc.company_name || (acc.companyId && dbCompanies.find(c => c.id === acc.companyId)?.name) || dbCompanies[0]?.name || "None";
+                              const compName = acc.companyName || acc.company_name || (acc.companyId && dbCompanies.find(c => c.id === acc.companyId)?.name) || dbCompanies[0]?.name || t(lang, "purchase.card_none_label", "None");
                               return (
                                 <button
                                   key={acc.accountCode}
@@ -3390,21 +3395,21 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                     <span className="font-mono text-[9.5px] font-black bg-primary/10 text-primary px-1.5 py-0.5 rounded shrink-0">System: {acc.accountCode}</span>
                                   </div>
                                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 text-[9px] text-muted-foreground">
-                                    <div><span className="font-semibold text-foreground/80">Branch:</span> {acc.cityBranchName || "Main Branch"}</div>
+                                    <div><span className="font-semibold text-foreground/80">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> {acc.cityBranchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}</div>
                                     <div>
                                       {acc.manualReferenceNumber && (
-                                        <div className="mb-0.5"><span className="font-semibold text-foreground/80">Manual A/C:</span> <span className="font-bold text-slate-700 dark:text-slate-300">{acc.manualReferenceNumber}</span></div>
+                                        <div className="mb-0.5"><span className="font-semibold text-foreground/80">{t(lang, "purchase.manual_ac_colon", "Manual A/C:")}</span> <span className="font-bold text-slate-700 dark:text-slate-300">{acc.manualReferenceNumber}</span></div>
                                       )}
-                                      <div><span className="font-semibold text-foreground/80">Curr:</span> <span className="font-bold text-emerald-600 dark:text-emerald-400">{acc.ledgerCurrency || "PKR"}</span></div>
+                                      <div><span className="font-semibold text-foreground/80">{t(lang, "purchase.curr_colon", "Curr:")}</span> <span className="font-bold text-emerald-600 dark:text-emerald-400">{acc.ledgerCurrency || "PKR"}</span></div>
                                     </div>
-                                    <div><span className="font-semibold text-foreground/80">Company:</span> <span className="truncate inline-block max-w-[120px] align-bottom">{compName}</span></div>
+                                    <div><span className="font-semibold text-foreground/80">{t(lang, "purchase.card_company_colon", "Company:")}</span> <span className="truncate inline-block max-w-[120px] align-bottom">{compName}</span></div>
                                   </div>
                                 </button>
                               );
                             })}
                             {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).length === 0 && (
                               <div className="p-4 text-center text-muted-foreground text-xs italic">
-                                No matching accounts found. Try searching by Code, Name, Currency, or Phone.
+                                {t(lang, "purchase.no_matching_accounts", "No matching accounts found. Try searching by Code, Name, Currency, or Phone.")}
                               </div>
                             )}
                           </div>
@@ -3416,7 +3421,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   <div className="rounded-lg border border-border bg-muted/20 p-3">
                     <div className="grid grid-cols-1 gap-3">
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">Contract No</label>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.contract_no_label", "Contract No")}</label>
                         <input
                           type="text"
                           value={form.salesContractNo}
@@ -3425,7 +3430,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">Contract / Booking Date</label>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.contract_booking_date_label", "Contract / Booking Date")}</label>
                         <input
                           type="date"
                           value={form.salesDate}
@@ -3437,7 +3442,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
                     <div className="grid grid-cols-2 gap-3 mt-3">
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">Invoice / Payment Select</label>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.invoice_payment_select_label", "Invoice / Payment Select")}</label>
                         <select
                           value={form.paymentType}
                           onChange={(e) => setValue("paymentType", e.target.value)}
@@ -3449,7 +3454,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         </select>
                       </div>
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">Ship Option</label>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.ship_option_label", "Ship Option")}</label>
                         <select
                           value={form.shippingMode}
                           onChange={(e) => {
@@ -3465,21 +3470,21 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         </select>
                       </div>
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">Status</label>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "log.tbl_status", "Status")}</label>
                         <select
                           value={form.salesStatus}
                           onChange={(e) => setValue("salesStatus", e.target.value)}
                           className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8"
                         >
-                          <option value="Draft">Draft</option>
-                          <option value="Pending">Pending</option>
-                          <option value="Confirmed">Confirmed</option>
-                          <option value="Transferred">Transferred</option>
+                          <option value="Draft">{t(lang, "bdash.status_draft", "Draft")}</option>
+                          <option value="Pending">{t(lang, "log.seg_pending", "Pending")}</option>
+                          <option value="Confirmed">{t(lang, "purchase.opt_confirmed", "Confirmed")}</option>
+                          <option value="Transferred">{t(lang, "purchase.opt_transferred", "Transferred")}</option>
                         </select>
                       </div>
                     </div>
                     <div className="mt-3">
-                      <label className="block text-[10px] text-muted-foreground mb-1">Booking Remarks / Terms</label>
+                      <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.booking_remarks_terms_label", "Booking Remarks / Terms")}</label>
                       <textarea
                         rows={2}
                         value={form.remarks}
@@ -3495,7 +3500,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       onClick={() => setActiveTab("goods")}
                       className="w-full font-bold h-10 rounded-lg text-xs uppercase tracking-wider bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow"
                     >
-                      Next: Goods Entry
+                      {t(lang, "lp.next_goods_entry", "Next: Goods Entry")}
                     </Button>
                   </div>
                 </fieldset>
@@ -3505,22 +3510,22 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 <fieldset disabled={isTransferred && !session?.scopes?.isSuperAdmin} className="space-y-3 order-2 w-full mt-0 rounded-2xl border border-border bg-card p-4 shadow-sm animate-in fade-in zoom-in-95 duration-200">
                   <div className="border-b border-border pb-2">
                     <h3 className="text-xs font-black uppercase tracking-wider text-foreground flex items-center gap-2">
-                      GOODS ENTRY
+                      {t(lang, "purchase.goods_entry_title", "GOODS ENTRY")}
                     </h3>
                   </div>
                   
                   <div className="rounded-xl border border-sky-200 bg-sky-50/70 p-3.5 shadow-sm">
-                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-sky-700 font-bold mb-1">Sale Source / Lot Selection</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-sky-700 font-bold mb-1">{t(lang, "sales.sale_source_lot_selection", "Sale Source / Lot Selection")}</p>
                     <select
                       value={form.saleSource || "booking"}
                       onChange={(e) => openSaleSource(e.target.value)}
                       className="w-full bg-background border border-input rounded px-3 py-2 text-foreground font-bold outline-none focus:border-primary text-xs h-10 mt-2 shadow-sm"
                     >
-                      <option value="booking">Booking Sale (Fresh Booking)</option>
-                      <option value="in_transit">In-Transit Lot (Cargo on Route)</option>
-                      <option value="local">Local Purchase (Purchased Locally)</option>
-                      <option value="warehouse">Warehouse Stock (In Whse)</option>
-                      <option value="endorse">Endorse Stock (Traceable Stock)</option>
+                      <option value="booking">{t(lang, "sales.opt_booking_sale", "Booking Sale (Fresh Booking)")}</option>
+                      <option value="in_transit">{t(lang, "sales.opt_in_transit_lot", "In-Transit Lot (Cargo on Route)")}</option>
+                      <option value="local">{t(lang, "sales.opt_local_purchase", "Local Purchase (Purchased Locally)")}</option>
+                      <option value="warehouse">{t(lang, "sales.opt_warehouse_stock", "Warehouse Stock (In Whse)")}</option>
+                      <option value="endorse">{t(lang, "sales.opt_endorse_stock", "Endorse Stock (Traceable Stock)")}</option>
                     </select>
                     {form.saleSource && form.saleSource !== "booking" && (
                       <button
@@ -3528,37 +3533,37 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         onClick={() => setLotPanelOpen(prev => !prev)}
                         className="mt-2.5 w-full h-8 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded text-[10px] shadow transition uppercase tracking-wider"
                       >
-                        {lotPanelOpen ? "Close Stock Panel" : "View / Open Stock Lots"}
+                        {lotPanelOpen ? t(lang, "sales.close_stock_panel_btn", "Close Stock Panel") : t(lang, "sales.view_open_stock_lots_btn", "View / Open Stock Lots")}
                       </button>
                     )}
 
                     {selectedSaleLot ? (
                       <div className="mt-3 space-y-1.5 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-[10px]">
                         <div>
-                          <span className="text-emerald-700 font-bold block uppercase text-[8px]">Selected Lot:</span>
+                          <span className="text-emerald-700 font-bold block uppercase text-[8px]">{t(lang, "sales.selected_lot_colon", "Selected Lot:")}</span>
                           <span className="font-black text-foreground text-xs">{selectedSaleLot.lotNo}</span>
                         </div>
                         <div className="flex justify-between border-t border-emerald-100/50 pt-1.5">
-                          <span className="text-emerald-700 font-semibold">Goods:</span>
+                          <span className="text-emerald-700 font-semibold">{t(lang, "sales.goods_colon", "Goods:")}</span>
                           <span className="font-bold text-foreground truncate max-w-[120px]">{selectedSaleLot.goodsName}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-emerald-700 font-semibold">Available Qty:</span>
+                          <span className="text-emerald-700 font-semibold">{t(lang, "sales.available_qty_colon", "Available Qty:")}</span>
                           <span className="font-black text-foreground font-mono">{Number(selectedSaleLot.availableQty || 0).toLocaleString()} {selectedSaleLot.qtyName}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-emerald-700 font-semibold">Net Weight:</span>
+                          <span className="text-emerald-700 font-semibold">{t(lang, "tl.net_weight_colon", "Net Weight:")}</span>
                           <span className="font-black text-foreground font-mono">{Number(selectedSaleLot.netWeight || 0).toLocaleString()} KG</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-emerald-700 font-semibold">Stock Ref:</span>
+                          <span className="text-emerald-700 font-semibold">{t(lang, "sales.stock_ref_colon", "Stock Ref:")}</span>
                           <span className="font-bold text-foreground font-mono">{selectedSaleLot.stockRef}</span>
                         </div>
                       </div>
                     ) : (
                       form.saleSource !== "booking" && (
                         <div className="mt-3 rounded-xl border border-dashed border-sky-300 bg-white/60 p-2.5 text-[10px] font-semibold text-sky-700 leading-relaxed">
-                          Please open stock lots to copy and use an available cargo lot for this sales entry.
+                          {t(lang, "sales.open_stock_lots_msg", "Please open stock lots to copy and use an available cargo lot for this sales entry.")}
                         </div>
                       )
                     )}
@@ -3566,7 +3571,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   <div className="grid grid-cols-1 gap-3">
                     {/* Manual Net KGs Input */}
                     <div>
-                      <label className="block text-[10px] text-muted-foreground mb-1">Net KGs (Weight)</label>
+                      <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.net_kgs_weight", "Net KGs (Weight)")}</label>
                       <input
                         type="number"
                         value={form.netWeight !== undefined && form.netWeight !== "" ? form.netWeight : ""}
@@ -3582,13 +3587,13 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     </div>
 
                     <div>
-                      <label className="block text-[10px] text-muted-foreground mb-1">Origin Country</label>
+                      <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.f_origin_country", "Origin Country")}</label>
                       <select
                         value={form.origin || ""}
                         onChange={(e) => setValue("origin", e.target.value)}
                         className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
                       >
-                        <option value="">Select Origin</option>
+                        <option value="">{t(lang, "purchase.select_origin", "Select Origin")}</option>
                         {Array.from(new Set([
                           "United Arab Emirates", "Iran", "USA", "Vietnam", "Pakistan", "India", "Afghanistan", "China", "Turkey",
                           ...allCountries.map(c => c.name).filter(Boolean),
@@ -3601,7 +3606,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     </div>
 
                     <div className="relative">
-                      <label className="block text-[10px] text-muted-foreground mb-1">Goods Name*</label>
+                      <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.goods_name_star", "Goods Name*")}</label>
                       <SearchableSelect
                         value={form.goodsName || ""}
                         onChange={(val) => {
@@ -3636,7 +3641,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                           ...dbGoods.map(g => ({ label: g.goods_name || g.goodsName, value: g.goods_name || g.goodsName })),
                           ...GOODS_OPTIONS.filter(go => !dbGoods.some(g => (g.goods_name || g.goodsName) === go)).map(g => ({ label: g, value: g }))
                         ]}
-                        placeholder="Select Goods"
+                        placeholder={t(lang, "sales.select_goods_ph", "Select Goods")}
                         addOptionLabel="Add New Good"
                       />
                     </div>
@@ -3644,7 +3649,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <div className="flex items-center justify-between mb-1">
-                          <label className="block text-[10px] text-muted-foreground">HS Code</label>
+                          <label className="block text-[10px] text-muted-foreground">{t(lang, "purchase.th_hs_code", "HS Code")}</label>
                           {form.goodsName && (() => {
                             const selectedGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === form.goodsName.trim().toUpperCase());
                             if (selectedGood && (selectedGood.chs_code || selectedGood.chsCode || "") !== (form.hsCode || "")) {
@@ -3654,7 +3659,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                   onClick={handleUpdateHsCode}
                                   className="text-[9px] bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground px-1.5 py-0.5 rounded transition-colors"
                                 >
-                                  Save to Master
+                                  {t(lang, "purchase.save_to_master", "Save to Master")}
                                 </button>
                               );
                             }
@@ -3669,7 +3674,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1 font-bold">Allot Name / ID</label>
+                        <label className="block text-[10px] text-muted-foreground mb-1 font-bold">{t(lang, "purchase.allot_name_id", "Allot Name / ID")}</label>
                         {form.saleSource && form.saleSource !== "booking" ? (
                           <select
                             value={form.allotName || ""}
@@ -3710,7 +3715,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             type="text"
                             value={form.allotName || ""}
                             onChange={(e) => setValue("allotName", e.target.value)}
-                            placeholder="e.g. ALT-2003"
+                            placeholder={t(lang, "sales.alt_code_example_ph", "e.g. ALT-2003")}
                             className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
                           />
                         )}
@@ -3719,14 +3724,14 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">Brand</label>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.th_brand", "Brand")}</label>
                         <SearchableSelect
                           value={form.brand || ""}
                           onChange={(val) => {
                             if (val === "__ADD_NEW__") {
                               const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
                               if (!selGood) {
-                                alert("Please select a Good first before adding a new Brand.");
+                                alert(t(lang, "sales.select_good_first_brand_alert", "Please select a Good first before adding a new Brand."));
                                 return;
                               }
                               setCustomVariationForm({
@@ -3750,19 +3755,19 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             ].filter(Boolean))).sort();
                             return brands.map(b => ({ label: b, value: b }));
                           })()}
-                          placeholder="Select Brand"
+                          placeholder={t(lang, "sales.select_brand_ph", "Select Brand")}
                           addOptionLabel="Add New Brand"
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">Size Specification</label>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "lp.size_spec", "Size Specification")}</label>
                         <SearchableSelect
                           value={form.size || ""}
                           onChange={(val) => {
                             if (val === "__ADD_NEW__") {
                               const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
                               if (!selGood) {
-                                alert("Please select a Good first before adding a new Size.");
+                                alert(t(lang, "sales.select_good_first_size_alert", "Please select a Good first before adding a new Size."));
                                 return;
                               }
                               setCustomVariationForm({
@@ -3786,7 +3791,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             ].filter(Boolean))).sort();
                             return sizes.map(s => ({ label: s, value: s }));
                           })()}
-                          placeholder="Select Size"
+                          placeholder={t(lang, "sales.select_size_ph", "Select Size")}
                           addOptionLabel="Add New Size"
                         />
                       </div>
@@ -3794,7 +3799,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">Qty Name</label>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.qty_name_label", "Qty Name")}</label>
                         <SearchableSelect
                           value={form.qtyName || "BAGS"}
                           onChange={(val) => {
@@ -3809,12 +3814,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             }
                           }}
                           options={Array.from(new Set([...QTY_TYPE_OPTIONS, ...customQtyNames, form.qtyName])).filter(Boolean).map(q => ({ label: q, value: q }))}
-                          placeholder="Select Qty Name"
+                          placeholder={t(lang, "sales.select_qty_name_ph", "Select Qty Name")}
                           addOptionLabel="Add New Qty Name"
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">Quantity No</label>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.quantity_no", "Quantity No")}</label>
                         <input
                           type="number"
                           value={form.qtyNo || ""}
@@ -3871,7 +3876,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">Divide Type</label>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.divide_type", "Divide Type")}</label>
                         <select
                           value={form.divideType || "D/KGs"}
                           onChange={(e) => setValue("divideType", e.target.value)}
@@ -3882,7 +3887,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         </select>
                       </div>
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">Divide Weight / Value</label>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.divide_weight_value", "Divide Weight / Value")}</label>
                         <input
                           type="number"
                           value={form.divideWeight || 1}
@@ -3898,7 +3903,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">Price Type</label>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.price_type", "Price Type")}</label>
                         <select
                           value={form.priceType || "P/KGs"}
                           onChange={(e) => setValue("priceType", e.target.value)}
@@ -3909,7 +3914,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         </select>
                       </div>
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">Price Rate (C1)</label>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.price_rate_c1", "Price Rate (C1)")}</label>
                         <input
                           type="number"
                           value={form.coursePrice || ""}
@@ -3924,10 +3929,10 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     </div>
  
                     <div className="bg-emerald-50/50 dark:bg-emerald-950/20 p-3 rounded-lg border border-emerald-100 dark:border-emerald-900 mt-2">
-                      <h4 className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400 mb-2">Sales Currency & Conversion</h4>
+                      <h4 className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400 mb-2">{t(lang, "sales.currency_conversion_title", "Sales Currency & Conversion")}</h4>
                       <div className="grid grid-cols-2 gap-3 mb-2">
                         <div>
-                          <label className="block text-[9px] text-emerald-700 dark:text-emerald-500 mb-1 font-bold">Pricing Currency</label>
+                          <label className="block text-[9px] text-emerald-700 dark:text-emerald-500 mb-1 font-bold">{t(lang, "purchase.pricing_currency", "Pricing Currency")}</label>
                           <select
                             value={form.currencyType || "USD"}
                             onChange={(e) => {
@@ -4005,14 +4010,14 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         onClick={() => setActiveTab("booking")}
                         className="flex-1 font-bold h-10 rounded-lg text-xs text-slate-600 hover:bg-slate-50 border border-input"
                       >
-                        Back
+                        {t(lang, "common.back", "Back")}
                       </Button>
                       <Button
                         type="button"
                         onClick={() => setActiveTab("others")}
                         className="flex-1 font-bold h-10 rounded-lg text-xs bg-primary text-primary-foreground hover:bg-primary/90 transition-all"
                       >
-                        Next
+                        {t(lang, "common.next", "Next")}
                       </Button>
                     </div>
                   </div>
@@ -4023,7 +4028,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 <fieldset disabled={isTransferred && !session?.scopes?.isSuperAdmin} className="space-y-3 order-2 w-full mt-0 rounded-2xl border border-border bg-card p-4 shadow-sm animate-in fade-in zoom-in-95 duration-200">
                   <div className="border-b border-border pb-2">
                     <h3 className="text-xs font-black uppercase tracking-wider text-foreground flex items-center gap-2">
-                      STEP 3: OTHER DETAILS
+                      {t(lang, "purchase.step3_other_details", "STEP 3: OTHER DETAILS")}
                     </h3>
                   </div>
 
@@ -4036,12 +4041,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             <Globe2 className="h-4 w-4" />
                           </div>
                           <div>
-                            <h4 className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-900 dark:text-slate-100">Shipping & Location</h4>
-                            <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">Essential route information only: country, port, mode and dates.</p>
+                            <h4 className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-900 dark:text-slate-100">{t(lang, "purchase.shipping_location_title", "Shipping & Location")}</h4>
+                            <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">{t(lang, "purchase.shipping_location_subtitle", "Essential route information only: country, port, mode and dates.")}</p>
                           </div>
                         </div>
                         <label className="min-w-[150px] space-y-1">
-                          <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">Shipping Mode</span>
+                          <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.shipping_mode_label", "Shipping Mode")}</span>
                           <select
                             value={form.shippingMode || "By Sea"}
                             onChange={(e) => {
@@ -4060,11 +4065,11 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         <div className="rounded-lg border border-amber-200 bg-amber-50/40 p-3 dark:border-amber-900/50 dark:bg-amber-950/10">
                           <div className="mb-3 flex items-center gap-2 border-b border-amber-100 pb-2 dark:border-amber-900/40">
                             <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
-                            <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">Loading / Departure</h5>
+                            <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{t(lang, "purchase.loading_departure_title", "Loading / Departure")}</h5>
                           </div>
                           <div className="grid gap-4 sm:grid-cols-3">
                             <label className="space-y-1">
-                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">Loading Country</span>
+                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.loading_country_label", "Loading Country")}</span>
                               <SearchableSelect
                                 value={form.loadingCountry || ""}
                                 onChange={(val) => {
@@ -4079,12 +4084,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                   }
                                 }}
                                 options={masterCountryOptions.map((c) => ({ label: `${c.name} ${c.iso2 ? `(${c.iso2})` : ""}`, value: c.name }))}
-                                placeholder="Select Country"
+                                placeholder={t(lang, "sales.select_country_ph", "Select Country")}
                                 addOptionLabel="Add New Country"
                               />
                             </label>
                             <label className="space-y-1">
-                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">Loading Port</span>
+                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.loading_port_label", "Loading Port")}</span>
                               <SearchableSelect
                                 value={form.loadingPort || form.airportName || form.loadingBorder || ""}
                                 onChange={(val) => {
@@ -4098,13 +4103,13 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                   }
                                 }}
                                 options={currentLoadingPorts.map((p, idx) => ({ label: `${p.port_name} ${p.port_code ? `[${p.port_code}]` : ""}`, value: p.port_name }))}
-                                placeholder="Select Port"
+                                placeholder={t(lang, "sales.select_port_ph", "Select Port")}
                                 addOptionLabel="Add New Port"
                                 disabled={!form.loadingCountry && currentLoadingPorts.length === 0}
                               />
                             </label>
                             <label className="space-y-1">
-                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">Loading Date</span>
+                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.loading_date_label", "Loading Date")}</span>
                               <input
                                 type="date"
                                 value={form.loadingDate || ""}
@@ -4118,11 +4123,11 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         <div className="rounded-lg border border-emerald-200 bg-emerald-50/40 p-3 dark:border-emerald-900/50 dark:bg-emerald-950/10">
                           <div className="mb-3 flex items-center gap-2 border-b border-emerald-100 pb-2 dark:border-emerald-900/40">
                             <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                            <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">Receiving / Arrival</h5>
+                            <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{t(lang, "purchase.receiving_arrival_title", "Receiving / Arrival")}</h5>
                           </div>
                           <div className="grid gap-4 sm:grid-cols-3">
                             <label className="space-y-1">
-                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">Receiving Country</span>
+                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.receiving_country_label", "Receiving Country")}</span>
                               <SearchableSelect
                                 value={form.receivingCountry || form.destinationCountry || form.receivedCountry || ""}
                                 onChange={(val) => {
@@ -4138,12 +4143,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                   }
                                 }}
                                 options={masterCountryOptions.map((c) => ({ label: `${c.name} ${c.iso2 ? `(${c.iso2})` : ""}`, value: c.name }))}
-                                placeholder="Select Country"
+                                placeholder={t(lang, "sales.select_country_ph", "Select Country")}
                                 addOptionLabel="Add New Country"
                               />
                             </label>
                             <label className="space-y-1">
-                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">Receiving Port</span>
+                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.receiving_port_label", "Receiving Port")}</span>
                               <SearchableSelect
                                 value={form.receivingPort || form.destinationPort || form.receivedPort || ""}
                                 onChange={(val) => {
@@ -4158,13 +4163,13 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                   }
                                 }}
                                 options={currentReceivedPorts.map((p, idx) => ({ label: `${p.port_name} ${p.port_code ? `[${p.port_code}]` : ""}`, value: p.port_name }))}
-                                placeholder="Select Port"
+                                placeholder={t(lang, "sales.select_port_ph", "Select Port")}
                                 addOptionLabel="Add New Port"
                                 disabled={!(form.receivingCountry || form.destinationCountry || form.receivedCountry) && currentReceivedPorts.length === 0}
                               />
                             </label>
                             <label className="space-y-1">
-                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">Receiving Date</span>
+                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.receiving_date_label", "Receiving Date")}</span>
                               <input
                                 type="date"
                                 value={form.receivedDate || ""}
@@ -4178,10 +4183,10 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     </div>
                     {/* --- SECTION 2: ADVANCE & PAYMENT TERMS --- */}
                     <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded p-3 space-y-3">
-                      <h4 className="text-[10px] font-black uppercase text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-800 pb-1">Advance & Payment Terms</h4>
+                      <h4 className="text-[10px] font-black uppercase text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-800 pb-1">{t(lang, "purchase.advance_payment_terms_title", "Advance & Payment Terms")}</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                         <div>
-                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Payment Type</label>
+                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">{t(lang, "purchase.payment_type_label", "Payment Type")}</label>
                           <select
                             value={form.paymentType || "Advance Payment"}
                             onChange={(e) => setValue("paymentType", e.target.value)}
@@ -4191,19 +4196,19 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                           </select>
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Advance Percentage (%)</label>
+                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">{t(lang, "purchase.advance_percentage_label", "Advance Percentage (%)")}</label>
                           <input
                             type="number"
                             min="0"
                             max="100"
                             value={form.advancePercent ?? ""}
                             onChange={(e) => setValue("advancePercent", e.target.value ? Number(e.target.value) : null)}
-                            placeholder="e.g. 20"
+                            placeholder={t(lang, "sales.qty_example_ph", "e.g. 20")}
                             className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Advance Payment Date</label>
+                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">{t(lang, "purchase.advance_payment_date_label", "Advance Payment Date")}</label>
                           <input
                             type="date"
                             value={form.advancePaymentDate || ""}
@@ -4212,7 +4217,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Final Payment Date</label>
+                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">{t(lang, "purchase.final_payment_date_label", "Final Payment Date")}</label>
                           <input
                             type="date"
                             value={form.paymentDate || ""}
@@ -4225,26 +4230,26 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
                     {/* --- SECTION 3: TRANSPORT & CONTAINER DETAILS --- */}
                     <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded p-3 space-y-3">
-                      <h4 className="text-[10px] font-black uppercase text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-800 pb-1">Transport & Container Details</h4>
+                      <h4 className="text-[10px] font-black uppercase text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-800 pb-1">{t(lang, "purchase.transport_container_title", "Transport & Container Details")}</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                         <div>
-                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Container Numbers</label>
+                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">{t(lang, "purchase.container_numbers_label", "Container Numbers")}</label>
                           <input
                             type="text"
                             value={form.containerNumbers || ""}
                             onChange={(e) => setValue("containerNumbers", e.target.value)}
-                            placeholder="e.g. ABCU1234567"
+                            placeholder={t(lang, "sales.container_example_ph", "e.g. ABCU1234567")}
                             className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Container Size / Type</label>
+                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">{t(lang, "purchase.container_size_type_label", "Container Size / Type")}</label>
                           <select
                             value={form.containerSize || ""}
                             onChange={(e) => setValue("containerSize", e.target.value)}
                             className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
                           >
-                            <option value="">Select Type...</option>
+                            <option value="">{t(lang, "purchase.select_type_placeholder", "Select Type...")}</option>
                             {CONTAINER_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                           </select>
                         </div>
@@ -4253,12 +4258,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
                     {/* --- SECTION 4: REMARKS & NARRATION --- */}
                     <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded p-3">
-                      <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Remarks & Narration</label>
+                      <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">{t(lang, "purchase.remarks_narration_title", "Remarks & Narration")}</label>
                       <textarea
                         value={form.remarks || ""}
                         onChange={(e) => setValue("remarks", e.target.value)}
                         className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-16 resize-none"
-                        placeholder="Add any remarks or narration here..."
+                        placeholder={t(lang, "sales.remarks_narration_ph", "Add any remarks or narration here...")}
                       />
                     </div>
                   </div>
@@ -4270,14 +4275,14 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       onClick={() => setActiveTab("goods")}
                       className="flex-1 font-bold h-10 rounded-lg text-xs text-slate-600 hover:bg-slate-50 border border-input"
                     >
-                      Back
+                      {t(lang, "common.back", "Back")}
                     </Button>
                     <Button
                       type="button"
                       onClick={() => setActiveTab("reports_tab")}
                       className="flex-1 font-bold h-10 rounded-lg text-xs bg-primary text-primary-foreground hover:bg-primary/90 transition-all"
                     >
-                      Next
+                      {t(lang, "common.next", "Next")}
                     </Button>
                   </div>
                 </fieldset>
@@ -4286,10 +4291,10 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 <div className="space-y-3 order-2 w-full mt-0 rounded-2xl border border-border bg-card p-4 shadow-sm animate-in fade-in zoom-in-95 duration-200">
                   <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center space-y-3">
                     <h3 className="text-[11px] font-black uppercase text-slate-800">
-                      Step 4: Review Reports
+                      {t(lang, "sales.step4_review_reports", "Step 4: Review Reports")}
                     </h3>
                     <p className="text-[9px] text-slate-500 font-semibold">
-                      Review all generated reports and notes before final verification.
+                      {t(lang, "sales.review_reports_subtitle", "Review all generated reports and notes before final verification.")}
                     </p>
                     <div className="flex gap-3 pt-3 border-t border-slate-200 mt-3">
                       <Button
@@ -4298,14 +4303,14 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         onClick={() => setActiveTab("others")}
                         className="flex-1 font-bold h-10 rounded-lg text-xs text-slate-600 hover:bg-slate-50 border border-input"
                       >
-                        Back
+                        {t(lang, "common.back", "Back")}
                       </Button>
                       <Button
                         type="button"
                         onClick={() => setActiveTab("report")}
                         className="flex-1 font-bold h-10 rounded-lg text-xs bg-primary text-primary-foreground hover:bg-primary/90 transition-all"
                       >
-                        Next
+                        {t(lang, "common.next", "Next")}
                       </Button>
                     </div>
                   </div>
@@ -4331,7 +4336,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 className="bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-[10px] font-bold h-9 px-3 rounded-lg shadow-sm flex items-center gap-1.5"
               >
                 <Download className="h-3.5 w-3.5 text-slate-500" />
-                Download Review Report (PDF)
+                {t(lang, "sales.download_review_report", "Download Review Report (PDF)")}
               </Button>
               <Button
                 type="button"
@@ -4339,7 +4344,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 className="bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-[10px] font-bold h-9 px-3 rounded-lg shadow-sm flex items-center gap-1.5"
               >
                 <Printer className="h-3.5 w-3.5 text-slate-500" />
-                Print Review
+                {t(lang, "sales.print_review_btn", "Print Review")}
               </Button>
             </div>
           </div>
@@ -4347,7 +4352,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
           {/* Alert Success bar */}
           <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl p-3.5 flex items-center gap-3 text-[10px] font-bold shadow-sm">
             <span className="h-6 w-6 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 text-xs font-black">✓</span>
-            All information has been saved successfully and is ready for final review.
+            {t(lang, "cbs.all_saved_ready", "All information has been saved successfully and is ready for final review.")}
           </div>
 
           {/* Grid Layout Cards */}
@@ -4357,18 +4362,18 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-[10px]">
               <h3 className="font-black text-slate-800 border-b border-slate-100 pb-1.5 mb-2.5 uppercase flex items-center gap-2">
                 <span className="w-4 h-4 rounded bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-[8px]">1</span>
-                Branch Information
+                {t(lang, "branch.section_branch_info", "Branch Information")}
               </h3>
               <div className="grid grid-cols-[90px_1fr] gap-x-2 gap-y-1.5">
-                <span className="text-slate-400 font-semibold">Country:</span><span className="font-bold text-slate-800">{form.branchCountry || "Pakistan"}</span>
-                <span className="text-slate-400 font-semibold">Main Branch:</span><span className="font-bold text-slate-800">{form.branchName || "N/A"}</span>
-                <span className="text-slate-400 font-semibold">City Branch:</span><span className="font-bold text-slate-800">{form.branchName || "N/A"}</span>
-                <span className="text-slate-400 font-semibold">Branch Code:</span><span className="font-bold text-slate-800">{form.branchCode || "N/A"}</span>
-                <span className="text-slate-400 font-semibold">User Admin:</span><span className="font-bold text-slate-800">{form.userName || "ADMIN"}</span>
-                <span className="text-slate-400 font-semibold">User ID:</span><span className="font-bold text-slate-800 font-mono">{form.userId || "USR-1001"}</span>
-                <span className="text-slate-400 font-semibold">Currency:</span><span className="font-bold text-slate-800">{form.salesCurrency || "PKR"}</span>
-                <span className="text-slate-400 font-semibold">Status:</span><span className="inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[8px] font-black uppercase w-max">{isTransferred ? "Active" : "Draft"}</span>
-                <span className="text-slate-400 font-semibold">Established Date:</span><span className="font-bold text-slate-800">{form.salesDate}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_country_colon", "Country:")}</span><span className="font-bold text-slate-800">{form.branchCountry || "Pakistan"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.main_branch_colon", "Main Branch:")}</span><span className="font-bold text-slate-800">{form.branchName || "N/A"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.city_branch_colon", "City Branch:")}</span><span className="font-bold text-slate-800">{form.branchName || "N/A"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_branch_code_colon", "Branch Code:")}</span><span className="font-bold text-slate-800">{form.branchCode || "N/A"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_user_admin_colon", "User Admin:")}</span><span className="font-bold text-slate-800">{form.userName || "ADMIN"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_user_id_colon", "User ID:")}</span><span className="font-bold text-slate-800 font-mono">{form.userId || "USR-1001"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.currency_colon_label", "Currency:")}</span><span className="font-bold text-slate-800">{form.salesCurrency || "PKR"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_status_colon", "Status:")}</span><span className="inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[8px] font-black uppercase w-max">{isTransferred ? t(lang, "common.active", "Active") : t(lang, "bdash.status_draft", "Draft")}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.established_date_colon", "Established Date:")}</span><span className="font-bold text-slate-800">{form.salesDate}</span>
               </div>
             </div>
 
@@ -4376,16 +4381,16 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-[10px]">
               <h3 className="font-black text-slate-800 border-b border-slate-100 pb-1.5 mb-2.5 uppercase flex items-center gap-2">
                 <span className="w-4 h-4 rounded bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-[8px]">2</span>
-                Logistics & Routing
+                {t(lang, "sales.logistics_routing_title", "Logistics & Routing")}
               </h3>
               <div className="grid grid-cols-[90px_1fr] gap-x-2 gap-y-1.5">
-                <span className="text-slate-400 font-semibold">Loading Mode:</span><span className="font-bold text-slate-800">{form.salesLoadingMode || "By Sea"}</span>
-                <span className="text-slate-400 font-semibold">Contract No:</span><span className="font-bold text-slate-800">{form.salesContractNo || "N/A"}</span>
-                <span className="text-slate-400 font-semibold">Port of Loading:</span><span className="font-bold text-slate-800">{form.salesPortOfLoading || "N/A"}</span>
-                <span className="text-slate-400 font-semibold">Port of Discharge:</span><span className="font-bold text-slate-800">{form.salesPortOfDischarge || "N/A"}</span>
-                <span className="text-slate-400 font-semibold">Destination Country:</span><span className="font-bold text-slate-800">{form.salesDestinationCountry || "N/A"}</span>
-                <span className="text-slate-400 font-semibold">Origin Country:</span><span className="font-bold text-slate-800">{form.origin || "Pakistan"}</span>
-                <span className="text-slate-400 font-semibold">Delivery Term:</span><span className="font-bold text-slate-800">{form.deliveryTerm || "CFR"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_loading_mode_colon", "Loading Mode:")}</span><span className="font-bold text-slate-800">{form.salesLoadingMode || "By Sea"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_contract_no_colon", "Contract No:")}</span><span className="font-bold text-slate-800">{form.salesContractNo || "N/A"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.port_of_loading_colon", "Port of Loading:")}</span><span className="font-bold text-slate-800">{form.salesPortOfLoading || "N/A"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.port_of_discharge_colon", "Port of Discharge:")}</span><span className="font-bold text-slate-800">{form.salesPortOfDischarge || "N/A"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.destination_country_colon", "Destination Country:")}</span><span className="font-bold text-slate-800">{form.salesDestinationCountry || "N/A"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_origin_country_colon", "Origin Country:")}</span><span className="font-bold text-slate-800">{form.origin || "Pakistan"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.delivery_term_colon", "Delivery Term:")}</span><span className="font-bold text-slate-800">{form.deliveryTerm || "CFR"}</span>
               </div>
             </div>
 
@@ -4393,16 +4398,16 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-[10px]">
               <h3 className="font-black text-slate-800 border-b border-slate-100 pb-1.5 mb-2.5 uppercase flex items-center gap-2">
                 <span className="w-4 h-4 rounded bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-[8px]">3</span>
-                Customer Account (DR)
+                {t(lang, "sales.customer_account_dr_badge", "Customer Account (DR)")}
               </h3>
               <div className="grid grid-cols-[90px_1fr] gap-x-2 gap-y-1.5">
-                <span className="text-slate-400 font-semibold">Account Code:</span><span className="font-bold text-slate-800 font-mono">{form.customerAccountNo || "N/A"}</span>
-                <span className="text-slate-400 font-semibold">Account Name:</span><span className="font-bold text-slate-800">{form.customerAccountName || "N/A"}</span>
-                <span className="text-slate-400 font-semibold">Branch:</span><span className="font-bold text-slate-800">{form.customerAccountBranch || "N/A"}</span>
-                <span className="text-slate-400 font-semibold">Currency:</span><span className="font-bold text-slate-800">{form.salesCurrency || "PKR"}</span>
-                <span className="text-slate-400 font-semibold">Company:</span><span className="font-bold text-slate-800">{form.salesCompanyName || "None"}</span>
-                <span className="text-slate-400 font-semibold">Email:</span><span className="font-bold text-slate-800 truncate" title={form.customerAccountEmail}>{form.customerAccountEmail || "N/A"}</span>
-                <span className="text-slate-400 font-semibold">WhatsApp:</span><span className="font-bold text-slate-800">{form.customerAccountWhatsapp || "N/A"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span><span className="font-bold text-slate-800 font-mono">{form.customerAccountNo || "N/A"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span><span className="font-bold text-slate-800">{form.customerAccountName || "N/A"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.branch_colon_label", "Branch:")}</span><span className="font-bold text-slate-800">{form.customerAccountBranch || "N/A"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.currency_colon_label", "Currency:")}</span><span className="font-bold text-slate-800">{form.salesCurrency || "PKR"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_company_colon", "Company:")}</span><span className="font-bold text-slate-800">{form.salesCompanyName || t(lang, "purchase.card_none_label", "None")}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "cusm.email_word", "Email:")}</span><span className="font-bold text-slate-800 truncate" title={form.customerAccountEmail}>{form.customerAccountEmail || "N/A"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.whatsapp_colon", "WhatsApp:")}</span><span className="font-bold text-slate-800">{form.customerAccountWhatsapp || "N/A"}</span>
               </div>
             </div>
 
@@ -4410,16 +4415,16 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-[10px]">
               <h3 className="font-black text-slate-800 border-b border-slate-100 pb-1.5 mb-2.5 uppercase flex items-center gap-2">
                 <span className="w-4 h-4 rounded bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-[8px]">4</span>
-                Sales Account (CR)
+                {t(lang, "purchase.sales_account_cr_badge", "Sales Account (CR)")}
               </h3>
               <div className="grid grid-cols-[90px_1fr] gap-x-2 gap-y-1.5">
-                <span className="text-slate-400 font-semibold">Account Code:</span><span className="font-bold text-slate-800 font-mono">{form.salesAccountNo || "N/A"}</span>
-                <span className="text-slate-400 font-semibold">Account Name:</span><span className="font-bold text-slate-800">{form.salesAccountName || "N/A"}</span>
-                <span className="text-slate-400 font-semibold">Branch:</span><span className="font-bold text-slate-800">{form.salesAccountBranch || "N/A"}</span>
-                <span className="text-slate-400 font-semibold">Currency:</span><span className="font-bold text-slate-800">{form.salesCurrency || "PKR"}</span>
-                <span className="text-slate-400 font-semibold">Company:</span><span className="font-bold text-slate-800">{form.salesCompanyName || "None"}</span>
-                <span className="text-slate-400 font-semibold">Email:</span><span className="font-bold text-slate-800 truncate" title={form.salesAccountEmail}>{form.salesAccountEmail || "N/A"}</span>
-                <span className="text-slate-400 font-semibold">WhatsApp:</span><span className="font-bold text-slate-800">{form.salesAccountWhatsapp || "N/A"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span><span className="font-bold text-slate-800 font-mono">{form.salesAccountNo || "N/A"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span><span className="font-bold text-slate-800">{form.salesAccountName || "N/A"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.branch_colon_label", "Branch:")}</span><span className="font-bold text-slate-800">{form.salesAccountBranch || "N/A"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.currency_colon_label", "Currency:")}</span><span className="font-bold text-slate-800">{form.salesCurrency || "PKR"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_company_colon", "Company:")}</span><span className="font-bold text-slate-800">{form.salesCompanyName || t(lang, "purchase.card_none_label", "None")}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "cusm.email_word", "Email:")}</span><span className="font-bold text-slate-800 truncate" title={form.salesAccountEmail}>{form.salesAccountEmail || "N/A"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.whatsapp_colon", "WhatsApp:")}</span><span className="font-bold text-slate-800">{form.salesAccountWhatsapp || "N/A"}</span>
               </div>
             </div>
 
@@ -4432,21 +4437,21 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-[10px]">
               <h3 className="font-black text-slate-800 border-b border-slate-100 pb-1.5 mb-2.5 uppercase flex items-center gap-2">
                 <span className="w-4 h-4 rounded bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-[8px]">5</span>
-                Roles & Permissions
+                {t(lang, "branch.wizard_step7_title", "Roles & Permissions")}
               </h3>
               <table className="w-full text-left text-[9px] mt-1">
                 <thead>
                   <tr className="border-b border-slate-150 text-slate-400 font-bold uppercase tracking-wider">
-                    <Th className="pb-1.5">Role Name</Th>
-                    <Th className="pb-1.5">Users</Th>
-                    <Th className="pb-1.5 text-right">Permissions</Th>
+                    <Th className="pb-1.5">{t(lang, "sales.role_name_label", "Role Name")}</Th>
+                    <Th className="pb-1.5">{t(lang, "cbs.users_word", "Users")}</Th>
+                    <Th className="pb-1.5 text-right">{t(lang, "branch.permissions_label", "Permissions")}</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-semibold">
-                  <tr><td className="py-1">Branch Admin</td><td className="py-1">2</td><td className="py-1 text-right text-blue-600">Full Access</td></tr>
-                  <tr><td className="py-1">Accountant</td><td className="py-1">3</td><td className="py-1 text-right text-blue-600">Accounting Access</td></tr>
-                  <tr><td className="py-1">Store Manager</td><td className="py-1">1</td><td className="py-1 text-right text-blue-600">Inventory Access</td></tr>
-                  <tr><td className="py-1">Sales Executive</td><td className="py-1">4</td><td className="py-1 text-right text-blue-600">Sales Access</td></tr>
+                  <tr><td className="py-1">{t(lang, "cbs.role_branch_admin", "Branch Admin")}</td><td className="py-1">2</td><td className="py-1 text-right text-blue-600">{t(lang, "cbs.access_full", "Full Access")}</td></tr>
+                  <tr><td className="py-1">{t(lang, "cbs.role_accountant", "Accountant")}</td><td className="py-1">3</td><td className="py-1 text-right text-blue-600">{t(lang, "sales.accounting_access_label", "Accounting Access")}</td></tr>
+                  <tr><td className="py-1">{t(lang, "cbs.role_store_manager", "Store Manager")}</td><td className="py-1">1</td><td className="py-1 text-right text-blue-600">{t(lang, "branch.perm_inventory_access", "Inventory Access")}</td></tr>
+                  <tr><td className="py-1">{t(lang, "cbs.role_sales_executive", "Sales Executive")}</td><td className="py-1">4</td><td className="py-1 text-right text-blue-600">{t(lang, "cbs.access_sales", "Sales Access")}</td></tr>
                 </tbody>
               </table>
             </div>
@@ -4455,16 +4460,16 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-[10px]">
               <h3 className="font-black text-slate-800 border-b border-slate-100 pb-1.5 mb-2.5 uppercase flex items-center gap-2">
                 <span className="w-4 h-4 rounded bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-[8px]">6</span>
-                Accounting Setup
+                {t(lang, "cbs.step7_label", "Accounting Setup")}
               </h3>
               <div className="grid grid-cols-[140px_1fr] gap-x-2 gap-y-1.5">
-                <span className="text-slate-400 font-semibold">Default Purchase Account:</span><span className="font-bold text-slate-800">Purchases - Local</span>
-                <span className="text-slate-400 font-semibold">Default Sales Account:</span><span className="font-bold text-slate-800">Sales - Local</span>
-                <span className="text-slate-400 font-semibold">General Serial No:</span><span className="font-bold text-slate-800 font-mono">{form.generalSerialNumber || "N/A"}</span>
-                <span className="text-slate-400 font-semibold">Roznamcha (Journal) No:</span><span className="font-bold text-slate-800 font-mono">{form.journalNumber || "N/A"}</span>
-                <span className="text-slate-400 font-semibold">Cash Entry Serial:</span><span className="font-bold text-slate-800 font-mono">{form.cashEntrySerial || "N/A"}</span>
-                <span className="text-slate-400 font-semibold">Current Year Start:</span><span className="font-bold text-slate-800">01 Jul 2025</span>
-                <span className="text-slate-400 font-semibold">Accounting Method:</span><span className="font-bold text-slate-800">Accrual Basis</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.default_purchase_account_colon", "Default Purchase Account:")}</span><span className="font-bold text-slate-800">{t(lang, "sales.purchases_local_value", "Purchases - Local")}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.default_sales_account_colon", "Default Sales Account:")}</span><span className="font-bold text-slate-800">{t(lang, "sales.sales_local_value", "Sales - Local")}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.general_serial_no", "General Serial No:")}</span><span className="font-bold text-slate-800 font-mono">{form.generalSerialNumber || "N/A"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.roznamcha_journal_no", "Roznamcha (Journal) No:")}</span><span className="font-bold text-slate-800 font-mono">{form.journalNumber || "N/A"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.cash_entry_serial", "Cash Entry Serial:")}</span><span className="font-bold text-slate-800 font-mono">{form.cashEntrySerial || "N/A"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.current_year_start_colon", "Current Year Start:")}</span><span className="font-bold text-slate-800">01 Jul 2025</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.accounting_method_colon", "Accounting Method:")}</span><span className="font-bold text-slate-800">{t(lang, "sales.accrual_basis_value", "Accrual Basis")}</span>
               </div>
             </div>
 
@@ -4472,16 +4477,16 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-[10px]">
               <h3 className="font-black text-slate-800 border-b border-slate-100 pb-1.5 mb-2.5 uppercase flex items-center gap-2">
                 <span className="w-4 h-4 rounded bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-[8px]">7</span>
-                Communication Setup
+                {t(lang, "cbs.communication_setup_label", "Communication Setup")}
               </h3>
               <div className="grid grid-cols-[140px_1fr] gap-x-2 gap-y-1.5">
-                <span className="text-slate-400 font-semibold">Email (For Documents):</span><span className="font-bold text-slate-850 truncate">{form.branchEmail || "info@damaanbusiness.com"}</span>
-                <span className="text-slate-400 font-semibold">Email (Notifications):</span><span className="font-bold text-slate-850 truncate">{form.notificationsEmail || "notify@damaanbusiness.com"}</span>
-                <span className="text-slate-400 font-semibold">WhatsApp Number:</span><span className="font-bold text-slate-800">+92 333 1234567</span>
-                <span className="text-slate-400 font-semibold">SMS Notifications:</span><span className="inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[8px] font-black uppercase w-max">Enabled</span>
-                <span className="text-slate-400 font-semibold">Email Notifications:</span><span className="inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[8px] font-black uppercase w-max">Enabled</span>
-                <span className="text-slate-400 font-semibold">Language:</span><span className="font-bold text-slate-800">English</span>
-                <span className="text-slate-400 font-semibold">Time Zone:</span><span className="font-bold text-slate-800 truncate">(GMT+05:00) Pakistan</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.email_documents_colon", "Email (For Documents):")}</span><span className="font-bold text-slate-850 truncate">{form.branchEmail || "info@damaanbusiness.com"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.email_notifications_colon", "Email (Notifications):")}</span><span className="font-bold text-slate-850 truncate">{form.notificationsEmail || "notify@damaanbusiness.com"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.whatsapp_number_colon", "WhatsApp Number:")}</span><span className="font-bold text-slate-800">+92 333 1234567</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.sms_notifications_colon", "SMS Notifications:")}</span><span className="inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[8px] font-black uppercase w-max">{t(lang, "cbs.enabled_word", "Enabled")}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.email_notifications_row_colon", "Email Notifications:")}</span><span className="inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[8px] font-black uppercase w-max">{t(lang, "cbs.enabled_word", "Enabled")}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.language_colon", "Language:")}</span><span className="font-bold text-slate-800">{t(lang, "cbs.lang_english_word", "English")}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.timezone_colon", "Time Zone:")}</span><span className="font-bold text-slate-800 truncate">(GMT+05:00) Pakistan</span>
               </div>
             </div>
 
@@ -4490,19 +4495,19 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
           {/* Goods Details Spreadsheet-like Table */}
           <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
             <h3 className="font-black text-[11px] text-slate-800 border-b border-slate-100 pb-2 mb-3 uppercase flex items-center gap-2">
-              <Package className="h-3.5 w-3.5 text-blue-600" /> Goods Details
+              <Package className="h-3.5 w-3.5 text-blue-600" /> {t(lang, "purchase.goods_details_title", "Goods Details")}
             </h3>
             <div className="overflow-x-auto">
               <table className="w-full text-[10px] text-left border-collapse border border-slate-200">
                 <thead className="bg-slate-50 text-slate-650 font-bold uppercase tracking-wider text-[8px] border-b border-slate-200">
                   <tr>
-                    <Th className="p-2 border-r border-slate-200">Goods</Th>
-                    <Th className="p-2 border-r border-slate-200">Brand</Th>
-                    <Th className="p-2 border-r border-slate-200">Origin</Th>
-                    <Th className="p-2 border-r border-slate-200 text-right">Qty</Th>
-                    <Th className="p-2 border-r border-slate-200 text-right">G.Wt</Th>
-                    <Th className="p-2 border-r border-slate-200 text-right">N.Wt</Th>
-                    <Th className="p-2 border-r border-slate-200 text-right">Rate</Th>
+                    <Th className="p-2 border-r border-slate-200">{t(lang, "purchase.th_goods", "Goods")}</Th>
+                    <Th className="p-2 border-r border-slate-200">{t(lang, "purchase.th_brand", "Brand")}</Th>
+                    <Th className="p-2 border-r border-slate-200">{t(lang, "purchase.th_origin", "Origin")}</Th>
+                    <Th className="p-2 border-r border-slate-200 text-right">{t(lang, "purchase.th_qty", "Qty")}</Th>
+                    <Th className="p-2 border-r border-slate-200 text-right">{t(lang, "sales.gwt_abbr", "G.Wt")}</Th>
+                    <Th className="p-2 border-r border-slate-200 text-right">{t(lang, "sales.nwt_abbr", "N.Wt")}</Th>
+                    <Th className="p-2 border-r border-slate-200 text-right">{t(lang, "purchase.th_rate", "Rate")}</Th>
                     <Th className="p-2 border-r border-slate-200 text-right">Amount ({form.currencyType || "USD"})</Th>
                     <Th className="p-2 text-right text-emerald-800">Final ({form.secondaryCurrency || "PKR"})</Th>
                   </tr>
@@ -4525,7 +4530,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   ))}
                   {goodsEntries.length > 0 && (
                     <tr className="bg-slate-50 font-black border-t-2 border-slate-300 text-slate-800">
-                      <td colSpan={3} className="p-2 text-right border-r border-slate-200">TOTALS:</td>
+                      <td colSpan={3} className="p-2 text-right border-r border-slate-200">{t(lang, "purchase.totals_label", "TOTALS:")}</td>
                       <td className="p-2 text-right border-r border-slate-200">{reportTotals.totalQty.toLocaleString()} {goodsEntries[0]?.qtyName || ""}</td>
                       <td className="p-2 text-right border-r border-slate-200 font-mono">{reportTotals.totalGross.toFixed(2)}</td>
                       <td className="p-2 text-right border-r border-slate-200 font-mono">{reportTotals.totalNet.toFixed(2)}</td>
@@ -4542,20 +4547,20 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
           {/* Remarks (Report) Input */}
           <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
             <h3 className="font-black text-[11px] text-slate-800 border-b border-slate-100 pb-2 mb-3 uppercase">
-              Remarks (Report Summary)
+              {t(lang, "sales.remarks_report_summary", "Remarks (Report Summary)")}
             </h3>
             <textarea
               value={form.orderReportRemarks}
               onChange={(e) => handleTextChange("orderReportRemarks", e.target.value)}
               className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-slate-900 outline-none focus:border-blue-500 resize-none h-24 text-[10px] font-semibold"
-              placeholder="Type verification, approval, or audit remarks here..."
+              placeholder={t(lang, "sales.verification_remarks_ph", "Type verification, approval, or audit remarks here...")}
             />
           </div>
 
           {/* Saved Reports */}
           {reportsList.length > 0 && (
             <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
-              <h3 className="font-black text-[11px] text-slate-800 border-b border-slate-100 pb-2 mb-3 uppercase">Saved Reports</h3>
+              <h3 className="font-black text-[11px] text-slate-800 border-b border-slate-100 pb-2 mb-3 uppercase">{t(lang, "sales.saved_reports_title", "Saved Reports")}</h3>
               <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
                 {reportsList.map((report) => (
                   <div key={report.id} className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-[10px] font-semibold relative">
@@ -4581,7 +4586,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <span className="h-5 w-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-[10px]">✓</span>
-                  <h4 className="text-xs font-black text-slate-900 uppercase">Approve & Activate Order</h4>
+                  <h4 className="text-xs font-black text-slate-900 uppercase">{t(lang, "sales.approve_activate_order_btn", "Approve & Activate Order")}</h4>
                 </div>
                 <p className="text-[10px] text-slate-500 font-semibold leading-relaxed mb-4">
                   Approve this booking order and transfer/post it to the General Ledger. The booking will become active and available for all operations.
@@ -4590,7 +4595,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               <div>
                 {isTransferred ? (
                   <div className="w-full bg-emerald-50 text-emerald-800 text-[10px] font-black uppercase text-center py-2 border border-emerald-200 rounded-lg">
-                    Approved & Transferred
+                    {t(lang, "sales.approved_transferred_status", "Approved & Transferred")}
                   </div>
                 ) : (
                   <Button
@@ -4599,7 +4604,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     disabled={savingOrder || isTransferred}
                     className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-10 rounded-lg text-xs uppercase tracking-wider shadow transition-all flex items-center justify-center gap-2"
                   >
-                    Approve & Activate
+                    {t(lang, "cbs.approve_activate_btn", "Approve & Activate")}
                   </Button>
                 )}
               </div>
@@ -4610,7 +4615,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <span className="h-5 w-5 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-[10px]">↩</span>
-                  <h4 className="text-xs font-black text-slate-900 uppercase">Send Back for Edit</h4>
+                  <h4 className="text-xs font-black text-slate-900 uppercase">{t(lang, "cbs.send_back_title", "Send Back for Edit")}</h4>
                 </div>
                 <p className="text-[10px] text-slate-500 font-semibold leading-relaxed mb-4">
                   Send this booking back to the entries screen for corrections, adjustments, or additional cargo/amount information.
@@ -4621,7 +4626,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 onClick={() => setActiveTab("goods")}
                 className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold h-10 rounded-lg text-xs uppercase tracking-wider shadow transition-all"
               >
-                Send Back for Edit
+                {t(lang, "cbs.send_back_title", "Send Back for Edit")}
               </Button>
             </div>
 
@@ -4630,7 +4635,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <span className="h-5 w-5 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center font-bold text-[10px]">✕</span>
-                  <h4 className="text-xs font-black text-slate-900 uppercase">Request Changes / Cancel</h4>
+                  <h4 className="text-xs font-black text-slate-900 uppercase">{t(lang, "sales.request_changes_cancel_btn", "Request Changes / Cancel")}</h4>
                 </div>
                 <p className="text-[10px] text-slate-500 font-semibold leading-relaxed mb-4">
                   Flag specific discrepancies or cancel this booking process entirely. All logs will record this audit action.
@@ -4639,14 +4644,14 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               <Button
                 type="button"
                 onClick={() => {
-                  if (confirm("Are you sure you want to request changes and reset this booking?")) {
+                  if (confirm(t(lang, "sales.confirm_request_changes_reset", "Are you sure you want to request changes and reset this booking?"))) {
                     handleReset();
                     setActiveTab("booking");
                   }
                 }}
                 className="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold h-10 rounded-lg text-xs uppercase tracking-wider shadow transition-all"
               >
-                Request Changes
+                {t(lang, "cbs.request_changes", "Request Changes")}
               </Button>
             </div>
 
@@ -4685,11 +4690,11 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
           <div className="w-full max-w-5xl h-[90vh] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden relative">
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
               <h2 className="text-sm font-black text-slate-800 uppercase tracking-wide flex items-center gap-2">
-                <Printer className="h-4 w-4 text-blue-600" /> Print Preview
+                <Printer className="h-4 w-4 text-blue-600" /> {t(lang, "acct.print_preview", "Print Preview")}
               </h2>
               <div className="flex items-center gap-3">
-                <Button type="button" onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-700 text-white h-8 px-4 text-xs font-bold rounded shadow transition-all">Print Document</Button>
-                <Button type="button" variant="outline" onClick={() => setPreviewModalOpen(false)} className="h-8 px-4 text-xs font-bold hover:bg-slate-100">Close</Button>
+                <Button type="button" onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-700 text-white h-8 px-4 text-xs font-bold rounded shadow transition-all">{t(lang, "purchase.print_document_btn", "Print Document")}</Button>
+                <Button type="button" variant="outline" onClick={() => setPreviewModalOpen(false)} className="h-8 px-4 text-xs font-bold hover:bg-slate-100">{t(lang, "purchase.close_btn", "Close")}</Button>
               </div>
             </div>
             <div className="flex-1 overflow-y-auto p-8 bg-slate-100/50 flex justify-center custom-scrollbar">
@@ -4699,67 +4704,67 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 <div className="mb-6 overflow-hidden rounded-xl border border-slate-200 text-left">
                   <div className="flex flex-col gap-4 bg-slate-950 px-5 py-4 text-white md:flex-row md:items-center md:justify-between">
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">Damaan Business Group</p>
-                      <h1 className="mt-1 text-xl font-black uppercase tracking-[0.22em]">Sales Booking Order</h1>
-                      <p className="mt-1 text-[10px] font-semibold text-slate-300">Professional verification, account routing, goods, payment and audit template</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">{t(lang, "purchase.damaan_business_group", "Damaan Business Group")}</p>
+                      <h1 className="mt-1 text-xl font-black uppercase tracking-[0.22em]">{t(lang, "sales.booking_order_title", "Sales Booking Order")}</h1>
+                      <p className="mt-1 text-[10px] font-semibold text-slate-300">{t(lang, "sales.professional_verification_subtitle", "Professional verification, account routing, goods, payment and audit template")}</p>
                     </div>
                     <div className="grid grid-cols-2 gap-x-5 gap-y-1 text-right text-[10px] font-bold md:min-w-[360px]">
-                      <span className="text-slate-400">PO No</span><span>{form.salesOrderNo || "N/A"}</span>
-                      <span className="text-slate-400">Bill No</span><span>{form.billNo || "N/A"}</span>
-                      <span className="text-slate-400">Date</span><span>{form.salesDate || "N/A"}</span>
-                      <span className="text-slate-400">Status</span><span className={isTransferred ? "text-emerald-300" : "text-amber-300"}>{isTransferred ? "Transferred" : "Pending Transfer"}</span>
+                      <span className="text-slate-400">{t(lang, "sales.so_no_label", "SO No")}</span><span>{form.salesOrderNo || "N/A"}</span>
+                      <span className="text-slate-400">{t(lang, "rozrep.bill_no", "Bill No")}</span><span>{form.billNo || "N/A"}</span>
+                      <span className="text-slate-400">{t(lang, "bdash.col_date", "Date")}</span><span>{form.salesDate || "N/A"}</span>
+                      <span className="text-slate-400">{t(lang, "log.tbl_status", "Status")}</span><span className={isTransferred ? "text-emerald-300" : "text-amber-300"}>{isTransferred ? t(lang, "sales.transferred_status_word", "Transferred") : t(lang, "sales.pending_transfer_status_word", "Pending Transfer")}</span>
                     </div>
                   </div>
 
                   {/* Account Info Cards */}
                   <div className="grid gap-4 p-4 text-[10px] md:grid-cols-2 bg-slate-50/50">
                     <div className="border border-slate-300 bg-white p-3 rounded shadow-sm">
-                      <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800 text-[10px]">Sales Account (CR)</h3>
+                      <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800 text-[10px]">{t(lang, "purchase.sales_account_cr_badge", "Sales Account (CR)")}</h3>
                       <div className="grid grid-cols-[80px_1fr] gap-1">
-                        <span className="text-slate-500 font-semibold">Account Code:</span><span className="font-bold">{form.salesAccountNo || "N/A"}</span>
-                        <span className="text-slate-500 font-semibold">Account Name:</span><span className="font-bold">{form.salesAccountName || "N/A"}</span>
-                        <span className="text-slate-500 font-semibold">Company:</span><span className="font-bold">{form.salesCompanyName || "N/A"}</span>
+                        <span className="text-slate-500 font-semibold">{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span><span className="font-bold">{form.salesAccountNo || "N/A"}</span>
+                        <span className="text-slate-500 font-semibold">{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span><span className="font-bold">{form.salesAccountName || "N/A"}</span>
+                        <span className="text-slate-500 font-semibold">{t(lang, "purchase.card_company_colon", "Company:")}</span><span className="font-bold">{form.salesCompanyName || "N/A"}</span>
                       </div>
                     </div>
                     <div className="border border-slate-300 bg-white p-3 rounded shadow-sm">
-                      <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800 text-[10px]">Customer Account (DR)</h3>
+                      <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800 text-[10px]">{t(lang, "sales.customer_account_dr_badge", "Customer Account (DR)")}</h3>
                       <div className="grid grid-cols-[80px_1fr] gap-1">
-                        <span className="text-slate-500 font-semibold">Account Code:</span><span className="font-bold">{form.customerAccountNo || "N/A"}</span>
-                        <span className="text-slate-500 font-semibold">Account Name:</span><span className="font-bold">{form.customerAccountName || "N/A"}</span>
-                        <span className="text-slate-500 font-semibold">Company:</span><span className="font-bold">{form.salesCompanyName || "N/A"}</span>
+                        <span className="text-slate-500 font-semibold">{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span><span className="font-bold">{form.customerAccountNo || "N/A"}</span>
+                        <span className="text-slate-500 font-semibold">{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span><span className="font-bold">{form.customerAccountName || "N/A"}</span>
+                        <span className="text-slate-500 font-semibold">{t(lang, "purchase.card_company_colon", "Company:")}</span><span className="font-bold">{form.salesCompanyName || "N/A"}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Routing row */}
                   <div className="grid gap-0 border-t border-slate-200 bg-white text-[10px] font-semibold text-slate-700 md:grid-cols-4">
-                    <div className="border-b border-slate-200 p-3 md:border-b-0 md:border-r"><span className="block text-[8px] uppercase tracking-wider text-slate-400">Country</span>{form.branchCountry || form.origin || "N/A"}</div>
-                    <div className="border-b border-slate-200 p-3 md:border-b-0 md:border-r"><span className="block text-[8px] uppercase tracking-wider text-slate-400">Branch</span>{form.branchName || "N/A"}</div>
-                    <div className="border-b border-slate-200 p-3 md:border-b-0 md:border-r"><span className="block text-[8px] uppercase tracking-wider text-slate-400">Branch Code</span>{form.branchCode || "N/A"}</div>
-                    <div className="p-3"><span className="block text-[8px] uppercase tracking-wider text-slate-400">Currency</span>{form.salesCurrency || form.currencyType || "N/A"}</div>
+                    <div className="border-b border-slate-200 p-3 md:border-b-0 md:border-r"><span className="block text-[8px] uppercase tracking-wider text-slate-400">{t(lang, "report.country", "Country")}</span>{form.branchCountry || form.origin || "N/A"}</div>
+                    <div className="border-b border-slate-200 p-3 md:border-b-0 md:border-r"><span className="block text-[8px] uppercase tracking-wider text-slate-400">{t(lang, "report.branch", "Branch")}</span>{form.branchName || "N/A"}</div>
+                    <div className="border-b border-slate-200 p-3 md:border-b-0 md:border-r"><span className="block text-[8px] uppercase tracking-wider text-slate-400">{t(lang, "bdash.branch_code", "Branch Code")}</span>{form.branchCode || "N/A"}</div>
+                    <div className="p-3"><span className="block text-[8px] uppercase tracking-wider text-slate-400">{t(lang, "hr.f_currency", "Currency")}</span>{form.salesCurrency || form.currencyType || "N/A"}</div>
                   </div>
                 </div>
 
                 {/* Goods Table */}
                 <div className="mb-6">
-                  <h3 className="font-black text-xs border-b-2 border-slate-400 pb-1 mb-2 uppercase text-slate-800">Goods Details</h3>
+                  <h3 className="font-black text-xs border-b-2 border-slate-400 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.goods_details_title", "Goods Details")}</h3>
                   <table className="w-full text-[9px] border-collapse border border-slate-300">
                     <thead>
                       <tr className="bg-slate-100 border-b border-slate-300">
                         <Th className="border-r border-slate-300 p-1.5 text-left">#</Th>
-                        <Th className="border-r border-slate-300 p-1.5 text-left">Goods Name</Th>
-                        <Th className="border-r border-slate-300 p-1.5 text-center">HS Code</Th>
-                        <Th className="border-r border-slate-300 p-1.5 text-center">Origin</Th>
-                        <Th className="border-r border-slate-300 p-1.5 text-right">Qty</Th>
-                        <Th className="border-r border-slate-300 p-1.5 text-center">Unit</Th>
+                        <Th className="border-r border-slate-300 p-1.5 text-left">{t(lang, "purchase.th_goods_name", "Goods Name")}</Th>
+                        <Th className="border-r border-slate-300 p-1.5 text-center">{t(lang, "purchase.th_hs_code", "HS Code")}</Th>
+                        <Th className="border-r border-slate-300 p-1.5 text-center">{t(lang, "purchase.th_origin", "Origin")}</Th>
+                        <Th className="border-r border-slate-300 p-1.5 text-right">{t(lang, "purchase.th_qty", "Qty")}</Th>
+                        <Th className="border-r border-slate-300 p-1.5 text-center">{t(lang, "purchase.th_unit", "Unit")}</Th>
                         <Th className="border-r border-slate-300 p-1.5 text-right">Price ({form.currencyType || "USD"})</Th>
-                        <Th className="border-r border-slate-300 p-1.5 text-center">Ex. Rate</Th>
+                        <Th className="border-r border-slate-300 p-1.5 text-center">{t(lang, "purchase.th_ex_rate", "Ex. Rate")}</Th>
                         <Th className="p-1.5 text-right">Final ({form.secondaryCurrency || "PKR"})</Th>
                       </tr>
                     </thead>
                     <tbody>
                       {goodsEntries.length === 0 ? (
-                        <tr><td colSpan={9} className="p-3 text-center italic text-slate-500">No goods entries.</td></tr>
+                        <tr><td colSpan={9} className="p-3 text-center italic text-slate-500">{t(lang, "purchase.no_goods_entries", "No goods entries.")}</td></tr>
                       ) : (
                         goodsEntries.map((g, i) => (
                           <tr key={i} className="border-b border-slate-200">
@@ -4778,9 +4783,9 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     </tbody>
                     <tfoot>
                       <tr className="bg-slate-50 border-t-2 border-slate-400 font-bold">
-                        <td colSpan={4} className="p-1.5 text-right">Total:</td>
+                        <td colSpan={4} className="p-1.5 text-right">{t(lang, "purchase.total_colon", "Total:")}</td>
                         <td className="border-r border-slate-200 p-1.5 text-right">{reportTotals.totalQty.toLocaleString()}</td>
-                        <td colSpan={3} className="border-r border-slate-200 p-1.5 text-right text-[8px] text-slate-500 uppercase">Grand Total:</td>
+                        <td colSpan={3} className="border-r border-slate-200 p-1.5 text-right text-[8px] text-slate-500 uppercase">{t(lang, "purchase.grand_total_colon", "Grand Total:")}</td>
                         <td className="p-1.5 text-right">{form.secondaryCurrency || "PKR"} {reportTotals.grandFinal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                       </tr>
                     </tfoot>
@@ -4789,36 +4794,36 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
                 {/* Loading Details */}
                 <div className="mb-4 border border-slate-300 rounded p-3 text-[10px]">
-                  <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">Loading & Transit Report</h3>
+                  <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.loading_transit_report", "Loading & Transit Report")}</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid grid-cols-[100px_1fr] gap-1">
-                      <span className="text-slate-500 font-semibold">Shipping Mode:</span><span className="font-bold">{form.shippingMode || "N/A"}</span>
-                      <span className="text-slate-500 font-semibold">Origin Country:</span><span className="font-bold">{form.origin || "N/A"}</span>
-                      <span className="text-slate-500 font-semibold">Loading Port/Border:</span><span className="font-bold">{form.loadingPort || form.loadingBorder || form.airportName || "N/A"}</span>
-                      <span className="text-slate-500 font-semibold">Loading Date:</span><span className="font-bold">{form.loadingDate || "N/A"}</span>
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.shipping_mode_colon", "Shipping Mode:")}</span><span className="font-bold">{form.shippingMode || "N/A"}</span>
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.card_origin_country_colon", "Origin Country:")}</span><span className="font-bold">{form.origin || "N/A"}</span>
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.loading_port_border_colon", "Loading Port/Border:")}</span><span className="font-bold">{form.loadingPort || form.loadingBorder || form.airportName || "N/A"}</span>
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.loading_date_colon", "Loading Date:")}</span><span className="font-bold">{form.loadingDate || "N/A"}</span>
                     </div>
                     <div className="grid grid-cols-[100px_1fr] gap-1">
-                      <span className="text-slate-500 font-semibold">Transit Country:</span><span className="font-bold">{form.transitCountry || "N/A"}</span>
-                      <span className="text-slate-500 font-semibold">Destination Country:</span><span className="font-bold">{form.receivedCountry || "N/A"}</span>
-                      <span className="text-slate-500 font-semibold">Received Port/Border:</span><span className="font-bold">{form.receivedPort || form.receivedBorder || form.receivedPortName || "N/A"}</span>
-                      <span className="text-slate-500 font-semibold">Received Date:</span><span className="font-bold">{form.receivedDate || "N/A"}</span>
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.transit_country_colon", "Transit Country:")}</span><span className="font-bold">{form.transitCountry || "N/A"}</span>
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.destination_country_colon", "Destination Country:")}</span><span className="font-bold">{form.receivedCountry || "N/A"}</span>
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.received_port_border_colon", "Received Port/Border:")}</span><span className="font-bold">{form.receivedPort || form.receivedBorder || form.receivedPortName || "N/A"}</span>
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.received_date_colon", "Received Date:")}</span><span className="font-bold">{form.receivedDate || "N/A"}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Payment Condition */}
                 <div className="mb-4 border border-slate-300 rounded p-3 text-[10px]">
-                  <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">Payment Conditions Report</h3>
+                  <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.payment_conditions_report", "Payment Conditions Report")}</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid grid-cols-[120px_1fr] gap-1">
-                      <span className="text-slate-500 font-semibold">Payment Term:</span><span className="font-bold">{form.paymentType || "N/A"}</span>
-                      <span className="text-slate-500 font-semibold">Advance (%):</span><span className="font-bold">{form.advancePercent || 0}%</span>
-                      <span className="text-slate-500 font-semibold">Advance Payment Date:</span><span className="font-bold">{form.advancePaymentDate || "N/A"}</span>
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.payment_term_colon", "Payment Term:")}</span><span className="font-bold">{form.paymentType || "N/A"}</span>
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.advance_pct_colon", "Advance (%):")}</span><span className="font-bold">{form.advancePercent || 0}%</span>
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.advance_payment_date_colon", "Advance Payment Date:")}</span><span className="font-bold">{form.advancePaymentDate || "N/A"}</span>
                     </div>
                     <div className="grid grid-cols-[120px_1fr] gap-1">
-                      <span className="text-slate-500 font-semibold">Invoice Terms:</span><span className="font-bold">{form.invoicePayment || "N/A"}</span>
-                      <span className="text-slate-500 font-semibold">Remaining (%):</span><span className="font-bold">{100 - (form.advancePercent || 0)}%</span>
-                      <span className="text-slate-500 font-semibold">Final Payment Date:</span><span className="font-bold">{form.paymentDate || "N/A"}</span>
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.invoice_terms_colon", "Invoice Terms:")}</span><span className="font-bold">{form.invoicePayment || "N/A"}</span>
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.remaining_pct_colon", "Remaining (%):")}</span><span className="font-bold">{100 - (form.advancePercent || 0)}%</span>
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.final_payment_date_colon", "Final Payment Date:")}</span><span className="font-bold">{form.paymentDate || "N/A"}</span>
                     </div>
                   </div>
                 </div>
@@ -4826,7 +4831,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 {/* Remarks & Narration */}
                 {form.remarks && (
                   <div className="mb-4 border border-slate-300 rounded p-3 text-[10px]">
-                    <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">Remarks & Narration</h3>
+                    <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.remarks_narration_title", "Remarks & Narration")}</h3>
                     <p className="whitespace-pre-wrap font-medium text-slate-800">{form.remarks}</p>
                   </div>
                 )}
@@ -4834,7 +4839,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 {/* User Remarks (Report) */}
                 {form.orderReportRemarks && (
                   <div className="mb-4 border border-slate-300 rounded p-3 text-[10px]">
-                    <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">User Remarks (Report)</h3>
+                    <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.user_remarks_report_title", "User Remarks (Report)")}</h3>
                     <p className="whitespace-pre-wrap font-medium text-slate-800">{form.orderReportRemarks}</p>
                   </div>
                 )}
@@ -4842,7 +4847,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 {/* Dynamic Reports */}
                 {reportsList.length > 0 && (
                   <div className="mb-4 border border-slate-300 rounded p-3 text-[10px]">
-                    <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">Dynamic Reports & Notes</h3>
+                    <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.dynamic_reports_notes_title", "Dynamic Reports & Notes")}</h3>
                     <div className="space-y-3">
                       {reportsList.map((r, i) => (
                         <div key={r.id}>
@@ -4857,13 +4862,13 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 {/* Signatures */}
                 <div className="mt-16 grid grid-cols-3 gap-8 text-center text-[10px] font-bold">
                   <div>
-                    <div className="border-t border-slate-400 pt-1">Prepared By</div>
+                    <div className="border-t border-slate-400 pt-1">{t(lang, "purchase.prepared_by_label", "Prepared By")}</div>
                   </div>
                   <div>
-                    <div className="border-t border-slate-400 pt-1">Checked By</div>
+                    <div className="border-t border-slate-400 pt-1">{t(lang, "purchase.checked_by_label", "Checked By")}</div>
                   </div>
                   <div>
-                    <div className="border-t border-slate-400 pt-1">Authorized Signatory</div>
+                    <div className="border-t border-slate-400 pt-1">{t(lang, "purchase.authorized_signatory_label", "Authorized Signatory")}</div>
                   </div>
                 </div>
               </div>
@@ -4878,8 +4883,8 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
           <div className="w-full max-w-xs rounded-xl border border-border bg-card shadow-2xl animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
               <div>
-                <h3 className="text-sm font-bold tracking-tight text-foreground">Add New Country</h3>
-                <p className="text-[10px] text-muted-foreground mt-0.5">ISO codes and emails are auto-generated</p>
+                <h3 className="text-sm font-bold tracking-tight text-foreground">{t(lang, "purchase.add_new_country_label", "Add New Country")}</h3>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{t(lang, "sales.iso_codes_auto_generated", "ISO codes and emails are auto-generated")}</p>
               </div>
               <button
                 type="button"
@@ -4892,13 +4897,13 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[10px] rounded px-3 py-2">{newCountryError}</div>
               )}
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">Country Name *</label>
+                <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "sales.country_name_star", "Country Name *")}</label>
                 <input
                   type="text"
                   value={newCountryForm.name}
                   onChange={(e) => setNewCountryForm({ name: e.target.value })}
                   onKeyDown={(e) => { if (e.key === "Enter") handleAddNewCountry(); }}
-                  placeholder="e.g. Iran"
+                  placeholder={t(lang, "purchase.wiz_ph_country_example", "e.g. Iran")}
                   autoFocus
                   className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary"
                 />
@@ -4910,7 +4915,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 type="button"
                 onClick={() => { setNewCountryModal(false); setNewCountryError(""); setNewCountryForm({ name: "" }); }}
                 className="px-4 py-1.5 text-[11px] rounded border border-input text-muted-foreground hover:text-foreground transition-colors"
-              >Cancel</button>
+              >{t(lang, "common.cancel", "Cancel")}</button>
               <button
                 type="button"
                 onClick={handleAddNewCountry}
@@ -4928,8 +4933,8 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
           <div className="w-full max-w-sm rounded-xl border border-border bg-card shadow-2xl animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
               <div>
-                <h3 className="text-sm font-bold tracking-tight text-foreground">Add New Good</h3>
-                <p className="text-[10px] text-muted-foreground mt-0.5">Creates a new item in the Goods Master</p>
+                <h3 className="text-sm font-bold tracking-tight text-foreground">{t(lang, "purchase.add_new_good", "Add New Good")}</h3>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{t(lang, "sales.creates_new_item_goods_master", "Creates a new item in the Goods Master")}</p>
               </div>
               <button
                 type="button"
@@ -4943,17 +4948,17 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               )}
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2">
-                  <label className="block text-[10px] text-muted-foreground mb-1">Goods Name *</label>
+                  <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "tl.goods_name_label", "Goods Name *")}</label>
                   <input
                     type="text"
                     value={newGoodForm.goodsName}
                     onChange={(e) => setNewGoodForm(p => ({ ...p, goodsName: e.target.value.toUpperCase() }))}
-                    placeholder="e.g. PINE NUTS INSHELL"
+                    placeholder={t(lang, "purchase.wiz_ph_goods_name_example", "e.g. PINE NUTS INSHELL")}
                     className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary uppercase"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] text-muted-foreground mb-1">HS Code *</label>
+                  <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "sales.hs_code_star", "HS Code *")}</label>
                   <input
                     type="text"
                     value={newGoodForm.chsCode}
@@ -4963,14 +4968,14 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   />
                 </div>
               </div>
-              <p className="text-[9px] text-muted-foreground/60">After saving, this good will be auto-selected with HS Code pre-filled.</p>
+              <p className="text-[9px] text-muted-foreground/60">{t(lang, "sales.after_saving_good_msg", "After saving, this good will be auto-selected with HS Code pre-filled.")}</p>
             </div>
             <div className="flex justify-end gap-2 px-5 pb-4">
               <button
                 type="button"
                 onClick={() => { setNewGoodModal(false); setNewGoodError(""); setNewGoodForm({ goodsName: "", chsCode: "" }); }}
                 className="px-4 py-1.5 text-[11px] rounded border border-input text-muted-foreground hover:text-foreground transition-colors"
-              >Cancel</button>
+              >{t(lang, "common.cancel", "Cancel")}</button>
               <button
                 type="button"
                 onClick={handleAddNewGood}
@@ -4989,10 +4994,10 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
               <div>
                 <h3 className="text-sm font-bold tracking-tight text-foreground uppercase">
-                  Add New {newPortForm.transportType === "sea" ? "Port" : newPortForm.transportType === "road" ? "Border" : "Airport"}
+                  {t(lang, "sales.add_new_prefix_word", "Add New {0}").replace("{0}", newPortForm.transportType === "sea" ? t(lang, "sales.port_word", "Port") : newPortForm.transportType === "road" ? t(lang, "sales.border_word", "Border") : t(lang, "sales.airport_word", "Airport"))}
                 </h3>
                 <p className="text-[10px] text-muted-foreground mt-0.5">
-                  Adding to {newPortForm.side === "loading" ? "Loading" : "Received"} registry
+                  {t(lang, "sales.adding_to_registry_msg", "Adding to {0} registry").replace("{0}", newPortForm.side === "loading" ? t(lang, "sales.loading_word", "Loading") : t(lang, "sales.received_word", "Received"))}
                 </p>
               </div>
               <button
@@ -5006,19 +5011,19 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[10px] rounded px-3 py-2">{newPortError}</div>
               )}
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">Country Name *</label>
+                <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "sales.country_name_star", "Country Name *")}</label>
                 <select
                   value={newPortForm.countryName || ""}
                   onChange={(e) => setNewPortForm(p => ({ ...p, countryName: e.target.value }))}
                   className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary"
                 >
-                  <option value="">Select Country...</option>
+                  <option value="">{t(lang, "purchase.select_country_ellipsis", "Select Country...")}</option>
                   {transitCountryOptions.map(c => <option key={c.name || c.id} value={c.name}>{c.name}</option>)}
                 </select>
               </div>
               <div>
                 <label className="block text-[10px] text-muted-foreground mb-1">
-                  {newPortForm.transportType === "sea" ? "Port" : newPortForm.transportType === "road" ? "Border" : "Airport"} Name *
+                  {t(lang, "sales.name_star_suffix", "{0} Name *").replace("{0}", newPortForm.transportType === "sea" ? t(lang, "sales.port_word", "Port") : newPortForm.transportType === "road" ? t(lang, "sales.border_word", "Border") : t(lang, "sales.airport_word", "Airport"))}
                 </label>
                 <input
                   type="text"
@@ -5041,7 +5046,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 type="button"
                 onClick={() => { setNewPortModal(false); setNewPortError(""); setNewPortForm(p => ({ ...p, portName: "" })); }}
                 className="px-4 py-1.5 text-[11px] rounded border border-input text-muted-foreground hover:text-foreground transition-colors"
-              >Cancel</button>
+              >{t(lang, "common.cancel", "Cancel")}</button>
               <button
                 type="button"
                 disabled={!newPortForm.portName.trim()}
@@ -5052,7 +5057,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   }
                 }}
                 className="px-4 py-1.5 text-[11px] rounded bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity disabled:opacity-60"
-              >Save</button>
+              >{t(lang, "common.save", "Save")}</button>
             </div>
           </div>
         </div>
@@ -5065,10 +5070,10 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
               <div>
                 <h3 className="text-sm font-bold tracking-tight text-foreground uppercase">
-                  Add Good Variation
+                  {t(lang, "purchase.wiz_add_good_variation", "Add Good Variation")}
                 </h3>
                 <p className="text-[10px] text-muted-foreground mt-0.5">
-                  Specify size/brand under selected good
+                  {t(lang, "purchase.wiz_specify_size_brand", "Specify size/brand under selected good")}
                 </p>
               </div>
               <button
@@ -5079,7 +5084,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             </div>
             <div className="p-5 space-y-3">
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">Goods Name</label>
+                <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.th_goods_name", "Goods Name")}</label>
                 <input
                   type="text"
                   value={customVariationForm.goodsName}
@@ -5089,17 +5094,17 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               </div>
 
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">Brand Name *</label>
+                <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "sales.brand_name_star", "Brand Name *")}</label>
                 <input
                   type="text"
                   value={customVariationForm.brand}
                   onChange={(e) => setCustomVariationForm(p => ({ ...p, brand: e.target.value.toUpperCase() }))}
-                  placeholder="e.g. PREMIUM"
+                  placeholder={t(lang, "purchase.wiz_ph_brand_example", "e.g. PREMIUM")}
                   className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary uppercase"
                 />
               </div>
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">Size Specification *</label>
+                <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "sales.size_spec_star", "Size Specification *")}</label>
                 <input
                   type="text"
                   value={customVariationForm.size}
@@ -5109,7 +5114,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       handleSaveCustomVariation();
                     }
                   }}
-                  placeholder="e.g. 20/22"
+                  placeholder={t(lang, "purchase.wiz_ph_size_example", "e.g. 20/22")}
                   className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary uppercase"
                 />
               </div>
@@ -5119,12 +5124,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 type="button"
                 onClick={() => setCustomVariationModal(false)}
                 className="px-4 py-1.5 text-[11px] rounded border border-input text-muted-foreground hover:text-foreground transition-colors"
-              >Cancel</button>
+              >{t(lang, "common.cancel", "Cancel")}</button>
               <button
                 type="button"
                 onClick={handleSaveCustomVariation}
                 className="px-4 py-1.5 text-[11px] rounded bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity"
-              >Save</button>
+              >{t(lang, "common.save", "Save")}</button>
             </div>
           </div>
         </div>
@@ -5137,10 +5142,10 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
               <div>
                 <h3 className="text-sm font-bold tracking-tight text-foreground">
-                  Create New {createAccountType === "purchase" ? "Supplier Account" : "Customer Account"}
+                  {t(lang, "sales.create_new_prefix", "Create New {0}").replace("{0}", createAccountType === "purchase" ? t(lang, "sales.supplier_account_word", "Supplier Account") : t(lang, "sales.customer_account_word", "Customer Account"))}
                 </h3>
                 <p className="text-[10px] text-muted-foreground mt-0.5">
-                  Scope: {form.cityBranchId ? "City Branch" : form.countryBranchId ? "Main Branch" : form.countryId ? "Country Scope" : "Super Admin"}
+                  {t(lang, "sales.scope_colon", "Scope:")} {form.cityBranchId ? t(lang, "report.scope_city_branch", "City Branch") : form.countryBranchId ? t(lang, "purchase.card_main_branch_fallback", "Main Branch") : form.countryId ? t(lang, "sales.country_scope_word", "Country Scope") : t(lang, "sales.super_admin_scope_word", "Super Admin")}
                 </p>
               </div>
               <button
@@ -5157,29 +5162,29 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               )}
 
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">Account Name *</label>
+                <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "sales.account_name_star", "Account Name *")}</label>
                 <input
                   type="text"
                   value={createAccountForm.name}
                   onChange={(e) => setCreateAccountForm(p => ({ ...p, name: e.target.value }))}
-                  placeholder="e.g. Haji Ahmad Dry Fruits"
+                  placeholder={t(lang, "purchase.wiz_ph_account_name_example", "e.g. Haji Ahmad Dry Fruits")}
                   className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] text-muted-foreground mb-1">Account Code *</label>
+                  <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "sales.account_code_star", "Account Code *")}</label>
                   <input
                     type="text"
                     value={createAccountForm.code}
                     onChange={(e) => setCreateAccountForm(p => ({ ...p, code: e.target.value }))}
-                    placeholder="AUTO"
+                    placeholder={t(lang, "purchase.wiz_ph_auto", "AUTO")}
                     className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary font-mono"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] text-muted-foreground mb-1">Currency *</label>
+                  <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "sales.currency_star", "Currency *")}</label>
                   <select
                     value={createAccountForm.currency}
                     onChange={(e) => setCreateAccountForm(p => ({ ...p, currency: e.target.value }))}
@@ -5194,17 +5199,17 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] text-muted-foreground mb-1">Account Category *</label>
+                  <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "sales.account_category_star", "Account Category *")}</label>
                   <select
                     value={createAccountForm.kind}
                     onChange={(e) => setCreateAccountForm(p => ({ ...p, kind: e.target.value }))}
                     className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary"
                   >
-                    <option value="liability">Liability</option>
-                    <option value="asset">Asset</option>
-                    <option value="expense">Expense</option>
-                    <option value="income">Income</option>
-                    <option value="equity">Equity</option>
+                    <option value="liability">{t(lang, "sales.liability_word", "Liability")}</option>
+                    <option value="asset">{t(lang, "sales.asset_word", "Asset")}</option>
+                    <option value="expense">{t(lang, "sae.expense", "Expense")}</option>
+                    <option value="income">{t(lang, "sales.income_word", "Income")}</option>
+                    <option value="equity">{t(lang, "acct.grp_equity", "Equity")}</option>
                   </select>
                 </div>
                 <div className="flex items-center pt-5">
@@ -5215,7 +5220,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       onChange={(e) => setCreateAccountForm(p => ({ ...p, isControlAccount: e.target.checked }))}
                       className="rounded border-input text-primary focus:ring-primary h-3.5 w-3.5"
                     />
-                    Control Account
+                    {t(lang, "purchase.wiz_control_account", "Control Account")}
                   </label>
                 </div>
               </div>
@@ -5229,7 +5234,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 type="button"
                 onClick={() => setCreateAccountModalOpen(false)}
                 className="px-4 py-1.5 text-[11px] rounded border border-input text-muted-foreground hover:text-foreground transition-colors"
-              >Cancel</button>
+              >{t(lang, "common.cancel", "Cancel")}</button>
               <button
                 type="button"
                 onClick={handleAddNewAccount}
@@ -5249,7 +5254,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
           <div className="bg-background rounded-xl border border-border shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between p-4 border-b border-border/60 bg-muted/30">
               <h3 className="font-bold text-base text-foreground flex items-center gap-2">
-                Create New Report
+                {t(lang, "purchase.wiz_create_new_report", "Create New Report")}
               </h3>
               <button
                 type="button"
@@ -5261,34 +5266,34 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             </div>
             <form onSubmit={handleNewReportSubmit} className="p-5 space-y-4">
               <div>
-                <label className="text-xs font-bold text-foreground mb-1.5 block">Report Name <span className="text-red-500">*</span></label>
+                <label className="text-xs font-bold text-foreground mb-1.5 block">{t(lang, "report.builder_report_name", "Report Name")}<span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   required
                   value={newReportForm.name}
                   onChange={(e) => setNewReportForm({ ...newReportForm, name: e.target.value })}
                   className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  placeholder="e.g. Loading Report, Shipping Report"
+                  placeholder={t(lang, "purchase.wiz_ph_report_name_example", "e.g. Loading Report, Shipping Report")}
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-foreground mb-1.5 block">Description</label>
+                <label className="text-xs font-bold text-foreground mb-1.5 block">{t(lang, "common.description", "Description")}</label>
                 <input
                   type="text"
                   value={newReportForm.description}
                   onChange={(e) => setNewReportForm({ ...newReportForm, description: e.target.value })}
                   className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  placeholder="Optional description"
+                  placeholder={t(lang, "purchase.wiz_ph_optional_description", "Optional description")}
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-foreground mb-1.5 block">Notes</label>
+                <label className="text-xs font-bold text-foreground mb-1.5 block">{t(lang, "cusm.notes", "Notes")}</label>
                 <textarea
                   rows={3}
                   value={newReportForm.notes}
                   onChange={(e) => setNewReportForm({ ...newReportForm, notes: e.target.value })}
                   className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  placeholder="Additional notes for this report"
+                  placeholder={t(lang, "purchase.wiz_ph_additional_notes", "Additional notes for this report")}
                 />
               </div>
               <div className="flex justify-end gap-2 pt-2 border-t border-border/60">
@@ -5298,13 +5303,13 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   onClick={() => setIsNewReportModalOpen(false)}
                   className="h-9"
                 >
-                  Cancel
+                  {t(lang, "common.cancel", "Cancel")}
                 </Button>
                 <Button
                   type="submit"
                   className="h-9 bg-primary hover:bg-primary/90 font-bold"
                 >
-                  Create & Save
+                  {t(lang, "purchase.wiz_create_and_save", "Create & Save")}
                 </Button>
               </div>
             </form>
@@ -5319,10 +5324,10 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
               <div>
                 <h3 className="text-sm font-bold tracking-tight text-foreground">
-                  Create New Company
+                  {t(lang, "purchase.wiz_create_new_company", "Create New Company")}
                 </h3>
                 <p className="text-[10px] text-muted-foreground mt-0.5">
-                  Adding to Company Master Settings registry
+                  {t(lang, "purchase.wiz_adding_to_company_registry", "Adding to Company Master Settings registry")}
                 </p>
               </div>
               <button
@@ -5339,29 +5344,29 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               )}
 
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">Company Name *</label>
+                <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "tl.company_name_label", "Company Name *")}</label>
                 <input
                   type="text"
                   value={createCompanyForm.name}
                   onChange={(e) => setCreateCompanyForm(p => ({ ...p, name: e.target.value }))}
-                  placeholder="e.g. Apex Trading LLC"
+                  placeholder={t(lang, "purchase.wiz_ph_company_example", "e.g. Apex Trading LLC")}
                   className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">Legal Name</label>
+                <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "branch.legal_name_label", "Legal Name")}</label>
                 <input
                   type="text"
                   value={createCompanyForm.legalName}
                   onChange={(e) => setCreateCompanyForm(p => ({ ...p, legalName: e.target.value }))}
-                  placeholder="e.g. Apex Imports (Optional)"
+                  placeholder={t(lang, "purchase.wiz_ph_company_legal_example", "e.g. Apex Imports (Optional)")}
                   className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">Base Currency *</label>
+                <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "sales.base_currency_star", "Base Currency *")}</label>
                 <select
                   value={createCompanyForm.baseCurrency}
                   onChange={(e) => setCreateCompanyForm(p => ({ ...p, baseCurrency: e.target.value }))}
@@ -5382,7 +5387,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 type="button"
                 onClick={() => setCreateCompanyModalOpen(false)}
                 className="px-4 py-1.5 text-[11px] rounded border border-input text-muted-foreground hover:text-foreground transition-colors"
-              >Cancel</button>
+              >{t(lang, "common.cancel", "Cancel")}</button>
               <button
                 type="button"
                 onClick={handleAddNewCompany}
@@ -5404,7 +5409,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
           <div className="bg-white rounded-xl shadow-2xl overflow-hidden w-full max-w-lg animate-in zoom-in-95 duration-200">
             <div className="bg-blue-900 text-white p-4 flex items-center justify-between border-b border-blue-800">
               <h2 className="font-black tracking-wider uppercase text-sm flex items-center gap-2">
-                <FileSignature className="h-4 w-4 text-blue-300" /> Transfer to Payment Module
+                <FileSignature className="h-4 w-4 text-blue-300" /> {t(lang, "purchase.wiz_transfer_to_payment_module", "Transfer to Payment Module")}
               </h2>
               <button type="button" onClick={() => setTransferConfirmModal(false)} className="text-blue-300 hover:text-white transition">
                 <X className="h-5 w-5" />
@@ -5415,7 +5420,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               <div className="flex items-start gap-3 bg-blue-50 text-blue-800 p-3 rounded-lg border border-blue-100">
                 <CheckSquare className="h-5 w-5 shrink-0 mt-0.5 text-blue-600" />
                 <p className="font-semibold leading-relaxed">
-                  You are about to transfer this Sales Booking to the <strong>Sales Transfer / Receipt</strong> module.
+                  {t(lang, "sales.about_to_transfer_booking", "You are about to transfer this Sales Booking to the")}<strong>{t(lang, "sales.transfer_receipt_module", "Sales Transfer / Receipt")}</strong> {t(lang, "sales.module_word_period", "module.")}
                   <br/><br/>
                   <em>Note: No accounting entries (Roznamcha, Ledger) will be posted at this stage. Entries will only be posted when the payment is officially processed.</em>
                 </p>
@@ -5423,19 +5428,19 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="border border-slate-200 rounded p-2.5 bg-white shadow-sm flex justify-between items-center">
-                  <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Invoice No</span>
+                  <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{t(lang, "lpjr.inv_invoice_no", "Invoice No")}</span>
                   <div className="font-black font-mono text-slate-900">{form.salesOrderNo}</div>
                 </div>
                 <div className="border border-slate-200 rounded p-2.5 bg-white shadow-sm flex justify-between items-center">
-                  <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Base Entry No</span>
-                  <div className="font-black font-mono text-slate-900">{savedOrderNo || "Pending..."}</div>
+                  <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{t(lang, "sales.base_entry_no_label", "Base Entry No")}</span>
+                  <div className="font-black font-mono text-slate-900">{savedOrderNo || t(lang, "purchase.wiz_pending_ellipsis", "Pending...")}</div>
                 </div>
               </div>
             </div>
 
             <div className="bg-slate-100 border-t border-slate-200 p-4 flex justify-end gap-3 rounded-b-xl">
               <Button type="button" variant="outline" className="font-bold border-slate-300 text-slate-600" onClick={() => setTransferConfirmModal(false)}>
-                Cancel
+                {t(lang, "common.cancel", "Cancel")}
               </Button>
               <Button
                 type="button"
@@ -5446,7 +5451,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   handleTransfer();
                 }}
               >
-                {savingOrder ? "Processing..." : "Confirm & Transfer"}
+                {savingOrder ? t(lang, "sales.processing_ellipsis", "Processing...") : t(lang, "sales.confirm_transfer_short", "Confirm & Transfer")}
               </Button>
             </div>
           </div>
@@ -5460,7 +5465,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             <div className="bg-slate-950 text-white p-4 flex items-center justify-between">
               <h3 className="font-black text-xs uppercase tracking-wider flex items-center gap-2">
                 <Package className="h-4 w-4 text-sky-400" />
-                {form.saleSource === "in_transit" ? "Transit Cargo Details" : "Lot Details"}
+                {form.saleSource === "in_transit" ? t(lang, "sales.transit_cargo_details_title", "Transit Cargo Details") : t(lang, "sales.lot_details_title", "Lot Details")}
               </h3>
               <button
                 type="button"
@@ -5474,47 +5479,47 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             <div className="p-5 space-y-4 text-xs">
               {(() => {
                 const lot = MOCK_SALE_LOTS.find((l) => l.lotNo === selectedLotId);
-                if (!lot) return <p className="text-muted-foreground italic">No lot selected.</p>;
+                if (!lot) return <p className="text-muted-foreground italic">{t(lang, "sales.no_lot_selected", "No lot selected.")}</p>;
                 return (
                   <>
                     <div className="grid grid-cols-2 gap-3 border-b border-slate-100 pb-3">
                       <div>
-                        <span className="text-[10px] text-muted-foreground font-semibold block uppercase">Lot Number</span>
+                        <span className="text-[10px] text-muted-foreground font-semibold block uppercase">{t(lang, "sales.lot_number_label", "Lot Number")}</span>
                         <span className="font-mono font-black text-primary text-sm">{lot.lotNo}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-muted-foreground font-semibold block uppercase">Reference Number</span>
+                        <span className="text-[10px] text-muted-foreground font-semibold block uppercase">{t(lang, "sales.reference_number_label", "Reference Number")}</span>
                         <span className="font-mono font-bold text-slate-700">{lot.stockRef}</span>
                       </div>
                     </div>
 
                     <div className="space-y-2">
                       <div className="flex justify-between py-1 border-b border-slate-50">
-                        <span className="text-slate-500 font-medium">Goods Name:</span>
+                        <span className="text-slate-500 font-medium">{t(lang, "sales.goods_name_colon", "Goods Name:")}</span>
                         <span className="font-bold text-slate-900">{lot.goodsName}</span>
                       </div>
                       <div className="flex justify-between py-1 border-b border-slate-50">
-                        <span className="text-slate-500 font-medium">Brand:</span>
+                        <span className="text-slate-500 font-medium">{t(lang, "sales.brand_colon", "Brand:")}</span>
                         <span className="font-semibold text-slate-900">{lot.brand}</span>
                       </div>
                       <div className="flex justify-between py-1 border-b border-slate-50">
-                        <span className="text-slate-500 font-medium">Size:</span>
+                        <span className="text-slate-500 font-medium">{t(lang, "sales.size_colon", "Size:")}</span>
                         <span className="font-semibold text-slate-900">{lot.size}</span>
                       </div>
                       <div className="flex justify-between py-1 border-b border-slate-50">
-                        <span className="text-slate-500 font-medium">Origin:</span>
+                        <span className="text-slate-500 font-medium">{t(lang, "sales.origin_colon", "Origin:")}</span>
                         <span className="font-semibold text-slate-900">{lot.origin}</span>
                       </div>
                       <div className="flex justify-between py-1 border-b border-slate-50">
-                        <span className="text-slate-500 font-medium">Available Quantity:</span>
+                        <span className="text-slate-500 font-medium">{t(lang, "sales.available_quantity_colon", "Available Quantity:")}</span>
                         <span className="font-black text-emerald-600">{Number(lot.availableQty).toLocaleString()} {lot.qtyName}</span>
                       </div>
                       <div className="flex justify-between py-1 border-b border-slate-50">
-                        <span className="text-slate-500 font-medium">Net Weight:</span>
+                        <span className="text-slate-500 font-medium">{t(lang, "tl.net_weight_colon", "Net Weight:")}</span>
                         <span className="font-bold text-slate-900">{Number(lot.netWeight).toLocaleString()} KG</span>
                       </div>
                       <div className="flex justify-between py-1">
-                        <span className="text-slate-500 font-medium">Price:</span>
+                        <span className="text-slate-500 font-medium">{t(lang, "sales.price_colon", "Price:")}</span>
                         <span className="font-bold text-slate-950">{lot.currencyType} {lot.coursePrice}</span>
                       </div>
                     </div>
@@ -5527,7 +5532,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         defaultChecked
                       />
                       <label htmlFor="confirm-lot-chk" className="font-bold text-[10px] leading-tight cursor-pointer">
-                        Confirm selection of this cargo lot to apply details to the goods entry form.
+                        {t(lang, "sales.confirm_lot_selection_msg", "Confirm selection of this cargo lot to apply details to the goods entry form.")}
                       </label>
                     </div>
 
@@ -5538,7 +5543,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         className="h-9 font-bold"
                         onClick={() => setIsLotModalOpen(false)}
                       >
-                        Cancel
+                        {t(lang, "common.cancel", "Cancel")}
                       </Button>
                       <Button
                         type="button"
@@ -5548,7 +5553,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                           setIsLotModalOpen(false);
                         }}
                       >
-                        Save & Apply
+                        {t(lang, "sales.save_apply_btn", "Save & Apply")}
                       </Button>
                     </div>
                   </>

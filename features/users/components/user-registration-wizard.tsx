@@ -380,6 +380,15 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     if (emp) {
       const empName = emp.person?.customer_name || emp.name || emp.full_name || "";
       const code = emp.employee_code || emp.code || "EMP-001";
+
+      // Extract first/last name
+      const nameParts = empName.trim().split(" ");
+      const firstNameVal = nameParts[0] || "";
+      const lastNameVal = nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";
+      const middleNameVal = nameParts.length > 2 ? nameParts.slice(1, -1).join(" ") : "";
+
+      setFirstName(firstNameVal);
+      setLastName(lastNameVal);
       setFullName(empName);
       setEmployeeCode(code);
       if (!loginUsername) {
@@ -412,18 +421,12 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         setResidentialAddress(emp.person.address);
       }
 
-      // Extract first/last name
-      const nameParts = empName.trim().split(" ");
-      const firstName = nameParts[0] || "";
-      const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";
-      const middleName = nameParts.length > 2 ? nameParts.slice(1, -1).join(" ") : "";
-
       // Populate rich employee master profile object
       setEmployeeProfile({
         personMasterId: emp.person_master_id || emp.person?.id,
-        firstName,
-        middleName,
-        lastName,
+        firstName: firstNameVal,
+        middleName: middleNameVal,
+        lastName: lastNameVal,
         fullName: empName,
         employeeCode: code,
         designation: emp.designation || "Staff",
@@ -1026,70 +1029,69 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               {/* STEP 1: Employee Master Profile Information */}
               {step === 1 && (
                 <div className="space-y-4">
-                  {/* Gender / Category Filter Tabs */}
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
-                      <span className="flex items-center gap-1.5">
-                        <Users className="h-3.5 w-3.5 text-blue-600" />
-                        <span>{tr("genderFilterLabel")}</span>
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-normal">Filter registered profiles</span>
-                    </Label>
-                    <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100/80 dark:bg-slate-900 p-0.5 gap-1">
-                      <button
-                        type="button"
-                        onClick={() => setGenderFilter("all")}
-                        className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all flex items-center gap-1.5 ${
-                          genderFilter === "all"
-                            ? "bg-[#0F172A] text-white shadow-sm dark:bg-slate-800"
-                            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
-                        }`}
-                      >
-                        <Users className="h-3.5 w-3.5" />
-                        <span>{tr("genderAll")}</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setGenderFilter("male")}
-                        className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all flex items-center gap-1.5 ${
-                          genderFilter === "male"
-                            ? "bg-[#0F172A] text-white shadow-sm dark:bg-slate-800"
-                            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
-                        }`}
-                      >
-                        <User className="h-3.5 w-3.5" />
-                        <span>{tr("genderMale")}</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setGenderFilter("female")}
-                        className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all flex items-center gap-1.5 ${
-                          genderFilter === "female"
-                            ? "bg-[#0F172A] text-white shadow-sm dark:bg-slate-800"
-                            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
-                        }`}
-                      >
-                        <UserCheck className="h-3.5 w-3.5" />
-                        <span>{tr("genderFemale")}</span>
-                      </button>
+                  {/* Single Unified Header Packet: Gender / Staff Filter + Employee Select */}
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 p-3 space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/80 dark:border-slate-800 pb-2.5">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                        <Users className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                        <span>{tr("selectEmployee")}</span>
+                      </div>
+                      <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-0.5 gap-1 shadow-2xs">
+                        <button
+                          type="button"
+                          onClick={() => setGenderFilter("all")}
+                          className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all flex items-center gap-1 ${
+                            genderFilter === "all"
+                              ? "bg-slate-900 text-white shadow-xs dark:bg-slate-800"
+                              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
+                          }`}
+                        >
+                          <Users className="h-3 w-3" />
+                          <span>{tr("genderAll")}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setGenderFilter("male")}
+                          className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all flex items-center gap-1 ${
+                            genderFilter === "male"
+                              ? "bg-slate-900 text-white shadow-xs dark:bg-slate-800"
+                              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
+                          }`}
+                        >
+                          <User className="h-3 w-3" />
+                          <span>{tr("genderMale")}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setGenderFilter("female")}
+                          className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all flex items-center gap-1 ${
+                            genderFilter === "female"
+                              ? "bg-slate-900 text-white shadow-xs dark:bg-slate-800"
+                              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
+                          }`}
+                        >
+                          <UserCheck className="h-3 w-3" />
+                          <span>{tr("genderFemale")}</span>
+                        </button>
+                      </div>
                     </div>
-                  </div>
 
-                  <SearchSelect
-                    label={hrEmployeesLoading ? `${tr("selectEmployee")} (...)` : tr("selectEmployee")}
-                    value={selectedEmployeeId}
-                    placeholder={tr("employeeSearchPlaceholder")}
-                    searchPlaceholder={tr("employeeSearchPlaceholder")}
-                    emptyLabel={tr("noEmployeesFound")}
-                    options={employeeOptions}
-                    disabled={hrEmployeesLoading}
-                    onValueChange={setSelectedEmployeeId}
-                    createLabel={tr("addNewEmployee")}
-                    createButtonPlacement="both"
-                    onCreateNew={() => setShowEmployeeModal(true)}
-                    onViewOption={(empId) => setViewEmployeeId(empId)}
-                    onEditOption={(empId) => setEditEmployeeId(empId)}
-                  />
+                    <SearchSelect
+                      label=""
+                      value={selectedEmployeeId}
+                      placeholder={tr("employeeSearchPlaceholder")}
+                      searchPlaceholder={tr("employeeSearchPlaceholder")}
+                      emptyLabel={tr("noEmployeesFound")}
+                      options={employeeOptions}
+                      disabled={hrEmployeesLoading}
+                      onValueChange={setSelectedEmployeeId}
+                      createLabel={tr("addNewEmployee")}
+                      createButtonPlacement="both"
+                      onCreateNew={() => setShowEmployeeModal(true)}
+                      onViewOption={(empId) => setViewEmployeeId(empId)}
+                      onEditOption={(empId) => setEditEmployeeId(empId)}
+                    />
+                  </div>
 
                   {/* Selected Employee Master Profile Banner */}
                   {selectedEmployeeId && employeeProfile.fullName && (

@@ -12,6 +12,7 @@ import { ReportStatusLegend } from "@/features/reports/components/report-status-
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { resolveVerifiedTranslation, translationPendingLabel } from "@/lib/i18n/verified-record-translations";
+import { t } from "@/lib/i18n/ui";
 import { RecordTranslationCorrectionDialog } from "@/features/translations/components/record-translation-correction-dialog";
 
 type SalesReport = {
@@ -162,7 +163,7 @@ export function SalesBookingJournalReportView() {
       {/* Search & Filters */}
       <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex flex-wrap gap-4 items-end">
         <div className="flex-1 min-w-[240px]">
-          <label className="block text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wider">Search Records</label>
+          <label className="block text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wider">{t(activeLang, "sales.sbjr_search_records", "Search Records")}</label>
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -171,20 +172,20 @@ export function SalesBookingJournalReportView() {
               onKeyDown={(e) => {
                 if (e.key === "Enter") void loadReports(query);
               }}
-              placeholder="Search sales order #, customer, brand..."
+              placeholder={t(activeLang, "sales.sbjr_search_ph", "Search sales order #, customer, brand...")}
               className="bg-background border-input pl-9 text-xs text-foreground placeholder:text-muted-foreground h-10 shadow-sm"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wider">Country</label>
+          <label className="block text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wider">{t(activeLang, "report.country", "Country")}</label>
           <select
             value={countryId}
             onChange={(e) => setCountryId(e.target.value)}
             className="bg-background border border-input rounded-lg px-3 h-10 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring shadow-sm"
           >
-            <option value="">All Countries</option>
+            <option value="">{t(activeLang, "common.all_countries", "All Countries")}</option>
             {countries.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
@@ -192,14 +193,14 @@ export function SalesBookingJournalReportView() {
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wider">Branch Scope</label>
+          <label className="block text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wider">{t(activeLang, "sales.sbjr_branch_scope", "Branch Scope")}</label>
           <select
             value={branchId}
             onChange={(e) => setBranchId(e.target.value)}
             disabled={!countryId}
             className="bg-background border border-input rounded-lg px-3 h-10 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring shadow-sm disabled:opacity-50"
           >
-            <option value="">All Branches</option>
+            <option value="">{t(activeLang, "common.all_branches", "All Branches")}</option>
             {branches.map((b) => (
               <option key={b.id} value={b.id}>{b.name}</option>
             ))}
@@ -221,7 +222,7 @@ export function SalesBookingJournalReportView() {
             disabled={reports.length === 0}
             className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-10 text-xs px-4 shadow-sm"
           >
-            <Download className="h-4 w-4 mr-2" /> Export CSV
+            <Download className="h-4 w-4 mr-2" /> {t(activeLang, "sales.sbjr_export_csv", "Export CSV")}
           </Button>
         </div>
       </div>
@@ -266,11 +267,11 @@ export function SalesBookingJournalReportView() {
           <tbody className="divide-y divide-border">
             {loading ? (
               <tr>
-                <td colSpan={10} className="px-6 py-12 text-center text-muted-foreground font-medium">Loading sales booking registry...</td>
+                <td colSpan={10} className="px-6 py-12 text-center text-muted-foreground font-medium">{t(activeLang, "sales.sbjr_loading_registry", "Loading sales booking registry...")}</td>
               </tr>
             ) : reports.length === 0 ? (
               <tr>
-                <td colSpan={10} className="px-6 py-12 text-center text-muted-foreground">No sales orders found.</td>
+                <td colSpan={10} className="px-6 py-12 text-center text-muted-foreground">{t(activeLang, "sales.sbjr_no_orders_found", "No sales orders found.")}</td>
               </tr>
             ) : (
               reports.map((r) => (

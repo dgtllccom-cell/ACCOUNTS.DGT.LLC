@@ -23,6 +23,8 @@ import {
   PenLine
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 import { Th } from "@/components/ui/translated-th";
 import { deriveSalesBookingPostingState } from "@/lib/services/sales-booking-posting-state";
 import { resolveSalesBookingPaymentRoute } from "@/lib/services/sales-booking-routing";
@@ -57,9 +59,10 @@ function statusColor(s: string) {
   return "bg-sky-50 text-sky-700 border-sky-200";
 }
 
-function statusLabel(s: string) {
+function statusLabel(s: string, lang: string) {
   const lower = String(s || "").toLowerCase();
-  if (lower === "partial") return "Partial Advance Paid";
+  if (lower === "partial") return t(lang, "sales.ster_partial_advance_paid", "Partial Advance Paid");
+  if (lower === "pending") return t(lang, "log.seg_pending", "Pending");
   return s;
 }
 
@@ -69,11 +72,13 @@ function SectionCard({
   icon,
   title,
   badge,
+  lang,
   children
 }: {
   icon: React.ReactNode;
   title: string;
   badge?: string;
+  lang: string;
   children: React.ReactNode;
 }) {
   return (
@@ -85,7 +90,7 @@ function SectionCard({
         </div>
         {badge && (
           <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${statusColor(badge)}`}>
-            {statusLabel(badge)}
+            {statusLabel(badge, lang)}
           </span>
         )}
       </div>
@@ -120,6 +125,7 @@ function SalesTransferErpReportViewContent({
 }: {
   purchaseData?: any;
 }) {
+  const lang = useActiveLanguage();
   const router = useRouter();
   const searchParams = useSearchParams();
   const idParam = searchParams.get("id");
@@ -146,7 +152,7 @@ function SalesTransferErpReportViewContent({
         const row = json?.data?.reports?.[0] || json?.data?.selected || json?.reports?.[0] || json;
         setReportData(row);
       } catch (err: any) {
-        if (!cancelled) setError(err?.message || "Failed to load purchase record.");
+        if (!cancelled) setError(err?.message || t(lang, "sales.ster_err_load_sales_record", "Failed to load sales order record."));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -269,7 +275,7 @@ function getCurrencySymbol(c: string) {
       });
       const json = await res.json();
       if (!res.ok || !json.ok) {
-        throw new Error(json?.error?.message || json?.error || "Failed to process transfer payment.");
+        throw new Error(json?.error?.message || json?.error || t(lang, "sales.ster_err_transfer_payment", "Failed to process transfer payment."));
       }
       setTransferSuccess("✅ Booking Transfer successfully posted! Supplier ledger and inventory balances have been automatically updated.");
       
@@ -282,7 +288,7 @@ function getCurrencySymbol(c: string) {
         remaining_due: totalSalesAmountPkr
       }));
     } catch (err: any) {
-      setTransferError(err?.message || "Error processing transfer payment.");
+      setTransferError(err?.message || t(lang, "sales.ster_err_processing_transfer", "Error processing transfer payment."));
     } finally {
       setTransferring(false);
     }
@@ -310,7 +316,7 @@ function getCurrencySymbol(c: string) {
       <div className="flex h-screen items-center justify-center">
         <div className="rounded-xl border border-rose-200 bg-rose-50 p-6 text-center max-w-md">
           <AlertTriangle className="h-8 w-8 text-rose-500 mx-auto mb-3" />
-          <p className="text-sm font-bold text-rose-800">{error || "Purchase record not found."}</p>
+          <p className="text-sm font-bold text-rose-800">{error || t(lang, "sales.ster_sales_record_not_found", "Sales order record not found.")}</p>
           <Button onClick={() => router.back()} variant="outline" size="sm" className="mt-4">
             ← Go Back
           </Button>
@@ -334,11 +340,11 @@ function getCurrencySymbol(c: string) {
             className="h-8 text-white hover:bg-white/10 gap-1.5 px-2"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            <span className="text-[10px] font-bold uppercase">Back to Report</span>
+            <span className="text-[10px] font-bold uppercase">{t(lang, "pter.back_to_report", "Back to Report")}</span>
           </Button>
           <div className="h-4 w-px bg-white/20" />
           <div>
-            <p className="text-[8px] font-bold uppercase tracking-widest text-blue-200">Sales Transfer Payment</p>
+            <p className="text-[8px] font-bold uppercase tracking-widest text-blue-200">{t(lang, "nav.sales_transfer_payment", "Sales Transfer Payment")}</p>
             <p className="text-xs font-black text-white">{d.salesBookingOrderNumber}</p>
           </div>
         </div>
@@ -346,7 +352,7 @@ function getCurrencySymbol(c: string) {
         <div className="flex items-center gap-2">
           {/* Status badge */}
           <span className={`hidden sm:inline-flex items-center rounded-full border px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${statusColor(d.payment_status || d.status || "Pending")}`}>
-            {statusLabel(d.payment_status || d.status || "Pending")}
+            {statusLabel(d.payment_status || d.status || "Pending", lang)}
           </span>
 
           <Button
@@ -357,7 +363,7 @@ function getCurrencySymbol(c: string) {
             className="h-8 text-white hover:bg-white/10 gap-1.5 px-2.5"
           >
             <Printer className="h-3.5 w-3.5" />
-            <span className="text-[10px] font-bold uppercase hidden sm:inline">Print / PDF</span>
+            <span className="text-[10px] font-bold uppercase hidden sm:inline">{t(lang, "purchase.pmw_print_pdf", "Print / PDF")}</span>
           </Button>
 
           <Button
@@ -369,7 +375,7 @@ function getCurrencySymbol(c: string) {
             className="h-8 text-white hover:bg-white/10 gap-1.5 px-2.5 disabled:opacity-50"
           >
             <PenLine className="h-3.5 w-3.5" />
-            <span className="text-[10px] font-bold uppercase hidden sm:inline">Edit Booking</span>
+            <span className="text-[10px] font-bold uppercase hidden sm:inline">{t(lang, "sales.ster_edit_booking", "Edit Booking")}</span>
           </Button>
 
           {/* ★ PRIMARY: Transfer Payment button */}
@@ -394,11 +400,11 @@ function getCurrencySymbol(c: string) {
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
               <p className="text-[8px] font-bold uppercase tracking-[0.3em] text-blue-200">Daman Business Group — Enterprise ERP</p>
-              <h1 className="text-xl font-black tracking-tight mt-0.5">ERP Transaction Report</h1>
+              <h1 className="text-xl font-black tracking-tight mt-0.5">{t(lang, "pter.erp_report_title", "ERP Transaction Report")}</h1>
               <p className="text-[10px] text-blue-200 font-semibold mt-0.5">Sales Transfer Payment — Official Audit Document</p>
             </div>
             <div className="text-right">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-blue-200">Journal Number</p>
+              <p className="text-[9px] font-bold uppercase tracking-widest text-blue-200">{t(lang, "pter.journal_number", "Journal Number")}</p>
               <p className="text-sm font-black font-mono">{journalNumber}</p>
               <p className="text-[10px] text-blue-300 font-mono mt-0.5">{journalDate}</p>
             </div>
@@ -406,56 +412,56 @@ function getCurrencySymbol(c: string) {
         </div>
 
         {/* ── 1. HEADER INFORMATION ─────────────────────── */}
-        <SectionCard icon={<FileText className="h-4 w-4" />} title="Transaction Header" badge={d.payment_status || d.status}>
+        <SectionCard lang={lang} icon={<FileText className="h-4 w-4" />} title={t(lang, "pter.sec_txn_header", "Transaction Header")} badge={d.payment_status || d.status}>
           <div className="grid sm:grid-cols-2 gap-x-8">
             <div>
-              <InfoRow label="Booking Reference" value={d.salesBookingOrderNumber} mono />
-              <InfoRow label="Sales Date" value={fmtDate(d.salesDate)} />
-              <InfoRow label="Booking Date" value={fmtDate(d.bookingDate || d.createdAt)} />
-              <InfoRow label="Transaction Status" value={d.payment_status || d.status || "-"} />
+              <InfoRow label={t(lang, "pter.booking_ref", "Booking Reference")} value={d.salesBookingOrderNumber} mono />
+              <InfoRow label={t(lang, "sales.ster_sales_date", "Sales Date")} value={fmtDate(d.salesDate)} />
+              <InfoRow label={t(lang, "purchase.f_booking_date", "Booking Date")} value={fmtDate(d.bookingDate || d.createdAt)} />
+              <InfoRow label={t(lang, "pter.transaction_status", "Transaction Status")} value={d.payment_status || d.status || "-"} />
             </div>
             <div>
-              <InfoRow label="Booking User" value={d.audit?.userName || "Admin"} />
-              <InfoRow label="User ID" value={d.audit?.userId || "-"} mono />
-              <InfoRow label="Branch Name" value={d.branchName || "-"} />
-              <InfoRow label="Country" value={d.countryName || "-"} />
+              <InfoRow label={t(lang, "pter.booking_user", "Booking User")} value={d.audit?.userName || "Admin"} />
+              <InfoRow label={t(lang, "purchase.f_user_id", "User ID")} value={d.audit?.userId || "-"} mono />
+              <InfoRow label={t(lang, "cdash.col_branch_name", "Branch Name")} value={d.branchName || "-"} />
+              <InfoRow label={t(lang, "report.country", "Country")} value={d.countryName || "-"} />
             </div>
           </div>
         </SectionCard>
 
         {/* ── 2. SELLER & CUSTOMER INFORMATION ──────────── */}
         <div className="grid sm:grid-cols-2 gap-4">
-          <SectionCard icon={<User className="h-4 w-4" />} title="Seller Information">
-            <InfoRow label="Seller Code" value={d.salesAccountNumber || "BUY-001"} mono />
-            <InfoRow label="Seller Name" value={d.buyerName || "-"} />
+          <SectionCard lang={lang} icon={<User className="h-4 w-4" />} title={t(lang, "sales.ster_seller_information", "Seller Information")}>
+            <InfoRow label={t(lang, "sales.ster_seller_code", "Seller Code")} value={d.salesAccountNumber || "BUY-001"} mono />
+            <InfoRow label={t(lang, "sales.ster_seller_name", "Seller Name")} value={d.buyerName || "-"} />
             <InfoRow
-              label="Contact Number"
+              label={t(lang, "pter.contact_number", "Contact Number")}
               value={form.buyerPhone || form.buyerContact || "-"}
             />
             <InfoRow
-              label="Email"
+              label={t(lang, "purchase.dd_email", "Email")}
               value={form.buyerEmail || "-"}
             />
-            <InfoRow label="Country" value={form.receivedCountry || d.branchName || "-"} />
+            <InfoRow label={t(lang, "report.country", "Country")} value={form.receivedCountry || d.branchName || "-"} />
           </SectionCard>
 
-          <SectionCard icon={<Building2 className="h-4 w-4" />} title="Customer Information">
-            <InfoRow label="Customer Code" value={d.purchaseAccountNumber || "SUP-001"} mono />
-            <InfoRow label="Customer Name" value={d.supplierName || "-"} />
+          <SectionCard lang={lang} icon={<Building2 className="h-4 w-4" />} title={t(lang, "acct.sec_customer_info", "Customer Information")}>
+            <InfoRow label={t(lang, "acct.customer_code", "Customer Code")} value={d.purchaseAccountNumber || "SUP-001"} mono />
+            <InfoRow label={t(lang, "acct.customer_name", "Customer Name")} value={d.supplierName || "-"} />
             <InfoRow
-              label="Contact Number"
+              label={t(lang, "pter.contact_number", "Contact Number")}
               value={form.supplierPhone || form.contactPhone || d.form_data?.supplier?.phone || "-"}
             />
             <InfoRow
-              label="Email"
+              label={t(lang, "purchase.dd_email", "Email")}
               value={form.supplierEmail || form.contactEmail || d.form_data?.supplier?.email || "-"}
             />
-            <InfoRow label="Country" value={d.countryName || form.loadingCountry || "-"} />
+            <InfoRow label={t(lang, "report.country", "Country")} value={d.countryName || form.loadingCountry || "-"} />
           </SectionCard>
         </div>
 
         {/* ── 4. GOODS DETAILS ──────────────────────────── */}
-        <SectionCard icon={<Package className="h-4 w-4" />} title="Goods Details">
+        <SectionCard lang={lang} icon={<Package className="h-4 w-4" />} title={t(lang, "purchase.goods_details_title", "Goods Details")}>
           <div className="overflow-x-auto">
             <table className="w-full text-xs border-collapse">
               <thead>
@@ -486,7 +492,7 @@ function getCurrencySymbol(c: string) {
               </tbody>
               <tfoot>
                 <tr className="bg-slate-50 font-black text-[11px]">
-                  <td colSpan={7} className="px-3 py-2.5 text-right text-slate-600 uppercase tracking-wider">Grand Total</td>
+                  <td colSpan={7} className="px-3 py-2.5 text-right text-slate-600 uppercase tracking-wider">{t(lang, "report.builder_grand_total", "Grand Total")}</td>
                   <td className="px-3 py-2.5 text-right text-[#0f2942] font-black text-sm font-mono">
                     {money(totalSalesAmountUsd)} {currency}
                   </td>
@@ -497,19 +503,19 @@ function getCurrencySymbol(c: string) {
         </SectionCard>
 
         {/* ── 5. LOADING & TRANSPORT ────────────────────── */}
-        <SectionCard icon={<Ship className="h-4 w-4" />} title="Loading & Transport Information">
+        <SectionCard lang={lang} icon={<Ship className="h-4 w-4" />} title={t(lang, "sales.ster_loading_transport_info", "Loading & Transport Information")}>
           <div className="grid sm:grid-cols-2 gap-x-8">
             <div>
-              <InfoRow label="Loading Country" value={form.loadingCountry || d.countryName || "-"} />
-              <InfoRow label="Loading Port" value={form.loadingPort || "-"} />
-              <InfoRow label="Loading Date" value={fmtDate(form.loadingDate)} />
-              <InfoRow label="Vessel Name" value={form.vesselName || form.shipName || "-"} />
+              <InfoRow label={t(lang, "purchase.loading_country_label", "Loading Country")} value={form.loadingCountry || d.countryName || "-"} />
+              <InfoRow label={t(lang, "purchase.loading_port_label", "Loading Port")} value={form.loadingPort || "-"} />
+              <InfoRow label={t(lang, "purchase.loading_date_label", "Loading Date")} value={fmtDate(form.loadingDate)} />
+              <InfoRow label={t(lang, "plr.vessel_name", "Vessel Name")} value={form.vesselName || form.shipName || "-"} />
             </div>
             <div>
-              <InfoRow label="Receiving Country" value={form.receivedCountry || "-"} />
-              <InfoRow label="Receiving Port" value={form.receivedPort || form.exitPort || "-"} />
-              <InfoRow label="Container Number" value={form.containerNo || form.containerNumber || `CONT-${d.containerCount || 0} containers`} mono />
-              <InfoRow label="BL Number" value={form.blNo || form.billOfLadingNo || "-"} mono />
+              <InfoRow label={t(lang, "purchase.receiving_country_label", "Receiving Country")} value={form.receivedCountry || "-"} />
+              <InfoRow label={t(lang, "purchase.receiving_port_label", "Receiving Port")} value={form.receivedPort || form.exitPort || "-"} />
+              <InfoRow label={t(lang, "sales.ster_container_number", "Container Number")} value={form.containerNo || form.containerNumber || `CONT-${d.containerCount || 0} containers`} mono />
+              <InfoRow label={t(lang, "plr.col_bl", "BL Number")} value={form.blNo || form.billOfLadingNo || "-"} mono />
             </div>
           </div>
         </SectionCard>
@@ -522,19 +528,19 @@ function getCurrencySymbol(c: string) {
           const displayRemainingUsd = isPosted ? actualRemainingDueUsd : remainingBalanceUsd;
           const displayRemainingPkr = isPosted ? actualRemainingDuePkr : remainingBalancePkr;
           return (
-            <SectionCard icon={<CreditCard className="h-4 w-4" />} title="Payment Information" badge={bookingPostingState.label}>
+            <SectionCard lang={lang} icon={<CreditCard className="h-4 w-4" />} title={t(lang, "pter.sec_payment_info", "Payment Information")} badge={bookingPostingState.label}>
               <div className="grid sm:grid-cols-2 gap-x-8">
                 <div>
-                  <InfoRow label="Total Purchase Amount" value={`${money(totalSalesAmountUsd)} ${currencySymbol} / ${money(totalSalesAmountPkr)} ${localCurrencySymbol}`} mono />
-                  <InfoRow label="Advance Percentage" value={`${form.advancePercent || 0}%`} mono />
-                  <InfoRow label="Advance Paid" value={`${money(displayAdvanceUsd)} ${currencySymbol} / ${money(displayAdvancePkr)} ${localCurrencySymbol}`} mono />
-                  <InfoRow label="Remaining Balance" value={`${money(displayRemainingUsd)} ${currencySymbol} / ${money(displayRemainingPkr)} ${localCurrencySymbol}`} mono />
+                  <InfoRow label={t(lang, "pb_register.total_purchase_amount", "Total Purchase Amount")} value={`${money(totalSalesAmountUsd)} ${currencySymbol} / ${money(totalSalesAmountPkr)} ${localCurrencySymbol}`} mono />
+                  <InfoRow label={t(lang, "sales.ster_advance_percentage", "Advance Percentage")} value={`${form.advancePercent || 0}%`} mono />
+                  <InfoRow label={t(lang, "sed.f_advance_paid", "Advance Paid")} value={`${money(displayAdvanceUsd)} ${currencySymbol} / ${money(displayAdvancePkr)} ${localCurrencySymbol}`} mono />
+                  <InfoRow label={t(lang, "purchase.pmw_remaining_balance", "Remaining Balance")} value={`${money(displayRemainingUsd)} ${currencySymbol} / ${money(displayRemainingPkr)} ${localCurrencySymbol}`} mono />
                 </div>
                 <div>
-                  <InfoRow label="Payment Status" value={statusLabel(bookingPostingState.label === "BLACK" ? "completed" : d.payment_status || d.status || "-")} />
-                  <InfoRow label="Selected Mode" value={form.paymentType || "-"} />
-                  <InfoRow label="Payment Route" value={paymentRoute.paymentLabel} />
-                  <InfoRow label="Due Date" value={fmtDate(form.dueDate || form.loadingDate)} />
+                  <InfoRow label={t(lang, "hr.p_payment_status", "Payment Status")} value={statusLabel(bookingPostingState.label === "BLACK" ? "completed" : d.payment_status || d.status || "-", lang)} />
+                  <InfoRow label={t(lang, "sales.ster_selected_mode", "Selected Mode")} value={form.paymentType || "-"} />
+                  <InfoRow label={t(lang, "sales.ster_payment_route", "Payment Route")} value={paymentRoute.paymentLabel} />
+                  <InfoRow label={t(lang, "bankroz.due_date", "Due Date")} value={fmtDate(form.dueDate || form.loadingDate)} />
                 </div>
               </div>
 
@@ -558,12 +564,12 @@ function getCurrencySymbol(c: string) {
         })()}
 
         {/* ── 7. ACCOUNTING / LEDGER IMPACT ────────────── */}
-        <SectionCard icon={<BookOpen className="h-4 w-4" />} title="Accounting / Ledger Impact">
+        <SectionCard lang={lang} icon={<BookOpen className="h-4 w-4" />} title={t(lang, "pter.sec_accounting", "Accounting / Ledger Impact")}>
           {/* Journal meta */}
           <div className="grid sm:grid-cols-3 gap-x-8 mb-4">
-            <InfoRow label="Journal Number" value={journalNumber} mono />
-            <InfoRow label="Journal Date" value={journalDate} />
-            <InfoRow label="Posting Status" value={d.ledger_posting_status || "Pending"} />
+            <InfoRow label={t(lang, "pter.journal_number", "Journal Number")} value={journalNumber} mono />
+            <InfoRow label={t(lang, "pter.journal_date", "Journal Date")} value={journalDate} />
+            <InfoRow label={t(lang, "report.col_posting_status", "Posting Status")} value={d.ledger_posting_status || t(lang, "log.seg_pending", "Pending")} />
           </div>
 
           {/* Balance validation badge */}
@@ -583,22 +589,22 @@ function getCurrencySymbol(c: string) {
                 <table className="w-full text-xs border-collapse">
                   <thead>
                     <tr className="bg-slate-100 text-[10px] font-black uppercase tracking-wider text-slate-650 border-b border-slate-200">
-                      <Th className="px-4 py-2.5 text-left">GL Code</Th>
-                      <Th className="px-4 py-2.5 text-left">Account Name</Th>
-                      <Th className="px-4 py-2.5 text-right">Debit</Th>
-                      <Th className="px-4 py-2.5 text-right">Credit</Th>
+                      <Th className="px-4 py-2.5 text-left">{t(lang, "pter.col_gl_code", "GL Code")}</Th>
+                      <Th className="px-4 py-2.5 text-left">{t(lang, "purchase.f_account_name", "Account Name")}</Th>
+                      <Th className="px-4 py-2.5 text-right">{t(lang, "cdash.col_debit", "Debit")}</Th>
+                      <Th className="px-4 py-2.5 text-right">{t(lang, "cdash.col_credit", "Credit")}</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     <tr className="bg-blue-50/40 hover:bg-blue-50/70">
                       <td className="px-4 py-3 font-mono font-black text-[#0f2942]">{form.purchaseAccountNo || d.purchaseAccountNumber || "—"}</td>
-                      <td className="px-4 py-3 font-semibold text-slate-700">{form.purchaseAccountName || d.purchaseAccountName || "Customer Account (Debit)"} (DR)</td>
+                      <td className="px-4 py-3 font-semibold text-slate-700">{form.purchaseAccountName || d.purchaseAccountName || t(lang, "sales.ster_customer_account_debit_fallback", "Customer Account (Debit)")} (DR)</td>
                       <td className="px-4 py-3 text-right font-mono font-bold text-blue-700">{money(debitAmount)} {localCurrencySymbol}</td>
                       <td className="px-4 py-3 text-right font-mono font-bold text-slate-400">-</td>
                     </tr>
                     <tr className="bg-emerald-50/40 hover:bg-emerald-50/70">
                       <td className="px-4 py-3 font-mono font-black text-[#0f2942]">{form.salesAccountNo || d.salesAccountNumber || "—"}</td>
-                      <td className="px-4 py-3 font-semibold text-slate-700">{form.salesAccountName || d.salesAccountName || "Sales Account (Credit)"} (CR)</td>
+                      <td className="px-4 py-3 font-semibold text-slate-700">{form.salesAccountName || d.salesAccountName || t(lang, "sales.ster_sales_account_credit_fallback", "Sales Account (Credit)")} (CR)</td>
                       <td className="px-4 py-3 text-right font-mono font-bold text-slate-400">-</td>
                       <td className="px-4 py-3 text-right font-mono font-bold text-emerald-700">{money(creditAmount)} {localCurrencySymbol}</td>
                     </tr>
@@ -614,11 +620,11 @@ function getCurrencySymbol(c: string) {
           <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3 text-[10px] font-semibold text-slate-500 space-y-1">
             <p className="font-black text-slate-600 uppercase text-[9px] tracking-wider mb-1">Accounting Flow — Purchase Transfer Stage</p>
             <p>
-              <span className="text-blue-700 font-black">DEBIT:</span>{" "}
+              <span className="text-blue-700 font-black">{t(lang, "pter.debit_label", "DEBIT:")}</span>{" "}
               Customer Account ({form.purchaseAccountNo || d.purchaseAccountNumber || "—"}) = Goods received at purchase cost
             </p>
             <p>
-              <span className="text-emerald-700 font-black">CREDIT:</span>{" "}
+              <span className="text-emerald-700 font-black">{t(lang, "pter.credit_label", "CREDIT:")}</span>{" "}
               Sales/Credit Account ({form.salesAccountNo || d.salesAccountNumber || "—"}) = Receivable recorded against customer
             </p>
 
@@ -665,7 +671,7 @@ function getCurrencySymbol(c: string) {
         <footer className="rounded-xl bg-[#0f2942] text-white py-3 px-5 flex flex-wrap items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-wider print:rounded-none">
           <div className="flex items-center gap-2">
             <Globe className="h-3.5 w-3.5" />
-            <span>Daman Business Group</span>
+            <span>{t(lang, "purchase.damaan_business_group", "Daman Business Group")}</span>
           </div>
           <div className="flex items-center gap-2 font-mono">
             <Hash className="h-3.5 w-3.5" />
@@ -697,7 +703,7 @@ function getCurrencySymbol(c: string) {
 
 export function SalesTransferErpReportView(props: { purchaseData?: any }) {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">Loading Sales Verification...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">{t(lang, "sales.ster_loading_verification", "Loading Sales Verification...")}</div>}>
       <SalesTransferErpReportViewContent {...props} />
     </Suspense>
   );

@@ -41,6 +41,16 @@ type EmployeeFormProps = {
   lang?: SupportedLanguage;
 };
 
+const CATEGORY_DEFAULTS: Record<string, { designation: string; department: string }> = {
+  "Country Owner": { designation: "Country Director / Managing Partner", department: "Executive Management" },
+  "Branch Owner": { designation: "Branch Managing Director", department: "Branch Administration" },
+  "Company Owner": { designation: "Chief Executive Officer / Owner", department: "Executive Board" },
+  "Manager": { designation: "General Operations Manager", department: "Operations & Management" },
+  "Normal Staff": { designation: "Senior Office Associate", department: "General Administration" },
+  "Employee": { designation: "Executive Staff Officer", department: "General Operations" },
+  "Others": { designation: "General Staff Officer", department: "Operations" }
+};
+
 type LedgerOption = {
   id: string;
   name: string;
@@ -596,7 +606,14 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                 <button
                   key={cat}
                   type="button"
-                  onClick={() => setCategory(cat)}
+                  onClick={() => {
+                    setCategory(cat);
+                    const def = CATEGORY_DEFAULTS[cat];
+                    if (def) {
+                      setDesignation(def.designation);
+                      setDepartment(def.department);
+                    }
+                  }}
                   className={`py-2 px-2 rounded-lg text-xs font-bold transition-all truncate text-center ${
                     category === cat
                       ? "bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 shadow-sm border border-emerald-300 dark:border-emerald-700"
@@ -619,18 +636,18 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
             />
           </div>
 
-          {/* Selected Employee Master Profile card — confirm the selected person at a glance (item 6). */}
+          {/* Selected Employee Master Profile card */}
           {selectedPersonObj ? (
             <div className="rounded-2xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50/40 dark:bg-emerald-950/20 p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white text-base font-black uppercase">
+                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white text-base font-black uppercase shadow-sm">
                     {(fullName || "?").trim().charAt(0)}
                   </div>
                   <div className="min-w-0">
                     <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">{t(lang, "hr.f_selected_profile", "Selected Employee Master Profile")}</div>
-                    <div className="truncate text-sm font-black text-slate-900 dark:text-slate-100">{fullName}</div>
-                    <div className="truncate text-[11px] text-slate-500">{selectedPersonObj.company_name || t(lang, "hr.pp_independent", "Independent Account")} · {catLabel(category)}</div>
+                    <div className="truncate text-base font-black text-slate-900 dark:text-slate-100">{fullName}</div>
+                    <div className="truncate text-xs text-slate-500 font-medium">{selectedPersonObj.company_name || t(lang, "hr.pp_independent", "Independent Account")} · {catLabel(category)}</div>
                   </div>
                 </div>
                 <div className="flex flex-shrink-0 items-center gap-2">
@@ -639,7 +656,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                   </button>
                 </div>
               </div>
-              <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4">
+              <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4 border-t border-emerald-100 dark:border-emerald-900/60 pt-2.5">
                 {[
                   [t(lang, "hr.pp_contact_person", "Contact Person"), selectedPersonObj.contact_person],
                   [t(lang, "hr.pp_mobile_phone", "Mobile Phone"), selectedPersonObj.mobile],
@@ -649,7 +666,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                 ].map(([lbl, v], i) => (
                   <div key={i} className="min-w-0">
                     <div className="text-[9px] font-bold uppercase tracking-wide text-slate-400">{lbl}</div>
-                    <div className="truncate text-xs font-semibold text-slate-800 dark:text-slate-200">{v || "-"}</div>
+                    <div className="truncate text-xs font-semibold text-slate-800 dark:text-slate-200" dir="ltr">{v || "-"}</div>
                   </div>
                 ))}
               </div>
@@ -660,50 +677,8 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
             </div>
           )}
 
-          {/* Structured identity (item 4): First / Last are independent fields; Full Name is derived. */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_first_name", "First Name *")}</label>
-              <input
-                type="text"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                placeholder={t(lang, "hr.f_ph_first_name", "e.g. Ahmad")}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_last_name", "Surname / Last Name *")}</label>
-              <input
-                type="text"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                placeholder={t(lang, "hr.f_ph_last_name", "e.g. Khan")}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_gender", "Gender")}</label>
-              <select
-                value={gender}
-                onChange={(e) => setGender(e.target.value)}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
-              >
-                <option value="">{t(lang, "hr.f_gender_select", "Select…")}</option>
-                <option value="Male">{t(lang, "hr.f_gender_male", "Male")}</option>
-                <option value="Female">{t(lang, "hr.f_gender_female", "Female")}</option>
-                <option value="Other">{t(lang, "hr.f_gender_other", "Other")}</option>
-              </select>
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">{t(lang, "hr.f_full_name", "Full Name")}</label>
-            <div className="w-full rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 px-3.5 py-2 text-xs font-black text-slate-800 dark:text-slate-100">
-              {fullName || "-"}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+          {/* Designation & Department */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_lbl_designation", "Designation / Position *")}</label>
               <input
@@ -711,7 +686,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                 value={designation}
                 onChange={(e) => setDesignation(e.target.value)}
                 placeholder={t(lang, "hr.f_ph_designation", "e.g. Finance Manager / General Staff")}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900 dark:text-slate-100 shadow-xs"
               />
             </div>
             <div>
@@ -721,7 +696,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
                 placeholder={t(lang, "hr.f_ph_department", "e.g. Accounts / Operations")}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900 dark:text-slate-100 shadow-xs"
               />
             </div>
           </div>
@@ -730,9 +705,9 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
           <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs space-y-1.5">
             <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">{t(lang, "hr.f_step1_preview", "STEP 1 PACKET PREVIEW")}</div>
             <div className="grid grid-cols-3 gap-2">
-              <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_lbl_category", "Category:")}</span> {catLabel(category)}</div>
-              <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_lbl_name", "Name:")}</span> {fullName || t(lang, "hr.f_not_selected", "Not Selected")}</div>
-              <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_lbl_designation_short", "Designation:")}</span> {designation || "-"}</div>
+              <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_lbl_category", "Category:")}</span> <span className="font-bold text-emerald-600">{catLabel(category)}</span></div>
+              <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_lbl_name", "Name:")}</span> <span className="font-bold">{fullName || t(lang, "hr.f_not_selected", "Not Selected")}</span></div>
+              <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_lbl_designation_short", "Designation:")}</span> <span className="font-bold">{designation || "-"}</span></div>
             </div>
           </div>
         </div>
@@ -790,7 +765,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                 <option value="">{t(lang, "hr.f_select_city_branch", "Select City Branch")}</option>
                 {cityBranches.map((cb) => (
                   <option key={cb.id} value={cb.id}>
-                    {cb.city_name || cb.cityName ? `${cb.city_name || cb.cityName} — ` : ""}{cb.name} {cb.code ? `(${cb.code})` : ""}
+                    {cb.name} {cb.code ? `(${cb.code})` : ""}
                   </option>
                 ))}
               </select>

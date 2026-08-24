@@ -15,6 +15,8 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 import {
   Building2, Calendar, Phone, Mail, MapPin, Printer, FileDown, Eye,
   Pencil, Send, Check, FileText, Hash,
@@ -123,6 +125,7 @@ export function QuotationView({
   termsAndConditions = DEFAULT_TERMS,
   chrome = true,
 }: QuotationViewProps) {
+  const lang = useActiveLanguage();
   const [view, setView] = useState<"form" | "print">("form");
   const printRef = useRef<HTMLDivElement>(null);
   const totals = items.reduce(
@@ -174,7 +177,7 @@ export function QuotationView({
                 <FileText className="h-5 w-5" />
               </div>
               <div>
-                <div className="text-sm font-semibold leading-tight">Sales Quotation</div>
+                <div className="text-sm font-semibold leading-tight">{t(lang, "sales.quot_sales_quotation_title", "Sales Quotation")}</div>
                 <div className="text-xs text-slate-500">#{meta.quoteNo}</div>
               </div>
             </div>
@@ -182,23 +185,23 @@ export function QuotationView({
               <div className="hidden rounded-lg border border-slate-200 bg-slate-50 p-0.5 sm:flex">
                 <button onClick={() => setView("form")}
                   className={`rounded-md px-3 py-1.5 text-xs font-medium ${view === "form" ? "bg-white shadow-sm" : "text-slate-600"}`}>
-                  <Pencil className="mr-1 inline h-3.5 w-3.5" /> Form
+                  <Pencil className="mr-1 inline h-3.5 w-3.5" /> {t(lang, "sales.quot_form_word", "Form")}
                 </button>
                 <button onClick={() => setView("print")}
                   className={`rounded-md px-3 py-1.5 text-xs font-medium ${view === "print" ? "bg-white shadow-sm" : "text-slate-600"}`}>
-                  <Eye className="mr-1 inline h-3.5 w-3.5" /> Preview
+                  <Eye className="mr-1 inline h-3.5 w-3.5" /> {t(lang, "urf.preview", "Preview")}
                 </button>
               </div>
               <button onClick={handlePrint}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800">
-                <Printer className="h-3.5 w-3.5" /> Print
+                <Printer className="h-3.5 w-3.5" /> {t(lang, "report.builder_print", "Print")}
               </button>
               <button onClick={handlePrint}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium hover:bg-slate-50">
                 <FileDown className="h-3.5 w-3.5" /> PDF
               </button>
               <button className="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-500">
-                <Send className="h-3.5 w-3.5" /> Send to Customer
+                <Send className="h-3.5 w-3.5" /> {t(lang, "sales.quot_send_to_customer_btn", "Send to Customer")}
               </button>
             </div>
           </div>
@@ -226,7 +229,7 @@ export function QuotationView({
               </div>
             </div>
             <div className="text-right">
-              <div className="text-xs font-medium uppercase tracking-wider text-slate-500">Quotation</div>
+              <div className="text-xs font-medium uppercase tracking-wider text-slate-500">{t(lang, "sales.quot_quotation_word", "Quotation")}</div>
               <div className="mt-1 text-2xl font-bold text-slate-900">{meta.quoteNo}</div>
               {meta.status && (
                 <span className={`mt-2 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ${statusColor[meta.status]}`}>
@@ -234,10 +237,10 @@ export function QuotationView({
                 </span>
               )}
               <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                <div className="text-slate-500">Date</div><div className="font-medium text-right">{meta.quoteDate}</div>
-                <div className="text-slate-500">Valid Until</div><div className="font-medium text-right">{meta.validUntil}</div>
-                <div className="text-slate-500">Currency</div><div className="font-medium text-right">{meta.currency}</div>
-                {meta.reference && (<><div className="text-slate-500">Reference</div><div className="font-medium text-right">{meta.reference}</div></>)}
+                <div className="text-slate-500">{t(lang, "bdash.col_date", "Date")}</div><div className="font-medium text-right">{meta.quoteDate}</div>
+                <div className="text-slate-500">{t(lang, "sales.quot_valid_until_label", "Valid Until")}</div><div className="font-medium text-right">{meta.validUntil}</div>
+                <div className="text-slate-500">{t(lang, "hr.f_currency", "Currency")}</div><div className="font-medium text-right">{meta.currency}</div>
+                {meta.reference && (<><div className="text-slate-500">{t(lang, "report.col_reference", "Reference")}</div><div className="font-medium text-right">{meta.reference}</div></>)}
               </div>
             </div>
 
@@ -245,7 +248,7 @@ export function QuotationView({
           {/* Bill To / Terms */}
           <div className="grid grid-cols-1 gap-4 p-6 sm:grid-cols-2">
             <section className="avoid-break rounded-lg border border-slate-200 bg-slate-50/50 p-4">
-              <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Bill To</div>              <div className="text-base font-semibold text-slate-900">{customer.name}</div>
+              <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">{t(lang, "sales.quot_bill_to_label", "Bill To")}</div>              <div className="text-base font-semibold text-slate-900">{customer.name}</div>
               {customer.code && <div className="text-xs text-slate-500">{customer.code}</div>}
               <div className="mt-2 space-y-0.5 text-xs text-slate-600">
                 {customer.address && <div>{customer.address}</div>}
@@ -255,11 +258,11 @@ export function QuotationView({
               </div>
             </section>
             <section className="avoid-break rounded-lg border border-slate-200 bg-slate-50/50 p-4">
-              <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Terms</div>
+              <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">{t(lang, "sales.quot_terms_label", "Terms")}</div>
               <div className="grid grid-cols-[110px_1fr] gap-y-1 text-xs">
-                {meta.paymentTerms && (<><div className="text-slate-500">Payment</div><div className="font-medium">{meta.paymentTerms}</div></>)}
-                {meta.deliveryTerms && (<><div className="text-slate-500">Delivery</div><div className="font-medium">{meta.deliveryTerms}</div></>)}
-                {meta.salesperson && (<><div className="text-slate-500">Salesperson</div><div className="font-medium">{meta.salesperson}</div></>)}
+                {meta.paymentTerms && (<><div className="text-slate-500">{t(lang, "ctimeline.stage_payment", "Payment")}</div><div className="font-medium">{meta.paymentTerms}</div></>)}
+                {meta.deliveryTerms && (<><div className="text-slate-500">{t(lang, "sales.quot_delivery_label", "Delivery")}</div><div className="font-medium">{meta.deliveryTerms}</div></>)}
+                {meta.salesperson && (<><div className="text-slate-500">{t(lang, "report.salesperson", "Salesperson")}</div><div className="font-medium">{meta.salesperson}</div></>)}
               </div>
             </section>
           </div>
@@ -270,14 +273,14 @@ export function QuotationView({
                 <thead className="bg-slate-900 text-white">
                   <tr>
                     <Th className="px-2 py-2 text-left font-medium">#</Th>
-                    <Th className="px-2 py-2 text-left font-medium">Code</Th>
-                    <Th className="px-2 py-2 text-left font-medium">Description</Th>
-                    <Th className="px-2 py-2 text-right font-medium">Qty</Th>
-                    <Th className="px-2 py-2 text-left font-medium">Unit</Th>
-                    <Th className="px-2 py-2 text-right font-medium">Price</Th>
-                    <Th className="px-2 py-2 text-right font-medium">Disc%</Th>
-                    <Th className="px-2 py-2 text-right font-medium">Tax%</Th>
-                    <Th className="px-2 py-2 text-right font-medium">Total</Th>
+                    <Th className="px-2 py-2 text-left font-medium">{t(lang, "common.code", "Code")}</Th>
+                    <Th className="px-2 py-2 text-left font-medium">{t(lang, "common.description", "Description")}</Th>
+                    <Th className="px-2 py-2 text-right font-medium">{t(lang, "purchase.th_qty", "Qty")}</Th>
+                    <Th className="px-2 py-2 text-left font-medium">{t(lang, "purchase.th_unit", "Unit")}</Th>
+                    <Th className="px-2 py-2 text-right font-medium">{t(lang, "purchase.th_price", "Price")}</Th>
+                    <Th className="px-2 py-2 text-right font-medium">{t(lang, "sales.quot_disc_pct_label", "Disc%")}</Th>
+                    <Th className="px-2 py-2 text-right font-medium">{t(lang, "sales.quot_tax_pct_label", "Tax%")}</Th>
+                    <Th className="px-2 py-2 text-right font-medium">{t(lang, "common.total", "Total")}</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 bg-white">
@@ -306,9 +309,9 @@ export function QuotationView({
           {/* Totals + notes */}
           <div className="grid grid-cols-1 gap-4 p-6 sm:grid-cols-3">
             <section className="avoid-break sm:col-span-2 rounded-lg border border-slate-200 bg-slate-50/50 p-4">
-              <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Notes</div>
+              <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500">{t(lang, "cusm.notes", "Notes")}</div>
               <p className="text-xs leading-relaxed text-slate-700">{notes}</p>
-              <div className="mt-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Terms & Conditions</div>
+              <div className="mt-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500">{t(lang, "lpjr.inv_terms", "Terms & Conditions")}</div>
               <ol className="mt-1 list-decimal space-y-0.5 pl-4 text-[11px] leading-relaxed text-slate-600">
                 {termsAndConditions.map((t, i) => <li key={i}>{t}</li>)}
               </ol>
@@ -321,7 +324,7 @@ export function QuotationView({
                 <Row label="VAT" value={fmt(totals.tax, meta.currency)} muted />
                 <div className="my-2 border-t border-dashed border-slate-300" />
                 <div className="flex items-center justify-between rounded-md bg-slate-900 px-3 py-2 text-white">
-                  <span className="text-[11px] font-medium uppercase tracking-wider">Grand Total</span>
+                  <span className="text-[11px] font-medium uppercase tracking-wider">{t(lang, "report.builder_grand_total", "Grand Total")}</span>
                   <span className="text-base font-bold tabular-nums">{fmt(totals.total, meta.currency)}</span>
                 </div>
               </div>
@@ -331,12 +334,12 @@ export function QuotationView({
           {/* Signatures */}
           <div className="grid grid-cols-2 gap-8 border-t border-slate-200 p-6 pt-8 text-xs">
             <div>
-              <div className="mb-10 text-slate-500">Prepared By</div>
+              <div className="mb-10 text-slate-500">{t(lang, "purchase.prepared_by_label", "Prepared By")}</div>
               <div className="border-t border-slate-400 pt-1 font-medium">{meta.salesperson}</div>
             </div>
             <div className="text-right">
-              <div className="mb-10 text-slate-500">Customer Acceptance</div>
-              <div className="border-t border-slate-400 pt-1 font-medium">Signature & Stamp</div>
+              <div className="mb-10 text-slate-500">{t(lang, "sales.quot_customer_acceptance_label", "Customer Acceptance")}</div>
+              <div className="border-t border-slate-400 pt-1 font-medium">{t(lang, "sales.quot_signature_stamp_label", "Signature & Stamp")}</div>
             </div>
           </div>
         </div>
