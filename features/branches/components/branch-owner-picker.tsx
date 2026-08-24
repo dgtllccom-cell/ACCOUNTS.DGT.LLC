@@ -5,6 +5,21 @@ import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-se
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { apiGet } from "@/lib/api/client";
 import { CustomerForm } from "@/features/customers/components/customer-form";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+
+const ROLE_I18N: Record<string, Record<string, string>> = {
+  "staff user": { ur: "اسٹاف یوزر", ar: "مستخدم موظف", ps: "د کارمندانو کارن", fa: "کاربر کارمند" },
+  "super_admin": { ur: "سپر ایڈمن", ar: "مشرف عام", ps: "سوپر اډمین", fa: "سوپر ادمین" },
+  "country_admin": { ur: "کنٹری ایڈمن", ar: "مشرف الدولة", ps: "د هیواد اډمین", fa: "ادمین کشور" },
+  "Global": { ur: "گلوبل", ar: "عام", ps: "نړیوال", fa: "سراسری" }
+};
+
+function localizeRoleDesc(role: string, lang: string): string {
+  if (!role || lang === "en") return role;
+  const match = ROLE_I18N[role];
+  if (match && match[lang]) return match[lang];
+  return role;
+}
 
 type OwnerCustomerRow = {
   id: string;
@@ -50,7 +65,7 @@ export function BranchOwnerPicker({
   value,
   onValueChange,
   disabled,
-  placeholder = "Search owner",
+  placeholder,
   createButtonPlacement = "below"
 }: {
   value: string;
@@ -59,9 +74,14 @@ export function BranchOwnerPicker({
   placeholder?: string;
   createButtonPlacement?: "modal" | "trigger" | "both" | "below";
 }) {
+  const lang = useActiveLanguage();
   const [loading, setLoading] = useState(false);
   const [options, setOptions] = useState<SearchSelectOption[]>([]);
   const [openCreate, setOpenCreate] = useState(false);
+
+  const defaultPlaceholder = lang === "ur" ? "مالک تلاش کریں" : lang === "ps" ? "مالک وپلټئ" : lang === "ar" ? "البحث عن المالك" : "Search owner";
+  const defaultCreateLabel = lang === "ur" ? "+ نیا مالک" : lang === "ps" ? "+ نوی مالک" : lang === "ar" ? "+ مالك جديد" : "New Owner";
+  const defaultOwnerLabel = lang === "ur" ? "مالک کا نام" : lang === "ps" ? "د مالک نوم" : lang === "ar" ? "اسم المالك" : "Owner Name";
 
   async function loadList() {
     setLoading(true);
@@ -83,7 +103,9 @@ export function BranchOwnerPicker({
         );
       }
       for (const row of usersRes.rows ?? []) {
-        const label = [row.fullName, row.role, row.branchName].filter(Boolean).join(" · ");
+        const localizedRole = localizeRoleDesc(row.role, lang);
+        const localizedBranch = row.branchName === "Global" ? localizeRoleDesc("Global", lang) : row.branchName;
+        const label = [row.fullName, localizedRole, localizedBranch].filter(Boolean).join(" · ");
         next.push(toOwnerOption(row.fullName, label, [row.userCode, row.fullName, row.countryName, row.branchName, row.role].join(" ")));
       }
 
@@ -100,7 +122,7 @@ export function BranchOwnerPicker({
   useEffect(() => {
     loadList().catch(() => null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [lang]);
 
   const finalOptions = useMemo(() => {
     if (value && !options.some((opt) => opt.value === value)) {
@@ -112,13 +134,13 @@ export function BranchOwnerPicker({
   return (
     <>
       <SearchSelect
-        label="Owner Name"
+        label={defaultOwnerLabel}
         value={value}
-        placeholder={placeholder ?? (loading ? "Loading..." : "Search owner")}
+        placeholder={placeholder ?? (loading ? (lang === "ur" ? "لوڈ ہو رہا ہے..." : "Loading...") : defaultPlaceholder)}
         disabled={disabled || loading}
         options={finalOptions}
         onValueChange={onValueChange}
-        createLabel="New Owner"
+        createLabel={defaultCreateLabel}
         createButtonPlacement={createButtonPlacement}
         onCreateNew={async () => setOpenCreate(true)}
       />

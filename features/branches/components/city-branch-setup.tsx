@@ -71,6 +71,22 @@ type CityBranchRow = {
 };
 
 type ContactRow = { type: string; value: string };
+
+const CONTACT_TYPE_I18N: Record<string, Record<string, string>> = {
+  "Mobile": { ur: "موبائل", ar: "جوال", ps: "موبایل", fa: "موبایل" },
+  "Phone": { ur: "فون", ar: "هاتف", ps: "تلیفون", fa: "تلفن" },
+  "WhatsApp": { ur: "واٹس ایپ", ar: "واتساب", ps: "واټس اپ", fa: "واتساپ" },
+  "Email": { ur: "ای میل", ar: "البريد الإلكتروني", ps: "بریښنالیک", fa: "ایمیل" },
+  "Fax": { ur: "فیکس", ar: "فاكس", ps: "فکس", fa: "فکس" }
+};
+
+function localizeContactType(type: string, lang: string): string {
+  if (!type || lang === "en") return type;
+  const match = CONTACT_TYPE_I18N[type];
+  if (match && match[lang]) return match[lang];
+  return type;
+}
+
 type CompanyRow = { id: string; name: string; legal_name: string | null; base_currency: string };
 type OwnerCustomerRow = {
   id: string;
@@ -1103,7 +1119,7 @@ function CityBranchSetupContent() {
     if (!city) return "";
     const existingNames = new Set(
       (existingBranchesList || [])
-        .filter((b) => isCityBranchMatch(b, meta.city?.id, meta.city?.name ?? ""))
+        .filter((b) => isCityBranchMatch(b, meta.city?.id ?? "", meta.city?.name ?? ""))
         .map((b) => (b.name || "").toLowerCase().trim())
     );
 
@@ -1351,7 +1367,7 @@ function CityBranchSetupContent() {
       const list = await loadExistingCityBranches(location.countryId, countryBranchId);
       setEditingCityBranchId("");
       if (!editingCityBranchId) {
-        setBranchCode(suggestBranchCode(locationMeta, list.length));
+        setBranchCode(suggestBranchCode(locationMeta, list));
         setBranchName("");
         setPermissionTemplate("city-standard");
         setPermissionGrants(parentPermissionGrants?.length ? getPermissionKeysForTemplate("city-standard").filter((p) => parentPermissionGrants.includes(p)) : getPermissionKeysForTemplate("city-standard"));
@@ -1681,67 +1697,83 @@ function CityBranchSetupContent() {
               <section hidden={activeStep !== 4} className="order-4 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">
                 <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">4</span>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Step 4 - Contact Information</h2>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{tt("branch.sec_contact", "Step 4 - Contact Information")}</h2>
                 </div>
                 <div className="space-y-3">
-                  {contacts.map((row, idx) => (
-                    <div key={`contact-${idx}`} className="grid gap-2 md:grid-cols-[180px_1fr_120px]">
-                      <select
-                        className={selectClassName()}
-                        value={row.type}
-                        onChange={(event) => {
-                          const value = event.target.value;
-                          if (value === "__new__") {
-                            const next = addNewTypePrompt();
-                            if (!next) return;
-                            updateContact(idx, { type: next });
-                            return;
-                          }
-                          updateContact(idx, { type: value });
-                        }}
-                      >
-                        <option value="">Select Type</option>
-                        {contactTypeOptions.map((type) => (
-                          <option key={type} value={type}>
-                            {type}
-                          </option>
-                        ))}
-                        <option value="__new__">+ Add New Type</option>
-                      </select>
+                  {contacts.map((row, idx) => {
+                    const isEmail = (row.type || "").toLowerCase().includes("email");
+                    const isPhone = toContactTypeKey(row.type);
 
-                      {toContactTypeKey(row.type) ? (
-                        <ContactNumberInput
-                          label=""
-                          hideLabel
-                          showHelp={false}
-                          countryId={location.countryId || null}
-                          contactTypeKey={toContactTypeKey(row.type) as ContactTypeKey}
-                          value={row.value}
-                          disabled={!location.countryId}
-                          onValueChange={(next) => updateContact(idx, { value: next })}
-                        />
-                      ) : (
-                        <Input
-                          value={row.value}
-                          onChange={(event) => updateContact(idx, { value: event.target.value })}
-                          placeholder="Enter value"
-                        />
-                      )}
+                    return (
+                      <div key={`contact-${idx}`} className="grid gap-2 md:grid-cols-[180px_1fr_120px]">
+                        <select
+                          className={selectClassName()}
+                          value={row.type}
+                          onChange={(event) => {
+                            const value = event.target.value;
+                            if (value === "__new__") {
+                              const next = addNewTypePrompt();
+                              if (!next) return;
+                              updateContact(idx, { type: next });
+                              return;
+                            }
+                            updateContact(idx, { type: value });
+                          }}
+                        >
+                          <option value="">{tt("common.select_type", "Select Type")}</option>
+                          {contactTypeOptions.map((type) => (
+                            <option key={type} value={type}>
+                              {localizeContactType(type, lang)}
+                            </option>
+                          ))}
+                          <option value="__new__">{tt("common.add_new_type", "+ Add New Type")}</option>
+                        </select>
 
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="border-rose-200 text-rose-700 hover:bg-rose-50 hover:text-rose-800"
-                        onClick={() => setContacts((current) => current.filter((_, i) => i !== idx))}
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  ))}
+                        {isPhone ? (
+                          <ContactNumberInput
+                            label=""
+                            hideLabel
+                            showHelp={false}
+                            countryId={location.countryId || null}
+                            contactTypeKey={toContactTypeKey(row.type) as ContactTypeKey}
+                            value={row.value}
+                            disabled={!location.countryId}
+                            onValueChange={(next) => updateContact(idx, { value: next })}
+                          />
+                        ) : isEmail ? (
+                          <Input
+                            type="email"
+                            dir="ltr"
+                            value={row.value}
+                            onChange={(event) => updateContact(idx, { value: event.target.value })}
+                            placeholder="branch@dgt.llc"
+                            className="font-sans text-left bg-white text-slate-900"
+                          />
+                        ) : (
+                          <Input
+                            dir="ltr"
+                            value={row.value}
+                            onChange={(event) => updateContact(idx, { value: event.target.value })}
+                            placeholder={tt("branch.enter_val", "Enter value")}
+                            className="font-mono text-left bg-white text-slate-900"
+                          />
+                        )}
+
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="border-rose-200 text-rose-700 hover:bg-rose-50 hover:text-rose-800"
+                          onClick={() => setContacts((current) => current.filter((_, i) => i !== idx))}
+                        >
+                          {tt("common.remove", "Remove")}
+                        </Button>
+                      </div>
+                    );
+                  })}
 
                   <div className="flex flex-wrap gap-2">
                     <Button type="button" variant="outline" onClick={() => setContacts((current) => [...current, { type: "", value: "" }])}>
-                      + Add Contact
+                      {tt("branch.add_contact_btn", "+ Add Contact")}
                     </Button>
                   </div>
                 </div>

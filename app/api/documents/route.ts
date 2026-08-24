@@ -1,57 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import postgres from "postgres";
 import { withLocalPg } from "@/lib/db/local-postgres";
 
 export const dynamic = "force-dynamic";
 
-function getSql() {
-  const dbUrl = process.env.DATABASE_URL;
-  if (!dbUrl) return null;
-  return postgres(dbUrl, { max: 1, prepare: false });
-}
-
-// Auto-initialize DB table
-async function ensureDocumentsTable() {
-  const sql = getSql();
-  if (!sql) return;
-  try {
-    await sql`
-      CREATE TABLE IF NOT EXISTS public.office_documents (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        title VARCHAR(255) NOT NULL,
-        file_name VARCHAR(255) NOT NULL,
-        file_url TEXT NOT NULL,
-        file_type VARCHAR(100) NOT NULL DEFAULT 'pdf',
-        file_size BIGINT DEFAULT 0,
-        country_id UUID,
-        country_name VARCHAR(255) DEFAULT 'Pakistan',
-        country_branch_id UUID,
-        main_branch_name VARCHAR(255),
-        city_branch_id UUID,
-        city_branch_name VARCHAR(255),
-        module_type VARCHAR(100) NOT NULL DEFAULT 'Purchase Documents',
-        category VARCHAR(100) DEFAULT 'General',
-        tags JSONB DEFAULT '[]'::jsonb,
-        metadata JSONB DEFAULT '{}'::jsonb,
-        scanned_at TIMESTAMPTZ,
-        created_by VARCHAR(255) DEFAULT 'System',
-        created_at TIMESTAMPTZ DEFAULT NOW(),
-        updated_at TIMESTAMPTZ DEFAULT NOW(),
-        deleted_at TIMESTAMPTZ
-      );
-    `;
-    await sql`CREATE INDEX IF NOT EXISTS idx_office_docs_hierarchy ON public.office_documents(country_id, country_branch_id, city_branch_id, module_type);`;
-    await sql`CREATE INDEX IF NOT EXISTS idx_office_docs_deleted ON public.office_documents(deleted_at);`;
-    await sql.end();
-  } catch (e) {
-    console.error("Document table auto-init error:", e);
-  }
-}
-
 export async function GET(request: NextRequest) {
   try {
-    await ensureDocumentsTable();
     const { searchParams } = request.nextUrl;
 
     const countryId = searchParams.get("countryId");
@@ -117,7 +71,6 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    await ensureDocumentsTable();
     const body = await request.json();
 
     const {

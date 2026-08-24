@@ -261,6 +261,17 @@ export async function POST(request: Request) {
       );
     }
 
+    let validCreatedBy: string | null = null;
+    if (isUuid(session.userId)) {
+      const profileRow = await withLocalPg(async (sql) => {
+        const rows = await sql`select id from public.profiles where id = ${session.userId} and deleted_at is null limit 1`;
+        return rows[0] ?? null;
+      });
+      if (profileRow?.id) {
+        validCreatedBy = profileRow.id;
+      }
+    }
+
     const payload = {
       country_id: parsed.data.countryId,
       country_branch_id: parsed.data.countryBranchId,
@@ -283,7 +294,7 @@ export async function POST(request: Request) {
       documents: parsed.data.documents ?? [],
       permission_template: parsed.data.permissionTemplate ?? null,
       permission_grants: permissionGrants,
-      created_by: isUuid(session.userId) ? session.userId : null,
+      created_by: validCreatedBy,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
