@@ -62,6 +62,9 @@ type BranchOption = {
 };
 
 export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: EmployeeFormProps) {
+  const activeLang = useActiveLanguage();
+  // Prefer an explicit non-"en" language from the host; otherwise follow the reactive store.
+  const lang = (langProp && langProp !== "en") ? langProp : activeLang;
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [activeStep, setActiveStep] = useState<number>(1);
@@ -420,10 +423,6 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
     }
   }
 
-  // NOTE: hooks must run unconditionally — keep this above the `loading` early return.
-  const activeLang = useActiveLanguage();
-  // Prefer an explicit non-"en" language from the host; otherwise follow the reactive store.
-  const lang = (langProp && langProp !== "en") ? langProp : activeLang;
   // Central-dictionary labels only — no per-component machine translation.
   const CAT_KEYS: Record<string, string> = { 
     "Country Owner": "hr.f_cat_country_owner",

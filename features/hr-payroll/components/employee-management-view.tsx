@@ -43,17 +43,17 @@ export function EmployeeManagementView() {
   const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
 
   const journalColumns = [
-    { key: "employee_code", label: "Emp Code" },
-    { key: "person_name", label: "Employee Name" },
-    { key: "mobile", label: "Mobile" },
-    { key: "country_name", label: "Country" },
-    { key: "branch_name", label: "Branch" },
-    { key: "category", label: "Category" },
-    { key: "designation", label: "Designation" },
-    { key: "department", label: "Department" },
-    { key: "joining_date", label: "Joining Date" },
-    { key: "salary_formatted", label: "Net Payroll", align: "right" as const },
-    { key: "status", label: "Status", format: "status" as const },
+    { key: "employee_code", label: t(lang, "hr.col_emp_code", "Emp Code") },
+    { key: "person_name", label: t(lang, "hr.col_employee_name", "Employee Name") },
+    { key: "mobile", label: t(lang, "cbs.mobile_word", "Mobile") },
+    { key: "country_name", label: t(lang, "common.country", "Country") },
+    { key: "branch_name", label: t(lang, "common.branch", "Branch") },
+    { key: "category", label: t(lang, "common.category", "Category") },
+    { key: "designation", label: t(lang, "cbs.designation_word", "Designation") },
+    { key: "department", label: t(lang, "hr.department_word", "Department") },
+    { key: "joining_date", label: t(lang, "hr.col_joining_date", "Joining Date") },
+    { key: "salary_formatted", label: t(lang, "hr.col_net_payroll", "Net Payroll"), align: "right" as const },
+    { key: "status", label: t(lang, "common.status", "Status"), format: "status" as const },
   ];
 
   const formattedEmployees = employees.map((emp) => ({
@@ -129,12 +129,12 @@ export function EmployeeManagementView() {
   }, [activeTab, search, category, status, countryId, branchId, lang]);
 
   async function handleDelete(id: string) {
-    if (!confirm("Are you sure you want to delete this employee record?")) return;
+    if (!confirm(t(lang, "hr.confirm_delete_employee", "Are you sure you want to delete this employee record?"))) return;
     try {
       await apiDelete(`/api/erp/hr-payroll/employees/${id}`);
       loadEmployees().catch(() => null);
     } catch (err: any) {
-      alert("Error deleting employee: " + err.message);
+      alert(t(lang, "hr.error_deleting_employee", "Error deleting employee: ") + err.message);
     }
   }
 
@@ -153,8 +153,8 @@ export function EmployeeManagementView() {
           {activeTab === "master" && (
             <div className="flex items-center gap-3">
               <JournalPrintButton
-                title="Employee Master Setup Journal"
-                subtitle="Complete Employee Directory & Payroll Master Listing"
+                title={t(lang, "hr.journal_title", "Employee Master Setup Journal")}
+                subtitle={t(lang, "hr.journal_subtitle", "Complete Employee Directory & Payroll Master Listing")}
                 columns={journalColumns}
                 rows={formattedEmployees as Record<string, unknown>[]}
                 fetchFullData={async () => {
@@ -287,8 +287,8 @@ export function EmployeeManagementView() {
 
             <div className="flex items-center gap-2">
               <JournalPrintButton
-                title="Employee Master Setup Journal"
-                subtitle="Complete Employee Directory & Payroll Master Listing"
+                title={t(lang, "hr.journal_title", "Employee Master Setup Journal")}
+                subtitle={t(lang, "hr.journal_subtitle", "Complete Employee Directory & Payroll Master Listing")}
                 columns={journalColumns}
                 rows={formattedEmployees as Record<string, unknown>[]}
                 fetchFullData={async () => {
@@ -388,7 +388,7 @@ export function EmployeeManagementView() {
                             type="button"
                             onClick={() => setOpenActionMenuId(openActionMenuId === emp.id ? null : emp.id)}
                             className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition shadow-xs"
-                            title="Actions"
+                            title={t(lang, "common.actions", "Actions")}
                           >
                             <MoreVertical className="h-4 w-4" />
                           </button>
@@ -548,22 +548,22 @@ export function EmployeeManagementView() {
       <UniversalReportModal
         isOpen={showReport}
         onClose={() => setShowReport(false)}
-        title="Employee Master Report"
-        subtitle="Comprehensive Employee Registry — HR & Payroll Division"
+        title={t(lang, "hr.report_title", "Employee Master Report")}
+        subtitle={t(lang, "hr.report_subtitle", "Comprehensive Employee Registry — HR & Payroll Division")}
         exportFileName="employee_master_report"
         filters={[
-          { label: "Search", value: search || "All" },
-          { label: "Category", value: category || "All" },
-          { label: "Status", value: status || "All" }
+          { label: t(lang, "common.search", "Search"), value: search || t(lang, "common.all", "All") },
+          { label: t(lang, "common.category", "Category"), value: category || t(lang, "common.all", "All") },
+          { label: t(lang, "common.status", "Status"), value: status || t(lang, "common.all", "All") }
         ]}
         columns={[
-          { key: "employee_code", label: "Employee Code" },
-          { key: "person_name", label: "Person / Customer Name" },
-          { key: "category", label: "Category" },
-          { key: "designation", label: "Designation" },
-          { key: "salary", label: "Salary", align: "right", isNumeric: true },
-          { key: "status", label: "Status", align: "center" },
-          { key: "join_date", label: "Join Date" }
+          { key: "employee_code", label: t(lang, "hr.employee_code_full", "Employee Code") },
+          { key: "person_name", label: t(lang, "hr.person_customer_name", "Person / Customer Name") },
+          { key: "category", label: t(lang, "common.category", "Category") },
+          { key: "designation", label: t(lang, "cbs.designation_word", "Designation") },
+          { key: "salary", label: t(lang, "hr.col_salary", "Salary"), align: "right", isNumeric: true },
+          { key: "status", label: t(lang, "common.status", "Status"), align: "center" },
+          { key: "join_date", label: t(lang, "hr.col_join_date", "Join Date") }
         ]}
         data={employees.map(e => ({
           employee_code: e.employee_code || "-",

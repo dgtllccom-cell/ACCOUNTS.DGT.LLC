@@ -206,6 +206,7 @@ function normalizeSearch(value: string) {
 
 function CityBranchSetupContent() {
   const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const searchParams = useSearchParams();
   const editId = searchParams.get("editId") ?? "";
   const [drawerBranchData, setDrawerBranchData] = useState<any>(null);
@@ -859,7 +860,7 @@ function CityBranchSetupContent() {
     setPermissionGrants(Array.isArray(row.permission_grants) ? row.permission_grants : getPermissionKeysForTemplate("city-standard"));
     setBanner({
       type: "success",
-      message: `Editing Existing Branch\nBranch Name: ${row.name}\nBranch Code: ${row.code}`
+      message: `${t(lang, "cbs.editing_existing_branch")}\n${t(lang, "cbs.branch_name")}: ${row.name}\n${t(lang, "cbs.branch_code_word")}: ${row.code}`
     });
 
     // Load communication configs
@@ -994,19 +995,19 @@ function CityBranchSetupContent() {
         const json = (await res.json().catch(() => ({}))) as { cityBranches?: CityBranchRow[]; error?: string };
         if (cancelled) return;
         if (!res.ok) {
-          setBanner({ type: "error", message: json.error || "City branch record not found." });
+          setBanner({ type: "error", message: json.error || t(lang, "cbs.branch_not_found") });
           return;
         }
         const row = Array.isArray(json.cityBranches) ? json.cityBranches[0] : null;
         if (!row) {
-          setBanner({ type: "error", message: "City branch record not found." });
+          setBanner({ type: "error", message: t(lang, "cbs.branch_not_found") });
           return;
         }
         await loadMainBranches(row.country_id);
         await loadExistingCityBranches(row.country_id, row.country_branch_id);
         beginEditCityBranch(row);
       } catch (error) {
-        if (!cancelled) setBanner({ type: "error", message: error instanceof Error ? error.message : "Failed to load city branch record." });
+        if (!cancelled) setBanner({ type: "error", message: error instanceof Error ? error.message : t(lang, "cbs.failed_load_branch") });
       } finally {
         if (!cancelled) setEditLoading(false);
       }
@@ -1233,19 +1234,19 @@ function CityBranchSetupContent() {
     setBanner(null);
 
     if (!isUuid(location.countryId) || !isUuid(countryBranchId)) {
-      setBanner({ type: "error", message: "Please select a valid Country and Main Branch." });
+      setBanner({ type: "error", message: t(lang, "cbs.select_valid_country_branch") });
       return;
     }
 
     if (!isUuid(location.stateProvinceId) || !isUuid(location.cityId) || !locationMeta.city?.name) {
-      setBanner({ type: "error", message: "Please select State/Province and City from Location Settings." });
+      setBanner({ type: "error", message: t(lang, "cbs.select_state_city_msg") });
       return;
     }
 
     if (codeAlreadyExists) {
       setBanner({
         type: "error",
-        message: `Branch Code Already Exists\nBranch Code "${branchCode}" is already in use in this country. Please enter a unique branch code.`
+        message: `${t(lang, "cbs.branch_code_exists_title")}\n${t(lang, "cbs.branch_code_in_use_msg").replace("{0}", branchCode)}`
       });
       return;
     }
@@ -1253,25 +1254,25 @@ function CityBranchSetupContent() {
     if (nameAlreadyExists) {
       setBanner({
         type: "error",
-        message: `Branch Name Already Exists in this City\nBranch Name "${branchName}" is already registered in this city. Please choose a distinct name.`
+        message: `${t(lang, "cbs.branch_name_exists_title")}\n${t(lang, "cbs.branch_name_in_use_msg").replace("{0}", branchName)}`
       });
       return;
     }
 
     if (!branchName.trim()) {
-      setBanner({ type: "error", message: "Branch Name is required." });
+      setBanner({ type: "error", message: t(lang, "cbs.branch_name_required") });
       return;
     }
 
     if (!branchCode.trim()) {
-      setBanner({ type: "error", message: "Branch Code is required." });
+      setBanner({ type: "error", message: t(lang, "cbs.branch_code_required") });
       return;
     }
 
     if (!permissionTemplate || !permissionGrants.length) {
       setBanner({
         type: "error",
-        message: "Please select a Permissions Template and at least one explicit permission before saving the City Branch."
+        message: t(lang, "cbs.select_template_permission_msg")
       });
       return;
     }
@@ -1279,7 +1280,7 @@ function CityBranchSetupContent() {
     if (parentPermissionGrants?.length && permissionGrants.some((permission) => !parentPermissionGrants.includes(permission))) {
       setBanner({
         type: "error",
-        message: "City Branch permissions must be selected from the Country/Main Branch permissions only."
+        message: t(lang, "cbs.permissions_scope_msg")
       });
       return;
     }
@@ -1363,7 +1364,7 @@ function CityBranchSetupContent() {
         return;
       }
 
-      setBanner({ type: "success", message: `${editingCityBranchId ? "Updated" : "Saved"}: ${branchName} (${branchCode})` });
+      setBanner({ type: "success", message: `${editingCityBranchId ? t(lang, "cbs.updated_status_word") : t(lang, "cbs.saved_status_word")}: ${branchName} (${branchCode})` });
       const list = await loadExistingCityBranches(location.countryId, countryBranchId);
       setEditingCityBranchId("");
       if (!editingCityBranchId) {
@@ -1378,7 +1379,7 @@ function CityBranchSetupContent() {
         setAccessToken("");
       }
     } catch (err) {
-      setBanner({ type: "error", message: err instanceof Error ? err.message : "Failed to save city branch." });
+      setBanner({ type: "error", message: err instanceof Error ? err.message : t(lang, "cbs.failed_save_branch") });
     } finally {
       setSaving(false);
     }
@@ -1697,7 +1698,7 @@ function CityBranchSetupContent() {
               <section hidden={activeStep !== 4} className="order-4 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">
                 <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">4</span>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{tt("branch.sec_contact", "Step 4 - Contact Information")}</h2>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "branch.sec_contact", "Step 4 - Contact Information")}</h2>
                 </div>
                 <div className="space-y-3">
                   {contacts.map((row, idx) => {
@@ -1720,13 +1721,13 @@ function CityBranchSetupContent() {
                             updateContact(idx, { type: value });
                           }}
                         >
-                          <option value="">{tt("common.select_type", "Select Type")}</option>
+                          <option value="">{t(lang, "common.select_type", "Select Type")}</option>
                           {contactTypeOptions.map((type) => (
                             <option key={type} value={type}>
                               {localizeContactType(type, lang)}
                             </option>
                           ))}
-                          <option value="__new__">{tt("common.add_new_type", "+ Add New Type")}</option>
+                          <option value="__new__">{t(lang, "common.add_new_type", "+ Add New Type")}</option>
                         </select>
 
                         {isPhone ? (
@@ -1754,7 +1755,7 @@ function CityBranchSetupContent() {
                             dir="ltr"
                             value={row.value}
                             onChange={(event) => updateContact(idx, { value: event.target.value })}
-                            placeholder={tt("branch.enter_val", "Enter value")}
+                            placeholder={t(lang, "branch.enter_val", "Enter value")}
                             className="font-mono text-left bg-white text-slate-900"
                           />
                         )}
@@ -1765,7 +1766,7 @@ function CityBranchSetupContent() {
                           className="border-rose-200 text-rose-700 hover:bg-rose-50 hover:text-rose-800"
                           onClick={() => setContacts((current) => current.filter((_, i) => i !== idx))}
                         >
-                          {tt("common.remove", "Remove")}
+                          {t(lang, "common.remove", "Remove")}
                         </Button>
                       </div>
                     );
@@ -1773,7 +1774,7 @@ function CityBranchSetupContent() {
 
                   <div className="flex flex-wrap gap-2">
                     <Button type="button" variant="outline" onClick={() => setContacts((current) => [...current, { type: "", value: "" }])}>
-                      {tt("branch.add_contact_btn", "+ Add Contact")}
+                      {t(lang, "branch.add_contact_btn", "+ Add Contact")}
                     </Button>
                   </div>
                 </div>
@@ -1849,15 +1850,15 @@ function CityBranchSetupContent() {
                 
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-4 rounded-lg border p-4 bg-slate-50/30">
-                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-500">Official Branch Email</h3>
-                    
+                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-500">{t(lang, "cbs.official_branch_email")}</h3>
+
                     <div className="space-y-2">
-                      <Label className="text-xs text-slate-600">Official Email Prefix</Label>
+                      <Label className="text-xs text-slate-600">{t(lang, "cbs.official_email_prefix")}</Label>
                       <div className="flex gap-2">
                         <Input
                           value={emailPrefix}
                           onChange={(e) => setEmailPrefix(e.target.value)}
-                          placeholder="e.g. chaman"
+                          placeholder={t(lang, "cbs.email_prefix_ph")}
                           className="flex-1"
                         />
                         <Button
@@ -1874,81 +1875,81 @@ function CityBranchSetupContent() {
                             }, 500);
                           }}
                         >
-                          {aiLoading ? "Thinking..." : "AI Suggest"}
+                          {aiLoading ? t(lang, "cbs.ai_thinking") : t(lang, "cbs.ai_suggest")}
                         </Button>
                       </div>
                       {generatedEmail && (
                         <p className="text-[10px] text-green-600 font-semibold mt-1">
-                          Generated Email Address: {generatedEmail}
+                          {t(lang, "cbs.generated_email_label")} {generatedEmail}
                         </p>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-xs text-slate-600">Email Server</Label>
+                      <Label className="text-xs text-slate-600">{t(lang, "cbs.email_server")}</Label>
                       <select
                         className={selectClassName()}
                         value={emailServerName}
                         onChange={(e) => setEmailServerName(e.target.value)}
                       >
-                        <option value="Local IP Server (UPS Linked)">Local IP Server (UPS Linked)</option>
-                        <option value="Google Workspace Cloud Server">Google Workspace Cloud Server</option>
-                        <option value="Microsoft Office 365 Cloud Server">Microsoft Office 365 Cloud Server</option>
+                        <option value="Local IP Server (UPS Linked)">{t(lang, "cbs.email_server_local")}</option>
+                        <option value="Google Workspace Cloud Server">{t(lang, "cbs.email_server_google")}</option>
+                        <option value="Microsoft Office 365 Cloud Server">{t(lang, "cbs.email_server_o365")}</option>
                       </select>
                     </div>
 
                     {emailServerName.includes("Local IP") && (
                       <div className="grid gap-2 grid-cols-2 pt-2 border-t text-[11px] space-y-1">
                         <div className="col-span-2 space-y-1">
-                          <Label className="text-[10px] text-slate-500">Local IP Address</Label>
+                          <Label className="text-[10px] text-slate-500">{t(lang, "cbs.local_ip_address")}</Label>
                           <Input value={localIp} onChange={(e) => setLocalIp(e.target.value)} className="h-8 text-xs" />
                         </div>
                         <div className="col-span-2 space-y-1">
-                          <Label className="text-[10px] text-slate-500">Public IP Address</Label>
+                          <Label className="text-[10px] text-slate-500">{t(lang, "cbs.public_ip_address")}</Label>
                           <Input value={publicIp} onChange={(e) => setPublicIp(e.target.value)} className="h-8 text-xs" />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-[10px] text-slate-500">SMTP Host</Label>
+                          <Label className="text-[10px] text-slate-500">{t(lang, "cbs.smtp_host")}</Label>
                           <Input value={smtpHost} onChange={(e) => setSmtpHost(e.target.value)} className="h-8 text-xs" />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-[10px] text-slate-500">SMTP Port</Label>
+                          <Label className="text-[10px] text-slate-500">{t(lang, "cbs.smtp_port")}</Label>
                           <Input value={smtpPort} onChange={(e) => setSmtpPort(e.target.value)} className="h-8 text-xs" />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-[10px] text-slate-500">IMAP Host</Label>
+                          <Label className="text-[10px] text-slate-500">{t(lang, "cbs.imap_host")}</Label>
                           <Input value={imapHost} onChange={(e) => setImapHost(e.target.value)} className="h-8 text-xs" />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-[10px] text-slate-500">IMAP Port</Label>
+                          <Label className="text-[10px] text-slate-500">{t(lang, "cbs.imap_port")}</Label>
                           <Input value={imapPort} onChange={(e) => setImapPort(e.target.value)} className="h-8 text-xs" />
                         </div>
                         <div className="col-span-2 flex items-center gap-2 pt-1.5">
                           <input type="checkbox" checked={sslSecure} onChange={(e) => setSslSecure(e.target.checked)} id="ssl-checkbox" />
-                          <Label htmlFor="ssl-checkbox" className="text-[11px] text-slate-600">SSL / TLS Secure Connection</Label>
+                          <Label htmlFor="ssl-checkbox" className="text-[11px] text-slate-600">{t(lang, "cbs.ssl_tls")}</Label>
                         </div>
                       </div>
                     )}
 
                     <div className="grid gap-2 grid-cols-2 pt-2 border-t">
                       <div className="space-y-1">
-                        <Label className="text-[10px] text-slate-500">SMTP Username</Label>
+                        <Label className="text-[10px] text-slate-500">{t(lang, "cbs.smtp_username")}</Label>
                         <Input value={smtpUser} onChange={(e) => setSmtpUser(e.target.value)} placeholder={generatedEmail} className="h-8 text-xs" />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-[10px] text-slate-500">App Password / Secret</Label>
+                        <Label className="text-[10px] text-slate-500">{t(lang, "cbs.app_password")}</Label>
                         <Input type="password" value={smtpPass} onChange={(e) => setSmtpPass(e.target.value)} placeholder="••••••••••••" className="h-8 text-xs" />
                       </div>
                     </div>
 
                     <div className="pt-2 border-t flex items-center justify-between">
                       <div className="text-[10px] font-bold text-slate-500">
-                        Email Status:{" "}
+                        {t(lang, "cbs.email_status_label")}{" "}
                         <span className={cn(
                           "px-1.5 py-0.5 rounded",
                           smtpStatus === "Ready" ? "text-green-700 bg-green-50" : "text-red-700 bg-red-50"
                         )}>
-                          {smtpStatus}
+                          {smtpStatus === "Ready" ? t(lang, "cbs.status_ready") : smtpStatus === "Connection Failed" ? t(lang, "cbs.status_connection_failed") : smtpStatus}
                         </span>
                       </div>
                       <Button
@@ -1976,26 +1977,26 @@ function CityBranchSetupContent() {
                             });
                             const data = await res.json();
                             if (!res.ok) throw new Error(data?.error || "Connection failed.");
-                            alert(`✅ ${branchName || "Branch"} email is ready to send.`);
+                            alert(t(lang, "cbs.email_ready_alert").replace("{0}", branchName || t(lang, "cbs.branch_fallback")));
                             setSmtpStatus("Ready");
                           } catch (err: any) {
-                            alert(`❌ SMTP authentication failed.\nDetails: ${err.message || "Invalid credentials."}`);
+                            alert(t(lang, "cbs.smtp_auth_failed_alert").replace("{0}", err.message || "Invalid credentials."));
                             setSmtpStatus("Connection Failed");
                           } finally {
                             setTestingEmail(false);
                           }
                         }}
                       >
-                        {testingEmail ? "Testing..." : "Test Email Server"}
+                        {testingEmail ? t(lang, "cbs.testing_ellipsis") : t(lang, "cbs.test_email_server")}
                       </Button>
                     </div>
                   </div>
 
                   <div className="space-y-4 rounded-lg border p-4 bg-slate-50/30">
-                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-500">WhatsApp API Integration</h3>
-                    
+                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-500">{t(lang, "cbs.whatsapp_api_integration")}</h3>
+
                     <div className="space-y-2">
-                      <Label className="text-xs text-slate-600">Official WhatsApp Number</Label>
+                      <Label className="text-xs text-slate-600">{t(lang, "cbs.official_whatsapp_number")}</Label>
                       <Input
                         value={whatsappNumber}
                         onChange={(e) => setWhatsappNumber(e.target.value)}
@@ -2004,43 +2005,43 @@ function CityBranchSetupContent() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-xs text-slate-600">Phone Number ID</Label>
+                      <Label className="text-xs text-slate-600">{t(lang, "cbs.phone_number_id")}</Label>
                       <Input
                         value={phoneNumberId}
                         onChange={(e) => setPhoneNumberId(e.target.value)}
-                        placeholder="Meta Phone Number ID"
+                        placeholder={t(lang, "cbs.phone_number_id_ph")}
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-xs text-slate-600">WABA ID (WhatsApp Business Account)</Label>
+                      <Label className="text-xs text-slate-600">{t(lang, "cbs.waba_id")}</Label>
                       <Input
                         value={wabaId}
                         onChange={(e) => setWabaId(e.target.value)}
-                        placeholder="Meta WABA ID"
+                        placeholder={t(lang, "cbs.waba_id_ph")}
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-xs text-slate-600">System User Access Token</Label>
+                      <Label className="text-xs text-slate-600">{t(lang, "cbs.system_user_access_token")}</Label>
                       <textarea
                         value={accessToken}
                         onChange={(e) => setAccessToken(e.target.value)}
-                        placeholder="Meta Cloud System User Access Token (Encrypted Secrets)"
+                        placeholder={t(lang, "cbs.access_token_ph")}
                         className="min-h-16 w-full rounded-lg border bg-background px-3 py-1.5 text-xs outline-none shadow-sm focus:border-primary"
                       />
                     </div>
 
                     <div className="pt-2 border-t flex items-center justify-between">
                       <div className="text-[10px] font-bold text-slate-500">
-                        WhatsApp Status:{" "}
+                        {t(lang, "cbs.whatsapp_status_label")}{" "}
                         <span className={cn(
                           "px-1.5 py-0.5 rounded",
                           whatsappStatus === "Ready" ? "text-green-700 bg-green-50" :
                           whatsappStatus === "Verification Pending" ? "text-amber-700 bg-amber-50" :
                           "text-red-700 bg-red-50"
                         )}>
-                          {whatsappStatus}
+                          {whatsappStatus === "Ready" ? t(lang, "cbs.status_ready") : whatsappStatus === "Verification Pending" ? t(lang, "cbs.status_verification_pending") : whatsappStatus}
                         </span>
                       </div>
                       <Button
@@ -2052,13 +2053,13 @@ function CityBranchSetupContent() {
                         onClick={() => {
                           setTestingWhatsapp(true);
                           setTimeout(() => {
-                            alert("✅ Meta WhatsApp Cloud API credentials matched successfully.");
+                            alert(t(lang, "cbs.whatsapp_verified_alert"));
                             setWhatsappStatus("Ready");
                             setTestingWhatsapp(false);
                           }, 600);
                         }}
                       >
-                        {testingWhatsapp ? "Verifying..." : "Verify WhatsApp"}
+                        {testingWhatsapp ? t(lang, "cbs.verifying_ellipsis") : t(lang, "cbs.verify_whatsapp")}
                       </Button>
                     </div>
                   </div>
@@ -2078,23 +2079,23 @@ function CityBranchSetupContent() {
                       </div>
                       <div>
                         <p className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400">DGT LLC · ERP System</p>
-                        <h1 className="text-lg font-black text-slate-900 dark:text-slate-100 leading-tight">City Branch – Final Review &amp; Approval</h1>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400">Please review all information carefully before final approval.</p>
+                        <h1 className="text-lg font-black text-slate-900 dark:text-slate-100 leading-tight">{t(lang, "cbs.step9_title")}</h1>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">{t(lang, "cbs.step9_subtitle")}</p>
                       </div>
                     </div>
                   </div>
                   {/* Step Progress Bar */}
                   <div className="flex items-stretch overflow-x-auto border-b border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/40">
                     {[
-                      { n: 1, label: "Branch Information", done: Boolean(branchName && branchCode) },
-                      { n: 2, label: "Address & Location", done: Boolean(locationMeta.city?.name) },
-                      { n: 3, label: "Bank Account Setup", done: false },
-                      { n: 4, label: "Contact Information", done: contacts.some(c => c.value) },
-                      { n: 5, label: "Review & Summary", done: hasAny },
-                      { n: 6, label: "Upload Documents", done: false },
-                      { n: 7, label: "Accounting Setup", done: false },
-                      { n: 8, label: "Roles & Permissions", done: permissionGrants.length > 0 },
-                      { n: 9, label: "Final Approval", done: false, active: true },
+                      { n: 1, label: t(lang, "cbs.pb_branch_info"), done: Boolean(branchName && branchCode) },
+                      { n: 2, label: t(lang, "cbs.pb_address_location"), done: Boolean(locationMeta.city?.name) },
+                      { n: 3, label: t(lang, "cbs.pb_bank_setup"), done: false },
+                      { n: 4, label: t(lang, "cbs.pb_contact_info"), done: contacts.some(c => c.value) },
+                      { n: 5, label: t(lang, "cbs.pb_review_summary"), done: hasAny },
+                      { n: 6, label: t(lang, "cbs.pb_upload_docs"), done: false },
+                      { n: 7, label: t(lang, "cbs.pb_accounting_setup"), done: false },
+                      { n: 8, label: t(lang, "cbs.pb_roles_permissions"), done: permissionGrants.length > 0 },
+                      { n: 9, label: t(lang, "cbs.pb_final_approval"), done: false, active: true },
                     ].map(({ n, label, done, active }) => (
                       <button key={n} type="button" onClick={() => setActiveStep(n < 9 ? n : 9)} className={`relative flex min-w-[80px] flex-1 flex-col items-center justify-center px-2 py-2.5 transition-colors ${active ? "bg-indigo-50 dark:bg-indigo-950/20" : "hover:bg-slate-100 dark:hover:bg-slate-800/40"}` }>
                         <div className={`flex h-6 w-6 items-center justify-center rounded-full text-[9px] font-black border-2 ${
@@ -2114,27 +2115,27 @@ function CityBranchSetupContent() {
 
                 {/* ══ REVIEW SUMMARY BANNER ══ */}
                 <div className="border-x border-slate-200 bg-white px-6 py-4 dark:border-slate-700 dark:bg-slate-950">
-                  <p className="mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">⑤ Review Summary</p>
+                  <p className="mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">⑤ {t(lang, "cbs.review_summary_label")}</p>
                   {(() => {
                     const missing: string[] = [];
-                    if (!location.countryId) missing.push("Country");
-                    if (!countryBranchId) missing.push("Main Branch");
-                    if (!branchName) missing.push("City Branch Name");
-                    if (!branchCode) missing.push("Branch Code");
-                    if (!currency) missing.push("Currency");
-                    if (!location.cityId && !locationMeta.city?.name) missing.push("City");
-                    if (!contacts.some(c => c.type && c.value)) missing.push("Contact Info");
-                    if (!permissionGrants.length) missing.push("Permissions");
+                    if (!location.countryId) missing.push(t(lang, "common.country"));
+                    if (!countryBranchId) missing.push(t(lang, "cbs.main_branch_word"));
+                    if (!branchName) missing.push(t(lang, "cbs.city_branch_name_word"));
+                    if (!branchCode) missing.push(t(lang, "cbs.branch_code_word"));
+                    if (!currency) missing.push(t(lang, "cbs.currency_word"));
+                    if (!location.cityId && !locationMeta.city?.name) missing.push(t(lang, "common.city"));
+                    if (!contacts.some(c => c.type && c.value)) missing.push(t(lang, "cbs.contact_info_word"));
+                    if (!permissionGrants.length) missing.push(t(lang, "cbs.permissions_word"));
                     if (missing.length) return (
                       <div className="flex items-start gap-3 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-200">
                         <span className="text-base">⚠️</span>
-                        <div><p className="font-bold">Some required fields are missing:</p><p className="mt-0.5 text-xs">{missing.join(" · ")}</p></div>
+                        <div><p className="font-bold">{t(lang, "cbs.fields_missing_label")}</p><p className="mt-0.5 text-xs">{missing.join(" · ")}</p></div>
                       </div>
                     );
                     return (
                       <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200">
                         <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white text-[10px]">✓</span>
-                        All information has been saved successfully and is ready for final review.
+                        {t(lang, "cbs.all_saved_ready")}
                       </div>
                     );
                   })()}
@@ -2143,41 +2144,41 @@ function CityBranchSetupContent() {
                 {/* ══ FOUR INFO CARDS ══ */}
                 <div className="grid gap-0 border-x border-t border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-950 sm:grid-cols-2 xl:grid-cols-4">
                   {[
-                    { num: 1, title: "Branch Information", icon: "🏢", color: "text-blue-700 dark:text-blue-400", rows: [
-                      { label: "Country", value: previewCountry },
-                      { label: "Main Branch", value: previewMainBranch },
-                      { label: "City Branch", value: branchName },
-                      { label: "Branch Code", value: branchCode },
-                      { label: "Currency", value: currency },
-                      { label: "Status", value: editingCityBranchId ? (activeExistingCityBranch?.status || "Active") : "New (Draft)" },
-                      { label: "Est. Date", value: activeExistingCityBranch?.created_at ? new Date(activeExistingCityBranch.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "Pending Save" },
+                    { num: 1, title: t(lang, "cbs.pb_branch_info"), icon: "🏢", color: "text-blue-700 dark:text-blue-400", rows: [
+                      { label: t(lang, "common.country"), value: previewCountry },
+                      { label: t(lang, "cbs.main_branch_word"), value: previewMainBranch },
+                      { label: t(lang, "cbs.city_branch_word"), value: branchName },
+                      { label: t(lang, "cbs.branch_code_word"), value: branchCode },
+                      { label: t(lang, "cbs.currency_word"), value: currency },
+                      { label: t(lang, "common.status"), value: editingCityBranchId ? (activeExistingCityBranch?.status || t(lang, "common.active")) : t(lang, "cbs.new_draft_word") },
+                      { label: t(lang, "cbs.est_date_word"), value: activeExistingCityBranch?.created_at ? new Date(activeExistingCityBranch.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : t(lang, "cbs.pending_save_word") },
                     ]},
-                    { num: 2, title: "Address & Location", icon: "📍", color: "text-emerald-700 dark:text-emerald-400", rows: [
-                      { label: "Address", value: fullAddress },
-                      { label: "City", value: locationMeta.city?.name },
-                      { label: "State / Province", value: locationMeta.state?.name },
-                      { label: "Postal Code", value: zip },
-                      { label: "District", value: locationMeta.district?.name },
-                      { label: "Area", value: locationMeta.area?.name },
-                      { label: "Country", value: previewCountry },
+                    { num: 2, title: t(lang, "cbs.pb_address_location"), icon: "📍", color: "text-emerald-700 dark:text-emerald-400", rows: [
+                      { label: t(lang, "cbs.address_word"), value: fullAddress },
+                      { label: t(lang, "common.city"), value: locationMeta.city?.name },
+                      { label: t(lang, "cbs.state_province_word"), value: locationMeta.state?.name },
+                      { label: t(lang, "cbs.postal_code_word"), value: zip },
+                      { label: t(lang, "cbs.district_word"), value: locationMeta.district?.name },
+                      { label: t(lang, "cbs.area_word"), value: locationMeta.area?.name },
+                      { label: t(lang, "common.country"), value: previewCountry },
                     ]},
-                    { num: 3, title: "Contact Information", icon: "📞", color: "text-violet-700 dark:text-violet-400", rows: [
-                      { label: "Phone", value: contacts.find(c => c.type.toLowerCase().includes("phone"))?.value },
-                      { label: "Mobile", value: contacts.find(c => c.type.toLowerCase().includes("mobile"))?.value },
-                      { label: "Email", value: contacts.find(c => c.type.toLowerCase().includes("email"))?.value || generatedEmail },
-                      { label: "WhatsApp", value: contacts.find(c => c.type.toLowerCase().includes("whatsapp"))?.value },
-                      { label: "Contact Person", value: ownerPreview?.name || ownerName },
-                      { label: "Designation", value: ownerPreview?.role || "Branch Manager" },
-                      { label: "Website", value: contacts.find(c => c.type.toLowerCase().includes("website"))?.value },
+                    { num: 3, title: t(lang, "cbs.pb_contact_info"), icon: "📞", color: "text-violet-700 dark:text-violet-400", rows: [
+                      { label: t(lang, "cbs.phone_word"), value: contacts.find(c => c.type.toLowerCase().includes("phone"))?.value },
+                      { label: t(lang, "cbs.mobile_word"), value: contacts.find(c => c.type.toLowerCase().includes("mobile"))?.value },
+                      { label: t(lang, "cbs.email_word"), value: contacts.find(c => c.type.toLowerCase().includes("email"))?.value || generatedEmail },
+                      { label: t(lang, "cbs.whatsapp_word"), value: contacts.find(c => c.type.toLowerCase().includes("whatsapp"))?.value },
+                      { label: t(lang, "cbs.contact_person_word"), value: ownerPreview?.name || ownerName },
+                      { label: t(lang, "cbs.designation_word"), value: ownerPreview?.role || t(lang, "cbs.branch_manager_word") },
+                      { label: t(lang, "cbs.website_word"), value: contacts.find(c => c.type.toLowerCase().includes("website"))?.value },
                     ]},
-                    { num: 4, title: "Company / Owner", icon: "🏦", color: "text-amber-700 dark:text-amber-400", rows: [
-                      { label: "Company Name", value: company?.name },
-                      { label: "Legal Name", value: company?.legal_name },
-                      { label: "Company Code", value: companyCode },
-                      { label: "Base Currency", value: company?.base_currency },
-                      { label: "Owner Name", value: ownerPreview?.name || ownerName },
-                      { label: "Owner Code", value: ownerPreview?.code },
-                      { label: "Owner Role", value: ownerPreview?.role || "Owner" },
+                    { num: 4, title: t(lang, "cbs.company_owner_title"), icon: "🏦", color: "text-amber-700 dark:text-amber-400", rows: [
+                      { label: t(lang, "cbs.company_name_field"), value: company?.name },
+                      { label: t(lang, "cbs.legal_name_word"), value: company?.legal_name },
+                      { label: t(lang, "cbs.company_code_word"), value: companyCode },
+                      { label: t(lang, "cbs.base_currency_word"), value: company?.base_currency },
+                      { label: t(lang, "cbs.owner_name_word"), value: ownerPreview?.name || ownerName },
+                      { label: t(lang, "cbs.owner_code_word"), value: ownerPreview?.code },
+                      { label: t(lang, "cbs.owner_role_word"), value: ownerPreview?.role || t(lang, "cbs.owner_word") },
                     ]},
                   ].map(({ num, title, icon, color, rows }, ci) => (
                     <div key={num} className={`p-5 ${ci > 0 ? "border-l border-slate-100 dark:border-slate-800" : ""} ${ci >= 2 ? "border-t border-slate-100 dark:border-slate-800 xl:border-t-0" : ""}` }>
@@ -2202,7 +2203,7 @@ function CityBranchSetupContent() {
                 <div className="border-x border-t border-slate-200 bg-white px-6 py-5 dark:border-slate-700 dark:bg-slate-950">
                   <div className="mb-4 flex items-center gap-2">
                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[8px] font-black text-white">6</span>
-                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-700 dark:text-amber-400">📄 Uploaded Documents</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-700 dark:text-amber-400">📄 {t(lang, "cbs.uploaded_documents_label")}</p>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     {[
@@ -2216,17 +2217,17 @@ function CityBranchSetupContent() {
                           <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${doc.color} text-white text-[9px] font-black flex-shrink-0`}>{doc.type}</div>
                           <div className="min-w-0">
                             <p className="text-[11px] font-bold text-slate-800 dark:text-slate-100 leading-tight truncate">{doc.name}</p>
-                            <p className="text-[9px] text-slate-400 mt-0.5">{doc.size} · Uploaded 25 Jul 2025</p>
+                            <p className="text-[9px] text-slate-400 mt-0.5">{doc.size} · {t(lang, "cbs.uploaded_on_label")} 25 Jul 2025</p>
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <button type="button" className="flex-1 rounded-md border border-slate-200 bg-white py-1 text-[9px] font-semibold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">👁 Preview</button>
-                          <button type="button" className="flex-1 rounded-md border border-slate-200 bg-white py-1 text-[9px] font-semibold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">⬇ Download</button>
+                          <button type="button" className="flex-1 rounded-md border border-slate-200 bg-white py-1 text-[9px] font-semibold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">👁 {t(lang, "cbs.preview_word")}</button>
+                          <button type="button" className="flex-1 rounded-md border border-slate-200 bg-white py-1 text-[9px] font-semibold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">⬇ {t(lang, "cbs.download_word")}</button>
                         </div>
                       </div>
                     ))}
                   </div>
-                  <button type="button" className="mt-3 flex items-center gap-1.5 text-[10px] font-semibold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400">📂 View All Documents (4)</button>
+                  <button type="button" className="mt-3 flex items-center gap-1.5 text-[10px] font-semibold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400">📂 {t(lang, "cbs.view_all_documents").replace("{0}", "4")}</button>
                 </div>
 
                 {/* ══ THREE COLUMN LOWER SECTIONS ══ */}
@@ -2235,52 +2236,52 @@ function CityBranchSetupContent() {
                   <div className="p-5">
                     <div className="mb-3 flex items-center gap-2 border-b border-slate-100 pb-2 dark:border-slate-800">
                       <span className="flex h-5 w-5 items-center justify-center rounded-full border border-indigo-400 text-[8px] font-black text-indigo-600 dark:text-indigo-400">6</span>
-                      <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-400">🔐 Roles &amp; Permissions</span>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-400">🔐 {t(lang, "cbs.pb_roles_permissions")}</span>
                     </div>
                     <div className="mb-1.5 grid grid-cols-3 gap-1 border-b border-slate-100 pb-1 dark:border-slate-800">
-                      <span className="text-[8px] font-black uppercase tracking-wide text-slate-400">Role</span>
-                      <span className="text-[8px] font-black uppercase tracking-wide text-slate-400">Users</span>
-                      <span className="text-[8px] font-black uppercase tracking-wide text-slate-400">Access</span>
+                      <span className="text-[8px] font-black uppercase tracking-wide text-slate-400">{t(lang, "cbs.role_word")}</span>
+                      <span className="text-[8px] font-black uppercase tracking-wide text-slate-400">{t(lang, "cbs.users_word")}</span>
+                      <span className="text-[8px] font-black uppercase tracking-wide text-slate-400">{t(lang, "cbs.access_word")}</span>
                     </div>
-                    {[{ role: "Branch Admin", users: 2, access: "Full Access" }, { role: "Accountant", users: 3, access: "Finance Only" }, { role: "Store Manager", users: 1, access: "Inventory" }, { role: "Sales Executive", users: 4, access: "Sales Access" }, { role: "Viewer", users: 2, access: "View Only" }].map(({ role, users, access }) => (
+                    {[{ role: t(lang, "cbs.role_branch_admin"), users: 2, access: t(lang, "cbs.access_full") }, { role: t(lang, "cbs.role_accountant"), users: 3, access: t(lang, "cbs.access_finance_only") }, { role: t(lang, "cbs.role_store_manager"), users: 1, access: t(lang, "cbs.access_inventory") }, { role: t(lang, "cbs.role_sales_executive"), users: 4, access: t(lang, "cbs.access_sales") }, { role: t(lang, "cbs.role_viewer"), users: 2, access: t(lang, "cbs.access_view_only") }].map(({ role, users, access }) => (
                       <div key={role} className="grid grid-cols-3 gap-1 border-b border-dashed border-slate-100 py-1.5 dark:border-slate-800">
                         <span className="text-[10px] font-semibold text-slate-800 dark:text-slate-100">{role}</span>
                         <span className="text-[10px] font-semibold text-slate-600 dark:text-slate-300">{users}</span>
                         <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">{access}</span>
                       </div>
                     ))}
-                    <p className="mt-2 text-[9px] text-indigo-600 dark:text-indigo-400">Template: <strong>{permissionTemplate || "city-standard"}</strong> · {permissionGrants.length} total</p>
-                    <button type="button" className="mt-2 text-[9px] font-semibold text-indigo-600 hover:underline dark:text-indigo-400">↗ View All Roles &amp; Permissions</button>
+                    <p className="mt-2 text-[9px] text-indigo-600 dark:text-indigo-400">{t(lang, "cbs.template_word")}: <strong>{permissionTemplate || "city-standard"}</strong> · {permissionGrants.length} {t(lang, "cbs.total_word")}</p>
+                    <button type="button" className="mt-2 text-[9px] font-semibold text-indigo-600 hover:underline dark:text-indigo-400">↗ {t(lang, "cbs.view_all_roles_permissions")}</button>
                   </div>
 
                   {/* Accounting Setup */}
                   <div className="border-l border-slate-100 p-5 dark:border-slate-800">
                     <div className="mb-3 flex items-center gap-2 border-b border-slate-100 pb-2 dark:border-slate-800">
                       <span className="flex h-5 w-5 items-center justify-center rounded-full border border-emerald-400 text-[8px] font-black text-emerald-600 dark:text-emerald-400">7</span>
-                      <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">📒 Accounting Setup</span>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">📒 {t(lang, "cbs.pb_accounting_setup")}</span>
                     </div>
-                    {[{ label: "Default Purchase Account", value: "Purchases – Local" }, { label: "Default Sales Account", value: "Sales – Local" }, { label: "Cash Account", value: "Cash in Hand" }, { label: "Bank Account", value: "HBL – Main Branch" }, { label: "Tax Account", value: "Sales Tax Payable" }, { label: "Current Year Start", value: "01 Jul 2025" }, { label: "Accounting Method", value: "Accrual Basis" }].map(({ label, value }) => (
+                    {[{ label: t(lang, "cbs.default_purchase_account"), value: "Purchases – Local" }, { label: t(lang, "cbs.default_sales_account"), value: "Sales – Local" }, { label: t(lang, "cbs.cash_account"), value: "Cash in Hand" }, { label: t(lang, "cbs.bank_account_word"), value: "HBL – Main Branch" }, { label: t(lang, "cbs.tax_account"), value: "Sales Tax Payable" }, { label: t(lang, "cbs.current_year_start"), value: "01 Jul 2025" }, { label: t(lang, "cbs.accounting_method"), value: "Accrual Basis" }].map(({ label, value }) => (
                       <div key={label} className="flex items-start justify-between gap-2 border-b border-dashed border-slate-100 py-1.5 dark:border-slate-800">
                         <span className="text-[9px] text-slate-400 dark:text-slate-500 leading-4 w-28 shrink-0">{label}</span>
                         <span className="text-right text-[10px] font-semibold text-slate-800 dark:text-slate-100 leading-4">{value}</span>
                       </div>
                     ))}
-                    <button type="button" className="mt-2 text-[9px] font-semibold text-emerald-600 hover:underline dark:text-emerald-400">↗ View Chart of Accounts</button>
+                    <button type="button" className="mt-2 text-[9px] font-semibold text-emerald-600 hover:underline dark:text-emerald-400">↗ {t(lang, "cbs.view_chart_of_accounts")}</button>
                   </div>
 
                   {/* Communication Setup */}
                   <div className="border-l border-slate-100 p-5 dark:border-slate-800">
                     <div className="mb-3 flex items-center gap-2 border-b border-slate-100 pb-2 dark:border-slate-800">
                       <span className="flex h-5 w-5 items-center justify-center rounded-full border border-cyan-400 text-[8px] font-black text-cyan-600 dark:text-cyan-400">8</span>
-                      <span className="text-[10px] font-black uppercase tracking-wider text-cyan-700 dark:text-cyan-400">📡 Communication Setup</span>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-cyan-700 dark:text-cyan-400">📡 {t(lang, "cbs.communication_setup_label")}</span>
                     </div>
-                    {[{ label: "Email (Documents)", value: generatedEmail || "—" }, { label: "Email (Notifications)", value: generatedEmail ? `notify@${generatedEmail.split("@")[1]}` : "—" }, { label: "WhatsApp Number", value: whatsappNumber || "—" }, { label: "SMS Notifications", value: whatsappNumber ? "Enabled" : "Disabled" }, { label: "Email Notifications", value: generatedEmail ? "Enabled" : "Disabled" }, { label: "SMTP Server", value: emailServerName || "Not Configured" }, { label: "Language", value: "English" }, { label: "Time Zone", value: "(GMT+05:00) PKT" }].map(({ label, value }) => (
+                    {[{ label: t(lang, "cbs.email_documents_row"), value: generatedEmail || "—" }, { label: t(lang, "cbs.email_notif_addr_row"), value: generatedEmail ? `notify@${generatedEmail.split("@")[1]}` : "—" }, { label: t(lang, "cbs.whatsapp_number_row"), value: whatsappNumber || "—" }, { label: t(lang, "cbs.sms_notifications_row"), value: whatsappNumber ? t(lang, "cbs.enabled_word") : t(lang, "cbs.disabled_word") }, { label: t(lang, "cbs.email_notifications_row"), value: generatedEmail ? t(lang, "cbs.enabled_word") : t(lang, "cbs.disabled_word") }, { label: t(lang, "cbs.smtp_server_row"), value: emailServerName || t(lang, "cbs.not_configured_word") }, { label: t(lang, "cbs.language_row"), value: t(lang, "cbs.lang_english_word") }, { label: t(lang, "cbs.timezone_row"), value: "(GMT+05:00) PKT" }].map(({ label, value }) => (
                       <div key={label} className="flex items-start justify-between gap-2 border-b border-dashed border-slate-100 py-1.5 dark:border-slate-800">
                         <span className="text-[9px] text-slate-400 dark:text-slate-500 leading-4 w-28 shrink-0">{label}</span>
-                        <span className={`text-right text-[10px] font-semibold leading-4 ${ value === "Enabled" ? "text-emerald-600 dark:text-emerald-400" : value === "Disabled" ? "text-rose-500 dark:text-rose-400" : value === "—" ? "text-slate-300 dark:text-slate-600" : "text-slate-800 dark:text-slate-100"}`}>{value}</span>
+                        <span className={`text-right text-[10px] font-semibold leading-4 ${ value === t(lang, "cbs.enabled_word") ? "text-emerald-600 dark:text-emerald-400" : value === t(lang, "cbs.disabled_word") ? "text-rose-500 dark:text-rose-400" : value === "—" ? "text-slate-300 dark:text-slate-600" : "text-slate-800 dark:text-slate-100"}`}>{value}</span>
                       </div>
                     ))}
-                    <button type="button" className="mt-2 text-[9px] font-semibold text-cyan-600 hover:underline dark:text-cyan-400">↗ Test Communication Settings</button>
+                    <button type="button" className="mt-2 text-[9px] font-semibold text-cyan-600 hover:underline dark:text-cyan-400">↗ {t(lang, "cbs.test_communication_settings")}</button>
                   </div>
                 </div>
 
@@ -2288,29 +2289,29 @@ function CityBranchSetupContent() {
                 <div className="border-x border-t border-slate-200 bg-white px-6 py-5 dark:border-slate-700 dark:bg-slate-950">
                   <div className="mb-4 flex items-center gap-2">
                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-700 text-[8px] font-black text-white dark:bg-slate-300 dark:text-slate-800">9</span>
-                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-700 dark:text-slate-300">⚡ Final Approval Actions</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-700 dark:text-slate-300">⚡ {t(lang, "cbs.final_approval_actions_label")}</p>
                   </div>
                   <div className="grid gap-4 sm:grid-cols-3">
                     {/* Approve */}
                     <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-5 dark:border-emerald-900/50 dark:bg-emerald-950/20">
                       <div className="mb-3 flex items-center gap-2.5">
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40"><span className="text-xl">✅</span></div>
-                        <p className="text-sm font-black text-emerald-800 dark:text-emerald-300">Approve &amp; Activate Branch</p>
+                        <p className="text-sm font-black text-emerald-800 dark:text-emerald-300">{t(lang, "cbs.approve_activate_title")}</p>
                       </div>
-                      <p className="mb-4 text-xs text-emerald-700 dark:text-emerald-400">Approve this branch and make it active. The branch will be available for all operations.</p>
+                      <p className="mb-4 text-xs text-emerald-700 dark:text-emerald-400">{t(lang, "cbs.approve_activate_desc")}</p>
                       <Button type="submit" disabled={saving || !location.countryId || !countryBranchId || cityAlreadyExists} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-9 rounded-lg">
-                        {saving ? "Saving…" : "✓ Approve & Activate"}
+                        {saving ? t(lang, "common.saving") : `✓ ${t(lang, "cbs.approve_activate_btn")}`}
                       </Button>
                     </div>
                     {/* Send Back */}
                     <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-900/50 dark:bg-amber-950/20">
                       <div className="mb-3 flex items-center gap-2.5">
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-900/40"><span className="text-xl">✏️</span></div>
-                        <p className="text-sm font-black text-amber-800 dark:text-amber-300">Send Back for Edit</p>
+                        <p className="text-sm font-black text-amber-800 dark:text-amber-300">{t(lang, "cbs.send_back_title")}</p>
                       </div>
-                      <p className="mb-4 text-xs text-amber-700 dark:text-amber-400">Send this application back for <strong>corrections</strong> or additional information.</p>
+                      <p className="mb-4 text-xs text-amber-700 dark:text-amber-400">{t(lang, "cbs.send_back_desc")}</p>
                       <Button type="button" variant="outline" onClick={() => setActiveStep(1)} className="w-full border-amber-400 bg-amber-100 text-amber-800 hover:bg-amber-200 font-bold text-xs h-9 rounded-lg dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
-                        ↩ Send Back for Edit
+                        ↩ {t(lang, "cbs.send_back_title")}
                       </Button>
                     </div>
                     {/* Request Changes */}
@@ -2578,13 +2579,13 @@ function CityBranchSetupContent() {
             {/* Existing Branch Conflict */}
             {branchConflict && (
               <div className="border-t border-amber-100 bg-amber-50 px-4 py-3 dark:border-amber-900/40 dark:bg-amber-950/20">
-                <p className="text-[9px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">⚠ Duplicate Code or Name Detected</p>
+                <p className="text-[9px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">⚠ {t(lang, "cbs.duplicate_code_name_detected")}</p>
                 <div className="mt-1 text-[10px] text-amber-800 dark:text-amber-300 space-y-1">
                   {codeAlreadyExists && (
-                    <p>Branch Code <b>{branchCode}</b> is already in use. Please enter a unique code.</p>
+                    <p>{t(lang, "cbs.branch_code_word")} <b>{branchCode}</b> {t(lang, "cbs.already_in_use_short")}</p>
                   )}
                   {nameAlreadyExists && (
-                    <p>Branch Name <b>{branchName}</b> already exists in {locationMeta.city?.name || "this city"}. Please choose a distinct name.</p>
+                    <p>{t(lang, "cbs.branch_name")} <b>{branchName}</b> {t(lang, "cbs.already_exists_in_city").replace("{0}", locationMeta.city?.name || t(lang, "cbs.this_city_word"))}</p>
                   )}
                 </div>
                 <div className="mt-2 flex flex-wrap gap-1.5">
@@ -2596,7 +2597,7 @@ function CityBranchSetupContent() {
                       className="h-6 text-[9px] bg-white text-emerald-700 border-emerald-300 hover:bg-emerald-50"
                       onClick={() => setBranchCode(suggestBranchCode(locationMeta, existingCityBranches))}
                     >
-                      ⚡ Auto-Fix Code
+                      ⚡ {t(lang, "cbs.auto_fix_code")}
                     </Button>
                   )}
                   {activeExistingCityBranch && (
@@ -2607,7 +2608,7 @@ function CityBranchSetupContent() {
                       className="h-6 text-[9px]"
                       onClick={() => beginEditCityBranch(activeExistingCityBranch)}
                     >
-                      <Pencil className="h-3 w-3 mr-1" aria-hidden /> Edit Existing
+                      <Pencil className="h-3 w-3 mr-1" aria-hidden /> {t(lang, "cbs.edit_existing_btn")}
                     </Button>
                   )}
                 </div>
@@ -2624,7 +2625,7 @@ function CityBranchSetupContent() {
                   <Input
                     value={existingCitySearch}
                     onChange={(event) => setExistingCitySearch(event.target.value)}
-                    placeholder="Search branches…"
+                    placeholder={t(lang, "cbs.search_branches_ph")}
                     className="h-7 text-xs"
                   />
                   {filteredExistingCityBranches.slice(0, 5).map((b) => (
@@ -2666,12 +2667,12 @@ function CityBranchSetupContent() {
       <DetailDrawer
         isOpen={drawerBranchData !== null}
         onClose={() => setDrawerBranchData(null)}
-        title="City Branch Details"
-        subtitle="Verification certificate and branch permissions"
+        title={t(lang, "cbs.city_branch_details_title")}
+        subtitle={t(lang, "cbs.verification_cert_subtitle")}
       >
         {drawerBranchData && (
           <BranchLiveReportPanel
-            title="Saved City Branch"
+            title={t(lang, "cbs.saved_city_branch_title")}
             status={drawerBranchData.branchStatus}
             branchData={drawerBranchData}
           />
