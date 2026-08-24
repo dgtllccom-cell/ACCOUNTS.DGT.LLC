@@ -363,12 +363,12 @@ function MiniChart({
   title,
   rows,
   formatValue,
-  lang
+  lang = "en"
 }: {
   title: string;
   rows: Array<{ label: string; value: number }>;
   formatValue?: (value: number) => string;
-  lang: SupportedLanguage;
+  lang?: SupportedLanguage;
 }) {
   const max = Math.max(1, ...rows.map((row) => Math.abs(row.value)));
 

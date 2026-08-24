@@ -5,8 +5,7 @@ import { apiGet } from "@/lib/api/client";
 import { CustomerForm } from "./customer-form";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
-import { transliterateProperNoun } from "@/lib/i18n/transliteration";
-import { localizeTerm } from "@/features/companies/components/company-registry";
+import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
 
 type CustomerRow = {
   id: string;

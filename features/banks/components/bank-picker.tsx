@@ -5,8 +5,7 @@ import { listBanks, getBankById, type BankRecord } from "@/features/banks/bank-a
 import { BankForm } from "@/features/banks/components/bank-form";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
-import { localizeTerm } from "@/features/companies/components/company-registry";
-import { transliterateProperNoun } from "@/lib/i18n/transliteration";
+import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
 
 function toOption(row: BankRecord, lang: string = "en"): SearchSelectOption {
   const bankName = localizeTerm(row.bank_name, lang);

@@ -270,3 +270,11 @@ export function transliterateToLatin(text: string): string {
     .map((word) => (word ? word[0].toUpperCase() + word.slice(1) : word))
     .join(" ");
 }
+
+/** Localize or transliterate any business/entity term dynamically into the target language. */
+export function localizeTerm(val: string | null | undefined, lang: string = "en"): string {
+  if (!val) return "";
+  if (lang === "en") return val;
+  return transliterateProperNoun(val, lang as SupportedLanguage);
+}
+

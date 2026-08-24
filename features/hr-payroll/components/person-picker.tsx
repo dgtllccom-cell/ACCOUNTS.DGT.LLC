@@ -6,8 +6,7 @@ import { CustomerForm } from "@/features/customers/components/customer-form";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
-import { transliterateProperNoun } from "@/lib/i18n/transliteration";
-import { localizeTerm } from "@/features/companies/components/company-registry";
+import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
 
 type PersonRow = {
   id: string;

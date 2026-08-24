@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 export function GoodsVariationsGrid({ goodsId }: { goodsId: string }) {
   const lang = useActiveLanguage();
@@ -52,7 +53,7 @@ export function GoodsVariationsGrid({ goodsId }: { goodsId: string }) {
 
   const handleAddVariation = async () => {
     if (!addForm.size.trim() || !addForm.brand.trim()) {
-      setAddError("Size and Brand are required.");
+      setAddError(t(lang, "goods.gvg_size_brand_required_msg", "Size and Brand are required."));
       return;
     }
     
@@ -73,7 +74,7 @@ export function GoodsVariationsGrid({ goodsId }: { goodsId: string }) {
       const payload = await res.json().catch(() => ({}));
       
       if (!res.ok || !payload.ok) {
-        throw new Error(payload?.error?.message || payload?.error || "Failed to create variation");
+        throw new Error(payload?.error?.message || payload?.error || t(lang, "goods.gvg_failed_create_variation", "Failed to create variation"));
       }
       
       // Reset form and refresh
@@ -82,7 +83,7 @@ export function GoodsVariationsGrid({ goodsId }: { goodsId: string }) {
       fetchData();
       
     } catch (err) {
-      setAddError(err instanceof Error ? err.message : "Failed to add variation");
+      setAddError(err instanceof Error ? err.message : t(lang, "goods.gvg_failed_add_variation", "Failed to add variation"));
     } finally {
       setAdding(false);
     }
@@ -95,11 +96,11 @@ export function GoodsVariationsGrid({ goodsId }: { goodsId: string }) {
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-muted-foreground animate-pulse">Loading variations...</div>;
+    return <div className="p-8 text-center text-muted-foreground animate-pulse">{t(lang, "goods.gvg_loading_variations", "Loading variations...")}</div>;
   }
 
   if (!goods) {
-    return <div className="p-8 text-center text-destructive">Failed to load Goods Data</div>;
+    return <div className="p-8 text-center text-destructive">{t(lang, "goods.gvg_failed_load_goods_data", "Failed to load Goods Data")}</div>;
   }
 
   return (
@@ -111,56 +112,56 @@ export function GoodsVariationsGrid({ goodsId }: { goodsId: string }) {
             {goods.goods_name || goods.goodsName}
           </h2>
           <div className="mt-2 flex items-center gap-4 text-xs font-mono text-muted-foreground">
-            <span className="bg-white px-2 py-1 rounded border border-border">HS: {goods.chs_code || goods.chsCode}</span>
-            <span>Total Variations: {variations.length}</span>
+            <span className="bg-white px-2 py-1 rounded border border-border">{t(lang, "goods.gvg_hs_colon", "HS:")} {goods.chs_code || goods.chsCode}</span>
+            <span>{t(lang, "goods.gvg_total_variations_colon", "Total Variations:")} {variations.length}</span>
           </div>
         </div>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
           className={`flex items-center gap-1 px-4 py-2 rounded text-xs font-semibold transition-colors ${
-            showAddForm 
-              ? "bg-slate-200 text-slate-700 hover:bg-slate-300" 
+            showAddForm
+              ? "bg-slate-200 text-slate-700 hover:bg-slate-300"
               : "bg-primary text-primary-foreground hover:opacity-90"
           }`}
         >
-          {showAddForm ? "Cancel" : <><Plus className="w-4 h-4" /> Add Variation</>}
+          {showAddForm ? t(lang, "common.cancel", "Cancel") : <><Plus className="w-4 h-4" /> {t(lang, "goods.gvg_add_variation", "Add Variation")}</>}
         </button>
       </div>
 
       {/* Add Variation Form */}
       {showAddForm && (
         <div className="p-4 bg-primary/5 border-b border-primary/10">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-primary mb-3">New Variation</h3>
+          <h3 className="text-xs font-bold uppercase tracking-wider text-primary mb-3">{t(lang, "goods.gvg_new_variation", "New Variation")}</h3>
           {addError && <div className="text-destructive text-[11px] mb-2">{addError}</div>}
           <div className="flex gap-3 items-end">
             <div className="flex-1">
-              <label className="block text-[10px] font-bold text-muted-foreground mb-1 uppercase tracking-wider">Origin Country</label>
+              <label className="block text-[10px] font-bold text-muted-foreground mb-1 uppercase tracking-wider">{t(lang, "purchase.f_origin_country", "Origin Country")}</label>
               <select
                 value={addForm.originCountryId}
                 onChange={e => setAddForm(p => ({ ...p, originCountryId: e.target.value }))}
                 className="w-full bg-white border border-input rounded px-3 py-2 text-foreground text-sm outline-none focus:border-primary"
               >
-                <option value="">Select Origin...</option>
+                <option value="">{t(lang, "goods.gvg_select_origin_ph", "Select Origin...")}</option>
                 {countries.map(c => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
             </div>
             <div className="flex-1">
-              <label className="block text-[10px] font-bold text-muted-foreground mb-1 uppercase tracking-wider">Size *</label>
+              <label className="block text-[10px] font-bold text-muted-foreground mb-1 uppercase tracking-wider">{t(lang, "goods.gvg_size_required", "Size *")}</label>
               <input
                 type="text"
-                placeholder="e.g. W320"
+                placeholder={t(lang, "goods.gvg_size_placeholder_example", "e.g. W320")}
                 value={addForm.size}
                 onChange={e => setAddForm(p => ({ ...p, size: e.target.value }))}
                 className="w-full bg-white border border-input rounded px-3 py-2 text-foreground text-sm outline-none focus:border-primary uppercase"
               />
             </div>
             <div className="flex-1">
-              <label className="block text-[10px] font-bold text-muted-foreground mb-1 uppercase tracking-wider">Brand *</label>
+              <label className="block text-[10px] font-bold text-muted-foreground mb-1 uppercase tracking-wider">{t(lang, "goods.gvg_brand_required", "Brand *")}</label>
               <input
                 type="text"
-                placeholder="e.g. DGT"
+                placeholder={t(lang, "goods.gvg_brand_placeholder_example", "e.g. DGT")}
                 value={addForm.brand}
                 onChange={e => setAddForm(p => ({ ...p, brand: e.target.value }))}
                 className="w-full bg-white border border-input rounded px-3 py-2 text-foreground text-sm outline-none focus:border-primary uppercase"
@@ -171,7 +172,7 @@ export function GoodsVariationsGrid({ goodsId }: { goodsId: string }) {
               disabled={adding}
               className="bg-primary text-primary-foreground px-6 py-2 rounded text-sm font-bold hover:opacity-90 disabled:opacity-50"
             >
-              {adding ? "Saving..." : "Save"}
+              {adding ? t(lang, "report.builder_saving", "Saving...") : t(lang, "common.save", "Save")}
             </button>
           </div>
         </div>
@@ -181,8 +182,8 @@ export function GoodsVariationsGrid({ goodsId }: { goodsId: string }) {
       <div className="flex-1 overflow-auto p-6">
         {variations.length === 0 ? (
           <div className="text-center p-8 border-2 border-dashed border-border rounded-lg text-muted-foreground">
-            <p className="text-sm">No variations found for this Goods Master.</p>
-            <p className="text-xs mt-1">Click "Add Variation" to create one (Origin + Size + Brand).</p>
+            <p className="text-sm">{t(lang, "goods.gvg_no_variations_found", "No variations found for this Goods Master.")}</p>
+            <p className="text-xs mt-1">{t(lang, "goods.gvg_click_add_variation_msg", 'Click "Add Variation" to create one (Origin + Size + Brand).')}</p>
           </div>
         ) : (
           <div className="border border-border rounded-lg overflow-hidden bg-white">

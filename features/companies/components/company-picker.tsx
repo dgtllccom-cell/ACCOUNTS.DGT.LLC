@@ -5,8 +5,7 @@ import { apiGet } from "@/lib/api/client";
 import { CompanyIncorporationForm } from "./company-incorporation-form";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
-import { localizeTerm } from "@/features/companies/components/company-registry";
-import { transliterateProperNoun } from "@/lib/i18n/transliteration";
+import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
 
 export type CompanyRow = {
   id: string;
