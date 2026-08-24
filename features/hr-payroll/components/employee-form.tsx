@@ -68,12 +68,13 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
 
   // Core fields
   const [personMasterId, setPersonMasterId] = useState("");
-  // Structured person identity (item 4). Populated from the selected person master, editable here,
+  const [loadedPerson, setLoadedPerson] = useState<any>(null);
+  // Structured person identity. Populated from the selected person master, editable here,
   // and synced back to the person master (customers) on save. Full name is derived from these.
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [gender, setGender] = useState("");
-  const [category, setCategory] = useState<"Manager" | "Normal Staff" | "Employee" | "Others">("Employee");
+  const [category, setCategory] = useState<"Country Owner" | "Branch Owner" | "Company Owner" | "Manager" | "Normal Staff" | "Employee" | "Others">("Employee");
   const [designation, setDesignation] = useState("");
   const [department, setDepartment] = useState("");
 
@@ -277,7 +278,39 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
   const totalAllowances = Number(accommodationAllowance) + Number(transportAllowance) + Number(foodAllowance) + Number(mobileAllowance) + Number(otherAllowance);
   const netSalary = Math.max(0, Number(basicSalary) + totalAllowances - Number(deduction) - Number(taxDeduction));
 
-  const selectedPersonObj = useMemo(() => personsList.find((p) => p.id === personMasterId) ?? null, [personsList, personMasterId]);
+  // Fetch person master dynamically whenever personMasterId changes
+  useEffect(() => {
+    if (!personMasterId) {
+      setLoadedPerson(null);
+      setFirstName("");
+      setLastName("");
+      setGender("");
+      return;
+    }
+    let alive = true;
+    apiGet<{ customer?: any }>(`/api/erp/customers/${encodeURIComponent(personMasterId)}?lang=${encodeURIComponent(lang)}`)
+      .then((res) => {
+        if (!alive || !res?.customer) return;
+        setLoadedPerson(res.customer);
+        const p = res.customer;
+        if (p.first_name || p.last_name) {
+          setFirstName(p.first_name || "");
+          setLastName(p.last_name || "");
+        } else if (p.customer_name) {
+          const parts = p.customer_name.trim().split(/\s+/);
+          setFirstName(parts[0] || "");
+          setLastName(parts.slice(1).join(" ") || "");
+        }
+        if (p.gender) setGender(p.gender);
+        if (p.country_id && !countryId) setCountryId(p.country_id);
+      })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [personMasterId, lang]);
+
+  const selectedPersonObj = useMemo(() => {
+    return loadedPerson || personsList.find((p) => p.id === personMasterId) || null;
+  }, [loadedPerson, personsList, personMasterId]);
   const selectedCountryObj = useMemo(() => countries.find((c) => c.id === countryId) ?? null, [countries, countryId]);
   const selectedMainBranchObj = useMemo(() => branches.find((b) => b.id === countryBranchId) ?? null, [branches, countryBranchId]);
   const selectedCityBranchObj = useMemo(() => cityBranches.find((b) => b.id === cityBranchId) ?? null, [cityBranches, cityBranchId]);
@@ -293,16 +326,6 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
       .catch(() => { if (alive) setPersonDetail(null); });
     return () => { alive = false; };
   }, [personMasterId]);
-
-  // When the selected person changes, load their structured identity from the master; clear when
-  // deselected so no stale values from a previously selected person are ever retained (item 5).
-  useEffect(() => {
-    if (!selectedPersonObj) { setFirstName(""); setLastName(""); setGender(""); return; }
-    setFirstName(selectedPersonObj.first_name || "");
-    setLastName(selectedPersonObj.last_name || "");
-    setGender(selectedPersonObj.gender || "");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPersonObj?.id]);
 
   // Full name is always derived from the structured fields, falling back to the stored display name.
   const fullName = [firstName, lastName].filter(Boolean).join(" ").trim() || (selectedPersonObj?.customer_name || "");
@@ -402,8 +425,24 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
   // Prefer an explicit non-"en" language from the host; otherwise follow the reactive store.
   const lang = (langProp && langProp !== "en") ? langProp : activeLang;
   // Central-dictionary labels only — no per-component machine translation.
-  const CAT_KEYS: Record<string, string> = { "Manager": "hr.f_cat_manager", "Normal Staff": "hr.f_cat_normal_staff", "Employee": "hr.f_cat_employee", "Others": "hr.f_cat_others" };
-  const catLabel = (c: string) => t(lang, (CAT_KEYS[c] || "hr.f_cat_employee") as never, c);
+  const CAT_KEYS: Record<string, string> = { 
+    "Country Owner": "hr.f_cat_country_owner",
+    "Branch Owner": "hr.f_cat_branch_owner",
+    "Company Owner": "hr.f_cat_company_owner",
+    "Manager": "hr.f_cat_manager", 
+    "Normal Staff": "hr.f_cat_normal_staff", 
+    "Employee": "hr.f_cat_employee", 
+    "Others": "hr.f_cat_others" 
+  };
+  const catLabel = (c: string) => {
+    if (c === "Country Owner") return lang === "ur" ? "👑 کنٹری اونر / ہیڈ" : "👑 Country Owner / Head";
+    if (c === "Branch Owner") return lang === "ur" ? "🏛️ برانچ اونر / منیجر" : "🏛️ Branch Owner / Manager";
+    if (c === "Company Owner") return lang === "ur" ? "🏢 کمپنی اونر" : "🏢 Company Owner";
+    if (c === "Manager") return lang === "ur" ? "👔 منیجر" : "👔 Manager";
+    if (c === "Normal Staff") return lang === "ur" ? "👥 سٹاف" : "👥 Normal Staff";
+    if (c === "Employee") return lang === "ur" ? "💼 ملازم" : "💼 Employee";
+    return t(lang, (CAT_KEYS[c] || "hr.f_cat_employee") as never, c);
+  };
 
   // A4 Employee Master Profile Print/PDF via the shared master-profile engine (item 10).
   function printProfile() {
@@ -555,17 +594,17 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
 
           <div>
             <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block mb-2">
-              {t(lang, "hr.f_select_category", "Select Employee Category *")}
+              {t(lang, "hr.f_select_category", "Select Employee / Master Category *")}
             </label>
-            <div className="grid grid-cols-4 gap-2 bg-slate-100 dark:bg-slate-950 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800">
-              {(["Manager", "Normal Staff", "Employee", "Others"] as const).map((cat) => (
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-1.5 bg-slate-100 dark:bg-slate-950 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800">
+              {(["Country Owner", "Branch Owner", "Company Owner", "Manager", "Normal Staff", "Employee", "Others"] as const).map((cat) => (
                 <button
                   key={cat}
                   type="button"
                   onClick={() => setCategory(cat)}
-                  className={`py-2.5 rounded-lg text-xs font-bold transition-all ${
+                  className={`py-2 px-2 rounded-lg text-xs font-bold transition-all truncate text-center ${
                     category === cat
-                      ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm border border-slate-200 dark:border-slate-700"
+                      ? "bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 shadow-sm border border-emerald-300 dark:border-emerald-700"
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-900"
                   }`}
                 >

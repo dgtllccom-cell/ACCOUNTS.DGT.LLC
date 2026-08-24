@@ -28,6 +28,7 @@ import { getPermissionKeysForTemplate } from "@/lib/permissions/catalog";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
 import { openMasterProfileReportWindow } from "@/lib/reports/open-master-profile-report-window";
 import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import type { ContactTypeKey } from "@/features/contact-types/contact-type-api";
 
 type CountryBranchRow = {
@@ -164,6 +165,7 @@ function asIso3(country: LocationCountry | null) {
 }
 
 function CountryBranchSetupContent() {
+  const lang = useActiveLanguage();
   const searchParams = useSearchParams();
   const editId = searchParams.get("editId") ?? "";
   const [drawerBranchData, setDrawerBranchData] = useState<any>(null);
@@ -1019,14 +1021,14 @@ function CountryBranchSetupContent() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">New Entry</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">Country Branch</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">{t(lang, "cnbs.new_entry")}</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight">{t(lang, "cnbs.title")}</h1>
           <p className="text-sm text-muted-foreground">
-            Create one main branch per country. Countries and locations come from Settings / Location.
+            {t(lang, "cnbs.subtitle")}
           </p>
         </div>
         <span className={pillClassName()}>
-          <b>Rule:</b> One Main Branch per Country
+          <b>{t(lang, "cnbs.rule_label")}</b> {t(lang, "cnbs.rule_desc")}
         </span>
       </div>
 
@@ -1034,15 +1036,15 @@ function CountryBranchSetupContent() {
         <div className="overflow-x-auto -mx-1 px-1" aria-label="Country branch wizard sequence">
           <div className="flex gap-2 min-w-max">
           {[
-            ["1", "Branch Information", "Country, currency and location"],
-            ["2", "Access Scope", "Review country scope before setup"],
-            ["3", "User Account Setup", "Company and branch owner"],
-            ["4", "Contact Information", "Phone, email and official IDs"],
-            ["5", "Review & PDF Summary", "Preview before final setup"],
-            ["6", "Branch Documents", "Optional branch files"],
-            ["7", "Roles & Permissions", "Configure and confirm role access"],
-            ["8", "AI Communication Setup", "Email, WhatsApp and alerts"],
-            ["9", "Final Approval", "Accept setup or go back"]
+            ["1", t(lang, "cnbs.step1_title"), t(lang, "cnbs.step1_desc")],
+            ["2", t(lang, "cnbs.step2_title"), t(lang, "cnbs.step2_desc")],
+            ["3", t(lang, "cnbs.step3_title"), t(lang, "cnbs.step3_desc")],
+            ["4", t(lang, "cnbs.step4_title"), t(lang, "cnbs.step4_desc")],
+            ["5", t(lang, "cnbs.step5_title"), t(lang, "cnbs.step5_desc")],
+            ["6", t(lang, "cnbs.step6_title"), t(lang, "cnbs.step6_desc")],
+            ["7", t(lang, "cnbs.step7_title"), t(lang, "cnbs.step7_desc")],
+            ["8", t(lang, "cnbs.step8_title"), t(lang, "cnbs.step8_desc")],
+            ["9", t(lang, "cnbs.step9_title"), t(lang, "cnbs.step9_desc")]
           ].map(([no, title, desc]) => (
             <div key={no} className={cn("rounded-xl border px-3 py-2 transition min-w-[120px] max-w-[140px] flex-shrink-0", Number(no) === activeStep ? "border-cyan-500 bg-cyan-50 shadow-sm ring-1 ring-cyan-200 dark:border-cyan-500 dark:bg-cyan-950/40" : "border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900/50")}>
               <div className="flex items-start gap-2">
@@ -1055,7 +1057,7 @@ function CountryBranchSetupContent() {
           </div>
         </div>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
-          <span className="text-xs font-bold text-slate-500">Step {activeStep} of 9</span>
+          <span className="text-xs font-bold text-slate-500">{t(lang, "cbs.step_word")} {activeStep} {t(lang, "cbs.of_9")}</span>
           <div className="flex flex-wrap items-center gap-2">
             <Button
               type="button"
@@ -1065,7 +1067,7 @@ function CountryBranchSetupContent() {
               onClick={() => setActiveStep((step) => Math.max(1, step - 1))}
               className="font-bold text-xs h-8 px-3.5 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer disabled:opacity-40"
             >
-              ← Back
+              ← {t(lang, "common.back")}
             </Button>
             {activeStep < 9 ? (
               <Button
@@ -1074,7 +1076,7 @@ function CountryBranchSetupContent() {
                 onClick={() => setActiveStep((step) => Math.min(9, step + 1))}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm h-8 px-4 flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
               >
-                <span>Next</span>
+                <span>{t(lang, "common.next")}</span>
                 <span className="text-sm font-black">→</span>
               </Button>
             ) : (
@@ -1085,7 +1087,7 @@ function CountryBranchSetupContent() {
                 disabled={saving || Boolean(existingMainBranch && !editingCountryBranchId) || !location.countryId}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm h-8 px-4 cursor-pointer disabled:opacity-40"
               >
-                {saving ? "Saving..." : editingCountryBranchId ? "Update Branch" : "Accept & Save"}
+                {saving ? t(lang, "common.saving") : editingCountryBranchId ? t(lang, "cnbs.update_branch") : t(lang, "cbs.accept_save")}
               </Button>
             )}
           </div>
@@ -1096,13 +1098,13 @@ function CountryBranchSetupContent() {
         <div className={cn(activeStep === 9 ? "col-span-12" : "lg:col-span-7 xl:col-span-7", "space-y-6 w-full")}>
           <Card className="border-slate-200/80 shadow-sm">
           <CardHeader className="pb-3">
-            <CardTitle>Country Main Branch Setup</CardTitle>
+            <CardTitle>{t(lang, "cnbs.setup_title")}</CardTitle>
           </CardHeader>
 
           <CardContent>
             {editLoading ? (
               <div className="mb-4 rounded-lg border bg-muted/30 px-4 py-3 text-sm font-medium text-muted-foreground">
-                Loading existing branch for edit...
+                {t(lang, "cnbs.loading_edit")}
               </div>
             ) : null}
             {banner ? (
@@ -1124,7 +1126,7 @@ function CountryBranchSetupContent() {
                     onClick={() => beginEditCountryBranch(existingMainBranch)}
                   >
                     <Pencil className="h-3.5 w-3.5" aria-hidden />
-                    Edit Existing Branch
+                    {t(lang, "cbs.edit_existing_branch")}
                   </Button>
                 ) : null}
               </div>
@@ -1133,7 +1135,7 @@ function CountryBranchSetupContent() {
               <section hidden={activeStep !== 1} className="order-1 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">
                 <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">1</span>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Step 1 - Branch Information & Location</h2>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cnbs.step1_section_title")}</h2>
                 </div>
 
                 <div className="space-y-4">
@@ -1150,24 +1152,24 @@ function CountryBranchSetupContent() {
 
                   <div className="grid gap-3 md:grid-cols-3">
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Currency</Label>
-                      <Input value={currency} readOnly placeholder="Auto from selected Country" className="bg-muted/50 font-semibold" />
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{t(lang, "cbs.currency_label")}</Label>
+                      <Input value={currency} readOnly placeholder={t(lang, "cnbs.currency_auto_placeholder")} className="bg-muted/50 font-semibold" />
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">ZIP / Postal Code</Label>
-                      <Input value={zip} readOnly placeholder="Auto from selected Area or City" className="bg-muted/50 font-semibold" />
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{t(lang, "cbs.zip_postal_code")}</Label>
+                      <Input value={zip} readOnly placeholder={t(lang, "cnbs.zip_auto_placeholder")} className="bg-muted/50 font-semibold" />
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Branch Code</Label>
-                      <Input value={branchCode} readOnly placeholder="Auto-generated" className="bg-muted/50 font-mono font-semibold" />
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{t(lang, "cbs.branch_code")}</Label>
+                      <Input value={branchCode} readOnly placeholder={t(lang, "cnbs.branch_code_auto")} className="bg-muted/50 font-mono font-semibold" />
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
                     <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                      Branch Email (Hostinger Titan Mailbox) *
+                      {t(lang, "cnbs.branch_email")}
                     </Label>
                     <Input
                       type="email"
@@ -1178,12 +1180,12 @@ function CountryBranchSetupContent() {
                       className="h-9 text-xs font-medium"
                     />
                     <p className="text-[11px] text-slate-500">
-                      Enter your Hostinger Titan mailbox address for this branch. The ERP will securely send emails using this sender address via Titan SMTP.
+                      {t(lang, "cnbs.branch_email_hint")}
                     </p>
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Full Address</Label>
+                    <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{t(lang, "cbs.full_address")}</Label>
                     <textarea
                       value={fullAddress}
                       onChange={(event) => setFullAddress(event.target.value)}
@@ -1199,15 +1201,15 @@ function CountryBranchSetupContent() {
               <section hidden={activeStep !== 3} className="order-3 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">
                 <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">3</span>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Step 3 - Company & Branch Owner</h2>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cnbs.step3_section_title")}</h2>
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">
                   <div className="space-y-2">
                     <CompanyPicker
-                      label="Company Name"
+                      label={t(lang, "cnbs.company_name_label")}
                       value={companyId}
                       onValueChange={setCompanyId}
-                      placeholder="Search company"
+                      placeholder={t(lang, "cnbs.search_company")}
                       createButtonPlacement="below"
                     />
                   </div>
@@ -1215,7 +1217,7 @@ function CountryBranchSetupContent() {
                     <BranchOwnerPicker
                       value={ownerName}
                       onValueChange={setOwnerName}
-                      placeholder="Search owner"
+                      placeholder={t(lang, "cnbs.search_owner")}
                       createButtonPlacement="below"
                     />
                   </div>
@@ -1225,7 +1227,7 @@ function CountryBranchSetupContent() {
               <section hidden={activeStep !== 4} className="order-4 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">
                 <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">4</span>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Step 4 - Contacts</h2>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cnbs.step4_section_title")}</h2>
                 </div>
                 <div className="space-y-3">
                   {contacts.map((row, idx) => (
@@ -1244,13 +1246,13 @@ function CountryBranchSetupContent() {
                           updateContact(idx, { type: value });
                         }}
                       >
-                        <option value="">Select Type</option>
+                        <option value="">{t(lang, "cnbs.select_type")}</option>
                         {contactTypeOptions.map((type) => (
                           <option key={type} value={type}>
                             {type}
                           </option>
                         ))}
-                        <option value="__new__">+ Add New Type</option>
+                        <option value="__new__">{t(lang, "cnbs.add_new_type")}</option>
                       </select>
 
                       {toContactTypeKey(row.type) ? (
@@ -1268,7 +1270,7 @@ function CountryBranchSetupContent() {
                         <Input
                           value={row.value}
                           onChange={(event) => updateContact(idx, { value: event.target.value })}
-                          placeholder="Enter value"
+                          placeholder={t(lang, "cnbs.enter_value")}
                         />
                       )}
 
@@ -1278,7 +1280,7 @@ function CountryBranchSetupContent() {
                         className="border-rose-200 text-rose-700 hover:bg-rose-50 hover:text-rose-800"
                         onClick={() => setContacts((current) => current.filter((_, i) => i !== idx))}
                       >
-                        Remove
+                        {t(lang, "common.remove")}
                       </Button>
                     </div>
                   ))}
@@ -1294,7 +1296,7 @@ function CountryBranchSetupContent() {
               <section hidden={activeStep !== 7} className="order-7 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">
                 <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">5</span>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Step 7 - Roles & Permissions</h2>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cnbs.step7_section_title")}</h2>
                 </div>
                 <PermissionAssignmentSection
                   level="country"
@@ -1329,7 +1331,7 @@ function CountryBranchSetupContent() {
                     disabled={saving}
                     className="text-xs text-muted-foreground hover:text-foreground h-9 px-3"
                   >
-                    Reset
+                    {t(lang, "common.reset")}
                   </Button>
                 </div>
 
@@ -1344,7 +1346,7 @@ function CountryBranchSetupContent() {
                       }}
                       className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm h-9 px-5 flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
                     >
-                      <span>Next</span>
+                      <span>{t(lang, "common.next")}</span>
                       <span className="text-sm font-black">→</span>
                     </Button>
                   ) : (
@@ -1353,7 +1355,7 @@ function CountryBranchSetupContent() {
                       disabled={saving || Boolean(existingMainBranch && !editingCountryBranchId) || !location.countryId}
                       className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm h-9 px-6 cursor-pointer disabled:opacity-40"
                     >
-                      {saving ? "Saving..." : editingCountryBranchId ? "Update Country Branch" : "Accept & Save Country Branch"}
+                      {saving ? t(lang, "common.saving") : editingCountryBranchId ? t(lang, "cnbs.update_country_branch") : t(lang, "cnbs.accept_save_country_branch")}
                     </Button>
                   )}
                 </div>
@@ -1445,7 +1447,7 @@ function CountryBranchSetupContent() {
                   <>
                     {existingMainBranch ? (
                       <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">
-                        A main branch already exists for this country: <b>{existingMainBranch.name}</b> ({existingMainBranch.code})
+                        {t(lang, "cnbs.main_branch_exists")} <b>{existingMainBranch.name}</b> ({existingMainBranch.code})
                         <Button
                           type="button"
                           size="sm"
@@ -1454,21 +1456,21 @@ function CountryBranchSetupContent() {
                           onClick={() => beginEditCountryBranch(existingMainBranch)}
                         >
                           <Pencil className="h-3.5 w-3.5" aria-hidden />
-                          Edit Existing
+                          {t(lang, "cnbs.edit_existing_short")}
                         </Button>
                       </div>
                     ) : null}
 
                     <details className="border-t pt-2">
-                      <summary className="cursor-pointer text-sm font-semibold text-foreground">Saved Country Main Branches</summary>
+                      <summary className="cursor-pointer text-sm font-semibold text-foreground">{t(lang, "cnbs.saved_branches")}</summary>
                       {!location.countryId ? (
-                        <p className="mt-2 text-xs text-muted-foreground">Select a country to load saved branches.</p>
+                        <p className="mt-2 text-xs text-muted-foreground">{t(lang, "cnbs.select_country_load")}</p>
                       ) : countryBranches.length ? (
                         <div className="mt-2 space-y-2">
                           <Input
                             value={countryBranchSearch}
                             onChange={(event) => setCountryBranchSearch(event.target.value)}
-                            placeholder="Search branches"
+                            placeholder={t(lang, "cnbs.search_branches")}
                           />
                           <ul className="space-y-2 text-xs text-muted-foreground">
                             {filteredCountryBranches.slice(0, 6).map((b) => (
@@ -1481,11 +1483,11 @@ function CountryBranchSetupContent() {
                                 <div className="flex items-center gap-2">
                                   <Button type="button" size="sm" variant="outline" className="h-7" onClick={() => viewSavedBranch(b)}>
                                     <Eye className="h-3.5 w-3.5" aria-hidden />
-                                    View
+                                    {t(lang, "common.view")}
                                   </Button>
                                   <Button type="button" size="sm" variant="outline" className="h-7" onClick={() => beginEditCountryBranch(b)}>
                                     <Pencil className="h-3.5 w-3.5" aria-hidden />
-                                    Edit
+                                    {t(lang, "common.edit")}
                                   </Button>
                                 </div>
                               </li>
@@ -1496,7 +1498,7 @@ function CountryBranchSetupContent() {
                           </ul>
                         </div>
                       ) : (
-                        <p className="mt-2 text-xs text-muted-foreground">No saved branches for this country yet.</p>
+                        <p className="mt-2 text-xs text-muted-foreground">{t(lang, "cnbs.no_saved_branches")}</p>
                       )}
                     </details>
                   </>
@@ -1526,8 +1528,9 @@ function CountryBranchSetupContent() {
 }
 
 export function CountryBranchSetup() {
+  const lang = useActiveLanguage();
   return (
-    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">Loading Country Branch Setup...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">{t(lang, "cnbs.loading_wizard")}</div>}>
       <CountryBranchSetupContent />
     </Suspense>
   );

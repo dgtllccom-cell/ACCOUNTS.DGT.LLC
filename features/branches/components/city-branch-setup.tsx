@@ -29,6 +29,7 @@ import { getPermissionKeysForTemplate } from "@/lib/permissions/catalog";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
 import { openMasterProfileReportWindow } from "@/lib/reports/open-master-profile-report-window";
 import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import type { ContactTypeKey } from "@/features/contact-types/contact-type-api";
 
 type CountryBranchRow = {
@@ -188,6 +189,7 @@ function normalizeSearch(value: string) {
 }
 
 function CityBranchSetupContent() {
+  const lang = useActiveLanguage();
   const searchParams = useSearchParams();
   const editId = searchParams.get("editId") ?? "";
   const [drawerBranchData, setDrawerBranchData] = useState<any>(null);
@@ -1346,15 +1348,15 @@ function CityBranchSetupContent() {
             onClick={() => setActiveStep((step) => Math.max(1, step - 1))}
             className="h-8 px-2.5 text-xs text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-900/50"
           >
-            <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> Back
+            <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> {t(lang, "common.back")}
           </Button>
           <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
           <div className="flex flex-col">
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400">
-              New Entry
+              {t(lang, "cbs.new_entry")}
             </span>
             <span className="text-[10px] font-bold text-slate-500 mt-0.5">
-              Step {activeStep} of 9
+              {t(lang, "cbs.step_word")} {activeStep} {t(lang, "cbs.of_9")}
             </span>
           </div>
         </div>
@@ -1362,15 +1364,15 @@ function CityBranchSetupContent() {
         {/* Center Section: Compact 1-9 Step Navigator with Tooltips/Checkmarks */}
         <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-900 p-1 rounded-lg border border-slate-200 dark:border-slate-800">
           {[
-            { n: 1, label: "Branch Info", done: Boolean(branchName && branchCode) },
-            { n: 2, label: "Address & Location", done: Boolean(locationMeta.city?.name) },
-            { n: 3, label: "Bank Account Setup", done: false },
-            { n: 4, label: "Contact Info", done: contacts.some(c => c.value) },
-            { n: 5, label: "Review & Summary", done: hasAny },
-            { n: 6, label: "Upload Documents", done: false },
-            { n: 7, label: "Accounting Setup", done: false },
-            { n: 8, label: "Roles & Permissions", done: permissionGrants.length > 0 },
-            { n: 9, label: "Final Approval", done: false },
+            { n: 1, label: t(lang, "cbs.step1_label"), done: Boolean(branchName && branchCode) },
+            { n: 2, label: t(lang, "cbs.step2_label"), done: Boolean(locationMeta.city?.name) },
+            { n: 3, label: t(lang, "cbs.step3_label"), done: false },
+            { n: 4, label: t(lang, "cbs.step4_label"), done: contacts.some(c => c.value) },
+            { n: 5, label: t(lang, "cbs.step5_label"), done: hasAny },
+            { n: 6, label: t(lang, "cbs.step6_label"), done: false },
+            { n: 7, label: t(lang, "cbs.step7_label"), done: false },
+            { n: 8, label: t(lang, "cbs.step8_label"), done: permissionGrants.length > 0 },
+            { n: 9, label: t(lang, "cbs.step9_label"), done: false },
           ].map(({ n, label, done }) => {
             const active = activeStep === n;
             return (
@@ -1416,7 +1418,7 @@ function CityBranchSetupContent() {
               className="h-8 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md hover:shadow-lg border-0"
               onClick={() => setActiveStep((step) => Math.min(9, step + 1))}
             >
-              Next <ArrowRight className="ml-1 h-3.5 w-3.5" />
+              {t(lang, "common.next")} <ArrowRight className="ml-1 h-3.5 w-3.5" />
             </Button>
           ) : (
             <Button
@@ -1426,12 +1428,12 @@ function CityBranchSetupContent() {
               disabled={saving || !location.countryId || !countryBranchId || cityAlreadyExists}
               className="h-8 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md hover:shadow-lg border-0 disabled:bg-slate-300 disabled:text-slate-500"
             >
-              {saving ? "Saving..." : editingCityBranchId ? "Update" : "Accept & Save"}
+              {saving ? t(lang, "common.saving") : editingCityBranchId ? t(lang, "common.update") : t(lang, "cbs.accept_save")}
             </Button>
           )}
 
           <span className={pillClassName()}>
-            <b>Scope:</b> City branch under selected Country Main Branch
+            <b>{t(lang, "cbs.scope_label")}</b> {t(lang, "cbs.scope_desc_city")}
           </span>
         </div>
       </div>
@@ -1440,13 +1442,13 @@ function CityBranchSetupContent() {
         <div className={cn(activeStep === 9 ? "col-span-12" : "lg:col-span-7 xl:col-span-7", "space-y-6 w-full")}>
           <Card className="border-slate-200/80 shadow-sm">
           <CardHeader className="pb-3">
-            <CardTitle>City Branch Setup</CardTitle>
+            <CardTitle>{t(lang, "cbs.title")}</CardTitle>
           </CardHeader>
 
           <CardContent>
             {editLoading ? (
               <div className="mb-4 rounded-lg border bg-muted/30 px-4 py-3 text-sm font-medium text-muted-foreground">
-                Loading existing city branch for edit...
+                {t(lang, "cbs.loading_edit")}
               </div>
             ) : null}
             {banner ? (
@@ -1468,7 +1470,7 @@ function CityBranchSetupContent() {
                     onClick={() => beginEditCityBranch(activeExistingCityBranch)}
                   >
                     <Pencil className="h-3.5 w-3.5" aria-hidden />
-                    Edit Existing Branch
+                    {t(lang, "cbs.edit_existing_branch")}
                   </Button>
                 ) : null}
               </div>
@@ -1478,7 +1480,7 @@ function CityBranchSetupContent() {
               <section hidden={activeStep !== 1} className={compactSectionClass(!location.countryId || !currency)}>
                 <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">1</span>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Step 1 - Branch Information: Country & Currency</h2>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step1a_title")}</h2>
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">
                   <LocationHierarchySelect
@@ -1490,8 +1492,8 @@ function CityBranchSetupContent() {
                   />
 
                   <div className="space-y-2">
-                    <Label className="text-xs text-slate-600">Currency</Label>
-                    <Input value={currency} readOnly placeholder="Auto from selected Country" className={compactInputClass(!currency)} />
+                    <Label className="text-xs text-slate-600">{t(lang, "cbs.currency_label")}</Label>
+                    <Input value={currency} readOnly placeholder={t(lang, "cbs.currency_placeholder")} className={compactInputClass(!currency)} />
                   </div>
                 </div>
               </section>
@@ -1499,20 +1501,20 @@ function CityBranchSetupContent() {
               <section hidden={activeStep !== 1} className={compactSectionClass(!countryBranchId)}>
                 <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">1</span>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Step 1 - Branch Information: Main Branch</h2>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step1b_title")}</h2>
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">
                   <SearchSelect
-                    label="Select Main Branch"
+                    label={t(lang, "cbs.select_main_branch")}
                     value={countryBranchId}
-                    placeholder={location.countryId ? "Select main branch" : "Select country first"}
+                    placeholder={location.countryId ? t(lang, "cbs.select_main_branch_ph") : t(lang, "cbs.select_country_first")}
                     disabled={!location.countryId}
                     options={mainBranches.map((b) => ({ value: b.id, label: `${b.name} (${b.code})` }))}
                     onValueChange={(value) => void onMainBranchSelected(value)}
                   />
 
                   <div className="space-y-2">
-                    <Label className="text-xs text-slate-600">Main Branch Code</Label>
+                    <Label className="text-xs text-slate-600">{t(lang, "cbs.main_branch_code")}</Label>
                     <Input value={selectedMainBranch?.code ?? ""} readOnly className={compactInputClass(!countryBranchId)} />
                   </div>
                 </div>
@@ -1521,11 +1523,11 @@ function CityBranchSetupContent() {
               <section hidden={activeStep !== 1} className={compactSectionClass(!location.stateProvinceId || !location.cityId || !fullAddress.trim() || changedFromSaved(fullAddress, activeExistingCityBranch?.address))}>
                 <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">1</span>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Step 1 - Branch Information: Location</h2>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step1c_title")}</h2>
                 </div>
                 <div className="grid gap-3 md:grid-cols-12">
                   <div className="space-y-2 md:col-span-4">
-                    <Label className="text-xs text-slate-600">Country (auto)</Label>
+                    <Label className="text-xs text-slate-600">{t(lang, "cbs.country_auto")}</Label>
                     <Input value={locationMeta.country?.name ?? ""} readOnly className={compactInputClass(!location.countryId)} />
                   </div>
                   <div className="space-y-2 md:col-span-8">
@@ -1541,16 +1543,16 @@ function CityBranchSetupContent() {
                   </div>
 
                   <div className="space-y-1.5 md:col-span-4">
-                    <Label className="text-xs text-slate-600">ZIP / Postal Code</Label>
+                    <Label className="text-xs text-slate-600">{t(lang, "cbs.zip_postal_code")}</Label>
                     <Input
                       value={zip}
                       onChange={(e) => setManualZip(e.target.value)}
-                      placeholder={autoZip ? autoZip : "Enter ZIP / postal code"}
+                      placeholder={autoZip ? autoZip : t(lang, "cbs.zip_placeholder")}
                       className={compactInputClass(formTouched && !zip)}
                     />
                     {!manualZip && autoZip && (
                       <p className="text-[10px] text-slate-400 leading-tight">
-                        Auto from selected area or city &mdash; type to override
+                        {t(lang, "cbs.zip_auto_hint")}
                       </p>
                     )}
                     {manualZip && (
@@ -1559,16 +1561,16 @@ function CityBranchSetupContent() {
                         onClick={() => setManualZip("")}
                         className="text-[10px] text-indigo-500 hover:text-indigo-700 underline leading-tight"
                       >
-                        Clear manual &mdash; use auto ({autoZip || "none"})
+                        {t(lang, "cbs.zip_clear_manual").replace("{0}", autoZip || t(lang, "cbs.zip_none"))}
                       </button>
                     )}
                   </div>
                   <div className="space-y-2 md:col-span-8">
-                    <Label className="text-xs text-slate-600">Full Address</Label>
+                    <Label className="text-xs text-slate-600">{t(lang, "cbs.full_address")}</Label>
                     <textarea
                       value={fullAddress}
                       onChange={(event) => setFullAddress(event.target.value)}
-                      placeholder="Area / Road, Building, Street, Landmark, etc."
+                      placeholder={t(lang, "cbs.full_address_placeholder")}
                       className={compactTextareaClass(formTouched && (!fullAddress.trim() || changedFromSaved(fullAddress, activeExistingCityBranch?.address)))}
                     />
                   </div>
@@ -1578,16 +1580,16 @@ function CityBranchSetupContent() {
               <section hidden={activeStep !== 1} className={compactSectionClass(!branchName.trim() || !branchCode.trim() || changedFromSaved(branchName, activeExistingCityBranch?.name) || changedFromSaved(branchCode, activeExistingCityBranch?.code))}>
                 <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">1</span>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Step 1 - Branch Information: City Branch Details</h2>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step1d_title")}</h2>
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label className="text-xs text-slate-600">Branch Name</Label>
-                    <Input value={branchName} onChange={(event) => setBranchName(event.target.value)} placeholder="e.g. Chaman City Branch" className={compactInputClass(!branchName.trim() || changedFromSaved(branchName, activeExistingCityBranch?.name))} />
+                    <Label className="text-xs text-slate-600">{t(lang, "cbs.branch_name")}</Label>
+                    <Input value={branchName} onChange={(event) => setBranchName(event.target.value)} placeholder={t(lang, "cbs.branch_name_placeholder")} className={compactInputClass(!branchName.trim() || changedFromSaved(branchName, activeExistingCityBranch?.name))} />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-xs text-slate-600">Branch Code</Label>
-                    <Input value={branchCode} onChange={(event) => setBranchCode(event.target.value)} placeholder="Auto suggests from Country + City code" className={compactInputClass(!branchCode.trim() || changedFromSaved(branchCode, activeExistingCityBranch?.code))} />
+                    <Label className="text-xs text-slate-600">{t(lang, "cbs.branch_code")}</Label>
+                    <Input value={branchCode} onChange={(event) => setBranchCode(event.target.value)} placeholder={t(lang, "cbs.branch_code_placeholder")} className={compactInputClass(!branchCode.trim() || changedFromSaved(branchCode, activeExistingCityBranch?.code))} />
                   </div>
                 </div>
               </section>
@@ -2226,45 +2228,45 @@ function CityBranchSetupContent() {
                     <div className="rounded-xl border border-rose-200 bg-rose-50 p-5 dark:border-rose-900/50 dark:bg-rose-950/20">
                       <div className="mb-3 flex items-center gap-2.5">
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 text-rose-600 dark:bg-rose-900/40"><span className="text-xl">⚠️</span></div>
-                        <p className="text-sm font-black text-rose-800 dark:text-rose-300">Request Changes</p>
+                        <p className="text-sm font-black text-rose-800 dark:text-rose-300">{t(lang, "cbs.request_changes")}</p>
                       </div>
-                      <p className="mb-4 text-xs text-rose-700 dark:text-rose-400">Request specific changes while keeping the application in review process.</p>
+                      <p className="mb-4 text-xs text-rose-700 dark:text-rose-400">{t(lang, "cbs.request_changes_desc")}</p>
                       <Button type="button" variant="outline" className="w-full border-rose-400 bg-rose-100 text-rose-800 hover:bg-rose-200 font-bold text-xs h-9 rounded-lg dark:border-rose-700 dark:bg-rose-900/30 dark:text-rose-300">
-                        ⚐ Request Changes
+                        ⚐ {t(lang, "cbs.request_changes")}
                       </Button>
                     </div>
                   </div>
                   <div className="mt-4 flex items-center gap-2 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 dark:border-blue-900/40 dark:bg-blue-950/20">
                     <span className="text-blue-500 text-base flex-shrink-0">ℹ</span>
-                    <p className="text-[10px] text-blue-800 dark:text-blue-300">Please review all information carefully before taking action. Once approved, the branch will be activated and available for all operations.</p>
+                    <p className="text-[10px] text-blue-800 dark:text-blue-300">{t(lang, "cbs.review_notice")}</p>
                   </div>
                 </div>
 
                 {/* Bottom nav bar */}
                 <div className="rounded-b-2xl border border-t-0 border-slate-200 bg-slate-50 px-6 py-3 dark:border-slate-700 dark:bg-slate-900/60 flex items-center justify-between gap-3">
                   <button type="button" onClick={() => setActiveStep(8)} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
-                    ← Back to Previous
+                    {t(lang, "cbs.back_to_previous")}
                   </button>
                   <button type="reset" className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-500 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
-                    ✕ Close Review
+                    {t(lang, "cbs.close_review")}
                   </button>
                 </div>
               </section>
               <div className="order-10 flex flex-wrap justify-between gap-2 border-t border-slate-100 pt-4 dark:border-slate-800">
                 <Button type="reset" variant="outline" disabled={saving}>
-                  Cancel
+                  {t(lang, "common.cancel")}
                 </Button>
                 <div className="flex flex-wrap gap-2">
                   <Button type="button" variant="outline" disabled={saving || activeStep === 1} onClick={() => setActiveStep((step) => Math.max(1, step - 1))} className="border-slate-300 bg-white text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 disabled:bg-slate-100 disabled:text-slate-400">
-                    <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> Back
+                    <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> {t(lang, "common.back")}
                   </Button>
                   {activeStep < 9 ? (
                     <Button type="button" onClick={() => setActiveStep((step) => Math.min(9, step + 1))} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-md hover:shadow-lg border-0">
-                      Next <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                      {t(lang, "common.next")} <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
                     </Button>
                   ) : (
                     <Button type="submit" disabled={saving || !location.countryId || !countryBranchId || cityAlreadyExists} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md hover:shadow-lg border-0 disabled:bg-slate-300 disabled:text-slate-500">
-                      {saving ? "Saving..." : editingCityBranchId ? "Update" : "Save"}
+                      {saving ? t(lang, "common.saving") : editingCityBranchId ? t(lang, "common.update") : t(lang, "cbs.save")}
                     </Button>
                   )}
                 </div>
@@ -2282,11 +2284,11 @@ function CityBranchSetupContent() {
             <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-4 py-2.5 dark:border-slate-800 dark:bg-slate-900/60">
               <div className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Live Summary</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">{t(lang, "cbs.live_summary")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase ${hasAny ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400" : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"}`}>
-                  {hasAny ? "Draft" : "Empty"}
+                  {hasAny ? t(lang, "status.draft") : t(lang, "branch.status_empty")}
                 </span>
                 <BranchReportActionsMenu
                   ariaLabel="City branch actions"
@@ -2304,9 +2306,9 @@ function CityBranchSetupContent() {
             {/* Quick Metrics Strip */}
             <div className="grid grid-cols-3 divide-x divide-slate-100 border-b border-slate-100 dark:divide-slate-800 dark:border-slate-800">
               {[
-                { label: "Branch", value: branchName || "—" },
-                { label: "Currency", value: currency || "USD" },
-                { label: "Permissions", value: String(permissionGrants.length) },
+                { label: t(lang, "cbs.branch_word"), value: branchName || "—" },
+                { label: t(lang, "cbs.currency_word"), value: currency || "USD" },
+                { label: t(lang, "cbs.permissions_word"), value: String(permissionGrants.length) },
               ].map(({ label, value }) => (
                 <div key={label} className="px-3 py-2 text-center">
                   <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">{label}</div>
@@ -2322,20 +2324,20 @@ function CityBranchSetupContent() {
               <details open className="group">
                 <summary className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-900/30">
                   <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-emerald-600 text-[8px] font-bold text-white leading-none px-1">1</span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Branch Information</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">{t(lang, "cbs.branch_information")}</span>
                   <span className="ml-auto text-[9px] text-slate-400 group-open:rotate-180 transition-transform">▾</span>
                 </summary>
                 <div className="px-4 pb-3 pt-1 space-y-0">
                   {[
-                    { label: "Country", value: previewCountry },
-                    { label: "Main Branch", value: previewMainBranch },
-                    { label: "City Branch", value: branchName },
-                    { label: "Branch Code", value: branchCode },
-                    { label: "Currency", value: currency },
-                    { label: "State", value: locationMeta.state?.name },
-                    { label: "City", value: locationMeta.city?.name },
-                    { label: "ZIP", value: zip },
-                    { label: "Address", value: fullAddress },
+                    { label: t(lang, "cbs.country_word"), value: previewCountry },
+                    { label: t(lang, "cbs.main_branch_word"), value: previewMainBranch },
+                    { label: t(lang, "cbs.city_branch_word"), value: branchName },
+                    { label: t(lang, "cbs.branch_code_word"), value: branchCode },
+                    { label: t(lang, "cbs.currency_word"), value: currency },
+                    { label: t(lang, "cbs.state_word"), value: locationMeta.state?.name },
+                    { label: t(lang, "cbs.city_word"), value: locationMeta.city?.name },
+                    { label: t(lang, "cbs.zip_word"), value: zip },
+                    { label: t(lang, "cbs.address_word"), value: fullAddress },
                   ].map(({ label, value }) => (
                     <div key={label} className="flex items-baseline justify-between gap-2 border-b border-dashed border-slate-100 py-1.5 last:border-0 dark:border-slate-800/60">
                       <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wide text-slate-400">{label}</span>
@@ -2351,14 +2353,14 @@ function CityBranchSetupContent() {
               <details className="group">
                 <summary className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-900/30">
                   <span className="flex items-center justify-center rounded-full bg-sky-600 text-[8px] font-bold text-white leading-none px-1">2</span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Access Scope</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">{t(lang, "cbs.access_scope_word")}</span>
                   <span className="ml-auto text-[9px] text-slate-400 group-open:rotate-180 transition-transform">▾</span>
                 </summary>
                 <div className="px-4 pb-3 pt-1 space-y-0">
                   {[
-                    { label: "Template", value: permissionTemplate },
-                    { label: "Grants", value: String(permissionGrants.length) + " permissions" },
-                    { label: "Parent Limit", value: parentPermissionGrants?.length ? `Yes (${parentPermissionGrants.length})` : "None" },
+                    { label: t(lang, "cbs.template_word", "Template"), value: permissionTemplate },
+                    { label: t(lang, "cbs.grants_word", "Grants"), value: `${permissionGrants.length} ${t(lang, "cbs.permissions_word", "permissions")}` },
+                    { label: t(lang, "cbs.parent_limit_word", "Parent Limit"), value: parentPermissionGrants?.length ? t(lang, "cbs.yes_with_count", "Yes ({count})").replace("{count}", String(parentPermissionGrants.length)) : t(lang, "cbs.none_word", "None") },
                   ].map(({ label, value }) => (
                     <div key={label} className="flex items-baseline justify-between gap-2 border-b border-dashed border-slate-100 py-1.5 last:border-0 dark:border-slate-800/60">
                       <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wide text-slate-400">{label}</span>
@@ -2372,16 +2374,16 @@ function CityBranchSetupContent() {
               <details className="group">
                 <summary className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-900/30">
                   <span className="flex items-center justify-center rounded-full bg-violet-600 text-[8px] font-bold text-white leading-none px-1">3</span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">User Account</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">{t(lang, "cbs.user_account_word")}</span>
                   <span className="ml-auto text-[9px] text-slate-400 group-open:rotate-180 transition-transform">▾</span>
                 </summary>
                 <div className="px-4 pb-3 pt-1">
                   {[
-                    { label: "Company", value: company?.name },
-                    { label: "Comp. Code", value: companyCode !== "-" ? companyCode : undefined },
-                    { label: "Owner", value: ownerPreview?.name || ownerName },
-                    { label: "Owner Code", value: ownerPreview?.code },
-                    { label: "Owner Role", value: ownerPreview?.role },
+                    { label: t(lang, "cbs.company_word", "Company"), value: company?.name },
+                    { label: t(lang, "cbs.company_code_word", "Comp. Code"), value: companyCode !== "-" ? companyCode : undefined },
+                    { label: t(lang, "cbs.owner_word", "Owner"), value: ownerPreview?.name || ownerName },
+                    { label: t(lang, "cbs.owner_code_word", "Owner Code"), value: ownerPreview?.code },
+                    { label: t(lang, "cbs.owner_role_word", "Owner Role"), value: ownerPreview?.role },
                   ].map(({ label, value }) => (
                     <div key={label} className="flex items-baseline justify-between gap-2 border-b border-dashed border-slate-100 py-1.5 last:border-0 dark:border-slate-800/60">
                       <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wide text-slate-400">{label}</span>
@@ -2397,7 +2399,7 @@ function CityBranchSetupContent() {
               <details className="group">
                 <summary className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-900/30">
                   <span className="flex items-center justify-center rounded-full bg-teal-600 text-[8px] font-bold text-white leading-none px-1">4</span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Contact Info</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">{t(lang, "cbs.contact_info_word")}</span>
                   <span className="ml-auto text-[9px] text-slate-400 group-open:rotate-180 transition-transform">▾</span>
                 </summary>
                 <div className="px-4 pb-3 pt-1">
@@ -2409,7 +2411,7 @@ function CityBranchSetupContent() {
                       </div>
                     ))
                   ) : (
-                    <p className="py-2 text-[10px] italic text-rose-400">No contacts entered.</p>
+                    <p className="py-2 text-[10px] italic text-rose-400">{t(lang, "cbs.no_contacts_entered", "No contacts entered.")}</p>
                   )}
                 </div>
               </details>
@@ -2418,7 +2420,7 @@ function CityBranchSetupContent() {
               <details className="group">
                 <summary className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-900/30">
                   <span className="flex items-center justify-center rounded-full bg-indigo-600 text-[8px] font-bold text-white leading-none px-1">7</span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Roles & Permissions</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">{t(lang, "cbs.roles_permissions_word")}</span>
                   <span className="ml-auto text-[9px] text-slate-400 group-open:rotate-180 transition-transform">▾</span>
                 </summary>
                 <div className="px-4 pb-3 pt-2">
@@ -2428,7 +2430,7 @@ function CityBranchSetupContent() {
                         {key}
                       </span>
                     )) : (
-                      <span className="text-[10px] italic text-rose-400">No permissions assigned.</span>
+                      <span className="text-[10px] italic text-rose-400">{t(lang, "cbs.no_permissions_assigned", "No permissions assigned.")}</span>
                     )}
                   </div>
                 </div>
@@ -2438,22 +2440,22 @@ function CityBranchSetupContent() {
               <details className="group">
                 <summary className="flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-900/30">
                   <span className="flex items-center justify-center rounded-full bg-cyan-600 text-[8px] font-bold text-white leading-none px-1">8</span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Communication</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">{t(lang, "cbs.communication_word")}</span>
                   <span className="ml-auto text-[9px] text-slate-400 group-open:rotate-180 transition-transform">▾</span>
                 </summary>
                 <div className="px-4 pb-3 pt-1">
                   {[
-                    { label: "Email", value: generatedEmail },
-                    { label: "SMTP", value: smtpStatus },
-                    { label: "WhatsApp", value: whatsappNumber || whatsappStatus },
+                    { label: t(lang, "cbs.email_word", "Email"), value: generatedEmail },
+                    { label: t(lang, "cbs.smtp_word", "SMTP"), value: smtpStatus === "Ready" ? t(lang, "cbs.ready", "Ready") : smtpStatus === "Not Configured" ? t(lang, "cbs.not_configured", "Not Configured") : smtpStatus },
+                    { label: t(lang, "cbs.whatsapp_word", "WhatsApp"), value: whatsappNumber || (whatsappStatus === "Ready" ? t(lang, "cbs.ready", "Ready") : whatsappStatus === "Not Configured" ? t(lang, "cbs.not_configured", "Not Configured") : whatsappStatus) },
                   ].map(({ label, value }) => (
                     <div key={label} className="flex items-baseline justify-between gap-2 border-b border-dashed border-slate-100 py-1.5 last:border-0 dark:border-slate-800/60">
                       <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wide text-slate-400">{label}</span>
                       <span className={`text-right text-[11px] font-semibold truncate max-w-[150px] ${
-                        !value || value === "Not Configured" ? "text-rose-400 italic"
-                        : value === "Ready" ? "text-emerald-600 dark:text-emerald-400"
+                        !value || value === "Not Configured" || value === t(lang, "cbs.not_configured", "Not Configured") ? "text-rose-400 italic"
+                        : value === "Ready" || value === t(lang, "cbs.ready", "Ready") ? "text-emerald-600 dark:text-emerald-400"
                         : "text-slate-800 dark:text-slate-100"
-                      }`}>{value || "Not Configured"}</span>
+                      }`}>{value || t(lang, "cbs.not_configured", "Not Configured")}</span>
                     </div>
                   ))}
                 </div>
@@ -2463,18 +2465,18 @@ function CityBranchSetupContent() {
             {/* Missing Fields Warning */}
             {hasAny && (() => {
               const missing: string[] = [];
-              if (!location.countryId) missing.push("Country");
-              if (!countryBranchId) missing.push("Main Branch");
-              if (!branchName) missing.push("Branch Name");
-              if (!branchCode) missing.push("Branch Code");
-              if (!currency) missing.push("Currency");
-              if (!location.cityId && !locationMeta.city?.name) missing.push("City");
-              if (!contacts.some(c => c.type && c.value)) missing.push("Contacts");
-              if (!permissionGrants.length) missing.push("Permissions");
+              if (!location.countryId) missing.push(t(lang, "cbs.field_country"));
+              if (!countryBranchId) missing.push(t(lang, "cbs.field_main_branch"));
+              if (!branchName) missing.push(t(lang, "cbs.field_branch_name"));
+              if (!branchCode) missing.push(t(lang, "cbs.field_branch_code"));
+              if (!currency) missing.push(t(lang, "cbs.field_currency"));
+              if (!location.cityId && !locationMeta.city?.name) missing.push(t(lang, "cbs.field_city"));
+              if (!contacts.some(c => c.type && c.value)) missing.push(t(lang, "cbs.field_contacts"));
+              if (!permissionGrants.length) missing.push(t(lang, "cbs.permissions_word"));
               if (!missing.length) return null;
               return (
                 <div className="border-t border-rose-100 bg-rose-50 px-4 py-3 dark:border-rose-900/40 dark:bg-rose-950/20">
-                  <p className="mb-1.5 text-[9px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400">⚠ Incomplete Fields</p>
+                  <p className="mb-1.5 text-[9px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400">⚠ {t(lang, "cbs.incomplete_fields")}</p>
                   <div className="flex flex-wrap gap-1">
                     {missing.map(m => (
                       <span key={m} className="rounded border border-rose-200 bg-rose-100 px-1.5 py-0.5 text-[9px] font-semibold text-rose-700 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300">{m}</span>
@@ -2567,8 +2569,9 @@ function CityBranchSetupContent() {
 }
 
 export function CityBranchSetup() {
+  const lang = useActiveLanguage();
   return (
-    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">Loading City Branch Setup...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">{t(lang, "cbs.loading_wizard")}</div>}>
       <CityBranchSetupContent />
     </Suspense>
   );

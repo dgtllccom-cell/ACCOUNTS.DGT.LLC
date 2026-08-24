@@ -65,28 +65,50 @@ export async function GET(request: NextRequest) {
     }
 
     let employees: any[] = Array.isArray(rpcResult) ? rpcResult : [];
-
     const lang = (searchParams.get("lang") || "en") as any;
 
-    // Filter by search terms in customer/person fields if provided
+    // Filter by search terms across all fields if provided
     let filtered = employees || [];
     if (search) {
       filtered = filtered.filter((emp: any) => {
         const name = String(emp.person?.customer_name || "").toLowerCase();
+        const firstName = String(emp.person?.first_name || "").toLowerCase();
+        const lastName = String(emp.person?.last_name || "").toLowerCase();
+        const fullName = String(emp.full_name || "").toLowerCase();
         const company = String(emp.person?.company_name || "").toLowerCase();
         const mobile = String(emp.person?.mobile || "").toLowerCase();
+        const whatsapp = String(emp.person?.whatsapp || "").toLowerCase();
         const code = String(emp.employee_code || "").toLowerCase();
-        return name.includes(search) || company.includes(search) || mobile.includes(search) || code.includes(search);
+        const desig = String(emp.designation || "").toLowerCase();
+        const dept = String(emp.department || "").toLowerCase();
+        const cat = String(emp.category || "").toLowerCase();
+        const country = String(emp.country?.name || "").toLowerCase();
+        const branch = String(emp.branch?.name || "").toLowerCase();
+        return (
+          name.includes(search) ||
+          firstName.includes(search) ||
+          lastName.includes(search) ||
+          fullName.includes(search) ||
+          company.includes(search) ||
+          mobile.includes(search) ||
+          whatsapp.includes(search) ||
+          code.includes(search) ||
+          desig.includes(search) ||
+          dept.includes(search) ||
+          cat.includes(search) ||
+          country.includes(search) ||
+          branch.includes(search)
+        );
       });
     }
 
     if (filtered.length > 0 && lang) {
       filtered = await localizeRecordNames(filtered, "employees", "full_name", lang);
-      const persons = filtered.map(e => e.person).filter(Boolean);
+      const persons = filtered.map((e: any) => e.person).filter(Boolean);
       if (persons.length > 0) {
         const localizedPersons = await localizeRecordNames(persons, "customers", "customer_name", lang);
-        const personMap = new Map(localizedPersons.map(p => [p.id, p]));
-        filtered = filtered.map(e => ({
+        const personMap = new Map(localizedPersons.map((p: any) => [p.id, p]));
+        filtered = filtered.map((e: any) => ({
           ...e,
           person: e.person ? (personMap.get(e.person.id) || e.person) : e.person
         }));

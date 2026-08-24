@@ -9,10 +9,14 @@ import { Loader2, Plus, Trash2, Printer, X, Check, Package } from "lucide-react"
 import { Th } from "@/components/ui/translated-th";
 import { UniversalReportModal } from "@/components/ui/universal-report-modal";
 import { SearchSelect } from "@/components/ui/search-select";
+import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 type GoodsRecord = { id: string; chs_code: string; name: string; category: string; brand: string; origin_country: string; sizes: string; is_active: boolean; created_at: string };
 
 export function GoodsMasterRegistry() {
+  const lang = useActiveLanguage();
   const [goods, setGoods] = useState<GoodsRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -112,39 +116,39 @@ export function GoodsMasterRegistry() {
     <Card className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
         <div>
-          <CardTitle className="text-xl font-bold text-slate-900 dark:text-slate-100">Goods Master</CardTitle>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage global product, goods catalog and CHS classifications</p>
+          <CardTitle className="text-xl font-bold text-slate-900 dark:text-slate-100">{t(lang, "gmr.title")}</CardTitle>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{t(lang, "gmr.subtitle")}</p>
         </div>
         <div className="flex gap-2">
           <Button onClick={() => setShowReport(true)} size="sm" variant="outline">
-            <Printer className="w-4 h-4 mr-1" /> Print Preview
+            <Printer className="w-4 h-4 mr-1" /> {t(lang, "gmr.print_preview")}
           </Button>
           <Button onClick={() => setIsModalOpen(true)} size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white">
-            <Plus className="w-4 h-4 mr-1" /> + New Goods Item
+            <Plus className="w-4 h-4 mr-1" /> {t(lang, "gmr.new_item")}
           </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-4 pt-4">
         <div className="flex gap-2">
-          <Input placeholder="Search goods by name, CHS code, or brand..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="max-w-md" />
+          <Input placeholder={t(lang, "gmr.search_ph")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="max-w-md" />
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)} className="px-3 py-2 border rounded-md bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-sm">
-            <option value="all">All Status</option>
-            <option value="Active">Active Only</option>
-            <option value="Inactive">Inactive Only</option>
+            <option value="all">{t(lang, "gmr.all_status")}</option>
+            <option value="Active">{t(lang, "gmr.active_only")}</option>
+            <option value="Inactive">{t(lang, "gmr.inactive_only")}</option>
           </select>
         </div>
 
         <div className="grid grid-cols-3 gap-3 text-sm">
           <div className="bg-blue-50/70 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 p-3 rounded-lg">
-            <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">TOTAL</div>
+            <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">{translateHeader(lang, "TOTAL")}</div>
             <div className="text-2xl font-bold text-blue-950 dark:text-blue-200 mt-1">{summary.total}</div>
           </div>
           <div className="bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50 p-3 rounded-lg">
-            <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">ACTIVE</div>
+            <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">{translateHeader(lang, "ACTIVE")}</div>
             <div className="text-2xl font-bold text-emerald-950 dark:text-emerald-200 mt-1">{summary.active}</div>
           </div>
           <div className="bg-rose-50/70 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/50 p-3 rounded-lg">
-            <div className="text-xs font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wider">INACTIVE</div>
+            <div className="text-xs font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wider">{translateHeader(lang, "INACTIVE")}</div>
             <div className="text-2xl font-bold text-rose-950 dark:text-rose-200 mt-1">{summary.inactive}</div>
           </div>
         </div>
@@ -171,7 +175,7 @@ export function GoodsMasterRegistry() {
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="p-8 text-center text-slate-500">No goods records found</td>
+                    <td colSpan={8} className="p-8 text-center text-slate-500">{t(lang, "gmr.no_records")}</td>
                   </tr>
                 ) : (
                   filtered.map((g, idx) => (
@@ -184,11 +188,11 @@ export function GoodsMasterRegistry() {
                       <td className="p-3 text-slate-600 dark:text-slate-400">{g.origin_country || '-'}</td>
                       <td className="p-3 text-center">
                         <span className={cn("px-2.5 py-0.5 rounded-full text-xs font-semibold", g.is_active ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300" : "bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300")}>
-                          {g.is_active ? "Active" : "Inactive"}
+                          {g.is_active ? translateHeader(lang, "ACTIVE") : translateHeader(lang, "INACTIVE")}
                         </span>
                       </td>
                       <td className="p-3 text-center">
-                        <button onClick={() => handleDelete(g.id)} className="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-950 text-rose-600 dark:text-rose-400 rounded transition-colors" title="Delete Goods Item">
+                        <button onClick={() => handleDelete(g.id)} className="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-950 text-rose-600 dark:text-rose-400 rounded transition-colors" title={t(lang, "gmr.delete_item_title")}>
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </td>
@@ -208,7 +212,7 @@ export function GoodsMasterRegistry() {
         <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-lg overflow-hidden">
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
             <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <Package className="w-5 h-5 text-emerald-600" /> Add New Goods Item
+              <Package className="w-5 h-5 text-emerald-600" /> {t(lang, "gmr.add_new_item")}
             </h3>
             <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg">
               <X className="w-5 h-5" />
@@ -217,7 +221,7 @@ export function GoodsMasterRegistry() {
           <form onSubmit={handleSave} className="p-6 space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">CHS Code *</label>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">{t(lang, "gmr.chs_code_label")}</label>
                 <Input
                   placeholder="e.g. 1006.30"
                   value={formData.chsCode}
@@ -226,24 +230,24 @@ export function GoodsMasterRegistry() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Category</label>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">{translateHeader(lang, "CATEGORY")}</label>
                 <select
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   className="w-full px-3 py-2 border rounded-md bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-sm"
                 >
-                  <option value="General Merchandise">General Merchandise</option>
-                  <option value="Agriculture & Food">Agriculture & Food</option>
-                  <option value="Textiles & Garments">Textiles & Garments</option>
-                  <option value="Metals & Minerals">Metals & Minerals</option>
-                  <option value="Chemicals & Fertilizers">Chemicals & Fertilizers</option>
-                  <option value="Electronics & Machinery">Electronics & Machinery</option>
+                  <option value="General Merchandise">{t(lang, "gmr.cat_general")}</option>
+                  <option value="Agriculture & Food">{t(lang, "gmr.cat_agriculture")}</option>
+                  <option value="Textiles & Garments">{t(lang, "gmr.cat_textiles")}</option>
+                  <option value="Metals & Minerals">{t(lang, "gmr.cat_metals")}</option>
+                  <option value="Chemicals & Fertilizers">{t(lang, "gmr.cat_chemicals")}</option>
+                  <option value="Electronics & Machinery">{t(lang, "gmr.cat_electronics")}</option>
                 </select>
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Goods Name / Description *</label>
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">{t(lang, "gmr.goods_name_desc")}</label>
               <Input
                 placeholder="e.g. Super Basmati Rice 50kg Bags"
                 value={formData.name}
@@ -254,7 +258,7 @@ export function GoodsMasterRegistry() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Brand Name</label>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">{t(lang, "gmr.brand_name")}</label>
                 <Input
                   placeholder="e.g. Mughal / Al-Habib"
                   value={formData.brand}
@@ -262,7 +266,7 @@ export function GoodsMasterRegistry() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Sizes / Specs</label>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">{t(lang, "gmr.sizes_specs")}</label>
                 <Input
                   placeholder="e.g. 50kg / 25kg"
                   value={formData.sizes}
@@ -272,12 +276,12 @@ export function GoodsMasterRegistry() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Origin Country</label>
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">{t(lang, "gmr.origin_country")}</label>
               <SearchSelect
                 label=""
                 value={formData.originCountry}
                 options={countries.map(c => ({ value: c.name, label: c.name }))}
-                placeholder="Select Origin Country..."
+                placeholder={t(lang, "gmr.select_origin_ph")}
                 onValueChange={(val) => setFormData({ ...formData, originCountry: val })}
               />
             </div>
@@ -290,15 +294,15 @@ export function GoodsMasterRegistry() {
                 onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                 className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
               />
-              <label htmlFor="goods_is_active" className="text-sm font-medium text-slate-700 dark:text-slate-300">Active Item in Catalog</label>
+              <label htmlFor="goods_is_active" className="text-sm font-medium text-slate-700 dark:text-slate-300">{t(lang, "gmr.active_item")}</label>
             </div>
 
             <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
               <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
-                Cancel
+                {t(lang, "common.cancel")}
               </Button>
               <Button type="submit" disabled={saving} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Check className="w-4 h-4 mr-1" />} Save Goods Item
+                {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Check className="w-4 h-4 mr-1" />} {t(lang, "gmr.save_item")}
               </Button>
             </div>
           </form>
@@ -309,7 +313,7 @@ export function GoodsMasterRegistry() {
     <UniversalReportModal
       isOpen={showReport}
       onClose={() => setShowReport(false)}
-      title="Goods Master Register"
+      title={t(lang, "gmr.register_title")}
       data={goods}
       columns={[
         { key: "chs_code", label: "CHS Code" },

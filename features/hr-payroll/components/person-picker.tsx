@@ -71,10 +71,8 @@ export function PersonPicker({
     try {
       const qp = new URLSearchParams();
       if (countryId) qp.set("countryId", countryId);
-      qp.set("limit", "50");
-      // Resolve customer_name/company_name into the active language server-side — without this
-      // every entry showed whatever script it was originally typed in, mixed record-to-record
-      // regardless of the selected language (see app/api/erp/customers/route.ts).
+      qp.set("limit", "100");
+      // Resolve customer_name/company_name into the active language server-side
       qp.set("lang", lang);
       const res = await apiGet<{ customers: PersonRow[] }>(`/api/erp/customers?${qp.toString()}`);
       setPeople(res.customers ?? []);
@@ -102,7 +100,7 @@ export function PersonPicker({
         if (res.customer) {
           setPeople((current) => {
             if (current.some((p) => p.id === res.customer.id)) return current;
-            return [...current, res.customer];
+            return [res.customer, ...current];
           });
         }
       } catch {
@@ -230,10 +228,16 @@ export function PersonPicker({
           <CustomerForm
             lang={lang}
             mode="embedded"
-            onSave={(newPersonId) => {
-              loadList().catch(() => null);
-              onValueChange(newPersonId);
+            onSave={async (newPersonId) => {
               setOpenCreate(false);
+              try {
+                const res = await apiGet<{ customer: PersonRow }>(`/api/erp/customers/${encodeURIComponent(newPersonId)}?lang=${encodeURIComponent(lang)}`);
+                if (res.customer) {
+                  setPeople((current) => [res.customer, ...current.filter((p) => p.id !== newPersonId)]);
+                }
+              } catch {}
+              onValueChange(newPersonId);
+              void loadList();
             }}
           />
         </SimpleModal>
@@ -249,11 +253,16 @@ export function PersonPicker({
             lang={lang}
             mode="embedded"
             initialCustomerId={editPersonId}
-            onSave={(savedPersonId) => {
-              // Refresh so the dropdown immediately shows the updated, correctly-localized name.
-              loadList().catch(() => null);
-              onValueChange(savedPersonId);
+            onSave={async (savedId) => {
               setEditPersonId(null);
+              try {
+                const res = await apiGet<{ customer: PersonRow }>(`/api/erp/customers/${encodeURIComponent(savedId)}?lang=${encodeURIComponent(lang)}`);
+                if (res.customer) {
+                  setPeople((current) => [res.customer, ...current.filter((p) => p.id !== savedId)]);
+                }
+              } catch {}
+              onValueChange(savedId);
+              void loadList();
             }}
           />
         </SimpleModal>

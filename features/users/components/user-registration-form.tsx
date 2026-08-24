@@ -13,6 +13,8 @@ import { enterpriseRolePermissions } from "@/lib/permissions/enterprise-roles";
 import { listCountries, type LocationCountry } from "@/features/locations/location-api";
 import { apiGet } from "@/lib/api/client";
 import { SimpleModal } from "@/components/ui/simple-modal";
+import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 type MainBranchRow = { id: string; name: string; code: string; local_currency: string };
 type CityBranchRow = { id: string; name: string; code: string; city_name: string; local_currency: string };
@@ -69,6 +71,7 @@ function groupPermissions(perms: string[]) {
 }
 
 export function UserRegistrationForm() {
+  const lang = useActiveLanguage();
   const [banner, setBanner] = useState<Banner>(null);
   const [saving, setSaving] = useState(false);
   const [generatingUserCode, setGeneratingUserCode] = useState(false);
@@ -399,9 +402,9 @@ export function UserRegistrationForm() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">New Entry</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">User Registration</h1>
-          <p className="text-sm text-muted-foreground">Unified user setup with branch hierarchy and live report preview.</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">{t(lang, "urf.new_entry")}</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight">{t(lang, "urf.title")}</h1>
+          <p className="text-sm text-muted-foreground">{t(lang, "urf.subtitle")}</p>
         </div>
       </div>
 
@@ -410,7 +413,7 @@ export function UserRegistrationForm() {
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
               <Users2 className="h-5 w-5 text-primary" aria-hidden />
-              Complete Registration & Branch Detail
+              {t(lang, "urf.complete_registration")}
             </CardTitle>
           </CardHeader>
 
@@ -429,12 +432,12 @@ export function UserRegistrationForm() {
             ) : null}
 
             <section className="space-y-3">
-              <h2 className="text-sm font-semibold text-slate-950 dark:text-slate-100">Personal Information</h2>
+              <h2 className="text-sm font-semibold text-slate-950 dark:text-slate-100">{t(lang, "urf.personal_info")}</h2>
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
-                  <Label>Gender</Label>
+                  <Label>{t(lang, "urf.gender")}</Label>
                   <select className="flex h-10 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm" value={gender} onChange={(e) => setGender(e.target.value)}>
-                    <option value="">Select Gender</option>
+                    <option value="">{t(lang, "urf.select_gender")}</option>
                     {genderOptions.map((g) => (
                       <option key={g} value={g}>
                         {g}
@@ -443,23 +446,23 @@ export function UserRegistrationForm() {
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <Label>First Name</Label>
-                  <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First Name" />
+                  <Label>{t(lang, "urf.first_name")}</Label>
+                  <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder={t(lang, "urf.first_name")} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Last Name</Label>
-                  <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last Name" />
+                  <Label>{t(lang, "urf.last_name")}</Label>
+                  <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder={t(lang, "urf.last_name")} />
                 </div>
               </div>
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-sm font-semibold text-slate-950 dark:text-slate-100">Company & Branch Scope</h2>
+              <h2 className="text-sm font-semibold text-slate-950 dark:text-slate-100">{t(lang, "urf.company_branch_scope")}</h2>
 
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2 md:col-span-2">
                   <SearchSelect
-                    label="User Type / Role"
+                    label={t(lang, "urf.user_type_role")}
                     value={role}
                     options={roleOptions.map((r) => ({ value: r.value, label: r.label, keywords: r.help }))}
                     onValueChange={(next) => setRole(next as EnterpriseRole)}
@@ -508,35 +511,35 @@ export function UserRegistrationForm() {
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-sm font-semibold text-slate-950 dark:text-slate-100">ERP Credentials</h2>
+              <h2 className="text-sm font-semibold text-slate-950 dark:text-slate-100">{t(lang, "urf.erp_credentials")}</h2>
 
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
-                  <Label>User ID</Label>
+                  <Label>{t(lang, "urf.user_id")}</Label>
                   <div className="flex gap-2">
-                    <Input value={userCode} onChange={(e) => setUserCode(e.target.value)} placeholder="Auto-generated User ID" />
+                    <Input value={userCode} onChange={(e) => setUserCode(e.target.value)} placeholder={t(lang, "urf.user_id_placeholder")} />
                     <Button type="button" variant="outline" className="h-10 shrink-0" onClick={issueUserCode} disabled={generatingUserCode}>
                       <RefreshCcw className="h-4 w-4" aria-hidden />
-                      <span className="ms-2">{generatingUserCode ? "..." : "Auto"}</span>
+                      <span className="ms-2">{generatingUserCode ? "..." : t(lang, "urf.auto_word")}</span>
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground">User can sign in using User ID.</p>
+                  <p className="text-xs text-muted-foreground">{t(lang, "urf.user_id_hint")}</p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Password</Label>
-                  <Input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Password" />
+                  <Label>{t(lang, "urf.password")}</Label>
+                  <Input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder={t(lang, "urf.password")} />
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Confirm Password</Label>
-                  <Input value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} type="password" placeholder="Confirm Password" />
+                  <Label>{t(lang, "urf.confirm_password")}</Label>
+                  <Input value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} type="password" placeholder={t(lang, "urf.confirm_password")} />
                 </div>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Preferred Language</Label>
+                  <Label>{t(lang, "urf.preferred_language")}</Label>
                   <select
                     className="flex h-10 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm"
                     value={preferredLanguage}
@@ -555,41 +558,41 @@ export function UserRegistrationForm() {
             <section className="space-y-3">
               <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-950 dark:text-slate-100">
                 <ShieldCheck className="h-4 w-4 text-primary" aria-hidden />
-                Role Permissions
+                {t(lang, "urf.role_permissions")}
               </h2>
-              <p className="text-sm text-muted-foreground">Defaults load by role. You can customize permissions before saving.</p>
+              <p className="text-sm text-muted-foreground">{t(lang, "urf.role_permissions_hint")}</p>
 
               <div className="flex flex-wrap items-center gap-2">
                 <Button type="button" variant="outline" onClick={() => setPermissionsModalOpen(true)}>
-                  Select Permissions
+                  {t(lang, "urf.select_permissions")}
                 </Button>
                 <span className="text-xs text-muted-foreground">
-                  Selected: <b className="text-foreground">{selectedPermissions.length}</b>
+                  {t(lang, "urf.selected_colon")} <b className="text-foreground">{selectedPermissions.length}</b>
                 </span>
               </div>
 
               {permissionsModalOpen ? (
-                <SimpleModal title="Role Permissions" onClose={() => setPermissionsModalOpen(false)} className="max-w-4xl">
+                <SimpleModal title={t(lang, "urf.role_permissions")} onClose={() => setPermissionsModalOpen(false)} className="max-w-4xl">
                   <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
                     <div className="space-y-3">
                       <div className="space-y-2">
-                        <Label>Search</Label>
-                        <Input value={permissionQuery} onChange={(e) => setPermissionQuery(e.target.value)} placeholder="Search permissions..." />
+                        <Label>{t(lang, "common.search")}</Label>
+                        <Input value={permissionQuery} onChange={(e) => setPermissionQuery(e.target.value)} placeholder={t(lang, "urf.search_permissions_ph")} />
                       </div>
                       <div className="rounded-lg border bg-white p-3 text-xs dark:bg-background">
-                        <p className="font-semibold text-muted-foreground">Selected Permissions</p>
+                        <p className="font-semibold text-muted-foreground">{t(lang, "urf.selected_permissions")}</p>
                         <div className="mt-2 max-h-64 space-y-1 overflow-auto">
                           {selectedPermissions.length ? (
                             selectedPermissions.map((p) => (
                               <div key={p} className="flex items-center justify-between gap-2 rounded-md border px-2 py-1">
                                 <span className="font-mono">{p}</span>
                                 <button type="button" className="text-rose-700" onClick={() => togglePermission(p)}>
-                                  Remove
+                                  {t(lang, "urf.remove")}
                                 </button>
                               </div>
                             ))
                           ) : (
-                            <p className="text-muted-foreground">No permissions selected.</p>
+                            <p className="text-muted-foreground">{t(lang, "urf.no_permissions_selected")}</p>
                           )}
                         </div>
                       </div>
@@ -597,9 +600,9 @@ export function UserRegistrationForm() {
 
                     <div className="space-y-3">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Permission List</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t(lang, "urf.permission_list")}</p>
                         <Button type="button" variant="secondary" size="sm" onClick={() => setPermissionsModalOpen(false)}>
-                          Done
+                          {t(lang, "urf.done")}
                         </Button>
                       </div>
                       <div className="max-h-[60vh] space-y-4 overflow-auto rounded-lg border bg-white p-3 dark:bg-background">
@@ -629,7 +632,7 @@ export function UserRegistrationForm() {
             <div className="flex justify-end">
               <Button type="button" className="h-10 gap-2" onClick={onSubmit} disabled={saving}>
                 <Save className="h-4 w-4" aria-hidden />
-                {saving ? "Saving..." : "Submit"}
+                {saving ? t(lang, "common.saving") : t(lang, "urf.submit")}
               </Button>
             </div>
           </CardContent>
@@ -638,56 +641,56 @@ export function UserRegistrationForm() {
         <Card className="h-fit border-slate-200/80 shadow-sm xl:sticky xl:top-6">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center justify-between gap-3">
-              <span>Live Report</span>
+              <span>{t(lang, "urf.live_report")}</span>
               <span className="inline-flex items-center gap-1 rounded-full border bg-background px-3 py-1 text-xs text-muted-foreground">
                 <CheckCircle2 className="h-4 w-4 text-primary" aria-hidden />
-                Preview
+                {t(lang, "urf.preview")}
               </span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="rounded-lg border bg-white p-4 dark:bg-background">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">User</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">{t(lang, "urf.user_word")}</p>
               <div className="mt-3">
-                {reportRow("Name", fullName || "-")}
+                {reportRow(t(lang, "urf.name_word"), fullName || "-")}
               </div>
             </div>
 
             <div className="rounded-lg border bg-white p-4 dark:bg-background">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Role & Scope</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">{t(lang, "urf.role_scope")}</p>
               <div className="mt-3">
-                {reportRow("Role", roleOptions.find((r) => r.value === role)?.label ?? role)}
-                {reportRow("Country", selectedCountry?.name ?? "-")}
-                {reportRow("Main Branch", selectedMainBranch ? `${selectedMainBranch.name} (${selectedMainBranch.code})` : "-")}
+                {reportRow(t(lang, "urf.role_word"), roleOptions.find((r) => r.value === role)?.label ?? role)}
+                {reportRow(t(lang, "common.country"), selectedCountry?.name ?? "-")}
+                {reportRow(t(lang, "urf.main_branch_word"), selectedMainBranch ? `${selectedMainBranch.name} (${selectedMainBranch.code})` : "-")}
                 {reportRow(
-                  "City Branch",
+                  t(lang, "urf.city_branch_word"),
                   selectedCityBranch ? `${selectedCityBranch.city_name} - ${selectedCityBranch.name} (${selectedCityBranch.code})` : "-"
                 )}
               </div>
             </div>
 
             <div className="rounded-lg border bg-white p-4 dark:bg-background">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Preferences</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">{t(lang, "urf.preferences")}</p>
               <div className="mt-3">
-                {reportRow("Language", preferredLanguage)}
-                {reportRow("User ID", userCode.trim() || "-")}
+                {reportRow(t(lang, "urf.language_word"), preferredLanguage)}
+                {reportRow(t(lang, "urf.user_id"), userCode.trim() || "-")}
               </div>
             </div>
 
             {createdResult ? (
               <div className="rounded-lg border bg-white p-4 dark:bg-background">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Confirmation</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">{t(lang, "urf.confirmation")}</p>
                 <div className="mt-3">
-                  {reportRow("Created User UUID", createdResult.userId || "-")}
-                  {reportRow("Issued User ID", createdResult.userCode || userCode.trim() || "-")}
-                  {reportRow("Role", roleOptions.find((r) => r.value === role)?.label ?? role)}
-                  {reportRow("Country", selectedCountry?.name ?? "-")}
-                  {reportRow("Main Branch", selectedMainBranch ? `${selectedMainBranch.name} (${selectedMainBranch.code})` : "-")}
+                  {reportRow(t(lang, "urf.created_user_uuid"), createdResult.userId || "-")}
+                  {reportRow(t(lang, "urf.issued_user_id"), createdResult.userCode || userCode.trim() || "-")}
+                  {reportRow(t(lang, "urf.role_word"), roleOptions.find((r) => r.value === role)?.label ?? role)}
+                  {reportRow(t(lang, "common.country"), selectedCountry?.name ?? "-")}
+                  {reportRow(t(lang, "urf.main_branch_word"), selectedMainBranch ? `${selectedMainBranch.name} (${selectedMainBranch.code})` : "-")}
                   {reportRow(
-                    "City Branch",
+                    t(lang, "urf.city_branch_word"),
                     selectedCityBranch ? `${selectedCityBranch.city_name} - ${selectedCityBranch.name} (${selectedCityBranch.code})` : "-"
                   )}
-                  {reportRow("Permissions", String(selectedPermissions.length))}
+                  {reportRow(t(lang, "urf.permissions_word"), String(selectedPermissions.length))}
                   {reportRow("Created By", sessionInfo?.user.fullName || sessionInfo?.user.email || "-")}
                   {reportRow("Created At", createdResult.createdAt)}
                 </div>

@@ -330,12 +330,12 @@ export function CompanyRegistry() {
             <div style="font-size: 12px; color: #64748b;">Account No: ${c.accountNo} | Consortium: ${c.consortium}</div>
           </div>
           <div class="grid">
-            <div class="card"><div class="label">Account Name</div><div class="value">${c.accountName}</div></div>
-            <div class="card"><div class="label">Branch Rules</div><div class="value">${c.branchRules}</div></div>
-            <div class="card"><div class="label">Companies Count</div><div class="value">${c.companiesCount} Companies</div></div>
-            <div class="card"><div class="label">Total Contracts</div><div class="value">${c.contractsCount} Active Contracts</div></div>
-            <div class="card"><div class="label">Primary Contact</div><div class="value">${c.primaryContact}</div></div>
-            <div class="card"><div class="label">Official Email</div><div class="value">${c.email}</div></div>
+            <div class="card"><div class="label">${tt("creg.account_name", "Account Name")}</div><div class="value">${c.accountName}</div></div>
+            <div class="card"><div class="label">${tt("creg.branch_rules", "Branch Rules")}</div><div class="value">${c.branchRules}</div></div>
+            <div class="card"><div class="label">${tt("creg.companies_count", "Companies Count")}</div><div class="value">${c.companiesCount} ${tt("creg.companies_word", "Companies")}</div></div>
+            <div class="card"><div class="label">${tt("creg.total_contracts", "Total Contracts")}</div><div class="value">${c.contractsCount} ${tt("creg.active_contracts", "Active Contracts")}</div></div>
+            <div class="card"><div class="label">${tt("creg.primary_contact", "Primary Contact")}</div><div class="value">${c.primaryContact}</div></div>
+            <div class="card"><div class="label">${tt("creg.official_email", "Official Email")}</div><div class="value">${c.email}</div></div>
           </div>
           <script>window.onload = function() { window.print(); };</script>
         </body>
@@ -404,9 +404,9 @@ export function CompanyRegistry() {
               className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/50 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
             >
               <option value="all">{tt("creg.all_countries", "All Countries")}</option>
-              <option value="pakistan">Pakistan</option>
-              <option value="uae">United Arab Emirates</option>
-              <option value="afghanistan">Afghanistan</option>
+              <option value="pakistan">{tt("creg.country_pakistan", "Pakistan")}</option>
+              <option value="uae">{tt("creg.country_uae", "United Arab Emirates")}</option>
+              <option value="afghanistan">{tt("creg.country_afghanistan", "Afghanistan")}</option>
             </select>
           </div>
 
@@ -419,9 +419,9 @@ export function CompanyRegistry() {
               className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/50 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
             >
               <option value="all">{tt("creg.all_branches", "All Branches")}</option>
-              <option value="main">Main Headquarters</option>
-              <option value="lahore">Lahore Hub</option>
-              <option value="dubai">Dubai Regional Hub</option>
+              <option value="main">{tt("creg.branch_main_hq", "Main Headquarters")}</option>
+              <option value="lahore">{tt("creg.branch_lahore_hub", "Lahore Hub")}</option>
+              <option value="dubai">{tt("creg.branch_dubai_hub", "Dubai Regional Hub")}</option>
             </select>
           </div>
 

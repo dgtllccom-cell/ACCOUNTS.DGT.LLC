@@ -301,11 +301,7 @@ export function CustomerForm({
   }, [locationMeta.country]);
 
   const ready = Boolean(
-    (customerType === "Business" ? businessName.trim() : true) &&
-    firstName.trim() &&
-    lastName.trim() &&
-    location.countryId &&
-    address.trim()
+    (customerType === "Business" ? businessName.trim() : (firstName.trim() || lastName.trim()))
   );
 
   const previewLocation = useMemo(() => {
@@ -373,19 +369,27 @@ export function CustomerForm({
     const firstWhatsapp = contacts.find((c) => c.type === "WhatsApp")?.value || "";
     const firstEmail = contacts.find((c) => c.type === "Email")?.value || "";
 
+    const resolvedCustomerName = customerType === "Business" 
+      ? businessName.trim() 
+      : ([firstName, lastName].filter(Boolean).join(" ").trim() || "New Person");
+
     const payload = {
-      countryId: location.countryId,
+      countryId: location.countryId || null,
       stateProvinceId: location.stateProvinceId || null,
       districtId: location.districtId || null,
       cityId: location.cityId || null,
       areaLocationId: location.areaId || null,
-      customerName: customerType === "Business" ? businessName.trim() : `${firstName} ${lastName}`.trim(),
-      companyName: customerType === "Business" ? businessName.trim() : null,
+      customerName: resolvedCustomerName,
+      firstName: firstName.trim() || null,
+      lastName: lastName.trim() || null,
+      gender: customerType === "Business" ? null : customerType,
+      photoUrl: passportPicture || null,
+      companyName: customerType === "Business" ? businessName.trim() : (companyName || null),
       contactPerson: customerType === "Business" ? `${firstName} ${lastName}`.trim() : (fatherName || null),
       mobile: firstMobile || null,
       whatsapp: firstWhatsapp || null,
       email: firstEmail || null,
-      address: address || null,
+      address: address || (city ? `${city}, ${country || ""}`.trim() : "-"),
       notes: JSON.stringify(notesJson),
       originalLanguage: lang,
       contacts: [],
@@ -506,14 +510,35 @@ export function CustomerForm({
                     }}
                     className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20"
                   >
-                    <option value="Customer">👤 Customer (گاہک / کسٹمر)</option>
-                    <option value="Employee">💼 Employee (ملازم / ایمپلائی)</option>
-                    <option value="Driver">🚛 Truck Driver (ٹرک ڈرائیور)</option>
-                    <option value="Truck Owner">🚚 Truck Owner (مالک ٹرک)</option>
-                    <option value="Clearing Agent">🛃 Clearing / Custom Agent (کسٹم ایجنٹ)</option>
+                    <option value="Country Owner">👑 Country Owner / Main Head (کنٹری اونر / مین ہیڈ)</option>
+                    <option value="Branch Owner">🏛️ Branch Owner / Manager (برانچ اونر / سٹی منیجر)</option>
+                    <option value="Company Owner">🏢 Company Owner / Partner (کمپنی اونر / پارٹنر)</option>
+                    <option value="Manager">👔 Manager / Director (منیجر / ڈائریکٹر)</option>
+                    <option value="Employee">💼 Employee / Staff (ملازم / عملہ)</option>
+                    <option value="Customer">👤 Customer / Client (گاہک / کسٹمر)</option>
                     <option value="Vendor">🏭 Supplier / Vendor (سپلائر / وینڈر)</option>
-                    <option value="Business">🏢 Business / Corporate (کارپوریٹ کمپنی)</option>
+                    <option value="Truck Owner">🚚 Truck Owner (مالک ٹرک / ٹرانسپورٹر)</option>
+                    <option value="Driver">🚛 Truck Driver (ٹرک ڈرائیور)</option>
+                    <option value="Clearing Agent">🛃 Clearing Agent (کسٹم ایجنٹ)</option>
+                    <option value="Business">🏢 Corporate / Business (کارپوریٹ کمپنی)</option>
                   </select>
+                </div>
+
+                {/* Quick Save Banner for fast person creation */}
+                <div className="flex items-center justify-between bg-teal-50 border border-teal-200 rounded-xl p-3">
+                  <div className="text-xs text-teal-800">
+                    <span className="font-bold">⚡ Quick Save Available:</span> Enter Name and click Save & Finalize anytime.
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={submitForm}
+                    disabled={!ready || saving}
+                    size="sm"
+                    className="bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs h-8 px-4 rounded-lg shadow-xs"
+                  >
+                    <Save className="h-3.5 w-3.5 mr-1" />
+                    {saving ? "Saving..." : "Save Person Master"}
+                  </Button>
                 </div>
 
                 {customerType === "Business" && (

@@ -335,34 +335,30 @@ export const customerRegistrationInputSchema = z.object({
 });
 
 export const customerCreateSchema = scopeSchema.extend({
-  countryId: uuidSchema,
+  countryId: optionalUuidSchema,
   stateProvinceId: optionalUuidSchema,
   districtId: optionalUuidSchema,
   cityId: optionalUuidSchema,
   areaLocationId: optionalUuidSchema,
-  customerName: z.string().trim().min(2).max(200),
+  customerName: z.string().trim().min(1).max(300),
   // Structured person identity (person master). customerName stays the display/full name;
   // firstName/lastName are the canonical structured fields synced into it.
-  firstName: z.string().trim().max(120).nullable().optional(),
-  lastName: z.string().trim().max(120).nullable().optional(),
-  gender: z.string().trim().max(30).nullable().optional(),
-  photoUrl: z.string().trim().max(2000).nullable().optional(),
-  // Many forms intentionally send `null` for empty optional fields to keep payloads explicit.
-  // Accept both omitted and explicit null here.
-  companyName: z.string().trim().max(200).nullable().optional(),
-  contactPerson: z.string().trim().max(200).nullable().optional(),
-  mobile: z.string().trim().max(50).nullable().optional(),
-  whatsapp: z.string().trim().max(50).nullable().optional(),
-  email: z.string().trim().email().nullable().optional(),
-  address: z.string().trim().max(1000).nullable().optional(),
-  notes: z.string().trim().max(2000).nullable().optional(),
+  firstName: z.string().trim().max(150).nullable().optional(),
+  lastName: z.string().trim().max(150).nullable().optional(),
+  gender: z.string().trim().max(50).nullable().optional(),
+  photoUrl: z.string().trim().nullable().optional(),
+  companyName: z.string().trim().max(300).nullable().optional(),
+  contactPerson: z.string().trim().max(300).nullable().optional(),
+  mobile: z.string().trim().max(100).nullable().optional(),
+  whatsapp: z.string().trim().max(100).nullable().optional(),
+  email: z.string().trim().nullable().optional(),
+  address: z.string().trim().max(2000).nullable().optional(),
+  notes: z.string().trim().nullable().optional(),
   originalLanguage: supportedLanguageSchema.default("en"),
   contacts: z.array(customerContactInputSchema).default([]),
   registrations: z.array(customerRegistrationInputSchema).default([])
 });
-export const customerUpdateSchema = customerCreateSchema.partial().extend({
-  countryId: uuidSchema
-});
+export const customerUpdateSchema = customerCreateSchema.partial();
 
 const companyContactSchema = z.object({
   id: z.string().trim().max(80).optional(),

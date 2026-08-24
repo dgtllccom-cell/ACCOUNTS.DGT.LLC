@@ -65,7 +65,7 @@ export class CustomersRepository {
   // already used by companies-repository.ts) when available, falling back to the Supabase
   // client otherwise. See banks-repository.ts for the same pattern.
   async search(input: { query?: string | null; countryId?: string | null; limit?: number }) {
-    const limit = Math.min(Math.max(input.limit ?? 20, 1), 50);
+    const limit = Math.min(Math.max(input.limit ?? 50, 1), 100);
     const q = cleanQuery(input.query ?? "");
     const like = q ? `%${q}%` : null;
 
@@ -80,8 +80,14 @@ export class CustomersRepository {
       const rows = await sql`
         SELECT ${sql(CUSTOMER_COLUMNS)} FROM public.customers
         WHERE deleted_at IS NULL
-          AND (${input.countryId ? sql`country_id = ${input.countryId}` : sql`true`})
-          AND (${like ? sql`(customer_name ILIKE ${like} OR first_name ILIKE ${like} OR last_name ILIKE ${like} OR company_name ILIKE ${like} OR email ILIKE ${like} OR mobile ILIKE ${like} OR whatsapp ILIKE ${like} OR id = ANY(${translatedMatchIds}::uuid[]))` : sql`true`})
+          AND (${input.countryId ? sql`country_id = ${input.countryId}::uuid` : sql`true`})
+          AND (${
+            like
+              ? sql`(customer_name ILIKE ${like} OR first_name ILIKE ${like} OR last_name ILIKE ${like} OR company_name ILIKE ${like} OR contact_person ILIKE ${like} OR email ILIKE ${like} OR mobile ILIKE ${like} OR whatsapp ILIKE ${like} OR address ILIKE ${like} OR notes ILIKE ${like} ${
+                  translatedMatchIds.length > 0 ? sql`OR id = ANY(${translatedMatchIds}::uuid[])` : sql``
+                })`
+              : sql`true`
+          })
         ORDER BY customer_name ASC
         LIMIT ${limit}
       `;
@@ -102,6 +108,7 @@ export class CustomersRepository {
         [
           `customer_name.ilike.${like}`,
           `company_name.ilike.${like}`,
+          `contact_person.ilike.${like}`,
           `email.ilike.${like}`,
           `mobile.ilike.${like}`,
           `whatsapp.ilike.${like}`
@@ -185,7 +192,7 @@ export class CustomersRepository {
   }
 
   async create(input: {
-    countryId: string;
+    countryId?: string | null;
     stateProvinceId?: string | null;
     districtId?: string | null;
     cityId?: string | null;
@@ -206,56 +213,66 @@ export class CustomersRepository {
     actorId?: string | null;
   }) {
     const now = new Date().toISOString();
-    const insertRow = {
-      country_id: input.countryId,
-      state_province_id: input.stateProvinceId ?? null,
-      district_id: input.districtId ?? null,
-      city_id: input.cityId ?? null,
-      area_location_id: input.areaLocationId ?? null,
-      customer_name: input.customerName.trim(),
-      first_name: input.firstName?.trim() || null,
-      last_name: input.lastName?.trim() || null,
-      gender: input.gender ?? null,
-      photo_url: input.photoUrl ?? null,
-      company_name: input.companyName ?? null,
-      contact_person: input.contactPerson ?? null,
-      mobile: input.mobile ?? null,
-      whatsapp: input.whatsapp ?? null,
-      email: input.email ?? null,
-      address: input.address ?? null,
-      notes: input.notes ?? null,
-      original_language_code: input.originalLanguageCode,
-      is_active: true,
-      created_by: input.actorId ?? null,
-      created_at: now,
-      updated_at: now
-    };
 
     const viaPg = await withLocalPg(async (sql) => {
-      const rows = await sql`INSERT INTO public.customers ${sql(insertRow)} RETURNING id`;
-      return (rows[0] as any).id as string;
-    });
-    if (!viaPg) {
-      throw new Error("Customer create requires the local development DATABASE_URL connection.");
-    }
-    const data = viaPg;
-    try {
-      const serials = await allocateFormSerials("customers", { countryId: input.countryId, branchKey: input.cityId ?? null });
-      const serialPatch = {
-        super_admin_serial: serials.superAdminSerial,
-        country_serial: serials.countrySerial,
-        branch_serial: serials.branchSerial,
-        entry_serial: serials.entrySerial
-      };
-      const viaPg = await withLocalPg(async (sql) => {
-        await sql`UPDATE public.customers SET ${sql(serialPatch)} WHERE id = ${data}::uuid`;
-        return true;
-      });
-      if (!viaPg) {
-        throw new Error("Customer serial allocation requires the local development DATABASE_URL connection.");
+      let resolvedCountryId = input.countryId;
+      if (!resolvedCountryId) {
+        const [c] = await sql`SELECT id FROM public.countries WHERE is_active = true ORDER BY name ASC LIMIT 1`;
+        resolvedCountryId = c?.id;
       }
-    } catch { /* serial allocation is non-fatal */ }
-    return data as string;
+
+      let validActorId: string | null = null;
+      if (input.actorId) {
+        const [prof] = await sql`SELECT id FROM public.profiles WHERE id = ${input.actorId}::uuid LIMIT 1`;
+        if (prof) validActorId = prof.id;
+      }
+
+      const insertRow = {
+        country_id: resolvedCountryId,
+        state_province_id: input.stateProvinceId ?? null,
+        district_id: input.districtId ?? null,
+        city_id: input.cityId ?? null,
+        area_location_id: input.areaLocationId ?? null,
+        customer_name: input.customerName.trim(),
+        first_name: input.firstName?.trim() || null,
+        last_name: input.lastName?.trim() || null,
+        gender: input.gender ?? null,
+        photo_url: input.photoUrl ?? null,
+        company_name: input.companyName ?? null,
+        contact_person: input.contactPerson ?? null,
+        mobile: input.mobile ?? null,
+        whatsapp: input.whatsapp ?? null,
+        email: input.email ?? null,
+        address: input.address ?? null,
+        notes: input.notes ?? null,
+        original_language_code: input.originalLanguageCode,
+        is_active: true,
+        created_by: validActorId,
+        created_at: now,
+        updated_at: now
+      };
+
+      const rows = await sql`INSERT INTO public.customers ${sql(insertRow)} RETURNING id`;
+      const createdId = (rows[0] as any).id as string;
+
+      try {
+        const serials = await allocateFormSerials("customers", { countryId: resolvedCountryId, branchKey: input.cityId ?? null });
+        const serialPatch = {
+          super_admin_serial: serials.superAdminSerial,
+          country_serial: serials.countrySerial,
+          branch_serial: serials.branchSerial,
+          entry_serial: serials.entrySerial
+        };
+        await sql`UPDATE public.customers SET ${sql(serialPatch)} WHERE id = ${createdId}::uuid`;
+      } catch { /* non-fatal */ }
+
+      return createdId;
+    });
+
+    if (!viaPg) {
+      throw new Error("Customer create requires DATABASE_URL connection.");
+    }
+    return viaPg as string;
   }
 
   async insertContacts(customerId: string, contacts: Array<{ type: string; value: string; isPrimary?: boolean }>) {

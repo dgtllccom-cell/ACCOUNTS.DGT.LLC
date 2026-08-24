@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ExternalLink, Plus, MapPin, AlertCircle } from "lucide-react";
+import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { Button } from "@/components/ui/button";
 import { SimpleModal } from "@/components/ui/simple-modal";
@@ -76,7 +78,12 @@ const locationLabels: Record<string, Record<SupportedLanguage, string>> = {
   newState: { en: "New State", ur: "نیا صوبہ", ar: "ولاية جديدة", fa: "استان جدید", ps: "نوې صوبه" },
   newCity: { en: "New City", ur: "نیا شہر", ar: "مدينة جديدة", fa: "شهر جدید", ps: "نوی ښار" },
   newArea: { en: "New Area", ur: "نیا علاقہ", ar: "منطقة جديدة", fa: "منطقه جدید", ps: "نوې سیمه" },
-  manageLocations: { en: "Manage Locations", ur: "مقامات کا انتظام", ar: "إدارة المواقع", fa: "مدیریت موقعیت‌ها", ps: "د ځایونو مدیریت" }
+  manageLocations: { en: "Manage Locations", ur: "مقامات کا انتظام", ar: "إدارة المواقع", fa: "مدیریت موقعیت‌ها", ps: "د ځایونو مدیریت" },
+  selectCityFirst: { en: "Select city first", ur: "پہلے شہر منتخب کریں", ar: "اختر المدينة أولاً", fa: "ابتدا شهر را انتخاب کنید", ps: "لومړی ښار وټاکئ" },
+  loadingStates: { en: "Loading states...", ur: "صوبے لوڈ ہو رہے ہیں...", ar: "جارٍ تحميل الولايات...", fa: "در حال بارگذاری استان‌ها...", ps: "صوبې بارېږي..." },
+  loadingDistricts: { en: "Loading districts...", ur: "اضلاع لوڈ ہو رہے ہیں...", ar: "جارٍ تحميل المديريات...", fa: "در حال بارگذاری شهرستان‌ها...", ps: "ولسوالۍ بارېږي..." },
+  loadingCities: { en: "Loading cities...", ur: "شہر لوڈ ہو رہے ہیں...", ar: "جارٍ تحميل المدن...", fa: "در حال بارگذاری شهرها...", ps: "ښارونه بارېږي..." },
+  loadingAreas: { en: "Loading areas...", ur: "علاقے لوڈ ہو رہے ہیں...", ar: "جارٍ تحميل المناطق...", fa: "در حال بارگذاری مناطق...", ps: "سیمې بارېږي..." }
 };
 
 export function LocationHierarchySelect({
@@ -401,7 +408,7 @@ export function LocationHierarchySelect({
             <SearchSelect
               label={loc("state")}
               value={value.stateProvinceId}
-              placeholder={loadingStates ? "Loading states..." : value.countryId ? loc("selectState") : loc("selectCountryFirst")}
+              placeholder={loadingStates ? loc("loadingStates") : value.countryId ? loc("selectState") : loc("selectCountryFirst")}
               disabled={disabled || !value.countryId || loadingStates}
               loading={loadingStates}
               options={toOptions(states)}
@@ -425,7 +432,7 @@ export function LocationHierarchySelect({
             <SearchSelect
               label={loc("district")}
               value={value.districtId}
-              placeholder={loadingDistricts ? "Loading districts..." : value.stateProvinceId || value.countryId ? loc("district") : loc("selectCountryFirst")}
+              placeholder={loadingDistricts ? loc("loadingDistricts") : value.stateProvinceId || value.countryId ? loc("district") : loc("selectCountryFirst")}
               disabled={disabled || (!value.countryId && !value.stateProvinceId) || loadingDistricts}
               loading={loadingDistricts}
               options={toOptions(districts)}
@@ -461,7 +468,7 @@ export function LocationHierarchySelect({
             <SearchSelect
               label={loc("city")}
               value={value.cityId}
-              placeholder={loadingCities ? "Loading cities..." : (showState && !value.stateProvinceId) ? loc("selectStateFirst") : value.countryId ? loc("selectCity") : loc("selectCountryFirst")}
+              placeholder={loadingCities ? loc("loadingCities") : (showState && !value.stateProvinceId) ? loc("selectStateFirst") : value.countryId ? loc("selectCity") : loc("selectCountryFirst")}
               disabled={disabled || !value.countryId || (showState && !value.stateProvinceId) || loadingCities}
               loading={loadingCities}
               options={toOptions(cities)}
@@ -495,7 +502,7 @@ export function LocationHierarchySelect({
               <SearchSelect
                 label={loc("area")}
                 value={value.areaId ?? ""}
-                placeholder={loadingAreas ? "Loading areas..." : value.cityId ? loc("selectArea") : "Select city first"}
+                placeholder={loadingAreas ? loc("loadingAreas") : value.cityId ? loc("selectArea") : loc("selectCityFirst")}
                 disabled={disabled || !value.cityId || loadingAreas}
                 loading={loadingAreas}
                 options={toOptions(areas)}
@@ -615,6 +622,7 @@ export function LocationQuickCreateModal({
   onClose: () => void;
   onCreated: (newId: string, item: any) => void;
 }) {
+  const lang = useActiveLanguage();
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -627,17 +635,19 @@ export function LocationQuickCreateModal({
   const [zipCode, setZipCode] = useState("");
 
   const typeLabel =
-    type === "district" ? "District / City" :
-    type === "area" ? "Area / Town / Locality / Road" :
-    type ? type.charAt(0).toUpperCase() + type.slice(1) : "";
+    type === "district" ? t(lang, "lqm.type_district") :
+    type === "area" ? t(lang, "lqm.type_area") :
+    type === "state" ? t(lang, "lqm.type_state") :
+    type === "city" ? t(lang, "lqm.type_city") :
+    type === "country" ? t(lang, "lqm.type_country") : "";
 
   const missingParentMessage = useMemo(() => {
-    if (type === "state" && !countryId) return "Please select a Country before adding a State / Province.";
-    if (type === "district" && (!countryId || !stateProvinceId)) return "Please select Country and State / Province before adding a District.";
-    if (type === "city" && !countryId) return "Please select a Country and State before adding a City.";
-    if (type === "area" && (!countryId || !cityId)) return "Please select Country, State, and City before adding a new Area / Road.";
+    if (type === "state" && !countryId) return t(lang, "lqm.missing_state");
+    if (type === "district" && (!countryId || !stateProvinceId)) return t(lang, "lqm.missing_district");
+    if (type === "city" && !countryId) return t(lang, "lqm.missing_city");
+    if (type === "area" && (!countryId || !cityId)) return t(lang, "lqm.missing_area");
     return null;
-  }, [type, countryId, stateProvinceId, cityId]);
+  }, [type, countryId, stateProvinceId, cityId, lang]);
 
   const canSave = useMemo(() => {
     if (!name.trim()) return false;
@@ -702,16 +712,16 @@ export function LocationQuickCreateModal({
   }
 
   const saveButtonLabel = useMemo(() => {
-    if (saving) return "Saving...";
-    if (type === "district") return "Save District";
-    if (type === "area") return "Save Area";
-    if (type === "city") return "Save City";
-    if (type === "state") return "Save State";
-    if (type === "country") return "Save Country";
-    return `Save ${typeLabel}`;
-  }, [saving, type, typeLabel]);
+    if (saving) return t(lang, "common.saving");
+    if (type === "district") return t(lang, "lqm.save_district");
+    if (type === "area") return t(lang, "lqm.save_area");
+    if (type === "city") return t(lang, "lqm.save_city");
+    if (type === "state") return t(lang, "lqm.save_state");
+    if (type === "country") return t(lang, "lqm.save_country");
+    return `${t(lang, "common.save")} ${typeLabel}`;
+  }, [saving, type, typeLabel, lang]);
 
-  const title = `New ${typeLabel}`;
+  const title = `${t(lang, "lqm.new_word")} ${typeLabel}`;
 
   return (
     <SimpleModal title={title} onClose={onClose} className="max-w-md">
@@ -732,60 +742,60 @@ export function LocationQuickCreateModal({
         <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50/70 p-3 text-xs dark:border-blue-900/50 dark:bg-blue-950/40">
           <div className="font-bold text-blue-900 dark:text-blue-200 mb-1.5 flex items-center gap-1.5">
             <MapPin className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-            Parent Location Hierarchy:
+            {t(lang, "lqm.parent_hierarchy")}
           </div>
           <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] text-slate-700 dark:text-slate-300">
-            <div><span className="font-semibold text-slate-500 dark:text-slate-400">Country:</span> {countryName || "Selected"}</div>
-            {type !== "state" && <div><span className="font-semibold text-slate-500 dark:text-slate-400">State / Province:</span> {stateName || "Selected"}</div>}
-            {type === "area" && districtName && <div><span className="font-semibold text-slate-500 dark:text-slate-400">District:</span> {districtName}</div>}
-            {type === "area" && <div><span className="font-semibold text-slate-500 dark:text-slate-400">City / Town:</span> {cityName || "Selected"}</div>}
+            <div><span className="font-semibold text-slate-500 dark:text-slate-400">{t(lang, "lqm.country_word")}</span> {countryName || t(lang, "lqm.selected_word")}</div>
+            {type !== "state" && <div><span className="font-semibold text-slate-500 dark:text-slate-400">{t(lang, "lqm.state_province_word")}</span> {stateName || t(lang, "lqm.selected_word")}</div>}
+            {type === "area" && districtName && <div><span className="font-semibold text-slate-500 dark:text-slate-400">{t(lang, "lqm.district_word")}</span> {districtName}</div>}
+            {type === "area" && <div><span className="font-semibold text-slate-500 dark:text-slate-400">{t(lang, "lqm.city_town_word")}</span> {cityName || t(lang, "lqm.selected_word")}</div>}
           </div>
           <div className="mt-2 pt-1.5 border-t border-blue-200/60 dark:border-blue-900/40 text-[10.5px] font-semibold text-blue-700 dark:text-blue-300">
-            Adding: <span className="underline">{typeLabel}</span> under {type === "area" ? (cityName || "selected City") : type === "city" ? (stateName || "selected State") : type === "district" ? (stateName || "selected State") : (countryName || "selected Country")}
+            {t(lang, "lqm.adding_word")} <span className="underline">{typeLabel}</span> {t(lang, "lqm.under_word")} {type === "area" ? (cityName || t(lang, "lqm.selected_city")) : type === "city" ? (stateName || t(lang, "lqm.selected_state")) : type === "district" ? (stateName || t(lang, "lqm.selected_state")) : (countryName || t(lang, "lqm.selected_country"))}
           </div>
         </div>
       )}
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label>{typeLabel} Name *</Label>
+          <Label>{typeLabel} {t(lang, "lqm.name_field")}</Label>
           <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder={`Enter ${typeLabel.toLowerCase()} name`}
+            placeholder={`${t(lang, "lqm.enter_name_ph")}`}
           />
         </div>
 
         {type === "country" && (
           <div className="space-y-2">
-            <Label>Country Code (ISO2) *</Label>
+            <Label>{t(lang, "lqm.iso2_label")}</Label>
             <Input
               maxLength={2}
               value={iso2}
               onChange={(e) => setIso2(e.target.value.toUpperCase())}
-              placeholder="e.g. PK"
+              placeholder={t(lang, "lqm.iso2_ph")}
             />
           </div>
         )}
 
         {(type === "state" || type === "district" || type === "city" || type === "area") && (
           <div className="space-y-2">
-            <Label>{type === "area" ? "Area / Town / Locality / Road Code" : `${typeLabel} Code`}</Label>
+            <Label>{type === "area" ? t(lang, "lqm.area_code_label") : `${typeLabel} Code`}</Label>
             <Input
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              placeholder={`Enter ${type === "area" ? "road code" : `${typeLabel.toLowerCase()} code`} (optional)`}
+              placeholder={type === "area" ? t(lang, "lqm.road_code_ph") : t(lang, "lqm.code_ph")}
             />
           </div>
         )}
 
         {(type === "city" || type === "area") && (
           <div className="space-y-2">
-            <Label>ZIP / Postal Code</Label>
+            <Label>{t(lang, "lqm.zip_label")}</Label>
             <Input
               value={zipCode}
               onChange={(e) => setZipCode(e.target.value)}
-              placeholder="e.g. 86000"
+              placeholder={t(lang, "lqm.zip_ph")}
             />
             {type === "area" && (
               <p className="text-[10px] text-slate-500 leading-tight">
@@ -803,7 +813,7 @@ export function LocationQuickCreateModal({
             onClick={onClose}
             disabled={saving}
           >
-            Cancel
+            {t(lang, "common.cancel")}
           </Button>
           <Button
             type="button"

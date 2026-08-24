@@ -18,6 +18,8 @@ import {
 import { createWarehouse, updateWarehouse, type WarehouseRecord } from "@/features/warehouses/warehouse-api";
 import { CustomerPicker } from "@/features/customers/components/customer-picker";
 import { apiGet } from "@/lib/api/client";
+import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 const WAREHOUSE_TYPES = [
   "Normal Storage",
@@ -29,6 +31,21 @@ const WAREHOUSE_TYPES = [
 ];
 
 const STATUS_OPTIONS = ["Active", "Inactive", "Under Maintenance", "Closed"];
+
+const WAREHOUSE_TYPE_KEYS: Record<string, "whf.type_normal_storage" | "whf.type_cold_store" | "whf.type_bonded_warehouse" | "whf.type_automated_warehouse" | "whf.type_distribution_center" | "whf.type_fulfillment_center"> = {
+  "Normal Storage": "whf.type_normal_storage",
+  "Cold Store": "whf.type_cold_store",
+  "Bonded Warehouse": "whf.type_bonded_warehouse",
+  "Automated Warehouse": "whf.type_automated_warehouse",
+  "Distribution Center": "whf.type_distribution_center",
+  "Fulfillment Center": "whf.type_fulfillment_center",
+};
+const STATUS_KEYS: Record<string, "whf.status_active" | "whf.status_inactive" | "whf.status_under_maintenance" | "whf.status_closed"> = {
+  "Active": "whf.status_active",
+  "Inactive": "whf.status_inactive",
+  "Under Maintenance": "whf.status_under_maintenance",
+  "Closed": "whf.status_closed",
+};
 
 type WarehouseFormState = {
   warehouseName: string;
@@ -71,6 +88,7 @@ export function WarehouseForm({
   onSave,
   onCancel
 }: WarehouseFormProps) {
+  const lang = useActiveLanguage();
   const [form, setForm] = useState<WarehouseFormState>(emptyForm);
   const [location, setLocation] = useState<LocationHierarchyValue>({
     countryId: "",
@@ -286,14 +304,14 @@ export function WarehouseForm({
           </div>
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-indigo-600">
-              {mode === "standalone" ? "Settings / Master Forms" : "Warehouse Master Form"}
+              {mode === "standalone" ? t(lang, "whf.settings_master_forms") : t(lang, "whf.master_form_label")}
             </p>
             <h1 className={mode === "standalone" ? "mt-0.5 text-2xl font-bold tracking-tight" : "text-lg font-bold"}>
-              Customer Warehouse
+              {t(lang, "whf.title")}
             </h1>
             {mode === "standalone" && (
               <p className="text-sm text-muted-foreground">
-                Register warehouses or storage facilities connected with the company
+                {t(lang, "whf.subtitle")}
               </p>
             )}
           </div>
@@ -306,15 +324,15 @@ export function WarehouseForm({
           }
         >
           <CheckCircle2 className="h-4 w-4" aria-hidden />
-          {isReady ? "Ready to Save" : "Draft"}
+          {isReady ? t(lang, "whf.ready_to_save") : t(lang, "status.draft")}
         </span>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs font-semibold text-slate-500 mb-2">
         {[
-          { id: 1, label: "1. Warehouse Details" },
-          { id: 2, label: "2. Location & Contact" },
-          { id: 3, label: "3. Review & Save" },
+          { id: 1, label: t(lang, "whf.step1_tab") },
+          { id: 2, label: t(lang, "whf.step2_tab") },
+          { id: 3, label: t(lang, "whf.step3_tab") },
         ].map((s) => {
           const active = currentStep === s.id;
           const completed = currentStep > s.id;
@@ -352,20 +370,20 @@ export function WarehouseForm({
             <section className="space-y-5 rounded-lg border bg-card p-5 shadow-sm">
               <div className="flex items-center gap-2 border-b pb-3">
                 <Warehouse className="h-4 w-4 text-indigo-600" aria-hidden />
-                <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">Warehouse Details</h2>
+                <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">{t(lang, "whf.details_section")}</h2>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold">Warehouse Name *</Label>
+                  <Label className="text-xs font-semibold">{t(lang, "whf.warehouse_name")}</Label>
                   <Input
                     value={form.warehouseName}
                     onChange={(e) => set("warehouseName", e.target.value)}
-                    placeholder="Enter warehouse name"
+                    placeholder={t(lang, "whf.name_placeholder")}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold">Warehouse Owner</Label>
+                  <Label className="text-xs font-semibold">{t(lang, "whf.warehouse_owner")}</Label>
                   <CustomerPicker
                     label=""
                     value={ownerCustomerId}
@@ -377,24 +395,24 @@ export function WarehouseForm({
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold">Warehouse Type *</Label>
+                  <Label className="text-xs font-semibold">{t(lang, "whf.warehouse_type")}</Label>
                   <select
                     value={form.warehouseType}
                     onChange={(e) => set("warehouseType", e.target.value)}
                     className={selectClass}
                   >
-                    {WAREHOUSE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                    {WAREHOUSE_TYPES.map((wt) => <option key={wt} value={wt}>{t(lang, WAREHOUSE_TYPE_KEYS[wt])}</option>)}
                   </select>
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold">Status *</Label>
+                  <Label className="text-xs font-semibold">{t(lang, "whf.status_label")}</Label>
                   <select
                     value={form.status}
                     onChange={(e) => set("status", e.target.value)}
                     className={selectClass}
                   >
-                    {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                    {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{t(lang, STATUS_KEYS[s])}</option>)}
                   </select>
                 </div>
               </div>
@@ -406,7 +424,7 @@ export function WarehouseForm({
             <section className="space-y-5 rounded-lg border bg-card p-5 shadow-sm">
               <div className="flex items-center gap-2 border-b pb-3">
                 <Globe className="h-4 w-4 text-indigo-600" aria-hidden />
-                <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">Location & Contact</h2>
+                <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">{t(lang, "whf.location_contact")}</h2>
               </div>
 
               <LocationHierarchySelect
@@ -417,25 +435,25 @@ export function WarehouseForm({
               />
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Full Address</Label>
+                <Label className="text-xs font-semibold">{t(lang, "cbs.full_address")}</Label>
                 <Input
                   value={form.fullAddress}
                   onChange={(e) => set("fullAddress", e.target.value)}
-                  placeholder="Enter full address or street"
+                  placeholder={t(lang, "whf.address_placeholder")}
                 />
               </div>
 
               <div className="space-y-3 pt-2">
                 {ownerDetails && (
                   <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-3 text-[11px]">
-                    <div className="mb-2 font-bold text-emerald-800">Linked Owner Details</div>
+                    <div className="mb-2 font-bold text-emerald-800">{t(lang, "whf.linked_owner_details")}</div>
                     <div className="grid gap-2 sm:grid-cols-2">
                       <div>
-                        <div className="text-[10px] uppercase tracking-wider text-emerald-700">Owner / Business</div>
+                        <div className="text-[10px] uppercase tracking-wider text-emerald-700">{t(lang, "whf.owner_business")}</div>
                         <div className="font-semibold text-slate-800">{ownerDetails.customer_name || "-"}</div>
                       </div>
                       <div>
-                        <div className="text-[10px] uppercase tracking-wider text-emerald-700">Company</div>
+                        <div className="text-[10px] uppercase tracking-wider text-emerald-700">{t(lang, "whf.company")}</div>
                         <div className="font-semibold text-slate-800">{ownerDetails.company_name || "-"}</div>
                       </div>
                       {ownerContactSummary.map((item) => (
@@ -450,7 +468,7 @@ export function WarehouseForm({
                 <div className="flex items-center justify-between border-b pb-2">
                   <div className="flex items-center gap-2">
                     <Globe className="h-4.5 w-4.5 text-indigo-600" />
-                    <h3 className="font-semibold text-slate-800 text-sm">Contacts & Contracts</h3>
+                    <h3 className="font-semibold text-slate-800 text-sm">{t(lang, "whf.contacts_contracts")}</h3>
                   </div>
                   <Button
                     type="button"
@@ -459,7 +477,7 @@ export function WarehouseForm({
                     onClick={() => setForm(p => ({ ...p, contracts: [...p.contracts, { type: "Contract Number", value: "" }] }))}
                     className="h-7 text-xs border-indigo-200 text-indigo-700 hover:bg-indigo-50 px-2.5 rounded-md font-semibold"
                   >
-                    + Add Contract/Contact
+                    {t(lang, "whf.add_contract_contact")}
                   </Button>
                 </div>
                 <div className="space-y-3">
@@ -468,7 +486,7 @@ export function WarehouseForm({
                     return (
                       <div key={idx} className="flex gap-2 items-end">
                         <div className="w-1/3 space-y-1">
-                          <Label className="text-[10px] font-semibold text-slate-500">Type</Label>
+                          <Label className="text-[10px] font-semibold text-slate-500">{t(lang, "whf.type_word")}</Label>
                           <select
                             value={isCustom ? "Custom" : contact.type}
                             onChange={(e) => {
@@ -479,15 +497,15 @@ export function WarehouseForm({
                             }}
                             className={selectClass + " h-9 text-xs px-2"}
                           >
-                            <option value="Contract Number">Contract Number</option>
-                            <option value="Phone Number">Phone Number</option>
-                            <option value="Email Address">Email Address</option>
-                            <option value="Landline">Landline</option>
-                            <option value="Custom">+ Custom Type</option>
+                            <option value="Contract Number">{t(lang, "whf.contract_number")}</option>
+                            <option value="Phone Number">{t(lang, "whf.phone_number")}</option>
+                            <option value="Email Address">{t(lang, "whf.email_address")}</option>
+                            <option value="Landline">{t(lang, "whf.landline")}</option>
+                            <option value="Custom">{t(lang, "whf.custom_type_option")}</option>
                           </select>
                         </div>
                         <div className="flex-1 space-y-1">
-                          <Label className="text-[10px] font-semibold text-slate-500">Value</Label>
+                          <Label className="text-[10px] font-semibold text-slate-500">{t(lang, "whf.value_word")}</Label>
                           <Input
                             value={contact.value}
                             onChange={(e) => {
@@ -500,7 +518,7 @@ export function WarehouseForm({
                                 ? "email@example.com"
                                 : contact.type === "Phone Number"
                                 ? "+971 50 1234567"
-                                : "Reference / ID / Number"
+                                : t(lang, "whf.reference_placeholder")
                             }
                             className="h-9 text-xs font-mono"
                           />
@@ -533,27 +551,27 @@ export function WarehouseForm({
             <section className="space-y-5 rounded-lg border bg-card p-5 shadow-sm">
               <div className="flex items-center gap-2 border-b pb-3">
                 <Save className="h-4 w-4 text-indigo-600" aria-hidden />
-                <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">Review & Save</h2>
+                <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">{t(lang, "whf.review_save")}</h2>
               </div>
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 text-xs">
                 <div className="rounded-lg border bg-slate-50 p-3">
-                  <p className="text-[10px] uppercase tracking-wider text-slate-500">Warehouse</p>
+                  <p className="text-[10px] uppercase tracking-wider text-slate-500">{t(lang, "whf.warehouse_word")}</p>
                   <p className="mt-1 font-bold text-slate-900">{form.warehouseName || "-"}</p>
                 </div>
                 <div className="rounded-lg border bg-slate-50 p-3">
-                  <p className="text-[10px] uppercase tracking-wider text-slate-500">Owner</p>
+                  <p className="text-[10px] uppercase tracking-wider text-slate-500">{t(lang, "whf.owner_word")}</p>
                   <p className="mt-1 font-bold text-slate-900">{form.ownerName || "-"}</p>
                 </div>
                 <div className="rounded-lg border bg-slate-50 p-3">
-                  <p className="text-[10px] uppercase tracking-wider text-slate-500">Type / Status</p>
-                  <p className="mt-1 font-bold text-slate-900">{form.warehouseType || "-"} · {form.status || "-"}</p>
+                  <p className="text-[10px] uppercase tracking-wider text-slate-500">{t(lang, "whf.type_status")}</p>
+                  <p className="mt-1 font-bold text-slate-900">{form.warehouseType ? t(lang, WAREHOUSE_TYPE_KEYS[form.warehouseType]) : "-"} · {form.status ? t(lang, STATUS_KEYS[form.status]) : "-"}</p>
                 </div>
                 <div className="rounded-lg border bg-slate-50 p-3 md:col-span-2 xl:col-span-3">
-                  <p className="text-[10px] uppercase tracking-wider text-slate-500">Address</p>
+                  <p className="text-[10px] uppercase tracking-wider text-slate-500">{t(lang, "cbs.address_word")}</p>
                   <p className="mt-1 font-semibold text-slate-800">{form.fullAddress || "-"}</p>
                 </div>
                 <div className="rounded-lg border bg-slate-50 p-3 md:col-span-2 xl:col-span-3">
-                  <p className="text-[10px] uppercase tracking-wider text-slate-500">Contacts / Contracts</p>
+                  <p className="text-[10px] uppercase tracking-wider text-slate-500">{t(lang, "whf.contacts_contracts_short")}</p>
                   <div className="mt-2 grid gap-2 md:grid-cols-2">
                     {form.contracts.filter((item) => item.value).map((item, index) => (
                       <div key={`${item.type}-${index}`} className="flex items-center justify-between rounded border bg-white px-2 py-1.5">
@@ -562,7 +580,7 @@ export function WarehouseForm({
                       </div>
                     ))}
                     {form.contracts.filter((item) => item.value).length === 0 && (
-                      <div className="text-slate-400">No contact values added yet.</div>
+                      <div className="text-slate-400">{t(lang, "whf.no_contacts")}</div>
                     )}
                   </div>
                 </div>
@@ -592,9 +610,9 @@ export function WarehouseForm({
               disabled={currentStep === 1}
               className="border-slate-200 text-slate-700 font-medium h-10 px-4"
             >
-              Back
+              {t(lang, "common.back")}
             </Button>
-            
+
             <div className="flex gap-2">
               <Button
                 type="button"
@@ -602,7 +620,7 @@ export function WarehouseForm({
                 onClick={onCancel ?? handleReset}
                 className="h-10 px-4"
               >
-                Cancel
+                {t(lang, "common.cancel")}
               </Button>
               {currentStep < 3 ? (
                 <Button
@@ -610,7 +628,7 @@ export function WarehouseForm({
                   onClick={() => setCurrentStep((Math.min(3, currentStep + 1)) as any)}
                   className="rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-sm h-10 px-8 gap-2"
                 >
-                  Next
+                  {t(lang, "common.next")}
                 </Button>
               ) : (
                 <Button
@@ -620,7 +638,7 @@ export function WarehouseForm({
                   className="rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition gap-2 shadow-sm font-medium h-10 px-5"
                 >
                   <Save className="h-4 w-4" aria-hidden />
-                  {saving ? "Saving..." : "Save Warehouse"}
+                  {saving ? t(lang, "common.saving") : t(lang, "whf.save_warehouse")}
                 </Button>
               )}
             </div>
@@ -632,18 +650,18 @@ export function WarehouseForm({
           <div className="flex items-center justify-between border-b pb-3 mb-4">
             <div className="flex items-center gap-2">
               <Warehouse className="h-4 w-4 text-indigo-600" aria-hidden />
-              <h2 className="font-semibold text-sm">Warehouse Preview</h2>
+              <h2 className="font-semibold text-sm">{t(lang, "whf.preview")}</h2>
             </div>
             <div>
               {savedWarehouse ? (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 border border-emerald-200">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Saved Record
+                  {t(lang, "whf.saved_record")}
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-200">
                   <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                  Live Draft
+                  {t(lang, "whf.live_draft")}
                 </span>
               )}
             </div>
@@ -653,20 +671,20 @@ export function WarehouseForm({
             {savedWarehouse && (
               <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-2.5 text-center mb-3">
                 <CheckCircle2 className="h-5 w-5 text-emerald-600 mx-auto mb-1" />
-                <p className="text-emerald-700 font-semibold text-xs">Saved Successfully</p>
+                <p className="text-emerald-700 font-semibold text-xs">{t(lang, "whf.saved_successfully")}</p>
               </div>
             )}
             <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Warehouse Name</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{t(lang, "whf.warehouse_name_word")}</p>
               <p className="font-bold text-sm mt-0.5 text-slate-900">{savedWarehouse ? savedWarehouse.warehouse_name : form.warehouseName || "-"}</p>
             </div>
             <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Owner Name</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{t(lang, "whf.owner_name_word")}</p>
               <p className="font-semibold mt-0.5 text-slate-800">{savedWarehouse ? savedWarehouse.owner_name : form.ownerName || "-"}</p>
             </div>
             {ownerContactSummary.length > 0 && !savedWarehouse && (
               <div>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Owner Master Details</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{t(lang, "whf.owner_master_details")}</p>
                 <div className="mt-1 space-y-1">
                   {ownerContactSummary.map((item) => (
                     <div key={item.label} className="flex justify-between items-center text-slate-800">
@@ -678,11 +696,11 @@ export function WarehouseForm({
               </div>
             )}
             <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Type</p>
-              <p className="font-semibold mt-0.5 text-slate-900">{savedWarehouse ? savedWarehouse.warehouse_type : form.warehouseType || "-"}</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{t(lang, "whf.type_word")}</p>
+              <p className="font-semibold mt-0.5 text-slate-900">{(() => { const wt = savedWarehouse ? savedWarehouse.warehouse_type : form.warehouseType; return wt ? (WAREHOUSE_TYPE_KEYS[wt] ? t(lang, WAREHOUSE_TYPE_KEYS[wt]) : wt) : "-"; })()}</p>
             </div>
             <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Contacts / Contracts</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{t(lang, "whf.contacts_contracts_short")}</p>
               <div className="mt-1 space-y-1">
                 {(savedWarehouse ? JSON.parse(savedWarehouse.contact_number || "[]") : form.contracts).map((c: any, i: number) => (
                   c.value ? (
@@ -696,9 +714,9 @@ export function WarehouseForm({
             </div>
             
             <div className="flex justify-between border-t pt-2">
-              <span className="text-muted-foreground">Status</span>
+              <span className="text-muted-foreground">{t(lang, "common.status")}</span>
               <span className={`font-bold ${savedWarehouse ? (savedWarehouse.status === "Active" ? "text-emerald-600" : "text-amber-600") : (form.status === "Active" ? "text-emerald-600" : "text-amber-600")}`}>
-                {savedWarehouse ? savedWarehouse.status : form.status}
+                {(() => { const s = savedWarehouse ? savedWarehouse.status : form.status; return s ? (STATUS_KEYS[s] ? t(lang, STATUS_KEYS[s]) : s) : s; })()}
               </span>
             </div>
 
