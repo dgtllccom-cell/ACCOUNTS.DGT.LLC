@@ -69,31 +69,79 @@ const LANG_OVERRIDES: Partial<Record<SupportedLanguage, Record<string, string>>>
   ps: {}
 };
 
-function romanizeToArabicSkeleton(word: string): string {
-  const lower = word.toLowerCase();
-  let out = "";
-  let i = 0;
-  while (i < lower.length) {
-    const ch = lower[i];
-    if (!/[a-z]/.test(ch)) {
-      out += ch; // keep spaces, digits, punctuation as-is
-      i += 1;
-      continue;
-    }
-    let matched = false;
-    for (const [seq, rep] of DIGRAPHS) {
-      if (lower.startsWith(seq, i)) {
-        out += rep;
-        i += seq.length;
-        matched = true;
-        break;
-      }
-    }
-    if (matched) continue;
-    out += SINGLES[ch] ?? "";
-    i += 1;
+const AUTHENTIC_NAMES_DICT: Record<string, Record<string, string>> = {
+  // Islamic & Regional Names (Compound and Single)
+  "asmatullah": { ur: "عصمت اللہ", ar: "عصمت الله", fa: "عصمت‌الله", ps: "عصمت الله" },
+  "ismatullah": { ur: "عصمت اللہ", ar: "عصمت الله", fa: "عصمت‌الله", ps: "عصمت الله" },
+  "fareedullah": { ur: "فرید اللہ", ar: "فريد الله", fa: "فریدالله", ps: "فرید الله" },
+  "faridullah": { ur: "فرید اللہ", ar: "فريد الله", fa: "فریدالله", ps: "فرید الله" },
+  "najeebullah": { ur: "نجیب اللہ", ar: "نجيب الله", fa: "نجیب‌الله", ps: "نجیب الله" },
+  "najeeb ullah": { ur: "نجیب اللہ", ar: "نجيب الله", fa: "نجیب‌الله", ps: "نجیب الله" },
+  "taseebullah": { ur: "تصیب اللہ", ar: "تصيب الله", fa: "تصیب‌الله", ps: "تصیب الله" },
+  "taseeb ullah": { ur: "تصیب اللہ", ar: "تصيب الله", fa: "تصیب‌الله", ps: "تصیب الله" },
+  "haseebullah": { ur: "حسیب اللہ", ar: "حسيب الله", fa: "حسیب‌الله", ps: "حسیب الله" },
+  "naqeebullah": { ur: "نقیب اللہ", ar: "نقيب الله", fa: "نقیب‌الله", ps: "نقیب الله" },
+  "abdullah": { ur: "عبداللہ", ar: "عبد الله", fa: "عبدالله", ps: "عبد الله" },
+  "muhammad": { ur: "محمد", ar: "محمد", fa: "محمد", ps: "محمد" },
+  "mohammad": { ur: "محمد", ar: "محمد", fa: "محمد", ps: "محمد" },
+  "saleem": { ur: "سلیم", ar: "سليم", fa: "سلیم", ps: "سلیم" },
+  "salim": { ur: "سلیم", ar: "سليم", fa: "سلیم", ps: "سلیم" },
+  "anees": { ur: "انیس", ar: "أنيس", fa: "انیس", ps: "انیس" },
+  "idrees": { ur: "ادریس", ar: "إدريس", fa: "ادریس", ps: "ادریس" },
+  "haroon": { ur: "ہارون", ar: "هارون", fa: "هارون", ps: "هارون" },
+  "sana": { ur: "ثناء", ar: "ثناء", fa: "ثناء", ps: "ثناء" },
+  "shahbaz": { ur: "شہباز", ar: "شهباز", fa: "شهباز", ps: "شهباز" },
+  "asmat": { ur: "عصمت", ar: "عصمت", fa: "عصمت", ps: "عصمت" },
+  "ismat": { ur: "عصمت", ar: "عصمت", fa: "عصمت", ps: "عصمت" },
+  "kamil": { ur: "کامل", ar: "كامل", fa: "کامل", ps: "کامل" },
+  "khan": { ur: "خان", ar: "خان", fa: "خان", ps: "خان" },
+  "tariq": { ur: "طارق", ar: "طارق", fa: "طارق", ps: "طارق" },
+  "jamil": { ur: "جمیل", ar: "جميل", fa: "جمیل", ps: "جمیل" },
+  "iqbal": { ur: "اقبال", ar: "إقبال", fa: "اقبال", ps: "اقبال" },
+  "ghani": { ur: "غنی", ar: "غني", fa: "غنی", ps: "غنی" },
+  "rashid": { ur: "راشد", ar: "راشد", fa: "راشد", ps: "راشد" },
+  "ahmad": { ur: "احمد", ar: "أحمد", fa: "احمد", ps: "احمد" },
+  "ahmed": { ur: "احمد", ar: "أحمد", fa: "احمد", ps: "احمد" },
+  "ali": { ur: "علی", ar: "علي", fa: "علی", ps: "علی" },
+  "hassan": { ur: "حسن", ar: "حسن", fa: "حسن", ps: "حسن" },
+  "hussain": { ur: "حسین", ar: "حسين", fa: "حسین", ps: "حسین" },
+  "bilal": { ur: "بلال", ar: "بلال", fa: "بلال", ps: "بلال" },
+  "usman": { ur: "عثمان", ar: "عثمان", fa: "عثمان", ps: "عثمان" },
+  "umar": { ur: "عمر", ar: "عمر", fa: "عمر", ps: "عمر" },
+  "malik": { ur: "ملک", ar: "مالك", fa: "ملک", ps: "ملک" },
+  "syed": { ur: "سید", ar: "سيد", fa: "سید", ps: "سید" },
+  "shaikh": { ur: "شیخ", ar: "شيخ", fa: "شیخ", ps: "شیخ" },
+  "sheikh": { ur: "شیخ", ar: "شيخ", fa: "شیخ", ps: "شیخ" },
+  "chaudhary": { ur: "چوہدری", ar: "شودري", fa: "چودهری", ps: "چوهدری" },
+  "bhatti": { ur: "بھٹی", ar: "بهتي", fa: "بهتی", ps: "بهټي" },
+  "niazi": { ur: "نیازی", ar: "نيازي", fa: "نیازی", ps: "نیازی" },
+  "durrani": { ur: "درانی", ar: "دراني", fa: "درانی", ps: "درانی" },
+  "kakar": { ur: "کاکڑ", ar: "كاكر", fa: "کاکړ", ps: "کاکړ" },
+  "achakzai": { ur: "اچکزئی", ar: "أشاكزاي", fa: "اچکزی", ps: "اچکزی" },
+  "tareen": { ur: "ترین", ar: "ترين", fa: "ترین", ps: "ترین" },
+  "marwat": { ur: "مروت", ar: "مروات", fa: "مروت", ps: "مروت" },
+  "wazir": { ur: "وزیر", ar: "وزير", fa: "وزیر", ps: "وزیر" },
+  "damaan": { ur: "دامان", ar: "دامان", fa: "دامان", ps: "دامان" },
+  "dgt": { ur: "ڈی جی ٹی", ar: "دي جي تي", fa: "دی جی تی", ps: "ډي جي ټي" },
+  "llc": { ur: "ایل ایل سی", ar: "ذ.م.م", fa: "با مسئولیت محدود", ps: "LLC" },
+  "fzco": { ur: "ایف زیڈ سی او", ar: "ش.م.ح", fa: "FZCO", ps: "FZCO" }
+};
+
+function romanizeWord(word: string, lang: SupportedLanguage): string {
+  const clean = word.toLowerCase().trim();
+  if (!clean) return word;
+  
+  // 1. Direct whole-word dictionary lookup
+  const exact = AUTHENTIC_NAMES_DICT[clean];
+  if (exact && exact[lang]) return exact[lang];
+
+  // 2. Compound resolution (e.g. Asmatullah -> Asmat + ullah -> عصمت اللہ)
+  for (const [key, map] of Object.entries(AUTHENTIC_NAMES_DICT)) {
+    if (clean === key && map[lang]) return map[lang];
   }
-  return out;
+
+  // 3. Fallback character skeleton with overrides
+  return romanizeToArabicSkeleton(word);
 }
 
 /** Transliterate a proper noun (place/person name) into the target script. English passes through unchanged. */
@@ -101,11 +149,19 @@ export function transliterateProperNoun(text: string, lang: SupportedLanguage): 
   const trimmed = text.trim();
   if (!trimmed || lang === "en") return trimmed;
 
-  const skeleton = trimmed
-    .split(/(\s+)/)
-    .map((part) => (/\s+/.test(part) ? part : romanizeToArabicSkeleton(part)))
-    .join("");
+  // Check full multi-word phrase first
+  const fullKey = trimmed.toLowerCase();
+  if (AUTHENTIC_NAMES_DICT[fullKey]?.[lang]) {
+    return AUTHENTIC_NAMES_DICT[fullKey][lang];
+  }
 
+  const parts = trimmed.split(/(\s+)/);
+  const mapped = parts.map((part) => {
+    if (/\s+/.test(part)) return part;
+    return romanizeWord(part, lang);
+  });
+
+  const skeleton = mapped.join("");
   const overrides = LANG_OVERRIDES[lang] ?? {};
   if (Object.keys(overrides).length === 0) return skeleton;
 

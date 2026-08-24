@@ -27,6 +27,7 @@ import { EmployeeLedgerPanel } from "@/features/hr-payroll/components/employee-l
 import { openUserA4ReportWindow } from "@/lib/reports/open-user-a4-report-window";
 import { Th } from "@/components/ui/translated-th";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { transliterateProperNoun } from "@/lib/i18n/transliteration";
 
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
@@ -544,11 +545,9 @@ function translateGeneralOffice(label: string, lang: SupportedLanguage) {
     if (lang === "ps") return "عصمت الله عبدالله";
   }
 
-  if (lower.includes("anees") || lower.includes("anis") || trimmed.includes("انیس")) {
-    if (lang === "ur") return "محمد انیس";
-    if (lang === "ar") return "محمد أنيس";
-    if (lang === "fa") return "محمد انیس";
-    if (lang === "ps") return "محمد انیس";
+  if (/[a-zA-Z]/.test(trimmed)) {
+    const transliterated = transliterateProperNoun(trimmed, lang);
+    if (transliterated && transliterated !== trimmed) return transliterated;
   }
 
   return translateHeader(lang, trimmed);

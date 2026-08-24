@@ -739,7 +739,7 @@ export function LedgerReportView({
         {selectedLedger ? (
           <div className="flex items-center gap-3 rounded-lg border bg-slate-50/50 p-2 px-3 shadow-sm dark:bg-slate-900/50">
             <div className="text-sm">
-              <span className="text-muted-foreground">Account: </span>
+              <span className="text-muted-foreground">{t(lang, "ledger.lgrv_account_colon", "Account:")}</span>
               <span className="font-bold">{selectedLedger.accountName || selectedLedger.ledgerName || "-"}</span>
             </div>
             <span className={badgeClass(selectedLedger.status === "inactive" ? "inactive" : "active")}>
@@ -752,7 +752,7 @@ export function LedgerReportView({
                 void loadSelectedStatement(selectedLedger.ledgerId);
               }
             }}>
-              View Ledger
+              {t(lang, "ledger.view_ledger", "View Ledger")}
             </Button>
           </div>
         ) : null}
@@ -851,7 +851,7 @@ export function LedgerReportView({
               {dateDropdownOpen ? (
                 <div className="absolute right-0 md:left-0 mt-2 z-30 w-64 p-3 bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100 rounded-lg border border-slate-200 dark:border-slate-800 shadow-xl space-y-3">
                   <div className="space-y-1">
-                    <span className="text-[11px] text-slate-500 font-semibold">From Date</span>
+                    <span className="text-[11px] text-slate-500 font-semibold">{t(lang, "bankroz.from_date", "From Date")}</span>
                     <Input
                       type="date"
                       value={fromDate}
@@ -863,7 +863,7 @@ export function LedgerReportView({
                     />
                   </div>
                   <div className="space-y-1">
-                    <span className="text-[11px] text-slate-500 font-semibold">To Date</span>
+                    <span className="text-[11px] text-slate-500 font-semibold">{t(lang, "bankroz.to_date", "To Date")}</span>
                     <Input
                       type="date"
                       value={toDate}
@@ -888,7 +888,7 @@ export function LedgerReportView({
                         void loadReport(ledgerId, accountSearch);
                       }}
                     >
-                      Reset
+                      {t(lang, "common.reset", "Reset")}
                     </Button>
                     <Button
                       type="button"
@@ -899,7 +899,7 @@ export function LedgerReportView({
                         void loadReport(ledgerId, accountSearch);
                       }}
                     >
-                      Apply
+                      {t(lang, "god.apply", "Apply")}
                     </Button>
                   </div>
                 </div>
@@ -933,7 +933,7 @@ export function LedgerReportView({
               disabled={loading} 
               className="h-10 font-semibold text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
             >
-              Reset
+              {t(lang, "common.reset", "Reset")}
             </Button>
 
             {/* 9. Actions button pushed to far right corner */}
@@ -945,7 +945,7 @@ export function LedgerReportView({
                 onClick={() => setMenuOpen((v) => !v)}
               >
                 <MoreVertical className="h-4 w-4 text-slate-600 dark:text-slate-300" />
-                Actions
+                {t(lang, "form.actions", "Actions")}
               </Button>
               {menuOpen ? (
                 <div className="absolute right-0 top-full z-20 mt-2 w-56 overflow-hidden rounded-xl border bg-background shadow-xl bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">
@@ -1373,10 +1373,10 @@ export function LedgerReportView({
                       <td className="text-center py-12 text-slate-500 bg-slate-50/50 dark:bg-slate-900/30" colSpan={columns.length}>
                         <div className="flex flex-col items-center justify-center gap-1.5 py-4">
                           <span className="font-semibold text-slate-700 dark:text-slate-300 text-sm">
-                            No ledger entries found for the selected date range.
+                            {t(lang, "ledger.lgrv_no_entries_range", "No ledger entries found for the selected date range.")}
                           </span>
                           <span className="text-xs text-slate-400">
-                            Try adjusting your date range, scope, or search filters to view records.
+                            {t(lang, "ledger.lgrv_adjust_filters_msg", "Try adjusting your date range, scope, or search filters to view records.")}
                           </span>
                         </div>
                       </td>
@@ -1460,41 +1460,41 @@ export function LedgerReportView({
       >
         {loadingStatement ? (
           <div className="flex items-center justify-center py-8">
-            <div className="text-sm text-muted-foreground animate-pulse">Loading ledger statement lines...</div>
+            <div className="text-sm text-muted-foreground animate-pulse">{t(lang, "ledger.loading_ledger_statement_lines", "Loading ledger statement lines...")}</div>
           </div>
         ) : statement?.lines ? (
           <div className="space-y-6">
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Branch</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{t(lang, "report.branch", "Branch")}</span>
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">{selectedLedger ? buildBranchLabel(selectedLedger) : "-"}</span>
               </div>
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Category</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{t(lang, "god.asset_category", "Category")}</span>
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">{fmtKind(selectedLedger?.accountKind)}</span>
               </div>
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Status</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{t(lang, "log.tbl_status", "Status")}</span>
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">{selectedLedger?.status === "active" ? "Active" : "Inactive"}</span>
               </div>
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Company</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{t(lang, "hr.pp_company", "Company")}</span>
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">{selectedLedger?.companyName || "-"}</span>
               </div>
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Statement Entries</h3>
+              <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">{t(lang, "ledger.lgrv_statement_entries", "Statement Entries")}</h3>
               <div className="overflow-x-auto rounded-lg border dark:border-slate-800">
                 <table className="w-full text-xs text-left">
                   <thead className="bg-slate-900 text-white dark:bg-slate-800">
                     <tr>
-                      <th className="px-3 py-2">Date</th>
-                      <th className="px-3 py-2">Voucher / Ref</th>
-                      <th className="px-3 py-2">Description</th>
-                      <th className="px-3 py-2 text-right">Debit</th>
-                      <th className="px-3 py-2 text-right">Credit</th>
-                      <th className="px-3 py-2 text-right">Balance</th>
+                      <th className="px-3 py-2">{t(lang, "bdash.col_date", "Date")}</th>
+                      <th className="px-3 py-2">{t(lang, "ledger.lgrv_voucher_ref", "Voucher / Ref")}</th>
+                      <th className="px-3 py-2">{t(lang, "common.description", "Description")}</th>
+                      <th className="px-3 py-2 text-right">{t(lang, "cdash.col_debit", "Debit")}</th>
+                      <th className="px-3 py-2 text-right">{t(lang, "cdash.col_credit", "Credit")}</th>
+                      <th className="px-3 py-2 text-right">{t(lang, "cdash.col_balance", "Balance")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y dark:divide-slate-800">
@@ -1519,7 +1519,7 @@ export function LedgerReportView({
                     })}
                     {displayedLines.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="px-3 py-4 text-center text-muted-foreground italic">No entries for this period.</td>
+                        <td colSpan={6} className="px-3 py-4 text-center text-muted-foreground italic">{t(lang, "ledger.lgrv_no_entries_period", "No entries for this period.")}</td>
                       </tr>
                     )}
                   </tbody>
@@ -1529,15 +1529,15 @@ export function LedgerReportView({
 
             <div className="grid grid-cols-3 gap-3 bg-slate-50 p-4 rounded-xl border dark:bg-slate-900/30 dark:border-slate-800">
               <div>
-                <span className="text-[10px] font-bold text-muted-foreground uppercase">Debit Total</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase">{t(lang, "ledger.lgrv_debit_total", "Debit Total")}</span>
                 <div className="text-sm font-extrabold text-rose-600 mt-0.5">{selectedLedger?.ledgerCurrency} {fmtNumber(displayedLines.reduce((sum, r) => sum + r.debit, 0))}</div>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-muted-foreground uppercase">Credit Total</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase">{t(lang, "ledger.lgrv_credit_total", "Credit Total")}</span>
                 <div className="text-sm font-extrabold text-emerald-600 mt-0.5">{selectedLedger?.ledgerCurrency} {fmtNumber(displayedLines.reduce((sum, r) => sum + r.credit, 0))}</div>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-muted-foreground uppercase">Closing Balance</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase">{t(lang, "bankroz.closing_balance", "Closing Balance")}</span>
                 <div className={cn("text-sm font-extrabold mt-0.5", fmtBalance(displayedLines.length ? displayedLines[displayedLines.length - 1]!.runningBalance : 0, selectedLedger?.normalBalance).color)}>
                   {selectedLedger?.ledgerCurrency} {fmtBalance(displayedLines.length ? displayedLines[displayedLines.length - 1]!.runningBalance : 0, selectedLedger?.normalBalance).text}
                 </div>
@@ -1558,7 +1558,7 @@ function ExportOptions({ onPrint, onExportCsv }: { onPrint: (isPrint: boolean) =
   if (!open) {
     return (
       <Button variant="outline" size="sm" onClick={() => setOpen(true)} className="gap-1">
-        Export Options
+        {t(lang, "ledger.lgrv_export_options", "Export Options")}
         <ChevronRight className="h-4 w-4" />
       </Button>
     );
@@ -1573,11 +1573,11 @@ function ExportOptions({ onPrint, onExportCsv }: { onPrint: (isPrint: boolean) =
         PDF
       </Button>
       <Button type="button" variant="outline" size="sm" onClick={onExportCsv}>
-        Excel
+        {t(lang, "report.builder_excel", "Excel")}
       </Button>
       <Button type="button" variant="default" size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={() => onPrint(true)}>
         <Printer className="mr-2 h-4 w-4" />
-        Print
+        {t(lang, "report.builder_print", "Print")}
       </Button>
     </div>
   );
