@@ -704,7 +704,32 @@ export function CustomerForm({
                           </select>
                         </div>
                         <div className="flex-1 space-y-1">
-                          <Label className="text-[10px] font-semibold text-slate-500">{getLabel("contactValue", lang)}</Label>
+                          <div className="flex items-center justify-between">
+                            <Label className="text-[10px] font-semibold text-slate-500">{getLabel("contactValue", lang)}</Label>
+                            {contact.type !== "Email" && (
+                              <div className="flex items-center gap-1" dir="ltr">
+                                {["+92", "+971", "+93", "+966"].map((cc) => (
+                                  <button
+                                    key={cc}
+                                    type="button"
+                                    onClick={() => {
+                                      const updated = [...contacts];
+                                      const cur = updated[idx].value.trim();
+                                      if (!cur.startsWith("+")) {
+                                        updated[idx].value = `${cc} ${cur}`;
+                                      } else {
+                                        updated[idx].value = `${cc} ${cur.replace(/^\+\d+\s*/, "")}`;
+                                      }
+                                      setContacts(updated);
+                                    }}
+                                    className="text-[9px] px-1 py-0.5 rounded bg-slate-100 hover:bg-teal-50 text-slate-600 hover:text-teal-700 font-mono font-bold border border-slate-200"
+                                  >
+                                    {cc}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                           <Input
                             value={contact.value}
                             onChange={(e) => {
@@ -714,12 +739,13 @@ export function CustomerForm({
                             }}
                             placeholder={
                               contact.type === "Email"
-                                ? "email@example.com"
+                                ? "name@company.com"
                                 : contact.type === "WhatsApp"
                                 ? "+92 300 1234567"
-                                : "Contact Number"
+                                : "+92 333 1234567"
                             }
-                            className="h-9 text-xs bg-white text-slate-900 border-slate-200 font-mono"
+                            dir="ltr"
+                            className="h-9 text-xs bg-white text-slate-900 border-slate-200 font-mono text-left"
                           />
                         </div>
                         {contacts.length > 1 && (
@@ -1004,7 +1030,7 @@ export function CustomerForm({
             <div className="border-t pt-3">
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{getLabel("location", lang)}</p>
               <p className="text-xs text-slate-700 font-semibold mt-0.5">{previewLocation}</p>
-              {cityCode && <p className="text-[10px] text-muted-foreground mt-0.5 font-mono">{getLabel("zipCode", lang)}: {cityCode}</p>}
+              {cityCode && <p className="text-[10px] text-muted-foreground mt-0.5 font-mono" dir="ltr">{getLabel("zipCode", lang)}: {cityCode}</p>}
             </div>
             {address && (
               <div>
@@ -1018,9 +1044,9 @@ export function CustomerForm({
               {contacts.filter(c => c.value.trim()).map((c, idx) => {
                 const label = c.type.startsWith("Custom: ") ? c.type.slice(8) : c.type;
                 return (
-                  <div key={idx} className="flex justify-between">
+                  <div key={idx} className="flex justify-between items-center">
                     <span className="text-slate-500 font-semibold">{label || "Custom"}:</span>
-                    <span className="font-bold text-slate-800 font-mono">{c.value}</span>
+                    <span className="font-bold text-slate-800 font-mono text-left" dir="ltr">{c.value}</span>
                   </div>
                 );
               })}
@@ -1034,9 +1060,9 @@ export function CustomerForm({
               {documents.filter(d => d.number.trim()).map((d, idx) => {
                 const label = d.type.startsWith("Custom: ") ? d.type.slice(8) : d.type;
                 return (
-                  <div key={idx} className="flex justify-between">
+                  <div key={idx} className="flex justify-between items-center">
                     <span className="text-slate-500 font-semibold">{label || "Custom"}:</span>
-                    <span className="font-bold text-slate-800 font-mono">{d.number}</span>
+                    <span className="font-bold text-slate-800 font-mono text-left" dir="ltr">{d.number}</span>
                   </div>
                 );
               })}

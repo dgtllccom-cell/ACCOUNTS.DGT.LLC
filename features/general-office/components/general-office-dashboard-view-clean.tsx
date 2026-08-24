@@ -432,10 +432,17 @@ const generalOfficeLabels: Record<string, Partial<Record<SupportedLanguage, stri
   "Assets Summary": { ur: "اثاثہ جات کا خلاصہ", ar: "ملخص الأصول", fa: "خلاصه اموال", ps: "د شتمنیو لنډیز" },
   "BRANCHES": { ur: "برانچز", ar: "الفروع", fa: "شعب", ps: "څانګې" },
   "QUICK REPORTS": { ur: "فوری رپورٹس", ar: "تقارير سريعة", fa: "گزارش‌های سریع", ps: "چټک راپورونه" },
-  "EMPLOYEES LIST": { ur: "ملازمین کی فہرست", ar: "قائمة الموظفين", fa: "لیست پرسنل", ps: "د کارمندانو لست" },
+  "EMPLOYEES LIST": { ur: "ملازمین و مالکان کی فہرست", ar: "قائمة الموظفين والمالكين", fa: "لیست پرسنل و مالکان", ps: "د کارمندانو او مالکانو لست" },
   "Today": { ur: "آج", ar: "اليوم", fa: "امروز", ps: "نن" },
   "Yesterday": { ur: "گزشتہ کل", ar: "أمس", fa: "دیروز", ps: "پرون" },
   "This Month": { ur: "موجودہ ماہ", ar: "هذا الشهر", fa: "این ماه", ps: "روانه میاشت" },
+  "All Records": { ur: "تمام ریکارڈز", ar: "كل السجلات", fa: "همه رکوردها", ps: "ټول ریکارډونه" },
+  "All Categories": { ur: "تمام زمرہ جات", ar: "جميع الفئات", fa: "همه دسته‌ها", ps: "ټولې کټګورۍ" },
+  "All Statuses": { ur: "تمام اسٹیٹس", ar: "جميع الحالات", fa: "همه وضعیت‌ها", ps: "ټول حالتونه" },
+  "Country Owner / Head": { ur: "کنٹری اونر / ہیڈ", ar: "مالك الدولة / رئيس", fa: "مالک کشوری / رئیس", ps: "د هیواد مالک / مشر" },
+  "Branch Owner / Partner": { ur: "برانچ اونر / پارٹنر", ar: "مالك الفرع / شريك", fa: "مالک شعبه / شریک", ps: "د څانګې مالک / ملګری" },
+  "Branch Owner / Manager": { ur: "برانچ اونر / منیجر", ar: "مالك الفرع / مدير", fa: "مالک شعبه / مدیر", ps: "د څانګې مالک / مدیر" },
+  "View": { ur: "دیکھیں", ar: "عرض", fa: "مشاهده", ps: "کتل" },
   "Meet": { ur: "میٹ / میٹنگ", ar: "اجتماع", fa: "جلسه", ps: "غونډه" }
 };
 
@@ -519,9 +526,9 @@ export function GeneralOfficeDashboardView() {
 
   // Employees State
   const [employees, setEmployees] = useState<any[]>([]);
-  // Date-wise employee activity (Priority 3). Defaults to Today; filters the table + drives the
+  // Date-wise employee activity (Priority 3). Defaults to all records; filters the table + drives the
   // daily-count cards off the real created_at/updated_at timestamps.
-  const [dateRange, setDateRange] = useState<DateRange>(() => computeRange("day", new Date().toISOString().slice(0, 10)));
+  const [dateRange, setDateRange] = useState<DateRange>({ mode: "all" });
   const employeesByDate = useMemo(
     () => employees.filter((e) => dateRange.mode === "all" || inRange(e.created_at, dateRange) || inRange(e.updated_at, dateRange)),
     [employees, dateRange]
@@ -648,11 +655,9 @@ export function GeneralOfficeDashboardView() {
     } catch (err: any) {
       clearTimeout(timeoutId);
       if (!(err instanceof DOMException && err.name === "AbortError")) {
-        console.error("Error loading employees:", err);
-        setLoadError(err?.message || "Failed to load employees. Please retry.");
+        setLoadError(err.message || "Network error loading employee records.");
       }
     } finally {
-      clearTimeout(timeoutId);
       if (!ac.signal.aborted) setLoading(false);
     }
   }, [search, categoryFilter, statusFilter, lang]);
@@ -765,12 +770,12 @@ export function GeneralOfficeDashboardView() {
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+            className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 font-sans"
           >
-            <option value="">{t.allCategories || "All Categories"}</option>
-            <option value="Country Owner">Country Owner / Head</option>
-            <option value="Branch Owner">Branch Owner / Partner</option>
-            <option value="Company Owner">Company Owner</option>
+            <option value="">{tr("All Categories")}</option>
+            <option value="Country Owner">{tr("Country Owner / Head")}</option>
+            <option value="Branch Owner">{tr("Branch Owner / Manager")}</option>
+            <option value="Company Owner">{tr("Company Owner")}</option>
             <option value="Manager">{tr("Manager")}</option>
             <option value="Normal Staff">{tr("Normal Staff")}</option>
             <option value="Employee">{tr("Employee")}</option>
@@ -781,9 +786,9 @@ export function GeneralOfficeDashboardView() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+            className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 font-sans"
           >
-            <option value="">{t.allStatuses || "All Statuses"}</option>
+            <option value="">{tr("All Statuses")}</option>
             <option value="Active">{t.active || "Active"}</option>
             <option value="Inactive">{t.inactive || "Inactive"}</option>
             <option value="On Leave">{t.onLeave || "On Leave"}</option>
@@ -791,39 +796,62 @@ export function GeneralOfficeDashboardView() {
           </select>
 
           {/* Quick Date Presets */}
-          <div className="hidden sm:flex items-center gap-1">
+          <div className="hidden sm:flex items-center gap-1 font-sans">
+            <button
+              type="button"
+              onClick={() => setDateRange({ mode: "all" })}
+              className={`h-8.5 rounded-xl border px-2.5 text-xs font-bold transition-colors ${
+                dateRange.mode === "all"
+                  ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+              }`}
+            >
+              {tr("All Records")}
+            </button>
             <button
               type="button"
               onClick={() => setDateRange(computeRange("day", iso(new Date())))}
-              className="h-8.5 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+              className={`h-8.5 rounded-xl border px-2.5 text-xs font-bold transition-colors ${
+                dateRange.mode === "day" && dateRange.start?.slice(0, 10) === iso(new Date())
+                  ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+              }`}
             >
-              Today
+              {tr("Today")}
             </button>
             <button
               type="button"
               onClick={() => setDateRange(computeRange("day", addDays(iso(new Date()), -1)))}
-              className="h-8.5 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+              className={`h-8.5 rounded-xl border px-2.5 text-xs font-bold transition-colors ${
+                dateRange.mode === "day" && dateRange.start?.slice(0, 10) === addDays(iso(new Date()), -1)
+                  ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+              }`}
             >
-              Yesterday
+              {tr("Yesterday")}
             </button>
             <button
               type="button"
               onClick={() => setDateRange(computeRange("month", iso(new Date())))}
-              className="h-8.5 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+              className={`h-8.5 rounded-xl border px-2.5 text-xs font-bold transition-colors ${
+                dateRange.mode === "month"
+                  ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+              }`}
             >
-              This Month
+              {tr("This Month")}
             </button>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 font-sans">
             <Button
               type="button"
               variant="outline"
               className="h-8.5 rounded-xl border-blue-200 bg-blue-700 text-white hover:bg-blue-800 text-xs font-bold px-3 gap-1.5 shadow-xs"
             >
               <Send className="h-3.5 w-3.5" />
-              Meet
+              {tr("Meet")}
             </Button>
 
             <Button
@@ -940,21 +968,21 @@ export function GeneralOfficeDashboardView() {
             <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">5. {tr("QUICK REPORTS")}</span>
           </div>
           <div className="mt-2 space-y-1 text-[10px] font-semibold">
-            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Today Report</span>
-              <span className="text-blue-600 hover:underline cursor-pointer flex items-center gap-0.5">📈 View</span>
+            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400 font-sans">
+              <span>{tr("Today Report")}</span>
+              <span className="text-blue-600 hover:underline cursor-pointer flex items-center gap-0.5 font-bold">📈 {tr("View")}</span>
             </div>
-            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Monthly Payroll</span>
-              <span className="text-blue-600 hover:underline cursor-pointer flex items-center gap-0.5">📈 View</span>
+            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400 font-sans">
+              <span>{tr("Monthly Payroll")}</span>
+              <span className="text-blue-600 hover:underline cursor-pointer flex items-center gap-0.5 font-bold">📈 {tr("View")}</span>
             </div>
-            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Attendance Summary</span>
-              <span className="text-blue-600 hover:underline cursor-pointer flex items-center gap-0.5">📈 View</span>
+            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400 font-sans">
+              <span>{tr("Attendance Summary")}</span>
+              <span className="text-blue-600 hover:underline cursor-pointer flex items-center gap-0.5 font-bold">📈 {tr("View")}</span>
             </div>
-            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-              <span>Assets Summary</span>
-              <span className="text-blue-600 hover:underline cursor-pointer flex items-center gap-0.5">📈 View</span>
+            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400 font-sans">
+              <span>{tr("Assets Summary")}</span>
+              <span className="text-blue-600 hover:underline cursor-pointer flex items-center gap-0.5 font-bold">📈 {tr("View")}</span>
             </div>
           </div>
         </div>
@@ -969,9 +997,9 @@ export function GeneralOfficeDashboardView() {
 
       {/* ── EMPLOYEES LIST TABLE CARD matching Reference Image 2 ── */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs overflow-hidden">
-        <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+        <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2 font-sans">
           <Users className="h-4 w-4 text-blue-600" />
-          <span className="text-xs font-bold tracking-wider text-slate-700 dark:text-slate-300 uppercase">EMPLOYEES LIST</span>
+          <span className="text-xs font-bold tracking-wider text-slate-700 dark:text-slate-300 uppercase">{tr("EMPLOYEES LIST")}</span>
         </div>
 
         <div className="overflow-x-auto">

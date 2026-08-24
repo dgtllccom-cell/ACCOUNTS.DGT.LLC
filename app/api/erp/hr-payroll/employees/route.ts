@@ -28,6 +28,46 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const countryId = searchParams.get("countryId");
     const branchId = searchParams.get("branchId");
+    // Auto-sync any unlinked persons in `customers` who have an Owner / Employee role
+    try {
+      await withLocalPg(async (sql) => {
+        const unlinked = await sql`
+          SELECT c.id, c.customer_name, c.gender, c.country_id, c.created_at
+          FROM public.customers c
+          WHERE c.gender IN ('Country Owner', 'Branch Owner', 'Company Owner', 'Manager', 'Normal Staff', 'Employee')
+            AND NOT EXISTS (
+              SELECT 1 FROM public.employees e WHERE e.person_master_id = c.id
+            )
+        `;
+        if (unlinked && unlinked.length > 0) {
+          for (const u of unlinked) {
+            const countRes = await sql`SELECT count(*)::int as c FROM public.employees`;
+            const code = `EMP-${String((countRes[0]?.c || 0) + 1).padStart(4, "0")}`;
+            const desig = u.gender === 'Country Owner' ? 'Country Director / Managing Partner'
+              : u.gender === 'Branch Owner' ? 'Branch Owner / Manager'
+              : u.gender === 'Company Owner' ? 'Company Owner / Partner'
+              : u.gender === 'Manager' ? 'General Manager'
+              : 'Office Staff';
+            const dept = (u.gender === 'Country Owner' || u.gender === 'Branch Owner' || u.gender === 'Company Owner')
+              ? 'Executive Management'
+              : 'General Operations';
+            await sql`
+              INSERT INTO public.employees (
+                id, person_master_id, employee_code, category, designation, department,
+                country_id, status, created_at, updated_at
+              ) VALUES (
+                gen_random_uuid(), ${u.id}, ${code}, ${u.gender}, ${desig}, ${dept},
+                ${u.country_id || null}, 'Active', ${u.created_at || new Date().toISOString()}, NOW()
+              )
+              ON CONFLICT DO NOTHING
+            `;
+          }
+        }
+      });
+    } catch (syncErr) {
+      console.warn("[EMPLOYEES] Auto-sync unlinked persons warning:", syncErr);
+    }
+
     const category = searchParams.get("category");
     const status = searchParams.get("status");
     const search = searchParams.get("search")?.trim().toLowerCase();
