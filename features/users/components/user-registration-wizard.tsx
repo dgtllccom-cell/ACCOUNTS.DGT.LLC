@@ -82,16 +82,16 @@ const branchTypeOptions = [
 ] as const;
 
 const roleOptions: Array<{ value: EnterpriseRole; label: string; help: string }> = [
-  { value: "super_admin", label: "Super Admin User", help: "Global scope (full root system control)." },
-  { value: "country_admin", label: "Country Admin User", help: "Country scope (full country ledger & branches)." },
-  { value: "country_user", label: "Country Operations User", help: "Country scope user." },
-  { value: "main_branch_admin", label: "Main Branch Admin User", help: "Main branch scope (Roznamcha & daily book closing)." },
-  { value: "city_branch_admin", label: "City/Branch User", help: "City branch scope (transactions & entry)." },
-  { value: "accountant", label: "Accountant", help: "Branch scope with direct ledger & financial posting." },
-  { value: "cashier", label: "Cashier", help: "Branch scope with cash receipts & payments." },
-  { value: "agent_user", label: "Clearing / Customs Agent", help: "Port & customs clearance limited scope." },
-  { value: "staff_user", label: "Staff User", help: "Standard operational branch access." },
-  { value: "auditor_viewer", label: "Auditor / Viewer", help: "Read-only audit & reporting scope." }
+  { value: "super_admin", label: "Super Admin (سپر ایڈمن - مکمل کنٹرول)", help: "Global Scope — Full root control across all countries and branches." },
+  { value: "country_admin", label: "Country Admin (ملکی ایڈمن)", help: "Country Scope — Full country ledger, branches and management." },
+  { value: "country_user", label: "Country Normal User (ملکی عام صارف)", help: "Country Scope — Standard operational and transactions access for the country." },
+  { value: "main_branch_admin", label: "Main Branch Admin (مین برانچ ایڈمن)", help: "Main Branch Scope — Main branch Roznamcha, daily book closing and approvals." },
+  { value: "city_branch_admin", label: "City Branch Admin (سٹی برانچ ایڈمن)", help: "City Branch Scope — City branch management and full branch approvals." },
+  { value: "staff_user", label: "City Normal User / Staff (سٹی عام صارف و عملہ)", help: "City Branch Scope — Standard city branch entry and transactions." },
+  { value: "agent_user", label: "Clearing Agent Admin / Agent User (کسٹم و کلیرنگ ایجنٹ)", help: "Port & Customs Scope — Port clearance, container tracking and customs documentation." },
+  { value: "accountant", label: "Accountant (اکاؤنٹنٹ)", help: "Financial Scope — Direct journal posting, ledger auditing and bank reconciliation." },
+  { value: "cashier", label: "Cashier (کیشیئر)", help: "Cash Counter Scope — Daily cash receipts, counter payments and cash safe." },
+  { value: "auditor_viewer", label: "Auditor / Read-Only Viewer (آڈیٹر / نگران)", help: "Audit Scope — Read-only access to statements, audit trails and journals." }
 ];
 
 const userWizardTranslations: Record<string, Record<SupportedLanguage, string>> = {

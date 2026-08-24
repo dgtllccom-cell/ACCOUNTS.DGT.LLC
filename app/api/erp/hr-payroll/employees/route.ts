@@ -211,6 +211,19 @@ export async function POST(request: NextRequest) {
         entrySerial = s.entrySerial;
       } catch {}
 
+      // Validate session.userId exists in public.profiles to prevent foreign key violation
+      let validCreatedBy: string | null = null;
+      if (session?.userId) {
+        try {
+          const [prof] = await sql`SELECT id FROM public.profiles WHERE id = ${session.userId} LIMIT 1`;
+          if (prof?.id) {
+            validCreatedBy = prof.id;
+          }
+        } catch {
+          validCreatedBy = null;
+        }
+      }
+
       const [row] = await sql`
         INSERT INTO public.employees (
           id, person_master_id, employee_code, category, designation, department,
@@ -239,7 +252,7 @@ export async function POST(request: NextRequest) {
           ${salaryStartDate || null}, ${salaryPaymentDate || null}, ${salaryPaymentMethod || "Cash"}, ${salarySchedule || "Monthly"},
           ${salaryScheduleDate || "last"}, ${salaryExpenseAccountId || null}, ${employeePayableAccountId || null},
           ${cashAccountId || null}, ${bankAccountId || null}, ${advanceSalaryAccountId || null}, ${loanAccountId || null},
-          ${deductionAccountId || null}, ${session.userId || null}, ${superAdminSerial}, ${countrySerial}, ${branchSerial}, ${entrySerial}
+          ${deductionAccountId || null}, ${validCreatedBy}, ${superAdminSerial}, ${countrySerial}, ${branchSerial}, ${entrySerial}
         )
         RETURNING id, employee_code, category, designation, department
       `;
