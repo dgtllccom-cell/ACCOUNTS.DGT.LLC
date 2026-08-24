@@ -227,32 +227,52 @@ export class CustomersRepository {
 
       let validStateId: string | null = null;
       if (input.stateProvinceId) {
-        const [st] = await sql`SELECT id FROM public.state_provinces WHERE id = ${input.stateProvinceId}::uuid LIMIT 1`;
-        if (st) validStateId = st.id;
+        try {
+          const [st] = await sql`SELECT id FROM public.states_provinces WHERE id = ${input.stateProvinceId}::uuid LIMIT 1`;
+          if (st) validStateId = st.id;
+        } catch {
+          validStateId = null;
+        }
       }
 
       let validDistrictId: string | null = null;
       if (input.districtId) {
-        const [dst] = await sql`SELECT id FROM public.districts WHERE id = ${input.districtId}::uuid LIMIT 1`;
-        if (dst) validDistrictId = dst.id;
+        try {
+          const [dst] = await sql`SELECT id FROM public.districts WHERE id = ${input.districtId}::uuid LIMIT 1`;
+          if (dst) validDistrictId = dst.id;
+        } catch {
+          validDistrictId = null;
+        }
       }
 
       let validCityId: string | null = null;
       if (input.cityId) {
-        const [ct] = await sql`SELECT id FROM public.cities WHERE id = ${input.cityId}::uuid LIMIT 1`;
-        if (ct) validCityId = ct.id;
+        try {
+          const [ct] = await sql`SELECT id FROM public.cities WHERE id = ${input.cityId}::uuid LIMIT 1`;
+          if (ct) validCityId = ct.id;
+        } catch {
+          validCityId = null;
+        }
       }
 
       let validAreaId: string | null = null;
       if (input.areaLocationId) {
-        const [ar] = await sql`SELECT id FROM public.area_locations WHERE id = ${input.areaLocationId}::uuid LIMIT 1`;
-        if (ar) validAreaId = ar.id;
+        try {
+          const [ar] = await sql`SELECT id FROM public.area_locations WHERE id = ${input.areaLocationId}::uuid LIMIT 1`;
+          if (ar) validAreaId = ar.id;
+        } catch {
+          validAreaId = null;
+        }
       }
 
       let validActorId: string | null = null;
       if (input.actorId) {
-        const [prof] = await sql`SELECT id FROM public.users WHERE id = ${input.actorId}::uuid LIMIT 1`;
-        if (prof) validActorId = prof.id;
+        try {
+          const [prof] = await sql`SELECT id FROM public.users WHERE id = ${input.actorId}::uuid LIMIT 1`;
+          if (prof) validActorId = prof.id;
+        } catch {
+          validActorId = null;
+        }
       }
 
       const insertRow = {
