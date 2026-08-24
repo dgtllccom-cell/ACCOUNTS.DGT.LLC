@@ -1,14 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Globe2, LogOut, Keyboard, Palette } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
 import { supportedLanguages, type SupportedLanguage, rtlLanguages, getHtmlLanguage } from "@/lib/i18n/languages";
-import { t } from "@/lib/i18n/ui";
 import { getLanguageKeyboardMap } from "@/lib/i18n/keyboard-layouts";
 import { useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
-import { applyThemeMode, legacyThemeMode, normalizeThemeMode, themeModes, type ThemeMode } from "@/lib/ui/theme-modes";
+import { t } from "@/lib/i18n/ui";
+import { applyThemeMode, legacyThemeMode, normalizeThemeMode, type ThemeMode } from "@/lib/ui/theme-modes";
+import { QuickPreferencesPopover } from "@/components/layout/quick-preferences-popover";
 
 function getInitialThemeMode(): ThemeMode {
   if (typeof document === "undefined") return "day";
@@ -58,14 +56,6 @@ export function PreferencesControls() {
   const [language, setLanguage] = useState<SupportedLanguage>("en");
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [keyboardMapperActive, setKeyboardMapperActive] = useState(true);
-
-  const languageOptions = useMemo(() => supportedLanguages, []);
-  const themeLabels = useMemo(() => ({
-    night: t(language, "nav.theme_night"),
-    day: t(language, "nav.theme_day"),
-    soft: t(language, "nav.theme_soft"),
-    green: t(language, "nav.theme_green_business")
-  }), [language]);
 
   // Run font injection on load and whenever language state updates.
   useEffect(() => {
@@ -149,7 +139,7 @@ export function PreferencesControls() {
       }
       if (event.key === "erp_lang" && event.newValue) {
         const next = event.newValue as SupportedLanguage;
-        if (languageOptions.some((l) => l.code === next)) {
+        if (supportedLanguages.some((l) => l.code === next)) {
           document.documentElement.lang = getHtmlLanguage(next);
           document.documentElement.dir = rtlLanguages.includes(next) ? "rtl" : "ltr";
           setLanguage(next);
@@ -159,17 +149,7 @@ export function PreferencesControls() {
 
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
-  }, [languageOptions]);
-
-  function toggleTheme() {
-    const order: ThemeMode[] = ["night", "day", "soft", "green"];
-    const next = order[(order.indexOf(themeMode) + 1) % order.length];
-    applyThemeMode(next);
-    localStorage.setItem("erp_theme_mode", next);
-    document.cookie = `erp_theme_mode=${encodeURIComponent(next)}; Path=/; Max-Age=${60 * 60 * 24 * 365}; SameSite=Lax`;
-    localStorage.setItem("erp_theme", next === "night" ? "dark" : "light");
-    setThemeMode(next);
-  }
+  }, []);
 
   function changeLanguage(next: SupportedLanguage) {
     document.documentElement.lang = getHtmlLanguage(next);
@@ -186,6 +166,14 @@ export function PreferencesControls() {
       window.dispatchEvent(new Event("erp_language_changed"));
     }
     router.refresh();
+  }
+
+  function changeTheme(next: ThemeMode) {
+    applyThemeMode(next);
+    localStorage.setItem("erp_theme_mode", next);
+    document.cookie = `erp_theme_mode=${encodeURIComponent(next)}; Path=/; Max-Age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+    localStorage.setItem("erp_theme", next === "night" ? "dark" : "light");
+    setThemeMode(next);
   }
 
   async function handleLogout() {
@@ -215,118 +203,19 @@ export function PreferencesControls() {
         }} />
       )}
 
-      {/* Keyboard mapper toggle (Only visible when RTL language is active) */}
-      {mounted && isRtlLangActive && (
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setKeyboardMapperActive(!keyboardMapperActive)}
-          className={cn(
-            "h-8 w-8 relative rounded-lg border",
-            keyboardMapperActive
-              ? "bg-indigo-50 border-indigo-200 text-indigo-600 hover:bg-indigo-100/80 dark:bg-indigo-950/40 dark:border-indigo-900/40"
-              : "text-slate-400 hover:bg-slate-50"
-          )}
-          title={keyboardMapperActive ? "Disable virtual keyboard translation" : "Enable virtual keyboard translation"}
-        >
-          <Keyboard className="h-4 w-4" />
-          {keyboardMapperActive && (
-            <span className="absolute top-1 right-1 flex h-1.5 w-1.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-indigo-500"></span>
-            </span>
-          )}
-        </Button>
-      )}
-
-      <div className="hidden items-center gap-2 rounded-md border bg-background px-2 py-1 text-xs sm:flex">
-        <Globe2 className="h-4 w-4 text-muted-foreground" aria-hidden />
-        <label className="sr-only" htmlFor="erp-language">
-          Language
-        </label>
-        {mounted ? (
-          <select
-            id="erp-language"
-            className="bg-transparent text-xs outline-none"
-            value={language}
-            onChange={(event) => changeLanguage(event.target.value as SupportedLanguage)}
-          >
-            {languageOptions.map((lang) => (
-              <option key={lang.code} value={lang.code}>
-                {lang.englishName === lang.nativeName ? lang.englishName : `${lang.englishName} - ${lang.nativeName}`}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <span className="w-20" />
-        )}
-      </div>
-
-      <div className="hidden items-center gap-2 rounded-md border bg-background px-2 py-1 text-xs sm:flex">
-        <Palette className="h-4 w-4 text-muted-foreground" aria-hidden />
-        <label className="sr-only" htmlFor="erp-theme-mode">
-          Theme
-        </label>
-        {mounted ? (
-          <select
-            id="erp-theme-mode"
-            className="bg-transparent text-xs outline-none"
-            value={themeMode}
-            onChange={(event) => {
-              const next = normalizeThemeMode(event.target.value);
-              applyThemeMode(next);
-              localStorage.setItem("erp_theme_mode", next);
-              document.cookie = `erp_theme_mode=${encodeURIComponent(next)}; Path=/; Max-Age=${60 * 60 * 24 * 365}; SameSite=Lax`;
-              localStorage.setItem("erp_theme", next === "night" ? "dark" : "light");
-              setThemeMode(next);
-            }}
-          >
-            {themeModes.map((mode) => (
-              <option key={mode.id} value={mode.id}>
-                {themeLabels[mode.id]}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <span className="w-24" />
-        )}
-      </div>
-
-      <div className="sm:hidden">
-        <Button
-          variant="outline"
-          size="icon"
-          aria-label={mounted ? t(language, "nav.theme_mode") : "Theme"}
-          title={mounted ? t(language, "nav.theme_mode") : "Theme"}
-          onClick={toggleTheme}
-          className="text-muted-foreground"
-        >
-          <Palette className="h-4 w-4" aria-hidden />
-        </Button>
-      </div>
-
-      <div className="sm:hidden">
-        <Button
-          variant="outline"
-          size="icon"
-          aria-label="Language"
-          onClick={() => changeLanguage(language === "en" ? "ur" : "en")}
-        >
-          <Globe2 className="h-4 w-4" aria-hidden />
-        </Button>
-      </div>
-
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={handleLogout}
-        disabled={isLoggingOut}
-        aria-label="Log out"
-        title="Log out"
-        className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40"
-      >
-        <LogOut className="h-4 w-4" aria-hidden />
-      </Button>
+      <QuickPreferencesPopover
+        language={language}
+        themeMode={themeMode}
+        keyboardMapperActive={keyboardMapperActive}
+        showKeyboardMapper={mounted && isRtlLangActive}
+        showLogout
+        isLoggingOut={isLoggingOut}
+        onLanguageChange={changeLanguage}
+        onThemeChange={changeTheme}
+        onToggleKeyboardMapper={() => setKeyboardMapperActive((current) => !current)}
+        onLogout={handleLogout}
+        triggerLabel={mounted ? t(language, "common.settings") : "Settings"}
+      />
     </div>
   );
 }

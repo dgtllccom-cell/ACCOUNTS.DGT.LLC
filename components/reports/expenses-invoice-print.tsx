@@ -1,6 +1,9 @@
 import React from "react";
+import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 export function ExpensesInvoicePrint({ bill }: { bill: any }) {
+  const lang = useActiveLanguage();
   if (!bill) return null;
 
   const totalQty = bill.expenses_bill_lines?.reduce((sum: number, l: any) => sum + Number(l.qty), 0) || 0;
@@ -44,7 +47,7 @@ export function ExpensesInvoicePrint({ bill }: { bill: any }) {
       <div className="border border-slate-800 p-4 pb-2 text-center relative flex justify-between items-center">
         <div className="text-left">
           <h1 className="text-3xl font-black text-slate-800 tracking-tighter" style={{ fontFamily: "Impact, sans-serif" }}>DAMAAN GROUP ERP</h1>
-          <p className="text-xs font-bold text-slate-600 mt-1 uppercase tracking-wide">Enterprise Resource Planning & General Ledger</p>
+          <p className="text-xs font-bold text-slate-600 mt-1 uppercase tracking-wide">{t(lang, "pdfui.eip_erp_general_ledger_tagline", "Enterprise Resource Planning & General Ledger")}</p>
         </div>
         <div className="text-right flex flex-col items-end">
           {/* Mock Logo or Text Logo */}
@@ -56,16 +59,16 @@ export function ExpensesInvoicePrint({ bill }: { bill: any }) {
       </div>
       
       <div className="bg-slate-700 text-white font-bold px-4 py-1 text-xs uppercase text-center border-x border-slate-800">
-        Internal Management System & Operations
+        {t(lang, "pdfui.eip_internal_mgmt_ops_tagline", "Internal Management System & Operations")}
       </div>
 
       <div className="border border-slate-800 flex text-xs">
         <div className="w-1/2 p-2 border-r border-slate-800">
-          <p><strong>System ID :</strong> {bill.profiles?.id?.substring(0, 8).toUpperCase()}</p>
-          <p><strong>Country :</strong> {bill.city_branches?.countries?.name}</p>
+          <p><strong>{t(lang, "pdfui.eip_system_id_colon", "System ID :")}</strong> {bill.profiles?.id?.substring(0, 8).toUpperCase()}</p>
+          <p><strong>{t(lang, "pdfui.eip_country_colon", "Country :")}</strong> {bill.city_branches?.countries?.name}</p>
         </div>
         <div className="w-1/2 p-2 flex items-center justify-center bg-slate-100">
-          <h2 className="text-xl font-bold uppercase tracking-widest text-slate-800">EXPENSES BILL</h2>
+          <h2 className="text-xl font-bold uppercase tracking-widest text-slate-800">{t(lang, "pdfui.eip_expenses_bill", "EXPENSES BILL")}</h2>
         </div>
       </div>
 
@@ -73,28 +76,28 @@ export function ExpensesInvoicePrint({ bill }: { bill: any }) {
       <div className="flex border-t border-b border-slate-800 text-[10px]">
         {/* Left Side: Invoice Info */}
         <div className="w-1/2 border-r border-slate-800 p-3">
-          <div className="text-left font-bold border-b border-slate-300 pb-1 mb-2 uppercase text-[10px] text-slate-700">Document Information</div>
+          <div className="text-left font-bold border-b border-slate-300 pb-1 mb-2 uppercase text-[10px] text-slate-700">{t(lang, "pdfui.eip_document_information", "Document Information")}</div>
           <table className="w-full">
             <tbody>
               <tr>
-                <td className="font-bold py-1 w-24 text-slate-700">Serial No.</td>
+                <td className="font-bold py-1 w-24 text-slate-700">{t(lang, "god.asset_serial", "Serial No.")}</td>
                 <td className="font-black text-slate-900">: {bill.serial_no}</td>
               </tr>
               <tr>
-                <td className="font-bold py-1 text-slate-700">Bill Date</td>
+                <td className="font-bold py-1 text-slate-700">{t(lang, "pdfui.eip_bill_date", "Bill Date")}</td>
                 <td className="font-medium">: {bill.bill_date ? new Date(bill.bill_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : ""}</td>
               </tr>
               <tr>
-                <td className="font-bold py-1 text-slate-700">Branch Name</td>
+                <td className="font-bold py-1 text-slate-700">{t(lang, "cdash.col_branch_name", "Branch Name")}</td>
                 <td className="font-medium">: {bill.city_branches?.name}</td>
               </tr>
               <tr>
-                <td className="font-bold py-1 text-slate-700">Reference No.</td>
+                <td className="font-bold py-1 text-slate-700">{t(lang, "acct.reference_no", "Reference No.")}</td>
                 <td className="font-medium">: {bill.reference_no || '-'}</td>
               </tr>
               <tr>
-                <td className="font-bold py-1 text-slate-700">Status</td>
-                <td className="font-medium">: {bill.transferred_to_roznamcha ? "POSTED" : "UNPOSTED"}</td>
+                <td className="font-bold py-1 text-slate-700">{t(lang, "log.tbl_status", "Status")}</td>
+                <td className="font-medium">: {bill.transferred_to_roznamcha ? t(lang, "pdfui.eip_posted", "POSTED") : t(lang, "pdfui.eip_unposted", "UNPOSTED")}</td>
               </tr>
             </tbody>
           </table>
@@ -102,13 +105,13 @@ export function ExpensesInvoicePrint({ bill }: { bill: any }) {
 
         {/* Right Side: Billed To */}
         <div className="w-1/2 p-3 bg-slate-50">
-          <div className="text-left font-bold border-b border-slate-300 pb-1 mb-2 uppercase text-[10px] text-slate-700">Billed To (DR Account)</div>
+          <div className="text-left font-bold border-b border-slate-300 pb-1 mb-2 uppercase text-[10px] text-slate-700">{t(lang, "pdfui.eip_billed_to_dr_account", "Billed To (DR Account)")}</div>
           <div className="mt-2">
              <p className="font-mono text-sm uppercase font-black text-slate-900 leading-tight">
-               {bill.debit_ledger_name || (bill.debit_ledger_id ? "Linked Ledger (ID: " + bill.debit_ledger_id.substring(0,8) + ")" : "NOT SELECTED")}
+               {bill.debit_ledger_name || (bill.debit_ledger_id ? t(lang, "pdfui.eip_linked_ledger_id_prefix", "Linked Ledger (ID:") + " " + bill.debit_ledger_id.substring(0,8) + ")" : t(lang, "pdfui.eip_not_selected", "NOT SELECTED"))}
              </p>
-             <p className="text-[10px] text-slate-600 mt-2 font-medium">System ID: {bill.debit_ledger_id ? bill.debit_ledger_id.substring(0,8).toUpperCase() : "-"}</p>
-             <p className="text-[10px] text-slate-600 font-medium">Created By: {bill.profiles?.full_name || 'System Admin'}</p>
+             <p className="text-[10px] text-slate-600 mt-2 font-medium">{t(lang, "pdfui.eip_system_id_no_space_colon", "System ID:")} {bill.debit_ledger_id ? bill.debit_ledger_id.substring(0,8).toUpperCase() : "-"}</p>
+             <p className="text-[10px] text-slate-600 font-medium">{t(lang, "pdfui.eip_created_by_colon", "Created By:")} {bill.profiles?.full_name || t(lang, "pdfui.eip_system_admin", "System Admin")}</p>
           </div>
         </div>
       </div>
@@ -117,18 +120,18 @@ export function ExpensesInvoicePrint({ bill }: { bill: any }) {
       <table className="w-full border-x border-b border-slate-800 text-[9px] mt-4">
         <thead>
           <tr className="border-b border-slate-800 text-center font-bold bg-slate-100">
-            <td className="border-r border-slate-800 p-1 w-6">No.</td>
-            <td className="border-r border-slate-800 p-1 text-left">Description of Expense</td>
-            <td className="border-r border-slate-800 p-1 w-8">Qty</td>
-            <td className="border-r border-slate-800 p-1 w-12">U. Price</td>
-            <td className="border-r border-slate-800 p-1 w-14">Amount</td>
-            <td className="border-r border-slate-800 p-1 w-8">Cur</td>
-            <td className="border-r border-slate-800 p-1 w-6">Op</td>
-            <td className="border-r border-slate-800 p-1 w-12">Rate</td>
-            <td className="border-r border-slate-800 p-1 w-14">Final</td>
-            <td className="border-r border-slate-800 p-1 w-10">Tax %</td>
-            <td className="border-r border-slate-800 p-1 w-12">Tax Amt</td>
-            <td className="p-1 w-16 text-right">Total</td>
+            <td className="border-r border-slate-800 p-1 w-6">{t(lang, "ledger.col_no", "No.")}</td>
+            <td className="border-r border-slate-800 p-1 text-left">{t(lang, "pdfui.eip_description_of_expense", "Description of Expense")}</td>
+            <td className="border-r border-slate-800 p-1 w-8">{t(lang, "purchase.th_qty", "Qty")}</td>
+            <td className="border-r border-slate-800 p-1 w-12">{t(lang, "pdfui.eip_u_price", "U. Price")}</td>
+            <td className="border-r border-slate-800 p-1 w-14">{t(lang, "purchase.th_amount", "Amount")}</td>
+            <td className="border-r border-slate-800 p-1 w-8">{t(lang, "lpjr.col_cur", "Cur")}</td>
+            <td className="border-r border-slate-800 p-1 w-6">{t(lang, "money_exchange.op_label", "Op")}</td>
+            <td className="border-r border-slate-800 p-1 w-12">{t(lang, "purchase.th_rate", "Rate")}</td>
+            <td className="border-r border-slate-800 p-1 w-14">{t(lang, "purchase.th_final", "Final")}</td>
+            <td className="border-r border-slate-800 p-1 w-10">{t(lang, "pdfui.eip_tax_percent", "Tax %")}</td>
+            <td className="border-r border-slate-800 p-1 w-12">{t(lang, "pdfui.eip_tax_amt", "Tax Amt")}</td>
+            <td className="p-1 w-16 text-right">{t(lang, "common.total", "Total")}</td>
           </tr>
         </thead>
         <tbody>
@@ -150,7 +153,7 @@ export function ExpensesInvoicePrint({ bill }: { bill: any }) {
           ))}
           {/* Blank row to fill space if needed */}
           <tr className="border-t-2 border-slate-800 font-bold bg-slate-50">
-            <td colSpan={2} className="border-r border-slate-800 p-1 text-right uppercase">Grand Total (Incl. Tax)</td>
+            <td colSpan={2} className="border-r border-slate-800 p-1 text-right uppercase">{t(lang, "pdfui.eip_grand_total_incl_tax", "Grand Total (Incl. Tax)")}</td>
             <td className="border-r border-slate-800 p-1 text-center">{totalQty}</td>
             <td className="border-r border-slate-800 p-1"></td>
             <td className="border-r border-slate-800 p-1 text-right">{taxableValue.toFixed(2)}</td>
@@ -164,20 +167,20 @@ export function ExpensesInvoicePrint({ bill }: { bill: any }) {
       {/* Totals & Footer Block */}
       <div className="border-x border-b border-slate-800 flex text-xs">
         <div className="w-2/3 border-r border-slate-800 p-2 flex flex-col justify-center">
-          <p className="font-bold border-b border-slate-300 pb-1 mb-2">Total Amount in words</p>
+          <p className="font-bold border-b border-slate-300 pb-1 mb-2">{t(lang, "pdfui.eip_total_amount_in_words", "Total Amount in words")}</p>
           <p className="uppercase font-medium text-sm pl-4 italic">{numberToWords(grandTotal)}</p>
         </div>
         <div className="w-1/3">
           <div className="flex justify-between p-2 border-b border-slate-800">
-            <span>Taxable Amount</span>
+            <span>{t(lang, "lpjr.inv_taxable_amt", "Taxable Amount")}</span>
             <span>{taxableValue.toFixed(2)}</span>
           </div>
           <div className="flex justify-between p-2 border-b border-slate-800">
-            <span>Add : TAX</span>
+            <span>{t(lang, "pdfui.eip_add_tax", "Add : TAX")}</span>
             <span>{taxAmount.toFixed(2)}</span>
           </div>
           <div className="flex justify-between p-2 font-bold bg-slate-100">
-            <span>Total Amount After Tax</span>
+            <span>{t(lang, "pdfui.eip_total_amount_after_tax", "Total Amount After Tax")}</span>
             <span className="text-sm">{currency} {grandTotal.toFixed(2)}</span>
           </div>
         </div>
@@ -185,22 +188,22 @@ export function ExpensesInvoicePrint({ bill }: { bill: any }) {
 
       <div className="border-x border-b border-slate-800 flex text-xs h-32">
         <div className="w-2/3 border-r border-slate-800 p-2 relative">
-          <p className="font-bold underline mb-1">Terms and Conditions</p>
+          <p className="font-bold underline mb-1">{t(lang, "pdfui.eip_terms_and_conditions", "Terms and Conditions")}</p>
           <ul className="list-disc pl-4 text-[9px] text-slate-600 leading-tight">
-            <li>Subject to internal branch jurisdiction.</li>
-            <li>Our responsibility ceases as soon as the expense is recorded.</li>
-            <li>Expenses once recorded and posted cannot be easily reverted without Admin rights.</li>
+            <li>{t(lang, "pdfui.eip_subject_internal_branch_jurisdiction", "Subject to internal branch jurisdiction.")}</li>
+            <li>{t(lang, "pdfui.eip_responsibility_ceases_msg", "Our responsibility ceases as soon as the expense is recorded.")}</li>
+            <li>{t(lang, "pdfui.eip_expenses_revert_admin_msg", "Expenses once recorded and posted cannot be easily reverted without Admin rights.")}</li>
           </ul>
         </div>
         <div className="w-1/3 relative flex flex-col">
           <div className="p-1 text-center text-[8px] italic text-slate-500 border-b border-slate-300">
-            Certified that the particulars given above are true and correct.
+            {t(lang, "pdfui.eip_certified_particulars_true_msg", "Certified that the particulars given above are true and correct.")}
           </div>
           <div className="p-2 text-center font-bold">
             For DAMAAN GROUP
           </div>
           <div className="mt-auto p-2 text-center text-[10px] font-bold border-t border-slate-300">
-            Authorised Signatory
+            {t(lang, "pdfui.eip_authorised_signatory", "Authorised Signatory")}
           </div>
         </div>
       </div>

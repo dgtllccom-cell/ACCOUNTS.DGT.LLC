@@ -184,15 +184,16 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
     });
   }, [customers]);
 
-  // Statistics Summary
+  // Statistics Summary with 360 linkages
   const stats = useMemo(() => {
     const total = parsedCustomers.length;
     const active = parsedCustomers.filter((c) => c.meta.status === "Active").length;
     const inactive = total - active;
-    const business = parsedCustomers.filter((c) => c.meta.customerType === "Business").length;
-    const individual = total - business;
+    const totalLinkedCompanies = parsedCustomers.reduce((acc, c: any) => acc + (c.partiesDir?.companies_count || 0), 0);
+    const totalLinkedEmployees = parsedCustomers.reduce((acc, c: any) => acc + (c.partiesDir?.employees_count || 0), 0);
+    const totalLinkedBanks = parsedCustomers.reduce((acc, c: any) => acc + (c.partiesDir?.banks_count || 0), 0);
 
-    return { total, active, inactive, business, individual };
+    return { total, active, inactive, totalLinkedCompanies, totalLinkedEmployees, totalLinkedBanks };
   }, [parsedCustomers]);
 
   // Filter & Search
@@ -518,20 +519,24 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
           </div>
         </div>
 
-        {/* Card 3: TYPE BREAKDOWN */}
+        {/* Card 3: 360 LINKAGES */}
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Building2 className="h-4 w-4 text-purple-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">3. {getLabel("typeBreakdown", lang)}</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">3. {lang === "ur" ? "سسٹم لنکس و کمپنیاں" : "System Linkages"}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
-            <div className="flex justify-between text-amber-600 font-bold">
-              <span>{getLabel("corporateBusinessLabel", lang)}:</span>
-              <span>{stats.business}</span>
-            </div>
             <div className="flex justify-between text-indigo-600 font-bold">
-              <span>{getLabel("individualPersonalLabel", lang)}:</span>
-              <span>{stats.individual}</span>
+              <span>{lang === "ur" ? "کمپنیاں:" : "Companies:"}</span>
+              <span>{stats.totalLinkedCompanies}</span>
+            </div>
+            <div className="flex justify-between text-emerald-600 font-bold">
+              <span>{lang === "ur" ? "ملازمین:" : "Employees:"}</span>
+              <span>{stats.totalLinkedEmployees}</span>
+            </div>
+            <div className="flex justify-between text-purple-600 font-bold">
+              <span>{lang === "ur" ? "بینک کھاتے:" : "Banks:"}</span>
+              <span>{stats.totalLinkedBanks}</span>
             </div>
           </div>
         </div>

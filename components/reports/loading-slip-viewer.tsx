@@ -109,16 +109,16 @@ export function LoadingSlipViewer({ data, onClose }: LoadingSlipViewerProps) {
       {/* Toolbar */}
       <div className="no-print border-b bg-white px-4 py-3 flex items-center justify-between shadow-sm shrink-0 h-14">
         <div className="flex items-center gap-4">
-          <h2 className="text-sm font-bold text-slate-800">Print Loading Slip</h2>
+          <h2 className="text-sm font-bold text-slate-800">{t(lang, "pdfui.lsv_print_loading_slip", "Print Loading Slip")}</h2>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={handlePrint}>
             <Printer className="h-4 w-4 mr-2" />
-            Print
+            {t(lang, "report.builder_print", "Print")}
           </Button>
           <Button variant="outline" size="sm" onClick={() => window.print()}>
             <Download className="h-4 w-4 mr-2" />
-            Save as PDF
+            {t(lang, "pdfui.crv_save_as_pdf", "Save as PDF")}
           </Button>
           <div className="w-px h-4 bg-slate-200 mx-1"></div>
           <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 text-slate-500">
@@ -146,7 +146,7 @@ export function LoadingSlipViewer({ data, onClose }: LoadingSlipViewerProps) {
               </div>
             </div>
             <div className="text-right pt-2">
-              <h2 className="text-2xl font-black uppercase tracking-widest text-[#0b1f3c]">Commercial Invoice</h2>
+              <h2 className="text-2xl font-black uppercase tracking-widest text-[#0b1f3c]">{t(lang, "pdfui.lsv_commercial_invoice", "Commercial Invoice")}</h2>
             </div>
           </div>
 
@@ -158,18 +158,18 @@ export function LoadingSlipViewer({ data, onClose }: LoadingSlipViewerProps) {
                     {/* Left Side Parties */}
                     <div className="border-r-2 border-black">
                       <div className="border-b-2 border-black p-2 min-h-[90px]">
-                        <div className="font-bold text-xs uppercase mb-1">Exporter / Shipper</div>
+                        <div className="font-bold text-xs uppercase mb-1">{t(lang, "plrf.exporter", "Exporter / Shipper")}</div>
                         <div className="font-semibold">{data.exporterName}</div>
                         <div className="text-xs">{data.exporterAddress}</div>
                       </div>
                       <div className="border-b-2 border-black p-2 min-h-[90px]">
-                        <div className="font-bold text-xs uppercase mb-1">Consignee</div>
+                        <div className="font-bold text-xs uppercase mb-1">{t(lang, "pdfui.lsv_consignee", "Consignee")}</div>
                         <div className="font-semibold">{data.consigneeName}</div>
                         <div className="text-xs">{data.consigneeAddress}</div>
                       </div>
                       <div className="p-2 min-h-[70px]">
-                        <div className="font-bold text-xs uppercase mb-1">Notify Party</div>
-                        <div className="font-semibold">{data.notifyParty || "SAME AS CONSIGNEE"}</div>
+                        <div className="font-bold text-xs uppercase mb-1">{t(lang, "plrf.notify_party", "Notify Party")}</div>
+                        <div className="font-semibold">{data.notifyParty || t(lang, "pdfui.lsv_same_as_consignee", "SAME AS CONSIGNEE")}</div>
                       </div>
                     </div>
 
@@ -177,54 +177,54 @@ export function LoadingSlipViewer({ data, onClose }: LoadingSlipViewerProps) {
                     <div>
                       <div className="grid grid-cols-2 border-b-2 border-black">
                         <div className="border-r-2 border-black p-2 min-h-[45px]">
-                          <div className="font-bold text-xs uppercase">Invoice No.</div>
+                          <div className="font-bold text-xs uppercase">{t(lang, "pdfui.lsv_invoice_no", "Invoice No.")}</div>
                           <div className="font-semibold">{data.invoiceNo}</div>
                         </div>
                         <div className="p-2 min-h-[45px]">
-                          <div className="font-bold text-xs uppercase">Date</div>
+                          <div className="font-bold text-xs uppercase">{t(lang, "bdash.col_date", "Date")}</div>
                           <div className="font-semibold">{data.invoiceDate}</div>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 border-b-2 border-black">
                         <div className="border-r-2 border-black p-2 min-h-[45px]">
-                          <div className="font-bold text-xs uppercase">Reference No.</div>
+                          <div className="font-bold text-xs uppercase">{t(lang, "acct.reference_no", "Reference No.")}</div>
                           <div className="font-semibold">{data.referenceNo}</div>
                         </div>
                         <div className="p-2 min-h-[45px]">
-                          <div className="font-bold text-xs uppercase">Ref Date</div>
+                          <div className="font-bold text-xs uppercase">{t(lang, "pdfui.lsv_ref_date", "Ref Date")}</div>
                           <div className="font-semibold">{data.referenceDate}</div>
                         </div>
                       </div>
                       
                       <div className="grid grid-cols-2 border-b-2 border-black">
                         <div className="border-r-2 border-black p-2 min-h-[45px]">
-                          <div className="font-bold text-xs uppercase">Country of Origin</div>
+                          <div className="font-bold text-xs uppercase">{t(lang, "il.origin", "Country of Origin")}</div>
                           <div className="font-semibold">{data.originCountry}</div>
                         </div>
                         <div className="p-2 min-h-[45px]">
-                          <div className="font-bold text-xs uppercase">Country of Destination</div>
+                          <div className="font-bold text-xs uppercase">{t(lang, "pdfui.lsv_country_of_destination", "Country of Destination")}</div>
                           <div className="font-semibold">{data.destinationCountry}</div>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 border-b-2 border-black">
                         <div className="border-r-2 border-black p-2 min-h-[45px]">
-                          <div className="font-bold text-xs uppercase">Port of Loading</div>
+                          <div className="font-bold text-xs uppercase">{t(lang, "pdfui.lsv_port_of_loading", "Port of Loading")}</div>
                           <div className="font-semibold">{data.portOfLoading}</div>
                         </div>
                         <div className="p-2 min-h-[45px]">
-                          <div className="font-bold text-xs uppercase">Port of Discharge</div>
+                          <div className="font-bold text-xs uppercase">{t(lang, "pdfui.lsv_port_of_discharge", "Port of Discharge")}</div>
                           <div className="font-semibold">{data.portOfDischarge}</div>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2">
                         <div className="border-r-2 border-black p-2 min-h-[45px]">
-                          <div className="font-bold text-xs uppercase">Final Destination</div>
+                          <div className="font-bold text-xs uppercase">{t(lang, "pdfui.lsv_final_destination", "Final Destination")}</div>
                           <div className="font-semibold">{data.finalDestination}</div>
                         </div>
                         <div className="p-2 min-h-[45px]">
-                          <div className="font-bold text-xs uppercase">Container / Flight No.</div>
+                          <div className="font-bold text-xs uppercase">{t(lang, "pdfui.lsv_container_flight_no", "Container / Flight No.")}</div>
                           <div className="font-semibold">{data.containerNo} {data.vesselFlightNo ? `/ ${data.vesselFlightNo}` : ''}</div>
                         </div>
                       </div>
@@ -292,13 +292,13 @@ export function LoadingSlipViewer({ data, onClose }: LoadingSlipViewerProps) {
                   <div className="flex">
                     <div className="w-2/3 border-r-2 border-black p-3 space-y-4">
                       <div>
-                        <span className="font-bold text-xs uppercase">Amount in Words:</span>
+                        <span className="font-bold text-xs uppercase">{t(lang, "pdfui.lsv_amount_in_words_colon", "Amount in Words:")}</span>
                         <div className="font-semibold mt-1">
                           {data.amountInWords} {data.currency} ONLY
                         </div>
                       </div>
                       <div>
-                        <span className="font-bold text-xs uppercase">Remarks / Declaration:</span>
+                        <span className="font-bold text-xs uppercase">{t(lang, "pdfui.lsv_remarks_declaration_colon", "Remarks / Declaration:")}</span>
                         <div className="text-xs mt-1">
                           {data.remarks || "We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct."}
                         </div>
@@ -307,7 +307,7 @@ export function LoadingSlipViewer({ data, onClose }: LoadingSlipViewerProps) {
                     <div className="w-1/3 p-3 flex flex-col justify-between">
                       <div className="font-bold text-xs uppercase text-right">For {data.companyName}</div>
                       <div className="mt-16 text-right font-bold text-xs border-t border-black w-48 ml-auto pt-1">
-                        Authorized Signatory
+                        {t(lang, "purchase.authorized_signatory_label", "Authorized Signatory")}
                       </div>
                     </div>
                   </div>

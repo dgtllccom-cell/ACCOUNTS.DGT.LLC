@@ -2,6 +2,8 @@
 
 import type { ReactNode } from "react";
 import { ViewportActionMenu } from "@/components/ui/viewport-action-menu";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 import {
   MoreVertical,
   Eye,
@@ -68,9 +70,12 @@ export function UnifiedActionMenu({
   onDelete,
   customItems = []
 }: UnifiedActionMenuProps) {
+  const language = useActiveLanguage();
+  const resolvedAriaLabel = ariaLabel === "Record actions" ? t(language, "common.actions") : ariaLabel;
+
   return (
     <ViewportActionMenu
-      ariaLabel={ariaLabel}
+      ariaLabel={resolvedAriaLabel}
       align={align}
       buttonClassName={
         buttonClassName ||
@@ -94,7 +99,7 @@ export function UnifiedActionMenu({
                 className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-foreground hover:bg-accent transition-colors"
               >
                 <Eye className="h-4 w-4 text-blue-500 shrink-0" />
-                <span>View</span>
+                <span>{t(language, "common.view")}</span>
               </button>
             )}
 
@@ -105,7 +110,7 @@ export function UnifiedActionMenu({
                 className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-foreground hover:bg-accent transition-colors"
               >
                 <Edit3 className="h-4 w-4 text-amber-500 shrink-0" />
-                <span>Edit</span>
+                <span>{t(language, "common.edit")}</span>
               </button>
             )}
 
@@ -116,7 +121,7 @@ export function UnifiedActionMenu({
                 className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-foreground hover:bg-accent transition-colors"
               >
                 <Printer className="h-4 w-4 text-emerald-500 shrink-0" />
-                <span>Print</span>
+                <span>{t(language, "common.print")}</span>
               </button>
             )}
 
@@ -127,7 +132,7 @@ export function UnifiedActionMenu({
                 className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-foreground hover:bg-accent transition-colors"
               >
                 <FileText className="h-4 w-4 text-rose-500 shrink-0" />
-                <span>PDF Export</span>
+                <span>{t(language, "report.export_pdf", "PDF Export")}</span>
               </button>
             )}
 
@@ -138,7 +143,7 @@ export function UnifiedActionMenu({
                 className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-foreground hover:bg-accent transition-colors"
               >
                 <FileSpreadsheet className="h-4 w-4 text-emerald-600 shrink-0" />
-                <span>Excel Export</span>
+                <span>{t(language, "report.export_excel", "Excel Export")}</span>
               </button>
             )}
 
@@ -149,7 +154,7 @@ export function UnifiedActionMenu({
                 className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-foreground hover:bg-accent transition-colors"
               >
                 <Mail className="h-4 w-4 text-indigo-500 shrink-0" />
-                <span>Email Document</span>
+                <span>{t(language, "report.email_document", "Email Document")}</span>
               </button>
             )}
 
@@ -160,7 +165,7 @@ export function UnifiedActionMenu({
                 className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-foreground hover:bg-accent transition-colors"
               >
                 <MessageSquare className="h-4 w-4 text-green-500 shrink-0" />
-                <span>WhatsApp Document</span>
+                <span>{t(language, "report.whatsapp_document", "WhatsApp Document")}</span>
               </button>
             )}
 
@@ -171,7 +176,7 @@ export function UnifiedActionMenu({
                 className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-foreground hover:bg-accent transition-colors"
               >
                 <Download className="h-4 w-4 text-cyan-500 shrink-0" />
-                <span>Download</span>
+                <span>{t(language, "common.download")}</span>
               </button>
             )}
 
@@ -205,7 +210,7 @@ export function UnifiedActionMenu({
                   className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-destructive hover:bg-destructive/10 transition-colors"
                 >
                   <Trash2 className="h-4 w-4 shrink-0" />
-                  <span>Delete</span>
+                  <span>{t(language, "common.delete")}</span>
                 </button>
               </>
             )}
