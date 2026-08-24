@@ -357,10 +357,10 @@ export function CompanyIncorporationForm({
     }
     router.push("/dashboard/settings/company" as Route);
   }
-  const [ownerName, setOwnerName] = useState("Asmat Khan");
-  const [companyName, setCompanyName] = useState("DAMAAN Trading Company LLC");
-  const [businessName, setBusinessName] = useState("Import Export Trading");
-  const [businessType, setBusinessType] = useState("Import, Export, Trading, Steel & Purchase");
+  const [ownerName, setOwnerName] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [businessName, setBusinessName] = useState("");
+  const [businessType, setBusinessType] = useState("");
   const [location, setLocation] = useState<LocationHierarchyValue>({
     countryId: "",
     stateProvinceId: "",
@@ -368,11 +368,17 @@ export function CompanyIncorporationForm({
     cityId: "",
     areaId: ""
   });
-  const [locationMeta, setLocationMeta] = useState<LocationHierarchyMeta>(damaamDraftLocationMeta);
-  const [address, setAddress] = useState("Al Ras, Deira, Dubai, United Arab Emirates");
-  const [contacts, setContacts] = useState<DynamicRow[]>(damaamDraftContacts);
-  const [registrations, setRegistrations] = useState<DynamicRow[]>(damaamDraftRegistrations);
-  const [ownerIds, setOwnerIds] = useState<DynamicRow[]>(damaamDraftOwnerIds);
+  const [locationMeta, setLocationMeta] = useState<LocationHierarchyMeta>({
+    country: null,
+    state: null,
+    district: null,
+    city: null,
+    area: null
+  });
+  const [address, setAddress] = useState("");
+  const [contacts, setContacts] = useState<DynamicRow[]>([newRow()]);
+  const [registrations, setRegistrations] = useState<DynamicRow[]>([newRow()]);
+  const [ownerIds, setOwnerIds] = useState<DynamicRow[]>([newRow()]);
   const [types, setTypes] = useState(defaultTypes);
   const [typeModal, setTypeModal] = useState<DynamicList | null>(null);
   const [newType, setNewType] = useState("");

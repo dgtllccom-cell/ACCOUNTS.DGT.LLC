@@ -1670,14 +1670,14 @@ function CityBranchSetupContent() {
               <section hidden={activeStep !== 3} className="order-3 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">
                 <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">3</span>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Step 3 - User Account Setup: Company & Owner</h2>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step3_section_title")}</h2>
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">
                   <CompanyPicker
-                    label="Company Name"
+                    label={t(lang, "cbs.company_name_field")}
                     value={companyId}
                     onValueChange={setCompanyId}
-                    placeholder="Search company"
+                    placeholder={t(lang, "cbs.search_company_ph")}
                     createButtonPlacement="below"
                     disabled={!location.countryId}
                   />
@@ -1687,7 +1687,7 @@ function CityBranchSetupContent() {
                       value={ownerName}
                       onValueChange={setOwnerName}
                       disabled={!location.countryId}
-                      placeholder="Search owner"
+                      placeholder={t(lang, "cbs.search_owner_ph")}
                       createButtonPlacement="below"
                     />
                   </div>
@@ -1784,12 +1784,12 @@ function CityBranchSetupContent() {
                   <div className="flex items-center gap-2.5">
                     <span className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">7</span>
                     <div>
-                      <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Step 7 — Roles &amp; Permissions</h2>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400">Configure access controls for this city branch.</p>
+                      <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step7_title2")}</h2>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400">{t(lang, "cbs.step7_subtitle")}</p>
                     </div>
                   </div>
                   <span className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-[10px] font-bold text-indigo-700 dark:border-indigo-900/60 dark:bg-indigo-950/30 dark:text-indigo-300">
-                    🔐 {permissionGrants.length} permissions active
+                    🔐 {t(lang, "cbs.permissions_active").replace("{0}", String(permissionGrants.length))}
                   </span>
                 </div>
                 <PermissionAssignmentSection
@@ -1800,7 +1800,7 @@ function CityBranchSetupContent() {
                   onSelectedChange={setPermissionGrants}
                   parentPermissions={parentPermissionGrants}
                   required
-                  note="City permissions are explicit and are not inherited automatically from the Country/Main Branch."
+                  note={t(lang, "cbs.step7_note")}
                 />
               </section>
 
@@ -1808,43 +1808,43 @@ function CityBranchSetupContent() {
                 <div className="flex items-center justify-between gap-3 border-b border-cyan-100 pb-3 dark:border-cyan-900/60">
                   <div className="flex items-center gap-2.5">
                     <span className="flex h-6 w-6 items-center justify-center rounded-full bg-cyan-600 text-xs font-bold text-white">5</span>
-                    <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Step 5 - Review & PDF Summary</h2>
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step5_title2")}</h2>
                   </div>
-                  <Button type="button" variant="outline" size="sm" onClick={() => openReport(true)} disabled={!hasAny}>Download PDF Summary</Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => openReport(true)} disabled={!hasAny}>{t(lang, "cbs.download_pdf")}</Button>
                 </div>
                 <div className="grid gap-3 md:grid-cols-3 text-xs">
-                  <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">Country</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{previewCountry || "-"}</p></div>
-                  <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">Main Branch</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{previewMainBranch || "-"}</p></div>
-                  <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">City Branch</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{branchName || "Draft"}</p></div>
-                  <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">Branch Code</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{branchCode || "-"}</p></div>
-                  <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">Currency</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{currency || "USD"}</p></div>
-                  <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">Contacts</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{contactItems.length || 0}</p></div>
+                  <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">{t(lang, "cbs.country_word")}</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{previewCountry || "-"}</p></div>
+                  <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">{t(lang, "cbs.main_branch_word")}</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{previewMainBranch || "-"}</p></div>
+                  <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">{t(lang, "cbs.city_branch_word")}</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{branchName || t(lang, "status.draft")}</p></div>
+                  <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">{t(lang, "cbs.branch_code_word")}</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{branchCode || "-"}</p></div>
+                  <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">{t(lang, "cbs.currency_word")}</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{currency || "USD"}</p></div>
+                  <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">{t(lang, "cbs.field_contacts")}</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{contactItems.length || 0}</p></div>
                 </div>
               </section>
 
               <section hidden={activeStep !== 6} className="order-6 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">
                 <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">6</span>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Step 6 - Branch Documents</h2>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step6_title2")}</h2>
                 </div>
-                <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50/60 p-4 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-900/30">Branch documents are optional. Existing document workflow remains unchanged and can be attached where applicable.</div>
+                <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50/60 p-4 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-900/30">{t(lang, "cbs.step6_desc")}</div>
               </section>
 
               <section hidden={activeStep !== 2} className="order-2 rounded-xl border border-emerald-200/80 bg-emerald-50/40 p-5 shadow-sm space-y-4 dark:border-emerald-900/60 dark:bg-emerald-950/20">
                 <div className="flex items-center gap-2.5 border-b border-emerald-100 pb-3 dark:border-emerald-900/60">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white">2</span>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Step 2 - Access Scope & Role Planning</h2>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step2_title2")}</h2>
                 </div>
                 <div className="grid gap-3 md:grid-cols-3 text-xs">
-                  <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">Template</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{permissionTemplate || "-"}</p></div>
-                  <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">Permissions</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{permissionGrants.length}</p></div>
-                  <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">Parent Limited</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{parentPermissionGrants?.length ? "Yes" : "No"}</p></div>
+                  <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">{t(lang, "cbs.template_word")}</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{permissionTemplate || "-"}</p></div>
+                  <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">{t(lang, "cbs.permissions_word")}</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{permissionGrants.length}</p></div>
+                  <div className="rounded-lg border bg-white p-3 dark:bg-slate-950"><span className="text-slate-500">{t(lang, "cbs.parent_limited_word")}</span><p className="mt-1 font-bold text-slate-900 dark:text-slate-100">{parentPermissionGrants?.length ? t(lang, "common.yes") : t(lang, "common.no")}</p></div>
                 </div>
               </section>
               <section hidden={activeStep !== 8} className="order-8 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">
                 <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">8</span>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Step 8 - AI Branch Communication Setup</h2>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "cbs.step8_title2")}</h2>
                 </div>
                 
                 <div className="grid gap-4 md:grid-cols-2">

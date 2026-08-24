@@ -205,6 +205,48 @@ const INITIAL_DEMO_COMPANIES: CompanyRegistryItem[] = [
   }
 ];
 
+const BUSINESS_TERMS_I18N: Record<string, Record<string, string>> = {
+  "Multi Branch Allowed": { ur: "ملٹی برانچز کی اجازت ہے", ar: "يسمح بالفروع المتعددة", ps: "د څو څانګو اجازه شته", fa: "چندین شعبه مجاز است" },
+  "Branch by Country": { ur: "ملک کے لحاظ سے برانچ", ar: "فرع حسب الدولة", ps: "د هیواد له مخې څانګه", fa: "شعبه بر اساس کشور" },
+  "Single Country Only": { ur: "صرف ایک ملک", ar: "دولة واحدة فقط", ps: "یوازې یو هیواد", fa: "فقط یک کشور" },
+  "All Branches Allowed": { ur: "تمام برانچز کی اجازت ہے", ar: "جميع الفروع مسموح بها", ps: "ټولو څانګو ته اجازه شته", fa: "همه شعب مجاز هستند" },
+  "City Branch Rule": { ur: "سٹی برانچ کے قواعد", ar: "قواعد فروع المدن", ps: "د ښار د څانګې قواعد", fa: "قوانین شعب شهری" },
+  "Standard Consortium": { ur: "معیاری کنسورشیم", ar: "اتحاد قياسي", ps: "معیاري کنسورشیم", fa: "کنسرسیوم استاندارد" },
+  "Company Account": { ur: "کمپنی اکاؤنٹ", ar: "حساب الشركة", ps: "د شرکت حساب", fa: "حساب شرکت" },
+
+  // Famous Consortiums & Companies
+  "DAMAAN Trading Company LLC": { ur: "دامان ٹریڈنگ کمپنی ایل ایل سی", ar: "شركة دامان التجارية ذ.م.م", ps: "دامان سوداګریز شرکت LLC", fa: "شرکت بازرگانی دامان با مسئولیت محدود" },
+  "Asmat Khan Group": { ur: "عصمت خان گروپ", ar: "مجموعة عصمت خان", ps: "عصمت خان ګروپ", fa: "گروه عصمت خان" },
+  "Al-Razi Consortium": { ur: "الرازی کنسورشیم", ar: "اتحاد الرازي", ps: "الرازي کنسورشیم", fa: "کنسرسیوم الرازی" },
+  "Al-Razi Trading LLC": { ur: "الرازی ٹریڈنگ ایل ایل سی", ar: "شركة الرازي التجارية ذ.م.م", ps: "الرازي سوداګریز شرکت", fa: "شرکت بازرگانی الرازی" },
+  "Ghani Group": { ur: "غنی گروپ", ar: "مجموعة غني", ps: "غني ګروپ", fa: "گروه غنی" },
+  "Ghani International": { ur: "غنی انٹرنیشنل", ar: "غني العالمية", ps: "غني انټرنیشنل", fa: "غنی بین‌المللی" },
+  "Shahbaz Consortium": { ur: "شہباز کنسورشیم", ar: "اتحاد شهباز", ps: "شهباز کنسورشیم", fa: "کنسرسیوم شهباز" },
+  "Shahbaz Industries Ltd.": { ur: "شہباز انڈسٹریز لمیٹڈ", ar: "شركة شهباز للصناعات المحدودة", ps: "شهباز انډسټریز لمیټډ", fa: "صنایع شهباز با مسئولیت محدود" },
+  "Damaan Group": { ur: "دامان گروپ", ar: "مجموعة دامان", ps: "دامان ګروپ", fa: "گروه دامان" },
+  "Damaan Business Group": { ur: "دامان بزنس گروپ", ar: "مجموعة أعمال دامان", ps: "دامان بزنس ګروپ", fa: "گروه کسب‌وکار دامان" },
+  "Iqbal Consortium": { ur: "اقبال کنسورشیم", ar: "اتحاد إقبال", ps: "اقبال کنسورشیم", fa: "کنسرسیوم اقبال" },
+  "Iqbal Corporation": { ur: "اقبال کارپوریشن", ar: "مؤسسة إقبال", ps: "اقبال کارپوریشن", fa: "شرکت اقبال" },
+  "Khan Brothers": { ur: "خان برادرز", ar: "إخوان خان", ps: "خان برادرز", fa: "برادران خان" },
+  "Khan Brothers LLC": { ur: "خان برادرز ایل ایل سی", ar: "شركة إخوان خان ذ.م.م", ps: "خان برادرز LLC", fa: "شرکت برادران خان" },
+  "Sial Traders": { ur: "سیال ٹریڈرز", ar: "تجار سيال", ps: "سیال سوداګر", fa: "بازرگانان سیال" },
+  "Sial Traders International": { ur: "سیال ٹریڈرز انٹرنیشنل", ar: "سيال التجارية العالمية", ps: "سیال سوداګر نړیوال", fa: "سیال تریدرز بین‌المللی" },
+  "Malik Enterprises": { ur: "ملک انٹرپرائزز", ar: "مؤسسة مالك", ps: "ملک تصدۍ", fa: "شرکت‌های ملک" },
+  "Malik Enterprises Ltd.": { ur: "ملک انٹرپرائزز لمیٹڈ", ar: "شركة مالك للمشاريع المحدودة", ps: "ملک انټرپرازیز لمیټډ", fa: "ملک اینترپرایزز لیمیتد" },
+  "Global Links": { ur: "گلوبل لنکس", ar: "الروابط العالمية", ps: "نړیوالې اړیکې", fa: "پیوندهای جهانی" },
+  "Global Links FZCO": { ur: "گلوبل لنکس ایف زیڈ سی او", ar: "غلوبال لينكس ش.م.ح", ps: "ګلوبل لنکس FZCO", fa: "گلوبال لینکس FZCO" },
+  "Future Vision": { ur: "فیوچر وژن", ar: "رؤية المستقبل", ps: "راتلونکی لید", fa: "چشم‌انداز آینده" },
+  "Future Vision Group": { ur: "فیوچر وژن گروپ", ar: "مجموعة رؤية المستقبل", ps: "فیوچر ویژن ګروپ", fa: "گروه چشم‌انداز آینده" },
+  "Group": { ur: "گروپ", ar: "مجموعة", ps: "ګروپ", fa: "گروه" }
+};
+
+function localizeTerm(term: string, lang: string): string {
+  if (!term || lang === "en") return term;
+  const match = BUSINESS_TERMS_I18N[term];
+  if (match && match[lang]) return match[lang];
+  return term;
+}
+
 export function CompanyRegistry() {
   const router = useRouter();
   const lang = useActiveLanguage();
@@ -248,12 +290,16 @@ export function CompanyRegistry() {
           const email = contactEmail || `${safeSlug}@company.dgt.llc`;
           const contactPhone = (Array.isArray(c.contacts) && c.contacts[0]?.value) || "+971 50 000 0000";
 
+          const rawConsortium = c.owner_name ? `${c.owner_name} Group` : "Standard Consortium";
+          const rawRules = "Multi Branch Allowed";
+          const rawAccountName = c.name || "Company Account";
+
           return {
             id: c.id,
             accountNo: `10010${String(i + 1).padStart(2, "0")}`,
-            consortium: c.owner_name ? `${c.owner_name} ${tt("creg.group_suffix", "Group")}` : tt("creg.standard_consortium", "Standard Consortium"),
-            branchRules: tt("creg.multi_branch_allowed", "Multi Branch Allowed"),
-            accountName: c.name || "Company Account",
+            consortium: localizeTerm(rawConsortium, lang),
+            branchRules: localizeTerm(rawRules, lang),
+            accountName: localizeTerm(rawAccountName, lang),
             companiesCount: 1,
             contractsCount: 2,
             primaryContact: contactPhone,
@@ -267,10 +313,22 @@ export function CompanyRegistry() {
         });
         setCompanies(mapped);
       } else {
-        setCompanies(INITIAL_DEMO_COMPANIES);
+        const localizedDemo = INITIAL_DEMO_COMPANIES.map((c) => ({
+          ...c,
+          consortium: localizeTerm(c.consortium, lang),
+          branchRules: localizeTerm(c.branchRules, lang),
+          accountName: localizeTerm(c.accountName, lang)
+        }));
+        setCompanies(localizedDemo);
       }
     } catch (e) {
-      setCompanies(INITIAL_DEMO_COMPANIES);
+      const localizedDemo = INITIAL_DEMO_COMPANIES.map((c) => ({
+        ...c,
+        consortium: localizeTerm(c.consortium, lang),
+        branchRules: localizeTerm(c.branchRules, lang),
+        accountName: localizeTerm(c.accountName, lang)
+      }));
+      setCompanies(localizedDemo);
     } finally {
       setLoading(false);
     }
@@ -742,57 +800,6 @@ export function CompanyRegistry() {
               »
             </button>
           </div>
-        </div>
-      </div>
-
-      {/* ── 6 BOTTOM EXPLANATION CARDS MATCHING SCREENSHOT 1 ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-3 rounded-2xl space-y-1">
-          <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-            <FileText className="h-3.5 w-3.5 text-blue-600" />
-            {tt("creg.tip_account_no", "Account No.")}
-          </div>
-          <div className="text-[11px] text-muted-foreground">{tt("creg.tip_account_no_desc", "Unique account identifier")}</div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-3 rounded-2xl space-y-1">
-          <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-            <Building2 className="h-3.5 w-3.5 text-blue-600" />
-            {tt("creg.tip_companies_count", "Companies Count")}
-          </div>
-          <div className="text-[11px] text-muted-foreground">{tt("creg.tip_companies_count_desc", "Total companies under this account")}</div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-3 rounded-2xl space-y-1">
-          <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-            <FileText className="h-3.5 w-3.5 text-purple-600" />
-            {tt("creg.tip_contracts", "Contracts")}
-          </div>
-          <div className="text-[11px] text-muted-foreground">{tt("creg.tip_contracts_desc", "Total active contracts")}</div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-3 rounded-2xl space-y-1">
-          <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-            <Layers className="h-3.5 w-3.5 text-emerald-600" />
-            {tt("creg.tip_branch_rules", "Branch Rules")}
-          </div>
-          <div className="text-[11px] text-muted-foreground">{tt("creg.tip_branch_rules_desc", "Rules applied for branches")}</div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-3 rounded-2xl space-y-1">
-          <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-            <Eye className="h-3.5 w-3.5 text-indigo-600" />
-            {tt("creg.tip_preview", "Preview")}
-          </div>
-          <div className="text-[11px] text-muted-foreground">{tt("creg.tip_preview_desc", "View complete details")}</div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-3 rounded-2xl space-y-1">
-          <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-            <PencilLine className="h-3.5 w-3.5 text-purple-600" />
-            {tt("creg.tip_actions", "Actions")}
-          </div>
-          <div className="text-[11px] text-muted-foreground">{tt("creg.tip_actions_desc", "Edit, Duplicate or Delete")}</div>
         </div>
       </div>
 
