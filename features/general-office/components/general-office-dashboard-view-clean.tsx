@@ -912,7 +912,37 @@ export function GeneralOfficeDashboardView() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-1.5 font-sans">
+          <div className="flex flex-wrap items-center gap-1.5 font-sans">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push("/dashboard/settings/customers" as Route)}
+              className="h-8.5 rounded-xl border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200 text-xs font-bold px-2.5 gap-1 shadow-xs"
+            >
+              <UserCheck className="h-3.5 w-3.5" />
+              {lang === "ur" ? "پرسن / کسٹمر" : lang === "ar" ? "الشخص / العميل" : "Person / Customer"}
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push("/dashboard/settings/company" as Route)}
+              className="h-8.5 rounded-xl border-indigo-300 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-200 text-xs font-bold px-2.5 gap-1 shadow-xs"
+            >
+              <Building2 className="h-3.5 w-3.5" />
+              {lang === "ur" ? "کمپنی" : lang === "ar" ? "الشركة" : "Company"}
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push("/dashboard/settings/bank" as Route)}
+              className="h-8.5 rounded-xl border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200 text-xs font-bold px-2.5 gap-1 shadow-xs"
+            >
+              <CreditCard className="h-3.5 w-3.5" />
+              {lang === "ur" ? "بینک" : lang === "ar" ? "البنك" : "Bank"}
+            </Button>
+
             <Button
               type="button"
               variant="outline"

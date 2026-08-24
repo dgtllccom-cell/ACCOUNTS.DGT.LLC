@@ -821,6 +821,9 @@ export const sidebarTree: SidebarNode[] = [
     children: [
       { key: "go-master-setup", labelKey: "nav.employee_master_setup", iconKey: "users", href: "/dashboard/general-office/employees?tab=master-setup" as Route },
       { key: "go-emp-mgmt", labelKey: "nav.employee_management", iconKey: "users", href: "/dashboard/general-office/employees?tab=management" as Route },
+      { key: "go-customers-registry", labelKey: "nav.customers_form", iconKey: "user-plus", href: "/dashboard/settings/customers" as Route },
+      { key: "go-company-registry", labelKey: "nav.company_form", iconKey: "building-2", href: "/dashboard/settings/company" as Route },
+      { key: "go-bank-registry", labelKey: "nav.bank_form", iconKey: "banknote", href: "/dashboard/settings/bank" as Route },
       { key: "go-departments", labelKey: "nav.departments", iconKey: "building-2", href: "/dashboard/general-office/employees?tab=departments" as Route },
       { key: "go-designations", labelKey: "nav.designations", iconKey: "scroll-text", href: "/dashboard/general-office/employees?tab=designations" as Route },
       { key: "go-attendance", labelKey: "nav.attendance", iconKey: "clock", href: "/dashboard/general-office/employees?tab=attendance" as Route },
@@ -1420,32 +1423,9 @@ export const sidebarTree: SidebarNode[] = [
             href: "/dashboard/settings/locations" as Route
           },
           {
-            key: "mgmt-company",
-            labelKey: "nav.company_form",
-            href: "/dashboard/settings/company" as Route
-          },
-          {
             key: "mgmt-company-registration-type",
             labelKey: "nav.company_registration_type",
             href: "/dashboard/settings/company-registration-type" as Route
-          },
-          {
-            key: "mgmt-customers",
-            labelKey: "nav.customers_form",
-            href: "/dashboard/settings/customers" as Route,
-            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-          },
-          {
-            key: "mgmt-employees",
-            labelKey: "nav.employee_management",
-            href: "/dashboard/settings/employees" as Route,
-            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-          },
-          {
-            key: "mgmt-bank",
-            labelKey: "nav.bank_form",
-            href: "/dashboard/settings/bank" as Route,
-            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
           },
           {
             key: "mgmt-contact-type",
