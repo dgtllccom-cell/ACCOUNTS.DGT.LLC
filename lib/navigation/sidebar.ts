@@ -819,8 +819,7 @@ export const sidebarTree: SidebarNode[] = [
     href: "/dashboard/general-office/employees" as Route,
     roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"],
     children: [
-      { key: "go-master-setup", labelKey: "nav.employee_master_setup", iconKey: "users", href: "/dashboard/general-office/employees?tab=master-setup" as Route },
-      { key: "go-emp-mgmt", labelKey: "nav.employee_management", iconKey: "users", href: "/dashboard/general-office/employees?tab=management" as Route },
+      { key: "go-employees", labelKey: "nav.employee_management", iconKey: "users", href: "/dashboard/general-office/employees" as Route },
       { key: "go-customers-registry", labelKey: "nav.customers_form", iconKey: "user-plus", href: "/dashboard/settings/customers" as Route },
       { key: "go-company-registry", labelKey: "nav.company_form", iconKey: "building-2", href: "/dashboard/settings/company" as Route },
       { key: "go-bank-registry", labelKey: "nav.bank_form", iconKey: "banknote", href: "/dashboard/settings/bank" as Route },

@@ -174,7 +174,19 @@ export function PersonPicker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, lang]);
 
-  const options: SearchSelectOption[] = useMemo(() => people.map((p) => toOption(p, lang)), [people, lang]);
+  const options: SearchSelectOption[] = useMemo(() => {
+    const seen = new Set<string>();
+    const opts: SearchSelectOption[] = [];
+    for (const p of people) {
+      const opt = toOption(p, lang);
+      const cleanKey = opt.label.toLowerCase().trim().replace(/\s+/g, " ");
+      if (!seen.has(cleanKey)) {
+        seen.add(cleanKey);
+        opts.push(opt);
+      }
+    }
+    return opts;
+  }, [people, lang]);
   const [viewPerson, setViewPerson] = useState<PersonRow | null>(null);
 
   return (
