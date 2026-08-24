@@ -260,18 +260,50 @@ function romanizeWord(word: string, lang: SupportedLanguage): string {
   return romanizeToArabicSkeleton(word);
 }
 
+const URDU_CANONICAL_CORRECTIONS: Array<[RegExp, string]> = [
+  [/اسماٹ[و]*ل[ل]*اہ/gi, "عصمت اللہ"],
+  [/اسمات[و]*ل[ل]*اہ/gi, "عصمت اللہ"],
+  [/عصمت[و]*ل[ل]*اہ/gi, "عصمت اللہ"],
+  [/ابد[و]*ل[ل]*اہ/gi, "عبداللہ"],
+  [/ابدا[ل]*لہ/gi, "عبداللہ"],
+  [/تاج[ ]*بیب[و]*ل[ل]*اہ/gi, "تاج حبیب اللہ"],
+  [/تاج[ ]*حبیب[و]*ل[ل]*اہ/gi, "تاج حبیب اللہ"],
+  [/تاجبیب/gi, "تاج حبیب"],
+  [/ناسیب[و]*ل[ل]*اہ/gi, "نصیب اللہ"],
+  [/نسیب[و]*ل[ل]*اہ/gi, "نصیب اللہ"],
+  [/نکیب[و]*ل[ل]*اہ/gi, "نقیب اللہ"],
+  [/نقیب[و]*ل[ل]*اہ/gi, "نقیب اللہ"],
+  [/نجیب[و]*ل[ل]*اہ/gi, "نجیب اللہ"],
+  [/فارید[و]*ل[ل]*اہ/gi, "فرید اللہ"],
+  [/فرید[و]*ل[ل]*اہ/gi, "فرید اللہ"],
+  [/حسیب[و]*ل[ل]*اہ/gi, "حسیب اللہ"],
+  [/سان[و]*ل[ل]*اہ/gi, "ثناء اللہ"],
+  [/ثناء[ ]*شاہباز/gi, "ثناء شہباز"],
+  [/اسماٹ/gi, "عصمت"],
+  [/ابدول/gi, "عبدال"]
+];
+
 /** Transliterate a proper noun (place/person name) into the target script. English passes through unchanged. */
 export function transliterateProperNoun(text: string, lang: SupportedLanguage): string {
   const trimmed = text.trim();
   if (!trimmed || lang === "en") return trimmed;
 
-  // Check full multi-word phrase first
+  // 1. Check full multi-word phrase in authentic dictionary
   const fullKey = trimmed.toLowerCase();
   if (AUTHENTIC_NAMES_DICT[fullKey]?.[lang]) {
     return AUTHENTIC_NAMES_DICT[fullKey][lang];
   }
 
-  // Split on words while preserving punctuation and whitespace delimiters
+  // 2. If already in Perso-Arabic script, apply authentic Urdu/Arabic phonetic corrections
+  if (/[\u0600-\u06FF]/.test(trimmed)) {
+    let corrected = trimmed;
+    for (const [re, repl] of URDU_CANONICAL_CORRECTIONS) {
+      corrected = corrected.replace(re, repl);
+    }
+    return corrected;
+  }
+
+  // 3. Split on words while preserving punctuation and whitespace delimiters
   const parts = trimmed.split(/([\s,;&\-\/\.\(\)]+)/);
   const mapped = parts.map((part) => {
     if (!part || /^[\s,;&\-\/\.\(\)]+$/.test(part)) {
@@ -284,7 +316,13 @@ export function transliterateProperNoun(text: string, lang: SupportedLanguage): 
     return romanizeWord(part, lang);
   });
 
-  const skeleton = mapped.join("");
+  let skeleton = mapped.join("");
+
+  // 4. Apply canonical corrections on the resulting skeleton
+  for (const [re, repl] of URDU_CANONICAL_CORRECTIONS) {
+    skeleton = skeleton.replace(re, repl);
+  }
+
   const overrides = LANG_OVERRIDES[lang] ?? {};
   if (Object.keys(overrides).length === 0) return skeleton;
 
