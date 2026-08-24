@@ -591,6 +591,11 @@ export function GeneralOfficeDashboardView() {
     }
   }) as typeof dict.en, [baseDict, lang]);
   const tr = useCallback((label: string) => translateGeneralOffice(label, lang), [lang]);
+  const localizeVisibleName = useCallback((value: string | null | undefined) => {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+    return lang === "en" ? raw : transliterateProperNoun(raw, lang);
+  }, [lang]);
 
   // Employees State
   const [employees, setEmployees] = useState<any[]>([]);
@@ -873,7 +878,7 @@ export function GeneralOfficeDashboardView() {
             >
               <option value="">{tr("All Companies")}</option>
               {companyOptions.map((c) => (
-                <option key={c} value={c}>{c}</option>
+                <option key={c} value={c}>{localizeVisibleName(c)}</option>
               ))}
             </select>
           )}
@@ -964,7 +969,7 @@ export function GeneralOfficeDashboardView() {
               className="h-8.5 rounded-xl border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200 text-xs font-bold px-2.5 gap-1 shadow-xs"
             >
               <UserCheck className="h-3.5 w-3.5" />
-              {lang === "ur" ? "پرسن / کسٹمر" : lang === "ar" ? "الشخص / العميل" : "Person / Customer"}
+              {tr("Person / Customer")}
             </Button>
 
             <Button
@@ -974,7 +979,7 @@ export function GeneralOfficeDashboardView() {
               className="h-8.5 rounded-xl border-indigo-300 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-200 text-xs font-bold px-2.5 gap-1 shadow-xs"
             >
               <Building2 className="h-3.5 w-3.5" />
-              {lang === "ur" ? "کمپنی" : lang === "ar" ? "الشركة" : "Company"}
+              {tr("Company")}
             </Button>
 
             <Button
@@ -984,7 +989,7 @@ export function GeneralOfficeDashboardView() {
               className="h-8.5 rounded-xl border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200 text-xs font-bold px-2.5 gap-1 shadow-xs"
             >
               <CreditCard className="h-3.5 w-3.5" />
-              {lang === "ur" ? "بینک" : lang === "ar" ? "البنك" : "Bank"}
+              {tr("Bank")}
             </Button>
 
             <Button
@@ -1021,11 +1026,11 @@ export function GeneralOfficeDashboardView() {
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
             <div className="flex justify-between">
               <span>{tr("Country")}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">{sessionCtx?.countryName || "Pakistan / UAE"}</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{localizeVisibleName(sessionCtx?.countryName || "Pakistan / UAE")}</span>
             </div>
             <div className="flex justify-between">
               <span>{tr("Branch Name")}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100 uppercase">{sessionCtx?.branchName || "KARACHI MAIN"}</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100 uppercase">{localizeVisibleName(sessionCtx?.branchName || "KARACHI MAIN")}</span>
             </div>
             <div className="flex justify-between">
               <span>{tr("User ID / Name")}:</span>
@@ -1221,14 +1226,14 @@ export function GeneralOfficeDashboardView() {
                 </tr>
               ) : (
                 employeesByDate.map((emp) => {
-                  const companyName = (emp.person?.company_name || emp.company_name || "").trim();
-                  const branchName = emp.country_branch?.name || emp.city_branch?.name || "";
+                  const companyName = localizeVisibleName(emp.person?.company_name || emp.company_name || "");
+                  const branchName = localizeVisibleName(emp.country_branch?.name || emp.city_branch?.name || "");
                   return (
                     <tr key={emp.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
                       <td className="p-3.5 font-mono font-bold text-blue-600">{emp.employee_code}</td>
                       <td className="p-3.5 font-bold text-slate-900 dark:text-slate-100 font-sans">
                         <div className="font-bold text-slate-900 dark:text-slate-100">
-                          {tr(personFullName(emp.person || {}) || emp.name)}
+                          {localizeVisibleName(personFullName(emp.person || {}) || emp.name)}
                         </div>
                         {companyName && (
                           <div className="text-[11px] font-bold text-blue-600 dark:text-blue-400 mt-0.5 flex items-center gap-1">
@@ -1239,7 +1244,7 @@ export function GeneralOfficeDashboardView() {
                         {(emp.person?.father_name || emp.person?.contact_person) && (
                           <div className="text-[10px] text-slate-500 font-normal mt-0.5">
                             {lang === "ur" ? "ولدیت: " : lang === "ar" ? "اسم الأب: " : "S/O: "}
-                            {emp.person?.father_name || emp.person?.contact_person}
+                            {localizeVisibleName(emp.person?.father_name || emp.person?.contact_person)}
                           </div>
                         )}
                       </td>

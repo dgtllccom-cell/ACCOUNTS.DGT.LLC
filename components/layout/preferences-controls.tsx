@@ -39,8 +39,8 @@ function injectWebFonts(lang: SupportedLanguage) {
     link.href = "https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap";
     document.documentElement.style.setProperty("--font-family-override", "'Vazirmatn', sans-serif");
   } else if (lang === "ur") {
-    link.href = "https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;600;700&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap";
-    document.documentElement.style.setProperty("--font-family-override", "'Noto Nastaliq Urdu', 'Noto Naskh Arabic', serif");
+    link.href = "https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;600;700;800&family=Cairo:wght@400;600;700&display=swap";
+    document.documentElement.style.setProperty("--font-family-override", "'Noto Naskh Arabic', 'Cairo', 'Segoe UI', Tahoma, sans-serif");
   } else {
     document.documentElement.style.removeProperty("--font-family-override");
   }

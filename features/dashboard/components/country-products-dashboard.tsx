@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
+import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 type ProductRow = {
   id: string;
@@ -181,6 +183,7 @@ function StatCard({
 }
 
 export function CountryProductsDashboard() {
+  const lang = useActiveLanguage();
   const [products, setProducts] = useState<ProductRow[]>([]);
   const [accountSummary, setAccountSummary] = useState<AccountReportResponse["summary"] | null>(null);
   const [lookup, setLookup] = useState<BranchLookup>(emptyBranchLookup);
@@ -265,14 +268,14 @@ export function CountryProductsDashboard() {
     <div className="space-y-5">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Country Dashboard</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{t(lang, "nav.country_dashboard", "Country Dashboard")}</h1>
           <p className="text-sm text-muted-foreground">
-            Country-scoped accounts, products, inventory value, and branch product reporting.
+            {t(lang, "dash.cpd_subtitle", "Country-scoped accounts, products, inventory value, and branch product reporting.")}
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={() => void loadDashboard()} disabled={loading}>
           <RefreshCw className={cn("mr-2 h-4 w-4", loading && "animate-spin")} />
-          Refresh
+          {t(lang, "common.refresh", "Refresh")}
         </Button>
       </div>
 
@@ -281,35 +284,35 @@ export function CountryProductsDashboard() {
           <CardContent className="flex flex-col gap-3 p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
             <span>{error}</span>
             <Button size="sm" variant="outline" onClick={() => void loadDashboard()}>
-              Retry
+              {t(lang, "dash.cpd_retry", "Retry")}
             </Button>
           </CardContent>
         </Card>
       ) : null}
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard title="Total Accounts" value={accountSummary?.totalAccounts ?? 0} icon={<WalletCards className="h-5 w-5" />} />
-        <StatCard title="Total Products" value={summary.totalProducts} icon={<Boxes className="h-5 w-5" />} />
-        <StatCard title="Active Products" value={summary.activeProducts} icon={<PackageCheck className="h-5 w-5" />} tone="green" />
-        <StatCard title="Inactive Products" value={summary.inactiveProducts} icon={<PackageX className="h-5 w-5" />} tone="red" />
-        <StatCard title="Product Categories" value={summary.productCategories} icon={<Tags className="h-5 w-5" />} tone="amber" />
-        <StatCard title="Total Stock" value={formatNumber(summary.totalStock)} icon={<Boxes className="h-5 w-5" />} />
-        <StatCard title="Inventory Value" value={formatNumber(summary.inventoryValue, 2)} icon={<CircleDollarSign className="h-5 w-5" />} tone="green" />
-        <StatCard title="Low Stock Products" value={summary.lowStockProducts} icon={<PackageX className="h-5 w-5" />} tone="amber" />
+        <StatCard title={t(lang, "cdash.total_accounts", "Total Accounts")} value={accountSummary?.totalAccounts ?? 0} icon={<WalletCards className="h-5 w-5" />} />
+        <StatCard title={t(lang, "cdash.total_products", "Total Products")} value={summary.totalProducts} icon={<Boxes className="h-5 w-5" />} />
+        <StatCard title={t(lang, "dash.cpd_active_products", "Active Products")} value={summary.activeProducts} icon={<PackageCheck className="h-5 w-5" />} tone="green" />
+        <StatCard title={t(lang, "dash.cpd_inactive_products", "Inactive Products")} value={summary.inactiveProducts} icon={<PackageX className="h-5 w-5" />} tone="red" />
+        <StatCard title={t(lang, "nav.product_categories", "Product Categories")} value={summary.productCategories} icon={<Tags className="h-5 w-5" />} tone="amber" />
+        <StatCard title={t(lang, "dash.cpd_total_stock", "Total Stock")} value={formatNumber(summary.totalStock)} icon={<Boxes className="h-5 w-5" />} />
+        <StatCard title={t(lang, "dash.cpd_inventory_value", "Inventory Value")} value={formatNumber(summary.inventoryValue, 2)} icon={<CircleDollarSign className="h-5 w-5" />} tone="green" />
+        <StatCard title={t(lang, "dash.cpd_low_stock_products", "Low Stock Products")} value={summary.lowStockProducts} icon={<PackageX className="h-5 w-5" />} tone="amber" />
       </div>
 
       <Card>
         <CardHeader className="border-b p-4">
           <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
             <div>
-              <CardTitle className="text-base">Country Product & Account Report</CardTitle>
+              <CardTitle className="text-base">{t(lang, "dash.cpd_country_product_account_report", "Country Product & Account Report")}</CardTitle>
               <p className="text-xs text-muted-foreground">
-                Products are shown according to country, branch, and user permissions.
+                {t(lang, "dash.cpd_products_shown_per_permissions", "Products are shown according to country, branch, and user permissions.")}
               </p>
             </div>
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
               <div className="space-y-1">
-                <Label className="text-[11px]">Product Search</Label>
+                <Label className="text-[11px]">{t(lang, "dash.cpd_product_search", "Product Search")}</Label>
                 <div className="relative">
                   <Search className="pointer-events-none absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -321,13 +324,13 @@ export function CountryProductsDashboard() {
                 </div>
               </div>
               <div className="space-y-1">
-                <Label className="text-[11px]">Product Category</Label>
+                <Label className="text-[11px]">{t(lang, "dash.cpd_product_category", "Product Category")}</Label>
                 <select
                   value={categoryFilter}
                   onChange={(event) => setCategoryFilter(event.target.value)}
                   className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
                 >
-                  <option value="all">All Categories</option>
+                  <option value="all">{t(lang, "report.all_categories", "All Categories")}</option>
                   {categories.map((category) => (
                     <option key={category} value={category}>
                       {category}
@@ -336,15 +339,15 @@ export function CountryProductsDashboard() {
                 </select>
               </div>
               <div className="space-y-1">
-                <Label className="text-[11px]">Product Status</Label>
+                <Label className="text-[11px]">{t(lang, "dash.cpd_product_status", "Product Status")}</Label>
                 <select
                   value={statusFilter}
                   onChange={(event) => setStatusFilter(event.target.value)}
                   className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
                 >
-                  <option value="all">All Status</option>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
+                  <option value="all">{t(lang, "acct.status_all", "All Status")}</option>
+                  <option value="active">{t(lang, "god.active", "Active")}</option>
+                  <option value="inactive">{t(lang, "god.inactive", "Inactive")}</option>
                 </select>
               </div>
               <Button
@@ -358,7 +361,7 @@ export function CountryProductsDashboard() {
                 }}
               >
                 <Filter className="mr-2 h-4 w-4" />
-                Reset
+                {t(lang, "common.reset", "Reset")}
               </Button>
             </div>
           </div>
@@ -385,7 +388,7 @@ export function CountryProductsDashboard() {
                 {loading ? (
                   <tr>
                     <td colSpan={11} className="px-3 py-10 text-center text-muted-foreground">
-                      Loading products and account report...
+                      {t(lang, "dash.cpd_loading_products_report", "Loading products and account report...")}
                     </td>
                   </tr>
                 ) : filteredProducts.length ? (
@@ -428,7 +431,7 @@ export function CountryProductsDashboard() {
                 ) : (
                   <tr>
                     <td colSpan={11} className="px-3 py-10 text-center text-muted-foreground">
-                      No product records found for this country scope.
+                      {t(lang, "dash.cpd_no_product_records_scope", "No product records found for this country scope.")}
                     </td>
                   </tr>
                 )}

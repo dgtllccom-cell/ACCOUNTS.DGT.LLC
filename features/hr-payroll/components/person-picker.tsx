@@ -34,11 +34,11 @@ export function personFullName(row: { first_name?: string | null; last_name?: st
 
 function toOption(row: PersonRow, lang: string = "en"): SearchSelectOption {
   const rawName = personFullName(row);
-  const name = transliterateProperNoun(rawName, lang);
+  const name = transliterateProperNoun(rawName, lang as SupportedLanguage);
   const fatherRaw = (row as any).father_name || ((row as any).contact_person && (row as any).contact_person !== rawName ? (row as any).contact_person : null);
-  const father = fatherRaw && !fatherRaw.startsWith("+") && isNaN(Number(fatherRaw)) ? transliterateProperNoun(fatherRaw, lang) : null;
+  const father = fatherRaw && !fatherRaw.startsWith("+") && isNaN(Number(fatherRaw)) ? transliterateProperNoun(fatherRaw, lang as SupportedLanguage) : null;
   const companyRaw = row.company_name && row.company_name !== rawName ? row.company_name : null;
-  const company = companyRaw ? localizeTerm(companyRaw, lang) : null;
+  const company = companyRaw ? localizeTerm(companyRaw, lang as SupportedLanguage) : null;
   
   // Format clean name display with proper localization
   let extraBits: string[] = [];

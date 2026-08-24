@@ -77,8 +77,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     document.documentElement.lang = lang;
     document.documentElement.dir = rtl.has(lang) ? 'rtl' : 'ltr';
     if (rtl.has(lang)) {
-      var overrides = { ar: "'Cairo', sans-serif", fa: "'Vazirmatn', sans-serif", ur: "'Noto Nastaliq Urdu', 'Noto Naskh Arabic', serif", ps: "'Noto Naskh Arabic', 'Noto Nastaliq Urdu', serif" };
-      document.documentElement.style.setProperty('--font-family-override', overrides[lang] || "'Noto Naskh Arabic', serif");
+      var overrides = { ar: "'Cairo', sans-serif", fa: "'Vazirmatn', sans-serif", ur: "'Noto Naskh Arabic', 'Cairo', 'Segoe UI', Tahoma, sans-serif", ps: "'Noto Naskh Arabic', 'Cairo', 'Segoe UI', Tahoma, sans-serif" };
+      document.documentElement.style.setProperty('--font-family-override', overrides[lang] || "'Noto Naskh Arabic', sans-serif");
     }
   } catch {}
   try {

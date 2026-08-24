@@ -108,52 +108,79 @@ export async function GET(request: NextRequest) {
     let employees: any[] = Array.isArray(rpcResult) ? rpcResult : [];
     const lang = (searchParams.get("lang") || "en") as any;
 
-    // Filter by search terms across all fields if provided
-    let filtered = employees || [];
-    if (search) {
-      filtered = filtered.filter((emp: any) => {
-        const name = String(emp.person?.customer_name || "").toLowerCase();
-        const firstName = String(emp.person?.first_name || "").toLowerCase();
-        const lastName = String(emp.person?.last_name || "").toLowerCase();
-        const fullName = String(emp.full_name || "").toLowerCase();
-        const company = String(emp.person?.company_name || "").toLowerCase();
-        const mobile = String(emp.person?.mobile || "").toLowerCase();
-        const whatsapp = String(emp.person?.whatsapp || "").toLowerCase();
-        const code = String(emp.employee_code || "").toLowerCase();
-        const desig = String(emp.designation || "").toLowerCase();
-        const dept = String(emp.department || "").toLowerCase();
-        const cat = String(emp.category || "").toLowerCase();
-        const country = String(emp.country?.name || "").toLowerCase();
-        const branch = String(emp.branch?.name || "").toLowerCase();
-        return (
-          name.includes(search) ||
-          firstName.includes(search) ||
-          lastName.includes(search) ||
-          fullName.includes(search) ||
-          company.includes(search) ||
-          mobile.includes(search) ||
-          whatsapp.includes(search) ||
-          code.includes(search) ||
-          desig.includes(search) ||
-          dept.includes(search) ||
-          cat.includes(search) ||
-          country.includes(search) ||
-          branch.includes(search)
-        );
-      });
-    }
+    // Resolve all visible related records first so both display and search operate on the
+    // same localized values. This keeps the table from mixing raw English company/branch/country
+    // names with translated employee/person fields.
+    if (employees.length > 0 && lang) {
+      employees = await localizeRecordNames(employees, "employees", "full_name", lang);
 
-    if (filtered.length > 0 && lang) {
-      filtered = await localizeRecordNames(filtered, "employees", "full_name", lang);
-      const persons = filtered.map((e: any) => e.person).filter(Boolean);
-      if (persons.length > 0) {
-        const localizedPersons = await localizeRecordNames(persons, "customers", "customer_name", lang);
+      const personRows = employees.map((e: any) => e.person).filter(Boolean);
+      if (personRows.length > 0) {
+        let localizedPersons = await localizeRecordNames(personRows, "customers", "customer_name", lang);
+        localizedPersons = await localizeRecordNames(localizedPersons, "customers", "company_name", lang);
         const personMap = new Map(localizedPersons.map((p: any) => [p.id, p]));
-        filtered = filtered.map((e: any) => ({
+        employees = employees.map((e: any) => ({
           ...e,
           person: e.person ? (personMap.get(e.person.id) || e.person) : e.person
         }));
       }
+
+      const countryRows = employees.map((e: any) => e.country).filter(Boolean);
+      if (countryRows.length > 0) {
+        const localizedCountries = await localizeRecordNames(countryRows, "countries", "name", lang);
+        const countryMap = new Map(localizedCountries.map((c: any) => [c.id, c]));
+        employees = employees.map((e: any) => ({
+          ...e,
+          country: e.country ? (countryMap.get(e.country.id) || e.country) : e.country
+        }));
+      }
+
+      const countryBranchRows = employees.map((e: any) => e.country_branch).filter(Boolean);
+      if (countryBranchRows.length > 0) {
+        const localizedCountryBranches = await localizeRecordNames(countryBranchRows, "country_branches", "name", lang);
+        const branchMap = new Map(localizedCountryBranches.map((b: any) => [b.id, b]));
+        employees = employees.map((e: any) => ({
+          ...e,
+          country_branch: e.country_branch ? (branchMap.get(e.country_branch.id) || e.country_branch) : e.country_branch
+        }));
+      }
+
+      const cityBranchRows = employees.map((e: any) => e.city_branch).filter(Boolean);
+      if (cityBranchRows.length > 0) {
+        const localizedCityBranches = await localizeRecordNames(cityBranchRows, "city_branches", "name", lang);
+        const cityMap = new Map(localizedCityBranches.map((b: any) => [b.id, b]));
+        employees = employees.map((e: any) => ({
+          ...e,
+          city_branch: e.city_branch ? (cityMap.get(e.city_branch.id) || e.city_branch) : e.city_branch
+        }));
+      }
+    }
+
+    // Filter by search terms across all visible fields if provided.
+    let filtered = employees || [];
+    if (search) {
+      filtered = filtered.filter((emp: any) => {
+        const haystack = [
+          emp.person?.customer_name,
+          emp.person?.first_name,
+          emp.person?.last_name,
+          emp.person?.company_name,
+          emp.full_name,
+          emp.employee_code,
+          emp.category,
+          emp.designation,
+          emp.department,
+          emp.status,
+          emp.country?.name,
+          emp.country_branch?.name,
+          emp.city_branch?.name,
+          emp.person?.mobile,
+          emp.person?.whatsapp,
+          emp.person?.email,
+          emp.person?.address
+        ].map((v) => String(v || "").toLowerCase()).join(" ");
+        return haystack.includes(search);
+      });
     }
 
     return NextResponse.json({ employees: filtered });

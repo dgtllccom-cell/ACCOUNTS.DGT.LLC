@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": [
+    "app/api/erp/hr-payroll/employees/route.ts",
+    "features/general-office/components/general-office-dashboard-view-clean.tsx"
+  ]
+}
