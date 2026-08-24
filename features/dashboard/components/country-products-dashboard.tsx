@@ -206,7 +206,7 @@ export function CountryProductsDashboard() {
       setAccountSummary(accountData.summary);
       setLookup(buildLookup(hierarchyData));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to load country dashboard data.");
+      setError(err instanceof Error ? err.message : t(lang, "dash.cpd_unable_load_dashboard", "Unable to load country dashboard data."));
     } finally {
       setLoading(false);
     }
@@ -242,12 +242,12 @@ export function CountryProductsDashboard() {
           .join(" ")
       );
       if (q && !text.includes(q)) return false;
-      if (categoryFilter !== "all" && productCategory(row) !== categoryFilter) return false;
+      if (categoryFilter !== "all" && productCategory(row, lang) !== categoryFilter) return false;
       if (statusFilter === "active" && !row.is_active) return false;
       if (statusFilter === "inactive" && row.is_active) return false;
       return true;
     });
-  }, [categoryFilter, lookup, products, search, statusFilter]);
+  }, [categoryFilter, lookup, products, search, statusFilter, lang]);
 
   const summary = useMemo(() => {
     const totalStock = filteredProducts.reduce((sum, row) => sum + stockQty(row), 0);
@@ -319,7 +319,7 @@ export function CountryProductsDashboard() {
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
                     className="h-9 pl-8"
-                    placeholder="Name, code, branch..."
+                    placeholder={t(lang, "dash.cpd_search_name_code_branch_ph", "Name, code, branch...")}
                   />
                 </div>
               </div>
@@ -401,7 +401,7 @@ export function CountryProductsDashboard() {
                       <tr key={row.id} className="border-b transition-colors hover:bg-muted/40">
                         <td className="px-3 py-3 font-medium">{row.product_code}</td>
                         <td className="px-3 py-3">{productName(row)}</td>
-                        <td className="px-3 py-3">{productCategory(row)}</td>
+                        <td className="px-3 py-3">{productCategory(row, lang)}</td>
                         <td className="px-3 py-3">{country?.name ?? "-"}</td>
                         <td className="px-3 py-3">{mainBranch?.name ?? "-"}</td>
                         <td className="px-3 py-3">{cityBranch?.name ?? "-"}</td>
