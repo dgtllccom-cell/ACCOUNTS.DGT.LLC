@@ -560,30 +560,6 @@ export function GeneralOfficeDashboardView() {
   const [selectedEmployeeForLoan, setSelectedEmployeeForLoan] = useState<any | null>(null);
   const [selectedEmployeeForHistory, setSelectedEmployeeForHistory] = useState<any | null>(null);
 
-  // Sync active language. Read localStorage FIRST (the canonical client store) and fall back to
-  // the html tag — reading only the html tag raced on load and left this whole page (and the
-  // embedded Employee wizard it feeds `lang` to) stuck on English while the store was already ur.
-  useEffect(() => {
-    function syncLang() {
-      if (typeof document === "undefined") return;
-      const raw = ((typeof localStorage !== "undefined" && localStorage.getItem("erp_lang")) || document.documentElement.lang || "en").trim();
-      const l = (raw.split("-")[0] as SupportedLanguage) || "en";
-      const validLang = ["en", "ur", "ps", "fa", "ar"].includes(l) ? (l as SupportedLanguage) : "en";
-      setLang(validLang);
-      setIsRtl(["ur", "ps", "fa", "ar"].includes(validLang));
-    }
-    syncLang();
-    const observer = new MutationObserver(syncLang);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
-    window.addEventListener("storage", syncLang);
-    window.addEventListener("erp_language_changed", syncLang);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("storage", syncLang);
-      window.removeEventListener("erp_language_changed", syncLang);
-    };
-  }, []);
-
   // Automatically trigger form modal if navigated directly to master-setup
   useEffect(() => {
     if (initialTab === "master-setup") {
