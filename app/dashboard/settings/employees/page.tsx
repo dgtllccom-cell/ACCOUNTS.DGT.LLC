@@ -1,9 +1,6 @@
-import { EmployeeManagementView } from "@/features/hr-payroll/components/employee-management-view";
+import { redirect } from "next/navigation";
 
-export default function EmployeesPage() {
-  return (
-    <div className="p-6">
-      <EmployeeManagementView />
-    </div>
-  );
+export default function EmployeesSettingsPage() {
+  redirect("/dashboard/general-office/employees");
 }
+

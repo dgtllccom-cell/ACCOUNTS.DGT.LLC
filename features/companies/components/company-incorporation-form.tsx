@@ -17,6 +17,7 @@ import {
   type LocationHierarchyValue
 } from "@/features/locations/components/location-hierarchy-select";
 import { apiPost, apiGet, apiPatch } from "@/lib/api/client";
+import { PersonPicker } from "@/features/hr-payroll/components/person-picker";
 import type { ContactTypeKey } from "@/features/contact-types/contact-type-api";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
@@ -357,6 +358,8 @@ export function CompanyIncorporationForm({
     }
     router.push("/dashboard/settings/company" as Route);
   }
+  const [ownerPersonId, setOwnerPersonId] = useState("");
+  const [existingCompaniesForOwner, setExistingCompaniesForOwner] = useState<Array<{ id: string; name: string }>>([]);
   const [ownerName, setOwnerName] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [businessName, setBusinessName] = useState("");
@@ -397,6 +400,29 @@ export function CompanyIncorporationForm({
     setMessage("");
     setCurrentStep(1);
   }
+
+  // Load existing companies when owner is selected
+  useEffect(() => {
+    if (!ownerPersonId) return;
+    (async () => {
+      try {
+        const pRes = await apiGet<{ customer: any }>(`/api/erp/customers/${encodeURIComponent(ownerPersonId)}?lang=${encodeURIComponent(lang)}`);
+        const pName = pRes.customer?.customer_name || [pRes.customer?.first_name, pRes.customer?.last_name].filter(Boolean).join(" ") || "";
+        if (pName) {
+          setOwnerName(pName);
+        }
+        const cRes = await apiGet<{ companies: any[] }>("/api/erp/companies?limit=100");
+        const list = cRes.companies || [];
+        const matched = list.filter((c: any) => 
+          (c.owner_name && c.owner_name.toLowerCase().trim() === pName.toLowerCase().trim()) ||
+          (c.owner_id && c.owner_id === ownerPersonId)
+        );
+        setExistingCompaniesForOwner(matched.map((m: any) => ({ id: m.id, name: m.name || m.legal_name })));
+      } catch (err) {
+        console.error("Failed to fetch owner details:", err);
+      }
+    })();
+  }, [ownerPersonId, lang]);
 
   // Tracks an existing company matched by name during duplicate-detection on save
   // (see the "duplicate"/"already exists" fallback below); cleared whenever the user
@@ -756,18 +782,63 @@ export function CompanyIncorporationForm({
           {currentStep === 1 && (
             <>
             <SectionTitle>{tr("company_form.section_company_details", "Company Details")}</SectionTitle>
-            <div className="grid gap-4 md:grid-cols-3">
+            
+            <div className="space-y-4">
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-slate-700">{tr("company_form.owner_name", "Company Owner Name")}</Label>
-                <Input value={ownerName} onChange={(event) => { setOwnerName(event.target.value); setSelectedCompanyId(null); }} placeholder={tr("company_form.enter_owner_name", "Enter owner name")} className="bg-white text-slate-900 border-slate-200" />
+                <PersonPicker
+                  label={lang === "ur" ? "کمپنی کا مالک منتخب یا شامل کریں *" : "Select or Add Company Owner Name *"}
+                  value={ownerPersonId}
+                  onValueChange={(id) => {
+                    setOwnerPersonId(id);
+                    setSelectedCompanyId(null);
+                  }}
+                  countryId={location.countryId}
+                  lang={lang}
+                />
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-slate-700">{tr("company_form.company_name", "Company Name")}</Label>
-                <Input value={companyName} onChange={(event) => { setCompanyName(event.target.value); setSelectedCompanyId(null); }} placeholder={tr("company_form.enter_company_name", "Enter company name")} className="bg-white text-slate-900 border-slate-200" />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-slate-700">{tr("company_form.business_name", "Business Name")}</Label>
-                <Input value={businessName} onChange={(event) => { setBusinessName(event.target.value); setSelectedCompanyId(null); }} placeholder={tr("company_form.enter_business_name", "Enter business name")} className="bg-white text-slate-900 border-slate-200" />
+
+              {ownerName && (
+                <div className="p-3.5 rounded-xl border border-indigo-200 bg-indigo-50/60 dark:bg-indigo-950/30 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-indigo-900 dark:text-indigo-200 font-bold text-xs">
+                      <span>👑 {lang === "ur" ? "منتخب کمپنی اونر:" : "Selected Company Owner:"}</span>
+                      <span className="font-extrabold text-indigo-700 dark:text-indigo-300">{ownerName}</span>
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200">
+                      {existingCompaniesForOwner.length} {lang === "ur" ? "رجسٹرڈ کمپنیاں" : "Registered Companies"}
+                    </span>
+                  </div>
+
+                  {existingCompaniesForOwner.length > 0 ? (
+                    <div className="space-y-1 pt-1 border-t border-indigo-100 dark:border-indigo-900/40">
+                      <p className="text-[10px] text-slate-600 dark:text-slate-400 font-semibold">
+                        {lang === "ur" ? `اس مالک کے تحت پہلے سے رجسٹرڈ کمپنیاں (آپ نئی کمپنی #${existingCompaniesForOwner.length + 1} درج کر رہے ہیں):` : `Existing registered companies for this owner (Registering Company #${existingCompaniesForOwner.length + 1}):`}
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {existingCompaniesForOwner.map((co, idx) => (
+                          <span key={co.id} className="text-[11px] font-semibold bg-white dark:bg-slate-900 border border-indigo-200 px-2 py-0.5 rounded-md text-slate-800 dark:text-slate-200">
+                            {idx + 1}. {co.name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-[10px] text-slate-500 italic">
+                      {lang === "ur" ? "اس مالک کے لیے یہ پہلی کمپنی درج کی جا رہی ہے۔" : "This is the first company being registered for this owner."}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-slate-700">{tr("company_form.company_name", "Company Name")} *</Label>
+                  <Input value={companyName} onChange={(event) => { setCompanyName(event.target.value); setSelectedCompanyId(null); }} placeholder={tr("company_form.enter_company_name", "Enter company name (e.g. DAMAN Trading Company LLC)")} className="bg-white text-slate-900 border-slate-200" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-slate-700">{tr("company_form.business_name", "Business Name")} *</Label>
+                  <Input value={businessName} onChange={(event) => { setBusinessName(event.target.value); setSelectedCompanyId(null); }} placeholder={tr("company_form.enter_business_name", "Enter business / trading name")} className="bg-white text-slate-900 border-slate-200" />
+                </div>
               </div>
             </div>
             </>
