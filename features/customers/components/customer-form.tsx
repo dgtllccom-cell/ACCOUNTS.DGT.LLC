@@ -468,22 +468,22 @@ export function CustomerForm({
               key={s.id}
               type="button"
               onClick={() => setCurrentStep(s.id as any)}
-              className={`flex items-center gap-2 border rounded-lg p-2.5 text-left transition-all ${
+              className={`flex items-center gap-2 border rounded-xl p-3 text-start transition-all ${
                 active
-                  ? "border-teal-500 bg-teal-50/50 text-teal-700 font-bold shadow-sm"
+                  ? "border-teal-500 bg-teal-50/70 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 font-bold shadow-sm"
                   : completed
                   ? "border-emerald-200 bg-emerald-50/50 text-emerald-700 font-bold"
-                  : "border-slate-100 bg-slate-50/50 text-slate-400"
+                  : "border-slate-100 bg-slate-50/50 text-slate-500 hover:bg-slate-100"
               }`}
             >
               <div
-                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md ${
-                  active ? "bg-teal-500 text-white" : completed ? "bg-emerald-500 text-white" : "bg-slate-200 text-slate-500"
+                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-bold ${
+                  active ? "bg-teal-500 text-white" : completed ? "bg-emerald-500 text-white" : "bg-slate-200 text-slate-600"
                 }`}
               >
                 {completed ? <CheckCircle2 className="h-4 w-4" /> : s.id}
               </div>
-              <span className="truncate">{s.label}</span>
+              <span className="truncate font-semibold leading-tight">{s.label}</span>
             </button>
           );
         })}
@@ -508,19 +508,25 @@ export function CustomerForm({
                       setCustomerType(e.target.value);
                       if (e.target.value !== "Business") setBusinessName("");
                     }}
-                    className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20"
+                    className="flex min-h-[44px] w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20 font-sans leading-relaxed"
                   >
-                    <option value="Country Owner">👑 Country Owner / Main Head (کنٹری اونر / مین ہیڈ)</option>
-                    <option value="Branch Owner">🏛️ Branch Owner / Manager (برانچ اونر / سٹی منیجر)</option>
-                    <option value="Company Owner">🏢 Company Owner / Partner (کمپنی اونر / پارٹنر)</option>
-                    <option value="Manager">👔 Manager / Director (منیجر / ڈائریکٹر)</option>
-                    <option value="Employee">💼 Employee / Staff (ملازم / عملہ)</option>
-                    <option value="Customer">👤 Customer / Client (گاہک / کسٹمر)</option>
-                    <option value="Vendor">🏭 Supplier / Vendor (سپلائر / وینڈر)</option>
-                    <option value="Truck Owner">🚚 Truck Owner (مالک ٹرک / ٹرانسپورٹر)</option>
-                    <option value="Driver">🚛 Truck Driver (ٹرک ڈرائیور)</option>
-                    <option value="Clearing Agent">🛃 Clearing Agent (کسٹم ایجنٹ)</option>
-                    <option value="Business">🏢 Corporate / Business (کارپوریٹ کمپنی)</option>
+                    {[
+                      { value: "Country Owner", label: lang === "ur" ? "👑 کنٹری اونر / مین ہیڈ" : lang === "ps" ? "👑 د هیواد مالک / مشر" : lang === "fa" ? "👑 مالک کشوری / رئیس" : lang === "ar" ? "👑 مالك الدولة / رئيس" : "👑 Country Owner / Main Head" },
+                      { value: "Branch Owner", label: lang === "ur" ? "🏛️ برانچ اونر / سٹی منیجر" : lang === "ps" ? "🏛️ د څانګې مالک / مدیر" : lang === "fa" ? "🏛️ مالک شعبه / مدیر" : lang === "ar" ? "🏛️ مالك الفرع / مدير" : "🏛️ Branch Owner / Manager" },
+                      { value: "Company Owner", label: lang === "ur" ? "🏢 کمپنی اونر / پارٹنر" : lang === "ps" ? "🏢 د شرکت مالک / شریک" : lang === "fa" ? "🏢 مالک شرکت / شریک" : lang === "ar" ? "🏢 مالك الشركة / الشريك" : "🏢 Company Owner / Partner" },
+                      { value: "Manager", label: lang === "ur" ? "👔 منیجر / ڈائریکٹر" : lang === "ps" ? "👔 مدیر / لارښود" : lang === "fa" ? "👔 مدیر / دایرکتور" : lang === "ar" ? "👔 مدير / المشرف" : "👔 Manager / Director" },
+                      { value: "Employee", label: lang === "ur" ? "💼 ملازم / عملہ" : lang === "ps" ? "💼 کارمند / عمله" : lang === "fa" ? "💼 کارمند / پرسنل" : lang === "ar" ? "💼 موظف / طاقم العمل" : "💼 Employee / Staff" },
+                      { value: "Customer", label: lang === "ur" ? "👤 کسٹمر / کلائنٹ" : lang === "ps" ? "👤 پیرودونکی / ګاهک" : lang === "fa" ? "👤 مشتری / خریدار" : lang === "ar" ? "👤 عميل / زبون" : "👤 Customer / Client" },
+                      { value: "Vendor", label: lang === "ur" ? "🏭 سپلائر / وینڈر" : lang === "ps" ? "🏭 عرضه کوونکی / وېشونکی" : lang === "fa" ? "🏭 تأمین‌کننده / فروشنده" : lang === "ar" ? "🏭 مورد / بائع" : "🏭 Supplier / Vendor" },
+                      { value: "Truck Owner", label: lang === "ur" ? "🚚 مالک ٹرک / ٹرانسپورٹر" : lang === "ps" ? "🚚 د ټرک مالک / ټرانسپورټر" : lang === "fa" ? "🚚 مالک موتربار / ترانسپورت" : lang === "ar" ? "🚚 مالك الشاحنة / ناقل" : "🚚 Truck Owner / Transporter" },
+                      { value: "Driver", label: lang === "ur" ? "🚛 ٹرک ڈرائیور" : lang === "ps" ? "🚛 د ټرک چلوونکی" : lang === "fa" ? "🚛 راننده موتربار" : lang === "ar" ? "🚛 سائق الشاحنة" : "🚛 Truck Driver" },
+                      { value: "Clearing Agent", label: lang === "ur" ? "🛃 کسٹم / کلیئرنگ ایجنٹ" : lang === "ps" ? "🛃 ګمرکي ایجنټ" : lang === "fa" ? "🛃 کارگزار گمرکی" : lang === "ar" ? "🛃 مخلص جمركي" : "🛃 Customs / Clearing Agent" },
+                      { value: "Business", label: lang === "ur" ? "🏢 کارپوریٹ کمپنی" : lang === "ps" ? "🏢 کارپوریټ شرکت" : lang === "fa" ? "🏢 شرکت تجاری" : lang === "ar" ? "🏢 شركة أعمال" : "🏢 Corporate / Business Company" }
+                    ].map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
 

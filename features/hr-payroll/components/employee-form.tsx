@@ -521,13 +521,47 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
     "Others": "hr.f_cat_others" 
   };
   const catLabel = (c: string) => {
-    if (c === "Country Owner") return lang === "ur" ? "👑 کنٹری اونر / ہیڈ" : "👑 Country Owner / Head";
-    if (c === "Branch Owner") return lang === "ur" ? "🏛️ برانچ اونر / منیجر" : "🏛️ Branch Owner / Manager";
-    if (c === "Company Owner") return lang === "ur" ? "🏢 کمپنی اونر" : "🏢 Company Owner";
-    if (c === "Manager") return lang === "ur" ? "👔 منیجر" : "👔 Manager";
-    if (c === "Normal Staff") return lang === "ur" ? "👥 سٹاف" : "👥 Normal Staff";
-    if (c === "Employee") return lang === "ur" ? "💼 ملازم" : "💼 Employee";
-    return t(lang, (CAT_KEYS[c] || "hr.f_cat_employee") as never, c);
+    if (lang === "ur") {
+      if (c === "Country Owner") return "👑 کنٹری اونر / ہیڈ";
+      if (c === "Branch Owner") return "🏛️ برانچ اونر / منیجر";
+      if (c === "Company Owner") return "🏢 کمپنی اونر";
+      if (c === "Manager") return "👔 منیجر";
+      if (c === "Normal Staff") return "👥 اسٹاف";
+      if (c === "Employee") return "💼 ملازم";
+      if (c === "Others") return "دیگر";
+    } else if (lang === "ps") {
+      if (c === "Country Owner") return "👑 د هیواد مالک / مشر";
+      if (c === "Branch Owner") return "🏛️ د څانګې مالک / مدیر";
+      if (c === "Company Owner") return "🏢 د شرکت مالک";
+      if (c === "Manager") return "👔 مدیر";
+      if (c === "Normal Staff") return "👥 کارمندان";
+      if (c === "Employee") return "💼 کارمند";
+      if (c === "Others") return "نور";
+    } else if (lang === "fa") {
+      if (c === "Country Owner") return "👑 مالک کشوری / رئیس";
+      if (c === "Branch Owner") return "🏛️ مالک شعبه / مدیر";
+      if (c === "Company Owner") return "🏢 مالک شرکت";
+      if (c === "Manager") return "👔 مدیر";
+      if (c === "Normal Staff") return "👥 پرسنل";
+      if (c === "Employee") return "💼 کارمند";
+      if (c === "Others") return "سایر";
+    } else if (lang === "ar") {
+      if (c === "Country Owner") return "👑 مالك الدولة / رئيس";
+      if (c === "Branch Owner") return "🏛️ مالك الفرع / مدير";
+      if (c === "Company Owner") return "🏢 مالك الشركة";
+      if (c === "Manager") return "👔 مدير";
+      if (c === "Normal Staff") return "👥 طاقم العمل";
+      if (c === "Employee") return "💼 موظف";
+      if (c === "Others") return "أخرى";
+    }
+    if (c === "Country Owner") return "👑 Country Owner / Head";
+    if (c === "Branch Owner") return "🏛️ Branch Owner / Manager";
+    if (c === "Company Owner") return "🏢 Company Owner";
+    if (c === "Manager") return "👔 Manager";
+    if (c === "Normal Staff") return "👥 Normal Staff";
+    if (c === "Employee") return "💼 Employee";
+    if (c === "Others") return "Others";
+    return c;
   };
 
   // A4 Employee Master Profile Print/PDF via the shared master-profile engine (item 10).
@@ -600,15 +634,15 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
   }
 
   const stepsList = [
-    { number: 1, label: t(lang, "hr.f_step_lbl_1", "Step 1: Category & Identity"), icon: <UserCheck className="h-4 w-4" /> },
-    { number: 2, label: t(lang, "hr.f_step_lbl_2", "Step 2: Location & Scopes"), icon: <MapPin className="h-4 w-4" /> },
-    { number: 3, label: t(lang, "hr.f_step_lbl_3", "Step 3: Timelines & Shift"), icon: <Clock className="h-4 w-4" /> },
-    { number: 4, label: t(lang, "hr.f_step_lbl_4", "Step 4: Salary & Accounts"), icon: <BadgeDollarSign className="h-4 w-4" /> },
-    { number: 5, label: t(lang, "hr.f_step_lbl_5", "Step 5: Entry Verification Report"), icon: <FileText className="h-4 w-4" /> }
+    { number: 1, label: lang === "ur" ? "مرحلہ ۱: زمرہ اور شناخت" : lang === "ps" ? "۱ ګام: کټګوري او هویت" : lang === "fa" ? "مرحله ۱: دسته و هویت" : lang === "ar" ? "الخطوة ۱: الفئة والهوية" : "Step 1: Category & Identity", icon: <UserCheck className="h-4 w-4" /> },
+    { number: 2, label: lang === "ur" ? "مرحلہ ۲: لوکیشن اور برانچ" : lang === "ps" ? "۲ ګام: ځای او څانګه" : lang === "fa" ? "مرحله ۲: موقعیت و شعبه" : lang === "ar" ? "الخطوة ۲: الموقع والفرع" : "Step 2: Location & Branch", icon: <MapPin className="h-4 w-4" /> },
+    { number: 3, label: lang === "ur" ? "مرحلہ ۳: اوقات اور شفٹ" : lang === "ps" ? "۳ ګام: وخت او شفټ" : lang === "fa" ? "مرحله ۳: زمان و شیفت" : lang === "ar" ? "الخطوة ۳: الدوام والمناوبة" : "Step 3: Timelines & Shift", icon: <Clock className="h-4 w-4" /> },
+    { number: 4, label: lang === "ur" ? "مرحلہ ۴: تنخواہ اور کھاتہ" : lang === "ps" ? "۴ ګام: معاش او حساب" : lang === "fa" ? "مرحله ۴: حقوق و حساب" : lang === "ar" ? "الخطوة ۴: الراتب والحساب" : "Step 4: Salary & Accounts", icon: <BadgeDollarSign className="h-4 w-4" /> },
+    { number: 5, label: lang === "ur" ? "مرحلہ ۵: تصدیق اور رپورٹ" : lang === "ps" ? "۵ ګام: تایید او راپور" : lang === "fa" ? "مرحله ۵: تأیید و گزارش" : lang === "ar" ? "الخطوة ۵: التدقيق والتقرير" : "Step 5: Verification Report", icon: <FileText className="h-4 w-4" /> }
   ];
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 bg-card text-card-foreground p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+    <form onSubmit={handleSubmit} className="space-y-6 bg-card text-card-foreground p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm font-sans">
       
       {/* Header Banner */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
@@ -640,16 +674,16 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
               key={s.number}
               type="button"
               onClick={() => setActiveStep(s.number)}
-              className={`flex items-center gap-2.5 rounded-xl border p-2.5 text-left transition-all ${
+              className={`flex items-center gap-2.5 rounded-xl border p-3 text-start min-h-[52px] transition-all font-sans ${
                 isActive
-                  ? "border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shadow-sm ring-1 ring-emerald-500/30"
+                  ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 shadow-sm ring-1 ring-emerald-500/30"
                   : isDone
                   ? "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 text-slate-700 dark:text-slate-300"
                   : "border-slate-200 dark:border-slate-800 bg-card text-slate-500 hover:border-slate-300"
               }`}
             >
               <div
-                className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg text-xs font-bold transition-colors ${
+                className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg text-xs font-black transition-colors ${
                   isActive
                     ? "bg-emerald-600 text-white"
                     : isDone
@@ -660,7 +694,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                 {isDone ? <Check className="h-3.5 w-3.5" /> : s.number}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-xs font-bold">{s.label}</div>
+                <div className="text-xs font-bold leading-tight">{s.label}</div>
               </div>
             </button>
           );
