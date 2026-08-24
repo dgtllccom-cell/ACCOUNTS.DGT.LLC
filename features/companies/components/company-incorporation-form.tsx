@@ -45,7 +45,7 @@ import type { ContactTypeKey } from "@/features/contact-types/contact-type-api";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
-import { LanguageSwitcher } from "@/components/layout/language-switcher";
+import { PreferencesControls } from "@/components/layout/preferences-controls";
 
 type DynamicList = "contacts" | "registrations" | "ownerIds";
 type DynamicRow = {
@@ -383,19 +383,19 @@ export function CompanyIncorporationForm({
           })}
         </div>
 
-        {/* Right Controls: Settings & Language */}
+        {/* Right Controls: Preferences & Close */}
         <div className="flex items-center gap-2">
+          <PreferencesControls />
           <Button
             type="button"
             variant="outline"
-            size="sm"
-            onClick={() => router.push("/dashboard/settings/company" as Route)}
-            className="h-9 px-3 rounded-xl border-slate-200 dark:border-slate-700 font-bold text-xs gap-1.5"
+            size="icon"
+            onClick={handleClose}
+            className="h-9 w-9 rounded-full border-slate-200"
+            title="Close"
           >
-            <Settings className="h-4 w-4 text-slate-500" />
-            <span>{lang === "ur" ? "سیٹنگز" : "Settings"}</span>
+            <X className="h-4 w-4" />
           </Button>
-          <LanguageSwitcher />
         </div>
       </header>
 
@@ -536,9 +536,9 @@ export function CompanyIncorporationForm({
             </CardHeader>
 
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
+              <div className="overflow-auto max-h-[300px]">
                 <table className="w-full text-[11px] text-left rtl:text-right">
-                  <thead className="bg-slate-50/60 dark:bg-slate-800/30 text-slate-500 border-b border-slate-100 dark:border-slate-800 font-bold uppercase">
+                  <thead className="bg-slate-50/60 dark:bg-slate-800/30 text-slate-500 border-b border-slate-100 dark:border-slate-800 font-bold uppercase sticky top-0 bg-white dark:bg-slate-900">
                     <tr>
                       <th className="px-3 py-2.5 text-center w-8">#</th>
                       <th className="px-3 py-2.5">{lang === "ur" ? "کمپنی کا نام" : "Company Name"}</th>
@@ -823,8 +823,10 @@ export function CompanyIncorporationForm({
                     <Label className="text-xs font-bold text-slate-700">{lang === "ur" ? "مقام کا انتخاب کریں" : "Select Location"}</Label>
                     <LocationHierarchySelect
                       value={location}
-                      onChange={(next) => setLocation(next)}
-                      onMetaChange={(meta) => setLocationMeta(meta)}
+                      onChange={(next, meta) => {
+                        setLocation(next);
+                        if (meta) setLocationMeta(meta);
+                      }}
                       lang={lang}
                     />
                   </div>

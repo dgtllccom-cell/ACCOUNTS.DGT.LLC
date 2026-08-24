@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
 
 export type AccountLiveReportProps = {
   // Wizard States
