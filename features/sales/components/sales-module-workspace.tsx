@@ -21,6 +21,7 @@ import { openSalesA4ReportWindow } from "@/lib/reports/open-sales-a4-report-wind
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 type SalesModuleType = "sales" | "stock";
 
@@ -312,12 +313,12 @@ export function SalesModuleWorkspace({
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
             <Button type="button" variant="outline" size="sm" className="h-9 px-3 border-slate-700 bg-slate-800 text-white hover:bg-slate-700 rounded-xl font-bold transition" onClick={() => window.history.back()}>
-              <ArrowLeft className="h-4 w-4 mr-1" /> Back
+              <ArrowLeft className="h-4 w-4 mr-1" /> {t(lang, "common.back", "Back")}
             </Button>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="truncate text-xl sm:text-2xl md:text-3xl font-black text-white">{title}</h1>
-                <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-black uppercase text-emerald-400 border border-emerald-500/30">Spreadsheet Dashboard</span>
+                <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-black uppercase text-emerald-400 border border-emerald-500/30">{t(lang, "purchase.pmw_spreadsheet_dashboard", "Spreadsheet Dashboard")}</span>
               </div>
               <p className="truncate text-xs sm:text-sm text-slate-300 font-medium mt-0.5">{description}</p>
             </div>
@@ -353,35 +354,35 @@ export function SalesModuleWorkspace({
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search SO, Customer, Goods, Branch..."
+              placeholder={t(lang, "sales.smw_search_placeholder", "Search SO, Customer, Goods, Branch...")}
               className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 pl-9 pr-3 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 font-medium"
             />
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             <Button type="button" variant="outline" size="sm" className="h-10 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 hover:bg-slate-100 font-bold px-3.5 rounded-xl" onClick={() => setFiltersOpen((value) => !value)}>
-              <Filter className="h-4 w-4 mr-1.5 text-slate-500" /> Filter
+              <Filter className="h-4 w-4 mr-1.5 text-slate-500" /> {t(lang, "purchase.pmw_filter", "Filter")}
             </Button>
             <Button type="button" variant="outline" size="sm" className="h-10 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 hover:bg-slate-100 font-bold px-3.5 rounded-xl" onClick={() => { setQuery(""); setCountryFilter(""); setStatusFilter(""); void loadOrders(); }}>
-              <RefreshCw className={cn("h-4 w-4 mr-1.5 text-slate-500", loading && "animate-spin")} /> Refresh
+              <RefreshCw className={cn("h-4 w-4 mr-1.5 text-slate-500", loading && "animate-spin")} /> {t(lang, "common.refresh", "Refresh")}
             </Button>
             <span className="hidden h-10 items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 text-xs font-bold text-slate-600 dark:text-slate-400 lg:inline-flex">
               <CalendarDays className="h-4 w-4 text-emerald-500" /> {reportNow ? `${reportNow.date}, ${reportNow.time}` : "-"}
             </span>
             <div className="relative">
-              <Button type="button" variant="outline" size="icon" className="h-10 w-10 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 hover:bg-slate-100 rounded-xl" onClick={() => setActionsOpen((value) => !value)} aria-label="Actions">
+              <Button type="button" variant="outline" size="icon" className="h-10 w-10 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 hover:bg-slate-100 rounded-xl" onClick={() => setActionsOpen((value) => !value)} aria-label={t(lang, "common.actions", "Actions")}>
                 <MoreVertical className="h-4 w-4" />
               </Button>
               {actionsOpen ? (
                 <div className="absolute right-0 z-20 mt-1 w-48 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-1.5 text-xs shadow-xl text-slate-800 dark:text-slate-200 font-medium">
                   <button className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-bold hover:bg-slate-100 dark:hover:bg-slate-900" onClick={() => exportCsv(rows, title)}>
-                    <FileSpreadsheet className="h-4 w-4 text-emerald-500" /> Export Excel
+                    <FileSpreadsheet className="h-4 w-4 text-emerald-500" /> {t(lang, "purchase.pmw_export_excel", "Export Excel")}
                   </button>
                   <button className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-bold hover:bg-slate-100 dark:hover:bg-slate-900" onClick={() => { import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => { openGenericErpReport({ title: title || "Sales Report", lang, columns: columns.map(c => ({ key: c.key, label: c.label })), rows: rows as Record<string, unknown>[] }); }); }}>
-                    <Printer className="h-4 w-4 text-cyan-500" /> Print / PDF
+                    <Printer className="h-4 w-4 text-cyan-500" /> {t(lang, "purchase.pmw_print_pdf", "Print / PDF")}
                   </button>
                   <button className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-bold hover:bg-slate-100 dark:hover:bg-slate-900" onClick={() => exportCsv(rows, title)}>
-                    <Download className="h-4 w-4 text-slate-400" /> Download CSV
+                    <Download className="h-4 w-4 text-slate-400" /> {t(lang, "purchase.pmw_download_csv", "Download CSV")}
                   </button>
                 </div>
               ) : null}
@@ -392,11 +393,11 @@ export function SalesModuleWorkspace({
         {filtersOpen ? (
           <div className="mt-3 grid gap-3 border-t border-slate-200 dark:border-slate-800 pt-3 sm:grid-cols-3">
             <select value={countryFilter} onChange={(event) => setCountryFilter(event.target.value)} className="h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 text-xs sm:text-sm text-slate-900 dark:text-slate-100 font-semibold">
-              <option value="">All Countries</option>
+              <option value="">{t(lang, "common.all_countries", "All Countries")}</option>
               {countries.map((item) => <option key={item} value={item}>{item}</option>)}
             </select>
             <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 text-xs sm:text-sm text-slate-900 dark:text-slate-100 font-semibold">
-              <option value="">All Status</option>
+              <option value="">{t(lang, "common.all_status", "All Status")}</option>
               {statuses.map((item) => <option key={item} value={item}>{item}</option>)}
             </select>
             <input type="date" className="h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 text-xs sm:text-sm text-slate-900 dark:text-slate-100 font-semibold" />
@@ -407,10 +408,10 @@ export function SalesModuleWorkspace({
       {/* Country Breakdown Cards */}
       <section className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm space-y-3">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-1 border-b border-slate-200 dark:border-slate-800 pb-3 text-xs font-bold uppercase text-slate-500 dark:text-slate-400">
-          <span>Branch Name: <b className="text-slate-900 dark:text-slate-100">{rows[0] ? branch(rows[0]) : "All Branches"}</b></span>
-          <span>User Name: <b className="text-slate-900 dark:text-slate-100">Super Admin</b></span>
-          <span>Date: <b className="text-slate-900 dark:text-slate-100">{reportNow?.date || "-"}</b></span>
-          <span>Time: <b className="text-slate-900 dark:text-slate-100">{reportNow?.time || "-"}</b></span>
+          <span>{t(lang, "purchase.pmw_branch_name_label", "Branch Name:")} <b className="text-slate-900 dark:text-slate-100">{rows[0] ? branch(rows[0]) : t(lang, "common.all_branches", "All Branches")}</b></span>
+          <span>{t(lang, "purchase.pmw_user_name_label", "User Name:")} <b className="text-slate-900 dark:text-slate-100">{t(lang, "purchase.pmw_super_admin", "Super Admin")}</b></span>
+          <span>{t(lang, "common.date", "Date")}: <b className="text-slate-900 dark:text-slate-100">{reportNow?.date || "-"}</b></span>
+          <span>{t(lang, "common.time", "Time")}: <b className="text-slate-900 dark:text-slate-100">{reportNow?.time || "-"}</b></span>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 pt-2">
@@ -426,16 +427,16 @@ export function SalesModuleWorkspace({
                   <div key={curr.currency} className="space-y-2">
                     <div className="text-[11px] font-black uppercase text-slate-500 dark:text-slate-400">{curr.currency} <span className="font-bold lowercase text-slate-400">({curr.count} SOs)</span></div>
                     <div className="grid grid-cols-2 gap-2 text-[10px] sm:text-xs">
-                      <div className="rounded-xl bg-white dark:bg-slate-900 p-2.5 border border-slate-200 dark:border-slate-800"><span className="block text-slate-400 font-bold uppercase text-[9px]">Total Sales</span><b className="text-slate-900 dark:text-slate-100 font-mono">{money(curr.invoice, curr.currency)}</b></div>
-                      <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/30 p-2.5 border border-emerald-200 dark:border-emerald-900/40"><span className="block text-emerald-600 dark:text-emerald-400 font-bold uppercase text-[9px]">Paid</span><b className="text-emerald-700 dark:text-emerald-300 font-mono">{money(curr.advance, curr.currency)}</b></div>
-                      <div className="col-span-2 rounded-xl bg-rose-50 dark:bg-rose-950/30 p-2.5 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40"><span className="block text-slate-400 font-bold uppercase text-[9px]">Receivable Balance</span><b className="text-xs font-mono font-black">{money(curr.remaining, curr.currency)}</b></div>
+                      <div className="rounded-xl bg-white dark:bg-slate-900 p-2.5 border border-slate-200 dark:border-slate-800"><span className="block text-slate-400 font-bold uppercase text-[9px]">{t(lang, "sales.smw_total_sales", "Total Sales")}</span><b className="text-slate-900 dark:text-slate-100 font-mono">{money(curr.invoice, curr.currency)}</b></div>
+                      <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/30 p-2.5 border border-emerald-200 dark:border-emerald-900/40"><span className="block text-emerald-600 dark:text-emerald-400 font-bold uppercase text-[9px]">{t(lang, "sales.smw_paid", "Paid")}</span><b className="text-emerald-700 dark:text-emerald-300 font-mono">{money(curr.advance, curr.currency)}</b></div>
+                      <div className="col-span-2 rounded-xl bg-rose-50 dark:bg-rose-950/30 p-2.5 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40"><span className="block text-slate-400 font-bold uppercase text-[9px]">{t(lang, "sales.smw_receivable_balance", "Receivable Balance")}</span><b className="text-xs font-mono font-black">{money(curr.remaining, curr.currency)}</b></div>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
           )) : (
-            <div className="col-span-full rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 p-6 text-center text-sm font-medium text-slate-500">No sales records found for this dashboard scope.</div>
+            <div className="col-span-full rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 p-6 text-center text-sm font-medium text-slate-500">{t(lang, "sales.smw_no_dashboard_records", "No sales records found for this dashboard scope.")}</div>
           )}
         </div>
       </section>
@@ -444,11 +445,11 @@ export function SalesModuleWorkspace({
       <section className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-base font-black text-slate-900 dark:text-slate-100">Quantity / Items Summary</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Containers, quantity, weight, and workflow totals.</p>
+            <h2 className="text-base font-black text-slate-900 dark:text-slate-100">{t(lang, "sales.smw_quantity_items_summary", "Quantity / Items Summary")}</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t(lang, "purchase.pmw_quantity_report_subtitle", "Containers, quantity, weight, and workflow totals.")}</p>
           </div>
           <Button type="button" variant="outline" size="sm" className="h-8 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 hover:bg-slate-100 font-bold text-xs rounded-xl" onClick={() => exportCsv(rows, title)}>
-            View Full Report
+            {t(lang, "purchase.pmw_view_full_report", "View Full Report")}
           </Button>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -463,16 +464,16 @@ export function SalesModuleWorkspace({
       <section className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
         <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-4 py-3 bg-slate-50/50 dark:bg-slate-950">
           <div>
-            <h2 className="text-base font-black text-slate-900 dark:text-slate-100">{title} — Spreadsheet Register</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Live sales workflow records and transaction details</p>
+            <h2 className="text-base font-black text-slate-900 dark:text-slate-100">{title} — {t(lang, "sales.smw_spreadsheet_register", "Spreadsheet Register")}</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t(lang, "sales.smw_live_records_subtitle", "Live sales workflow records and transaction details")}</p>
           </div>
           <span className="px-3 py-1 bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold font-mono">
-            {rows.length} Records
+            {rows.length} {t(lang, "sales.smw_records_word", "Records")}
           </span>
         </div>
 
         {error ? <div className="m-4 rounded-xl border border-rose-300 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/20 px-4 py-3 text-xs font-bold text-rose-600 dark:text-rose-400">{error}</div> : null}
-        
+
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1320px] text-xs sm:text-sm text-left text-slate-700 dark:text-slate-300">
             <thead className="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-200 uppercase font-black text-[11px] sm:text-xs border-b border-slate-200 dark:border-slate-800">
@@ -484,7 +485,7 @@ export function SalesModuleWorkspace({
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800 font-medium">
               {loading ? (
-                <tr><td colSpan={14} className="px-4 py-12 text-center text-slate-500 font-medium">Loading sales records...</td></tr>
+                <tr><td colSpan={14} className="px-4 py-12 text-center text-slate-500 font-medium">{t(lang, "sales.smw_loading", "Loading sales records...")}</td></tr>
               ) : rows.length ? rows.map((row) => (
                 <tr key={row.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
                   <td className="px-4 py-3.5 font-mono font-bold text-slate-900 dark:text-slate-100">{soNumber(row)}</td>
@@ -496,7 +497,7 @@ export function SalesModuleWorkspace({
                   <td className="px-4 py-3.5"><b>{form(row).purchaseAccountName || customer(row)}</b><br /><span className="text-slate-400 text-[11px]">{form(row).purchaseAccountNo || "-"}</span></td>
                   <td className="px-4 py-3.5"><b>{form(row).salesAccountName || "-"}</b><br /><span className="text-slate-400 text-[11px]">{form(row).salesAccountNo || "-"}</span></td>
                   <td className="px-4 py-3.5"><b>{product(row)}</b><br /><span className="text-slate-400 text-[11px]">{goods(row)[0]?.brand || "-"}</span></td>
-                  <td className="px-4 py-3.5">Qty: <b>{quantity(row).toLocaleString()}</b><br />Net: <b>{weight(row).toLocaleString()} KG</b></td>
+                  <td className="px-4 py-3.5">{t(lang, "purchase.pmw_qty_label", "Qty:")} <b>{quantity(row).toLocaleString()}</b><br />{t(lang, "purchase.pmw_net_label", "Net:")} <b>{weight(row).toLocaleString()} KG</b></td>
                   <td className="px-4 py-3.5 font-mono"><b>{money(amount(row), currency(row))}</b><br /><span className="text-slate-400 text-[11px]">Rate: {Number(row.exchange_rate || form(row).exchangeRate || 1)}</span></td>
                   <td className="px-4 py-3.5 font-mono">
                     <b>{money(advance(row), currency(row))}</b><br />
@@ -511,7 +512,7 @@ export function SalesModuleWorkspace({
                       variant="outline"
                       size="icon"
                       className="h-8 w-8 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 hover:bg-slate-100 rounded-xl"
-                      title="View & Post Payments"
+                      title={t(lang, "sales.smw_view_post_payments_title", "View & Post Payments")}
                       onClick={() => router.push(`/dashboard/sales/sales-order/view?id=${row.id}`)}
                     >
                       <Eye className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
@@ -519,7 +520,7 @@ export function SalesModuleWorkspace({
                   </td>
                 </tr>
               )) : (
-                <tr><td colSpan={14} className="px-4 py-12 text-center text-slate-500 font-medium">No live sales records found for this stage.</td></tr>
+                <tr><td colSpan={14} className="px-4 py-12 text-center text-slate-500 font-medium">{t(lang, "sales.smw_no_live_records", "No live sales records found for this stage.")}</td></tr>
               )}
             </tbody>
           </table>

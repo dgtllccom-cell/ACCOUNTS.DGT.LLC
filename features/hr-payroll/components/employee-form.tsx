@@ -165,15 +165,13 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
     }
     async function loadBranches() {
       try {
-        const res = await apiGet<{ ok: boolean; data: { branches: any[] } }>(`/api/erp/locations/branches/main?countryId=${countryId}`);
-        if (res.ok && res.data?.branches) {
-          const list = res.data.branches;
-          setBranches(list);
-          if (list.length > 0) {
-            setCountryBranchId((prev) => (list.some((b) => b.id === prev) ? prev : list[0].id));
-          } else {
-            setCountryBranchId("");
-          }
+        const res: any = await apiGet(`/api/erp/locations/branches/main?countryId=${encodeURIComponent(countryId)}`);
+        const list = Array.isArray(res?.data?.branches) ? res.data.branches : Array.isArray(res?.branches) ? res.branches : [];
+        setBranches(list);
+        if (list.length > 0) {
+          setCountryBranchId((prev: string) => (list.some((b: any) => b.id === prev) ? prev : list[0].id));
+        } else {
+          setCountryBranchId("");
         }
       } catch (err) {
         console.error(err);
@@ -191,16 +189,14 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
     }
     async function loadCityBranches() {
       try {
-        const url = `/api/erp/locations/branches/city?countryId=${countryId}${countryBranchId ? `&countryBranchId=${countryBranchId}` : ""}`;
-        const res = await apiGet<{ ok: boolean; data: { cityBranches: any[] } }>(url);
-        if (res.ok && res.data?.cityBranches) {
-          const list = res.data.cityBranches;
-          setCityBranches(list);
-          if (list.length > 0) {
-            setCityBranchId((prev) => (list.some((cb) => cb.id === prev) ? prev : list[0].id));
-          } else {
-            setCityBranchId("");
-          }
+        const url = `/api/erp/locations/branches/city?countryId=${encodeURIComponent(countryId)}${countryBranchId ? `&countryBranchId=${encodeURIComponent(countryBranchId)}` : ""}`;
+        const res: any = await apiGet(url);
+        const list = Array.isArray(res?.data?.cityBranches) ? res.data.cityBranches : Array.isArray(res?.cityBranches) ? res.cityBranches : [];
+        setCityBranches(list);
+        if (list.length > 0) {
+          setCityBranchId((prev: string) => (list.some((cb: any) => cb.id === prev) ? prev : list[0].id));
+        } else {
+          setCityBranchId("");
         }
       } catch (err) {
         console.error(err);
@@ -336,7 +332,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
   async function handleSubmit(e?: React.FormEvent) {
     if (e) e.preventDefault();
     if (!personMasterId) {
-      alert("Please select or add an Employee / Person Name first.");
+      alert(t(lang, "hr.select_person_first", "Please select or add an Employee / Person Name first."));
       setActiveStep(1);
       return;
     }
@@ -417,7 +413,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
       }
       onSave(savedId);
     } catch (err: any) {
-      alert("Error saving employee profile: " + err.message);
+      alert(t(lang, "hr.error_saving_profile", "Error saving employee profile: ") + err.message);
     } finally {
       setSaving(false);
     }
@@ -794,7 +790,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                 <option value="">{t(lang, "hr.f_select_city_branch", "Select City Branch")}</option>
                 {cityBranches.map((cb) => (
                   <option key={cb.id} value={cb.id}>
-                    {cb.name} {cb.code ? `(${cb.code})` : ""}
+                    {cb.city_name || cb.cityName ? `${cb.city_name || cb.cityName} — ` : ""}{cb.name} {cb.code ? `(${cb.code})` : ""}
                   </option>
                 ))}
               </select>

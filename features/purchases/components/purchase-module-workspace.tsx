@@ -493,8 +493,8 @@ export function PurchaseModuleWorkspace({
         <div className="mb-2 flex flex-wrap items-center gap-x-6 gap-y-1 border-b pb-2 text-[11px] font-bold uppercase text-muted-foreground">
           <span>{t(lang, "purchase.pmw_branch_name_label", "Branch Name:")} <b className="text-foreground">{rows[0] ? branch(rows[0]) : t(lang, "common.all_branches", "All Branches")}</b></span>
           <span>{t(lang, "purchase.pmw_user_name_label", "User Name:")} <b className="text-foreground">{t(lang, "purchase.pmw_super_admin", "Super Admin")}</b></span>
-          <span>Date: <b className="text-foreground">{reportNow?.date || "-"}</b></span>
-          <span>Time: <b className="text-foreground">{reportNow?.time || "-"}</b></span>
+          <span>{t(lang, "common.date", "Date")}: <b className="text-foreground">{reportNow?.date || "-"}</b></span>
+          <span>{t(lang, "common.time", "Time")}: <b className="text-foreground">{reportNow?.time || "-"}</b></span>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {countryCards.length ? countryCards.map((countryCard) => (

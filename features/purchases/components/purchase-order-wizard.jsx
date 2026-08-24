@@ -131,7 +131,7 @@ async function lookupAccountMaster(query, countryId, countryBranchId, cityBranch
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok || !payload.ok) {
-    throw new Error(payload?.error?.message || payload?.error || "Account lookup failed.");
+    throw new Error(payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_account_lookup", "Account lookup failed."));
   }
   return payload.data?.found ? payload.data.account : null;
 }
@@ -154,7 +154,7 @@ async function lookupPurchaseBookingReport(query, countryId, countryBranchId, ci
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok || !payload.ok) {
-    throw new Error(payload?.error?.message || payload?.error || "Purchase booking lookup failed.");
+    throw new Error(payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_booking_lookup", "Purchase booking lookup failed."));
   }
   return payload.data?.reports?.[0] ?? null;
 }
@@ -498,8 +498,10 @@ export function PurchaseOrderWizard({ session }) {
   const lang = useActiveLanguage();
   const trUi = useCallback((label) => {
     if (lang === "en") return label;
-    const translated = translateHeader(lang, label);
-    return translated === label ? translationPendingLabel(lang) : translated;
+    // translateHeader() already returns the original label unchanged when no dictionary
+    // entry exists for it — that IS the correct fallback, not a signal to replace it with a
+    // "Translation pending" placeholder.
+    return translateHeader(lang, label);
   }, [lang]);
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState("booking"); // "booking" | "goods" | "others" | "reports"
@@ -1477,7 +1479,7 @@ export function PurchaseOrderWizard({ session }) {
           if (res.ok && payload.ok) {
             poData = payload.data?.order ?? payload.order ?? null;
           } else {
-            throw new Error(payload?.error?.message || payload?.error || "Failed to load purchase order by ID.");
+            throw new Error(payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_load_order_by_id", "Failed to load purchase order by ID."));
           }
         } else if (poNo) {
           poData = await lookupPurchaseBookingReport(
@@ -1937,8 +1939,8 @@ export function PurchaseOrderWizard({ session }) {
     return true;
   };
   const formatAccountDisplayLabel = (accountName, accountCode, manualReferenceNumber) => {
-    const name = accountName || "Unnamed Account";
-    const code = accountCode || "No Code";
+    const name = accountName || t(lang, "purchase.wiz_unnamed_account", "Unnamed Account");
+    const code = accountCode || t(lang, "purchase.wiz_no_code", "No Code");
     const manual = manualReferenceNumber ? ` [Manual: ${manualReferenceNumber}]` : "";
     return `${name} (${code})${manual}`;
   };
@@ -2128,15 +2130,17 @@ export function PurchaseOrderWizard({ session }) {
     try {
       const account = await lookupAccountMaster(query, form.countryId, form.countryBranchId, form.cityBranchId, isSuperAdmin);
       if (!account) {
-        setAccountLookupMessage(`Account not found: ${query}.`);
+        setAccountLookupMessage(t(lang, "purchase.wiz_account_not_found", "Account not found: {0}.").replace("{0}", query));
         return;
       }
       applyAccountMaster(type, account);
       setAccountLookupMessage(
-        `${type === "purchase" ? "Purchase" : "Sales"} account loaded: ${account.accountName}`
+        t(lang, "purchase.wiz_account_loaded", "{0} account loaded: {1}")
+          .replace("{0}", type === "purchase" ? t(lang, "purchase.wiz_type_purchase", "Purchase") : t(lang, "purchase.wiz_type_sales", "Sales"))
+          .replace("{1}", account.accountName)
       );
     } catch (error) {
-      setAccountLookupMessage(error instanceof Error ? error.message : "Account lookup failed.");
+      setAccountLookupMessage(error instanceof Error ? error.message : t(lang, "purchase.wiz_err_account_lookup", "Account lookup failed."));
     } finally {
       setAccountLookupLoading(null);
     }
@@ -2299,7 +2303,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
 
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.ok) {
-        throw new Error(payload?.error?.message || payload?.error || "Failed to create port.");
+        throw new Error(payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_create_port", "Failed to create port."));
       }
 
       // Re-fetch port list
@@ -2492,7 +2496,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.ok) {
         const errDetails = payload?.error?.details ? JSON.stringify(payload.error.details) : "";
-        throw new Error(`${payload?.error?.message || payload?.error || "Purchase order failed to save."} ${errDetails}`);
+        throw new Error(`${payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_order_save", "Purchase order failed to save.")} ${errDetails}`);
       }
       const returnedOrderId = payload.data?.purchaseOrderId || savedOrderId || payload.data?.id;
       const returnedOrderNo = payload.data?.purchaseOrderNo || savedOrderNo || form.purchaseOrderNo;
@@ -2546,7 +2550,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.ok) {
         const errDetails = payload?.error?.details ? JSON.stringify(payload.error.details) : "";
-        throw new Error(`${payload?.error?.message || payload?.error || "Purchase order failed to save."} ${errDetails}`);
+        throw new Error(`${payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_order_save", "Purchase order failed to save.")} ${errDetails}`);
       }
       const returnedOrderId = payload.data?.purchaseOrderId || savedOrderId || payload.data?.id;
       const returnedOrderNo = payload.data?.purchaseOrderNo || savedOrderNo || form.purchaseOrderNo;
@@ -2560,7 +2564,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
         });
         const transferPayload = await transferResponse.json().catch(() => ({}));
         if (!transferResponse.ok || !transferPayload.ok) {
-          throw new Error(transferPayload?.error?.message || transferPayload?.error || "Roznamcha/Ledger Transfer failed.");
+          throw new Error(transferPayload?.error?.message || transferPayload?.error || t(lang, "purchase.wiz_err_roznamcha_transfer", "Roznamcha/Ledger Transfer failed."));
         }
         transferDestination = `${transferPayload.data?.destinationPath || transferDestination.split("?")[0]}?purchaseOrderNo=${encodeURIComponent(returnedOrderNo || "")}`;
       }
@@ -2603,7 +2607,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.ok) {
         const errDetails = payload?.error?.details ? JSON.stringify(payload.error.details) : "";
-        throw new Error(`${payload?.error?.message || payload?.error || "Purchase order failed to save."} ${errDetails}`);
+        throw new Error(`${payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_order_save", "Purchase order failed to save.")} ${errDetails}`);
       }
       const returnedOrderId = payload.data?.purchaseOrderId || savedOrderId || payload.data?.id;
       const returnedOrderNo = payload.data?.purchaseOrderNo || savedOrderNo || form.purchaseOrderNo;
@@ -2618,7 +2622,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
         });
         const transferPayload = await transferResponse.json().catch(() => ({}));
         if (!transferResponse.ok || !transferPayload.ok) {
-          throw new Error(transferPayload?.error?.message || transferPayload?.error || "Roznamcha/Ledger Transfer failed.");
+          throw new Error(transferPayload?.error?.message || transferPayload?.error || t(lang, "purchase.wiz_err_roznamcha_transfer", "Roznamcha/Ledger Transfer failed."));
         }
         transferDestination = transferPayload.data?.destinationPath || transferDestination;
       }
@@ -2643,7 +2647,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
 
   const handleDelete = async () => {
     if (!savedOrderId) return;
-    if (!window.confirm("Are you sure you want to permanently delete this booking? All associated ledger transfers will be reverted.")) {
+    if (!window.confirm(t(lang, "purchase.wiz_confirm_delete_booking", "Are you sure you want to permanently delete this booking? All associated ledger transfers will be reverted."))) {
       return;
     }
 
@@ -2655,10 +2659,10 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.ok) {
-        throw new Error(payload?.error?.message || payload?.error || "Failed to delete booking.");
+        throw new Error(payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_delete_booking", "Failed to delete booking."));
       }
 
-      alert("Booking successfully deleted and transfers reverted.");
+      alert(t(lang, "purchase.wiz_deleted_reverted", "Booking successfully deleted and transfers reverted."));
       setRegisterRefreshKey(k => k + 1);
       setIsFormOpen(false);
       handleReset();
@@ -2765,7 +2769,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
   const handleAddNewCountry = async () => {
     const { name } = newCountryForm;
     if (!name.trim()) {
-      setNewCountryError("Country name is required.");
+      setNewCountryError(t(lang, "purchase.wiz_country_name_required", "Country name is required."));
       return;
     }
     setNewCountryLoading(true);
@@ -2790,7 +2794,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.ok) {
-        throw new Error(payload?.error?.message || payload?.error || "Failed to create country.");
+        throw new Error(payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_create_country", "Failed to create country."));
       }
       const created = payload.data?.country;
       if (created) {
@@ -2818,7 +2822,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
       setNewCountryForm({ name: "" });
       setSaveMessage(`Country "${trimmed}" saved to master.`);
     } catch (err) {
-      setNewCountryError(err instanceof Error ? err.message : "Failed to create country.");
+      setNewCountryError(err instanceof Error ? err.message : t(lang, "purchase.wiz_err_create_country", "Failed to create country."));
     } finally {
       setNewCountryLoading(false);
     }
@@ -2827,7 +2831,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
   const handleAddNewGood = async () => {
     const { goodsName, chsCode } = newGoodForm;
     if (!goodsName.trim() || !chsCode.trim()) {
-      setNewGoodError("Goods name and HS code are required.");
+      setNewGoodError(t(lang, "purchase.wiz_goods_hscode_required", "Goods name and HS code are required."));
       return;
     }
     setNewGoodLoading(true);
@@ -2844,7 +2848,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.ok) {
-        throw new Error(payload?.error?.message || payload?.error || "Failed to create good.");
+        throw new Error(payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_create_good", "Failed to create good."));
       }
       // Refresh goods list and auto-select the new good
       const reloadRes = await fetch("/api/erp/goods?limit=500").then(r => r.json()).catch(() => ({}));
@@ -2856,7 +2860,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
       setNewGoodForm({ goodsName: "", chsCode: "" });
       setSaveMessage(`Good "${goodsName.trim().toUpperCase()}" saved to master.`);
     } catch (err) {
-      setNewGoodError(err instanceof Error ? err.message : "Failed to create good.");
+      setNewGoodError(err instanceof Error ? err.message : t(lang, "purchase.wiz_err_create_good", "Failed to create good."));
     } finally {
       setNewGoodLoading(false);
     }
@@ -2883,7 +2887,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
   const handleAddNewAccount = async () => {
     const { code, name, kind, currency, parentId, isControlAccount } = createAccountForm;
     if (!name.trim() || !code.trim()) {
-      setCreateAccountError("Account name and code are required.");
+      setCreateAccountError(t(lang, "purchase.wiz_account_name_code_required", "Account name and code are required."));
       return;
     }
     setCreateAccountLoading(true);
@@ -2914,7 +2918,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
       });
       const payloadData = await response.json().catch(() => ({}));
       if (!response.ok || !payloadData.ok) {
-        throw new Error(payloadData?.error?.message || payloadData?.error || "Failed to create account.");
+        throw new Error(payloadData?.error?.message || payloadData?.error || t(lang, "purchase.wiz_err_create_account", "Failed to create account."));
       }
 
       // Refresh accounts list
@@ -2962,7 +2966,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
 
       setCreateAccountModalOpen(false);
     } catch (err) {
-      setCreateAccountError(err instanceof Error ? err.message : "Failed to create account.");
+      setCreateAccountError(err instanceof Error ? err.message : t(lang, "purchase.wiz_err_create_account", "Failed to create account."));
     } finally {
       setCreateAccountLoading(false);
     }
@@ -2971,7 +2975,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
   const handleAddNewCompany = async () => {
     const { name, legalName, baseCurrency } = createCompanyForm;
     if (!name.trim()) {
-      setCreateCompanyError("Company name is required.");
+      setCreateCompanyError(t(lang, "purchase.wiz_company_name_required", "Company name is required."));
       return;
     }
     setCreateCompanyLoading(true);
@@ -2994,7 +2998,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
 
       const payloadData = await response.json().catch(() => ({}));
       if (!response.ok || !payloadData.ok) {
-        throw new Error(payloadData?.error?.message || payloadData?.error || "Failed to create company.");
+        throw new Error(payloadData?.error?.message || payloadData?.error || t(lang, "purchase.wiz_err_create_company", "Failed to create company."));
       }
 
       const createdId = payloadData.companyId || payloadData.data?.companyId;
@@ -3026,7 +3030,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
       setCreateCompanyForm({ name: "", legalName: "", baseCurrency: "USD" });
       setSaveMessage(`Company "${finalName}" created successfully.`);
     } catch (err) {
-      setCreateCompanyError(err instanceof Error ? err.message : "Failed to create company.");
+      setCreateCompanyError(err instanceof Error ? err.message : t(lang, "purchase.wiz_err_create_company", "Failed to create company."));
     } finally {
       setCreateCompanyLoading(false);
     }
@@ -3035,7 +3039,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
   const handleSaveCustomVariation = async () => {
     const { goodsName, brand, size } = customVariationForm;
     if (!brand.trim() || !size.trim()) {
-      alert("Please fill both Brand and Size.");
+      alert(t(lang, "purchase.wiz_fill_brand_size", "Please fill both Brand and Size."));
       return;
     }
 
@@ -3076,7 +3080,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
         });
         const createData = await createRes.json().catch(() => ({}));
         if (!createRes.ok || !createData.ok) {
-          throw new Error(createData?.error?.message || createData?.error || "Failed to create Good in master.");
+          throw new Error(createData?.error?.message || createData?.error || t(lang, "purchase.wiz_err_create_good_master", "Failed to create Good in master."));
         }
         targetGoodsId = createData.goodsId || createData.data?.goodsId;
 
@@ -3103,7 +3107,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
 
         const payload = await response.json().catch(() => ({}));
         if (!response.ok || !payload.ok) {
-          throw new Error(payload?.error?.message || payload?.error || "Failed to save variation.");
+          throw new Error(payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_save_variation", "Failed to save variation."));
         }
       } catch (err) {
         setSavingOrder(false);
@@ -3152,7 +3156,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
         body: JSON.stringify({ chsCode: form.hsCode })
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data.ok) throw new Error(data?.error || data?.error?.message || "Failed to update HS Code.");
+      if (!response.ok || !data.ok) throw new Error(data?.error || data?.error?.message || t(lang, "purchase.wiz_err_update_hs_code", "Failed to update HS Code."));
       
       const reloadRes = await fetch("/api/erp/goods?limit=500").then(r => r.json()).catch(() => ({}));
       const goodsData = reloadRes?.data?.goods || reloadRes?.goods;
@@ -3237,7 +3241,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
           })
         });
         const payload = await response.json().catch(() => ({}));
-        if (!response.ok || !payload.ok) throw new Error(payload?.error?.message || payload?.error || "Failed to create country.");
+        if (!response.ok || !payload.ok) throw new Error(payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_create_country", "Failed to create country."));
         
         const reloadRes = await fetch("/api/erp/locations/countries?all=true&limit=500").then(r => r.json()).catch(() => ({}));
         const countriesData = reloadRes?.data?.countries || reloadRes?.countries;
@@ -3291,7 +3295,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
           })
         });
         const payload = await response.json().catch(() => ({}));
-        if (!response.ok || !payload.ok) throw new Error(payload?.error?.message || payload?.error || "Failed to create port.");
+        if (!response.ok || !payload.ok) throw new Error(payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_create_port", "Failed to create port."));
 
         const [loadRes, recRes] = await Promise.all([
           fetch("/api/erp/ports/loading?all=true&limit=500"),
@@ -3524,7 +3528,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
               type="button"
               onClick={() => {
                 setViewDropdownOpen(false);
-                alert("Email action triggered!");
+                alert(t(lang, "purchase.wiz_email_triggered", "Email action triggered!"));
               }}
               className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition border-t border-border/40 pt-2 mt-1"
             >
@@ -3535,7 +3539,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
               type="button"
               onClick={() => {
                 setViewDropdownOpen(false);
-                alert("WhatsApp action triggered!");
+                alert(t(lang, "purchase.wiz_whatsapp_triggered", "WhatsApp action triggered!"));
               }}
               className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
             >
@@ -3546,7 +3550,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
               type="button"
               onClick={() => {
                 setViewDropdownOpen(false);
-                alert("Checkup action triggered!");
+                alert(t(lang, "purchase.wiz_checkup_triggered", "Checkup action triggered!"));
               }}
               className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
             >
@@ -4336,7 +4340,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                           </div>
                           <div className="max-h-64 overflow-y-auto space-y-1.5 pr-0.5">
                             {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, purchaseSearch)).map((acc) => {
-                              const compName = acc.companyName || acc.company_name || (acc.companyId && dbCompanies.find(c => c.id === acc.companyId)?.name) || dbCompanies[0]?.name || "None";
+                              const compName = acc.companyName || acc.company_name || (acc.companyId && dbCompanies.find(c => c.id === acc.companyId)?.name) || dbCompanies[0]?.name || t(lang, "purchase.card_none_label", "None");
                               return (
                                 <button
                                   key={acc.accountCode}
@@ -4412,7 +4416,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                           </div>
                           <div className="max-h-64 overflow-y-auto space-y-1.5 pr-0.5">
                             {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).map((acc) => {
-                              const compName = acc.companyName || acc.company_name || (acc.companyId && dbCompanies.find(c => c.id === acc.companyId)?.name) || dbCompanies[0]?.name || "None";
+                              const compName = acc.companyName || acc.company_name || (acc.companyId && dbCompanies.find(c => c.id === acc.companyId)?.name) || dbCompanies[0]?.name || t(lang, "purchase.card_none_label", "None");
                               return (
                                 <button
                                   key={acc.accountCode}
@@ -5530,11 +5534,11 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                 </div>
                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/70">
                   <span className="block text-[9px] font-black uppercase text-slate-400 mb-0.5">{t(lang, "purchase.user_name_label", "User Name")}</span>
-                  <span className="font-bold text-slate-900 uppercase">{form.userName || session?.fullName || "SUPER ADMIN"}</span>
+                  <span className="font-bold text-slate-900 uppercase">{form.userName || session?.fullName || t(lang, "purchase.pmw_super_admin", "Super Admin")}</span>
                 </div>
                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/70">
                   <span className="block text-[9px] font-black uppercase text-slate-400 mb-0.5">{t(lang, "purchase.working_branch_label", "Working Branch")}</span>
-                  <span className="font-bold text-slate-900 truncate block">{form.branchName || "Main Branch"}</span>
+                  <span className="font-bold text-slate-900 truncate block">{form.branchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}</span>
                 </div>
                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/70">
                   <span className="block text-[9px] font-black uppercase text-slate-400 mb-0.5">{t(lang, "purchase.verification_date_label", "Verification Date")}</span>
@@ -5913,7 +5917,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                   value={newCountryForm.name}
                   onChange={(e) => setNewCountryForm({ name: e.target.value })}
                   onKeyDown={(e) => { if (e.key === "Enter") handleAddNewCountry(); }}
-                  placeholder="e.g. Iran"
+                  placeholder={t(lang, "purchase.wiz_ph_country_example", "e.g. Iran")}
                   autoFocus
                   className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary"
                 />
@@ -5963,7 +5967,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                     type="text"
                     value={newGoodForm.goodsName}
                     onChange={(e) => setNewGoodForm(p => ({ ...p, goodsName: e.target.value.toUpperCase() }))}
-                    placeholder="e.g. PINE NUTS INSHELL"
+                    placeholder={t(lang, "purchase.wiz_ph_goods_name_example", "e.g. PINE NUTS INSHELL")}
                     className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary uppercase"
                   />
                 </div>
@@ -6080,10 +6084,10 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
               <div>
                 <h3 className="text-sm font-bold tracking-tight text-foreground uppercase">
-                  Add Good Variation
+                  {t(lang, "purchase.wiz_add_good_variation", "Add Good Variation")}
                 </h3>
                 <p className="text-[10px] text-muted-foreground mt-0.5">
-                  Specify size/brand under selected good
+                  {t(lang, "purchase.wiz_specify_size_brand", "Specify size/brand under selected good")}
                 </p>
               </div>
               <button
@@ -6109,7 +6113,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                   type="text"
                   value={customVariationForm.brand}
                   onChange={(e) => setCustomVariationForm(p => ({ ...p, brand: e.target.value.toUpperCase() }))}
-                  placeholder="e.g. PREMIUM"
+                  placeholder={t(lang, "purchase.wiz_ph_brand_example", "e.g. PREMIUM")}
                   className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary uppercase"
                 />
               </div>
@@ -6124,7 +6128,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                       handleSaveCustomVariation();
                     }
                   }}
-                  placeholder="e.g. 20/22"
+                  placeholder={t(lang, "purchase.wiz_ph_size_example", "e.g. 20/22")}
                   className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary uppercase"
                 />
               </div>
@@ -6177,7 +6181,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                   type="text"
                   value={createAccountForm.name}
                   onChange={(e) => setCreateAccountForm(p => ({ ...p, name: e.target.value }))}
-                  placeholder="e.g. Haji Ahmad Dry Fruits"
+                  placeholder={t(lang, "purchase.wiz_ph_account_name_example", "e.g. Haji Ahmad Dry Fruits")}
                   className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary"
                 />
               </div>
@@ -6189,7 +6193,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                     type="text"
                     value={createAccountForm.code}
                     onChange={(e) => setCreateAccountForm(p => ({ ...p, code: e.target.value }))}
-                    placeholder="AUTO"
+                    placeholder={t(lang, "purchase.wiz_ph_auto", "AUTO")}
                     className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary font-mono"
                   />
                 </div>
@@ -6230,7 +6234,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                       onChange={(e) => setCreateAccountForm(p => ({ ...p, isControlAccount: e.target.checked }))}
                       className="rounded border-input text-primary focus:ring-primary h-3.5 w-3.5"
                     />
-                    Control Account
+                    {t(lang, "purchase.wiz_control_account", "Control Account")}
                   </label>
                 </div>
               </div>
@@ -6264,7 +6268,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
           <div className="bg-background rounded-xl border border-border shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between p-4 border-b border-border/60 bg-muted/30">
               <h3 className="font-bold text-base text-foreground flex items-center gap-2">
-                Create New Report
+                {t(lang, "purchase.wiz_create_new_report", "Create New Report")}
               </h3>
               <button
                 type="button"
@@ -6283,7 +6287,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                   value={newReportForm.name}
                   onChange={(e) => setNewReportForm({ ...newReportForm, name: e.target.value })}
                   className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  placeholder="e.g. Loading Report, Shipping Report"
+                  placeholder={t(lang, "purchase.wiz_ph_report_name_example", "e.g. Loading Report, Shipping Report")}
                 />
               </div>
               <div>
@@ -6293,7 +6297,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                   value={newReportForm.description}
                   onChange={(e) => setNewReportForm({ ...newReportForm, description: e.target.value })}
                   className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  placeholder="Optional description"
+                  placeholder={t(lang, "purchase.wiz_ph_optional_description", "Optional description")}
                 />
               </div>
               <div>
@@ -6303,7 +6307,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                   value={newReportForm.notes}
                   onChange={(e) => setNewReportForm({ ...newReportForm, notes: e.target.value })}
                   className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  placeholder="Additional notes for this report"
+                  placeholder={t(lang, "purchase.wiz_ph_additional_notes", "Additional notes for this report")}
                 />
               </div>
               <div className="flex justify-end gap-2 pt-2 border-t border-border/60">
@@ -6313,13 +6317,13 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                   onClick={() => setIsNewReportModalOpen(false)}
                   className="h-9"
                 >
-                  Cancel
+                  {t(lang, "common.cancel", "Cancel")}
                 </Button>
                 <Button
                   type="submit"
                   className="h-9 bg-primary hover:bg-primary/90 font-bold"
                 >
-                  Create & Save
+                  {t(lang, "purchase.wiz_create_and_save", "Create & Save")}
                 </Button>
               </div>
             </form>
@@ -6334,10 +6338,10 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
               <div>
                 <h3 className="text-sm font-bold tracking-tight text-foreground">
-                  Create New Company
+                  {t(lang, "purchase.wiz_create_new_company", "Create New Company")}
                 </h3>
                 <p className="text-[10px] text-muted-foreground mt-0.5">
-                  Adding to Company Master Settings registry
+                  {t(lang, "purchase.wiz_adding_to_company_registry", "Adding to Company Master Settings registry")}
                 </p>
               </div>
               <button
@@ -6359,7 +6363,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                   type="text"
                   value={createCompanyForm.name}
                   onChange={(e) => setCreateCompanyForm(p => ({ ...p, name: e.target.value }))}
-                  placeholder="e.g. Apex Trading LLC"
+                  placeholder={t(lang, "purchase.wiz_ph_company_example", "e.g. Apex Trading LLC")}
                   className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary"
                 />
               </div>
@@ -6370,7 +6374,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                   type="text"
                   value={createCompanyForm.legalName}
                   onChange={(e) => setCreateCompanyForm(p => ({ ...p, legalName: e.target.value }))}
-                  placeholder="e.g. Apex Imports (Optional)"
+                  placeholder={t(lang, "purchase.wiz_ph_company_legal_example", "e.g. Apex Imports (Optional)")}
                   className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary"
                 />
               </div>
@@ -6417,7 +6421,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
           <div className="bg-white rounded-xl shadow-2xl overflow-hidden w-full max-w-lg animate-in zoom-in-95 duration-200">
             <div className="bg-blue-900 text-white p-4 flex items-center justify-between border-b border-blue-800">
               <h2 className="font-black tracking-wider uppercase text-sm flex items-center gap-2">
-                <FileSignature className="h-4 w-4 text-blue-300" /> Transfer to Payment Module
+                <FileSignature className="h-4 w-4 text-blue-300" /> {t(lang, "purchase.wiz_transfer_to_payment_module", "Transfer to Payment Module")}
               </h2>
               <button type="button" onClick={() => setTransferConfirmModal(false)} className="text-blue-300 hover:text-white transition">
                 <X className="h-5 w-5" />
@@ -6441,14 +6445,14 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                 </div>
                 <div className="border border-slate-200 rounded p-2.5 bg-white shadow-sm flex justify-between items-center">
                   <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{trUi("Base Entry No")}</span>
-                  <div className="font-black font-mono text-slate-900">{savedOrderNo || "Pending..."}</div>
+                  <div className="font-black font-mono text-slate-900">{savedOrderNo || t(lang, "purchase.wiz_pending_ellipsis", "Pending...")}</div>
                 </div>
               </div>
             </div>
 
             <div className="bg-slate-100 border-t border-slate-200 p-4 flex justify-end gap-3 rounded-b-xl">
               <Button type="button" variant="outline" className="font-bold border-slate-300 text-slate-600" onClick={() => setTransferConfirmModal(false)}>
-                Cancel
+                {t(lang, "common.cancel", "Cancel")}
               </Button>
               <Button
                 type="button"
