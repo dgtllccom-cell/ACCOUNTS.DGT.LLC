@@ -17,6 +17,7 @@ import {
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLabel } from "./translations";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 type CustomerRow = {
   id: string;
@@ -436,7 +437,7 @@ export function CustomerForm({
       {/* Page Title */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-teal-600">Settings / Management</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-teal-600">{t(lang, "cusm.settings_management", "Settings / Management")}</p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
             {initialCustomerId ? getLabel("editCustomerDetails", lang) : getLabel("customerDetails", lang)}
           </h1>
@@ -535,7 +536,7 @@ export function CustomerForm({
                 {/* Quick Save Banner for fast person creation */}
                 <div className="flex items-center justify-between bg-teal-50 border border-teal-200 rounded-xl p-3">
                   <div className="text-xs text-teal-800">
-                    <span className="font-bold">⚡ Quick Save Available:</span> Enter Name and click Save & Finalize anytime.
+                    <span className="font-bold">⚡ {getLabel("quickSaveAvailableLabel", lang)}</span> {getLabel("quickSaveAvailableMsg", lang)}
                   </div>
                   <Button
                     type="button"
@@ -555,7 +556,7 @@ export function CustomerForm({
                     <Input
                       value={businessName}
                       onChange={(e) => setBusinessName(e.target.value)}
-                      placeholder="e.g. ABC Traders (Pvt) Ltd."
+                      placeholder={getLabel("companyNamePlaceholderExample", lang)}
                       className="bg-white text-slate-900 border-slate-200 text-xs h-10"
                     />
                   </div>
@@ -645,12 +646,12 @@ export function CustomerForm({
                 <div className="grid gap-3 grid-cols-2">
                   <div className="space-y-1.5">
                     <Label className="text-xs font-semibold text-slate-700">{getLabel("cityCode", lang)}</Label>
-                    <Input value={cityCode} onChange={(e) => setCityCode(e.target.value)} placeholder="City / Zip Code" className="bg-white text-slate-900 border-slate-200 text-xs h-10" />
+                    <Input value={cityCode} onChange={(e) => setCityCode(e.target.value)} placeholder={getLabel("cityZipCodePlaceholder", lang)} className="bg-white text-slate-900 border-slate-200 text-xs h-10" />
                   </div>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-slate-700">{getLabel("fullAddress", lang)} *</Label>
-                  <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Enter full address" className="bg-white text-slate-900 border-slate-200 text-xs h-10" />
+                  <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder={t(lang, "company_form.enter_full_address", "Enter full address")} className="bg-white text-slate-900 border-slate-200 text-xs h-10" />
                 </div>
               </CardContent>
             </Card>
@@ -697,11 +698,11 @@ export function CustomerForm({
                             }}
                             className="flex h-9 w-full rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-900 outline-none focus:border-teal-500"
                           >
-                            <option value="Mobile">Mobile</option>
-                            <option value="WhatsApp">WhatsApp</option>
-                            <option value="Email">Email</option>
-                            <option value="Landline">Landline</option>
-                            <option value="Office">Office</option>
+                            <option value="Mobile">{t(lang, "cbs.mobile_word", "Mobile")}</option>
+                            <option value="WhatsApp">{t(lang, "purchase.dd_whatsapp", "WhatsApp")}</option>
+                            <option value="Email">{t(lang, "purchase.dd_email", "Email")}</option>
+                            <option value="Landline">{t(lang, "whf.landline", "Landline")}</option>
+                            <option value="Office">{getLabel("officeContactType", lang)}</option>
                             <option value="Custom">{getLabel("customType", lang)}</option>
                           </select>
                         </div>
@@ -768,7 +769,7 @@ export function CustomerForm({
                       
                       {isCustom && (
                         <div className="w-full space-y-1 pl-1 border-l-2 border-teal-500/30">
-                          <Label className="text-[9px] font-bold text-teal-700">Type Custom Contact Label Name</Label>
+                          <Label className="text-[9px] font-bold text-teal-700">{getLabel("typeCustomContactLabelName", lang)}</Label>
                           <Input
                             value={contact.type.startsWith("Custom: ") ? contact.type.slice(8) : contact.type}
                             onChange={(e) => {
@@ -776,7 +777,7 @@ export function CustomerForm({
                               updated[idx].type = "Custom: " + e.target.value;
                               setContacts(updated);
                             }}
-                            placeholder="e.g. Fax or Skype ID"
+                            placeholder={getLabel("faxOrSkypeIdPlaceholder", lang)}
                             className="h-8 text-xs bg-white text-slate-900 border-slate-200"
                           />
                         </div>
@@ -844,9 +845,9 @@ export function CustomerForm({
                             className="flex h-9 w-full rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-900 outline-none focus:border-teal-500"
                           >
                             <option value="CNIC">CNIC</option>
-                            <option value="Passport">Passport</option>
-                            <option value="National ID">National ID</option>
-                            <option value="Trade License">Trade License</option>
+                            <option value="Passport">{getLabel("passportDocType", lang)}</option>
+                            <option value="National ID">{getLabel("nationalIdDocType", lang)}</option>
+                            <option value="Trade License">{getLabel("tradeLicenseDocType", lang)}</option>
                             <option value="Custom">{getLabel("customType", lang)}</option>
                           </select>
                         </div>
@@ -859,7 +860,7 @@ export function CustomerForm({
                               updated[idx].number = e.target.value;
                               setDocuments(updated);
                             }}
-                            placeholder="Document Number"
+                            placeholder={getLabel("documentNumber", lang)}
                             className="h-9 text-xs bg-white text-slate-900 border-slate-200 font-mono"
                           />
                         </div>
@@ -867,7 +868,7 @@ export function CustomerForm({
 
                       {isCustom && (
                         <div className="w-full space-y-1 border-l-2 border-teal-500/30 pl-2">
-                          <Label className="text-[9px] font-bold text-teal-700">Type Custom Document Label Name</Label>
+                          <Label className="text-[9px] font-bold text-teal-700">{getLabel("typeCustomDocumentLabelName", lang)}</Label>
                           <Input
                             value={doc.type.startsWith("Custom: ") ? doc.type.slice(8) : doc.type}
                             onChange={(e) => {
@@ -875,7 +876,7 @@ export function CustomerForm({
                               updated[idx].type = "Custom: " + e.target.value;
                               setDocuments(updated);
                             }}
-                            placeholder="e.g. Tax Certificate or Trade License"
+                            placeholder={getLabel("taxCertificateTradeLicensePlaceholder", lang)}
                             className="h-8 text-xs bg-white text-slate-900 border-slate-200"
                           />
                         </div>
@@ -886,7 +887,7 @@ export function CustomerForm({
                         <div className="flex items-center gap-2">
                           <Label className="cursor-pointer flex w-max items-center justify-center h-8 px-3 rounded-full bg-slate-100 hover:bg-slate-200 border text-slate-500 shadow-sm transition gap-1.5 text-[10px] font-semibold">
                             <Paperclip className="h-3 w-3" />
-                            <span>Attach</span>
+                            <span>{getLabel("attach", lang)}</span>
                             <Input
                               type="file"
                               onChange={(e) => {
@@ -935,7 +936,7 @@ export function CustomerForm({
                     rows={4}
                     value={remarks}
                     onChange={(e) => setRemarks(e.target.value)}
-                    placeholder="Enter remarks or additional notes here..."
+                    placeholder={getLabel("enterRemarksNotesPlaceholder", lang)}
                     className="flex w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20"
                   />
                 </div>

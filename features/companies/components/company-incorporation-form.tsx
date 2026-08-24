@@ -165,8 +165,8 @@ function PreviewField({
   mono?: boolean;
   className?: string;
 }) {
-  const shown = value && value !== "-" ? value : "â€”";
-  const empty = shown === "â€”";
+  const shown = value && value !== "-" ? value : "—";
+  const empty = shown === "—";
   return (
     <div className={className}>
       <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{label}</p>
@@ -735,7 +735,7 @@ export function CompanyIncorporationForm({
           <CheckCircle2 className="h-4 w-4" aria-hidden />
           {ready ? tr("company_form.ready", "Ready") : tr("company_form.draft", "Draft")}
         </span>
-        <Button type="button" variant="outline" size="icon" onClick={handleClose} className="h-9 w-9 rounded-full border-slate-200" aria-label="Close company incorporation form">
+        <Button type="button" variant="outline" size="icon" onClick={handleClose} className="h-9 w-9 rounded-full border-slate-200" aria-label={tr("creg.crtr_close_incorporation_form", "Close company incorporation form")}>
           <X className="h-4 w-4" aria-hidden />
         </Button>
         </div>

@@ -1,10 +1,12 @@
-"use client";
-
 import { useEffect, useMemo, useState } from "react";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { apiGet } from "@/lib/api/client";
 import { CompanyIncorporationForm } from "./company-incorporation-form";
+import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { localizeTerm } from "@/features/companies/components/company-registry";
+import { transliterateProperNoun } from "@/lib/i18n/transliteration";
 
 export type CompanyRow = {
   id: string;
@@ -33,9 +35,12 @@ export type CompanyRow = {
   updated_at: string;
 };
 
-function toOption(row: CompanyRow): SearchSelectOption {
-  const label = row.legal_name ? `${row.name} (${row.legal_name})` : row.name;
-  const keywords = [row.name, row.legal_name, row.owner_name, row.country_name, row.city_name, row.base_currency].filter(Boolean).join(" ");
+function toOption(row: CompanyRow, lang: string = "en"): SearchSelectOption {
+  const name = localizeTerm(row.name, lang);
+  const legalName = row.legal_name ? localizeTerm(row.legal_name, lang) : null;
+  const ownerName = row.owner_name ? transliterateProperNoun(row.owner_name, lang) : null;
+  const label = legalName ? `${name} (${legalName})` : name;
+  const keywords = [name, row.name, legalName, row.legal_name, ownerName, row.owner_name, row.country_name, row.city_name, row.base_currency].filter(Boolean).join(" ");
   return { value: row.id, label, keywords };
 }
 
@@ -60,6 +65,7 @@ export function CompanyPicker({
   placeholder?: string;
   createButtonPlacement?: "modal" | "trigger" | "both" | "below";
 }) {
+  const lang = useActiveLanguage();
   const [loading, setLoading] = useState(false);
   const [companies, setCompanies] = useState<CompanyRow[]>([]);
   const [openCreate, setOpenCreate] = useState(false);
@@ -106,7 +112,7 @@ export function CompanyPicker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
-  const options: SearchSelectOption[] = useMemo(() => companies.map(toOption), [companies]);
+  const options: SearchSelectOption[] = useMemo(() => companies.map((c) => toOption(c, lang)), [companies, lang]);
   const [viewCompany, setViewCompany] = useState<CompanyRow | null>(null);
   const [editCompanyId, setEditCompanyId] = useState<string | null>(null);
 
@@ -125,15 +131,15 @@ export function CompanyPicker({
       <SearchSelect
         label={label}
         value={value}
-        placeholder={placeholder ?? (loading ? "Loading..." : "Search company")}
+        placeholder={placeholder ?? (loading ? t(lang, "common.loading", "Loading...") : t(lang, "branch.search_company", "Search company"))}
         disabled={disabled || loading}
         options={options}
         onValueChange={onValueChange}
-        createLabel="New Company"
+        createLabel={t(lang, "purchase.card_new_company_btn", "New Company")}
         createButtonPlacement={createButtonPlacement}
         onCreateNew={async () => setOpenCreate(true)}
-        viewTitle="View Company & Owner Details"
-        editTitle="Edit Company Master"
+        viewTitle={t(lang, "creg.cp_view_company_owner_details", "View Company & Owner Details")}
+        editTitle={t(lang, "creg.cp_edit_company_master", "Edit Company Master")}
         onViewOption={(companyId) => {
           const found = companies.find((c) => c.id === companyId);
           if (found) setViewCompany(found);
@@ -146,22 +152,22 @@ export function CompanyPicker({
       {/* View Detail Modal */}
       {viewCompany ? (
         <SimpleModal
-          title={`Company Details — ${viewCompany.name}`}
+          title={`${t(lang, "creg.cp_company_details_dash", "Company Details —")} ${localizeTerm(viewCompany.name, lang)}`}
           onClose={() => setViewCompany(null)}
-          className="w-[96vw] max-w-[850px] max-h-[85vh] overflow-y-auto rounded-2xl font-sans"
+          className="w-[96vw] max-w-3xl max-h-[85vh] overflow-y-auto rounded-3xl font-sans shadow-2xl"
         >
-          <div className="p-4 space-y-5 text-xs text-slate-800 dark:text-slate-200">
+          <div className="p-5 space-y-5 text-xs text-slate-800 dark:text-slate-200">
             {/* Header Badge */}
-            <div className="flex items-center justify-between bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 p-4 rounded-xl">
+            <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900/80 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 p-4 rounded-2xl">
               <div>
-                <h3 className="text-base font-black uppercase tracking-wide">{viewCompany.name}</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-300 font-medium">Legal Name: {viewCompany.legal_name || "-"}</p>
+                <h3 className="text-base font-black tracking-wide">{localizeTerm(viewCompany.name, lang)}</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">{t(lang, "creg.cp_legal_name_colon", "Legal Name:")} {viewCompany.legal_name ? localizeTerm(viewCompany.legal_name, lang) : "—"}</p>
               </div>
               <div className="text-right">
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-500 text-slate-950">
-                  {viewCompany.is_active ? "Active Master" : "Inactive"}
+                <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-900">
+                  {viewCompany.is_active ? t(lang, "hr.pp_active_master", "Active Master") : t(lang, "god.inactive", "Inactive")}
                 </span>
-                <p className="text-[10px] text-slate-400 mt-1">Currency: <span className="font-bold text-slate-800 dark:text-white">{viewCompany.base_currency}</span></p>
+                <p className="text-[10px] text-slate-400 mt-1">{t(lang, "purchase.currency_colon_label", "Currency:")} <span className="font-bold text-slate-800 dark:text-white">{viewCompany.base_currency}</span></p>
               </div>
             </div>
 
@@ -169,14 +175,14 @@ export function CompanyPicker({
             <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-xl p-3.5 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">
-                  Owner / Investor Master Details
+                  {t(lang, "creg.cp_owner_investor_master_details", "Owner / Investor Master Details")}
                 </span>
                 <span className="text-[10px] font-bold text-slate-500">
-                  Total Registered Companies: {ownerCompanies.length}
+                  {t(lang, "creg.cp_total_registered_companies_colon", "Total Registered Companies:")} {ownerCompanies.length}
                 </span>
               </div>
               <p className="text-sm font-black text-slate-900 dark:text-white">
-                {viewCompany.owner_name || "Primary Proprietor / Corporate Group"}
+                {viewCompany.owner_name || t(lang, "creg.cp_primary_proprietor_corporate_group", "Primary Proprietor / Corporate Group")}
               </p>
             </div>
 
@@ -184,7 +190,7 @@ export function CompanyPicker({
             {ownerCompanies.length > 1 && (
               <div className="space-y-2">
                 <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">
-                  Other Companies Owned by {viewCompany.owner_name} ({ownerCompanies.length})
+                  {t(lang, "creg.cp_other_companies_owned_by", "Other Companies Owned by")} {viewCompany.owner_name} ({ownerCompanies.length})
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {ownerCompanies.map((c) => (
@@ -208,7 +214,7 @@ export function CompanyPicker({
                         }}
                         className="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
                       >
-                        Select
+                        {t(lang, "common.select", "Select")}
                       </button>
                     </div>
                   ))}
@@ -219,29 +225,29 @@ export function CompanyPicker({
             {/* Grid Specs */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 bg-slate-50/50 dark:bg-slate-900/50">
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">Business Type</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "company_form.business_type_label", "Business Type")}</span>
                 <span className="font-bold text-slate-800 dark:text-white">{viewCompany.business_type || "Commercial Trading"}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">Country / City</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "creg.cp_country_city", "Country / City")}</span>
                 <span className="font-bold text-slate-800 dark:text-white">{viewCompany.country_name || "UAE"} {viewCompany.city_name ? `/ ${viewCompany.city_name}` : ""}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">Base Currency</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "bdash.base_currency", "Base Currency")}</span>
                 <span className="font-bold text-slate-800 dark:text-white">{viewCompany.base_currency}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">Address</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "purchase.f_address", "Address")}</span>
                 <span className="font-bold text-slate-800 dark:text-white">{viewCompany.address || "-"}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">Tax / Registration ID</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "creg.cp_tax_registration_id", "Tax / Registration ID")}</span>
                 <span className="font-mono font-bold text-slate-800 dark:text-white">
-                  {viewCompany.registrations?.map(r => r.value).join(", ") || "Standard Registration"}
+                  {viewCompany.registrations?.map(r => r.value).join(", ") || t(lang, "creg.cp_standard_registration", "Standard Registration")}
                 </span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">Primary Contact</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "creg.primary_contact", "Primary Contact")}</span>
                 <span className="font-bold text-slate-800 dark:text-white">
                   {viewCompany.contacts?.map(ct => ct.value).join(", ") || "-"}
                 </span>
@@ -258,7 +264,7 @@ export function CompanyPicker({
                 }}
                 className="px-3.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 rounded-xl transition"
               >
-                Edit Master
+                {t(lang, "hr.pp_edit_master", "Edit Master")}
               </button>
               <div className="flex items-center gap-2">
                 <button
@@ -266,7 +272,7 @@ export function CompanyPicker({
                   onClick={() => setViewCompany(null)}
                   className="px-3.5 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-700 transition"
                 >
-                  Close
+                  {t(lang, "purchase.close_btn", "Close")}
                 </button>
                 <button
                   type="button"
@@ -276,7 +282,7 @@ export function CompanyPicker({
                   }}
                   className="px-4 py-1.5 text-xs font-extrabold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition shadow-xs"
                 >
-                  Select This Company
+                  {t(lang, "creg.cp_select_this_company", "Select This Company")}
                 </button>
               </div>
             </div>
@@ -287,7 +293,7 @@ export function CompanyPicker({
       {/* Edit Master Modal */}
       {editCompanyId ? (
         <SimpleModal
-          title="Edit Company - Company Master"
+          title={t(lang, "creg.cp_edit_company_dash_master", "Edit Company - Company Master")}
           onClose={() => setEditCompanyId(null)}
           className="w-[96vw] max-w-[1100px] h-[90vh] max-h-[90vh] rounded-2xl font-sans"
         >
@@ -307,7 +313,7 @@ export function CompanyPicker({
       {/* Create New Modal */}
       {openCreate ? (
         <SimpleModal
-          title="New Company - Company Master"
+          title={t(lang, "creg.cp_new_company_dash_master", "New Company - Company Master")}
           onClose={() => setOpenCreate(false)}
           className="w-[96vw] max-w-[1100px] h-[90vh] max-h-[90vh] rounded-2xl font-sans"
         >

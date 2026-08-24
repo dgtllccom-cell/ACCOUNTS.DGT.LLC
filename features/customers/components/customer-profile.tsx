@@ -55,7 +55,7 @@ export function CustomerProfile({
         const res = await apiGet<{ customer: CustomerRow }>(`/api/erp/customers/${customerId}`);
         setCustomer(res.customer);
       } catch (e: any) {
-        setError(e.message || "Failed to load customer profile.");
+        setError(e.message || getLabel("failedToLoadCustomerProfile", lang));
       } finally {
         setLoading(false);
       }
@@ -139,7 +139,7 @@ export function CustomerProfile({
   if (loading) {
     return (
       <div className="flex h-[400px] items-center justify-center text-sm text-slate-500 font-medium">
-        Loading customer profile preview report...
+        {getLabel("loadingCustomerProfilePreview", lang)}
       </div>
     );
   }
@@ -147,7 +147,7 @@ export function CustomerProfile({
   if (error || !customer || !parsedMeta) {
     return (
       <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800 m-6">
-        {error || "Customer profile record not found."}
+        {error || getLabel("customerProfileNotFound", lang)}
         <div className="mt-3">
           <Button type="button" onClick={() => router.push("/dashboard/settings/customers" as Route)}>
             {getLabel("backToList", lang)}
@@ -211,7 +211,7 @@ export function CustomerProfile({
     if (cleanNo) {
       window.open(`https://wa.me/${cleanNo}`, "_blank");
     } else {
-      alert("No active WhatsApp/Mobile number found for this customer.");
+      alert(getLabel("noWhatsAppNumberMsg", lang));
     }
   };
 
@@ -221,7 +221,7 @@ export function CustomerProfile({
     if (emailAddr) {
       window.location.href = `mailto:${emailAddr}?subject=Customer Profile Certificate&body=Please find attached details for ${customer.customer_name}`;
     } else {
-      alert("No email address registered for this customer.");
+      alert(getLabel("noEmailRegisteredMsg", lang));
     }
   };
 
@@ -239,7 +239,7 @@ export function CustomerProfile({
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } else {
-      alert("No document files uploaded for this customer.");
+      alert(getLabel("noDocumentFilesUploadedMsg", lang));
     }
   };
 
@@ -255,7 +255,7 @@ export function CustomerProfile({
           <div className="border-b-2 border-teal-600 pb-2.5 flex items-center justify-between dark:border-teal-500">
             <div>
               <h2 className="text-sm font-extrabold text-teal-800 tracking-tight dark:text-teal-400">DAMAAN GROUP</h2>
-              <p className="text-[8px] text-slate-500 uppercase font-bold tracking-widest mt-0.5 dark:text-slate-400">Enterprise Registry</p>
+              <p className="text-[8px] text-slate-500 uppercase font-bold tracking-widest mt-0.5 dark:text-slate-400">{getLabel("enterpriseRegistry", lang)}</p>
             </div>
             <div className="text-right">
               <span className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2 py-0.5 text-[9px] font-bold text-teal-700 border border-teal-200 uppercase dark:bg-teal-950/30 dark:text-teal-300 dark:border-teal-900">
@@ -269,42 +269,42 @@ export function CustomerProfile({
           <div className="space-y-3">
             {/* Customer Account Details Card */}
             <div className="border rounded-xl p-3 bg-slate-50/50 space-y-1.5 dark:bg-slate-900/40 dark:border-slate-800">
-              <h3 className="text-[9px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1 dark:text-teal-400">Customer Account Details</h3>
+              <h3 className="text-[9px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1 dark:text-teal-400">{t(lang, "nav.customer_account_details", "Customer Account Details")}</h3>
               <div className="space-y-1 text-xs">
                 <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">Account Name</span>
+                  <span className="text-slate-500">{t(lang, "purchase.f_account_name", "Account Name")}</span>
                   <span className="font-bold text-slate-900 dark:text-slate-100">{parsedMeta.accountName || customer.customer_name}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">Account Number</span>
+                  <span className="text-slate-500">{t(lang, "bank.account_number", "Account Number")}</span>
                   <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{parsedMeta.accountNumber || parsedMeta.customerAccountNumber}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">Customer Number</span>
+                  <span className="text-slate-500">{t(lang, "roz.cef_customer_number", "Customer Number")}</span>
                   <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{parsedMeta.customerAccountNumber}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">Manual Reference</span>
+                  <span className="text-slate-500">{getLabel("manualReference", lang)}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.manualReference || "-"}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">Branch Name</span>
+                  <span className="text-slate-500">{t(lang, "cdash.col_branch_name", "Branch Name")}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.branchName || "-"}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">Branch Code</span>
+                  <span className="text-slate-500">{t(lang, "bdash.branch_code", "Branch Code")}</span>
                   <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{parsedMeta.branchCode || "-"}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">City Branch</span>
+                  <span className="text-slate-500">{t(lang, "report.scope_city_branch", "City Branch")}</span>
                   <span className="font-bold text-slate-850 dark:text-slate-200">{parsedMeta.cityBranch || parsedMeta.city || "-"}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">Country & State</span>
+                  <span className="text-slate-500">{getLabel("countryAndState", lang)}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">{[parsedMeta.country, parsedMeta.stateProvince].filter(Boolean).join(", ") || "-"}</span>
                 </div>
                 <div className="flex justify-between pb-0.5">
-                  <span className="text-slate-500">Address</span>
+                  <span className="text-slate-500">{t(lang, "purchase.f_address", "Address")}</span>
                   <span className="font-bold text-slate-900 dark:text-slate-100 text-right truncate max-w-[180px]" title={customer.address || ""}>{customer.address || "-"}</span>
                 </div>
               </div>
@@ -312,46 +312,46 @@ export function CustomerProfile({
 
             {/* Customer Company Details Card */}
             <div className="border rounded-xl p-3 bg-slate-50/50 space-y-1.5 dark:bg-slate-900/40 dark:border-slate-800">
-              <h3 className="text-[9px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1 dark:text-teal-400">Customer Company Details</h3>
+              <h3 className="text-[9px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1 dark:text-teal-400">{getLabel("customerCompanyDetails", lang)}</h3>
               <div className="space-y-1 text-xs">
                 <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">Company Name</span>
+                  <span className="text-slate-500">{t(lang, "branch.row_company_name", "Company Name")}</span>
                   <span className="font-bold text-slate-900 dark:text-slate-100">{parsedMeta.companyName || customer.company_name || "-"}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">Registration Number</span>
+                  <span className="text-slate-500">{t(lang, "ledger.registration_number", "Registration Number")}</span>
                   <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{parsedMeta.companyRegNo || "-"}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">Tax / NTN Number</span>
+                  <span className="text-slate-500">{getLabel("taxNtnNumber", lang)}</span>
                   <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{parsedMeta.companyTaxNo || "-"}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">Business Type</span>
+                  <span className="text-slate-500">{t(lang, "company_form.business_type_label", "Business Type")}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.companyBusinessType || "-"}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">Phone Number</span>
+                  <span className="text-slate-500">{t(lang, "purchase.f_phone_number", "Phone Number")}</span>
                   <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{parsedMeta.companyPhone || "-"}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">Email Address</span>
+                  <span className="text-slate-500">{getLabel("emailAddress", lang)}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200 text-right truncate max-w-[120px]" title={parsedMeta.companyEmail}>{parsedMeta.companyEmail || "-"}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">Country</span>
+                  <span className="text-slate-500">{getLabel("country", lang)}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.companyCountry || parsedMeta.country || "-"}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">City</span>
+                  <span className="text-slate-500">{getLabel("city", lang)}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.companyCity || parsedMeta.city || "-"}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">State</span>
+                  <span className="text-slate-500">{t(lang, "branch.state_label", "State")}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.companyState || parsedMeta.stateProvince || "-"}</span>
                 </div>
                 <div className="flex justify-between pb-0.5">
-                  <span className="text-slate-500">Complete Address</span>
+                  <span className="text-slate-500">{getLabel("completeAddress", lang)}</span>
                   <span className="font-bold text-slate-900 dark:text-slate-100 text-right truncate max-w-[120px]" title={parsedMeta.companyAddress || customer.address || ""}>{parsedMeta.companyAddress || customer.address || "-"}</span>
                 </div>
               </div>
@@ -361,13 +361,13 @@ export function CustomerProfile({
 
           {/* Contacts */}
           <div className="space-y-1.5">
-            <h3 className="text-[9px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1 dark:text-teal-400">Contacts</h3>
+            <h3 className="text-[9px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1 dark:text-teal-400">{getLabel("contacts", lang)}</h3>
             <div className="border rounded-lg overflow-hidden dark:border-slate-800">
               <table className="w-full text-xs text-left">
                 <thead className="bg-slate-50 text-slate-600 uppercase font-bold border-b dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800">
                   <tr>
-                    <Th className="px-3 py-1">Type</Th>
-                    <Th className="px-3 py-1 font-mono">Value</Th>
+                    <Th className="px-3 py-1">{getLabel("typeLabel", lang)}</Th>
+                    <Th className="px-3 py-1 font-mono">{t(lang, "god.asset_value", "Value")}</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y dark:divide-slate-800">
@@ -384,13 +384,13 @@ export function CustomerProfile({
 
           {/* Documents */}
           <div className="space-y-1.5">
-            <h3 className="text-[9px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1 dark:text-teal-400">Documents</h3>
+            <h3 className="text-[9px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1 dark:text-teal-400">{getLabel("documents", lang)}</h3>
             <div className="border rounded-lg overflow-hidden dark:border-slate-800">
               <table className="w-full text-xs text-left">
                 <thead className="bg-slate-50 text-slate-600 uppercase font-bold border-b dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800">
                   <tr>
-                    <Th className="px-3 py-1">Type</Th>
-                    <Th className="px-3 py-1 font-mono">Number</Th>
+                    <Th className="px-3 py-1">{getLabel("typeLabel", lang)}</Th>
+                    <Th className="px-3 py-1 font-mono">{getLabel("numberLabel", lang)}</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y dark:divide-slate-800">
@@ -408,7 +408,7 @@ export function CustomerProfile({
           {/* Remarks */}
           {parsedMeta.remarks && (
             <div className="space-y-1 border rounded-lg p-2.5 bg-slate-50/50 dark:bg-slate-900/40 dark:border-slate-800">
-              <h4 className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Remarks / Registry Notes</h4>
+              <h4 className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">{getLabel("remarksRegistryNotes", lang)}</h4>
               <p className="text-xs text-slate-700 leading-relaxed font-medium dark:text-slate-300">{parsedMeta.remarks}</p>
             </div>
           )}
@@ -430,12 +430,12 @@ export function CustomerProfile({
             className="h-8 text-slate-300 hover:text-white hover:bg-slate-800 rounded-md gap-1.5 px-2.5"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Back</span>
+            <span className="hidden sm:inline">{getLabel("backButton", lang)}</span>
           </Button>
           <div className="h-4 w-px bg-slate-700" />
           <div className="flex items-center gap-2 text-slate-200">
             <FileText className="h-4 w-4 text-teal-500" />
-            <span className="font-semibold text-slate-200">Document Preview</span>
+            <span className="font-semibold text-slate-200">{getLabel("documentPreview", lang)}</span>
           </div>
         </div>
 
@@ -446,9 +446,9 @@ export function CustomerProfile({
             className="h-7 px-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-md font-semibold text-[10px] uppercase flex items-center gap-1.5"
           >
             <Columns className="h-3 w-3" />
-            Portrait
+            {t(lang, "pv.portrait", "Portrait")}
           </button>
-          <span className="text-slate-500">Page 1 of 1</span>
+          <span className="text-slate-500">{getLabel("pageOneOfOne", lang)}</span>
           <span className="bg-slate-800 border border-slate-700 text-slate-300 text-[10px] px-2.5 py-0.5 rounded font-bold uppercase">
             A4
           </span>
@@ -459,7 +459,7 @@ export function CustomerProfile({
           {/* WhatsApp share */}
           <button
             onClick={shareWhatsApp}
-            title="Open WhatsApp Chat"
+            title={getLabel("openWhatsAppChatTitle", lang)}
             className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-teal-400 hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <MessageSquare className="h-4 w-4" />
@@ -467,7 +467,7 @@ export function CustomerProfile({
           {/* Email share */}
           <button
             onClick={shareEmail}
-            title="Compose Email"
+            title={getLabel("composeEmailTitle", lang)}
             className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-blue-400 hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <Mail className="h-4 w-4" />
@@ -475,7 +475,7 @@ export function CustomerProfile({
           {/* Download first upload scan */}
           <button
             onClick={handleDownloadScan}
-            title="Download Document Scan"
+            title={getLabel("downloadDocumentScanTitle", lang)}
             className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-emerald-400 hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <DownloadActionIcon className="h-4 w-4" />
@@ -483,7 +483,7 @@ export function CustomerProfile({
           {/* Edit details redirect */}
           <button
             onClick={() => router.push(`/dashboard/settings/customers/setup?customerId=${customer.id}` as Route)}
-            title="Edit customer record"
+            title={getLabel("editCustomerRecordTitle", lang)}
             className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-blue-400 hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <PencilLine className="h-4 w-4" />
@@ -492,7 +492,7 @@ export function CustomerProfile({
           {/* Print */}
           <button
             onClick={handlePrint}
-            title="Print / Save PDF (A4 Layout)"
+            title={getLabel("printSavePdfA4Title", lang)}
             className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-amber-400 hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <Printer className="h-4 w-4" />
@@ -514,7 +514,7 @@ export function CustomerProfile({
             <div className="border-b-2 border-teal-600 pb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-extrabold text-teal-800 tracking-tight">DAMAAN BUSINESS GROUP</h2>
-                <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest mt-0.5">Enterprise ERP / FMS Portal</p>
+                <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest mt-0.5">{getLabel("enterpriseErpFmsPortal", lang)}</p>
               </div>
               <div className="text-right">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-50 px-3 py-1 text-[10px] font-bold text-teal-700 border border-teal-200 uppercase">
@@ -526,8 +526,8 @@ export function CustomerProfile({
 
             {/* Document Title */}
             <div className="text-center py-2 bg-slate-50 border rounded-lg">
-              <h1 className="text-base font-extrabold text-slate-800 uppercase tracking-widest">Official Customer Profile Registry</h1>
-              <p className="text-[10px] text-slate-500 mt-0.5">Database audit record & incorporated verification certificate</p>
+              <h1 className="text-base font-extrabold text-slate-800 uppercase tracking-widest">{getLabel("officialCustomerProfileRegistry", lang)}</h1>
+              <p className="text-[10px] text-slate-500 mt-0.5">{getLabel("databaseAuditRecordCertificateMsg", lang)}</p>
             </div>
 
             {/* Content Grids */}
@@ -537,42 +537,42 @@ export function CustomerProfile({
                 <div className="absolute top-3 right-3 text-teal-600/30">
                   <User className="h-6 w-6" />
                 </div>
-                <h3 className="text-[10px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1">Customer Account Details</h3>
+                <h3 className="text-[10px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1">{t(lang, "nav.customer_account_details", "Customer Account Details")}</h3>
                 <div className="space-y-2 text-xs">
                   <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">Account Name</span>
+                    <span className="text-slate-500">{t(lang, "purchase.f_account_name", "Account Name")}</span>
                     <span className="font-bold text-slate-800">{parsedMeta.accountName || customer.customer_name}</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">Account Number</span>
+                    <span className="text-slate-500">{t(lang, "bank.account_number", "Account Number")}</span>
                     <span className="font-bold text-slate-800 font-mono">{parsedMeta.accountNumber || parsedMeta.customerAccountNumber}</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">Customer Number</span>
+                    <span className="text-slate-500">{t(lang, "roz.cef_customer_number", "Customer Number")}</span>
                     <span className="font-bold text-slate-800 font-mono">{parsedMeta.customerAccountNumber}</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">Manual Reference</span>
+                    <span className="text-slate-500">{getLabel("manualReference", lang)}</span>
                     <span className="font-bold text-slate-800">{parsedMeta.manualReference || "-"}</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">Branch Name</span>
+                    <span className="text-slate-500">{t(lang, "cdash.col_branch_name", "Branch Name")}</span>
                     <span className="font-bold text-slate-800">{parsedMeta.branchName || "-"}</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">Branch Code</span>
+                    <span className="text-slate-500">{t(lang, "bdash.branch_code", "Branch Code")}</span>
                     <span className="font-bold text-slate-800 font-mono">{parsedMeta.branchCode || "-"}</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">City Branch</span>
+                    <span className="text-slate-500">{t(lang, "report.scope_city_branch", "City Branch")}</span>
                     <span className="font-bold text-slate-800">{parsedMeta.cityBranch || parsedMeta.city || "-"}</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">Country & State</span>
+                    <span className="text-slate-500">{getLabel("countryAndState", lang)}</span>
                     <span className="font-bold text-slate-800">{[parsedMeta.country, parsedMeta.stateProvince].filter(Boolean).join(", ") || "-"}</span>
                   </div>
                   <div className="flex justify-between pb-0.5">
-                    <span className="text-slate-500">Address</span>
+                    <span className="text-slate-500">{t(lang, "purchase.f_address", "Address")}</span>
                     <span className="font-bold text-slate-900 text-right max-w-[150px] truncate" title={customer.address || ""}>{customer.address || "-"}</span>
                   </div>
                 </div>
@@ -583,46 +583,46 @@ export function CustomerProfile({
                 <div className="absolute top-3 right-3 text-teal-600/30">
                   <Building2 className="h-6 w-6" />
                 </div>
-                <h3 className="text-[10px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1">Customer Company Details</h3>
+                <h3 className="text-[10px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1">{getLabel("customerCompanyDetails", lang)}</h3>
                 <div className="space-y-2 text-xs">
                   <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">Company Name</span>
+                    <span className="text-slate-500">{t(lang, "branch.row_company_name", "Company Name")}</span>
                     <span className="font-bold text-slate-800">{parsedMeta.companyName || customer.company_name || "-"}</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">Registration Number</span>
+                    <span className="text-slate-500">{t(lang, "ledger.registration_number", "Registration Number")}</span>
                     <span className="font-bold text-slate-800 font-mono">{parsedMeta.companyRegNo || "-"}</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">Tax / NTN Number</span>
+                    <span className="text-slate-500">{getLabel("taxNtnNumber", lang)}</span>
                     <span className="font-bold text-slate-800 font-mono">{parsedMeta.companyTaxNo || "-"}</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">Business Type</span>
+                    <span className="text-slate-500">{t(lang, "company_form.business_type_label", "Business Type")}</span>
                     <span className="font-bold text-slate-800">{parsedMeta.companyBusinessType || "-"}</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">Phone Number</span>
+                    <span className="text-slate-500">{t(lang, "purchase.f_phone_number", "Phone Number")}</span>
                     <span className="font-bold text-slate-800 font-mono">{parsedMeta.companyPhone || "-"}</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">Email Address</span>
+                    <span className="text-slate-500">{getLabel("emailAddress", lang)}</span>
                     <span className="font-bold text-slate-800 text-right max-w-[150px] truncate text-[11px]" title={parsedMeta.companyEmail}>{parsedMeta.companyEmail || "-"}</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">Country</span>
+                    <span className="text-slate-500">{getLabel("country", lang)}</span>
                     <span className="font-bold text-slate-800">{parsedMeta.companyCountry || parsedMeta.country || "-"}</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">City</span>
+                    <span className="text-slate-500">{getLabel("city", lang)}</span>
                     <span className="font-bold text-slate-800">{parsedMeta.companyCity || parsedMeta.city || "-"}</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">State</span>
+                    <span className="text-slate-500">{t(lang, "branch.state_label", "State")}</span>
                     <span className="font-bold text-slate-800">{parsedMeta.companyState || parsedMeta.stateProvince || "-"}</span>
                   </div>
                   <div className="flex justify-between pb-0.5">
-                    <span className="text-slate-500">Complete Address</span>
+                    <span className="text-slate-500">{getLabel("completeAddress", lang)}</span>
                     <span className="font-bold text-slate-900 text-right max-w-[150px] truncate" title={parsedMeta.companyAddress || customer.address || ""}>{parsedMeta.companyAddress || customer.address || "-"}</span>
                   </div>
                 </div>
@@ -631,14 +631,14 @@ export function CustomerProfile({
 
             {/* Contacts Table style */}
             <div className="space-y-2">
-              <h3 className="text-[10px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1">Communication Channels</h3>
+              <h3 className="text-[10px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1">{getLabel("communicationChannels", lang)}</h3>
               <div className="border rounded-lg overflow-hidden">
                 <table className="w-full text-xs text-left">
                   <thead className="bg-slate-50 text-slate-600 uppercase font-bold border-b">
                     <tr>
                       <Th className="px-4 py-2">#</Th>
-                      <Th className="px-4 py-2">Contact Type</Th>
-                      <Th className="px-4 py-2 font-mono">Contact Details / Value</Th>
+                      <Th className="px-4 py-2">{getLabel("contactType", lang)}</Th>
+                      <Th className="px-4 py-2 font-mono">{getLabel("contactDetailsValue", lang)}</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -651,7 +651,7 @@ export function CustomerProfile({
                     ))}
                     {parsedMeta.contacts.length === 0 && (
                       <tr>
-                        <td colSpan={3} className="px-4 py-6 text-center italic text-slate-400">No contact details registered.</td>
+                        <td colSpan={3} className="px-4 py-6 text-center italic text-slate-400">{getLabel("noContactDetailsRegistered", lang)}</td>
                       </tr>
                     )}
                   </tbody>
@@ -661,15 +661,15 @@ export function CustomerProfile({
 
             {/* Documents Table style */}
             <div className="space-y-2">
-              <h3 className="text-[10px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1">Registered Verification Documents</h3>
+              <h3 className="text-[10px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1">{getLabel("registeredVerificationDocuments", lang)}</h3>
               <div className="border rounded-lg overflow-hidden">
                 <table className="w-full text-xs text-left">
                   <thead className="bg-slate-50 text-slate-600 uppercase font-bold border-b">
                     <tr>
                       <Th className="px-4 py-2">#</Th>
-                      <Th className="px-4 py-2">Document Type</Th>
-                      <Th className="px-4 py-2 font-mono">Number</Th>
-                      <Th className="px-4 py-2">Scan Attachment Reference</Th>
+                      <Th className="px-4 py-2">{getLabel("documentType", lang)}</Th>
+                      <Th className="px-4 py-2 font-mono">{getLabel("numberLabel", lang)}</Th>
+                      <Th className="px-4 py-2">{getLabel("scanAttachmentReference", lang)}</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -698,18 +698,18 @@ export function CustomerProfile({
                                 className="text-[9px] text-teal-600 font-bold hover:underline cursor-pointer flex items-center gap-0.5 ml-2"
                               >
                                 <DownloadActionIcon className="h-2.5 w-2.5" />
-                                Download Scan
+                                {getLabel("downloadScan", lang)}
                               </button>
                             </div>
                           ) : (
-                            <span className="text-slate-400 italic text-[10px]">No scan upload</span>
+                            <span className="text-slate-400 italic text-[10px]">{getLabel("noScanUpload", lang)}</span>
                           )}
                         </td>
                       </tr>
                     ))}
                     {parsedMeta.documents.length === 0 && (
                       <tr>
-                        <td colSpan={4} className="px-4 py-6 text-center italic text-slate-400">No documents registered.</td>
+                        <td colSpan={4} className="px-4 py-6 text-center italic text-slate-400">{getLabel("noDocumentsRegistered", lang)}</td>
                       </tr>
                     )}
                   </tbody>
@@ -720,7 +720,7 @@ export function CustomerProfile({
             {/* Additional Remarks Section */}
             {parsedMeta.remarks && (
               <div className="space-y-1.5 border rounded-lg p-3 bg-slate-50/50">
-                <h4 className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Remarks / Registry Auditor Notes</h4>
+                <h4 className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">{getLabel("remarksRegistryAuditorNotes", lang)}</h4>
                 <p className="text-xs text-slate-700 leading-relaxed font-medium">{parsedMeta.remarks}</p>
               </div>
             )}
@@ -729,7 +729,7 @@ export function CustomerProfile({
           {/* Footer Signature stamp block */}
           <div className="border-t pt-8 mt-12 flex justify-between text-xs select-none">
             <div className="space-y-1">
-              <p className="text-slate-400 uppercase text-[9px] font-bold">Date of Issuance</p>
+              <p className="text-slate-400 uppercase text-[9px] font-bold">{getLabel("dateOfIssuance", lang)}</p>
               <p className="font-bold text-slate-700 font-mono">
                 {new Date().toLocaleDateString(undefined, {
                   day: "2-digit",
@@ -739,11 +739,11 @@ export function CustomerProfile({
               </p>
             </div>
             <div className="space-y-1 text-right">
-              <p className="text-slate-400 uppercase text-[9px] font-bold">Authorized Signature</p>
+              <p className="text-slate-400 uppercase text-[9px] font-bold">{t(lang, "acct.authorized_signature", "Authorized Signature")}</p>
               <div className="h-8 flex items-end justify-end">
                 <div className="w-32 border-b border-dashed border-slate-400" />
               </div>
-              <p className="text-[9px] text-slate-400 italic">ERP Registrar Office stamp</p>
+              <p className="text-[9px] text-slate-400 italic">{getLabel("erpRegistrarOfficeStamp", lang)}</p>
             </div>
           </div>
         </div>

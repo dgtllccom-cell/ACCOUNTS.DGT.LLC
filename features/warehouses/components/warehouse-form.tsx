@@ -389,7 +389,7 @@ export function WarehouseForm({
                     value={ownerCustomerId}
                     onValueChange={(customerId) => setOwnerCustomerId(customerId)}
                     countryId={form.countryId || null}
-                    placeholder="Search owner from Customer / Person Master"
+                    placeholder={t(lang, "wh.wf_search_owner_customer_person", "Search owner from Customer / Person Master")}
                   />
                   <p className="text-[10px] text-muted-foreground">Select an existing shared customer/person/business owner or create one from the same master form.</p>
                 </div>

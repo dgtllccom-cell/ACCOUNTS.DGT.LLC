@@ -696,12 +696,12 @@ export default function JournalStockReportDashboard({
 
                 <div className="grid grid-cols-2 gap-3 text-[10px] font-bold bg-slate-50/50 dark:bg-slate-950 p-3 rounded-xl border border-slate-150 dark:border-slate-850">
                   <div className="space-y-1.5">
-                    <div className="flex justify-between"><span className="text-slate-400">CURRENCY:</span><span className="text-slate-900 dark:text-white font-mono">{c.currency}</span></div>
-                    <div className="flex justify-between"><span className="text-slate-400">TOTAL PURCHASE:</span><span className="text-rose-600 dark:text-rose-450 font-mono">{fmtNum(c.purchase, 2)}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_currency_colon", "CURRENCY:")}</span><span className="text-slate-900 dark:text-white font-mono">{c.currency}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_total_purchase_colon", "TOTAL PURCHASE:")}</span><span className="text-rose-600 dark:text-rose-450 font-mono">{fmtNum(c.purchase, 2)}</span></div>
                   </div>
                   <div className="space-y-1.5 pl-3 border-l border-slate-200 dark:border-slate-800">
-                    <div className="flex justify-between"><span className="text-slate-400">TOTAL TRANSFERRED:</span><span className="text-emerald-600 dark:text-emerald-450 font-mono">{fmtNum(c.transferred, 2)}</span></div>
-                    <div className="flex justify-between"><span className="text-slate-400">REMAINING BALANCE:</span><span className="text-slate-900 dark:text-white font-mono">{fmtNum(c.remaining, 2)}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_total_transferred_colon", "TOTAL TRANSFERRED:")}</span><span className="text-emerald-600 dark:text-emerald-450 font-mono">{fmtNum(c.transferred, 2)}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_remaining_balance_colon", "REMAINING BALANCE:")}</span><span className="text-slate-900 dark:text-white font-mono">{fmtNum(c.remaining, 2)}</span></div>
                   </div>
                 </div>
 
@@ -763,14 +763,14 @@ export default function JournalStockReportDashboard({
                 <tr>
                   <td colSpan={9} className="p-8 text-center text-slate-400 font-mono">
                     <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-600 mb-2" />
-                    Crunching stock reports data...
+                    {t(lang, "jr.jsrd_crunching_data", "Crunching stock reports data...")}
                   </td>
                 </tr>
               ) : groupedData.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="p-12 text-center text-slate-400 font-sans">
                     <Package className="h-10 w-10 mx-auto text-slate-300 dark:text-slate-700 mb-3" />
-                    <p className="font-bold text-slate-700 dark:text-slate-300">No report records match the selected filters</p>
+                    <p className="font-bold text-slate-700 dark:text-slate-300">{t(lang, "jr.jsrd_no_records_match", "No report records match the selected filters")}</p>
                   </td>
                 </tr>
               ) : (
@@ -872,7 +872,7 @@ export default function JournalStockReportDashboard({
                   <FileText className="w-5 h-5 text-blue-400" />
                   <div>
                     <h3 className="text-sm font-black uppercase tracking-wider text-white">
-                      Purchase Booking Bill Register: <span className="text-blue-400">{selectedGroupDetails.name}</span>
+                      {t(lang, "jr.jsrd_bill_register_colon", "Purchase Booking Bill Register:")}<span className="text-blue-400">{selectedGroupDetails.name}</span>
                     </h3>
                     <p className="text-[10px] text-slate-400 font-semibold">
                       Showing detailed purchase booking records, weight breakdown & multi-currency remaining balances ({selectedGroupDetails.records.length} Bills)
@@ -910,7 +910,7 @@ export default function JournalStockReportDashboard({
                   className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all"
                 >
                   <Download className="w-3.5 h-3.5" />
-                  Export Register CSV
+                  {t(lang, "jr.jsrd_export_register_csv", "Export Register CSV")}
                 </button>
                 <button
                   onClick={() => setSelectedEntity(null)}
@@ -970,7 +970,7 @@ export default function JournalStockReportDashboard({
                 <div className="flex justify-between items-center">
                   <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
                     <Package className="w-4 h-4 text-emerald-600" />
-                    Purchase Booking Bill Register Details
+                    {t(lang, "jr.jsrd_bill_register_details", "Purchase Booking Bill Register Details")}
                   </h4>
                   <span className="text-[10px] font-bold text-slate-400">
                     Scroll horizontally to view all 17 currency and serial fields →

@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { t } from "@/lib/i18n/ui";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
 import { UniversalReportModal } from "@/components/ui/universal-report-modal";
 
@@ -107,20 +108,20 @@ export function BankRegistry() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Bank Management</CardTitle>
+            <CardTitle>{t(lang, "nav.bank_management", "Bank Management")}</CardTitle>
             <p className="text-sm text-slate-500 mt-1">
               {th("Manage all banks and banking details")}
             </p>
           </div>
           <Button onClick={() => router.push("/dashboard/settings/bank/new")}>
-            <Plus className="w-4 h-4 mr-1" /> New Bank
+            <Plus className="w-4 h-4 mr-1" /> {t(lang, "bankreg.bankreg_new_bank", "New Bank")}
           </Button>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-2 flex-wrap">
             <div className="flex-1 min-w-[250px]">
               <Input
-                placeholder="Search bank name, code, account number, IBAN..."
+                placeholder={t(lang, "bankreg.bankreg_search_placeholder", "Search bank name, code, account number, IBAN...")}
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
@@ -133,9 +134,9 @@ export function BankRegistry() {
               onChange={(e) => setStatusFilter(e.target.value as any)}
               className="px-3 py-2 border rounded-md bg-white"
             >
-              <option value="all">All Status</option>
-              <option value="Active">Active Only</option>
-              <option value="Inactive">Inactive Only</option>
+              <option value="all">{t(lang, "acct.status_all", "All Status")}</option>
+              <option value="Active">{t(lang, "acct.active_only", "Active Only")}</option>
+              <option value="Inactive">{t(lang, "acct.inactive_only", "Inactive Only")}</option>
             </select>
             <Button variant="outline" onClick={handlePrint}>
               <Printer className="w-4 h-4" />
@@ -144,19 +145,19 @@ export function BankRegistry() {
 
           <div className="grid grid-cols-4 gap-2 text-sm">
             <div className="bg-blue-50 p-3 rounded">
-              <div className="text-xs text-blue-600 font-semibold">TOTAL</div>
+              <div className="text-xs text-blue-600 font-semibold">{t(lang, "creg.crtr_total_word", "TOTAL")}</div>
               <div className="text-lg font-bold text-blue-900">{summary.total}</div>
             </div>
             <div className="bg-green-50 p-3 rounded">
-              <div className="text-xs text-green-600 font-semibold">ACTIVE</div>
+              <div className="text-xs text-green-600 font-semibold">{t(lang, "status.active", "ACTIVE")}</div>
               <div className="text-lg font-bold text-green-900">{summary.active}</div>
             </div>
             <div className="bg-red-50 p-3 rounded">
-              <div className="text-xs text-red-600 font-semibold">INACTIVE</div>
+              <div className="text-xs text-red-600 font-semibold">{t(lang, "creg.crtr_inactive_word", "INACTIVE")}</div>
               <div className="text-lg font-bold text-red-900">{summary.inactive}</div>
             </div>
             <div className="bg-slate-50 p-3 rounded">
-              <div className="text-xs text-slate-600 font-semibold">SHOWING</div>
+              <div className="text-xs text-slate-600 font-semibold">{t(lang, "bankreg.bankreg_showing_word", "SHOWING")}</div>
               <div className="text-lg font-bold text-slate-900">{paginated.length}</div>
             </div>
           </div>
@@ -165,13 +166,13 @@ export function BankRegistry() {
             {loading ? (
               <div className="p-8 text-center">
                 <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
-                <p className="text-slate-600">Loading banks...</p>
+                <p className="text-slate-600">{t(lang, "bankreg.bankreg_loading_banks", "Loading banks...")}</p>
               </div>
             ) : filtered.length === 0 ? (
               <div className="p-8 text-center">
-                <p className="text-slate-600">No banks found</p>
+                <p className="text-slate-600">{t(lang, "bankreg.bankreg_no_banks_found", "No banks found")}</p>
                 <Button onClick={() => router.push("/dashboard/settings/bank/new")} className="mt-4">
-                  Create First Bank
+                  {t(lang, "bankreg.bankreg_create_first_bank", "Create First Bank")}
                 </Button>
               </div>
             ) : (
@@ -208,7 +209,7 @@ export function BankRegistry() {
                             bank.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
                           )}
                         >
-                          {bank.is_active ? "Active" : "Inactive"}
+                          {bank.is_active ? t(lang, "god.active", "Active") : t(lang, "god.inactive", "Inactive")}
                         </span>
                       </td>
                       <td className="p-3 text-center">
@@ -243,7 +244,7 @@ export function BankRegistry() {
 
           {totalPages > 1 && (
             <div className="flex items-center justify-between">
-              <div className="text-sm text-slate-600">Page {page} of {totalPages}</div>
+              <div className="text-sm text-slate-600">{t(lang, "report.page", "Page")} {page} {t(lang, "creg.of", "of")} {totalPages}</div>
               <div className="flex gap-2">
                 <Button
                   onClick={() => setPage(Math.max(1, page - 1))}
@@ -251,7 +252,7 @@ export function BankRegistry() {
                   variant="outline"
                   size="sm"
                 >
-                  Previous
+                  {t(lang, "common.previous", "Previous")}
                 </Button>
                 <Button
                   onClick={() => setPage(Math.min(totalPages, page + 1))}
@@ -259,7 +260,7 @@ export function BankRegistry() {
                   variant="outline"
                   size="sm"
                 >
-                  Next
+                  {t(lang, "common.next", "Next")}
                 </Button>
               </div>
             </div>
@@ -270,23 +271,23 @@ export function BankRegistry() {
       <UniversalReportModal
         isOpen={showReport}
         onClose={() => setShowReport(false)}
-        title="Bank Registry Report"
-        subtitle="Master Financial Institution Accounts and Banking Details"
+        title={t(lang, "bankreg.bankreg_report_title", "Bank Registry Report")}
+        subtitle={t(lang, "bankreg.bankreg_report_subtitle", "Master Financial Institution Accounts and Banking Details")}
         exportFileName="bank_registry_report"
         filters={[
-          { label: "Status Filter", value: statusFilter },
-          { label: "Search Query", value: searchQuery || "None" }
+          { label: t(lang, "bankreg.bankreg_status_filter", "Status Filter"), value: statusFilter },
+          { label: t(lang, "bankreg.bankreg_search_query", "Search Query"), value: searchQuery || t(lang, "purchase.card_none_label", "None") }
         ]}
         columns={[
-          { key: "bank_name", label: "Bank Name" },
-          { key: "bank_code", label: "Code" },
-          { key: "branch_name", label: "Branch" },
-          { key: "country_name", label: "Country" },
-          { key: "account_title", label: "Account Title" },
-          { key: "account_number", label: "Account Number" },
-          { key: "iban", label: "IBAN" },
-          { key: "currency_code", label: "Currency" },
-          { key: "status", label: "Status", align: "center" }
+          { key: "bank_name", label: t(lang, "bank.bank_name", "Bank Name") },
+          { key: "bank_code", label: t(lang, "common.code", "Code") },
+          { key: "branch_name", label: t(lang, "report.branch", "Branch") },
+          { key: "country_name", label: t(lang, "report.country", "Country") },
+          { key: "account_title", label: t(lang, "bank.account_title_label", "Account Title") },
+          { key: "account_number", label: t(lang, "bank.account_number", "Account Number") },
+          { key: "iban", label: t(lang, "bank.iban_label", "IBAN") },
+          { key: "currency_code", label: t(lang, "hr.f_currency", "Currency") },
+          { key: "status", label: t(lang, "log.tbl_status", "Status"), align: "center" }
         ]}
         data={filtered.map(b => ({
           bank_name: b.bank_name,
@@ -297,7 +298,7 @@ export function BankRegistry() {
           account_number: b.account_number || "-",
           iban: b.iban || "-",
           currency_code: b.currency_code,
-          status: b.is_active ? "Active" : "Inactive"
+          status: b.is_active ? t(lang, "god.active", "Active") : t(lang, "god.inactive", "Inactive")
         }))}
       />
     </div>

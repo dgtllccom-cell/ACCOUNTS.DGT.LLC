@@ -411,10 +411,6 @@ const generalOfficeLabels: Record<string, Partial<Record<SupportedLanguage, stri
   "Country Owner": { ur: "کنٹری اونر / سربراہ", ar: "مالك الدولة / رئيس", fa: "مالک کشور / رئیس", ps: "د هیواد مالک / مشر" },
   "Branch Owner": { ur: "برانچ اونر / پارٹنر", ar: "مالك الفرع / شريك", fa: "مالک شعبه / شریک", ps: "د څانګې مالک / ملګری" },
   "Company Owner": { ur: "کمپنی اونر", ar: "مالك الشركة", fa: "مالک شرکت", ps: "د شرکت مالک" },
-  "Manager": { ur: "منیجر", ar: "مدير", fa: "مدیر", ps: "مدیر" },
-  "Normal Staff": { ur: "عام عملہ", ar: "موظفون عاديون", fa: "کارکنان عادی", ps: "عادي کارمندان" },
-  "Employee": { ur: "ملازم", ar: "موظف", fa: "کارمند", ps: "کارمند" },
-  "Others": { ur: "دیگر", ar: "أخرى", fa: "سایر", ps: "نور" },
   "Active": { ur: "فعال", ar: "نشط", fa: "فعال", ps: "فعال" },
   "Inactive": { ur: "غیر فعال", ar: "غير نشط", fa: "غیرفعال", ps: "غیر فعال" },
   "On Leave": { ur: "رخصت پر", ar: "في إجازة", fa: "در مرخصی", ps: "په رخصتۍ" },
@@ -425,10 +421,13 @@ const generalOfficeLabels: Record<string, Partial<Record<SupportedLanguage, stri
   "Active Staff": { ur: "فعال عملہ", ar: "الموظفون النشطون", fa: "پرسنل فعال", ps: "فعال کارمندان" },
   "Departments": { ur: "شعبہ جات", ar: "الأقسام", fa: "دپارتمان‌ها", ps: "څانګې" },
   "Monthly Payroll": { ur: "ماہانہ پے رول", ar: "الرواتب الشهرية", fa: "حقوق ماهانه", ps: "میاشتنی معاش" },
-  "Pending Leaves": { ur: "زیر التواء چھٹیاں", ar: "الإجازات المعلقة", fa: "مرخصی‌های در انتظار", ps: "پاتې رخصتۍ" },
   "Assets Tracked": { ur: "اثاثہ جات", ar: "الأصول المسجلة", fa: "اموال اداری", ps: "دفتري شتمنۍ" },
   "Total Branches": { ur: "کل برانچز", ar: "إجمالي الفروع", fa: "کل شعب", ps: "ټولې څانګې" },
   "Active Branches": { ur: "فعال برانچز", ar: "الفروع النشطة", fa: "شعب فعال", ps: "فعالې څانګې" },
+  "BRANCHES & COMPANIES": { ur: "برانچز اور کمپنیاں", ar: "الفروع والشركات", fa: "شعب و شرکت‌ها", ps: "څانګې او شرکتونه" },
+  "Registered Companies": { ur: "رجسٹرڈ کمپنیاں", ar: "الشركات المسجلة", fa: "شرکت‌های ثبت‌شده", ps: "ثبت شوي شرکتونه" },
+  "All Companies": { ur: "تمام کمپنیاں", ar: "جميع الشركات", fa: "همه شرکت‌ها", ps: "ټول شرکتونه" },
+  "Company / Firm": { ur: "کمپنی / فرم", ar: "الشركة / المؤسسة", fa: "شرکت / مؤسسه", ps: "شرکت / فرم" },
   "Today Report": { ur: "آج کی رپورٹ", ar: "تقرير اليوم", fa: "گزارش امروز", ps: "د نن ورځې راپور" },
   "Attendance Summary": { ur: "حاضری کا خلاصہ", ar: "ملخص الحضور", fa: "خلاصه حضور", ps: "د حاضرۍ لنډیز" },
   "Assets Summary": { ur: "اثاثہ جات کا خلاصہ", ar: "ملخص الأصول", fa: "خلاصه اموال", ps: "د شتمنیو لنډیز" },
@@ -480,7 +479,7 @@ const URDU_TO_ENGLISH: Record<string, string> = {
   "عصمت اللہ عبداللہ": "ASMATULLAH ABDULLAH"
 };
 
-function translateGeneralOffice(label: string, lang: SupportedLanguage) {
+function translateGeneralOffice(label: string, lang: SupportedLanguage): string {
   if (!label) return "";
   const trimmed = label.trim();
 
@@ -507,7 +506,7 @@ function translateGeneralOffice(label: string, lang: SupportedLanguage) {
   }
   
   // Exact match in dictionary
-  if (generalOfficeLabels[trimmed]?.[lang]) return generalOfficeLabels[trimmed][lang];
+  if (generalOfficeLabels[trimmed]?.[lang]) return generalOfficeLabels[trimmed][lang]!;
 
   // Handle slash-separated designations/departments
   if (trimmed.includes("/")) {
@@ -519,9 +518,9 @@ function translateGeneralOffice(label: string, lang: SupportedLanguage) {
   
   // Case-insensitive match
   const upper = trimmed.toUpperCase();
-  if (generalOfficeLabels[upper]?.[lang]) return generalOfficeLabels[upper][lang];
+  if (generalOfficeLabels[upper]?.[lang]) return generalOfficeLabels[upper][lang]!;
   const lower = trimmed.toLowerCase();
-  if (generalOfficeLabels[lower]?.[lang]) return generalOfficeLabels[lower][lang];
+  if (generalOfficeLabels[lower]?.[lang]) return generalOfficeLabels[lower][lang]!;
 
   // Specific canonical Name resolution
   if (lower.includes("naseeb") || trimmed.includes("ناسیب") || trimmed.includes("نسیب")) {
@@ -597,10 +596,29 @@ export function GeneralOfficeDashboardView() {
   const [employees, setEmployees] = useState<any[]>([]);
   // Date-wise employee activity (Priority 3). Defaults to all records; filters the table + drives the
   // daily-count cards off the real created_at/updated_at timestamps.
-  const [dateRange, setDateRange] = useState<DateRange>({ mode: "all" });
+  const [dateRange, setDateRange] = useState<DateRange>(() => computeRange("all", iso(new Date())));
+
+  const companyOptions = useMemo(() => {
+    const set = new Set<string>();
+    employees.forEach((e) => {
+      const c = (e.person?.company_name || e.company_name || "").trim();
+      if (c) set.add(c);
+    });
+    return Array.from(set).sort();
+  }, [employees]);
+  const [companyFilter, setCompanyFilter] = useState("");
+
   const employeesByDate = useMemo(
-    () => employees.filter((e) => dateRange.mode === "all" || inRange(e.created_at, dateRange) || inRange(e.updated_at, dateRange)),
-    [employees, dateRange]
+    () => employees.filter((e) => {
+      const matchesDate = dateRange.mode === "all" || inRange(e.created_at, dateRange) || inRange(e.updated_at, dateRange);
+      if (!matchesDate) return false;
+      if (companyFilter) {
+        const c = (e.person?.company_name || e.company_name || "").trim().toLowerCase();
+        if (c !== companyFilter.toLowerCase()) return false;
+      }
+      return true;
+    }),
+    [employees, dateRange, companyFilter]
   );
   const dailyCounts = useMemo(() => {
     const isActive = (e: any) => String(e.status ?? "").toLowerCase() === "active";
@@ -665,12 +683,22 @@ export function GeneralOfficeDashboardView() {
       .filter(([, v]) => v > 0)
       .map(([cur, v]) => `${cur} ${v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v.toLocaleString()}`)
       .join(" / ") || "—";
-    // Unique departments and unique branches
+    // Unique departments, unique branches, and unique companies
     const deptSet = new Set(employees.map((e) => e.department).filter(Boolean));
     const branchSet = new Set(
       employees.map((e) => e.country_branch?.name || e.city_branch?.name).filter(Boolean)
     );
-    return { total, active, payrollLabel, departments: deptSet.size, branches: branchSet.size };
+    const companySet = new Set(
+      employees.map((e) => (e.person?.company_name || e.company_name || "").trim()).filter(Boolean)
+    );
+    return {
+      total,
+      active,
+      payrollLabel,
+      departments: deptSet.size,
+      branches: branchSet.size,
+      companies: companySet.size
+    };
   }, [employees]);
 
   // Modals State
@@ -836,6 +864,20 @@ export function GeneralOfficeDashboardView() {
             />
           </div>
 
+          {/* Company Filter */}
+          {companyOptions.length > 0 && (
+            <select
+              value={companyFilter}
+              onChange={(e) => setCompanyFilter(e.target.value)}
+              className="h-8.5 rounded-xl border border-blue-200 bg-blue-50/50 px-2.5 text-xs font-bold text-blue-900 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-200 font-sans"
+            >
+              <option value="">{tr("All Companies")}</option>
+              {companyOptions.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          )}
+
           {/* Category Filter */}
           <select
             value={categoryFilter}
@@ -869,7 +911,7 @@ export function GeneralOfficeDashboardView() {
           <div className="hidden sm:flex items-center gap-1 font-sans">
             <button
               type="button"
-              onClick={() => setDateRange({ mode: "all" })}
+              onClick={() => setDateRange(computeRange("all", iso(new Date())))}
               className={`h-8.5 rounded-xl border px-2.5 text-xs font-bold transition-colors ${
                 dateRange.mode === "all"
                   ? "bg-blue-600 text-white border-blue-600 shadow-xs"
@@ -882,7 +924,7 @@ export function GeneralOfficeDashboardView() {
               type="button"
               onClick={() => setDateRange(computeRange("day", iso(new Date())))}
               className={`h-8.5 rounded-xl border px-2.5 text-xs font-bold transition-colors ${
-                dateRange.mode === "day" && dateRange.start?.slice(0, 10) === iso(new Date())
+                dateRange.mode === "day" && dateRange.from === iso(new Date())
                   ? "bg-blue-600 text-white border-blue-600 shadow-xs"
                   : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
               }`}
@@ -893,7 +935,7 @@ export function GeneralOfficeDashboardView() {
               type="button"
               onClick={() => setDateRange(computeRange("day", addDays(iso(new Date()), -1)))}
               className={`h-8.5 rounded-xl border px-2.5 text-xs font-bold transition-colors ${
-                dateRange.mode === "day" && dateRange.start?.slice(0, 10) === addDays(iso(new Date()), -1)
+                dateRange.mode === "day" && dateRange.from === addDays(iso(new Date()), -1)
                   ? "bg-blue-600 text-white border-blue-600 shadow-xs"
                   : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
               }`}
@@ -1043,20 +1085,20 @@ export function GeneralOfficeDashboardView() {
           </div>
         </div>
 
-        {/* Card 4: BRANCHES */}
+        {/* Card 4: BRANCHES & COMPANIES */}
         <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Building2 className="h-4 w-4 text-indigo-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">4. {tr("BRANCHES")}</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">4. {tr("BRANCHES & COMPANIES")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
               <span>{tr("Total Branches")}:</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">{summaryStats.branches || "—"}</span>
             </div>
-            <div className="flex justify-between text-emerald-600 font-bold">
-              <span>{tr("Active Branches")}:</span>
-              <span>{summaryStats.branches || "—"}</span>
+            <div className="flex justify-between text-indigo-600 font-bold">
+              <span>{tr("Registered Companies")}:</span>
+              <span>{summaryStats.companies || "—"}</span>
             </div>
           </div>
         </div>
@@ -1150,7 +1192,7 @@ export function GeneralOfficeDashboardView() {
                         className="mt-2 h-8.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold gap-1.5 px-4"
                       >
                         <RefreshCcw className="h-3.5 w-3.5" />
-                        Retry Loading
+                        {ct(lang, "go.go_retry_loading", "Retry Loading")}
                       </Button>
                     </div>
                   </td>
@@ -1162,8 +1204,8 @@ export function GeneralOfficeDashboardView() {
                       <div className="h-12 w-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
                         <Users className="h-6 w-6" />
                       </div>
-                      <p className="text-sm font-bold text-slate-800 dark:text-slate-200">No employees found</p>
-                      <p className="text-xs text-muted-foreground">Try adjusting your search or filters</p>
+                      <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{ct(lang, "go.go_no_employees_found", "No employees found")}</p>
+                      <p className="text-xs text-muted-foreground">{ct(lang, "go.go_adjust_search_filters", "Try adjusting your search or filters")}</p>
                       <Button
                         onClick={() => {
                           setSelectedEmployeeId(null);
@@ -1178,45 +1220,62 @@ export function GeneralOfficeDashboardView() {
                   </td>
                 </tr>
               ) : (
-                employeesByDate.map((emp) => (
-                  <tr key={emp.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                    <td className="p-3.5 font-mono font-bold text-blue-600">{emp.employee_code}</td>
-                    <td className="p-3.5 font-bold text-slate-900 dark:text-slate-100 font-sans">
-                      <div className="font-bold text-slate-900 dark:text-slate-100">
-                        {tr(personFullName(emp.person || {}) || emp.name)}
-                      </div>
-                      {(emp.person?.father_name || emp.person?.contact_person) && (
-                        <div className="text-[10px] text-slate-500 font-normal mt-0.5">
-                          {lang === "ur" ? "ولدیت: " : lang === "ar" ? "اسم الأب: " : "S/O: "}
-                          {emp.person?.father_name || emp.person?.contact_person}
+                employeesByDate.map((emp) => {
+                  const companyName = (emp.person?.company_name || emp.company_name || "").trim();
+                  const branchName = emp.country_branch?.name || emp.city_branch?.name || "";
+                  return (
+                    <tr key={emp.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                      <td className="p-3.5 font-mono font-bold text-blue-600">{emp.employee_code}</td>
+                      <td className="p-3.5 font-bold text-slate-900 dark:text-slate-100 font-sans">
+                        <div className="font-bold text-slate-900 dark:text-slate-100">
+                          {tr(personFullName(emp.person || {}) || emp.name)}
                         </div>
-                      )}
-                    </td>
-                    <td className="p-3.5 text-muted-foreground font-sans">{tr(emp.category || "Staff")}</td>
-                    <td className="p-3.5">{tr(emp.designation)} / {tr(emp.department)}</td>
-                    <td className="p-3.5 font-mono text-muted-foreground">{emp.joining_date || "—"}</td>
-                    <td className="p-3.5 font-mono font-bold">{emp.net_salary ? `${Number(emp.net_salary).toLocaleString()} ${emp.salary_currency || "USD"}` : "—"}</td>
-                    <td className="p-3.5 font-mono text-muted-foreground">0</td>
-                    <td className="p-3.5">
-                      <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-300 font-bold text-[10px]">
-                        {tr(emp.status || "Active")}
-                      </Badge>
-                    </td>
-                    <td className="p-3.5 text-right space-x-1">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setSelectedEmployeeId(emp.id);
-                          setShowFormModal(true);
-                        }}
-                        className="h-7 text-xs text-blue-600 hover:bg-blue-50"
-                      >
-                        {t.edit}
-                      </Button>
-                    </td>
-                  </tr>
-                ))
+                        {companyName && (
+                          <div className="text-[11px] font-bold text-blue-600 dark:text-blue-400 mt-0.5 flex items-center gap-1">
+                            <Building2 className="h-3 w-3 shrink-0 text-blue-500" />
+                            <span>{companyName}</span>
+                          </div>
+                        )}
+                        {(emp.person?.father_name || emp.person?.contact_person) && (
+                          <div className="text-[10px] text-slate-500 font-normal mt-0.5">
+                            {lang === "ur" ? "ولدیت: " : lang === "ar" ? "اسم الأب: " : "S/O: "}
+                            {emp.person?.father_name || emp.person?.contact_person}
+                          </div>
+                        )}
+                      </td>
+                      <td className="p-3.5 text-muted-foreground font-sans">
+                        <div className="font-semibold text-slate-800 dark:text-slate-200">{tr(emp.category || "Staff")}</div>
+                        {branchName && (
+                          <div className="text-[10px] text-slate-400 font-medium mt-0.5">
+                            {branchName}
+                          </div>
+                        )}
+                      </td>
+                      <td className="p-3.5">{tr(emp.designation)} / {tr(emp.department)}</td>
+                      <td className="p-3.5 font-mono text-muted-foreground">{emp.joining_date || "—"}</td>
+                      <td className="p-3.5 font-mono font-bold">{emp.net_salary ? `${Number(emp.net_salary).toLocaleString()} ${emp.salary_currency || "USD"}` : "—"}</td>
+                      <td className="p-3.5 font-mono text-muted-foreground">0</td>
+                      <td className="p-3.5">
+                        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-300 font-bold text-[10px]">
+                          {tr(emp.status || "Active")}
+                        </Badge>
+                      </td>
+                      <td className="p-3.5 text-right space-x-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            setSelectedEmployeeId(emp.id);
+                            setShowFormModal(true);
+                          }}
+                          className="h-7 text-xs text-blue-600 hover:bg-blue-50"
+                        >
+                          {t.edit}
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -1246,13 +1305,13 @@ export function GeneralOfficeDashboardView() {
 
       {/* Global Bottom Status Footer matching Reference Image 2 */}
       <div className="pt-6 border-t border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
-        <div>© 2026 Digital Dock ERP (Pvt) Ltd. All rights reserved.</div>
+        <div>{ct(lang, "go.go_copyright_footer", "© 2026 Digital Dock ERP (Pvt) Ltd. All rights reserved.")}</div>
         <div className="flex items-center gap-4 text-[11px] font-medium">
           <span>v3.2.0</span>
           <span>Pakistan Standard Time (PST)</span>
           <span className="flex items-center gap-1.5 text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            System Online
+            {ct(lang, "go.go_system_online", "System Online")}
           </span>
         </div>
       </div>

@@ -89,7 +89,7 @@ export function CustomersManagement() {
         const data = await apiGet<{ customers: CustomerRow[] }>(`/api/erp/customers?${qp.toString()}`);
         if (!cancelled) setCustomers(data.customers ?? []);
       } catch (e: any) {
-        if (!cancelled) setBanner({ tone: "err", text: e.message || "Failed to load customers" });
+        if (!cancelled) setBanner({ tone: "err", text: e.message || t(lang, "cusm.cm_failed_load_customers", "Failed to load customers") });
       } finally {
         if (!cancelled) setLoadingList(false);
       }
@@ -103,7 +103,7 @@ export function CustomersManagement() {
   async function onSave() {
     setBanner(null);
     if (!canSave) {
-      setBanner({ tone: "err", text: "Select a country and enter Customer Name (min 2 chars)." });
+      setBanner({ tone: "err", text: t(lang, "cusm.cm_select_country_name_msg", "Select a country and enter Customer Name (min 2 chars).") });
       return;
     }
 
@@ -137,12 +137,12 @@ export function CustomersManagement() {
       setEmail("");
       setAddress("");
       setNotes("");
-      setBanner({ tone: "ok", text: "Customer saved." });
+      setBanner({ tone: "ok", text: t(lang, "cusm.cm_customer_saved", "Customer saved.") });
 
       // refresh list
       setSearch((s) => s);
     } catch (e: any) {
-      setBanner({ tone: "err", text: e.message || "Save failed" });
+      setBanner({ tone: "err", text: e.message || t(lang, "cusm.cm_save_failed", "Save failed") });
     } finally {
       setSaving(false);
     }

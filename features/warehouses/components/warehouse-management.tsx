@@ -438,7 +438,7 @@ export function WarehouseManagement() {
               closeFormModal();
             }}
           />
-          {submitting ? <div className="text-xs text-slate-500">Refreshing registry...</div> : null}
+          {submitting ? <div className="text-xs text-slate-500">{t(lang, "wh.wm_refreshing_registry", "Refreshing registry...")}</div> : null}
         </SimpleModal>
       ) : null}
 
@@ -488,7 +488,7 @@ export function WarehouseManagement() {
               <div className="mt-2 text-sm font-semibold text-slate-800">{viewWarehouse.full_address || "-"}</div>
             </div>
             <div className="rounded-xl border bg-slate-50 p-3 md:col-span-2">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Contacts / Contracts</div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">{t(lang, "whf.contacts_contracts_short", "Contacts / Contracts")}</div>
               <div className="mt-2 grid gap-2 md:grid-cols-2">
                 {parseContactSummary(viewWarehouse.contact_number).length > 0 ? (
                   parseContactSummary(viewWarehouse.contact_number).map((item, index) => (
@@ -498,7 +498,7 @@ export function WarehouseManagement() {
                     </div>
                   ))
                 ) : (
-                  <div className="text-sm text-slate-500">No contacts saved.</div>
+                  <div className="text-sm text-slate-500">{t(lang, "wh.wm_no_contacts_saved", "No contacts saved.")}</div>
                 )}
               </div>
             </div>
@@ -510,7 +510,7 @@ export function WarehouseManagement() {
         isOpen={showReport}
         onClose={() => setShowReport(false)}
         title={tt("wh.report_title", "Warehouse Registry Report")}
-        subtitle="Complete Storage Facility, Yard, & Logistics Master Registry"
+        subtitle={t(lang, "wh.wm_complete_storage_facility_reg", "Complete Storage Facility, Yard, & Logistics Master Registry")}
         exportFileName="warehouse_registry_report"
         filters={[
           { label: "Status Filter", value: statusFilter },

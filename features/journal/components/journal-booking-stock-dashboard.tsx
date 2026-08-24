@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 import {
   FileText, Package, Scale, Gauge, Container, MessageSquare,
   Search, ChevronDown, ChevronUp, Download, Upload, Printer,
@@ -139,6 +141,7 @@ const MOCK_STOCK_UTILIZATION: Record<string, Array<{ customer: string; date: str
    Main Component
 ───────────────────────────────────────────── */
 export function JournalBookingStockDashboard({ session }: { session: any }) {
+  const lang = useActiveLanguage();
   // ── State ──
   const [data, setData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -278,7 +281,7 @@ export function JournalBookingStockDashboard({ session }: { session: any }) {
       <div className="bg-[#0d2d6b] text-white px-6 py-4 print:hidden">
         <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-lg font-black tracking-wide uppercase">Journal Booking Stock for Admin Dashboard</h1>
+            <h1 className="text-lg font-black tracking-wide uppercase">{t(lang, "jr.jbsd_title", "Journal Booking Stock for Admin Dashboard")}</h1>
             <p className="text-blue-200 text-xs mt-0.5">Container Goods Received — Transferred Purchase Orders Only</p>
           </div>
           <div className="flex items-center gap-2">
@@ -298,7 +301,7 @@ export function JournalBookingStockDashboard({ session }: { session: any }) {
                 <div className="absolute right-0 mt-2 w-[320px] sm:w-[380px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl z-50 p-4 text-slate-800 dark:text-slate-100 animate-in fade-in slide-in-from-top-2 duration-150">
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
                     <span className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-2">
-                      <Search className="w-3.5 h-3.5" /> Search & Filter
+                      <Search className="w-3.5 h-3.5" /> {t(lang, "nav.search_and_filter", "Search & Filter")}
                     </span>
                     <button onClick={() => setFiltersOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                       <ChevronUp className="w-4 h-4" />
@@ -306,50 +309,50 @@ export function JournalBookingStockDashboard({ session }: { session: any }) {
                   </div>
                   <form onSubmit={handleSearch} className="pt-3 flex flex-col gap-3.5">
                     <div className="flex flex-col gap-1">
-                      <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Date From</label>
+                      <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">{t(lang, "purchase.lgr_date_from", "Date From")}</label>
                       <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
                         className="h-9 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 text-xs outline-none focus:ring-2 focus:ring-blue-500/40 dark:text-slate-200" />
                     </div>
                     <div className="flex flex-col gap-1">
-                      <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Date To</label>
+                      <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">{t(lang, "purchase.lgr_date_to", "Date To")}</label>
                       <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
                         className="h-9 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 text-xs outline-none focus:ring-2 focus:ring-blue-500/40 dark:text-slate-200" />
                     </div>
                     <div className="flex flex-col gap-1">
-                      <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Purchase Bill No</label>
+                      <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">{t(lang, "jr.jbsd_purchase_bill_no", "Purchase Bill No")}</label>
                       <input type="text" value={purchaseOrderNo} onChange={e => setPurchaseOrderNo(e.target.value)}
-                        placeholder="Bill / PO number..."
+                        placeholder={t(lang, "jr.jbsd_bill_po_ph", "Bill / PO number...")}
                         className="h-9 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 text-xs outline-none focus:ring-2 focus:ring-blue-500/40 dark:text-slate-200" />
                     </div>
                     <div className="flex flex-col gap-1">
-                      <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Goods Name</label>
+                      <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">{t(lang, "purchase.th_goods_name", "Goods Name")}</label>
                       <input type="text" value={goodsName} onChange={e => setGoodsName(e.target.value)}
-                        placeholder="Search goods..."
+                        placeholder={t(lang, "jr.jbsd_search_goods_ph", "Search goods...")}
                         className="h-9 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 text-xs outline-none focus:ring-2 focus:ring-blue-500/40 dark:text-slate-200" />
                     </div>
                     <div className="flex flex-col gap-1">
-                      <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">HS Code</label>
+                      <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">{t(lang, "purchase.th_hs_code", "HS Code")}</label>
                       <input type="text" value={hsCode} onChange={e => setHsCode(e.target.value)}
-                        placeholder="HS Code..."
+                        placeholder={t(lang, "jr.jbsd_hs_code_ph", "HS Code...")}
                         className="h-9 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 text-xs outline-none focus:ring-2 focus:ring-blue-500/40 dark:text-slate-200" />
                     </div>
                     {session?.isSuperAdmin && (
                       <div className="flex flex-col gap-1">
-                        <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Country</label>
+                        <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">{t(lang, "report.country", "Country")}</label>
                         <select value={countryId} onChange={e => setCountryId(e.target.value)}
                           className="h-9 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 text-xs outline-none focus:ring-2 focus:ring-blue-500/40 dark:text-slate-200">
-                          <option value="">All Countries</option>
+                          <option value="">{t(lang, "common.all_countries", "All Countries")}</option>
                           {countries.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </select>
                       </div>
                     )}
                     <div className="flex items-end gap-2 mt-2">
                       <button type="submit" className="flex-1 h-9 bg-[#0d2d6b] hover:bg-[#0a2456] text-white text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5">
-                        <Search className="w-3.5 h-3.5" /> Search
+                        <Search className="w-3.5 h-3.5" /> {t(lang, "common.search", "Search")}
                       </button>
                       <button type="button" onClick={handleReset}
                         className="h-9 px-4 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 text-xs font-semibold rounded-lg transition-all">
-                        Reset
+                        {t(lang, "common.reset", "Reset")}
                       </button>
                     </div>
                   </form>
@@ -367,7 +370,7 @@ export function JournalBookingStockDashboard({ session }: { session: any }) {
             className="w-full flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-slate-700"
           >
             <span className="text-xs font-black uppercase tracking-wider text-[#0d2d6b] dark:text-blue-400 flex items-center gap-2">
-              <Building2 className="w-3.5 h-3.5" /> Branch / Reference Details
+              <Building2 className="w-3.5 h-3.5" /> {t(lang, "jr.jbsd_branch_reference_details", "Branch / Reference Details")}
             </span>
             {branchPanelOpen ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
           </button>
@@ -390,7 +393,7 @@ export function JournalBookingStockDashboard({ session }: { session: any }) {
                       ? <div className="space-y-0.5">{values.map(v => (
                           <p key={v} className="text-sm font-semibold text-slate-800 dark:text-slate-200">{v}</p>
                         ))}</div>
-                      : <p className="text-sm text-slate-400 dark:text-slate-500">All</p>)
+                      : <p className="text-sm text-slate-400 dark:text-slate-500">{t(lang, "report.all_label", "All")}</p>)
                   }
                 </div>
               ))}
@@ -401,7 +404,7 @@ export function JournalBookingStockDashboard({ session }: { session: any }) {
         {/* ── Summary Report Cards ── */}
         <div>
           <p className="text-xs font-black uppercase tracking-wider text-[#0d2d6b] dark:text-blue-400 mb-3 flex items-center gap-2">
-            <Gauge className="w-3.5 h-3.5" /> Summary Report
+            <Gauge className="w-3.5 h-3.5" /> {t(lang, "jr.jbsd_summary_report", "Summary Report")}
           </p>
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
             <SummaryCard icon={FileText} label="Total Bills (Receipts)" iconColor="bg-blue-600"
@@ -424,7 +427,7 @@ export function JournalBookingStockDashboard({ session }: { session: any }) {
           {/* Table Header Row */}
           <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
             <span className="text-xs font-black uppercase tracking-wider text-[#0d2d6b] dark:text-blue-400">
-              Goods Receipt Register (Details)
+              {t(lang, "jr.jbsd_goods_receipt_register_details", "Goods Receipt Register (Details)")}
             </span>
             <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
               {loading ? (
@@ -432,7 +435,7 @@ export function JournalBookingStockDashboard({ session }: { session: any }) {
               ) : error ? (
                 <span className="text-red-500 text-xs font-semibold">{error}</span>
               ) : (
-                <span className="font-semibold">Total Records: <strong className="text-slate-800 dark:text-slate-200">{pagination?.totalRecords ?? 0}</strong></span>
+                <span className="font-semibold">{t(lang, "jr.jbsd_total_records_colon", "Total Records:")}<strong className="text-slate-800 dark:text-slate-200">{pagination?.totalRecords ?? 0}</strong></span>
               )}
               {/* Pagination compact */}
               {!loading && pagination && pagination.totalPages > 1 && (
@@ -483,7 +486,7 @@ export function JournalBookingStockDashboard({ session }: { session: any }) {
                       <div className="flex flex-col items-center gap-3">
                         <Package className="w-10 h-10 opacity-30" />
                         <span className="text-sm font-semibold text-red-500">{error}</span>
-                        <button onClick={() => fetchData(1)} className="text-xs text-blue-600 hover:underline">Try Again</button>
+                        <button onClick={() => fetchData(1)} className="text-xs text-blue-600 hover:underline">{t(lang, "jr.jbsd_try_again", "Try Again")}</button>
                       </div>
                     </td>
                   </tr>
@@ -492,8 +495,8 @@ export function JournalBookingStockDashboard({ session }: { session: any }) {
                     <td colSpan={15} className="px-6 py-16 text-center">
                       <div className="flex flex-col items-center gap-3 text-slate-400 dark:text-slate-500">
                         <Package className="w-10 h-10 opacity-30" />
-                        <p className="text-sm font-semibold">No transferred stock found</p>
-                        <p className="text-xs">Only purchase orders with <strong>ledger_posting_status = posted</strong> appear here.</p>
+                        <p className="text-sm font-semibold">{t(lang, "jr.jbsd_no_transferred_stock", "No transferred stock found")}</p>
+                        <p className="text-xs">{t(lang, "jr.jbsd_only_purchase_orders_with", "Only purchase orders with")}<strong>ledger_posting_status = posted</strong> {t(lang, "jr.jbsd_appear_here", "appear here.")}</p>
                       </div>
                     </td>
                   </tr>
@@ -561,7 +564,7 @@ export function JournalBookingStockDashboard({ session }: { session: any }) {
                                     Stock Utilization History & Balance for {row.billNumber}
                                   </h5>
                                   <div className="text-[9px] font-bold text-slate-500">
-                                    Goods: <span className="text-slate-800 font-bold">{row.goodsName}</span> | Original Capacity: <span className="font-mono text-slate-800">{originalQty.toLocaleString()} {row.unit}</span> ({originalWeight.toLocaleString()} KG)
+                                    {t(lang, "sales.goods_colon", "Goods:")}<span className="text-slate-800 font-bold">{row.goodsName}</span> | Original Capacity: <span className="font-mono text-slate-800">{originalQty.toLocaleString()} {row.unit}</span> ({originalWeight.toLocaleString()} KG)
                                   </div>
                                 </div>
 
@@ -569,23 +572,23 @@ export function JournalBookingStockDashboard({ session }: { session: any }) {
                                   <table className="w-full text-[9px] text-slate-700 border-collapse">
                                     <thead className="bg-slate-100 text-slate-600 font-bold uppercase tracking-wider text-[8px] border-b border-slate-200">
                                       <tr>
-                                        <Th className="px-3 py-1.5 text-left">Transaction Ref</Th>
-                                        <Th className="px-3 py-1.5 text-left">Sale Date</Th>
-                                        <Th className="px-3 py-1.5 text-left">Customer / Debtor</Th>
-                                        <Th className="px-3 py-1.5 text-right">Qty Deducted</Th>
-                                        <Th className="px-3 py-1.5 text-right">Weight Deducted</Th>
-                                        <Th className="px-3 py-1.5 text-left">Status</Th>
+                                        <Th className="px-3 py-1.5 text-left">{t(lang, "sales.transaction_ref_label", "Transaction Ref")}</Th>
+                                        <Th className="px-3 py-1.5 text-left">{t(lang, "sales.sale_date_label", "Sale Date")}</Th>
+                                        <Th className="px-3 py-1.5 text-left">{t(lang, "sales.customer_debtor_label", "Customer / Debtor")}</Th>
+                                        <Th className="px-3 py-1.5 text-right">{t(lang, "sales.qty_deducted_label", "Qty Deducted")}</Th>
+                                        <Th className="px-3 py-1.5 text-right">{t(lang, "sales.weight_deducted_label", "Weight Deducted")}</Th>
+                                        <Th className="px-3 py-1.5 text-left">{t(lang, "log.tbl_status", "Status")}</Th>
                                       </tr>
                                     </thead>
                                     <tbody>
                                       {/* Initial import/purchase record */}
                                       <tr className="border-b border-slate-100 font-semibold bg-emerald-50/20 text-emerald-800">
                                         <td className="px-3 py-1.5 font-mono">{row.orderId || "PO-INTAKE"}</td>
-                                        <td className="px-3 py-1.5">Intake Date</td>
-                                        <td className="px-3 py-1.5 italic text-emerald-700">Initial Import / Stock Inbound</td>
+                                        <td className="px-3 py-1.5">{t(lang, "sales.intake_date_label", "Intake Date")}</td>
+                                        <td className="px-3 py-1.5 italic text-emerald-700">{t(lang, "sales.initial_import_inbound", "Initial Import / Stock Inbound")}</td>
                                         <td className="px-3 py-1.5 text-right font-mono font-bold text-emerald-600">+{originalQty.toLocaleString()}</td>
                                         <td className="px-3 py-1.5 text-right font-mono font-bold text-emerald-600">+{originalWeight.toLocaleString()} KG</td>
-                                        <td className="px-3 py-1.5"><span className="text-[8px] font-black uppercase bg-emerald-100 text-emerald-800 px-1 py-0.5 rounded">Inbound</span></td>
+                                        <td className="px-3 py-1.5"><span className="text-[8px] font-black uppercase bg-emerald-100 text-emerald-800 px-1 py-0.5 rounded">{t(lang, "sales.inbound_word", "Inbound")}</span></td>
                                       </tr>
 
                                       {/* Deduction history */}
@@ -596,14 +599,14 @@ export function JournalBookingStockDashboard({ session }: { session: any }) {
                                           <td className="px-3 py-1.5 font-semibold text-slate-800">{d.customer}</td>
                                           <td className="px-3 py-1.5 text-right font-mono font-bold">-{d.quantity.toLocaleString()}</td>
                                           <td className="px-3 py-1.5 text-right font-mono font-bold">-{d.weight.toLocaleString()} KG</td>
-                                          <td className="px-3 py-1.5"><span className="text-[8px] font-black uppercase bg-red-100 text-red-800 px-1 py-0.5 rounded">Sold Out</span></td>
+                                          <td className="px-3 py-1.5"><span className="text-[8px] font-black uppercase bg-red-100 text-red-800 px-1 py-0.5 rounded">{t(lang, "sales.sold_out_word", "Sold Out")}</span></td>
                                         </tr>
                                       ))}
 
                                       {/* Total Sold Summary row */}
                                       {deductions.length > 0 && (
                                         <tr className="bg-slate-50/50 border-t border-slate-150 font-bold">
-                                          <td colSpan={3} className="px-3 py-1.5 text-right text-slate-500 uppercase tracking-wider text-[8px]">Total Outward Deductions:</td>
+                                          <td colSpan={3} className="px-3 py-1.5 text-right text-slate-500 uppercase tracking-wider text-[8px]">{t(lang, "sales.total_outward_deductions_colon", "Total Outward Deductions:")}</td>
                                           <td className="px-3 py-1.5 text-right font-mono text-red-600 font-black">-{totalDeductedQty.toLocaleString()} {row.unit}</td>
                                           <td className="px-3 py-1.5 text-right font-mono text-red-600 font-black">-{totalDeductedWeight.toLocaleString()} KG</td>
                                           <td className="px-3 py-1.5 text-slate-400 font-semibold">—</td>
@@ -612,10 +615,10 @@ export function JournalBookingStockDashboard({ session }: { session: any }) {
 
                                       {/* Net Remaining Balance row */}
                                       <tr className="bg-sky-50 border-t border-slate-200 font-black text-sky-950">
-                                        <td colSpan={3} className="px-3 py-1.5 text-right uppercase tracking-wider text-[8px]">Net Available Balance:</td>
+                                        <td colSpan={3} className="px-3 py-1.5 text-right uppercase tracking-wider text-[8px]">{t(lang, "sales.net_available_balance_colon", "Net Available Balance:")}</td>
                                         <td className="px-3 py-1.5 text-right font-mono text-[10px] font-black text-sky-700">{row.quantity.toLocaleString()} {row.unit}</td>
                                         <td className="px-3 py-1.5 text-right font-mono text-[10px] font-black text-sky-700">{row.netWeight.toLocaleString()} KG</td>
-                                        <td className="px-3 py-1.5"><span className="text-[8px] font-black uppercase bg-sky-200 text-sky-800 px-1 py-0.5 rounded animate-pulse">Live Stock</span></td>
+                                        <td className="px-3 py-1.5"><span className="text-[8px] font-black uppercase bg-sky-200 text-sky-800 px-1 py-0.5 rounded animate-pulse">{t(lang, "sales.live_stock_title", "Live Stock")}</span></td>
                                       </tr>
                                     </tbody>
                                   </table>
@@ -657,7 +660,7 @@ export function JournalBookingStockDashboard({ session }: { session: any }) {
           {!loading && pagination && pagination.totalPages > 1 && (
             <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 print:hidden">
               <span className="text-xs text-slate-500 dark:text-slate-400">
-                Page <strong>{page}</strong> of <strong>{pagination.totalPages}</strong> &nbsp;·&nbsp; {pagination.totalRecords} total records
+                {t(lang, "sae.page", "Page")}<strong>{page}</strong> {t(lang, "rozrep.of", "of")}<strong>{pagination.totalPages}</strong> &nbsp;·&nbsp; {pagination.totalRecords} total records
               </span>
               <div className="flex items-center gap-1">
                 <button onClick={() => fetchData(1)} disabled={page === 1} className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30 transition-all"><ChevronsLeft className="w-4 h-4" /></button>

@@ -27,6 +27,7 @@ type AssignmentRow = {
   country_id: string | null;
   country_branch_id: string | null;
   city_branch_id: string | null;
+  clearing_agent_id?: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -336,7 +337,7 @@ export async function GET(request: NextRequest) {
       withTimeout<AssignmentRow>(
         admin
         .from("user_role_assignments")
-        .select("user_id, role, country_id, country_branch_id, city_branch_id, is_active, created_at, updated_at")
+        .select("user_id, role, country_id, country_branch_id, city_branch_id, clearing_agent_id, is_active, created_at, updated_at")
         .is("deleted_at", null)
           .order("created_at", { ascending: false })
           .limit(Math.max(query.limit * 3, 500)),
@@ -362,7 +363,7 @@ export async function GET(request: NextRequest) {
       return apiOk(fallbackReport(session, profilesRes.error?.message ?? assignmentsRes.error?.message ?? "User journal data source unavailable"));
     }
 
-       const profiles = (profilesRes.data ?? []) as ProfileRow[];
+    const profiles = (profilesRes.data ?? []) as ProfileRow[];
     const assignments = (assignmentsRes.data ?? []) as AssignmentRow[];
     const permissionSets = (permissionsRes.error ? [] : permissionsRes.data ?? []) as PermissionRow[];
     const authUsers = (authUsersRes.error ? [] : authUsersRes.data ?? []) as any[];
@@ -379,13 +380,14 @@ export async function GET(request: NextRequest) {
     }
 
     const userIds = profiles.map((profile) => profile.id);
-    const [countryIds, countryBranchIds, cityBranchIds] = [
+    const [countryIds, countryBranchIds, cityBranchIds, clearingAgentIds] = [
       unique(assignments.map((row) => row.country_id)),
       unique(assignments.map((row) => row.country_branch_id)),
-      unique(assignments.map((row) => row.city_branch_id))
+      unique(assignments.map((row) => row.city_branch_id)),
+      unique(assignments.map((row) => row.clearing_agent_id))
     ];
 
-    const [countriesRes, countryBranchesRes, cityBranchesRes, auditRes] = await Promise.all([
+    const [countriesRes, countryBranchesRes, cityBranchesRes, clearingAgentsRes, clearingAgentBranchesRes, auditRes] = await Promise.all([
       countryIds.length
         ? withTimeout<{ id: string; name: string; iso2: string | null }>(admin.from("countries").select("id, name, iso2").in("id", countryIds), "countries")
         : Promise.resolve({ data: [], error: null }),
@@ -397,6 +399,18 @@ export async function GET(request: NextRequest) {
         ? withTimeout<{ id: string; name: string; code: string; city_name: string; country_id: string; country_branch_id: string }>(
             admin.from("city_branches").select("id, name, code, city_name, country_id, country_branch_id").in("id", cityBranchIds),
             "city branches"
+          )
+        : Promise.resolve({ data: [], error: null }),
+      clearingAgentIds.length
+        ? withTimeout<{ id: string; name: string; code: string; head_office_country_id: string | null }>(
+            admin.from("clearing_agents").select("id, name, code, head_office_country_id").in("id", clearingAgentIds),
+            "clearing agents"
+          )
+        : Promise.resolve({ data: [], error: null }),
+      clearingAgentIds.length
+        ? withTimeout<{ id: string; name: string; code: string; clearing_agent_id: string; branch_level: string }>(
+            admin.from("clearing_agent_branches").select("id, name, code, clearing_agent_id, branch_level").in("clearing_agent_id", clearingAgentIds).is("deleted_at", null),
+            "clearing agent branches"
           )
         : Promise.resolve({ data: [], error: null }),
       userIds.length
@@ -423,11 +437,26 @@ export async function GET(request: NextRequest) {
       country_id: string;
       country_branch_id: string;
     }>;
+    const clearingAgents = (clearingAgentsRes.error ? [] : clearingAgentsRes.data ?? []) as Array<{
+      id: string;
+      name: string;
+      code: string;
+      head_office_country_id: string | null;
+    }>;
+    const clearingAgentBranches = (clearingAgentBranchesRes.error ? [] : clearingAgentBranchesRes.data ?? []) as Array<{
+      id: string;
+      name: string;
+      code: string;
+      clearing_agent_id: string;
+      branch_level: string;
+    }>;
     const audits = (auditRes.error ? [] : auditRes.data ?? []) as AuditRow[];
 
     const countryLookup = new Map(countries.map((row) => [row.id, row] as const));
     const mainBranchLookup = new Map(countryBranches.map((row) => [row.id, row] as const));
     const cityBranchLookup = new Map(cityBranches.map((row) => [row.id, row] as const));
+    const clearingAgentLookup = new Map(clearingAgents.map((row) => [row.id, row] as const));
+    const clearingBranchLookup = new Map(clearingAgentBranches.map((row) => [row.clearing_agent_id, row] as const));
 
     const permissionsByUser = new Map(permissionSets.map((row) => [row.user_id, (row.permissions ?? []).filter((p): p is string => typeof p === "string" && Boolean(p))] as const));
 
@@ -451,36 +480,45 @@ export async function GET(request: NextRequest) {
       const country = latestAssignment?.country_id ? countryLookup.get(latestAssignment.country_id) ?? null : null;
       const mainBranch = latestAssignment?.country_branch_id ? mainBranchLookup.get(latestAssignment.country_branch_id) ?? null : null;
       const cityBranch = latestAssignment?.city_branch_id ? cityBranchLookup.get(latestAssignment.city_branch_id) ?? null : null;
+      const clearingAgent = latestAssignment?.clearing_agent_id ? clearingAgentLookup.get(latestAssignment.clearing_agent_id) ?? null : null;
+      const clearingBranch = latestAssignment?.clearing_agent_id ? clearingBranchLookup.get(latestAssignment.clearing_agent_id) ?? null : null;
+
       const branchType =
-        latestAssignment?.city_branch_id
-          ? "City Branch"
-          : latestAssignment?.country_branch_id
-            ? "Main Branch"
-            : latestAssignment?.country_id
-              ? "Country"
-              : "Global";
+        latestAssignment?.clearing_agent_id
+          ? "Clearing HQ"
+          : latestAssignment?.city_branch_id
+            ? "City Branch"
+            : latestAssignment?.country_branch_id
+              ? "Main Branch"
+              : latestAssignment?.country_id
+                ? "Country"
+                : "Global";
 
       const countryMainBranch = country
         ? countryBranches.find((b) => b.country_id === country.id) ?? null
         : null;
 
       const branchName =
-        branchType === "City Branch"
-          ? `${cityBranch?.city_name ?? "-"} - ${cityBranch?.name ?? "-"}`
-          : branchType === "Main Branch"
-            ? mainBranch?.name ?? "-"
-            : branchType === "Country"
-              ? country?.name ?? "-"
-              : "Global";
+        branchType === "Clearing HQ"
+          ? clearingBranch?.name ?? clearingAgent?.name ?? "Clearing Agent Head Office"
+          : branchType === "City Branch"
+            ? `${cityBranch?.city_name ?? "-"} - ${cityBranch?.name ?? "-"}`
+            : branchType === "Main Branch"
+              ? mainBranch?.name ?? "-"
+              : branchType === "Country"
+                ? country?.name ?? "-"
+                : "Global";
 
       const branchCode =
-        branchType === "City Branch"
-          ? cityBranch?.code ?? mainBranch?.code ?? countryMainBranch?.code ?? "-"
-          : branchType === "Main Branch"
-            ? mainBranch?.code ?? "-"
-            : branchType === "Country"
-              ? countryMainBranch?.code ?? mainBranch?.code ?? "-"
-              : "-";
+        branchType === "Clearing HQ"
+          ? clearingBranch?.code ?? clearingAgent?.code ?? "CLEARING-HO-01"
+          : branchType === "City Branch"
+            ? cityBranch?.code ?? mainBranch?.code ?? countryMainBranch?.code ?? "-"
+            : branchType === "Main Branch"
+              ? mainBranch?.code ?? "-"
+              : branchType === "Country"
+                ? countryMainBranch?.code ?? mainBranch?.code ?? "-"
+                : "-";
 
       const permissions = permissionsByUser.get(profile.id) ?? [...new Set(enterpriseRolePermissions[role] ?? [])];
       const userAudits = (auditsByUser.get(profile.id) ?? []).slice().sort((a, b) => b.created_at.localeCompare(a.created_at));

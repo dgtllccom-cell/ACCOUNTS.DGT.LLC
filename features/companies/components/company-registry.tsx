@@ -33,6 +33,7 @@ import type { CompanyRow } from "@/lib/repositories/companies-repository";
 import { printStore } from "@/lib/store/print-store";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { transliterateProperNoun } from "@/lib/i18n/transliteration";
 
 export type CompanyRegistryItem = {
   id: string;
@@ -216,7 +217,12 @@ const BUSINESS_TERMS_I18N: Record<string, Record<string, string>> = {
 
   // Famous Consortiums & Companies
   "DAMAAN Trading Company LLC": { ur: "دامان ٹریڈنگ کمپنی ایل ایل سی", ar: "شركة دامان التجارية ذ.م.م", ps: "دامان سوداګریز شرکت LLC", fa: "شرکت بازرگانی دامان با مسئولیت محدود" },
+  "Damaan Trading Company LLC": { ur: "دامان ٹریڈنگ کمپنی ایل ایل سی", ar: "شركة دامان التجارية ذ.م.م", ps: "دامان سوداګریز شرکت LLC", fa: "شرکت بازرگانی دامان با مسئولیت محدود" },
   "Asmat Khan Group": { ur: "عصمت خان گروپ", ar: "مجموعة عصمت خان", ps: "عصمت خان ګروپ", fa: "گروه عصمت خان" },
+  "Njyb Allah Group": { ur: "نجیب اللہ گروپ", ar: "مجموعة نجيب الله", ps: "نجيب الله ګروپ", fa: "گروه نجیب الله" },
+  "Njyb Allah Aind Company": { ur: "نجیب اللہ اینڈ کمپنی", ar: "شركة نجيب الله", ps: "نجيب الله او شرکت", fa: "شرکت نجیب الله" },
+  "Najeeb Allah Group": { ur: "نجیب اللہ گروپ", ar: "مجموعة نجيب الله", ps: "نجيب الله ګروپ", fa: "گروه نجیب الله" },
+  "Najeeb Allah And Company": { ur: "نجیب اللہ اینڈ کمپنی", ar: "شركة نجيب الله", ps: "نجيب الله او شرکت", fa: "شرکت نجیب الله" },
   "Al-Razi Consortium": { ur: "الرازی کنسورشیم", ar: "اتحاد الرازي", ps: "الرازي کنسورشیم", fa: "کنسرسیوم الرازی" },
   "Al-Razi Trading LLC": { ur: "الرازی ٹریڈنگ ایل ایل سی", ar: "شركة الرازي التجارية ذ.م.م", ps: "الرازي سوداګریز شرکت", fa: "شرکت بازرگانی الرازی" },
   "Ghani Group": { ur: "غنی گروپ", ar: "مجموعة غني", ps: "غني ګروپ", fa: "گروه غنی" },
@@ -237,14 +243,65 @@ const BUSINESS_TERMS_I18N: Record<string, Record<string, string>> = {
   "Global Links FZCO": { ur: "گلوبل لنکس ایف زیڈ سی او", ar: "غلوبال لينكس ش.م.ح", ps: "ګلوبل لنکس FZCO", fa: "گلوبال لینکس FZCO" },
   "Future Vision": { ur: "فیوچر وژن", ar: "رؤية المستقبل", ps: "راتلونکی لید", fa: "چشم‌انداز آینده" },
   "Future Vision Group": { ur: "فیوچر وژن گروپ", ar: "مجموعة رؤية المستقبل", ps: "فیوچر ویژن ګروپ", fa: "گروه چشم‌انداز آینده" },
-  "Group": { ur: "گروپ", ar: "مجموعة", ps: "ګروپ", fa: "گروه" }
+
+  // Word level mappings
+  "Group": { ur: "گروپ", ar: "مجموعة", ps: "ګروپ", fa: "گروه" },
+  "Company": { ur: "کمپنی", ar: "شركة", ps: "شرکت", fa: "شرکت" },
+  "Trading": { ur: "ٹریڈنگ", ar: "التجارية", ps: "سوداګریز", fa: "بازرگانی" },
+  "LLC": { ur: "ایل ایل سی", ar: "ذ.م.م", ps: "LLC", fa: "با مسئولیت محدود" },
+  "Ltd": { ur: "لیمیٹڈ", ar: "المحدودة", ps: "لیمیټډ", fa: "با مسئولیت محدود" },
+  "Limited": { ur: "لیمیٹڈ", ar: "المحدودة", ps: "لیمیټډ", fa: "با مسئولیت محدود" },
+  "Enterprises": { ur: "انٹرپرائزز", ar: "المشاريع", ps: "تصدۍ", fa: "شرکت‌های" },
+  "Industries": { ur: "انڈسٹریز", ar: "الصناعات", ps: "انډسټریز", fa: "صنایع" },
+  "International": { ur: "انٹرنیشنل", ar: "العالمية", ps: "انټرنیشنل", fa: "بین‌المللی" },
+  "Consortium": { ur: "کنسورشیم", ar: "اتحاد", ps: "کنسورشیم", fa: "کنسرسیوم" },
+  "Brothers": { ur: "برادرز", ar: "إخوان", ps: "برادرز", fa: "برادران" },
+  "Traders": { ur: "ٹریڈرز", ar: "تجار", ps: "سوداګر", fa: "بازرگانان" },
+  "And": { ur: "اینڈ", ar: "و", ps: "او", fa: "و" },
+  "Aind": { ur: "اینڈ", ar: "و", ps: "او", fa: "و" },
+  "Allah": { ur: "اللہ", ar: "الله", ps: "الله", fa: "الله" },
+  "Njyb": { ur: "نجیب", ar: "نجيب", ps: "نجيب", fa: "نجیب" },
+  "Najeeb": { ur: "نجیب", ar: "نجيب", ps: "نجيب", fa: "نجیب" },
+  "Asmat": { ur: "عصمت", ar: "عصمت", ps: "عصمت", fa: "عصمت" },
+  "Khan": { ur: "خان", ar: "خان", ps: "خان", fa: "خان" },
+  "DAMAAN": { ur: "دامان", ar: "دامان", ps: "دامان", fa: "دامان" },
+  "Damaan": { ur: "دامان", ar: "دامان", ps: "دامان", fa: "دامان" },
+  "Bilal": { ur: "بلال", ar: "بلال", ps: "بلال", fa: "بلال" }
 };
 
 function localizeTerm(term: string, lang: string): string {
   if (!term || lang === "en") return term;
-  const match = BUSINESS_TERMS_I18N[term];
-  if (match && match[lang]) return match[lang];
-  return term;
+  const trimmed = term.trim();
+  if (!trimmed) return "";
+
+  // 1. Direct match
+  if (BUSINESS_TERMS_I18N[trimmed]?.[lang]) {
+    return BUSINESS_TERMS_I18N[trimmed][lang];
+  }
+
+  // 2. Case-insensitive exact match
+  const lower = trimmed.toLowerCase();
+  for (const [k, v] of Object.entries(BUSINESS_TERMS_I18N)) {
+    if (k.toLowerCase() === lower && v[lang]) {
+      return v[lang];
+    }
+  }
+
+  // 3. Multi-word substitution and transliteration
+  const words = trimmed.split(/(\s+)/);
+  const mapped = words.map((w) => {
+    if (/\s+/.test(w)) return w;
+    const clean = w.replace(/[^a-zA-Z0-9]/g, "");
+    const cleanLower = clean.toLowerCase();
+    for (const [k, v] of Object.entries(BUSINESS_TERMS_I18N)) {
+      if (k.toLowerCase() === cleanLower && v[lang]) {
+        return w.replace(clean, v[lang]);
+      }
+    }
+    return transliterateProperNoun(w, lang as any) || w;
+  });
+
+  return mapped.join("");
 }
 
 export function CompanyRegistry() {
@@ -296,9 +353,9 @@ export function CompanyRegistry() {
           return {
             id: c.id,
             accountNo: `10010${String(i + 1).padStart(2, "0")}`,
-            consortium: localizeTerm(rawConsortium, lang),
-            branchRules: localizeTerm(rawRules, lang),
-            accountName: localizeTerm(rawAccountName, lang),
+            consortium: rawConsortium,
+            branchRules: rawRules,
+            accountName: rawAccountName,
             companiesCount: compCount,
             contractsCount: contractsCount,
             primaryContact: contactPhone,
@@ -401,95 +458,92 @@ export function CompanyRegistry() {
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className="space-y-6 text-slate-900 dark:text-slate-100 pb-16">
 
-      {/* ── TOP HEADER MATCHING SCREENSHOT 1 ── */}
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
-        {/* Left: Icon + Title */}
-        <div className="flex items-center gap-3">
-          <div className="h-11 w-11 rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-200/60 dark:border-blue-900 shrink-0">
-            <Building2 className="h-6 w-6" />
+      {/* ── TOP HEADER & CONTROLS TOOLBAR ── */}
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3.5 bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs font-sans">
+        {/* Left: Icon + Title + Count Badge */}
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-200/60 dark:border-blue-900 shrink-0">
+            <Building2 className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-              {tt("creg.title", "Company Management Registry")}
-            </h1>
-            <p className="text-xs text-muted-foreground">
+            <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
+              <h1 className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100">
+                {tt("creg.title", "Company Management Registry")}
+              </h1>
+              <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800 shadow-xs leading-none">
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-500 mr-1.5 shrink-0" />
+                {companies.length} {tt("creg.companies_word", "Companies")}
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
               {tt("creg.subtitle", "Complete registry of company accounts, branches, contracts and related information.")}
             </p>
           </div>
         </div>
 
-        {/* Right: Filter Controls & New Action */}
+        {/* Right: Unified Search, Filters & Action Buttons */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* Company Type Dropdown */}
-          <div className="flex flex-col">
-            <span className="text-[9px] font-bold text-muted-foreground uppercase px-1">{tt("creg.company_type", "Company Type")}</span>
-            <select
-              value={companyTypeFilter}
-              onChange={(e) => setCompanyTypeFilter(e.target.value)}
-              className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/50 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-            >
-              <option value="all">{tt("creg.all_types", "All Types")}</option>
-              <option value="trading">{tt("creg.type_trading", "Trading")}</option>
-              <option value="clearing">{tt("creg.type_clearing", "Clearing")}</option>
-              <option value="logistics">{tt("creg.type_logistics", "Logistics")}</option>
-            </select>
+          {/* Integrated Search Input */}
+          <div className="relative min-w-[200px] sm:min-w-[240px]">
+            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={tt("common.search", "Search company, code, consortium...")}
+              className="h-8.5 pl-8.5 pr-2.5 text-xs bg-slate-50/70 dark:bg-slate-950 border-slate-200 dark:border-slate-700 rounded-xl font-sans"
+            />
           </div>
+
+          {/* Company Type Dropdown */}
+          <select
+            value={companyTypeFilter}
+            onChange={(e) => setCompanyTypeFilter(e.target.value)}
+            className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 font-sans"
+          >
+            <option value="all">{tt("creg.all_types", "All Types")}</option>
+            <option value="trading">{tt("creg.type_trading", "Trading")}</option>
+            <option value="clearing">{tt("creg.type_clearing", "Clearing")}</option>
+            <option value="logistics">{tt("creg.type_logistics", "Logistics")}</option>
+          </select>
 
           {/* Status Dropdown */}
-          <div className="flex flex-col">
-            <span className="text-[9px] font-bold text-muted-foreground uppercase px-1">{tt("common.status", "Status")}</span>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/50 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-            >
-              <option value="all">{tt("creg.all_status", "All Status")}</option>
-              <option value="active">{tt("creg.status_active", "Active")}</option>
-              <option value="inactive">{tt("creg.status_inactive", "Inactive")}</option>
-            </select>
-          </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 font-sans"
+          >
+            <option value="all">{tt("creg.all_status", "All Status")}</option>
+            <option value="active">{tt("creg.status_active", "Active")}</option>
+            <option value="inactive">{tt("creg.status_inactive", "Inactive")}</option>
+          </select>
 
           {/* Country Dropdown */}
-          <div className="flex flex-col">
-            <span className="text-[9px] font-bold text-muted-foreground uppercase px-1">{tt("common.country", "Country")}</span>
-            <select
-              value={countryFilter}
-              onChange={(e) => setCountryFilter(e.target.value)}
-              className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/50 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-            >
-              <option value="all">{tt("creg.all_countries", "All Countries")}</option>
-              <option value="pakistan">{tt("creg.country_pakistan", "Pakistan")}</option>
-              <option value="uae">{tt("creg.country_uae", "United Arab Emirates")}</option>
-              <option value="afghanistan">{tt("creg.country_afghanistan", "Afghanistan")}</option>
-            </select>
-          </div>
+          <select
+            value={countryFilter}
+            onChange={(e) => setCountryFilter(e.target.value)}
+            className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 font-sans"
+          >
+            <option value="all">{tt("creg.all_countries", "All Countries")}</option>
+            <option value="pakistan">{tt("creg.country_pakistan", "Pakistan")}</option>
+            <option value="uae">{tt("creg.country_uae", "United Arab Emirates")}</option>
+            <option value="afghanistan">{tt("creg.country_afghanistan", "Afghanistan")}</option>
+          </select>
 
           {/* Branch Dropdown */}
-          <div className="flex flex-col">
-            <span className="text-[9px] font-bold text-muted-foreground uppercase px-1">{tt("common.branch", "Branch")}</span>
-            <select
-              value={branchFilter}
-              onChange={(e) => setBranchFilter(e.target.value)}
-              className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/50 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-            >
-              <option value="all">{tt("creg.all_branches", "All Branches")}</option>
-              <option value="main">{tt("creg.branch_main_hq", "Main Headquarters")}</option>
-              <option value="lahore">{tt("creg.branch_lahore_hub", "Lahore Hub")}</option>
-              <option value="dubai">{tt("creg.branch_dubai_hub", "Dubai Regional Hub")}</option>
-            </select>
-          </div>
+          <select
+            value={branchFilter}
+            onChange={(e) => setBranchFilter(e.target.value)}
+            className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 font-sans"
+          >
+            <option value="all">{tt("creg.all_branches", "All Branches")}</option>
+            <option value="main">{tt("creg.branch_main_hq", "Main Headquarters")}</option>
+            <option value="lahore">{tt("creg.branch_lahore_hub", "Lahore Hub")}</option>
+            <option value="dubai">{tt("creg.branch_dubai_hub", "Dubai Regional Hub")}</option>
+          </select>
 
-          {/* Date Range Picker */}
-          <div className="flex flex-col">
-            <span className="text-[9px] font-bold text-muted-foreground uppercase px-1">{tt("creg.select_date_range", "Select Date Range")}</span>
-            <div className="h-8.5 flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/50 px-2.5 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
-              <Calendar className="h-3.5 w-3.5 text-slate-500" />
-              <span>{tt("creg.select_date_range", "Select Date Range")}</span>
-            </div>
-          </div>
-
-          {/* Reset & Search Buttons */}
-          <div className="flex items-center gap-1.5 self-end">
+          {/* Action Buttons */}
+          <div className="flex items-center gap-1.5">
             <Button
               type="button"
               variant="outline"
@@ -500,7 +554,7 @@ export function CompanyRegistry() {
                 setCountryFilter("all");
                 setBranchFilter("all");
               }}
-              className="h-8.5 rounded-xl border-slate-200 bg-white text-xs font-bold px-3 gap-1 shadow-xs hover:bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300"
+              className="h-8.5 rounded-xl border-slate-200 bg-white text-xs font-bold px-3 gap-1 shadow-xs hover:bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 font-sans"
             >
               <RotateCcw className="h-3 w-3" />
               {tt("common.reset", "Reset")}
@@ -508,19 +562,11 @@ export function CompanyRegistry() {
 
             <Button
               type="button"
-              className="h-8.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3.5 gap-1.5 shadow-xs"
-            >
-              <Search className="h-3.5 w-3.5" />
-              {tt("common.search", "Search")}
-            </Button>
-
-            <Button
-              type="button"
               onClick={() => router.push("/dashboard/settings/company-setup" as Route)}
-              className="h-8.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 gap-1.5 shadow-sm"
+              className="h-8.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 gap-1.5 shadow-sm font-sans"
             >
               <Plus className="h-3.5 w-3.5" />
-              + {tt("creg.new_company", "New Company")}
+              {tt("creg.new_company", "New Company")}
             </Button>
           </div>
         </div>
@@ -637,17 +683,17 @@ export function CompanyRegistry() {
 
                     {/* Consortium */}
                     <td className="p-3.5 font-bold text-slate-800 dark:text-slate-200">
-                      {c.consortium}
+                      {localizeTerm(c.consortium, lang)}
                     </td>
 
                     {/* Branch Rules */}
                     <td className="p-3.5 text-slate-600 dark:text-slate-400 font-medium">
-                      {c.branchRules}
+                      {localizeTerm(c.branchRules, lang)}
                     </td>
 
                     {/* Account Name */}
                     <td className="p-3.5 font-bold text-slate-900 dark:text-slate-100">
-                      {c.accountName}
+                      {localizeTerm(c.accountName, lang)}
                     </td>
 
                     {/* Companies Count Badge */}
@@ -680,7 +726,7 @@ export function CompanyRegistry() {
                         type="button"
                         onClick={() => setPreviewCompany(c)}
                         className="h-7 w-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 inline-flex items-center justify-center cursor-pointer transition"
-                        title="Preview Details"
+                        title={tt("creg.crtr_preview_details", "Preview Details")}
                       >
                         <Eye className="h-3.5 w-3.5 text-slate-600 dark:text-slate-300" />
                       </button>
@@ -693,7 +739,7 @@ export function CompanyRegistry() {
                           type="button"
                           onClick={() => router.push(`/dashboard/settings/company-setup?companyId=${c.id}` as Route)}
                           className="h-7 w-7 rounded-lg border border-slate-200 hover:bg-blue-50 text-blue-600 flex items-center justify-center"
-                          title="Edit"
+                          title={tt("branch.edit", "Edit")}
                         >
                           <PencilLine className="h-3.5 w-3.5" />
                         </button>
@@ -701,19 +747,19 @@ export function CompanyRegistry() {
                           type="button"
                           onClick={() => handlePrint(c)}
                           className="h-7 w-7 rounded-lg border border-slate-200 hover:bg-emerald-50 text-emerald-600 flex items-center justify-center"
-                          title="Duplicate / Print"
+                          title={tt("creg.crtr_duplicate_print", "Duplicate / Print")}
                         >
                           <Copy className="h-3.5 w-3.5" />
                         </button>
                         <button
                           type="button"
                           onClick={() => {
-                            if (confirm(`Are you sure you want to delete ${c.accountName}?`)) {
+                            if (confirm(`${tt("creg.crtr_confirm_delete_prefix", "Are you sure you want to delete")} ${c.accountName}?`)) {
                               setCompanies((prev) => prev.filter((item) => item.id !== c.id));
                             }
                           }}
                           className="h-7 w-7 rounded-lg border border-slate-200 hover:bg-rose-50 text-rose-600 flex items-center justify-center"
-                          title="Delete"
+                          title={tt("common.delete", "Delete")}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
@@ -800,8 +846,8 @@ export function CompanyRegistry() {
                   <Building2 className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="font-black text-base text-slate-900 dark:text-slate-100">{previewCompany.accountName}</h3>
-                  <p className="text-xs text-muted-foreground">Account #{previewCompany.accountNo} • {previewCompany.consortium}</p>
+                  <h3 className="font-black text-base text-slate-900 dark:text-slate-100">{localizeTerm(previewCompany.accountName, lang)}</h3>
+                  <p className="text-xs text-muted-foreground">Account #{previewCompany.accountNo} • {localizeTerm(previewCompany.consortium, lang)}</p>
                 </div>
               </div>
               <button
@@ -813,10 +859,10 @@ export function CompanyRegistry() {
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 text-xs">
+            <div className="grid grid-cols-2 gap-3 text-xs font-sans">
               <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl space-y-1">
                 <span className="text-[10px] uppercase font-bold text-muted-foreground">{tt("creg.modal_branch_rules", "Branch Rules:")}</span>
-                <div className="font-bold text-slate-800 dark:text-slate-200">{previewCompany.branchRules}</div>
+                <div className="font-bold text-slate-800 dark:text-slate-200">{localizeTerm(previewCompany.branchRules, lang)}</div>
               </div>
               <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl space-y-1">
                 <span className="text-[10px] uppercase font-bold text-muted-foreground">{tt("creg.modal_total_companies", "Total Companies:")}</span>

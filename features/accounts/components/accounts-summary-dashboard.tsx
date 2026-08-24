@@ -19,6 +19,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Th } from "@/components/ui/translated-th";
+import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 type AccountRow = {
   accountId: string;
@@ -86,6 +88,7 @@ function StatCard({
 
 export function AccountsSummaryDashboard() {
   const router = useRouter();
+  const lang = useActiveLanguage();
   const [rows, setRows] = useState<AccountRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -167,13 +170,13 @@ export function AccountsSummaryDashboard() {
   }, [rows, search, filterType, filterStatus, filterCountry]);
 
   const cards = [
-    { label: "Total Accounts", value: stats.total, sub: "All registered accounts", color: "text-[#0284c7]", icon: Hash },
-    { label: "Customers", value: stats.customers, sub: "Customer accounts", color: "text-emerald-600", icon: UserRound },
-    { label: "Companies", value: stats.companies, sub: "Company accounts", color: "text-violet-600", icon: Building2 },
-    { label: "Banks", value: stats.banks, sub: "Bank accounts", color: "text-amber-600", icon: Landmark },
-    { label: "Active", value: stats.active, sub: "Active accounts", color: "text-teal-600", icon: CheckCircle2 },
-    { label: "Closed", value: stats.closed, sub: "Inactive / closed", color: "text-rose-600", icon: XCircle },
-    { label: "Recent (30d)", value: stats.recent, sub: "Added in last 30 days", color: "text-indigo-600", icon: Clock },
+    { label: t(lang, "cdash.total_accounts", "Total Accounts"), value: stats.total, sub: t(lang, "acct.asd_all_registered_accounts", "All registered accounts"), color: "text-[#0284c7]", icon: Hash },
+    { label: t(lang, "bdash.customers", "Customers"), value: stats.customers, sub: t(lang, "acct.asd_customer_accounts", "Customer accounts"), color: "text-emerald-600", icon: UserRound },
+    { label: t(lang, "creg.companies_word", "Companies"), value: stats.companies, sub: t(lang, "acct.asd_company_accounts", "Company accounts"), color: "text-violet-600", icon: Building2 },
+    { label: t(lang, "acct.asd_banks_word", "Banks"), value: stats.banks, sub: t(lang, "acct.asd_bank_accounts", "Bank accounts"), color: "text-amber-600", icon: Landmark },
+    { label: t(lang, "god.active", "Active"), value: stats.active, sub: t(lang, "acct.asd_active_accounts", "Active accounts"), color: "text-teal-600", icon: CheckCircle2 },
+    { label: t(lang, "whf.status_closed", "Closed"), value: stats.closed, sub: t(lang, "acct.asd_inactive_closed", "Inactive / closed"), color: "text-rose-600", icon: XCircle },
+    { label: t(lang, "acct.asd_recent_30d", "Recent (30d)"), value: stats.recent, sub: t(lang, "acct.asd_added_last_30_days", "Added in last 30 days"), color: "text-indigo-600", icon: Clock },
   ];
 
   return (
@@ -181,23 +184,23 @@ export function AccountsSummaryDashboard() {
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-primary">Accounts</p>
-          <h1 className="mt-0.5 text-2xl font-bold tracking-tight text-slate-900">Accounts Summary Dashboard</h1>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-primary">{t(lang, "nav.accounts", "Accounts")}</p>
+          <h1 className="mt-0.5 text-2xl font-bold tracking-tight text-slate-900">{t(lang, "acct.asd_title", "Accounts Summary Dashboard")}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Complete overview of all accounts — historical and current records.
+            {t(lang, "acct.asd_subtitle", "Complete overview of all accounts — historical and current records.")}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200">
             <TrendingUp className="h-3.5 w-3.5" />
-            {loading ? "Loading..." : `${stats.total} Total Accounts`}
+            {loading ? t(lang, "common.loading", "Loading...") : `${stats.total} ${t(lang, "cdash.total_accounts", "Total Accounts")}`}
           </span>
           <Button
             type="button"
             onClick={() => router.push("/dashboard/accounts/setup")}
             className="rounded-lg bg-primary text-white text-xs font-semibold h-9 px-4"
           >
-            + New Account
+            {t(lang, "acct.areg_new_account", "+ New Account")}
           </Button>
         </div>
       </div>
@@ -214,61 +217,61 @@ export function AccountsSummaryDashboard() {
         {/* Table Header Bar */}
         <div className="bg-[#0f172a] px-5 py-3.5 flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-sm font-bold text-white">All Accounts Register</h2>
-            <p className="text-[11px] text-white/60">Historical + Current records — {filtered.length} shown</p>
+            <h2 className="text-sm font-bold text-white">{t(lang, "acct.asd_all_accounts_register", "All Accounts Register")}</h2>
+            <p className="text-[11px] text-white/60">{t(lang, "acct.asd_historical_current_records", "Historical + Current records —")} {filtered.length} {t(lang, "acct.asd_shown_word", "shown")}</p>
           </div>
           <span className="text-[10px] text-white/50">
-            Generated: {new Date().toISOString().slice(0, 10)}
+            {t(lang, "purchase.generated_label", "Generated:")} {new Date().toISOString().slice(0, 10)}
           </span>
         </div>
 
         {/* Filters */}
         <div className="bg-slate-50 border-b px-4 py-3 flex flex-wrap items-end gap-3">
           <div className="space-y-1">
-            <Label className="text-[10px] text-slate-500 font-semibold uppercase">Search</Label>
+            <Label className="text-[10px] text-slate-500 font-semibold uppercase">{t(lang, "common.search", "Search")}</Label>
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Name / Account No..."
+                placeholder={t(lang, "acct.asd_name_account_no_ph", "Name / Account No...")}
                 className="h-8 pl-8 text-xs w-52 bg-white"
               />
             </div>
           </div>
 
           <div className="space-y-1">
-            <Label className="text-[10px] text-slate-500 font-semibold uppercase">Account Type</Label>
+            <Label className="text-[10px] text-slate-500 font-semibold uppercase">{t(lang, "bank.account_type", "Account Type")}</Label>
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
               className="h-8 rounded-lg border border-input bg-white px-2.5 text-xs w-36"
             >
-              <option value="all">All Types</option>
-              {uniqueTypes.map((t) => <option key={t} value={t}>{t}</option>)}
+              <option value="all">{t(lang, "tl.type_all", "All Types")}</option>
+              {uniqueTypes.map((ty) => <option key={ty} value={ty}>{ty}</option>)}
             </select>
           </div>
 
           <div className="space-y-1">
-            <Label className="text-[10px] text-slate-500 font-semibold uppercase">Status</Label>
+            <Label className="text-[10px] text-slate-500 font-semibold uppercase">{t(lang, "log.tbl_status", "Status")}</Label>
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
               className="h-8 rounded-lg border border-input bg-white px-2.5 text-xs w-32"
             >
-              <option value="all">All Status</option>
+              <option value="all">{t(lang, "acct.status_all", "All Status")}</option>
               {uniqueStatuses.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
 
           <div className="space-y-1">
-            <Label className="text-[10px] text-slate-500 font-semibold uppercase">Country</Label>
+            <Label className="text-[10px] text-slate-500 font-semibold uppercase">{t(lang, "report.country", "Country")}</Label>
             <select
               value={filterCountry}
               onChange={(e) => setFilterCountry(e.target.value)}
               className="h-8 rounded-lg border border-input bg-white px-2.5 text-xs w-36"
             >
-              <option value="all">All Countries</option>
+              <option value="all">{t(lang, "common.all_countries", "All Countries")}</option>
               {uniqueCountries.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
@@ -280,7 +283,7 @@ export function AccountsSummaryDashboard() {
             onClick={() => { setSearch(""); setFilterType("all"); setFilterStatus("all"); setFilterCountry("all"); }}
             className="h-8 text-xs"
           >
-            Reset
+            {t(lang, "common.reset", "Reset")}
           </Button>
         </div>
 
@@ -335,7 +338,7 @@ export function AccountsSummaryDashboard() {
                       <td className="px-3 py-2 border-r border-slate-200 text-slate-500">{row.subType || "-"}</td>
                       <td className="px-3 py-2 border-r border-slate-200">
                         <span className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-bold uppercase ${statusColor}`}>
-                          {row.status || "Active"}
+                          {row.status || t(lang, "god.active", "Active")}
                         </span>
                       </td>
                       <td className="px-3 py-2 border-r border-slate-200 text-slate-600 font-medium max-w-[130px] truncate">
@@ -357,7 +360,7 @@ export function AccountsSummaryDashboard() {
                           className="inline-flex items-center gap-1 rounded border border-blue-200 bg-blue-50 px-2 py-1 text-[10px] font-semibold text-blue-700 hover:bg-blue-100 transition-colors"
                         >
                           <Eye className="h-3 w-3" />
-                          View
+                          {t(lang, "branch.view", "View")}
                         </button>
                       </td>
                     </tr>
@@ -366,7 +369,7 @@ export function AccountsSummaryDashboard() {
               ) : (
                 <tr>
                   <td colSpan={11} className="text-center py-12 text-slate-400">
-                    No accounts found matching filters.
+                    {t(lang, "acct.asd_no_accounts_found_filters", "No accounts found matching filters.")}
                   </td>
                 </tr>
               )}

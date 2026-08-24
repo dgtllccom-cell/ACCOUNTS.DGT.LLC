@@ -19,6 +19,7 @@ import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { Th } from "@/components/ui/translated-th";
+import { t } from "@/lib/i18n/ui";
 
 type AccountGeneralReportRow = {
   accountId: string;
@@ -157,7 +158,7 @@ export function AccountProfileView({
           setData(res);
         }
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load account details");
+        if (!cancelled) setError(err instanceof Error ? err.message : t(lang, "acct.apv_failed_load_account_details", "Failed to load account details"));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -216,26 +217,26 @@ export function AccountProfileView({
   }, [selectedRow, searchQuery]);
 
   function exportSingleAccountExcel(row: any) {
-    const header = ["Field", "Value"];
+    const header = [t(lang, "sae.field", "Field"), t(lang, "god.asset_value", "Value")];
     const lines = [
-      ["Account Number", row.accountCode],
-      ["Account Name", row.accountName],
-      ["Customer Owner", row.customerName ?? "-"],
-      ["Customer Number", row.customerNumber ?? "-"],
-      ["Manual Ref No", row.manualReferenceNumber ?? "-"],
-      ["Journal Code", row.journalCode],
-      ["Account Category", row.accountCategory],
-      ["Account Type", row.subType],
-      ["Branch Name", row.branchName],
-      ["Branch Code", row.branchCode],
-      ["Country Name", row.countryName],
-      ["Currency", row.currency],
-      ["Status", row.status],
-      ["Opening Balance", row.openingBalance],
-      ["Debit Total", row.debitTotal],
-      ["Credit Total", row.creditTotal],
-      ["Current Balance", row.currentBalance],
-      ["Created Date", row.createdAt]
+      [t(lang, "bank.account_number", "Account Number"), row.accountCode],
+      [t(lang, "purchase.f_account_name", "Account Name"), row.accountName],
+      [t(lang, "acct.apv_customer_owner", "Customer Owner"), row.customerName ?? "-"],
+      [t(lang, "roz.cef_customer_number", "Customer Number"), row.customerNumber ?? "-"],
+      [t(lang, "acct.apv_manual_ref_no", "Manual Ref No"), row.manualReferenceNumber ?? "-"],
+      [t(lang, "acct.apv_journal_code", "Journal Code"), row.journalCode],
+      [t(lang, "acct.apv_account_category", "Account Category"), row.accountCategory],
+      [t(lang, "bank.account_type", "Account Type"), row.subType],
+      [t(lang, "cdash.col_branch_name", "Branch Name"), row.branchName],
+      [t(lang, "bdash.branch_code", "Branch Code"), row.branchCode],
+      [t(lang, "report.country_name", "Country Name"), row.countryName],
+      [t(lang, "hr.f_currency", "Currency"), row.currency],
+      [t(lang, "log.tbl_status", "Status"), row.status],
+      [t(lang, "bankroz.opening_balance", "Opening Balance"), row.openingBalance],
+      [t(lang, "ledger.lgrv_debit_total", "Debit Total"), row.debitTotal],
+      [t(lang, "ledger.lgrv_credit_total", "Credit Total"), row.creditTotal],
+      [t(lang, "acct.current_balance", "Current Balance"), row.currentBalance],
+      [t(lang, "branch.row_created_date", "Created Date"), row.createdAt]
     ].map(pair => `"${String(pair[0]).replace(/"/g, '""')}","${String(pair[1]).replace(/"/g, '""')}"`).join("\n");
     
     const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), header.join(",") + "\n" + lines], { type: "text/csv;charset=utf-8" });
@@ -248,31 +249,31 @@ export function AccountProfileView({
   }
 
   function emailReport(row: any) {
-    const sub = encodeURIComponent(`Account Profile: ${row.accountName} (${row.accountCode})`);
+    const sub = encodeURIComponent(`${t(lang, "acct.apv_account_profile_colon", "Account Profile:")} ${row.accountName} (${row.accountCode})`);
     const body = encodeURIComponent(
-      `Account Number: ${row.accountCode}\n` +
-      `Name: ${row.accountName}\n` +
-      `Owner: ${row.customerName ?? "-"}\n` +
-      `Journal: ${row.journalCode}\n` +
-      `Type: ${row.accountCategory}\n` +
-      `Branch: ${row.branchName}\n` +
-      `Balance: ${row.currentBalance} ${row.currency}\n\n` +
-      `Link: ${window.location.href}`
+      `${t(lang, "acct.apv_account_number_colon", "Account Number:")} ${row.accountCode}\n` +
+      `${t(lang, "hr.f_lbl_name", "Name:")} ${row.accountName}\n` +
+      `${t(lang, "company_form.owner_prefix", "Owner:")} ${row.customerName ?? "-"}\n` +
+      `${t(lang, "acct.apv_journal_colon", "Journal:")} ${row.journalCode}\n` +
+      `${t(lang, "acct.apv_type_colon", "Type:")} ${row.accountCategory}\n` +
+      `${t(lang, "purchase.branch_colon_label", "Branch:")} ${row.branchName}\n` +
+      `${t(lang, "roz.balance_colon", "Balance:")} ${row.currentBalance} ${row.currency}\n\n` +
+      `${t(lang, "acct.apv_link_colon", "Link:")} ${window.location.href}`
     );
     window.location.href = `mailto:?subject=${sub}&body=${body}`;
   }
 
   function whatsAppReport(row: any) {
     const text = encodeURIComponent(
-      `*Account Profile Report*\n` +
-      `*Name:* ${row.accountName}\n` +
-      `*Account No:* ${row.accountCode}\n` +
-      `*Owner:* ${row.customerName ?? "-"}\n` +
-      `*Type:* ${row.accountCategory}\n` +
-      `*Branch:* ${row.branchName} (${row.branchCode})\n` +
-      `*Balance:* ${row.currentBalance} ${row.currency}\n` +
-      `*Status:* ${row.status}\n\n` +
-      `Link: ${window.location.href}`
+      `*${t(lang, "acct.report_title", "Account Profile Report")}*\n` +
+      `*${t(lang, "hr.f_lbl_name", "Name:")}* ${row.accountName}\n` +
+      `*${t(lang, "acct.apv_account_no_colon", "Account No:")}* ${row.accountCode}\n` +
+      `*${t(lang, "company_form.owner_prefix", "Owner:")}* ${row.customerName ?? "-"}\n` +
+      `*${t(lang, "acct.apv_type_colon", "Type:")}* ${row.accountCategory}\n` +
+      `*${t(lang, "purchase.branch_colon_label", "Branch:")}* ${row.branchName} (${row.branchCode})\n` +
+      `*${t(lang, "roz.balance_colon", "Balance:")}* ${row.currentBalance} ${row.currency}\n` +
+      `*${t(lang, "purchase.card_status_colon", "Status:")}* ${row.status}\n\n` +
+      `${t(lang, "acct.apv_link_colon", "Link:")} ${window.location.href}`
     );
     window.open(`https://wa.me/?text=${text}`, "_blank", "noopener,noreferrer");
   }
@@ -280,12 +281,12 @@ export function AccountProfileView({
   function copyProfileLink() {
     if (typeof navigator !== "undefined" && navigator.clipboard) {
       navigator.clipboard.writeText(window.location.href);
-      alert("Profile link copied to clipboard!");
+      alert(t(lang, "acct.apv_profile_link_copied", "Profile link copied to clipboard!"));
     }
   }
 
   function downloadStatementCSV(row: any, movements: any[]) {
-    const header = ["Date", "Source/Journal", "Voucher/Ref No", "Debit", "Credit", "Currency", "Net Amount"];
+    const header = [t(lang, "bdash.col_date", "Date"), t(lang, "acct.apv_source_journal", "Source/Journal"), t(lang, "acct.apv_voucher_ref_no_slash", "Voucher/Ref No"), t(lang, "cdash.col_debit", "Debit"), t(lang, "cdash.col_credit", "Credit"), t(lang, "hr.f_currency", "Currency"), t(lang, "acct.apv_net_amount", "Net Amount")];
     const lines = movements.map(m => [
       fmtDateTime(m.entryDate),
       m.source,
@@ -307,7 +308,7 @@ export function AccountProfileView({
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-sm text-muted-foreground">
-        Loading account view profile...
+        {t(lang, "acct.apv_loading_profile", "Loading account view profile...")}
       </div>
     );
   }
@@ -318,7 +319,7 @@ export function AccountProfileView({
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
         <Button asChild variant="outline">
           <Link href="/dashboard/accounts">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Account Register
+            <ArrowLeft className="mr-2 h-4 w-4" /> {t(lang, "acct.apv_back_to_account_register", "Back to Account Register")}
           </Link>
         </Button>
       </div>
@@ -329,11 +330,11 @@ export function AccountProfileView({
     return (
       <div className="space-y-4 py-10">
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-          Account profile not found or invalid account ID.
+          {t(lang, "acct.apv_profile_not_found", "Account profile not found or invalid account ID.")}
         </div>
         <Button asChild variant="outline">
           <Link href="/dashboard/accounts">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Account Register
+            <ArrowLeft className="mr-2 h-4 w-4" /> {t(lang, "acct.apv_back_to_account_register", "Back to Account Register")}
           </Link>
         </Button>
       </div>
@@ -363,7 +364,7 @@ export function AccountProfileView({
       {/* ── Title Portal ────────────────────────────────────────────── */}
       {titlePortalNode && createPortal(
         <div className="flex items-center gap-2 flex-wrap text-slate-800 dark:text-slate-200">
-          <h1 className="text-xs font-black uppercase tracking-tight whitespace-nowrap">Account Profile</h1>
+          <h1 className="text-xs font-black uppercase tracking-tight whitespace-nowrap">{t(lang, "acct.apv_account_profile", "Account Profile")}</h1>
           <span className="text-[10px] text-muted-foreground font-mono font-semibold">
             {selectedRow.accountCode}
           </span>
@@ -381,7 +382,7 @@ export function AccountProfileView({
       {/* ── Actions Portal ───────────────────────────────────────────── */}
       {portalNode && createPortal(
         <div className="flex items-center gap-1.5 shrink-0">
-          <Button asChild variant="outline" size="sm" className="h-7 w-7 p-0 shrink-0 border-slate-200 dark:border-slate-800" title="Back to Setup Report">
+          <Button asChild variant="outline" size="sm" className="h-7 w-7 p-0 shrink-0 border-slate-200 dark:border-slate-800" title={t(lang, "acct.apv_back_to_setup_report", "Back to Setup Report")}>
             <Link href="/dashboard/accounts/setup-report">
               <ArrowLeft className="h-3.5 w-3.5" />
             </Link>
@@ -392,7 +393,7 @@ export function AccountProfileView({
             <Search className="h-3 w-3 text-slate-400 ml-2 pointer-events-none" />
             <input
               type="text"
-              placeholder="Search journal..."
+              placeholder={t(lang, "acct.apv_search_journal_ph", "Search journal...")}
               className="h-full px-2 text-[10px] font-semibold outline-none bg-transparent w-[90px] focus:w-[130px] transition-all text-slate-900 dark:text-slate-100"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
@@ -417,14 +418,14 @@ export function AccountProfileView({
               variant="outline"
               className="h-7 w-7 p-0 border-slate-200 dark:border-slate-800"
               onClick={() => setActionMenuOpen(v => !v)}
-              title="Actions Menu"
+              title={t(lang, "acct.apv_actions_menu", "Actions Menu")}
             >
               <MoreVertical className="h-4 w-4" />
             </Button>
             {actionMenuOpen && (
               <div className="absolute right-0 top-full z-50 mt-1.5 w-52 overflow-hidden rounded-lg border bg-background shadow-lg text-[11px] leading-tight">
 
-                <div className="border-b border-t bg-muted/20 px-3 py-1.5 text-[9px] font-black uppercase tracking-wider text-muted-foreground">Statements</div>
+                <div className="border-b border-t bg-muted/20 px-3 py-1.5 text-[9px] font-black uppercase tracking-wider text-muted-foreground">{t(lang, "acct.apv_statements", "Statements")}</div>
                 <button
                   type="button"
                   className="flex w-full items-center gap-2 px-3 py-1.5 hover:bg-muted text-left text-slate-700 dark:text-slate-355"
@@ -434,7 +435,7 @@ export function AccountProfileView({
                   }}
                 >
                   <ClipboardList className="h-3.5 w-3.5 text-blue-650" />
-                  <span>Account Statement</span>
+                  <span>{t(lang, "acct.apv_account_statement", "Account Statement")}</span>
                 </button>
                 <button
                   type="button"
@@ -451,17 +452,17 @@ export function AccountProfileView({
                   }}
                 >
                   <BookOpen className="h-3.5 w-3.5 text-indigo-655" />
-                  <span>Ledger Statement</span>
+                  <span>{t(lang, "ledger.nld_ledger_statement", "Ledger Statement")}</span>
                 </button>
 
-                <div className="border-b border-t bg-muted/20 px-3 py-1.5 text-[9px] font-black uppercase tracking-wider text-muted-foreground">Download & Share</div>
+                <div className="border-b border-t bg-muted/20 px-3 py-1.5 text-[9px] font-black uppercase tracking-wider text-muted-foreground">{t(lang, "acct.apv_download_share", "Download & Share")}</div>
                 <button
                   type="button"
                   className="flex w-full items-center gap-2 px-3 py-1.5 hover:bg-muted text-left text-slate-700 dark:text-slate-355"
                   onClick={() => { setActionMenuOpen(false); exportSingleAccountExcel(selectedRow); }}
                 >
                   <Download className="h-3.5 w-3.5 text-slate-655" />
-                  <span>Download Report</span>
+                  <span>{t(lang, "acct.apv_download_report", "Download Report")}</span>
                 </button>
                 <button
                   type="button"
@@ -469,7 +470,7 @@ export function AccountProfileView({
                   onClick={() => { setActionMenuOpen(false); emailReport(selectedRow); }}
                 >
                   <Mail className="h-3.5 w-3.5 text-orange-555" />
-                  <span>Email Report</span>
+                  <span>{t(lang, "acct.apv_email_report", "Email Report")}</span>
                 </button>
                 <button
                   type="button"
@@ -477,7 +478,7 @@ export function AccountProfileView({
                   onClick={() => { setActionMenuOpen(false); whatsAppReport(selectedRow); }}
                 >
                   <MessageCircle className="h-3.5 w-3.5 text-emerald-555" />
-                  <span>WhatsApp Report</span>
+                  <span>{t(lang, "acct.apv_whatsapp_report", "WhatsApp Report")}</span>
                 </button>
                 <button
                   type="button"
@@ -485,10 +486,10 @@ export function AccountProfileView({
                   onClick={() => { setActionMenuOpen(false); copyProfileLink(); }}
                 >
                   <Share2 className="h-3.5 w-3.5 text-teal-655" />
-                  <span>Share Report</span>
+                  <span>{t(lang, "acct.apv_share_report", "Share Report")}</span>
                 </button>
 
-                <div className="border-t bg-muted/20 px-3 py-1.5 text-[9px] font-black uppercase tracking-wider text-muted-foreground">System Audit</div>
+                <div className="border-t bg-muted/20 px-3 py-1.5 text-[9px] font-black uppercase tracking-wider text-muted-foreground">{t(lang, "acct.apv_system_audit", "System Audit")}</div>
                 <button
                   type="button"
                   className="flex w-full items-center gap-2 px-3 py-1.5 hover:bg-muted text-left text-slate-700 dark:text-slate-355"
@@ -519,49 +520,49 @@ export function AccountProfileView({
             </span>
             <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-white">{selectedRow.branchName}</h2>
             <p className="mt-1 font-mono text-xs text-slate-400 font-semibold flex items-center gap-2">
-              <span>Code: <strong className="text-white">{selectedRow.branchCode}</strong></span>
+              <span>{t(lang, "branch.code_prefix", "Code:")} <strong className="text-white">{selectedRow.branchCode}</strong></span>
               <span className="text-slate-600">•</span>
-              <span>Scope: <strong className="text-blue-400">{selectedRow.branchType}</strong></span>
+              <span>{t(lang, "cbs.scope_label", "Scope:")} <strong className="text-blue-400">{selectedRow.branchType}</strong></span>
             </p>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-4 text-[11px] leading-tight max-w-2xl">
             <div>
-              <p className="text-slate-400 font-bold uppercase tracking-wider text-[9px]">Country</p>
+              <p className="text-slate-400 font-bold uppercase tracking-wider text-[9px]">{t(lang, "report.country", "Country")}</p>
               <p className="text-xs font-black text-white mt-0.5 flex items-center gap-1.5">
                 <Globe className="h-3.5 w-3.5 text-blue-400" />
                 {selectedRow.countryName}
               </p>
             </div>
             <div>
-              <p className="text-slate-400 font-bold uppercase tracking-wider text-[9px]">Country Serial</p>
+              <p className="text-slate-400 font-bold uppercase tracking-wider text-[9px]">{t(lang, "roz.country_serial", "Country Serial")}</p>
               <p className="text-xs font-mono font-black text-white mt-0.5">{selectedRow.countrySerialNumber || "—"}</p>
             </div>
             <div>
-              <p className="text-slate-400 font-bold uppercase tracking-wider text-[9px]">City Branch</p>
+              <p className="text-slate-400 font-bold uppercase tracking-wider text-[9px]">{t(lang, "report.scope_city_branch", "City Branch")}</p>
               <p className="text-xs font-black text-white mt-0.5">{selectedRow.cityBranchName && selectedRow.cityBranchName !== "-" ? selectedRow.cityBranchName : selectedRow.cityName || "—"}</p>
             </div>
             <div>
-              <p className="text-slate-400 font-bold uppercase tracking-wider text-[9px]">City Serial</p>
+              <p className="text-slate-400 font-bold uppercase tracking-wider text-[9px]">{t(lang, "acct.apv_city_serial", "City Serial")}</p>
               <p className="text-xs font-mono font-black text-white mt-0.5">{selectedRow.branchSerialNumber || "—"}</p>
             </div>
             <div>
-              <p className="text-slate-400 font-bold uppercase tracking-wider text-[9px]">Branch Manager</p>
+              <p className="text-slate-400 font-bold uppercase tracking-wider text-[9px]">{t(lang, "cbs.branch_manager_word", "Branch Manager")}</p>
               <p className="text-xs font-black text-white mt-0.5 flex items-center gap-1">
                 <span className="h-4 w-4 rounded-full bg-slate-700 flex items-center justify-center text-[8px] text-slate-300 font-black">BM</span>
                 {selectedRow.companyOwner || "Branch Manager"}
               </p>
             </div>
             <div>
-              <p className="text-slate-400 font-bold uppercase tracking-wider text-[9px]">Total Users</p>
+              <p className="text-slate-400 font-bold uppercase tracking-wider text-[9px]">{t(lang, "dash.total_users", "Total Users")}</p>
               <p className="text-xs font-black text-white mt-0.5">{new Set(branchAccounts.map(r => r.customerId).filter(Boolean)).size || 3} Users</p>
             </div>
             <div>
-              <p className="text-slate-400 font-bold uppercase tracking-wider text-[9px]">Total Accounts</p>
+              <p className="text-slate-400 font-bold uppercase tracking-wider text-[9px]">{t(lang, "cdash.total_accounts", "Total Accounts")}</p>
               <p className="text-xs font-black text-white mt-0.5">{totalBranchAccounts} Accounts</p>
             </div>
             <div>
-              <p className="text-slate-400 font-bold uppercase tracking-wider text-[9px]">Branch Currency</p>
+              <p className="text-slate-400 font-bold uppercase tracking-wider text-[9px]">{t(lang, "acct.apv_branch_currency", "Branch Currency")}</p>
               <p className="text-xs font-black text-emerald-450 mt-0.5 flex items-center gap-1">
                 <Coins className="h-3.5 w-3.5" />
                 {selectedRow.currency}
@@ -598,9 +599,9 @@ export function AccountProfileView({
       <Card className="rounded-xl shadow-sm border-slate-200 dark:border-slate-800 overflow-hidden">
         <div className="border-b bg-slate-50 dark:bg-slate-900/50 px-5 py-3 flex items-center justify-between">
           <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-            <Layers className="h-4 w-4 text-blue-500" /> ERP Branch Profile Section (Hierarchy Flow)
+            <Layers className="h-4 w-4 text-blue-500" /> {t(lang, "acct.apv_erp_branch_profile_section", "ERP Branch Profile Section (Hierarchy Flow)")}
           </h3>
-          <span className="text-[9px] font-mono text-slate-400 font-bold uppercase">Structural Mapping</span>
+          <span className="text-[9px] font-mono text-slate-400 font-bold uppercase">{t(lang, "acct.apv_structural_mapping", "Structural Mapping")}</span>
         </div>
         <CardContent className="p-6">
           <div className="flow-container overflow-x-auto pb-2 flex items-center gap-3 md:gap-4 select-none">
@@ -646,7 +647,7 @@ export function AccountProfileView({
                 <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
                   <Users className="h-4 w-4 text-purple-650" /> [Report 2] User &amp; Customer Details
                 </h3>
-                <span className="text-[9px] font-mono text-slate-400 font-bold uppercase">Customer Profile</span>
+                <span className="text-[9px] font-mono text-slate-400 font-bold uppercase">{t(lang, "acct.apv_customer_profile", "Customer Profile")}</span>
               </div>
               <div className="space-y-1.5 text-[11px] leading-tight">
                 <PreviewRow label="Customer Owner Name" value={selectedRow.customerName || "—"} tone="text-purple-600 dark:text-purple-400" />
@@ -676,7 +677,7 @@ export function AccountProfileView({
                         className="p-0 h-auto font-black text-blue-600 dark:text-blue-400 text-xs text-left hover:underline"
                         onClick={() => router.push(`/dashboard/settings/company-setup?companyId=${selectedRow.bankId}`)}
                       >
-                        Linked Bank Profile
+                        {t(lang, "acct.apv_linked_bank_profile", "Linked Bank Profile")}
                       </Button>
                     ) : "—"
                   } 
@@ -690,9 +691,9 @@ export function AccountProfileView({
             <CardContent className="p-5 space-y-4">
               <div className="flex items-center justify-between border-b pb-2">
                 <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                  <Activity className="h-4 w-4 text-blue-650" /> Account Technical Specifications
+                  <Activity className="h-4 w-4 text-blue-650" /> {t(lang, "acct.apv_account_technical_specs", "Account Technical Specifications")}
                 </h3>
-                <span className="text-[9px] font-mono text-slate-400 font-bold uppercase">Master File</span>
+                <span className="text-[9px] font-mono text-slate-400 font-bold uppercase">{t(lang, "acct.apv_master_file", "Master File")}</span>
               </div>
               <div className="space-y-1.5 text-[11px] leading-tight">
                 <PreviewRow label="Account Name" value={selectedRow.accountName} />
@@ -717,7 +718,7 @@ export function AccountProfileView({
                 <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
                   <Globe className="h-4 w-4 text-emerald-650" /> Branch &amp; Country Details
                 </h3>
-                <span className="text-[9px] font-mono text-slate-400 font-bold uppercase">Scope Registry</span>
+                <span className="text-[9px] font-mono text-slate-400 font-bold uppercase">{t(lang, "acct.apv_scope_registry", "Scope Registry")}</span>
               </div>
               <div className="space-y-1.5 text-[11px] leading-tight">
                 <PreviewRow label="Country Location" value={`${selectedRow.countryName} (${selectedRow.countryCode})`} />
@@ -735,15 +736,15 @@ export function AccountProfileView({
             <Card className="rounded-xl shadow-sm border-purple-200 dark:border-purple-900 bg-purple-50/5 dark:bg-purple-950/5 overflow-hidden">
               <div className="border-b border-purple-200 dark:border-purple-900 bg-purple-50/50 dark:bg-purple-950/20 px-5 py-3 flex items-center justify-between">
                 <h4 className="text-xs font-bold text-purple-900 dark:text-purple-200 uppercase tracking-wider flex items-center gap-1.5">
-                  <ShieldCheck className="h-4 w-4 text-purple-650" /> Account Audit History Trail
+                  <ShieldCheck className="h-4 w-4 text-purple-650" /> {t(lang, "acct.apv_account_audit_history_trail", "Account Audit History Trail")}
                 </h4>
-                <button type="button" className="text-purple-600 hover:text-purple-800 text-[10px] font-black uppercase" onClick={() => setShowAuditLogs(false)}>Close</button>
+                <button type="button" className="text-purple-600 hover:text-purple-800 text-[10px] font-black uppercase" onClick={() => setShowAuditLogs(false)}>{t(lang, "purchase.close_btn", "Close")}</button>
               </div>
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-start justify-between gap-4 text-xs">
                   <div className="space-y-1">
                     <p className="font-bold text-slate-800 dark:text-slate-200">
-                      Action: <span className="text-purple-600 uppercase tracking-wider font-extrabold">{selectedRow.recentActivityLabel || "Update Account"}</span>
+                      {t(lang, "acct.apv_action_colon", "Action:")} <span className="text-purple-600 uppercase tracking-wider font-extrabold">{selectedRow.recentActivityLabel || "Update Account"}</span>
                     </p>
                     <p className="text-[10px] text-slate-500">Executed on the system by {selectedRow.companyOwner}</p>
                   </div>
@@ -767,7 +768,7 @@ export function AccountProfileView({
               <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
                 <ClipboardList className="h-4 w-4 text-emerald-500" /> [Report 3] Detailed Account Statement &amp; Ledger Transactions
               </h3>
-              <p className="text-[10px] text-slate-500 mt-0.5 font-semibold">Real-time journal activity history and balance sheets. Redundant totals removed.</p>
+              <p className="text-[10px] text-slate-500 mt-0.5 font-semibold">{t(lang, "acct.apv_realtime_journal_msg", "Real-time journal activity history and balance sheets. Redundant totals removed.")}</p>
             </div>
             <span className="text-[9px] font-mono bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full dark:bg-emerald-950/40 dark:text-emerald-350 font-bold border border-emerald-100 dark:border-emerald-900/40">
               {filteredMovements.length} transactions
@@ -780,14 +781,14 @@ export function AccountProfileView({
                   <thead>
                     <tr className="bg-slate-100 dark:bg-slate-800/40 text-slate-500 font-bold border-b border-slate-200 dark:border-slate-800">
                       <Th className="px-4 py-2.5 font-bold">#</Th>
-                      <Th className="px-4 py-2.5 font-bold">Source</Th>
-                      <Th className="px-4 py-2.5 font-bold">Entry Date</Th>
-                      <Th className="px-4 py-2.5 font-bold">Voucher / Ref No</Th>
-                      <Th className="px-4 py-2.5 font-bold text-right">Debit</Th>
-                      <Th className="px-4 py-2.5 font-bold text-right">Credit</Th>
-                      <Th className="px-4 py-2.5 font-bold text-center">Currency</Th>
-                      <Th className="px-4 py-2.5 font-bold text-right">USD Rate</Th>
-                      <Th className="px-4 py-2.5 font-bold text-right">USD Amount</Th>
+                      <Th className="px-4 py-2.5 font-bold">{t(lang, "branch.source_label", "Source")}</Th>
+                      <Th className="px-4 py-2.5 font-bold">{t(lang, "acct.apv_entry_date", "Entry Date")}</Th>
+                      <Th className="px-4 py-2.5 font-bold">{t(lang, "acct.apv_voucher_ref_no", "Voucher / Ref No")}</Th>
+                      <Th className="px-4 py-2.5 font-bold text-right">{t(lang, "cdash.col_debit", "Debit")}</Th>
+                      <Th className="px-4 py-2.5 font-bold text-right">{t(lang, "cdash.col_credit", "Credit")}</Th>
+                      <Th className="px-4 py-2.5 font-bold text-center">{t(lang, "hr.f_currency", "Currency")}</Th>
+                      <Th className="px-4 py-2.5 font-bold text-right">{t(lang, "acct.apv_usd_rate", "USD Rate")}</Th>
+                      <Th className="px-4 py-2.5 font-bold text-right">{t(lang, "acct.apv_usd_amount", "USD Amount")}</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-850">
@@ -819,8 +820,8 @@ export function AccountProfileView({
             ) : (
               <div className="p-8 text-center text-slate-450 dark:text-slate-600 flex flex-col items-center justify-center gap-2">
                 <Info className="h-8 w-8 text-slate-300" />
-                <p className="text-sm font-semibold">No journal entries found</p>
-                <p className="text-xs">No active transactions match your search filter.</p>
+                <p className="text-sm font-semibold">{t(lang, "acct.apv_no_journal_entries_found", "No journal entries found")}</p>
+                <p className="text-xs">{t(lang, "acct.apv_no_active_transactions_filter", "No active transactions match your search filter.")}</p>
               </div>
             )}
           </CardContent>

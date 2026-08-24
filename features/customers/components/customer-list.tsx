@@ -16,6 +16,7 @@ import { DocumentAttachmentIcon } from "@/components/documents/document-attachme
 import { apiGet, apiDelete } from "@/lib/api/client";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLabel } from "./translations";
+import { t } from "@/lib/i18n/ui";
 import { Th } from "@/components/ui/translated-th";
 import { UniversalReportModal } from "@/components/ui/universal-report-modal";
 
@@ -345,58 +346,58 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
           <div class="certificate-container">
             <div class="header">
               <h1 class="title">${c.customer_name}</h1>
-              <div class="subtitle">Official Customer Profile Certificate</div>
+              <div class="subtitle">${getLabel("officialCustomerProfileCertificate", lang)}</div>
             </div>
-            
+
             <div class="grid">
               <div class="section">
-                <div class="section-title">Personal Information</div>
+                <div class="section-title">${getLabel("personalInfo", lang)}</div>
                 <div class="field">
-                  <div class="label">Customer Account Code</div>
+                  <div class="label">${getLabel("customerAccountCode", lang)}</div>
                   <div class="value">${c.meta.customerAccountNumber}</div>
                 </div>
                 <div class="field">
-                  <div class="label">Customer Type</div>
+                  <div class="label">${getLabel("customerType", lang)}</div>
                   <div class="value">${c.meta.customerType}</div>
                 </div>
                 <div class="field">
-                  <div class="label">Full Name</div>
+                  <div class="label">${t(lang, "hr.f_full_name", "Full Name")}</div>
                   <div class="value">${c.customer_name}</div>
                 </div>
                 <div class="field">
-                  <div class="label">Father Name / Representative</div>
+                  <div class="label">${getLabel("fatherNameRepresentative", lang)}</div>
                   <div class="value">${c.meta.fatherName || "-"}</div>
                 </div>
               </div>
-              
+
               <div class="section">
-                <div class="section-title">Location Information</div>
+                <div class="section-title">${getLabel("locationInfo", lang)}</div>
                 <div class="field">
-                  <div class="label">Full Address</div>
+                  <div class="label">${getLabel("fullAddress", lang)}</div>
                   <div class="value">${c.address || "-"}</div>
                 </div>
                 <div class="field">
-                  <div class="label">Zip / City Code</div>
+                  <div class="label">${getLabel("zipCityCode", lang)}</div>
                   <div class="value">${c.meta.cityCode || "-"}</div>
                 </div>
                 <div class="field">
-                  <div class="label">Country / State / City</div>
+                  <div class="label">${getLabel("countryStateCity", lang)}</div>
                   <div class="value">${[c.meta.city, c.meta.stateProvince, c.meta.country].filter(Boolean).join(", ") || "-"}</div>
                 </div>
               </div>
             </div>
 
             <div class="section">
-              <div class="section-title">Contact Information</div>
+              <div class="section-title">${getLabel("contactInfo", lang)}</div>
               <div class="grid" style="grid-template-cols: repeat(3, 1fr);">
-                ${contactsHtml || '<div class="value">No contacts registered.</div>'}
+                ${contactsHtml || `<div class="value">${getLabel("noContactsRegistered", lang)}</div>`}
               </div>
             </div>
 
             <div class="section">
-              <div class="section-title">Document Information</div>
+              <div class="section-title">${getLabel("documentInfo", lang)}</div>
               <div class="grid" style="grid-template-cols: repeat(3, 1fr);">
-                ${docsHtml || '<div class="value">No documents registered.</div>'}
+                ${docsHtml || `<div class="value">${getLabel("noDocumentsRegistered", lang)}</div>`}
               </div>
             </div>
           </div>
@@ -420,7 +421,7 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-teal-600">Settings / Management</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-teal-600">{t(lang, "cusm.settings_management", "Settings / Management")}</p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
             {getLabel("customersTitle", lang)}
           </h1>
@@ -436,7 +437,7 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
             className="gap-2 border-slate-700 hover:bg-slate-800 text-slate-200 font-medium shadow-sm h-10 px-4 rounded-lg text-xs"
           >
             <Printer className="h-4 w-4 text-cyan-400" />
-            Print / Report
+            {t(lang, "wh.print_report", "Print / Report")}
           </Button>
           <Button
             type="button"
@@ -444,7 +445,7 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
             className="gap-2 bg-teal-600 hover:bg-teal-700 text-white font-medium shadow-sm h-10 px-4 rounded-lg text-xs"
           >
             <Plus className="h-4 w-4" />
-            Add Customer
+            {t(lang, "bdash.qa_add_customer", "Add Customer")}
           </Button>
         </div>
       </div>
@@ -569,8 +570,8 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
         <CardHeader className="border-b px-5 py-4 bg-slate-50/50">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <CardTitle className="text-base font-semibold text-slate-800">Customer List Directory</CardTitle>
-              <p className="text-xs text-muted-foreground mt-0.5">Use actions to view, edit, print profiles, or review history.</p>
+              <CardTitle className="text-base font-semibold text-slate-800">{getLabel("customerListDirectory", lang)}</CardTitle>
+              <p className="text-xs text-muted-foreground mt-0.5">{getLabel("useActionsToViewEditPrintMsg", lang)}</p>
             </div>
             <div className="flex items-center gap-3">
               <div className="relative w-64">
@@ -588,8 +589,8 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
                 className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-700 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20"
               >
                 <option value="all">{getLabel("allStatuses", lang)}</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
+                <option value="active">{getLabel("activeStatus", lang)}</option>
+                <option value="inactive">{getLabel("inactiveStatus", lang)}</option>
               </select>
             </div>
           </div>
@@ -604,10 +605,10 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
                   <Th className="px-5 py-3.5">{getLabel("customerName", lang)}</Th>
                   <Th className="px-5 py-3.5">{getLabel("customerType", lang)}</Th>
                   <Th className="px-5 py-3.5">{getLabel("country", lang)}</Th>
-                  <Th className="px-5 py-3.5">State / Province</Th>
+                  <Th className="px-5 py-3.5">{getLabel("stateProvince", lang)}</Th>
                   <Th className="px-5 py-3.5">{getLabel("city", lang)}</Th>
-                  <Th className="px-5 py-3.5">Contacts</Th>
-                  <Th className="px-5 py-3.5">Documents</Th>
+                  <Th className="px-5 py-3.5">{getLabel("contacts", lang)}</Th>
+                  <Th className="px-5 py-3.5">{getLabel("documents", lang)}</Th>
                   <Th className="px-5 py-3.5">{getLabel("status", lang)}</Th>
                   <Th className="px-5 py-3.5">{getLabel("createdDate", lang)}</Th>
                   <Th className="px-5 py-3.5 text-center">{getLabel("actions", lang)}</Th>
@@ -617,7 +618,7 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
                 {loading ? (
                   <tr>
                     <td colSpan={12} className="px-5 py-10 text-center text-slate-500 font-medium italic">
-                      Loading Customer Registry Directory...
+                      {getLabel("loadingCustomerRegistryDirectory", lang)}
                     </td>
                   </tr>
                 ) : filteredCustomers.length > 0 ? (
@@ -689,7 +690,7 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
                           </div>
                           {/* Hover Tooltip listing all contacts */}
                           <div className="pointer-events-none absolute bottom-full mb-1 left-0 w-48 rounded-lg bg-slate-900 p-2.5 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100 z-50 shadow-md">
-                            <p className="font-bold border-b border-slate-700 pb-1 mb-1.5 text-teal-400">All Contacts</p>
+                            <p className="font-bold border-b border-slate-700 pb-1 mb-1.5 text-teal-400">{getLabel("allContacts", lang)}</p>
                             {c.meta.contacts.map((cn, idx) => (
                               <div key={idx} className="flex justify-between font-mono py-0.5">
                                 <span>{cn.type}:</span>
@@ -735,7 +736,7 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
                 ) : (
                   <tr>
                     <td colSpan={12} className="px-5 py-10 text-center text-slate-500 font-medium italic">
-                      No customers found in directory registry matching the filters.
+                      {getLabel("noCustomersFoundFilterMsg", lang)}
                     </td>
                   </tr>
                 )}
@@ -748,8 +749,8 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
       <DetailDrawer
         isOpen={selectedCustomerId !== null}
         onClose={() => setSelectedCustomerId(null)}
-        title="Customer Profile Details"
-        subtitle="Enterprise record and contact verification"
+        title={getLabel("customerProfileDetailsTitle", lang)}
+        subtitle={getLabel("enterpriseRecordContactVerificationSub", lang)}
       >
         {selectedCustomerId && (
           <CustomerProfile
@@ -763,20 +764,20 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
       <UniversalReportModal
         isOpen={showReport}
         onClose={() => setShowReport(false)}
-        title="Customer / Owner Directory Report"
-        subtitle="Complete Master Customer, Client, and Business Owner Directory"
+        title={getLabel("customerOwnerDirectoryReportTitle", lang)}
+        subtitle={getLabel("completeMasterCustomerDirectorySub", lang)}
         exportFileName="customer_directory_report"
         filters={[
-          { label: "Search Query", value: searchQuery || "None" }
+          { label: getLabel("searchQueryLabel", lang), value: searchQuery || t(lang, "purchase.card_none_label", "None") }
         ]}
         columns={[
-          { key: "customer_name", label: "Customer / Owner Name" },
-          { key: "company_name", label: "Company / Firm Name" },
-          { key: "contact_person", label: "Contact Person" },
-          { key: "mobile", label: "Mobile Number" },
-          { key: "whatsapp", label: "WhatsApp" },
-          { key: "email", label: "Email Address" },
-          { key: "address", label: "Address" }
+          { key: "customer_name", label: getLabel("customerOwnerNameLabel", lang) },
+          { key: "company_name", label: getLabel("companyFirmNameLabel", lang) },
+          { key: "contact_person", label: t(lang, "hr.pp_contact_person", "Contact Person") },
+          { key: "mobile", label: t(lang, "purchase.f_mobile_number", "Mobile Number") },
+          { key: "whatsapp", label: t(lang, "purchase.dd_whatsapp", "WhatsApp") },
+          { key: "email", label: getLabel("emailAddress", lang) },
+          { key: "address", label: t(lang, "purchase.f_address", "Address") }
         ]}
         data={filteredCustomers.map(c => ({
           customer_name: c.customer_name,

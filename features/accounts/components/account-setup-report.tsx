@@ -17,6 +17,7 @@ import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { translateValue } from "@/lib/i18n/table-values";
+import { t } from "@/lib/i18n/ui";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { openGenericErpReport, type GenericReportColumn } from "@/lib/reports/open-generic-erp-report";
 
@@ -452,7 +453,7 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
           </div>
 
           {/* Refresh */}
-          <button type="button" className="asr-icon-btn" onClick={fetchReport} title="Refresh" disabled={loading}>
+          <button type="button" className="asr-icon-btn" onClick={fetchReport} title={t(lang, "common.refresh", "Refresh")} disabled={loading}>
             <RefreshCw className={cn("h-3 w-3", loading && "animate-spin")} />
           </button>
 
@@ -471,8 +472,8 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
           </button>
 
           <JournalPrintButton
-            title="Account Setup Report"
-            subtitle={`Total ${filtered.length} accounts • ${reportContext.countryName} / ${reportContext.branchName}`}
+            title={t(lang, "nav.account_setup_report", "Account Setup Report")}
+            subtitle={`${t(lang, "common.total", "Total")} ${filtered.length} ${t(lang, "acct.asr_accounts_word_lc", "accounts")} • ${reportContext.countryName} / ${reportContext.branchName}`}
             columns={reportColumns}
             rows={reportRows as Record<string, unknown>[]}
             summary={reportSummary}
@@ -484,7 +485,7 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
               type="button"
               className="asr-icon-btn"
               onClick={() => setActionMenuOpen(v => !v)}
-              title="Export & Share"
+              title={t(lang, "acct.asr_export_share", "Export & Share")}
             >
               <MoreVertical className="h-4 w-4" />
             </button>
@@ -604,7 +605,7 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
         <div className="flex flex-col gap-3 p-3.5">
           <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-100 dark:border-slate-800 pb-2.5">
             <div className="flex items-center gap-2">
-              <span className="grid h-5 w-5 place-items-center rounded-md bg-blue-600 text-white font-black text-[10px] shadow-sm">Global</span>
+              <span className="grid h-5 w-5 place-items-center rounded-md bg-blue-600 text-white font-black text-[10px] shadow-sm">{t(lang, "report.scope_global", "Global")}</span>
               <h2 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
                 {tr("Country-Wise Accounts Summary Report")} ({countryBreakdowns.length} {countryBreakdowns.length === 1 ? tr("Country") : tr("Countries")})
               </h2>
@@ -617,7 +618,7 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
             </div>
             {hasActiveFilters && (
               <button type="button" onClick={resetFilters} className="asr-clear-chip-compact">
-                <X className="h-3 w-3" /> Clear filters
+                <X className="h-3 w-3" /> {t(lang, "acct.asr_clear_filters", "Clear filters")}
               </button>
             )}
           </div>
@@ -629,7 +630,7 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
               ))
             ) : countryBreakdowns.length === 0 ? (
               <div className="col-span-full text-center py-5 text-xs text-slate-400 font-bold">
-                No country accounts found matching the criteria.
+                {t(lang, "acct.asr_no_country_accounts_found", "No country accounts found matching the criteria.")}
               </div>
             ) : (
               countryBreakdowns.map((cb) => {
@@ -655,25 +656,25 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
                         </span>
                       </div>
                       <span className="inline-flex items-center rounded-full bg-blue-600 px-2 py-0.5 text-[9px] font-black text-white shadow-xs shrink-0">
-                        {cb.total} {cb.total === 1 ? "Acc" : "Accs"}
+                        {cb.total} {cb.total === 1 ? t(lang, "acct.asr_acc_singular", "Acc") : t(lang, "acct.asr_acc_plural", "Accs")}
                       </span>
                     </div>
 
                     <div className="grid grid-cols-4 gap-1 text-center">
                       <div className="rounded bg-emerald-50 dark:bg-emerald-950/40 p-1 border border-emerald-100 dark:border-emerald-900/40">
-                        <div className="text-[7.5px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-wider">Cust</div>
+                        <div className="text-[7.5px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-wider">{t(lang, "acct.asr_cust_abbr", "Cust")}</div>
                         <div className="text-[11px] font-black text-emerald-700 dark:text-emerald-300 font-mono leading-none mt-0.5">{cb.customers}</div>
                       </div>
                       <div className="rounded bg-purple-50 dark:bg-purple-950/40 p-1 border border-purple-100 dark:border-purple-900/40">
-                        <div className="text-[7.5px] font-black uppercase text-purple-600 dark:text-purple-400 tracking-wider">Comp</div>
+                        <div className="text-[7.5px] font-black uppercase text-purple-600 dark:text-purple-400 tracking-wider">{t(lang, "acct.asr_comp_abbr", "Comp")}</div>
                         <div className="text-[11px] font-black text-purple-700 dark:text-purple-300 font-mono leading-none mt-0.5">{cb.companies}</div>
                       </div>
                       <div className="rounded bg-amber-50 dark:bg-amber-950/40 p-1 border border-amber-100 dark:border-amber-900/40">
-                        <div className="text-[7.5px] font-black uppercase text-amber-600 dark:text-amber-400 tracking-wider">Bank</div>
+                        <div className="text-[7.5px] font-black uppercase text-amber-600 dark:text-amber-400 tracking-wider">{t(lang, "bdash.bank", "Bank")}</div>
                         <div className="text-[11px] font-black text-amber-700 dark:text-amber-300 font-mono leading-none mt-0.5">{cb.banks}</div>
                       </div>
                       <div className="rounded bg-slate-50 dark:bg-slate-800/60 p-1 border border-slate-150 dark:border-slate-700/50">
-                        <div className="text-[7.5px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">Pers</div>
+                        <div className="text-[7.5px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">{t(lang, "acct.asr_pers_abbr", "Pers")}</div>
                         <div className="text-[11px] font-black text-slate-700 dark:text-slate-200 font-mono leading-none mt-0.5">{cb.personal}</div>
                       </div>
                     </div>
@@ -838,7 +839,7 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
                             type="button"
                             onClick={() => router.push(`/dashboard/settings/company-setup?companyId=${row.companyId}`)}
                             className="cursor-pointer hover:scale-110 transition-transform focus:outline-none block mx-auto"
-                            title="Click to view company profile file"
+                            title={t(lang, "acct.asr_click_view_company_profile", "Click to view company profile file")}
                           >
                             <CheckCircle2 className="h-4 w-4 text-emerald-500 mx-auto" />
                           </button>
@@ -856,7 +857,7 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
                             type="button"
                             onClick={() => router.push(`/dashboard/settings/company-setup?companyId=${row.bankId}`)}
                             className="cursor-pointer hover:scale-110 transition-transform focus:outline-none block mx-auto"
-                            title="Click to view bank profile file"
+                            title={t(lang, "acct.asr_click_view_bank_profile", "Click to view bank profile file")}
                           >
                             <CheckCircle2 className="h-4 w-4 text-emerald-500 mx-auto" />
                           </button>
@@ -883,13 +884,13 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
                               <>
                                 <span 
                                   className={cn("asr-contact-dot", phones?.length ? "bg-rose-50 text-rose-500 border-rose-100" : "bg-slate-50 text-slate-300 border-slate-100")}
-                                  title={phones?.length ? phones.map(p => `${p.type}: ${p.value}`).join("\\n") : "No Phone"}
+                                  title={phones?.length ? phones.map(p => `${p.type}: ${p.value}`).join("\\n") : t(lang, "acct.asr_no_phone", "No Phone")}
                                 >
                                   <Phone className="h-2.5 w-2.5" />
                                 </span>
                                 <span 
                                   className={cn("asr-contact-dot", emails?.length ? "bg-purple-50 text-purple-500 border-purple-100" : "bg-slate-50 text-slate-300 border-slate-100")}
-                                  title={emails?.length ? emails.map(e => `${e.type}: ${e.value}`).join("\\n") : "No Email"}
+                                  title={emails?.length ? emails.map(e => `${e.type}: ${e.value}`).join("\\n") : t(lang, "acct.asr_no_email", "No Email")}
                                 >
                                   <Mail className="h-2.5 w-2.5" />
                                 </span>
@@ -905,7 +906,7 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
                           <button
                             type="button"
                             className="asr-action-btn asr-action-view"
-                            title="View Account Profile"
+                            title={t(lang, "acct.asr_view_account_profile", "View Account Profile")}
                             onClick={() => router.push(`/dashboard/accounts/view?accountId=${row.accountId}`)}
                           >
                             <Eye className="h-3.5 w-3.5" />
@@ -914,7 +915,7 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
                           <button
                             type="button"
                             className="asr-action-btn asr-action-edit"
-                            title="Edit Account"
+                            title={t(lang, "acct.asr_edit_account", "Edit Account")}
                             onClick={() => router.push(`/dashboard/accounts/setup?accountId=${row.accountId}&mode=edit`)}
                           >
                             <Edit3 className="h-3.5 w-3.5" />

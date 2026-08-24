@@ -8,10 +8,13 @@ import { cn } from "@/lib/utils";
 import { Loader2, Plus, Trash2, Printer, X, Check, Building } from "lucide-react";
 import { Th } from "@/components/ui/translated-th";
 import { UniversalReportModal } from "@/components/ui/universal-report-modal";
+import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 type CompanyRegistrationTypeRecord = { id: string; code: string; name: string; country_id?: string; description: string | null; is_active: boolean; created_at: string; country?: { name: string } };
 
 export function CompanyRegistrationTypeRegistry() {
+  const lang = useActiveLanguage();
   const [types, setTypes] = useState<CompanyRegistrationTypeRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -55,7 +58,7 @@ export function CompanyRegistrationTypeRegistry() {
   }, [searchQuery, types]);
 
   async function handleDelete(id: string) {
-    if (!window.confirm("Delete this company registration type?")) return;
+    if (!window.confirm(t(lang, "creg.crtr_delete_confirm", "Delete this company registration type?"))) return;
     try {
       await apiDelete(`/api/erp/company-registration-types/${id}`);
       loadTypes();
@@ -67,7 +70,7 @@ export function CompanyRegistrationTypeRegistry() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     if (!formData.name || !formData.code) {
-      alert("Please fill in Code and Name.");
+      alert(t(lang, "acct.fill_required", "Please fill in Code and Name."));
       return;
     }
     setSaving(true);
@@ -93,39 +96,39 @@ export function CompanyRegistrationTypeRegistry() {
     <Card className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
         <div>
-          <CardTitle className="text-xl font-bold text-slate-900 dark:text-slate-100">Company Registration Types</CardTitle>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage company registration classification types, license kinds and legal structures</p>
+          <CardTitle className="text-xl font-bold text-slate-900 dark:text-slate-100">{t(lang, "creg.crtr_title", "Company Registration Types")}</CardTitle>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{t(lang, "creg.crtr_subtitle", "Manage company registration classification types, license kinds and legal structures")}</p>
         </div>
         <div className="flex gap-2">
           <Button onClick={() => setShowReport(true)} size="sm" variant="outline">
-            <Printer className="w-4 h-4 mr-1" /> Print Preview
+            <Printer className="w-4 h-4 mr-1" /> {t(lang, "acct.print_preview", "Print Preview")}
           </Button>
           <Button onClick={() => setIsModalOpen(true)} size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white">
-            <Plus className="w-4 h-4 mr-1" /> + New Registration Type
+            <Plus className="w-4 h-4 mr-1" /> {t(lang, "creg.crtr_new_registration_type", "+ New Registration Type")}
           </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-4 pt-4">
         <div className="flex gap-2">
-          <Input placeholder="Search registration types..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="max-w-md" />
+          <Input placeholder={t(lang, "creg.crtr_search_placeholder", "Search registration types...")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="max-w-md" />
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)} className="px-3 py-2 border rounded-md bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-sm">
-            <option value="all">All Status</option>
-            <option value="Active">Active Only</option>
-            <option value="Inactive">Inactive Only</option>
+            <option value="all">{t(lang, "acct.status_all", "All Status")}</option>
+            <option value="Active">{t(lang, "acct.active_only", "Active Only")}</option>
+            <option value="Inactive">{t(lang, "acct.inactive_only", "Inactive Only")}</option>
           </select>
         </div>
 
         <div className="grid grid-cols-3 gap-3 text-sm">
           <div className="bg-blue-50/70 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 p-3 rounded-lg">
-            <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">TOTAL</div>
+            <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">{t(lang, "creg.crtr_total_word", "TOTAL")}</div>
             <div className="text-2xl font-bold text-blue-950 dark:text-blue-200 mt-1">{summary.total}</div>
           </div>
           <div className="bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50 p-3 rounded-lg">
-            <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">ACTIVE</div>
+            <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">{t(lang, "status.active", "ACTIVE")}</div>
             <div className="text-2xl font-bold text-emerald-950 dark:text-emerald-200 mt-1">{summary.active}</div>
           </div>
           <div className="bg-rose-50/70 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/50 p-3 rounded-lg">
-            <div className="text-xs font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wider">INACTIVE</div>
+            <div className="text-xs font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wider">{t(lang, "creg.crtr_inactive_word", "INACTIVE")}</div>
             <div className="text-2xl font-bold text-rose-950 dark:text-rose-200 mt-1">{summary.inactive}</div>
           </div>
         </div>
@@ -140,17 +143,17 @@ export function CompanyRegistrationTypeRegistry() {
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800">
                   <Th className="p-3">#</Th>
-                  <Th className="p-3 text-left">Code</Th>
-                  <Th className="p-3 text-left">Name</Th>
-                  <Th className="p-3 text-left">Description</Th>
-                  <Th className="p-3 text-center">Status</Th>
-                  <Th className="p-3 text-center">Actions</Th>
+                  <Th className="p-3 text-left">{t(lang, "common.code", "Code")}</Th>
+                  <Th className="p-3 text-left">{t(lang, "common.name", "Name")}</Th>
+                  <Th className="p-3 text-left">{t(lang, "common.description", "Description")}</Th>
+                  <Th className="p-3 text-center">{t(lang, "log.tbl_status", "Status")}</Th>
+                  <Th className="p-3 text-center">{t(lang, "form.actions", "Actions")}</Th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-slate-500">No company registration types found</td>
+                    <td colSpan={6} className="p-8 text-center text-slate-500">{t(lang, "creg.crtr_no_types_found", "No company registration types found")}</td>
                   </tr>
                 ) : (
                   filtered.map((type, idx) => (
@@ -161,11 +164,11 @@ export function CompanyRegistrationTypeRegistry() {
                       <td className="p-3 text-slate-600 dark:text-slate-400">{type.description || '-'}</td>
                       <td className="p-3 text-center">
                         <span className={cn("px-2.5 py-0.5 rounded-full text-xs font-semibold", type.is_active ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300" : "bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300")}>
-                          {type.is_active ? "Active" : "Inactive"}
+                          {type.is_active ? t(lang, "god.active", "Active") : t(lang, "god.inactive", "Inactive")}
                         </span>
                       </td>
                       <td className="p-3 text-center">
-                        <button onClick={() => handleDelete(type.id)} className="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-950 text-rose-600 dark:text-rose-400 rounded transition-colors" title="Delete Registration Type">
+                        <button onClick={() => handleDelete(type.id)} className="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-950 text-rose-600 dark:text-rose-400 rounded transition-colors" title={t(lang, "creg.crtr_delete_registration_type", "Delete Registration Type")}>
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </td>
@@ -185,7 +188,7 @@ export function CompanyRegistrationTypeRegistry() {
         <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-lg overflow-hidden">
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
             <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <Building className="w-5 h-5 text-emerald-600" /> Add New Registration Type
+              <Building className="w-5 h-5 text-emerald-600" /> {t(lang, "creg.crtr_add_new_registration_type", "Add New Registration Type")}
             </h3>
             <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg">
               <X className="w-5 h-5" />
@@ -193,9 +196,9 @@ export function CompanyRegistrationTypeRegistry() {
           </div>
           <form onSubmit={handleSave} className="p-6 space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Type Code *</label>
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">{t(lang, "creg.crtr_type_code_required", "Type Code *")}</label>
               <Input
-                placeholder="e.g. REG-LLC / REG-CORP / REG-PVT"
+                placeholder={t(lang, "creg.crtr_type_code_placeholder", "e.g. REG-LLC / REG-CORP / REG-PVT")}
                 value={formData.code}
                 onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                 required
@@ -203,9 +206,9 @@ export function CompanyRegistrationTypeRegistry() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Registration Type Name *</label>
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">{t(lang, "creg.crtr_registration_type_name_required", "Registration Type Name *")}</label>
               <Input
-                placeholder="e.g. Limited Liability Company (LLC) / Sole Proprietorship"
+                placeholder={t(lang, "creg.crtr_type_name_placeholder", "e.g. Limited Liability Company (LLC) / Sole Proprietorship")}
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
@@ -213,9 +216,9 @@ export function CompanyRegistrationTypeRegistry() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Description</label>
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">{t(lang, "common.description", "Description")}</label>
               <Input
-                placeholder="Optional description / legal requirements..."
+                placeholder={t(lang, "creg.crtr_description_placeholder", "Optional description / legal requirements...")}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               />
@@ -229,15 +232,15 @@ export function CompanyRegistrationTypeRegistry() {
                 onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                 className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
               />
-              <label htmlFor="reg_is_active" className="text-sm font-medium text-slate-700 dark:text-slate-300">Active Registration Type</label>
+              <label htmlFor="reg_is_active" className="text-sm font-medium text-slate-700 dark:text-slate-300">{t(lang, "creg.crtr_active_registration_type", "Active Registration Type")}</label>
             </div>
 
             <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
               <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
-                Cancel
+                {t(lang, "common.cancel", "Cancel")}
               </Button>
               <Button type="submit" disabled={saving} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Check className="w-4 h-4 mr-1" />} Save Type
+                {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Check className="w-4 h-4 mr-1" />} {t(lang, "acct.save_type", "Save Type")}
               </Button>
             </div>
           </form>
@@ -248,13 +251,13 @@ export function CompanyRegistrationTypeRegistry() {
     <UniversalReportModal
       isOpen={showReport}
       onClose={() => setShowReport(false)}
-      title="Company Registration Types Registry"
+      title={t(lang, "creg.crtr_title", "Company Registration Types")}
       data={types}
       columns={[
-        { key: "code", label: "Code" },
-        { key: "name", label: "Type Name" },
-        { key: "description", label: "Description" },
-        { key: "is_active", label: "Status", format: (v) => (v ? "Active" : "Inactive") }
+        { key: "code", label: t(lang, "common.code", "Code") },
+        { key: "name", label: t(lang, "acct.type_name_col", "Type Name") },
+        { key: "description", label: t(lang, "common.description", "Description") },
+        { key: "is_active", label: t(lang, "log.tbl_status", "Status"), format: (v) => (v ? t(lang, "god.active", "Active") : t(lang, "god.inactive", "Inactive")) }
       ]}
     />
     </>

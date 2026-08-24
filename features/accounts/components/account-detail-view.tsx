@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, X, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 type Account = {
   id: string;
@@ -20,6 +22,7 @@ type Account = {
 type MasterRecord = { id: string; name: string; code: string };
 
 export function AccountDetailView({ accountId }: { accountId: string }) {
+  const lang = useActiveLanguage();
   const [account, setAccount] = useState<Account | null>(null);
   const [loading, setLoading] = useState(true);
   const [masterData, setMasterData] = useState<{
@@ -73,7 +76,7 @@ export function AccountDetailView({ accountId }: { accountId: string }) {
       });
       loadAccount();
     } catch (err: any) {
-      alert(`Failed to link: ${err.message}`);
+      alert(`${t(lang, "acct.adv_failed_to_link", "Failed to link:")} ${err.message}`);
     }
   }
 
@@ -86,7 +89,7 @@ export function AccountDetailView({ accountId }: { accountId: string }) {
       });
       loadAccount();
     } catch (err: any) {
-      alert(`Failed to unlink: ${err.message}`);
+      alert(`${t(lang, "acct.adv_failed_to_unlink", "Failed to unlink:")} ${err.message}`);
     }
   }
 
@@ -99,7 +102,7 @@ export function AccountDetailView({ accountId }: { accountId: string }) {
   }
 
   if (!account) {
-    return <div className="p-4 text-red-600">Account not found</div>;
+    return <div className="p-4 text-red-600">{t(lang, "acct.adv_account_not_found", "Account not found")}</div>;
   }
 
   const getAvailableForLink = (type: string) => {
@@ -115,9 +118,9 @@ export function AccountDetailView({ accountId }: { accountId: string }) {
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <h4 className="font-semibold text-sm mb-2">Currently Linked ({linked.length})</h4>
+          <h4 className="font-semibold text-sm mb-2">{t(lang, "acct.adv_currently_linked", "Currently Linked")} ({linked.length})</h4>
           {linked.length === 0 ? (
-            <p className="text-slate-500 text-sm italic">No linked records</p>
+            <p className="text-slate-500 text-sm italic">{t(lang, "acct.adv_no_linked_records", "No linked records")}</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {linked.map((item: any) => (
@@ -136,9 +139,9 @@ export function AccountDetailView({ accountId }: { accountId: string }) {
         </div>
 
         <div>
-          <h4 className="font-semibold text-sm mb-2">Available to Link ({available.length})</h4>
+          <h4 className="font-semibold text-sm mb-2">{t(lang, "acct.adv_available_to_link", "Available to Link")} ({available.length})</h4>
           {available.length === 0 ? (
-            <p className="text-slate-500 text-sm italic">All {title.toLowerCase()} are linked</p>
+            <p className="text-slate-500 text-sm italic">All {title.toLowerCase()} {t(lang, "acct.adv_all_linked_suffix", "are linked")}</p>
           ) : (
             <div className="space-y-1 max-h-48 overflow-y-auto">
               {available.map((item: any) => (
@@ -148,7 +151,7 @@ export function AccountDetailView({ accountId }: { accountId: string }) {
                     onClick={() => linkItem(type, item.id)}
                     className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 flex items-center gap-1"
                   >
-                    <Plus className="w-3 h-3" /> Link
+                    <Plus className="w-3 h-3" /> {t(lang, "acct.adv_link_btn", "Link")}
                   </button>
                 </div>
               ))}
@@ -163,20 +166,20 @@ export function AccountDetailView({ accountId }: { accountId: string }) {
     <div className="space-y-6 max-w-6xl">
       <Card>
         <CardHeader>
-          <CardTitle>Account Details</CardTitle>
+          <CardTitle>{t(lang, "roz.col_account_details", "Account Details")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-slate-600">Code</p>
+              <p className="text-sm text-slate-600">{t(lang, "common.code", "Code")}</p>
               <p className="font-mono font-semibold">{account.code}</p>
             </div>
             <div>
-              <p className="text-sm text-slate-600">Name</p>
+              <p className="text-sm text-slate-600">{t(lang, "common.name", "Name")}</p>
               <p className="font-semibold">{account.name}</p>
             </div>
             <div>
-              <p className="text-sm text-slate-600">Country</p>
+              <p className="text-sm text-slate-600">{t(lang, "report.country", "Country")}</p>
               <p>{account.country?.name || "-"}</p>
             </div>
           </div>
@@ -186,25 +189,25 @@ export function AccountDetailView({ accountId }: { accountId: string }) {
       <div className="grid grid-cols-1 gap-6">
         <LinkSection
           type="companies"
-          title="Linked Companies"
+          title={t(lang, "acct.adv_linked_companies", "Linked Companies")}
           linked={account.linked_companies}
           available={getAvailableForLink("companies")}
         />
         <LinkSection
           type="banks"
-          title="Linked Banks"
+          title={t(lang, "acct.adv_linked_banks", "Linked Banks")}
           linked={account.linked_banks}
           available={getAvailableForLink("banks")}
         />
         <LinkSection
           type="warehouses"
-          title="Linked Warehouses"
+          title={t(lang, "acct.adv_linked_warehouses", "Linked Warehouses")}
           linked={account.linked_warehouses}
           available={getAvailableForLink("warehouses")}
         />
         <LinkSection
           type="customers"
-          title="Linked Customers/Owners"
+          title={t(lang, "acct.adv_linked_customers_owners", "Linked Customers/Owners")}
           linked={account.linked_customers}
           available={getAvailableForLink("customers")}
         />

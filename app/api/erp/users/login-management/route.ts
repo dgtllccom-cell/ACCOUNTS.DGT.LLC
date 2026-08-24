@@ -53,6 +53,7 @@ type AssignmentRow = {
   country_id: string | null;
   country_branch_id: string | null;
   city_branch_id: string | null;
+  clearing_agent_id?: string | null;
   is_active: boolean;
   created_at: string | null;
   updated_at: string | null;
@@ -63,6 +64,7 @@ type ProfileRow = {
   id: string;
   full_name: string | null;
   user_code: string | null;
+  raw_password?: string | null;
   created_at: string | null;
   updated_at: string | null;
   deleted_at: string | null;
@@ -81,6 +83,7 @@ type BranchUserDetail = {
   username: string;
   email: string;
   mobile: string;
+  temporaryPassword?: string | null;
   role: string;
   classification: string;
   mainUser: boolean;
@@ -166,13 +169,19 @@ async function loadViaPg() {
     const countryRowsRaw = await sql<CountryRow[]>`select id, name, iso2, iso3, currency_code, is_active from countries where deleted_at is null order by name asc`;
     const branchRowsRaw = await sql<CountryBranchRow[]>`select id, country_id, name, code, local_currency, status, is_main, address, company_id, owner_name, contacts, created_at, updated_at, deleted_at from country_branches where deleted_at is null order by name asc`;
     const cityRowsRaw = await sql<CityBranchRow[]>`select id, country_id, country_branch_id, city_name, name, code, local_currency, status, address, company_id, owner_name, contacts, created_at, updated_at, deleted_at from city_branches where deleted_at is null order by city_name asc`;
-    const assignmentRowsRaw = await sql<AssignmentRow[]>`select user_id, role, country_id, country_branch_id, city_branch_id, is_active, created_at, updated_at, deleted_at from user_role_assignments where deleted_at is null order by created_at desc`;
-    const profileRowsRaw = await sql<ProfileRow[]>`select id, full_name, user_code, created_at, updated_at, deleted_at, default_company_id from profiles where deleted_at is null`;
+    const clearingAgentRowsRaw = await sql<any[]>`select id, name, code, head_office_country_id from clearing_agents where deleted_at is null`;
+    const clearingBranchRowsRaw = await sql<any[]>`select id, name, code, clearing_agent_id, branch_level from clearing_agent_branches where deleted_at is null`;
+    const authUserRowsRaw = await sql<any[]>`select id, email from auth.users`;
+    const assignmentRowsRaw = await sql<AssignmentRow[]>`select user_id, role, country_id, country_branch_id, city_branch_id, clearing_agent_id, is_active, created_at, updated_at, deleted_at from user_role_assignments where deleted_at is null order by created_at desc`;
+    const profileRowsRaw = await sql<ProfileRow[]>`select id, full_name, user_code, raw_password, created_at, updated_at, deleted_at, default_company_id from profiles where deleted_at is null`;
     const permissionRowsRaw = await sql<PermissionSetRow[]>`select user_id, permissions from user_permission_sets where deleted_at is null`;
 
     const countryRows = countryRowsRaw as CountryRow[];
     const branchRows = branchRowsRaw as CountryBranchRow[];
     const cityRows = cityRowsRaw as CityBranchRow[];
+    const clearingAgents = clearingAgentRowsRaw as Array<{ id: string; name: string; code: string; head_office_country_id: string | null }>;
+    const clearingBranches = clearingBranchRowsRaw as Array<{ id: string; name: string; code: string; clearing_agent_id: string; branch_level: string }>;
+    const authUsers = authUserRowsRaw as Array<{ id: string; email: string }>;
     const assignmentRows = assignmentRowsRaw as AssignmentRow[];
     const profileRows = profileRowsRaw as ProfileRow[];
     const permissionRows = permissionRowsRaw as PermissionSetRow[];
@@ -180,6 +189,9 @@ async function loadViaPg() {
     const countriesById = new Map(countryRows.map((row) => [row.id, row] as const));
     const countryBranchesById = new Map(branchRows.map((row) => [row.id, row] as const));
     const cityBranchesById = new Map(cityRows.map((row) => [row.id, row] as const));
+    const clearingAgentsById = new Map(clearingAgents.map((row) => [row.id, row] as const));
+    const clearingBranchesByAgentId = new Map(clearingBranches.map((row) => [row.clearing_agent_id, row] as const));
+    const authUsersById = new Map(authUsers.map((row) => [row.id, row] as const));
     const profilesById = new Map(profileRows.map((row) => [row.id, row] as const));
     const permissionsByUser = new Map(permissionRows.map((row) => [row.user_id, Array.isArray(row.permissions) ? row.permissions.filter(Boolean) : []] as const));
 
@@ -187,28 +199,59 @@ async function loadViaPg() {
       const profile = profilesById.get(assignment.user_id);
       if (!profile) return null;
 
+      const authUser = authUsersById.get(assignment.user_id);
       const country = assignment.country_id ? countriesById.get(assignment.country_id) : null;
       const mainBranch = assignment.country_branch_id ? countryBranchesById.get(assignment.country_branch_id) : null;
       const cityBranch = assignment.city_branch_id ? cityBranchesById.get(assignment.city_branch_id) : null;
-      const fallbackCountry = cityBranch?.country_id ? countriesById.get(cityBranch.country_id) : mainBranch?.country_id ? countriesById.get(mainBranch.country_id) : null;
+      const clearingAgent = assignment.clearing_agent_id ? clearingAgentsById.get(assignment.clearing_agent_id) : null;
+      const clearingBranch = assignment.clearing_agent_id ? clearingBranchesByAgentId.get(assignment.clearing_agent_id) : null;
+
+      const fallbackCountry = cityBranch?.country_id
+        ? countriesById.get(cityBranch.country_id)
+        : mainBranch?.country_id
+          ? countriesById.get(mainBranch.country_id)
+          : clearingAgent?.head_office_country_id
+            ? countriesById.get(clearingAgent.head_office_country_id)
+            : null;
       const fallbackMainBranch = cityBranch?.country_branch_id ? countryBranchesById.get(cityBranch.country_branch_id) : null;
       const role = assignment.role || "staff_user";
       const lastLogin = normalizeDate(assignment.updated_at || assignment.created_at || profile?.updated_at || profile?.created_at || null);
+
+      let branchName = "-";
+      let branchCode = "-";
+      let cityName = "-";
+
+      if (clearingBranch || clearingAgent) {
+        branchName = clearingBranch?.name || clearingAgent?.name || "Clearing Agent Head Office";
+        branchCode = clearingBranch?.code || clearingAgent?.code || "CLEARING-HO-01";
+        cityName = "Head Office";
+      } else if (cityBranch) {
+        branchName = cityBranch.name;
+        branchCode = cityBranch.code;
+        cityName = cityBranch.city_name;
+      } else if (mainBranch || fallbackMainBranch) {
+        branchName = mainBranch?.name || fallbackMainBranch?.name || "-";
+        branchCode = mainBranch?.code || fallbackMainBranch?.code || "-";
+      } else if (role === "super_admin") {
+        branchName = "Global HQ";
+        branchCode = "SUPERADMIN";
+      }
 
       return {
         id: assignment.user_id,
         name: profile?.full_name || profile?.user_code || "Unnamed User",
         loginId: profile?.user_code || assignment.user_id,
         username: profile?.user_code || assignment.user_id,
-        email: "",
+        email: authUser?.email || (profile?.user_code ? `${profile.user_code.toLowerCase()}@dgt.llc` : ""),
         mobile: "",
+        temporaryPassword: profile?.raw_password || null,
         role,
         classification: roleClassification(role),
         mainUser: isMainUserRole(role),
-        countryName: country?.name || fallbackCountry?.name || "-",
-        cityName: cityBranch?.city_name || "-",
-        branchName: cityBranch?.name || mainBranch?.name || fallbackMainBranch?.name || "-",
-        branchCode: cityBranch?.code || mainBranch?.code || fallbackMainBranch?.code || "-",
+        countryName: country?.name || fallbackCountry?.name || "Global",
+        cityName,
+        branchName,
+        branchCode,
         department: assignment.role || "-",
         permissions: permissionsByUser.get(assignment.user_id) ?? [],
         status: assignment.is_active ? "Active" : "Inactive",
@@ -309,6 +352,16 @@ async function loadViaPg() {
       };
     });
 
+    const superAdminUsers = allUserDetails.filter((u) => u.role === "super_admin" || u.countryName === "Global");
+    const superAdminBranches = [
+      {
+        id: "super-admin-branch",
+        name: "Global Executive Headquarters & Clearing Agent Super Admin",
+        code: "HQ-SUPERADMIN",
+        users: superAdminUsers
+      }
+    ];
+
     const totalActiveBranches = branchRows.filter((branch) => branch.status === "active").length + cityRows.filter((branch) => branch.status === "active").length;
     const summary = {
       totalCountries: countries.length,
@@ -323,7 +376,7 @@ async function loadViaPg() {
 
     return {
       summary,
-      superAdminBranches: [],
+      superAdminBranches,
       countries,
       generatedAt: new Date().toISOString()
     };

@@ -158,12 +158,32 @@ export function AdminUserManagementPanel() {
   // Flattened all users list for search/filtering
   const allUsersFlattened = useMemo(() => {
     const list: Array<BranchUser & { countryName: string; countryCode?: string; branchName: string; branchCode: string; branchType: string }> = [];
+    const seenIds = new Set<string>();
+
+    const pushUser = (u: BranchUser, extra: { countryName: string; countryCode?: string; branchName: string; branchCode: string; branchType: string }) => {
+      const key = u.id || u.username || u.loginId;
+      if (key && seenIds.has(key)) return;
+      if (key) seenIds.add(key);
+      list.push({ ...u, ...extra });
+    };
+
+    // Super Admin and Clearing Agent Head Office Users
+    superAdminBranches.forEach((sb) => {
+      sb.users?.forEach((u: any) => {
+        pushUser(u, {
+          countryName: u.countryName || "Global",
+          countryCode: "HQ",
+          branchName: u.branchName || sb.name || "Global Executive HQ",
+          branchCode: u.branchCode || sb.code || "HQ-SUPERADMIN",
+          branchType: u.role === "super_admin" ? "Super Admin" : "Clearing HQ"
+        });
+      });
+    });
 
     countries.forEach((country) => {
       // Direct country users
       country.users?.forEach((u) => {
-        list.push({
-          ...u,
+        pushUser(u, {
           countryName: country.name,
           countryCode: country.iso2 || country.name.substring(0, 2).toUpperCase(),
           branchName: "Country HQ",
@@ -175,8 +195,7 @@ export function AdminUserManagementPanel() {
       country.mainBranches?.forEach((mb) => {
         // Main branch users
         mb.users?.forEach((u) => {
-          list.push({
-            ...u,
+          pushUser(u, {
             countryName: country.name,
             countryCode: country.iso2 || country.name.substring(0, 2).toUpperCase(),
             branchName: mb.name,
@@ -188,8 +207,7 @@ export function AdminUserManagementPanel() {
         // City branch users
         mb.cityBranches?.forEach((cb) => {
           cb.users?.forEach((u) => {
-            list.push({
-              ...u,
+            pushUser(u, {
               countryName: country.name,
               countryCode: country.iso2 || country.name.substring(0, 2).toUpperCase(),
               branchName: `${cb.cityName} - ${cb.name}`,
@@ -202,14 +220,12 @@ export function AdminUserManagementPanel() {
     });
 
     return list;
-  }, [countries]);
+  }, [countries, superAdminBranches]);
 
   // Overall metric counts
   const totalMetrics = useMemo(() => {
-    let totalCount = 0;
-    let totalMainUsers = 0;
-    let totalCityBranches = 0;
     let totalMainBranches = 0;
+    let totalCityBranches = 0;
 
     countries.forEach((c) => {
       totalMainBranches += c.mainBranches?.length || 0;
@@ -218,8 +234,8 @@ export function AdminUserManagementPanel() {
       });
     });
 
-    totalCount = allUsersFlattened.length;
-    totalMainUsers = allUsersFlattened.filter((u) => u.mainUser || ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin"].includes(u.role?.toLowerCase())).length;
+    const totalCount = allUsersFlattened.length;
+    const totalMainUsers = allUsersFlattened.filter((u) => u.mainUser || ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin"].includes(u.role?.toLowerCase())).length;
 
     return {
       totalCountries: countries.length,

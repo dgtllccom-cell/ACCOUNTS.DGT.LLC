@@ -483,7 +483,7 @@ export default function JournalReport({
                     <label className="text-[9px] font-bold uppercase text-slate-400">{t(lang, "report.salesperson", "Salesperson")}</label>
                     <select value={selectedSalesmanId} onChange={e => setSelectedSalesmanId(e.target.value)}
                       className="h-8 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-2 text-xs outline-none focus:border-blue-500">
-                      <option value="all">All Salespeople</option>
+                      <option value="all">{t(lang, "jr.jr_all_salespeople", "All Salespeople")}</option>
                       {salesmen.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                     </select>
                   </div>
@@ -497,7 +497,7 @@ export default function JournalReport({
             className="flex items-center gap-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 rounded-lg text-xs font-bold uppercase border border-slate-200 dark:border-slate-800"
           >
             <Download className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">CSV Export</span>
+            <span className="hidden sm:inline">{t(lang, "jr.jr_csv_export", "CSV Export")}</span>
           </button>
 
           <button
@@ -544,7 +544,7 @@ export default function JournalReport({
                 </div>
                 <div className="flex justify-between items-center">
                   <span>{tr("ROLE")}:</span>
-                  <span className="font-extrabold text-slate-800 dark:text-slate-200 uppercase">SUPER ADMIN</span>
+                  <span className="font-extrabold text-slate-800 dark:text-slate-200 uppercase">{t(lang, "purchase.pmw_super_admin", "Super Admin")}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span>{tr("DATE & TIME")}:</span>
@@ -678,18 +678,18 @@ export default function JournalReport({
 
                   <div className="grid grid-cols-2 gap-3 text-[10px] font-bold bg-slate-50/50 dark:bg-slate-950 p-3 rounded-xl border border-slate-150 dark:border-slate-850">
                     <div className="space-y-1.5">
-                      <div className="flex justify-between"><span className="text-slate-400">CURRENCY:</span><span className="text-slate-900 dark:text-white font-mono">{c.currency}</span></div>
-                      <div className="flex justify-between"><span className="text-slate-400">TOTAL PURCHASE:</span><span className="text-rose-600 dark:text-rose-450 font-mono">{fmtNum(c.purchase, 2)}</span></div>
+                      <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_currency_colon", "CURRENCY:")}</span><span className="text-slate-900 dark:text-white font-mono">{c.currency}</span></div>
+                      <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_total_purchase_colon", "TOTAL PURCHASE:")}</span><span className="text-rose-600 dark:text-rose-450 font-mono">{fmtNum(c.purchase, 2)}</span></div>
                     </div>
                     <div className="space-y-1.5 pl-3 border-l border-slate-200 dark:border-slate-800">
-                      <div className="flex justify-between"><span className="text-slate-400">TOTAL TRANSFERRED:</span><span className="text-emerald-600 dark:text-emerald-450 font-mono">{fmtNum(c.transferred, 2)}</span></div>
-                      <div className="flex justify-between"><span className="text-slate-400">REMAINING BALANCE:</span><span className="text-slate-900 dark:text-white font-mono">{fmtNum(c.remaining, 2)}</span></div>
+                      <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_total_transferred_colon", "TOTAL TRANSFERRED:")}</span><span className="text-emerald-600 dark:text-emerald-450 font-mono">{fmtNum(c.transferred, 2)}</span></div>
+                      <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_remaining_balance_colon", "REMAINING BALANCE:")}</span><span className="text-slate-900 dark:text-white font-mono">{fmtNum(c.remaining, 2)}</span></div>
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-wider text-slate-400">
-                      <span>BRANCH BREAKDOWN</span>
+                      <span>{tr("BRANCH BREAKDOWN")}</span>
                       <span className="text-blue-600 dark:text-blue-400">ALL</span>
                     </div>
                     {c.branches.map((b, bIdx) => (
@@ -697,9 +697,9 @@ export default function JournalReport({
                         <span className="text-slate-800 dark:text-slate-200 uppercase">{b.branch}</span>
                         <div className="flex items-center gap-3 font-mono text-[9.5px]">
                           <span className="text-rose-600">{fmtNum(b.purchase, 2)}</span>
-                          <span className="text-slate-400 text-[8px]">PAID ADV</span>
+                          <span className="text-slate-400 text-[8px]">{tr("PAID ADV")}</span>
                           <span className="text-emerald-600">{fmtNum(b.transferred, 2)}</span>
-                          <span className="text-slate-400 text-[8px]">REM. BAL</span>
+                          <span className="text-slate-400 text-[8px]">{tr("REM. BAL")}</span>
                           <span className="text-slate-800 dark:text-white">{fmtNum(b.remaining, 2)}</span>
                         </div>
                       </div>
@@ -752,7 +752,7 @@ export default function JournalReport({
                   onChange={e => setPartyFilter(e.target.value)}
                   className="bg-white dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 font-bold"
                 >
-                  <option value="">All Parties</option>
+                  <option value="">{t(lang, "jr.jr_all_parties", "All Parties")}</option>
                   {uniqueParties.map(p => (
                     <option key={p} value={p}>{p}</option>
                   ))}
@@ -887,7 +887,7 @@ export default function JournalReport({
                                 setClickedStepIndex(0);
                               }}
                               className={`p-1.5 rounded-lg border transition-all ${isSelected ? "bg-blue-600 border-blue-600 text-white" : "bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400"}`}
-                              title="View Bill Journey"
+                              title={t(lang, "jr.jr_view_bill_journey", "View Bill Journey")}
                             >
                               <Eye className="w-3.5 h-3.5" />
                             </button>
@@ -925,14 +925,14 @@ export default function JournalReport({
                     onClick={() => setModalActiveStep(2)}
                     className="flex items-center gap-2 px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all animate-pulse"
                   >
-                    NEXT: STEP 2 (LEDGER) âž”
+                    {t(lang, "jr.jr_next_step2_ledger", "NEXT: STEP 2 (LEDGER)")} ➔
                   </button>
                 ) : (
                   <button
                     onClick={() => setModalActiveStep(1)}
                     className="flex items-center gap-2 px-4 py-1.5 bg-slate-700 hover:bg-slate-800 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all"
                   >
-                    â¬… BACK: STEP 1 (GOODS)
+                    ⬅ {t(lang, "jr.jr_back_step1_goods", "BACK: STEP 1 (GOODS)")}
                   </button>
                 )}
 
@@ -940,10 +940,10 @@ export default function JournalReport({
 
                 <div>
                   <span className="text-[9px] font-black uppercase bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 px-2 py-0.5 rounded-md">
-                    Purchase Order Audit
+                    {t(lang, "jr.jr_purchase_order_audit", "Purchase Order Audit")}
                   </span>
                   <h3 className="text-xs sm:text-sm font-black text-slate-800 dark:text-white mt-0.5 flex items-center gap-1.5">
-                    Bill Journey & Status Verification
+                    {t(lang, "jr.jr_bill_journey_status", "Bill Journey & Status Verification")}
                     <span className="font-mono text-xs text-slate-400 dark:text-slate-500 font-semibold">({selectedRecord.journal_no})</span>
                   </h3>
                 </div>
@@ -956,7 +956,7 @@ export default function JournalReport({
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[11px] font-black uppercase tracking-wider transition-all shadow-xs"
                 >
                   <Printer className="w-3.5 h-3.5" />
-                  Print Report
+                  {t(lang, "jr.jr_print_report_btn", "Print Report")}
                 </button>
                 <button
                   onClick={() => {
@@ -976,16 +976,16 @@ export default function JournalReport({
                 {/* Header Logo/TRN row */}
                 <div className="flex justify-between items-start border-b-2 border-slate-900 dark:border-slate-700 pb-3">
                   <div className="text-left">
-                    <h1 className="text-xs md:text-sm font-black tracking-wide text-slate-900 dark:text-white uppercase">DAMAN BUSINESS GROUP</h1>
-                    <p className="text-[8px] uppercase tracking-widest text-slate-500 font-bold mt-0.5">Enterprise List & Logistics System</p>
+                    <h1 className="text-xs md:text-sm font-black tracking-wide text-slate-900 dark:text-white uppercase">{t(lang, "purchase.damaan_business_group", "Damaan Business Group")}</h1>
+                    <p className="text-[8px] uppercase tracking-widest text-slate-500 font-bold mt-0.5">{t(lang, "jr.jr_enterprise_logistics_system", "Enterprise List & Logistics System")}</p>
                   </div>
                   <div className="text-right">
-                    <h2 className="text-xs md:text-sm font-black tracking-wide text-slate-900 dark:text-white uppercase">BRANCH FINANCIAL LEDGER REPORT</h2>
-                    <p className="text-[8px] uppercase tracking-wider text-slate-500 font-bold mt-0.5">JOURNAL, CREDIT, DEBIT, INDORESE & REMAINING BALANCE STATEMENT</p>
+                    <h2 className="text-xs md:text-sm font-black tracking-wide text-slate-900 dark:text-white uppercase">{t(lang, "jr.jr_branch_financial_ledger_report", "BRANCH FINANCIAL LEDGER REPORT")}</h2>
+                    <p className="text-[8px] uppercase tracking-wider text-slate-500 font-bold mt-0.5">{t(lang, "jr.jr_journal_statement_subtitle", "JOURNAL, CREDIT, DEBIT, INDORESE & REMAINING BALANCE STATEMENT")}</p>
                   </div>
                   <div className="hidden md:block text-right">
                     <span className="text-[8px] font-mono font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded border border-slate-200 dark:border-slate-700">
-                      REPORT ID / TRN: 101-382-38493-00101
+                      {t(lang, "jr.jr_report_id_trn", "REPORT ID / TRN:")} 101-382-38493-00101
                     </span>
                   </div>
                 </div>
@@ -1004,7 +1004,7 @@ export default function JournalReport({
                       <User className="w-3.5 h-3.5 text-slate-400" />
                       <div>
                         <p>{t(lang, "purchase.pmw_user_name_label", "User Name:")}</p>
-                        <p className="text-slate-900 dark:text-white font-extrabold text-[9px] mt-0.5">SUPER ADMIN</p>
+                        <p className="text-slate-900 dark:text-white font-extrabold text-[9px] mt-0.5">{t(lang, "purchase.pmw_super_admin", "Super Admin")}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5">
@@ -1024,14 +1024,14 @@ export default function JournalReport({
                     <div className="flex items-center gap-1.5">
                       <Calendar className="w-3.5 h-3.5 text-slate-400" />
                       <div>
-                        <p>Date:</p>
+                        <p>{t(lang, "jr.jr_date_colon", "Date:")}</p>
                         <p className="text-slate-900 dark:text-white font-extrabold text-[9px] mt-0.5">{new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <Clock className="w-3.5 h-3.5 text-slate-400" />
                       <div>
-                        <p>Time:</p>
+                        <p>{t(lang, "jr.jr_time_colon", "Time:")}</p>
                         <p className="text-slate-900 dark:text-white font-extrabold text-[9px] mt-0.5">{new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
                       </div>
                     </div>
@@ -1050,7 +1050,7 @@ export default function JournalReport({
                       }`}
                     >
                       <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-mono">1</span>
-                      STEP 1: Goods Specification & Order Verification
+                      {t(lang, "jr.jr_step1_title", "STEP 1: Goods Specification & Order Verification")}
                     </button>
 
                     <button
@@ -1062,7 +1062,7 @@ export default function JournalReport({
                       }`}
                     >
                       <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-mono">2</span>
-                      STEP 2: Financial Postings & Ledger Summary
+                      {t(lang, "jr.jr_step2_title", "STEP 2: Financial Postings & Ledger Summary")}
                     </button>
                   </div>
 
@@ -1071,14 +1071,14 @@ export default function JournalReport({
                       onClick={() => setModalActiveStep(2)}
                       className="flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all animate-pulse"
                     >
-                      NEXT: STEP 2 (LEDGER & PAYMENTS) âž”
+                      {t(lang, "jr.jr_next_step2_ledger_payments", "NEXT: STEP 2 (LEDGER & PAYMENTS)")} ➔
                     </button>
                   ) : (
                     <button
                       onClick={() => setModalActiveStep(1)}
                       className="flex items-center gap-2 px-5 py-2 bg-slate-700 hover:bg-slate-800 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all"
                     >
-                      â¬… BACK: STEP 1 (GOODS & VERIFICATION)
+                      ⬅ {t(lang, "jr.jr_back_step1_goods_verification", "BACK: STEP 1 (GOODS & VERIFICATION)")}
                     </button>
                   )}
                 </div>
@@ -1095,13 +1095,13 @@ export default function JournalReport({
                         <div className="bg-[#0d2d6b] text-white px-3 py-1.5 rounded-xl flex items-center justify-between shadow-xs">
                           <div className="flex items-center gap-2">
                             <span className="bg-emerald-500 text-white font-black text-[9px] px-2 py-0.5 rounded-md uppercase tracking-wider">
-                              STEP 1
+                              {t(lang, "jr.jr_step1_badge", "STEP 1")}
                             </span>
                             <span className="text-[10px] font-black uppercase tracking-wider">
-                              VERIFICATION CHECKPOINTS & GOODS SPECIFICATION
+                              {t(lang, "jr.jr_verification_checkpoints_goods", "VERIFICATION CHECKPOINTS & GOODS SPECIFICATION")}
                             </span>
                           </div>
-                          <span className="text-[8px] font-bold text-slate-300 uppercase">ORDER AUDIT VERIFIED</span>
+                          <span className="text-[8px] font-bold text-slate-300 uppercase">{t(lang, "jr.jr_order_audit_verified", "ORDER AUDIT VERIFIED")}</span>
                         </div>
 
                         {/* Top Checkpoints & Details 2-col Grid */}
@@ -1111,7 +1111,7 @@ export default function JournalReport({
                           <div className="md:col-span-4 border border-slate-200 dark:border-slate-800 rounded-xl p-3 bg-slate-50/40 dark:bg-slate-900/20 space-y-2">
                             <h4 className="text-[9px] font-black uppercase text-blue-900 dark:text-blue-400 tracking-wider flex items-center gap-1">
                               <CheckCircle className="w-3 h-3 text-blue-600" />
-                              VERIFICATION CHECKPOINTS
+                              {t(lang, "jr.jr_verification_checkpoints", "VERIFICATION CHECKPOINTS")}
                             </h4>
                             <div className="space-y-1.5 pt-1">
                               {(selectedRecord.journey && selectedRecord.journey.length > 0 ? selectedRecord.journey : [
@@ -1126,7 +1126,7 @@ export default function JournalReport({
                                   <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-black flex-shrink-0 mt-0.5 ${
                                     step.status === "completed" ? "bg-emerald-600 text-white" : step.status === "active" ? "bg-blue-600 text-white animate-pulse" : "bg-slate-200 dark:bg-slate-800 text-slate-400"
                                   }`}>
-                                    {step.status === "completed" ? "âœ“" : step.status === "active" ? "âž”" : (sIdx + 1)}
+                                    {step.status === "completed" ? "✓" : step.status === "active" ? "➔" : (sIdx + 1)}
                                   </div>
                                   <div>
                                     <p className={`font-extrabold uppercase ${step.status === "completed" ? "text-slate-800 dark:text-slate-200" : step.status === "active" ? "text-blue-700 dark:text-blue-400" : "text-slate-400"}`}>
@@ -1145,11 +1145,11 @@ export default function JournalReport({
 
                               {/* Booking & Status Info */}
                               <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 bg-slate-50/20 text-[8.5px] space-y-1">
-                                <h5 className="font-black uppercase text-blue-900 dark:text-blue-400 text-[8px] tracking-wider mb-1">BOOKING & STATUS INFO</h5>
-                                <div className="flex justify-between"><span className="text-slate-400">Reference Order ID:</span><span className="font-mono font-bold text-slate-800 dark:text-white">{selectedRecord.journal_no}</span></div>
-                                <div className="flex justify-between"><span className="text-slate-400">Super Serial:</span><span className="font-mono font-bold text-slate-800 dark:text-white">{selectedRecord.journal_no}</span></div>
-                                <div className="flex justify-between"><span className="text-slate-400">Qty/With Unit:</span><span className="font-bold text-slate-800 dark:text-white">{fmtNum(selectedRecord.totalQuantity || 10000, 0)} Kgs</span></div>
-                                <div className="flex justify-between"><span className="text-slate-400">Purchase Date:</span><span className="font-bold text-slate-800 dark:text-white">{fmtDate(selectedRecord.date)}</span></div>
+                                <h5 className="font-black uppercase text-blue-900 dark:text-blue-400 text-[8px] tracking-wider mb-1">{t(lang, "jr.jr_booking_status_info", "BOOKING & STATUS INFO")}</h5>
+                                <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_reference_order_id", "Reference Order ID:")}</span><span className="font-mono font-bold text-slate-800 dark:text-white">{selectedRecord.journal_no}</span></div>
+                                <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_super_serial_colon", "Super Serial:")}</span><span className="font-mono font-bold text-slate-800 dark:text-white">{selectedRecord.journal_no}</span></div>
+                                <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_qty_with_unit_colon", "Qty/With Unit:")}</span><span className="font-bold text-slate-800 dark:text-white">{fmtNum(selectedRecord.totalQuantity || 10000, 0)} Kgs</span></div>
+                                <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_purchase_date_colon", "Purchase Date:")}</span><span className="font-bold text-slate-800 dark:text-white">{fmtDate(selectedRecord.date)}</span></div>
                                 <div className="flex justify-between"><span className="text-slate-400">{t(lang, "purchase.f_exchange_rate", "Exchange Rate:")}</span><span className="font-mono font-bold text-slate-800 dark:text-white">{fmtNum(selectedRecord.exchangeRate || 277.50, 4)}</span></div>
                               </div>
 
@@ -1157,16 +1157,16 @@ export default function JournalReport({
                               <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 bg-slate-50/20 text-[8.5px] space-y-1">
                                 <h5 className="font-black uppercase text-blue-900 dark:text-blue-400 text-[8px] tracking-wider mb-1">SUPPLIER DETAILS</h5>
                                 <div className="flex justify-between"><span className="text-slate-400">{t(lang, "hr.f_lbl_name", "Name:")}</span><span className="font-bold text-slate-800 dark:text-white truncate max-w-[90px]">Asian Exports</span></div>
-                                <div className="flex justify-between"><span className="text-slate-400">Postal / Contact:</span><span className="font-bold text-slate-800 dark:text-white">Registered Office</span></div>
-                                <div className="flex justify-between"><span className="text-slate-400">Tax Registration:</span><span className="font-mono font-bold text-emerald-600">{t(lang, "god.active", "Active")}</span></div>
+                                <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_postal_contact_colon", "Postal / Contact:")}</span><span className="font-bold text-slate-800 dark:text-white">{t(lang, "jr.jr_registered_office", "Registered Office")}</span></div>
+                                <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_tax_registration_colon", "Tax Registration:")}</span><span className="font-mono font-bold text-emerald-600">{t(lang, "god.active", "Active")}</span></div>
                               </div>
 
                               {/* Buyer Details */}
                               <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 bg-slate-50/20 text-[8.5px] space-y-1">
                                 <h5 className="font-black uppercase text-blue-900 dark:text-blue-400 text-[8px] tracking-wider mb-1">BUYER DETAILS</h5>
                                 <div className="flex justify-between"><span className="text-slate-400">{t(lang, "hr.f_lbl_name", "Name:")}</span><span className="font-bold text-slate-800 dark:text-white truncate max-w-[90px]">International Export Sales A/C</span></div>
-                                <div className="flex justify-between"><span className="text-slate-400">Postal / Contact:</span><span className="font-bold text-slate-800 dark:text-white">Central Warehouse</span></div>
-                                <div className="flex justify-between"><span className="text-slate-400">Tax Code:</span><span className="font-mono font-bold text-slate-800 dark:text-white">DGT-PAK-2026</span></div>
+                                <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_postal_contact_colon", "Postal / Contact:")}</span><span className="font-bold text-slate-800 dark:text-white">Central Warehouse</span></div>
+                                <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_tax_code_colon", "Tax Code:")}</span><span className="font-mono font-bold text-slate-800 dark:text-white">DGT-PAK-2026</span></div>
                               </div>
 
                             </div>
@@ -1174,16 +1174,16 @@ export default function JournalReport({
                             {/* Shipment & Transit Info */}
                             <div className="grid grid-cols-2 gap-3 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 bg-slate-50/30 text-[8.5px]">
                               <div className="space-y-1">
-                                <h5 className="font-black uppercase text-slate-600 dark:text-slate-300 text-[8px] tracking-wider mb-1">SHIPMENT & LOGISTICS</h5>
+                                <h5 className="font-black uppercase text-slate-600 dark:text-slate-300 text-[8px] tracking-wider mb-1">{t(lang, "jr.jr_shipment_logistics", "SHIPMENT & LOGISTICS")}</h5>
                                 <div className="flex justify-between"><span className="text-slate-400">{t(lang, "purchase.card_origin_country_colon", "Origin Country:")}</span><span className="font-bold text-slate-800 dark:text-white">{t(lang, "nav.india", "India")}</span></div>
                                 <div className="flex justify-between"><span className="text-slate-400">{t(lang, "purchase.destination_country_colon", "Destination Country:")}</span><span className="font-bold text-slate-800 dark:text-white">{t(lang, "creg.country_pakistan", "Pakistan")}</span></div>
-                                <div className="flex justify-between"><span className="text-slate-400">Vessel / Truck / Flight:</span><span className="font-bold text-slate-800 dark:text-white">By Land Route (Cargo)</span></div>
+                                <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_vessel_truck_flight_colon", "Vessel / Truck / Flight:")}</span><span className="font-bold text-slate-800 dark:text-white">{t(lang, "jr.jr_by_land_route_cargo", "By Land Route (Cargo)")}</span></div>
                               </div>
                               <div className="space-y-1 pl-3 border-l border-slate-200 dark:border-slate-800">
-                                <h5 className="font-black uppercase text-slate-600 dark:text-slate-300 text-[8px] tracking-wider mb-1">LOADING & TRANSIT DETAILS</h5>
-                                <div className="flex justify-between"><span className="text-slate-400">Shipping Order / Mode:</span><span className="font-bold text-slate-800 dark:text-white">{t(lang, "common.export", "Export")}</span></div>
-                                <div className="flex justify-between"><span className="text-slate-400">Port of Loading / Origin:</span><span className="font-bold text-slate-800 dark:text-white">Torkham / Chaman Border</span></div>
-                                <div className="flex justify-between"><span className="text-slate-400">Destination Terminal:</span><span className="font-bold text-slate-800 dark:text-white">Central Storage Complex</span></div>
+                                <h5 className="font-black uppercase text-slate-600 dark:text-slate-300 text-[8px] tracking-wider mb-1">{t(lang, "jr.jr_loading_transit_details", "LOADING & TRANSIT DETAILS")}</h5>
+                                <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_shipping_order_mode_colon", "Shipping Order / Mode:")}</span><span className="font-bold text-slate-800 dark:text-white">{t(lang, "common.export", "Export")}</span></div>
+                                <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_port_loading_origin_colon", "Port of Loading / Origin:")}</span><span className="font-bold text-slate-800 dark:text-white">Torkham / Chaman Border</span></div>
+                                <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_destination_terminal_colon", "Destination Terminal:")}</span><span className="font-bold text-slate-800 dark:text-white">Central Storage Complex</span></div>
                               </div>
                             </div>
 
@@ -1193,7 +1193,7 @@ export default function JournalReport({
                         {/* GOODS SPECIFICATION Table */}
                         <div className="space-y-1.5">
                           <div className="bg-[#1e3a8a] text-white px-3 py-1.5 rounded-t-xl text-[9px] font-black uppercase tracking-wider">
-                            GOODS SPECIFICATION
+                            {t(lang, "jr.jr_goods_specification", "GOODS SPECIFICATION")}
                           </div>
                           <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-b-xl">
                             <table className="w-full text-left border-collapse text-[8.5px]">
@@ -1232,7 +1232,7 @@ export default function JournalReport({
 
                           {/* IN WORDS (PKR) Bar */}
                           <div className="bg-slate-50 dark:bg-slate-850 p-2 rounded-xl border border-slate-200 dark:border-slate-800 text-[8.5px] font-bold">
-                            <span className="text-slate-400 uppercase">IN WORDS (PKR): </span>
+                            <span className="text-slate-400 uppercase">{t(lang, "jr.jr_in_words_pkr", "IN WORDS (PKR):")}</span>
                             <span className="text-slate-800 dark:text-white font-extrabold uppercase">Two Million Seven Hundred Seventy-Five Thousand Rupees Only</span>
                           </div>
                         </div>
@@ -1245,23 +1245,23 @@ export default function JournalReport({
                         {/* REPORT SUMMARY */}
                         <div className="space-y-1">
                           <div className="bg-[#1e3a8a] text-white px-2.5 py-1.5 rounded-t-xl text-[9px] font-black uppercase tracking-wider">
-                            Report Summary
+                            {t(lang, "jr.jr_report_summary", "Report Summary")}
                           </div>
                           <div className="border border-slate-200 dark:border-slate-800 rounded-b-xl p-2.5 space-y-1.5 text-[9px] bg-slate-50/20 dark:bg-slate-900/10 font-bold leading-tight">
-                            <div className="flex justify-between text-slate-400"><span>Total Debit (PKR):</span><span className="text-slate-800 dark:text-white">PKR {fmtNum(selectedRecord.amount, 2)}</span></div>
-                            <div className="flex justify-between text-slate-400"><span>Total Credit (PKR):</span><span className="text-slate-800 dark:text-white">PKR {fmtNum(selectedRecord.amount, 2)}</span></div>
-                            <div className="flex justify-between text-slate-400"><span>Net Balance (PKR):</span><span className="text-emerald-600 dark:text-emerald-450 font-bold">PKR 0.00</span></div>
+                            <div className="flex justify-between text-slate-400"><span>{t(lang, "jr.jr_total_debit_pkr_colon", "Total Debit (PKR):")}</span><span className="text-slate-800 dark:text-white">PKR {fmtNum(selectedRecord.amount, 2)}</span></div>
+                            <div className="flex justify-between text-slate-400"><span>{t(lang, "jr.jr_total_credit_pkr_colon", "Total Credit (PKR):")}</span><span className="text-slate-800 dark:text-white">PKR {fmtNum(selectedRecord.amount, 2)}</span></div>
+                            <div className="flex justify-between text-slate-400"><span>{t(lang, "jr.jr_net_balance_pkr_colon", "Net Balance (PKR):")}</span><span className="text-emerald-600 dark:text-emerald-450 font-bold">PKR 0.00</span></div>
                           </div>
                         </div>
 
                         {/* CREDITED AGAINST (SOURCE) */}
                         <div className="space-y-1">
                           <div className="bg-[#1e3a8a] text-white px-2.5 py-1.5 rounded-t-xl text-[9px] font-black uppercase tracking-wider">
-                            Credited Against (Source)
+                            {t(lang, "jr.jr_credited_against_source", "Credited Against (Source)")}
                           </div>
                           <div className="border border-slate-200 dark:border-slate-800 rounded-b-xl p-2.5 space-y-1.5 text-[9px] bg-slate-50/20 dark:bg-slate-900/10 font-bold leading-tight">
-                            <div className="flex justify-between text-slate-400"><span>Source Type:</span><span className="text-slate-800 dark:text-white">SALES INVOICE</span></div>
-                            <div className="flex justify-between text-slate-400"><span>Invoice No:</span><span className="text-slate-800 dark:text-white font-mono">{selectedRecord.journal_no}</span></div>
+                            <div className="flex justify-between text-slate-400"><span>{t(lang, "jr.jr_source_type_colon", "Source Type:")}</span><span className="text-slate-800 dark:text-white">{t(lang, "jr.jr_sales_invoice_caps", "SALES INVOICE")}</span></div>
+                            <div className="flex justify-between text-slate-400"><span>{t(lang, "jr.jr_invoice_no_colon", "Invoice No:")}</span><span className="text-slate-800 dark:text-white font-mono">{selectedRecord.journal_no}</span></div>
                             <div className="flex justify-between text-slate-400"><span>{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span><span className="text-slate-800 dark:text-white font-mono">1101-002</span></div>
                             <div className="flex justify-between text-slate-400"><span>{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span><span className="text-slate-800 dark:text-white uppercase truncate max-w-[120px]" title={selectedRecord.salesAccount}>{selectedRecord.salesAccount || "INTERNATIONAL EXPORT SALES A/C"}</span></div>
                           </div>
@@ -1270,11 +1270,11 @@ export default function JournalReport({
                         {/* DEBITED AGAINST (SOURCE) */}
                         <div className="space-y-1">
                           <div className="bg-[#1e3a8a] text-white px-2.5 py-1.5 rounded-t-xl text-[9px] font-black uppercase tracking-wider">
-                            Debited Against (Source)
+                            {t(lang, "jr.jr_debited_against_source", "Debited Against (Source)")}
                           </div>
                           <div className="border border-slate-200 dark:border-slate-800 rounded-b-xl p-2.5 space-y-1.5 text-[9px] bg-slate-50/20 dark:bg-slate-900/10 font-bold leading-tight">
-                            <div className="flex justify-between text-slate-400"><span>Source Type:</span><span className="text-slate-800 dark:text-white">PURCHASE INVOICE</span></div>
-                            <div className="flex justify-between text-slate-400"><span>Invoice No:</span><span className="text-slate-800 dark:text-white font-mono">{selectedRecord.journal_no}</span></div>
+                            <div className="flex justify-between text-slate-400"><span>{t(lang, "jr.jr_source_type_colon", "Source Type:")}</span><span className="text-slate-800 dark:text-white">{t(lang, "jr.jr_purchase_invoice_caps", "PURCHASE INVOICE")}</span></div>
+                            <div className="flex justify-between text-slate-400"><span>{t(lang, "jr.jr_invoice_no_colon", "Invoice No:")}</span><span className="text-slate-800 dark:text-white font-mono">{selectedRecord.journal_no}</span></div>
                             <div className="flex justify-between text-slate-400"><span>{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span><span className="text-slate-800 dark:text-white font-mono">5001-001</span></div>
                             <div className="flex justify-between text-slate-400"><span>{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span><span className="text-slate-800 dark:text-white uppercase truncate max-w-[120px]" title={selectedRecord.purchaseAccount}>{selectedRecord.purchaseAccount || "ASIAN EXPORTS A/C (DEEB)"}</span></div>
                           </div>
@@ -1283,13 +1283,13 @@ export default function JournalReport({
                         {/* BALANCE AGAINST (PARTY) */}
                         <div className="space-y-1">
                           <div className="bg-[#1e3a8a] text-white px-2.5 py-1.5 rounded-t-xl text-[9px] font-black uppercase tracking-wider">
-                            Balance Against (Party)
+                            {t(lang, "jr.jr_balance_against_party", "Balance Against (Party)")}
                           </div>
                           <div className="border border-slate-200 dark:border-slate-800 rounded-b-xl p-2.5 space-y-1.5 text-[9px] bg-slate-50/20 dark:bg-slate-900/10 font-bold leading-tight">
-                            <div className="flex justify-between text-slate-400"><span>Party Name:</span><span className="text-slate-800 dark:text-white uppercase truncate max-w-[120px]" title={selectedRecord.party}>{selectedRecord.party}</span></div>
+                            <div className="flex justify-between text-slate-400"><span>{t(lang, "jr.jr_party_name_colon", "Party Name:")}</span><span className="text-slate-800 dark:text-white uppercase truncate max-w-[120px]" title={selectedRecord.party}>{selectedRecord.party}</span></div>
                             <div className="flex justify-between text-slate-400"><span>{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span><span className="text-slate-800 dark:text-white font-mono">1101-002</span></div>
-                            <div className="flex justify-between text-slate-400"><span>Total Due (PKR):</span><span className="text-slate-800 dark:text-white font-mono">PKR {fmtNum(selectedRecord.amount, 2)}</span></div>
-                            <div className="flex justify-between text-slate-400"><span>Due Date:</span><span className="text-slate-800 dark:text-white">{fmtDate(new Date(new Date(selectedRecord.date).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10))}</span></div>
+                            <div className="flex justify-between text-slate-400"><span>{t(lang, "jr.jr_total_due_pkr_colon", "Total Due (PKR):")}</span><span className="text-slate-800 dark:text-white font-mono">PKR {fmtNum(selectedRecord.amount, 2)}</span></div>
+                            <div className="flex justify-between text-slate-400"><span>{t(lang, "jr.jr_due_date_colon", "Due Date:")}</span><span className="text-slate-800 dark:text-white">{fmtDate(new Date(new Date(selectedRecord.date).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10))}</span></div>
                             <div className="flex justify-between text-slate-400 items-center">
                               <span>{t(lang, "purchase.card_status_colon", "Status:")}</span>
                               <span className={`inline-flex px-1.5 py-0.5 rounded text-[8px] font-black uppercase ${
@@ -1306,7 +1306,7 @@ export default function JournalReport({
                         {/* ERP REGISTER VERIFIED BADGE */}
                         <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-3 bg-slate-50/30 text-center flex flex-col items-center justify-center space-y-1">
                           <CheckCircle className="w-8 h-8 text-emerald-600" />
-                          <p className="text-[9px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider">ERP REGISTER (AUTOGENERATED)</p>
+                          <p className="text-[9px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider">{t(lang, "jr.jr_erp_register_autogenerated", "ERP REGISTER (AUTOGENERATED)")}</p>
                           <p className="text-[10px] font-black text-emerald-600 tracking-widest uppercase">VERIFIED</p>
                         </div>
 
@@ -1324,20 +1324,20 @@ export default function JournalReport({
                     <div className="bg-[#0d2d6b] text-white px-3 py-1.5 rounded-xl flex items-center justify-between shadow-xs">
                       <div className="flex items-center gap-2">
                         <span className="bg-blue-500 text-white font-black text-[9px] px-2 py-0.5 rounded-md uppercase tracking-wider">
-                          STEP 2
+                          {t(lang, "jr.jr_step2_badge", "STEP 2")}
                         </span>
                         <span className="text-[10px] font-black uppercase tracking-wider">
-                          GENERAL ACCOUNTS JOURNAL ENTRY POSTINGS & LEDGER SUMMARY
+                          {t(lang, "jr.jr_general_accounts_journal_title", "GENERAL ACCOUNTS JOURNAL ENTRY POSTINGS & LEDGER SUMMARY")}
                         </span>
                       </div>
-                      <span className="text-[8px] font-bold text-slate-300 uppercase">FINANCIAL AUDIT VERIFIED</span>
+                      <span className="text-[8px] font-bold text-slate-300 uppercase">{t(lang, "jr.jr_financial_audit_verified", "FINANCIAL AUDIT VERIFIED")}</span>
                     </div>
 
                     {/* General Accounts Journal Entry Postings Table */}
                     <div className="space-y-1.5">
                       <div className="bg-[#1e3a8a] text-white px-3 py-1.5 rounded-t-xl text-[9px] font-black uppercase tracking-wider flex justify-between items-center">
                         <span>1. GENERAL ACCOUNTS JOURNAL ENTRY POSTINGS</span>
-                        <span>OFFICIAL AUDIT LOG</span>
+                        <span>{t(lang, "jr.jr_official_audit_log", "OFFICIAL AUDIT LOG")}</span>
                       </div>
                       <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-b-xl">
                         <table className="w-full text-left border-collapse text-[8px]">
@@ -1364,7 +1364,7 @@ export default function JournalReport({
                               <td className="py-1.5 px-2 text-right font-mono font-bold text-emerald-600">2,775,000.00</td>
                               <td className="py-1.5 px-2 text-right text-slate-400">-</td>
                               <td className="py-1.5 px-2 text-center font-bold">PKR</td>
-                              <td className="py-1.5 px-2">SUPER ADMIN</td>
+                              <td className="py-1.5 px-2">{t(lang, "purchase.pmw_super_admin", "Super Admin")}</td>
                               <td className="py-1.5 px-2">Pakistan Main Branch</td>
                               <td className="py-1.5 px-2">{t(lang, "creg.country_pakistan", "Pakistan")}</td>
                             </tr>
@@ -1376,7 +1376,7 @@ export default function JournalReport({
                               <td className="py-1.5 px-2 text-right text-slate-400">-</td>
                               <td className="py-1.5 px-2 text-right font-mono font-bold text-emerald-600">2,775,000.00</td>
                               <td className="py-1.5 px-2 text-center font-bold">PKR</td>
-                              <td className="py-1.5 px-2">SUPER ADMIN</td>
+                              <td className="py-1.5 px-2">{t(lang, "purchase.pmw_super_admin", "Super Admin")}</td>
                               <td className="py-1.5 px-2">Pakistan Main Branch</td>
                               <td className="py-1.5 px-2">{t(lang, "creg.country_pakistan", "Pakistan")}</td>
                             </tr>
@@ -1390,13 +1390,13 @@ export default function JournalReport({
                       <div className="bg-[#0d2d6b] text-white px-3 py-1.5 rounded-xl flex justify-between items-center text-[9px] font-black uppercase tracking-wider shadow-xs">
                         <div className="flex items-center gap-2">
                           <span className="bg-purple-600 text-white font-black text-[9px] px-2 py-0.5 rounded-md uppercase tracking-wider">
-                            STEP 2.2
+                            {t(lang, "jr.jr_step22_badge", "STEP 2.2")}
                           </span>
                           <span className="text-[10px] font-black uppercase tracking-wider">
-                            LEDGER TRANSACTION SUMMARY (ALL ENTRIES IN ONE VIEW)
+                            {t(lang, "jr.jr_ledger_txn_summary_caps", "LEDGER TRANSACTION SUMMARY (ALL ENTRIES IN ONE VIEW)")}
                           </span>
                         </div>
-                        <span className="text-[8px] font-bold text-slate-300">TOTAL OPERATIONS: 7</span>
+                        <span className="text-[8px] font-bold text-slate-300">{t(lang, "jr.jr_total_operations_prefix", "TOTAL OPERATIONS:")} 7</span>
                       </div>
 
                       <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-b-xl">
@@ -1427,7 +1427,7 @@ export default function JournalReport({
                             <tr className="hover:bg-slate-50 dark:hover:bg-slate-850/30">
                               <td className="py-2 px-2.5 text-center font-bold text-slate-400">1</td>
                               <td className="py-2 px-2 text-slate-500">Pakistan Main Branch</td>
-                              <td className="py-2 px-2 text-slate-500">SUPER ADMIN</td>
+                              <td className="py-2 px-2 text-slate-500">{t(lang, "purchase.pmw_super_admin", "Super Admin")}</td>
                               <td className="py-2 px-2">{fmtDate(selectedRecord.date)}</td>
                               <td className="py-2 px-2 uppercase text-[8px]">{t(lang, "nav.purchase_invoice", "Purchase Invoice")}</td>
                               <td className="py-2 px-2 font-mono font-bold text-slate-800 dark:text-white">PO: {selectedRecord.journal_no}</td>
@@ -1442,7 +1442,7 @@ export default function JournalReport({
                               <td className="py-2 px-2 text-right font-mono font-bold">2,775,000.00</td>
                             </tr>
                             <tr className="bg-slate-50/40 dark:bg-slate-900/20 text-slate-500 font-extrabold text-[8px] uppercase tracking-wide">
-                              <td colSpan={10} className="py-1 px-2.5 text-right text-[#1e3a8a] dark:text-blue-400 font-black">TOTAL DEBIT ENTRIES: 1</td>
+                              <td colSpan={10} className="py-1 px-2.5 text-right text-[#1e3a8a] dark:text-blue-400 font-black">{t(lang, "jr.jr_total_debit_entries_prefix", "TOTAL DEBIT ENTRIES:")} 1</td>
                               <td className="py-1 px-2 text-right font-mono text-slate-800 dark:text-white">2,775,000.00</td>
                               <td className="py-1 px-2 text-right">-</td>
                               <td className="py-1 px-2 text-right font-mono text-slate-800 dark:text-white">2,775,000.00</td>
@@ -1455,9 +1455,9 @@ export default function JournalReport({
                             <tr className="hover:bg-slate-50 dark:hover:bg-slate-850/30">
                               <td className="py-2 px-2.5 text-center font-bold text-slate-400">2</td>
                               <td className="py-2 px-2 text-slate-500">Pakistan Main Branch</td>
-                              <td className="py-2 px-2 text-slate-500">SUPER ADMIN</td>
+                              <td className="py-2 px-2 text-slate-500">{t(lang, "purchase.pmw_super_admin", "Super Admin")}</td>
                               <td className="py-2 px-2">{fmtDate(selectedRecord.date)}</td>
-                              <td className="py-2 px-2 uppercase text-[8px]">Sales Invoice</td>
+                              <td className="py-2 px-2 uppercase text-[8px]">{t(lang, "jr.jr_sales_invoice_word", "Sales Invoice")}</td>
                               <td className="py-2 px-2 font-mono font-bold text-slate-800 dark:text-white">INV: {selectedRecord.journal_no}</td>
                               <td className="py-2 px-2.5 font-normal text-slate-500 leading-normal max-w-[200px] truncate">
                                 Credit for Sales Invoice - Red Onions Premium 10,000 Kgs
@@ -1470,7 +1470,7 @@ export default function JournalReport({
                               <td className="py-2 px-2 text-right font-mono font-bold">2,775,000.00</td>
                             </tr>
                             <tr className="bg-slate-50/40 dark:bg-slate-900/20 text-slate-500 font-extrabold text-[8px] uppercase tracking-wide">
-                              <td colSpan={10} className="py-1 px-2.5 text-right text-emerald-700 dark:text-emerald-400 font-black">TOTAL CREDIT ENTRIES: 1</td>
+                              <td colSpan={10} className="py-1 px-2.5 text-right text-emerald-700 dark:text-emerald-400 font-black">{t(lang, "jr.jr_total_credit_entries_prefix", "TOTAL CREDIT ENTRIES:")} 1</td>
                               <td className="py-1 px-2 text-right">-</td>
                               <td className="py-1 px-2 text-right font-mono text-slate-800 dark:text-white">2,775,000.00</td>
                               <td className="py-1 px-2 text-right font-mono text-slate-800 dark:text-white">2,775,000.00</td>
@@ -1489,9 +1489,9 @@ export default function JournalReport({
                               <tr key={iIdx} className="hover:bg-slate-50 dark:hover:bg-slate-850/30">
                                 <td className="py-2 px-2.5 text-center font-bold text-slate-400">{indRow.no}</td>
                                 <td className="py-2 px-2 text-slate-500">Pakistan Main Branch</td>
-                                <td className="py-2 px-2 text-slate-500">SUPER ADMIN</td>
+                                <td className="py-2 px-2 text-slate-500">{t(lang, "purchase.pmw_super_admin", "Super Admin")}</td>
                                 <td className="py-2 px-2">21 JUL 2026</td>
-                                <td className="py-2 px-2 uppercase text-[8px]">Indorsement</td>
+                                <td className="py-2 px-2 uppercase text-[8px]">{t(lang, "jr.jr_indorsement_word", "Indorsement")}</td>
                                 <td className="py-2 px-2 font-mono font-bold text-slate-800 dark:text-white">{indRow.ref}</td>
                                 <td className="py-2 px-2.5 font-normal text-slate-500">{indRow.details}</td>
                                 <td className="py-2 px-2 font-mono text-[8px]">1101-002</td>
@@ -1503,7 +1503,7 @@ export default function JournalReport({
                               </tr>
                             ))}
                             <tr className="bg-slate-50/40 dark:bg-slate-900/20 text-slate-500 font-extrabold text-[8px] uppercase tracking-wide">
-                              <td colSpan={10} className="py-1 px-2.5 text-right text-blue-750 dark:text-blue-400 font-black">TOTAL INDORESE ENTRIES: 4</td>
+                              <td colSpan={10} className="py-1 px-2.5 text-right text-blue-750 dark:text-blue-400 font-black">{t(lang, "jr.jr_total_indorese_entries_prefix", "TOTAL INDORESE ENTRIES:")} 4</td>
                               <td className="py-1 px-2 text-right">-</td>
                               <td className="py-1 px-2 text-right font-mono text-slate-800 dark:text-white">2,775,000.00</td>
                               <td className="py-1 px-2 text-right font-mono text-slate-800 dark:text-white">2,775,000.00</td>
@@ -1516,7 +1516,7 @@ export default function JournalReport({
                             <tr className="hover:bg-slate-50 dark:hover:bg-slate-850/30">
                               <td className="py-2 px-2.5 text-center font-bold text-slate-400">7</td>
                               <td className="py-2 px-2 text-slate-500">Pakistan Main Branch</td>
-                              <td className="py-2 px-2 text-slate-500">SUPER ADMIN</td>
+                              <td className="py-2 px-2 text-slate-500">{t(lang, "purchase.pmw_super_admin", "Super Admin")}</td>
                               <td className="py-2 px-2">21 JUL 2026</td>
                               <td className="py-2 px-2 uppercase text-[8px]">{t(lang, "report.col_outstanding", "Outstanding")}</td>
                               <td className="py-2 px-2 font-mono font-bold text-slate-800 dark:text-white">RB-001</td>
@@ -1529,7 +1529,7 @@ export default function JournalReport({
                               <td className="py-2 px-2 text-right font-mono font-extrabold text-emerald-600">0.00</td>
                             </tr>
                             <tr className="bg-slate-50/40 dark:bg-slate-900/20 text-slate-500 font-extrabold text-[8px] uppercase tracking-wide">
-                              <td colSpan={10} className="py-1 px-2.5 text-right text-purple-750 dark:text-purple-400 font-black">TOTAL REMAINING ENTRIES: 1</td>
+                              <td colSpan={10} className="py-1 px-2.5 text-right text-purple-750 dark:text-purple-400 font-black">{t(lang, "jr.jr_total_remaining_entries_prefix", "TOTAL REMAINING ENTRIES:")} 1</td>
                               <td className="py-1 px-2 text-right">-</td>
                               <td className="py-1 px-2 text-right">-</td>
                               <td className="py-1 px-2 text-right font-mono text-slate-800 dark:text-white">0.00</td>
@@ -1542,23 +1542,23 @@ export default function JournalReport({
                       {/* Summary KPI Bar */}
                       <div className="grid grid-cols-5 border border-slate-200 dark:border-slate-800 rounded-xl text-center divide-x divide-slate-200 dark:divide-slate-800 font-bold bg-[#1e3a8a] text-white overflow-hidden">
                         <div className="p-2">
-                          <p className="text-slate-350 uppercase text-[7px]">TOTAL DEBIT (PKR)</p>
+                          <p className="text-slate-350 uppercase text-[7px]">{t(lang, "jr.jr_total_debit_pkr_caps", "TOTAL DEBIT (PKR)")}</p>
                           <p className="font-mono font-extrabold text-[10px] mt-0.5">PKR 2,775,000.00</p>
                         </div>
                         <div className="p-2">
-                          <p className="text-slate-350 uppercase text-[7px]">TOTAL CREDIT (PKR)</p>
+                          <p className="text-slate-350 uppercase text-[7px]">{t(lang, "jr.jr_total_credit_pkr_caps", "TOTAL CREDIT (PKR)")}</p>
                           <p className="font-mono font-extrabold text-[10px] mt-0.5">PKR 2,775,000.00</p>
                         </div>
                         <div className="p-2">
-                          <p className="text-slate-350 uppercase text-[7px]">TOTAL INDORESE (PKR)</p>
+                          <p className="text-slate-350 uppercase text-[7px]">{t(lang, "jr.jr_total_indorese_pkr_caps", "TOTAL INDORESE (PKR)")}</p>
                           <p className="font-mono font-extrabold text-[10px] mt-0.5">PKR 2,775,000.00</p>
                         </div>
                         <div className="p-2">
-                          <p className="text-slate-350 uppercase text-[7px]">TOTAL REMAINING (PKR)</p>
+                          <p className="text-slate-350 uppercase text-[7px]">{t(lang, "jr.jr_total_remaining_pkr_caps", "TOTAL REMAINING (PKR)")}</p>
                           <p className="font-mono font-extrabold text-[10px] mt-0.5">PKR 0.00</p>
                         </div>
                         <div className="p-2 bg-emerald-600">
-                          <p className="text-emerald-100 uppercase text-[7px]">NET BALANCE (PKR)</p>
+                          <p className="text-emerald-100 uppercase text-[7px]">{t(lang, "jr.jr_net_balance_pkr_caps", "NET BALANCE (PKR)")}</p>
                           <p className="font-mono text-xs font-black mt-0.5 text-white">0.00</p>
                         </div>
                       </div>
@@ -1578,13 +1578,13 @@ export default function JournalReport({
                           <div className="space-y-1.5">
                             <div className="flex justify-between"><span className="text-slate-400">{t(lang, "purchase.f_payment_terms", "Payment Terms:")}</span><span className="text-slate-800 dark:text-white uppercase">{selectedRecord.paymentCondition || "CREDIT (30 DAYS)"}</span></div>
                             <div className="flex justify-between"><span className="text-slate-400">{t(lang, "purchase.f_exchange_rate", "Exchange Rate:")}</span><span className="text-slate-850 dark:text-white font-mono">{fmtNum(selectedRecord.exchangeRate || 1, 4)}</span></div>
-                            <div className="flex justify-between"><span className="text-slate-400">Total Invoice (USD):</span><span className="text-slate-850 dark:text-white">USD {fmtNum(selectedRecord.amount / (selectedRecord.exchangeRate || 1), 2)}</span></div>
-                            <div className="flex justify-between"><span className="text-slate-400">Total Invoice (PKR):</span><span className="text-slate-850 dark:text-white">PKR {fmtNum(selectedRecord.amount, 2)}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_total_invoice_usd_colon", "Total Invoice (USD):")}</span><span className="text-slate-850 dark:text-white">USD {fmtNum(selectedRecord.amount / (selectedRecord.exchangeRate || 1), 2)}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_total_invoice_pkr_colon", "Total Invoice (PKR):")}</span><span className="text-slate-850 dark:text-white">PKR {fmtNum(selectedRecord.amount, 2)}</span></div>
                           </div>
                           <div className="space-y-1.5 pl-6 border-l border-slate-200 dark:border-slate-800">
-                            <div className="flex justify-between"><span className="text-slate-400">Cleared Amount:</span><span className="text-slate-850 dark:text-white">USD {fmtNum((selectedRecord.paidAmount || 0) / (selectedRecord.exchangeRate || 1), 2)} / PKR {fmtNum(selectedRecord.paidAmount || 0, 2)}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_cleared_amount_colon", "Cleared Amount:")}</span><span className="text-slate-850 dark:text-white">USD {fmtNum((selectedRecord.paidAmount || 0) / (selectedRecord.exchangeRate || 1), 2)} / PKR {fmtNum(selectedRecord.paidAmount || 0, 2)}</span></div>
                             <div className="flex justify-between"><span className="text-rose-600">{t(lang, "lp.remaining_balance_s", "Remaining Balance:")}</span><span className="text-rose-600 font-mono">USD {fmtNum((selectedRecord.remainingAmount || 0) / (selectedRecord.exchangeRate || 1), 2)} / PKR {fmtNum(selectedRecord.remainingAmount || 0, 2)}</span></div>
-                            <div className="flex justify-between"><span className="text-slate-450">Remaining Due Date:</span><span className="text-slate-850 dark:text-white">{fmtDate(new Date(new Date(selectedRecord.date).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10))}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-450">{t(lang, "jr.jr_remaining_due_date_colon", "Remaining Due Date:")}</span><span className="text-slate-850 dark:text-white">{fmtDate(new Date(new Date(selectedRecord.date).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10))}</span></div>
                           </div>
                         </div>
                       </div>
@@ -1594,14 +1594,14 @@ export default function JournalReport({
                         <div className="flex flex-col justify-between">
                           <div className="h-6 flex items-center justify-center italic text-slate-500 font-serif normal-case">{t(lang, "nav.super_admin_menu", "Super Admin")}</div>
                           <div>
-                            <div className="border-t border-slate-400 dark:border-slate-700 pt-1 text-slate-600 dark:text-slate-400 font-extrabold">SUPER ADMIN (AUTHORIZED)</div>
-                            <span className="text-[8px] text-slate-450 dark:text-slate-500 normal-case block mt-0.5">SIGNATURE & DATE</span>
+                            <div className="border-t border-slate-400 dark:border-slate-700 pt-1 text-slate-600 dark:text-slate-400 font-extrabold">{t(lang, "jr.jr_super_admin_authorized", "SUPER ADMIN (AUTHORIZED)")}</div>
+                            <span className="text-[8px] text-slate-450 dark:text-slate-500 normal-case block mt-0.5">{t(lang, "jr.jr_signature_date", "SIGNATURE & DATE")}</span>
                           </div>
                         </div>
                         <div className="flex flex-col justify-between items-center border-l border-slate-200 dark:border-slate-800 pl-2">
                           <CheckCircle className="w-6 h-6 text-emerald-600" />
                           <div>
-                            <div className="text-[9px] font-black text-emerald-600">ERP STAMP & VERIFIED</div>
+                            <div className="text-[9px] font-black text-emerald-600">{t(lang, "jr.jr_erp_stamp_verified", "ERP STAMP & VERIFIED")}</div>
                             <span className="text-[8px] text-slate-450 dark:text-slate-500 normal-case block mt-0.5">AUTOGENERATED</span>
                           </div>
                         </div>
@@ -1624,16 +1624,16 @@ export default function JournalReport({
           {/* Header Section */}
           <div className="flex justify-between items-start border-b-2 border-slate-950 pb-3">
             <div className="text-left">
-              <h1 className="text-xs font-black tracking-wide text-slate-900 uppercase">DAMAN BUSINESS GROUP</h1>
-              <p className="text-[8px] uppercase tracking-widest text-slate-500 font-bold mt-0.5">Enterprise List & Logistics System</p>
+              <h1 className="text-xs font-black tracking-wide text-slate-900 uppercase">{t(lang, "purchase.damaan_business_group", "Damaan Business Group")}</h1>
+              <p className="text-[8px] uppercase tracking-widest text-slate-500 font-bold mt-0.5">{t(lang, "jr.jr_enterprise_logistics_system", "Enterprise List & Logistics System")}</p>
             </div>
             <div className="text-right">
-              <h2 className="text-xs font-black tracking-wide text-slate-900 uppercase">BRANCH FINANCIAL LEDGER REPORT</h2>
-              <p className="text-[8px] uppercase tracking-wider text-slate-500 font-bold mt-0.5">JOURNAL, CREDIT, DEBIT, INDORESE & REMAINING BALANCE STATEMENT</p>
+              <h2 className="text-xs font-black tracking-wide text-slate-900 uppercase">{t(lang, "jr.jr_branch_financial_ledger_report", "BRANCH FINANCIAL LEDGER REPORT")}</h2>
+              <p className="text-[8px] uppercase tracking-wider text-slate-500 font-bold mt-0.5">{t(lang, "jr.jr_journal_statement_subtitle", "JOURNAL, CREDIT, DEBIT, INDORESE & REMAINING BALANCE STATEMENT")}</p>
             </div>
             <div className="text-right">
               <span className="text-[8px] font-mono font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded border border-slate-300">
-                REPORT ID / TRN: 101-382-38493-00101
+                {t(lang, "jr.jr_report_id_trn", "REPORT ID / TRN:")} 101-382-38493-00101
               </span>
             </div>
           </div>
@@ -1652,7 +1652,7 @@ export default function JournalReport({
                 <User className="w-3.5 h-3.5 text-slate-400" />
                 <div>
                   <p>{t(lang, "purchase.pmw_user_name_label", "User Name:")}</p>
-                  <p className="text-slate-900 font-extrabold text-[9px] mt-0.5">SUPER ADMIN</p>
+                  <p className="text-slate-900 font-extrabold text-[9px] mt-0.5">{t(lang, "purchase.pmw_super_admin", "Super Admin")}</p>
                 </div>
               </div>
               <div className="flex items-center gap-1.5">
@@ -1672,14 +1672,14 @@ export default function JournalReport({
               <div className="flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5 text-slate-400" />
                 <div>
-                  <p>Date:</p>
+                  <p>{t(lang, "jr.jr_date_colon", "Date:")}</p>
                   <p className="text-slate-900 font-extrabold text-[9px] mt-0.5">{new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()}</p>
                 </div>
               </div>
               <div className="flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-slate-400" />
                 <div>
-                  <p>Time:</p>
+                  <p>{t(lang, "jr.jr_time_colon", "Time:")}</p>
                   <p className="text-slate-900 font-extrabold text-[9px] mt-0.5">{new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
                 </div>
               </div>
@@ -1695,25 +1695,25 @@ export default function JournalReport({
               {/* REPORT SUMMARY */}
               <div className="space-y-1">
                 <div className="bg-[#1e3a8a] text-white px-2.5 py-1.5 rounded-t-xl text-[9px] font-black uppercase tracking-wider">
-                  Report Summary
+                  {t(lang, "jr.jr_report_summary", "Report Summary")}
                 </div>
                 <div className="border border-slate-300 rounded-b-xl p-2.5 space-y-1.5 text-[9px] bg-slate-50/20 font-bold leading-tight">
-                  <div className="flex justify-between text-slate-500"><span>Total Debit (PKR):</span><span className="text-slate-900">PKR {fmtNum(selectedRecord.amount, 2)}</span></div>
-                  <div className="flex justify-between text-slate-500"><span>Total Credit (PKR):</span><span className="text-slate-900">PKR {fmtNum(selectedRecord.amount, 2)}</span></div>
-                  <div className="flex justify-between text-slate-500"><span>Total Indorese (PKR):</span><span className="text-slate-900">PKR {fmtNum(selectedRecord.paidAmount || 0, 2)}</span></div>
-                  <div className="flex justify-between text-slate-500"><span>Total Remaining (PKR):</span><span className="text-emerald-700">PKR {fmtNum(selectedRecord.remainingAmount || 0, 2)}</span></div>
-                  <div className="flex justify-between text-slate-500"><span>Net Balance (PKR):</span><span className="text-emerald-700">PKR 0.00</span></div>
+                  <div className="flex justify-between text-slate-500"><span>{t(lang, "jr.jr_total_debit_pkr_colon", "Total Debit (PKR):")}</span><span className="text-slate-900">PKR {fmtNum(selectedRecord.amount, 2)}</span></div>
+                  <div className="flex justify-between text-slate-500"><span>{t(lang, "jr.jr_total_credit_pkr_colon", "Total Credit (PKR):")}</span><span className="text-slate-900">PKR {fmtNum(selectedRecord.amount, 2)}</span></div>
+                  <div className="flex justify-between text-slate-500"><span>{t(lang, "jr.jr_total_indorese_pkr_colon", "Total Indorese (PKR):")}</span><span className="text-slate-900">PKR {fmtNum(selectedRecord.paidAmount || 0, 2)}</span></div>
+                  <div className="flex justify-between text-slate-500"><span>{t(lang, "jr.jr_total_remaining_pkr_colon", "Total Remaining (PKR):")}</span><span className="text-emerald-700">PKR {fmtNum(selectedRecord.remainingAmount || 0, 2)}</span></div>
+                  <div className="flex justify-between text-slate-500"><span>{t(lang, "jr.jr_net_balance_pkr_colon", "Net Balance (PKR):")}</span><span className="text-emerald-700">PKR 0.00</span></div>
                 </div>
               </div>
 
               {/* CREDITED AGAINST (SOURCE) */}
               <div className="space-y-1">
                 <div className="bg-[#1e3a8a] text-white px-2.5 py-1.5 rounded-t-xl text-[9px] font-black uppercase tracking-wider">
-                  Credited Against (Source)
+                  {t(lang, "jr.jr_credited_against_source", "Credited Against (Source)")}
                 </div>
                 <div className="border border-slate-300 rounded-b-xl p-2.5 space-y-1.5 text-[9px] bg-slate-50/20 font-bold leading-tight font-sans">
-                  <div className="flex justify-between text-slate-500"><span>Source Type:</span><span className="text-slate-900">SALES INVOICE</span></div>
-                  <div className="flex justify-between text-slate-500"><span>Invoice No:</span><span className="text-slate-900 font-mono">{selectedRecord.journal_no}</span></div>
+                  <div className="flex justify-between text-slate-500"><span>{t(lang, "jr.jr_source_type_colon", "Source Type:")}</span><span className="text-slate-900">{t(lang, "jr.jr_sales_invoice_caps", "SALES INVOICE")}</span></div>
+                  <div className="flex justify-between text-slate-500"><span>{t(lang, "jr.jr_invoice_no_colon", "Invoice No:")}</span><span className="text-slate-900 font-mono">{selectedRecord.journal_no}</span></div>
                   <div className="flex justify-between text-slate-500"><span>{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span><span className="text-slate-900 font-mono">1101-002</span></div>
                   <div className="flex justify-between text-slate-500"><span>{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span><span className="text-slate-900 uppercase truncate max-w-[100px]" title={selectedRecord.salesAccount}>{selectedRecord.salesAccount || "INTERNATIONAL EXPORT SALES A/C"}</span></div>
                 </div>
@@ -1722,11 +1722,11 @@ export default function JournalReport({
               {/* DEBITED AGAINST (SOURCE) */}
               <div className="space-y-1">
                 <div className="bg-[#1e3a8a] text-white px-2.5 py-1.5 rounded-t-xl text-[9px] font-black uppercase tracking-wider">
-                  Debited Against (Source)
+                  {t(lang, "jr.jr_debited_against_source", "Debited Against (Source)")}
                 </div>
                 <div className="border border-slate-300 rounded-b-xl p-2.5 space-y-1.5 text-[9px] bg-slate-50/20 font-bold leading-tight font-sans">
-                  <div className="flex justify-between text-slate-500"><span>Source Type:</span><span className="text-slate-900">PURCHASE INVOICE</span></div>
-                  <div className="flex justify-between text-slate-500"><span>Invoice No:</span><span className="text-slate-900 font-mono">{selectedRecord.journal_no}</span></div>
+                  <div className="flex justify-between text-slate-500"><span>{t(lang, "jr.jr_source_type_colon", "Source Type:")}</span><span className="text-slate-900">{t(lang, "jr.jr_purchase_invoice_caps", "PURCHASE INVOICE")}</span></div>
+                  <div className="flex justify-between text-slate-500"><span>{t(lang, "jr.jr_invoice_no_colon", "Invoice No:")}</span><span className="text-slate-900 font-mono">{selectedRecord.journal_no}</span></div>
                   <div className="flex justify-between text-slate-500"><span>{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span><span className="text-slate-900 font-mono">5001-001</span></div>
                   <div className="flex justify-between text-slate-500"><span>{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span><span className="text-slate-900 uppercase truncate max-w-[100px]" title={selectedRecord.purchaseAccount}>{selectedRecord.purchaseAccount || "ASIAN EXPORTS A/C (DEEB)"}</span></div>
                 </div>
@@ -1735,13 +1735,13 @@ export default function JournalReport({
               {/* BALANCE AGAINST (PARTY) */}
               <div className="space-y-1">
                 <div className="bg-[#1e3a8a] text-white px-2.5 py-1.5 rounded-t-xl text-[9px] font-black uppercase tracking-wider">
-                  Balance Against (Party)
+                  {t(lang, "jr.jr_balance_against_party", "Balance Against (Party)")}
                 </div>
                 <div className="border border-slate-300 rounded-b-xl p-2.5 space-y-1.5 text-[9px] bg-slate-50/20 font-bold leading-tight">
-                  <div className="flex justify-between text-slate-500"><span>Party Name:</span><span className="text-slate-900 uppercase truncate max-w-[100px]" title={selectedRecord.party}>{selectedRecord.party}</span></div>
+                  <div className="flex justify-between text-slate-500"><span>{t(lang, "jr.jr_party_name_colon", "Party Name:")}</span><span className="text-slate-900 uppercase truncate max-w-[100px]" title={selectedRecord.party}>{selectedRecord.party}</span></div>
                   <div className="flex justify-between text-slate-500"><span>{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span><span className="text-slate-900 font-mono">1101-002</span></div>
-                  <div className="flex justify-between text-slate-500"><span>Total Due (PKR):</span><span className="text-slate-900 font-mono">PKR {fmtNum(selectedRecord.amount, 2)}</span></div>
-                  <div className="flex justify-between text-slate-500"><span>Due Date:</span><span className="text-slate-900">{fmtDate(new Date(new Date(selectedRecord.date).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10))}</span></div>
+                  <div className="flex justify-between text-slate-500"><span>{t(lang, "jr.jr_total_due_pkr_colon", "Total Due (PKR):")}</span><span className="text-slate-900 font-mono">PKR {fmtNum(selectedRecord.amount, 2)}</span></div>
+                  <div className="flex justify-between text-slate-500"><span>{t(lang, "jr.jr_due_date_colon", "Due Date:")}</span><span className="text-slate-900">{fmtDate(new Date(new Date(selectedRecord.date).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10))}</span></div>
                   <div className="flex justify-between text-slate-500 items-center">
                     <span>{t(lang, "purchase.card_status_colon", "Status:")}</span>
                     <span className="font-extrabold uppercase text-[8px] tracking-wider text-rose-600">
@@ -1754,16 +1754,16 @@ export default function JournalReport({
               {/* QUICK SUMMARY (PKR) */}
               <div className="space-y-1">
                 <div className="bg-[#1e3a8a] text-white px-2.5 py-1.5 rounded-t-xl text-[9px] font-black uppercase tracking-wider">
-                  Quick Summary (PKR)
+                  {t(lang, "jr.jr_quick_summary_pkr", "Quick Summary (PKR)")}
                 </div>
                 <div className="border border-slate-300 rounded-b-xl p-2.5 space-y-1.5 text-[9px] bg-slate-50/20 font-bold leading-tight">
                   <div className="flex justify-between text-slate-500"><span>TOTAL DEBIT</span><span>{fmtNum(selectedRecord.amount, 2)}</span></div>
                   <div className="flex justify-between text-slate-500"><span>TOTAL CREDIT</span><span>{fmtNum(selectedRecord.amount, 2)}</span></div>
-                  <div className="flex justify-between text-slate-500"><span>TOTAL INDORESE</span><span>{fmtNum(selectedRecord.paidAmount || 0, 2)}</span></div>
-                  <div className="flex justify-between text-slate-500"><span>TOTAL REMAINING</span><span>{fmtNum(selectedRecord.remainingAmount || 0, 2)}</span></div>
+                  <div className="flex justify-between text-slate-500"><span>{t(lang, "jr.jr_total_indorese_caps", "TOTAL INDORESE")}</span><span>{fmtNum(selectedRecord.paidAmount || 0, 2)}</span></div>
+                  <div className="flex justify-between text-slate-500"><span>{t(lang, "jr.jr_total_remaining_caps", "TOTAL REMAINING")}</span><span>{fmtNum(selectedRecord.remainingAmount || 0, 2)}</span></div>
                   <div className="border-t border-slate-300 my-1"></div>
                   <div className="flex justify-between text-emerald-700 font-black">
-                    <span>NET BALANCE (PKR)</span>
+                    <span>{t(lang, "jr.jr_net_balance_pkr_caps", "NET BALANCE (PKR)")}</span>
                     <span>0.00</span>
                   </div>
                 </div>
@@ -1774,7 +1774,7 @@ export default function JournalReport({
             {/* Right Column (9 cols) - The Unified Ledger Table */}
             <div className="col-span-9 space-y-3">
               <div className="bg-[#1e3a8a] text-white px-3 py-1.5 rounded-t-xl flex justify-between items-center text-[9px] font-black uppercase tracking-wider">
-                <span>Ledger Transaction Summary (All Entries in One View)</span>
+                <span>{t(lang, "jr.jr_ledger_txn_summary_title", "Ledger Transaction Summary (All Entries in One View)")}</span>
                 <span>Total Operations: {3 + (selectedRecord.payments?.length || (selectedRecord.paidAmount > 0 ? 1 : 0)) + 1}</span>
               </div>
 
@@ -1808,7 +1808,7 @@ export default function JournalReport({
                     <tr className="hover:bg-slate-50">
                       <td className="py-2 px-2.5 text-center font-bold text-slate-400">1</td>
                       <td className="py-2 px-2 text-slate-500">{selectedRecord.journey?.[0]?.branch || "Pakistan Main Branch"}</td>
-                      <td className="py-2 px-2 text-slate-500">SUPER ADMIN</td>
+                      <td className="py-2 px-2 text-slate-500">{t(lang, "purchase.pmw_super_admin", "Super Admin")}</td>
                       <td className="py-2 px-2">{fmtDate(selectedRecord.date)}</td>
                       <td className="py-2 px-2 uppercase text-[8px]">{t(lang, "nav.purchase_invoice", "Purchase Invoice")}</td>
                       <td className="py-2 px-2 font-mono font-bold">PO: {selectedRecord.journal_no}</td>
@@ -1825,7 +1825,7 @@ export default function JournalReport({
 
                     {/* Debit Total Row */}
                     <tr className="bg-slate-50 text-slate-500 font-extrabold text-[8px] uppercase tracking-wide">
-                      <td colSpan={10} className="py-1 px-2.5 text-right text-[#1e3a8a] font-black">TOTAL DEBIT ENTRIES: 1</td>
+                      <td colSpan={10} className="py-1 px-2.5 text-right text-[#1e3a8a] font-black">{t(lang, "jr.jr_total_debit_entries_prefix", "TOTAL DEBIT ENTRIES:")} 1</td>
                       <td className="py-1 px-2 text-right font-mono text-slate-800">PKR {fmtNum(selectedRecord.amount, 2)}</td>
                       <td className="py-1 px-2 text-right">-</td>
                       <td className="py-1 px-2 text-right font-mono text-slate-800">PKR {fmtNum(selectedRecord.amount, 2)}</td>
@@ -1840,9 +1840,9 @@ export default function JournalReport({
                     <tr className="hover:bg-slate-50">
                       <td className="py-2 px-2.5 text-center font-bold text-slate-400">2</td>
                       <td className="py-2 px-2 text-slate-500">{selectedRecord.journey?.[0]?.branch || "Pakistan Main Branch"}</td>
-                      <td className="py-2 px-2 text-slate-500">SUPER ADMIN</td>
+                      <td className="py-2 px-2 text-slate-500">{t(lang, "purchase.pmw_super_admin", "Super Admin")}</td>
                       <td className="py-2 px-2">{fmtDate(selectedRecord.date)}</td>
-                      <td className="py-2 px-2 uppercase text-[8px]">Sales Invoice</td>
+                      <td className="py-2 px-2 uppercase text-[8px]">{t(lang, "jr.jr_sales_invoice_word", "Sales Invoice")}</td>
                       <td className="py-2 px-2 font-mono font-bold">INV: {selectedRecord.journal_no}</td>
                       <td className="py-2 px-2.5 font-normal text-slate-500 leading-normal max-w-[200px] truncate" title={`Credit for Sales Invoice - ${selectedRecord.goods?.[0]?.name || "Goods"}`}>
                         Credit for Sales Invoice - {selectedRecord.goods?.[0]?.name || "Goods"} {fmtNum(selectedRecord.totalQuantity || selectedRecord.goods?.[0]?.quantity || 0, 0)} {selectedRecord.qtyUnit || selectedRecord.goods?.[0]?.qtyName || "Bags"}
@@ -1857,7 +1857,7 @@ export default function JournalReport({
 
                     {/* Credit Total Row */}
                     <tr className="bg-slate-50 text-slate-500 font-extrabold text-[8px] uppercase tracking-wide">
-                      <td colSpan={10} className="py-1 px-2.5 text-right text-emerald-750 font-black">TOTAL CREDIT ENTRIES: 1</td>
+                      <td colSpan={10} className="py-1 px-2.5 text-right text-emerald-750 font-black">{t(lang, "jr.jr_total_credit_entries_prefix", "TOTAL CREDIT ENTRIES:")} 1</td>
                       <td className="py-1 px-2 text-right">-</td>
                       <td className="py-1 px-2 text-right font-mono text-slate-800">PKR {fmtNum(selectedRecord.amount, 2)}</td>
                       <td className="py-1 px-2 text-right font-mono text-slate-800">PKR {fmtNum(selectedRecord.amount, 2)}</td>
@@ -1874,9 +1874,9 @@ export default function JournalReport({
                         <tr key={idx} className="hover:bg-slate-50">
                           <td className="py-2 px-2.5 text-center font-bold text-slate-400">{3 + idx}</td>
                           <td className="py-2 px-2 text-slate-500">{selectedRecord.journey?.[0]?.branch || "Pakistan Main Branch"}</td>
-                          <td className="py-2 px-2 text-slate-500">SUPER ADMIN</td>
+                          <td className="py-2 px-2 text-slate-500">{t(lang, "purchase.pmw_super_admin", "Super Admin")}</td>
                           <td className="py-2 px-2">{fmtDate(p.date)}</td>
-                          <td className="py-2 px-2 uppercase text-[8px]">Indorsement</td>
+                          <td className="py-2 px-2 uppercase text-[8px]">{t(lang, "jr.jr_indorsement_word", "Indorsement")}</td>
                           <td className="py-2 px-2 font-mono font-bold">IND-{String(idx + 1).padStart(3, '0')}</td>
                           <td className="py-2 px-2.5 font-normal text-slate-500 max-w-[200px] truncate">Indorsement to Bank - Part {idx + 1} ({p.method})</td>
                           <td className="py-2 px-2 font-mono text-[8px]">1101-002</td>
@@ -1892,9 +1892,9 @@ export default function JournalReport({
                         <tr className="hover:bg-slate-50">
                           <td className="py-2 px-2.5 text-center font-bold text-slate-400">3</td>
                           <td className="py-2 px-2 text-slate-500">{selectedRecord.journey?.[0]?.branch || "Pakistan Main Branch"}</td>
-                          <td className="py-2 px-2 text-slate-500">SUPER ADMIN</td>
+                          <td className="py-2 px-2 text-slate-500">{t(lang, "purchase.pmw_super_admin", "Super Admin")}</td>
                           <td className="py-2 px-2">{fmtDate(selectedRecord.date)}</td>
-                          <td className="py-2 px-2 uppercase text-[8px]">Indorsement</td>
+                          <td className="py-2 px-2 uppercase text-[8px]">{t(lang, "jr.jr_indorsement_word", "Indorsement")}</td>
                           <td className="py-2 px-2 font-mono font-bold">IND-001</td>
                           <td className="py-2 px-2.5 font-normal text-slate-500">Indorsement to Bank - Initial Payment</td>
                           <td className="py-2 px-2 font-mono text-[8px]">1101-002</td>
@@ -1906,7 +1906,7 @@ export default function JournalReport({
                         </tr>
                       ) : (
                         <tr>
-                          <td colSpan={13} className="py-3 text-center italic text-slate-400">No Indorsement entry logged</td>
+                          <td colSpan={13} className="py-3 text-center italic text-slate-400">{t(lang, "jr.jr_no_indorsement_logged", "No Indorsement entry logged")}</td>
                         </tr>
                       )
                     )}
@@ -1914,7 +1914,7 @@ export default function JournalReport({
                     {/* Indorsement Total Row */}
                     <tr className="bg-slate-50 text-slate-500 font-extrabold text-[8px] uppercase tracking-wide">
                       <td colSpan={10} className="py-1 px-2.5 text-right text-blue-700 font-black font-sans">
-                        TOTAL INDORESE ENTRIES: {selectedRecord.payments?.length || (selectedRecord.paidAmount > 0 ? 1 : 0)}
+                        {t(lang, "jr.jr_total_indorese_entries_prefix", "TOTAL INDORESE ENTRIES:")} {selectedRecord.payments?.length || (selectedRecord.paidAmount > 0 ? 1 : 0)}
                       </td>
                       <td className="py-1 px-2 text-right">-</td>
                       <td className="py-1 px-2 text-right font-mono text-slate-800">PKR {fmtNum(selectedRecord.paidAmount || 0, 2)}</td>
@@ -1932,7 +1932,7 @@ export default function JournalReport({
                         {3 + (selectedRecord.payments?.length || (selectedRecord.paidAmount > 0 ? 1 : 0))}
                       </td>
                       <td className="py-2 px-2 text-slate-500">{selectedRecord.journey?.[0]?.branch || "Pakistan Main Branch"}</td>
-                      <td className="py-2 px-2 text-slate-500">SUPER ADMIN</td>
+                      <td className="py-2 px-2 text-slate-500">{t(lang, "purchase.pmw_super_admin", "Super Admin")}</td>
                       <td className="py-2 px-2">{fmtDate(selectedRecord.date)}</td>
                       <td className="py-2 px-2 uppercase text-[8px]">{t(lang, "report.col_outstanding", "Outstanding")}</td>
                       <td className="py-2 px-2 font-mono font-bold">RB-001</td>
@@ -1947,7 +1947,7 @@ export default function JournalReport({
 
                     {/* Remaining Total Row */}
                     <tr className="bg-slate-50 text-slate-500 font-extrabold text-[8px] uppercase tracking-wide">
-                      <td colSpan={10} className="py-1 px-2.5 text-right text-purple-700 font-black font-sans">TOTAL REMAINING ENTRIES: 1</td>
+                      <td colSpan={10} className="py-1 px-2.5 text-right text-purple-700 font-black font-sans">{t(lang, "jr.jr_total_remaining_entries_prefix", "TOTAL REMAINING ENTRIES:")} 1</td>
                       <td className="py-1 px-2 text-right">-</td>
                       <td className="py-1 px-2 text-right">-</td>
                       <td className="py-1 px-2 text-right font-mono text-slate-800">PKR {fmtNum(selectedRecord.remainingAmount || 0, 2)}</td>
@@ -1960,23 +1960,23 @@ export default function JournalReport({
               {/* Final Ledger Summary Bar */}
               <div className="grid grid-cols-5 border border-slate-300 rounded-xl text-center divide-x divide-slate-300 font-bold bg-[#1e3a8a] text-white overflow-hidden">
                 <div className="p-2">
-                  <p className="text-slate-350 uppercase text-[7px]">Total Debit (PKR)</p>
+                  <p className="text-slate-350 uppercase text-[7px]">{t(lang, "jr.jr_total_debit_pkr_plain", "Total Debit (PKR)")}</p>
                   <p className="font-mono font-extrabold text-[10px] mt-0.5">PKR {fmtNum(selectedRecord.amount, 2)}</p>
                 </div>
                 <div className="p-2">
-                  <p className="text-slate-350 uppercase text-[7px]">Total Credit (PKR)</p>
+                  <p className="text-slate-350 uppercase text-[7px]">{t(lang, "jr.jr_total_credit_pkr_plain", "Total Credit (PKR)")}</p>
                   <p className="font-mono font-extrabold text-[10px] mt-0.5">PKR {fmtNum(selectedRecord.amount, 2)}</p>
                 </div>
                 <div className="p-2">
-                  <p className="text-slate-350 uppercase text-[7px]">Total Indorese (PKR)</p>
+                  <p className="text-slate-350 uppercase text-[7px]">{t(lang, "jr.jr_total_indorese_pkr_plain", "Total Indorese (PKR)")}</p>
                   <p className="font-mono font-extrabold text-[10px] mt-0.5">PKR {fmtNum(selectedRecord.paidAmount || 0, 2)}</p>
                 </div>
                 <div className="p-2">
-                  <p className="text-slate-350 uppercase text-[7px]">Total Remaining (PKR)</p>
+                  <p className="text-slate-350 uppercase text-[7px]">{t(lang, "jr.jr_total_remaining_pkr_plain", "Total Remaining (PKR)")}</p>
                   <p className="font-mono font-extrabold text-[10px] mt-0.5">PKR {fmtNum(selectedRecord.remainingAmount || 0, 2)}</p>
                 </div>
                 <div className="p-2 bg-emerald-600">
-                  <p className="text-emerald-100 uppercase text-[7px]">Net Balance (PKR)</p>
+                  <p className="text-emerald-100 uppercase text-[7px]">{t(lang, "jr.jr_net_balance_pkr_plain", "Net Balance (PKR)")}</p>
                   <p className="font-mono text-xs font-black mt-0.5 text-white">0.00</p>
                 </div>
               </div>
@@ -1997,13 +1997,13 @@ export default function JournalReport({
                 <div className="space-y-1.5">
                   <div className="flex justify-between"><span className="text-slate-400">{t(lang, "purchase.f_payment_terms", "Payment Terms:")}</span><span className="text-slate-800 uppercase">{selectedRecord.paymentCondition || "CREDIT (30 DAYS)"}</span></div>
                   <div className="flex justify-between"><span className="text-slate-400">{t(lang, "purchase.f_exchange_rate", "Exchange Rate:")}</span><span className="text-slate-850 font-mono">{fmtNum(selectedRecord.exchangeRate || 1, 4)}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Total Invoice (USD):</span><span className="text-slate-850">USD {fmtNum(selectedRecord.amount / (selectedRecord.exchangeRate || 1), 2)}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Total Invoice (PKR):</span><span className="text-slate-850">PKR {fmtNum(selectedRecord.amount, 2)}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_total_invoice_usd_colon", "Total Invoice (USD):")}</span><span className="text-slate-850">USD {fmtNum(selectedRecord.amount / (selectedRecord.exchangeRate || 1), 2)}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_total_invoice_pkr_colon", "Total Invoice (PKR):")}</span><span className="text-slate-850">PKR {fmtNum(selectedRecord.amount, 2)}</span></div>
                 </div>
                 <div className="space-y-1.5 pl-6 border-l border-slate-300">
-                  <div className="flex justify-between"><span className="text-slate-400">Cleared Amount:</span><span className="text-slate-850">USD {fmtNum((selectedRecord.paidAmount || 0) / (selectedRecord.exchangeRate || 1), 2)} / PKR {fmtNum(selectedRecord.paidAmount || 0, 2)}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_cleared_amount_colon", "Cleared Amount:")}</span><span className="text-slate-850">USD {fmtNum((selectedRecord.paidAmount || 0) / (selectedRecord.exchangeRate || 1), 2)} / PKR {fmtNum(selectedRecord.paidAmount || 0, 2)}</span></div>
                   <div className="flex justify-between"><span className="text-rose-600">{t(lang, "lp.remaining_balance_s", "Remaining Balance:")}</span><span className="text-rose-600 font-mono">USD {fmtNum((selectedRecord.remainingAmount || 0) / (selectedRecord.exchangeRate || 1), 2)} / PKR {fmtNum(selectedRecord.remainingAmount || 0, 2)}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-450">Remaining Due Date:</span><span className="text-slate-850">{fmtDate(new Date(new Date(selectedRecord.date).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10))}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-450">{t(lang, "jr.jr_remaining_due_date_colon", "Remaining Due Date:")}</span><span className="text-slate-850">{fmtDate(new Date(new Date(selectedRecord.date).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10))}</span></div>
                 </div>
               </div>
             </div>
@@ -2013,14 +2013,14 @@ export default function JournalReport({
               <div className="flex flex-col justify-between">
                 <div className="h-6 flex items-center justify-center italic text-slate-500 font-serif normal-case">{t(lang, "nav.super_admin_menu", "Super Admin")}</div>
                 <div>
-                  <div className="border-t border-slate-400 pt-1 text-slate-650 font-extrabold">SUPER ADMIN (AUTHORIZED)</div>
-                  <span className="text-[8px] text-slate-450 normal-case block mt-0.5">SIGNATURE & DATE</span>
+                  <div className="border-t border-slate-400 pt-1 text-slate-650 font-extrabold">{t(lang, "jr.jr_super_admin_authorized", "SUPER ADMIN (AUTHORIZED)")}</div>
+                  <span className="text-[8px] text-slate-450 normal-case block mt-0.5">{t(lang, "jr.jr_signature_date", "SIGNATURE & DATE")}</span>
                 </div>
               </div>
               <div className="flex flex-col justify-between items-center">
                 <CheckCircle className="w-6 h-6 text-[#10b981] my-auto" />
                 <div>
-                  <div className="border-t border-slate-400 w-full pt-1 text-slate-650 font-extrabold">ERP REGISTER (AUTOGENERATED)</div>
+                  <div className="border-t border-slate-400 w-full pt-1 text-slate-650 font-extrabold">{t(lang, "jr.jr_erp_register_autogenerated", "ERP REGISTER (AUTOGENERATED)")}</div>
                   <span className="text-[8px] text-[#10b981] tracking-widest block font-black mt-0.5">VERIFIED</span>
                 </div>
               </div>

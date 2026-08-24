@@ -124,8 +124,35 @@ const AUTHENTIC_NAMES_DICT: Record<string, Record<string, string>> = {
   "damaan": { ur: "دامان", ar: "دامان", fa: "دامان", ps: "دامان" },
   "dgt": { ur: "ڈی جی ٹی", ar: "دي جي تي", fa: "دی جی تی", ps: "ډي جي ټي" },
   "llc": { ur: "ایل ایل سی", ar: "ذ.م.م", fa: "با مسئولیت محدود", ps: "LLC" },
-  "fzco": { ur: "ایف زیڈ سی او", ar: "ش.م.ح", fa: "FZCO", ps: "FZCO" }
+  "fzco": { ur: "ایف زیڈ سی او", ar: "ش.م.ح", fa: "FZCO", ps: "FZCO" },
+  "njyb": { ur: "نجیب", ar: "نجيب", fa: "نجیب", ps: "نجيب" },
+  "najeeb": { ur: "نجیب", ar: "نجيب", fa: "نجیب", ps: "نجيب" },
+  "aind": { ur: "اینڈ", ar: "و", fa: "و", ps: "او" },
+  "and": { ur: "اینڈ", ar: "و", fa: "و", ps: "او" }
 };
+
+function romanizeToArabicSkeleton(word: string): string {
+  const lower = word.toLowerCase();
+  let out = "";
+  let i = 0;
+  while (i < lower.length) {
+    const rest = lower.slice(i);
+    let matched = false;
+    for (const [seq, rep] of DIGRAPHS) {
+      if (rest.startsWith(seq)) {
+        out += rep;
+        i += seq.length;
+        matched = true;
+        break;
+      }
+    }
+    if (matched) continue;
+    const ch = lower[i];
+    out += SINGLES[ch] ?? ch;
+    i += 1;
+  }
+  return out;
+}
 
 function romanizeWord(word: string, lang: SupportedLanguage): string {
   const clean = word.toLowerCase().trim();

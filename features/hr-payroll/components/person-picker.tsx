@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useMemo, useState } from "react";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { SimpleModal } from "@/components/ui/simple-modal";
@@ -8,6 +6,8 @@ import { CustomerForm } from "@/features/customers/components/customer-form";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
+import { transliterateProperNoun } from "@/lib/i18n/transliteration";
+import { localizeTerm } from "@/features/companies/components/company-registry";
 
 type PersonRow = {
   id: string;
@@ -33,23 +33,27 @@ export function personFullName(row: { first_name?: string | null; last_name?: st
   return structured || "";
 }
 
-function toOption(row: PersonRow): SearchSelectOption {
-  const name = personFullName(row);
-  const father = (row as any).father_name || ((row as any).contact_person && (row as any).contact_person !== name ? (row as any).contact_person : null);
-  const company = row.company_name && row.company_name !== name ? row.company_name : null;
+function toOption(row: PersonRow, lang: string = "en"): SearchSelectOption {
+  const rawName = personFullName(row);
+  const name = transliterateProperNoun(rawName, lang);
+  const fatherRaw = (row as any).father_name || ((row as any).contact_person && (row as any).contact_person !== rawName ? (row as any).contact_person : null);
+  const father = fatherRaw && !fatherRaw.startsWith("+") && isNaN(Number(fatherRaw)) ? transliterateProperNoun(fatherRaw, lang) : null;
+  const companyRaw = row.company_name && row.company_name !== rawName ? row.company_name : null;
+  const company = companyRaw ? localizeTerm(companyRaw, lang) : null;
   
-  // Format clean name display without messy phone numbers
+  // Format clean name display with proper localization
   let extraBits: string[] = [];
-  if (father && !father.startsWith("+") && isNaN(Number(father))) {
-    extraBits.push(`ولدیت: ${father}`);
+  if (father) {
+    const fatherPrefix = lang === "ur" ? "ولدیت:" : lang === "ar" ? "ابن:" : lang === "fa" ? "فرزند:" : lang === "ps" ? "د پلار نوم:" : "s/o:";
+    extraBits.push(`${fatherPrefix} ${father}`);
   } else if (company) {
     extraBits.push(company);
   }
   
   const label = extraBits.length > 0 ? `${name} (${extraBits.join(" · ")})` : name;
   const keywords = [
-    name, row.customer_name, row.first_name, row.last_name,
-    father, row.company_name
+    name, rawName, row.customer_name, row.first_name, row.last_name,
+    father, fatherRaw, company, companyRaw
   ].filter(Boolean).join(" ");
   return { value: row.id, label, keywords };
 }
@@ -171,7 +175,7 @@ export function PersonPicker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, lang]);
 
-  const options: SearchSelectOption[] = useMemo(() => people.map(toOption), [people]);
+  const options: SearchSelectOption[] = useMemo(() => people.map((p) => toOption(p, lang)), [people, lang]);
   const [viewPerson, setViewPerson] = useState<PersonRow | null>(null);
 
   return (
@@ -203,54 +207,58 @@ export function PersonPicker({
       {/* View Person Modal */}
       {viewPerson ? (
         <SimpleModal
-          title={`${t(lang, "hr.pp_view_title", "Person / Account Details")} — ${viewPerson.customer_name}`}
+          title={`${t(lang, "hr.pp_view_title", "Person / Account Details")} — ${transliterateProperNoun(viewPerson.customer_name, lang)}`}
           onClose={() => setViewPerson(null)}
-          className="w-[96vw] max-w-[700px] max-h-[85vh] overflow-y-auto rounded-2xl font-sans"
+          className="w-[96vw] max-w-2xl max-h-[85vh] overflow-y-auto rounded-3xl font-sans shadow-2xl"
         >
-          <div className="p-4 space-y-4 text-xs text-slate-800 dark:text-slate-200">
-            <div className="flex items-center justify-between bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 p-4 rounded-xl">
+          <div className="p-5 space-y-4 text-xs text-slate-800 dark:text-slate-200">
+            <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl">
               <div>
-                <h3 className="text-base font-black uppercase tracking-wide">{viewPerson.customer_name}</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-300 font-medium">{t(lang, "hr.pp_company", "Company")}: {viewPerson.company_name || t(lang, "hr.pp_independent", "Independent Account")}</p>
+                <h3 className="text-base font-black tracking-wide text-slate-900 dark:text-white">
+                  {transliterateProperNoun(viewPerson.customer_name, lang)}
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                  {t(lang, "hr.pp_company", "Company")}: <span className="font-bold text-slate-700 dark:text-slate-300">{viewPerson.company_name ? localizeTerm(viewPerson.company_name, lang) : t(lang, "hr.pp_independent", "Independent Account")}</span>
+                </p>
               </div>
               <div className="text-right">
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-500 text-slate-950">
+                <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-900">
                   {t(lang, "hr.pp_active_master", "Active Master")}
                 </span>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 bg-slate-50/50 dark:bg-slate-900/50">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 bg-white dark:bg-slate-950">
               <div>
                 <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "hr.pp_contact_person", "Contact Person")}</span>
-                <span className="font-bold text-slate-800 dark:text-white">{viewPerson.contact_person || "-"}</span>
+                <span className="font-bold text-slate-800 dark:text-white text-sm">{viewPerson.contact_person ? transliterateProperNoun(viewPerson.contact_person, lang) : "—"}</span>
               </div>
               <div>
                 <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "hr.pp_mobile_phone", "Mobile Phone")}</span>
-                <span className="font-mono font-bold text-slate-800 dark:text-white">{viewPerson.mobile || "-"}</span>
+                <span className="font-mono font-bold text-slate-800 dark:text-white text-sm" dir="ltr">{viewPerson.mobile || "—"}</span>
               </div>
               <div>
                 <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "sed.f_whatsapp", "WhatsApp")}</span>
-                <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{viewPerson.whatsapp || viewPerson.mobile || "-"}</span>
+                <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-sm" dir="ltr">{viewPerson.whatsapp || viewPerson.mobile || "—"}</span>
               </div>
-              <div>
+              <div className="sm:col-span-2">
                 <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "hr.pp_email_address", "Email Address")}</span>
-                <span className="font-bold text-slate-800 dark:text-white">{viewPerson.email || "-"}</span>
+                <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-xs" dir="ltr">{viewPerson.email || "—"}</span>
               </div>
-              <div>
+              <div className="sm:col-span-3">
                 <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "hr.pp_address_location", "Address / Location")}</span>
-                <span className="font-bold text-slate-800 dark:text-white">{viewPerson.address || "-"}</span>
+                <span className="font-medium text-slate-800 dark:text-slate-200 text-xs">{viewPerson.address ? localizeTerm(viewPerson.address, lang) : "—"}</span>
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
               <button
                 type="button"
                 onClick={() => {
                   setEditPersonId(viewPerson.id);
                   setViewPerson(null);
                 }}
-                className="px-3.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 rounded-xl transition"
+                className="px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 rounded-xl transition"
               >
                 {t(lang, "hr.pp_edit_master", "Edit Master")}
               </button>
@@ -258,7 +266,7 @@ export function PersonPicker({
                 <button
                   type="button"
                   onClick={() => setViewPerson(null)}
-                  className="px-3.5 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-700 transition"
+                  className="px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 transition"
                 >
                   {t(lang, "common.close", "Close")}
                 </button>
@@ -268,7 +276,7 @@ export function PersonPicker({
                     onValueChange(viewPerson.id);
                     setViewPerson(null);
                   }}
-                  className="px-4 py-1.5 text-xs font-extrabold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition shadow-xs"
+                  className="px-5 py-2 text-xs font-black text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition shadow-xs"
                 >
                   {t(lang, "hr.pp_select_this_person", "Select This Person")}
                 </button>

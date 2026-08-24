@@ -5,6 +5,8 @@ import { SearchSelect } from "@/components/ui/search-select";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { WarehouseForm } from "@/features/warehouses/components/warehouse-form";
 import { fetchWarehouses, type WarehouseRecord } from "@/features/warehouses/warehouse-api";
+import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 export type WarehousePickerProps = {
   value?: string;
@@ -19,10 +21,12 @@ export function WarehousePicker({
   value,
   onValueChange,
   onSelectRecord,
-  label = "Warehouse",
+  label,
   placeholder,
   disabled
 }: WarehousePickerProps) {
+  const lang = useActiveLanguage();
+  const resolvedLabel = label ?? t(lang, "whf.warehouse_word", "Warehouse");
   const [warehouses, setWarehouses] = useState<WarehouseRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [openCreate, setOpenCreate] = useState(false);
@@ -55,9 +59,9 @@ export function WarehousePicker({
   return (
     <>
       <SearchSelect
-        label={label}
+        label={resolvedLabel}
         value={value ?? ""}
-        placeholder={placeholder ?? (loading ? "Loading warehouses..." : "Search warehouse by name, type...")}
+        placeholder={placeholder ?? (loading ? t(lang, "wh.loading", "Loading warehouses...") : t(lang, "wh.wp_search_warehouse_ph", "Search warehouse by name, type..."))}
         disabled={disabled || loading}
         options={options}
         onValueChange={(val) => {
@@ -65,11 +69,11 @@ export function WarehousePicker({
           const found = warehouses.find((w) => w.id === val) || null;
           onSelectRecord?.(found);
         }}
-        createLabel="New Warehouse"
+        createLabel={t(lang, "wh.new_warehouse", "New Warehouse")}
         createButtonPlacement="both"
         onCreateNew={async () => setOpenCreate(true)}
-        viewTitle="View Warehouse Details"
-        editTitle="Edit Warehouse Master"
+        viewTitle={t(lang, "wh.wp_view_warehouse_details", "View Warehouse Details")}
+        editTitle={t(lang, "wh.wp_edit_warehouse_master", "Edit Warehouse Master")}
         onViewOption={(warehouseId) => {
           const found = warehouses.find((w) => w.id === warehouseId);
           if (found) setViewWarehouse(found);
@@ -82,7 +86,7 @@ export function WarehousePicker({
       {/* View Warehouse Modal */}
       {viewWarehouse ? (
         <SimpleModal
-          title={`Warehouse Details — ${viewWarehouse.warehouse_name}`}
+          title={`${t(lang, "wh.wp_warehouse_details_dash", "Warehouse Details —")} ${viewWarehouse.warehouse_name}`}
           onClose={() => setViewWarehouse(null)}
           className="w-[96vw] max-w-[700px] max-h-[85vh] overflow-y-auto rounded-2xl font-sans"
         >
@@ -90,40 +94,40 @@ export function WarehousePicker({
             <div className="flex items-center justify-between bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 p-4 rounded-xl">
               <div>
                 <h3 className="text-base font-black uppercase tracking-wide">{viewWarehouse.warehouse_name}</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-300 font-medium">Code: {viewWarehouse.warehouse_code || viewWarehouse.id.slice(0, 8)}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-300 font-medium">{t(lang, "branch.code_prefix", "Code:")} {viewWarehouse.warehouse_code || viewWarehouse.id.slice(0, 8)}</p>
               </div>
               <div className="text-right">
                 <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-500 text-slate-950">
-                  {viewWarehouse.is_active !== false ? "Active Facility" : "Inactive"}
+                  {viewWarehouse.is_active !== false ? t(lang, "wh.wp_active_facility", "Active Facility") : t(lang, "god.inactive", "Inactive")}
                 </span>
-                <p className="text-[10px] text-slate-400 mt-1">Type: <span className="font-bold text-slate-800 dark:text-white uppercase">{viewWarehouse.warehouse_type || "general"}</span></p>
+                <p className="text-[10px] text-slate-400 mt-1">{t(lang, "acct.apv_type_colon", "Type:")} <span className="font-bold text-slate-800 dark:text-white uppercase">{viewWarehouse.warehouse_type || "general"}</span></p>
               </div>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 bg-slate-50/50 dark:bg-slate-900/50">
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">Country / City</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "creg.cp_country_city", "Country / City")}</span>
                 <span className="font-bold text-slate-800 dark:text-white">{viewWarehouse.country_name || "UAE"} {viewWarehouse.city_name ? `/ ${viewWarehouse.city_name}` : ""}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">Managed Branch</span>
-                <span className="font-bold text-slate-800 dark:text-white">{viewWarehouse.branch_name || "Main Branch"}</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "wh.wp_managed_branch", "Managed Branch")}</span>
+                <span className="font-bold text-slate-800 dark:text-white">{viewWarehouse.branch_name || t(lang, "report.scope_main_branch", "Main Branch")}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">Storage Capacity</span>
-                <span className="font-bold text-slate-800 dark:text-white">{viewWarehouse.total_capacity_tons ? `${viewWarehouse.total_capacity_tons} Tons` : "Standard Storage"}</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "wh.wp_storage_capacity", "Storage Capacity")}</span>
+                <span className="font-bold text-slate-800 dark:text-white">{viewWarehouse.total_capacity_tons ? `${viewWarehouse.total_capacity_tons} Tons` : t(lang, "wh.wp_standard_storage", "Standard Storage")}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">Address / Location</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "hr.pp_address_location", "Address / Location")}</span>
                 <span className="font-bold text-slate-800 dark:text-white">{viewWarehouse.address || viewWarehouse.area_name || "-"}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">Manager Contact</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "wh.wp_manager_contact", "Manager Contact")}</span>
                 <span className="font-bold text-slate-800 dark:text-white">{viewWarehouse.manager_name || viewWarehouse.phone_number || "-"}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">Cold Storage / Temperature</span>
-                <span className="font-bold text-slate-800 dark:text-white">{viewWarehouse.is_cold_storage ? "Cold Storage Facility" : "Ambient Storage"}</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "wh.wp_cold_storage_temperature", "Cold Storage / Temperature")}</span>
+                <span className="font-bold text-slate-800 dark:text-white">{viewWarehouse.is_cold_storage ? t(lang, "wh.wp_cold_storage_facility", "Cold Storage Facility") : t(lang, "wh.wp_ambient_storage", "Ambient Storage")}</span>
               </div>
             </div>
 
@@ -136,7 +140,7 @@ export function WarehousePicker({
                 }}
                 className="px-3.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 rounded-xl transition"
               >
-                Edit Master
+                {t(lang, "hr.pp_edit_master", "Edit Master")}
               </button>
               <div className="flex items-center gap-2">
                 <button
@@ -144,7 +148,7 @@ export function WarehousePicker({
                   onClick={() => setViewWarehouse(null)}
                   className="px-3.5 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-700 transition"
                 >
-                  Close
+                  {t(lang, "purchase.close_btn", "Close")}
                 </button>
                 <button
                   type="button"
@@ -155,7 +159,7 @@ export function WarehousePicker({
                   }}
                   className="px-4 py-1.5 text-xs font-extrabold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition shadow-xs"
                 >
-                  Select This Warehouse
+                  {t(lang, "wh.wp_select_this_warehouse", "Select This Warehouse")}
                 </button>
               </div>
             </div>
@@ -166,7 +170,7 @@ export function WarehousePicker({
       {/* Edit Warehouse Modal */}
       {editWarehouseId ? (
         <SimpleModal
-          title="Edit Warehouse — Warehouse Master Form"
+          title={t(lang, "wh.wp_edit_warehouse_dash_master_form", "Edit Warehouse — Warehouse Master Form")}
           onClose={() => setEditWarehouseId(null)}
           className="max-w-[90vw] lg:max-w-6xl max-h-[90vh] overflow-y-auto"
         >
@@ -187,7 +191,7 @@ export function WarehousePicker({
       {/* Create Warehouse Modal */}
       {openCreate ? (
         <SimpleModal
-          title="New Warehouse — Warehouse Master Form"
+          title={t(lang, "wh.wp_new_warehouse_dash_master_form", "New Warehouse — Warehouse Master Form")}
           onClose={() => setOpenCreate(false)}
           className="max-w-[90vw] lg:max-w-6xl max-h-[90vh] overflow-y-auto"
         >
