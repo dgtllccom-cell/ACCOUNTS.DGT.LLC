@@ -256,13 +256,13 @@ export function CountryProductsDashboard() {
       totalProducts: filteredProducts.length,
       activeProducts: filteredProducts.filter((row) => row.is_active).length,
       inactiveProducts: filteredProducts.filter((row) => !row.is_active).length,
-      productCategories: new Set(filteredProducts.map(productCategory)).size,
+      productCategories: new Set(filteredProducts.map((row) => productCategory(row, lang))).size,
       totalStock,
       inventoryValue: totalValue,
       lowStockProducts: filteredProducts.filter((row) => stockQty(row) > 0 && stockQty(row) <= 10).length,
       topSellingProducts: filteredProducts.filter((row) => salePrice(row) > 0).length
     };
-  }, [filteredProducts]);
+  }, [filteredProducts, lang]);
 
   return (
     <div className="space-y-5">
