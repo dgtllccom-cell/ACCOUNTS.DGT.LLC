@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { SimpleModal } from "@/components/ui/simple-modal";
-import { apiGet } from "@/lib/api/client";
+import { apiGet, apiPost } from "@/lib/api/client";
 import { CustomerForm } from "@/features/customers/components/customer-form";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
@@ -86,6 +86,52 @@ export function PersonPicker({
     }
   }
 
+  async function handleQuickCreatePerson(name: string) {
+    if (!name || !name.trim()) return;
+    setLoading(true);
+    try {
+      const trimmed = name.trim();
+      const parts = trimmed.split(/\s+/);
+      const firstName = parts[0] || trimmed;
+      const lastName = parts.length > 1 ? parts.slice(1).join(" ") : null;
+
+      const res = await apiPost<{ customer?: PersonRow; id?: string }>("/api/erp/customers", {
+        customerName: trimmed,
+        firstName,
+        lastName,
+        countryId: countryId || undefined,
+        originalLanguage: lang
+      });
+
+      const newId = res?.customer?.id || (res as any)?.id;
+      if (newId) {
+        const createdRow: PersonRow = res?.customer || {
+          id: newId,
+          customer_name: trimmed,
+          first_name: firstName,
+          last_name: lastName,
+          gender: null,
+          photo_url: null,
+          company_name: null,
+          contact_person: null,
+          mobile: null,
+          whatsapp: null,
+          email: null,
+          address: null
+        };
+        setPeople((current) => [createdRow, ...current.filter((p) => p.id !== newId)]);
+        onValueChange(newId);
+      } else {
+        await loadList();
+      }
+    } catch (err) {
+      console.error("Failed to auto-create person master:", err);
+      setOpenCreate(true);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
     loadList().catch(() => null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -139,6 +185,7 @@ export function PersonPicker({
         onEditOption={(personId) => setEditPersonId(personId)}
         createLabel={t(lang, "hr.pp_add_new_person_master", "Add New Person Master")}
         createButtonPlacement="both"
+        onCreateWithSearch={handleQuickCreatePerson}
         onCreateNew={async () => {
           setOpenCreate(true);
         }}

@@ -28,6 +28,7 @@ export function SearchSelect({
   onSearchValueChange,
   createLabel,
   onCreateNew,
+  onCreateWithSearch,
   createButtonPlacement = "below",
   triggerClassName,
   className,
@@ -50,6 +51,7 @@ export function SearchSelect({
   onSearchValueChange?: (value: string) => void;
   createLabel?: string;
   onCreateNew?: () => void | Promise<void>;
+  onCreateWithSearch?: (query: string) => void | Promise<void>;
   createButtonPlacement?: "modal" | "trigger" | "both" | "below";
   triggerClassName?: string;
   className?: string;
@@ -62,6 +64,7 @@ export function SearchSelect({
 }) {
   const language = useActiveLanguage();
   const [open, setOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState("");
   const resolvedPlaceholder = placeholder ?? uiText(language, "common.select");
   const resolvedSearchPlaceholder = searchPlaceholder ?? uiText(language, "common.search");
   const resolvedEmptyLabel = emptyLabel ?? uiText(language, "common.no_matches_found");
@@ -86,6 +89,7 @@ export function SearchSelect({
 
   function setOpenSafe(next: boolean) {
     setOpen(next);
+    if (!next) setSearchQuery("");
     onOpenChange?.(next);
   }
 
@@ -128,8 +132,6 @@ export function SearchSelect({
                   <X className="h-3 w-3" />
                 </span>
               )}
-              {/* Explicit dropdown affordance: a bordered caret button so the field reads as a
-                  selectable dropdown (not a read-only input) — consistent across the whole ERP. */}
               <span
                 aria-hidden
                 className={cn(
@@ -161,20 +163,56 @@ export function SearchSelect({
           >
             <CommandInput
               placeholder={resolvedSearchPlaceholder}
-              onValueChange={onSearchValueChange}
+              value={searchQuery}
+              onValueChange={(q) => {
+                setSearchQuery(q);
+                onSearchValueChange?.(q);
+              }}
               className="bg-slate-50 dark:bg-slate-900"
             />
             <CommandList className="bg-white dark:bg-slate-950 opacity-100 max-h-[300px] overflow-y-auto">
-              <CommandEmpty>{resolvedEmptyLabel}</CommandEmpty>
+              <CommandEmpty>
+                <div className="py-3 px-3 text-center space-y-2">
+                  <div className="text-xs text-muted-foreground">{resolvedEmptyLabel}</div>
+                  {(onCreateWithSearch || onCreateNew) && searchQuery.trim() && (
+                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                      <button
+                        type="button"
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const q = searchQuery.trim();
+                          setOpenSafe(false);
+                          if (onCreateWithSearch) {
+                            await onCreateWithSearch(q);
+                          } else if (onCreateNew) {
+                            await onCreateNew();
+                          }
+                        }}
+                        className="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition"
+                      >
+                        <span className="text-sm font-black">+</span>
+                        <span className="truncate">
+                          {language === "ur"
+                            ? `نیا شخص / ملازم ماسٹر بنائیں: "${searchQuery.trim()}"`
+                            : language === "ps"
+                            ? `نوی شخص / کارمند ماسټر جوړ کړئ: "${searchQuery.trim()}"`
+                            : language === "fa"
+                            ? `ثبت پرونده اصلی شخص جدید: "${searchQuery.trim()}"`
+                            : language === "ar"
+                            ? `إنشاء سجل شخص رئيسي جديد: "${searchQuery.trim()}"`
+                            : `+ Create New Person Master: "${searchQuery.trim()}"`}
+                        </span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </CommandEmpty>
               <CommandGroup className="bg-white dark:bg-slate-950 opacity-100">
                 {uniqueOptions.map((opt) => (
                   <CommandItem
                     key={opt.value}
-                    // Coerce to strings: cmdk runs `keywords.map(s => s.trim())` and trims the
-                    // item value, so a null/undefined value or label (real DB rows can have them)
-                    // would throw "Cannot read properties of undefined (reading 'trim')" and crash
-                    // the whole page. Normalizing here keeps one safe shared dropdown ERP-wide.
-                    value={opt.label ?? String(opt.value ?? "")} // CommandItem filters on its string value
+                    value={opt.label ?? String(opt.value ?? "")}
                     keywords={[opt.keywords ?? "", String(opt.value ?? "")]}
                     disabled={opt.disabled}
                     onSelect={() => {
@@ -235,6 +273,32 @@ export function SearchSelect({
                   </CommandItem>
                 ))}
               </CommandGroup>
+              {(onCreateWithSearch || onCreateNew) && searchQuery.trim() && !uniqueOptions.some(o => o.label.toLowerCase() === searchQuery.trim().toLowerCase()) && (
+                <>
+                  <div className="h-px bg-border my-1" />
+                  <CommandGroup>
+                    <CommandItem
+                      onSelect={async () => {
+                        const q = searchQuery.trim();
+                        setOpenSafe(false);
+                        if (onCreateWithSearch) {
+                          await onCreateWithSearch(q);
+                        } else if (onCreateNew) {
+                          await onCreateNew();
+                        }
+                      }}
+                      className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/30 flex items-center gap-2 py-2 cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
+                    >
+                      <span className="text-sm font-bold">+</span>
+                      <span>
+                        {language === "ur"
+                          ? `نیا شخص شامل کریں: "${searchQuery.trim()}"`
+                          : `+ Create New Person: "${searchQuery.trim()}"`}
+                      </span>
+                    </CommandItem>
+                  </CommandGroup>
+                </>
+              )}
               {onCreateNew && (
                 <>
                   <div className="h-px bg-border my-1" />
