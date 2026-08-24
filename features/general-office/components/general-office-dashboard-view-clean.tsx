@@ -675,66 +675,68 @@ export function GeneralOfficeDashboardView() {
 
   return (
     <div className={cn("space-y-6 pb-16 min-h-screen", isRtl && "text-right")} dir={isRtl ? "rtl" : "ltr"}>
-      {/* ── Top Header with Controls matching Reference Image 2 ── */}
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
-        {/* Left Title & Icon */}
-        <div className="flex items-center gap-3">
-          <div className="h-11 w-11 rounded-2xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-200/60 dark:border-purple-900 shrink-0">
-            <Users className="h-6 w-6" />
+      {/* ── Streamlined Compact Top Header & Controls Toolbar ── */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
+        {/* Left: Compact Title & Module Info */}
+        <div className="flex items-center gap-2.5">
+          <div className="h-9 w-9 rounded-xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-200/60 dark:border-purple-900 shrink-0">
+            <Users className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
+            <h1 className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
               {t.title}
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                {employees.length} {t.activeStaff}
+              </span>
             </h1>
-            <p className="text-xs text-muted-foreground">
-              {t.subtitle}
-            </p>
           </div>
         </div>
 
-        {/* Right Filter & Action Controls Cluster */}
+        {/* Right: Unified Search, Filters & Action Buttons */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* Country Dropdown */}
-          <div className="flex flex-col">
-            <span className="text-[9px] font-bold text-muted-foreground uppercase px-1">Country</span>
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/50 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-            >
-              <option value="">All Countries</option>
-              <option value="pk">Pakistan</option>
-              <option value="uae">United Arab Emirates</option>
-              <option value="af">Afghanistan</option>
-            </select>
+          {/* Integrated Search Input */}
+          <div className="relative min-w-[200px] sm:min-w-[240px]">
+            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t.searchPlaceholder || "Search employees, code, name..."}
+              className="h-8.5 pl-8.5 pr-2.5 text-xs bg-slate-50/70 dark:bg-slate-950 border-slate-200 dark:border-slate-700 rounded-xl"
+            />
           </div>
 
-          {/* Branch Dropdown */}
-          <div className="flex flex-col">
-            <span className="text-[9px] font-bold text-muted-foreground uppercase px-1">Stadium / Branch</span>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/50 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-            >
-              <option value="">All Branches</option>
-              <option value="karachi">Karachi Main</option>
-              <option value="lahore">Lahore City</option>
-              <option value="dubai">Dubai Main Hub</option>
-            </select>
-          </div>
+          {/* Category Filter */}
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+          >
+            <option value="">{t.allCategories || "All Categories"}</option>
+            <option value="Country Owner">Country Owner / Head</option>
+            <option value="Branch Owner">Branch Owner / Partner</option>
+            <option value="Company Owner">Company Owner</option>
+            <option value="Manager">{tr("Manager")}</option>
+            <option value="Normal Staff">{tr("Normal Staff")}</option>
+            <option value="Employee">{tr("Employee")}</option>
+            <option value="Others">{tr("Others")}</option>
+          </select>
 
-          {/* Date Picker Button */}
-          <div className="flex flex-col">
-            <span className="text-[9px] font-bold text-muted-foreground uppercase px-1">Date Range</span>
-            <div className="h-8.5 flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/50 px-2.5 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
-              <Calendar className="h-3.5 w-3.5 text-slate-500" />
-              <span>{dateRange.from && dateRange.to ? `${dateRange.from} - ${dateRange.to}` : "All Dates (2026)"}</span>
-            </div>
-          </div>
+          {/* Status Filter */}
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+          >
+            <option value="">{t.allStatuses || "All Statuses"}</option>
+            <option value="Active">{t.active || "Active"}</option>
+            <option value="Inactive">{t.inactive || "Inactive"}</option>
+            <option value="On Leave">{t.onLeave || "On Leave"}</option>
+            <option value="Suspended">{t.suspended || "Suspended"}</option>
+          </select>
 
           {/* Quick Date Presets */}
-          <div className="flex items-center gap-1 self-end">
+          <div className="hidden sm:flex items-center gap-1">
             <button
               type="button"
               onClick={() => setDateRange(computeRange("day", iso(new Date())))}
@@ -759,7 +761,7 @@ export function GeneralOfficeDashboardView() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-1.5 self-end">
+          <div className="flex items-center gap-1.5">
             <Button
               type="button"
               variant="outline"
@@ -774,7 +776,7 @@ export function GeneralOfficeDashboardView() {
                 setSelectedEmployeeId(null);
                 setShowFormModal(true);
               }}
-              className="h-8.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 gap-1.5 shadow-sm"
+              className="h-8.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3.5 gap-1.5 shadow-sm"
             >
               <UserPlus className="h-3.5 w-3.5" />
               {t.registerBtn}
@@ -908,61 +910,7 @@ export function GeneralOfficeDashboardView() {
         {/* TAB 1 & 2: EMPLOYEE MASTER SETUP & MANAGEMENT TABLE DIRECTORY */}
         {(activeTab === "master-setup" || activeTab === "management") && (
           <div className="space-y-4">
-            {/* ── Search, Categories, Statuses & More Filters Toolbar matching Reference Image 2 ── */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
-        <div className="relative flex-1 w-full">
-          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={t.searchPlaceholder}
-            className="h-9.5 pl-10 text-xs bg-slate-50/50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-xl"
-          />
-        </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="h-9.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
-          >
-            <option value="">{t.allCategories}</option>
-            <option value="Manager">{tr("Manager")}</option>
-            <option value="Normal Staff">{tr("Normal Staff")}</option>
-            <option value="Employee">{tr("Employee")}</option>
-            <option value="Others">{tr("Others")}</option>
-          </select>
-
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-9.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
-          >
-            <option value="">{t.allStatuses}</option>
-            <option value="Active">{t.active}</option>
-            <option value="Inactive">{t.inactive}</option>
-            <option value="On Leave">{t.onLeave}</option>
-            <option value="Suspended">{t.suspended}</option>
-          </select>
-
-          <Button
-            type="button"
-            variant="outline"
-            className="h-9.5 rounded-xl border-slate-200 text-xs font-semibold px-3 gap-1.5 text-slate-700 dark:border-slate-800 dark:text-slate-300"
-          >
-            <Filter className="h-3.5 w-3.5" />
-            More Filters
-          </Button>
-
-          <button
-            type="button"
-            className="h-9.5 w-9.5 rounded-xl border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900"
-          >
-            <MoreVertical className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
 
       {/* ── EMPLOYEES LIST TABLE CARD matching Reference Image 2 ── */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs overflow-hidden">
