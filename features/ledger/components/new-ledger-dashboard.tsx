@@ -28,6 +28,7 @@ import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-se
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { t } from "@/lib/i18n/ui";
 
 type LookupResponse = {
   found: boolean;
@@ -484,7 +485,7 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
             <SearchSelect
               label=""
               value={ledgerId}
-              placeholder="Search or select account..."
+              placeholder={t(activeLang, "ledger.nld_search_account_ph", "Search or select account...")}
               options={ledgerOptions}
               onValueChange={(value) => {
                 setLedgerId(value);
@@ -496,7 +497,7 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
             <SearchSelect
               label=""
               value={selectedCountry}
-              placeholder="All Countries"
+              placeholder={t(activeLang, "common.all_countries", "All Countries")}
               options={countryOptions}
               onValueChange={(value) => {
                 setSelectedCountry(value);
@@ -508,7 +509,7 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
             <SearchSelect
               label=""
               value={selectedBranch}
-              placeholder="All Branches"
+              placeholder={t(activeLang, "common.all_branches", "All Branches")}
               options={branchOptions}
               onValueChange={(value) => {
                 setSelectedBranch(value);
@@ -520,7 +521,7 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
             <SearchSelect
               label=""
               value={selectedUser}
-              placeholder="All Users"
+              placeholder={t(activeLang, "report.filter_all_users", "All Users")}
               options={userOptions}
               onValueChange={(value) => {
                 setSelectedUser(value);
@@ -540,11 +541,11 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
             {dateDropdownOpen ? (
               <div className="absolute right-0 md:left-0 mt-2 z-30 w-64 p-3 bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100 rounded-lg border border-slate-200 dark:border-slate-800 shadow-xl space-y-3">
                 <div className="space-y-1">
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">From Date</span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">{t(activeLang, "bankroz.from_date", "From Date")}</span>
                   <Input type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} className="h-9 text-xs" />
                 </div>
                 <div className="space-y-1">
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">To Date</span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">{t(activeLang, "bankroz.to_date", "To Date")}</span>
                   <Input type="date" value={toDate} onChange={(event) => setToDate(event.target.value)} className="h-9 text-xs" />
                 </div>
                 <div className="flex items-center gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
@@ -560,7 +561,7 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
                       if (ledgerId) void loadAccountById(ledgerId);
                     }}
                   >
-                    Reset
+                    {t(activeLang, "common.reset", "Reset")}
                   </Button>
                   <Button
                     type="button"
@@ -571,7 +572,7 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
                       if (ledgerId) void loadAccountById(ledgerId);
                     }}
                   >
-                    Apply
+                    {t(activeLang, "god.apply", "Apply")}
                   </Button>
                 </div>
               </div>
@@ -590,15 +591,15 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
           <div className="relative ml-auto">
             <Button type="button" variant="outline" className="h-10 gap-2" onClick={() => setActionsOpen((value) => !value)}>
               <MoreVertical className="h-4 w-4" />
-              Actions
+              {t(activeLang, "form.actions", "Actions")}
             </Button>
             {actionsOpen ? (
               <div className="absolute right-0 top-full z-30 mt-2 w-48 overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-xl">
                 <button type="button" className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-muted" onClick={printLedger}>
-                  <Printer className="h-4 w-4" /> Print
+                  <Printer className="h-4 w-4" /> {t(activeLang, "report.builder_print", "Print")}
                 </button>
                 <button type="button" className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-muted" onClick={downloadCsv}>
-                  <DownloadActionIcon className="h-4 w-4" /> Export CSV
+                  <DownloadActionIcon className="h-4 w-4" /> {t(activeLang, "report.builder_export_csv", "Export CSV")}
                 </button>
                 <button type="button" className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-muted" onClick={printLedger}>
                   <FileText className="h-4 w-4" /> PDF
@@ -621,7 +622,7 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
             <div className="flex flex-col gap-1 md:flex-row md:items-end md:justify-between">
               <div>
                 <h1 className="text-2xl font-semibold tracking-tight text-cyan-600 dark:text-cyan-300">
-                  Ledger Statement
+                  {t(activeLang, "ledger.nld_ledger_statement", "Ledger Statement")}
                 </h1>
                 <p className="text-xs text-muted-foreground">
                   {th("Status")}: {th("Active")} | {th("Created")}: {account ? fmtDate(account.createdAt || (account as any)?.createdDate || lines[0]?.createdAt || new Date().toISOString()) : "-"}
@@ -634,32 +635,32 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
           </div>
 
           <div className="grid gap-0 border-b lg:grid-cols-4">
-            <InfoPanel title="Account Details" accent="cyan">
-              <InfoRow label="A/c Name" value={safeText(account?.accountName)} strong />
-              <InfoRow label="A/c Number" value={safeText(account?.accountCode)} strong />
-              <InfoRow label="Manual Ref" value={safeText(account?.manualReferenceNumber)} />
-              <InfoRow label="Customer No" value={safeText(account?.customerNumber)} />
-              <InfoRow label="Category" value={safeText(account?.accountKind)} />
-              <InfoRow label="Currency" value={safeText(account?.ledgerCurrency)} strong />
-              <InfoRow label="Ledger" value={safeText(account?.ledgerCode)} strong />
+            <InfoPanel title={t(activeLang, "roz.col_account_details", "Account Details")} accent="cyan">
+              <InfoRow label={t(activeLang, "ledger.ac_name", "A/c Name")} value={safeText(account?.accountName)} strong />
+              <InfoRow label={t(activeLang, "ledger.ac_number", "A/c Number")} value={safeText(account?.accountCode)} strong />
+              <InfoRow label={t(activeLang, "purchase.card_manual_ref_label", "Manual Ref")} value={safeText(account?.manualReferenceNumber)} />
+              <InfoRow label={t(activeLang, "roz.cef_customer_no", "Customer No")} value={safeText(account?.customerNumber)} />
+              <InfoRow label={t(activeLang, "god.asset_category", "Category")} value={safeText(account?.accountKind)} />
+              <InfoRow label={t(activeLang, "hr.f_currency", "Currency")} value={safeText(account?.ledgerCurrency)} strong />
+              <InfoRow label={t(activeLang, "hr.l_ledger", "Ledger")} value={safeText(account?.ledgerCode)} strong />
             </InfoPanel>
 
-            <InfoPanel title="Company Details" accent="blue">
-              <InfoRow label="Company Name" value={account?.companyName ? account.companyName : (account ? "Not Assigned" : "-")} />
-              <InfoRow label="Country" value={safeText(account?.countryName)} />
-              <InfoRow label="Main Branch" value={safeText(account?.countryBranchName)} />
-              <InfoRow label="City Branch" value={safeText(account?.cityBranchName)} />
-              <InfoRow label="State / City" value={`${safeText(account?.stateName)} / ${safeText(account?.cityName)}`} />
-              <InfoRow label="Address" value={safeText(account?.address)} />
+            <InfoPanel title={t(activeLang, "branch.section_company_details", "Company Details")} accent="blue">
+              <InfoRow label={t(activeLang, "branch.row_company_name", "Company Name")} value={account?.companyName ? account.companyName : (account ? "Not Assigned" : "-")} />
+              <InfoRow label={t(activeLang, "report.country", "Country")} value={safeText(account?.countryName)} />
+              <InfoRow label={t(activeLang, "report.scope_main_branch", "Main Branch")} value={safeText(account?.countryBranchName)} />
+              <InfoRow label={t(activeLang, "report.scope_city_branch", "City Branch")} value={safeText(account?.cityBranchName)} />
+              <InfoRow label={t(activeLang, "ledger.state_city", "State / City")} value={`${safeText(account?.stateName)} / ${safeText(account?.cityName)}`} />
+              <InfoRow label={t(activeLang, "purchase.f_address", "Address")} value={safeText(account?.address)} />
             </InfoPanel>
 
-            <InfoPanel title="Ledger Summary" accent="indigo">
-              <InfoRow label="Entries" value={String(totals.entries)} />
+            <InfoPanel title={t(activeLang, "ledger.summary", "Ledger Summary")} accent="indigo">
+              <InfoRow label={t(activeLang, "bankroz.entries", "Entries")} value={String(totals.entries)} />
               <InfoRow label="Dr" value={fmtNumber(totals.debit || account?.debitTotal)} danger />
               <InfoRow label="Cr" value={fmtNumber(totals.credit || account?.creditTotal)} success />
-              <InfoRow label="Opening" value={fmtBalance(openingBalance, account?.normalBalance).text} />
+              <InfoRow label={t(activeLang, "report.col_opening", "Opening")} value={fmtBalance(openingBalance, account?.normalBalance).text} />
               <InfoRow 
-                label="Balance" 
+                label={t(activeLang, "cdash.col_balance", "Balance")} 
                 value={fmtBalance(totals.balance || account?.currentBalance || 0, account?.normalBalance).text} 
                 success={fmtBalance(totals.balance || account?.currentBalance || 0, account?.normalBalance).isCr}
                 danger={fmtBalance(totals.balance || account?.currentBalance || 0, account?.normalBalance).isDr}
@@ -668,18 +669,18 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
               {isSuperAdmin && <InfoRow label="1 USD" value="Rate stored per posting" />}
               {account && totals.entries === 0 && (
                 <div className="mt-2 rounded-md bg-amber-50 dark:bg-amber-950/40 p-1.5 text-[10px] text-amber-800 dark:text-amber-300 font-medium text-center">
-                  {th("No ledger entries available for this account.")}
+                  {t(activeLang, "ledger.nld_no_entries", "No ledger entries available for this account.")}
                 </div>
               )}
             </InfoPanel>
 
-            <InfoPanel title="Session / Login Details" accent="violet">
-              <InfoRow label="Session Branch" value={branchLabel(account)} strong />
-              <InfoRow label="Login Date" value={new Date().toLocaleDateString()} />
-              <InfoRow label="Login Time" value={new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} />
-              <InfoRow label="User Name" value={safeText(session?.user?.fullName || (session as any)?.fullName || "Super Admin")} strong />
-              <InfoRow label="User ID" value={safeText(session?.user?.id || (session as any)?.userId || (session?.user as any)?.user_id || "USR-SA-001")} />
-              <InfoRow label="System" value="ERP / FMS" />
+            <InfoPanel title={t(activeLang, "ledger.session_details", "Session / Login Details")} accent="violet">
+              <InfoRow label={t(activeLang, "ledger.session_branch", "Session Branch")} value={branchLabel(account)} strong />
+              <InfoRow label={t(activeLang, "ledger.nld_login_date", "Login Date")} value={new Date().toLocaleDateString()} />
+              <InfoRow label={t(activeLang, "ledger.nld_login_time", "Login Time")} value={new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} />
+              <InfoRow label={t(activeLang, "purchase.user_name_label", "User Name")} value={safeText(session?.user?.fullName || (session as any)?.fullName || "Super Admin")} strong />
+              <InfoRow label={t(activeLang, "purchase.f_user_id", "User ID")} value={safeText(session?.user?.id || (session as any)?.userId || (session?.user as any)?.user_id || "USR-SA-001")} />
+              <InfoRow label={t(activeLang, "common.system", "System")} value="ERP / FMS" />
             </InfoPanel>
           </div>
         </CardContent>
@@ -750,8 +751,8 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
                   <tr>
                     <td colSpan={isSuperAdmin ? 15 : 11} className="px-4 py-12 text-center text-slate-500 bg-slate-50/50 dark:bg-slate-900/30">
                       <div className="flex flex-col items-center justify-center gap-1">
-                        <span className="font-semibold text-slate-700 dark:text-slate-300 text-sm">No ledger entries available for this account.</span>
-                        <span className="text-xs text-slate-400">There are currently no posted transactions recorded for this account.</span>
+                        <span className="font-semibold text-slate-700 dark:text-slate-300 text-sm">{t(activeLang, "ledger.nld_no_entries", "No ledger entries available for this account.")}</span>
+                        <span className="text-xs text-slate-400">{t(activeLang, "ledger.nld_no_entries_sub", "There are currently no posted transactions recorded for this account.")}</span>
                       </div>
                     </td>
                   </tr>

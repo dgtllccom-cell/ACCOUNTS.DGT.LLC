@@ -783,7 +783,7 @@ export function LedgerReportView({
               <SearchSelect
                 label=""
                 value={selectedCountry}
-                placeholder="All Countries"
+                placeholder={t(lang, "common.all_countries", "All Countries")}
                 options={countryOptions}
                 onValueChange={(value) => {
                   setSelectedCountry(value);
@@ -811,7 +811,7 @@ export function LedgerReportView({
               <SearchSelect
                 label=""
                 value={selectedUser}
-                placeholder="All Users"
+                placeholder={t(lang, "report.filter_all_users", "All Users")}
                 options={userOptions}
                 onValueChange={(value) => {
                   setSelectedUser(value);
@@ -825,7 +825,7 @@ export function LedgerReportView({
               <SearchSelect
                 label=""
                 value={statusFilter}
-                placeholder="All Statuses"
+                placeholder={t(lang, "common.all_statuses", "All Statuses")}
                 options={[
                   { value: "all", label: "All Statuses" },
                   { value: "active", label: "Active" },
@@ -912,7 +912,7 @@ export function LedgerReportView({
                 className="h-10 text-xs border-slate-300 dark:border-slate-700"
                 value={accountSearch}
                 onChange={(e) => setAccountSearch(e.target.value)}
-                placeholder="Filter text..."
+                placeholder={t(lang, "ledger.lgrv_filter_text_ph", "Filter text...")}
               />
             </div>
 
@@ -950,11 +950,11 @@ export function LedgerReportView({
               {menuOpen ? (
                 <div className="absolute right-0 top-full z-20 mt-2 w-56 overflow-hidden rounded-xl border bg-background shadow-xl bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">
                   <MenuAction icon={<Printer className="h-4 w-4" />} label={t(effectiveLang, "ledger.print")} onClick={() => openPrint(true)} />
-                  <MenuAction icon={<DownloadActionIcon className="h-4 w-4" />} label="PDF Export" onClick={() => openPrint(false)} />
+                  <MenuAction icon={<DownloadActionIcon className="h-4 w-4" />} label={t(lang, "ledger.lgrv_pdf_export", "PDF Export")} onClick={() => openPrint(false)} />
                   <MenuAction icon={<DownloadActionIcon className="h-4 w-4" />} label={t(effectiveLang, "ledger.export_csv")} onClick={exportReportCsv} />
                   <MenuAction
                     icon={<Search className="h-4 w-4" />}
-                    label="View Ledger"
+                    label={t(lang, "ledger.view_ledger", "View Ledger")}
                     onClick={() => {
                       setMenuOpen(false);
                       if (selectedLedger && (selectedLedger.accountCode || selectedLedger.ledgerCode)) {
@@ -966,7 +966,7 @@ export function LedgerReportView({
                   />
                   <MenuAction
                     icon={<ChevronDown className="h-4 w-4" />}
-                    label="Open Journal"
+                    label={t(lang, "ledger.lgrv_open_journal", "Open Journal")}
                     onClick={() => {
                       setMenuOpen(false);
                       if (selectedLedger && (selectedLedger.accountCode || selectedLedger.ledgerCode)) {
@@ -978,7 +978,7 @@ export function LedgerReportView({
                   />
                   <MenuAction
                     icon={<RefreshCcw className="h-4 w-4" />}
-                    label="Account Activity"
+                    label={t(lang, "ledger.lgrv_account_activity", "Account Activity")}
                     onClick={() => {
                       setMenuOpen(false);
                       if (selectedLedger && (selectedLedger.accountCode || selectedLedger.ledgerCode)) {
@@ -1344,7 +1344,7 @@ export function LedgerReportView({
                     variant="ghost"
                     size="icon"
                     className="h-6 w-6 text-slate-400 hover:text-slate-700 hover:bg-slate-200 no-print"
-                    title="View Ledger"
+                    title={t(lang, "ledger.view_ledger", "View Ledger")}
                     onClick={(e) => {
                       e.stopPropagation();
                       router.push(`/dashboard/ledger/new?account=${encodeURIComponent(row.accountCode || row.ledgerCode)}`);
@@ -1456,7 +1456,7 @@ export function LedgerReportView({
         }}
         title={`Ledger: ${selectedLedger?.accountName || selectedLedger?.ledgerName || "Details"}`}
         subtitle={`${t(effectiveLang, "ledger.ac_number", "A/c Number")}: ${selectedLedger?.accountCode || selectedLedger?.ledgerCode || "-"} · ${t(effectiveLang, "ledger.currency", "Currency")}: ${selectedLedger?.ledgerCurrency || "-"}`}
-        actions={<ExportOptions onPrint={openPrint} onExportCsv={exportReportCsv} />}
+        actions={<ExportOptions lang={lang} onPrint={openPrint} onExportCsv={exportReportCsv} />}
       >
         {loadingStatement ? (
           <div className="flex items-center justify-center py-8">
@@ -1552,7 +1552,7 @@ export function LedgerReportView({
   );
 }
 
-function ExportOptions({ onPrint, onExportCsv }: { onPrint: (isPrint: boolean) => void; onExportCsv: () => void }) {
+function ExportOptions({ lang, onPrint, onExportCsv }: { lang: string; onPrint: (isPrint: boolean) => void; onExportCsv: () => void }) {
   const [open, setOpen] = useState(false);
 
   if (!open) {
@@ -1570,7 +1570,7 @@ function ExportOptions({ onPrint, onExportCsv }: { onPrint: (isPrint: boolean) =
         <ChevronRight className="h-4 w-4 rotate-180" />
       </Button>
       <Button type="button" variant="outline" size="sm" onClick={() => onPrint(false)}>
-        PDF
+        {t(lang, "report.builder_pdf", "PDF")}
       </Button>
       <Button type="button" variant="outline" size="sm" onClick={onExportCsv}>
         {t(lang, "report.builder_excel", "Excel")}

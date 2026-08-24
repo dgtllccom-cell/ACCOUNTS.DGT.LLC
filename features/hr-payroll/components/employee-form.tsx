@@ -753,7 +753,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                   🏢 {selectedMainBranchObj ? `${selectedMainBranchObj.name}` : translateHr("Main Branch: -", lang)}
                 </div>
                 <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium truncate">
-                  🏙️ {selectedCityBranchObj ? `${selectedCityBranchObj.city_name || (selectedCityBranchObj as any).cityName || ""} — ${selectedCityBranchObj.name}` : translateHr("City Branch: -", lang)}
+                  🏙️ {selectedCityBranchObj ? selectedCityBranchObj.name : translateHr("City Branch: -", lang)}
                 </div>
               </div>
 
