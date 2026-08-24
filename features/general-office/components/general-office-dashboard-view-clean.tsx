@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import type { Route } from "next";
 import {
   Users, Building2, ScrollText, Clock, Calendar, Banknote,
   ClipboardList, FileText, Badge as IdBadgeIcon, BarChart3,
   Search, Filter, Plus, Printer, Download, Mail, MessageSquare,
   Eye, Edit3, Trash2, CheckCircle2, AlertCircle, XCircle, ChevronRight,
-  ShieldCheck, RefreshCcw, FileSpreadsheet, Send, PhoneCall, Check, UserPlus, MoreVertical
+  ShieldCheck, RefreshCcw, FileSpreadsheet, Send, PhoneCall, Check, UserPlus, UserCheck, CreditCard, MoreVertical
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -566,6 +567,7 @@ type TabKey =
   | "reports";
 
 export function GeneralOfficeDashboardView() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab = (searchParams.get("tab") as TabKey) || "management";
 
