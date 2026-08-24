@@ -388,9 +388,18 @@ const generalOfficeLabels: Record<string, Partial<Record<SupportedLanguage, stri
   "No leave requests — the leave module requires a dedicated leave table.": { ur: "چھٹی کی کوئی درخواست نہیں — چھٹی ماڈیول کے لیے علیحدہ ٹیبل درکار ہے۔", ar: "لا طلبات إجازة — يتطلب نظام الإجازات جدولاً مخصصاً.", fa: "هیچ درخواست مرخصی نیست — ماژول مرخصی به جدول اختصاصی نیاز دارد.", ps: "د رخصتۍ هیڅ غوښتنه نشته — د رخصتۍ ماډل لپاره جلا جدول ته اړتیا ده." },
   "No office assets — the assets module requires a dedicated assets table.": { ur: "کوئی دفتری اثاثہ نہیں — اثاثہ ماڈیول کے لیے علیحدہ ٹیبل درکار ہے۔", ar: "لا أصول مكتبية — يتطلب نظام الأصول جدولاً مخصصاً.", fa: "هیچ دارایی اداری نیست — ماژول دارایی به جدول اختصاصی نیاز دارد.", ps: "هیڅ دفتري شتمنی نشته — د شتمنیو ماډل لپاره جلا جدول ته اړتیا ده." },
   "NASEEBULLAH": { ur: "نصیب اللہ", ar: "نصيب الله", fa: "نصیب‌الله", ps: "نصیب الله" },
+  "Naseebullah": { ur: "نصیب اللہ", ar: "نصيب الله", fa: "نصیب‌الله", ps: "نصیب الله" },
+  "naseebullah": { ur: "نصیب اللہ", ar: "نصيب الله", fa: "نصیب‌الله", ps: "نصیب الله" },
   "Naseeb Ullah": { ur: "نصیب اللہ", ar: "نصيب الله", fa: "نصیب‌الله", ps: "نصیب الله" },
+  "naseeb ullah": { ur: "نصیب اللہ", ar: "نصيب الله", fa: "نصیب‌الله", ps: "نصیب الله" },
+  "ناسیب وہللاہ": { ur: "نصیب اللہ", ar: "نصيب الله", fa: "نصیب‌الله", ps: "نصیب الله" },
+  "ناسیب": { ur: "نصیب اللہ", ar: "نصيب الله", fa: "نصیب‌الله", ps: "نصیب الله" },
+  "Muhammad Anees": { ur: "محمد انیس", ar: "محمد أنيس", fa: "محمد انیس", ps: "محمد انیس" },
+  "muhammad anees": { ur: "محمد انیس", ar: "محمد أنيس", fa: "محمد انیس", ps: "محمد انیس" },
+  "Muhammad anees": { ur: "محمد انیس", ar: "محمد أنيس", fa: "محمد انیس", ps: "محمد انیس" },
   "ASMATULLAH ABDULLAH": { ur: "عصمت اللہ عبداللہ", ar: "عصمت الله عبد الله", fa: "عصمت‌الله عبدالله", ps: "عصمت الله عبدالله" },
   "Asmatullah Abdullah": { ur: "عصمت اللہ عبداللہ", ar: "عصمت الله عبد الله", fa: "عصمت‌الله عبدالله", ps: "عصمت الله عبدالله" },
+  "asmatullah abdullah": { ur: "عصمت اللہ عبداللہ", ar: "عصمت الله عبد الله", fa: "عصمت‌الله عبدالله", ps: "عصمت الله عبدالله" },
   "Country Director / Managing Partner": { ur: "کنٹری ڈائریکٹر / مینجنگ پارٹنر", ar: "المدير الإقليمي / شريك إداري", fa: "مدیر کشوری / شریک مدیر", ps: "د هیواد مدیر / ملګری مدیر" },
   "Executive Management": { ur: "ایگزیکٹو مینجمنٹ", ar: "الإدارة التنفيذية", fa: "مدیریت اجرایی", ps: "اجرایوي اداره" },
   "Senior Office Associate": { ur: "سینئر آفس ایسوسی ایٹ", ar: "أخصائي مكتب أول", fa: "کارشناس ارشد دفتر", ps: "لوړپوړی دفتري همکار" },
@@ -431,8 +440,42 @@ const generalOfficeLabels: Record<string, Partial<Record<SupportedLanguage, stri
 };
 
 function translateGeneralOffice(label: string, lang: SupportedLanguage) {
+  if (!label) return "";
   if (lang === "en") return label;
-  return generalOfficeLabels[label]?.[lang] || translateHeader(lang, label);
+  const trimmed = label.trim();
+  
+  // Exact match
+  if (generalOfficeLabels[trimmed]?.[lang]) return generalOfficeLabels[trimmed][lang];
+  
+  // Case-insensitive match
+  const upper = trimmed.toUpperCase();
+  if (generalOfficeLabels[upper]?.[lang]) return generalOfficeLabels[upper][lang];
+  const lower = trimmed.toLowerCase();
+  if (generalOfficeLabels[lower]?.[lang]) return generalOfficeLabels[lower][lang];
+
+  // Specific canonical Name resolution
+  if (lower.includes("naseeb") || trimmed.includes("ناسیب") || trimmed.includes("نسیب")) {
+    if (lang === "ur") return "نصیب اللہ";
+    if (lang === "ar") return "نصيب الله";
+    if (lang === "fa") return "نصیب‌الله";
+    if (lang === "ps") return "نصیب الله";
+  }
+
+  if (lower.includes("asmat") || trimmed.includes("عصمت")) {
+    if (lang === "ur") return "عصمت اللہ عبداللہ";
+    if (lang === "ar") return "عصمت الله عبد الله";
+    if (lang === "fa") return "عصمت‌الله عبدالله";
+    if (lang === "ps") return "عصمت الله عبدالله";
+  }
+
+  if (lower.includes("anees") || lower.includes("anis") || trimmed.includes("انیس")) {
+    if (lang === "ur") return "محمد انیس";
+    if (lang === "ar") return "محمد أنيس";
+    if (lang === "fa") return "محمد انیس";
+    if (lang === "ps") return "محمد انیس";
+  }
+
+  return translateHeader(lang, trimmed);
 }
 type TabKey =
   | "master-setup"
