@@ -14,13 +14,13 @@ export function AuthPortalShell({
   className?: string;
 }) {
   return (
-    <div className={`min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-950 dark:text-slate-50 ${className ?? ""}`.trim()}>
-      <main className="flex-1 flex flex-col justify-center">
-        <div className="grid min-h-screen w-full lg:grid-cols-[1fr_1.08fr]">
-          <section className="relative flex min-h-screen flex-col justify-between bg-white px-4 py-6 sm:px-8 sm:py-10 lg:px-12 xl:px-16 dark:bg-slate-950">
+    <div className={`min-h-screen bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-slate-50 ${className ?? ""}`.trim()}>
+      <main className="flex min-h-screen flex-col justify-center">
+        <div className="grid min-h-screen w-full lg:grid-cols-[minmax(0,1fr)_minmax(0,1.08fr)]">
+          <section className="relative flex min-h-screen flex-col justify-between border-slate-200/70 bg-white px-4 py-6 shadow-[0_0_0_1px_rgba(148,163,184,0.06)] sm:px-8 sm:py-10 lg:border-r lg:px-12 xl:px-16 dark:border-slate-900/70 dark:bg-slate-950 dark:shadow-none">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-blue-100 bg-white shadow-md shadow-blue-100 dark:border-blue-900/40 dark:bg-slate-900 dark:shadow-none sm:h-12 sm:w-12">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-blue-100 shadow-[0_10px_30px_rgba(37,99,235,0.12)] dark:border-blue-900/40 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 dark:shadow-none sm:h-12 sm:w-12">
                   <svg viewBox="0 0 40 40" width="40" height="40" className="h-7 w-7 sm:h-8 sm:w-8" fill="none" aria-hidden>
                     <rect width="40" height="40" rx="10" fill="#EFF6FF" />
                     <path d="M10 28 L10 14 L20 8 L30 14 L30 28 L20 34 Z" fill="#1e3a8a" opacity="0.15" />
@@ -31,10 +31,10 @@ export function AuthPortalShell({
                   </svg>
                 </div>
                 <div>
-                  <div className="text-lg font-black tracking-[0.18em] text-[#06122d] dark:text-white sm:text-xl sm:tracking-[0.22em]">
+                  <div className="text-lg font-black tracking-[0.16em] text-[#06122d] dark:text-white sm:text-xl sm:tracking-[0.2em]">
                     DAMAAN
                   </div>
-                  <div className="text-[8px] font-bold uppercase tracking-[0.3em] text-slate-400 sm:text-[9px] sm:tracking-[0.38em]">
+                  <div className="text-[8px] font-bold uppercase tracking-[0.3em] text-slate-400 sm:text-[9px] sm:tracking-[0.34em]">
                     Business Group
                   </div>
                 </div>
@@ -47,7 +47,7 @@ export function AuthPortalShell({
               </div>
             </div>
 
-            <div className="my-auto w-full max-w-[460px] mx-auto py-6">{children}</div>
+            <div className="my-auto mx-auto w-full max-w-[460px] py-6">{children}</div>
 
             <div className="flex flex-col items-center justify-between gap-2 border-t border-slate-100 pt-4 text-[10px] font-semibold text-slate-400 sm:flex-row dark:border-slate-900">
               <span>© 2026 DAMAAN BUSINESS GROUP</span>
@@ -63,7 +63,7 @@ export function AuthPortalShell({
           </section>
 
           <section
-            className="relative hidden overflow-hidden lg:flex lg:flex-col justify-between"
+            className="relative hidden overflow-hidden border-l border-white/10 lg:flex lg:flex-col justify-between"
             style={{ background: "linear-gradient(160deg, #06122d 0%, #0a1f45 45%, #071828 100%)", color: "#ffffff" }}
           >
             <div className="pointer-events-none absolute inset-0 overflow-hidden">

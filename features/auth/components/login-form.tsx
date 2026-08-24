@@ -362,10 +362,7 @@ export function LoginForm({
 
       {/* ── Role Scope Pills ── */}
       {showRoleTabs && (
-        <div
-          className="mb-4 flex overflow-x-auto gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-800/60 no-scrollbar"
-          style={{ display: "flex", flexWrap: "nowrap", gap: "4px", padding: "4px", backgroundColor: "#f1f5f9", borderRadius: "12px", border: "1px solid #e2e8f0", overflowX: "auto" }}
-        >
+        <div className="mb-4 flex gap-1 overflow-x-auto rounded-2xl border border-slate-200 bg-slate-100/90 p-1.5 shadow-xs no-scrollbar dark:border-slate-800 dark:bg-slate-800/60">
           {TABS.map((tab) => (
             <button
               key={tab.id}
@@ -373,26 +370,11 @@ export function LoginForm({
               aria-label={tab.label}
               title={tab.label}
               onClick={() => handleTabChange(tab.id)}
-              style={{
-                flex: "1 1 0%",
-                padding: "8px 10px",
-                borderRadius: "8px",
-                fontSize: "10px",
-                fontWeight: 800,
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-                textAlign: "center",
-                whiteSpace: "nowrap",
-                cursor: "pointer",
-                backgroundColor: activeTab === tab.id ? "#0f172a" : "transparent",
-                color: activeTab === tab.id ? "#ffffff" : "#64748b",
-                border: "none",
-              }}
               className={cn(
-                "shrink-0 flex-1 rounded-lg px-2.5 py-2 text-[9px] sm:text-[9.5px] font-black uppercase tracking-wider transition-all duration-200 text-center whitespace-nowrap cursor-pointer",
+                "shrink-0 flex-1 rounded-xl px-3 py-2 text-[9px] sm:text-[9.5px] font-black uppercase tracking-[0.14em] text-center whitespace-nowrap transition-all duration-200 cursor-pointer border",
                 activeTab === tab.id
-                  ? "bg-slate-900 text-white shadow-xs dark:bg-white dark:text-slate-900"
-                  : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                  ? "border-slate-900 bg-slate-900 text-white shadow-md shadow-slate-900/10 dark:border-white dark:bg-white dark:text-slate-900"
+                  : "border-transparent bg-transparent text-slate-500 hover:border-slate-200 hover:bg-white hover:text-slate-900 dark:text-slate-400 dark:hover:border-slate-700 dark:hover:bg-slate-900/60 dark:hover:text-white"
               )}
             >
               {tab.short}
@@ -401,8 +383,8 @@ export function LoginForm({
         </div>
       )}
 
-      <div className="mb-4 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 p-4 shadow-xs dark:border-slate-800 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
-        <div className="flex items-center justify-between gap-3">
+      <div className="mb-4 rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 p-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] dark:border-slate-800 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
+        <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-700 dark:text-blue-300">
               {ACCESS_PROFILES[activeTab].eyebrow}
@@ -414,7 +396,7 @@ export function LoginForm({
               {ACCESS_PROFILES[activeTab].subtitle}
             </p>
           </div>
-          <div className="hidden sm:flex flex-col items-end gap-1 rounded-xl border border-blue-100 bg-white px-3 py-2 text-right dark:border-blue-900/40 dark:bg-slate-900">
+          <div className="hidden sm:flex flex-col items-end gap-1 rounded-2xl border border-blue-100 bg-white px-3 py-2 text-right shadow-sm dark:border-blue-900/40 dark:bg-slate-900">
             <span className="text-[9px] font-black uppercase tracking-[0.22em] text-slate-400">Scope</span>
             <span className="text-[11px] font-extrabold text-blue-700 dark:text-blue-300">
               {ACCESS_PROFILES[activeTab].scopeLabel}
@@ -428,7 +410,7 @@ export function LoginForm({
 
       {/* ── Error Banner ── */}
       {errorState && (
-        <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 p-3.5 text-xs font-bold text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300 animate-in fade-in zoom-in-95 duration-150">
+        <div className="mb-4 flex items-start gap-2.5 rounded-2xl border border-rose-200 bg-rose-50 p-3.5 text-xs font-bold text-rose-700 shadow-sm dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300 animate-in fade-in zoom-in-95 duration-150">
           <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-rose-600" />
           <div>{errorState}</div>
         </div>
@@ -571,23 +553,7 @@ export function LoginForm({
         <Button
           type="submit"
           disabled={loading}
-          style={{
-            height: "48px",
-            width: "100%",
-            borderRadius: "12px",
-            background: "linear-gradient(to right, #1d4ed8, #4338ca, #1e40af)",
-            color: "#ffffff",
-            fontWeight: 900,
-            fontSize: "13px",
-            letterSpacing: "0.05em",
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "8px",
-            border: "none",
-            cursor: loading ? "wait" : "pointer"
-          }}
-          className="h-12 w-full font-black text-xs sm:text-sm tracking-wide text-white shadow-md transition-all duration-200 hover:shadow-lg rounded-xl bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 hover:from-blue-800 hover:to-indigo-800 gap-2 cursor-pointer"
+          className="h-12 w-full rounded-2xl bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 px-4 text-xs font-black tracking-[0.08em] text-white shadow-[0_12px_30px_rgba(30,64,175,0.24)] transition-all duration-200 hover:-translate-y-0.5 hover:from-blue-800 hover:via-indigo-800 hover:to-blue-900 hover:shadow-[0_16px_36px_rgba(30,64,175,0.28)] sm:text-sm"
         >
           {loading ? (
             <>

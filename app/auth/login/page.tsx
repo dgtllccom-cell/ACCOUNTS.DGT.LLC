@@ -59,18 +59,19 @@ export default async function LoginPage({
       <div className="rounded-[28px] border border-white/10 bg-white/95 p-6 shadow-2xl shadow-black/20 backdrop-blur-sm lg:p-8">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">
+            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
+              <Server className="h-3.5 w-3.5 text-blue-600" />
               Damaan Business Group ERP
-            </p>
-            <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-900 lg:text-4xl">
+            </div>
+            <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-900 lg:text-4xl">
               Choose the right access path
             </h1>
             <p className="mt-3 max-w-xl text-sm leading-6 font-medium text-slate-600 lg:text-base">
               Separate login entry points for Admin, Country, City, and Clearing Agent teams — polished for a professional ERP experience.
             </p>
           </div>
-          <div className="hidden shrink-0 rounded-2xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-right lg:block">
-            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-700">Status</p>
+          <div className="hidden shrink-0 rounded-3xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-right shadow-sm lg:block">
+            <p className="text-[9px] font-black uppercase tracking-[0.22em] text-emerald-700">Status</p>
             <p className="mt-1 text-sm font-extrabold text-emerald-700">Connected</p>
           </div>
         </div>
@@ -82,15 +83,15 @@ export default async function LoginPage({
               <Link
                 key={card.href}
                 href={card.href}
-                className="group rounded-2xl border border-slate-200 bg-slate-50 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:bg-white hover:shadow-lg dark:border-slate-800 dark:bg-slate-950/40"
+                className="group rounded-3xl border border-slate-200 bg-slate-50 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:bg-white hover:shadow-xl dark:border-slate-800 dark:bg-slate-950/40"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-blue-700 transition-colors group-hover:bg-blue-600 group-hover:text-white dark:bg-blue-950/40 dark:text-blue-300">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100 transition-colors group-hover:bg-blue-600 group-hover:text-white dark:bg-blue-950/40 dark:text-blue-300 dark:ring-blue-900/50">
                       <Icon className="h-5 w-5" aria-hidden />
                     </div>
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                      <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">
                         {card.badge}
                       </p>
                       <h2 className="mt-1 text-sm font-black text-slate-900 dark:text-white">
@@ -109,7 +110,7 @@ export default async function LoginPage({
         </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900/50">
+          <div className="rounded-3xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
               <Server className="h-3.5 w-3.5 text-blue-600" />
               Live ERP
@@ -117,7 +118,7 @@ export default async function LoginPage({
             <p className="mt-2 text-sm font-bold text-slate-900 dark:text-white">Production-style layout</p>
             <p className="mt-1 text-xs font-medium text-slate-500">Clear login paths for each operator group.</p>
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900/50">
+          <div className="rounded-3xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
               <Building2 className="h-3.5 w-3.5 text-blue-600" />
               Brand
@@ -125,7 +126,7 @@ export default async function LoginPage({
             <p className="mt-2 text-sm font-bold text-slate-900 dark:text-white">Damaan Business Group</p>
             <p className="mt-1 text-xs font-medium text-slate-500">Professional ERP identity for the organization.</p>
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900/50">
+          <div className="rounded-3xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
               Security
