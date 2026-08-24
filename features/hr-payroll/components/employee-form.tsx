@@ -41,15 +41,96 @@ type EmployeeFormProps = {
   lang?: SupportedLanguage;
 };
 
-const CATEGORY_DEFAULTS: Record<string, { designation: string; department: string }> = {
-  "Country Owner": { designation: "Country Director / Managing Partner", department: "Executive Management" },
-  "Branch Owner": { designation: "Branch Managing Director", department: "Branch Administration" },
-  "Company Owner": { designation: "Chief Executive Officer / Owner", department: "Executive Board" },
-  "Manager": { designation: "General Operations Manager", department: "Operations & Management" },
-  "Normal Staff": { designation: "Senior Office Associate", department: "General Administration" },
-  "Employee": { designation: "Executive Staff Officer", department: "General Operations" },
-  "Others": { designation: "General Staff Officer", department: "Operations" }
+const CATEGORY_DEFAULTS: Record<string, Record<string, { designation: string; department: string }>> = {
+  en: {
+    "Country Owner": { designation: "Country Director / Managing Partner", department: "Executive Management" },
+    "Branch Owner": { designation: "Branch Managing Director", department: "Branch Administration" },
+    "Company Owner": { designation: "Chief Executive Officer / Owner", department: "Executive Board" },
+    "Manager": { designation: "General Operations Manager", department: "Operations & Management" },
+    "Normal Staff": { designation: "Senior Office Associate", department: "General Administration" },
+    "Employee": { designation: "Executive Staff Officer", department: "General Operations" },
+    "Others": { designation: "General Staff Officer", department: "Operations" }
+  },
+  ur: {
+    "Country Owner": { designation: "کنٹری ڈائریکٹر / مینجنگ پارٹنر", department: "ایگزیکٹو مینجمنٹ" },
+    "Branch Owner": { designation: "برانچ مینجنگ ڈائریکٹر", department: "برانچ ایڈمنسٹریشن" },
+    "Company Owner": { designation: "چیف ایگزیکٹو آفیسر / اونر", department: "ایگزیکٹو بورڈ" },
+    "Manager": { designation: "جنرل آپریشنز منیجر", department: "آپریشنز و مینجمنٹ" },
+    "Normal Staff": { designation: "سینئر آفس ایسوسی ایٹ", department: "جنرل ایڈمنسٹریشن" },
+    "Employee": { designation: "ایگزیکٹو اسٹاف آفیسر", department: "جنرل آپریشنز" },
+    "Others": { designation: "جنرل اسٹاف آفیسر", department: "آپریشنز" }
+  },
+  ps: {
+    "Country Owner": { designation: "د هیواد مدیر / ملګری", department: "اجرایوي اداره" },
+    "Branch Owner": { designation: "د څانګې مدیر", department: "د څانګې اداره" },
+    "Company Owner": { designation: "اجرایوي مشر / مالک", department: "اجرایوي بورډ" },
+    "Manager": { designation: "عمومي عملیاتي مدیر", department: "عملیات او مدیریت" },
+    "Normal Staff": { designation: "لوړپوړی دفتري همکار", department: "عمومي اداره" },
+    "Employee": { designation: "اجرایوي کارمند", department: "عمومي عملیات" },
+    "Others": { designation: "عمومي کارمند", department: "عملیات" }
+  },
+  fa: {
+    "Country Owner": { designation: "مدیر کشوری / شریک مدیر", department: "مدیریت اجرایی" },
+    "Branch Owner": { designation: "مدیر عامل شعبه", department: "امور اداری شعبه" },
+    "Company Owner": { designation: "مدیرعامل / مالک شرکت", department: "هیئت اجرایی" },
+    "Manager": { designation: "مدیر عملیات عمومی", department: "عملیات و مدیریت" },
+    "Normal Staff": { designation: "کارشناس ارشد دفتر", department: "امور اداری عمومی" },
+    "Employee": { designation: "افسر اجرایی پرسنل", department: "عملیات عمومی" },
+    "Others": { designation: "افسر عمومی پرسنل", department: "عملیات" }
+  },
+  ar: {
+    "Country Owner": { designation: "المدير الإقليمي / شريك إداري", department: "الإدارة التنفيذية" },
+    "Branch Owner": { designation: "المدير الإداري للفرع", department: "إدارة الفرع" },
+    "Company Owner": { designation: "الرئيس التنفيذي / المالك", department: "المجلس التنفيذي" },
+    "Manager": { designation: "مدير العمليات العامة", department: "العمليات والإدارة" },
+    "Normal Staff": { designation: "أخصائي مكتب أول", department: "الإدارة العامة" },
+    "Employee": { designation: "مسؤول تنفيذي", department: "العمليات العامة" },
+    "Others": { designation: "موظف عام", department: "العمليات" }
+  }
 };
+
+const hrLabels: Record<string, Partial<Record<SupportedLanguage, string>>> = {
+  "Live Employee Master Report": { ur: "ملازم ماسٹر لائیو رپورٹ", ar: "تقرير الموظف المباشر", fa: "گزارش زنده مشخصات کارمند", ps: "د کارمند اصلي ژوندی راپور" },
+  "No Person Selected": { ur: "کوئی شخص منتخب نہیں", ar: "لم يتم اختيار شخص", fa: "هیچ فردی انتخاب نشده", ps: "هیڅ شخص نه دی ټاکل شوی" },
+  "Location & Branch": { ur: "مقام اور برانچ کے اختیارات", ar: "الموقع والفرع", fa: "موقعیت و شعبه", ps: "موقعیت او څانګه" },
+  "Contact Details": { ur: "رابطے کی تفصیلات", ar: "تفاصيل الاتصال", fa: "اطلاعات تماس", ps: "د اړیکې معلومات" },
+  "Shift & Timelines": { ur: "ڈیوٹی اوقات و شیڈول", ar: "أوقات العمل والجدول", fa: "شیفت و زمان‌بندی", ps: "دندې وختونه او مهالوېش" },
+  "Salary / Compensation": { ur: "تنخواہ و مالی معاوضہ", ar: "الراتب والمستحقات", fa: "حقوق و مزایا", ps: "معاش او مالي امتیازات" },
+  "Country: -": { ur: "ملک: منتخب نہیں", ar: "الدولة: غير محدد", fa: "کشور: نامشخص", ps: "هیواد: نه دی ټاکل شوی" },
+  "Main Branch: -": { ur: "مین برانچ: منتخب نہیں", ar: "الفرع الرئيسي: غير محدد", fa: "شعبه اصلی: نامشخص", ps: "مرکزي څانګه: نه ده ټاکل شوې" },
+  "City Branch: -": { ur: "سٹی برانچ: منتخب نہیں", ar: "فرع المدينة: غير محدد", fa: "شعبه شهری: نامشخص", ps: "ښاري څانګه: نه ده ټاکل شوې" },
+  "Shift": { ur: "شفٹ", ar: "الوردية", fa: "شیفت", ps: "شفټ" },
+  "Joining": { ur: "شمولیت", ar: "تاريخ الالتحاق", fa: "تاریخ استخدام", ps: "ګډون" },
+  "Day Shift": { ur: "دن کی شفٹ", ar: "وردية نهارية", fa: "شیفت روز", ps: "د ورځې شفټ" },
+  "Night Shift": { ur: "رات کی شفٹ", ar: "وردية ليلية", fa: "شیفت شب", ps: "د شپې شفټ" },
+  "Rotational": { ur: "گردشی شفٹ", ar: "وردية دورية", fa: "شیفت چرخشی", ps: "ګرځنده شفټ" },
+  "Flexible": { ur: "لچکدار اوقات", ar: "مرن", fa: "انعطاف‌پذیر", ps: "نرم" },
+  "Monthly": { ur: "ماہانہ", ar: "شهري", fa: "ماهانه", ps: "میاشتنی" },
+  "Daily": { ur: "روزانہ", ar: "يومي", fa: "روزانه", ps: "ورځنی" },
+  "Weekly": { ur: "ہفتہ وار", ar: "أسبوعي", fa: "هفتگی", ps: "اونیز" },
+  "Hourly": { ur: "فی گھنٹہ", ar: "بالساعة", fa: "ساعتی", ps: "ساعتي" },
+  "Rate": { ur: "شرح", ar: "معدل", fa: "نرخ", ps: "کچه" },
+  "Step 1 Packet: Employee Category & Person Selection": { ur: "مرحلہ 1: ملازم زمرہ اور شخص کا انتخاب", ar: "المرحلة 1: فئة الموظف واختيار الشخص", fa: "مرحله 1: دسته کارمند و انتخاب شخص", ps: "لومړی پړاو: د کارمند کټګوري او شخص ټاکنه" },
+  "Step 2 Packet: Location Scope, Branch & Hierarchy": { ur: "مرحلہ 2: مقام، برانچ اور تنظیمی درجہ بندی", ar: "المرحلة 2: نطاق الموقع والفرع والتسلسل", fa: "مرحله 2: موقعیت، شعبه و سلسله‌مراتب", ps: "دویم پړاو: موقعیت او څانګه" },
+  "Step 3 Packet: Employment Type, Shift & Duty Schedule": { ur: "مرحلہ 3: ملازمت کی قسم، شفٹ اور ڈیوٹی شیڈول", ar: "المرحلة 3: نوع التوظيف والوردية وجدول الدوام", fa: "مرحله 3: نوع استخدام، شیفت و برنامه کاری", ps: "دریم پړاو: د کار ډول، شفټ او دندې مهالوېش" },
+  "Step 4 Packet: Salary, Allowances & GL Ledgers": { ur: "مرحلہ 4: تنخواہ، الاؤنسز اور جی ایل کھاتہ جات", ar: "المرحلة 4: الراتب والبدلات ودفتر الأستاذ", fa: "مرحله 4: حقوق، مزایا و دفاتر کل", ps: "څلورم پړاو: معاش، الاونسونه او د حساب کتاب" },
+  "Step 5 Packet: Verification, Documents & Final Review": { ur: "مرحلہ 5: حتمی تصدیق، دستاویزات اور جائزہ", ar: "المرحلة 5: التحقق والمستندات والمراجعة النهائية", fa: "مرحله 5: تأیید نهایی، مدارک و بررسی", ps: "پنځم پړاو: وروستۍ تصدیق، اسناد او بیاکتنه" },
+  "Step 1: Category & Identity": { ur: "مرحلہ 1: زمرہ اور شناخت", ar: "المرحلة 1: الفئة والهوية", fa: "مرحله 1: دسته‌بندی و هویت", ps: "لومړی پړاو: کټګوري او پېژندنه" },
+  "Step 2: Location & Scopes": { ur: "مرحلہ 2: مقام اور اختیارات", ar: "المرحلة 2: الموقع والنطاقات", fa: "مرحله 2: موقعیت و اختیارات", ps: "دویم پړاو: موقعیت او څانګې" },
+  "Step 3: Timelines & Shift": { ur: "مرحلہ 3: اوقات اور شفٹ", ar: "المرحلة 3: المواعيد والوردية", fa: "مرحله 3: زمان‌بندی و شیفت", ps: "دریم پړاو: مهال وېش او شفټ" },
+  "Step 4: Salary & Accounts": { ur: "مرحلہ 4: تنخواہ اور کھاتے", ar: "المرحلة 4: الراتب والحسابات", fa: "مرحله 4: حقوق و حساب‌ها", ps: "څلورم پړاو: معاش او حسابونه" },
+  "Step 5: Entry Verification Report": { ur: "مرحلہ 5: انٹری تصدیقی رپورٹ", ar: "المرحلة 5: تقرير التحقق", fa: "مرحله 5: گزارش تأیید ثبت", ps: "پنځم پړاو: د ثبت تصدیقي راپور" },
+  "Enterprise Employee Registration Wizard": { ur: "انٹرپرائز ملازم رجسٹریشن وزرڈ", ar: "معالج تسجيل موظفي المؤسسة", fa: "ویزارد ثبت سازمانی پرسنل", ps: "د سازماني کارمندانو ثبتولو وزرډ" },
+  "Register New Employee Master Record": { ur: "نیا ملازم ماسٹر ریکارڈ رجسٹر کریں", ar: "تسجيل سجل موظف رئيسي جديد", fa: "ثبت پرونده اصلی کارمند جدید", ps: "د نوي کارمند اصلي ریکارډ ثبت کړئ" },
+  "Edit Employee Master Setup": { ur: "ملازم ماسٹر سیٹ اپ میں ترمیم کریں", ar: "تعديل إعدادات الموظف الرئيسية", fa: "ویرایش تنظیمات اصلی کارمند", ps: "د کارمند اصلي تنظیم سم کړئ" },
+  "Executive Partner (Fixed Salary N/A / Optional)": { ur: "پارٹنر ایکویٹی و ڈرائنگ (فکسڈ تنخواہ لاگو نہیں)", ar: "شريك تنفيذي (الراتب الثابت غير منطبق / اختياري)", fa: "شریک اجرایی (حقوق ثابت نامربوط / اختیاری)", ps: "اجرایوي ملګری (ثابت معاش نه تطبیقیږي / اختیاري)" }
+};
+
+function translateHr(label: string, lang: SupportedLanguage): string {
+  if (!label) return "";
+  if (lang === "en") return label;
+  return hrLabels[label]?.[lang] || label;
+}
 
 type LedgerOption = {
   id: string;
@@ -88,8 +169,8 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
   const [lastName, setLastName] = useState("");
   const [gender, setGender] = useState("");
   const [category, setCategory] = useState<"Country Owner" | "Branch Owner" | "Company Owner" | "Manager" | "Normal Staff" | "Employee" | "Others">("Employee");
-  const [designation, setDesignation] = useState("");
-  const [department, setDepartment] = useState("");
+  const [designation, setDesignation] = useState(() => (CATEGORY_DEFAULTS[lang]?.[category] || CATEGORY_DEFAULTS.en[category])?.designation || "");
+  const [department, setDepartment] = useState(() => (CATEGORY_DEFAULTS[lang]?.[category] || CATEGORY_DEFAULTS.en[category])?.department || "");
 
   // Location scopes
   const [countryId, setCountryId] = useState("");
@@ -595,7 +676,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
               <div className="flex items-center gap-2">
                 <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                  {t(lang, "hr.live_report_card", "Live Employee Master Report")}
+                  {translateHr("Live Employee Master Report", lang)}
                 </span>
               </div>
               <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
@@ -610,7 +691,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-black text-slate-900 dark:text-slate-100 truncate">
-                  {fullName || t(lang, "hr.f_not_selected", "No Person Selected")}
+                  {fullName || translateHr("No Person Selected", lang)}
                 </div>
                 <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 truncate">
                   {designation || "-"}
@@ -626,16 +707,16 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
               {/* Scope & Branch */}
               <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1">
                 <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  📍 {t(lang, "hr.f_location_scope", "Location & Branch")}
+                  📍 {translateHr("Location & Branch", lang)}
                 </div>
                 <div className="font-semibold text-slate-800 dark:text-slate-200 truncate">
-                  {selectedCountryObj?.name || "Country: -"}
+                  {selectedCountryObj?.name || translateHr("Country: -", lang)}
                 </div>
                 <div className="text-[11px] text-slate-600 dark:text-slate-400 truncate">
-                  🏢 {selectedMainBranchObj ? `${selectedMainBranchObj.name}` : "Main Branch: -"}
+                  🏢 {selectedMainBranchObj ? `${selectedMainBranchObj.name}` : translateHr("Main Branch: -", lang)}
                 </div>
                 <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium truncate">
-                  🏙️ {selectedCityBranchObj ? `${selectedCityBranchObj.city_name || (selectedCityBranchObj as any).cityName || ""} — ${selectedCityBranchObj.name}` : "City Branch: -"}
+                  🏙️ {selectedCityBranchObj ? `${selectedCityBranchObj.city_name || (selectedCityBranchObj as any).cityName || ""} — ${selectedCityBranchObj.name}` : translateHr("City Branch: -", lang)}
                 </div>
               </div>
 
@@ -643,7 +724,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
               {selectedPersonObj && (
                 <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1 text-[11px]">
                   <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                    📞 {t(lang, "hr.pp_contact_person", "Contact Details")}
+                    📞 {translateHr("Contact Details", lang)}
                   </div>
                   <div className="truncate text-slate-700 dark:text-slate-300" dir="ltr">
                     📱 {selectedPersonObj.mobile || "-"}
@@ -660,14 +741,14 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
               {/* Duty & Shift */}
               <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1 text-[11px]">
                 <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  ⏰ {t(lang, "hr.f_shift_schedule", "Shift & Timelines")}
+                  ⏰ {translateHr("Shift & Timelines", lang)}
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">{t(lang, "hr.f_shift", "Shift")}:</span>
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">{workingShift || "Day Shift"} ({dutyStartTime} - {dutyEndTime})</span>
+                  <span className="text-slate-500">{translateHr("Shift", lang)}:</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">{translateHr(workingShift || "Day Shift", lang)} ({dutyStartTime} - {dutyEndTime})</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">{t(lang, "hr.f_joining_date", "Joining")}:</span>
+                  <span className="text-slate-500">{translateHr("Joining", lang)}:</span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200">{joiningDate || "-"}</span>
                 </div>
               </div>
@@ -675,15 +756,15 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
               {/* Salary / Partner Equity */}
               <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1 text-[11px]">
                 <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  💰 {t(lang, "hr.f_salary_status", "Salary / Compensation")}
+                  💰 {translateHr("Salary / Compensation", lang)}
                 </div>
                 {category === "Country Owner" || category === "Branch Owner" || category === "Company Owner" ? (
                   <div className="text-xs font-bold text-amber-600 dark:text-amber-400">
-                    👑 {catLabel(category)} · Executive Partner (Fixed Salary N/A / Optional)
+                    👑 {catLabel(category)} · {translateHr("Executive Partner (Fixed Salary N/A / Optional)", lang)}
                   </div>
                 ) : (
                   <div className="flex justify-between items-center font-bold text-slate-800 dark:text-slate-200">
-                    <span>{salaryType} Rate:</span>
+                    <span>{translateHr(salaryType, lang)} {translateHr("Rate", lang)}:</span>
                     <span className="text-emerald-600">{basicSalary ? `${basicSalary.toLocaleString()} ${salaryCurrency}` : `0.00 ${salaryCurrency}`}</span>
                   </div>
                 )}
@@ -700,7 +781,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
               <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
                 <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                   <UserCheck className="h-4 w-4 text-emerald-600" />
-                  <span>{t(lang, "hr.f_step1_title", "Step 1 Packet: Employee Category & Person Selection")}</span>
+                  <span>{translateHr("Step 1 Packet: Employee Category & Person Selection", lang)}</span>
                 </h3>
                 <span className="text-xs font-semibold text-slate-400">{t(lang, "hr.f_step1_of5", "Step 1 of 5")}</span>
               </div>
@@ -716,7 +797,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                   type="button"
                   onClick={() => {
                     setCategory(cat);
-                    const def = CATEGORY_DEFAULTS[cat];
+                    const def = (CATEGORY_DEFAULTS[lang] || CATEGORY_DEFAULTS.en)[cat] || CATEGORY_DEFAULTS.en[cat];
                     if (def) {
                       setDesignation(def.designation);
                       setDepartment(def.department);

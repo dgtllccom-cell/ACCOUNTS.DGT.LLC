@@ -24,10 +24,13 @@ type PersonRow = {
   address: string | null;
 };
 
-/** Prefer the structured First + Last name; fall back to the stored full/display name. */
+/** Prefer the localized customer_name if present; fall back to first + last name. */
 export function personFullName(row: { first_name?: string | null; last_name?: string | null; customer_name?: string | null }): string {
-  const structured = [row.first_name, row.last_name].filter(Boolean).join(" ").trim();
-  return structured || (row.customer_name ?? "").trim();
+  if (row?.customer_name && row.customer_name.trim()) {
+    return row.customer_name.trim();
+  }
+  const structured = [row?.first_name, row?.last_name].filter(Boolean).join(" ").trim();
+  return structured || "";
 }
 
 function toOption(row: PersonRow): SearchSelectOption {
