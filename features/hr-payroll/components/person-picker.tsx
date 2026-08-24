@@ -35,12 +35,21 @@ export function personFullName(row: { first_name?: string | null; last_name?: st
 
 function toOption(row: PersonRow): SearchSelectOption {
   const name = personFullName(row);
-  // Secondary identity line: company · phone — so the admin can tell people apart at a glance.
-  const bits = [row.company_name, row.mobile || row.whatsapp].filter(Boolean).join(" · ");
-  const label = bits ? `${name} — ${bits}` : name;
+  const father = (row as any).father_name || ((row as any).contact_person && (row as any).contact_person !== name ? (row as any).contact_person : null);
+  const company = row.company_name && row.company_name !== name ? row.company_name : null;
+  
+  // Format clean name display without messy phone numbers
+  let extraBits: string[] = [];
+  if (father && !father.startsWith("+") && isNaN(Number(father))) {
+    extraBits.push(`ولدیت: ${father}`);
+  } else if (company) {
+    extraBits.push(company);
+  }
+  
+  const label = extraBits.length > 0 ? `${name} (${extraBits.join(" · ")})` : name;
   const keywords = [
     name, row.customer_name, row.first_name, row.last_name,
-    row.company_name, row.contact_person, row.mobile, row.whatsapp, row.email
+    father, row.company_name
   ].filter(Boolean).join(" ");
   return { value: row.id, label, keywords };
 }

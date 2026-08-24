@@ -821,32 +821,30 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
               </div>
 
           <div>
-            <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block mb-2">
+            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5 font-sans">
               {t(lang, "hr.f_select_category", "Select Employee / Master Category *")}
             </label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-1.5 bg-slate-100 dark:bg-slate-950 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800">
-              {(["Country Owner", "Branch Owner", "Company Owner", "Manager", "Normal Staff", "Employee", "Others"] as const).map((cat) => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => {
-                    setCategory(cat);
-                    const def = (CATEGORY_DEFAULTS[lang] || CATEGORY_DEFAULTS.en)[cat] || CATEGORY_DEFAULTS.en[cat];
-                    if (def) {
-                      setDesignation(def.designation);
-                      setDepartment(def.department);
-                    }
-                  }}
-                  className={`py-2 px-2 rounded-lg text-xs font-bold transition-all truncate text-center ${
-                    category === cat
-                      ? "bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 shadow-sm border border-emerald-300 dark:border-emerald-700"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-900"
-                  }`}
-                >
-                  {catLabel(cat)}
-                </button>
-              ))}
-            </div>
+            <select
+              value={category}
+              onChange={(e) => {
+                const cat = e.target.value as any;
+                setCategory(cat);
+                const def = (CATEGORY_DEFAULTS[lang] || CATEGORY_DEFAULTS.en)[cat] || CATEGORY_DEFAULTS.en[cat];
+                if (def) {
+                  setDesignation(def.designation);
+                  setDepartment(def.department);
+                }
+              }}
+              className="flex h-11 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3.5 text-xs font-bold text-slate-900 dark:text-slate-100 shadow-xs outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-sans"
+            >
+              <option value="Country Owner">{catLabel("Country Owner")}</option>
+              <option value="Branch Owner">{catLabel("Branch Owner")}</option>
+              <option value="Company Owner">{catLabel("Company Owner")}</option>
+              <option value="Manager">{catLabel("Manager")}</option>
+              <option value="Employee">{catLabel("Employee")}</option>
+              <option value="Normal Staff">{catLabel("Normal Staff")}</option>
+              <option value="Others">{catLabel("Others")}</option>
+            </select>
           </div>
 
           <div>

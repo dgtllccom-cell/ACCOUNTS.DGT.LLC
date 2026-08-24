@@ -1081,8 +1081,18 @@ export function GeneralOfficeDashboardView() {
                 employeesByDate.map((emp) => (
                   <tr key={emp.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
                     <td className="p-3.5 font-mono font-bold text-blue-600">{emp.employee_code}</td>
-                    <td className="p-3.5 font-bold text-slate-900 dark:text-slate-100">{tr(personFullName(emp.person || {}) || emp.name)}</td>
-                    <td className="p-3.5 text-muted-foreground">{tr(emp.category || "Staff")}</td>
+                    <td className="p-3.5 font-bold text-slate-900 dark:text-slate-100 font-sans">
+                      <div className="font-bold text-slate-900 dark:text-slate-100">
+                        {tr(personFullName(emp.person || {}) || emp.name)}
+                      </div>
+                      {(emp.person?.father_name || emp.person?.contact_person) && (
+                        <div className="text-[10px] text-slate-500 font-normal mt-0.5">
+                          {lang === "ur" ? "ولدیت: " : lang === "ar" ? "اسم الأب: " : "S/O: "}
+                          {emp.person?.father_name || emp.person?.contact_person}
+                        </div>
+                      )}
+                    </td>
+                    <td className="p-3.5 text-muted-foreground font-sans">{tr(emp.category || "Staff")}</td>
                     <td className="p-3.5">{tr(emp.designation)} / {tr(emp.department)}</td>
                     <td className="p-3.5 font-mono text-muted-foreground">{emp.joining_date || "—"}</td>
                     <td className="p-3.5 font-mono font-bold">{emp.net_salary ? `${Number(emp.net_salary).toLocaleString()} ${emp.salary_currency || "USD"}` : "—"}</td>
