@@ -1,16 +1,21 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Globe2, Moon, Sun, LogOut, Keyboard } from "lucide-react";
+import { Globe2, LogOut, Keyboard, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supportedLanguages, type SupportedLanguage, rtlLanguages, getHtmlLanguage } from "@/lib/i18n/languages";
+import { t } from "@/lib/i18n/ui";
 import { getLanguageKeyboardMap } from "@/lib/i18n/keyboard-layouts";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { applyThemeMode, legacyThemeMode, normalizeThemeMode, themeModes, type ThemeMode } from "@/lib/ui/theme-modes";
 
-function getInitialTheme(): "light" | "dark" {
-  if (typeof document === "undefined") return "light";
-  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+function getInitialThemeMode(): ThemeMode {
+  if (typeof document === "undefined") return "day";
+  const dataMode = document.documentElement.dataset.erpThemeMode;
+  const storedMode = localStorage.getItem("erp_theme_mode");
+  const legacyMode = localStorage.getItem("erp_theme");
+  return normalizeThemeMode(dataMode || storedMode || legacyThemeMode(legacyMode));
 }
 
 function getInitialLanguage(): SupportedLanguage {
@@ -49,12 +54,18 @@ function injectWebFonts(lang: SupportedLanguage) {
 export function PreferencesControls() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [themeMode, setThemeMode] = useState<ThemeMode>("day");
   const [language, setLanguage] = useState<SupportedLanguage>("en");
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [keyboardMapperActive, setKeyboardMapperActive] = useState(true);
 
   const languageOptions = useMemo(() => supportedLanguages, []);
+  const themeLabels = useMemo(() => ({
+    night: t(language, "nav.theme_night"),
+    day: t(language, "nav.theme_day"),
+    soft: t(language, "nav.theme_soft"),
+    green: t(language, "nav.theme_green_business")
+  }), [language]);
 
   // Run font injection on load and whenever language state updates.
   useEffect(() => {
@@ -119,7 +130,7 @@ export function PreferencesControls() {
 
   useEffect(() => {
     setMounted(true);
-    setTheme(getInitialTheme());
+    setThemeMode(getInitialThemeMode());
     const initialLang = getInitialLanguage();
     setLanguage(initialLang);
     document.documentElement.lang = getHtmlLanguage(initialLang);
@@ -127,9 +138,14 @@ export function PreferencesControls() {
     injectWebFonts(initialLang);
 
     const onStorage = (event: StorageEvent) => {
-      if (event.key === "erp_theme" && (event.newValue === "light" || event.newValue === "dark")) {
-        document.documentElement.classList.toggle("dark", event.newValue === "dark");
-        setTheme(event.newValue);
+      if (event.key === "erp_theme_mode") {
+        const next = normalizeThemeMode(event.newValue);
+        applyThemeMode(next);
+        setThemeMode(next);
+      } else if (event.key === "erp_theme") {
+        const next = normalizeThemeMode(legacyThemeMode(event.newValue));
+        applyThemeMode(next);
+        setThemeMode(next);
       }
       if (event.key === "erp_lang" && event.newValue) {
         const next = event.newValue as SupportedLanguage;
@@ -146,10 +162,13 @@ export function PreferencesControls() {
   }, [languageOptions]);
 
   function toggleTheme() {
-    const next = theme === "dark" ? "light" : "dark";
-    document.documentElement.classList.toggle("dark", next === "dark");
-    localStorage.setItem("erp_theme", next);
-    setTheme(next);
+    const order: ThemeMode[] = ["night", "day", "soft", "green"];
+    const next = order[(order.indexOf(themeMode) + 1) % order.length];
+    applyThemeMode(next);
+    localStorage.setItem("erp_theme_mode", next);
+    document.cookie = `erp_theme_mode=${encodeURIComponent(next)}; Path=/; Max-Age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+    localStorage.setItem("erp_theme", next === "night" ? "dark" : "light");
+    setThemeMode(next);
   }
 
   function changeLanguage(next: SupportedLanguage) {
@@ -243,13 +262,48 @@ export function PreferencesControls() {
         )}
       </div>
 
-      <Button variant="outline" size="icon" onClick={toggleTheme} aria-label="Toggle theme">
+      <div className="hidden items-center gap-2 rounded-md border bg-background px-2 py-1 text-xs sm:flex">
+        <Palette className="h-4 w-4 text-muted-foreground" aria-hidden />
+        <label className="sr-only" htmlFor="erp-theme-mode">
+          Theme
+        </label>
         {mounted ? (
-          theme === "dark" ? <Sun className="h-4 w-4" aria-hidden /> : <Moon className="h-4 w-4" aria-hidden />
+          <select
+            id="erp-theme-mode"
+            className="bg-transparent text-xs outline-none"
+            value={themeMode}
+            onChange={(event) => {
+              const next = normalizeThemeMode(event.target.value);
+              applyThemeMode(next);
+              localStorage.setItem("erp_theme_mode", next);
+              document.cookie = `erp_theme_mode=${encodeURIComponent(next)}; Path=/; Max-Age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+              localStorage.setItem("erp_theme", next === "night" ? "dark" : "light");
+              setThemeMode(next);
+            }}
+          >
+            {themeModes.map((mode) => (
+              <option key={mode.id} value={mode.id}>
+                {themeLabels[mode.id]}
+              </option>
+            ))}
+          </select>
         ) : (
-          <span className="sr-only">Theme</span>
+          <span className="w-24" />
         )}
-      </Button>
+      </div>
+
+      <div className="sm:hidden">
+        <Button
+          variant="outline"
+          size="icon"
+          aria-label={mounted ? t(language, "nav.theme_mode") : "Theme"}
+          title={mounted ? t(language, "nav.theme_mode") : "Theme"}
+          onClick={toggleTheme}
+          className="text-muted-foreground"
+        >
+          <Palette className="h-4 w-4" aria-hidden />
+        </Button>
+      </div>
 
       <div className="sm:hidden">
         <Button

@@ -401,9 +401,25 @@ export function CompanyIncorporationForm({
     setCurrentStep(1);
   }
 
+  function matchOwner(compOwner?: string | null, targetOwner?: string | null): boolean {
+    if (!compOwner || !targetOwner) return false;
+    const a = compOwner.toLowerCase().trim().replace(/[^a-z0-9]/g, "");
+    const b = targetOwner.toLowerCase().trim().replace(/[^a-z0-9]/g, "");
+    if (!a || !b) return false;
+    if (a === b) return true;
+    if (a.includes(b) || b.includes(a)) return true;
+    const stemA = a.replace(/(ullah|ollah|ulla|olla|khan|abdullah)/g, "");
+    const stemB = b.replace(/(ullah|ollah|ulla|olla|khan|abdullah)/g, "");
+    if (stemA && stemB && (stemA === stemB || stemA.includes(stemB) || stemB.includes(stemA))) return true;
+    return false;
+  }
+
   // Load existing companies when owner is selected
   useEffect(() => {
-    if (!ownerPersonId) return;
+    if (!ownerPersonId) {
+      setExistingCompaniesForOwner([]);
+      return;
+    }
     (async () => {
       try {
         const pRes = await apiGet<{ customer: any }>(`/api/erp/customers/${encodeURIComponent(ownerPersonId)}?lang=${encodeURIComponent(lang)}`);
@@ -411,11 +427,12 @@ export function CompanyIncorporationForm({
         if (pName) {
           setOwnerName(pName);
         }
-        const cRes = await apiGet<{ companies: any[] }>("/api/erp/companies?limit=100");
+        const cRes = await apiGet<{ companies: any[] }>("/api/erp/companies?limit=200");
         const list = cRes.companies || [];
         const matched = list.filter((c: any) => 
-          (c.owner_name && c.owner_name.toLowerCase().trim() === pName.toLowerCase().trim()) ||
-          (c.owner_id && c.owner_id === ownerPersonId)
+          (c.owner_person_id && c.owner_person_id === ownerPersonId) ||
+          (c.owner_id && c.owner_id === ownerPersonId) ||
+          matchOwner(c.owner_name, pName)
         );
         setExistingCompaniesForOwner(matched.map((m: any) => ({ id: m.id, name: m.name || m.legal_name })));
       } catch (err) {
@@ -798,32 +815,64 @@ export function CompanyIncorporationForm({
               </div>
 
               {ownerName && (
-                <div className="p-3.5 rounded-xl border border-indigo-200 bg-indigo-50/60 dark:bg-indigo-950/30 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-indigo-900 dark:text-indigo-200 font-bold text-xs">
-                      <span>👑 {lang === "ur" ? "منتخب کمپنی اونر:" : "Selected Company Owner:"}</span>
-                      <span className="font-extrabold text-indigo-700 dark:text-indigo-300">{ownerName}</span>
+                <div className="p-4 rounded-xl border border-indigo-200 bg-indigo-50/70 dark:bg-indigo-950/40 space-y-3 shadow-xs">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-lg">👑</span>
+                      <div>
+                        <p className="text-[11px] text-indigo-700 dark:text-indigo-300 font-bold uppercase tracking-wider">
+                          {lang === "ur" ? "منتخب مالک / پروپرائیٹر:" : "Selected Owner / Proprietor:"}
+                        </p>
+                        <p className="text-sm font-extrabold text-indigo-950 dark:text-indigo-100">
+                          {transliterateProperNoun(ownerName, lang)}
+                        </p>
+                      </div>
                     </div>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200">
+                    <span className="text-xs font-bold px-3 py-1 rounded-full bg-indigo-600 text-white shadow-xs">
                       {existingCompaniesForOwner.length} {lang === "ur" ? "رجسٹرڈ کمپنیاں" : "Registered Companies"}
                     </span>
                   </div>
 
                   {existingCompaniesForOwner.length > 0 ? (
-                    <div className="space-y-1 pt-1 border-t border-indigo-100 dark:border-indigo-900/40">
-                      <p className="text-[10px] text-slate-600 dark:text-slate-400 font-semibold">
-                        {lang === "ur" ? `اس مالک کے تحت پہلے سے رجسٹرڈ کمپنیاں (آپ نئی کمپنی #${existingCompaniesForOwner.length + 1} درج کر رہے ہیں):` : `Existing registered companies for this owner (Registering Company #${existingCompaniesForOwner.length + 1}):`}
+                    <div className="space-y-2 pt-2 border-t border-indigo-200 dark:border-indigo-900/50">
+                      <p className="text-xs text-slate-700 dark:text-slate-300 font-bold">
+                        {lang === "ur" 
+                          ? `اس مالک کے نام پر پہلے سے ${existingCompaniesForOwner.length} سسٹر کمپنیاں رجسٹرڈ ہیں:` 
+                          : `This owner already has ${existingCompaniesForOwner.length} sister companies registered:`}
                       </p>
-                      <div className="flex flex-wrap gap-1.5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {existingCompaniesForOwner.map((co, idx) => (
-                          <span key={co.id} className="text-[11px] font-semibold bg-white dark:bg-slate-900 border border-indigo-200 px-2 py-0.5 rounded-md text-slate-800 dark:text-slate-200">
-                            {idx + 1}. {co.name}
-                          </span>
+                          <div key={co.id} className="flex items-center justify-between gap-2 p-2 rounded-lg bg-white dark:bg-slate-900 border border-indigo-100 dark:border-indigo-900/30 text-xs shadow-xs">
+                            <div className="flex items-center gap-2 truncate">
+                              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-[11px] font-bold text-indigo-800">
+                                {idx + 1}
+                              </span>
+                              <span className="font-bold text-slate-800 dark:text-slate-100 truncate">
+                                {localizeTerm(co.name, lang)}
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                router.push(`/dashboard/settings/company-setup?companyId=${co.id}` as Route);
+                              }}
+                              className="shrink-0 text-[11px] text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 font-bold underline cursor-pointer"
+                            >
+                              {lang === "ur" ? "تفصیل دیکھیں" : "View"}
+                            </button>
+                          </div>
                         ))}
+                      </div>
+                      <div className="mt-2 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 p-2.5 flex items-center justify-between gap-2">
+                        <p className="text-xs text-amber-900 dark:text-amber-200 font-medium">
+                          {lang === "ur"
+                            ? `💡 آپ اسی مالک کے تحت نئی سسٹر کمپنی #${existingCompaniesForOwner.length + 1} درج کر رہے ہیں۔ نیچے نیا نام درج کریں۔`
+                            : `💡 Registering Sister Company #${existingCompaniesForOwner.length + 1} under this owner. Enter company name below.`}
+                        </p>
                       </div>
                     </div>
                   ) : (
-                    <p className="text-[10px] text-slate-500 italic">
+                    <p className="text-xs text-slate-500 italic">
                       {lang === "ur" ? "اس مالک کے لیے یہ پہلی کمپنی درج کی جا رہی ہے۔" : "This is the first company being registered for this owner."}
                     </p>
                   )}

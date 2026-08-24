@@ -808,6 +808,11 @@ export type UiKey =
   | "nav.template_green"
   | "nav.template_gold"
   | "nav.template_cyan"
+  | "nav.theme_mode"
+  | "nav.theme_night"
+  | "nav.theme_day"
+  | "nav.theme_soft"
+  | "nav.theme_green_business"
   | "nav.translations_management"
   | "nav.pakistan"
   | "nav.afghanistan"
@@ -6049,6 +6054,11 @@ const en: Dict = {
   "nav.template_green": "Green",
   "nav.template_gold": "Gold",
   "nav.template_cyan": "Cyan",
+  "nav.theme_mode": "Theme Mode",
+  "nav.theme_night": "Night / Dark",
+  "nav.theme_day": "Day / White",
+  "nav.theme_soft": "Soft Light",
+  "nav.theme_green_business": "Green / Business",
   "nav.translations_management": "Local Translation Management",
   "nav.pakistan": "Pakistan",
   "nav.afghanistan": "Afghanistan",
@@ -12226,6 +12236,11 @@ const ur: Dict = {
   "nav.template_purple": "پرپل",
   "nav.template_blue": "بلیو",
   "nav.template_green": "گرین",
+  "nav.theme_mode": "تھیم موڈ",
+  "nav.theme_night": "رات / ڈارک",
+  "nav.theme_day": "دن / سفید",
+  "nav.theme_soft": "نرم روشنی",
+  "nav.theme_green_business": "گرین / بزنس",
   "nav.new_entry": "نیا اندراج",
   "nav.new_account": "نیا کھاتہ / لیجر",
   "nav.new_branch": "برانچ نیٹ ورک و سیٹ اپ",
@@ -17460,6 +17475,11 @@ const ar: Dict = {
   "nav.template_green": "أخضر",
   "nav.template_gold": "ذهبي",
   "nav.template_cyan": "سماوي",
+  "nav.theme_mode": "وضع المظهر",
+  "nav.theme_night": "ليلي / داكن",
+  "nav.theme_day": "نهاري / أبيض",
+  "nav.theme_soft": "إضاءة ناعمة",
+  "nav.theme_green_business": "أخضر / أعمال",
   "auth.welcome_back": "مرحباً بعودتك",
   "auth.sign_in_continue": "سجّل الدخول للمتابعة إلى حسابك",
   "auth.user_id_or_email": "معرّف المستخدم / البريد",
@@ -22657,6 +22677,11 @@ const fa: Dict = {
   "nav.chs_products": "مدیریت محصولات CHS",
   "nav.port_master": "مدیریت بنادر / مرزها",
   "nav.template_color": "رنگ قالب",
+  "nav.theme_mode": "حالت پوسته",
+  "nav.theme_night": "شب / تیره",
+  "nav.theme_day": "روز / سفید",
+  "nav.theme_soft": "نور ملایم",
+  "nav.theme_green_business": "سبز / تجاری",
   "auth.welcome_back": "خوش آمدید",
   "auth.sign_in_continue": "برای ادامه وارد حساب خود شوید",
   "auth.user_id_or_email": "شناسه کاربر / ایمیل",
@@ -28352,6 +28377,11 @@ const ps: Dict = {
   "nav.template_gold": "طلایي",
   "nav.template_green": "شنه",
   "nav.template_purple": "بنفش",
+  "nav.theme_mode": "د بڼې حالت",
+  "nav.theme_night": "شپه / توره",
+  "nav.theme_day": "ورځ / سپینه",
+  "nav.theme_soft": "نرمه رڼا",
+  "nav.theme_green_business": "شنه / سوداګریز",
   "nav.translations_management": "د محلي ژباړې مدیریت",
   "nav.trial_balance": "ازمایښتي بیلانس",
   "nav.uae_dubai": "متحده عربي امارات (دوبۍ)",

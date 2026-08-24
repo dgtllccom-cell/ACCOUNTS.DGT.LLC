@@ -1,35 +1,37 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Globe2, HelpCircle, Moon, Sun } from "lucide-react";
+import { Globe2, HelpCircle, Palette } from "lucide-react";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { supportedLanguages, rtlLanguages } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { applyThemeMode, legacyThemeMode, normalizeThemeMode, themeModes, type ThemeMode } from "@/lib/ui/theme-modes";
 
-function getInitialTheme(): "light" | "dark" {
-  if (typeof document === "undefined") return "light";
-  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+function getInitialThemeMode(): ThemeMode {
+  if (typeof document === "undefined") return "day";
+  const dataMode = document.documentElement.dataset.erpThemeMode;
+  const storedMode = localStorage.getItem("erp_theme_mode");
+  const legacyMode = localStorage.getItem("erp_theme");
+  return normalizeThemeMode(dataMode || storedMode || legacyThemeMode(legacyMode));
 }
 
 export function AuthTopControls({ lang }: { lang: SupportedLanguage }) {
   const [mounted, setMounted] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [themeMode, setThemeMode] = useState<ThemeMode>("day");
 
   const languageOptions = useMemo(() => supportedLanguages, []);
+  const themeLabels = useMemo(() => ({
+    night: t(lang, "nav.theme_night"),
+    day: t(lang, "nav.theme_day"),
+    soft: t(lang, "nav.theme_soft"),
+    green: t(lang, "nav.theme_green_business")
+  }), [lang]);
 
   useEffect(() => {
     setMounted(true);
-    setTheme(getInitialTheme());
+    setThemeMode(getInitialThemeMode());
   }, []);
-
-  function toggleTheme() {
-    const next = theme === "dark" ? "light" : "dark";
-    document.documentElement.classList.toggle("dark", next === "dark");
-    localStorage.setItem("erp_theme", next);
-    setTheme(next);
-  }
 
   function changeLanguage(next: SupportedLanguage) {
     document.documentElement.lang = next;
@@ -70,20 +72,28 @@ export function AuthTopControls({ lang }: { lang: SupportedLanguage }) {
         </select>
       </div>
 
-      <Button
-        type="button"
-        variant="outline"
-        size="icon"
-        className="h-9 w-9 rounded-full border-white/15 bg-white/5 text-white hover:bg-white/10"
-        onClick={toggleTheme}
-        aria-label="Toggle theme"
-      >
-        {mounted ? (
-          theme === "dark" ? <Sun className="h-4 w-4" aria-hidden /> : <Moon className="h-4 w-4" aria-hidden />
-        ) : (
-          <span className="sr-only">Theme</span>
-        )}
-      </Button>
+      <div className="hidden items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs md:flex">
+        <Palette className="h-4 w-4" aria-hidden />
+        <select
+          className={cn("bg-transparent text-xs font-semibold outline-none", mounted ? "" : "opacity-0")}
+          value={themeMode}
+          onChange={(e) => {
+            const next = normalizeThemeMode(e.target.value);
+            applyThemeMode(next);
+            localStorage.setItem("erp_theme_mode", next);
+            document.cookie = `erp_theme_mode=${encodeURIComponent(next)}; Path=/; Max-Age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+            localStorage.setItem("erp_theme", next === "night" ? "dark" : "light");
+            setThemeMode(next);
+          }}
+          aria-label={t(lang, "nav.theme_mode")}
+        >
+          {themeModes.map((mode) => (
+            <option key={mode.id} value={mode.id} className="text-slate-900 font-bold bg-white">
+              {themeLabels[mode.id]}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 }

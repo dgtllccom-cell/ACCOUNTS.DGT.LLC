@@ -13,6 +13,15 @@ export default function SettingsError({
 }) {
   useEffect(() => {
     console.error("Settings module exception caught:", error);
+    const msg = error?.message || String(error || "");
+    if (msg.includes("Loading chunk") || msg.includes("ChunkLoadError") || msg.includes("Failed to fetch") || msg.includes("failed to fetch")) {
+      const now = Date.now();
+      const lastReload = parseInt(sessionStorage.getItem("last_auto_chunk_reload") || "0", 10);
+      if (now - lastReload > 10000) {
+        sessionStorage.setItem("last_auto_chunk_reload", String(now));
+        window.location.reload();
+      }
+    }
   }, [error]);
 
   const handleRetry = () => {

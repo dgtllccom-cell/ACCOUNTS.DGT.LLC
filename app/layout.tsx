@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { GoogleTranslateScript } from "@/components/layout/google-translate-script";
 import { PdfPreviewModal } from "@/components/ui/pdf-preview-modal";
+import { legacyThemeMode, themeModes } from "@/lib/ui/theme-modes";
 
 export const metadata: Metadata = {
   applicationName: "Digital Dock ERP",
@@ -44,17 +45,29 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: `
 (() => {
   try {
-    const allowed = new Set(['purple','blue','green','gold','cyan']);
+    const allowedColors = new Set(['purple','blue','green','gold','cyan']);
     const storedColor = localStorage.getItem('erp_color');
-    const color = (storedColor && allowed.has(storedColor)) ? storedColor : 'purple';
+    const color = (storedColor && allowedColors.has(storedColor)) ? storedColor : 'purple';
     document.documentElement.classList.remove('theme-purple','theme-blue','theme-green','theme-gold','theme-cyan');
     document.documentElement.classList.add('theme-' + color);
   } catch {}
   try {
-    const storedTheme = localStorage.getItem('erp_theme');
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const theme = storedTheme || (prefersDark ? 'dark' : 'light');
-    document.documentElement.classList.toggle('dark', theme === 'dark');
+    const legacyTheme = localStorage.getItem('erp_theme');
+    const storedThemeMode = localStorage.getItem('erp_theme_mode');
+    const allowedModes = new Set(${JSON.stringify(themeModes.map((mode) => mode.id))});
+    const legacyValue = ${JSON.stringify(legacyThemeMode(null))};
+    const mode = (storedThemeMode && allowedModes.has(storedThemeMode))
+      ? storedThemeMode
+      : (legacyTheme === 'dark' || legacyTheme === 'light')
+        ? (legacyTheme === 'dark' ? 'night' : 'day')
+        : legacyValue;
+    document.documentElement.classList.remove('theme-night','theme-day','theme-soft','theme-green-business');
+    document.documentElement.classList.add('theme-' + (mode === 'green' ? 'green-business' : mode));
+    document.documentElement.classList.toggle('dark', mode === 'night');
+    document.documentElement.dataset.erpThemeMode = mode;
+    document.documentElement.style.colorScheme = mode === 'night' ? 'dark' : 'light';
+    if (storedThemeMode !== mode) localStorage.setItem('erp_theme_mode', mode);
+    document.cookie = 'erp_theme_mode=' + encodeURIComponent(mode) + '; Path=/; Max-Age=' + (60 * 60 * 24 * 365) + '; SameSite=Lax';
   } catch {}
   try {
     const rtl = new Set(['ar','ur','fa','ps']);
