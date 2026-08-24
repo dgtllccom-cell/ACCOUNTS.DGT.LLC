@@ -242,6 +242,7 @@ function CityBranchSetupContent() {
   const [editingCityBranchId, setEditingCityBranchId] = useState("");
 
   const [branchName, setBranchName] = useState("");
+  const [branchCategory, setBranchCategory] = useState<"business" | "clearing_agent">("business");
   const [branchCode, setBranchCode] = useState("");
   const [permissionTemplate, setPermissionTemplate] = useState("city-standard");
   const [permissionGrants, setPermissionGrants] = useState<string[]>(() => getPermissionKeysForTemplate("city-standard"));
@@ -1590,6 +1591,45 @@ function CityBranchSetupContent() {
                   <div className="space-y-2">
                     <Label className="text-xs text-slate-600">{t(lang, "cbs.main_branch_code")}</Label>
                     <Input value={selectedMainBranch?.code ?? ""} readOnly className={compactInputClass(!countryBranchId)} />
+                  </div>
+                </div>
+
+                {/* City Branch Business Nature / Type Selector */}
+                <div className="mt-3 space-y-2 p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-800 font-sans">
+                  <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                    {lang === "ur" ? "اس سٹی برانچ کی نوعیت / بزنس کی قسم *" : lang === "ar" ? "نوع ونشاط هذا الفرع *" : lang === "ps" ? "د دې ښار د څانګې ډول *" : lang === "fa" ? "نوعیت این شعبه *" : "City Branch Business Nature / Type *"}
+                  </Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setBranchCategory("business")}
+                      className={`p-3 rounded-xl border text-start flex items-center gap-3 transition-all ${
+                        branchCategory === "business"
+                          ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-800 dark:text-indigo-200 font-bold shadow-xs ring-1 ring-indigo-400/30"
+                          : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
+                      }`}
+                    >
+                      <span className="text-2xl">🏢</span>
+                      <div>
+                        <div className="text-xs font-bold">{lang === "ur" ? "بزنس و کارپوریٹ سٹی برانچ" : lang === "ar" ? "فرع تجاري / أعمال" : lang === "ps" ? "تجارتي / بزنس څانګه" : lang === "fa" ? "شعبه تجاری و شرکتی" : "Business & Corporate Branch"}</div>
+                        <div className="text-[10px] text-slate-500">{lang === "ur" ? "عام تجارتی، دفتری و مالیاتی امور" : "General commercial & trading branch"}</div>
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBranchCategory("clearing_agent")}
+                      className={`p-3 rounded-xl border text-start flex items-center gap-3 transition-all ${
+                        branchCategory === "clearing_agent"
+                          ? "border-blue-500 bg-blue-50 dark:bg-blue-950/50 text-blue-800 dark:text-blue-200 font-bold shadow-xs ring-1 ring-blue-400/30"
+                          : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
+                      }`}
+                    >
+                      <span className="text-2xl">🚢</span>
+                      <div>
+                        <div className="text-xs font-bold">{lang === "ur" ? "کسٹم کلیئرنگ ایجنٹ و شپنگ لائن" : lang === "ar" ? "فرع التخليص الجمركي وخط الشحن" : lang === "ps" ? "ګمرکي کلیرنګ ایجنټ او د کښتۍ لاین" : lang === "fa" ? "کارگزاری گمرک و خط کشتیرانی" : "Clearing Agent & Shipping Line"}</div>
+                        <div className="text-[10px] text-slate-500">{lang === "ur" ? "پورٹ، کسٹم کلیئرنگ و کنٹینرز" : "Ports, shipping lines & customs clearing"}</div>
+                      </div>
+                    </button>
                   </div>
                 </div>
               </section>

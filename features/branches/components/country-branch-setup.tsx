@@ -199,6 +199,7 @@ function CountryBranchSetupContent() {
   const [countryBranches, setCountryBranches] = useState<CountryBranchRow[]>([]);
   const [countryBranchSearch, setCountryBranchSearch] = useState("");
   const [branchType, setBranchType] = useState("");
+  const [branchCategory, setBranchCategory] = useState<"business" | "clearing_agent">("business");
   const [branchCode, setBranchCode] = useState("");
   const [permissionTemplate, setPermissionTemplate] = useState("country-standard");
   const [permissionGrants, setPermissionGrants] = useState<string[]>(() => getPermissionKeysForTemplate("country-standard"));
@@ -1149,6 +1150,45 @@ function CountryBranchSetupContent() {
                     allowManageLink={true}
                     onChange={onLocationChange}
                   />
+
+                  {/* Branch Business Nature / Type Selector */}
+                  <div className="space-y-2 p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-800 font-sans">
+                    <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                      {lang === "ur" ? "برانچ کی نوعیت / بزنس کی قسم *" : lang === "ar" ? "نوع ونشاط الفرع *" : lang === "ps" ? "د څانګې ډول *" : lang === "fa" ? "نوعیت شعبه *" : "Branch Business Nature / Type *"}
+                    </Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => setBranchCategory("business")}
+                        className={`p-3 rounded-xl border text-start flex items-center gap-3 transition-all ${
+                          branchCategory === "business"
+                            ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-800 dark:text-indigo-200 font-bold shadow-xs ring-1 ring-indigo-400/30"
+                            : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
+                        }`}
+                      >
+                        <span className="text-2xl">🏢</span>
+                        <div>
+                          <div className="text-xs font-bold">{lang === "ur" ? "بزنس و کارپوریٹ برانچ" : lang === "ar" ? "فرع تجاري / أعمال" : lang === "ps" ? "تجارتي / بزنس څانګه" : lang === "fa" ? "شعبه تجاری و شرکتی" : "Business & Corporate Branch"}</div>
+                          <div className="text-[10px] text-slate-500">{lang === "ur" ? "عام تجارتی و مالیاتی امور" : "General commercial & trading operations"}</div>
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setBranchCategory("clearing_agent")}
+                        className={`p-3 rounded-xl border text-start flex items-center gap-3 transition-all ${
+                          branchCategory === "clearing_agent"
+                            ? "border-blue-500 bg-blue-50 dark:bg-blue-950/50 text-blue-800 dark:text-blue-200 font-bold shadow-xs ring-1 ring-blue-400/30"
+                            : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
+                        }`}
+                      >
+                        <span className="text-2xl">🚢</span>
+                        <div>
+                          <div className="text-xs font-bold">{lang === "ur" ? "کسٹم کلیئرنگ ایجنٹ و شپنگ لائن" : lang === "ar" ? "فرع التخليص الجمركي وخط الشحن" : lang === "ps" ? "ګمرکي کلیرنګ ایجنټ او د کښتۍ لاین" : lang === "fa" ? "کارگزاری گمرک و خط کشتیرانی" : "Clearing Agent & Shipping Line"}</div>
+                          <div className="text-[10px] text-slate-500">{lang === "ur" ? "پورٹ، کسٹم کلیئرنگ و کنٹینرز" : "Ports, shipping lines & customs clearing"}</div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
 
                   <div className="grid gap-3 md:grid-cols-3">
                     <div className="space-y-2">

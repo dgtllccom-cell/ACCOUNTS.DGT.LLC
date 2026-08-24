@@ -386,6 +386,18 @@ export function CompanyIncorporationForm({
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
 
   const [saving, setSaving] = useState(false);
+  const [createdCompaniesForOwner, setCreatedCompaniesForOwner] = useState<Array<{ id: string; name: string }>>([]);
+  const [showMultiPrompt, setShowMultiPrompt] = useState(false);
+
+  function handleAddAnotherForSameOwner() {
+    setShowMultiPrompt(false);
+    setCompanyName("");
+    setBusinessName("");
+    setRegistrations([newRow()]);
+    setMessage("");
+    setCurrentStep(1);
+  }
+
   // Tracks an existing company matched by name during duplicate-detection on save
   // (see the "duplicate"/"already exists" fallback below); cleared whenever the user
   // edits any field so a stale match never gets silently reused for a different entry.
@@ -636,14 +648,10 @@ export function CompanyIncorporationForm({
           ownerIds: ownerIds.filter((row) => row.type && row.value)
         };
 
+        setCreatedCompaniesForOwner((prev) => [...prev, { id: res.companyId, name: companyName.trim() }]);
+        setShowMultiPrompt(true);
         onSave?.(newCompany);
         setMessage(tr("company_form.saved_company_msg", `Saved company "${newCompany.companyName}" to database successfully.`).replace("{name}", newCompany.companyName));
-
-        if (mode === "standalone") {
-          setTimeout(() => {
-            router.push("/dashboard/settings/company" as Route);
-          }, 1000);
-        }
       }
     } catch (err: any) {
       const errMsg = String(err?.message || err || "");
@@ -888,12 +896,48 @@ export function CompanyIncorporationForm({
               </div>
             </div>
 
+            {showMultiPrompt && (
+              <div className="rounded-2xl border-2 border-emerald-500/40 bg-emerald-50/80 dark:bg-emerald-950/60 p-4 shadow-sm space-y-3 font-sans">
+                <div className="flex items-center gap-2 text-emerald-900 dark:text-emerald-200 font-bold text-sm">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+                  <span>
+                    {lang === "ur" 
+                      ? `کمپنی کامیابی سے درج ہو گئی! (مالک: ${ownerName})` 
+                      : `Company Registered Successfully for Owner: ${ownerName}`}
+                  </span>
+                </div>
+                <p className="text-xs text-emerald-800 dark:text-emerald-300">
+                  {lang === "ur" 
+                    ? `اس مالک کے تحت اب تک ${createdCompaniesForOwner.length} کمپنیاں شامل ہو چکی ہیں۔ کیا آپ اسی مالک کے لیے مزید دوسری کمپنی کا اندراج کرنا چاہتے ہیں؟`
+                    : `Total companies registered for this owner: ${createdCompaniesForOwner.length}. Would you like to register another company for this same owner now?`}
+                </p>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <Button
+                    type="button"
+                    onClick={handleAddAnotherForSameOwner}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-9 px-4 rounded-xl shadow-xs"
+                  >
+                    <Plus className="h-4 w-4 mr-1.5" />
+                    {lang === "ur" ? "+ اسی مالک کے لیے مزید کمپنی شامل کریں" : "+ Add Another Company for this Owner"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleClose}
+                    className="text-xs h-9 px-4 rounded-xl border-slate-300 font-semibold"
+                  >
+                    {lang === "ur" ? "کمپنیوں کی فہرست پر جائیں" : "Go to Companies Registry"}
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {message ? (
               <div
                 className={
                   message.includes("successfully")
-                    ? "rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800"
-                    : "rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800"
+                    ? "rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 font-sans"
+                    : "rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800 font-sans"
                 }
               >
                 {message}
