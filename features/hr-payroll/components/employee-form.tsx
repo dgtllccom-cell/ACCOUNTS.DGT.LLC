@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import type { Route } from "next";
 import {
   Check,
   ChevronLeft,
@@ -153,6 +155,7 @@ type BranchOption = {
 };
 
 export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: EmployeeFormProps) {
+  const router = useRouter();
   const activeLang = useActiveLanguage();
   // Prefer an explicit non-"en" language from the host; otherwise follow the reactive store.
   const lang = (langProp && langProp !== "en") ? langProp : activeLang;
@@ -827,7 +830,20 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
             <select
               value={category}
               onChange={(e) => {
-                const cat = e.target.value as any;
+                const val = e.target.value;
+                if (val === "__GO_TO_COMPANY__") {
+                  router.push("/dashboard/settings/company" as Route);
+                  return;
+                }
+                if (val === "__GO_TO_CUSTOMER__") {
+                  router.push("/dashboard/settings/customers" as Route);
+                  return;
+                }
+                if (val === "__GO_TO_BANK__") {
+                  router.push("/dashboard/settings/bank" as Route);
+                  return;
+                }
+                const cat = val as any;
                 setCategory(cat);
                 const def = (CATEGORY_DEFAULTS[lang] || CATEGORY_DEFAULTS.en)[cat] || CATEGORY_DEFAULTS.en[cat];
                 if (def) {
@@ -837,13 +853,20 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
               }}
               className="flex h-11 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3.5 text-xs font-bold text-slate-900 dark:text-slate-100 shadow-xs outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-sans"
             >
-              <option value="Country Owner">{catLabel("Country Owner")}</option>
-              <option value="Branch Owner">{catLabel("Branch Owner")}</option>
-              <option value="Company Owner">{catLabel("Company Owner")}</option>
-              <option value="Manager">{catLabel("Manager")}</option>
-              <option value="Employee">{catLabel("Employee")}</option>
-              <option value="Normal Staff">{catLabel("Normal Staff")}</option>
-              <option value="Others">{catLabel("Others")}</option>
+              <optgroup label={lang === "ur" ? "ملازمین کے زمرے" : lang === "ar" ? "فئات الموظفين" : "Employee Categories"}>
+                <option value="Country Owner">{catLabel("Country Owner")}</option>
+                <option value="Branch Owner">{catLabel("Branch Owner")}</option>
+                <option value="Company Owner">{catLabel("Company Owner")}</option>
+                <option value="Manager">{catLabel("Manager")}</option>
+                <option value="Employee">{catLabel("Employee")}</option>
+                <option value="Normal Staff">{catLabel("Normal Staff")}</option>
+                <option value="Others">{catLabel("Others")}</option>
+              </optgroup>
+              <optgroup label={lang === "ur" ? "دیگر ماسٹر فارمز" : lang === "ar" ? "النماذج الرئيسية الأخرى" : "Other Master Forms"}>
+                <option value="__GO_TO_CUSTOMER__">👤 {lang === "ur" ? "کسٹمر / پرسن ماسٹر فارم کھولیں ↗" : lang === "ar" ? "فتح نموذج الشخص / العميل ↗" : "Open Customer / Person Master ↗"}</option>
+                <option value="__GO_TO_COMPANY__">🏢 {lang === "ur" ? "کمپنی رجسٹریشن فارم کھولیں ↗" : lang === "ar" ? "فتح نموذج تسجيل الشركة ↗" : "Open Company Master Form ↗"}</option>
+                <option value="__GO_TO_BANK__">🏦 {lang === "ur" ? "بینک اکاؤنٹ ماسٹر فارم کھولیں ↗" : lang === "ar" ? "فتح نموذج الحساب البنكي ↗" : "Open Bank Master Form ↗"}</option>
+              </optgroup>
             </select>
           </div>
 

@@ -37,6 +37,49 @@ type CustomerRow = {
   updated_at: string;
 };
 
+const CUSTOMER_I18N_TERMS: Record<string, Record<string, string>> = {
+  "asmatullah abdullah": { ur: "عصمت اللہ عبداللہ", ar: "عصمت الله عبد الله", fa: "عصمت‌الله عبدالله", ps: "عصمت الله عبد الله" },
+  "asmatullah": { ur: "عصمت اللہ", ar: "عصمت الله", fa: "عصمت‌الله", ps: "عصمت الله" },
+  "ismatullah abdullah": { ur: "عصمت اللہ عبداللہ", ar: "عصمت الله عبد الله", fa: "عصمت‌الله عبدالله", ps: "عصمت الله عبد الله" },
+  "muhammad anees": { ur: "محمد انیس", ar: "محمد أنيس", fa: "محمد انیس", ps: "محمد انیس" },
+  "muhammad idrees": { ur: "محمد ادریس", ar: "محمد إدريس", fa: "محمد ادریس", ps: "محمد ادریس" },
+  "muhammad haroon": { ur: "محمد ہارون", ar: "محمد هارون", fa: "محمد هارون", ps: "محمد هارون" },
+  "najeebullah": { ur: "نجیب اللہ", ar: "نجيب الله", fa: "نجیب‌الله", ps: "نجیب الله" },
+  "najeeb ullah": { ur: "نجیب اللہ", ar: "نجيب الله", fa: "نجیب‌الله", ps: "نجیب الله" },
+  "sana shahbaz": { ur: "ثناء شہباز", ar: "ثناء شهباز", fa: "ثناء شهباز", ps: "ثناء شهباز" },
+  "asmatullah andcopany": { ur: "عصمت اللہ اینڈ کمپنی", ar: "شركة عصمت الله", fa: "شرکت عصمت‌الله", ps: "عصمت الله او شرکت" },
+  "kamil khan": { ur: "کامل خان", ar: "كامل خان", fa: "کامل خان", ps: "کامل خان" },
+  "tariq jamil": { ur: "طارق جمیل", ar: "طارق جميل", fa: "طارق جمیل", ps: "طارق جمیل" },
+  "abdullah": { ur: "عبداللہ", ar: "عبد الله", fa: "عبدالله", ps: "عبد الله" },
+  "male": { ur: "مرد", ar: "ذكر", fa: "مرد", ps: "نارینه" },
+  "female": { ur: "عورت", ar: "أنثى", fa: "زن", ps: "ښځینه" },
+  "business": { ur: "کاروباری ادارہ", ar: "مؤسسة تجارية", fa: "کسب و کار", ps: "سوداګریز شرکت" },
+  "pakistan": { ur: "پاکستان", ar: "باكستان", fa: "پاکستان", ps: "پاکستان" },
+  "united arab emirates": { ur: "متحدہ عرب امارات", ar: "الإمارات العربية المتحدة", fa: "امارات متحده عربی", ps: "متحده عربي امارات" },
+  "uae": { ur: "متحدہ عرب امارات", ar: "الإمارات", fa: "امارات", ps: "امارات" },
+  "dubai": { ur: "دبئی", ar: "دبي", fa: "دبی", ps: "دوبۍ" },
+  "karachi": { ur: "کراچی", ar: "كراتشي", fa: "کراچی", ps: "کراچۍ" },
+  "lahore": { ur: "لاہور", ar: "لاهور", fa: "لاهور", ps: "لاهور" },
+  "quetta": { ur: "کوئٹہ", ar: "كويته", fa: "کویته", ps: "کوټه" },
+  "peshawar": { ur: "پشاور", ar: "بيشاور", fa: "پیشاور", ps: "پېښور" },
+  "chaman": { ur: "چمن", ar: "تچمن", fa: "چمن", ps: "چمن" },
+  "punjab": { ur: "پنجاب", ar: "البنجاب", fa: "پنجاب", ps: "پنجاب" },
+  "sindh": { ur: "سندھ", ar: "السند", fa: "سند", ps: "سند" },
+  "balochistan": { ur: "بلوچستان", ar: "بلوشستان", fa: "بلوچستان", ps: "بلوچستان" },
+  "kpk": { ur: "خیبر پختونخوا", ar: "خيبر بختونخوا", fa: "خیبر پختونخوا", ps: "خیبر پښتونخوا" },
+  "emirate of dubai": { ur: "امارتِ دبئی", ar: "إمارة دبي", fa: "امارت دبی", ps: "د دوبۍ امارت" },
+  "active": { ur: "فعال", ar: "نشط", fa: "فعال", ps: "فعال" }
+};
+
+function translateCustomerText(value: string | null | undefined, targetLang: SupportedLanguage): string {
+  if (!value) return "-";
+  if (targetLang === "en") return value;
+  const key = value.trim().toLowerCase();
+  const found = CUSTOMER_I18N_TERMS[key];
+  if (found && found[targetLang]) return found[targetLang];
+  return value;
+}
+
 export function CustomerList({ lang }: { lang: SupportedLanguage }) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -63,7 +106,7 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
     setError(null);
     try {
       // Query limit=250 to get a large set for stats & registry calculation
-      const res = await apiGet<{ customers: CustomerRow[] }>("/api/erp/customers?limit=250");
+      const res = await apiGet<{ customers: CustomerRow[] }>(`/api/erp/customers?limit=250&lang=${encodeURIComponent(lang || "en")}`);
       setCustomers(res.customers ?? []);
     } catch (e: any) {
       setError(e.message || "Failed to load customers.");
@@ -74,7 +117,7 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
 
   useEffect(() => {
     void loadCustomers();
-  }, []);
+  }, [lang]);
 
   // Parse custom metadata for each customer
   const parsedCustomers = useMemo(() => {
@@ -589,17 +632,17 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
                         {c.meta.customerAccountNumber}
                       </td>
                       <td className="px-5 py-3.5 font-extrabold text-slate-900">
-                        {c.customer_name}
+                        {translateCustomerText(c.customer_name, lang)}
                       </td>
-                      <td className="px-5 py-3.5 font-medium text-slate-800">{c.meta.customerType}</td>
+                      <td className="px-5 py-3.5 font-medium text-slate-800">{translateCustomerText(c.meta.customerType, lang)}</td>
                       <td className="px-5 py-3.5 text-slate-600 font-medium">
-                        {c.meta.country || "-"}
-                      </td>
-                      <td className="px-5 py-3.5 text-slate-600 font-medium">
-                        {c.meta.stateProvince || "-"}
+                        {translateCustomerText(c.meta.country, lang)}
                       </td>
                       <td className="px-5 py-3.5 text-slate-600 font-medium">
-                        {c.meta.city || "-"}
+                        {translateCustomerText(c.meta.stateProvince, lang)}
+                      </td>
+                      <td className="px-5 py-3.5 text-slate-600 font-medium">
+                        {translateCustomerText(c.meta.city, lang)}
                       </td>
                       <td className="px-5 py-3.5 text-slate-700">
                         <div className="group relative flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
