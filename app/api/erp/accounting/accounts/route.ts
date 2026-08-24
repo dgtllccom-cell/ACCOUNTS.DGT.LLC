@@ -619,7 +619,7 @@ export async function POST(request: NextRequest) {
 
         const accountRows = await tx`
           insert into enterprise_accounts ${tx({
-            scope: body.scope,
+            scope: body.scope || "super_admin",
             country_id: validCountryId,
             country_branch_id: validCountryBranchId,
             city_branch_id: validCityBranchId,
@@ -637,14 +637,14 @@ export async function POST(request: NextRequest) {
             creation_date: nowIso,
             branch_code: branchCode,
             branch_account_sequence: branchSequence,
-            name: body.name,
-            kind: body.kind,
-            currency: body.currency.toUpperCase(),
-            opening_balance: body.openingBalance,
-            current_balance: body.openingBalance,
+            name: body.name || "Account",
+            kind: body.kind || "asset",
+            currency: (body.currency || "USD").toUpperCase(),
+            opening_balance: body.openingBalance ?? 0,
+            current_balance: body.openingBalance ?? 0,
             status: body.status || "active",
-            is_control_account: body.isControlAccount,
-            contacts: body.contacts,
+            is_control_account: Boolean(body.isControlAccount),
+            contacts: body.contacts ?? null,
             created_by: validActorId
           })}
           returning id;
@@ -671,22 +671,22 @@ export async function POST(request: NextRequest) {
 
         const ledgerRows = await tx`
           insert into ledgers ${tx({
-            scope: body.scope,
-            country_id: body.countryId ?? null,
-            country_branch_id: body.countryBranchId ?? null,
-            city_branch_id: body.cityBranchId ?? null,
+            scope: body.scope || "super_admin",
+            country_id: validCountryId,
+            country_branch_id: validCountryBranchId,
+            city_branch_id: validCityBranchId,
             enterprise_account_id: accountId,
             parent_ledger_id: parentLedgerId,
             code: issuedCode,
-            name: body.name,
-            currency: body.currency.toUpperCase(),
-            opening_balance: body.openingBalance,
-            current_balance: body.openingBalance,
+            name: body.name || "Account",
+            currency: (body.currency || "USD").toUpperCase(),
+            opening_balance: body.openingBalance ?? 0,
+            current_balance: body.openingBalance ?? 0,
             debit_total: 0,
             credit_total: 0,
             normal_balance: creditNormal ? "credit" : "debit",
             is_active: true,
-            created_by: actorId
+            created_by: validActorId
           })}
           returning id;
         `;
@@ -701,10 +701,10 @@ export async function POST(request: NextRequest) {
             enterprise_account_id: accountId,
             account_number: issuedCode,
             event_type: "created",
-            created_by: actorId,
+            created_by: validActorId,
             debit_total: 0,
             credit_total: 0,
-            current_balance: body.openingBalance,
+            current_balance: body.openingBalance ?? 0,
             details: {
               customerNumber,
               accountSerialNumber,
@@ -715,9 +715,9 @@ export async function POST(request: NextRequest) {
               branchAccountSequence: branchSequence,
               linkedLedgerId: ledgerId,
               sessionUser: {
-                id: session.userId,
-                email: session.email,
-                fullName: session.fullName
+                id: session.userId || null,
+                email: session.email || null,
+                fullName: session.fullName || null
               }
             }
           })}
