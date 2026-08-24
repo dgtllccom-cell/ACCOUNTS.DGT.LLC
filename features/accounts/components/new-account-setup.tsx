@@ -580,7 +580,16 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
 
   const branchCode = branchInfo?.code ?? "";
   const isEditMode = Boolean(initialAccountId);
-  const accountPreview = lastCreated?.accountNumber || accountCode || (branchCode ? "AUTO" : "");
+  
+  const generatedPreviewCode = useMemo(() => {
+    if (accountCode) return accountCode;
+    const cCode = selectedCountry?.iso2 || (selectedCountry?.name?.slice(0, 2).toUpperCase()) || "GL";
+    const bCode = branchInfo?.code ? branchInfo.code.replace(/[^A-Z0-9]/gi, "").slice(-4) : "001";
+    const catCode = category ? (category.includes("P/S") ? "PS" : category.replace(/[^A-Z0-9]/gi, "").slice(0, 3).toUpperCase()) : "ACC";
+    return `${cCode}-${bCode}-${catCode}`;
+  }, [accountCode, selectedCountry, branchInfo, category]);
+
+  const accountPreview = lastCreated?.accountNumber || accountCode || (branchCode ? generatedPreviewCode : "AUTO");
   const readyToSave = Boolean(country && branchType && branch && accountTitle && subType && category && accountName);
   const saved = message?.startsWith("Saved") ?? false;
 
@@ -942,12 +951,29 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
 
               <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="accountCode">{getLabel("accountCodeAuto", lang)}</Label>
-                  <Input id="accountCode" value={accountCode || getLabel("generatedOnSave", lang)} readOnly className="bg-slate-50 font-mono text-xs" />
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="accountCode">{getLabel("accountCodeAuto", lang)}</Label>
+                    {branchInfo?.code ? (
+                      <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">
+                        {branchInfo.code}
+                      </span>
+                    ) : null}
+                  </div>
+                  <Input
+                    id="accountCode"
+                    value={accountCode || (branchInfo || selectedCountry ? generatedPreviewCode : getLabel("generatedOnSave", lang))}
+                    readOnly
+                    className="bg-blue-50/50 dark:bg-blue-950/30 font-mono text-xs font-bold text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 shadow-inner"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="manualReferenceNumber">{getLabel("manualReference", lang)}</Label>
-                  <Input id="manualReferenceNumber" value={manualReferenceNumber} onChange={(event) => setManualReferenceNumber(event.target.value.replace(/[^A-Za-z0-9_-]/g, '').toUpperCase())} placeholder={getLabel("manualReferencePlaceholder", lang)} />
+                  <Input
+                    id="manualReferenceNumber"
+                    value={manualReferenceNumber}
+                    onChange={(event) => setManualReferenceNumber(event.target.value.replace(/[^A-Za-z0-9_-]/g, '').toUpperCase())}
+                    placeholder={getLabel("manualReferencePlaceholder", lang)}
+                  />
                 </div>
               </div>
 

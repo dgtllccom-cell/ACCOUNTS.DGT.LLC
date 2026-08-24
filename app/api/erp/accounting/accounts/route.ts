@@ -561,16 +561,72 @@ export async function POST(request: NextRequest) {
         const manualReferenceNumber = body.manualReferenceNumber?.trim() || null;
         const nowIso = new Date().toISOString();
 
+        let validCountryId = null;
+        if (body.countryId) {
+          try {
+            const rows = await tx`select id from countries where id = ${body.countryId}::uuid limit 1;`;
+            if (rows.length > 0) validCountryId = rows[0].id;
+          } catch {}
+        }
+
+        let validCountryBranchId = null;
+        if (body.countryBranchId) {
+          try {
+            const rows = await tx`select id from country_branches where id = ${body.countryBranchId}::uuid limit 1;`;
+            if (rows.length > 0) validCountryBranchId = rows[0].id;
+          } catch {}
+        }
+
+        let validCityBranchId = null;
+        if (body.cityBranchId) {
+          try {
+            const rows = await tx`select id from city_branches where id = ${body.cityBranchId}::uuid limit 1;`;
+            if (rows.length > 0) validCityBranchId = rows[0].id;
+          } catch {}
+        }
+
+        let validCustomerId = null;
+        if (body.customerId) {
+          try {
+            const rows = await tx`select id from customers where id = ${body.customerId}::uuid limit 1;`;
+            if (rows.length > 0) validCustomerId = rows[0].id;
+          } catch {}
+        }
+
+        let validCompanyId = null;
+        if (body.companyId) {
+          try {
+            const rows = await tx`select id from companies where id = ${body.companyId}::uuid limit 1;`;
+            if (rows.length > 0) validCompanyId = rows[0].id;
+          } catch {}
+        }
+
+        let validBankId = null;
+        if (body.bankId) {
+          try {
+            const rows = await tx`select id from banks where id = ${body.bankId}::uuid limit 1;`;
+            if (rows.length > 0) validBankId = rows[0].id;
+          } catch {}
+        }
+
+        let validActorId = null;
+        if (actorId) {
+          try {
+            const rows = await tx`select id from profiles where id = ${actorId}::uuid limit 1;`;
+            if (rows.length > 0) validActorId = rows[0].id;
+          } catch {}
+        }
+
         const accountRows = await tx`
           insert into enterprise_accounts ${tx({
             scope: body.scope,
-            country_id: body.countryId ?? null,
-            country_branch_id: body.countryBranchId ?? null,
-            city_branch_id: body.cityBranchId ?? null,
+            country_id: validCountryId,
+            country_branch_id: validCountryBranchId,
+            city_branch_id: validCityBranchId,
             parent_id: body.parentId ?? null,
-            customer_id: body.customerId ?? null,
-            company_id: body.companyId ?? null,
-            bank_id: body.bankId ?? null,
+            customer_id: validCustomerId,
+            company_id: validCompanyId,
+            bank_id: validBankId,
             code: issuedCode,
             account_number: issuedCode,
             customer_number: customerNumber,
@@ -589,7 +645,7 @@ export async function POST(request: NextRequest) {
             status: body.status || "active",
             is_control_account: body.isControlAccount,
             contacts: body.contacts,
-            created_by: actorId
+            created_by: validActorId
           })}
           returning id;
         `;
