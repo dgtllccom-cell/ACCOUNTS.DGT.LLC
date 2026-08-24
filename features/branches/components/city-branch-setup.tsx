@@ -1060,17 +1060,15 @@ function CityBranchSetupContent() {
     }
   }
 
-  async function loadExistingCityBranches(nextCountryId: string, nextCountryBranchId: string) {
-    if (!isUuid(nextCountryId) || !isUuid(nextCountryBranchId)) {
+  async function loadExistingCityBranches(nextCountryId: string, nextCountryBranchId?: string) {
+    if (!isUuid(nextCountryId)) {
       setExistingCityBranches([]);
       return [];
     }
-    const res = await fetch(
-      `/api/branch-management/city-branches?countryId=${encodeURIComponent(nextCountryId)}&countryBranchId=${encodeURIComponent(
-        nextCountryBranchId
-      )}`,
-      { cache: "no-store" }
-    );
+    const url = nextCountryBranchId && isUuid(nextCountryBranchId)
+      ? `/api/branch-management/city-branches?countryId=${encodeURIComponent(nextCountryId)}&countryBranchId=${encodeURIComponent(nextCountryBranchId)}`
+      : `/api/branch-management/city-branches?countryId=${encodeURIComponent(nextCountryId)}`;
+    const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) {
       setExistingCityBranches([]);
       return [];
@@ -1081,20 +1079,48 @@ function CityBranchSetupContent() {
     return list;
   }
 
-  function suggestBranchCode(meta: LocationHierarchyMeta, existingCount: number) {
+  function suggestBranchCode(meta: LocationHierarchyMeta, existingBranchesList: CityBranchRow[] = existingCityBranches) {
     const prefix = asIso3(meta.country);
-    const num = String(Math.max(1, existingCount + 1)).padStart(3, "0");
-    const cityCode = compactCode(meta.city?.code || meta.city?.name || "", "CITY");
-    return `${prefix}-${cityCode}-${num}`;
+    const rawCity = meta.city?.code || meta.city?.name || "";
+    const cityCode = compactCode(rawCity, "CITY");
+    const existingCodes = new Set((existingBranchesList || []).map((b) => (b.code || "").toUpperCase().trim()));
+
+    // Find the first available number starting from 1
+    let n = 1;
+    while (n <= 999) {
+      const num = String(n).padStart(3, "0");
+      const candidate = `${prefix}-${cityCode}-${num}`;
+      if (!existingCodes.has(candidate)) {
+        return candidate;
+      }
+      n++;
+    }
+    return `${prefix}-${cityCode}-${String((existingBranchesList || []).length + 1).padStart(3, "0")}`;
   }
 
-  function suggestBranchName(meta: LocationHierarchyMeta, existingCount = 0) {
+  function suggestBranchName(meta: LocationHierarchyMeta, existingBranchesList: CityBranchRow[] = existingCityBranches) {
     const city = meta.city?.name?.trim();
     if (!city) return "";
-    if (existingCount > 0) {
-      return `${city} City Branch ${existingCount + 1}`;
+    const existingNames = new Set(
+      (existingBranchesList || [])
+        .filter((b) => isCityBranchMatch(b, meta.city?.id, meta.city?.name ?? ""))
+        .map((b) => (b.name || "").toLowerCase().trim())
+    );
+
+    let candidate = `${city} City Branch`;
+    if (!existingNames.has(candidate.toLowerCase())) {
+      return candidate;
     }
-    return `${city} City Branch`;
+
+    let n = 2;
+    while (n <= 100) {
+      candidate = `${city} City Branch ${n}`;
+      if (!existingNames.has(candidate.toLowerCase())) {
+        return candidate;
+      }
+      n++;
+    }
+    return `${city} City Branch ${(existingBranchesList || []).length + 1}`;
   }
 
   async function onCountrySelected(next: LocationHierarchyValue, meta: LocationHierarchyMeta) {
@@ -1140,13 +1166,14 @@ function CityBranchSetupContent() {
 
     if (!isUuid(next.countryId)) return;
     await loadMainBranches(next.countryId);
+    await loadExistingCityBranches(next.countryId);
   }
 
   async function onMainBranchSelected(nextId: string) {
     setBanner(null);
     setCountryBranchId(nextId);
     const list = await loadExistingCityBranches(location.countryId, nextId);
-    setBranchCode(suggestBranchCode(locationMeta, list.length));
+    setBranchCode(suggestBranchCode(locationMeta, list));
     const parent = mainBranches.find((branch) => branch.id === nextId);
     const parentPermissions = parent?.permission_grants?.length ? parent.permission_grants : undefined;
     setPermissionGrants((current) => (parentPermissions ? current.filter((permission) => parentPermissions.includes(permission)) : current));
@@ -1162,15 +1189,13 @@ function CityBranchSetupContent() {
 
     if (editingCityBranchId) return;
 
-    const countInCity = existingCityBranches.filter((b) => isCityBranchMatch(b, next.cityId, meta.city?.name ?? "")).length;
-
     if (!branchName.trim() || branchName.endsWith("City Branch") || /City Branch \d+$/.test(branchName)) {
-      const nextName = suggestBranchName(meta, countInCity);
+      const nextName = suggestBranchName(meta, existingCityBranches);
       if (nextName) setBranchName(nextName);
     }
 
     if (countryBranchId) {
-      setBranchCode(suggestBranchCode(meta, existingCityBranches.length));
+      setBranchCode(suggestBranchCode(meta, existingCityBranches));
     }
   }
 
@@ -2530,11 +2555,30 @@ function CityBranchSetupContent() {
                     <p>Branch Name <b>{branchName}</b> already exists in {locationMeta.city?.name || "this city"}. Please choose a distinct name.</p>
                   )}
                 </div>
-                {activeExistingCityBranch && (
-                  <Button type="button" size="sm" variant="outline" className="mt-2 h-6 text-[9px]" onClick={() => beginEditCityBranch(activeExistingCityBranch)}>
-                    <Pencil className="h-3 w-3" aria-hidden /> Edit Existing
-                  </Button>
-                )}
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {codeAlreadyExists && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-6 text-[9px] bg-white text-emerald-700 border-emerald-300 hover:bg-emerald-50"
+                      onClick={() => setBranchCode(suggestBranchCode(locationMeta, existingCityBranches))}
+                    >
+                      ⚡ Auto-Fix Code
+                    </Button>
+                  )}
+                  {activeExistingCityBranch && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-6 text-[9px]"
+                      onClick={() => beginEditCityBranch(activeExistingCityBranch)}
+                    >
+                      <Pencil className="h-3 w-3 mr-1" aria-hidden /> Edit Existing
+                    </Button>
+                  )}
+                </div>
               </div>
             )}
 
