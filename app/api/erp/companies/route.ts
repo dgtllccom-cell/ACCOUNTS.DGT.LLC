@@ -28,9 +28,12 @@ export async function GET(request: NextRequest) {
     // Always resolve — see customers/[id]/route.ts for why skipping lang === "en" would leak
     // non-English source text into the English view.
     if (Array.isArray(companies) && companies.length > 0) {
-      companies = await localizeRecordNames<any>(companies, "companies", "name", lang);
-      companies = await localizeRecordNames<any>(companies, "companies", "legal_name", lang);
-      companies = await localizeRecordNames<any>(companies, "companies", "owner_name", lang);
+      companies = await localizeRecordNames<any>(companies, "companies", "name", lang, { phraseFallback: true });
+      companies = await localizeRecordNames<any>(companies, "companies", "legal_name", lang, { phraseFallback: true });
+      companies = await localizeRecordNames<any>(companies, "companies", "owner_name", lang, { phraseFallback: true });
+      companies = await localizeRecordNames<any>(companies, "companies", "country_name", lang, { phraseFallback: true });
+      companies = await localizeRecordNames<any>(companies, "companies", "state_name", lang, { phraseFallback: true });
+      companies = await localizeRecordNames<any>(companies, "companies", "city_name", lang, { phraseFallback: true });
     }
 
     return apiOk({ ...(result as any), companies });

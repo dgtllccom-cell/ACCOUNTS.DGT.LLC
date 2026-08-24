@@ -438,15 +438,24 @@ function CityBranchSetupContent() {
   }, [parentPermissionGrants]);
 
   const matchingExistingCityBranch = useMemo(() => {
-    if (!countryBranchId || !location.cityId || !locationMeta.city?.name) return null;
-    return (
-      existingCityBranches.find(
-        (branch) =>
-          branch.country_branch_id === countryBranchId &&
-          isCityBranchMatch(branch, location.cityId, locationMeta.city?.name ?? "")
-      ) ?? null
-    );
-  }, [countryBranchId, existingCityBranches, location.cityId, locationMeta.city?.name]);
+    if (!countryBranchId) return null;
+    if (branchCode.trim()) {
+      const match = existingCityBranches.find(
+        (b) => b.country_branch_id === countryBranchId && b.code.toUpperCase() === branchCode.trim().toUpperCase()
+      );
+      if (match) return match;
+    }
+    if (branchName.trim() && (location.cityId || locationMeta.city?.name)) {
+      const match = existingCityBranches.find(
+        (b) =>
+          b.country_branch_id === countryBranchId &&
+          b.name.trim().toLowerCase() === branchName.trim().toLowerCase() &&
+          isCityBranchMatch(b, location.cityId, locationMeta.city?.name ?? "")
+      );
+      if (match) return match;
+    }
+    return null;
+  }, [countryBranchId, existingCityBranches, branchCode, branchName, location.cityId, locationMeta.city?.name]);
 
   const activeExistingCityBranch = useMemo(() => {
     if (editingCityBranchId) {
@@ -455,17 +464,27 @@ function CityBranchSetupContent() {
     return matchingExistingCityBranch;
   }, [editingCityBranchId, existingCityBranches, matchingExistingCityBranch]);
 
-  const cityAlreadyExists = Boolean(
-    location.cityId &&
+  const codeAlreadyExists = Boolean(
+    branchCode.trim() &&
       existingCityBranches.some((b) => {
         if (editingCityBranchId && b.id === editingCityBranchId) return false;
-        if (b.city_id && b.city_id === location.cityId) return true;
-        if (b.city_name && locationMeta.city?.name) {
-          return b.city_name.trim().toLowerCase() === locationMeta.city.name.trim().toLowerCase();
-        }
-        return false;
+        return b.code && b.code.trim().toUpperCase() === branchCode.trim().toUpperCase();
       })
   );
+
+  const nameAlreadyExists = Boolean(
+    branchName.trim() &&
+      existingCityBranches.some((b) => {
+        if (editingCityBranchId && b.id === editingCityBranchId) return false;
+        const sameCity =
+          (location.cityId && b.city_id && b.city_id === location.cityId) ||
+          (b.city_name && locationMeta.city?.name && b.city_name.trim().toLowerCase() === locationMeta.city.name.trim().toLowerCase());
+        return Boolean(sameCity && b.name && b.name.trim().toLowerCase() === branchName.trim().toLowerCase());
+      })
+  );
+
+  const branchConflict = codeAlreadyExists || nameAlreadyExists;
+  const cityAlreadyExists = branchConflict;
 
   const contactItems = contacts
     .map((row) => {
@@ -1069,9 +1088,12 @@ function CityBranchSetupContent() {
     return `${prefix}-${cityCode}-${num}`;
   }
 
-  function suggestBranchName(meta: LocationHierarchyMeta) {
+  function suggestBranchName(meta: LocationHierarchyMeta, existingCount = 0) {
     const city = meta.city?.name?.trim();
     if (!city) return "";
+    if (existingCount > 0) {
+      return `${city} City Branch ${existingCount + 1}`;
+    }
     return `${city} City Branch`;
   }
 
@@ -1140,8 +1162,10 @@ function CityBranchSetupContent() {
 
     if (editingCityBranchId) return;
 
-    if (!branchName.trim()) {
-      const nextName = suggestBranchName(meta);
+    const countInCity = existingCityBranches.filter((b) => isCityBranchMatch(b, next.cityId, meta.city?.name ?? "")).length;
+
+    if (!branchName.trim() || branchName.endsWith("City Branch") || /City Branch \d+$/.test(branchName)) {
+      const nextName = suggestBranchName(meta, countInCity);
       if (nextName) setBranchName(nextName);
     }
 
@@ -1177,10 +1201,18 @@ function CityBranchSetupContent() {
       return;
     }
 
-    if (cityAlreadyExists) {
+    if (codeAlreadyExists) {
       setBanner({
         type: "error",
-        message: `City Branch Already Exists\nBranch Name: ${activeExistingCityBranch?.name || "-"}\nBranch Code: ${activeExistingCityBranch?.code || "-"}\nStatus: ${activeExistingCityBranch?.status || "-"}`
+        message: `Branch Code Already Exists\nBranch Code "${branchCode}" is already in use in this country. Please enter a unique branch code.`
+      });
+      return;
+    }
+
+    if (nameAlreadyExists) {
+      setBanner({
+        type: "error",
+        message: `Branch Name Already Exists in this City\nBranch Name "${branchName}" is already registered in this city. Please choose a distinct name.`
       });
       return;
     }
@@ -2487,12 +2519,17 @@ function CityBranchSetupContent() {
             })()}
 
             {/* Existing Branch Conflict */}
-            {cityAlreadyExists && (
+            {branchConflict && (
               <div className="border-t border-amber-100 bg-amber-50 px-4 py-3 dark:border-amber-900/40 dark:bg-amber-950/20">
-                <p className="text-[9px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">⚠ Branch Already Exists</p>
-                <p className="mt-1 text-[10px] text-amber-800 dark:text-amber-300">
-                  <b>{activeExistingCityBranch?.name}</b> ({activeExistingCityBranch?.code}) already registered for this city under {previewMainBranch}.
-                </p>
+                <p className="text-[9px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">⚠ Duplicate Code or Name Detected</p>
+                <div className="mt-1 text-[10px] text-amber-800 dark:text-amber-300 space-y-1">
+                  {codeAlreadyExists && (
+                    <p>Branch Code <b>{branchCode}</b> is already in use. Please enter a unique code.</p>
+                  )}
+                  {nameAlreadyExists && (
+                    <p>Branch Name <b>{branchName}</b> already exists in {locationMeta.city?.name || "this city"}. Please choose a distinct name.</p>
+                  )}
+                </div>
                 {activeExistingCityBranch && (
                   <Button type="button" size="sm" variant="outline" className="mt-2 h-6 text-[9px]" onClick={() => beginEditCityBranch(activeExistingCityBranch)}>
                     <Pencil className="h-3 w-3" aria-hidden /> Edit Existing

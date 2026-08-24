@@ -148,9 +148,11 @@ export async function getPhraseTranslator(lang: SupportedLanguage): Promise<(val
   };
 }
 
-function genuine(target: string | null | undefined, raw: string, english: string): string | null {
+function genuine(target: string | null | undefined, raw: string, english: string, isEnglishTarget = false): string | null {
   const t = (target || "").trim();
-  if (t && t !== raw && t !== english) return t;
+  if (!t || t === raw) return null;
+  if (isEnglishTarget) return t;
+  if (t !== english) return t;
   return null;
 }
 
@@ -184,7 +186,7 @@ export async function lookupApprovedDictionary(
   const d = dict.get(raw.toLowerCase());
   if (!d) return null;
   const targetCol = LANG_COL[lang] || "english_text";
-  return genuine(d[targetCol as keyof DictRow] as string, raw, (d.english_text || "").trim());
+  return genuine(d[targetCol as keyof DictRow] as string, raw, (d.english_text || "").trim(), lang === "en");
 }
 
 export async function localizeRecordNames<T extends { id: string }>(
@@ -202,12 +204,12 @@ export async function localizeRecordNames<T extends { id: string }>(
   }
 ): Promise<T[]> {
   if (!records || records.length === 0) return records;
-  if (lang === "en" && !options?.phraseFallback) return records;
   const dbUrl = process.env.DATABASE_URL;
   if (!dbUrl) return records;
   const ids = records.map((r) => r.id).filter(Boolean);
   if (ids.length === 0) return records;
 
+  const isEn = lang === "en";
   const targetCol = LANG_COL[lang] || "english_text";
   // Exact-match dictionary is disabled for proper-name tables, but phrase-level substitution
   // (whole approved terms only) is safe there too — it only ever replaces known business terms.
@@ -235,28 +237,29 @@ export async function localizeRecordNames<T extends { id: string }>(
       const englishVal = (trans?.english_text || "").trim();
 
       // Tier 1 — record-specific approved translation.
-      const recVal = genuine(trans ? (trans[targetCol as keyof DictRow] as string) : null, rawValue, englishVal);
+      const targetText = trans ? (trans[targetCol as keyof DictRow] as string) : null;
+      const recVal = genuine(targetText, rawValue, englishVal, isEn);
       if (recVal) return { ...record, [field]: recVal };
 
       // Tier 2 — central dictionary (exact term match, approved only).
       if (dict) {
         const d = dict.get(rawValue.toLowerCase());
         if (d) {
-          const dictVal = genuine(d[targetCol as keyof DictRow] as string, rawValue, (d.english_text || "").trim());
+          const dictVal = genuine(d[targetCol as keyof DictRow] as string, rawValue, (d.english_text || "").trim(), isEn);
           if (dictVal) return { ...record, [field]: dictVal };
         }
 
         // Tier 2b — phrase-level substitution of approved business terms inside the value,
         // so no approved English term remains visible in a non-English selection; genuine
         // proper-name words are left untouched (honest, never guessed).
-        if (options?.phraseFallback) {
+        if (options?.phraseFallback || !isEn) {
           const phrase = phraseTranslate(dict, rawValue, lang);
           if (phrase) return { ...record, [field]: phrase };
         }
       }
 
-      // Tier 3 — honest original value (English preferred), no guessed spelling.
-      if (lang === "en" && englishVal) return { ...record, [field]: englishVal };
+      // Tier 3 — honest original value (English preferred when viewing in English), no guessed spelling.
+      if (isEn && englishVal && englishVal !== rawValue) return { ...record, [field]: englishVal };
       return record;
     });
   } finally {

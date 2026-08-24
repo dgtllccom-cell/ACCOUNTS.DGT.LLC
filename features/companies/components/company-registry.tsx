@@ -240,22 +240,31 @@ export function CompanyRegistry() {
         : [];
 
       if (rawList.length > 0) {
-        const mapped: CompanyRegistryItem[] = rawList.map((c: any, i: number) => ({
-          id: c.id,
-          accountNo: `10010${String(i + 1).padStart(2, "0")}`,
-          consortium: c.owner_name ? `${c.owner_name} Group` : "Standard Consortium",
-          branchRules: "Multi Branch Allowed",
-          accountName: c.name || "Company Account",
-          companiesCount: 1,
-          contractsCount: 2,
-          primaryContact: (c.contacts && c.contacts[0]?.value) || "+971 50 000 0000",
-          email: `${(c.name || "info").toLowerCase().replace(/[^a-z0-9]/g, "")}@company.dgt.llc`,
-          country: c.country_name || "Pakistan",
-          state: c.state_name || "Punjab",
-          city: c.city_name || "Karachi",
-          address: c.address || "Main Commercial Area",
-          raw: c
-        }));
+        const mapped: CompanyRegistryItem[] = rawList.map((c: any, i: number) => {
+          const contactEmail = Array.isArray(c.contacts)
+            ? c.contacts.find((x: any) => (x.type || "").toLowerCase().includes("email") && x.value)?.value
+            : null;
+          const safeSlug = (c.raw?.name || c.name || "info").toLowerCase().replace(/[^a-z0-9]/g, "") || "company";
+          const email = contactEmail || `${safeSlug}@company.dgt.llc`;
+          const contactPhone = (Array.isArray(c.contacts) && c.contacts[0]?.value) || "+971 50 000 0000";
+
+          return {
+            id: c.id,
+            accountNo: `10010${String(i + 1).padStart(2, "0")}`,
+            consortium: c.owner_name ? `${c.owner_name} ${tt("creg.group_suffix", "Group")}` : tt("creg.standard_consortium", "Standard Consortium"),
+            branchRules: tt("creg.multi_branch_allowed", "Multi Branch Allowed"),
+            accountName: c.name || "Company Account",
+            companiesCount: 1,
+            contractsCount: 2,
+            primaryContact: contactPhone,
+            email,
+            country: c.country_name || "Pakistan",
+            state: c.state_name || "Punjab",
+            city: c.city_name || "Karachi",
+            address: c.address || "Main Commercial Area",
+            raw: c
+          };
+        });
         setCompanies(mapped);
       } else {
         setCompanies(INITIAL_DEMO_COMPANIES);
@@ -611,12 +620,12 @@ export function CompanyRegistry() {
                     </td>
 
                     {/* Primary Contact */}
-                    <td className="p-3.5 font-mono text-slate-600 dark:text-slate-400">
+                    <td className="p-3.5 font-mono text-slate-600 dark:text-slate-400" dir="ltr">
                       {c.primaryContact}
                     </td>
 
                     {/* Email */}
-                    <td className="p-3.5 font-mono text-blue-600 dark:text-blue-400">
+                    <td className="p-3.5 font-mono text-blue-600 dark:text-blue-400" dir="ltr">
                       {c.email}
                     </td>
 

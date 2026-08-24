@@ -13,9 +13,12 @@ import { localizeRecordNames } from "@/lib/i18n/localize-records";
 // even though the list endpoint (app/api/erp/companies/route.ts) already resolved it.
 async function localizeCompany(company: any, lang: ReturnType<typeof normalizeLanguage>) {
   if (!company) return company;
-  let [resolved] = await localizeRecordNames([company], "companies", "name", lang);
-  [resolved] = await localizeRecordNames([resolved], "companies", "legal_name", lang);
-  [resolved] = await localizeRecordNames([resolved], "companies", "owner_name", lang);
+  let [resolved] = await localizeRecordNames([company], "companies", "name", lang, { phraseFallback: true });
+  [resolved] = await localizeRecordNames([resolved], "companies", "legal_name", lang, { phraseFallback: true });
+  [resolved] = await localizeRecordNames([resolved], "companies", "owner_name", lang, { phraseFallback: true });
+  [resolved] = await localizeRecordNames([resolved], "companies", "country_name", lang, { phraseFallback: true });
+  [resolved] = await localizeRecordNames([resolved], "companies", "state_name", lang, { phraseFallback: true });
+  [resolved] = await localizeRecordNames([resolved], "companies", "city_name", lang, { phraseFallback: true });
   return resolved;
 }
 

@@ -191,6 +191,33 @@ function toContactTypeKey(label: string): ContactTypeKey | null {
   return null;
 }
 
+const TYPE_TRANSLATIONS: Record<string, Record<string, string>> = {
+  "Mobile Number": { ur: "موبائل نمبر", ar: "رقم الجوال", ps: "موبایل شمیره", fa: "شماره موبایل" },
+  "Office Number": { ur: "دفتر کا نمبر", ar: "رقم المكتب", ps: "د دفتر شمیره", fa: "شماره دفتر" },
+  "WhatsApp Number": { ur: "واٹس ایپ نمبر", ar: "رقم الواتساب", ps: "د واټس اپ شمیره", fa: "شماره واتساپ" },
+  "Email Address": { ur: "ای میل ایڈریس", ar: "البريد الإلكتروني", ps: "بریښنالیک پته", fa: "آدرس ایمیل" },
+  "Phone Number": { ur: "فون نمبر", ar: "رقم الهاتف", ps: "د تلیفون شمیره", fa: "شماره تلفن" },
+  "Fax Number": { ur: "فیکس نمبر", ar: "رقم الفاكس", ps: "د فکس شمیره", fa: "شماره فکس" },
+  "Trade License Number": { ur: "ٹریڈ لائسنس نمبر", ar: "رقم الرخصة التجارية", ps: "د سوداګرۍ جواز شمیره", fa: "شماره پروانه کسب" },
+  "VAT/TRN": { ur: "VAT / TRN (ویلیو ایڈڈ ٹیکس)", ar: "ضريبة القيمة المضافة / TRN", ps: "VAT / TRN مالیه", fa: "مالیات بر ارزش افزوده / TRN" },
+  "Sales Tax No": { ur: "سیلز ٹیکس نمبر", ar: "رقم ضريبة المبيعات", ps: "د پلور مالیې شمیره", fa: "شماره مالیات بر فروش" },
+  "GST No": { ur: "جی ایس ٹی نمبر", ar: "رقم ضريبة السلع والخدمات (GST)", ps: "GST شمیره", fa: "شماره GST" },
+  "PSI No": { ur: "پی ایس آئی نمبر", ar: "رقم PSI", ps: "PSI شمیره", fa: "شماره PSI" },
+  "NTN No": { ur: "این ٹی این نمبر (NTN)", ar: "رقم NTN", ps: "NTN شمیره", fa: "شماره NTN" },
+  "Passport / Emirates ID / National ID": { ur: "پاسپورٹ / ایمریٹس آئی ڈی / قومی شناختی کارڈ", ar: "جواز السفر / الهوية الإماراتية / الهوية الوطنية", ps: "پاسپورت / د اماراتو پیژندپاڼه / ملي پیژندپاڼه", fa: "پاسپورت / شناسه امارات / کارت ملی" },
+  "CNIC No": { ur: "شناختی کارڈ نمبر (CNIC)", ar: "رقم الهوية الوطنية (CNIC)", ps: "د پیژندپاڼې شمیره (CNIC)", fa: "شماره کارت ملی (CNIC)" },
+  "Passport No": { ur: "پاسپورٹ نمبر", ar: "رقم جواز السفر", ps: "د پاسپورت شمیره", fa: "شماره پاسپورت" },
+  "National ID": { ur: "قومی شناختی کارڈ", ar: "الهوية الوطنية", ps: "ملي پیژندپاڼه", fa: "کارت ملی" },
+  "Residence Permit": { ur: "اقامہ / رہائشی اجازت نامہ", ar: "تصريح الإقامة / الإقامة", ps: "د استوګنې اجازه لیک", fa: "مجوز اقامت" }
+};
+
+export function localizeType(type: string, lang: string): string {
+  if (!type || lang === "en") return type;
+  const match = TYPE_TRANSLATIONS[type];
+  if (match && match[lang]) return match[lang];
+  return type;
+}
+
 function DynamicRows({
   label,
   helper,
@@ -205,7 +232,8 @@ function DynamicRows({
   addLabel = "Add",
   selectTypeLabel = "Select Type",
   addNewTypeLabel = "+ Add New Type",
-  enterValueLabel = "Enter value"
+  enterValueLabel = "Enter value",
+  lang = "en"
 }: {
   label: string;
   helper?: string;
@@ -221,6 +249,7 @@ function DynamicRows({
   selectTypeLabel?: string;
   addNewTypeLabel?: string;
   enterValueLabel?: string;
+  lang?: string;
 }) {
   return (
     <div className="space-y-3 rounded-lg border bg-white p-4">
@@ -236,58 +265,72 @@ function DynamicRows({
       </div>
 
       <div className="space-y-2">
-        {rows.map((row) => (
-          <div key={row.id} className="grid gap-2 md:grid-cols-[minmax(180px,0.8fr)_1fr_auto]">
-            <select
-              value={row.type}
-              onChange={(event) => {
-                if (event.target.value === "__new__") {
-                  onNewType(list);
-                  return;
-                }
-                onChange(row.id, { type: event.target.value });
-              }}
-              className={selectClass()}
-            >
-              <option value="">{selectTypeLabel}</option>
-              {types.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-              <option value="__new__">{addNewTypeLabel}</option>
-            </select>
-            {list === "contacts" && toContactTypeKey(row.type) ? (
-              <ContactNumberInput
-                label=""
-                hideLabel
-                showHelp={false}
-                countryId={countryId ?? null}
-                contactTypeKey={toContactTypeKey(row.type) as ContactTypeKey}
-                value={row.value}
-                disabled={!countryId}
-                onValueChange={(next) => onChange(row.id, { value: next })}
-              />
-            ) : (
-              <Input
-                value={row.value}
-                onChange={(event) => onChange(row.id, { value: event.target.value })}
-                placeholder={enterValueLabel}
-                className="bg-white text-slate-900"
-              />
-            )}
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={() => onRemove(row.id)}
-              aria-label={`Remove ${label} row`}
-              className="h-10 w-10 text-rose-600 hover:bg-rose-50 hover:text-rose-700 border-slate-200"
-            >
-              <Trash2 className="h-4 w-4" aria-hidden />
-            </Button>
-          </div>
-        ))}
+        {rows.map((row) => {
+          const isEmail = (row.type || "").toLowerCase().includes("email");
+          const isContactPhone = list === "contacts" && toContactTypeKey(row.type);
+          return (
+            <div key={row.id} className="grid gap-2 md:grid-cols-[minmax(180px,0.8fr)_1fr_auto]">
+              <select
+                value={row.type}
+                onChange={(event) => {
+                  if (event.target.value === "__new__") {
+                    onNewType(list);
+                    return;
+                  }
+                  onChange(row.id, { type: event.target.value });
+                }}
+                className={selectClass()}
+              >
+                <option value="">{selectTypeLabel}</option>
+                {types.map((type) => (
+                  <option key={type} value={type}>
+                    {localizeType(type, lang)}
+                  </option>
+                ))}
+                <option value="__new__">{addNewTypeLabel}</option>
+              </select>
+              {isContactPhone ? (
+                <ContactNumberInput
+                  label=""
+                  hideLabel
+                  showHelp={false}
+                  countryId={countryId ?? null}
+                  contactTypeKey={toContactTypeKey(row.type) as ContactTypeKey}
+                  value={row.value}
+                  disabled={!countryId}
+                  onValueChange={(next) => onChange(row.id, { value: next })}
+                />
+              ) : isEmail ? (
+                <Input
+                  type="email"
+                  dir="ltr"
+                  value={row.value}
+                  onChange={(event) => onChange(row.id, { value: event.target.value })}
+                  placeholder="example@domain.com"
+                  className="bg-white text-slate-900 font-sans text-left"
+                />
+              ) : (
+                <Input
+                  dir="ltr"
+                  value={row.value}
+                  onChange={(event) => onChange(row.id, { value: event.target.value })}
+                  placeholder={enterValueLabel}
+                  className="bg-white text-slate-900 font-mono text-left"
+                />
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => onRemove(row.id)}
+                aria-label={`Remove ${label} row`}
+                className="h-10 w-10 text-rose-600 hover:bg-rose-50 hover:text-rose-700 border-slate-200"
+              >
+                <Trash2 className="h-4 w-4" aria-hidden />
+              </Button>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -751,6 +794,7 @@ export function CompanyIncorporationForm({
               rows={contacts}
               types={types.contacts}
               countryId={location.countryId}
+              lang={lang}
               onChange={(id, patch) => { patchRow("contacts", id, patch); setSelectedCompanyId(null); }}
               onRemove={(id) => { removeRow("contacts", id); setSelectedCompanyId(null); }}
               onAdd={() => { addRow("contacts"); setSelectedCompanyId(null); }}
@@ -766,6 +810,7 @@ export function CompanyIncorporationForm({
               list="registrations"
               rows={registrations}
               types={types.registrations}
+              lang={lang}
               onChange={(id, patch) => { patchRow("registrations", id, patch); setSelectedCompanyId(null); }}
               onRemove={(id) => { removeRow("registrations", id); setSelectedCompanyId(null); }}
               onAdd={() => { addRow("registrations"); setSelectedCompanyId(null); }}
@@ -781,6 +826,7 @@ export function CompanyIncorporationForm({
               list="ownerIds"
               rows={ownerIds}
               types={types.ownerIds}
+              lang={lang}
               onChange={(id, patch) => { patchRow("ownerIds", id, patch); setSelectedCompanyId(null); }}
               onRemove={(id) => { removeRow("ownerIds", id); setSelectedCompanyId(null); }}
               onAdd={() => { addRow("ownerIds"); setSelectedCompanyId(null); }}
@@ -926,8 +972,8 @@ export function CompanyIncorporationForm({
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     {previewData.contacts.map((c) => (
                       <div key={c.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2">
-                        <span className="text-xs font-medium text-slate-500">{c.type}</span>
-                        <span className="break-all text-sm font-semibold text-slate-800 font-mono">{c.value}</span>
+                        <span className="text-xs font-medium text-slate-500">{localizeType(c.type, lang)}</span>
+                        <span className="break-all text-sm font-semibold text-slate-800 font-mono" dir="ltr">{c.value}</span>
                       </div>
                     ))}
                   </div>
@@ -942,8 +988,8 @@ export function CompanyIncorporationForm({
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     {previewData.registrations.map((r) => (
                       <div key={r.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2">
-                        <span className="text-xs font-medium text-slate-500">{r.type}</span>
-                        <span className="break-all text-sm font-semibold text-slate-800 font-mono">{r.value}</span>
+                        <span className="text-xs font-medium text-slate-500">{localizeType(r.type, lang)}</span>
+                        <span className="break-all text-sm font-semibold text-slate-800 font-mono" dir="ltr">{r.value}</span>
                       </div>
                     ))}
                   </div>
@@ -958,8 +1004,8 @@ export function CompanyIncorporationForm({
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     {previewData.ownerIds.map((o) => (
                       <div key={o.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2">
-                        <span className="text-xs font-medium text-slate-500">{o.type}</span>
-                        <span className="break-all text-sm font-semibold text-slate-800 font-mono">{o.value}</span>
+                        <span className="text-xs font-medium text-slate-500">{localizeType(o.type, lang)}</span>
+                        <span className="break-all text-sm font-semibold text-slate-800 font-mono" dir="ltr">{o.value}</span>
                       </div>
                     ))}
                   </div>

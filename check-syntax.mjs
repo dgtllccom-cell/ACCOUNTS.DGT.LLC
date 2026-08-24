@@ -27,3 +27,8 @@ function checkFile(filepath) {
 checkFile('features/branches/components/city-branch-setup.tsx');
 checkFile('features/branches/components/country-branch-setup.tsx');
 checkFile('features/hr-payroll/components/employee-management-view.tsx');
+checkFile('features/companies/components/company-incorporation-form.tsx');
+checkFile('features/companies/components/company-registry.tsx');
+checkFile('lib/i18n/localize-records.ts');
+checkFile('app/api/erp/companies/route.ts');
+checkFile('app/api/erp/companies/[id]/route.ts');

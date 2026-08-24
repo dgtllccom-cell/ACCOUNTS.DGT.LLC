@@ -182,16 +182,33 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: formatError("Country scope is not allowed.", session.isSuperAdmin) }, { status: 403 });
     }
 
-    const supabase = createSupabaseAdminClient() as any;
+    // Check main branch via Postgres or Supabase
+    let mainBranch: { id: string; country_id: string; local_currency: string; permission_grants: any } | null = null;
+    const mbViaPg = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        select id, country_id, local_currency, permission_grants
+        from public.country_branches
+        where id = ${parsed.data.countryBranchId}
+          and deleted_at is null
+        limit 1
+      `;
+      return rows[0] ?? null;
+    });
 
-    const { data: mainBranch, error: mainBranchError } = await supabase
-      .from("country_branches")
-      .select("id,country_id,local_currency,permission_grants")
-      .eq("id", parsed.data.countryBranchId)
-      .is("deleted_at", null)
-      .single();
+    if (mbViaPg) {
+      mainBranch = mbViaPg as any;
+    } else {
+      const supabase = createSupabaseAdminClient() as any;
+      const { data, error } = await supabase
+        .from("country_branches")
+        .select("id,country_id,local_currency,permission_grants")
+        .eq("id", parsed.data.countryBranchId)
+        .is("deleted_at", null)
+        .single();
+      if (!error && data?.id) mainBranch = data;
+    }
 
-    if (mainBranchError || !mainBranch?.id) {
+    if (!mainBranch?.id) {
       return NextResponse.json({ error: formatError("Main branch not found.", session.isSuperAdmin) }, { status: 404 });
     }
 
@@ -201,30 +218,55 @@ export async function POST(request: Request) {
 
     const permissionGrants = constrainToParentPermissions(mainBranch.permission_grants, parsed.data.permissionGrants);
 
-    // Prevent duplicate city branches under the same main branch for the same city.
-    if (parsed.data.cityId) {
-      const { data: existingByCityId } = await supabase
-        .from("city_branches")
-        .select("id")
-        .eq("country_branch_id", parsed.data.countryBranchId)
-        .eq("city_id", parsed.data.cityId)
-        .is("deleted_at", null)
-        .maybeSingle();
+    const normCode = parsed.data.code.trim().toUpperCase();
+    const normName = parsed.data.name.trim();
+    const normCityName = (parsed.data.cityName || parsed.data.name || "").trim();
 
-      if (existingByCityId?.id) {
-        return NextResponse.json(
-          { error: formatError("A City Branch already exists for this City under the selected Main Branch.", session.isSuperAdmin) },
-          { status: 409 }
-        );
-      }
+    // Check duplicate branch code under the same country
+    const existingCodeId = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        select id from public.city_branches
+        where country_id = ${parsed.data.countryId}
+          and upper(code) = ${normCode}
+          and deleted_at is null
+        limit 1
+      `;
+      return rows[0]?.id ?? null;
+    });
+
+    if (existingCodeId) {
+      return NextResponse.json(
+        { error: formatError(`Branch Code "${normCode}" is already in use in this country. Please specify a unique Branch Code.`, session.isSuperAdmin) },
+        { status: 409 }
+      );
+    }
+
+    // Check duplicate branch name in the same city
+    const existingNameId = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        select id from public.city_branches
+        where country_id = ${parsed.data.countryId}
+          and lower(city_name) = lower(${normCityName})
+          and lower(name) = lower(${normName})
+          and deleted_at is null
+        limit 1
+      `;
+      return rows[0]?.id ?? null;
+    });
+
+    if (existingNameId) {
+      return NextResponse.json(
+        { error: formatError(`Branch Name "${normName}" already exists for this City. Please choose a distinct Branch Name.`, session.isSuperAdmin) },
+        { status: 409 }
+      );
     }
 
     const payload = {
       country_id: parsed.data.countryId,
       country_branch_id: parsed.data.countryBranchId,
-      city_name: (parsed.data.cityName || parsed.data.name || "").trim(),
-      name: parsed.data.name.trim(),
-      code: parsed.data.code.trim().toUpperCase(),
+      city_name: normCityName,
+      name: normName,
+      code: normCode,
       local_currency: parsed.data.currencyCode.trim().toUpperCase(),
       status: "active",
       state_province_id: parsed.data.stateProvinceId ?? null,
@@ -248,24 +290,54 @@ export async function POST(request: Request) {
 
     // If city_id is present, prefer the canonical city name from centralized location.
     if (payload.city_id && (!payload.city_name || payload.city_name.length < 2)) {
-      const { data: cityRow } = await supabase
-        .from("cities")
-        .select("name")
-        .eq("id", payload.city_id)
-        .is("deleted_at", null)
-        .maybeSingle();
+      const cityRow = await withLocalPg(async (sql) => {
+        const rows = await sql`select name from public.cities where id = ${payload.city_id} and deleted_at is null limit 1`;
+        return rows[0] ?? null;
+      });
       if (cityRow?.name) payload.city_name = String(cityRow.name).trim();
     }
 
-    const { data, error } = await supabase.from("city_branches").insert(payload).select("id").single();
+    let insertedId: string | null = null;
+    const viaPgInsert = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        insert into public.city_branches (
+          country_id, country_branch_id, city_name, name, code, local_currency, status,
+          state_province_id, district_id, city_id, area_location_id, address, phone, email,
+          whatsapp_number, company_id, owner_name, contacts, documents, permission_template,
+          permission_grants, created_by, created_at, updated_at
+        ) values (
+          ${payload.country_id}, ${payload.country_branch_id}, ${payload.city_name},
+          ${payload.name}, ${payload.code}, ${payload.local_currency}, ${payload.status},
+          ${payload.state_province_id}, ${payload.district_id}, ${payload.city_id},
+          ${payload.area_location_id}, ${payload.address}, ${payload.phone}, ${payload.email},
+          ${payload.whatsapp_number}, ${payload.company_id}, ${payload.owner_name},
+          ${sql.json(payload.contacts as any)}, ${sql.json(payload.documents as any)},
+          ${payload.permission_template}, ${payload.permission_grants},
+          ${payload.created_by}, ${payload.created_at}, ${payload.updated_at}
+        )
+        returning id
+      `;
+      return rows[0]?.id ?? null;
+    });
 
-    if (error) {
-      return NextResponse.json({ error: formatError(error.message, session.isSuperAdmin) }, { status: 403 });
+    if (viaPgInsert) {
+      insertedId = viaPgInsert;
+    } else {
+      const supabase = createSupabaseAdminClient() as any;
+      const { data, error } = await supabase.from("city_branches").insert(payload).select("id").single();
+      if (error) {
+        return NextResponse.json({ error: formatError(error.message, session.isSuperAdmin) }, { status: 403 });
+      }
+      insertedId = data?.id ?? null;
+    }
+
+    if (!insertedId) {
+      return NextResponse.json({ error: formatError("Failed to insert city branch record.", session.isSuperAdmin) }, { status: 500 });
     }
 
     void syncRecordTranslations({
       table: "city_branches",
-      recordId: data.id,
+      recordId: insertedId,
       record: payload,
       originalLanguage: session.preferredLanguage ?? "en",
       actorId: session.userId
@@ -284,7 +356,7 @@ export async function POST(request: Request) {
     await linkEmailAccount({
       countryId: parsed.data.countryId,
       countryBranchId: parsed.data.countryBranchId,
-      cityBranchId: data.id,
+      cityBranchId: insertedId,
       scope: "city_branch",
       displayName: parsed.data.name.trim(),
       emailAddress: parsed.data.email,
@@ -299,7 +371,7 @@ export async function POST(request: Request) {
       await linkWhatsAppAccount({
         countryId: parsed.data.countryId,
         countryBranchId: parsed.data.countryBranchId,
-        cityBranchId: data.id,
+        cityBranchId: insertedId,
         scope: "city_branch",
         displayName: parsed.data.name.trim(),
         phoneNumber: parsed.data.whatsappConfig.whatsappNumber,
@@ -313,11 +385,11 @@ export async function POST(request: Request) {
     await auditApiAction(request as any, {
       action: "city_branches.create.api",
       entityTable: "city_branches",
-      entityId: data?.id ?? null,
+      entityId: insertedId,
       after: payload
     });
 
-    return NextResponse.json({ id: data?.id }, { status: 201 });
+    return NextResponse.json({ id: insertedId }, { status: 201 });
   } catch (error) {
     if (error instanceof ErpAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
@@ -348,16 +420,32 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: formatError("Country scope is not allowed.", session.isSuperAdmin) }, { status: 403 });
     }
 
-    const supabase = createSupabaseAdminClient() as any;
+    let mainBranch: { id: string; country_id: string; local_currency: string; permission_grants: any } | null = null;
+    const mbViaPg = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        select id, country_id, local_currency, permission_grants
+        from public.country_branches
+        where id = ${parsed.data.countryBranchId}
+          and deleted_at is null
+        limit 1
+      `;
+      return rows[0] ?? null;
+    });
 
-    const { data: mainBranch, error: mainBranchError } = await supabase
-      .from("country_branches")
-      .select("id,country_id,local_currency,permission_grants")
-      .eq("id", parsed.data.countryBranchId)
-      .is("deleted_at", null)
-      .single();
+    if (mbViaPg) {
+      mainBranch = mbViaPg as any;
+    } else {
+      const supabase = createSupabaseAdminClient() as any;
+      const { data, error } = await supabase
+        .from("country_branches")
+        .select("id,country_id,local_currency,permission_grants")
+        .eq("id", parsed.data.countryBranchId)
+        .is("deleted_at", null)
+        .single();
+      if (!error && data?.id) mainBranch = data;
+    }
 
-    if (mainBranchError || !mainBranch?.id) {
+    if (!mainBranch?.id) {
       return NextResponse.json({ error: formatError("Main branch not found.", session.isSuperAdmin) }, { status: 404 });
     }
 
@@ -367,30 +455,57 @@ export async function PUT(request: Request) {
 
     const permissionGrants = constrainToParentPermissions(mainBranch.permission_grants, parsed.data.permissionGrants);
 
-    if (parsed.data.cityId) {
-      const { data: existingByCityId } = await supabase
-        .from("city_branches")
-        .select("id")
-        .eq("country_branch_id", parsed.data.countryBranchId)
-        .eq("city_id", parsed.data.cityId)
-        .neq("id", id)
-        .is("deleted_at", null)
-        .maybeSingle();
+    const normCode = parsed.data.code.trim().toUpperCase();
+    const normName = parsed.data.name.trim();
+    const normCityName = (parsed.data.cityName || parsed.data.name || "").trim();
 
-      if (existingByCityId?.id) {
-        return NextResponse.json(
-          { error: formatError("A City Branch already exists for this City under the selected Main Branch.", session.isSuperAdmin) },
-          { status: 409 }
-        );
-      }
+    // Check duplicate branch code excluding self
+    const existingCodeId = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        select id from public.city_branches
+        where country_id = ${parsed.data.countryId}
+          and upper(code) = ${normCode}
+          and id <> ${id}
+          and deleted_at is null
+        limit 1
+      `;
+      return rows[0]?.id ?? null;
+    });
+
+    if (existingCodeId) {
+      return NextResponse.json(
+        { error: formatError(`Branch Code "${normCode}" is already in use in this country. Please specify a unique Branch Code.`, session.isSuperAdmin) },
+        { status: 409 }
+      );
+    }
+
+    // Check duplicate branch name in the same city excluding self
+    const existingNameId = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        select id from public.city_branches
+        where country_id = ${parsed.data.countryId}
+          and lower(city_name) = lower(${normCityName})
+          and lower(name) = lower(${normName})
+          and id <> ${id}
+          and deleted_at is null
+        limit 1
+      `;
+      return rows[0]?.id ?? null;
+    });
+
+    if (existingNameId) {
+      return NextResponse.json(
+        { error: formatError(`Branch Name "${normName}" already exists for this City. Please choose a distinct Branch Name.`, session.isSuperAdmin) },
+        { status: 409 }
+      );
     }
 
     const payload = {
       country_id: parsed.data.countryId,
       country_branch_id: parsed.data.countryBranchId,
-      city_name: (parsed.data.cityName || parsed.data.name || "").trim(),
-      name: parsed.data.name.trim(),
-      code: parsed.data.code.trim().toUpperCase(),
+      city_name: normCityName,
+      name: normName,
+      code: normCode,
       local_currency: parsed.data.currencyCode.trim().toUpperCase(),
       status: "active",
       state_province_id: parsed.data.stateProvinceId ?? null,
@@ -411,30 +526,68 @@ export async function PUT(request: Request) {
     };
 
     if (payload.city_id && (!payload.city_name || payload.city_name.length < 2)) {
-      const { data: cityRow } = await supabase
-        .from("cities")
-        .select("name")
-        .eq("id", payload.city_id)
-        .is("deleted_at", null)
-        .maybeSingle();
+      const cityRow = await withLocalPg(async (sql) => {
+        const rows = await sql`select name from public.cities where id = ${payload.city_id} and deleted_at is null limit 1`;
+        return rows[0] ?? null;
+      });
       if (cityRow?.name) payload.city_name = String(cityRow.name).trim();
     }
 
-    const { data, error } = await supabase
-      .from("city_branches")
-      .update(payload)
-      .eq("id", id)
-      .is("deleted_at", null)
-      .select("id")
-      .single();
+    let updatedId: string | null = null;
+    const viaPgUpdate = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        update public.city_branches
+        set
+          country_id = ${payload.country_id},
+          country_branch_id = ${payload.country_branch_id},
+          city_name = ${payload.city_name},
+          name = ${payload.name},
+          code = ${payload.code},
+          local_currency = ${payload.local_currency},
+          status = ${payload.status},
+          state_province_id = ${payload.state_province_id},
+          district_id = ${payload.district_id},
+          city_id = ${payload.city_id},
+          area_location_id = ${payload.area_location_id},
+          address = ${payload.address},
+          phone = ${payload.phone},
+          email = ${payload.email},
+          whatsapp_number = ${payload.whatsapp_number},
+          company_id = ${payload.company_id},
+          owner_name = ${payload.owner_name},
+          contacts = ${sql.json(payload.contacts as any)},
+          documents = ${sql.json(payload.documents as any)},
+          permission_template = ${payload.permission_template},
+          permission_grants = ${payload.permission_grants},
+          updated_at = ${payload.updated_at}
+        where id = ${id}
+          and deleted_at is null
+        returning id
+      `;
+      return rows[0]?.id ?? null;
+    });
 
-    if (error) {
-      return NextResponse.json({ error: formatError(error.message, session.isSuperAdmin) }, { status: 403 });
+    if (viaPgUpdate) {
+      updatedId = viaPgUpdate;
+    } else {
+      const supabase = createSupabaseAdminClient() as any;
+      const { data, error } = await supabase
+        .from("city_branches")
+        .update(payload)
+        .eq("id", id)
+        .is("deleted_at", null)
+        .select("id")
+        .single();
+
+      if (error) {
+        return NextResponse.json({ error: formatError(error.message, session.isSuperAdmin) }, { status: 403 });
+      }
+      updatedId = data?.id ?? id;
     }
 
     void syncRecordTranslations({
       table: "city_branches",
-      recordId: data.id,
+      recordId: updatedId || id,
       record: payload,
       originalLanguage: session.preferredLanguage ?? "en",
       actorId: session.userId
@@ -482,11 +635,11 @@ export async function PUT(request: Request) {
     await auditApiAction(request as any, {
       action: "city_branches.update.api",
       entityTable: "city_branches",
-      entityId: data?.id ?? id,
+      entityId: updatedId || id,
       after: payload
     });
 
-    return NextResponse.json({ id: data?.id ?? id }, { status: 200 });
+    return NextResponse.json({ id: updatedId || id }, { status: 200 });
   } catch (error) {
     if (error instanceof ErpAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
