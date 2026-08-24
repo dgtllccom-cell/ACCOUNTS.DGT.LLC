@@ -5,11 +5,13 @@ import { printStore } from "@/lib/store/print-store";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
-import { Building2, Search, Eye, PencilLine, Printer, Trash2, Users, UserCheck, UserMinus, Plus, Mail, MessageSquare, MoreHorizontal, Phone, FileText, Download } from "lucide-react";
+import { Building2, Search, Eye, PencilLine, Printer, Trash2, Users, UserCheck, UserMinus, Plus, Mail, MessageSquare, MoreHorizontal, Phone, FileText, Download, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { CustomerProfile } from "./customer-profile";
+import { Party360Modal } from "./party-360-modal";
+import { UniversalPartyDirectoryReport } from "./universal-party-directory-report";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { DocumentAttachmentIcon } from "@/components/documents/document-attachment-icon";
@@ -90,6 +92,8 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
   const [error, setError] = useState<string | null>(null);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [showReport, setShowReport] = useState(false);
+  const [selected360Party, setSelected360Party] = useState<{ id?: string; name: string } | null>(null);
+  const [showUniversalDirectory, setShowUniversalDirectory] = useState(false);
   
   // State to track which row action menu is open
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -429,7 +433,15 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
             {getLabel("createOrUpdateCustomerSub", lang)}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            onClick={() => setShowUniversalDirectory(true)}
+            className="gap-2 bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 hover:from-indigo-700 hover:to-blue-800 text-white font-bold shadow-md h-10 px-4 rounded-xl text-xs"
+          >
+            <Layers className="h-4 w-4" />
+            {lang === "ur" ? "360° ماسٹر پارٹیز ڈائریکٹری رپورٹ" : "360° Universal Parties Directory"}
+          </Button>
           <Button
             type="button"
             variant="outline"
@@ -633,7 +645,20 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
                         {c.meta.customerAccountNumber}
                       </td>
                       <td className="px-5 py-3.5 font-extrabold text-slate-900">
-                        {translateCustomerText(c.customer_name, lang)}
+                        <div className="flex items-center gap-2">
+                          <span>{translateCustomerText(c.customer_name, lang)}</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelected360Party({ id: c.id, name: c.customer_name });
+                            }}
+                            className="flex h-5 w-5 items-center justify-center rounded-md bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-black text-xs shadow-xs transition hover:scale-105 cursor-pointer"
+                            title={lang === "ur" ? "360° تمام لنکس اور ریکارڈز دیکھیں" : "View 360° cross-system profile"}
+                          >
+                            +
+                          </button>
+                        </div>
                       </td>
                       <td className="px-5 py-3.5 font-medium text-slate-800">{translateCustomerText(c.meta.customerType, lang)}</td>
                       <td className="px-5 py-3.5 text-slate-600 font-medium">
@@ -789,6 +814,28 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
           address: c.address || "-"
         }))}
       />
+
+      {/* 360 Degree Cross-System Party Modal */}
+      {selected360Party && (
+        <Party360Modal
+          customerId={selected360Party.id}
+          name={selected360Party.name}
+          lang={lang}
+          onClose={() => setSelected360Party(null)}
+        />
+      )}
+
+      {/* Universal 360 Parties Directory Report Modal */}
+      {showUniversalDirectory && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/80 p-3 sm:p-6 backdrop-blur-xs">
+          <div className="relative w-full max-w-7xl max-h-[94vh] flex flex-col rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden p-6 overflow-y-auto">
+            <UniversalPartyDirectoryReport
+              lang={lang}
+              onClose={() => setShowUniversalDirectory(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

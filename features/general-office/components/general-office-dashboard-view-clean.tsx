@@ -28,6 +28,9 @@ import { openUserA4ReportWindow } from "@/lib/reports/open-user-a4-report-window
 import { Th } from "@/components/ui/translated-th";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { transliterateProperNoun } from "@/lib/i18n/transliteration";
+import { Party360Modal } from "@/features/customers/components/party-360-modal";
+import { UniversalPartyDirectoryReport } from "@/features/customers/components/universal-party-directory-report";
+import { Layers } from "lucide-react";
 
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
@@ -646,6 +649,8 @@ export function GeneralOfficeDashboardView() {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [selected360Party, setSelected360Party] = useState<{ id?: string; employeeId?: string; name: string } | null>(null);
+  const [showUniversalDirectory, setShowUniversalDirectory] = useState(false);
 
   // Session context — fetched once from /api/erp/auth/session to populate summary cards with
   // real user/country/branch data instead of hardcoded placeholders.
