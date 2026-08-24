@@ -6,6 +6,7 @@ import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { translateValue } from "@/lib/i18n/table-values";
+import { t } from "@/lib/i18n/ui";
 import {
   Package, Building2, Download, Printer, Coins,
   Globe, Loader2, X, Eye, CheckCircle, Clock, Plane, Truck, Calendar, User, ChevronDown, ChevronUp, MapPin, Filter
@@ -449,7 +450,7 @@ export default function JournalReport({
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-2">
                     <div className="flex flex-col gap-1">
-                      <label className="text-[9px] font-bold uppercase text-slate-400">Date From</label>
+                      <label className="text-[9px] font-bold uppercase text-slate-400">{t(lang, "purchase.lgr_date_from", "Date From")}</label>
                       <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
                         className="h-8 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-2.5 text-xs outline-none focus:border-blue-500" />
                     </div>
@@ -461,25 +462,25 @@ export default function JournalReport({
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    <label className="text-[9px] font-bold uppercase text-slate-400">Country</label>
+                    <label className="text-[9px] font-bold uppercase text-slate-400">{t(lang, "report.country", "Country")}</label>
                     <select value={selectedCountryId} onChange={e => setSelectedCountryId(e.target.value)}
                       className="h-8 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-2 text-xs outline-none focus:border-blue-500">
-                      <option value="all">All Countries</option>
+                      <option value="all">{t(lang, "common.all_countries", "All Countries")}</option>
                       {countries.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    <label className="text-[9px] font-bold uppercase text-slate-400">Branch</label>
+                    <label className="text-[9px] font-bold uppercase text-slate-400">{t(lang, "report.branch", "Branch")}</label>
                     <select value={selectedBranchId} onChange={e => setSelectedBranchId(e.target.value)}
                       className="h-8 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-2 text-xs outline-none focus:border-blue-500">
-                      <option value="all">All Branches</option>
+                      <option value="all">{t(lang, "common.all_branches", "All Branches")}</option>
                       {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                     </select>
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    <label className="text-[9px] font-bold uppercase text-slate-400">Salesperson</label>
+                    <label className="text-[9px] font-bold uppercase text-slate-400">{t(lang, "report.salesperson", "Salesperson")}</label>
                     <select value={selectedSalesmanId} onChange={e => setSelectedSalesmanId(e.target.value)}
                       className="h-8 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-2 text-xs outline-none focus:border-blue-500">
                       <option value="all">All Salespeople</option>
@@ -504,7 +505,7 @@ export default function JournalReport({
             className="flex items-center gap-1 px-2.5 py-1 bg-[#0d2d6b] hover:bg-[#0a2456] text-white rounded-lg text-xs font-bold uppercase transition-all duration-150"
           >
             <Printer className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Print</span>
+            <span className="hidden sm:inline">{t(lang, "report.builder_print", "Print")}</span>
           </button>
         </div>,
         actionsSlot
@@ -778,7 +779,7 @@ export default function JournalReport({
                     <Th className="py-3 px-4">Journal Stock No</Th>
                     <Th className="py-3 px-4">BRANCH NO</Th>
                     <Th className="py-3 px-4">BRANCH CODE</Th>
-                    <Th className="py-3 px-4">Date</Th>
+                    <Th className="py-3 px-4">{t(lang, "bdash.col_date", "Date")}</Th>
                     <Th className="py-3 px-4">SUPPLIER DETAILS</Th>
                     <Th className="py-3 px-4">BUYER DETAILS</Th>
                     <Th className="py-3 px-4">Shipment Type</Th>
@@ -789,8 +790,8 @@ export default function JournalReport({
                     <Th className="py-3 px-4 text-right">PURCH. AMOUNT</Th>
                     <Th className="py-3 px-4 text-right">TOTAL AMOUNT (FINAL CURRENCY)</Th>
                     <Th className="py-3 px-4">Current Status</Th>
-                    <Th className="py-3 px-4">Next Step</Th>
-                    <Th className="py-3 px-4 w-16 text-center print:hidden">Actions</Th>
+                    <Th className="py-3 px-4">{t(lang, "common.next_step", "Next Step")}</Th>
+                    <Th className="py-3 px-4 w-16 text-center print:hidden">{t(lang, "form.actions", "Actions")}</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-850 text-xs font-semibold">
@@ -995,28 +996,28 @@ export default function JournalReport({
                     <div className="flex items-center gap-1.5">
                       <User className="w-3.5 h-3.5 text-slate-400" />
                       <div>
-                        <p>User ID:</p>
+                        <p>{t(lang, "purchase.card_user_id_colon", "User ID:")}</p>
                         <p className="text-slate-900 dark:text-white font-extrabold text-[9px] mt-0.5">ADM-001</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <User className="w-3.5 h-3.5 text-slate-400" />
                       <div>
-                        <p>User Name:</p>
+                        <p>{t(lang, "purchase.pmw_user_name_label", "User Name:")}</p>
                         <p className="text-slate-900 dark:text-white font-extrabold text-[9px] mt-0.5">SUPER ADMIN</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <Building2 className="w-3.5 h-3.5 text-slate-400" />
                       <div>
-                        <p>Branch Name:</p>
+                        <p>{t(lang, "purchase.pmw_branch_name_label", "Branch Name:")}</p>
                         <p className="text-slate-900 dark:text-white font-extrabold text-[9px] mt-0.5">PAKISTAN CITY DIVISION</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <Package className="w-3.5 h-3.5 text-slate-400" />
                       <div>
-                        <p>Branch Code:</p>
+                        <p>{t(lang, "purchase.card_branch_code_colon", "Branch Code:")}</p>
                         <p className="text-slate-900 dark:text-white font-extrabold text-[9px] mt-0.5">{selectedRecord.branchCode || "PAK-PAK-001"}</p>
                       </div>
                     </div>
@@ -1149,21 +1150,21 @@ export default function JournalReport({
                                 <div className="flex justify-between"><span className="text-slate-400">Super Serial:</span><span className="font-mono font-bold text-slate-800 dark:text-white">{selectedRecord.journal_no}</span></div>
                                 <div className="flex justify-between"><span className="text-slate-400">Qty/With Unit:</span><span className="font-bold text-slate-800 dark:text-white">{fmtNum(selectedRecord.totalQuantity || 10000, 0)} Kgs</span></div>
                                 <div className="flex justify-between"><span className="text-slate-400">Purchase Date:</span><span className="font-bold text-slate-800 dark:text-white">{fmtDate(selectedRecord.date)}</span></div>
-                                <div className="flex justify-between"><span className="text-slate-400">Exchange Rate:</span><span className="font-mono font-bold text-slate-800 dark:text-white">{fmtNum(selectedRecord.exchangeRate || 277.50, 4)}</span></div>
+                                <div className="flex justify-between"><span className="text-slate-400">{t(lang, "purchase.f_exchange_rate", "Exchange Rate:")}</span><span className="font-mono font-bold text-slate-800 dark:text-white">{fmtNum(selectedRecord.exchangeRate || 277.50, 4)}</span></div>
                               </div>
 
                               {/* Supplier Details */}
                               <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 bg-slate-50/20 text-[8.5px] space-y-1">
                                 <h5 className="font-black uppercase text-blue-900 dark:text-blue-400 text-[8px] tracking-wider mb-1">SUPPLIER DETAILS</h5>
-                                <div className="flex justify-between"><span className="text-slate-400">Name:</span><span className="font-bold text-slate-800 dark:text-white truncate max-w-[90px]">Asian Exports</span></div>
+                                <div className="flex justify-between"><span className="text-slate-400">{t(lang, "hr.f_lbl_name", "Name:")}</span><span className="font-bold text-slate-800 dark:text-white truncate max-w-[90px]">Asian Exports</span></div>
                                 <div className="flex justify-between"><span className="text-slate-400">Postal / Contact:</span><span className="font-bold text-slate-800 dark:text-white">Registered Office</span></div>
-                                <div className="flex justify-between"><span className="text-slate-400">Tax Registration:</span><span className="font-mono font-bold text-emerald-600">Active</span></div>
+                                <div className="flex justify-between"><span className="text-slate-400">Tax Registration:</span><span className="font-mono font-bold text-emerald-600">{t(lang, "god.active", "Active")}</span></div>
                               </div>
 
                               {/* Buyer Details */}
                               <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 bg-slate-50/20 text-[8.5px] space-y-1">
                                 <h5 className="font-black uppercase text-blue-900 dark:text-blue-400 text-[8px] tracking-wider mb-1">BUYER DETAILS</h5>
-                                <div className="flex justify-between"><span className="text-slate-400">Name:</span><span className="font-bold text-slate-800 dark:text-white truncate max-w-[90px]">International Export Sales A/C</span></div>
+                                <div className="flex justify-between"><span className="text-slate-400">{t(lang, "hr.f_lbl_name", "Name:")}</span><span className="font-bold text-slate-800 dark:text-white truncate max-w-[90px]">International Export Sales A/C</span></div>
                                 <div className="flex justify-between"><span className="text-slate-400">Postal / Contact:</span><span className="font-bold text-slate-800 dark:text-white">Central Warehouse</span></div>
                                 <div className="flex justify-between"><span className="text-slate-400">Tax Code:</span><span className="font-mono font-bold text-slate-800 dark:text-white">DGT-PAK-2026</span></div>
                               </div>
@@ -1174,13 +1175,13 @@ export default function JournalReport({
                             <div className="grid grid-cols-2 gap-3 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 bg-slate-50/30 text-[8.5px]">
                               <div className="space-y-1">
                                 <h5 className="font-black uppercase text-slate-600 dark:text-slate-300 text-[8px] tracking-wider mb-1">SHIPMENT & LOGISTICS</h5>
-                                <div className="flex justify-between"><span className="text-slate-400">Origin Country:</span><span className="font-bold text-slate-800 dark:text-white">India</span></div>
-                                <div className="flex justify-between"><span className="text-slate-400">Destination Country:</span><span className="font-bold text-slate-800 dark:text-white">Pakistan</span></div>
+                                <div className="flex justify-between"><span className="text-slate-400">{t(lang, "purchase.card_origin_country_colon", "Origin Country:")}</span><span className="font-bold text-slate-800 dark:text-white">{t(lang, "nav.india", "India")}</span></div>
+                                <div className="flex justify-between"><span className="text-slate-400">{t(lang, "purchase.destination_country_colon", "Destination Country:")}</span><span className="font-bold text-slate-800 dark:text-white">{t(lang, "creg.country_pakistan", "Pakistan")}</span></div>
                                 <div className="flex justify-between"><span className="text-slate-400">Vessel / Truck / Flight:</span><span className="font-bold text-slate-800 dark:text-white">By Land Route (Cargo)</span></div>
                               </div>
                               <div className="space-y-1 pl-3 border-l border-slate-200 dark:border-slate-800">
                                 <h5 className="font-black uppercase text-slate-600 dark:text-slate-300 text-[8px] tracking-wider mb-1">LOADING & TRANSIT DETAILS</h5>
-                                <div className="flex justify-between"><span className="text-slate-400">Shipping Order / Mode:</span><span className="font-bold text-slate-800 dark:text-white">Export</span></div>
+                                <div className="flex justify-between"><span className="text-slate-400">Shipping Order / Mode:</span><span className="font-bold text-slate-800 dark:text-white">{t(lang, "common.export", "Export")}</span></div>
                                 <div className="flex justify-between"><span className="text-slate-400">Port of Loading / Origin:</span><span className="font-bold text-slate-800 dark:text-white">Torkham / Chaman Border</span></div>
                                 <div className="flex justify-between"><span className="text-slate-400">Destination Terminal:</span><span className="font-bold text-slate-800 dark:text-white">Central Storage Complex</span></div>
                               </div>
@@ -1261,8 +1262,8 @@ export default function JournalReport({
                           <div className="border border-slate-200 dark:border-slate-800 rounded-b-xl p-2.5 space-y-1.5 text-[9px] bg-slate-50/20 dark:bg-slate-900/10 font-bold leading-tight">
                             <div className="flex justify-between text-slate-400"><span>Source Type:</span><span className="text-slate-800 dark:text-white">SALES INVOICE</span></div>
                             <div className="flex justify-between text-slate-400"><span>Invoice No:</span><span className="text-slate-800 dark:text-white font-mono">{selectedRecord.journal_no}</span></div>
-                            <div className="flex justify-between text-slate-400"><span>Account Code:</span><span className="text-slate-800 dark:text-white font-mono">1101-002</span></div>
-                            <div className="flex justify-between text-slate-400"><span>Account Name:</span><span className="text-slate-800 dark:text-white uppercase truncate max-w-[120px]" title={selectedRecord.salesAccount}>{selectedRecord.salesAccount || "INTERNATIONAL EXPORT SALES A/C"}</span></div>
+                            <div className="flex justify-between text-slate-400"><span>{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span><span className="text-slate-800 dark:text-white font-mono">1101-002</span></div>
+                            <div className="flex justify-between text-slate-400"><span>{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span><span className="text-slate-800 dark:text-white uppercase truncate max-w-[120px]" title={selectedRecord.salesAccount}>{selectedRecord.salesAccount || "INTERNATIONAL EXPORT SALES A/C"}</span></div>
                           </div>
                         </div>
 
@@ -1274,8 +1275,8 @@ export default function JournalReport({
                           <div className="border border-slate-200 dark:border-slate-800 rounded-b-xl p-2.5 space-y-1.5 text-[9px] bg-slate-50/20 dark:bg-slate-900/10 font-bold leading-tight">
                             <div className="flex justify-between text-slate-400"><span>Source Type:</span><span className="text-slate-800 dark:text-white">PURCHASE INVOICE</span></div>
                             <div className="flex justify-between text-slate-400"><span>Invoice No:</span><span className="text-slate-800 dark:text-white font-mono">{selectedRecord.journal_no}</span></div>
-                            <div className="flex justify-between text-slate-400"><span>Account Code:</span><span className="text-slate-800 dark:text-white font-mono">5001-001</span></div>
-                            <div className="flex justify-between text-slate-400"><span>Account Name:</span><span className="text-slate-800 dark:text-white uppercase truncate max-w-[120px]" title={selectedRecord.purchaseAccount}>{selectedRecord.purchaseAccount || "ASIAN EXPORTS A/C (DEEB)"}</span></div>
+                            <div className="flex justify-between text-slate-400"><span>{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span><span className="text-slate-800 dark:text-white font-mono">5001-001</span></div>
+                            <div className="flex justify-between text-slate-400"><span>{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span><span className="text-slate-800 dark:text-white uppercase truncate max-w-[120px]" title={selectedRecord.purchaseAccount}>{selectedRecord.purchaseAccount || "ASIAN EXPORTS A/C (DEEB)"}</span></div>
                           </div>
                         </div>
 
@@ -1286,11 +1287,11 @@ export default function JournalReport({
                           </div>
                           <div className="border border-slate-200 dark:border-slate-800 rounded-b-xl p-2.5 space-y-1.5 text-[9px] bg-slate-50/20 dark:bg-slate-900/10 font-bold leading-tight">
                             <div className="flex justify-between text-slate-400"><span>Party Name:</span><span className="text-slate-800 dark:text-white uppercase truncate max-w-[120px]" title={selectedRecord.party}>{selectedRecord.party}</span></div>
-                            <div className="flex justify-between text-slate-400"><span>Account Code:</span><span className="text-slate-800 dark:text-white font-mono">1101-002</span></div>
+                            <div className="flex justify-between text-slate-400"><span>{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span><span className="text-slate-800 dark:text-white font-mono">1101-002</span></div>
                             <div className="flex justify-between text-slate-400"><span>Total Due (PKR):</span><span className="text-slate-800 dark:text-white font-mono">PKR {fmtNum(selectedRecord.amount, 2)}</span></div>
                             <div className="flex justify-between text-slate-400"><span>Due Date:</span><span className="text-slate-800 dark:text-white">{fmtDate(new Date(new Date(selectedRecord.date).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10))}</span></div>
                             <div className="flex justify-between text-slate-400 items-center">
-                              <span>Status:</span>
+                              <span>{t(lang, "purchase.card_status_colon", "Status:")}</span>
                               <span className={`inline-flex px-1.5 py-0.5 rounded text-[8px] font-black uppercase ${
                                 selectedRecord.remainingAmount > 0
                                   ? "bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-300"
@@ -1349,7 +1350,7 @@ export default function JournalReport({
                               <Th className="py-1 px-2 text-right">DEBIT AMOUNT (PKR)</Th>
                               <Th className="py-1 px-2 text-right">CREDIT AMOUNT (PKR)</Th>
                               <Th className="py-1 px-2 text-center">CURRENCY</Th>
-                              <Th className="py-1 px-2">USER NAME</Th>
+                              <Th className="py-1 px-2">{t(lang, "form.user_name", "USER NAME")}</Th>
                               <Th className="py-1 px-2">BRANCH</Th>
                               <Th className="py-1 px-2">COUNTRY</Th>
                             </tr>
@@ -1365,7 +1366,7 @@ export default function JournalReport({
                               <td className="py-1.5 px-2 text-center font-bold">PKR</td>
                               <td className="py-1.5 px-2">SUPER ADMIN</td>
                               <td className="py-1.5 px-2">Pakistan Main Branch</td>
-                              <td className="py-1.5 px-2">Pakistan</td>
+                              <td className="py-1.5 px-2">{t(lang, "creg.country_pakistan", "Pakistan")}</td>
                             </tr>
                             <tr>
                               <td className="py-1.5 px-2 font-mono font-bold">{selectedRecord.journal_no}</td>
@@ -1377,7 +1378,7 @@ export default function JournalReport({
                               <td className="py-1.5 px-2 text-center font-bold">PKR</td>
                               <td className="py-1.5 px-2">SUPER ADMIN</td>
                               <td className="py-1.5 px-2">Pakistan Main Branch</td>
-                              <td className="py-1.5 px-2">Pakistan</td>
+                              <td className="py-1.5 px-2">{t(lang, "creg.country_pakistan", "Pakistan")}</td>
                             </tr>
                           </tbody>
                         </table>
@@ -1404,7 +1405,7 @@ export default function JournalReport({
                             <tr className="bg-slate-50 dark:bg-slate-850 text-slate-400 font-extrabold uppercase text-[8px] border-b border-slate-200 dark:border-slate-800 whitespace-nowrap">
                               <Th className="py-2 px-2.5 text-center">SR. NO.</Th>
                               <Th className="py-2 px-2">BRANCH NAME</Th>
-                              <Th className="py-2 px-2">USER NAME</Th>
+                              <Th className="py-2 px-2">{t(lang, "form.user_name", "USER NAME")}</Th>
                               <Th className="py-2 px-2">DATE</Th>
                               <Th className="py-2 px-2">CHECK TYPE</Th>
                               <Th className="py-2 px-2">CHECK / REF NO.</Th>
@@ -1428,7 +1429,7 @@ export default function JournalReport({
                               <td className="py-2 px-2 text-slate-500">Pakistan Main Branch</td>
                               <td className="py-2 px-2 text-slate-500">SUPER ADMIN</td>
                               <td className="py-2 px-2">{fmtDate(selectedRecord.date)}</td>
-                              <td className="py-2 px-2 uppercase text-[8px]">Purchase Invoice</td>
+                              <td className="py-2 px-2 uppercase text-[8px]">{t(lang, "nav.purchase_invoice", "Purchase Invoice")}</td>
                               <td className="py-2 px-2 font-mono font-bold text-slate-800 dark:text-white">PO: {selectedRecord.journal_no}</td>
                               <td className="py-2 px-2.5 font-normal text-slate-500 leading-normal max-w-[200px] truncate">
                                 Debit for Purchase Invoice - Red Onions Premium 10,000 Kgs from India
@@ -1517,7 +1518,7 @@ export default function JournalReport({
                               <td className="py-2 px-2 text-slate-500">Pakistan Main Branch</td>
                               <td className="py-2 px-2 text-slate-500">SUPER ADMIN</td>
                               <td className="py-2 px-2">21 JUL 2026</td>
-                              <td className="py-2 px-2 uppercase text-[8px]">Outstanding</td>
+                              <td className="py-2 px-2 uppercase text-[8px]">{t(lang, "report.col_outstanding", "Outstanding")}</td>
                               <td className="py-2 px-2 font-mono font-bold text-slate-800 dark:text-white">RB-001</td>
                               <td className="py-2 px-2.5 font-normal text-slate-500">Remaining Balance After Indorsement to Bank</td>
                               <td className="py-2 px-2 font-mono text-[8px]">1101-002</td>
@@ -1571,18 +1572,18 @@ export default function JournalReport({
                       <div className="md:col-span-8 border border-slate-250 dark:border-slate-800 rounded-xl p-3 bg-slate-50/20 dark:bg-slate-900/10">
                         <h4 className="text-[9px] font-black uppercase text-slate-500 tracking-wider mb-2 flex items-center gap-1">
                           <Building2 className="w-3.5 h-3.5 text-slate-400" />
-                          Payment Information
+                          {t(lang, "pter.sec_payment_info", "Payment Information")}
                         </h4>
                         <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-[9px] leading-tight font-bold">
                           <div className="space-y-1.5">
-                            <div className="flex justify-between"><span className="text-slate-400">Payment Terms:</span><span className="text-slate-800 dark:text-white uppercase">{selectedRecord.paymentCondition || "CREDIT (30 DAYS)"}</span></div>
-                            <div className="flex justify-between"><span className="text-slate-400">Exchange Rate:</span><span className="text-slate-850 dark:text-white font-mono">{fmtNum(selectedRecord.exchangeRate || 1, 4)}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "purchase.f_payment_terms", "Payment Terms:")}</span><span className="text-slate-800 dark:text-white uppercase">{selectedRecord.paymentCondition || "CREDIT (30 DAYS)"}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "purchase.f_exchange_rate", "Exchange Rate:")}</span><span className="text-slate-850 dark:text-white font-mono">{fmtNum(selectedRecord.exchangeRate || 1, 4)}</span></div>
                             <div className="flex justify-between"><span className="text-slate-400">Total Invoice (USD):</span><span className="text-slate-850 dark:text-white">USD {fmtNum(selectedRecord.amount / (selectedRecord.exchangeRate || 1), 2)}</span></div>
                             <div className="flex justify-between"><span className="text-slate-400">Total Invoice (PKR):</span><span className="text-slate-850 dark:text-white">PKR {fmtNum(selectedRecord.amount, 2)}</span></div>
                           </div>
                           <div className="space-y-1.5 pl-6 border-l border-slate-200 dark:border-slate-800">
                             <div className="flex justify-between"><span className="text-slate-400">Cleared Amount:</span><span className="text-slate-850 dark:text-white">USD {fmtNum((selectedRecord.paidAmount || 0) / (selectedRecord.exchangeRate || 1), 2)} / PKR {fmtNum(selectedRecord.paidAmount || 0, 2)}</span></div>
-                            <div className="flex justify-between"><span className="text-rose-600">Remaining Balance:</span><span className="text-rose-600 font-mono">USD {fmtNum((selectedRecord.remainingAmount || 0) / (selectedRecord.exchangeRate || 1), 2)} / PKR {fmtNum(selectedRecord.remainingAmount || 0, 2)}</span></div>
+                            <div className="flex justify-between"><span className="text-rose-600">{t(lang, "lp.remaining_balance_s", "Remaining Balance:")}</span><span className="text-rose-600 font-mono">USD {fmtNum((selectedRecord.remainingAmount || 0) / (selectedRecord.exchangeRate || 1), 2)} / PKR {fmtNum(selectedRecord.remainingAmount || 0, 2)}</span></div>
                             <div className="flex justify-between"><span className="text-slate-450">Remaining Due Date:</span><span className="text-slate-850 dark:text-white">{fmtDate(new Date(new Date(selectedRecord.date).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10))}</span></div>
                           </div>
                         </div>
@@ -1591,7 +1592,7 @@ export default function JournalReport({
                       {/* Authorized & Verified Stamp (4 cols) */}
                       <div className="md:col-span-4 grid grid-cols-2 text-center text-[9px] uppercase font-bold tracking-wider gap-4 border border-slate-250 dark:border-slate-800 rounded-xl p-3 bg-slate-50/20 dark:bg-slate-900/10">
                         <div className="flex flex-col justify-between">
-                          <div className="h-6 flex items-center justify-center italic text-slate-500 font-serif normal-case">Super Admin</div>
+                          <div className="h-6 flex items-center justify-center italic text-slate-500 font-serif normal-case">{t(lang, "nav.super_admin_menu", "Super Admin")}</div>
                           <div>
                             <div className="border-t border-slate-400 dark:border-slate-700 pt-1 text-slate-600 dark:text-slate-400 font-extrabold">SUPER ADMIN (AUTHORIZED)</div>
                             <span className="text-[8px] text-slate-450 dark:text-slate-500 normal-case block mt-0.5">SIGNATURE & DATE</span>
@@ -1643,28 +1644,28 @@ export default function JournalReport({
               <div className="flex items-center gap-1.5">
                 <User className="w-3.5 h-3.5 text-slate-400" />
                 <div>
-                  <p>User ID:</p>
+                  <p>{t(lang, "purchase.card_user_id_colon", "User ID:")}</p>
                   <p className="text-slate-900 font-extrabold text-[9px] mt-0.5">ADM-001</p>
                 </div>
               </div>
               <div className="flex items-center gap-1.5">
                 <User className="w-3.5 h-3.5 text-slate-400" />
                 <div>
-                  <p>User Name:</p>
+                  <p>{t(lang, "purchase.pmw_user_name_label", "User Name:")}</p>
                   <p className="text-slate-900 font-extrabold text-[9px] mt-0.5">SUPER ADMIN</p>
                 </div>
               </div>
               <div className="flex items-center gap-1.5">
                 <Building2 className="w-3.5 h-3.5 text-slate-400" />
                 <div>
-                  <p>Branch Name:</p>
+                  <p>{t(lang, "purchase.pmw_branch_name_label", "Branch Name:")}</p>
                   <p className="text-slate-900 font-extrabold text-[9px] mt-0.5">PAKISTAN CITY DIVISION</p>
                 </div>
               </div>
               <div className="flex items-center gap-1.5">
                 <Package className="w-3.5 h-3.5 text-slate-400" />
                 <div>
-                  <p>Branch Code:</p>
+                  <p>{t(lang, "purchase.card_branch_code_colon", "Branch Code:")}</p>
                   <p className="text-slate-900 font-extrabold text-[9px] mt-0.5">{selectedRecord.branchCode || "PAK-PAK-001"}</p>
                 </div>
               </div>
@@ -1713,8 +1714,8 @@ export default function JournalReport({
                 <div className="border border-slate-300 rounded-b-xl p-2.5 space-y-1.5 text-[9px] bg-slate-50/20 font-bold leading-tight font-sans">
                   <div className="flex justify-between text-slate-500"><span>Source Type:</span><span className="text-slate-900">SALES INVOICE</span></div>
                   <div className="flex justify-between text-slate-500"><span>Invoice No:</span><span className="text-slate-900 font-mono">{selectedRecord.journal_no}</span></div>
-                  <div className="flex justify-between text-slate-500"><span>Account Code:</span><span className="text-slate-900 font-mono">1101-002</span></div>
-                  <div className="flex justify-between text-slate-500"><span>Account Name:</span><span className="text-slate-900 uppercase truncate max-w-[100px]" title={selectedRecord.salesAccount}>{selectedRecord.salesAccount || "INTERNATIONAL EXPORT SALES A/C"}</span></div>
+                  <div className="flex justify-between text-slate-500"><span>{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span><span className="text-slate-900 font-mono">1101-002</span></div>
+                  <div className="flex justify-between text-slate-500"><span>{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span><span className="text-slate-900 uppercase truncate max-w-[100px]" title={selectedRecord.salesAccount}>{selectedRecord.salesAccount || "INTERNATIONAL EXPORT SALES A/C"}</span></div>
                 </div>
               </div>
 
@@ -1726,8 +1727,8 @@ export default function JournalReport({
                 <div className="border border-slate-300 rounded-b-xl p-2.5 space-y-1.5 text-[9px] bg-slate-50/20 font-bold leading-tight font-sans">
                   <div className="flex justify-between text-slate-500"><span>Source Type:</span><span className="text-slate-900">PURCHASE INVOICE</span></div>
                   <div className="flex justify-between text-slate-500"><span>Invoice No:</span><span className="text-slate-900 font-mono">{selectedRecord.journal_no}</span></div>
-                  <div className="flex justify-between text-slate-500"><span>Account Code:</span><span className="text-slate-900 font-mono">5001-001</span></div>
-                  <div className="flex justify-between text-slate-500"><span>Account Name:</span><span className="text-slate-900 uppercase truncate max-w-[100px]" title={selectedRecord.purchaseAccount}>{selectedRecord.purchaseAccount || "ASIAN EXPORTS A/C (DEEB)"}</span></div>
+                  <div className="flex justify-between text-slate-500"><span>{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span><span className="text-slate-900 font-mono">5001-001</span></div>
+                  <div className="flex justify-between text-slate-500"><span>{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span><span className="text-slate-900 uppercase truncate max-w-[100px]" title={selectedRecord.purchaseAccount}>{selectedRecord.purchaseAccount || "ASIAN EXPORTS A/C (DEEB)"}</span></div>
                 </div>
               </div>
 
@@ -1738,11 +1739,11 @@ export default function JournalReport({
                 </div>
                 <div className="border border-slate-300 rounded-b-xl p-2.5 space-y-1.5 text-[9px] bg-slate-50/20 font-bold leading-tight">
                   <div className="flex justify-between text-slate-500"><span>Party Name:</span><span className="text-slate-900 uppercase truncate max-w-[100px]" title={selectedRecord.party}>{selectedRecord.party}</span></div>
-                  <div className="flex justify-between text-slate-500"><span>Account Code:</span><span className="text-slate-900 font-mono">1101-002</span></div>
+                  <div className="flex justify-between text-slate-500"><span>{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span><span className="text-slate-900 font-mono">1101-002</span></div>
                   <div className="flex justify-between text-slate-500"><span>Total Due (PKR):</span><span className="text-slate-900 font-mono">PKR {fmtNum(selectedRecord.amount, 2)}</span></div>
                   <div className="flex justify-between text-slate-500"><span>Due Date:</span><span className="text-slate-900">{fmtDate(new Date(new Date(selectedRecord.date).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10))}</span></div>
                   <div className="flex justify-between text-slate-500 items-center">
-                    <span>Status:</span>
+                    <span>{t(lang, "purchase.card_status_colon", "Status:")}</span>
                     <span className="font-extrabold uppercase text-[8px] tracking-wider text-rose-600">
                       {selectedRecord.remainingAmount > 0 ? "PENDING" : "CLEARED"}
                     </span>
@@ -1782,15 +1783,15 @@ export default function JournalReport({
                   <thead>
                     <tr className="bg-slate-50 text-slate-500 font-extrabold uppercase text-[8px] border-b border-slate-300 whitespace-nowrap">
                       <Th className="py-2 px-2 text-center">Sr. No.</Th>
-                      <Th className="py-2 px-2">Branch Name</Th>
-                      <Th className="py-2 px-2">User Name</Th>
-                      <Th className="py-2 px-2">Date</Th>
+                      <Th className="py-2 px-2">{t(lang, "cdash.col_branch_name", "Branch Name")}</Th>
+                      <Th className="py-2 px-2">{t(lang, "purchase.user_name_label", "User Name")}</Th>
+                      <Th className="py-2 px-2">{t(lang, "bdash.col_date", "Date")}</Th>
                       <Th className="py-2 px-2">Check Type</Th>
                       <Th className="py-2 px-2">Check / Ref No.</Th>
                       <Th className="py-2 px-2.5">Details Remarks</Th>
-                      <Th className="py-2 px-2">Account Code</Th>
-                      <Th className="py-2 px-2">Account Name</Th>
-                      <Th className="py-2 px-2 text-center">Currency</Th>
+                      <Th className="py-2 px-2">{t(lang, "purchase.f_account_code", "Account Code")}</Th>
+                      <Th className="py-2 px-2">{t(lang, "purchase.f_account_name", "Account Name")}</Th>
+                      <Th className="py-2 px-2 text-center">{t(lang, "hr.f_currency", "Currency")}</Th>
                       <Th className="py-2 px-2 text-right">Debit (PKR)</Th>
                       <Th className="py-2 px-2 text-right">Credit (PKR)</Th>
                       <Th className="py-2 px-2 text-right">Final Amount (PKR)</Th>
@@ -1809,7 +1810,7 @@ export default function JournalReport({
                       <td className="py-2 px-2 text-slate-500">{selectedRecord.journey?.[0]?.branch || "Pakistan Main Branch"}</td>
                       <td className="py-2 px-2 text-slate-500">SUPER ADMIN</td>
                       <td className="py-2 px-2">{fmtDate(selectedRecord.date)}</td>
-                      <td className="py-2 px-2 uppercase text-[8px]">Purchase Invoice</td>
+                      <td className="py-2 px-2 uppercase text-[8px]">{t(lang, "nav.purchase_invoice", "Purchase Invoice")}</td>
                       <td className="py-2 px-2 font-mono font-bold">PO: {selectedRecord.journal_no}</td>
                       <td className="py-2 px-2.5 font-normal text-slate-500 leading-normal max-w-[200px] truncate" title={`Debit for Purchase Invoice - ${selectedRecord.goods?.[0]?.name || "Goods"} from ${selectedRecord.goods?.[0]?.origin || "Origin"}`}>
                         Debit for Purchase Invoice - {selectedRecord.goods?.[0]?.name || "Goods"} {fmtNum(selectedRecord.totalQuantity || selectedRecord.goods?.[0]?.quantity || 0, 0)} {selectedRecord.qtyUnit || selectedRecord.goods?.[0]?.qtyName || "Bags"} from {selectedRecord.goods?.[0]?.origin || "Origin"}
@@ -1933,7 +1934,7 @@ export default function JournalReport({
                       <td className="py-2 px-2 text-slate-500">{selectedRecord.journey?.[0]?.branch || "Pakistan Main Branch"}</td>
                       <td className="py-2 px-2 text-slate-500">SUPER ADMIN</td>
                       <td className="py-2 px-2">{fmtDate(selectedRecord.date)}</td>
-                      <td className="py-2 px-2 uppercase text-[8px]">Outstanding</td>
+                      <td className="py-2 px-2 uppercase text-[8px]">{t(lang, "report.col_outstanding", "Outstanding")}</td>
                       <td className="py-2 px-2 font-mono font-bold">RB-001</td>
                       <td className="py-2 px-2.5 font-normal text-slate-500 leading-normal max-w-[200px] truncate">Remaining Balance After Indorsement to Bank</td>
                       <td className="py-2 px-2 font-mono text-[8px]">1101-002</td>
@@ -1990,18 +1991,18 @@ export default function JournalReport({
             <div className="col-span-8 border border-slate-300 rounded-xl p-3 bg-slate-50/20">
               <h4 className="text-[9px] font-black uppercase text-slate-500 tracking-wider mb-2 flex items-center gap-1">
                 <Building2 className="w-3.5 h-3.5 text-slate-400" />
-                Payment Information
+                {t(lang, "pter.sec_payment_info", "Payment Information")}
               </h4>
               <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-[9px] leading-tight font-bold">
                 <div className="space-y-1.5">
-                  <div className="flex justify-between"><span className="text-slate-400">Payment Terms:</span><span className="text-slate-800 uppercase">{selectedRecord.paymentCondition || "CREDIT (30 DAYS)"}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-400">Exchange Rate:</span><span className="text-slate-850 font-mono">{fmtNum(selectedRecord.exchangeRate || 1, 4)}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-400">{t(lang, "purchase.f_payment_terms", "Payment Terms:")}</span><span className="text-slate-800 uppercase">{selectedRecord.paymentCondition || "CREDIT (30 DAYS)"}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-400">{t(lang, "purchase.f_exchange_rate", "Exchange Rate:")}</span><span className="text-slate-850 font-mono">{fmtNum(selectedRecord.exchangeRate || 1, 4)}</span></div>
                   <div className="flex justify-between"><span className="text-slate-400">Total Invoice (USD):</span><span className="text-slate-850">USD {fmtNum(selectedRecord.amount / (selectedRecord.exchangeRate || 1), 2)}</span></div>
                   <div className="flex justify-between"><span className="text-slate-400">Total Invoice (PKR):</span><span className="text-slate-850">PKR {fmtNum(selectedRecord.amount, 2)}</span></div>
                 </div>
                 <div className="space-y-1.5 pl-6 border-l border-slate-300">
                   <div className="flex justify-between"><span className="text-slate-400">Cleared Amount:</span><span className="text-slate-850">USD {fmtNum((selectedRecord.paidAmount || 0) / (selectedRecord.exchangeRate || 1), 2)} / PKR {fmtNum(selectedRecord.paidAmount || 0, 2)}</span></div>
-                  <div className="flex justify-between"><span className="text-rose-600">Remaining Balance:</span><span className="text-rose-600 font-mono">USD {fmtNum((selectedRecord.remainingAmount || 0) / (selectedRecord.exchangeRate || 1), 2)} / PKR {fmtNum(selectedRecord.remainingAmount || 0, 2)}</span></div>
+                  <div className="flex justify-between"><span className="text-rose-600">{t(lang, "lp.remaining_balance_s", "Remaining Balance:")}</span><span className="text-rose-600 font-mono">USD {fmtNum((selectedRecord.remainingAmount || 0) / (selectedRecord.exchangeRate || 1), 2)} / PKR {fmtNum(selectedRecord.remainingAmount || 0, 2)}</span></div>
                   <div className="flex justify-between"><span className="text-slate-450">Remaining Due Date:</span><span className="text-slate-850">{fmtDate(new Date(new Date(selectedRecord.date).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10))}</span></div>
                 </div>
               </div>
@@ -2010,7 +2011,7 @@ export default function JournalReport({
             {/* Authorized & Verified Stamp (4 cols) */}
             <div className="col-span-4 grid grid-cols-2 text-center text-[9px] uppercase font-bold tracking-wider gap-4 border border-slate-300 rounded-xl p-3 bg-slate-50/20">
               <div className="flex flex-col justify-between">
-                <div className="h-6 flex items-center justify-center italic text-slate-500 font-serif normal-case">Super Admin</div>
+                <div className="h-6 flex items-center justify-center italic text-slate-500 font-serif normal-case">{t(lang, "nav.super_admin_menu", "Super Admin")}</div>
                 <div>
                   <div className="border-t border-slate-400 pt-1 text-slate-650 font-extrabold">SUPER ADMIN (AUTHORIZED)</div>
                   <span className="text-[8px] text-slate-450 normal-case block mt-0.5">SIGNATURE & DATE</span>
