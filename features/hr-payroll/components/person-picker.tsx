@@ -287,6 +287,7 @@ export function PersonPicker({
           <CustomerForm
             lang={lang}
             mode="embedded"
+            onClose={() => setOpenCreate(false)}
             onSave={async (newPersonId) => {
               setOpenCreate(false);
               try {
@@ -312,6 +313,7 @@ export function PersonPicker({
             lang={lang}
             mode="embedded"
             initialCustomerId={editPersonId}
+            onClose={() => setEditPersonId(null)}
             onSave={async (savedId) => {
               setEditPersonId(null);
               try {

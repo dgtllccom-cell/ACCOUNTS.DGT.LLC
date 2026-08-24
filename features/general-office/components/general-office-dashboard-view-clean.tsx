@@ -446,13 +446,74 @@ const generalOfficeLabels: Record<string, Partial<Record<SupportedLanguage, stri
   "Meet": { ur: "میٹ / میٹنگ", ar: "اجتماع", fa: "جلسه", ps: "غونډه" }
 };
 
+const URDU_TO_ENGLISH: Record<string, string> = {
+  "برانچ مینجنگ ڈائریکٹر": "Branch Managing Director",
+  "برانچ ایڈمنسٹریشن": "Branch Administration",
+  "کنٹری ڈائریکٹر / مینجنگ پارٹنر": "Country Director / Managing Partner",
+  "ایگزیکٹو مینجمنٹ": "Executive Management",
+  "چیف ایگزیکٹو آفیسر / اونر": "Chief Executive Officer / Owner",
+  "ایگزیکٹو بورڈ": "Executive Board",
+  "جنرل آپریشنز منیجر": "General Operations Manager",
+  "آپریشنز و مینجمنٹ": "Operations & Management",
+  "سینئر آفس ایسوسی ایٹ": "Senior Office Associate",
+  "جنرل ایڈمنسٹریشن": "General Administration",
+  "ایگزیکٹو اسٹاف آفیسر": "Executive Staff Officer",
+  "جنرل آپریشنز": "General Operations",
+  "جنرل اسٹاف آفیسر": "General Staff Officer",
+  "آپریشنز": "Operations",
+  "برانچ اونر / پارٹنر": "Branch Owner / Partner",
+  "برانچ اونر / منیجر": "Branch Owner / Manager",
+  "کنٹری اونر / سربراہ": "Country Owner / Head",
+  "کمپنی اونر": "Company Owner",
+  "منیجر": "Manager",
+  "ملازم": "Employee",
+  "عام عملہ": "Normal Staff",
+  "دیگر": "Others",
+  "فعال": "Active",
+  "غیر فعال": "Inactive",
+  "نصیب اللہ": "NASEEB ULLAH",
+  "نقیب اللہ خان": "Nqeeb Allah Khan",
+  "نقیب اللہ": "Nqeeb Allah Khan",
+  "محمد انیس": "Muhammad Anees",
+  "عصمت اللہ عبداللہ": "ASMATULLAH ABDULLAH"
+};
+
 function translateGeneralOffice(label: string, lang: SupportedLanguage) {
   if (!label) return "";
-  if (lang === "en") return label;
   const trimmed = label.trim();
+
+  // If active language is English, ensure non-English text is translated to English
+  if (lang === "en") {
+    if (URDU_TO_ENGLISH[trimmed]) return URDU_TO_ENGLISH[trimmed];
+    if (trimmed.includes("/")) {
+      return trimmed
+        .split("/")
+        .map((part) => URDU_TO_ENGLISH[part.trim()] || translateHeader("en", part.trim()))
+        .join(" / ");
+    }
+    for (const [enKey, translations] of Object.entries(generalOfficeLabels)) {
+      if (
+        translations.ur === trimmed ||
+        translations.ar === trimmed ||
+        translations.fa === trimmed ||
+        translations.ps === trimmed
+      ) {
+        return enKey;
+      }
+    }
+    return trimmed;
+  }
   
-  // Exact match
+  // Exact match in dictionary
   if (generalOfficeLabels[trimmed]?.[lang]) return generalOfficeLabels[trimmed][lang];
+
+  // Handle slash-separated designations/departments
+  if (trimmed.includes("/")) {
+    return trimmed
+      .split("/")
+      .map((part) => translateGeneralOffice(part.trim(), lang))
+      .join(" / ");
+  }
   
   // Case-insensitive match
   const upper = trimmed.toUpperCase();
@@ -466,6 +527,13 @@ function translateGeneralOffice(label: string, lang: SupportedLanguage) {
     if (lang === "ar") return "نصيب الله";
     if (lang === "fa") return "نصیب‌الله";
     if (lang === "ps") return "نصیب الله";
+  }
+
+  if (lower.includes("nqeeb") || lower.includes("naqeeb") || trimmed.includes("نقیب")) {
+    if (lang === "ur") return "نقیب اللہ خان";
+    if (lang === "ar") return "نقيب الله خان";
+    if (lang === "fa") return "نقیب‌الله خان";
+    if (lang === "ps") return "نقیب الله خان";
   }
 
   if (lower.includes("asmat") || trimmed.includes("عصمت")) {

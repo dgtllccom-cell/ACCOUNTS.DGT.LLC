@@ -215,24 +215,52 @@ export class CustomersRepository {
     const now = new Date().toISOString();
 
     const viaPg = await withLocalPg(async (sql) => {
-      let resolvedCountryId = input.countryId;
+      let resolvedCountryId: string | null = null;
+      if (input.countryId) {
+        const [c] = await sql`SELECT id FROM public.countries WHERE id = ${input.countryId}::uuid LIMIT 1`;
+        if (c) resolvedCountryId = c.id;
+      }
       if (!resolvedCountryId) {
         const [c] = await sql`SELECT id FROM public.countries WHERE is_active = true ORDER BY name ASC LIMIT 1`;
-        resolvedCountryId = c?.id;
+        resolvedCountryId = c?.id ?? null;
+      }
+
+      let validStateId: string | null = null;
+      if (input.stateProvinceId) {
+        const [st] = await sql`SELECT id FROM public.state_provinces WHERE id = ${input.stateProvinceId}::uuid LIMIT 1`;
+        if (st) validStateId = st.id;
+      }
+
+      let validDistrictId: string | null = null;
+      if (input.districtId) {
+        const [dst] = await sql`SELECT id FROM public.districts WHERE id = ${input.districtId}::uuid LIMIT 1`;
+        if (dst) validDistrictId = dst.id;
+      }
+
+      let validCityId: string | null = null;
+      if (input.cityId) {
+        const [ct] = await sql`SELECT id FROM public.cities WHERE id = ${input.cityId}::uuid LIMIT 1`;
+        if (ct) validCityId = ct.id;
+      }
+
+      let validAreaId: string | null = null;
+      if (input.areaLocationId) {
+        const [ar] = await sql`SELECT id FROM public.area_locations WHERE id = ${input.areaLocationId}::uuid LIMIT 1`;
+        if (ar) validAreaId = ar.id;
       }
 
       let validActorId: string | null = null;
       if (input.actorId) {
-        const [prof] = await sql`SELECT id FROM public.profiles WHERE id = ${input.actorId}::uuid LIMIT 1`;
+        const [prof] = await sql`SELECT id FROM public.users WHERE id = ${input.actorId}::uuid LIMIT 1`;
         if (prof) validActorId = prof.id;
       }
 
       const insertRow = {
         country_id: resolvedCountryId,
-        state_province_id: input.stateProvinceId ?? null,
-        district_id: input.districtId ?? null,
-        city_id: input.cityId ?? null,
-        area_location_id: input.areaLocationId ?? null,
+        state_province_id: validStateId,
+        district_id: validDistrictId,
+        city_id: validCityId,
+        area_location_id: validAreaId,
         customer_name: input.customerName.trim(),
         first_name: input.firstName?.trim() || null,
         last_name: input.lastName?.trim() || null,

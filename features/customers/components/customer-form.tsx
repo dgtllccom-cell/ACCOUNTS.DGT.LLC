@@ -39,12 +39,14 @@ export function CustomerForm({
   lang: initialLang,
   initialCustomerId,
   mode = "standalone",
-  onSave
+  onSave,
+  onClose
 }: {
   lang: SupportedLanguage;
   initialCustomerId?: string;
   mode?: "standalone" | "embedded";
   onSave?: (customerId: string) => void;
+  onClose?: () => void;
 }) {
   const router = useRouter();
   // The server-rendered `lang` prop is only correct at the moment of the initial page
