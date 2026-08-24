@@ -852,7 +852,7 @@ export function LedgerReportView({
         <h2 className="text-lg font-semibold">{t(lang, "ledger.entries_table_title")}</h2>
         <Button variant="outline" size="sm" onClick={() => setPrintMode(true)} className="gap-2">
           <Printer className="h-4 w-4" />
-          Print Preview
+          {t(lang, "acct.print_preview", "Print Preview")}
         </Button>
       </div>
 
@@ -927,16 +927,16 @@ export function LedgerReportView({
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3 px-2 py-3 text-xs text-slate-500">
-              <span>{`Showing ${filteredLines.length ? (page - 1) * pageSize + 1 : 0} to ${Math.min(page * pageSize, filteredLines.length)} of ${filteredLines.length} entries`}</span>
+              <span>{t(lang, "ujr.showing_range", "Showing {from} to {to} of {count} entries").replace("{from}", String(filteredLines.length ? (page - 1) * pageSize + 1 : 0)).replace("{to}", String(Math.min(page * pageSize, filteredLines.length))).replace("{count}", String(filteredLines.length))}</span>
               <div className="flex items-center gap-2">
                 <Button type="button" variant="outline" size="sm" className="h-7 text-slate-600 hover:text-slate-900" disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))}>
-                  Prev
+                  {t(lang, "ledger.prev_short", "Prev")}
                 </Button>
                 <div className="text-xs">
-                  Page <b className="text-slate-800">{page}</b> / {Math.max(1, Math.ceil(filteredLines.length / pageSize))}
+                  {t(lang, "report.page", "Page")} <b className="text-slate-800">{page}</b> / {Math.max(1, Math.ceil(filteredLines.length / pageSize))}
                 </div>
                 <Button type="button" variant="outline" size="sm" className="h-7 text-slate-600 hover:text-slate-900" disabled={page >= Math.ceil(filteredLines.length / pageSize)} onClick={() => setPage(p => Math.min(Math.ceil(filteredLines.length / pageSize), p + 1))}>
-                  Next
+                  {t(lang, "common.next", "Next")}
                 </Button>
               </div>
             </div>

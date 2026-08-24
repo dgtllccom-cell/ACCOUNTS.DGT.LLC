@@ -586,16 +586,124 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
         })}
       </div>
 
-      {/* STEP 1 PACKET: Category & Identity */}
-      {activeStep === 1 && (
-        <div className="space-y-5">
-          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <UserCheck className="h-4 w-4 text-emerald-600" />
-              <span>{t(lang, "hr.f_step1_title", "Step 1 Packet: Employee Category & Person Selection")}</span>
-            </h3>
-            <span className="text-xs font-semibold text-slate-400">{t(lang, "hr.f_step1_of5", "Step 1 of 5")}</span>
+      {/* 2-Column Split: Left-Side Live Report + Right-Side Step Packets */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* LEFT COLUMN: LIVE DYNAMIC EMPLOYEE PROFILE REPORT CARD (5 cols) */}
+        <div className="lg:col-span-5 space-y-4 lg:sticky lg:top-4">
+          <div className="rounded-2xl border-2 border-emerald-500/30 bg-gradient-to-b from-slate-50 to-emerald-50/20 dark:from-slate-900 dark:to-slate-950 p-4 shadow-md space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
+              <div className="flex items-center gap-2">
+                <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                  {t(lang, "hr.live_report_card", "Live Employee Master Report")}
+                </span>
+              </div>
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                {catLabel(category)}
+              </span>
+            </div>
+
+            {/* Profile Header */}
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-2xl bg-emerald-600 text-white font-black text-lg flex items-center justify-center shadow-md shrink-0 uppercase">
+                {(fullName || "?").charAt(0)}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-black text-slate-900 dark:text-slate-100 truncate">
+                  {fullName || t(lang, "hr.f_not_selected", "No Person Selected")}
+                </div>
+                <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 truncate">
+                  {designation || "-"}
+                </div>
+                <div className="text-[10px] text-slate-500 font-medium truncate">
+                  {department || "-"}
+                </div>
+              </div>
+            </div>
+
+            {/* 4 Packet Summary Badges */}
+            <div className="space-y-2 text-xs">
+              {/* Scope & Branch */}
+              <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1">
+                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  📍 {t(lang, "hr.f_location_scope", "Location & Branch")}
+                </div>
+                <div className="font-semibold text-slate-800 dark:text-slate-200 truncate">
+                  {selectedCountryObj?.name || "Country: -"}
+                </div>
+                <div className="text-[11px] text-slate-600 dark:text-slate-400 truncate">
+                  🏢 {selectedMainBranchObj ? `${selectedMainBranchObj.name}` : "Main Branch: -"}
+                </div>
+                <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium truncate">
+                  🏙️ {selectedCityBranchObj ? `${selectedCityBranchObj.city_name || (selectedCityBranchObj as any).cityName || ""} — ${selectedCityBranchObj.name}` : "City Branch: -"}
+                </div>
+              </div>
+
+              {/* Contact Details */}
+              {selectedPersonObj && (
+                <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1 text-[11px]">
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    📞 {t(lang, "hr.pp_contact_person", "Contact Details")}
+                  </div>
+                  <div className="truncate text-slate-700 dark:text-slate-300" dir="ltr">
+                    📱 {selectedPersonObj.mobile || "-"}
+                  </div>
+                  <div className="truncate text-slate-700 dark:text-slate-300" dir="ltr">
+                    ✉️ {selectedPersonObj.email || "-"}
+                  </div>
+                  <div className="truncate text-slate-700 dark:text-slate-300">
+                    🏠 {selectedPersonObj.address || "-"}
+                  </div>
+                </div>
+              )}
+
+              {/* Duty & Shift */}
+              <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1 text-[11px]">
+                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  ⏰ {t(lang, "hr.f_shift_schedule", "Shift & Timelines")}
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">{t(lang, "hr.f_shift", "Shift")}:</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">{workingShift || "Day Shift"} ({dutyStartTime} - {dutyEndTime})</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">{t(lang, "hr.f_joining_date", "Joining")}:</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">{joiningDate || "-"}</span>
+                </div>
+              </div>
+
+              {/* Salary / Partner Equity */}
+              <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1 text-[11px]">
+                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  💰 {t(lang, "hr.f_salary_status", "Salary / Compensation")}
+                </div>
+                {category === "Country Owner" || category === "Branch Owner" || category === "Company Owner" ? (
+                  <div className="text-xs font-bold text-amber-600 dark:text-amber-400">
+                    👑 {catLabel(category)} · Executive Partner (Fixed Salary N/A / Optional)
+                  </div>
+                ) : (
+                  <div className="flex justify-between items-center font-bold text-slate-800 dark:text-slate-200">
+                    <span>{salaryType} Rate:</span>
+                    <span className="text-emerald-600">{basicSalary ? `${basicSalary.toLocaleString()} ${salaryCurrency}` : `0.00 ${salaryCurrency}`}</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
+        </div>
+
+        {/* RIGHT COLUMN: STEP PACKETS (7 cols) */}
+        <div className="lg:col-span-7 space-y-5">
+          {/* STEP 1 PACKET: Category & Identity */}
+          {activeStep === 1 && (
+            <div className="space-y-5">
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                  <UserCheck className="h-4 w-4 text-emerald-600" />
+                  <span>{t(lang, "hr.f_step1_title", "Step 1 Packet: Employee Category & Person Selection")}</span>
+                </h3>
+                <span className="text-xs font-semibold text-slate-400">{t(lang, "hr.f_step1_of5", "Step 1 of 5")}</span>
+              </div>
 
           <div>
             <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block mb-2">
@@ -944,6 +1052,19 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
             <span className="text-xs font-semibold text-slate-400">{t(lang, "hr.f_step4_of5", "Step 4 of 5")}</span>
           </div>
 
+          {/* Executive Owner Notice */}
+          {(category === "Country Owner" || category === "Branch Owner" || category === "Company Owner") && (
+            <div className="rounded-xl border border-amber-300 dark:border-amber-700/60 bg-amber-50 dark:bg-amber-950/30 p-3.5 flex items-center gap-3">
+              <div className="h-9 w-9 rounded-xl bg-amber-500 text-white font-black flex items-center justify-center text-base shrink-0 shadow-sm">
+                👑
+              </div>
+              <div className="text-xs text-amber-900 dark:text-amber-200">
+                <strong className="block font-bold mb-0.5">{catLabel(category)} — Executive Drawing / Partner Equity Mode</strong>
+                <span>As an executive owner/partner, fixed salary is optional. You can keep basic salary as 0.00 or specify executive drawings/allowances.</span>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_salary_basis", "Salary Basis")}</label>
@@ -1198,6 +1319,9 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
           </div>
         </div>
       )}
+
+        </div>
+      </div>
 
       {/* Footer Actions */}
       <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-800">

@@ -3248,7 +3248,8 @@ export type UiKey =
   | "orgchart.city_locations"
   | "orgchart.branches"
   | "orgchart.staff"
-  | "form.actions" | "form.role" | "form.user_id" | "form.user_name" | "hr.p_due" | "hr.p_generate_err" | "hr.p_generate_register" | "hr.p_generated_msg" | "hr.p_generating" | "ledger.no_entries_found" | "nav.bank_management" | "report.active_types" | "report.activity_history" | "report.all_categories" | "report.balance_pkr" | "report.bill_entries_summary" | "report.branch" | "report.branch_name" | "report.branch_summary" | "report.cleared_entries" | "report.comprehensive_daily" | "report.consolidated" | "report.country" | "report.country_name" | "report.country_summary" | "report.current_filter" | "report.dc_cartons" | "report.edit_history" | "report.explore" | "report.filter_all_projects" | "report.filter_project" | "report.global_financial_summary" | "report.hide_details" | "report.hide_report_details" | "report.invoice_payment_pkr" | "report.net_weight_kg" | "report.no_history" | "report.no_of_bills" | "report.performance_overview" | "report.purchase_payment_pkr" | "report.record_details" | "report.records_found" | "report.remaining_entries" | "report.remaining_payment_pkr" | "report.role" | "report.salesman_name" | "report.salesman_summary" | "report.salesperson" | "report.scope_city_branch" | "report.scope_entire_country" | "report.scope_main_branch" | "report.show_details" | "report.show_report_details" | "report.system_status" | "report.total_bill_entries" | "report.total_global_entries" | "report.total_purchase_pkr" | "report.total_transferred_pkr" | "roz.edit_payment_entry" | "roz.journal_roznamcha_entry_table"
+  | "form.actions" | "form.role" | "form.user_id" | "form.user_name" | "hr.p_due" | "hr.p_generate_err" | "hr.p_generate_register" | "hr.p_generated_msg" | "hr.p_generating" | "ledger.no_entries_found"
+  | "ledger.prev_short" | "nav.bank_management" | "report.active_types" | "report.activity_history" | "report.all_categories" | "report.balance_pkr" | "report.bill_entries_summary" | "report.branch" | "report.branch_name" | "report.branch_summary" | "report.cleared_entries" | "report.comprehensive_daily" | "report.consolidated" | "report.country" | "report.country_name" | "report.country_summary" | "report.current_filter" | "report.dc_cartons" | "report.edit_history" | "report.explore" | "report.filter_all_projects" | "report.filter_project" | "report.global_financial_summary" | "report.hide_details" | "report.hide_report_details" | "report.invoice_payment_pkr" | "report.net_weight_kg" | "report.no_history" | "report.no_of_bills" | "report.performance_overview" | "report.purchase_payment_pkr" | "report.record_details" | "report.records_found" | "report.remaining_entries" | "report.remaining_payment_pkr" | "report.role" | "report.salesman_name" | "report.salesman_summary" | "report.salesperson" | "report.scope_city_branch" | "report.scope_entire_country" | "report.scope_main_branch" | "report.show_details" | "report.show_report_details" | "report.system_status" | "report.total_bill_entries" | "report.total_global_entries" | "report.total_purchase_pkr" | "report.total_transferred_pkr" | "roz.edit_payment_entry" | "roz.journal_roznamcha_entry_table"
   | "roz.cef_customer_no" | "roz.cef_mobile_ph" | "roz.cef_attach" | "roz.cef_select_bank"
   | "roz.cef_method_label" | "roz.cef_select_method" | "roz.cef_new_method_option" | "roz.cef_ref_no"
   | "roz.cef_upload_label" | "roz.cef_multiply_opt" | "roz.cef_divide_opt" | "roz.cef_global_label"
@@ -6759,6 +6760,7 @@ const en: Dict = {
   "ledger.next": "Next",
   "ledger.entries_label": "Ledger Entries",
   "ledger.entries_table": "Ledger Entries",
+  "ledger.prev_short": "Prev",
   // Form fields & Buttons
   "form.from": "From",
   "form.to": "To",
@@ -12691,6 +12693,7 @@ const ur: Dict = {
   "ledger.preset_this_week": "اس ہفتے",
   "ledger.preset_today": "آج",
   "ledger.preset_yesterday": "کل",
+  "ledger.prev_short": "پچھلا",
   "nav.whatsapp_inbox": "واٹس ایپ ان باکس",
   "nav.whatsapp_setup": "اکاؤنٹ سیٹ اپ",
   "roz.approved_at": "منظوری کا وقت",
@@ -17515,6 +17518,7 @@ const ar: Dict = {
   "ledger.preset_this_week": "هذا الأسبوع",
   "ledger.preset_today": "اليوم",
   "ledger.preset_yesterday": "أمس",
+  "ledger.prev_short": "السابق",
   "nav.whatsapp_inbox": "صندوق وارد واتساب",
   "nav.whatsapp_setup": "إعداد الحساب",
   "roz.approved_at": "تاريخ الاعتماد",
@@ -22326,6 +22330,7 @@ const fa: Dict = {
   "ledger.preset_this_week": "این هفته",
   "ledger.preset_today": "امروز",
   "ledger.preset_yesterday": "دیروز",
+  "ledger.prev_short": "قبلی",
   "nav.whatsapp_inbox": "صندوق ورودی واتساپ",
   "nav.whatsapp_setup": "تنظیم حساب",
   "roz.approved_at": "زمان تأیید",
@@ -27164,6 +27169,7 @@ const ps: Dict = {
   "ledger.preset_this_week": "دا اونۍ",
   "ledger.preset_today": "نن",
   "ledger.preset_yesterday": "پرون",
+  "ledger.prev_short": "مخکنی",
   "nav.whatsapp_inbox": "د واټساپ صندوق",
   "nav.whatsapp_setup": "د حساب تنظیم",
   "roz.approved_at": "د تصویب وخت",
