@@ -1,6 +1,9 @@
 import React from "react";
+import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 export function ExpensesInvoicePrintStyle2({ bill }: { bill: any }) {
+  const lang = useActiveLanguage();
   if (!bill) return null;
 
   const totalQty = bill.expenses_bill_lines?.reduce((sum: number, l: any) => sum + Number(l.qty), 0) || 0;
@@ -45,21 +48,21 @@ export function ExpensesInvoicePrintStyle2({ bill }: { bill: any }) {
         
         {/* Top Header */}
         <div className="flex justify-between p-1 border-b border-slate-800 text-[10px]">
-          <span>Page No. 1 of 1</span>
-          <span className="font-bold tracking-widest uppercase">EXPENSES BILL</span>
-          <span>Original Copy</span>
+          <span>{t(lang, "pdfui.eip2_page_no_1_of_1", "Page No. 1 of 1")}</span>
+          <span className="font-bold tracking-widest uppercase">{t(lang, "pdfui.eip_expenses_bill", "EXPENSES BILL")}</span>
+          <span>{t(lang, "pdfui.eip2_original_copy", "Original Copy")}</span>
         </div>
 
         {/* Company Info */}
         <div className="flex border-b border-slate-800">
           <div className="w-1/6 border-r border-slate-800 flex items-center justify-center p-4">
             <div className="text-center font-bold text-slate-400 text-lg border-2 border-slate-300 rounded p-4">
-              Add<br />Logo
+              {t(lang, "company_form.add_button", "Add")}<br />{t(lang, "pdfui.eip2_logo", "Logo")}
             </div>
           </div>
           <div className="w-5/6 text-center py-2 flex flex-col justify-center">
             <h1 className="font-black text-xl tracking-wide uppercase">DAMAAN GROUP ERP</h1>
-            <p className="text-xs mt-1">Head Office / Corporate Management</p>
+            <p className="text-xs mt-1">{t(lang, "pdfui.eip2_head_office_corporate_mgmt", "Head Office / Corporate Management")}</p>
             <p className="text-[10px] mt-1">Mobile: +971-50-0000000 | Email: info@damaan.com</p>
             <p className="text-[10px]">Country: {bill.city_branches?.countries?.name} | Currency: {currency}</p>
           </div>
@@ -69,27 +72,27 @@ export function ExpensesInvoicePrintStyle2({ bill }: { bill: any }) {
         <div className="flex border-b border-slate-800 text-xs">
           {/* Left Side: Invoice Information */}
           <div className="w-1/2 border-r border-slate-800 p-3">
-            <p className="font-bold mb-2 uppercase text-[10px] border-b border-slate-300 pb-1 text-slate-700">Document Information</p>
+            <p className="font-bold mb-2 uppercase text-[10px] border-b border-slate-300 pb-1 text-slate-700">{t(lang, "pdfui.eip_document_information", "Document Information")}</p>
             <table className="w-full text-[10px]">
               <tbody>
-                <tr><td className="w-32 font-bold py-0.5">Invoice Number</td><td className="font-black text-slate-900">: {bill.serial_no}</td></tr>
-                <tr><td className="font-bold py-0.5">Invoice Date</td><td>: {formattedDate}</td></tr>
-                <tr><td className="font-bold py-0.5">Branch Name</td><td>: {bill.city_branches?.name}</td></tr>
-                <tr><td className="font-bold py-0.5">Reference No.</td><td>: {bill.reference_no || '-'}</td></tr>
-                <tr><td className="font-bold py-0.5">Status</td><td>: {bill.transferred_to_roznamcha ? "POSTED TO LEDGER" : "UNPOSTED"}</td></tr>
+                <tr><td className="w-32 font-bold py-0.5">{t(lang, "roz.cef_invoice_number_label", "Invoice Number")}</td><td className="font-black text-slate-900">: {bill.serial_no}</td></tr>
+                <tr><td className="font-bold py-0.5">{t(lang, "lpjr.inv_inv_date", "Invoice Date")}</td><td>: {formattedDate}</td></tr>
+                <tr><td className="font-bold py-0.5">{t(lang, "cdash.col_branch_name", "Branch Name")}</td><td>: {bill.city_branches?.name}</td></tr>
+                <tr><td className="font-bold py-0.5">{t(lang, "acct.reference_no", "Reference No.")}</td><td>: {bill.reference_no || '-'}</td></tr>
+                <tr><td className="font-bold py-0.5">{t(lang, "log.tbl_status", "Status")}</td><td>: {bill.transferred_to_roznamcha ? t(lang, "pdfui.eip2_posted_to_ledger", "POSTED TO LEDGER") : t(lang, "pdfui.eip_unposted", "UNPOSTED")}</td></tr>
               </tbody>
             </table>
           </div>
           
           {/* Right Side: Billed To (Debit Account) */}
           <div className="w-1/2 p-3 bg-slate-50">
-            <p className="font-bold mb-2 uppercase text-[10px] border-b border-slate-300 pb-1 text-slate-700">Billed To (DR Account)</p>
+            <p className="font-bold mb-2 uppercase text-[10px] border-b border-slate-300 pb-1 text-slate-700">{t(lang, "pdfui.eip_billed_to_dr_account", "Billed To (DR Account)")}</p>
             <div className="mt-2">
                <p className="font-mono text-sm uppercase font-black text-slate-900 leading-tight">
-                 {bill.debit_ledger_name || (bill.debit_ledger_id ? "Linked Ledger (ID: " + bill.debit_ledger_id.substring(0,8) + ")" : "NOT SELECTED")}
+                 {bill.debit_ledger_name || (bill.debit_ledger_id ? t(lang, "pdfui.eip_linked_ledger_id_prefix", "Linked Ledger (ID:") + " " + bill.debit_ledger_id.substring(0,8) + ")" : t(lang, "pdfui.eip_not_selected", "NOT SELECTED"))}
                </p>
-               <p className="text-[10px] text-slate-600 mt-2 font-medium">System ID: {bill.debit_ledger_id ? bill.debit_ledger_id.substring(0,8).toUpperCase() : "-"}</p>
-               <p className="text-[10px] text-slate-600 font-medium">Created By: {bill.profiles?.full_name || 'System Admin'}</p>
+               <p className="text-[10px] text-slate-600 mt-2 font-medium">{t(lang, "pdfui.eip_system_id_no_space_colon", "System ID:")} {bill.debit_ledger_id ? bill.debit_ledger_id.substring(0,8).toUpperCase() : "-"}</p>
+               <p className="text-[10px] text-slate-600 font-medium">{t(lang, "pdfui.eip_created_by_colon", "Created By:")} {bill.profiles?.full_name || t(lang, "pdfui.eip_system_admin", "System Admin")}</p>
             </div>
           </div>
         </div>
@@ -98,18 +101,18 @@ export function ExpensesInvoicePrintStyle2({ bill }: { bill: any }) {
         <table className="w-full text-[9px]">
           <thead>
             <tr className="border-b border-slate-800 text-center font-bold bg-slate-100">
-              <td className="border-r border-slate-800 p-1 w-6">No.</td>
-              <td className="border-r border-slate-800 p-1 text-left">Item Description</td>
-              <td className="border-r border-slate-800 p-1 w-8">Qty</td>
-              <td className="border-r border-slate-800 p-1 w-12">U. Price</td>
-              <td className="border-r border-slate-800 p-1 w-14">Amount</td>
-              <td className="border-r border-slate-800 p-1 w-8">Cur</td>
-              <td className="border-r border-slate-800 p-1 w-6">Op</td>
-              <td className="border-r border-slate-800 p-1 w-12">Rate</td>
-              <td className="border-r border-slate-800 p-1 w-14">Final</td>
-              <td className="border-r border-slate-800 p-1 w-10">Tax %</td>
-              <td className="border-r border-slate-800 p-1 w-12">Tax Amt</td>
-              <td className="p-1 w-16 text-right">Total</td>
+              <td className="border-r border-slate-800 p-1 w-6">{t(lang, "ledger.col_no", "No.")}</td>
+              <td className="border-r border-slate-800 p-1 text-left">{t(lang, "pdfui.eip2_item_description", "Item Description")}</td>
+              <td className="border-r border-slate-800 p-1 w-8">{t(lang, "purchase.th_qty", "Qty")}</td>
+              <td className="border-r border-slate-800 p-1 w-12">{t(lang, "pdfui.eip_u_price", "U. Price")}</td>
+              <td className="border-r border-slate-800 p-1 w-14">{t(lang, "purchase.th_amount", "Amount")}</td>
+              <td className="border-r border-slate-800 p-1 w-8">{t(lang, "lpjr.col_cur", "Cur")}</td>
+              <td className="border-r border-slate-800 p-1 w-6">{t(lang, "money_exchange.op_label", "Op")}</td>
+              <td className="border-r border-slate-800 p-1 w-12">{t(lang, "purchase.th_rate", "Rate")}</td>
+              <td className="border-r border-slate-800 p-1 w-14">{t(lang, "purchase.th_final", "Final")}</td>
+              <td className="border-r border-slate-800 p-1 w-10">{t(lang, "pdfui.eip_tax_percent", "Tax %")}</td>
+              <td className="border-r border-slate-800 p-1 w-12">{t(lang, "pdfui.eip_tax_amt", "Tax Amt")}</td>
+              <td className="p-1 w-16 text-right">{t(lang, "common.total", "Total")}</td>
             </tr>
           </thead>
           <tbody>
@@ -132,7 +135,7 @@ export function ExpensesInvoicePrintStyle2({ bill }: { bill: any }) {
             
             {/* Blank rows to fill space */}
             <tr className="border-t-2 border-slate-800 bg-slate-50">
-              <td className="border-r border-slate-800 p-1 font-bold text-right uppercase" colSpan={2}>Grand Total (Incl. Tax)</td>
+              <td className="border-r border-slate-800 p-1 font-bold text-right uppercase" colSpan={2}>{t(lang, "pdfui.eip_grand_total_incl_tax", "Grand Total (Incl. Tax)")}</td>
               <td className="border-r border-slate-800 p-1 font-bold text-center">{totalQty}</td>
               <td className="border-r border-slate-800 p-1 text-right font-bold" colSpan={8}></td>
               <td className="p-1 font-black text-right text-[11px] text-slate-900">{grandTotal.toFixed(2)}</td>
@@ -142,19 +145,19 @@ export function ExpensesInvoicePrintStyle2({ bill }: { bill: any }) {
 
         {/* Total In Words Row */}
         <div className="border-t border-slate-800 border-b border-slate-800 p-2 bg-slate-50">
-          <p className="text-[10px]"><span className="font-bold">Rs.</span> <span className="uppercase font-medium italic">{numberToWords(grandTotal)}</span></p>
+          <p className="text-[10px]"><span className="font-bold">{t(lang, "pdfui.eip2_rs", "Rs.")}</span> <span className="uppercase font-medium italic">{numberToWords(grandTotal)}</span></p>
         </div>
 
         {/* Footer Area */}
         <div className="flex h-32">
           {/* Terms */}
           <div className="w-1/3 border-r border-slate-800 p-2">
-            <p className="font-bold text-[10px]">Terms and Conditions</p>
-            <p className="text-[9px] mt-1">E. & O.E.</p>
+            <p className="font-bold text-[10px]">{t(lang, "pdfui.eip_terms_and_conditions", "Terms and Conditions")}</p>
+            <p className="text-[9px] mt-1">{t(lang, "pdfui.eip2_eoe", "E. & O.E.")}</p>
             <ol className="list-decimal pl-3 mt-1 text-[8px] text-slate-600 leading-tight">
-              <li>Goods once sold will not be taken back.</li>
+              <li>{t(lang, "pdfui.eip2_goods_sold_not_taken_back", "Goods once sold will not be taken back.")}</li>
               <li>Interest @ 18% p.a. will be charged if payment is not made within the stipulated time.</li>
-              <li>Subject to local jurisdiction only.</li>
+              <li>{t(lang, "pdfui.eip2_subject_local_jurisdiction", "Subject to local jurisdiction only.")}</li>
             </ol>
           </div>
           
@@ -162,10 +165,10 @@ export function ExpensesInvoicePrintStyle2({ bill }: { bill: any }) {
           <div className="w-1/3 border-r border-slate-800 p-2 flex flex-col justify-center items-center">
             <div className="w-12 h-12 bg-slate-200 mb-2 border border-slate-300"></div>
             <div className="text-[9px] w-full pl-2">
-              <p><strong>Account Number:</strong> 123456789</p>
-              <p><strong>Bank:</strong> Damaan Central Bank</p>
-              <p><strong>IFSC:</strong> DAMN000123</p>
-              <p><strong>Branch:</strong> Head Office</p>
+              <p><strong>{t(lang, "acct.apv_account_number_colon", "Account Number:")}</strong> 123456789</p>
+              <p><strong>{t(lang, "purchase.f_bank", "Bank:")}</strong> Damaan Central Bank</p>
+              <p><strong>{t(lang, "pdfui.eip2_ifsc_colon", "IFSC:")}</strong> DAMN000123</p>
+              <p><strong>{t(lang, "purchase.branch_colon_label", "Branch:")}</strong> Head Office</p>
             </div>
           </div>
 
@@ -173,7 +176,7 @@ export function ExpensesInvoicePrintStyle2({ bill }: { bill: any }) {
           <div className="w-1/3 p-2 flex flex-col relative">
             <p className="font-bold text-[10px] text-right">For DAMAAN GROUP ERP</p>
             <div className="mt-auto text-[10px] text-right font-bold">
-              Signature
+              {t(lang, "pdfui.eip2_signature", "Signature")}
             </div>
           </div>
         </div>

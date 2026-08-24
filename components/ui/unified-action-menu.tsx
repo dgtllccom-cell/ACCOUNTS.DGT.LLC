@@ -132,7 +132,7 @@ export function UnifiedActionMenu({
                 className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-foreground hover:bg-accent transition-colors"
               >
                 <FileText className="h-4 w-4 text-rose-500 shrink-0" />
-                <span>{t(language, "report.export_pdf", "PDF Export")}</span>
+                <span>{t(language, "report.export_pdf")}</span>
               </button>
             )}
 
@@ -143,7 +143,7 @@ export function UnifiedActionMenu({
                 className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-foreground hover:bg-accent transition-colors"
               >
                 <FileSpreadsheet className="h-4 w-4 text-emerald-600 shrink-0" />
-                <span>{t(language, "report.export_excel", "Excel Export")}</span>
+                <span>{t(language, "report.export_excel")}</span>
               </button>
             )}
 
@@ -154,7 +154,7 @@ export function UnifiedActionMenu({
                 className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-foreground hover:bg-accent transition-colors"
               >
                 <Mail className="h-4 w-4 text-indigo-500 shrink-0" />
-                <span>{t(language, "report.email_document", "Email Document")}</span>
+                <span>{t(language, "report.share_email")}</span>
               </button>
             )}
 
@@ -165,7 +165,7 @@ export function UnifiedActionMenu({
                 className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-foreground hover:bg-accent transition-colors"
               >
                 <MessageSquare className="h-4 w-4 text-green-500 shrink-0" />
-                <span>{t(language, "report.whatsapp_document", "WhatsApp Document")}</span>
+                <span>{t(language, "report.share_whatsapp")}</span>
               </button>
             )}
 

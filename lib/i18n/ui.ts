@@ -189,6 +189,7 @@ export type UiKey =
   | "nav.new_user"
   | "nav.register_employee"
   | "nav.entry_reports"
+  | "pdfui.eip2_posted_to_ledger"
   | "pdfui.eip2_page_no_1_of_1" | "pdfui.eip2_original_copy" | "pdfui.eip2_logo" | "pdfui.eip2_head_office_corporate_mgmt" | "pdfui.eip2_item_description" | "pdfui.eip2_rs" | "pdfui.eip2_eoe" | "pdfui.eip2_goods_sold_not_taken_back" | "pdfui.eip2_subject_local_jurisdiction" | "pdfui.eip2_ifsc_colon" | "pdfui.eip2_signature"
   | "pdfui.eip_system_id_no_space_colon" | "pdfui.eip_created_by_colon" | "pdfui.eip_posted" | "pdfui.eip_unposted" | "pdfui.eip_not_selected" | "pdfui.eip_linked_ledger_id_prefix" | "pdfui.eip_system_admin"
   | "pdfui.eip_erp_general_ledger_tagline" | "pdfui.eip_internal_mgmt_ops_tagline" | "pdfui.eip_system_id_colon" | "pdfui.eip_country_colon" | "pdfui.eip_expenses_bill" | "pdfui.eip_document_information" | "pdfui.eip_bill_date" | "pdfui.eip_billed_to_dr_account" | "pdfui.eip_description_of_expense" | "pdfui.eip_u_price" | "pdfui.eip_tax_percent" | "pdfui.eip_tax_amt" | "pdfui.eip_grand_total_incl_tax" | "pdfui.eip_total_amount_in_words" | "pdfui.eip_add_tax" | "pdfui.eip_total_amount_after_tax" | "pdfui.eip_terms_and_conditions" | "pdfui.eip_subject_internal_branch_jurisdiction" | "pdfui.eip_responsibility_ceases_msg" | "pdfui.eip_expenses_revert_admin_msg" | "pdfui.eip_certified_particulars_true_msg" | "pdfui.eip_authorised_signatory"
@@ -3432,6 +3433,7 @@ const en: Dict = {
   "pdfui.eip2_subject_local_jurisdiction": "Subject to local jurisdiction only.",
   "pdfui.eip2_ifsc_colon": "IFSC:",
   "pdfui.eip2_signature": "Signature",
+  "pdfui.eip2_posted_to_ledger": "POSTED TO LEDGER",
   "safd.safd_official_system_audit_directory": "OFFICIAL SYSTEM AUDIT & DIRECTORY",
   "safd.safd_erp_master_forms_directory": "ERP Master Forms Directory & Project Progress Report",
   "safd.safd_download_pdf_print": "Download PDF / Print",
@@ -8808,6 +8810,7 @@ const ur: Dict = {
   "pdfui.eip2_subject_local_jurisdiction": "صرف مقامی دائرہ اختیار سے مشروط۔",
   "pdfui.eip2_ifsc_colon": "IFSC:",
   "pdfui.eip2_signature": "دستخط",
+  "pdfui.eip2_posted_to_ledger": "لیجر میں پوسٹ شدہ",
   "safd.safd_official_system_audit_directory": "سرکاری سسٹم آڈٹ اور ڈائریکٹری",
   "safd.safd_erp_master_forms_directory": "ERP ماسٹر فارمز ڈائریکٹری اور پروجیکٹ پیش رفت رپورٹ",
   "safd.safd_download_pdf_print": "PDF ڈاؤن لوڈ / پرنٹ کریں",
@@ -14163,6 +14166,7 @@ const ar: Dict = {
   "pdfui.eip2_subject_local_jurisdiction": "يخضع للاختصاص القضائي المحلي فقط.",
   "pdfui.eip2_ifsc_colon": "IFSC:",
   "pdfui.eip2_signature": "التوقيع",
+  "pdfui.eip2_posted_to_ledger": "مرحّل إلى دفتر الأستاذ",
   "safd.safd_official_system_audit_directory": "التدقيق الرسمي للنظام والدليل",
   "safd.safd_erp_master_forms_directory": "دليل النماذج الرئيسي لنظام تخطيط الموارد وتقرير تقدم المشروع",
   "safd.safd_download_pdf_print": "تنزيل PDF / طباعة",
@@ -19517,6 +19521,7 @@ const fa: Dict = {
   "pdfui.eip2_subject_local_jurisdiction": "فقط منوط به صلاحیت قضایی محلی است.",
   "pdfui.eip2_ifsc_colon": "IFSC:",
   "pdfui.eip2_signature": "امضا",
+  "pdfui.eip2_posted_to_ledger": "ثبت‌شده در دفتر کل",
   "safd.safd_official_system_audit_directory": "حسابرسی رسمی سیستم و فهرست",
   "safd.safd_erp_master_forms_directory": "فهرست اصلی فرم‌های ERP و گزارش پیشرفت پروژه",
   "safd.safd_download_pdf_print": "دانلود PDF / چاپ",
@@ -24870,6 +24875,7 @@ const ps: Dict = {
   "pdfui.eip2_subject_local_jurisdiction": "یوازې محلي قضايي واک ته منوط دی.",
   "pdfui.eip2_ifsc_colon": "IFSC:",
   "pdfui.eip2_signature": "لاسلیک",
+  "pdfui.eip2_posted_to_ledger": "لیجر ته پوسټ شوی",
   "safd.safd_official_system_audit_directory": "رسمي سیسټم پلټنه او لارښود",
   "safd.safd_erp_master_forms_directory": "د ERP اصلي فورمې لارښود او د پروژې پرمختګ راپور",
   "safd.safd_download_pdf_print": "PDF ډاونلوډ / چاپ",
@@ -27023,6 +27029,7 @@ const ps: Dict = {
   "common.edit": "سمون",
   "common.delete": "ړنګول",
   "common.view": "کتل",
+  "common.settings": "ترتیبات",
   "common.add_new": "نوی اضافه کړئ",
   "common.create": "جوړول",
   "common.register": "ثبتول",
@@ -28401,6 +28408,7 @@ const ps: Dict = {
   "nav.city_journal_report": "د ښار جرنل راپور",
   "nav.construction_journal_report": "د ساختماني جرنل راپور",
   "nav.settings": "سیټنګونه",
+  "nav.language": "ژبه",
   "nav.location_form": "د موقعیت مدیریت",
   "nav.location_country": "د هېواد ماسټر",
   "nav.location_state": "د ایالت ماسټر",
@@ -28411,6 +28419,7 @@ const ps: Dict = {
   "auth.or_continue_with": "یا دوام ورکړئ",
   "auth.sign_in_google": "د Google سره ننوتل",
   "auth.choose_theme": "تمپلېټ وټاکئ",
+  "auth.logout": "وتل",
   "auth.support": "سپورټ",
 
   // Roznamcha Report UI
@@ -28891,6 +28900,7 @@ const ps: Dict = {
   "nav.theme_day": "ورځ / سپینه",
   "nav.theme_soft": "نرمه رڼا",
   "nav.theme_green_business": "شنه / سوداګریز",
+  "nav.keyboard_mapper": "د کیبورډ میپر",
   "nav.translations_management": "د محلي ژباړې مدیریت",
   "nav.trial_balance": "ازمایښتي بیلانس",
   "nav.uae_dubai": "متحده عربي امارات (دوبۍ)",

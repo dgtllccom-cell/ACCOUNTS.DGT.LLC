@@ -1,3 +1,4 @@
+import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
 "use client";
 
 import type { ReactNode } from "react";
@@ -140,6 +141,17 @@ export function AccountLiveReportPanel({
   const formattedDateTime = `${stampDate} ${stampTime}`;
   const t = (key: string, fallback: string) => liveReportLabels[key]?.[lang] || liveReportLabels[key]?.en || fallback;
 
+  const trName = (val: string | null | undefined) => {
+    if (!val || val === "-") return "-";
+    return lang === "ur" ? transliterateProperNoun(val, "ur") : val;
+  };
+
+  const trTerm = (val: string | null | undefined) => {
+    if (!val || val === "-") return "-";
+    return localizeTerm(val, lang);
+  };
+
+
   // Metrics (configured exactly to match user's mockup)
   const openingBalance = "0.00";
   const totalDebit = "0.00";
@@ -167,9 +179,9 @@ export function AccountLiveReportPanel({
   const custAddress = custObj?.address || (accountTitle === "Customer" ? [selectedBranchName, selectedCountryName].filter(Boolean).join(", ") || "-" : "-");
 
   const customerFields = (custObj || accountTitle === "Customer") ? [
-    { label: t("customerName", "Customer Name"), value: custObj?.customer_name || custObj?.name || (accountTitle === "Customer" ? accountName : "-") },
+    { label: t("customerName", "Customer Name"), value: trName(custObj?.customer_name || custObj?.name || (accountTitle === "Customer" ? accountName : "-")) },
     { label: t("customerCode", "Customer Code"), value: custObj?.customer_code || (custObj?.id ? compactCode(custObj.id, "CUST") : (accountTitle === "Customer" ? accountCode || "CUST-AUTO" : "-")) },
-    { label: t("customerType", "Customer Type"), value: custObj?.customer_type || subType || "Company / Individual" },
+    { label: t("customerType", "Customer Type"), value: trTerm(custObj?.customer_type || subType || "Company / Individual") },
     { label: "NTN / CNIC", value: custObj?.ntn_cnic || custObj?.ntn || (accountTitle === "Customer" ? manualReferenceNumber || "-" : "-") },
     { label: t("phone", "Phone"), value: custPhone },
     { label: t("email", "Email"), value: custEmail },
@@ -194,7 +206,7 @@ export function AccountLiveReportPanel({
   const compAddress = companyDetail?.address || (accountTitle === "Company" ? [selectedBranchName, selectedCountryName].filter(Boolean).join(", ") || "-" : "-");
 
   const companyFields = (companyDetail || accountTitle === "Company") ? [
-    { label: t("companyName", "Company Name"), value: companyDetail?.companyName || companyDetail?.name || companyDetail?.legal_name || (accountTitle === "Company" ? accountName : "-") },
+    { label: t("companyName", "Company Name"), value: trName(companyDetail?.companyName || companyDetail?.name || companyDetail?.legal_name || (accountTitle === "Company" ? accountName : "-")) },
     { label: t("companyCode", "Company Code"), value: companyDetail?.code || (companyDetail?.id ? compactCode(companyDetail.id, "DBG") : (accountTitle === "Company" ? accountCode || "COMP-AUTO" : "-")) },
     { label: t("registrationNo", "Registration No."), value: companyDetail?.registration_no || companyDetail?.registrations?.find((r: any) => r.type?.toLowerCase().includes("registration") || r.type?.toLowerCase().includes("license") || r.type?.toLowerCase().includes("trade"))?.value || (accountTitle === "Company" ? manualReferenceNumber || "-" : "-") },
     { label: "NTN", value: companyDetail?.ntn || companyDetail?.registrations?.find((r: any) => r.type?.toLowerCase().includes("ntn") || r.type?.toLowerCase().includes("gst") || r.type?.toLowerCase().includes("tax"))?.value || "-" },
@@ -217,8 +229,8 @@ export function AccountLiveReportPanel({
 
   // 4. Bank Details fields
   const bankFields = (bankDetail || accountTitle === "Bank") ? [
-    { label: t("bankName", "Bank Name"), value: bankDetail?.bank_name || bankDetail?.bankName || bankDetail?.name || (accountTitle === "Bank" ? accountName : "-") },
-    { label: t("accountTitle", "Account Title"), value: bankDetail?.account_title || accountName || "-" },
+    { label: t("bankName", "Bank Name"), value: trName(bankDetail?.bank_name || bankDetail?.bankName || bankDetail?.name || (accountTitle === "Bank" ? accountName : "-")) },
+    { label: t("accountTitle", "Account Title"), value: trName(bankDetail?.account_title || accountName || "-") },
     { label: t("accountNumber", "Account Number"), value: bankDetail?.account_number || (accountTitle === "Bank" ? manualReferenceNumber || "-" : "-") },
     { label: "IBAN", value: bankDetail?.iban_number || "-" },
     { label: t("bankBranch", "Bank Branch"), value: bankDetail?.branch_name || (accountTitle === "Bank" ? selectedBranchName || "-" : "-") },
@@ -287,17 +299,17 @@ export function AccountLiveReportPanel({
 
   // 1. Account Information fields
   const accountFields = [
-    { label: t("accountName", "Account Name"), value: accountName || "-" },
+    { label: t("accountName", "Account Name"), value: trName(accountName || "-") },
     { label: t("accountCode", "Account Code"), value: accountCode || "-" },
-    { label: t("accountTitle", "Account Title"), value: accountTitle || "-" },
-    { label: t("subType", "Sub Type"), value: subType || "-" },
-    { label: t("category", "Category"), value: category || "-" },
+    { label: t("accountTitle", "Account Title"), value: trTerm(accountTitle || "-") },
+    { label: t("subType", "Sub Type"), value: trTerm(subType || "-") },
+    { label: t("category", "Category"), value: trTerm(category || "-") },
     { label: t("currency", "Currency"), value: currency || "-" },
     { label: t("manualRef", "Manual Ref"), value: manualReferenceNumber || "-" },
     { label: t("mobileNumber", "Mobile Number"), value: primaryStepMobile || custPhone || compPhone || "-" },
     { label: t("contactsList", "Contacts"), value: formattedStepContacts || "-" },
-    { label: t("country", "Country"), value: selectedCountryName || "-" },
-    { label: t("branch", "Branch"), value: selectedBranchName || "-" },
+    { label: t("country", "Country"), value: trTerm(selectedCountryName || "-") },
+    { label: t("branch", "Branch"), value: trName(selectedBranchName || "-") },
   ];
 
   const isExpense = category === "EX";
