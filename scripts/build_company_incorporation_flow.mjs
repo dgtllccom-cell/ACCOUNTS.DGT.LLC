@@ -1,4 +1,6 @@
-"use client";
+import fs from 'fs';
+
+const code = `"use client";
 
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -172,8 +174,8 @@ export function CompanyIncorporationForm({
     (async () => {
       try {
         const [pRes, summaryRes, cRes] = await Promise.allSettled([
-          apiGet<{ customer: any }>(`/api/erp/customers/${encodeURIComponent(ownerPersonId)}?lang=${encodeURIComponent(lang)}`),
-          apiGet<{ summary: any }>(`/api/erp/parties/360-summary?customerId=${encodeURIComponent(ownerPersonId)}&lang=${encodeURIComponent(lang)}`),
+          apiGet<{ customer: any }>(\`/api/erp/customers/\${encodeURIComponent(ownerPersonId)}?lang=\${encodeURIComponent(lang)}\`),
+          apiGet<{ summary: any }>(\`/api/erp/parties/360-summary?customerId=\${encodeURIComponent(ownerPersonId)}&lang=\${encodeURIComponent(lang)}\`),
           apiGet<{ companies: any[] }>("/api/erp/companies?limit=200")
         ]);
 
@@ -210,7 +212,7 @@ export function CompanyIncorporationForm({
         setOwnerProfile({
           ...pData,
           summary: summaryData,
-          customerCode: pData?.customer_code || `CUST-${ownerPersonId.slice(0, 6).toUpperCase()}`,
+          customerCode: pData?.customer_code || \`CUST-\${ownerPersonId.slice(0, 6).toUpperCase()}\`,
           employeeCode: summaryData?.employees?.[0]?.employeeCode || "EMP-0010",
           fatherName: pData?.contact_person || pData?.father_name || "عبداللہ",
           personType: "Customer & Employee",
@@ -238,7 +240,7 @@ export function CompanyIncorporationForm({
   // Load initial company if editing
   useEffect(() => {
     if (initialCompanyId) {
-      apiGet<{ company: any }>(`/api/erp/companies/${encodeURIComponent(initialCompanyId)}`)
+      apiGet<{ company: any }>(\`/api/erp/companies/\${encodeURIComponent(initialCompanyId)}\`)
         .then((res) => {
           const comp = res.company;
           if (comp) {
@@ -302,7 +304,7 @@ export function CompanyIncorporationForm({
       };
 
       if (initialCompanyId) {
-        await apiPatch(`/api/erp/companies/${encodeURIComponent(initialCompanyId)}`, payload);
+        await apiPatch(\`/api/erp/companies/\${encodeURIComponent(initialCompanyId)}\`, payload);
         setMessage(lang === "ur" ? "کمپنی کے کوائف کامیابی سے اپ ڈیٹ ہو گئے۔" : "Company updated successfully.");
       } else {
         await apiPost("/api/erp/companies", payload);
@@ -364,17 +366,17 @@ export function CompanyIncorporationForm({
                 key={s.id}
                 type="button"
                 onClick={() => setCurrentStep(s.id as any)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                className={\`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition cursor-pointer \${
                   active
                     ? "bg-blue-600 text-white shadow-xs"
                     : done
                     ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
                     : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
-                }`}
+                }\`}
               >
-                <span className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-black ${
+                <span className={\`flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-black \${
                   active ? "bg-white text-blue-600" : done ? "bg-emerald-600 text-white" : "bg-slate-200 dark:bg-slate-700 text-slate-600"
-                }`}>
+                }\`}>
                   {done ? "✓" : s.id}
                 </span>
                 <span>{s.label}</span>
@@ -528,8 +530,8 @@ export function CompanyIncorporationForm({
                   </span>
                   <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                     {lang === "ur" 
-                      ? `اس شخص کی رجسٹرڈ کمپنیاں (${existingCompaniesForOwner.length})` 
-                      : `Registered Companies under this Owner (${existingCompaniesForOwner.length})`}
+                      ? \`اس شخص کی رجسٹرڈ کمپنیاں (\${existingCompaniesForOwner.length})\` 
+                      : \`Registered Companies under this Owner (\${existingCompaniesForOwner.length})\`}
                   </CardTitle>
                 </div>
               </div>
@@ -573,7 +575,7 @@ export function CompanyIncorporationForm({
                         <td className="px-3 py-2.5 text-center">
                           <button
                             type="button"
-                            onClick={() => router.push(`/dashboard/settings/company-setup?companyId=${co.id}` as Route)}
+                            onClick={() => router.push(\`/dashboard/settings/company-setup?companyId=\${co.id}\` as Route)}
                             className="p-1 rounded-md text-blue-600 hover:bg-blue-50 transition cursor-pointer"
                             title="View / Edit Company"
                           >
@@ -592,13 +594,13 @@ export function CompanyIncorporationForm({
                 <div>
                   <p className="font-bold">
                     {lang === "ur"
-                      ? `اس شخص کے نام پہلے سے ${existingCompaniesForOwner.length} کمپنیاں رجسٹرڈ ہیں۔`
-                      : `This owner already has ${existingCompaniesForOwner.length} registered companies.`}
+                      ? \`اس شخص کے نام پہلے سے \${existingCompaniesForOwner.length} کمپنیاں رجسٹرڈ ہیں۔\`
+                      : \`This owner already has \${existingCompaniesForOwner.length} registered companies.\`}
                   </p>
                   <p className="text-[11px] text-blue-700 dark:text-blue-300 mt-0.5">
                     {lang === "ur"
-                      ? `آپ اس شخص کے نام نئی کمپنی رجسٹر کر رہے ہیں (کمپنی نمبر: ${existingCompaniesForOwner.length + 1})`
-                      : `You are registering a new sister company under this owner (Company #${existingCompaniesForOwner.length + 1})`}
+                      ? \`آپ اس شخص کے نام نئی کمپنی رجسٹر کر رہے ہیں (کمپنی نمبر: \${existingCompaniesForOwner.length + 1})\`
+                      : \`You are registering a new sister company under this owner (Company #\${existingCompaniesForOwner.length + 1})\`}
                   </p>
                 </div>
               </div>
@@ -647,7 +649,7 @@ export function CompanyIncorporationForm({
                   </p>
                 </div>
                 <div className="text-xs font-bold text-blue-600 bg-blue-50 dark:bg-blue-950 px-3 py-1 rounded-full border border-blue-200 dark:border-blue-900">
-                  {lang === "ur" ? `مرحلہ ${currentStep} از 4` : `Step ${currentStep} of 4`}
+                  {lang === "ur" ? \`مرحلہ \${currentStep} از 4\` : \`Step \${currentStep} of 4\`}
                 </div>
               </div>
             </CardHeader>
@@ -952,3 +954,7 @@ export function CompanyIncorporationForm({
     </div>
   );
 }
+`;
+
+fs.writeFileSync('features/companies/components/company-incorporation-form.tsx', code, 'utf8');
+console.log('✅ features/companies/components/company-incorporation-form.tsx built successfully!');
