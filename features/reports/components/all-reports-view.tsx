@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
+import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 export interface ReportItem {
   id: string;
@@ -183,6 +185,7 @@ export const ALL_REPORTS_CATALOG: ReportItem[] = [
 ];
 
 export function AllReportsView() {
+  const lang = useActiveLanguage();
   const [userRole, setUserRole] = useState<string>("super_admin");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -223,8 +226,8 @@ export function AllReportsView() {
       {/* Header */}
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-wrap items-center justify-between gap-4">
         <div>
-          <div className="text-[10px] font-black uppercase tracking-widest text-indigo-600">Centralized Reports Suite</div>
-          <h1 className="text-xl font-black text-slate-950 tracking-tight">All ERP Reports & Analytical Catalog</h1>
+          <div className="text-[10px] font-black uppercase tracking-widest text-indigo-600">{t(lang, "arv.arv_centralized_reports_suite", "Centralized Reports Suite")}</div>
+          <h1 className="text-xl font-black text-slate-950 tracking-tight">{t(lang, "arv.arv_all_erp_reports_catalog", "All ERP Reports & Analytical Catalog")}</h1>
           <p className="text-xs text-slate-500 font-medium mt-0.5">
             Role-based permissions automatically restrict reports to authorized Country or Branch scopes.
           </p>
@@ -233,7 +236,7 @@ export function AllReportsView() {
         {/* Active Role Scope Badge */}
         <div className="flex items-center gap-2 rounded-xl bg-slate-900 px-3 py-1.5 text-xs text-white font-bold">
           <Shield className="h-4 w-4 text-emerald-400" />
-          <span>Active Role Scope:</span>
+          <span>{t(lang, "arv.arv_active_role_scope_colon", "Active Role Scope:")}</span>
           <span className="text-emerald-400 capitalize">{userRole.replace("_", " ")}</span>
         </div>
       </div>
@@ -264,7 +267,7 @@ export function AllReportsView() {
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
             <input
               type="text"
-              placeholder="Search reports by title..."
+              placeholder={t(lang, "arv.arv_search_reports_ph", "Search reports by title...")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 py-1.5 text-xs font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -311,11 +314,11 @@ export function AllReportsView() {
                     href={report.href}
                     className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition"
                   >
-                    Open Report <ArrowRight className="h-3.5 w-3.5" />
+                    {t(lang, "arv.arv_open_report", "Open Report")} <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
                 ) : (
                   <div className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400">
-                    <Lock className="h-3.5 w-3.5" /> Restricted to Role
+                    <Lock className="h-3.5 w-3.5" /> {t(lang, "arv.arv_restricted_to_role", "Restricted to Role")}
                   </div>
                 )}
               </div>

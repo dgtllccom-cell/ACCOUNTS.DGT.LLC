@@ -3,6 +3,8 @@ import React, { useState } from "react";
 import { Download, Printer, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Th } from "@/components/ui/translated-th";
+import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 export type LoadingSlipData = {
   // Header
@@ -65,6 +67,7 @@ type LoadingSlipViewerProps = {
 };
 
 export function LoadingSlipViewer({ data, onClose }: LoadingSlipViewerProps) {
+  const lang = useActiveLanguage();
   const [isPrinting, setIsPrinting] = useState(false);
 
   const handlePrint = () => {

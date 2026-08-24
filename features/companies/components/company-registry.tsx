@@ -34,6 +34,8 @@ import { printStore } from "@/lib/store/print-store";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { transliterateProperNoun } from "@/lib/i18n/transliteration";
+import { Party360Modal } from "@/features/customers/components/party-360-modal";
+import { Mail, Phone, MessageSquare, MoreHorizontal, Globe } from "lucide-react";
 
 export type CompanyRegistryItem = {
   id: string;
@@ -321,6 +323,8 @@ export function CompanyRegistry() {
   const [branchFilter, setBranchFilter] = useState("all");
 
   const [previewCompany, setPreviewCompany] = useState<CompanyRegistryItem | null>(null);
+  const [selected360Party, setSelected360Party] = useState<{ id?: string; name: string } | null>(null);
+  const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
 
   const [page, setPage] = useState(1);
   const pageSize = 10;
@@ -835,6 +839,15 @@ export function CompanyRegistry() {
           </div>
         </div>
       </div>
+
+      {/* ── PARTY 360 MODAL ── */}
+      {selected360Party && (
+        <Party360Modal
+          name={selected360Party.name}
+          lang={lang as any}
+          onClose={() => setSelected360Party(null)}
+        />
+      )}
 
       {/* ── PREVIEW DETAIL MODAL ── */}
       {previewCompany && (

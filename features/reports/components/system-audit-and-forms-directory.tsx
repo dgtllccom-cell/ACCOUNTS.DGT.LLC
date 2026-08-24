@@ -589,14 +589,14 @@ export function SystemAuditAndFormsDirectoryView({ lang = "en" }: { lang?: Suppo
           <div className="flex items-center gap-2">
             <span className="rounded-full bg-emerald-500/20 px-3 py-0.5 text-xs font-black text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
               <Sparkles className="h-3 w-3" />
-              OFFICIAL SYSTEM AUDIT & DIRECTORY
+              {t(lang, "safd.safd_official_system_audit_directory", "OFFICIAL SYSTEM AUDIT & DIRECTORY")}
             </span>
             <span className="rounded-full bg-blue-500/20 px-3 py-0.5 text-xs font-bold text-blue-300 border border-blue-500/30">
               Active: August 17, 2026
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-            ERP Master Forms Directory & Project Progress Report
+            {t(lang, "safd.safd_erp_master_forms_directory", "ERP Master Forms Directory & Project Progress Report")}
           </h1>
           <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
             DAMAAN BUSINESS GROUP Complete ERP System Portfolio. Comprehensive inventory of all active modules, forms, routes, and development milestones from inception to date.
@@ -609,7 +609,7 @@ export function SystemAuditAndFormsDirectoryView({ lang = "en" }: { lang?: Suppo
             className="h-11 px-5 rounded-2xl bg-blue-600 font-bold text-white hover:bg-blue-700 shadow-lg shadow-blue-600/30 cursor-pointer flex items-center gap-2"
           >
             <Printer className="h-4 w-4" />
-            <span>Download PDF / Print</span>
+            <span>{t(lang, "safd.safd_download_pdf_print", "Download PDF / Print")}</span>
           </Button>
         </div>
       </div>
@@ -624,14 +624,14 @@ export function SystemAuditAndFormsDirectoryView({ lang = "en" }: { lang?: Suppo
             <div>
               <h2 className="text-xl font-black text-foreground">DAMAAN BUSINESS GROUP</h2>
               <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Owner / Sponsor: Asmat Abdullah</p>
-              <p className="text-[11px] text-muted-foreground">Multi-Country Branch ERP, Commercial Trade, Customs Clearing & Financial Core</p>
+              <p className="text-[11px] text-muted-foreground">{t(lang, "safd.safd_multi_country_branch_erp_desc", "Multi-Country Branch ERP, Commercial Trade, Customs Clearing & Financial Core")}</p>
             </div>
           </div>
 
           <div className="text-start sm:text-end text-xs space-y-0.5">
             <p className="font-extrabold text-foreground">REPORT DATE: 17-AUGUST-2026</p>
             <p className="text-muted-foreground font-mono text-[11px]">Total Registered Forms: {ERP_FORMS_CATALOG.length}</p>
-            <p className="text-muted-foreground font-mono text-[11px]">Status: Production Ready / Audited</p>
+            <p className="text-muted-foreground font-mono text-[11px]">{t(lang, "safd.safd_status_production_ready", "Status: Production Ready / Audited")}</p>
           </div>
         </div>
 
@@ -644,27 +644,27 @@ export function SystemAuditAndFormsDirectoryView({ lang = "en" }: { lang?: Suppo
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="rounded-2xl border border-border bg-muted/20 p-4">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase">Total Modules & Forms</span>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase">{t(lang, "safd.safd_total_modules_forms", "Total Modules & Forms")}</span>
               <p className="text-2xl font-black text-foreground mt-1">{ERP_FORMS_CATALOG.length}</p>
               <span className="text-[10px] font-semibold text-emerald-600">100% Operational</span>
             </div>
 
             <div className="rounded-2xl border border-border bg-muted/20 p-4">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase">System Categories</span>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase">{t(lang, "safd.safd_system_categories", "System Categories")}</span>
               <p className="text-2xl font-black text-blue-600 dark:text-blue-400 mt-1">7 Core Sectors</p>
-              <span className="text-[10px] font-semibold text-muted-foreground">Full ERP Scope</span>
+              <span className="text-[10px] font-semibold text-muted-foreground">{t(lang, "safd.safd_full_erp_scope", "Full ERP Scope")}</span>
             </div>
 
             <div className="rounded-2xl border border-border bg-muted/20 p-4">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase">Database Migrations</span>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase">{t(lang, "safd.safd_database_migrations", "Database Migrations")}</span>
               <p className="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-1">119+ SQL Schemas</p>
               <span className="text-[10px] font-semibold text-muted-foreground">PostgreSQL & Supabase</span>
             </div>
 
             <div className="rounded-2xl border border-border bg-muted/20 p-4">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase">Role Scopes</span>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase">{t(lang, "safd.safd_role_scopes", "Role Scopes")}</span>
               <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">6 Hierarchy Levels</p>
-              <span className="text-[10px] font-semibold text-muted-foreground">Super to Cashier</span>
+              <span className="text-[10px] font-semibold text-muted-foreground">{t(lang, "safd.safd_super_to_cashier", "Super to Cashier")}</span>
             </div>
           </div>
         </div>
@@ -738,7 +738,7 @@ export function SystemAuditAndFormsDirectoryView({ lang = "en" }: { lang?: Suppo
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search form by name or route..."
+                placeholder={t(lang, "safd.safd_search_form_ph", "Search form by name or route...")}
                 className="w-full rounded-xl border border-border bg-background ps-9 pe-3 py-1.5 text-xs outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
@@ -750,12 +750,12 @@ export function SystemAuditAndFormsDirectoryView({ lang = "en" }: { lang?: Suppo
               <thead className="bg-muted/60 text-[10px] font-black uppercase tracking-wider text-muted-foreground border-b border-border">
                 <tr>
                   <th className="px-3.5 py-3">#</th>
-                  <th className="px-3.5 py-3">Form / Module Name</th>
-                  <th className="px-3.5 py-3">Category</th>
-                  <th className="px-3.5 py-3">System Route</th>
-                  <th className="px-3.5 py-3">Accessible Roles</th>
-                  <th className="px-3.5 py-3">Description / Purpose</th>
-                  <th className="px-3.5 py-3 text-center no-print">Action</th>
+                  <th className="px-3.5 py-3">{t(lang, "safd.safd_form_module_name", "Form / Module Name")}</th>
+                  <th className="px-3.5 py-3">{t(lang, "god.asset_category", "Category")}</th>
+                  <th className="px-3.5 py-3">{t(lang, "safd.safd_system_route", "System Route")}</th>
+                  <th className="px-3.5 py-3">{t(lang, "safd.safd_accessible_roles", "Accessible Roles")}</th>
+                  <th className="px-3.5 py-3">{t(lang, "safd.safd_description_purpose", "Description / Purpose")}</th>
+                  <th className="px-3.5 py-3 text-center no-print">{t(lang, "purchase.th_action", "Action")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -789,7 +789,7 @@ export function SystemAuditAndFormsDirectoryView({ lang = "en" }: { lang?: Suppo
                         href={item.route as any}
                         className="inline-flex items-center gap-1 rounded-lg bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 text-blue-600 dark:text-blue-300 px-2.5 py-1 text-[11px] font-bold transition-colors"
                       >
-                        Open <ExternalLink className="h-3 w-3" />
+                        {t(lang, "ctimeline.status_open_short", "Open")} <ExternalLink className="h-3 w-3" />
                       </Link>
                     </td>
                   </tr>
@@ -803,23 +803,23 @@ export function SystemAuditAndFormsDirectoryView({ lang = "en" }: { lang?: Suppo
         <div className="pt-6 border-t border-border mt-8">
           <div className="grid grid-cols-3 gap-6 text-center text-xs">
             <div>
-              <p className="font-black text-foreground mb-8">System Engineering Team</p>
+              <p className="font-black text-foreground mb-8">{t(lang, "safd.safd_system_engineering_team", "System Engineering Team")}</p>
               <div className="border-t border-muted-foreground/40 pt-1 font-bold text-muted-foreground uppercase tracking-wider text-[10px]">
-                Prepared By (Technical Lead)
+                {t(lang, "safd.safd_prepared_by_technical_lead", "Prepared By (Technical Lead)")}
               </div>
             </div>
 
             <div>
               <div className="h-10 mb-2" />
               <div className="border-t border-muted-foreground/40 pt-1 font-bold text-muted-foreground uppercase tracking-wider text-[10px]">
-                Audited & Checked By
+                {t(lang, "safd.safd_audited_checked_by", "Audited & Checked By")}
               </div>
             </div>
 
             <div>
               <p className="font-black text-foreground mb-8">Asmat Abdullah</p>
               <div className="border-t border-muted-foreground/40 pt-1 font-bold text-muted-foreground uppercase tracking-wider text-[10px]">
-                Approved By (System Owner)
+                {t(lang, "safd.safd_approved_by_system_owner", "Approved By (System Owner)")}
               </div>
             </div>
           </div>
