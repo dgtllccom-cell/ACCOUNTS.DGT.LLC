@@ -229,7 +229,7 @@ export async function POST(request: NextRequest) {
           ${body.accountType || "Business Account"},
           ${bankName},
           ${branchName || null},
-          ${bankCode || null},
+          ${bankCode || body.branchCode || "0000"},
           ${body.branchCodeType || "Branch Code"},
           ${body.shortName || bankName.slice(0, 16)},
           ${accountTitle || null},

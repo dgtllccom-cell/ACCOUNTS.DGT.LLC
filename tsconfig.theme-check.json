@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "files": [
+    "app/layout.tsx",
+    "components/layout/preferences-controls.tsx",
+    "components/layout/auth-top-controls.tsx",
+    "features/dashboard/components/country-products-dashboard.tsx",
+    "lib/ui/theme-modes.ts",
+    "lib/i18n/ui.ts"
+  ]
+}

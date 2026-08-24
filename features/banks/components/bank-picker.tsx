@@ -218,7 +218,7 @@ export function BankPicker({
       {/* Edit Bank Modal */}
       {editBankId ? (
         <SimpleModal
-          title={t(lang, "bankreg.bp_edit_bank_dash_master_form", "Edit Bank — Bank Master Form")}
+          title={t(lang, "bankreg.bp_edit_bank_dash_master_form", lang === "ur" ? "بینک میں ترمیم — بینک ماسٹر فارم" : lang === "ar" ? "تعديل البنك — نموذج البنك الرئيسي" : lang === "fa" ? "ویرایش بانک — فرم اصلی بانک" : lang === "ps" ? "د بانک سمول — د بانک ماسټر فورمه" : "Edit Bank — Bank Master Form")}
           onClose={() => setEditBankId(null)}
           className="max-w-[90vw] lg:max-w-6xl max-h-[90vh] overflow-y-auto"
         >
@@ -238,7 +238,7 @@ export function BankPicker({
       {/* Create Bank Modal */}
       {openCreate ? (
         <SimpleModal
-          title={t(lang, "bankreg.bp_new_bank_dash_master_form", "New Bank — Bank Master Form")}
+          title={t(lang, "bankreg.bp_new_bank_dash_master_form", lang === "ur" ? "نیا بینک — بینک ماسٹر فارم" : lang === "ar" ? "بنك جديد — نموذج البنك الرئيسي" : lang === "fa" ? "بانک جدید — فرم اصلی بانک" : lang === "ps" ? "نوی بانک — د بانک ماسټر فورمه" : "New Bank — Bank Master Form")}
           onClose={() => setOpenCreate(false)}
           className="max-w-[90vw] lg:max-w-6xl max-h-[90vh] overflow-y-auto"
         >

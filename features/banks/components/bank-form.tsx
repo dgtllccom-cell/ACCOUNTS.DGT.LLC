@@ -35,6 +35,18 @@ const DEFAULT_BANK_TYPES = [
   "Exchange Company"
 ];
 
+const BANK_TYPE_TRANSLATIONS: Record<string, Record<string, string>> = {
+  "Customer Account": { ur: "کسٹمر اکاؤنٹ", ar: "حساب العميل", fa: "حساب مشتری", ps: "د پیرودونکي حساب" },
+  "Business Account": { ur: "بزنس اکاؤنٹ", ar: "حساب تجاري", fa: "حساب تجاری", ps: "تجارتي حساب" },
+  "Personal Account": { ur: "ذاتی اکاؤنٹ", ar: "حساب شخصي", fa: "حساب شخصی", ps: "شخصي حساب" },
+  "Credit Card": { ur: "کریڈٹ کارڈ", ar: "بطاقة ائتمان", fa: "کارت اعتباری", ps: "کریډیټ کارت" },
+  "Debit Card": { ur: "ڈیبٹ کارڈ", ar: "بطاقة الخصم", fa: "کارت نقدی", ps: "ډیبیټ کارت" },
+  "Commercial Bank": { ur: "کمرشل بینک", ar: "بنك تجاري", fa: "بانک تجاری", ps: "سوداګریز بانک" },
+  "Islamic Bank": { ur: "اسلامی بینک", ar: "مصرف إسلامي", fa: "بانک اسلامی", ps: "اسلامي بانک" },
+  "Central Bank": { ur: "مرکزی بینک", ar: "البنك المركزي", fa: "بانک مرکزی", ps: "مرکزي بانک" },
+  "Exchange Company": { ur: "ایکسچینج کمپنی", ar: "شركة صرافة", fa: "شرکت صرافی", ps: "د تبادلې شرکت" }
+};
+
 const DEFAULT_ACCOUNT_TYPES = [
   "Business Account",
   "Company Account",
@@ -44,6 +56,16 @@ const DEFAULT_ACCOUNT_TYPES = [
   "Fixed Deposit",
   "Joint Account"
 ];
+
+const ACCOUNT_TYPE_TRANSLATIONS: Record<string, Record<string, string>> = {
+  "Business Account": { ur: "بزنس اکاؤنٹ", ar: "حساب تجاري", fa: "حساب تجاری", ps: "تجارتي حساب" },
+  "Company Account": { ur: "کمپنی اکاؤنٹ", ar: "حساب شركة", fa: "حساب شرکت", ps: "د شرکت حساب" },
+  "Personal Account": { ur: "ذاتی اکاؤنٹ", ar: "حساب شخصي", fa: "حساب شخصی", ps: "شخصي حساب" },
+  "Current Account": { ur: "کرنٹ اکاؤنٹ", ar: "حساب جاري", fa: "حساب جاری", ps: "روان حساب" },
+  "Savings Account": { ur: "سیونگ اکاؤنٹ", ar: "حساب توفير", fa: "حساب پس‌انداز", ps: "د سپما حساب" },
+  "Fixed Deposit": { ur: "فکسڈ ڈپازٹ", ar: "وديعة لأجل", fa: "سپرده ثابت", ps: "ثابت امانت" },
+  "Joint Account": { ur: "مشترکہ اکاؤنٹ", ar: "حساب مشترك", fa: "حساب مشترک", ps: "ګډ حساب" }
+};
 
 const DEFAULT_BRANCH_CODE_TYPES = [
   "SWIFT Code",
@@ -55,12 +77,34 @@ const DEFAULT_BRANCH_CODE_TYPES = [
   "IBAN Prefix"
 ];
 
+const BRANCH_CODE_TYPE_TRANSLATIONS: Record<string, Record<string, string>> = {
+  "SWIFT Code": { ur: "سوئفٹ کوڈ (SWIFT Code)", ar: "رمز سويفت (SWIFT)", fa: "کد سویفت", ps: "سویفټ کوډ" },
+  "Routing Number": { ur: "راؤٹنگ نمبر (Routing Number)", ar: "رقم التوجيه", fa: "شماره مسیریابی", ps: "روټینګ شمیره" },
+  "IFSC Code": { ur: "آئی ایف ایس سی کوڈ (IFSC Code)", ar: "رمز IFSC", fa: "کد IFSC", ps: "د IFSC کوډ" },
+  "Sort Code": { ur: "سورٹ کوڈ (Sort Code)", ar: "رمز الفرز", fa: "سورت کد", ps: "سارټ کوډ" },
+  "BSB Number": { ur: "بی ایس بی نمبر (BSB Number)", ar: "رقم BSB", fa: "شماره BSB", ps: "د BSB شمیره" },
+  "Branch Code": { ur: "برانچ کوڈ (Branch Code)", ar: "رمز الفرع", fa: "کد شعبه", ps: "د څانګې کوډ" },
+  "IBAN Prefix": { ur: "آئی بین پریفکس (IBAN Prefix)", ar: "بادئة الآيبان", fa: "پیشوند شبا", ps: "د IBAN مختاړی" }
+};
+
 const CURRENCIES = [
   "USD", "PKR", "AED", "AFN", "EUR", "GBP", "SAR", "INR",
   "CNY", "TRY", "IRR", "OMR", "KWD", "QAR", "BHD"
 ];
 
 const STATUS_OPTIONS = ["Active", "Inactive", "Frozen", "Closed"];
+
+const STATUS_TRANSLATIONS: Record<string, Record<string, string>> = {
+  "Active": { ur: "فعال (Active)", ar: "نشط", fa: "فعال", ps: "فعال" },
+  "Inactive": { ur: "غیر فعال (Inactive)", ar: "غير نشط", fa: "غیرفعال", ps: "غیر فعال" },
+  "Frozen": { ur: "منجمد (Frozen)", ar: "مجمد", fa: "مسدود", ps: "کنګل شوی" },
+  "Closed": { ur: "بند (Closed)", ar: "مغلق", fa: "بسته", ps: "تړل شوی" }
+};
+
+function localizeOption(val: string, dict: Record<string, Record<string, string>>, lang: string): string {
+  if (lang === "en") return val;
+  return dict[val]?.[lang] || val;
+}
 
 type BankFormState = {
   bankType: string;
@@ -367,7 +411,7 @@ export function BankForm({
                   className={selectClass}
                 >
                   <option value="">{tr("bank.select_bank_type", "Select Bank Type")}</option>
-                  {bankTypes.map((bt) => <option key={bt} value={bt}>{bt}</option>)}
+                  {bankTypes.map((bt) => <option key={bt} value={bt}>{localizeOption(bt, BANK_TYPE_TRANSLATIONS, lang)}</option>)}
                   <option value="__new__">{tr("bank.add_new_type", "+ Add New Type")}</option>
                 </select>
               </div>
@@ -384,7 +428,7 @@ export function BankForm({
                   className={selectClass}
                 >
                   <option value="">{tr("bank.select_account_type", "Select Account Type")}</option>
-                  {accountTypes.map((at) => <option key={at} value={at}>{at}</option>)}
+                  {accountTypes.map((at) => <option key={at} value={at}>{localizeOption(at, ACCOUNT_TYPE_TRANSLATIONS, lang)}</option>)}
                   <option value="__new__">{tr("bank.add_new_type", "+ Add New Type")}</option>
                 </select>
               </div>
@@ -403,7 +447,7 @@ export function BankForm({
             {/* Branch Code & Short Name */}
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-1.5 sm:col-span-2">
-                <Label className="text-xs font-semibold">{form.branchCodeType || tr("bank.branch_code_generic", "Branch Code")} *</Label>
+                <Label className="text-xs font-semibold">{localizeOption(form.branchCodeType, BRANCH_CODE_TYPE_TRANSLATIONS, lang) || tr("bank.branch_code_generic", "Branch Code")} *</Label>
                 <div className="flex gap-1.5">
                   <select
                     value={form.branchCodeType}
@@ -413,13 +457,13 @@ export function BankForm({
                     }}
                     className="h-10 rounded-md border border-input bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring shrink-0"
                   >
-                    {branchCodeTypes.map((bct) => <option key={bct} value={bct}>{bct}</option>)}
+                    {branchCodeTypes.map((bct) => <option key={bct} value={bct}>{localizeOption(bct, BRANCH_CODE_TYPE_TRANSLATIONS, lang)}</option>)}
                     <option value="__new__">{tr("bank.add_new_type", "+ Add New Type")}</option>
                   </select>
                   <Input
                     value={form.branchCode}
                     onChange={(e) => set("branchCode", e.target.value)}
-                    placeholder={`${tr("bank.enter_prefix", "Enter")} ${form.branchCodeType.toLowerCase()}`}
+                    placeholder={`${tr("bank.enter_prefix", "Enter")} ${localizeOption(form.branchCodeType, BRANCH_CODE_TYPE_TRANSLATIONS, lang).toLowerCase()}`}
                     className="flex-1"
                   />
                 </div>
@@ -506,7 +550,7 @@ export function BankForm({
                   onChange={(e) => set("accountStatus", e.target.value)}
                   className={selectClass}
                 >
-                  {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                  {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{localizeOption(s, STATUS_TRANSLATIONS, lang)}</option>)}
                 </select>
               </div>
             </div>
@@ -709,13 +753,13 @@ export function BankForm({
             <div className="flex justify-between">
               <span className="text-muted-foreground">{tr("bank.branch_label", "Branch")}</span>
               <span className="font-semibold text-slate-800">
-                {savedBank ? savedBank.branch_name : (form.branchCode ? `${form.branchCodeType} - ${form.branchCode}` : "-")}
+                {savedBank ? savedBank.branch_name : (form.branchCode ? `${localizeOption(form.branchCodeType, BRANCH_CODE_TYPE_TRANSLATIONS, lang)} - ${form.branchCode}` : "-")}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">{tr("common.status", "Status")}</span>
               <span className={`font-bold ${savedBank ? (savedBank.account_status === "Active" ? "text-emerald-600" : "text-amber-600") : (form.accountStatus === "Active" ? "text-emerald-600" : "text-amber-600")}`}>
-                {savedBank ? savedBank.account_status : form.accountStatus}
+                {localizeOption(savedBank ? (savedBank.account_status || "Active") : form.accountStatus, STATUS_TRANSLATIONS, lang)}
               </span>
             </div>
 

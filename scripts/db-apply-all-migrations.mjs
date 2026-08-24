@@ -29,7 +29,8 @@ const migrations = [
   { name: "20260814_per_language_tables", path: "supabase/migrations/20260814_per_language_tables.sql" },
   { name: "20260815_fix_cash_entry_and_daily_rate_rpcs", path: "supabase/migrations/20260815_fix_cash_entry_and_daily_rate_rpcs.sql" },
   { name: "20260816_fix_per_language_resolution", path: "supabase/migrations/20260816_fix_per_language_resolution.sql" },
-  { name: "20260816_bank_cheque_roznamcha_system", path: "supabase/migrations/20260816_bank_cheque_roznamcha_system.sql" }
+  { name: "20260816_bank_cheque_roznamcha_system", path: "supabase/migrations/20260816_bank_cheque_roznamcha_system.sql" },
+  { name: "20260817_fix_banks_branch_code_nullable", path: "supabase/migrations/20260817_fix_banks_branch_code_nullable.sql" }
 ];
 
 const sql = postgres(env.DATABASE_URL, { max: 1, prepare: false, connect_timeout: 60 });
