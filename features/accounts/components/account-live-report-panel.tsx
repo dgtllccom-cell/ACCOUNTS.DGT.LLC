@@ -1,4 +1,3 @@
-import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
 "use client";
 
 import type { ReactNode } from "react";
@@ -357,7 +356,7 @@ export function AccountLiveReportPanel({
             </div>
             <div>
               <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{t("accountGroup", "Account Group")}</div>
-              <div className="text-xs font-bold mt-1 text-slate-700">{category || "Sundry Debtors"}</div>
+              <div className="text-xs font-bold mt-1 text-slate-700">{trTerm(category || "Sundry Debtors")}</div>
             </div>
             <div>
               <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{t("currency", "Currency")}</div>
