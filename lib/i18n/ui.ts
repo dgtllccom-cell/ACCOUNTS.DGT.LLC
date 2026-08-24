@@ -868,6 +868,7 @@ export type UiKey =
   | "dash.widget_system_status"
   | "dash.widget_quick_controls"
   | "dash.widget_recent_activities"
+  | "dash.cpd_uncategorized" | "dash.cpd_unable_load_dashboard"
   | "roz.select_working_scope_title"
   | "roz.select_scope_subtitle"
   | "roz.select_country_placeholder"
@@ -6993,6 +6994,8 @@ const en: Dict = {
   "dash.cpd_inventory_value": "Inventory Value",
   "dash.cpd_low_stock_products": "Low Stock Products",
   "dash.cpd_search_name_code_branch_ph": "Name, code, branch...",
+  "dash.cpd_uncategorized": "Uncategorized",
+  "dash.cpd_unable_load_dashboard": "Unable to load country dashboard data.",
   "auth.welcome_back": "Welcome Back",
   "auth.sign_in_continue": "Sign in to continue to your account",
   "auth.user_id_or_email": "User ID / Email",
@@ -12705,6 +12708,8 @@ const ur: Dict = {
   "dash.cpd_inventory_value": "انوینٹری ویلیو",
   "dash.cpd_low_stock_products": "کم اسٹاک پروڈکٹس",
   "dash.cpd_search_name_code_branch_ph": "نام، کوڈ، برانچ...",
+  "dash.cpd_uncategorized": "غیر درجہ بند",
+  "dash.cpd_unable_load_dashboard": "ملک ڈیش بورڈ ڈیٹا لوڈ کرنے سے قاصر۔",
   "roz.select_working_scope_title": "سپر ایڈمن: ورکنگ اسکوپ منتخب کریں",
   "roz.select_scope_subtitle": "براہ کرم کیش انٹری کے لیے وہ ملک اور برانچ منتخب کریں جس میں آپ کام کرنا چاہتے ہیں۔",
   "roz.select_country_placeholder": "ملک منتخب کریں...",
@@ -17944,6 +17949,8 @@ const ar: Dict = {
   "dash.cpd_inventory_value": "قيمة المخزون",
   "dash.cpd_low_stock_products": "منتجات منخفضة المخزون",
   "dash.cpd_search_name_code_branch_ph": "الاسم، الرمز، الفرع...",
+  "dash.cpd_uncategorized": "غير مصنف",
+  "dash.cpd_unable_load_dashboard": "تعذر تحميل بيانات لوحة معلومات الدولة.",
   "roz.select_working_scope_title": "المشرف الأعلى: اختر نطاق العمل",
   "roz.select_scope_subtitle": "الرجاء اختيار الدولة والفرع اللذين تريد العمل بهما للإدخال النقدي.",
   "roz.select_country_placeholder": "اختر الدولة...",
@@ -23170,6 +23177,8 @@ const fa: Dict = {
   "dash.cpd_inventory_value": "ارزش موجودی",
   "dash.cpd_low_stock_products": "محصولات با موجودی کم",
   "dash.cpd_search_name_code_branch_ph": "نام، کد، شعبه...",
+  "dash.cpd_uncategorized": "بدون دسته",
+  "dash.cpd_unable_load_dashboard": "بارگیری داده‌های داشبورد کشور امکان‌پذیر نبود.",
   "roz.select_working_scope_title": "مدیر ارشد: انتخاب محدوده کاری",
   "roz.select_scope_subtitle": "لطفاً کشور و شعبه‌ای که می‌خواهید برای ثبت نقدی در آن کار کنید را انتخاب کنید.",
   "roz.select_country_placeholder": "انتخاب کشور...",
@@ -28417,6 +28426,8 @@ const ps: Dict = {
   "dash.cpd_inventory_value": "د زېرمې ارزښت",
   "dash.cpd_low_stock_products": "لږ زېرمه توکي",
   "dash.cpd_search_name_code_branch_ph": "نوم، کوډ، څانګه...",
+  "dash.cpd_uncategorized": "غیر طبقه بندي شوی",
+  "dash.cpd_unable_load_dashboard": "د هیواد ډشبورډ ډېټا پورته کول ناشوني.",
   "roz.select_working_scope_title": "سوپر ایډمین: د کاري ساحې انتخاب",
   "roz.select_scope_subtitle": "مهرباني وکړئ هغه هیواد او څانګه وټاکئ چې غواړئ د نغدو ننوتلو لپاره پکې کار وکړئ.",
   "roz.select_country_placeholder": "هیواد وټاکئ...",

@@ -21,6 +21,7 @@ import { PersonPicker } from "@/features/hr-payroll/components/person-picker";
 import type { ContactTypeKey } from "@/features/contact-types/contact-type-api";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
 
 type DynamicList = "contacts" | "registrations" | "ownerIds";
 type DynamicRow = {
@@ -1047,11 +1048,11 @@ export function CompanyIncorporationForm({
             <div className="mb-6 rounded-xl border border-slate-100 bg-gradient-to-br from-slate-50 to-slate-100/40 p-5">
               <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">{tr("company_form.company_name", "Company Name")}</p>
               <p className="mt-1 break-words text-xl font-bold leading-snug text-slate-900 sm:text-2xl">
-                {previewData.companyName && previewData.companyName !== "-" ? previewData.companyName : tr("company_form.untitled_company", "Untitled Company")}
+                {previewData.companyName && previewData.companyName !== "-" ? localizeTerm(previewData.companyName, lang) : tr("company_form.untitled_company", "Untitled Company")}
               </p>
               {previewData.ownerName && previewData.ownerName !== "-" ? (
                 <p className="mt-1.5 text-sm text-slate-600">
-                  {tr("company_form.owner_prefix", "Owner:")} <span className="font-semibold text-slate-800">{previewData.ownerName}</span>
+                  {tr("company_form.owner_prefix", "Owner:")} <span className="font-semibold text-slate-800">{transliterateProperNoun(previewData.ownerName, lang)}</span>
                 </p>
               ) : null}
             </div>
@@ -1060,19 +1061,19 @@ export function CompanyIncorporationForm({
               {/* Business information */}
               <PreviewSection title={tr("company_form.business_info_section", "Business Information")}>
                 <div className="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
-                  <PreviewField label={tr("company_form.business_name", "Business Name")} value={previewData.businessName} />
-                  <PreviewField label={tr("company_form.business_type_label", "Business Type")} value={previewData.businessType} />
-                  <PreviewField label={tr("company_form.owner_name_label", "Owner Name")} value={previewData.ownerName} />
+                  <PreviewField label={tr("company_form.business_name", "Business Name")} value={localizeTerm(previewData.businessName, lang)} />
+                  <PreviewField label={tr("company_form.business_type_label", "Business Type")} value={localizeTerm(previewData.businessType, lang)} />
+                  <PreviewField label={tr("company_form.owner_name_label", "Owner Name")} value={transliterateProperNoun(previewData.ownerName, lang)} />
                 </div>
               </PreviewSection>
 
               {/* Location */}
               <PreviewSection title={tr("company_form.section_location", "Location")}>
                 <div className="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
-                  <PreviewField label={tr("common.country", "Country")} value={previewData.country} />
-                  <PreviewField label={tr("company_form.state_province_label", "State / Province")} value={previewData.state} />
-                  <PreviewField label={tr("common.city", "City")} value={previewData.city} />
-                  <PreviewField label={tr("company_form.area_label", "Area / Town / Locality / Road")} value={previewData.area} />
+                  <PreviewField label={tr("common.country", "Country")} value={localizeTerm(previewData.country, lang)} />
+                  <PreviewField label={tr("company_form.state_province_label", "State / Province")} value={localizeTerm(previewData.state, lang)} />
+                  <PreviewField label={tr("common.city", "City")} value={localizeTerm(previewData.city, lang)} />
+                  <PreviewField label={tr("company_form.area_label", "Area / Town / Locality / Road")} value={localizeTerm(previewData.area, lang)} />
                   {(previewData as any).areaCode && (previewData as any).areaCode !== "-" ? (
                     <PreviewField label={tr("company_form.road_area_code_label", "Road / Area Code")} value={(previewData as any).areaCode} mono />
                   ) : null}
@@ -1081,7 +1082,7 @@ export function CompanyIncorporationForm({
                 {previewData.address && previewData.address !== "-" ? (
                   <div className="mt-4 rounded-lg border border-slate-100 bg-slate-50/60 p-3">
                     <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{tr("company_form.full_address", "Full Address")}</p>
-                    <p className="mt-1 break-words text-sm leading-relaxed text-slate-700">{previewData.address}</p>
+                    <p className="mt-1 break-words text-sm leading-relaxed text-slate-700">{localizeTerm(previewData.address, lang)}</p>
                   </div>
                 ) : null}
               </PreviewSection>

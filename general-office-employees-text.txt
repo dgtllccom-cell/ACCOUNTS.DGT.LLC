@@ -5,114 +5,164 @@ Automatic Download Ready
 Click below to automatically download the app installer directly into your computer for 1-click desktop access.
 
 DOWNLOAD & INSTALL APP NOW
-DAMAAN
-BUSINESS GROUP
-
-ERP ACCESS PORTAL
-
-Sign in to the right workspace
-
-Use the universal login below, or jump straight into a role-specific portal from the cards on the right.
-
-Server Connected (72.60.209.121)
-Secure ERP Access
-Welcome to Digital Dock ERP
-
-Authorized Multi-Country Enterprise Management System
-
-SELECT SYSTEM LANGUAGE
-🇺🇸
-English
-🇵🇰
-اردو
-🇦🇫
-پښتو
-🇦🇪
-العربية
-🇮🇷
-فارسی
-ADMIN
-COUNTRY
-CITY
-BRANCH
-AGENT
-
-GLOBAL ERP CONTROL
-
-Super Admin Access
-
-Full system visibility for configuration, audit, reporting, and cross-country administration.
-
-SCOPE
-All countries, all branches
-
-Use this entry point for global ERP operations and security oversight.
-
-EMAIL ADDRESS / USER ID
-PASSWORD
-Forgot Password?
-Remember Me
-SECURE ERP LOGIN
-Private ERP System • 256-Bit SSL Encrypted Access Only
-© 2026 DAMAAN BUSINESS GROUP
-Privacy Policy
-Security
-سپورٹ
+ڈیش بورڈ
+تلاش اور فلٹر
+⌘
+K
+تمام تاریخیں (2026)
+Language
 English
 Arabic - العربية
 Urdu - اردو
 Persian / Farsi - فارسی
 Pashto - پښتو
-DAMAAN BUSINESS GROUP ERP
-Choose the right access path
+SA
 
-Separate login entry points for Admin, Country, City, and Clearing Agent teams — polished for a professional ERP experience.
+Super Admin
 
-STATUS
+سپر ایڈمن
 
-Connected
+پیچھے
+ملازمین
 
-SUPER ADMIN
+معیاری ای آر پی نیویگیشن اور صفحہ کی کارروائیاں
 
-Admin Login
+کارروائیاں
+جنرل آفس مینجمنٹ
+0 فعال عملہ
+تمام زمرہ جات
+کنٹری اونر / ہیڈ
+برانچ اونر / منیجر
+کمپنی اونر
+منیجر
+عام عملہ
+ملازم
+دیگر
+تمام اسٹیٹس
+فعال
+غیر فعال
+رخصت پر
+معطل
+تمام ریکارڈز
+آج
+گزشتہ کل
+موجودہ ماہ
+پرسون / کوستومر
+کومپانی
+بانک
+میٹ / میٹنگ
+نیا ملازم رجسٹر کریں
+1. برانچ & وسر دیتایلس
+ملک:
+پاکیستان / وای
+برانچ کا نام:
+کراچی ماین
+صارف آئی ڈی / نام:
+Admin User
+حیثیت / اسٹیٹس:
+فعال سیشن
+2. یمپلوییس سوممری
+کل ملازمین:
+0
+فعال عملہ:
+0
+شعبہ جات:
+0
+3. پایرولل & اسسیتس
+ماہانہ پے رول:
+—
+زیر التواء چھٹیاں:
+0
+اثاثہ جات ٹریکڈ:
+0
+4. برانچز اور کمپنیاں
+کل برانچز:
+—
+رجسٹرڈ کمپنیاں:
+—
+5. فوری رپورٹس
+آج کی رپورٹ
+📈 دیکھیں
+ماہانہ پے رول
+📈 دیکھیں
+حاضری کا خلاصہ
+📈 دیکھیں
+اثاثہ جات کا خلاصہ
+📈 دیکھیں
+ملازمین و مالکان کی فہرست
+ملازم کوڈ	ملازم کا نام	کیٹیگری	عہدہ / شعبہ	شمولیت کی تاریخ	خالص تنخواہ	کٹوتی	حیثیت / اسٹیٹس	اقدامات
 
-Global access for configuration, audit, and cross-country ERP control.
+	
+	
+	
+	
+	
+	
+	
+	
 
-COUNTRY ADMIN
 
-Country Login
+	
+	
+	
+	
+	
+	
+	
+	
 
-Country-level access for scoped operations and branch oversight.
 
-CITY BRANCH
+	
+	
+	
+	
+	
+	
+	
+	
 
-City Login
 
-City branch access for localized ERP operations and reporting.
+	
+	
+	
+	
+	
+	
+	
+	
 
-CLEARING AGENT
 
-Clearing Agent Login
+	
+	
+	
+	
+	
+	
+	
+	
 
-Shipping line and clearing workflow access for operational teams.
 
-LIVE ERP
-
-Production-style layout
-
-Clear login paths for each operator group.
-
-BRAND
-
-Damaan Business Group
-
-Professional ERP identity for the organization.
-
-SECURITY
-
-Role-aware access
-
-Login pages map to the right ERP scope.
+	
+	
+	
+	
+	
+	
+	
+	
+Showing 0 to 0 of 0 entries
+«
+‹
+1
+›
+»
+20 / page
+50 / page
+100 / page
+© 2026 Digital Dock ERP (Pvt) Ltd. All rights reserved.
+v3.2.0
+Pakistan Standard Time (PST)
+System Online
 
 ---EN---
 Install Digital Dock ERP Mobile & Desktop App
@@ -121,111 +171,161 @@ Automatic Download Ready
 Click below to automatically download the app installer directly into your computer for 1-click desktop access.
 
 DOWNLOAD & INSTALL APP NOW
-DAMAAN
-BUSINESS GROUP
-
-ERP ACCESS PORTAL
-
-Sign in to the right workspace
-
-Use the universal login below, or jump straight into a role-specific portal from the cards on the right.
-
-Server Connected (72.60.209.121)
-Secure ERP Access
-Welcome to Digital Dock ERP
-
-Authorized Multi-Country Enterprise Management System
-
-SELECT SYSTEM LANGUAGE
-🇺🇸
-English
-🇵🇰
-اردو
-🇦🇫
-پښتو
-🇦🇪
-العربية
-🇮🇷
-فارسی
-ADMIN
-COUNTRY
-CITY
-BRANCH
-AGENT
-
-GLOBAL ERP CONTROL
-
-Super Admin Access
-
-Full system visibility for configuration, audit, reporting, and cross-country administration.
-
-SCOPE
-All countries, all branches
-
-Use this entry point for global ERP operations and security oversight.
-
-EMAIL ADDRESS / USER ID
-PASSWORD
-Forgot Password?
-Remember Me
-SECURE ERP LOGIN
-Private ERP System • 256-Bit SSL Encrypted Access Only
-© 2026 DAMAAN BUSINESS GROUP
-Privacy Policy
-Security
-Support
+Dashboard
+Search & Filter
+⌘
+K
+All Dates (2026)
+Language
 English
 Arabic - العربية
 Urdu - اردو
 Persian / Farsi - فارسی
 Pashto - پښتو
-DAMAAN BUSINESS GROUP ERP
-Choose the right access path
+SA
 
-Separate login entry points for Admin, Country, City, and Clearing Agent teams — polished for a professional ERP experience.
+Super Admin
 
-STATUS
+Super Admin
 
-Connected
+Back
+Employees
 
-SUPER ADMIN
+Standard ERP navigation and page actions
 
-Admin Login
+Actions
+General Office Management
+0 Active Staff
+All Categories
+Country Owner / Head
+Branch Owner / Manager
+Company Owner
+Manager
+Normal Staff
+Employee
+Others
+All Statuses
+Active
+Inactive
+On Leave
+Suspended
+All Records
+Today
+Yesterday
+This Month
+Person / Customer
+Company
+Bank
+Meet
+Register New Employee
+1. BRANCH & USER DETAILS
+Country:
+Pakistan / UAE
+Branch Name:
+KARACHI MAIN
+User ID / Name:
+Admin User
+Status:
+Active Session
+2. EMPLOYEES SUMMARY
+Total Employees:
+0
+Active Staff:
+0
+Departments:
+0
+3. PAYROLL & ASSETS
+Monthly Payroll:
+—
+Pending Leaves:
+0
+Assets Tracked:
+0
+4. BRANCHES & COMPANIES
+Total Branches:
+—
+Registered Companies:
+—
+5. QUICK REPORTS
+Today Report
+📈 View
+Monthly Payroll
+📈 View
+Attendance Summary
+📈 View
+Assets Summary
+📈 View
+EMPLOYEES LIST
+EMP CODE	EMPLOYEE NAME	CATEGORY	DESIGNATION / DEPT	JOINING DATE	NET PAYROLL	DEDUCTIONS	STATUS	ACTIONS
 
-Global access for configuration, audit, and cross-country ERP control.
+	
+	
+	
+	
+	
+	
+	
+	
 
-COUNTRY ADMIN
 
-Country Login
+	
+	
+	
+	
+	
+	
+	
+	
 
-Country-level access for scoped operations and branch oversight.
 
-CITY BRANCH
+	
+	
+	
+	
+	
+	
+	
+	
 
-City Login
 
-City branch access for localized ERP operations and reporting.
+	
+	
+	
+	
+	
+	
+	
+	
 
-CLEARING AGENT
 
-Clearing Agent Login
+	
+	
+	
+	
+	
+	
+	
+	
 
-Shipping line and clearing workflow access for operational teams.
 
-LIVE ERP
-
-Production-style layout
-
-Clear login paths for each operator group.
-
-BRAND
-
-Damaan Business Group
-
-Professional ERP identity for the organization.
-
-SECURITY
-
-Role-aware access
-
-Login pages map to the right ERP scope.
+	
+	
+	
+	
+	
+	
+	
+	
+Showing 0 to 0 of 0 entries
+«
+‹
+1
+›
+»
+20 / page
+50 / page
+100 / page
+© 2026 Digital Dock ERP (Pvt) Ltd. All rights reserved.
+v3.2.0
+Pakistan Standard Time (PST)
+System Online

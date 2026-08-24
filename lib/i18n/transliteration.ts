@@ -70,29 +70,83 @@ const LANG_OVERRIDES: Partial<Record<SupportedLanguage, Record<string, string>>>
 };
 
 const AUTHENTIC_NAMES_DICT: Record<string, Record<string, string>> = {
-  // Islamic & Regional Names (Compound and Single)
+  // Islamic & Regional Names (Compounds, Singles, and Variants)
   "asmatullah": { ur: "عصمت اللہ", ar: "عصمت الله", fa: "عصمت‌الله", ps: "عصمت الله" },
+  "asmatollah": { ur: "عصمت اللہ", ar: "عصمت الله", fa: "عصمت‌الله", ps: "عصمت الله" },
+  "asmatolla": { ur: "عصمت اللہ", ar: "عصمت الله", fa: "عصمت‌الله", ps: "عصمت الله" },
+  "asmatulla": { ur: "عصمت اللہ", ar: "عصمت الله", fa: "عصمت‌الله", ps: "عصمت الله" },
   "ismatullah": { ur: "عصمت اللہ", ar: "عصمت الله", fa: "عصمت‌الله", ps: "عصمت الله" },
+  "ismatollah": { ur: "عصمت اللہ", ar: "عصمت الله", fa: "عصمت‌الله", ps: "عصمت الله" },
+  "asmat": { ur: "عصمت", ar: "عصمت", fa: "عصمت", ps: "عصمت" },
+  "ismat": { ur: "عصمت", ar: "عصمت", fa: "عصمت", ps: "عصمت" },
+  "tajbeefullah": { ur: "تاج حبیب اللہ", ar: "تاج حبيب الله", fa: "تاج حبیب‌الله", ps: "تاج حبیب الله" },
+  "tajbeebullah": { ur: "تاج حبیب اللہ", ar: "تاج حبيب الله", fa: "تاج حبیب‌الله", ps: "تاج حبیب الله" },
+  "tajhabeebullah": { ur: "تاج حبیب اللہ", ar: "تاج حبيب الله", fa: "تاج حبیب‌الله", ps: "تاج حبیب الله" },
+  "tajhabibullah": { ur: "تاج حبیب اللہ", ar: "تاج حبيب الله", fa: "تاج حبیب‌الله", ps: "تاج حبیب الله" },
+  "tajbeef": { ur: "تاج حبیب", ar: "تاج حبيب", fa: "تاج حبیب", ps: "تاج حبیب" },
+  "tajbeeb": { ur: "تاج حبیب", ar: "تاج حبيب", fa: "تاج حبیب", ps: "تاج حبیب" },
+  "taj": { ur: "تاج", ar: "تاج", fa: "تاج", ps: "تاج" },
   "fareedullah": { ur: "فرید اللہ", ar: "فريد الله", fa: "فریدالله", ps: "فرید الله" },
   "faridullah": { ur: "فرید اللہ", ar: "فريد الله", fa: "فریدالله", ps: "فرید الله" },
+  "fareed": { ur: "فرید", ar: "فريد", fa: "فرید", ps: "فرید" },
+  "farid": { ur: "فرید", ar: "فريد", fa: "فرید", ps: "فرید" },
   "najeebullah": { ur: "نجیب اللہ", ar: "نجيب الله", fa: "نجیب‌الله", ps: "نجیب الله" },
   "najeeb ullah": { ur: "نجیب اللہ", ar: "نجيب الله", fa: "نجیب‌الله", ps: "نجیب الله" },
+  "najibullah": { ur: "نجیب اللہ", ar: "نجيب الله", fa: "نجیب‌الله", ps: "نجیب الله" },
+  "najeeb": { ur: "نجیب", ar: "نجيب", fa: "نجیب", ps: "نجيب" },
+  "najib": { ur: "نجیب", ar: "نجيب", fa: "نجیب", ps: "نجيب" },
+  "njyb": { ur: "نجیب", ar: "نجيب", fa: "نجیب", ps: "نجيب" },
   "taseebullah": { ur: "تصیب اللہ", ar: "تصيب الله", fa: "تصیب‌الله", ps: "تصیب الله" },
   "taseeb ullah": { ur: "تصیب اللہ", ar: "تصيب الله", fa: "تصیب‌الله", ps: "تصیب الله" },
   "haseebullah": { ur: "حسیب اللہ", ar: "حسيب الله", fa: "حسیب‌الله", ps: "حسیب الله" },
+  "haseeb": { ur: "حسیب", ar: "حسيب", fa: "حسیب", ps: "حسیب" },
   "naqeebullah": { ur: "نقیب اللہ", ar: "نقيب الله", fa: "نقیب‌الله", ps: "نقیب الله" },
+  "naqeeb": { ur: "نقیب", ar: "نقيب", fa: "نقیب", ps: "نقیب" },
+  "habeebullah": { ur: "حبیب اللہ", ar: "حبيب الله", fa: "حبیب‌الله", ps: "حبیب الله" },
+  "habibullah": { ur: "حبیب اللہ", ar: "حبيب الله", fa: "حبیب‌الله", ps: "حبیب الله" },
+  "habeeb": { ur: "حبیب", ar: "حبيب", fa: "حبیب", ps: "حبیب" },
+  "habib": { ur: "حبیب", ar: "حبيب", fa: "حبیب", ps: "حبیب" },
+  "sanaullah": { ur: "ثناء اللہ", ar: "ثناء الله", fa: "ثناءالله", ps: "ثناء الله" },
+  "amanullah": { ur: "امان اللہ", ar: "أمان الله", fa: "امان‌الله", ps: "امان الله" },
+  "khalilullah": { ur: "خلیل اللہ", ar: "خليل الله", fa: "خلیل‌الله", ps: "خلیل الله" },
+  "matiullah": { ur: "مطیع اللہ", ar: "مطيع الله", fa: "مطیع‌الله", ps: "مطیع الله" },
+  "waliullah": { ur: "ولی اللہ", ar: "ولي الله", fa: "ولی‌الله", ps: "ولی الله" },
+  "hafizullah": { ur: "حفیظ اللہ", ar: "حفيظ الله", fa: "حفیظ‌الله", ps: "حفیظ الله" },
+  "samieullah": { ur: "سمیع اللہ", ar: "سميع الله", fa: "سمیع‌الله", ps: "سمیع الله" },
+  "samiullah": { ur: "سمیع اللہ", ar: "سميع الله", fa: "سمیع‌الله", ps: "سمیع الله" },
+  "zabihullah": { ur: "ذبیح اللہ", ar: "ذبيح الله", fa: "ذبیح‌الله", ps: "ذبیح الله" },
+  "zabiullah": { ur: "ذبیح اللہ", ar: "ذبيح الله", fa: "ذبیح‌الله", ps: "ذبیح الله" },
+  "roohullah": { ur: "روح اللہ", ar: "روح الله", fa: "روح‌الله", ps: "روح الله" },
+  "rohullah": { ur: "روح اللہ", ar: "روح الله", fa: "روح‌الله", ps: "روح الله" },
+  "saifullah": { ur: "سیف اللہ", ar: "سيف الله", fa: "سیف‌الله", ps: "سیف الله" },
+  "asadullah": { ur: "اسد اللہ", ar: "أسد الله", fa: "اسدالله", ps: "اسد الله" },
+  "nasratullah": { ur: "نصرت اللہ", ar: "نصرت الله", fa: "نصرت‌الله", ps: "نصرت الله" },
+  "qudratullah": { ur: "قدرت اللہ", ar: "قدرة الله", fa: "قدرت‌الله", ps: "قدرت الله" },
+  "inayatullah": { ur: "عنایت اللہ", ar: "عناية الله", fa: "عنایت‌الله", ps: "عنایت الله" },
+  "rehmatullah": { ur: "رحمت اللہ", ar: "رحمة الله", fa: "رحمت‌الله", ps: "رحمت الله" },
+  "barkatullah": { ur: "برکت اللہ", ar: "بركة الله", fa: "برکت‌الله", ps: "برکت الله" },
+  "fazalullah": { ur: "فضل اللہ", ar: "فضل الله", fa: "فضل‌الله", ps: "فضل الله" },
+  "ziaullah": { ur: "ضیاء اللہ", ar: "ضياء الله", fa: "ضیاءالله", ps: "ضیاء الله" },
+  "noorullah": { ur: "نور اللہ", ar: "نور الله", fa: "نورالله", ps: "نور الله" },
+  "ullah": { ur: "اللہ", ar: "الله", fa: "الله", ps: "الله" },
+  "ollah": { ur: "اللہ", ar: "الله", fa: "الله", ps: "الله" },
   "abdullah": { ur: "عبداللہ", ar: "عبد الله", fa: "عبدالله", ps: "عبد الله" },
+  "abdul": { ur: "عبدال", ar: "عبد ال", fa: "عبدال", ps: "عبدال" },
+  "abdel": { ur: "عبدال", ar: "عبد ال", fa: "عبدال", ps: "عبدال" },
+  "abd": { ur: "عبد", ar: "عبد", fa: "عبد", ps: "عبد" },
   "muhammad": { ur: "محمد", ar: "محمد", fa: "محمد", ps: "محمد" },
   "mohammad": { ur: "محمد", ar: "محمد", fa: "محمد", ps: "محمد" },
   "saleem": { ur: "سلیم", ar: "سليم", fa: "سلیم", ps: "سلیم" },
   "salim": { ur: "سلیم", ar: "سليم", fa: "سلیم", ps: "سلیم" },
   "anees": { ur: "انیس", ar: "أنيس", fa: "انیس", ps: "انیس" },
+  "anis": { ur: "انیس", ar: "أنيس", fa: "انیس", ps: "انیس" },
+  "shareef": { ur: "شریف", ar: "شريف", fa: "شریف", ps: "شریف" },
+  "sharif": { ur: "شریف", ar: "شريف", fa: "شریف", ps: "شریف" },
   "idrees": { ur: "ادریس", ar: "إدريس", fa: "ادریس", ps: "ادریس" },
+  "idris": { ur: "ادریس", ar: "إدريس", fa: "ادریس", ps: "ادریس" },
   "haroon": { ur: "ہارون", ar: "هارون", fa: "هارون", ps: "هارون" },
   "sana": { ur: "ثناء", ar: "ثناء", fa: "ثناء", ps: "ثناء" },
   "shahbaz": { ur: "شہباز", ar: "شهباز", fa: "شهباز", ps: "شهباز" },
-  "asmat": { ur: "عصمت", ar: "عصمت", fa: "عصمت", ps: "عصمت" },
-  "ismat": { ur: "عصمت", ar: "عصمت", fa: "عصمت", ps: "عصمت" },
   "kamil": { ur: "کامل", ar: "كامل", fa: "کامل", ps: "کامل" },
   "khan": { ur: "خان", ar: "خان", fa: "خان", ps: "خان" },
   "tariq": { ur: "طارق", ar: "طارق", fa: "طارق", ps: "طارق" },
@@ -107,7 +161,10 @@ const AUTHENTIC_NAMES_DICT: Record<string, Record<string, string>> = {
   "hussain": { ur: "حسین", ar: "حسين", fa: "حسین", ps: "حسین" },
   "bilal": { ur: "بلال", ar: "بلال", fa: "بلال", ps: "بلال" },
   "usman": { ur: "عثمان", ar: "عثمان", fa: "عثمان", ps: "عثمان" },
+  "osman": { ur: "عثمان", ar: "عثمان", fa: "عثمان", ps: "عثمان" },
+  "othman": { ur: "عثمان", ar: "عثمان", fa: "عثمان", ps: "عثمان" },
   "umar": { ur: "عمر", ar: "عمر", fa: "عمر", ps: "عمر" },
+  "omer": { ur: "عمر", ar: "عمر", fa: "عمر", ps: "عمر" },
   "malik": { ur: "ملک", ar: "مالك", fa: "ملک", ps: "ملک" },
   "syed": { ur: "سید", ar: "سيد", fa: "سید", ps: "سید" },
   "shaikh": { ur: "شیخ", ar: "شيخ", fa: "شیخ", ps: "شیخ" },
@@ -125,8 +182,23 @@ const AUTHENTIC_NAMES_DICT: Record<string, Record<string, string>> = {
   "dgt": { ur: "ڈی جی ٹی", ar: "دي جي تي", fa: "دی جی تی", ps: "ډي جي ټي" },
   "llc": { ur: "ایل ایل سی", ar: "ذ.م.م", fa: "با مسئولیت محدود", ps: "LLC" },
   "fzco": { ur: "ایف زیڈ سی او", ar: "ش.م.ح", fa: "FZCO", ps: "FZCO" },
-  "njyb": { ur: "نجیب", ar: "نجيب", fa: "نجیب", ps: "نجيب" },
-  "najeeb": { ur: "نجیب", ar: "نجيب", fa: "نجیب", ps: "نجيب" },
+  "trading": { ur: "ٹریڈنگ", ar: "تجارة", fa: "تجارت", ps: "سوداګري" },
+  "company": { ur: "کمپنی", ar: "شركة", fa: "شرکت", ps: "شرکت" },
+  "import": { ur: "امپورٹ", ar: "استيراد", fa: "واردات", ps: "واردات" },
+  "export": { ur: "ایکسپورٹ", ar: "تصدير", fa: "صادرات", ps: "صادرات" },
+  "steel": { ur: "اسٹیل", ar: "فولاذ", fa: "فولاد", ps: "فولاد" },
+  "purchase": { ur: "پرچیز", ar: "شراء", fa: "خرید", ps: "پیرود" },
+  "united arab emirates": { ur: "متحدہ عرب امارات", ar: "الإمارات العربية المتحدة", fa: "امارات متحده عربی", ps: "متحده عربي امارات" },
+  "uae": { ur: "یو اے ای", ar: "الإمارات", fa: "امارات", ps: "امارات" },
+  "dubai": { ur: "دبئی", ar: "دبي", fa: "دبی", ps: "دوبۍ" },
+  "amart dubai": { ur: "امارت دبئی", ar: "إمارة دبي", fa: "امارت دبی", ps: "دوبۍ امارت" },
+  "amart": { ur: "امارت", ar: "إمارة", fa: "امارت", ps: "امارت" },
+  "amarat": { ur: "امارت", ar: "إمارة", fa: "امارت", ps: "امارت" },
+  "emirates": { ur: "امارات", ar: "الإمارات", fa: "امارات", ps: "امارات" },
+  "deira": { ur: "دیرہ", ar: "ديرة", fa: "دیره", ps: "دیره" },
+  "dyrh": { ur: "دیرہ", ar: "ديرة", fa: "دیره", ps: "دیره" },
+  "al ras": { ur: "الراس", ar: "الراس", fa: "الراس", ps: "الراس" },
+  "ras": { ur: "راس", ar: "رأس", fa: "راس", ps: "راس" },
   "aind": { ur: "اینڈ", ar: "و", fa: "و", ps: "او" },
   "and": { ur: "اینڈ", ar: "و", fa: "و", ps: "او" }
 };
@@ -162,12 +234,29 @@ function romanizeWord(word: string, lang: SupportedLanguage): string {
   const exact = AUTHENTIC_NAMES_DICT[clean];
   if (exact && exact[lang]) return exact[lang];
 
-  // 2. Compound resolution (e.g. Asmatullah -> Asmat + ullah -> عصمت اللہ)
-  for (const [key, map] of Object.entries(AUTHENTIC_NAMES_DICT)) {
-    if (clean === key && map[lang]) return map[lang];
+  // 2. Suffix stemming for compound "ullah" / "ollah" names
+  const ullahSuffixes = ["ullah", "ollah", "ulla", "olla"];
+  for (const suf of ullahSuffixes) {
+    if (clean.length > suf.length + 2 && clean.endsWith(suf)) {
+      const base = clean.slice(0, -suf.length);
+      const baseMapped = AUTHENTIC_NAMES_DICT[base]?.[lang] || romanizeWord(base, lang);
+      const ullahWord = lang === "ar" ? "الله" : lang === "fa" ? "‌الله" : "اللہ";
+      return `${baseMapped} ${ullahWord}`.trim();
+    }
   }
 
-  // 3. Fallback character skeleton with overrides
+  // 3. Prefix stemming for "abdul-" / "abdel-" names
+  const abdulPrefixes = ["abdul", "abdel", "abd"];
+  for (const pref of abdulPrefixes) {
+    if (clean.length > pref.length + 2 && clean.startsWith(pref)) {
+      const remainder = clean.slice(pref.length);
+      const remMapped = AUTHENTIC_NAMES_DICT[remainder]?.[lang] || romanizeWord(remainder, lang);
+      const abdulWord = lang === "ar" ? "عبد ال" : "عبدال";
+      return `${abdulWord}${remMapped}`.trim();
+    }
+  }
+
+  // 4. Fallback character skeleton with overrides
   return romanizeToArabicSkeleton(word);
 }
 
@@ -182,9 +271,16 @@ export function transliterateProperNoun(text: string, lang: SupportedLanguage): 
     return AUTHENTIC_NAMES_DICT[fullKey][lang];
   }
 
-  const parts = trimmed.split(/(\s+)/);
+  // Split on words while preserving punctuation and whitespace delimiters
+  const parts = trimmed.split(/([\s,;&\-\/\.\(\)]+)/);
   const mapped = parts.map((part) => {
-    if (/\s+/.test(part)) return part;
+    if (!part || /^[\s,;&\-\/\.\(\)]+$/.test(part)) {
+      if (part.includes("&")) {
+        const andWord = lang === "ur" ? " اور " : lang === "ar" ? " و" : " اور ";
+        return part.replace("&", andWord);
+      }
+      return part;
+    }
     return romanizeWord(part, lang);
   });
 

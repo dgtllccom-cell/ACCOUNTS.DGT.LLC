@@ -104,8 +104,8 @@ function productName(row: ProductRow) {
   return row.translated_name || row.product_name || "-";
 }
 
-function productCategory(row: ProductRow) {
-  return row.translated_category || row.category_name || "Uncategorized";
+function productCategory(row: ProductRow, lang: Parameters<typeof t>[0] = "en") {
+  return row.translated_category || row.category_name || t(lang, "dash.cpd_uncategorized", "Uncategorized");
 }
 
 function productUnit(row: ProductRow) {
@@ -217,8 +217,8 @@ export function CountryProductsDashboard() {
   }, []);
 
   const categories = useMemo(() => {
-    return [...new Set(products.map(productCategory).filter(Boolean))].sort((a, b) => a.localeCompare(b));
-  }, [products]);
+    return [...new Set(products.map((row) => productCategory(row, lang)).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  }, [products, lang]);
 
   const filteredProducts = useMemo(() => {
     const q = normalized(search);
@@ -230,7 +230,7 @@ export function CountryProductsDashboard() {
         [
           row.product_code,
           productName(row),
-          productCategory(row),
+          productCategory(row, lang),
           row.translated_brand,
           row.brand_name,
           country,
