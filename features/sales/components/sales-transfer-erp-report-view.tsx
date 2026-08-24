@@ -702,6 +702,7 @@ function getCurrencySymbol(c: string) {
 }
 
 export function SalesTransferErpReportView(props: { purchaseData?: any }) {
+  const lang = useActiveLanguage();
   return (
     <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">{t(lang, "sales.ster_loading_verification", "Loading Sales Verification...")}</div>}>
       <SalesTransferErpReportViewContent {...props} />

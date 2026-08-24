@@ -1732,7 +1732,7 @@ export function CashEntryForm({
 
   const handleDeleteEntry = async (entryId: string) => {
     if (!entryId || !canEditOrDelete) return;
-    const confirmed = window.confirm("Delete this entry by creating a reversal record?");
+    const confirmed = window.confirm(t(lang, "roz.cef_confirm_delete_reversal", "Delete this entry by creating a reversal record?"));
     if (!confirmed) return;
 
     try {
@@ -2401,27 +2401,27 @@ export function CashEntryForm({
           {/* Group 3: Customer Details */}
           {selectedCounterLedger && (
             <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold border-l pl-6 border-slate-200 dark:border-slate-700">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">Customer</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "bdash.customer", "Customer")}</span>
               <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate max-w-[150px]" title={selectedCounterLedger.accountName || selectedCounterLedger.ledgerName || "-"}>
                 {selectedCounterLedger.accountName || selectedCounterLedger.ledgerName || "-"}
               </span>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">Account No</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "rozrep.account_no", "Account No")}</span>
               <span className="font-extrabold text-slate-850 dark:text-slate-150 font-mono">
                 {selectedCounterLedger.accountCode || selectedCounterLedger.ledgerCode || "-"}
               </span>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">Customer No</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.cef_customer_no", "Customer No")}</span>
               <span className="font-extrabold text-slate-850 dark:text-slate-150 font-mono">
                 {selectedCounterLedger.customerNumber || "-"}
               </span>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">Currency</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "hr.f_currency", "Currency")}</span>
               <span className="font-extrabold text-slate-850 dark:text-slate-150">
                 {selectedCounterLedger.ledgerCurrency || "-"}
               </span>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 text-right">Balance</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 text-right">{t(lang, "cdash.col_balance", "Balance")}</span>
               <span className="font-extrabold text-emerald-600 dark:text-emerald-400">
                 {fmtAmount(selectedCounterLedger.currentBalance || 0)}
               </span>
@@ -2431,27 +2431,27 @@ export function CashEntryForm({
           {/* Group 4: Company & Contact Details */}
           {selectedCounterLedger && (
             <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold border-l pl-6 border-slate-200 dark:border-slate-700">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">Company</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "hr.pp_company", "Company")}</span>
               <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate max-w-[150px]" title={selectedCounterLedger.companyName || "-"}>
                 {selectedCounterLedger.companyName || "-"}
               </span>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">Mobile / Ph</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.cef_mobile_ph", "Mobile / Ph")}</span>
               <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate max-w-[150px]">
                 {Array.isArray(selectedCounterLedger.contacts) ? selectedCounterLedger.contacts.find((c: any) => c.type === "mobile")?.value || selectedCounterLedger.contacts.find((c: any) => c.type === "phone")?.value || "-" : "-"}
               </span>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">Email</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "purchase.dd_email", "Email")}</span>
               <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate max-w-[150px]">
                 {Array.isArray(selectedCounterLedger.contacts) ? selectedCounterLedger.contacts.find((c: any) => c.type === "email")?.value || "-" : "-"}
               </span>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">Location</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "company_form.section_location", "Location")}</span>
               <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate max-w-[150px]">
                 {selectedCounterLedger.countryName || selectedCountry?.name || "-"} / {selectedCounterLedger.cityBranchName || "-"}
               </span>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">Branch Code</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "bdash.branch_code", "Branch Code")}</span>
               <span className="font-extrabold text-slate-850 dark:text-slate-150 font-mono">
                 {selectedCounterLedger.branchSerialNumber || "-"}
               </span>
@@ -2553,7 +2553,7 @@ export function CashEntryForm({
                       className="h-10 text-xs font-semibold w-full"
                       value={roznamchaNumber}
                       onChange={(e) => setRoznamchaNumber(e.target.value)}
-                      placeholder="e.g. 000123"
+                      placeholder={t(lang, "roz.cef_serial_example_ph", "e.g. 000123")}
                     />
                   </FieldBlock>
                 </div>
@@ -2621,20 +2621,20 @@ export function CashEntryForm({
                       
                       {paymentType === "cash" && (
                         <div className="grid gap-3 md:grid-cols-2">
-                          <FieldBlock label="Receiver / Sender Name">
-                            <Input className="h-9 text-xs" value={typeDetails.receiverSenderName || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, receiverSenderName: e.target.value }))} placeholder="Receiver or sender name" />
+                          <FieldBlock label={t(lang, "roz.cef_receiver_sender_name", "Receiver / Sender Name")}>
+                            <Input className="h-9 text-xs" value={typeDetails.receiverSenderName || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, receiverSenderName: e.target.value }))} placeholder={t(lang, "roz.cef_receiver_sender_ph", "Receiver or sender name")} />
                           </FieldBlock>
-                          <FieldBlock label="Mobile Number">
-                            <Input className="h-9 text-xs" value={typeDetails.mobileNumber || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, mobileNumber: e.target.value }))} placeholder="Mobile number" />
+                          <FieldBlock label={t(lang, "purchase.f_mobile_number", "Mobile Number")}>
+                            <Input className="h-9 text-xs" value={typeDetails.mobileNumber || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, mobileNumber: e.target.value }))} placeholder={t(lang, "roz.cef_mobile_number_ph", "Mobile number")} />
                           </FieldBlock>
-                          <FieldBlock label="WhatsApp Number">
-                            <Input className="h-9 text-xs" value={typeDetails.whatsappNumber || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, whatsappNumber: e.target.value }))} placeholder="WhatsApp number" />
+                          <FieldBlock label={t(lang, "cbs.whatsapp_number_row", "WhatsApp Number")}>
+                            <Input className="h-9 text-xs" value={typeDetails.whatsappNumber || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, whatsappNumber: e.target.value }))} placeholder={t(lang, "roz.cef_whatsapp_number_ph", "WhatsApp number")} />
                           </FieldBlock>
-                          <FieldBlock label="ID Card Copy Upload">
+                          <FieldBlock label={t(lang, "roz.cef_id_card_copy_upload", "ID Card Copy Upload")}>
                             <div className="flex items-center gap-2">
                               <Label className="cursor-pointer flex w-max items-center justify-center h-8 px-3 rounded-full bg-slate-100 hover:bg-slate-200 border text-slate-500 shadow-sm transition gap-1.5 text-[10px] font-semibold">
                                 <Paperclip className="h-3 w-3" />
-                                <span>Attach</span>
+                                <span>{t(lang, "roz.cef_attach", "Attach")}</span>
                                 <Input
                                   type="file"
                                   className="hidden"
@@ -2654,7 +2654,7 @@ export function CashEntryForm({
                       {paymentType === "bank" && (
                         <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
                           <div className="space-y-1.5">
-                            <Label className="text-[10px] font-black uppercase text-slate-500">Bank Name</Label>
+                            <Label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "bank.bank_name", "Bank Name")}</Label>
                             <select
                               className="h-8 w-full rounded-md border border-input bg-background px-2 text-[11px] font-semibold outline-none"
                               value={typeDetails.bankName || ""}
@@ -2667,7 +2667,7 @@ export function CashEntryForm({
                                 }
                               }}
                             >
-                              <option value="">Select Bank</option>
+                              <option value="">{t(lang, "roz.cef_select_bank", "Select Bank")}</option>
                               {selectedCountry?.iso2 === "AE" && ["Dubai Islamic Bank", "Emirates NBD", "ADCB", "Mashreq Bank", "FAB"].map((bank) => <option key={bank} value={bank}>{bank}</option>)}
                               {selectedCountry?.iso2 === "PK" && ["HBL", "MCB", "UBL", "Meezan", "Bank Alfalah"].map((bank) => <option key={bank} value={bank}>{bank}</option>)}
                               {selectedCountry?.iso2 === "IN" && ["State Bank of India", "HDFC", "ICICI", "Axis Bank"].map((bank) => <option key={bank} value={bank}>{bank}</option>)}
@@ -2681,7 +2681,7 @@ export function CashEntryForm({
                           </div>
 
                           <div className="space-y-1.5">
-                            <Label className="text-[10px] font-black uppercase text-slate-500">Method</Label>
+                            <Label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "roz.cef_method_label", "Method")}</Label>
                             <select
                               className="h-8 w-full rounded-md border border-input bg-background px-2 text-[11px] font-semibold outline-none"
                               value={typeDetails.method || ""}
@@ -2694,33 +2694,33 @@ export function CashEntryForm({
                                 }
                               }}
                             >
-                              <option value="">Select Method</option>
+                              <option value="">{t(lang, "roz.cef_select_method", "Select Method")}</option>
                               {["Cheque", "Mobile Transfer", "Online Transfer", "Bank Transfer"].map((method) => (
                                 <option key={method} value={method}>{method}</option>
                               ))}
                               {savedMethods.map((method, index) => (
                                 <option key={`${method}-${index}`} value={method}>{method}</option>
                               ))}
-                              <option value="__new_method__" className="text-blue-700 font-bold">+ New Method</option>
+                              <option value="__new_method__" className="text-blue-700 font-bold">{t(lang, "roz.cef_new_method_option", "+ New Method")}</option>
                             </select>
                           </div>
 
                           <div className="space-y-1.5">
-                            <Label className="text-[10px] font-black uppercase text-slate-500">Ref. No.</Label>
+                            <Label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "roz.cef_ref_no", "Ref. No.")}</Label>
                             <Input
                               className="h-8 text-[11px] font-semibold w-full"
                               value={typeDetails.refNo || ""}
                               onChange={(e) => setTypeDetails((prev) => ({ ...prev, refNo: e.target.value }))}
-                              placeholder="Trx number"
+                              placeholder={t(lang, "roz.cef_trx_number_ph", "Trx number")}
                             />
                           </div>
 
                           <div className="space-y-1.5">
-                            <Label className="text-[10px] font-black uppercase text-slate-500">Upload</Label>
+                            <Label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "roz.cef_upload_label", "Upload")}</Label>
                             <div className="flex items-center gap-2">
                               <Label className="cursor-pointer flex w-max items-center justify-center h-8 px-3 rounded-full bg-slate-100 hover:bg-slate-200 border text-slate-500 shadow-sm transition gap-1.5 text-[10px] font-semibold">
                                 <Paperclip className="h-3 w-3" />
-                                <span>Attach</span>
+                                <span>{t(lang, "roz.cef_attach", "Attach")}</span>
                                 <Input
                                   type="file"
                                   className="hidden"
@@ -2739,11 +2739,11 @@ export function CashEntryForm({
 
                       {(paymentType === "business" || paymentType === "invoice") && (
                         <div className="grid gap-3 md:grid-cols-2">
-                          <FieldBlock label="Invoice Number">
-                            <Input className="h-9 text-xs" value={typeDetails.invoiceNumber || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, invoiceNumber: e.target.value }))} placeholder="Invoice number" />
+                          <FieldBlock label={t(lang, "roz.cef_invoice_number_label", "Invoice Number")}>
+                            <Input className="h-9 text-xs" value={typeDetails.invoiceNumber || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, invoiceNumber: e.target.value }))} placeholder={t(lang, "roz.cef_invoice_number_ph", "Invoice number")} />
                           </FieldBlock>
-                          <FieldBlock label="Purchase Information">
-                            <Input className="h-9 text-xs" value={typeDetails.purchaseInfo || typeDetails.businessName || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, purchaseInfo: e.target.value, businessName: e.target.value }))} placeholder="Purchase information" />
+                          <FieldBlock label={t(lang, "roz.cef_purchase_information_label", "Purchase Information")}>
+                            <Input className="h-9 text-xs" value={typeDetails.purchaseInfo || typeDetails.businessName || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, purchaseInfo: e.target.value, businessName: e.target.value }))} placeholder={t(lang, "roz.cef_purchase_info_ph", "Purchase information")} />
                           </FieldBlock>
                         </div>
                       )}
@@ -2751,13 +2751,13 @@ export function CashEntryForm({
                       {paymentType === "transfer" && (
                         <div className="grid gap-3 md:grid-cols-2">
                           <FieldBlock label={t(lang, "form.from")}>
-                            <Input className="h-9 text-xs" value={typeDetails.from || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, from: e.target.value }))} placeholder="From account" />
+                            <Input className="h-9 text-xs" value={typeDetails.from || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, from: e.target.value }))} placeholder={t(lang, "roz.cef_from_account_ph", "From account")} />
                           </FieldBlock>
                           <FieldBlock label={t(lang, "form.to")}>
-                            <Input className="h-9 text-xs" value={typeDetails.to || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, to: e.target.value }))} placeholder="To account" />
+                            <Input className="h-9 text-xs" value={typeDetails.to || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, to: e.target.value }))} placeholder={t(lang, "roz.cef_to_account_ph", "To account")} />
                           </FieldBlock>
-                          <FieldBlock label="Reference" className="md:col-span-2">
-                            <Input className="h-9 text-xs" value={typeDetails.ref || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, ref: e.target.value }))} placeholder="Reference" />
+                          <FieldBlock label={t(lang, "report.col_reference", "Reference")} className="md:col-span-2">
+                            <Input className="h-9 text-xs" value={typeDetails.ref || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, ref: e.target.value }))} placeholder={t(lang, "report.col_reference", "Reference")} />
                           </FieldBlock>
                         </div>
                       )}
@@ -2772,19 +2772,19 @@ export function CashEntryForm({
                       </div>
                       <div className="grid gap-3 md:grid-cols-3">
                         <FieldBlock label={t(lang, "form.quantity")}>
-                          <Input className="h-9 text-xs font-semibold" value={calcAmount} onChange={(e) => setCalcAmount(e.target.value)} type="number" step="0.0001" min="0" placeholder="e.g. 100" />
+                          <Input className="h-9 text-xs font-semibold" value={calcAmount} onChange={(e) => setCalcAmount(e.target.value)} type="number" step="0.0001" min="0" placeholder={t(lang, "roz.cef_amount_example_ph", "e.g. 100")} />
                         </FieldBlock>
                         <FieldBlock label={`${t(lang, "form.transaction_rate")} (Applied)`}>
                           <Input className="h-9 text-xs font-semibold" value={exchangeRate} onChange={(e) => setExchangeRate(e.target.value)} type="number" step="0.0001" min="0" disabled={isLocalCurrency} />
                           {dailyRate?.found ? (
                             <div className="mt-1 flex flex-wrap gap-2 text-[9px] font-semibold text-slate-500">
                               {dailyRate.buyingRate != null ? (
-                                <button type="button" className="rounded bg-emerald-50 px-1.5 py-0.5 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300" onClick={() => setExchangeRate(String(dailyRate.buyingRate))} title="Use daily buying rate">Buy: {dailyRate.buyingRate}</button>
+                                <button type="button" className="rounded bg-emerald-50 px-1.5 py-0.5 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300" onClick={() => setExchangeRate(String(dailyRate.buyingRate))} title={t(lang, "roz.cef_use_daily_buying_rate", "Use daily buying rate")}>{t(lang, "roz.cef_buy_colon", "Buy:")} {dailyRate.buyingRate}</button>
                               ) : null}
                               {dailyRate.sellingRate != null ? (
-                                <button type="button" className="rounded bg-rose-50 px-1.5 py-0.5 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-300" onClick={() => setExchangeRate(String(dailyRate.sellingRate))} title="Use daily selling rate">Sell: {dailyRate.sellingRate}</button>
+                                <button type="button" className="rounded bg-rose-50 px-1.5 py-0.5 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-300" onClick={() => setExchangeRate(String(dailyRate.sellingRate))} title={t(lang, "roz.cef_use_daily_selling_rate", "Use daily selling rate")}>{t(lang, "roz.cef_sell_colon", "Sell:")} {dailyRate.sellingRate}</button>
                               ) : null}
-                              <span className="text-slate-400">manual rate saved with entry</span>
+                              <span className="text-slate-400">{t(lang, "roz.cef_manual_rate_saved", "manual rate saved with entry")}</span>
                             </div>
                           ) : null}
                         </FieldBlock>
@@ -2794,8 +2794,8 @@ export function CashEntryForm({
                             value={calcOp}
                             onChange={(e) => setCalcOp(e.target.value as any)}
                           >
-                            <option value="mul">Multiply (*)</option>
-                            <option value="div">Divide (/)</option>
+                            <option value="mul">{t(lang, "roz.cef_multiply_opt", "Multiply (*)")}</option>
+                            <option value="div">{t(lang, "roz.cef_divide_opt", "Divide (/)")}</option>
                           </select>
                         </FieldBlock>
                       </div>
@@ -2919,7 +2919,7 @@ export function CashEntryForm({
                 />
                 {paymentMode && (
                   <ReportBox
-                    title="Ledger Entry Impact"
+                    title={t(lang, "roz.cef_ledger_entry_impact", "Ledger Entry Impact")}
                     rows={[
                       ["Transaction Type", paymentMode === "DEBIT" ? "Debit (Received)" : "Credit (Paid)"],
                       ["Balance Effect", paymentMode === "DEBIT" ? "Add to account" : "Reduce account"]
@@ -3173,21 +3173,21 @@ export function CashEntryForm({
                             {/* Global Serial (Super Admin Only) */}
                             {userRoleLevel === "super_admin" && (
                               <div className="flex items-center justify-between rounded bg-blue-50/80 px-2 py-0.5 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/50">
-                                <span className="font-bold text-[9px] uppercase tracking-wider text-blue-700 dark:text-blue-400">GLOBAL:</span>
+                                <span className="font-bold text-[9px] uppercase tracking-wider text-blue-700 dark:text-blue-400">{t(lang, "roz.cef_global_label", "GLOBAL:")}</span>
                                 <span className="font-extrabold text-blue-900 dark:text-blue-200">{globalSerial}</span>
                               </div>
                             )}
                             {/* Country Serial (Country Admin & Super Admin) */}
                             {(userRoleLevel === "super_admin" || userRoleLevel === "country") && (
                               <div className="flex items-center justify-between rounded bg-indigo-50/80 px-2 py-0.5 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/50">
-                                <span className="font-bold text-[9px] uppercase tracking-wider text-indigo-700 dark:text-indigo-400">CTRY:</span>
+                                <span className="font-bold text-[9px] uppercase tracking-wider text-indigo-700 dark:text-indigo-400">{t(lang, "roz.cef_ctry_label", "CTRY:")}</span>
                                 <span className="font-extrabold text-indigo-900 dark:text-indigo-200">{countrySerial}</span>
                               </div>
                             )}
                             {/* Branch Serial (Branch, Country & Super Admin) */}
                             {(userRoleLevel === "super_admin" || userRoleLevel === "country" || userRoleLevel === "branch") && (
                               <div className="flex items-center justify-between rounded bg-slate-100/80 px-2 py-0.5 dark:bg-slate-850 border border-slate-200 dark:border-slate-800">
-                                <span className="font-bold text-[9px] uppercase tracking-wider text-slate-600 dark:text-slate-400">BRN:</span>
+                                <span className="font-bold text-[9px] uppercase tracking-wider text-slate-600 dark:text-slate-400">{t(lang, "roz.cef_brn_label", "BRN:")}</span>
                                 <span className="font-extrabold text-slate-800 dark:text-slate-200">{branchSerial}</span>
                               </div>
                             )}
@@ -3237,24 +3237,24 @@ export function CashEntryForm({
                             <div className="flex flex-col gap-1">
                               {row.source_reference_no ? (
                                 <div className="flex items-center gap-1">
-                                  <span className="text-[9px] font-bold uppercase text-slate-400">Order:</span>
-                                  <span className="font-mono text-[10.5px] font-bold text-blue-700 dark:text-blue-400" title="Source Booking/Order">
+                                  <span className="text-[9px] font-bold uppercase text-slate-400">{t(lang, "roz.cef_order_label", "Order:")}</span>
+                                  <span className="font-mono text-[10.5px] font-bold text-blue-700 dark:text-blue-400" title={t(lang, "roz.cef_source_booking_order", "Source Booking/Order")}>
                                     {row.source_reference_no}
                                   </span>
                                 </div>
                               ) : null}
                               {line.manual_reference_number ? (
                                 <div className="flex items-center gap-1">
-                                  <span className="text-[9px] font-bold uppercase text-slate-400">Manual:</span>
-                                  <span className="font-mono text-[10.5px] font-bold text-slate-700 dark:text-slate-300" title="Manual Number">
+                                  <span className="text-[9px] font-bold uppercase text-slate-400">{t(lang, "roz.cef_manual_label", "Manual:")}</span>
+                                  <span className="font-mono text-[10.5px] font-bold text-slate-700 dark:text-slate-300" title={t(lang, "roz.cef_manual_number", "Manual Number")}>
                                     {line.manual_reference_number}
                                   </span>
                                 </div>
                               ) : null}
                               {line.customer_number ? (
                                 <div className="flex items-center gap-1">
-                                  <span className="text-[9px] font-bold uppercase text-slate-400">Cust:</span>
-                                  <span className="font-mono text-[10.5px] font-bold text-slate-500 dark:text-slate-400" title="Customer Number">
+                                  <span className="text-[9px] font-bold uppercase text-slate-400">{t(lang, "roz.cef_cust_label", "Cust:")}</span>
+                                  <span className="font-mono text-[10.5px] font-bold text-slate-500 dark:text-slate-400" title={t(lang, "roz.cef_customer_number", "Customer Number")}>
                                     {line.customer_number}
                                   </span>
                                 </div>
@@ -3318,7 +3318,7 @@ export function CashEntryForm({
                                         }}
                                       >
                                         <Printer className="h-3.5 w-3.5" />
-                                        Print A4
+                                        {t(lang, "roz.cef_print_a4", "Print A4")}
                                       </button>
                                       {canEditOrDelete && (
                                         <button
@@ -3330,7 +3330,7 @@ export function CashEntryForm({
                                           }}
                                         >
                                           <Trash2 className="h-3.5 w-3.5" />
-                                          Delete
+                                          {t(lang, "common.delete", "Delete")}
                                         </button>
                                       )}
                                     </div>
@@ -3360,53 +3360,53 @@ export function CashEntryForm({
           {addOptionType === "bank" ? (
             <div className="space-y-3">
               <div className="space-y-1">
-                <Label className="text-xs font-black">Bank Name</Label>
+                <Label className="text-xs font-black">{t(lang, "bank.bank_name", "Bank Name")}</Label>
                 <Input
                   className="text-xs font-semibold"
                   value={addOptionValue}
                   onChange={(e) => setAddOptionValue(e.target.value)}
-                  placeholder="e.g. HBL Karachi Branch"
+                  placeholder={t(lang, "roz.cef_bank_branch_example_ph", "e.g. HBL Karachi Branch")}
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs font-black">Bank Address</Label>
+                <Label className="text-xs font-black">{t(lang, "roz.cef_bank_address", "Bank Address")}</Label>
                 <textarea
                   rows={2}
                   className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   value={addOptionAddress}
                   onChange={(e) => setAddOptionAddress(e.target.value)}
-                  placeholder="Enter bank physical branch address..."
+                  placeholder={t(lang, "roz.cef_bank_address_ph", "Enter bank physical branch address...")}
                 />
               </div>
               <div className="flex justify-end gap-2 pt-2 border-t">
                 <Button type="button" variant="outline" onClick={() => setAddOptionOpen(false)}>
-                  Cancel
+                  {t(lang, "common.cancel", "Cancel")}
                 </Button>
                 <Button type="button" className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs" onClick={commitAddOption}>
-                  Save Bank
+                  {t(lang, "bank.save_bank", "Save Bank")}
                 </Button>
               </div>
             </div>
           ) : (
             <div className="space-y-4">
               <div className="space-y-2 pb-3 border-b">
-                <Label className="text-xs font-black">Add New Payment Method</Label>
+                <Label className="text-xs font-black">{t(lang, "roz.cef_add_new_payment_method", "Add New Payment Method")}</Label>
                 <div className="flex gap-2">
                   <Input
                     className="text-xs font-semibold"
                     value={addOptionValue}
                     onChange={(e) => setAddOptionValue(e.target.value)}
-                    placeholder="e.g. EasyPaisa / JazzCash"
+                    placeholder={t(lang, "roz.cef_method_example_ph", "e.g. EasyPaisa / JazzCash")}
                   />
                   <Button type="button" className="bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs" onClick={commitAddOption}>
-                    Add
+                    {t(lang, "company_form.add_button", "Add")}
                   </Button>
                 </div>
               </div>
 
               {savedMethods.length > 0 ? (
                 <div className="space-y-2">
-                  <Label className="text-xs font-black">Custom Methods List (Click text to rename, or Blur to save)</Label>
+                  <Label className="text-xs font-black">{t(lang, "roz.cef_custom_methods_list", "Custom Methods List (Click text to rename, or Blur to save)")}</Label>
                   <div className="max-h-[180px] overflow-y-auto space-y-2 pr-1">
                     {savedMethods.map((m) => (
                       <div key={m} className="flex items-center gap-2">
@@ -3426,7 +3426,7 @@ export function CashEntryForm({
                           className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50 text-[11px] font-bold"
                           onClick={() => deleteCustomMethod(m)}
                         >
-                          Delete
+                          {t(lang, "common.delete", "Delete")}
                         </Button>
                       </div>
                     ))}
@@ -3434,13 +3434,13 @@ export function CashEntryForm({
                 </div>
               ) : (
                 <p className="text-xs font-semibold text-slate-400 italic text-center py-2">
-                  No custom payment methods added yet.
+                  {t(lang, "roz.cef_no_custom_methods", "No custom payment methods added yet.")}
                 </p>
               )}
 
               <div className="flex justify-end pt-2 border-t">
                 <Button type="button" variant="outline" onClick={() => setAddOptionOpen(false)}>
-                  Close
+                  {t(lang, "purchase.close_btn", "Close")}
                 </Button>
               </div>
             </div>
