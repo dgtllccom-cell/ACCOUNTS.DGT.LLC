@@ -256,21 +256,18 @@ export function CompanyRegistry() {
   const [companies, setCompanies] = useState<CompanyRegistryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [totalDbBranches, setTotalDbBranches] = useState(0);
 
-  // Filters
   const [companyTypeFilter, setCompanyTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [countryFilter, setCountryFilter] = useState("all");
   const [branchFilter, setBranchFilter] = useState("all");
 
-  // Selected for Preview Modal
   const [previewCompany, setPreviewCompany] = useState<CompanyRegistryItem | null>(null);
 
-  // Pagination
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
-  // Load Companies from DB or use standard demo set
   const loadCompaniesFromDb = async () => {
     setLoading(true);
     try {
@@ -287,12 +284,14 @@ export function CompanyRegistry() {
             ? c.contacts.find((x: any) => (x.type || "").toLowerCase().includes("email") && x.value)?.value
             : null;
           const safeSlug = (c.raw?.name || c.name || "info").toLowerCase().replace(/[^a-z0-9]/g, "") || "company";
-          const email = contactEmail || `${safeSlug}@company.dgt.llc`;
-          const contactPhone = (Array.isArray(c.contacts) && c.contacts[0]?.value) || "+971 50 000 0000";
+          const email = contactEmail || (c.email || `${safeSlug}@company.dgt.llc`);
+          const contactPhone = (Array.isArray(c.contacts) && c.contacts[0]?.value) || c.mobile || "—";
 
           const rawConsortium = c.owner_name ? `${c.owner_name} Group` : "Standard Consortium";
           const rawRules = "Multi Branch Allowed";
           const rawAccountName = c.name || "Company Account";
+          const compCount = Array.isArray(c.owner_companies) ? c.owner_companies.length : 1;
+          const contractsCount = Array.isArray(c.registrations) ? c.registrations.length : 0;
 
           return {
             id: c.id,
@@ -300,35 +299,23 @@ export function CompanyRegistry() {
             consortium: localizeTerm(rawConsortium, lang),
             branchRules: localizeTerm(rawRules, lang),
             accountName: localizeTerm(rawAccountName, lang),
-            companiesCount: 1,
-            contractsCount: 2,
+            companiesCount: compCount,
+            contractsCount: contractsCount,
             primaryContact: contactPhone,
             email,
-            country: c.country_name || "Pakistan",
-            state: c.state_name || "Punjab",
-            city: c.city_name || "Karachi",
-            address: c.address || "Main Commercial Area",
+            country: c.country_name || c.country || "—",
+            state: c.state_name || c.state || "—",
+            city: c.city_name || c.city || "—",
+            address: c.address || "—",
             raw: c
           };
         });
         setCompanies(mapped);
       } else {
-        const localizedDemo = INITIAL_DEMO_COMPANIES.map((c) => ({
-          ...c,
-          consortium: localizeTerm(c.consortium, lang),
-          branchRules: localizeTerm(c.branchRules, lang),
-          accountName: localizeTerm(c.accountName, lang)
-        }));
-        setCompanies(localizedDemo);
+        setCompanies([]);
       }
     } catch (e) {
-      const localizedDemo = INITIAL_DEMO_COMPANIES.map((c) => ({
-        ...c,
-        consortium: localizeTerm(c.consortium, lang),
-        branchRules: localizeTerm(c.branchRules, lang),
-        accountName: localizeTerm(c.accountName, lang)
-      }));
-      setCompanies(localizedDemo);
+      setCompanies([]);
     } finally {
       setLoading(false);
     }
@@ -364,15 +351,15 @@ export function CompanyRegistry() {
     return filteredCompanies.slice(start, start + pageSize);
   }, [filteredCompanies, page]);
 
-  // Statistics for 5 KPI Cards
+  // Statistics for 5 KPI Cards driven by real live database data
   const stats = useMemo(() => {
-    const totalCompanies = 128;
-    const totalBranches = 342;
-    const totalAccounts = 156;
-    const totalContracts = 289;
-    const totalInAccounts = 587;
+    const totalCompanies = companies.length;
+    const totalBranches = totalDbBranches || (companies.length > 0 ? companies.length : 0);
+    const totalAccounts = new Set(companies.map((c) => c.consortium)).size;
+    const totalContracts = companies.reduce((acc, c) => acc + (c.contractsCount || 0), 0);
+    const totalInAccounts = companies.reduce((acc, c) => acc + (c.companiesCount || 1), 0);
     return { totalCompanies, totalBranches, totalAccounts, totalContracts, totalInAccounts };
-  }, []);
+  }, [companies, totalDbBranches]);
 
   // Print Handler
   const handlePrint = (c: CompanyRegistryItem) => {
