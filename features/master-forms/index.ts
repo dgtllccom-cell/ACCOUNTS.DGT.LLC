@@ -58,8 +58,20 @@ export {
   type BankRecord,
 } from "@/features/banks/bank-api";
 
+// ── Person Master (canonical picker — supersedes CustomerPicker for new code) ──
+export { PersonPicker, personFullName } from "@/components/erp/person-picker";
+
 // ── Customer Master ──────────────────────────────────────────────
 export { CustomerPicker } from "@/features/customers/components/customer-picker";
+
+// ── Warehouse Master ─────────────────────────────────────────────
+export { WarehousePicker } from "@/features/warehouses/components/warehouse-picker";
+
+// ── Shipping Line Master ─────────────────────────────────────────
+export { ShippingLinePicker } from "@/features/shipping/components/shipping-line-picker";
+
+// ── Clearing Agent Master ────────────────────────────────────────
+export { ClearingAgentPicker } from "@/features/shipping/components/clearing-agent-picker";
 
 // ── Branch Owner Picker (Customer or ERP User) ───────────────────
 export { BranchOwnerPicker } from "@/features/branches/components/branch-owner-picker";

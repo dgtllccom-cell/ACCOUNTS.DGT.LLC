@@ -95,7 +95,7 @@ export function Party360Modal({
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                  {lang === "ur" ? "پرسن ماسٹر — ای آر پی لنکس" : "Person Master — ERP Links & Registration Details"}
+                  {t(lang, "p360.erp_links_title", "Person Master — ERP Links & Registration Details")}
                 </span>
                 {summary?.customerCode && (
                   <span className="rounded-md bg-indigo-100 dark:bg-indigo-950/60 px-2 py-0.5 font-mono text-[11px] font-bold text-indigo-700 dark:text-indigo-300">
@@ -107,7 +107,7 @@ export function Party360Modal({
                 {urduName}
                 {fatherName && (
                   <span className="text-xs font-semibold text-slate-500 mr-2">
-                    ({lang === "ur" ? `ولدیت: ${fatherName}` : `S/o: ${fatherName}`})
+                    ({t(lang, "p360.father_prefix", "S/o")}: {fatherName})
                   </span>
                 )}
               </h2>
@@ -129,12 +129,12 @@ export function Party360Modal({
             <div className="py-16 text-center space-y-3">
               <div className="inline-block h-8 w-8 animate-spin rounded-full border-3 border-indigo-600 border-r-transparent" />
               <p className="text-xs font-bold text-slate-500">
-                {lang === "ur" ? "ماسٹر ہستی کی تمام شاخوں کا ریکارڈ اکٹھا کیا جا رہا ہے..." : "Aggregating 360° cross-system records..."}
+                {t(lang, "p360.aggregating_records", "Aggregating 360° cross-system records...")}
               </p>
             </div>
           ) : !summary ? (
             <div className="py-12 text-center text-slate-400 text-xs font-semibold">
-              {lang === "ur" ? "کوئی منسلک ریکارڈ دریافت نہیں ہو سکا۔" : "No cross-module linkages found."}
+              {t(lang, "p360.no_linkages_found", "No cross-module linkages found.")}
             </div>
           ) : (
             <>
@@ -151,7 +151,7 @@ export function Party360Modal({
                 >
                   <div className="flex items-center justify-between text-indigo-600 dark:text-indigo-400 mb-1">
                     <span className="text-[11px] font-black uppercase">
-                      {lang === "ur" ? "کمپنیاں" : "Companies"}
+                      {t(lang, "p360.companies_label", "Companies")}
                     </span>
                     <Building2 className="h-4 w-4" />
                   </div>
@@ -159,7 +159,7 @@ export function Party360Modal({
                     {summary.companies.length}
                   </p>
                   <p className="text-[10px] text-slate-500">
-                    {lang === "ur" ? "بطور مالک / ڈائریکٹر" : "As Owner / Director"}
+                    {t(lang, "p360.companies_kpi_sub", "As Owner / Director")}
                   </p>
                 </div>
 
@@ -174,7 +174,7 @@ export function Party360Modal({
                 >
                   <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400 mb-1">
                     <span className="text-[11px] font-black uppercase">
-                      {lang === "ur" ? "ملازمت" : "Employment"}
+                      {t(lang, "p360.employment_kpi_title", "Employment")}
                     </span>
                     <Briefcase className="h-4 w-4" />
                   </div>
@@ -182,7 +182,7 @@ export function Party360Modal({
                     {summary.employees.length}
                   </p>
                   <p className="text-[10px] text-slate-500 truncate">
-                    {summary.employees[0]?.employeeCode || (lang === "ur" ? "کوئی ملازم نہیں" : "Not Staff")}
+                    {summary.employees[0]?.employeeCode || t(lang, "p360.employment_not_staff", "Not Staff")}
                   </p>
                 </div>
 
@@ -197,7 +197,7 @@ export function Party360Modal({
                 >
                   <div className="flex items-center justify-between text-amber-600 dark:text-amber-400 mb-1">
                     <span className="text-[11px] font-black uppercase">
-                      {lang === "ur" ? "بینک اکاؤنٹس" : "Bank Accounts"}
+                      {t(lang, "p360.banks_label", "Banks")}
                     </span>
                     <Landmark className="h-4 w-4" />
                   </div>
@@ -205,7 +205,7 @@ export function Party360Modal({
                     {summary.banks.length}
                   </p>
                   <p className="text-[10px] text-slate-500">
-                    {lang === "ur" ? "کھاتہ جات" : "Active Master Banks"}
+                    {t(lang, "p360.banks_kpi_sub", "Active Master Banks")}
                   </p>
                 </div>
 
@@ -267,7 +267,7 @@ export function Party360Modal({
                 >
                   <div className="flex items-center justify-between text-blue-600 dark:text-blue-400 mb-1">
                     <span className="text-[11px] font-black uppercase">
-                      {lang === "ur" ? "پارٹی قسم" : "Party Type"}
+                      {t(lang, "p360.party_type_label", "Party Type")}
                     </span>
                     <UserCheck className="h-4 w-4" />
                   </div>

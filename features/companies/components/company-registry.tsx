@@ -306,6 +306,8 @@ function localizeTerm(term: string, lang: string): string {
   return mapped.join("");
 }
 
+export { localizeTerm };
+
 export function CompanyRegistry() {
   const router = useRouter();
   const lang = useActiveLanguage();

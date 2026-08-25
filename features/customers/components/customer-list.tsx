@@ -29,6 +29,10 @@ type CustomerRow = {
   city_id: string | null;
   area_location_id: string | null;
   customer_name: string;
+  first_name: string | null;
+  last_name: string | null;
+  father_name: string | null;
+  person_code: string | null;
   company_name: string | null;
   contact_person: string | null;
   mobile: string | null;
@@ -131,7 +135,7 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
         customerType: c.company_name ? "Business" : "Male",
         firstName: c.customer_name.split(" ")[0] || c.customer_name,
         lastName: c.customer_name.split(" ").slice(1).join(" ") || "",
-        fatherName: c.contact_person || "",
+        fatherName: c.father_name || c.contact_person || "",
         customerAccountNumber: "",
         country: "",
         stateProvince: "",
@@ -174,8 +178,9 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
         ];
       }
 
-      // Explicitly compute customer account code derived from ID
-      meta.customerAccountNumber = "CUST-" + c.id.slice(0, 6).toUpperCase();
+      // Use the real person_code (PER-XXXXXX) when available; fall back to UUID-derived code
+      // for legacy rows that predate the person-master migration and have not been backfilled.
+      meta.customerAccountNumber = c.person_code || ("CUST-" + c.id.slice(0, 6).toUpperCase());
 
       return {
         ...c,
@@ -206,6 +211,8 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
         (c) =>
           c.customer_name.toLowerCase().includes(q) ||
           c.meta.customerAccountNumber.toLowerCase().includes(q) ||
+          (c.person_code && c.person_code.toLowerCase().includes(q)) ||
+          (c.father_name && c.father_name.toLowerCase().includes(q)) ||
           (c.mobile && c.mobile.includes(q)) ||
           (c.email && c.email.toLowerCase().includes(q))
       );
@@ -441,7 +448,7 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
             className="gap-2 bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 hover:from-indigo-700 hover:to-blue-800 text-white font-bold shadow-md h-10 px-4 rounded-xl text-xs"
           >
             <Layers className="h-4 w-4" />
-            {lang === "ur" ? "360° ماسٹر پارٹیز ڈائریکٹری رپورٹ" : "360° Universal Parties Directory"}
+            {t(lang, "p360.universal_directory", "360° Universal Parties Directory")}
           </Button>
           <Button
             type="button"
@@ -523,19 +530,19 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Building2 className="h-4 w-4 text-purple-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">3. {lang === "ur" ? "سسٹم لنکس و کمپنیاں" : "System Linkages"}</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">3. {t(lang, "p360.system_linkages", "System Linkages")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-indigo-600 font-bold">
-              <span>{lang === "ur" ? "کمپنیاں:" : "Companies:"}</span>
+              <span>{t(lang, "p360.companies_label", "Companies")}:</span>
               <span>{stats.totalLinkedCompanies}</span>
             </div>
             <div className="flex justify-between text-emerald-600 font-bold">
-              <span>{lang === "ur" ? "ملازمین:" : "Employees:"}</span>
+              <span>{t(lang, "p360.employees_label", "Employees")}:</span>
               <span>{stats.totalLinkedEmployees}</span>
             </div>
             <div className="flex justify-between text-purple-600 font-bold">
-              <span>{lang === "ur" ? "بینک کھاتے:" : "Banks:"}</span>
+              <span>{t(lang, "p360.banks_label", "Banks")}:</span>
               <span>{stats.totalLinkedBanks}</span>
             </div>
           </div>
@@ -659,7 +666,7 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
                               setSelected360Party({ id: c.id, name: c.customer_name });
                             }}
                             className="flex h-5 w-5 items-center justify-center rounded-md bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-black text-xs shadow-xs transition hover:scale-105 cursor-pointer"
-                            title={lang === "ur" ? "360° تمام لنکس اور ریکارڈز دیکھیں" : "View 360° cross-system profile"}
+                            title={t(lang, "p360.view_360_profile", "View 360° cross-system profile")}
                           >
                             +
                           </button>

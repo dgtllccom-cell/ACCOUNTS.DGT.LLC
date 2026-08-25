@@ -2601,6 +2601,23 @@ export type UiKey =
   | "p360.no_trucks"
   | "p360.clearing_agents_section_title"
   | "p360.no_clearing_agents"
+  | "p360.universal_directory"
+  | "p360.system_linkages"
+  | "p360.companies_label"
+  | "p360.companies_kpi_sub"
+  | "p360.employees_label"
+  | "p360.employment_kpi_title"
+  | "p360.employment_not_staff"
+  | "p360.banks_label"
+  | "p360.banks_kpi_sub"
+  | "p360.party_type_label"
+  | "p360.aggregating_records"
+  | "p360.no_linkages_found"
+  | "p360.father_prefix"
+  | "p360.view_360_profile"
+  | "p360.erp_links_title"
+  | "p360.person_code_label"
+  | "p360.father_name_label"
   | "bank.enter_website"
   | "bank.remarks_optional"
   | "bank.enter_remarks"
@@ -5045,6 +5062,23 @@ const en: Dict = {
   "p360.no_trucks": "No linked trucks found.",
   "p360.clearing_agents_section_title": "Clearing Agent Records",
   "p360.no_clearing_agents": "No linked clearing agent records found.",
+  "p360.universal_directory": "360° Universal Parties Directory",
+  "p360.system_linkages": "System Linkages",
+  "p360.companies_label": "Companies",
+  "p360.companies_kpi_sub": "As Owner / Director",
+  "p360.employees_label": "Employees",
+  "p360.employment_kpi_title": "Employment",
+  "p360.employment_not_staff": "Not Staff",
+  "p360.banks_label": "Banks",
+  "p360.banks_kpi_sub": "Active Master Banks",
+  "p360.party_type_label": "Party Type",
+  "p360.aggregating_records": "Aggregating 360° cross-system records...",
+  "p360.no_linkages_found": "No cross-module linkages found.",
+  "p360.father_prefix": "S/o",
+  "p360.view_360_profile": "View 360° cross-system profile",
+  "p360.erp_links_title": "Person Master — ERP Links & Registration Details",
+  "p360.person_code_label": "Person Code",
+  "p360.father_name_label": "Father / S/O",
   "bank.enter_website": "Enter website",
   "bank.remarks_optional": "Remarks (Optional)",
   "bank.enter_remarks": "Enter any additional remarks",
@@ -11552,6 +11586,23 @@ const ur: Dict = {
   "p360.no_trucks": "کوئی منسلک ٹرک نہیں ملا۔",
   "p360.clearing_agents_section_title": "کلیئرنگ ایجنٹ ریکارڈز",
   "p360.no_clearing_agents": "کوئی منسلک کلیئرنگ ایجنٹ ریکارڈ نہیں ملا۔",
+  "p360.universal_directory": "360° یونیورسل پارٹیز ڈائریکٹری",
+  "p360.system_linkages": "سسٹم لنکس",
+  "p360.companies_label": "کمپنیاں",
+  "p360.companies_kpi_sub": "بطور مالک / ڈائریکٹر",
+  "p360.employees_label": "ملازمین",
+  "p360.employment_kpi_title": "ملازمت",
+  "p360.employment_not_staff": "کوئی ملازم نہیں",
+  "p360.banks_label": "بینک اکاؤنٹس",
+  "p360.banks_kpi_sub": "کھاتہ جات",
+  "p360.party_type_label": "پارٹی قسم",
+  "p360.aggregating_records": "ماسٹر ہستی کی تمام شاخوں کا ریکارڈ اکٹھا کیا جا رہا ہے...",
+  "p360.no_linkages_found": "کوئی منسلک ریکارڈ دریافت نہیں ہو سکا۔",
+  "p360.father_prefix": "ولدیت",
+  "p360.view_360_profile": "360° تمام لنکس اور ریکارڈز دیکھیں",
+  "p360.erp_links_title": "پرسن ماسٹر — ای آر پی لنکس و رجسٹریشن",
+  "p360.person_code_label": "پرسن کوڈ",
+  "p360.father_name_label": "ولدیت",
   "bank.enter_website": "ویب سائٹ درج کریں",
   "bank.remarks_optional": "تبصرے (اختیاری)",
   "bank.enter_remarks": "کوئی اضافی تبصرہ درج کریں",
@@ -17065,6 +17116,23 @@ const ar: Dict = {
   "p360.no_trucks": "لم يتم العثور على شاحنات مرتبطة.",
   "p360.clearing_agents_section_title": "سجلات وكيل التخليص",
   "p360.no_clearing_agents": "لم يتم العثور على سجلات وكيل تخليص مرتبطة.",
+  "p360.universal_directory": "دليل الأطراف الشاملة 360°",
+  "p360.system_linkages": "روابط النظام",
+  "p360.companies_label": "الشركات",
+  "p360.companies_kpi_sub": "بصفة مالك / مدير",
+  "p360.employees_label": "الموظفون",
+  "p360.employment_kpi_title": "التوظيف",
+  "p360.employment_not_staff": "غير موظف",
+  "p360.banks_label": "الحسابات المصرفية",
+  "p360.banks_kpi_sub": "الحسابات المصرفية الرئيسية",
+  "p360.party_type_label": "نوع الطرف",
+  "p360.aggregating_records": "جمع السجلات المتقاطعة 360°...",
+  "p360.no_linkages_found": "لم يتم العثور على روابط متقاطعة.",
+  "p360.father_prefix": "ابن",
+  "p360.view_360_profile": "عرض الملف الشخصي المتكامل 360°",
+  "p360.erp_links_title": "سجل الأشخاص — روابط ERP وتفاصيل التسجيل",
+  "p360.person_code_label": "رمز الشخص",
+  "p360.father_name_label": "اسم الأب",
   "bank.enter_website": "أدخل الموقع الإلكتروني",
   "bank.remarks_optional": "ملاحظات (اختياري)",
   "bank.enter_remarks": "أدخل أي ملاحظات إضافية",
@@ -22573,6 +22641,23 @@ const fa: Dict = {
   "p360.no_trucks": "هیچ کامیون مرتبطی یافت نشد.",
   "p360.clearing_agents_section_title": "سوابق کارگزار ترخیص",
   "p360.no_clearing_agents": "هیچ سابقه کارگزار ترخیص مرتبطی یافت نشد.",
+  "p360.universal_directory": "فهرست جامع طرفین 360°",
+  "p360.system_linkages": "پیوندهای سیستم",
+  "p360.companies_label": "شرکت‌ها",
+  "p360.companies_kpi_sub": "به عنوان مالک / مدیر",
+  "p360.employees_label": "کارمندان",
+  "p360.employment_kpi_title": "استخدام",
+  "p360.employment_not_staff": "کارمند نیست",
+  "p360.banks_label": "حساب‌های بانکی",
+  "p360.banks_kpi_sub": "حساب‌های بانکی فعال",
+  "p360.party_type_label": "نوع طرف",
+  "p360.aggregating_records": "در حال جمع‌آوری سوابق متقاطع 360°...",
+  "p360.no_linkages_found": "هیچ پیوند متقاطعی یافت نشد.",
+  "p360.father_prefix": "فرزند",
+  "p360.view_360_profile": "مشاهده پروفایل 360° متقاطع",
+  "p360.erp_links_title": "مشخصات اشخاص — پیوندهای ERP و جزئیات ثبت",
+  "p360.person_code_label": "کد شخص",
+  "p360.father_name_label": "نام پدر",
   "bank.enter_website": "وب‌سایت را وارد کنید",
   "bank.remarks_optional": "ملاحظات (اختیاری)",
   "bank.enter_remarks": "هرگونه ملاحظات اضافی را وارد کنید",
@@ -28076,6 +28161,23 @@ const ps: Dict = {
   "p360.no_trucks": "هیڅ تړلی ټرک ونه موندل شو۔",
   "p360.clearing_agents_section_title": "د گمرک ایجنټ ریکارډونه",
   "p360.no_clearing_agents": "هیڅ تړلی د گمرک ایجنټ ریکارډ ونه موندل شو۔",
+  "p360.universal_directory": "360° د ټولو اړخونو لیست",
+  "p360.system_linkages": "د سیسټم اړیکې",
+  "p360.companies_label": "شرکتونه",
+  "p360.companies_kpi_sub": "د مالک / ډایرکټر په توګه",
+  "p360.employees_label": "کارمندان",
+  "p360.employment_kpi_title": "دندهوالي",
+  "p360.employment_not_staff": "کارمند نه دی",
+  "p360.banks_label": "بانکي حسابونه",
+  "p360.banks_kpi_sub": "فعال بانکي حسابونه",
+  "p360.party_type_label": "د اړخ ډول",
+  "p360.aggregating_records": "360° ګډ ریکارډونه راټولیږي...",
+  "p360.no_linkages_found": "هیڅ ګډ اړیکه ونه موندل شوه۔",
+  "p360.father_prefix": "د پلار نوم",
+  "p360.view_360_profile": "360° د ټولو اړیکو پروفایل وګورئ",
+  "p360.erp_links_title": "د شخص ماسټر — ERP اړیکې او د راجسټریشن جزئیات",
+  "p360.person_code_label": "د شخص کوډ",
+  "p360.father_name_label": "د پلار نوم",
   "bank.enter_website": "ویب پاڼه دننه کړئ",
   "bank.remarks_optional": "تبصرې (اختیاري)",
   "bank.enter_remarks": "کوم اضافي تبصرې دننه کړئ",

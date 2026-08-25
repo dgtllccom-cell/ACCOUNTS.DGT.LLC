@@ -24,6 +24,10 @@ type CustomerRow = {
   city_id: string | null;
   area_location_id: string | null;
   customer_name: string;
+  first_name: string | null;
+  last_name: string | null;
+  father_name: string | null;
+  person_code: string | null;
   company_name: string | null;
   contact_person: string | null;
   mobile: string | null;
@@ -78,7 +82,7 @@ export function CustomerProfile({
       customerType: customer.company_name ? "Business" : "Male",
       firstName: customer.customer_name.split(" ")[0] || customer.customer_name,
       lastName: customer.customer_name.split(" ").slice(1).join(" ") || "",
-      fatherName: customer.contact_person || "",
+      fatherName: customer.father_name || customer.contact_person || "",
       customerAccountNumber: "",
       country: "",
       stateProvince: "",
@@ -137,8 +141,8 @@ export function CustomerProfile({
       ];
     }
 
-    // Explicitly compute customer account code derived from ID
-    meta.customerAccountNumber = "CUST-" + customer.id.slice(0, 6).toUpperCase();
+    // Use real person_code when available; fall back to UUID-derived code for pre-migration rows.
+    meta.customerAccountNumber = customer.person_code || ("CUST-" + customer.id.slice(0, 6).toUpperCase());
 
     return meta;
   }, [customer]);
