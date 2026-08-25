@@ -1944,6 +1944,7 @@ function DashboardSummaryHeader({
 export function PurchaseOrderManagementDashboard() {
   const router = useRouter();
   const activeLang = useActiveLanguage();
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(activeLang);
   const tr = useCallback((label: string) => translateHeader(activeLang, label), [activeLang]);
   // Universal, session-RBAC-scoped Branch & User context for the reusable summary header.
   const { context: branchContext, loading: branchContextLoading } = useBranchUserContext();
@@ -2447,7 +2448,7 @@ export function PurchaseOrderManagementDashboard() {
   );
 
   return (
-    <div className="w-full max-w-none space-y-4 px-2 py-3 text-slate-900 dark:text-slate-100 sm:px-4">
+    <div dir={isRtl ? "rtl" : "ltr"} className="w-full max-w-none space-y-4 px-2 py-3 text-slate-900 dark:text-slate-100 sm:px-4">
       {titlePortal && createPortal(pageHeaderContent, titlePortal)}
       {actionsPortal && createPortal(pageActionsContent, actionsPortal)}
 

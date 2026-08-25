@@ -1360,6 +1360,7 @@ export function PurchaseBookingJournalReportView({
   };
 
   const activeLang = useActiveLanguage();
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(activeLang);
   const trUi = useCallback((label: string) => {
     if (activeLang === "en") return label;
     // translateHeader() already returns the original label unchanged when no dictionary
@@ -1970,7 +1971,7 @@ export function PurchaseBookingJournalReportView({
   const dashboardSummary = useMemo(() => getDashboardSummaryData(registerRows, session), [registerRows, session]);
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
+    <div dir={isRtl ? "rtl" : "ltr"} className="space-y-6 animate-in fade-in duration-200">
       {/* Portals for Top Navigation Strip */}
       {titleSlot && createPortal(
         <div className="min-w-0">
