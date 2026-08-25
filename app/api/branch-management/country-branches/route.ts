@@ -24,10 +24,10 @@ function isUuid(value: string) {
 }
 
 const countryBranchSelect =
-  "id,country_id,name,code,local_currency,is_main,status,state_province_id,district_id,city_id,address,phone,email,whatsapp_number,company_id,owner_name,contacts,documents,permission_template,permission_grants,created_at,updated_at";
+  "id,country_id,name,code,local_currency,is_main,status,state_province_id,district_id,city_id,address,phone,email,whatsapp_number,company_id,owner_name,owner_customer_id,owner_profile_id,contacts,documents,permission_template,permission_grants,created_at,updated_at";
 
 const countryBranchFallbackSelect =
-  "id,country_id,name,code,local_currency,is_main,status,state_province_id,district_id,city_id,address,phone,email,whatsapp_number,company_id,owner_name,contacts,documents,created_at,updated_at";
+  "id,country_id,name,code,local_currency,is_main,status,state_province_id,district_id,city_id,address,phone,email,whatsapp_number,company_id,owner_name,owner_customer_id,owner_profile_id,contacts,documents,created_at,updated_at";
 
 function isMissingOptionalColumn(message: string) {
   return /permission_template|permission_grants/i.test(message);
@@ -107,6 +107,7 @@ export async function GET(request: Request) {
         select
           id, country_id, name, code, local_currency, is_main, status, state_province_id,
           district_id, city_id, address, phone, email, whatsapp_number, company_id, owner_name,
+          owner_customer_id, owner_profile_id,
           contacts, documents, permission_template, permission_grants, created_at, updated_at
         from public.country_branches
         where deleted_at is null
@@ -216,6 +217,8 @@ export async function POST(request: Request) {
       whatsapp_number: parsed.data.whatsappNumber?.trim() || null,
       company_id: parsed.data.companyId ?? null,
       owner_name: parsed.data.ownerName?.trim() ? parsed.data.ownerName.trim() : null,
+      owner_customer_id: parsed.data.ownerCustomerId ?? null,
+      owner_profile_id: parsed.data.ownerProfileId ?? null,
       contacts: parsed.data.contacts ?? [],
       documents: parsed.data.documents ?? [],
       permission_template: parsed.data.permissionTemplate ?? null,
@@ -335,6 +338,8 @@ export async function PUT(request: Request) {
       whatsapp_number: parsed.data.whatsappNumber?.trim() || null,
       company_id: parsed.data.companyId ?? null,
       owner_name: parsed.data.ownerName?.trim() ? parsed.data.ownerName.trim() : null,
+      owner_customer_id: parsed.data.ownerCustomerId ?? null,
+      owner_profile_id: parsed.data.ownerProfileId ?? null,
       contacts: parsed.data.contacts ?? [],
       documents: parsed.data.documents ?? [],
       permission_template: parsed.data.permissionTemplate ?? null,

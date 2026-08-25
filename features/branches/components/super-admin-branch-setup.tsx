@@ -286,6 +286,9 @@ function SuperAdminBranchSetupContent() {
   const [companyId, setCompanyId] = useState("");
   const [companyDetails, setCompanyDetails] = useState<CompanyDetailRow | null>(null);
   const [owner, setOwner] = useState("");
+  const [ownerId, setOwnerId] = useState("");
+  const [ownerCustomerId, setOwnerCustomerId] = useState<string | null>(null);
+  const [ownerProfileId, setOwnerProfileId] = useState<string | null>(null);
   const [ownerPreview, setOwnerPreview] = useState<OwnerPreview | null>(null);
 
   const [contactType, setContactType] = useState(initialContactTypes[0]);
@@ -870,6 +873,8 @@ function SuperAdminBranchSetupContent() {
           email,
           whatsappNumber: whatsappNumber || undefined,
           ownerName: owner.trim() || undefined,
+          ownerCustomerId: ownerCustomerId || undefined,
+          ownerProfileId: ownerProfileId || undefined,
           contacts: contactsPayload.length ? contactsPayload : undefined
         })
       });
@@ -1022,7 +1027,17 @@ function SuperAdminBranchSetupContent() {
                 </div>
 
                 <div className="space-y-2">
-                  <BranchOwnerPicker value={owner} onValueChange={setOwner} placeholder="Search owner" createButtonPlacement="below" />
+                  <BranchOwnerPicker
+                    value={ownerId}
+                    onValueChange={setOwnerId}
+                    onOwnerResolved={(resolved) => {
+                      setOwner(resolved?.name || "");
+                      setOwnerCustomerId(resolved?.kind === "customer" ? resolved.id : null);
+                      setOwnerProfileId(resolved?.kind === "profile" ? resolved.id : null);
+                    }}
+                    placeholder="Search owner"
+                    createButtonPlacement="below"
+                  />
                 </div>
               </div>
             </section>

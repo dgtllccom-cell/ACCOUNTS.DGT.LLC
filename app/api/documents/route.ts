@@ -1,9 +1,60 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { withLocalPg } from "@/lib/db/local-postgres";
-import { normalizeDocumentSearch } from "@/lib/documents/document-filing";
+import {
+  buildDocumentFileName,
+  buildDocumentFolderPath,
+  normalizeDocumentSearch
+} from "@/lib/documents/document-filing";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+const BUCKET_NAME = "erp-documents";
+
+function isMultipart(request: NextRequest) {
+  return request.headers.get("content-type")?.includes("multipart/form-data") ?? false;
+}
+
+async function parseJsonOrFormData(request: NextRequest) {
+  if (!isMultipart(request)) {
+    const body = await request.json();
+    return { body, file: null as File | null };
+  }
+
+  const formData = await request.formData();
+  const body: Record<string, any> = {};
+  for (const [key, value] of formData.entries()) {
+    if (key === "file") continue;
+    if (typeof value === "string") {
+      body[key] = value;
+    }
+  }
+  const file = formData.get("file");
+  return { body, file: file instanceof File ? file : null };
+}
+
+function parseMaybeJson<T>(value: any, fallback: T): T {
+  if (value === undefined || value === null || value === "") return fallback;
+  if (typeof value !== "string") return value as T;
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+function normalizeNullable(value: any) {
+  if (value === undefined || value === null) return null;
+  if (typeof value === "string" && value.trim() === "") return null;
+  return value;
+}
+
+async function resolveStorageUrl(storageKey: string | null | undefined) {
+  if (!storageKey) return null;
+  const admin = createSupabaseAdminClient();
+  const { data } = await admin.storage.from(BUCKET_NAME).createSignedUrl(storageKey, 60 * 60 * 24);
+  return data?.signedUrl ?? null;
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,9 +66,18 @@ export async function GET(request: NextRequest) {
     const personAccountId = searchParams.get("personAccountId");
     const personAccountCode = searchParams.get("personAccountCode");
     const personAccountName = searchParams.get("personAccountName");
+    const personAccountType = searchParams.get("personAccountType");
+    const companyId = searchParams.get("companyId");
+    const companyCode = searchParams.get("companyCode");
+    const companyName = searchParams.get("companyName");
+    const accountId = searchParams.get("accountId");
+    const accountCode = searchParams.get("accountCode");
+    const accountName = searchParams.get("accountName");
     const moduleType = searchParams.get("moduleType");
+    const sourceModule = searchParams.get("sourceModule");
     const documentType = searchParams.get("documentType");
     const sourceRecordNo = searchParams.get("sourceRecordNo");
+    const sourceRecordId = searchParams.get("sourceRecordId");
     const searchQuery = searchParams.get("search");
 
     // Root-cause bypass (see lib/db/local-postgres.ts): office_documents_scope_read
@@ -38,9 +98,18 @@ export async function GET(request: NextRequest) {
           and (${personAccountId ? sql`person_account_id = ${personAccountId}` : sql`true`})
           and (${personAccountCode ? sql`person_account_code = ${personAccountCode}` : sql`true`})
           and (${personAccountName ? sql`person_account_name ilike ${"%" + personAccountName + "%"}` : sql`true`})
+          and (${personAccountType ? sql`person_account_type = ${personAccountType}` : sql`true`})
+          and (${companyId ? sql`company_id = ${companyId}` : sql`true`})
+          and (${companyCode ? sql`company_code = ${companyCode}` : sql`true`})
+          and (${companyName ? sql`company_name ilike ${"%" + companyName + "%"}` : sql`true`})
+          and (${accountId ? sql`account_id = ${accountId}` : sql`true`})
+          and (${accountCode ? sql`account_code = ${accountCode}` : sql`true`})
+          and (${accountName ? sql`account_name ilike ${"%" + accountName + "%"}` : sql`true`})
           and (${moduleType && moduleType !== "all" ? sql`module_type = ${moduleType}` : sql`true`})
+          and (${sourceModule ? sql`source_module = ${sourceModule}` : sql`true`})
           and (${documentType ? sql`document_type = ${documentType}` : sql`true`})
           and (${sourceRecordNo ? sql`source_record_no = ${sourceRecordNo}` : sql`true`})
+          and (${sourceRecordId ? sql`source_record_id = ${sourceRecordId}` : sql`true`})
           and (${safeSearch ? sql`(
                 title ilike ${"%" + safeSearch + "%"}
                 or file_name ilike ${"%" + safeSearch + "%"}
@@ -49,7 +118,13 @@ export async function GET(request: NextRequest) {
                 or module_type ilike ${"%" + safeSearch + "%"}
                 or person_account_code ilike ${"%" + safeSearch + "%"}
                 or person_account_name ilike ${"%" + safeSearch + "%"}
+                or person_account_type ilike ${"%" + safeSearch + "%"}
+                or company_code ilike ${"%" + safeSearch + "%"}
+                or company_name ilike ${"%" + safeSearch + "%"}
+                or account_code ilike ${"%" + safeSearch + "%"}
+                or account_name ilike ${"%" + safeSearch + "%"}
                 or source_record_no ilike ${"%" + safeSearch + "%"}
+                or source_module ilike ${"%" + safeSearch + "%"}
                 or storage_key ilike ${"%" + safeSearch + "%"}
                 or document_path ilike ${"%" + safeSearch + "%"}
               )` : sql`true`})
@@ -74,9 +149,18 @@ export async function GET(request: NextRequest) {
     if (personAccountId) query = query.eq("person_account_id", personAccountId);
     if (personAccountCode) query = query.eq("person_account_code", personAccountCode);
     if (personAccountName) query = query.ilike("person_account_name", `%${personAccountName}%`);
+    if (personAccountType) query = query.eq("person_account_type", personAccountType);
+    if (companyId) query = query.eq("company_id", companyId);
+    if (companyCode) query = query.eq("company_code", companyCode);
+    if (companyName) query = query.ilike("company_name", `%${companyName}%`);
+    if (accountId) query = query.eq("account_id", accountId);
+    if (accountCode) query = query.eq("account_code", accountCode);
+    if (accountName) query = query.ilike("account_name", `%${accountName}%`);
     if (moduleType && moduleType !== "all") query = query.eq("module_type", moduleType);
+    if (sourceModule) query = query.eq("source_module", sourceModule);
     if (documentType) query = query.eq("document_type", documentType);
     if (sourceRecordNo) query = query.eq("source_record_no", sourceRecordNo);
+    if (sourceRecordId) query = query.eq("source_record_id", sourceRecordId);
     if (searchQuery) {
       query = query.or(
         [
@@ -87,7 +171,13 @@ export async function GET(request: NextRequest) {
           `module_type.ilike.%${searchQuery}%`,
           `person_account_code.ilike.%${searchQuery}%`,
           `person_account_name.ilike.%${searchQuery}%`,
+          `person_account_type.ilike.%${searchQuery}%`,
+          `company_code.ilike.%${searchQuery}%`,
+          `company_name.ilike.%${searchQuery}%`,
+          `account_code.ilike.%${searchQuery}%`,
+          `account_name.ilike.%${searchQuery}%`,
           `source_record_no.ilike.%${searchQuery}%`,
+          `source_module.ilike.%${searchQuery}%`,
           `storage_key.ilike.%${searchQuery}%`,
           `document_path.ilike.%${searchQuery}%`
         ].join(",")
@@ -97,9 +187,19 @@ export async function GET(request: NextRequest) {
     const { data: docs, error } = await query;
     if (error) throw error;
 
+    const resolvedDocs = await Promise.all(
+      (docs ?? []).map(async (doc: any) => {
+        const resolvedFileUrl = doc.storage_key ? await resolveStorageUrl(doc.storage_key) : null;
+        return {
+          ...doc,
+          file_url: resolvedFileUrl || doc.file_url
+        };
+      })
+    );
+
     // Live database records only — no demo/fallback documents. An empty result
     // means no documents have been uploaded for this scope yet.
-    return NextResponse.json({ documents: docs ?? [] });
+    return NextResponse.json({ documents: resolvedDocs });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -107,12 +207,12 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const { body, file } = await parseJsonOrFormData(request);
 
     const {
       title,
-      file_name,
-      file_url,
+      file_name: rawFileName,
+      file_url: rawFileUrl,
       file_type = "pdf",
       file_size = 0,
       country_id,
@@ -121,14 +221,21 @@ export async function POST(request: NextRequest) {
       main_branch_name,
       city_branch_id,
       city_branch_name,
+      company_id,
+      company_code,
+      company_name,
+      account_id,
+      account_code,
+      account_name,
+      person_account_id,
+      person_account_code,
+      person_account_name,
+      person_account_type,
       module_type = "Purchase Documents",
       document_type = "Document",
       source_module,
       source_record_id,
       source_record_no,
-      person_account_id,
-      person_account_code,
-      person_account_name,
       document_path,
       storage_key,
       category = "General",
@@ -139,29 +246,118 @@ export async function POST(request: NextRequest) {
       scanner_bridge = null
     } = body;
 
-    if (!title || !file_name || !file_url) {
-      return NextResponse.json({ error: "Missing required fields: title, file_name, file_url" }, { status: 400 });
+    const parsedTags = parseMaybeJson<any[]>(tags, []);
+    const parsedMetadata = parseMaybeJson<Record<string, any>>(metadata, {});
+    const normalizedFileSize = Number(file_size ?? 0) || 0;
+    const normalizedCountryId = normalizeNullable(country_id);
+    const normalizedCountryName = normalizeNullable(country_name);
+    const normalizedCountryBranchId = normalizeNullable(country_branch_id);
+    const normalizedMainBranchName = normalizeNullable(main_branch_name);
+    const normalizedCityBranchId = normalizeNullable(city_branch_id);
+    const normalizedCityBranchName = normalizeNullable(city_branch_name);
+    const normalizedCompanyId = normalizeNullable(company_id);
+    const normalizedCompanyCode = normalizeNullable(company_code);
+    const normalizedCompanyName = normalizeNullable(company_name);
+    const normalizedAccountId = normalizeNullable(account_id);
+    const normalizedAccountCode = normalizeNullable(account_code);
+    const normalizedAccountName = normalizeNullable(account_name);
+    const normalizedPersonAccountId = normalizeNullable(person_account_id);
+    const normalizedPersonAccountCode = normalizeNullable(person_account_code);
+    const normalizedPersonAccountName = normalizeNullable(person_account_name);
+    const normalizedPersonAccountType = normalizeNullable(person_account_type);
+    const normalizedModuleType = normalizeNullable(module_type) ?? "Purchase Documents";
+    const normalizedDocumentType = normalizeNullable(document_type) ?? "Document";
+    const normalizedSourceModule = normalizeNullable(source_module);
+    const normalizedSourceRecordId = normalizeNullable(source_record_id);
+    const normalizedSourceRecordNo = normalizeNullable(source_record_no);
+    const normalizedDocumentPath = normalizeNullable(document_path);
+    const normalizedStorageKey = normalizeNullable(storage_key);
+    const normalizedCategory = normalizeNullable(category) ?? "General";
+    const normalizedCreatedBy = normalizeNullable(created_by) ?? "Admin";
+    const normalizedScannerDeviceName = normalizeNullable(scanner_device_name);
+    const normalizedScannerBridge = normalizeNullable(scanner_bridge);
+    const baseFileName =
+      typeof rawFileName === "string" && rawFileName.trim()
+        ? rawFileName.trim()
+        : file
+          ? file.name.replace(/\.[^/.]+$/, "")
+          : "";
+
+    if (!title || !baseFileName) {
+      return NextResponse.json({ error: "Missing required fields: title, file_name" }, { status: 400 });
+    }
+
+    const scannedAt = new Date().toISOString();
+    const generatedPath =
+      normalizedDocumentPath ||
+      buildDocumentFolderPath({
+        countryName: normalizedCountryName,
+        branchName: normalizedCityBranchName ?? normalizedMainBranchName ?? null,
+        companyCode: normalizedCompanyCode,
+        companyName: normalizedCompanyName,
+        personAccountCode: normalizedPersonAccountCode,
+        personAccountName: normalizedPersonAccountName,
+        personAccountType: normalizedPersonAccountType,
+        accountCode: normalizedAccountCode,
+        accountName: normalizedAccountName,
+        moduleType: normalizedModuleType,
+        documentType: normalizedDocumentType
+      });
+    const generatedFileName =
+      rawFileName?.toString().trim() ||
+      buildDocumentFileName({
+        countryName: normalizedCountryName,
+        branchName: normalizedCityBranchName ?? normalizedMainBranchName ?? null,
+        companyCode: normalizedCompanyCode,
+        companyName: normalizedCompanyName,
+        personAccountCode: normalizedPersonAccountCode,
+        personAccountName: normalizedPersonAccountName,
+        personAccountType: normalizedPersonAccountType,
+        accountCode: normalizedAccountCode,
+        accountName: normalizedAccountName,
+        moduleType: normalizedModuleType,
+        documentType: normalizedDocumentType,
+        sourceRecordNo: normalizedSourceRecordNo,
+        createdAt: scannedAt,
+        extension: file ? (file.name.split(".").pop() || file_type || "pdf") : file_type || "pdf"
+      });
+    const resolvedStorageKey = normalizedStorageKey || (generatedPath ? `${generatedPath}/${generatedFileName}` : generatedFileName);
+    let resolvedFileUrl = typeof rawFileUrl === "string" && rawFileUrl.trim() ? rawFileUrl.trim() : null;
+
+    if (file) {
+      const admin = createSupabaseAdminClient();
+      const buffer = Buffer.from(await file.arrayBuffer());
+      const uploadResult = await admin.storage.from(BUCKET_NAME).upload(resolvedStorageKey, buffer, {
+        contentType: file.type || "application/octet-stream",
+        upsert: false
+      });
+      if (uploadResult.error) throw new Error(uploadResult.error.message);
+      const signed = await admin.storage.from(BUCKET_NAME).createSignedUrl(resolvedStorageKey, 60 * 60 * 24);
+      resolvedFileUrl = signed.data?.signedUrl ?? resolvedStorageKey;
+    } else if (!resolvedFileUrl) {
+      resolvedFileUrl = resolvedStorageKey;
     }
 
     // Root-cause bypass — see GET above: office_documents_scope_insert is RLS-gated
     // the same way, so a direct-Postgres write is tried first.
-    const scannedAt = new Date().toISOString();
     const viaPg = await withLocalPg(async (sql) => {
       const rows = await sql`
         insert into public.office_documents (
           title, file_name, file_url, file_type, file_size,
           country_id, country_name, country_branch_id, main_branch_name,
-          city_branch_id, city_branch_name, module_type, document_type, source_module, source_record_id, source_record_no,
-          person_account_id, person_account_code, person_account_name,
+          city_branch_id, city_branch_name, company_id, company_code, company_name, account_id, account_code, account_name,
+          person_account_id, person_account_code, person_account_name, person_account_type,
+          module_type, document_type, source_module, source_record_id, source_record_no,
           document_path, storage_key, category, tags, metadata,
           scanned_at, created_by, scanner_device_name, scanner_bridge
         ) values (
-          ${title}, ${file_name}, ${file_url}, ${file_type}, ${file_size},
-          ${country_id ?? null}, ${country_name ?? null}, ${country_branch_id ?? null}, ${main_branch_name ?? null},
-          ${city_branch_id ?? null}, ${city_branch_name ?? null}, ${module_type}, ${document_type}, ${source_module ?? null}, ${source_record_id ?? null}, ${source_record_no ?? null},
-          ${person_account_id ?? null}, ${person_account_code ?? null}, ${person_account_name ?? null},
-          ${document_path ?? null}, ${storage_key ?? null}, ${category}, ${sql.json(tags)}, ${sql.json(metadata)},
-          ${scannedAt}, ${created_by}, ${scanner_device_name ?? null}, ${scanner_bridge ?? null}
+          ${title}, ${generatedFileName}, ${resolvedFileUrl}, ${file_type}, ${normalizedFileSize},
+          ${normalizedCountryId}, ${normalizedCountryName}, ${normalizedCountryBranchId}, ${normalizedMainBranchName},
+          ${normalizedCityBranchId}, ${normalizedCityBranchName}, ${normalizedCompanyId}, ${normalizedCompanyCode}, ${normalizedCompanyName}, ${normalizedAccountId}, ${normalizedAccountCode}, ${normalizedAccountName},
+          ${normalizedPersonAccountId}, ${normalizedPersonAccountCode}, ${normalizedPersonAccountName}, ${normalizedPersonAccountType},
+          ${normalizedModuleType}, ${normalizedDocumentType}, ${normalizedSourceModule}, ${normalizedSourceRecordId}, ${normalizedSourceRecordNo},
+          ${generatedPath}, ${resolvedStorageKey}, ${normalizedCategory}, ${sql.json(parsedTags)}, ${sql.json(parsedMetadata)},
+          ${scannedAt}, ${normalizedCreatedBy}, ${normalizedScannerDeviceName}, ${normalizedScannerBridge}
         )
         returning *
       `;
@@ -177,33 +373,40 @@ export async function POST(request: NextRequest) {
       .from("office_documents")
       .insert({
         title,
-        file_name,
-        file_url,
+        file_name: generatedFileName,
+        file_url: resolvedFileUrl,
         file_type,
-        file_size,
-        country_id,
-        country_name,
-        country_branch_id,
-        main_branch_name,
-        city_branch_id,
-        city_branch_name,
-        module_type,
-        document_type,
-        source_module,
-        source_record_id,
-        source_record_no,
-        person_account_id,
-        person_account_code,
-        person_account_name,
-        document_path,
-        storage_key,
-        category,
-        tags,
-        metadata,
+        file_size: normalizedFileSize,
+        country_id: normalizedCountryId,
+        country_name: normalizedCountryName,
+        country_branch_id: normalizedCountryBranchId,
+        main_branch_name: normalizedMainBranchName,
+        city_branch_id: normalizedCityBranchId,
+        city_branch_name: normalizedCityBranchName,
+        company_id: normalizedCompanyId,
+        company_code: normalizedCompanyCode,
+        company_name: normalizedCompanyName,
+        account_id: normalizedAccountId,
+        account_code: normalizedAccountCode,
+        account_name: normalizedAccountName,
+        person_account_id: normalizedPersonAccountId,
+        person_account_code: normalizedPersonAccountCode,
+        person_account_name: normalizedPersonAccountName,
+        person_account_type: normalizedPersonAccountType,
+        module_type: normalizedModuleType,
+        document_type: normalizedDocumentType,
+        source_module: normalizedSourceModule,
+        source_record_id: normalizedSourceRecordId,
+        source_record_no: normalizedSourceRecordNo,
+        document_path: generatedPath,
+        storage_key: resolvedStorageKey,
+        category: normalizedCategory,
+        tags: parsedTags,
+        metadata: parsedMetadata,
         scanned_at: scannedAt,
-        created_by,
-        scanner_device_name,
-        scanner_bridge
+        created_by: normalizedCreatedBy,
+        scanner_device_name: normalizedScannerDeviceName,
+        scanner_bridge: normalizedScannerBridge
       })
       .select()
       .single();
@@ -225,9 +428,16 @@ export async function PATCH(request: NextRequest) {
       document_type,
       category,
       tags,
+      company_id,
+      company_code,
+      company_name,
+      account_id,
+      account_code,
+      account_name,
       person_account_id,
       person_account_code,
       person_account_name,
+      person_account_type,
       source_module,
       source_record_id,
       source_record_no,
@@ -249,9 +459,15 @@ export async function PATCH(request: NextRequest) {
             module_type = coalesce(${module_type ?? null}, module_type),
             document_type = coalesce(${document_type ?? null}, document_type),
             category = coalesce(${category ?? null}, category),
+            company_id = coalesce(${company_id ?? null}, company_id),
+            company_name = coalesce(${company_name ?? null}, company_name),
+            account_id = coalesce(${account_id ?? null}, account_id),
+            account_code = coalesce(${account_code ?? null}, account_code),
+            account_name = coalesce(${account_name ?? null}, account_name),
             person_account_id = coalesce(${person_account_id ?? null}, person_account_id),
             person_account_code = coalesce(${person_account_code ?? null}, person_account_code),
             person_account_name = coalesce(${person_account_name ?? null}, person_account_name),
+            person_account_type = coalesce(${person_account_type ?? null}, person_account_type),
             source_module = coalesce(${source_module ?? null}, source_module),
             source_record_id = coalesce(${source_record_id ?? null}, source_record_id),
             source_record_no = coalesce(${source_record_no ?? null}, source_record_no),
@@ -274,9 +490,16 @@ export async function PATCH(request: NextRequest) {
     if (module_type !== undefined) updates.module_type = module_type;
     if (document_type !== undefined) updates.document_type = document_type;
     if (category !== undefined) updates.category = category;
+    if (company_id !== undefined) updates.company_id = company_id;
+    if (company_code !== undefined) updates.company_code = company_code;
+    if (company_name !== undefined) updates.company_name = company_name;
+    if (account_id !== undefined) updates.account_id = account_id;
+    if (account_code !== undefined) updates.account_code = account_code;
+    if (account_name !== undefined) updates.account_name = account_name;
     if (person_account_id !== undefined) updates.person_account_id = person_account_id;
     if (person_account_code !== undefined) updates.person_account_code = person_account_code;
     if (person_account_name !== undefined) updates.person_account_name = person_account_name;
+    if (person_account_type !== undefined) updates.person_account_type = person_account_type;
     if (source_module !== undefined) updates.source_module = source_module;
     if (source_record_id !== undefined) updates.source_record_id = source_record_id;
     if (source_record_no !== undefined) updates.source_record_no = source_record_no;

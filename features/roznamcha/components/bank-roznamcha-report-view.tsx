@@ -41,6 +41,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { BankPicker } from "@/features/banks/components/bank-picker";
+import { getBankById } from "@/features/banks/bank-api";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { apiGet, apiPost } from "@/lib/api/client";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
@@ -61,6 +63,7 @@ export type BankTransactionRow = {
   bank_id?: string | null;
   bank_name: string;
   bank_code?: string | null;
+  bank?: { id: string; bank_name: string; short_name: string } | null;
   cheque_no?: string | null;
   particulars: string;
   cheque_date?: string | null;
@@ -212,8 +215,9 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
   const [newEntryModalOpen, setNewEntryModalOpen] = useState(false);
   const [newEntry, setNewEntry] = useState({
     type: "credit",
-    bankName: "Habib Bank Limited",
-    bankCode: "HBL",
+    bankId: "",
+    bankName: "",
+    bankCode: "",
     chequeNo: "",
     particulars: "",
     chequeDate: new Date().toISOString().slice(0, 10),
@@ -324,6 +328,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
     try {
       const isDebit = newEntry.type === "debit";
       await apiPost("/api/erp/bank-roznamcha", {
+        bankId: newEntry.bankId || null,
         bankName: newEntry.bankName,
         bankCode: newEntry.bankCode,
         chequeNo: newEntry.chequeNo || `CHK-${Math.floor(100000 + Math.random() * 900000)}`,
@@ -387,7 +392,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
         date: `${formatShortDate(r.entry_date)} ${formatTimeOnly(r.entry_time)}`,
         branch: r.city_branch?.name || r.country_branch?.name || "",
         user: r.user_name,
-        bank: r.bank_name + (r.bank_code ? ` (${r.bank_code})` : ""),
+        bank: (r.bank?.bank_name || r.bank_name) + ((r.bank?.short_name || r.bank_code) ? ` (${r.bank?.short_name || r.bank_code})` : ""),
         cheque: r.cheque_no || "-",
         details: r.particulars,
         due: formatShortDate(r.due_date),
@@ -434,8 +439,8 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
       `"${r.city_branch?.code || r.country_branch?.code || "BR-001"}"`,
       `"${r.city_branch?.name || r.country_branch?.name || "Main Branch"}"`,
       `"${r.user_name || ""}"`,
-      `"${r.bank_name || ""}"`,
-      `"${r.bank_code || ""}"`,
+      `"${r.bank?.bank_name || r.bank_name || ""}"`,
+      `"${r.bank?.short_name || r.bank_code || ""}"`,
       `"${r.cheque_no || ""}"`,
       `"${(r.particulars || "").replace(/"/g, '""')}"`,
       `"${formatShortDate(r.cheque_date)}"`,
@@ -962,10 +967,10 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
 
                       {/* 7. Bank Name */}
                       <td className="py-2.5 px-3 border-r whitespace-nowrap">
-                        <div className="font-semibold text-slate-900 dark:text-slate-100">{row.bank_name}</div>
-                        {row.bank_code && (
+                        <div className="font-semibold text-slate-900 dark:text-slate-100">{row.bank?.bank_name || row.bank_name}</div>
+                        {(row.bank?.short_name || row.bank_code) && (
                           <span className="inline-block text-[10px] font-bold text-blue-600 dark:text-blue-400">
-                            {row.bank_code}
+                            {row.bank?.short_name || row.bank_code}
                           </span>
                         )}
                       </td>
@@ -1438,30 +1443,24 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
               </div>
 
               <div className="space-y-1">
-                <Label className="font-semibold">{tt("bankroz.bank_name", "Bank Name")}</Label>
-                <select
-                  className="h-8 w-full rounded border bg-background px-2 text-xs font-semibold"
-                  value={newEntry.bankName}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    let code = "HBL";
-                    if (val.includes("National Bank")) code = "NBP";
-                    else if (val.includes("Alfalah")) code = "BAFL";
-                    else if (val.includes("MCB")) code = "MCB";
-                    else if (val.includes("United")) code = "UBL";
-                    else if (val.includes("Punjab")) code = "BOP";
-                    else if (val.includes("Meezan")) code = "MEEZAN";
-                    setNewEntry((p) => ({ ...p, bankName: val, bankCode: code }));
+                <BankPicker
+                  label={tt("bankroz.bank_name", "Bank Name")}
+                  value={newEntry.bankId}
+                  onValueChange={async (bankId) => {
+                    setNewEntry((p) => ({ ...p, bankId }));
+                    if (!bankId) return;
+                    try {
+                      const bank = await getBankById(bankId);
+                      setNewEntry((p) => ({
+                        ...p,
+                        bankName: bank?.bank_name || p.bankName,
+                        bankCode: bank?.short_name || p.bankCode
+                      }));
+                    } catch {
+                      // ignore
+                    }
                   }}
-                >
-                  <option value="Habib Bank Limited">Habib Bank Limited (HBL)</option>
-                  <option value="National Bank of Pakistan">National Bank of Pakistan (NBP)</option>
-                  <option value="Bank Alfalah Limited">Bank Alfalah Limited (BAFL)</option>
-                  <option value="MCB Bank Limited">MCB Bank Limited (MCB)</option>
-                  <option value="United Bank Limited">United Bank Limited (UBL)</option>
-                  <option value="Bank of Punjab">Bank of Punjab (BOP)</option>
-                  <option value="Meezan Bank">Meezan Bank</option>
-                </select>
+                />
               </div>
 
               <div className="space-y-1">

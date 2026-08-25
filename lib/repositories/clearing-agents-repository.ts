@@ -212,12 +212,22 @@ export class ClearingAgentsRepository {
     if (localDbUrl) {
       const localSql = postgres(localDbUrl, { max: 1, prepare: false });
       try {
+        // clearing_agents.code is NOT NULL (pre-existing column, still read by RBAC's
+        // login-management assignment UI for legacy hand-set values like
+        // "DGT-CLEARING-HQ") — a brand-new agent has no legacy code to preserve, so
+        // the freshly-allocated clearing_agent_code is also written into `code` to
+        // satisfy the constraint without colliding with any existing RBAC assignment.
+        const [codeRow] = await localSql`SELECT next_entity_serial('global', 'GLOBAL', 'clearing_agent', 'CLA') AS code`;
+        const generatedCode = (codeRow?.code as string | undefined) || `CLA-${Date.now()}`;
+
         const rows = await localSql`
           INSERT INTO public.clearing_agents (
-            name, person_id, company_id, head_office_country_id, contact_person, phone, email,
+            name, code, clearing_agent_code, person_id, company_id, head_office_country_id, contact_person, phone, email,
             status, notes, original_language_code, created_at, updated_at
           ) VALUES (
             ${(payload.name as string) || ""},
+            ${generatedCode},
+            ${generatedCode},
             ${payload.person_id ? String(payload.person_id) : null}::uuid,
             ${payload.company_id ? String(payload.company_id) : null}::uuid,
             ${payload.head_office_country_id ? String(payload.head_office_country_id) : null}::uuid,
@@ -232,16 +242,7 @@ export class ClearingAgentsRepository {
           RETURNING id
         `;
         if (rows && rows[0]?.id) {
-          const createdId = rows[0].id as string;
-          // Clearing Agent Master identity code (CLA-000001 style) — separate from
-          // the pre-existing free-text `code` column (RBAC still reads that one).
-          try {
-            const [row] = await localSql`SELECT next_entity_serial('global', 'GLOBAL', 'clearing_agent', 'CLA') AS code`;
-            if (row?.code) {
-              await localSql`UPDATE public.clearing_agents SET clearing_agent_code = ${row.code} WHERE id = ${createdId}::uuid AND clearing_agent_code IS NULL`;
-            }
-          } catch { /* non-fatal */ }
-          return createdId;
+          return rows[0].id as string;
         }
       } catch (err) {
         console.error("Direct postgres create error:", err);
@@ -250,9 +251,15 @@ export class ClearingAgentsRepository {
       }
     }
 
+    // Fallback path (no direct Postgres connection available): code/clearing_agent_code
+    // can't be allocated via next_entity_serial() here, so a timestamp-based unique
+    // value satisfies the NOT NULL constraint on `code` without a DB round-trip.
+    const fallbackCode = `CLA-${Date.now()}`;
     const supabase = createSupabaseAdminClient() as any;
     const { data, error } = await supabase.from("clearing_agents").insert({
       ...payload,
+      code: fallbackCode,
+      clearing_agent_code: fallbackCode,
       original_language_code: input.originalLanguage || "en",
       created_at: now,
       updated_at: now

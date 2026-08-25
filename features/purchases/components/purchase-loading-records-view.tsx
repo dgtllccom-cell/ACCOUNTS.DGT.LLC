@@ -13,6 +13,8 @@ import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { CompanyPicker } from "@/features/companies/components/company-picker";
+import { ShippingLinePicker } from "@/features/shipping/components/shipping-line-picker";
 function asRecordArray<T = any>(value: unknown): T[] {
   if (Array.isArray(value)) return value.filter(Boolean) as T[];
   if (value && typeof value === "object") {
@@ -284,12 +286,23 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
   // Country-to-Country Purchase — Transportation.
   const [transportMode, setTransportMode] = useState<"By Road" | "By Sea" | "By Air">("By Sea");
   const [transportCompany, setTransportCompany] = useState("");
+  const [transportCompanyId, setTransportCompanyId] = useState("");
   const [vehicleNo, setVehicleNo] = useState("");
+  const [truckId, setTruckId] = useState("");
   const [driverName, setDriverName] = useState("");
   const [driverMobile, setDriverMobile] = useState("");
   const [shippingLine, setShippingLine] = useState("");
+  const [shippingLineId, setShippingLineId] = useState("");
   const [transportReference, setTransportReference] = useState("");
   const [departureDate, setDepartureDate] = useState("");
+  const [truckOptions, setTruckOptions] = useState<Array<{ id: string; truck_number: string; driver_name?: string | null }>>([]);
+
+  useEffect(() => {
+    fetch("/api/erp/master-data/trucks?selectable=true")
+      .then((r) => (r.ok ? r.json() : { trucks: [] }))
+      .then((j) => setTruckOptions(j.trucks || []))
+      .catch(() => setTruckOptions([]));
+  }, []);
   const [expectedArrivalDate, setExpectedArrivalDate] = useState("");
   const [transportExpenseAmount, setTransportExpenseAmount] = useState("");
   const [transportExpenseCurrency, setTransportExpenseCurrency] = useState("USD");
@@ -804,10 +817,13 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
           // Country-to-Country Purchase — Transportation.
           transportMode,
           transportCompany: transportCompany || null,
+          transportCompanyId: transportCompanyId || null,
           vehicleNo: vehicleNo || null,
+          truckId: truckId || null,
           driverName: driverName || null,
           driverMobile: driverMobile || null,
           shippingLine: shippingLine || null,
+          shippingLineId: shippingLineId || null,
           transportReference: transportReference || null,
           departureDate: departureDate || null,
           expectedArrivalDate: expectedArrivalDate || null,
@@ -1163,10 +1179,21 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                               <option value="By Air">{tt("plr.by_air", "By Air")}</option>
                             </select>
                           </label>
-                          <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
-                            {tt("plr.transport_company", "Transport Company")}
-                            <input value={transportCompany} onChange={(e) => setTransportCompany(e.target.value)} className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950" />
-                          </label>
+                          <div className="space-y-1">
+                            <CompanyPicker
+                              label={tt("plr.transport_company", "Transport Company")}
+                              value={transportCompanyId}
+                              onValueChange={async (companyId) => {
+                                setTransportCompanyId(companyId);
+                                if (!companyId) return;
+                                try {
+                                  const res = await fetch(`/api/erp/companies/${companyId}`);
+                                  const json = await res.json();
+                                  if (json?.company?.name) setTransportCompany(json.company.name);
+                                } catch { /* ignore */ }
+                              }}
+                            />
+                          </div>
                           <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
                             {transportMode === "By Road" ? tt("plr.vehicle_no", "Vehicle No.") : tt("plr.transport_reference", "BL / Transport Ref.")}
                             <input
@@ -1178,6 +1205,29 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                           {transportMode === "By Road" ? (
                             <>
                               <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                                {tt("plr.registered_truck", "Registered Truck")}
+                                <select
+                                  value={truckId}
+                                  onChange={(e) => {
+                                    const id = e.target.value;
+                                    setTruckId(id);
+                                    const tr = truckOptions.find((x) => x.id === id);
+                                    if (tr) {
+                                      setVehicleNo(tr.truck_number || vehicleNo);
+                                      if (tr.driver_name) setDriverName(tr.driver_name);
+                                    }
+                                  }}
+                                  className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                                >
+                                  <option value="">{tt("plr.select_truck", "Select Truck (optional)")}</option>
+                                  {truckOptions.map((tr) => (
+                                    <option key={tr.id} value={tr.id}>
+                                      {tr.truck_number} {tr.driver_name ? `(${tr.driver_name})` : ""}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                              <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
                                 {tt("plr.driver_name", "Driver Name")}
                                 <input value={driverName} onChange={(e) => setDriverName(e.target.value)} className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950" />
                               </label>
@@ -1187,10 +1237,21 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                               </label>
                             </>
                           ) : (
-                            <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
-                              {tt("plr.shipping_line", "Shipping Line")}
-                              <input value={shippingLine} onChange={(e) => setShippingLine(e.target.value)} className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950" />
-                            </label>
+                            <div className="space-y-1">
+                              <ShippingLinePicker
+                                label={tt("plr.shipping_line", "Shipping Line")}
+                                value={shippingLineId}
+                                onValueChange={async (id) => {
+                                  setShippingLineId(id);
+                                  if (!id) return;
+                                  try {
+                                    const res = await fetch(`/api/erp/shipping-lines/${id}`);
+                                    const json = await res.json();
+                                    if (json?.shippingLine?.name) setShippingLine(json.shippingLine.name);
+                                  } catch { /* ignore */ }
+                                }}
+                              />
+                            </div>
                           )}
                           <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
                             {tt("plr.departure_date", "Departure Date")}

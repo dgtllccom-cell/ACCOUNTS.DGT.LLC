@@ -1,6 +1,7 @@
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
 import { transliterateProperNoun } from "@/lib/i18n/transliteration";
+import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { nameMatches } from "@/lib/utils/person-duplicate-match";
 
 export type PartyAffiliationSummary = {
@@ -52,7 +53,28 @@ export type PartyAffiliationSummary = {
     currency?: string;
     accountStatus?: string;
   }>;
-  
+
+  warehouses: Array<{
+    id: string;
+    warehouseName: string;
+    warehouseCode?: string | null;
+    warehouseType?: string | null;
+    role: "Owner" | "Responsible Person" | "Owner & Responsible Person";
+  }>;
+
+  trucks: Array<{
+    id: string;
+    truckNumber: string;
+    truckSerial?: string | null;
+    role: "Owner" | "Driver" | "Owner & Driver";
+  }>;
+
+  clearingAgents: Array<{
+    id: string;
+    name: string;
+    clearingAgentCode?: string | null;
+  }>;
+
   transactionsSummary: {
     totalEntries: number;
     latestEntryDate?: string | null;
@@ -70,6 +92,7 @@ export class Party360Service {
     lang?: string;
   }): Promise<PartyAffiliationSummary | null> {
     const { customerId, name, employeeId } = params;
+    const lang = normalizeLanguage(params.lang, "en");
 
     return await withLocalPg(async (sql) => {
       // 1. Fetch customer profile if customerId or name provided
@@ -128,7 +151,8 @@ export class Party360Service {
         ORDER BY c.name ASC
       `;
 
-      const matchedCompanies = allCompanies.filter((comp: any) => {
+      const localizedCompanies = await localizeRecordNames<any>(allCompanies as any[], "companies", "name", lang, { phraseFallback: true });
+      const matchedCompanies = (localizedCompanies as any[]).filter((comp: any) => {
         if (resolvedCustomerId && comp.owner_person_id === resolvedCustomerId) return true;
         return false;
       }).map((comp: any) => ({
@@ -153,7 +177,8 @@ export class Party360Service {
         ORDER BY e.employee_code ASC
       `;
 
-      const matchedEmployees = allEmployees.filter((emp: any) => {
+      const localizedEmployees = await localizeRecordNames<any>(allEmployees as any[], "employees", "customer_name", lang, { phraseFallback: true });
+      const matchedEmployees = (localizedEmployees as any[]).filter((emp: any) => {
         if (employeeId && emp.id === employeeId) return true;
         if (resolvedCustomerId && emp.person_master_id === resolvedCustomerId) return true;
         return false;
@@ -168,16 +193,20 @@ export class Party360Service {
         status: emp.status
       }));
 
-      // 4. Fetch all banks and match
+      // 4. Fetch all banks and match. FK-first now that banks.owner_person_id exists
+      // (Person Master Phase 2) — fuzzy name matching is only a fallback for legacy
+      // bank accounts registered before that column existed.
       const allBanks = await sql`
-        SELECT b.id, b.bank_name, b.account_title, b.account_number, b.branch_code, b.currency, b.account_status
+        SELECT b.id, b.bank_name, b.account_title, b.account_number, b.branch_code, b.currency, b.account_status, b.owner_person_id
         FROM public.banks b
         WHERE b.deleted_at IS NULL
         ORDER BY b.bank_name ASC
       `;
 
-      const matchedBanks = allBanks.filter((bnk: any) => {
-        if (targetName && (nameMatches(bnk.account_title, targetName) || nameMatches(bnk.bank_name, targetName))) return true;
+      const localizedBanks = await localizeRecordNames<any>(allBanks as any[], "banks", "bank_name", lang, { phraseFallback: true });
+      const matchedBanks = (localizedBanks as any[]).filter((bnk: any) => {
+        if (resolvedCustomerId && bnk.owner_person_id === resolvedCustomerId) return true;
+        if (!bnk.owner_person_id && targetName && (nameMatches(bnk.account_title, targetName) || nameMatches(bnk.bank_name, targetName))) return true;
         return false;
       }).map((bnk: any) => ({
         id: bnk.id,
@@ -188,6 +217,55 @@ export class Party360Service {
         currency: bnk.currency,
         accountStatus: bnk.account_status
       }));
+
+      // 4b. Warehouses this person owns and/or is responsible for.
+      const allWarehouses = await sql`
+        SELECT id, warehouse_name, warehouse_code, warehouse_type, owner_person_id, responsible_person_id
+        FROM public.warehouses
+        WHERE deleted_at IS NULL
+      `;
+      const matchedWarehouses = (resolvedCustomerId ? allWarehouses.filter((w: any) =>
+        w.owner_person_id === resolvedCustomerId || w.responsible_person_id === resolvedCustomerId
+      ) : []).map((w: any) => {
+        const isOwner = w.owner_person_id === resolvedCustomerId;
+        const isResponsible = w.responsible_person_id === resolvedCustomerId;
+        return {
+          id: w.id,
+          warehouseName: w.warehouse_name,
+          warehouseCode: w.warehouse_code,
+          warehouseType: w.warehouse_type,
+          role: (isOwner && isResponsible ? "Owner & Responsible Person" : isOwner ? "Owner" : "Responsible Person") as "Owner" | "Responsible Person" | "Owner & Responsible Person"
+        };
+      });
+
+      // 4c. Trucks this person owns and/or drives.
+      const allTrucks = await sql`
+        SELECT id, truck_number, truck_serial, owner_person_id, driver_person_id
+        FROM public.trucks
+        WHERE deleted_at IS NULL
+      `;
+      const matchedTrucks = (resolvedCustomerId ? allTrucks.filter((tr: any) =>
+        tr.owner_person_id === resolvedCustomerId || tr.driver_person_id === resolvedCustomerId
+      ) : []).map((tr: any) => {
+        const isOwner = tr.owner_person_id === resolvedCustomerId;
+        const isDriver = tr.driver_person_id === resolvedCustomerId;
+        return {
+          id: tr.id,
+          truckNumber: tr.truck_number,
+          truckSerial: tr.truck_serial,
+          role: (isOwner && isDriver ? "Owner & Driver" : isOwner ? "Owner" : "Driver") as "Owner" | "Driver" | "Owner & Driver"
+        };
+      });
+
+      // 4d. Clearing agent records directly linked to this person (an individual acting
+      // as a clearing agent). Shipping lines have no person FK by design — not surfaced here.
+      const allClearingAgents = await sql`
+        SELECT id, name, clearing_agent_code, person_id
+        FROM public.clearing_agents
+        WHERE deleted_at IS NULL
+      `;
+      const matchedClearingAgents = (resolvedCustomerId ? allClearingAgents.filter((ca: any) => ca.person_id === resolvedCustomerId) : [])
+        .map((ca: any) => ({ id: ca.id, name: ca.name, clearingAgentCode: ca.clearing_agent_code }));
 
       // 5. Aggregate transaction counts if customerRow exists
       let totalEntries = 0;
@@ -224,6 +302,9 @@ export class Party360Service {
         companies: matchedCompanies,
         employees: matchedEmployees,
         banks: matchedBanks,
+        warehouses: matchedWarehouses,
+        trucks: matchedTrucks,
+        clearingAgents: matchedClearingAgents,
         transactionsSummary: {
           totalEntries,
           latestEntryDate
@@ -239,11 +320,13 @@ export class Party360Service {
     query?: string;
     limit?: number;
     offset?: number;
+    lang?: string;
   }): Promise<{
     parties: PartyAffiliationSummary[];
     total: number;
   }> {
     const { query = "", limit = 100, offset = 0 } = params;
+    const lang = normalizeLanguage(params.lang, "en");
 
     return await withLocalPg(async (sql) => {
       // 1. Load all active customers
@@ -281,12 +364,17 @@ export class Party360Service {
       `;
 
       // Build unified parties list
+      const localizedCustomers = await localizeRecordNames<any>(customers as any[], "customers", "customer_name", lang, { phraseFallback: true });
+      const localizedCompanies = await localizeRecordNames<any>(companies as any[], "companies", "name", lang, { phraseFallback: true });
+      const localizedEmployees = await localizeRecordNames<any>(employees as any[], "employees", "customer_name", lang, { phraseFallback: true });
+      const localizedBanks = await localizeRecordNames<any>(banks as any[], "banks", "bank_name", lang, { phraseFallback: true });
+
       const parties: PartyAffiliationSummary[] = [];
 
-      for (const cust of customers) {
+      for (const cust of localizedCustomers as any[]) {
         const cName = cust.customer_name || [cust.first_name, cust.last_name].filter(Boolean).join(" ");
         
-        const matchedCompanies = companies.filter((comp: any) => {
+        const matchedCompanies = (localizedCompanies as any[]).filter((comp: any) => {
           if (comp.owner_person_id && comp.owner_person_id === cust.id) return true;
           return false;
         }).map((comp: any) => ({
@@ -299,7 +387,7 @@ export class Party360Service {
           ownerName: comp.owner_name
         }));
 
-        const matchedEmployees = employees.filter((emp: any) => {
+        const matchedEmployees = (localizedEmployees as any[]).filter((emp: any) => {
           if (emp.person_master_id && emp.person_master_id === cust.id) return true;
           return false;
         }).map((emp: any) => ({
@@ -313,7 +401,7 @@ export class Party360Service {
           status: emp.status
         }));
 
-        const matchedBanks = banks.filter((bnk: any) => {
+        const matchedBanks = (localizedBanks as any[]).filter((bnk: any) => {
           if (cName && (nameMatches(bnk.account_title, cName) || nameMatches(bnk.bank_name, cName))) return true;
           return false;
         }).map((bnk: any) => ({
@@ -346,6 +434,11 @@ export class Party360Service {
           companies: matchedCompanies,
           employees: matchedEmployees,
           banks: matchedBanks,
+          // Not matched in the bulk directory (Phase 2 scope) — the single-party lookup
+          // (getParty360Summary above) resolves these via FK for a specific person.
+          warehouses: [],
+          trucks: [],
+          clearingAgents: [],
           transactionsSummary: {
             totalEntries: 0
           }

@@ -68,6 +68,8 @@ import { ViewportActionMenu } from "@/components/ui/viewport-action-menu";
 import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
 import { openPurchaseA4ReportWindow, type PurchaseReportData } from "@/lib/reports/open-purchase-a4-report-window";
 import { PaymentEditModal } from "./payment-edit-modal";
+import { BankPicker } from "@/features/banks/components/bank-picker";
+import { getBankById } from "@/features/banks/bank-api";
 import { Th } from "@/components/ui/translated-th";
 import { t, tData, type LanguageCode } from "@/features/i18n/purchase-journal-translations";
 import { t as tGlobal } from "@/lib/i18n/ui";
@@ -4784,8 +4786,6 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                   { id: "e3", date: "25-May-25", rozNo: "1", rName: "3", method: "Bank", dr: "db7", cr: "dc55", details: "25000 USD x 3.67 = 91750.00 AED | Bank me TT mashreq bank me WALNUT KERNELS", amountAED: 91750 }
                 ];
 
-            const countryBanks = getCountryBankList(countryName);
-
             return (
               <div className="flex flex-col h-full overflow-y-auto bg-slate-100 dark:bg-[#070e20] text-slate-900 dark:text-slate-100 p-4 space-y-3 font-sans transition-colors">
                 
@@ -5364,26 +5364,23 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                       {paymentType === "bank" && (
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-xl">
                           <FieldBlock label="Select Bank Name" required>
-                            <div className="flex gap-1.5">
-                              <select
-                                className="flex h-8 w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 text-xs font-semibold text-slate-900 dark:text-slate-100"
-                                value={typeDetails.bankName || ""}
-                                onChange={(e) => setTypeDetails((p) => ({ ...p, bankName: e.target.value }))}
-                              >
-                                <option value="">- Select Bank -</option>
-                                {countryBanks.map((b) => <option key={b} value={b}>{b}</option>)}
-                                {savedBanks.map((sb) => <option key={sb.name} value={sb.name}>{sb.name} (Custom)</option>)}
-                              </select>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => openAddOption("bank")}
-                                className="h-8 px-2 text-xs text-blue-700 dark:text-blue-300 font-bold shrink-0"
-                              >
-                                + Add Bank
-                              </Button>
-                            </div>
+                            <BankPicker
+                              label=""
+                              value={typeDetails.bankId || ""}
+                              onValueChange={async (bankId) => {
+                                setTypeDetails((prev) => ({ ...prev, bankId }));
+                                if (!bankId) return;
+                                try {
+                                  const bank = await getBankById(bankId);
+                                  setTypeDetails((prev) => ({
+                                    ...prev,
+                                    bankName: bank?.bank_name || prev.bankName
+                                  }));
+                                } catch {
+                                  // ignore
+                                }
+                              }}
+                            />
                           </FieldBlock>
 
                           <FieldBlock label="Bank Account / IBAN / Ref No.">

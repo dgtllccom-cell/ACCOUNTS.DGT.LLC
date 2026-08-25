@@ -376,7 +376,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
           country_id = ${orderRow.country_id || null}::uuid,
           country_branch_id = ${orderRow.country_branch_id || null}::uuid,
           city_branch_id = ${orderRow.city_branch_id || null}::uuid,
-          type = ${rozType}
+          type = ${rozType},
+          bank_id = coalesce(${(body.typeDetails as any)?.bankId || null}::uuid, bank_id)
         where id = ${paymentRecord.roznamcha_entry_id}::uuid
       `;
 

@@ -1,8 +1,13 @@
 export type DocumentScopeParts = {
   countryName?: string | null;
   branchName?: string | null;
+  companyCode?: string | null;
+  companyName?: string | null;
   personAccountCode?: string | null;
   personAccountName?: string | null;
+  personAccountType?: string | null;
+  accountCode?: string | null;
+  accountName?: string | null;
   moduleType?: string | null;
   documentType?: string | null;
   sourceRecordNo?: string | null;
@@ -21,7 +26,9 @@ export function buildDocumentFolderPath(parts: DocumentScopeParts) {
   const segments = [
     parts.countryName?.trim(),
     parts.branchName?.trim(),
+    parts.companyCode?.trim() || parts.companyName?.trim(),
     parts.personAccountCode?.trim() || parts.personAccountName?.trim(),
+    parts.accountCode?.trim() || parts.accountName?.trim(),
     parts.moduleType?.trim(),
     parts.documentType?.trim()
   ].filter(Boolean) as string[];
@@ -40,8 +47,13 @@ export function buildDocumentFileName(
     : new Date().toISOString().slice(0, 10);
 
   const body = [
+    parts.companyCode?.trim() || parts.companyName?.trim(),
+    parts.companyName?.trim(),
     parts.personAccountCode?.trim() || parts.personAccountName?.trim(),
     parts.personAccountName?.trim(),
+    parts.accountCode?.trim() || parts.accountName?.trim(),
+    parts.accountName?.trim(),
+    parts.personAccountType?.trim(),
     parts.sourceRecordNo?.trim(),
     parts.moduleType?.trim(),
     parts.documentType?.trim()
@@ -60,7 +72,9 @@ export function buildDocumentDestinationLabel(parts: DocumentScopeParts) {
   return [
     parts.countryName?.trim(),
     parts.branchName?.trim(),
+    parts.companyCode?.trim() || parts.companyName?.trim(),
     parts.personAccountCode?.trim() || parts.personAccountName?.trim(),
+    parts.accountCode?.trim() || parts.accountName?.trim(),
     parts.moduleType?.trim(),
     parts.documentType?.trim()
   ]

@@ -20,6 +20,7 @@ import { t } from "@/lib/i18n/ui";
 import { BranchScopeDropdown } from "@/features/purchases/components/branch-scope-dropdown";
 import { deriveLocalPurchasePostingState } from "@/lib/services/local-purchase-posting-state";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
+import { PersonPicker } from "@/components/erp/person-picker";
 
 const CURRENCIES = ["USD", "AED", "PKR", "AFN", "INR", "IRR"];
 const QUANTITY_NAMES = ["Bags", "Cartons", "Boxes", "Crates", "Bales", "Drums", "Pieces", "Custom"];
@@ -256,14 +257,24 @@ export function LocalPurchaseView({
   const [warehouseAccountNo, setWarehouseAccountNo] = useState("");
   const [loadingWarehouses, setLoadingWarehouses] = useState(false);
 
-  // Truck setup list and states
+  // Truck setup list and states — real Truck Master records (Phase 2), not mock data.
   const [selectedTruckId, setSelectedTruckId] = useState("");
-  const TRUCK_LIST = useMemo(() => [
-    { id: "t-1", truckNo: "ABC-123", driverName: "Muhammad Ali", details: "Volvo 10-Wheeler (15 Ton)" },
-    { id: "t-2", truckNo: "KBL-987", driverName: "Jan Agha", details: "Hino Rigid (10 Ton)" },
-    { id: "t-3", truckNo: "DXB-777", driverName: "Saeed Al-Mansoori", details: "Scania Semi-Trailer (40 Ton)" },
-    { id: "t-4", truckNo: "LHR-555", driverName: "Zahid Khan", details: "Mazda Titan (4 Ton)" }
-  ], []);
+  const [TRUCK_LIST, setTruckList] = useState<Array<{ id: string; truckNo: string; driverName: string; details: string }>>([]);
+
+  useEffect(() => {
+    fetch("/api/erp/master-data/trucks?selectable=true")
+      .then((r) => (r.ok ? r.json() : { trucks: [] }))
+      .then((j) => {
+        const rows = (j.trucks || []).map((tr: any) => ({
+          id: tr.id,
+          truckNo: tr.truck_number || "",
+          driverName: tr.driver_name || "",
+          details: [tr.truck_type, tr.transport_company].filter(Boolean).join(" · ")
+        }));
+        setTruckList(rows);
+      })
+      .catch(() => setTruckList([]));
+  }, []);
 
   // Fetch warehouses on mount
   useEffect(() => {
@@ -340,6 +351,7 @@ export function LocalPurchaseView({
   const [chassisCode, setChassisCode] = useState("");
   const [lotNo, setLotNo] = useState("");
   const [supplierName, setSupplierName] = useState("");
+  const [supplierPersonId, setSupplierPersonId] = useState("");
   const [paymentMode, setPaymentMode] = useState("Cash");
   const [quantityName, setQuantityName] = useState("Bags");
   const [customQuantityName, setCustomQuantityName] = useState("");
@@ -1023,6 +1035,7 @@ export function LocalPurchaseView({
         chassisCode: chassisCode.trim() || null,
         lotNo: lotNo.trim() || null,
         supplierName: supplierName.trim() || "Local Market Vendor",
+        supplierPersonId: supplierPersonId || null,
         paymentMode: resolvedPaymentMode,
         shippingMode: resolvedShippingMode,
         originCountryId: originCountryId === "custom" ? null : (originCountryId || null),
@@ -1031,6 +1044,7 @@ export function LocalPurchaseView({
         advanceAmount: paymentMode === "Advance" ? calculatedAdvanceAmount : 0,
         remainingBalance: paymentMode === "Advance" ? remainingBalance : 0,
         warehouseName: warehouseName.trim() || null,
+        warehouseId: selectedWarehouseId && selectedWarehouseId !== "CUSTOM" ? selectedWarehouseId : null,
         warehousePlotNo: warehousePlotNo.trim() || null,
         transferDate: transferDate || null,
         loadingDate: loadingDate || null,
@@ -1092,6 +1106,7 @@ export function LocalPurchaseView({
       setGoodsId("");
       setCustomGoodsName("");
       setSupplierName("");
+      setSupplierPersonId("");
       setPaymentMode("Cash");
       setShippingMode("Loading");
       setCustomShippingMode("");
@@ -1646,6 +1661,23 @@ export function LocalPurchaseView({
                           </option>
                         ))}
                       </select>
+                    </div>
+
+                    {/* 3b. Supplier / Vendor (Person Master) */}
+                    <div>
+                      <PersonPicker
+                        label={t(lang, "lp.supplier", "Supplier / Vendor")}
+                        value={supplierPersonId}
+                        onValueChange={async (personId) => {
+                          setSupplierPersonId(personId);
+                          if (!personId) return;
+                          try {
+                            const res = await fetch(`/api/erp/customers/${personId}`);
+                            const json = await res.json();
+                            if (json?.customer?.customer_name) setSupplierName(json.customer.customer_name);
+                          } catch { /* ignore */ }
+                        }}
+                      />
                     </div>
 
                     {/* 4. Shipment Type & 5. Payment Condition */}
@@ -2899,6 +2931,7 @@ export function LocalPurchaseView({
                                           setCurrentStep(1);
                                           setGoodsId(row.goods_id || row.goodsId || "");
                                           setSupplierName(row.supplier_name || row.supplierName || "");
+                                          setSupplierPersonId(row.supplier_person_id || row.supplierPersonId || "");
                                           setPurchaseAccountNo(row.purchase_account_no || row.purchaseAccountNo || "");
                                           setSalesAccountNo(row.sales_account_no || row.salesAccountNo || "");
                                           setBrokerAccountNo(row.broker_account_no || row.brokerAccountNo || "");

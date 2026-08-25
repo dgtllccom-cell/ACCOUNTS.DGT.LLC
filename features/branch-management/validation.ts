@@ -61,6 +61,8 @@ export const createCountryBranchSchema = z.object({
   whatsappNumber: z.string().trim().max(50).optional(),
   companyId: optionalUuidSchema,
   ownerName: z.string().trim().max(120).optional(),
+  ownerCustomerId: optionalUuidSchema,
+  ownerProfileId: optionalUuidSchema,
   contacts: z.array(contactRowSchema).max(50).optional(),
   documents: z.array(documentRowSchema).max(50).optional(),
   permissionTemplate: permissionTemplateSchema,
@@ -84,6 +86,8 @@ export const createCityBranchSchema = z.object({
   whatsappNumber: z.string().trim().max(50).optional(),
   companyId: optionalUuidSchema,
   ownerName: z.string().trim().max(120).optional(),
+  ownerCustomerId: optionalUuidSchema,
+  ownerProfileId: optionalUuidSchema,
   contacts: z.array(contactRowSchema).max(50).optional(),
   documents: z.array(documentRowSchema).max(50).optional(),
   permissionTemplate: permissionTemplateSchema,
@@ -127,6 +131,8 @@ export const createSuperAdminBranchSchema = z.object({
   email: z.string().trim().email("Email is required").max(255),
   whatsappNumber: z.string().trim().max(50).optional(),
   ownerName: z.string().trim().max(120).optional(),
+  ownerCustomerId: optionalUuidSchema,
+  ownerProfileId: optionalUuidSchema,
   contacts: z.array(contactRowSchema).max(50).optional(),
   documents: z.array(documentRowSchema).max(50).optional()
 });

@@ -7,10 +7,10 @@ import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterpr
 
 /** Clearing Agent — Transit Loading (secure CRUD). Table: transit_truck_loadings. */
 const COLS =
-  "id, country_id, country_branch_id, city_branch_id, super_admin_serial, country_serial, branch_serial, entry_serial, truck_id, transit_date, transit_serial, transit_company, truck_number, driver_name, driver_mobile, goods_name, quantity, unit, transit_route, border, destination, dest_country_id, dest_state_province_id, dest_district_id, dest_city_id, customs_information, container_number, seal_number, remarks, status, is_active, created_at, updated_at";
+  "id, country_id, country_branch_id, city_branch_id, super_admin_serial, country_serial, branch_serial, entry_serial, truck_id, transit_date, transit_serial, transit_company, transit_company_id, truck_number, driver_name, driver_mobile, goods_name, quantity, unit, transit_route, border, destination, dest_country_id, dest_state_province_id, dest_district_id, dest_city_id, customs_information, container_number, seal_number, remarks, status, is_active, created_at, updated_at";
 
 const FIELDS = [
-  "truck_id", "transit_date", "transit_serial", "transit_company", "truck_number", "driver_name", "driver_mobile",
+  "truck_id", "transit_date", "transit_serial", "transit_company", "transit_company_id", "truck_number", "driver_name", "driver_mobile",
   "goods_name", "unit", "transit_route", "border", "destination", "customs_information", "container_number", "seal_number", "remarks",
   "dest_country_id", "dest_state_province_id", "dest_district_id", "dest_city_id",
 ];

@@ -28,6 +28,9 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { cn } from "@/lib/utils";
+import { PersonPicker } from "@/components/erp/person-picker";
+import { BankPicker } from "@/features/banks/components/bank-picker";
+import { getBankById } from "@/features/banks/bank-api";
 
 type MoneyExchangeEntry = {
   id?: string;
@@ -100,6 +103,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
   const [purchaseCountry, setPurchaseCountry] = useState("");
   const [purchaseCity, setPurchaseCity] = useState("");
   const [purchasedFrom, setPurchasedFrom] = useState("");
+  const [purchasedFromPersonId, setPurchasedFromPersonId] = useState("");
   const [receivedCountry, setReceivedCountry] = useState("");
   const [receivedCity, setReceivedCity] = useState("");
   const [receivedOfficeName, setReceivedOfficeName] = useState("");
@@ -114,6 +118,8 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
   const [finalAmount, setFinalAmount] = useState<number>(0);
   
   const [receiptName, setReceiptName] = useState("");
+  const [receiptPersonId, setReceiptPersonId] = useState("");
+  const [receiptBankId, setReceiptBankId] = useState("");
   const [receivedFrom, setReceivedFrom] = useState("");
   const [mobile, setMobile] = useState("");
   const [details, setDetails] = useState("");
@@ -214,10 +220,13 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
     setQuantity("");
     setFinalAmount(0);
     setReceiptName("");
+    setReceiptPersonId("");
+    setReceiptBankId("");
     setReceivedFrom("");
     setMobile("");
     setDetails("");
     setPurchasedFrom("");
+    setPurchasedFromPersonId("");
     setReceivedOfficeName("");
     setReceivedOfficeNumberValue("");
   };
@@ -243,6 +252,8 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
         quantity: Number(quantity),
         finalAmount,
         receiptName: receiptName.trim() || null,
+        receiptPersonId: receiptPersonId || null,
+        receiptBankId: receiptBankId || null,
         receivedFrom: receivedFrom.trim() || null,
         mobile: mobile.trim() || null,
         details: details.trim() || null,
@@ -251,6 +262,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
         purchaseCountry: purchaseCountry.trim() || null,
         purchaseCity: purchaseCity.trim() || null,
         purchasedFrom: purchasedFrom.trim() || null,
+        purchasedFromPersonId: purchasedFromPersonId || null,
         receivedCountry: receivedCountry.trim() || null,
         receivedCity: receivedCity.trim() || null,
         receivedOfficeName: receivedOfficeName.trim() || null,
@@ -793,8 +805,13 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                       <Label className="text-[9.5px] uppercase font-bold text-slate-500">{tr("money_exchange.recv_type_label", "Recv. Type")}</Label>
                       <select 
                         className="flex h-8 w-full rounded-md border border-input bg-background px-2 text-xs font-bold" 
-                        value={receivedType} 
-                        onChange={e => setReceivedType(e.target.value)}
+                        value={receivedType}
+                        onChange={e => {
+                          setReceivedType(e.target.value);
+                          setReceiptPersonId("");
+                          setReceiptBankId("");
+                          setReceiptName("");
+                        }}
                       >
                         <option value="Name">Name</option>
                         <option value="Agent">Agent</option>
@@ -803,8 +820,40 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                       </select>
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-[9.5px] uppercase font-bold text-slate-500">{tr("money_exchange.name_label", "Name")}</Label>
-                      <Input className="h-8 text-xs font-semibold" value={receiptName} onChange={e => setReceiptName(e.target.value)} />
+                      {receivedType === "Bank" ? (
+                        <BankPicker
+                          label={tr("money_exchange.name_label", "Name")}
+                          value={receiptBankId}
+                          onValueChange={async (bankId) => {
+                            setReceiptBankId(bankId);
+                            setReceiptPersonId("");
+                            if (!bankId) return;
+                            try {
+                              const bank = await getBankById(bankId);
+                              if (bank?.bank_name) setReceiptName(bank.bank_name);
+                            } catch { /* ignore */ }
+                          }}
+                        />
+                      ) : receivedType === "Name" ? (
+                        <PersonPicker
+                          label={tr("money_exchange.name_label", "Name")}
+                          value={receiptPersonId}
+                          onValueChange={async (personId) => {
+                            setReceiptPersonId(personId);
+                            setReceiptBankId("");
+                            if (!personId) return;
+                            try {
+                              const res = await apiGet<{ customer: { customer_name?: string } }>(`/api/erp/customers/${personId}`);
+                              if (res?.customer?.customer_name) setReceiptName(res.customer.customer_name);
+                            } catch { /* ignore */ }
+                          }}
+                        />
+                      ) : (
+                        <>
+                          <Label className="text-[9.5px] uppercase font-bold text-slate-500">{tr("money_exchange.name_label", "Name")}</Label>
+                          <Input className="h-8 text-xs font-semibold" value={receiptName} onChange={e => setReceiptName(e.target.value)} />
+                        </>
+                      )}
                     </div>
                     <div className="space-y-1">
                       <Label className="text-[9.5px] uppercase font-bold text-slate-500">{tr("money_exchange.mobile_whatsapp_label", "Mobile/WhatsApp")}</Label>
@@ -842,8 +891,18 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                       <Input className="h-8 text-xs font-semibold" placeholder={tr("money_exchange.type_city_placeholder", "Type city...")} value={purchaseCity} onChange={e => setPurchaseCity(e.target.value)} />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-[9.5px] uppercase font-bold text-slate-500">{tr("money_exchange.purchased_from_label", "Purchased From")}</Label>
-                      <Input className="h-8 text-xs font-semibold" value={purchasedFrom} onChange={e => setPurchasedFrom(e.target.value)} />
+                      <PersonPicker
+                        label={tr("money_exchange.purchased_from_label", "Purchased From")}
+                        value={purchasedFromPersonId}
+                        onValueChange={async (personId) => {
+                          setPurchasedFromPersonId(personId);
+                          if (!personId) return;
+                          try {
+                            const res = await apiGet<{ customer: { customer_name?: string } }>(`/api/erp/customers/${personId}`);
+                            if (res?.customer?.customer_name) setPurchasedFrom(res.customer.customer_name);
+                          } catch { /* ignore */ }
+                        }}
+                      />
                     </div>
                   </div>
 

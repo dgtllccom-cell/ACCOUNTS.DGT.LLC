@@ -9,6 +9,8 @@ import { LocationHierarchySelect } from "@/features/locations/components/locatio
 import { TruckAttachments } from "@/features/clearing-agent/components/truck-attachments";
 import { ReportActions } from "@/components/ui/report-actions";
 import { Th } from "@/components/ui/translated-th";
+import { PersonPicker } from "@/components/erp/person-picker";
+import { CompanyPicker } from "@/features/companies/components/company-picker";
 
 type Truck = {
   id: string;
@@ -24,9 +26,12 @@ type Truck = {
   capacity: string | null;
   owner_name: string | null;
   owner_mobile: string | null;
+  owner_person_id: string | null;
   transport_company: string | null;
+  transport_company_id: string | null;
   driver_name: string | null;
   driver_mobile: string | null;
+  driver_person_id: string | null;
   driver_cnic_passport: string | null;
   registration_expiry_date: string | null;
   insurance_expiry_date: string | null;
@@ -34,7 +39,7 @@ type Truck = {
   notes: string | null;
 };
 
-const EMPTY: any = { id: "", truck_number: "", registration_number: "", truck_type: "", make: "", model: "", manufacturing_year: "", color: "", chassis_number: "", engine_number: "", capacity: "", owner_name: "", owner_mobile: "", transport_company: "", driver_name: "", driver_mobile: "", driver_cnic_passport: "", registration_expiry_date: "", insurance_expiry_date: "", status: "active", notes: "", registration_country_id: null, base_state_province_id: null, base_district_id: null, base_city_id: null };
+const EMPTY: any = { id: "", truck_number: "", registration_number: "", truck_type: "", make: "", model: "", manufacturing_year: "", color: "", chassis_number: "", engine_number: "", capacity: "", owner_name: "", owner_mobile: "", owner_person_id: "", transport_company: "", transport_company_id: "", driver_name: "", driver_mobile: "", driver_person_id: "", driver_cnic_passport: "", registration_expiry_date: "", insurance_expiry_date: "", status: "active", notes: "", registration_country_id: null, base_state_province_id: null, base_district_id: null, base_city_id: null };
 
 const STATUSES = ["active", "inactive", "suspended", "expired"];
 
@@ -187,11 +192,69 @@ export function TruckRegistrationManagementView({ lang }: { lang: SupportedLangu
               {field("capacity", "Capacity")}
               {field("chassis_number", "Chassis No")}
               {field("engine_number", "Engine No")}
-              {field("owner_name", t(lang, "tr.owner"))}
-              {field("owner_mobile", t(lang, "tr.owner_mobile"))}
-              {field("transport_company", t(lang, "tr.company"))}
-              {field("driver_name", t(lang, "tr.driver"))}
-              {field("driver_mobile", t(lang, "tr.driver_mobile"))}
+              <div className="sm:col-span-2">
+                <PersonPicker
+                  label={t(lang, "tr.owner")}
+                  value={form.owner_person_id || ""}
+                  onValueChange={async (personId) => {
+                    setForm((prev: any) => ({ ...prev, owner_person_id: personId }));
+                    if (!personId) return;
+                    try {
+                      const res = await fetch(`/api/erp/customers/${personId}`);
+                      const json = await res.json();
+                      const person = json?.customer;
+                      if (person) {
+                        setForm((prev: any) => ({
+                          ...prev,
+                          owner_name: person.customer_name || prev.owner_name,
+                          owner_mobile: person.mobile || prev.owner_mobile
+                        }));
+                      }
+                    } catch {
+                      // ignore
+                    }
+                  }}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <CompanyPicker
+                  label={t(lang, "tr.company")}
+                  value={form.transport_company_id || ""}
+                  onValueChange={async (companyId) => {
+                    setForm((prev: any) => ({ ...prev, transport_company_id: companyId }));
+                    if (!companyId) return;
+                    try {
+                      const res = await fetch(`/api/erp/companies/${companyId}`);
+                      const json = await res.json();
+                      if (json?.company?.name) setForm((prev: any) => ({ ...prev, transport_company: json.company.name }));
+                    } catch { /* ignore */ }
+                  }}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <PersonPicker
+                  label={t(lang, "tr.driver")}
+                  value={form.driver_person_id || ""}
+                  onValueChange={async (personId) => {
+                    setForm((prev: any) => ({ ...prev, driver_person_id: personId }));
+                    if (!personId) return;
+                    try {
+                      const res = await fetch(`/api/erp/customers/${personId}`);
+                      const json = await res.json();
+                      const person = json?.customer;
+                      if (person) {
+                        setForm((prev: any) => ({
+                          ...prev,
+                          driver_name: person.customer_name || prev.driver_name,
+                          driver_mobile: person.mobile || prev.driver_mobile
+                        }));
+                      }
+                    } catch {
+                      // ignore
+                    }
+                  }}
+                />
+              </div>
               {field("driver_cnic_passport", "CNIC / Passport")}
               {field("registration_expiry_date", t(lang, "tr.reg_expiry"), "date")}
               {field("insurance_expiry_date", t(lang, "tr.ins_expiry"), "date")}

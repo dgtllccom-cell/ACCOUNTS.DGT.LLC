@@ -9,17 +9,19 @@ import { LocationHierarchySelect } from "@/features/locations/components/locatio
 import { ReportActions } from "@/components/ui/report-actions";
 import { TruckAttachments } from "@/features/clearing-agent/components/truck-attachments";
 import { Th } from "@/components/ui/translated-th";
+import { PersonPicker } from "@/components/erp/person-picker";
+import { ClearingAgentPicker } from "@/features/shipping/components/clearing-agent-picker";
 
 type Row = {
   id: string; import_date: string | null; import_serial: string | null; import_bill_number: string | null;
-  truck_id: string | null; truck_number: string | null; importer_name: string | null; supplier_name: string | null;
+  truck_id: string | null; truck_number: string | null; importer_name: string | null; importer_person_id: string | null; supplier_name: string | null; supplier_person_id: string | null;
   driver_name: string | null; driver_mobile: string | null; truck_type: string | null; goods_name: string | null;
   quantity: number | null; unit: string | null; customs_office: string | null; border_crossing: string | null;
-  country_of_origin: string | null; destination_country: string | null; clearing_agent: string | null; remarks: string | null;
+  country_of_origin: string | null; destination_country: string | null; clearing_agent: string | null; clearing_agent_id: string | null; remarks: string | null;
 };
 type TruckOpt = { id: string; truck_number: string; truck_type?: string | null; driver_name: string | null; driver_mobile: string | null };
 
-const EMPTY: any = { id: "", truck_id: "", import_date: "", import_bill_number: "", importer_name: "", supplier_name: "", driver_name: "", driver_mobile: "", truck_number: "", truck_type: "", goods_name: "", quantity: "", unit: "", customs_office: "", border_crossing: "", country_of_origin: "", destination_country: "", clearing_agent: "", remarks: "", dest_country_id: null, dest_state_province_id: null, dest_district_id: null, dest_city_id: null };
+const EMPTY: any = { id: "", truck_id: "", import_date: "", import_bill_number: "", importer_name: "", importer_person_id: "", supplier_name: "", supplier_person_id: "", driver_name: "", driver_mobile: "", truck_number: "", truck_type: "", goods_name: "", quantity: "", unit: "", customs_office: "", border_crossing: "", country_of_origin: "", destination_country: "", clearing_agent: "", clearing_agent_id: "", remarks: "", dest_country_id: null, dest_state_province_id: null, dest_district_id: null, dest_city_id: null };
 
 export function ImportLoadingManagementView({ lang }: { lang: SupportedLanguage }) {
   const dir = getLanguageDirection(lang);
@@ -164,8 +166,36 @@ export function ImportLoadingManagementView({ lang }: { lang: SupportedLanguage 
               </label>
               {field("import_date", t(lang, "il.date"), "date")}
               {field("import_bill_number", t(lang, "il.bill"))}
-              {field("importer_name", t(lang, "il.importer"))}
-              {field("supplier_name", t(lang, "il.supplier"))}
+              <div className="sm:col-span-2">
+                <PersonPicker
+                  label={t(lang, "il.importer")}
+                  value={form.importer_person_id || ""}
+                  onValueChange={async (personId) => {
+                    setForm((prev: any) => ({ ...prev, importer_person_id: personId }));
+                    if (!personId) return;
+                    try {
+                      const res = await fetch(`/api/erp/customers/${personId}`);
+                      const json = await res.json();
+                      if (json?.customer?.customer_name) setForm((prev: any) => ({ ...prev, importer_name: json.customer.customer_name }));
+                    } catch { /* ignore */ }
+                  }}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <PersonPicker
+                  label={t(lang, "il.supplier")}
+                  value={form.supplier_person_id || ""}
+                  onValueChange={async (personId) => {
+                    setForm((prev: any) => ({ ...prev, supplier_person_id: personId }));
+                    if (!personId) return;
+                    try {
+                      const res = await fetch(`/api/erp/customers/${personId}`);
+                      const json = await res.json();
+                      if (json?.customer?.customer_name) setForm((prev: any) => ({ ...prev, supplier_name: json.customer.customer_name }));
+                    } catch { /* ignore */ }
+                  }}
+                />
+              </div>
               {field("truck_number", "Truck #")}
               {field("driver_name", "Driver")}
               {field("driver_mobile", "Driver Mobile")}
@@ -177,7 +207,22 @@ export function ImportLoadingManagementView({ lang }: { lang: SupportedLanguage 
               {field("border_crossing", t(lang, "il.border"))}
               {field("country_of_origin", t(lang, "il.origin"))}
               {field("destination_country", t(lang, "il.dest_country"))}
-              {field("clearing_agent", t(lang, "il.agent"))}
+              <div className="sm:col-span-2">
+                <ClearingAgentPicker
+                  label={t(lang, "il.agent")}
+                  value={form.clearing_agent_id || ""}
+                  onValueChange={async (agentId) => {
+                    setForm((prev: any) => ({ ...prev, clearing_agent_id: agentId }));
+                    if (!agentId) return;
+                    try {
+                      const res = await fetch(`/api/erp/clearing-agents/${agentId}`);
+                      const json = await res.json();
+                      const name = json?.clearingAgent?.name;
+                      if (name) setForm((prev: any) => ({ ...prev, clearing_agent: name }));
+                    } catch { /* ignore */ }
+                  }}
+                />
+              </div>
               <div className="sm:col-span-2">
                 <span className="text-[11px] font-black uppercase tracking-wide text-slate-400">{t(lang, "il.dest_country")} (central master)</span>
                 <div className="mt-1">

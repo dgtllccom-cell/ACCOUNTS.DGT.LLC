@@ -22,7 +22,7 @@ export async function GET(request: Request) {
     let query = supabase
       .from("branches")
       .select(
-        "id,company_id,name,code,country_id,state_province_id,district_id,city_id,currency,address,phone,email,owner_name,contacts,documents,created_at,companies(name),countries(name),states_provinces(name),districts(name),cities(name)"
+        "id,company_id,name,code,country_id,state_province_id,district_id,city_id,currency,address,phone,email,owner_name,owner_customer_id,owner_profile_id,contacts,documents,created_at,companies(name),countries(name),states_provinces(name),districts(name),cities(name)"
       )
       .eq("is_super_admin", true)
       .is("deleted_at", null)
@@ -72,6 +72,8 @@ export async function POST(request: Request) {
       phone: parsed.data.phone?.trim() ? parsed.data.phone.trim() : null,
       email: parsed.data.email?.trim() ? parsed.data.email.trim().toLowerCase() : null,
       owner_name: parsed.data.ownerName?.trim() ? parsed.data.ownerName.trim() : null,
+      owner_customer_id: parsed.data.ownerCustomerId ?? null,
+      owner_profile_id: parsed.data.ownerProfileId ?? null,
       contacts: parsed.data.contacts ?? [],
       documents: parsed.data.documents ?? [],
       created_at: new Date().toISOString(),
@@ -131,6 +133,8 @@ export async function PUT(request: Request) {
       phone: parsed.data.phone?.trim() ? parsed.data.phone.trim() : null,
       email: parsed.data.email?.trim() ? parsed.data.email.trim().toLowerCase() : null,
       owner_name: parsed.data.ownerName?.trim() ? parsed.data.ownerName.trim() : null,
+      owner_customer_id: parsed.data.ownerCustomerId ?? null,
+      owner_profile_id: parsed.data.ownerProfileId ?? null,
       contacts: parsed.data.contacts ?? [],
       documents: parsed.data.documents ?? [],
       updated_at: new Date().toISOString()

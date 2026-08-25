@@ -68,6 +68,8 @@ import { ViewportActionMenu } from "@/components/ui/viewport-action-menu";
 import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
 import { openPurchaseA4ReportWindow, type PurchaseReportData } from "@/lib/reports/open-purchase-a4-report-window";
 import { PaymentEditModal } from "./payment-edit-modal";
+import { BankPicker } from "@/features/banks/components/bank-picker";
+import { getBankById } from "@/features/banks/bank-api";
 
 import type { GenericReportColumn } from "@/lib/reports/open-generic-erp-report";
 import { Th } from "@/components/ui/translated-th";
@@ -5750,26 +5752,22 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                     {paymentType === "bank" && (
                       <div className="space-y-3">
                         <div className="space-y-1 relative z-[46]">
-                          <span className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                            {t("bank_name", currentLanguage)}
-                          </span>
-                          <SearchableSelect
-                            value={typeDetails.bankName || ""}
-                            onChange={(val) => {
-                              if (val === "__ADD_NEW__") {
-                                openAddOption("bank");
-                              } else {
-                                setTypeDetails((prev) => ({ ...prev, bankName: val }));
+                          <BankPicker
+                            label={t("bank_name", currentLanguage)}
+                            value={typeDetails.bankId || ""}
+                            onValueChange={async (bankId) => {
+                              setTypeDetails((prev) => ({ ...prev, bankId }));
+                              if (!bankId) return;
+                              try {
+                                const bank = await getBankById(bankId);
+                                setTypeDetails((prev) => ({
+                                  ...prev,
+                                  bankName: bank?.bank_name || prev.bankName
+                                }));
+                              } catch {
+                                // ignore
                               }
                             }}
-                            options={[
-                              { label: t("select_bank", currentLanguage), value: "" },
-                              ...(selected ? getCountryBankList(rowCountryName(selected)) : getCountryBankList(session?.countryName || "")).map((bank) => ({ label: bank, value: bank })),
-                              ...savedBanks.map((bank) => ({ label: bank.name, value: bank.name }))
-                            ]}
-                            placeholder={t("select_bank", currentLanguage)}
-                            addOptionLabel={t("new_bank", currentLanguage)}
-                            className="text-xs font-semibold text-slate-800 dark:text-slate-100"
                           />
                         </div>
 

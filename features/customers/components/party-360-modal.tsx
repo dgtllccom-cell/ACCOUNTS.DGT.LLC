@@ -17,13 +17,17 @@ import {
   FileSpreadsheet,
   CheckCircle2,
   Calendar,
-  Layers
+  Layers,
+  Warehouse,
+  Truck,
+  ShieldCheck
 } from "lucide-react";
 import { apiGet } from "@/lib/api/client";
 import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import type { PartyAffiliationSummary } from "@/lib/services/party-360-service";
 import { Button } from "@/components/ui/button";
+import { t } from "@/lib/i18n/ui";
 
 export type Party360ModalProps = {
   customerId?: string;
@@ -43,7 +47,7 @@ export function Party360Modal({
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState<PartyAffiliationSummary | null>(null);
-  const [activeTab, setActiveTab] = useState<"all" | "companies" | "employees" | "banks">("all");
+  const [activeTab, setActiveTab] = useState<"all" | "companies" | "employees" | "banks" | "warehouses" | "trucks" | "clearingAgents">("all");
 
   useEffect(() => {
     let isMounted = true;
@@ -135,7 +139,7 @@ export function Party360Modal({
           ) : (
             <>
               {/* Top Overview KPI Banner */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
                 {/* Companies Count */}
                 <div 
                   onClick={() => setActiveTab("companies")}
@@ -205,8 +209,59 @@ export function Party360Modal({
                   </p>
                 </div>
 
+                {/* Warehouses */}
+                <div
+                  onClick={() => setActiveTab("warehouses")}
+                  className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${
+                    activeTab === "warehouses"
+                      ? "border-teal-500 bg-teal-50/80 dark:bg-teal-950/40 shadow-sm"
+                      : "border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 hover:border-slate-300"
+                  }`}
+                >
+                  <div className="flex items-center justify-between text-teal-600 dark:text-teal-400 mb-1">
+                    <span className="text-[11px] font-black uppercase">{t(lang, "p360.warehouses_title", "Warehouses")}</span>
+                    <Warehouse className="h-4 w-4" />
+                  </div>
+                  <p className="text-xl font-black text-slate-900 dark:text-white">{summary.warehouses.length}</p>
+                  <p className="text-[10px] text-slate-500">{t(lang, "p360.warehouses_kpi_sub", "Owner / Responsible")}</p>
+                </div>
+
+                {/* Trucks */}
+                <div
+                  onClick={() => setActiveTab("trucks")}
+                  className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${
+                    activeTab === "trucks"
+                      ? "border-orange-500 bg-orange-50/80 dark:bg-orange-950/40 shadow-sm"
+                      : "border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 hover:border-slate-300"
+                  }`}
+                >
+                  <div className="flex items-center justify-between text-orange-600 dark:text-orange-400 mb-1">
+                    <span className="text-[11px] font-black uppercase">{t(lang, "p360.trucks_title", "Trucks")}</span>
+                    <Truck className="h-4 w-4" />
+                  </div>
+                  <p className="text-xl font-black text-slate-900 dark:text-white">{summary.trucks.length}</p>
+                  <p className="text-[10px] text-slate-500">{t(lang, "p360.trucks_kpi_sub", "Owner / Driver")}</p>
+                </div>
+
+                {/* Clearing Agents */}
+                <div
+                  onClick={() => setActiveTab("clearingAgents")}
+                  className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${
+                    activeTab === "clearingAgents"
+                      ? "border-fuchsia-500 bg-fuchsia-50/80 dark:bg-fuchsia-950/40 shadow-sm"
+                      : "border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 hover:border-slate-300"
+                  }`}
+                >
+                  <div className="flex items-center justify-between text-fuchsia-600 dark:text-fuchsia-400 mb-1">
+                    <span className="text-[11px] font-black uppercase">{t(lang, "p360.clearing_agents_title", "Clearing Agent")}</span>
+                    <ShieldCheck className="h-4 w-4" />
+                  </div>
+                  <p className="text-xl font-black text-slate-900 dark:text-white">{summary.clearingAgents.length}</p>
+                  <p className="text-[10px] text-slate-500">{t(lang, "p360.clearing_agents_kpi_sub", "Linked Agent Records")}</p>
+                </div>
+
                 {/* Customer Account */}
-                <div 
+                <div
                   onClick={() => setActiveTab("all")}
                   className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50"
                 >
@@ -416,6 +471,135 @@ export function Party360Modal({
                   ) : (
                     <p className="text-xs text-slate-400 italic bg-slate-50 dark:bg-slate-950/30 p-3 rounded-xl">
                       {lang === "ur" ? "کوئی منسلک بینک اکاؤنٹ نہیں ملا۔" : "No linked bank accounts found."}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Section 4: Warehouses */}
+              {(activeTab === "all" || activeTab === "warehouses") && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Warehouse className="h-4 w-4 text-teal-600" />
+                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                      {t(lang, "p360.warehouses_section_title", "Warehouses")} ({summary.warehouses.length})
+                    </h3>
+                  </div>
+
+                  {summary.warehouses.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {summary.warehouses.map((w) => (
+                        <div
+                          key={w.id}
+                          className="flex items-center justify-between p-3 rounded-xl border border-teal-100 dark:border-teal-900/40 bg-white dark:bg-slate-900 shadow-xs"
+                        >
+                          <div className="flex items-center gap-2.5 truncate">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-200 font-bold text-xs">
+                              <Warehouse className="h-4 w-4" />
+                            </div>
+                            <div className="truncate">
+                              <p className="font-extrabold text-xs text-slate-900 dark:text-white truncate">
+                                {localizeTerm(w.warehouseName, lang)}
+                              </p>
+                              <p className="text-[10px] text-slate-500 truncate">
+                                {[w.warehouseCode, w.warehouseType].filter(Boolean).join(" • ")}
+                              </p>
+                            </div>
+                          </div>
+                          <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md bg-teal-50 text-teal-800 border border-teal-200">
+                            {w.role}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-400 italic bg-slate-50 dark:bg-slate-950/30 p-3 rounded-xl">
+                      {t(lang, "p360.no_warehouses", "No linked warehouses found.")}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Section 5: Trucks (Owner / Driver) */}
+              {(activeTab === "all" || activeTab === "trucks") && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Truck className="h-4 w-4 text-orange-600" />
+                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                      {t(lang, "p360.trucks_section_title", "Trucks (Owner / Driver)")} ({summary.trucks.length})
+                    </h3>
+                  </div>
+
+                  {summary.trucks.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {summary.trucks.map((tr) => (
+                        <div
+                          key={tr.id}
+                          className="flex items-center justify-between p-3 rounded-xl border border-orange-100 dark:border-orange-900/40 bg-white dark:bg-slate-900 shadow-xs"
+                        >
+                          <div className="flex items-center gap-2.5 truncate">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-orange-100 dark:bg-orange-950 text-orange-800 dark:text-orange-200 font-mono font-bold text-xs">
+                              <Truck className="h-4 w-4" />
+                            </div>
+                            <div className="truncate">
+                              <p className="font-extrabold text-xs text-slate-900 dark:text-white truncate font-mono">
+                                {tr.truckNumber}
+                              </p>
+                              {tr.truckSerial && (
+                                <p className="text-[10px] text-slate-500 truncate">{tr.truckSerial}</p>
+                              )}
+                            </div>
+                          </div>
+                          <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md bg-orange-50 text-orange-800 border border-orange-200">
+                            {tr.role}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-400 italic bg-slate-50 dark:bg-slate-950/30 p-3 rounded-xl">
+                      {t(lang, "p360.no_trucks", "No linked trucks found.")}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Section 6: Clearing Agent records */}
+              {(activeTab === "all" || activeTab === "clearingAgents") && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4 text-fuchsia-600" />
+                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                      {t(lang, "p360.clearing_agents_section_title", "Clearing Agent Records")} ({summary.clearingAgents.length})
+                    </h3>
+                  </div>
+
+                  {summary.clearingAgents.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {summary.clearingAgents.map((ca) => (
+                        <div
+                          key={ca.id}
+                          className="flex items-center justify-between p-3 rounded-xl border border-fuchsia-100 dark:border-fuchsia-900/40 bg-white dark:bg-slate-900 shadow-xs"
+                        >
+                          <div className="flex items-center gap-2.5 truncate">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-fuchsia-100 dark:bg-fuchsia-950 text-fuchsia-800 dark:text-fuchsia-200 font-bold text-xs">
+                              <ShieldCheck className="h-4 w-4" />
+                            </div>
+                            <div className="truncate">
+                              <p className="font-extrabold text-xs text-slate-900 dark:text-white truncate">
+                                {localizeTerm(ca.name, lang)}
+                              </p>
+                              {ca.clearingAgentCode && (
+                                <p className="text-[10px] text-slate-500 truncate font-mono">{ca.clearingAgentCode}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-400 italic bg-slate-50 dark:bg-slate-950/30 p-3 rounded-xl">
+                      {t(lang, "p360.no_clearing_agents", "No linked clearing agent records found.")}
                     </p>
                   )}
                 </div>

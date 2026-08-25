@@ -491,6 +491,9 @@ export const shippingBlRecordCreateSchema = scopeSchema.extend({
   // Clearing agent (shipping line) this BL belongs to — stamped so shipping-only logins can be
   // scoped to their own agent's records.
   clearingAgentId: optionalUuidSchema,
+  // Shipping Line Master this BL belongs to (Person Master Phase 2) — shippingLineName
+  // stays as the display/snapshot field, this is the real FK.
+  shippingLineId: optionalUuidSchema,
   shippingLineName: z.string().trim().min(2).max(200),
   blNumber: z.string().trim().min(2).max(120),
   containerNumber: z.string().trim().max(120).nullable().optional(),
@@ -528,6 +531,7 @@ export const shippingBlRecordUpdateSchema = scopeSchema.extend({
   roznamchaEntryId: optionalUuidSchema,
   ledgerId: optionalUuidSchema,
   clearingAgentId: optionalUuidSchema,
+  shippingLineId: optionalUuidSchema,
   shippingLineName: z.string().trim().min(2).max(200).optional(),
   blNumber: z.string().trim().min(2).max(120).optional(),
   containerNumber: z.string().trim().max(120).nullable().optional(),

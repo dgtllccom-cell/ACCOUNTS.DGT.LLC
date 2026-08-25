@@ -232,6 +232,9 @@ function CityBranchSetupContent() {
   const [companyId, setCompanyId] = useState("");
   const [company, setCompany] = useState<CompanyRow | null>(null);
   const [ownerName, setOwnerName] = useState("");
+  const [ownerId, setOwnerId] = useState("");
+  const [ownerCustomerId, setOwnerCustomerId] = useState<string | null>(null);
+  const [ownerProfileId, setOwnerProfileId] = useState<string | null>(null);
   const [ownerPreview, setOwnerPreview] = useState<OwnerPreview | null>(null);
 
   const [countryBranchId, setCountryBranchId] = useState("");
@@ -1318,6 +1321,8 @@ function CityBranchSetupContent() {
           whatsappNumber: whatsappNumber || undefined,
           companyId: companyId || undefined,
           ownerName: ownerName.trim() || undefined,
+          ownerCustomerId: ownerCustomerId || undefined,
+          ownerProfileId: ownerProfileId || undefined,
           permissionTemplate,
           permissionGrants,
           contacts: contactsPayload.length ? contactsPayload : undefined,
@@ -1725,8 +1730,13 @@ function CityBranchSetupContent() {
 
                   <div className="space-y-2">
                     <BranchOwnerPicker
-                      value={ownerName}
-                      onValueChange={setOwnerName}
+                      value={ownerId}
+                      onValueChange={setOwnerId}
+                      onOwnerResolved={(owner) => {
+                        setOwnerName(owner?.name || "");
+                        setOwnerCustomerId(owner?.kind === "customer" ? owner.id : null);
+                        setOwnerProfileId(owner?.kind === "profile" ? owner.id : null);
+                      }}
                       disabled={!location.countryId}
                       placeholder={t(lang, "cbs.search_owner_ph")}
                       createButtonPlacement="below"

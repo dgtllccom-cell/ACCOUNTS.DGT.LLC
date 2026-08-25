@@ -6,6 +6,7 @@ import { CompanyIncorporationForm } from "./company-incorporation-form";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type CompanyRow = {
   id: string;
@@ -37,7 +38,7 @@ export type CompanyRow = {
   updated_at: string;
 };
 
-function toOption(row: CompanyRow, lang: string = "en"): SearchSelectOption {
+function toOption(row: CompanyRow, lang: SupportedLanguage = "en"): SearchSelectOption {
   const name = localizeTerm(row.name, lang);
   const legalName = row.legal_name ? localizeTerm(row.legal_name, lang) : null;
   const ownerName = row.owner_name ? transliterateProperNoun(row.owner_name, lang) : null;

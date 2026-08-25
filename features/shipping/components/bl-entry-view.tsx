@@ -10,6 +10,9 @@ import { Label } from "@/components/ui/label";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
+import { ClearingAgentPicker } from "@/features/shipping/components/clearing-agent-picker";
+import { ShippingLinePicker } from "@/features/shipping/components/shipping-line-picker";
+import { apiGet } from "@/lib/api/client";
 
 type OptionRow = {
   id: string;
@@ -85,7 +88,9 @@ const emptyForm = {
   countryBranchId: "",
   cityBranchId: "",
   ledgerId: "",
+  shippingLineId: "",
   shippingLineName: "DGT Logistics",
+  clearingAgentId: "",
   blNumber: "BL-671867",
   containerNumber: "",
   vesselName: "",
@@ -388,7 +393,9 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
           countryBranchId: form.countryBranchId || null,
           cityBranchId: form.cityBranchId || null,
           ledgerId: form.ledgerId || null,
+          shippingLineId: form.shippingLineId || null,
           shippingLineName: form.shippingLineName,
+          clearingAgentId: form.clearingAgentId || null,
           blNumber: form.blNumber,
           containerNumber: form.containerNumber || null,
           vesselName: form.vesselName || null,
@@ -633,8 +640,28 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
                   <div className="rounded-lg border bg-background p-2">
                     <div className="mb-2 text-[10px] font-black uppercase tracking-wide text-cyan-700 dark:text-cyan-300">Shipping Line Details</div>
                     <div className="grid grid-cols-2 gap-2">
-                      <Field label="Shipping Line Name *" value={form.shippingLineName} onChange={(v) => updateField("shippingLineName", v)} />
+                      <ShippingLinePicker
+                        label="Shipping Line *"
+                        value={form.shippingLineId}
+                        onValueChange={async (id) => {
+                          updateField("shippingLineId", id);
+                          if (!id) return;
+                          try {
+                            const res = await apiGet<{ shippingLine: { name: string } }>(`/api/erp/shipping-lines/${encodeURIComponent(id)}`);
+                            if (res.shippingLine?.name) updateField("shippingLineName", res.shippingLine.name);
+                          } catch {
+                            // ignore
+                          }
+                        }}
+                      />
                       <Field label="Voyage Number *" value={form.voyageNumber} onChange={(v) => updateField("voyageNumber", v)} />
+                    </div>
+                    <div className="mt-2">
+                      <ClearingAgentPicker
+                        label="Clearing Agent"
+                        value={form.clearingAgentId}
+                        onValueChange={(id) => updateField("clearingAgentId", id)}
+                      />
                     </div>
                   </div>
                   <Field label="Loading Type" value={form.shippingType} onChange={(v) => updateField("shippingType", v)} asSelect options={[{ value: "By Sea", label: "By Sea" }, { value: "By Road", label: "By Road" }, { value: "By Air", label: "By Air" }]} />

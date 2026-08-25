@@ -111,8 +111,8 @@ export async function GET(request: Request) {
       customersRes
     ] = await Promise.all([
       supabase.from("countries").select("id, name, iso2, currency_code, official_email, admin_email, created_at").is("deleted_at", null),
-      supabase.from("country_branches").select("id, country_id, name, code, is_main, address, phone, email, whatsapp_number, owner_name, documents, contacts, created_at").is("deleted_at", null),
-      supabase.from("city_branches").select("id, country_id, country_branch_id, name, code, address, phone, email, contacts, documents, created_at").is("deleted_at", null),
+      supabase.from("country_branches").select("id, country_id, name, code, is_main, address, phone, email, whatsapp_number, owner_name, owner_customer_id, owner_profile_id, documents, contacts, created_at").is("deleted_at", null),
+      supabase.from("city_branches").select("id, country_id, country_branch_id, name, code, address, phone, email, owner_name, owner_customer_id, owner_profile_id, contacts, documents, created_at").is("deleted_at", null),
       supabase.from("profiles").select("id, full_name, preferred_language_code, created_at").limit(50),
       supabase.from("user_role_assignments").select("user_id, role, country_id, country_branch_id, city_branch_id, is_active, created_at").is("deleted_at", null),
       supabase.from("enterprise_accounts").select("id, code, name, country_id, country_branch_id, city_branch_id, company_id, bank_id, customer_id, created_at").is("deleted_at", null).order("created_at", { ascending: false }).limit(100),
@@ -328,7 +328,7 @@ export async function POST(request: Request) {
     authorize(session, { resource: "kyc", action: "update" });
     const body = await request.json();
 
-    const { entityId, entityType, action, ownerName, phone, email, address, documents } = body;
+    const { entityId, entityType, action, ownerName, ownerCustomerId, ownerProfileId, phone, email, address, documents } = body;
 
     if (!entityId || !entityType) {
       return NextResponse.json({ error: "Missing entityId or entityType" }, { status: 400 });
@@ -341,6 +341,8 @@ export async function POST(request: Request) {
         updated_at: new Date().toISOString()
       };
       if (ownerName) updateData.owner_name = ownerName.trim();
+      if (ownerCustomerId !== undefined) updateData.owner_customer_id = ownerCustomerId || null;
+      if (ownerProfileId !== undefined) updateData.owner_profile_id = ownerProfileId || null;
       if (phone) updateData.phone = phone.trim();
       if (email) updateData.email = email.trim().toLowerCase();
       if (address) updateData.address = address.trim();
@@ -351,6 +353,9 @@ export async function POST(request: Request) {
       const updateData: Record<string, any> = {
         updated_at: new Date().toISOString()
       };
+      if (ownerName) updateData.owner_name = ownerName.trim();
+      if (ownerCustomerId !== undefined) updateData.owner_customer_id = ownerCustomerId || null;
+      if (ownerProfileId !== undefined) updateData.owner_profile_id = ownerProfileId || null;
       if (phone) updateData.phone = phone.trim();
       if (email) updateData.email = email.trim().toLowerCase();
       if (address) updateData.address = address.trim();

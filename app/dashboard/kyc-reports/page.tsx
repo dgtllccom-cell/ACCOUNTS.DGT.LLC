@@ -29,6 +29,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { BranchOwnerPicker } from "@/features/branches/components/branch-owner-picker";
 import { cn } from "@/lib/utils";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
@@ -574,6 +575,9 @@ export default function KycReportsPage() {
   // Modal state for Uploading & Completing KYC
   const [activeItem, setActiveItem] = useState<KycItem | null>(null);
   const [editOwnerName, setEditOwnerName] = useState("");
+  const [editOwnerId, setEditOwnerId] = useState("");
+  const [editOwnerCustomerId, setEditOwnerCustomerId] = useState<string | null>(null);
+  const [editOwnerProfileId, setEditOwnerProfileId] = useState<string | null>(null);
   const [editPhone, setEditPhone] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editAddress, setEditAddress] = useState("");
@@ -637,6 +641,11 @@ export default function KycReportsPage() {
   function handleOpenKycModal(item: KycItem) {
     setActiveItem(item);
     setEditOwnerName(item.ownerName || item.rawDetails?.owner_name || "");
+    const ownerCustomerId = item.rawDetails?.owner_customer_id || null;
+    const ownerProfileId = item.rawDetails?.owner_profile_id || null;
+    setEditOwnerCustomerId(ownerCustomerId);
+    setEditOwnerProfileId(ownerProfileId);
+    setEditOwnerId(ownerCustomerId || ownerProfileId || "");
     setEditPhone(item.phone || item.rawDetails?.phone || "");
     setEditEmail(item.email || item.rawDetails?.email || "");
     setEditAddress(item.rawDetails?.address || "");
@@ -666,6 +675,8 @@ export default function KycReportsPage() {
           entityType: activeItem.type,
           action: "complete_kyc",
           ownerName: editOwnerName,
+          ownerCustomerId: editOwnerCustomerId,
+          ownerProfileId: editOwnerProfileId,
           phone: editPhone,
           email: editEmail,
           address: editAddress,
@@ -1110,12 +1121,28 @@ export default function KycReportsPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label className="text-xs font-semibold text-foreground">{tUI("registeredNameTitle")}</Label>
-                  <Input
-                    value={editOwnerName}
-                    onChange={(e) => setEditOwnerName(e.target.value)}
-                    placeholder={tUI("ownerOrEntityTitle")}
-                    className="bg-background text-xs h-9 rounded-lg mt-1"
-                  />
+                  {activeItem.type === "country_branch" || activeItem.type === "city_branch" ? (
+                    <div className="mt-1">
+                      <BranchOwnerPicker
+                        value={editOwnerId}
+                        onValueChange={setEditOwnerId}
+                        onOwnerResolved={(owner) => {
+                          setEditOwnerName(owner?.name || "");
+                          setEditOwnerCustomerId(owner?.kind === "customer" ? owner.id : null);
+                          setEditOwnerProfileId(owner?.kind === "profile" ? owner.id : null);
+                        }}
+                        placeholder={tUI("ownerOrEntityTitle")}
+                        createButtonPlacement="below"
+                      />
+                    </div>
+                  ) : (
+                    <Input
+                      value={editOwnerName}
+                      onChange={(e) => setEditOwnerName(e.target.value)}
+                      placeholder={tUI("ownerOrEntityTitle")}
+                      className="bg-background text-xs h-9 rounded-lg mt-1"
+                    />
+                  )}
                 </div>
                 <div>
                   <Label className="text-xs font-semibold text-foreground">{tUI("officialPhoneTitle")}</Label>

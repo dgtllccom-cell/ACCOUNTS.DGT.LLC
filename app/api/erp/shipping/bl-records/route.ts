@@ -229,7 +229,7 @@ export async function GET(request: NextRequest) {
     let recordsQuery = supabase
       .from("shipping_bl_records")
       .select(
-        "id, country_id, country_branch_id, city_branch_id, shipping_line_name, bl_number, container_number, vessel_name, voyage_number, loading_port, discharge_port, eta, etd, shipment_status, account_number, debit, credit, currency_code, purchase_order_id, sales_order_id, loading_record_id, roznamcha_entry_id, ledger_id, created_at, countries(name, iso2, currency_code), country_branches(name, code), city_branches(name, code, city_name), ledgers(code, name, currency), profiles(full_name)"
+        "id, country_id, country_branch_id, city_branch_id, shipping_line_name, shipping_line_id, clearing_agent_id, bl_number, container_number, vessel_name, voyage_number, loading_port, discharge_port, eta, etd, shipment_status, account_number, debit, credit, currency_code, purchase_order_id, sales_order_id, loading_record_id, roznamcha_entry_id, ledger_id, created_at, countries(name, iso2, currency_code), country_branches(name, code), city_branches(name, code, city_name), ledgers(code, name, currency), profiles(full_name)"
       )
       .is("deleted_at", null)
       .order("created_at", { ascending: false });
@@ -333,6 +333,7 @@ export async function POST(request: NextRequest) {
       clearing_agent_id: body.clearingAgentId ?? null,
       created_by: session.userId,
       shipping_line_name: body.shippingLineName,
+      shipping_line_id: body.shippingLineId ?? null,
       bl_number: body.blNumber,
       container_number: body.containerNumber ?? null,
       vessel_name: body.vesselName ?? null,
@@ -388,6 +389,8 @@ export async function PATCH(request: NextRequest) {
     const {
       id,
       shippingLineName,
+      shippingLineId,
+      clearingAgentId,
       blNumber,
       containerNumber,
       vesselName,
@@ -440,6 +443,8 @@ export async function PATCH(request: NextRequest) {
 
     const payload = {
       shipping_line_name: shippingLineName !== undefined ? shippingLineName : before.shipping_line_name,
+      shipping_line_id: shippingLineId !== undefined ? shippingLineId : before.shipping_line_id,
+      clearing_agent_id: clearingAgentId !== undefined ? clearingAgentId : before.clearing_agent_id,
       bl_number: blNumber !== undefined ? blNumber : before.bl_number,
       container_number: containerNumber !== undefined ? containerNumber : before.container_number,
       vessel_name: vesselName !== undefined ? vesselName : before.vessel_name,

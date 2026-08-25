@@ -3,6 +3,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { party360Service } from "@/lib/services/party-360-service";
+import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,11 +13,13 @@ export async function GET(request: NextRequest) {
     const query = request.nextUrl.searchParams.get("q") || request.nextUrl.searchParams.get("search") || "";
     const limit = Number(request.nextUrl.searchParams.get("limit") || "100");
     const offset = Number(request.nextUrl.searchParams.get("offset") || "0");
+    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
 
     const result = await party360Service.getUniversalPartiesDirectory({
       query,
       limit,
-      offset
+      offset,
+      lang
     });
 
     return apiOk(result);

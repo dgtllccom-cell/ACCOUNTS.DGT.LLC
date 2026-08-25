@@ -3,6 +3,8 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { localizeRecordNames } from "@/lib/i18n/localize-records";
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,6 +13,7 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams;
     const q = searchParams.get("q")?.trim();
+    const lang = normalizeLanguage(searchParams.get("lang"), "en");
 
     const data = await withLocalPg(async (sql) => {
       let query = sql`
@@ -26,10 +29,16 @@ export async function GET(request: NextRequest) {
     });
 
     const list = data || [];
-    const active = list.filter((item: any) => item.is_active).length;
+    const localized = Array.isArray(list) && list.length > 0
+      ? await localizeRecordNames<any>(list, "document_types", "name", lang, { phraseFallback: true })
+      : list;
+    const localizedWithDescription = Array.isArray(localized) && localized.length > 0
+      ? await localizeRecordNames<any>(localized, "document_types", "description", lang, { phraseFallback: true })
+      : localized;
+    const active = localizedWithDescription.filter((item: any) => item.is_active).length;
     return apiOk({
-      documentTypes: list,
-      summary: { total: list.length, active, inactive: list.length - active }
+      documentTypes: localizedWithDescription,
+      summary: { total: localizedWithDescription.length, active, inactive: localizedWithDescription.length - active }
     });
   } catch (error) {
     return handleApiError(error);

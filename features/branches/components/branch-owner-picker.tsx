@@ -42,18 +42,17 @@ type OwnerProfileRow = {
   role: string;
 };
 
-function normalize(value: string) {
-  return value
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
 function toOwnerOption(value: string, label: string, keywords?: string): SearchSelectOption {
   return { value, label, keywords };
 }
+
+// Some bootstrap/demo profiles (dev seed users) carry non-UUID ids like "temp-super-admin"
+// instead of a real profiles.id — those can't be stored in owner_profile_id (a real FK column),
+// so they're excluded from the picker rather than letting a save silently fail downstream.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export type OwnerKind = "customer" | "profile";
+export type ResolvedOwner = { kind: OwnerKind; id: string; name: string } | null;
 
 function guessOriginalLanguage(): "en" | "ar" | "ur" | "fa" | "ps" {
   const lang = (typeof document !== "undefined" ? document.documentElement.lang : "en") || "en";
@@ -64,12 +63,14 @@ function guessOriginalLanguage(): "en" | "ar" | "ur" | "fa" | "ps" {
 export function BranchOwnerPicker({
   value,
   onValueChange,
+  onOwnerResolved,
   disabled,
   placeholder,
   createButtonPlacement = "below"
 }: {
   value: string;
   onValueChange: (value: string) => void;
+  onOwnerResolved?: (owner: ResolvedOwner) => void;
   disabled?: boolean;
   placeholder?: string;
   createButtonPlacement?: "modal" | "trigger" | "both" | "below";
@@ -78,6 +79,7 @@ export function BranchOwnerPicker({
   const [loading, setLoading] = useState(false);
   const [options, setOptions] = useState<SearchSelectOption[]>([]);
   const [openCreate, setOpenCreate] = useState(false);
+  const [ownerKindById, setOwnerKindById] = useState<Map<string, OwnerKind>>(new Map());
 
   const defaultPlaceholder = lang === "ur" ? "مالک تلاش کریں" : lang === "ps" ? "مالک وپلټئ" : lang === "ar" ? "البحث عن المالك" : "Search owner";
   const defaultCreateLabel = lang === "ur" ? "+ نیا مالک" : lang === "ps" ? "+ نوی مالک" : lang === "ar" ? "+ مالك جديد" : "New Owner";
@@ -92,28 +94,33 @@ export function BranchOwnerPicker({
       ]);
 
       const next: SearchSelectOption[] = [];
+      const kindById = new Map<string, OwnerKind>();
       for (const row of customersRes.customers ?? []) {
         const label = row.company_name ? `${row.customer_name} (${row.company_name})` : row.customer_name;
         next.push(
           toOwnerOption(
-            row.customer_name,
+            row.id,
             label,
             [row.customer_name, row.company_name, row.contact_person, row.mobile, row.whatsapp, row.email].filter(Boolean).join(" ")
           )
         );
+        kindById.set(row.id, "customer");
       }
       for (const row of usersRes.rows ?? []) {
+        if (!UUID_RE.test(row.userId)) continue;
         const localizedRole = localizeRoleDesc(row.role, lang);
         const localizedBranch = row.branchName === "Global" ? localizeRoleDesc("Global", lang) : row.branchName;
         const label = [row.fullName, localizedRole, localizedBranch].filter(Boolean).join(" · ");
-        next.push(toOwnerOption(row.fullName, label, [row.userCode, row.fullName, row.countryName, row.branchName, row.role].join(" ")));
+        next.push(toOwnerOption(row.userId, label, [row.userCode, row.fullName, row.countryName, row.branchName, row.role].join(" ")));
+        kindById.set(row.userId, "profile");
       }
 
       const unique = new Map<string, SearchSelectOption>();
       for (const item of next) {
-        if (!unique.has(normalize(item.value))) unique.set(normalize(item.value), item);
+        if (!unique.has(item.value)) unique.set(item.value, item);
       }
       setOptions(Array.from(unique.values()));
+      setOwnerKindById(kindById);
     } finally {
       setLoading(false);
     }
@@ -139,7 +146,17 @@ export function BranchOwnerPicker({
         placeholder={placeholder ?? (loading ? (lang === "ur" ? "لوڈ ہو رہا ہے..." : "Loading...") : defaultPlaceholder)}
         disabled={disabled || loading}
         options={finalOptions}
-        onValueChange={onValueChange}
+        onValueChange={(id) => {
+          onValueChange(id);
+          if (!onOwnerResolved) return;
+          if (!id) {
+            onOwnerResolved(null);
+            return;
+          }
+          const kind = ownerKindById.get(id) ?? null;
+          const label = options.find((opt) => opt.value === id)?.label ?? id;
+          onOwnerResolved(kind ? { kind, id, name: label } : null);
+        }}
         createLabel={defaultCreateLabel}
         createButtonPlacement={createButtonPlacement}
         onCreateNew={async () => setOpenCreate(true)}
@@ -187,7 +204,7 @@ export function BranchOwnerPicker({
                     const customerName = rawCustomer.customer_name || rawCustomer.customerName || "";
                     const companyName = rawCustomer.company_name || rawCustomer.companyName || "";
                     const option = toOwnerOption(
-                      customerName,
+                      newCustomerId,
                       label,
                       [
                         customerName,
@@ -203,12 +220,18 @@ export function BranchOwnerPicker({
 
                     // Add new option immediately to local state
                     setOptions((current) => {
-                      if (current.some((item) => normalize(item.value) === normalize(option.value))) return current;
+                      if (current.some((item) => item.value === newCustomerId)) return current;
                       return [option, ...current];
                     });
-                    
+                    setOwnerKindById((current) => {
+                      const next = new Map(current);
+                      next.set(newCustomerId, "customer");
+                      return next;
+                    });
+
                     // Trigger selection
-                    onValueChange(label);
+                    onValueChange(newCustomerId);
+                    onOwnerResolved?.({ kind: "customer", id: newCustomerId, name: label });
                   }
 
                   // Reload full list to ensure data is synced

@@ -58,7 +58,11 @@ export async function POST(req: Request) {
 
     const countryId = body.country_id ?? (session.isSuperAdmin ? null : session.countryIds?.[0] ?? null);
 
-    const supabase = createSupabaseAdminClient();
+    // Cast to any: the generated Supabase types don't yet know about warehouses.
+    // owner_person_id/responsible_person_id (Person Master Phase 2 migration) —
+    // matches the `as any` convention already used everywhere else in this codebase
+    // for the same reason (e.g. lib/repositories/companies-repository.ts).
+    const supabase = createSupabaseAdminClient() as any;
     const { data, error } = await supabase
       .from("warehouses")
       .insert({

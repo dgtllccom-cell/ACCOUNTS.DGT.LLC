@@ -8240,6 +8240,9 @@ export type Database = {
           category: string | null
           city_branch_id: string | null
           city_branch_name: string | null
+          company_code: string | null
+          company_id: string | null
+          company_name: string | null
           country_branch_id: string | null
           country_id: string | null
           country_name: string | null
@@ -8251,10 +8254,22 @@ export type Database = {
           file_type: string
           file_url: string
           id: string
+          account_code: string | null
+          account_id: string | null
+          account_name: string | null
           main_branch_name: string | null
           metadata: Json | null
           module_type: string
+          person_account_code: string | null
+          person_account_id: string | null
+          person_account_name: string | null
+          person_account_type: string | null
           scanned_at: string | null
+          source_module: string | null
+          source_record_id: string | null
+          source_record_no: string | null
+          document_path: string | null
+          storage_key: string | null
           tags: Json | null
           title: string
           updated_at: string | null
@@ -8263,6 +8278,9 @@ export type Database = {
           category?: string | null
           city_branch_id?: string | null
           city_branch_name?: string | null
+          company_code?: string | null
+          company_id?: string | null
+          company_name?: string | null
           country_branch_id?: string | null
           country_id?: string | null
           country_name?: string | null
@@ -8274,10 +8292,22 @@ export type Database = {
           file_type?: string
           file_url: string
           id?: string
+          account_code?: string | null
+          account_id?: string | null
+          account_name?: string | null
           main_branch_name?: string | null
           metadata?: Json | null
           module_type?: string
+          person_account_code?: string | null
+          person_account_id?: string | null
+          person_account_name?: string | null
+          person_account_type?: string | null
           scanned_at?: string | null
+          source_module?: string | null
+          source_record_id?: string | null
+          source_record_no?: string | null
+          document_path?: string | null
+          storage_key?: string | null
           tags?: Json | null
           title: string
           updated_at?: string | null
@@ -8286,6 +8316,9 @@ export type Database = {
           category?: string | null
           city_branch_id?: string | null
           city_branch_name?: string | null
+          company_code?: string | null
+          company_id?: string | null
+          company_name?: string | null
           country_branch_id?: string | null
           country_id?: string | null
           country_name?: string | null
@@ -8297,10 +8330,22 @@ export type Database = {
           file_type?: string
           file_url?: string
           id?: string
+          account_code?: string | null
+          account_id?: string | null
+          account_name?: string | null
           main_branch_name?: string | null
           metadata?: Json | null
           module_type?: string
+          person_account_code?: string | null
+          person_account_id?: string | null
+          person_account_name?: string | null
+          person_account_type?: string | null
           scanned_at?: string | null
+          source_module?: string | null
+          source_record_id?: string | null
+          source_record_no?: string | null
+          document_path?: string | null
+          storage_key?: string | null
           tags?: Json | null
           title?: string
           updated_at?: string | null

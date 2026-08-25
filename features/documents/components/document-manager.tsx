@@ -40,9 +40,22 @@ interface OfficeDocument {
   main_branch_name?: string;
   city_branch_id?: string;
   city_branch_name?: string;
+  company_id?: string;
+  company_code?: string;
+  company_name?: string;
+  account_id?: string;
+  account_code?: string;
+  account_name?: string;
   module_type: string;
   category: string;
+  person_account_type?: string;
   tags?: string[];
+  source_module?: string;
+  source_record_id?: string;
+  source_record_no?: string;
+  document_type?: string;
+  document_path?: string;
+  storage_key?: string;
   scanned_at?: string;
   created_by?: string;
   created_at: string;
@@ -147,6 +160,13 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     ps: "اصلي څانګې",
     fa: "شعب اصلی",
     en: "Main Branches"
+  },
+  main_branch: {
+    ur: "مین برانچ",
+    ar: "الفرع الرئيسي",
+    ps: "اصلي څانګه",
+    fa: "شعبه اصلی",
+    en: "Main Branch"
   },
   city_branches: {
     ur: "سٹی برانچز",
@@ -309,6 +329,139 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     fa: "ذخیره تغییرات",
     en: "Save Changes"
   },
+  select: {
+    ur: "منتخب کریں",
+    ar: "اختر",
+    ps: "وټاکئ",
+    fa: "انتخاب کنید",
+    en: "Select"
+  },
+  search: {
+    ur: "تلاش کریں",
+    ar: "بحث",
+    ps: "لټون",
+    fa: "جستجو",
+    en: "Search"
+  },
+  no_matches_found: {
+    ur: "کوئی مماثلت نہیں ملی",
+    ar: "لم يتم العثور على نتائج",
+    ps: "هیڅ ورته پایله ونه موندل شوه",
+    fa: "هیچ موردی یافت نشد",
+    en: "No matches found"
+  },
+  company: {
+    ur: "کمپنی",
+    ar: "الشركة",
+    ps: "شرکت",
+    fa: "شرکت",
+    en: "Company"
+  },
+  account: {
+    ur: "اکاؤنٹ",
+    ar: "الحساب",
+    ps: "حساب",
+    fa: "حساب",
+    en: "Account"
+  },
+  person_customer_employee: {
+    ur: "شخص / کسٹمر / ملازم",
+    ar: "شخص / عميل / موظف",
+    ps: "شخص / پیرودونکی / کارکوونکی",
+    fa: "شخص / مشتری / کارمند",
+    en: "Person / Customer / Employee"
+  },
+  module: {
+    ur: "ماڈیول",
+    ar: "الوحدة",
+    ps: "ماډیول",
+    fa: "ماژول",
+    en: "Module"
+  },
+  document_type: {
+    ur: "دستاویز کی قسم",
+    ar: "نوع المستند",
+    ps: "د سند ډول",
+    fa: "نوع سند",
+    en: "Document Type"
+  },
+  document_title: {
+    ur: "دستاویز کا عنوان",
+    ar: "عنوان المستند",
+    ps: "د سند سرلیک",
+    fa: "عنوان سند",
+    en: "Document Title"
+  },
+  file_type: {
+    ur: "فائل کی قسم",
+    ar: "نوع الملف",
+    ps: "د فایل ډول",
+    fa: "نوع فایل",
+    en: "File Type"
+  },
+  module_category: {
+    ur: "ماڈیول کیٹیگری",
+    ar: "فئة الوحدة",
+    ps: "د ماډیول کټګورۍ",
+    fa: "دسته‌بندی ماژول",
+    en: "Module Category"
+  },
+  location: {
+    ur: "مقام",
+    ar: "الموقع",
+    ps: "ځای",
+    fa: "مکان",
+    en: "Location"
+  },
+  created_by: {
+    ur: "بنانے والا",
+    ar: "أنشأه",
+    ps: "جوړونکی",
+    fa: "ایجاد شده توسط",
+    en: "Created By"
+  },
+  date: {
+    ur: "تاریخ",
+    ar: "التاريخ",
+    ps: "نېټه",
+    fa: "تاریخ",
+    en: "Date"
+  },
+  actions: {
+    ur: "کاروائیاں",
+    ar: "الإجراءات",
+    ps: "اقدامونه",
+    fa: "اقدامات",
+    en: "Actions"
+  },
+  preview: {
+    ur: "پیش نظارہ",
+    ar: "معاينة",
+    ps: "مخکتنه",
+    fa: "پیش‌نمایش",
+    en: "Preview"
+  },
+  download: {
+    ur: "ڈاؤن لوڈ",
+    ar: "تنزيل",
+    ps: "ډاونلوډ",
+    fa: "دانلود",
+    en: "Download"
+  },
+  edit: {
+    ur: "ترمیم",
+    ar: "تعديل",
+    ps: "سمول",
+    fa: "ویرایش",
+    en: "Edit"
+  },
+  delete: {
+    ur: "حذف",
+    ar: "حذف",
+    ps: "ړنګول",
+    fa: "حذف",
+    en: "Delete"
+  },
 
   // Modules
   "Purchase Documents": {
@@ -448,7 +601,26 @@ export function DocumentManager() {
   const [editingDoc, setEditingDoc] = useState<OfficeDocument | null>(null);
   const [editTitle, setEditTitle] = useState<string>("");
   const [editModule, setEditModule] = useState<string>("");
-  const [selectedDocumentType, setSelectedDocumentType] = useState<string>(DOCUMENT_TYPES[0]);
+  const [selectedDocumentType, setSelectedDocumentType] = useState<string>("");
+  const [companySearchQuery, setCompanySearchQuery] = useState<string>("");
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
+  const [selectedCompanyCode, setSelectedCompanyCode] = useState<string>("");
+  const [selectedCompanyName, setSelectedCompanyName] = useState<string>("");
+  const [selectedCompanyOption, setSelectedCompanyOption] = useState<SearchSelectOption | null>(null);
+  const [companyOptions, setCompanyOptions] = useState<SearchSelectOption[]>([]);
+  const [companyLookupLoading, setCompanyLookupLoading] = useState<boolean>(false);
+  const companyLookupRef = useRef<Record<string, any>>({});
+
+  const [personSearchQuery, setPersonSearchQuery] = useState<string>("");
+  const [selectedPersonId, setSelectedPersonId] = useState<string>("");
+  const [selectedPersonType, setSelectedPersonType] = useState<string>("");
+  const [selectedPersonCode, setSelectedPersonCode] = useState<string>("");
+  const [selectedPersonName, setSelectedPersonName] = useState<string>("");
+  const [selectedPersonOption, setSelectedPersonOption] = useState<SearchSelectOption | null>(null);
+  const [personOptions, setPersonOptions] = useState<SearchSelectOption[]>([]);
+  const [personLookupLoading, setPersonLookupLoading] = useState<boolean>(false);
+  const personLookupRef = useRef<Record<string, any>>({});
+
   const [selectedAccountId, setSelectedAccountId] = useState<string>("");
   const [selectedAccountCode, setSelectedAccountCode] = useState<string>("");
   const [selectedAccountName, setSelectedAccountName] = useState<string>("");
@@ -457,6 +629,8 @@ export function DocumentManager() {
   const [accountOptions, setAccountOptions] = useState<SearchSelectOption[]>([]);
   const [accountLookupLoading, setAccountLookupLoading] = useState<boolean>(false);
   const accountLookupRef = useRef<Record<string, any>>({});
+  const [documentTypeOptions, setDocumentTypeOptions] = useState<SearchSelectOption[]>([]);
+  const [documentTypeLoading, setDocumentTypeLoading] = useState<boolean>(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -482,6 +656,43 @@ export function DocumentManager() {
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    async function loadDocumentTypes() {
+      setDocumentTypeLoading(true);
+      try {
+        const res = await apiGet<any>(`/api/erp/document-types?lang=${encodeURIComponent(lang)}&q=&limit=500`);
+        const raw = Array.isArray(res?.documentTypes) ? res.documentTypes : [];
+        const nextOptions = raw.map((docType: any) => {
+          const label = docType.name || docType.name_en || docType.code;
+          return {
+            value: docType.code || docType.id,
+            label,
+            keywords: [docType.code, docType.name, docType.description, docType.name_en, docType.name_ur, docType.name_ar, docType.name_fa, docType.name_ps]
+              .filter(Boolean)
+              .join(" ")
+          };
+        });
+        if (!cancelled) {
+          setDocumentTypeOptions(nextOptions);
+          setSelectedDocumentType((current) => current || nextOptions[0]?.value || "");
+        }
+      } catch (error) {
+        if (!cancelled) {
+          const nextOptions = DOCUMENT_TYPES.map((type) => ({ value: type, label: type, keywords: type }));
+          setDocumentTypeOptions(nextOptions);
+          setSelectedDocumentType((current) => current || nextOptions[0]?.value || "");
+        }
+      } finally {
+        if (!cancelled) setDocumentTypeLoading(false);
+      }
+    }
+    loadDocumentTypes();
+    return () => {
+      cancelled = true;
+    };
+  }, [lang]);
+
   // Fetch Documents
   const fetchDocs = useCallback(async () => {
     setLoading(true);
@@ -490,6 +701,17 @@ export function DocumentManager() {
       if (selectedCountryId) url += `&countryId=${encodeURIComponent(selectedCountryId)}`;
       if (selectedMainBranchId) url += `&mainBranchId=${encodeURIComponent(selectedMainBranchId)}`;
       if (selectedCityBranchId) url += `&cityBranchId=${encodeURIComponent(selectedCityBranchId)}`;
+      if (selectedCompanyId) url += `&companyId=${encodeURIComponent(selectedCompanyId)}`;
+      if (selectedCompanyCode) url += `&companyCode=${encodeURIComponent(selectedCompanyCode)}`;
+      if (selectedCompanyName) url += `&companyName=${encodeURIComponent(selectedCompanyName)}`;
+      if (selectedPersonId) url += `&personAccountId=${encodeURIComponent(selectedPersonId)}`;
+      if (selectedPersonCode) url += `&personAccountCode=${encodeURIComponent(selectedPersonCode)}`;
+      if (selectedPersonName) url += `&personAccountName=${encodeURIComponent(selectedPersonName)}`;
+      if (selectedPersonType) url += `&personAccountType=${encodeURIComponent(selectedPersonType)}`;
+      if (selectedAccountId) url += `&accountId=${encodeURIComponent(selectedAccountId)}`;
+      if (selectedAccountCode) url += `&accountCode=${encodeURIComponent(selectedAccountCode)}`;
+      if (selectedAccountName) url += `&accountName=${encodeURIComponent(selectedAccountName)}`;
+      if (selectedDocumentType) url += `&documentType=${encodeURIComponent(selectedDocumentType)}`;
       if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
 
       const res = await apiGet<{ documents: OfficeDocument[] }>(url);
@@ -500,11 +722,152 @@ export function DocumentManager() {
     } finally {
       setLoading(false);
     }
-  }, [selectedCountryId, selectedMainBranchId, selectedCityBranchId, selectedModule, searchQuery]);
+  }, [
+    selectedCountryId,
+    selectedMainBranchId,
+    selectedCityBranchId,
+    selectedCompanyId,
+    selectedCompanyCode,
+    selectedCompanyName,
+    selectedPersonId,
+    selectedPersonCode,
+    selectedPersonName,
+    selectedPersonType,
+    selectedAccountId,
+    selectedAccountCode,
+    selectedAccountName,
+    selectedDocumentType,
+    selectedModule,
+    searchQuery
+  ]);
 
   useEffect(() => {
     fetchDocs();
   }, [fetchDocs]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const query = companySearchQuery.trim();
+    if (!query) {
+      setCompanyOptions(selectedCompanyOption ? [selectedCompanyOption] : []);
+      companyLookupRef.current = selectedCompanyOption ? { [selectedCompanyOption.value]: selectedCompanyOption } : {};
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setCompanyLookupLoading(true);
+      try {
+        const params = new URLSearchParams({ q: query, limit: "25", lang });
+        if (selectedCountryId) params.set("countryId", selectedCountryId);
+        const res = await apiGet<any>(`/api/erp/companies?${params.toString()}`);
+        const companies = Array.isArray(res?.companies) ? res.companies : [];
+        if (cancelled) return;
+
+        const nextOptions: SearchSelectOption[] = companies.map((company: any) => {
+          const companyCode = company.company_code || company.code || company.registration_no || company.registration_number || company.id;
+          const companyName = company.name || company.legal_name || company.business_name || companyCode;
+          const label = [companyCode, companyName].filter(Boolean).join(" • ");
+          return {
+            value: company.id,
+            label,
+            keywords: [
+              companyCode,
+              companyName,
+              company.legal_name,
+              company.owner_name,
+              company.country_name,
+              company.city_name,
+              company.business_type
+            ]
+              .filter(Boolean)
+              .join(" ")
+          };
+        });
+
+        const nextLookup: Record<string, any> = {};
+        nextOptions.forEach((opt, index) => {
+          nextLookup[opt.value] = companies[index];
+        });
+        if (selectedCompanyOption && !nextLookup[selectedCompanyOption.value]) {
+          nextOptions.unshift(selectedCompanyOption);
+          nextLookup[selectedCompanyOption.value] = companyLookupRef.current[selectedCompanyOption.value] ?? selectedCompanyOption;
+        }
+        companyLookupRef.current = nextLookup;
+        setCompanyOptions(nextOptions);
+      } catch (error) {
+        if (!cancelled) setCompanyOptions(selectedCompanyOption ? [selectedCompanyOption] : []);
+      } finally {
+        if (!cancelled) setCompanyLookupLoading(false);
+      }
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [companySearchQuery, selectedCountryId, selectedCompanyOption, lang]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const query = personSearchQuery.trim();
+    if (!query) {
+      setPersonOptions(selectedPersonOption ? [selectedPersonOption] : []);
+      personLookupRef.current = selectedPersonOption ? { [selectedPersonOption.value]: selectedPersonOption } : {};
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setPersonLookupLoading(true);
+      try {
+        const params = new URLSearchParams({ q: query, limit: "25", lang });
+        if (selectedCountryId) params.set("countryId", selectedCountryId);
+        const res = await apiGet<any>(`/api/erp/parties/directory?${params.toString()}`);
+        const parties = Array.isArray(res?.parties) ? res.parties : [];
+        if (cancelled) return;
+
+        const nextOptions: SearchSelectOption[] = [];
+        const nextLookup: Record<string, any> = {};
+
+        for (const party of parties) {
+          const customerCode = party.customerCode || party.customer_code || party.customerId || "CUST";
+          const customerName = party.customerName || party.customer_name || "Customer";
+          const customerValue = `customer:${party.customerId}`;
+          const customerLabel = [`Customer`, customerCode, customerName].filter(Boolean).join(" • ");
+          nextOptions.push({
+            value: customerValue,
+            label: customerLabel,
+            keywords: [customerCode, customerName, party.mobile, party.email, party.cityName, party.countryName].filter(Boolean).join(" ")
+          });
+          nextLookup[customerValue] = { type: "customer", party };
+
+          for (const employee of party.employees || []) {
+            const employeeValue = `employee:${employee.id}`;
+            const employeeLabel = [`Employee`, employee.employeeCode, employee.fullName].filter(Boolean).join(" • ");
+            nextOptions.push({
+              value: employeeValue,
+              label: employeeLabel,
+              keywords: [employee.employeeCode, employee.fullName, employee.department, employee.jobTitle, employee.branchName].filter(Boolean).join(" ")
+            });
+            nextLookup[employeeValue] = { type: "employee", party, employee };
+          }
+        }
+
+        if (selectedPersonOption && !nextLookup[selectedPersonOption.value]) {
+          nextOptions.unshift(selectedPersonOption);
+          nextLookup[selectedPersonOption.value] = personLookupRef.current[selectedPersonOption.value] ?? selectedPersonOption;
+        }
+        personLookupRef.current = nextLookup;
+        setPersonOptions(nextOptions);
+      } catch (error) {
+        if (!cancelled) setPersonOptions(selectedPersonOption ? [selectedPersonOption] : []);
+      } finally {
+        if (!cancelled) setPersonLookupLoading(false);
+      }
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [personSearchQuery, selectedCountryId, selectedPersonOption, lang]);
 
   useEffect(() => {
     let cancelled = false;
@@ -592,61 +955,80 @@ export function DocumentManager() {
       if (["xls", "xlsx", "csv"].includes(extension)) docType = "excel";
 
       const moduleLabel = selectedModule === "all" ? "Purchase Documents" : selectedModule;
+      const docTypeValue = selectedDocumentType || documentTypeOptions[0]?.value || "Document";
       const destinationFileName = buildDocumentFileName({
+        countryName: activeCountry?.name ?? null,
+        branchName: activeCityBranch?.name || activeMainBranch?.name || null,
+        companyCode: selectedCompanyCode || null,
+        companyName: selectedCompanyName || null,
         personAccountCode: selectedAccountCode,
         personAccountName: selectedAccountName,
+        personAccountType: selectedPersonType || null,
+        accountCode: selectedAccountCode,
+        accountName: selectedAccountName,
         moduleType: moduleLabel,
-        documentType: selectedDocumentType,
-        sourceRecordNo: searchQuery.trim() || file.name.replace(/\.[^/.]+$/, ""),
+        documentType: docTypeValue,
+        sourceRecordNo: selectedPersonCode || selectedAccountCode || searchQuery.trim() || file.name.replace(/\.[^/.]+$/, ""),
         createdAt: new Date(),
         extension: docType === "image" ? extension : docType === "word" ? "docx" : docType === "excel" ? "xlsx" : "pdf"
       });
       const destinationPath = buildDocumentFolderPath({
         countryName: activeCountry?.name,
-        branchName: selectedCityBranchId || selectedMainBranchId ? (selectedCityBranchId ? "City Branch" : "Main Branch") : null,
+        branchName: activeCityBranch?.name || activeMainBranch?.name || null,
+        companyCode: selectedCompanyCode || null,
+        companyName: selectedCompanyName || null,
         personAccountCode: selectedAccountCode,
         personAccountName: selectedAccountName,
+        personAccountType: selectedPersonType || null,
+        accountCode: selectedAccountCode,
+        accountName: selectedAccountName,
         moduleType: moduleLabel,
-        documentType: selectedDocumentType
+        documentType: docTypeValue
       });
 
-      const payload = {
-        title: file.name.replace(/\.[^/.]+$/, ""),
-        file_name: destinationFileName,
-        file_url: "/exports/DGT_Standard_Branch_Users.pdf",
-        file_type: docType,
-        file_size: file.size,
-        country_id: selectedCountryId,
-        country_name: activeCountry?.name ?? null,
-        country_branch_id: selectedMainBranchId || null,
-        main_branch_name: activeMainBranch?.name ?? null,
-        city_branch_id: selectedCityBranchId || null,
-        city_branch_name: activeCityBranch?.name ?? null,
-        module_type: selectedModule === "all" ? "Purchase Documents" : selectedModule,
-        document_type: selectedDocumentType,
-        source_module: moduleLabel,
-        source_record_no: searchQuery.trim() || null,
-        person_account_id: selectedAccountId || null,
-        person_account_code: selectedAccountCode || null,
-        person_account_name: selectedAccountName || null,
-        category: "Uploaded",
-        tags: [extension.toUpperCase(), "Uploaded", selectedDocumentType],
-        metadata: {
-          destinationPath,
-          destinationFileName,
-          uploadedFrom: "DocumentsPage"
-        },
-        document_path: destinationPath,
-        storage_key: `${destinationPath}/${destinationFileName}`,
-        created_by: selectedAccountName || "User",
-        scanner_device_name: null,
-        scanner_bridge: null
-      };
+      const payload = new FormData();
+      payload.append("title", file.name.replace(/\.[^/.]+$/, ""));
+      payload.append("file_name", destinationFileName);
+      payload.append("file_type", docType);
+      payload.append("file_size", String(file.size));
+      payload.append("country_id", selectedCountryId || "");
+      payload.append("country_name", activeCountry?.name ?? "");
+      payload.append("country_branch_id", selectedMainBranchId || "");
+      payload.append("main_branch_name", activeMainBranch?.name ?? "");
+      payload.append("city_branch_id", selectedCityBranchId || "");
+      payload.append("city_branch_name", activeCityBranch?.name ?? "");
+      payload.append("company_id", selectedCompanyId || "");
+      payload.append("company_code", selectedCompanyCode || "");
+      payload.append("company_name", selectedCompanyName || "");
+      payload.append("account_id", selectedAccountId || "");
+      payload.append("account_code", selectedAccountCode || "");
+      payload.append("account_name", selectedAccountName || "");
+      payload.append("person_account_id", selectedPersonId || "");
+      payload.append("person_account_code", selectedPersonCode || "");
+      payload.append("person_account_name", selectedPersonName || "");
+      payload.append("person_account_type", selectedPersonType || "");
+      payload.append("module_type", selectedModule === "all" ? "Purchase Documents" : selectedModule);
+      payload.append("document_type", docTypeValue);
+      payload.append("source_module", moduleLabel);
+      payload.append("source_record_id", selectedPersonId || selectedCompanyId || selectedAccountId || "");
+      payload.append("source_record_no", selectedPersonCode || selectedAccountCode || searchQuery.trim() || file.name.replace(/\.[^/.]+$/, ""));
+      payload.append("category", "Uploaded");
+      payload.append("tags", JSON.stringify([extension.toUpperCase(), "Uploaded", docTypeValue]));
+      payload.append("metadata", JSON.stringify({
+        destinationPath,
+        destinationFileName,
+        uploadedFrom: "DocumentsPage"
+      }));
+      payload.append("document_path", destinationPath);
+      payload.append("storage_key", `${destinationPath}/${destinationFileName}`);
+      payload.append("created_by", selectedCompanyName || selectedPersonName || selectedAccountName || "User");
+      payload.append("scanner_device_name", "");
+      payload.append("scanner_bridge", "");
+      payload.append("file", file, file.name);
 
       await fetch("/api/documents", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: payload
       });
 
       await fetchDocs();
@@ -670,61 +1052,85 @@ export function DocumentManager() {
       setScanStatus(t("scanner_status_saving", "Processing OCR & saving scanned PDF..."));
       try {
         const moduleLabel = selectedModule === "all" ? "Purchase Documents" : selectedModule;
+        const docTypeValue = selectedDocumentType || documentTypeOptions[0]?.value || "Document";
         const destinationFileName = buildDocumentFileName({
+          countryName: activeCountry?.name ?? null,
+          branchName: activeCityBranch?.name || activeMainBranch?.name || null,
+          companyCode: selectedCompanyCode || null,
+          companyName: selectedCompanyName || null,
           personAccountCode: selectedAccountCode,
           personAccountName: selectedAccountName,
+          personAccountType: selectedPersonType || null,
+          accountCode: selectedAccountCode,
+          accountName: selectedAccountName,
           moduleType: moduleLabel,
-          documentType: selectedDocumentType,
-          sourceRecordNo: searchQuery.trim() || null,
+          documentType: docTypeValue,
+          sourceRecordNo: selectedPersonCode || selectedAccountCode || searchQuery.trim() || null,
           createdAt: new Date(),
           extension: "pdf"
         });
         const destinationPath = buildDocumentFolderPath({
           countryName: activeCountry?.name,
-          branchName: selectedCityBranchId || selectedMainBranchId ? (selectedCityBranchId ? "City Branch" : "Main Branch") : null,
+          branchName: activeCityBranch?.name || activeMainBranch?.name || null,
+          companyCode: selectedCompanyCode || null,
+          companyName: selectedCompanyName || null,
           personAccountCode: selectedAccountCode,
           personAccountName: selectedAccountName,
+          personAccountType: selectedPersonType || null,
+          accountCode: selectedAccountCode,
+          accountName: selectedAccountName,
           moduleType: moduleLabel,
-          documentType: selectedDocumentType
+          documentType: docTypeValue
         });
 
-        const scanPayload = {
-          title: `Scanned Document #${Math.floor(1000 + Math.random() * 9000)}`,
-          file_name: destinationFileName,
-          file_url: "/exports/DGT_Standard_Branch_Users.pdf",
-          file_type: "pdf",
-          file_size: 340000,
-          country_id: selectedCountryId,
-          country_name: activeCountry?.name ?? null,
-          country_branch_id: selectedMainBranchId || null,
-          main_branch_name: activeMainBranch?.name ?? null,
-          city_branch_id: selectedCityBranchId || null,
-          city_branch_name: activeCityBranch?.name ?? null,
-          module_type: selectedModule === "all" ? "Purchase Documents" : selectedModule,
-          document_type: selectedDocumentType,
-          source_module: moduleLabel,
-          source_record_no: searchQuery.trim() || null,
-          person_account_id: selectedAccountId || null,
-          person_account_code: selectedAccountCode || null,
-          person_account_name: selectedAccountName || null,
-          category: "Scanned",
-          tags: ["Scanned", "PDF", "TWAIN", selectedDocumentType],
-          metadata: {
-            destinationPath,
-            destinationFileName,
-            scannerBridge: "TWAIN/W3C API"
-          },
-          document_path: destinationPath,
-          storage_key: `${destinationPath}/${destinationFileName}`,
-          created_by: selectedAccountName || "Scanner Hardware API",
-          scanner_device_name: "Default Scanner",
-          scanner_bridge: "TWAIN/W3C API"
-        };
+        const scanFile = new File(
+          [new Blob([`%PDF-1.4\n% Scan simulation generated for ${destinationFileName}\n`], { type: "application/pdf" })],
+          destinationFileName,
+          { type: "application/pdf" }
+        );
+        const scanPayload = new FormData();
+        scanPayload.append("title", `Scanned Document #${Math.floor(1000 + Math.random() * 9000)}`);
+        scanPayload.append("file_name", destinationFileName);
+        scanPayload.append("file_type", "pdf");
+        scanPayload.append("file_size", "340000");
+        scanPayload.append("country_id", selectedCountryId || "");
+        scanPayload.append("country_name", activeCountry?.name ?? "");
+        scanPayload.append("country_branch_id", selectedMainBranchId || "");
+        scanPayload.append("main_branch_name", activeMainBranch?.name ?? "");
+        scanPayload.append("city_branch_id", selectedCityBranchId || "");
+        scanPayload.append("city_branch_name", activeCityBranch?.name ?? "");
+        scanPayload.append("company_id", selectedCompanyId || "");
+        scanPayload.append("company_code", selectedCompanyCode || "");
+        scanPayload.append("company_name", selectedCompanyName || "");
+        scanPayload.append("account_id", selectedAccountId || "");
+        scanPayload.append("account_code", selectedAccountCode || "");
+        scanPayload.append("account_name", selectedAccountName || "");
+        scanPayload.append("person_account_id", selectedPersonId || "");
+        scanPayload.append("person_account_code", selectedPersonCode || "");
+        scanPayload.append("person_account_name", selectedPersonName || "");
+        scanPayload.append("person_account_type", selectedPersonType || "");
+        scanPayload.append("module_type", selectedModule === "all" ? "Purchase Documents" : selectedModule);
+        scanPayload.append("document_type", docTypeValue);
+        scanPayload.append("source_module", moduleLabel);
+        scanPayload.append("source_record_id", selectedPersonId || selectedCompanyId || selectedAccountId || "");
+        scanPayload.append("source_record_no", selectedPersonCode || selectedAccountCode || searchQuery.trim() || "");
+        scanPayload.append("category", "Scanned");
+        scanPayload.append("tags", JSON.stringify(["Scanned", "PDF", "TWAIN", docTypeValue]));
+        scanPayload.append("metadata", JSON.stringify({
+          destinationPath,
+          destinationFileName,
+          scannerBridge: "TWAIN/W3C API"
+        }));
+        scanPayload.append("document_path", destinationPath);
+        scanPayload.append("storage_key", `${destinationPath}/${destinationFileName}`);
+        scanPayload.append("created_by", selectedCompanyName || selectedPersonName || selectedAccountName || "Scanner Hardware API");
+        scanPayload.append("scanner_device_name", "Default Scanner");
+        scanPayload.append("scanner_bridge", "TWAIN/W3C API");
+        scanPayload.append("file", scanFile, scanFile.name);
 
         await fetch("/api/documents", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(scanPayload)
+          body: scanPayload
         });
 
         await fetchDocs();
@@ -772,25 +1178,95 @@ export function DocumentManager() {
   const activeMainBranch = activeCountry?.mainBranches?.find((branch: any) => branch.id === selectedMainBranchId) ?? null;
   const activeCityBranch = (activeMainBranch?.cityBranches || []).find((branch: any) => branch.id === selectedCityBranchId) ?? null;
   const selectedModuleLabel = selectedModule === "all" ? "Purchase Documents" : selectedModule;
+  const resolvedDocumentTypeLabel =
+    documentTypeOptions.find((option) => option.value === selectedDocumentType)?.label ||
+    selectedDocumentType ||
+    "Document";
   const documentDestinationPreview = buildDocumentDestinationLabel({
     countryName: activeCountry?.name,
     branchName: activeCityBranch?.name || activeMainBranch?.name || null,
-    personAccountCode: selectedAccountCode,
-    personAccountName: selectedAccountName,
+    companyCode: selectedCompanyCode,
+    companyName: selectedCompanyName,
+    personAccountCode: selectedPersonCode || selectedAccountCode,
+    personAccountName: selectedPersonName || selectedAccountName,
+    personAccountType: selectedPersonType,
+    accountCode: selectedAccountCode,
+    accountName: selectedAccountName,
     moduleType: selectedModuleLabel,
-    documentType: selectedDocumentType
+    documentType: resolvedDocumentTypeLabel
   });
   const documentFileNamePreview = buildDocumentFileName({
     countryName: activeCountry?.name,
     branchName: activeCityBranch?.name || activeMainBranch?.name || null,
-    personAccountCode: selectedAccountCode,
-    personAccountName: selectedAccountName,
+    companyCode: selectedCompanyCode,
+    companyName: selectedCompanyName,
+    personAccountCode: selectedPersonCode || selectedAccountCode,
+    personAccountName: selectedPersonName || selectedAccountName,
+    personAccountType: selectedPersonType,
+    accountCode: selectedAccountCode,
+    accountName: selectedAccountName,
     moduleType: selectedModuleLabel,
-    documentType: selectedDocumentType,
-    sourceRecordNo: searchQuery.trim() || null,
+    documentType: resolvedDocumentTypeLabel,
+    sourceRecordNo: selectedPersonCode || selectedAccountCode || searchQuery.trim() || null,
     createdAt: new Date(),
     extension: "pdf"
   });
+
+  const handleCompanySelect = (value: string) => {
+    const found = companyLookupRef.current[value];
+    const nextCode = found?.company_code || found?.code || found?.registration_no || found?.registration_number || found?.id || "";
+    const nextName = found?.name || found?.legal_name || found?.business_name || "";
+    setSelectedCompanyId(value);
+    setSelectedCompanyCode(nextCode);
+    setSelectedCompanyName(nextName);
+    const nextOption = companyOptions.find((opt) => opt.value === value) ?? (found ? {
+      value,
+      label: [nextCode, nextName].filter(Boolean).join(" • "),
+      keywords: [nextCode, nextName, found?.legal_name, found?.owner_name, found?.country_name, found?.city_name].filter(Boolean).join(" ")
+    } : null);
+    setSelectedCompanyOption(nextOption);
+    if (nextOption) {
+      setCompanyOptions((prev) => [nextOption, ...prev.filter((opt) => opt.value !== nextOption.value)]);
+    }
+  };
+
+  const handlePersonSelect = (value: string) => {
+    const found = personLookupRef.current[value];
+    if (!found) return;
+
+    if (found.type === "employee") {
+      const employee = found.employee;
+      const nextCode = employee.employeeCode || employee.employee_code || employee.id || "";
+      const nextName = employee.fullName || employee.customer_name || "";
+      setSelectedPersonId(employee.id);
+      setSelectedPersonType("employee");
+      setSelectedPersonCode(nextCode);
+      setSelectedPersonName(nextName);
+    } else {
+      const party = found.party;
+      const nextCode = party.customerCode || party.customer_code || party.customerId || "";
+      const nextName = party.customerName || party.customer_name || "";
+      setSelectedPersonId(party.customerId || party.customer_id || value.replace(/^customer:/, ""));
+      setSelectedPersonType("customer");
+      setSelectedPersonCode(nextCode);
+      setSelectedPersonName(nextName);
+    }
+
+    const nextOption = personOptions.find((opt) => opt.value === value) ?? (found ? {
+      value,
+      label: found.type === "employee"
+        ? [`Employee`, found.employee.employeeCode, found.employee.fullName].filter(Boolean).join(" • ")
+        : [`Customer`, found.party.customerCode || found.party.customer_code || found.party.customerId, found.party.customerName || found.party.customer_name].filter(Boolean).join(" • "),
+      keywords: found.type === "employee"
+        ? [found.employee.employeeCode, found.employee.fullName, found.employee.department, found.employee.jobTitle, found.employee.branchName].filter(Boolean).join(" ")
+        : [found.party.customerCode, found.party.customerName, found.party.mobile, found.party.email, found.party.cityName, found.party.countryName].filter(Boolean).join(" ")
+    } : null);
+
+    setSelectedPersonOption(nextOption);
+    if (nextOption) {
+      setPersonOptions((prev) => [nextOption, ...prev.filter((opt) => opt.value !== nextOption.value)]);
+    }
+  };
 
   const handleAccountSelect = (value: string) => {
     const found = accountLookupRef.current[value];
@@ -869,11 +1345,11 @@ export function DocumentManager() {
             </div>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-3 xl:grid-cols-4">
             <SearchSelect
               label={t("countries", "Countries")}
               value={selectedCountryId}
-              placeholder={t("common.select", "Select")}
+              placeholder={t("select", "Select")}
               options={countries.map((country) => ({
                 value: country.id,
                 label: country.name,
@@ -884,14 +1360,14 @@ export function DocumentManager() {
                 setSelectedMainBranchId("");
                 setSelectedCityBranchId("");
               }}
-              searchPlaceholder={t("common.search", "Search")}
-              emptyLabel={t("common.no_matches_found", "No matches found")}
+              searchPlaceholder={t("search", "Search")}
+              emptyLabel={t("no_matches_found", "No matches found")}
             />
 
             <SearchSelect
               label={t("main_branches", "Main Branches")}
               value={selectedMainBranchId}
-              placeholder={t("common.select", "Select")}
+              placeholder={t("select", "Select")}
               options={(activeCountry?.mainBranches || []).map((branch: any) => ({
                 value: branch.id,
                 label: branch.name,
@@ -902,14 +1378,14 @@ export function DocumentManager() {
                 setSelectedMainBranchId(value);
                 setSelectedCityBranchId("");
               }}
-              searchPlaceholder={t("common.search", "Search")}
-              emptyLabel={t("common.no_matches_found", "No matches found")}
+              searchPlaceholder={t("search", "Search")}
+              emptyLabel={t("no_matches_found", "No matches found")}
             />
 
             <SearchSelect
               label={t("city_branches", "City Branches")}
               value={selectedCityBranchId}
-              placeholder={t("common.select", "Select")}
+              placeholder={t("select", "Select")}
               options={(activeMainBranch?.cityBranches || []).map((branch: any) => ({
                 value: branch.id,
                 label: branch.name,
@@ -917,47 +1393,68 @@ export function DocumentManager() {
               }))}
               disabled={!activeMainBranch}
               onValueChange={setSelectedCityBranchId}
-              searchPlaceholder={t("common.search", "Search")}
-              emptyLabel={t("common.no_matches_found", "No matches found")}
+              searchPlaceholder={t("search", "Search")}
+              emptyLabel={t("no_matches_found", "No matches found")}
             />
 
             <SearchSelect
-              label={t("common.person_account", "Person / Account")}
+              label={t("person_customer_employee", "Person / Customer / Employee")}
+              value={selectedPersonId ? (selectedPersonType ? `${selectedPersonType}:${selectedPersonId}` : selectedPersonId) : ""}
+              placeholder={t("search", "Search")}
+              options={personOptions}
+              loading={personLookupLoading}
+              onValueChange={handlePersonSelect}
+              onSearchValueChange={setPersonSearchQuery}
+              searchPlaceholder={t("search", "Search")}
+              emptyLabel={t("no_matches_found", "No matches found")}
+            />
+
+            <SearchSelect
+              label={t("company", "Company")}
+              value={selectedCompanyId}
+              placeholder={t("search", "Search")}
+              options={companyOptions}
+              loading={companyLookupLoading}
+              onValueChange={handleCompanySelect}
+              onSearchValueChange={setCompanySearchQuery}
+              searchPlaceholder={t("search", "Search")}
+              emptyLabel={t("no_matches_found", "No matches found")}
+            />
+
+            <SearchSelect
+              label={t("account", "Account")}
               value={selectedAccountId}
-              placeholder={t("common.search", "Search")}
+              placeholder={t("search", "Search")}
               options={accountOptions}
               loading={accountLookupLoading}
               onValueChange={handleAccountSelect}
               onSearchValueChange={setAccountSearchQuery}
-              searchPlaceholder={t("common.search", "Search")}
-              emptyLabel={t("common.no_matches_found", "No matches found")}
+              searchPlaceholder={t("search", "Search")}
+              emptyLabel={t("no_matches_found", "No matches found")}
             />
 
             <SearchSelect
-              label={t("module_categories", "Module Categories")}
+              label={t("module", "Module")}
               value={selectedModule}
-              placeholder={t("common.select", "Select")}
+              placeholder={t("select", "Select")}
               options={[
                 { value: "all", label: t("all_module_folders", "All Module Folders") },
                 ...MODULE_FOLDERS.map((mod) => ({ value: mod, label: t(mod, mod), keywords: mod }))
               ]}
               onValueChange={setSelectedModule}
-              searchPlaceholder={t("common.search", "Search")}
-              emptyLabel={t("common.no_matches_found", "No matches found")}
+              searchPlaceholder={t("search", "Search")}
+              emptyLabel={t("no_matches_found", "No matches found")}
             />
 
             <SearchSelect
-              label={t("nav.document_type", "Document Type")}
+              label={t("document_type", "Document Type")}
               value={selectedDocumentType}
-              placeholder={t("common.select", "Select")}
-              options={DOCUMENT_TYPES.map((type) => ({
-                value: type,
-                label: type,
-                keywords: type
-              }))}
+              placeholder={t("select", "Select")}
+              options={documentTypeOptions}
+              loading={documentTypeLoading}
               onValueChange={setSelectedDocumentType}
-              searchPlaceholder={t("common.search", "Search")}
-              emptyLabel={t("common.no_matches_found", "No matches found")}
+              searchPlaceholder={t("search", "Search")}
+              emptyLabel={t("no_matches_found", "No matches found")}
             />
           </div>
         </div>
@@ -969,10 +1466,13 @@ export function DocumentManager() {
             <div className="text-xs font-bold text-slate-900 leading-6">{documentDestinationPreview || t("no_docs", "No documents found in this directory folder.")}</div>
           </div>
           <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-            <div className="text-[10px] font-black uppercase text-slate-400">{t("doc_title_label", "Document Title")}</div>
+            <div className="text-[10px] font-black uppercase text-slate-400">{t("document_title", "Document Title")}</div>
             <div className="mt-1 text-xs font-semibold text-slate-700">{documentFileNamePreview}</div>
-            <div className="mt-2 text-[10px] text-slate-500">
-              {selectedAccountName ? `${selectedAccountCode ? `${selectedAccountCode} · ` : ""}${selectedAccountName}` : t("common.select", "Select")}
+            <div className="mt-2 space-y-1 text-[10px] text-slate-500">
+              <div>{selectedCompanyName ? `${selectedCompanyCode ? `${selectedCompanyCode} · ` : ""}${selectedCompanyName}` : t("company", "Company")}</div>
+              <div>{selectedPersonName ? `${selectedPersonCode ? `${selectedPersonCode} · ` : ""}${selectedPersonName}` : t("person_customer_employee", "Person / Customer / Employee")}</div>
+              <div>{selectedAccountName ? `${selectedAccountCode ? `${selectedAccountCode} · ` : ""}${selectedAccountName}` : t("account", "Account")}</div>
+              <div className="text-[9px] text-slate-400">{resolvedDocumentTypeLabel}</div>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -1148,7 +1648,7 @@ export function DocumentManager() {
             <ChevronRight className="h-3 w-3 text-slate-400" />
             <span>{t(activeCountry?.name || "Country", activeCountry?.name || "Country")}</span>
             <ChevronRight className="h-3 w-3 text-slate-400" />
-            <span>{selectedMainBranchId ? t("main_branches", "Main Branch") : t("all_branches", "All Branches")}</span>
+            <span>{selectedMainBranchId ? t("main_branch", "Main Branch") : t("all_branches", "All Branches")}</span>
             <ChevronRight className="h-3 w-3 text-slate-400" />
             <span className="text-indigo-700 bg-white px-2 py-0.5 rounded border border-indigo-100 shadow-2xs font-black">
               {selectedModule === "all" ? t("all_modules", "All Modules") : t(selectedModule, selectedModule)}
@@ -1163,16 +1663,18 @@ export function DocumentManager() {
               </div>
             ) : documents.length > 0 ? (
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
+                <table className="w-full min-w-[1200px] text-left text-xs border-collapse">
                   <thead>
                     <tr className="bg-slate-900 text-white font-black text-[9px] uppercase tracking-wider text-center">
-                      <Th className="p-3 text-left">Document Title</Th>
-                      <Th className="p-3">File Type</Th>
-                      <Th className="p-3">Module Category</Th>
-                      <Th className="p-3">Location</Th>
-                      <Th className="p-3">Created By</Th>
-                      <Th className="p-3">Date</Th>
-                      <Th className="p-3">Actions</Th>
+                      <Th className="p-3 text-left">{t("document_title", "Document Title")}</Th>
+                      <Th className="p-3">{t("company", "Company")} / {t("person_customer_employee", "Person / Customer / Employee")} / {t("account", "Account")}</Th>
+                      <Th className="p-3">{t("module", "Module")}</Th>
+                      <Th className="p-3">{t("document_type", "Document Type")}</Th>
+                      <Th className="p-3">{t("location", "Location")}</Th>
+                      <Th className="p-3">{t("file_type", "File Type")}</Th>
+                      <Th className="p-3">{t("created_by", "Created By")}</Th>
+                      <Th className="p-3">{t("date", "Date")}</Th>
+                      <Th className="p-3">{t("actions", "Actions")}</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -1187,18 +1689,35 @@ export function DocumentManager() {
                             <div>
                               <div>{doc.title}</div>
                               <div className="text-[9px] text-slate-400 font-mono" dir="ltr">{doc.file_name}</div>
+                              {doc.document_path ? <div className="text-[9px] text-slate-400 font-mono" dir="ltr">{doc.document_path}</div> : null}
                             </div>
                           </div>
                         </td>
                         <td className="p-3 uppercase font-extrabold text-[10px]">
-                          <span className="rounded bg-slate-100 px-2 py-0.5 border text-slate-700">{doc.file_type}</span>
+                          <div className="space-y-1">
+                            <div className="rounded bg-slate-100 px-2 py-0.5 border text-slate-700">
+                              {doc.company_code || doc.company_name ? `${doc.company_code ? `${doc.company_code} · ` : ""}${doc.company_name ?? ""}` : "—"}
+                            </div>
+                            <div className="rounded bg-slate-50 px-2 py-0.5 border text-slate-600">
+                              {doc.person_account_type || "—"}
+                              {doc.person_account_name ? ` · ${doc.person_account_name}` : ""}
+                            </div>
+                            <div className="rounded bg-slate-100 px-2 py-0.5 border text-slate-700">
+                              {doc.account_code || doc.account_name ? `${doc.account_code ? `${doc.account_code} · ` : ""}${doc.account_name ?? ""}` : "—"}
+                            </div>
+                          </div>
                         </td>
-                        <td className="p-3 font-semibold text-indigo-700">{t(doc.module_type, doc.module_type)}</td>
+                        <td className="p-3 font-semibold text-indigo-700">{t(doc.source_module || doc.module_type, doc.source_module || doc.module_type)}</td>
+                        <td className="p-3 font-semibold text-emerald-700">{t(doc.document_type || doc.module_type, doc.document_type || doc.module_type)}</td>
                         <td className="p-3 text-[10px]">
                           <div>{t(doc.country_name || "Pakistan", doc.country_name || "Pakistan")}</div>
                           <div className="text-slate-400 font-mono">{t(doc.main_branch_name || "Main Branch", doc.main_branch_name || "Main Branch")}</div>
+                          {doc.city_branch_name ? <div className="text-slate-400 font-mono">{t(doc.city_branch_name, doc.city_branch_name)}</div> : null}
                         </td>
-                        <td className="p-3 font-semibold">{doc.created_by || "Admin"}</td>
+                        <td className="p-3 uppercase font-extrabold text-[10px]">
+                          <span className="rounded bg-slate-100 px-2 py-0.5 border text-slate-700">{doc.file_type}</span>
+                        </td>
+                        <td className="p-3 font-semibold">{doc.created_by || t("super_admin", "Super Admin")}</td>
                         <td className="p-3 text-[10px] font-mono text-slate-500" dir="ltr">
                           {new Date(doc.created_at).toLocaleDateString()}
                         </td>
@@ -1207,7 +1726,7 @@ export function DocumentManager() {
                             <button
                               onClick={() => setPreviewDoc(doc)}
                               className="rounded border border-indigo-200 bg-white p-1 text-indigo-600 hover:bg-indigo-50 cursor-pointer"
-                              title="Preview Document"
+                              title={t("preview", "Preview")}
                             >
                               <Eye className="h-3.5 w-3.5" />
                             </button>
@@ -1215,7 +1734,7 @@ export function DocumentManager() {
                               href={doc.file_url}
                               download
                               className="rounded border border-emerald-200 bg-white p-1 text-emerald-600 hover:bg-emerald-50 cursor-pointer"
-                              title="Download"
+                              title={t("download", "Download")}
                             >
                               <Download className="h-3.5 w-3.5" />
                             </a>
@@ -1226,14 +1745,14 @@ export function DocumentManager() {
                                 setEditModule(doc.module_type);
                               }}
                               className="rounded border border-slate-200 bg-white p-1 text-slate-600 hover:bg-slate-100 cursor-pointer"
-                              title="Rename / Move"
+                              title={t("edit", "Edit")}
                             >
                               <Edit className="h-3.5 w-3.5" />
                             </button>
                             <button
                               onClick={() => handleDelete(doc.id)}
                               className="rounded border border-rose-200 bg-white p-1 text-rose-600 hover:bg-rose-50 cursor-pointer"
-                              title="Delete"
+                              title={t("delete", "Delete")}
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </button>
@@ -1277,7 +1796,7 @@ export function DocumentManager() {
             <div className="bg-slate-900 text-white p-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <FileText className="h-5 w-5 text-indigo-400" />
-                <div>
+                  <div>
                   <h3 className="font-bold text-sm">{previewDoc.title}</h3>
                   <p className="text-[10px] text-slate-400 font-mono" dir="ltr">
                     {previewDoc.file_name} • {t(previewDoc.module_type, previewDoc.module_type)}
@@ -1320,7 +1839,7 @@ export function DocumentManager() {
             <h3 className="font-bold text-base text-slate-900">{t("edit_title", "Edit / Move Document")}</h3>
             <div className="space-y-3">
               <div>
-                <label className="text-[10px] font-black uppercase text-slate-400">{t("doc_title_label", "Document Title")}</label>
+                <label className="text-[10px] font-black uppercase text-slate-400">{t("document_title", "Document Title")}</label>
                 <input
                   type="text"
                   value={editTitle}

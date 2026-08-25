@@ -5,6 +5,8 @@ import { Plus, Pencil, Search, Loader2, RefreshCw, FileText, CheckCircle2, Shiel
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { Th } from "@/components/ui/translated-th";
+import { ClearingAgentPicker } from "@/features/shipping/components/clearing-agent-picker";
+import { PersonPicker } from "@/components/erp/person-picker";
 
 type AgentCustomEntryRow = {
   id: string;
@@ -12,9 +14,12 @@ type AgentCustomEntryRow = {
   customs_declaration_no: string | null;
   declaration_type: "import" | "export" | "transit";
   agent_name: string;
+  agent_id: string | null;
   customs_station: string;
   consignee_name: string | null;
+  consignee_person_id: string | null;
   consignor_name: string | null;
+  consignor_person_id: string | null;
   hscode: string | null;
   goods_description: string | null;
   assessed_value: number;
@@ -31,9 +36,12 @@ const EMPTY_ENTRY: any = {
   customs_declaration_no: "",
   declaration_type: "import",
   agent_name: "",
+  agent_id: "",
   customs_station: "Karachi Customs House",
   consignee_name: "",
+  consignee_person_id: "",
   consignor_name: "",
+  consignor_person_id: "",
   hscode: "",
   goods_description: "",
   assessed_value: 0,

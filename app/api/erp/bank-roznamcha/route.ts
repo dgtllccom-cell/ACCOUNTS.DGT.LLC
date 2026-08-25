@@ -90,13 +90,15 @@ export async function GET(request: NextRequest) {
           CASE WHEN c.id IS NOT NULL THEN jsonb_build_object('id', c.id, 'name', c.name, 'currency_code', c.currency_code) ELSE NULL END AS country,
           CASE WHEN cb.id IS NOT NULL THEN jsonb_build_object('id', cb.id, 'name', cb.name, 'code', cb.code) ELSE NULL END AS country_branch,
           CASE WHEN cib.id IS NOT NULL THEN jsonb_build_object('id', cib.id, 'name', cib.name, 'code', cib.code) ELSE NULL END AS city_branch,
-          CASE WHEN p.id IS NOT NULL THEN jsonb_build_object('id', p.id, 'full_name', p.full_name) ELSE NULL END AS profile
+          CASE WHEN p.id IS NOT NULL THEN jsonb_build_object('id', p.id, 'full_name', p.full_name) ELSE NULL END AS profile,
+          CASE WHEN bnk.id IS NOT NULL THEN jsonb_build_object('id', bnk.id, 'bank_name', bnk.bank_name, 'short_name', bnk.short_name) ELSE NULL END AS bank
         FROM public.bank_cheque_transactions t
         LEFT JOIN public.companies comp ON comp.id = t.company_id
         LEFT JOIN public.countries c ON c.id = t.country_id
         LEFT JOIN public.country_branches cb ON cb.id = t.country_branch_id
         LEFT JOIN public.city_branches cib ON cib.id = t.city_branch_id
         LEFT JOIN public.profiles p ON p.id = t.user_id
+        LEFT JOIN public.banks bnk ON bnk.id = t.bank_id
         WHERE t.deleted_at IS NULL
           AND (${companyId && companyId !== "all" ? sql`t.company_id = ${companyId}` : sql`true`})
           AND (${countryId && countryId !== "all" ? sql`t.country_id = ${countryId}` : sql`true`})

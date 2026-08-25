@@ -9,9 +9,10 @@ import { LocationHierarchySelect } from "@/features/locations/components/locatio
 import { ReportActions } from "@/components/ui/report-actions";
 import { TruckAttachments } from "@/features/clearing-agent/components/truck-attachments";
 import { Th } from "@/components/ui/translated-th";
+import { CompanyPicker } from "@/features/companies/components/company-picker";
 
 type Row = {
-  id: string; transit_date: string | null; transit_serial: string | null; transit_company: string | null;
+  id: string; transit_date: string | null; transit_serial: string | null; transit_company: string | null; transit_company_id: string | null;
   truck_id: string | null; truck_number: string | null; driver_name: string | null; driver_mobile: string | null;
   goods_name: string | null; quantity: number | null; unit: string | null; transit_route: string | null;
   border: string | null; destination: string | null; customs_information: string | null;
@@ -20,7 +21,7 @@ type Row = {
 };
 type TruckOpt = { id: string; truck_number: string; driver_name: string | null; driver_mobile: string | null };
 
-const EMPTY: any = { id: "", truck_id: "", transit_date: "", transit_company: "", truck_number: "", driver_name: "", driver_mobile: "", goods_name: "", quantity: "", unit: "", transit_route: "", border: "", destination: "", customs_information: "", container_number: "", seal_number: "", remarks: "", dest_country_id: null, dest_state_province_id: null, dest_district_id: null, dest_city_id: null };
+const EMPTY: any = { id: "", truck_id: "", transit_date: "", transit_company: "", transit_company_id: "", truck_number: "", driver_name: "", driver_mobile: "", goods_name: "", quantity: "", unit: "", transit_route: "", border: "", destination: "", customs_information: "", container_number: "", seal_number: "", remarks: "", dest_country_id: null, dest_state_province_id: null, dest_district_id: null, dest_city_id: null };
 
 export function TransitLoadingManagementView({ lang }: { lang: SupportedLanguage }) {
   const dir = getLanguageDirection(lang);
@@ -164,7 +165,21 @@ export function TransitLoadingManagementView({ lang }: { lang: SupportedLanguage
                 </select>
               </label>
               {field("transit_date", t(lang, "tt.date"), "date")}
-              {field("transit_company", t(lang, "tt.company"))}
+              <div className="sm:col-span-2">
+                <CompanyPicker
+                  label={t(lang, "tt.company")}
+                  value={form.transit_company_id || ""}
+                  onValueChange={async (companyId) => {
+                    setForm((prev: any) => ({ ...prev, transit_company_id: companyId }));
+                    if (!companyId) return;
+                    try {
+                      const res = await fetch(`/api/erp/companies/${companyId}`);
+                      const json = await res.json();
+                      if (json?.company?.name) setForm((prev: any) => ({ ...prev, transit_company: json.company.name }));
+                    } catch { /* ignore */ }
+                  }}
+                />
+              </div>
               {field("truck_number", "Truck #")}
               {field("driver_name", "Driver")}
               {field("goods_name", t(lang, "tt.goods"))}
