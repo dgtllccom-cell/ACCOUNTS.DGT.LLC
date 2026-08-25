@@ -138,7 +138,7 @@ export async function GET(request: NextRequest) {
 
     const admin = createSupabaseAdminClient();
     let query = admin
-      .from("office_documents")
+      .from("office_documents" as any)
       .select("*")
       .is("deleted_at", null)
       .order("created_at", { ascending: false });
@@ -369,8 +369,8 @@ export async function POST(request: NextRequest) {
     }
 
     const admin = createSupabaseAdminClient();
-    const { data: newDoc, error } = await admin
-      .from("office_documents")
+    const { data: newDoc, error } = await (admin
+      .from("office_documents" as any) as any)
       .insert({
         title,
         file_name: generatedFileName,
@@ -507,8 +507,8 @@ export async function PATCH(request: NextRequest) {
     if (storage_key !== undefined) updates.storage_key = storage_key;
     if (tags !== undefined) updates.tags = tags;
 
-    const { data: updatedDoc, error } = await admin
-      .from("office_documents")
+    const { data: updatedDoc, error } = await (admin
+      .from("office_documents" as any) as any)
       .update(updates)
       .eq("id", id)
       .select()
@@ -542,8 +542,8 @@ export async function DELETE(request: NextRequest) {
     }
 
     const admin = createSupabaseAdminClient();
-    const { error } = await admin
-      .from("office_documents")
+    const { error } = await (admin
+      .from("office_documents" as any) as any)
       .update({ deleted_at: deletedAt })
       .eq("id", id);
 

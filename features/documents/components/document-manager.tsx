@@ -47,9 +47,13 @@ interface OfficeDocument {
   account_code?: string;
   account_name?: string;
   module_type: string;
-  category: string;
+  category?: string;
+  person_account_id?: string;
+  person_account_code?: string;
+  person_account_name?: string;
   person_account_type?: string;
   tags?: string[];
+  metadata?: Record<string, any>;
   source_module?: string;
   source_record_id?: string;
   source_record_no?: string;
@@ -58,6 +62,8 @@ interface OfficeDocument {
   storage_key?: string;
   scanned_at?: string;
   created_by?: string;
+  scanner_device_name?: string;
+  scanner_bridge?: string;
   created_at: string;
 }
 
