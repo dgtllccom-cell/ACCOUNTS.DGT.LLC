@@ -3,6 +3,7 @@ import { ErpAuthError, requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { auditApiAction } from "@/lib/api/audit";
 import { authorize, resolveReportScope } from "@/lib/permissions/middleware";
+import { withLocalPg } from "@/lib/db/local-postgres";
 
 type KycEntityType = "country_branch" | "city_branch" | "user_account" | "new_account";
 
@@ -92,12 +93,130 @@ function calculateGraceStatus(createdAt: string, missingReqs: string[]) {
   };
 }
 
+function compactBranchRawDetails(row: any) {
+  return {
+    owner_name: row.owner_name ?? null,
+    owner_customer_id: row.owner_customer_id ?? null,
+    owner_profile_id: row.owner_profile_id ?? null,
+    phone: row.phone ?? row.whatsapp_number ?? null,
+    email: row.email ?? null,
+    address: row.address ?? null,
+    documents: Array.isArray(row.documents) ? row.documents : []
+  };
+}
+
+function compactUserRawDetails(row: any) {
+  return {
+    full_name: row.full_name ?? null
+  };
+}
+
+function compactAccountRawDetails(row: any) {
+  return {
+    name: row.name ?? null,
+    code: row.code ?? null,
+    company_id: row.company_id ?? null,
+    bank_id: row.bank_id ?? null,
+    customer_id: row.customer_id ?? null
+  };
+}
+
 export async function GET(request: Request) {
   try {
+    const startedAt = Date.now();
+    console.log("[kyc-reports] GET start");
     const session = await requireErpSession();
+    console.log("[kyc-reports] session ok", Date.now() - startedAt);
     authorize(session, { resource: "reports", action: "read" });
     authorize(session, { resource: "kyc", action: "read" });
     const reportScope = resolveReportScope(session);
+    console.log("[kyc-reports] scope", reportScope.level, Date.now() - startedAt);
+    const sourceData = await withLocalPg(async (sql) => {
+      const queryStartedAt = Date.now();
+      console.log("[kyc-reports] db query start");
+      async function timedQuery<T>(label: string, query: Promise<T>) {
+        const start = Date.now();
+        const result = await query;
+        console.log(`[kyc-reports] ${label} done`, Date.now() - start);
+        return result;
+      }
+
+      const countries = await timedQuery(
+        "countries",
+        sql`
+          select id, name, iso2, currency_code, official_email, admin_email, created_at
+          from public.countries
+          where deleted_at is null
+        `
+      );
+      const countryBranches = await timedQuery(
+        "countryBranches",
+        sql`
+          select id, country_id, name, code, is_main, address, phone, email, whatsapp_number, owner_name, owner_customer_id, owner_profile_id, documents, contacts, created_at
+          from public.country_branches
+          where deleted_at is null
+        `
+      );
+      const cityBranches = await timedQuery(
+        "cityBranches",
+        sql`
+          select id, country_id, country_branch_id, name, code, address, phone, email, owner_name, owner_customer_id, owner_profile_id, contacts, documents, created_at
+          from public.city_branches
+          where deleted_at is null
+        `
+      );
+      const users = await timedQuery(
+        "profiles",
+        sql`
+          select id, full_name, preferred_language_code, created_at
+          from public.profiles
+          order by created_at desc
+          limit 50
+        `
+      );
+      const assignments = await timedQuery(
+        "assignments",
+        sql`
+          select user_id, role, country_id, country_branch_id, city_branch_id, is_active, created_at
+          from public.user_role_assignments
+          where deleted_at is null
+        `
+      );
+      const enterpriseAccounts = await timedQuery(
+        "enterpriseAccounts",
+        sql`
+          select id, code, name, country_id, country_branch_id, city_branch_id, company_id, bank_id, customer_id, created_at
+          from public.enterprise_accounts
+          where deleted_at is null
+          order by created_at desc
+          limit 100
+        `
+      );
+      const companies = await timedQuery(
+        "companies",
+        sql`
+          select id, name, legal_name, company_code, address, country_id, city_id, owner_name, contacts, created_at
+          from public.companies
+          where deleted_at is null
+          order by created_at desc
+          limit 50
+        `
+      );
+      const customers = await timedQuery(
+        "customers",
+        sql`
+          select id, customer_name, company_name, contact_person, mobile, whatsapp, email, address, country_id, created_at
+          from public.customers
+          where deleted_at is null
+          order by created_at desc
+          limit 50
+        `
+      );
+      console.log("[kyc-reports] db query ok", Date.now() - queryStartedAt);
+
+      return { countries, countryBranches, cityBranches, users, assignments, enterpriseAccounts, companies, customers };
+    });
+    console.log("[kyc-reports] sourceData ready", Boolean(sourceData), Date.now() - startedAt);
     const supabase = createSupabaseAdminClient() as any;
     const [
       countriesRes,
@@ -108,16 +227,27 @@ export async function GET(request: Request) {
       enterpriseAccountsRes,
       companiesRes,
       customersRes
-    ] = await Promise.all([
-      supabase.from("countries").select("id, name, iso2, currency_code, official_email, admin_email, created_at").is("deleted_at", null),
-      supabase.from("country_branches").select("id, country_id, name, code, is_main, address, phone, email, whatsapp_number, owner_name, owner_customer_id, owner_profile_id, documents, contacts, created_at").is("deleted_at", null),
-      supabase.from("city_branches").select("id, country_id, country_branch_id, name, code, address, phone, email, owner_name, owner_customer_id, owner_profile_id, contacts, documents, created_at").is("deleted_at", null),
-      supabase.from("profiles").select("id, full_name, preferred_language_code, created_at").order("created_at", { ascending: false }).limit(50),
-      supabase.from("user_role_assignments").select("user_id, role, country_id, country_branch_id, city_branch_id, is_active, created_at").is("deleted_at", null),
-      supabase.from("enterprise_accounts").select("id, code, name, country_id, country_branch_id, city_branch_id, company_id, bank_id, customer_id, created_at").is("deleted_at", null).order("created_at", { ascending: false }).limit(100),
-      supabase.from("companies").select("id, company_name, registration_number, phone, email, address, country_id, city_id, created_at").is("deleted_at", null).limit(50),
-      supabase.from("customers").select("id, customer_name, country_id, phone, email, address, created_at").is("deleted_at", null).limit(50)
-    ]);
+    ] = sourceData
+      ? [
+          { data: sourceData.countries },
+          { data: sourceData.countryBranches },
+          { data: sourceData.cityBranches },
+          { data: sourceData.users },
+          { data: sourceData.assignments },
+          { data: sourceData.enterpriseAccounts },
+          { data: sourceData.companies },
+          { data: sourceData.customers }
+        ]
+      : await Promise.all([
+          supabase.from("countries").select("id, name, iso2, currency_code, official_email, admin_email, created_at").is("deleted_at", null),
+          supabase.from("country_branches").select("id, country_id, name, code, is_main, address, phone, email, whatsapp_number, owner_name, owner_customer_id, owner_profile_id, documents, contacts, created_at").is("deleted_at", null),
+          supabase.from("city_branches").select("id, country_id, country_branch_id, name, code, address, phone, email, owner_name, owner_customer_id, owner_profile_id, contacts, documents, created_at").is("deleted_at", null),
+          supabase.from("profiles").select("id, full_name, preferred_language_code, created_at").order("created_at", { ascending: false }).limit(50),
+          supabase.from("user_role_assignments").select("user_id, role, country_id, country_branch_id, city_branch_id, is_active, created_at").is("deleted_at", null),
+          supabase.from("enterprise_accounts").select("id, code, name, country_id, country_branch_id, city_branch_id, company_id, bank_id, customer_id, created_at").is("deleted_at", null).order("created_at", { ascending: false }).limit(100),
+          supabase.from("companies").select("id, name, legal_name, company_code, address, country_id, city_id, owner_name, contacts, created_at").is("deleted_at", null).limit(50),
+          supabase.from("customers").select("id, customer_name, company_name, contact_person, mobile, whatsapp, email, address, country_id, created_at").is("deleted_at", null).limit(50)
+        ]);
 
     const countriesMap = new Map<string, string>();
     (countriesRes.data ?? []).forEach((c: any) => {
@@ -172,7 +302,7 @@ export async function GET(request: Request) {
         ownerName: cb.owner_name,
         documentsCount: Array.isArray(cb.documents) ? cb.documents.length : 0,
         editUrl: `/dashboard/new-entry/branch-entry/country-branch?id=${cb.id}`,
-        rawDetails: cb
+        rawDetails: compactBranchRawDetails(cb)
       });
     });
 
@@ -207,7 +337,7 @@ export async function GET(request: Request) {
         progressPercent: grace.progressPercent,
         documentsCount: Array.isArray(cbr.documents) ? cbr.documents.length : 0,
         editUrl: `/dashboard/new-entry/branch-entry/city-branch?id=${cbr.id}`,
-        rawDetails: cbr
+        rawDetails: compactBranchRawDetails(cbr)
       });
     });
 
@@ -245,7 +375,7 @@ export async function GET(request: Request) {
         progressPercent: grace.progressPercent,
         documentsCount: 0,
         editUrl: `/dashboard/new-entry/users/registration?id=${u.id}`,
-        rawDetails: u
+        rawDetails: compactUserRawDetails(u)
       });
     });
 
@@ -276,7 +406,7 @@ export async function GET(request: Request) {
         progressPercent: grace.progressPercent,
         documentsCount: 0,
         editUrl: `/dashboard/accounts/setup?id=${acc.id}`,
-        rawDetails: acc
+        rawDetails: compactAccountRawDetails(acc)
       });
     });
 
@@ -288,6 +418,7 @@ export async function GET(request: Request) {
       suspended: items.filter((i) => i.status === "suspended").length,
       compliant: items.filter((i) => i.status === "compliant").length
     };
+    console.log("[kyc-reports] response ready", { total: items.length, metrics }, Date.now() - startedAt);
 
     return NextResponse.json({
       items,

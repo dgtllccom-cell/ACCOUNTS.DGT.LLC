@@ -1,7 +1,6 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export const accountTranslations: Record<string, Record<SupportedLanguage, string>> = {
-  // Setup Wizard Headers
   newAccountReport: {
     en: "New Account Report",
     ur: "نیا اکاؤنٹ رپورٹ",
@@ -37,8 +36,6 @@ export const accountTranslations: Record<string, Record<SupportedLanguage, strin
     fa: "خلاصه حساب",
     ps: "د حساب لنډیز"
   },
-
-  // Steps Labels
   step1Label: {
     en: "Account Information",
     ur: "اکاؤنٹ کی معلومات",
@@ -81,8 +78,6 @@ export const accountTranslations: Record<string, Record<SupportedLanguage, strin
     fa: "بررسی و ذخیره",
     ps: "بیا کتنه او خوندي کول"
   },
-
-  // Form Fields & Labels
   country: {
     en: "Country",
     ur: "ملک",
@@ -96,6 +91,13 @@ export const accountTranslations: Record<string, Record<SupportedLanguage, strin
     ar: "نوع الفرع",
     fa: "نوع شعبه",
     ps: "د څانګې ډول"
+  },
+  cityBranch: {
+    en: "City Branch",
+    ur: "سٹی برانچ",
+    ar: "فرع المدينة",
+    fa: "شعبه شهری",
+    ps: "ښاري څانګه"
   },
   selectBranch: {
     en: "Select Branch",
@@ -265,8 +267,6 @@ export const accountTranslations: Record<string, Record<SupportedLanguage, strin
     fa: "شماره مرجع دستی",
     ps: "د لاسي حوالې شمیره"
   },
-
-  // Buttons & Actions
   saveNext: {
     en: "Save & Next",
     ur: "محفوظ کریں اور آگے بڑھیں",
@@ -358,8 +358,6 @@ export const accountTranslations: Record<string, Record<SupportedLanguage, strin
     fa: "شروع نشده",
     ps: "نه دی پیل شوی"
   },
-
-  // Warehouse Tab
   warehouseDisabledTitle: {
     en: "Form Disabled (Set to Zero)",
     ur: "فارم غیر فعال ہے (زیرو پر سیٹ ہے)",
@@ -374,8 +372,6 @@ export const accountTranslations: Record<string, Record<SupportedLanguage, strin
     fa: "راه‌اندازی انبار مکان‌های موجودی را مدیریت می‌کند. در حال حاضر، این پیکربندی غیرفعال است (روی صفر تنظیم شده است). هیچ فرم یا ورودی لازم نیست. می‌توانید برای بررسی و ذخیره حساب روی بعدی کلک کنید.",
     ps: "د ګودام تنظیم د لیست ځایونه اداره کوي. اوس مهال، دا ترتیب غیر فعال دی (صفر ته ټاکل شوی). هیڅ فارم یا ان پټ ته اړتیا نشته. تاسو کولی شئ د حساب بیاکتنې او خوندي کولو لپاره بل کلیک وکړئ."
   },
-
-  // Step 6 Review & Saved details
   branchDetails: {
     en: "Branch Details",
     ur: "برانچ کی تفصیلات",
@@ -404,8 +400,6 @@ export const accountTranslations: Record<string, Record<SupportedLanguage, strin
     fa: "جزئیات حساب ذخیره شده",
     ps: "خوندي شوي حساب توضیحات"
   },
-
-  // Setup Report Page & Table
   accountSetupReport: {
     en: "Account Setup Report",
     ur: "اکاؤنٹ سیٹ اپ رپورٹ",
@@ -588,55 +582,6 @@ export const accountTranslations: Record<string, Record<SupportedLanguage, strin
     fa: "\u0634\u0639\u0628\u0647 \u0627\u0635\u0644\u06cc",
     ps: "\u0627\u0635\u0644\u064a \u0685\u0627\u0646\u06ab\u0647"
   },
-  cityBranch: {
-    en: "City Branch",
-    ur: "\u0633\u0679\u06cc \u0628\u0631\u0627\u0646\u0686",
-    ar: "\u0641\u0631\u0639 \u0627\u0644\u0645\u062f\u064a\u0646\u0629",
-    fa: "\u0634\u0639\u0628\u0647 \u0634\u0647\u0631\u06cc",
-    ps: "\u069a\u0627\u0631\u064a \u0685\u0627\u0646\u06ab\u0647"
-  },
-  selectAccountTitle: {
-    en: "Select Account Title",
-    ur: "\u0627\u06a9\u0627\u0624\u0646\u0679 \u0639\u0646\u0648\u0627\u0646 \u0645\u0646\u062a\u062e\u0628 \u06a9\u0631\u06cc\u06ba",
-    ar: "\u0627\u062e\u062a\u0631 \u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u062d\u0633\u0627\u0628",
-    fa: "\u0639\u0646\u0648\u0627\u0646 \u062d\u0633\u0627\u0628 \u0631\u0627 \u0627\u0646\u062a\u062e\u0627\u0628 \u06a9\u0646\u06cc\u062f",
-    ps: "\u062f \u062d\u0633\u0627\u0628 \u0633\u0631\u0644\u06cc\u06a9 \u0648\u067c\u0627\u06a9\u0626"
-  },
-  customerAccount: {
-    en: "Customer Account",
-    ur: "\u06a9\u0633\u0679\u0645\u0631 \u0627\u06a9\u0627\u0624\u0646\u0679",
-    ar: "\u062d\u0633\u0627\u0628 \u0627\u0644\u0639\u0645\u064a\u0644",
-    fa: "\u062d\u0633\u0627\u0628 \u0645\u0634\u062a\u0631\u06cc",
-    ps: "\u062f \u067e\u06cc\u0631\u0648\u062f\u0648\u0646\u06a9\u064a \u062d\u0633\u0627\u0628"
-  },
-  bankAccount: {
-    en: "Bank Account",
-    ur: "\u0628\u06cc\u0646\u06a9 \u0627\u06a9\u0627\u0624\u0646\u0679",
-    ar: "\u062d\u0633\u0627\u0628 \u0628\u0646\u0643\u064a",
-    fa: "\u062d\u0633\u0627\u0628 \u0628\u0627\u0646\u06a9\u06cc",
-    ps: "\u0628\u0627\u0646\u06a9\u064a \u062d\u0633\u0627\u0628"
-  },
-  personal: {
-    en: "Personal",
-    ur: "\u0630\u0627\u062a\u06cc",
-    ar: "\u0634\u062e\u0635\u064a",
-    fa: "\u0634\u062e\u0635\u06cc",
-    ps: "\u0634\u062e\u0635\u064a"
-  },
-  company: {
-    en: "Company",
-    ur: "\u06a9\u0645\u067e\u0646\u06cc",
-    ar: "\u0634\u0631\u0643\u0629",
-    fa: "\u0634\u0631\u06a9\u062a",
-    ps: "\u0634\u0631\u06a9\u062a"
-  },
-  employee: {
-    en: "Employee",
-    ur: "\u0645\u0644\u0627\u0632\u0645",
-    ar: "\u0645\u0648\u0638\u0641",
-    fa: "\u06a9\u0627\u0631\u0645\u0646\u062f",
-    ps: "\u06a9\u0627\u0631\u06a9\u0648\u0648\u0646\u06a9\u06cc"
-  },
   selectSubType: {
     en: "Select Sub Type",
     ur: "\u0630\u06cc\u0644\u06cc \u0642\u0633\u0645 \u0645\u0646\u062a\u062e\u0628 \u06a9\u0631\u06cc\u06ba",
@@ -756,61 +701,12 @@ export const accountTranslations: Record<string, Record<SupportedLanguage, strin
     fa: "لطفاً قبل از ادامه، نام حساب را وارد کنید.",
     ps: "مهرباني وکړئ د پرمخ تګ دمخه د حساب نوم داخل کړئ."
   },
-  createSaveAccount: {
-    en: "Create and Save Account",
-    ur: "اکاؤنٹ بنائیں اور محفوظ کریں",
-    ar: "إنشاء وحفظ الحساب",
-    fa: "ایجاد و ذخیره حساب",
-    ps: "حساب جوړ او خوندي کړئ"
-  },
-  updateAccount: {
-    en: "Update Account",
-    ur: "اکاؤنٹ اپ ڈیٹ کریں",
-    ar: "تحديث الحساب",
-    fa: "بروزرسانی حساب",
-    ps: "حساب تازه کړئ"
-  },
-  submitForApproval: {
-    en: "Submit for Approval",
-    ur: "منظوری کے لیے جمع کروائیں",
-    ar: "إرسال للموافقة",
-    fa: "ارسال برای تایید",
-    ps: "د تصویب لپاره وسپارئ"
-  },
-  simulateCityAdmin: {
-    en: "Simulate as City Admin",
-    ur: "شہر ایڈمن کے طور پر سمولیشن کریں",
-    ar: "المحاكاة كمسؤول المدينة",
-    fa: "شبیه‌سازی به عنوان مدیر شهر",
-    ps: "د ښار د مدیر په توګه سمولیشن"
-  },
-  pendingApprovalHint: {
-    en: "This account will require Branch Manager approval before activation.",
-    ur: "یہ اکاؤنٹ برانچ مینیجر کی منظوری کے بعد فعال ہو گا۔",
-    ar: "يتطلب هذا الحساب موافقة مدير الفرع قبل التفعيل.",
-    fa: "این حساب قبل از فعال‌سازی نیاز به تایید مدیر شعبه دارد.",
-    ps: "دا حساب د فعالیدو دمخه د څانګې مدیر تصویب ته اړتیا لري."
-  },
-  saving: {
-    en: "Saving Account...",
-    ur: "اکاؤنٹ محفوظ ہو رہا ہے...",
-    ar: "جاري حفظ الحساب...",
-    fa: "در حال ذخیره حساب...",
-    ps: "حساب خوندي کیږي..."
-  },
   reviewDetailsHint: {
     en: "Please review all details before creating the account.",
     ur: "اکاؤنٹ بنانے سے پہلے تمام تفصیلات کا جائزہ لیں۔",
     ar: "يرجى مراجعة كافة التفاصيل قبل إنشاء الحساب.",
     fa: "لطفاً قبل از ایجاد حساب، تمام جزئیات را بررسی کنید.",
     ps: "مهرباني وکړئ د حساب جوړولو دمخه ټول توضیحات بیاکتنه وکړئ."
-  },
-  linkedMasterRecords: {
-    en: "Linked Master Records",
-    ur: "منسلک ماسٹر ریکارڈز",
-    ar: "السجلات الرئيسية المرتبطة",
-    fa: "سوابق اصلی متصل",
-    ps: "تړلي اصلي ریکارډونه"
   },
   linkedCustomer: {
     en: "Linked Customer",
@@ -832,20 +728,6 @@ export const accountTranslations: Record<string, Record<SupportedLanguage, strin
     ar: "البنك المرتبط",
     fa: "بانک متصل",
     ps: "تړلی بانک"
-  },
-  accountInfo: {
-    en: "Account Info",
-    ur: "اکاؤنٹ معلومات",
-    ar: "معلومات الحساب",
-    fa: "اطلاعات حساب",
-    ps: "د حساب معلومات"
-  },
-  manualReference: {
-    en: "Manual Ref",
-    ur: "دستی حوالہ",
-    ar: "المرجع اليدوي",
-    fa: "مرجع دستی",
-    ps: "لاسي مرجع"
   },
   noCompany: {
     en: "No",

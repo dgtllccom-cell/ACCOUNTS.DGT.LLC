@@ -328,7 +328,7 @@ export class Party360Service {
     const { query = "", limit = 100, offset = 0 } = params;
     const lang = normalizeLanguage(params.lang, "en");
 
-    return await withLocalPg(async (sql) => {
+    const result = await withLocalPg(async (sql) => {
       // 1. Load all active customers
       const customers = await sql`
         SELECT c.*, co.name AS country_name, st.name AS state_name, ci.name AS city_name
@@ -472,6 +472,8 @@ export class Party360Service {
         total: filtered.length
       };
     });
+
+    return result ?? { parties: [], total: 0 };
   }
 }
 

@@ -3431,6 +3431,16 @@ export type UiKey =
   | "hr.confirm_delete_employee" | "hr.error_deleting_employee" | "hr.journal_title" | "hr.journal_subtitle" | "hr.report_title" | "hr.report_subtitle" | "hr.col_emp_code" | "hr.col_employee_name" | "hr.department_word" | "hr.col_joining_date" | "hr.col_net_payroll" | "hr.employee_code_full" | "hr.person_customer_name" | "hr.col_salary" | "hr.col_join_date"
   | "hr.select_person_first" | "hr.error_saving_profile"
   | "hr.col_country_branch" | "hr.col_designation_dept" | "hr.col_deductions" | "hr.erp_links" | "hr.col_per_code"
+  | "nav.smart_due_center"
+  | "smart_due.title" | "smart_due.subtitle" | "smart_due.refresh" | "smart_due.loading" | "smart_due.no_items"
+  | "smart_due.filter_urgency" | "smart_due.filter_module" | "smart_due.filter_country" | "smart_due.filter_branch"
+  | "smart_due.all_urgency" | "smart_due.all_modules" | "smart_due.all_countries" | "smart_due.all_branches"
+  | "smart_due.card_overdue" | "smart_due.card_due_today" | "smart_due.card_due_tomorrow" | "smart_due.card_upcoming" | "smart_due.card_pending"
+  | "smart_due.urgency_overdue" | "smart_due.urgency_due_today" | "smart_due.urgency_due_tomorrow" | "smart_due.urgency_upcoming" | "smart_due.urgency_pending"
+  | "smart_due.col_due_date" | "smart_due.col_module" | "smart_due.col_reference" | "smart_due.col_party" | "smart_due.col_country" | "smart_due.col_branch"
+  | "smart_due.col_total" | "smart_due.col_paid" | "smart_due.col_remaining" | "smart_due.col_currency" | "smart_due.col_status" | "smart_due.col_user" | "smart_due.col_remarks"
+  | "smart_due.cheque" | "smart_due.purchase" | "smart_due.sales" | "smart_due.shipping_bl" | "smart_due.shipping_line" | "smart_due.followup"
+  | "smart_due.open_source" | "smart_due.management_alert" | "smart_due.items_need_action" | "smart_due.page" | "smart_due.of_pages"
   | "nav.branch_setup_network" | "nav.branch_general_report" | "nav.locations_management" | "nav.new_user_registration" | "nav.user_general_report" | "nav.super_admin_user" | "nav.country_user" | "nav.branch_user" | "nav.new_account" | "nav.ledger_account" | "nav.register_employee" | "nav.new_entry_hub" | "nav.entry_reports"
   | (string & {});
 
@@ -5801,6 +5811,54 @@ const en: Dict = {
   "hr.col_deductions": "Deductions (Adv/Loan)",
   "hr.erp_links": "ERP Links / 360°",
   "hr.col_per_code": "PER Code",
+  "nav.smart_due_center": "Smart Due Center",
+  "smart_due.title": "Smart Due / Follow-up Control Center",
+  "smart_due.subtitle": "All pending, overdue, and upcoming action items across all modules",
+  "smart_due.refresh": "Refresh",
+  "smart_due.loading": "Loading items...",
+  "smart_due.no_items": "No items found for the selected filters.",
+  "smart_due.filter_urgency": "Urgency",
+  "smart_due.filter_module": "Module",
+  "smart_due.filter_country": "Country",
+  "smart_due.filter_branch": "Branch",
+  "smart_due.all_urgency": "All Urgency",
+  "smart_due.all_modules": "All Modules",
+  "smart_due.all_countries": "All Countries",
+  "smart_due.all_branches": "All Branches",
+  "smart_due.card_overdue": "Overdue",
+  "smart_due.card_due_today": "Due Today",
+  "smart_due.card_due_tomorrow": "Due Tomorrow",
+  "smart_due.card_upcoming": "Upcoming",
+  "smart_due.card_pending": "Pending",
+  "smart_due.urgency_overdue": "Overdue",
+  "smart_due.urgency_due_today": "Due Today",
+  "smart_due.urgency_due_tomorrow": "Due Tomorrow",
+  "smart_due.urgency_upcoming": "Upcoming",
+  "smart_due.urgency_pending": "Pending",
+  "smart_due.col_due_date": "Due Date",
+  "smart_due.col_module": "Module / Type",
+  "smart_due.col_reference": "Reference No.",
+  "smart_due.col_party": "Party / Customer / Agent",
+  "smart_due.col_country": "Country",
+  "smart_due.col_branch": "Branch",
+  "smart_due.col_total": "Total",
+  "smart_due.col_paid": "Paid",
+  "smart_due.col_remaining": "Remaining",
+  "smart_due.col_currency": "Currency",
+  "smart_due.col_status": "Status",
+  "smart_due.col_user": "Responsible User",
+  "smart_due.col_remarks": "Remarks",
+  "smart_due.cheque": "Bank Cheque",
+  "smart_due.purchase": "Purchase Order",
+  "smart_due.sales": "Sales Order",
+  "smart_due.shipping_bl": "Shipping BL",
+  "smart_due.shipping_line": "Shipping Line",
+  "smart_due.followup": "Follow-up",
+  "smart_due.open_source": "Open Source Record",
+  "smart_due.management_alert": "Management Summary",
+  "smart_due.items_need_action": "items require action",
+  "smart_due.page": "Page",
+  "smart_due.of_pages": "of",
   "hr.employee_code_full": "Employee Code",
   "hr.person_customer_name": "Person / Customer Name",
   "hr.col_salary": "Salary",

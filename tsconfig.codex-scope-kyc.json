@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false
+  },
+  "include": [
+    "app/api/branch-management/general-report/route.ts",
+    "app/api/erp/kyc/reports/route.ts",
+    "app/dashboard/kyc-reports/page.tsx",
+    "features/customers/components/customer-picker.tsx"
+  ]
+}

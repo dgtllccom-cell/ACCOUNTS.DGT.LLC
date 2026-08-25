@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Digital Dock ERP">
+  <defs>
+    <linearGradient id="bg" x1="64" y1="32" x2="448" y2="480" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0f5bff"/>
+      <stop offset="1" stop-color="#061b63"/>
+    </linearGradient>
+    <linearGradient id="dock" x1="96" y1="154" x2="420" y2="377" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#bde6ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <path d="M145 338h222c20 0 37-14 42-34l17-75H303l-27-72h-91l-27 72H89l18 75c5 20 22 34 38 34Z" fill="url(#dock)"/>
+  <path d="M198 205h116M171 256h194M154 295h216" fill="none" stroke="#06318c" stroke-width="22" stroke-linecap="round"/>
+  <path d="M256 96v83" stroke="#fff" stroke-width="28" stroke-linecap="round"/>
+  <path d="M218 118h76" stroke="#fff" stroke-width="28" stroke-linecap="round"/>
+  <path d="M111 377c47 32 94 32 145 0 51 32 98 32 145 0" fill="none" stroke="#62d2ff" stroke-width="24" stroke-linecap="round"/>
+</svg>

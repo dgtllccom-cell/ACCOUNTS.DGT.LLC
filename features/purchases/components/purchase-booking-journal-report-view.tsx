@@ -2767,6 +2767,7 @@ export function PurchaseBookingJournalReportView({
                 const rcvPort = f.receivedPort || f.receivedCountryPort || "Central Port";
                 const rcvDate = formatShortDate(f.receivedDate || report.purchaseDate || report.bookingDate);
 
+                const isAccepted = report.status === "accepted" || report.status === "approved" || isPosted;
                 const invStatus = (report as any).inventoryStatus || report.form_data?.workflow?.inventoryStatus || (isAccepted ? "In Transit" : "Completed");
                 const payStatus = (report as any).paymentStatus || report.form_data?.workflow?.paymentStatus || (advFc > 0 ? "Advance Paid" : "Pending");
                 const loadStatus = (report as any).containerStatus || report.form_data?.workflow?.containerStatus || (isAccepted ? "Loaded" : "Dispatched");

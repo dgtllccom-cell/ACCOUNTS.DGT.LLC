@@ -1,0 +1,55 @@
+{
+  "components\\ui\\report-actions.tsx -> @/lib/reports/open-generic-erp-report": {
+    "id": 58152,
+    "files": [
+      "static/chunks/31852-d73c64bceab6d1f9.js",
+      "static/chunks/58152.a30399c0d4bfc97a.js"
+    ]
+  },
+  "features\\journal\\components\\purchase-order-payment-journal.tsx -> @/features/reports/ledger-report/ledger-report-api": {
+    "id": 74333,
+    "files": [
+      "static/chunks/74333.e55b68a95fdfc0af.js"
+    ]
+  },
+  "features\\journal\\components\\purchase-order-payment-journal.tsx -> @/lib/reports/open-generic-erp-report": {
+    "id": 58152,
+    "files": [
+      "static/chunks/35771.a30399c0d4bfc97a.js"
+    ]
+  },
+  "features\\journal\\components\\sales-order-payment-journal.tsx -> @/features/reports/ledger-report/ledger-report-api": {
+    "id": 74333,
+    "files": [
+      "static/chunks/74333.e55b68a95fdfc0af.js"
+    ]
+  },
+  "features\\journal\\components\\sales-order-payment-journal.tsx -> @/lib/reports/open-generic-erp-report": {
+    "id": 58152,
+    "files": [
+      "static/chunks/35771.a30399c0d4bfc97a.js"
+    ]
+  },
+  "features\\roznamcha\\components\\expenses-bill-entry-form.tsx -> @/features/reports/ledger-report/ledger-report-api": {
+    "id": 74333,
+    "files": [
+      "static/chunks/74333.e55b68a95fdfc0af.js"
+    ]
+  },
+  "features\\sales\\components\\sales-module-workspace.tsx -> @/lib/reports/open-generic-erp-report": {
+    "id": 58152,
+    "files": []
+  },
+  "node_modules\\next\\dist\\client\\index.js -> ../pages/_app": {
+    "id": 45139,
+    "files": [
+      "static/chunks/45139.c881a596cf66ed1e.js"
+    ]
+  },
+  "node_modules\\next\\dist\\client\\index.js -> ../pages/_error": {
+    "id": 31646,
+    "files": [
+      "static/chunks/31646.e4be98b08f195bd7.js"
+    ]
+  }
+}
