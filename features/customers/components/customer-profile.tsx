@@ -9,10 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { apiGet } from "@/lib/api/client";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { getLabel } from "./translations";
 import { Th } from "@/components/ui/translated-th";
 import { t } from "@/lib/i18n/ui";
 import { openMasterProfileReportWindow } from "@/lib/reports/open-master-profile-report-window";
+import { Party360Modal } from "./party-360-modal";
+import { Link2 } from "lucide-react";
 
 type CustomerRow = {
   id: string;
@@ -33,7 +36,7 @@ type CustomerRow = {
 };
 
 export function CustomerProfile({
-  lang,
+  lang: langProp,
   customerId,
   isDrawer = false
 }: {
@@ -42,9 +45,15 @@ export function CustomerProfile({
   isDrawer?: boolean;
 }) {
   const router = useRouter();
+  // Prefer the reactive client-side language store over the server-rendered prop — otherwise
+  // switching language after this page has loaded (without a full navigation) leaves it stuck
+  // on whatever language was active at SSR time. See CLAUDE.md's i18n component pattern.
+  const activeLang = useActiveLanguage();
+  const lang = activeLang !== "en" ? activeLang : langProp;
   const [loading, setLoading] = useState(true);
   const [customer, setCustomer] = useState<CustomerRow | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showErpLinks, setShowErpLinks] = useState(false);
 
   useEffect(() => {
     if (!customerId) return;
@@ -488,6 +497,14 @@ export function CustomerProfile({
           >
             <PencilLine className="h-4 w-4" />
           </button>
+          {/* ERP Links / Registration Details — every module/role this Person Master is linked to */}
+          <button
+            onClick={() => setShowErpLinks(true)}
+            title={t(lang, "erp.person_links_title", "ERP Links / Registration Details")}
+            className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-indigo-400 hover:bg-slate-800 transition-colors cursor-pointer"
+          >
+            <Link2 className="h-4 w-4" />
+          </button>
           <div className="h-4 w-px bg-slate-700" />
           {/* Print */}
           <button
@@ -782,6 +799,14 @@ export function CustomerProfile({
           }
         }
       `}</style>
+
+      {showErpLinks ? (
+        <Party360Modal
+          customerId={customer.id}
+          lang={lang}
+          onClose={() => setShowErpLinks(false)}
+        />
+      ) : null}
     </div>
   );
 }

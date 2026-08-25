@@ -122,6 +122,7 @@ export function CompanyIncorporationForm({
 
   // --- State Variables ---
   const [ownerPersonId, setOwnerPersonId] = useState("");
+  const [managerPersonId, setManagerPersonId] = useState("");
   const [ownerProfile, setOwnerProfile] = useState<any>(null);
   const [existingCompaniesForOwner, setExistingCompaniesForOwner] = useState<Array<any>>([]);
   const [ownerName, setOwnerName] = useState("");
@@ -251,6 +252,9 @@ export function CompanyIncorporationForm({
             if (comp.owner_person_id) {
               setOwnerPersonId(comp.owner_person_id);
             }
+            if (comp.manager_person_id) {
+              setManagerPersonId(comp.manager_person_id);
+            }
           }
         })
         .catch(() => null);
@@ -284,19 +288,15 @@ export function CompanyIncorporationForm({
     try {
       const payload = {
         name: companyName.trim(),
-        legal_name: businessName.trim() || companyName.trim(),
-        owner_name: ownerName.trim(),
-        owner_person_id: ownerPersonId || undefined,
-        business_type: legalStructure,
-        registration_type: registrationType,
-        license_number: licenseNumber.trim(),
-        nature_of_business: natureOfBusiness,
-        country_id: location.countryId || undefined,
-        state_province_id: location.stateProvinceId || undefined,
-        city_id: location.cityId || undefined,
+        legalName: businessName.trim() || companyName.trim(),
+        ownerName: ownerName.trim(),
+        ownerPersonId: ownerPersonId || undefined,
+        managerPersonId: managerPersonId || undefined,
+        businessType: legalStructure,
+        countryId: location.countryId || undefined,
+        stateProvinceId: location.stateProvinceId || undefined,
+        cityId: location.cityId || undefined,
         address: address.trim(),
-        phone: phone.trim(),
-        email: email.trim(),
         contacts: [{ type: "Mobile Number", value: phone }, { type: "Email Address", value: email }].filter(c => c.value),
         registrations: [{ type: registrationType, value: licenseNumber }].filter(r => r.value)
       };
@@ -402,7 +402,7 @@ export function CompanyIncorporationForm({
       {/* ── TOP MASTER OWNER PICKER BAR ── */}
       <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex-1 max-w-xl">
+          <div className="flex-1 max-w-xl grid grid-cols-1 sm:grid-cols-2 gap-3">
             <PersonPicker
               label={lang === "ur" ? "مالک / شخص کا انتخاب کریں (Select Owner / Person)" : "Select Owner / Person"}
               value={ownerPersonId}
@@ -410,6 +410,15 @@ export function CompanyIncorporationForm({
                 setOwnerPersonId(id);
               }}
               placeholder={lang === "ur" ? "مالک یا شخص کا نام یا کسٹمر کوڈ درج کریں..." : "Search owner name or customer code..."}
+              lang={lang}
+            />
+            <PersonPicker
+              label={lang === "ur" ? "کمپنی منیجر (Company Manager)" : "Company Manager"}
+              value={managerPersonId}
+              onValueChange={(id) => {
+                setManagerPersonId(id);
+              }}
+              placeholder={lang === "ur" ? "منیجر کا نام تلاش کریں..." : "Search manager name..."}
               lang={lang}
             />
           </div>

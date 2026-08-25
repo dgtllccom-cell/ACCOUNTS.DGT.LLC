@@ -61,6 +61,8 @@ export async function POST(request: NextRequest) {
         baseCurrency: body.baseCurrency || "USD",
         originalLanguage: body.originalLanguage || "en",
         ownerName: body.ownerName ?? null,
+        ownerPersonId: body.ownerPersonId ?? null,
+        managerPersonId: body.managerPersonId ?? null,
         businessType: body.businessType ?? null,
         countryId: body.countryId ?? null,
         stateProvinceId: body.stateProvinceId ?? null,

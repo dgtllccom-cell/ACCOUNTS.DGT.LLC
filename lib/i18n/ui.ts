@@ -3121,6 +3121,15 @@ export type UiKey =
   | "hr.pp_no_matches"
   | "hr.pp_add_new_person_master"
   | "hr.pp_edit_person_registry"
+  | "erp.person_links_title"
+  | "erp.person_dup_title"
+  | "erp.person_dup_desc"
+  | "erp.person_dup_desc2"
+  | "erp.person_dup_father"
+  | "erp.person_dup_mobile"
+  | "erp.person_dup_email"
+  | "erp.person_dup_use_existing"
+  | "erp.person_dup_create_new"
   | "orgchart.title"
   | "orgchart.subtitle"
   | "orgchart.stat_countries"
@@ -3316,6 +3325,15 @@ export type UiKey =
   | "hr.pp_no_matches"
   | "hr.pp_add_new_person_master"
   | "hr.pp_edit_person_registry"
+  | "erp.person_links_title"
+  | "erp.person_dup_title"
+  | "erp.person_dup_desc"
+  | "erp.person_dup_desc2"
+  | "erp.person_dup_father"
+  | "erp.person_dup_mobile"
+  | "erp.person_dup_email"
+  | "erp.person_dup_use_existing"
+  | "erp.person_dup_create_new"
   | "orgchart.title"
   | "orgchart.subtitle"
   | "orgchart.stat_countries"
@@ -4092,6 +4110,15 @@ const en: Dict = {
   "hr.pp_no_matches": "No matches found.",
   "hr.pp_add_new_person_master": "+ Add New Person Master",
   "hr.pp_edit_person_registry": "Edit Person Registry — Customer Master",
+  "erp.person_links_title": "ERP Links / Registration Details",
+  "erp.person_dup_title": "Possible Duplicate Person",
+  "erp.person_dup_desc": "We found existing person record(s) that may match",
+  "erp.person_dup_desc2": "Use the existing Person ID instead of creating a duplicate, or continue if this is genuinely a different person.",
+  "erp.person_dup_father": "Father",
+  "erp.person_dup_mobile": "Mobile",
+  "erp.person_dup_email": "Email",
+  "erp.person_dup_use_existing": "Use This Person",
+  "erp.person_dup_create_new": "Create New Anyway",
   "purchase.step4_verify_subtitle": "Verify printable document sections, account postings, goods manifest, payment terms, and loading schedules before final verification.",
   "purchase.opt_advance_payment": "Advance Payment",
   "purchase.opt_invoice": "Invoice",
@@ -10344,6 +10371,15 @@ const ur: Dict = {
   "hr.pp_no_matches": "کوئی مماثلت نہیں ملی۔",
   "hr.pp_add_new_person_master": "+ نیا پرسن ماسٹر شامل کریں",
   "hr.pp_edit_person_registry": "پرسن رجسٹری میں ترمیم کریں — کسٹمر ماسٹر",
+  "erp.person_links_title": "ای آر پی لنکس / رجسٹریشن تفصیلات",
+  "erp.person_dup_title": "ممکنہ ڈپلیکیٹ شخص",
+  "erp.person_dup_desc": "ہمیں موجودہ شخص کا ریکارڈ ملا جو مماثل ہو سکتا ہے",
+  "erp.person_dup_desc2": "نیا ڈپلیکیٹ بنانے کے بجائے موجودہ پرسن آئی ڈی استعمال کریں، یا اگر یہ واقعی ایک مختلف شخص ہے تو جاری رکھیں۔",
+  "erp.person_dup_father": "والد",
+  "erp.person_dup_mobile": "موبائل",
+  "erp.person_dup_email": "ای میل",
+  "erp.person_dup_use_existing": "یہ شخص استعمال کریں",
+  "erp.person_dup_create_new": "پھر بھی نیا بنائیں",
   "purchase.step4_verify_subtitle": "حتمی تصدیق سے پہلے پرنٹ ایبل دستاویز کے حصے، اکاؤنٹ پوسٹنگز، مال کی فہرست، ادائیگی کی شرائط، اور لوڈنگ شیڈول کی تصدیق کریں۔",
   "purchase.opt_advance_payment": "ایڈوانس ادائیگی",
   "purchase.opt_invoice": "انوائس",
@@ -15700,6 +15736,15 @@ const ar: Dict = {
   "hr.pp_no_matches": "لم يتم العثور على تطابق.",
   "hr.pp_add_new_person_master": "+ إضافة سجل شخص رئيسي جديد",
   "hr.pp_edit_person_registry": "تعديل سجل الشخص — سجل العميل الرئيسي",
+  "erp.person_links_title": "روابط النظام / تفاصيل التسجيل",
+  "erp.person_dup_title": "شخص مكرر محتمل",
+  "erp.person_dup_desc": "وجدنا سجل (سجلات) شخص موجودة قد تتطابق",
+  "erp.person_dup_desc2": "استخدم رقم الشخص الحالي بدلاً من إنشاء سجل مكرر، أو تابع إذا كان هذا شخصًا مختلفًا حقًا.",
+  "erp.person_dup_father": "الأب",
+  "erp.person_dup_mobile": "الجوال",
+  "erp.person_dup_email": "البريد الإلكتروني",
+  "erp.person_dup_use_existing": "استخدام هذا الشخص",
+  "erp.person_dup_create_new": "إنشاء جديد على أي حال",
   "purchase.step4_verify_subtitle": "تحقق من أقسام المستند القابل للطباعة، ترحيلات الحسابات، بيان البضائع، شروط الدفع، وجداول التحميل قبل التحقق النهائي.",
   "purchase.opt_advance_payment": "دفعة مقدمة",
   "purchase.opt_invoice": "فاتورة",
@@ -21056,6 +21101,15 @@ const fa: Dict = {
   "hr.pp_no_matches": "هیچ موردی یافت نشد.",
   "hr.pp_add_new_person_master": "+ افزودن شخص اصلی جدید",
   "hr.pp_edit_person_registry": "ویرایش ثبت شخص — مرجع مشتری",
+  "erp.person_links_title": "پیوندهای ERP / جزئیات ثبت‌نام",
+  "erp.person_dup_title": "احتمال شخص تکراری",
+  "erp.person_dup_desc": "ما رکورد(های) شخص موجودی را یافتیم که ممکن است مطابقت داشته باشد",
+  "erp.person_dup_desc2": "به‌جای ایجاد یک رکورد تکراری، از شناسه شخص موجود استفاده کنید، یا اگر واقعاً شخص دیگری است ادامه دهید.",
+  "erp.person_dup_father": "پدر",
+  "erp.person_dup_mobile": "موبایل",
+  "erp.person_dup_email": "ایمیل",
+  "erp.person_dup_use_existing": "استفاده از این شخص",
+  "erp.person_dup_create_new": "در هر صورت جدید ایجاد شود",
   "purchase.step4_verify_subtitle": "بخش‌های سند قابل چاپ، ثبت حساب‌ها، فهرست کالا، شرایط پرداخت و برنامه بارگیری را قبل از تایید نهایی بررسی کنید.",
   "purchase.opt_advance_payment": "پیش‌پرداخت",
   "purchase.opt_invoice": "فاکتور",
@@ -26409,6 +26463,15 @@ const ps: Dict = {
   "hr.pp_no_matches": "هیڅ سمون ونه موندل شو.",
   "hr.pp_add_new_person_master": "+ نوی فرد ماسټر اضافه کړئ",
   "hr.pp_edit_person_registry": "د فرد ثبت سمون — د مشتري ماسټر",
+  "erp.person_links_title": "د ERP لینکونه / د ثبت جزئیات",
+  "erp.person_dup_title": "احتمالي تکراري شخص",
+  "erp.person_dup_desc": "موږ د شتون لرونکي شخص ریکارډ(ونه) وموندل چې ممکن ورته وي",
+  "erp.person_dup_desc2": "د یو نوي تکراري ریکارډ جوړولو پرځای، شتون لرونکی د شخص ID وکاروئ، یا که دا واقعا بل شخص دی نو دوام ورکړئ.",
+  "erp.person_dup_father": "پلار",
+  "erp.person_dup_mobile": "موبایل",
+  "erp.person_dup_email": "بریښنالیک",
+  "erp.person_dup_use_existing": "دا شخص وکاروئ",
+  "erp.person_dup_create_new": "په هرصورت نوی جوړ کړئ",
   "purchase.step4_verify_subtitle": "د وروستي تصدیق دمخه د چاپ وړ سند برخې، د حساب ثبتونه، د مالونو لیست، د تادیې شرایط، او د بارولو مهالویش وګورئ.",
   "purchase.opt_advance_payment": "مخکینۍ تادیه",
   "purchase.opt_invoice": "انوائس",

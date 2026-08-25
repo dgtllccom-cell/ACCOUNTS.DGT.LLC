@@ -91,7 +91,7 @@ export function Party360Modal({
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                  {lang === "ur" ? "ماسٹر ہستی و 360° لنکیج ڈوزیئر" : "Master Entity & 360° Linkage Dossier"}
+                  {lang === "ur" ? "پرسن ماسٹر — ای آر پی لنکس" : "Person Master — ERP Links & Registration Details"}
                 </span>
                 {summary?.customerCode && (
                   <span className="rounded-md bg-indigo-100 dark:bg-indigo-950/60 px-2 py-0.5 font-mono text-[11px] font-bold text-indigo-700 dark:text-indigo-300">
@@ -349,9 +349,21 @@ export function Party360Modal({
                               </p>
                             </div>
                           </div>
-                          <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-                            {emp.status || "Active"}
-                          </span>
+                          <div className="shrink-0 flex items-center gap-2">
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                              {emp.status || "Active"}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onClose();
+                                router.push(`/dashboard/general-office/employees?employeeId=${emp.id}` as Route);
+                              }}
+                              className="text-xs font-bold text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 p-1.5 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 rounded-lg cursor-pointer"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>

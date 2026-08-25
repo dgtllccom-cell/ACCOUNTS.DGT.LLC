@@ -18,6 +18,8 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLabel } from "./translations";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { nameMatches } from "@/lib/utils/person-duplicate-match";
+import { PersonDuplicateWarningModal, type PersonDuplicateCandidate } from "@/components/erp/person-duplicate-warning-modal";
 
 type CustomerRow = {
   id: string;
@@ -29,6 +31,8 @@ type CustomerRow = {
   customer_name: string;
   company_name: string | null;
   contact_person: string | null;
+  father_name?: string | null;
+  person_code?: string | null;
   mobile: string | null;
   whatsapp: string | null;
   email: string | null;
@@ -58,6 +62,9 @@ export function CustomerForm({
   const lang = useActiveLanguage() || initialLang;
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [dupCandidates, setDupCandidates] = useState<PersonDuplicateCandidate[]>([]);
+  const [dupSearchedName, setDupSearchedName] = useState("");
+  const [pendingPayload, setPendingPayload] = useState<Record<string, unknown> | null>(null);
 
   // DB customers local cache to read details if editing
   const [savedCompanies, setSavedCompanies] = useState<CustomerRow[]>([]);
@@ -210,7 +217,7 @@ export function CustomerForm({
               } else {
                 setFirstName(parsed.firstName || c.customer_name.split(" ")[0] || c.customer_name || "");
                 setLastName(parsed.lastName || c.customer_name.split(" ").slice(1).join(" ") || "");
-                setFatherName(parsed.fatherName || c.contact_person || "");
+                setFatherName(c.father_name || parsed.fatherName || c.contact_person || "");
               }
             }
           } catch {
@@ -385,10 +392,11 @@ export function CustomerForm({
       customerName: resolvedCustomerName,
       firstName: firstName.trim() || null,
       lastName: lastName.trim() || null,
+      fatherName: customerType === "Business" ? null : (fatherName.trim() || null),
       gender: customerType === "Business" ? null : customerType,
       photoUrl: passportPicture || null,
       companyName: customerType === "Business" ? businessName.trim() : (companyName || null),
-      contactPerson: customerType === "Business" ? `${firstName} ${lastName}`.trim() : (fatherName || null),
+      contactPerson: customerType === "Business" ? `${firstName} ${lastName}`.trim() : null,
       mobile: firstMobile || null,
       whatsapp: firstWhatsapp || null,
       email: firstEmail || null,
@@ -399,6 +407,42 @@ export function CustomerForm({
       registrations: []
     };
 
+    // Duplicate-prevention: only when registering a brand-new Person Master, not when editing
+    // an existing one. Search existing people by the resolved name first; if a close match
+    // already exists, warn instead of silently creating a second row for the same person.
+    if (!initialCustomerId) {
+      try {
+        const qp = new URLSearchParams();
+        qp.set("q", resolvedCustomerName);
+        qp.set("limit", "10");
+        qp.set("lang", lang);
+        const res = await apiGet<{ customers: CustomerRow[] }>(`/api/erp/customers?${qp.toString()}`);
+        const matches = (res.customers ?? []).filter((c) => nameMatches(c.customer_name, resolvedCustomerName));
+        if (matches.length > 0) {
+          setDupCandidates(matches.map((c) => ({
+            id: c.id,
+            personCode: c.person_code,
+            name: c.customer_name,
+            fatherName: c.father_name,
+            mobile: (c as any).mobile,
+            email: (c as any).email
+          })));
+          setDupSearchedName(resolvedCustomerName);
+          setPendingPayload(payload);
+          setSaving(false);
+          return;
+        }
+      } catch {
+        // If the duplicate-check search itself fails, fall through to save — never block
+        // registration on a search-availability issue.
+      }
+    }
+
+    await performSave(payload);
+  };
+
+  const performSave = async (payload: Record<string, unknown>) => {
+    setSaving(true);
     try {
       if (initialCustomerId) {
         // Edit mode
@@ -1076,6 +1120,33 @@ export function CustomerForm({
           </div>
         </aside>
       </div>
+
+      {dupCandidates.length > 0 ? (
+        <PersonDuplicateWarningModal
+          lang={lang}
+          searchedName={dupSearchedName}
+          candidates={dupCandidates}
+          onUseExisting={(personId) => {
+            setDupCandidates([]);
+            setPendingPayload(null);
+            if (mode === "standalone") {
+              router.push(`/dashboard/settings/customers/view?customerId=${personId}` as Route);
+            } else {
+              onSave?.(personId);
+            }
+          }}
+          onCreateAnyway={() => {
+            const payload = pendingPayload;
+            setDupCandidates([]);
+            setPendingPayload(null);
+            if (payload) void performSave(payload);
+          }}
+          onCancel={() => {
+            setDupCandidates([]);
+            setPendingPayload(null);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

@@ -579,6 +579,14 @@ export function GeneralOfficeDashboardView() {
     if (nextTab && nextTab !== activeTab) {
       setActiveTab(nextTab);
     }
+    // Deep-link from the ERP Links / Party 360 viewer: opening ?employeeId=... jumps straight
+    // to the Employee edit form instead of leaving the visitor to find it in the list manually.
+    const deepLinkEmployeeId = searchParams.get("employeeId");
+    if (deepLinkEmployeeId) {
+      setActiveTab("management");
+      setSelectedEmployeeId(deepLinkEmployeeId);
+      setShowFormModal(true);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 

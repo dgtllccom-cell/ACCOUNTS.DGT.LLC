@@ -79,6 +79,7 @@ export async function POST(request: NextRequest) {
         customerName: body.customerName,
         firstName: body.firstName ?? null,
         lastName: body.lastName ?? null,
+        fatherName: body.fatherName ?? null,
         gender: body.gender ?? null,
         photoUrl: body.photoUrl ?? null,
         companyName: body.companyName ?? null,

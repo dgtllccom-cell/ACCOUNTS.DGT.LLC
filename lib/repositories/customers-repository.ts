@@ -13,8 +13,10 @@ export type CustomerRow = {
   customer_name: string;
   first_name: string | null;
   last_name: string | null;
+  father_name: string | null;
   gender: string | null;
   photo_url: string | null;
+  person_code: string | null;
   company_name: string | null;
   contact_person: string | null;
   mobile: string | null;
@@ -47,7 +49,7 @@ export type CustomerRegistrationRow = {
 
 const CUSTOMER_COLUMNS = [
   "id", "country_id", "state_province_id", "district_id", "city_id", "area_location_id",
-  "customer_name", "first_name", "last_name", "gender", "photo_url",
+  "customer_name", "first_name", "last_name", "father_name", "gender", "photo_url", "person_code",
   "company_name", "contact_person", "mobile", "whatsapp", "email", "address",
   "notes", "original_language_code", "is_active", "created_at", "updated_at"
 ];
@@ -83,7 +85,8 @@ export class CustomersRepository {
           AND (${input.countryId ? sql`country_id = ${input.countryId}::uuid` : sql`true`})
           AND (${
             like
-              ? sql`(customer_name ILIKE ${like} OR first_name ILIKE ${like} OR last_name ILIKE ${like} OR company_name ILIKE ${like} OR contact_person ILIKE ${like} OR email ILIKE ${like} OR mobile ILIKE ${like} OR whatsapp ILIKE ${like} OR address ILIKE ${like} OR notes ILIKE ${like} ${
+              ? sql`(customer_name ILIKE ${like} OR first_name ILIKE ${like} OR last_name ILIKE ${like} OR father_name ILIKE ${like} OR person_code ILIKE ${like} OR company_name ILIKE ${like} OR contact_person ILIKE ${like} OR email ILIKE ${like} OR mobile ILIKE ${like} OR whatsapp ILIKE ${like} OR address ILIKE ${like} OR notes ILIKE ${like}
+                  OR EXISTS (SELECT 1 FROM public.customer_registrations cr WHERE cr.customer_id = customers.id AND cr.deleted_at IS NULL AND cr.registration_value ILIKE ${like}) ${
                   translatedMatchIds.length > 0 ? sql`OR id = ANY(${translatedMatchIds}::uuid[])` : sql``
                 })`
               : sql`true`
@@ -107,6 +110,8 @@ export class CustomersRepository {
       query = query.or(
         [
           `customer_name.ilike.${like}`,
+          `father_name.ilike.${like}`,
+          `person_code.ilike.${like}`,
           `company_name.ilike.${like}`,
           `contact_person.ilike.${like}`,
           `email.ilike.${like}`,
@@ -200,6 +205,7 @@ export class CustomersRepository {
     customerName: string;
     firstName?: string | null;
     lastName?: string | null;
+    fatherName?: string | null;
     gender?: string | null;
     photoUrl?: string | null;
     companyName?: string | null;
@@ -284,6 +290,7 @@ export class CustomersRepository {
         customer_name: input.customerName.trim(),
         first_name: input.firstName?.trim() || null,
         last_name: input.lastName?.trim() || null,
+        father_name: input.fatherName?.trim() || null,
         gender: input.gender ?? null,
         photo_url: input.photoUrl ?? null,
         company_name: input.companyName ?? null,
@@ -312,6 +319,19 @@ export class CustomersRepository {
           entry_serial: serials.entrySerial
         };
         await sql`UPDATE public.customers SET ${sql(serialPatch)} WHERE id = ${createdId}::uuid`;
+      } catch { /* non-fatal */ }
+
+      // Person Master identity code (PER-000001 style) — a single global sequence, distinct
+      // from the 4-scope allocateFormSerials() engine above (that one is for transactional
+      // forms; a person identity only needs one clean global number, not country/branch/entry
+      // variants). Calls next_entity_serial() directly on the same connection rather than via
+      // the Supabase admin client, matching this repository's established direct-Postgres
+      // preference (see class-level comment).
+      try {
+        const [row] = await sql`SELECT next_entity_serial('global', 'GLOBAL', 'person', 'PER') AS code`;
+        if (row?.code) {
+          await sql`UPDATE public.customers SET person_code = ${row.code} WHERE id = ${createdId}::uuid AND person_code IS NULL`;
+        }
       } catch { /* non-fatal */ }
 
       return createdId;
@@ -375,6 +395,7 @@ export class CustomersRepository {
       customerName: string;
       firstName: string | null;
       lastName: string | null;
+      fatherName: string | null;
       gender: string | null;
       photoUrl: string | null;
       companyName: string | null;
@@ -396,6 +417,7 @@ export class CustomersRepository {
     if ("customerName" in input) patch.customer_name = input.customerName;
     if ("firstName" in input) patch.first_name = input.firstName;
     if ("lastName" in input) patch.last_name = input.lastName;
+    if ("fatherName" in input) patch.father_name = input.fatherName;
     if ("gender" in input) patch.gender = input.gender;
     if ("photoUrl" in input) patch.photo_url = input.photoUrl;
     if ("companyName" in input) patch.company_name = input.companyName;

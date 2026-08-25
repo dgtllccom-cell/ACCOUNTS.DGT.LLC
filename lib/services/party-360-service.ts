@@ -1,6 +1,7 @@
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
 import { transliterateProperNoun } from "@/lib/i18n/transliteration";
+import { nameMatches } from "@/lib/utils/person-duplicate-match";
 
 export type PartyAffiliationSummary = {
   customerId?: string;
@@ -58,28 +59,6 @@ export type PartyAffiliationSummary = {
   };
 };
 
-function normalizeNameStem(name?: string | null): string {
-  if (!name) return "";
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]/g, "")
-    .replace(/(ullah|ollah|ulla|olla|khan|abdullah|jan|sahib)/g, "");
-}
-
-function nameMatches(a?: string | null, b?: string | null): boolean {
-  if (!a || !b) return false;
-  const cleanA = a.toLowerCase().trim().replace(/[^a-z0-9]/g, "");
-  const cleanB = b.toLowerCase().trim().replace(/[^a-z0-9]/g, "");
-  if (!cleanA || !cleanB) return false;
-  if (cleanA === cleanB || cleanA.includes(cleanB) || cleanB.includes(cleanA)) return true;
-  
-  const stemA = normalizeNameStem(a);
-  const stemB = normalizeNameStem(b);
-  if (stemA && stemB && (stemA === stemB || stemA.includes(stemB) || stemB.includes(stemA))) return true;
-  return false;
-}
-
 export class Party360Service {
   /**
    * Get 360-degree cross-module linkage summary for a specific party or name
@@ -100,8 +79,8 @@ export class Party360Service {
           SELECT c.*, co.name AS country_name, st.name AS state_name, ci.name AS city_name
           FROM public.customers c
           LEFT JOIN public.countries co ON co.id = c.country_id
-          LEFT JOIN public.state_provinces st ON st.id = c.state_province_id
-          LEFT JOIN public.city_districts ci ON ci.id = c.city_id
+          LEFT JOIN public.states_provinces st ON st.id = c.state_province_id
+          LEFT JOIN public.cities ci ON ci.id = c.city_id
           WHERE c.id = ${customerId}::uuid
           LIMIT 1
         `;
@@ -114,14 +93,32 @@ export class Party360Service {
           SELECT c.*, co.name AS country_name, st.name AS state_name, ci.name AS city_name
           FROM public.customers c
           LEFT JOIN public.countries co ON co.id = c.country_id
-          LEFT JOIN public.state_provinces st ON st.id = c.state_province_id
-          LEFT JOIN public.city_districts ci ON ci.id = c.city_id
+          LEFT JOIN public.states_provinces st ON st.id = c.state_province_id
+          LEFT JOIN public.cities ci ON ci.id = c.city_id
           WHERE LOWER(c.customer_name) = LOWER(${name}) OR LOWER(c.first_name || ' ' || COALESCE(c.last_name, '')) = LOWER(${name})
           LIMIT 1
         `;
         customerRow = rows[0] || null;
       }
 
+      // If still no customerRow and only an employeeId was given, resolve the Person Master
+      // via employees.person_master_id (NOT NULL FK) — lets an "ERP Links" entry point that
+      // only knows the employee record still resolve back to the same shared person.
+      if (!customerRow && !customerId && employeeId) {
+        const rows = await sql`
+          SELECT c.*, co.name AS country_name, st.name AS state_name, ci.name AS city_name
+          FROM public.employees e
+          JOIN public.customers c ON c.id = e.person_master_id
+          LEFT JOIN public.countries co ON co.id = c.country_id
+          LEFT JOIN public.states_provinces st ON st.id = c.state_province_id
+          LEFT JOIN public.cities ci ON ci.id = c.city_id
+          WHERE e.id = ${employeeId}::uuid
+          LIMIT 1
+        `;
+        customerRow = rows[0] || null;
+      }
+
+      const resolvedCustomerId = customerId || customerRow?.id || null;
       const targetName = customerRow?.customer_name || name || "";
 
       // 2. Fetch all companies and match
@@ -132,8 +129,7 @@ export class Party360Service {
       `;
 
       const matchedCompanies = allCompanies.filter((comp: any) => {
-        if (customerId && comp.owner_person_id === customerId) return true;
-        if (targetName && nameMatches(comp.owner_name, targetName)) return true;
+        if (resolvedCustomerId && comp.owner_person_id === resolvedCustomerId) return true;
         return false;
       }).map((comp: any) => ({
         id: comp.id,
@@ -145,10 +141,13 @@ export class Party360Service {
         ownerName: comp.owner_name
       }));
 
-      // 3. Fetch all employees and match
+      // 3. Fetch all employees and match. person_master_id is NOT NULL on employees, so this
+      // is always a reliable FK join — no fuzzy-name fallback needed for this entity type.
       const allEmployees = await sql`
-        SELECT e.id, e.employee_code, e.first_name, e.last_name, e.father_name, e.job_title, e.department, e.customer_id, e.status, b.name AS branch_name
+        SELECT e.id, e.employee_code, e.person_master_id, e.designation, e.department, e.status, b.name AS branch_name,
+               c.customer_name, c.first_name, c.last_name, c.father_name
         FROM public.employees e
+        JOIN public.customers c ON c.id = e.person_master_id
         LEFT JOIN public.country_branches b ON b.id = e.country_branch_id
         WHERE e.deleted_at IS NULL
         ORDER BY e.employee_code ASC
@@ -156,16 +155,14 @@ export class Party360Service {
 
       const matchedEmployees = allEmployees.filter((emp: any) => {
         if (employeeId && emp.id === employeeId) return true;
-        if (customerId && emp.customer_id === customerId) return true;
-        const empFullName = [emp.first_name, emp.last_name].filter(Boolean).join(" ");
-        if (targetName && nameMatches(empFullName, targetName)) return true;
+        if (resolvedCustomerId && emp.person_master_id === resolvedCustomerId) return true;
         return false;
       }).map((emp: any) => ({
         id: emp.id,
         employeeCode: emp.employee_code || "EMP",
-        fullName: [emp.first_name, emp.last_name].filter(Boolean).join(" "),
+        fullName: emp.customer_name || [emp.first_name, emp.last_name].filter(Boolean).join(" "),
         fatherName: emp.father_name,
-        jobTitle: emp.job_title,
+        jobTitle: emp.designation,
         department: emp.department,
         branchName: emp.branch_name,
         status: emp.status
@@ -254,8 +251,8 @@ export class Party360Service {
         SELECT c.*, co.name AS country_name, st.name AS state_name, ci.name AS city_name
         FROM public.customers c
         LEFT JOIN public.countries co ON co.id = c.country_id
-        LEFT JOIN public.state_provinces st ON st.id = c.state_province_id
-        LEFT JOIN public.city_districts ci ON ci.id = c.city_id
+        LEFT JOIN public.states_provinces st ON st.id = c.state_province_id
+        LEFT JOIN public.cities ci ON ci.id = c.city_id
         ORDER BY c.created_at DESC
         LIMIT 500
       `;
@@ -266,10 +263,12 @@ export class Party360Service {
         FROM public.companies c
       `;
 
-      // 3. Load all employees
+      // 3. Load all employees (person_master_id is NOT NULL — reliable FK join, no fuzzy fallback)
       const employees = await sql`
-        SELECT e.id, e.employee_code, e.first_name, e.last_name, e.father_name, e.job_title, e.department, e.customer_id, e.status, b.name AS branch_name
+        SELECT e.id, e.employee_code, e.person_master_id, e.designation, e.department, e.status, b.name AS branch_name,
+               c.customer_name, c.first_name, c.last_name, c.father_name
         FROM public.employees e
+        JOIN public.customers c ON c.id = e.person_master_id
         LEFT JOIN public.country_branches b ON b.id = e.country_branch_id
         WHERE e.deleted_at IS NULL
       `;
@@ -289,7 +288,6 @@ export class Party360Service {
         
         const matchedCompanies = companies.filter((comp: any) => {
           if (comp.owner_person_id && comp.owner_person_id === cust.id) return true;
-          if (cName && nameMatches(comp.owner_name, cName)) return true;
           return false;
         }).map((comp: any) => ({
           id: comp.id,
@@ -302,16 +300,14 @@ export class Party360Service {
         }));
 
         const matchedEmployees = employees.filter((emp: any) => {
-          if (emp.customer_id && emp.customer_id === cust.id) return true;
-          const empFullName = [emp.first_name, emp.last_name].filter(Boolean).join(" ");
-          if (cName && nameMatches(empFullName, cName)) return true;
+          if (emp.person_master_id && emp.person_master_id === cust.id) return true;
           return false;
         }).map((emp: any) => ({
           id: emp.id,
           employeeCode: emp.employee_code || "EMP",
-          fullName: [emp.first_name, emp.last_name].filter(Boolean).join(" "),
+          fullName: emp.customer_name || [emp.first_name, emp.last_name].filter(Boolean).join(" "),
           fatherName: emp.father_name,
-          jobTitle: emp.job_title,
+          jobTitle: emp.designation,
           department: emp.department,
           branchName: emp.branch_name,
           status: emp.status

@@ -12,6 +12,7 @@ export type CustomerInput = {
   customerName: string;
   firstName?: string | null;
   lastName?: string | null;
+  fatherName?: string | null;
   gender?: string | null;
   photoUrl?: string | null;
   companyName?: string | null;
@@ -48,6 +49,7 @@ export class CustomersService {
       customerName: input.customerName,
       firstName: input.firstName ?? null,
       lastName: input.lastName ?? null,
+      fatherName: input.fatherName ?? null,
       gender: input.gender ?? null,
       photoUrl: input.photoUrl ?? null,
       companyName: input.companyName ?? null,
@@ -104,6 +106,7 @@ export class CustomersService {
       customerName: "customerName" in input ? input.customerName ?? "" : undefined,
       firstName: "firstName" in input ? input.firstName ?? null : undefined,
       lastName: "lastName" in input ? input.lastName ?? null : undefined,
+      fatherName: "fatherName" in input ? input.fatherName ?? null : undefined,
       gender: "gender" in input ? input.gender ?? null : undefined,
       photoUrl: "photoUrl" in input ? input.photoUrl ?? null : undefined,
       companyName: "companyName" in input ? input.companyName ?? null : undefined,

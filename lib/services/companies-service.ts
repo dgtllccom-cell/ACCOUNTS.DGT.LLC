@@ -9,6 +9,8 @@ export type CompanyInput = {
   baseCurrency: string;
   originalLanguage: SupportedLanguage;
   ownerName?: string | null;
+  ownerPersonId?: string | null;
+  managerPersonId?: string | null;
   businessType?: string | null;
   countryId?: string | null;
   stateProvinceId?: string | null;
@@ -42,6 +44,8 @@ export class CompaniesService {
       legalName: input.legalName ?? null,
       baseCurrency: input.baseCurrency,
       ownerName: input.ownerName ?? null,
+      ownerPersonId: input.ownerPersonId ?? null,
+      managerPersonId: input.managerPersonId ?? null,
       businessType: input.businessType ?? null,
       countryId: input.countryId ?? null,
       stateProvinceId: input.stateProvinceId ?? null,

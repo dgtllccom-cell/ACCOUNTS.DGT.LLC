@@ -37491,3 +37491,37 @@ Error: Cannot coerce the result to a single JSON object
 2026-08-23T09:16:03.470Z - SERVER_ERROR - Cannot coerce the result to a single JSON object - {}
 2026-08-23T14:47:38.046Z - SERVER_ERROR - Unexpected server error - {}
 2026-08-23T14:47:46.775Z - SERVER_ERROR - Unexpected server error - {}
+
+[2026-08-25T06:48:37.871Z] PostgresError: relation "public.state_provinces" does not exist
+PostgresError: relation "public.state_provinces" does not exist
+    at ErrorResponse (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:830:70)
+    at handle (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:504:6)
+    at Socket.data (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:339:9)
+    at Socket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TCP.onStreamRead (node:internal/stream_base_commons:189:23)
+    at TCP.callbackTrampoline (node:internal/async_hooks:130:17)
+    at cachedError (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:175:23)
+    at new Query (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:41:24)
+    at sql (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:110:11)
+    at eval (webpack-internal:///(rsc)/./lib/services/party-360-service.ts:19:39)
+
+[2026-08-25T06:48:37.901Z] PostgresError: relation "public.state_provinces" does not exist
+PostgresError: relation "public.state_provinces" does not exist
+    at ErrorResponse (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:830:70)
+    at handle (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:504:6)
+    at Socket.data (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:339:9)
+    at Socket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TCP.onStreamRead (node:internal/stream_base_commons:189:23)
+    at TCP.callbackTrampoline (node:internal/async_hooks:130:17)
+    at cachedError (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:175:23)
+    at new Query (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:41:24)
+    at sql (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:110:11)
+    at eval (webpack-internal:///(rsc)/./lib/services/party-360-service.ts:19:39)
+2026-08-25T06:48:38.495Z - SERVER_ERROR - relation "public.state_provinces" does not exist - {}
+2026-08-25T06:48:38.509Z - SERVER_ERROR - relation "public.state_provinces" does not exist - {}

@@ -41,6 +41,8 @@ export type CompanyRow = {
   legal_name: string | null;
   base_currency: string;
   owner_name: string | null;
+  owner_person_id: string | null;
+  manager_person_id: string | null;
   business_type: string | null;
   country_id: string | null;
   state_province_id: string | null;
@@ -67,6 +69,8 @@ export type CompanyWriteInput = {
   legalName?: string | null;
   baseCurrency: string;
   ownerName?: string | null;
+  ownerPersonId?: string | null;
+  managerPersonId?: string | null;
   businessType?: string | null;
   countryId?: string | null;
   stateProvinceId?: string | null;
@@ -92,6 +96,8 @@ const COMPANY_SELECT = [
   "legal_name",
   "base_currency",
   "owner_name",
+  "owner_person_id",
+  "manager_person_id",
   "business_type",
   "country_id",
   "state_province_id",
@@ -145,6 +151,8 @@ function mapRawRow(r: any): CompanyRow {
     legal_name: r.legal_name ?? null,
     base_currency: r.base_currency ?? "USD",
     owner_name: r.owner_name ?? null,
+    owner_person_id: r.owner_person_id ?? null,
+    manager_person_id: r.manager_person_id ?? null,
     business_type: r.business_type ?? null,
     country_id: r.country_id ?? null,
     state_province_id: r.state_province_id ?? null,
@@ -173,6 +181,8 @@ function toPayload(input: Partial<CompanyWriteInput>) {
   if ("legalName" in input) payload.legal_name = cleanText(input.legalName);
   if ("baseCurrency" in input) payload.base_currency = cleanText(input.baseCurrency)?.toUpperCase() ?? "USD";
   if ("ownerName" in input) payload.owner_name = cleanText(input.ownerName);
+  if ("ownerPersonId" in input) payload.owner_person_id = input.ownerPersonId || null;
+  if ("managerPersonId" in input) payload.manager_person_id = input.managerPersonId || null;
   if ("businessType" in input) payload.business_type = cleanText(input.businessType);
   if ("countryId" in input) payload.country_id = input.countryId || null;
   if ("stateProvinceId" in input) payload.state_province_id = input.stateProvinceId || null;
@@ -286,7 +296,7 @@ export class CompaniesRepository {
       try {
         const rows = await localSql`
           INSERT INTO public.companies (
-            name, legal_name, base_currency, owner_name, business_type,
+            name, legal_name, base_currency, owner_name, owner_person_id, manager_person_id, business_type,
             country_id, state_province_id, district_id, city_id, area_location_id,
             country_name, state_name, district_name, city_name, area_name, zip_code, address,
             contacts, registrations, owner_ids, is_active, created_at, updated_at
@@ -295,6 +305,8 @@ export class CompaniesRepository {
             ${(payload.legal_name as string) || null},
             ${(payload.base_currency as string) || "USD"},
             ${(payload.owner_name as string) || null},
+            ${payload.owner_person_id ? String(payload.owner_person_id) : null}::uuid,
+            ${payload.manager_person_id ? String(payload.manager_person_id) : null}::uuid,
             ${(payload.business_type as string) || null},
             ${payload.country_id ? String(payload.country_id) : null}::uuid,
             ${payload.state_province_id ? String(payload.state_province_id) : null}::uuid,
@@ -350,6 +362,8 @@ export class CompaniesRepository {
             legal_name = COALESCE(${payload.legal_name !== undefined ? (payload.legal_name as string) : null}, legal_name),
             base_currency = COALESCE(${payload.base_currency !== undefined ? (payload.base_currency as string) : null}, base_currency),
             owner_name = COALESCE(${payload.owner_name !== undefined ? (payload.owner_name as string) : null}, owner_name),
+            owner_person_id = COALESCE(${payload.owner_person_id !== undefined ? (payload.owner_person_id ? String(payload.owner_person_id) : null) : null}::uuid, owner_person_id),
+            manager_person_id = COALESCE(${payload.manager_person_id !== undefined ? (payload.manager_person_id ? String(payload.manager_person_id) : null) : null}::uuid, manager_person_id),
             business_type = COALESCE(${payload.business_type !== undefined ? (payload.business_type as string) : null}, business_type),
             country_id = COALESCE(${payload.country_id !== undefined ? (payload.country_id ? String(payload.country_id) : null) : null}::uuid, country_id),
             state_province_id = COALESCE(${payload.state_province_id !== undefined ? (payload.state_province_id ? String(payload.state_province_id) : null) : null}::uuid, state_province_id),

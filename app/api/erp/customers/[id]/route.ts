@@ -63,6 +63,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
         // customer edits never wipe an existing first/last/gender/photo.
         ...(body.firstName !== undefined ? { firstName: body.firstName ?? null } : {}),
         ...(body.lastName !== undefined ? { lastName: body.lastName ?? null } : {}),
+        ...(body.fatherName !== undefined ? { fatherName: body.fatherName ?? null } : {}),
         ...(body.gender !== undefined ? { gender: body.gender ?? null } : {}),
         ...(body.photoUrl !== undefined ? { photoUrl: body.photoUrl ?? null } : {}),
         companyName: body.companyName ?? null,

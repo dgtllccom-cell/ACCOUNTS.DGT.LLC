@@ -345,6 +345,7 @@ export const customerCreateSchema = scopeSchema.extend({
   // firstName/lastName are the canonical structured fields synced into it.
   firstName: z.string().trim().max(150).nullable().optional(),
   lastName: z.string().trim().max(150).nullable().optional(),
+  fatherName: z.string().trim().max(150).nullable().optional(),
   gender: z.string().trim().max(50).nullable().optional(),
   photoUrl: z.string().trim().nullable().optional(),
   companyName: z.string().trim().max(300).nullable().optional(),
@@ -384,6 +385,8 @@ export const companyCreateSchema = z.object({
     .default("USD"),
   originalLanguage: supportedLanguageSchema.default("en"),
   ownerName: z.string().trim().max(200).nullable().optional(),
+  ownerPersonId: optionalUuidSchema,
+  managerPersonId: optionalUuidSchema,
   businessType: z.string().trim().max(300).nullable().optional(),
   countryId: optionalUuidSchema,
   stateProvinceId: optionalUuidSchema,
