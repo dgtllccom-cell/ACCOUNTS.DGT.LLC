@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { PersonDuplicateWarningModal, type PersonDuplicateCandidate } from "@/components/erp/person-duplicate-warning-modal";
@@ -57,7 +57,7 @@ function toOption(row: PersonRow, lang: string = "en"): SearchSelectOption {
   const label = extraBits.length > 0 ? `${name} (${extraBits.join(" · ")})` : name;
   const keywords = [
     name, rawName, row.customer_name, row.first_name, row.last_name, row.person_code,
-    father, fatherRaw, company, companyRaw, row.mobile, row.email
+    father, fatherRaw, company, companyRaw, row.mobile, row.whatsapp, row.email
   ].filter(Boolean).join(" ");
   return { value: row.id, label, keywords };
 }
@@ -88,13 +88,14 @@ export function PersonPicker({
   const [dupCandidates, setDupCandidates] = useState<PersonDuplicateCandidate[]>([]);
   const [dupSearchedName, setDupSearchedName] = useState("");
   const [pendingCreateName, setPendingCreateName] = useState<string | null>(null);
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   async function loadList() {
     setLoading(true);
     try {
       const qp = new URLSearchParams();
       if (countryId) qp.set("countryId", countryId);
-      qp.set("limit", "100");
+      qp.set("limit", "500");
       // Resolve customer_name/company_name into the active language server-side
       qp.set("lang", lang);
       const res = await apiGet<{ customers: PersonRow[] }>(`/api/erp/customers?${qp.toString()}`);
@@ -104,6 +105,29 @@ export function PersonPicker({
     } finally {
       setLoading(false);
     }
+  }
+
+  function handleSearchChange(q: string) {
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    if (!q || q.trim().length < 2) return;
+    searchTimerRef.current = setTimeout(async () => {
+      try {
+        const qp = new URLSearchParams();
+        qp.set("q", q.trim());
+        qp.set("limit", "50");
+        qp.set("lang", lang);
+        if (countryId) qp.set("countryId", countryId);
+        const res = await apiGet<{ customers: PersonRow[] }>(`/api/erp/customers?${qp.toString()}`);
+        const found = res.customers ?? [];
+        if (found.length > 0) {
+          setPeople((current) => {
+            const existingIds = new Set(current.map((p) => p.id));
+            const newOnes = found.filter((p) => !existingIds.has(p.id));
+            return newOnes.length > 0 ? [...newOnes, ...current] : current;
+          });
+        }
+      } catch {}
+    }, 350);
   }
 
   async function createPersonNow(trimmed: string) {
@@ -246,6 +270,7 @@ export function PersonPicker({
         disabled={disabled || loading}
         options={options}
         onValueChange={onValueChange}
+        onSearchValueChange={handleSearchChange}
         onViewOption={(personId) => {
           const found = people.find((p) => p.id === personId);
           if (found) setViewPerson(found);

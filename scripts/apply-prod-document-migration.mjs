@@ -36,7 +36,14 @@ async function applyMigrations() {
   await sql.unsafe(sql2);
   console.log('   ✅ Phase 1 context migration applied.');
 
-  console.log('3. Verifying columns on database...');
+  console.log('3. Applying supabase/migrations/20260826_expenses_account_type.sql ...');
+  if (fs.existsSync('supabase/migrations/20260826_expenses_account_type.sql')) {
+    const sql3 = fs.readFileSync('supabase/migrations/20260826_expenses_account_type.sql', 'utf8');
+    await sql.unsafe(sql3);
+    console.log('   ✅ Expenses Account type and 5-language dictionary migration applied.');
+  }
+
+  console.log('4. Verifying columns and account_types on database...');
   const cols = await sql`
     SELECT column_name, data_type, is_nullable
     FROM information_schema.columns 

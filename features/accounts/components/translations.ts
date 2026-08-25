@@ -111,6 +111,125 @@ export const accountTranslations: Record<string, Record<SupportedLanguage, strin
     fa: "عنوان حساب",
     ps: "د حساب سرلیک"
   },
+  selectAccountTitle: {
+    en: "Select Account Title",
+    ur: "اکاؤنٹ کا عنوان منتخب کریں",
+    ar: "اختر عنوان الحساب",
+    fa: "انتخاب عنوان حساب",
+    ps: "د حساب سرلیک وټاکئ"
+  },
+  customerAccount: {
+    en: "Customer Account",
+    ur: "کسٹمر اکاؤنٹ",
+    ar: "حساب العميل",
+    fa: "حساب مشتری",
+    ps: "د پیرودونکي حساب"
+  },
+  bankAccount: {
+    en: "Bank Account",
+    ur: "بینک اکاؤنٹ",
+    ar: "حساب بنكي",
+    fa: "حساب بانکی",
+    ps: "د بانک حساب"
+  },
+  personal: {
+    en: "Personal",
+    ur: "ذاتی",
+    ar: "شخصي",
+    fa: "شخصی",
+    ps: "شخصي"
+  },
+  company: {
+    en: "Company",
+    ur: "کمپنی",
+    ar: "شركة",
+    fa: "شرکت",
+    ps: "شرکت"
+  },
+  employee: {
+    en: "Employee",
+    ur: "ملازم",
+    ar: "موظف",
+    fa: "کارمند",
+    ps: "کارکوونکی"
+  },
+  expensesAccount: {
+    en: "Expenses Account",
+    ur: "اخراجات کا اکاؤنٹ",
+    ar: "حساب المصروفات",
+    fa: "حساب هزینه‌ها",
+    ps: "د لګښتونو حساب"
+  },
+  officeExpenses: {
+    en: "Office Expenses",
+    ur: "دفتر کے اخراجات",
+    ar: "مصروفات المكتب",
+    fa: "هزینه‌های دفتر",
+    ps: "د دفتر لګښتونه"
+  },
+  operationalExpenses: {
+    en: "Operational Expenses",
+    ur: "آپریشنل اخراجات",
+    ar: "المصروفات التشغيلية",
+    fa: "هزینه‌های عملیاتی",
+    ps: "عملیاتي لګښتونه"
+  },
+  utilityBills: {
+    en: "Utility & Bills",
+    ur: "یوٹیلیٹی اور بلز",
+    ar: "المرافق والفواتير",
+    fa: "قبوض و خدمات شهری",
+    ps: "د اوبو او برېښنا لګښتونه"
+  },
+  rentLease: {
+    en: "Rent & Lease",
+    ur: "کرایہ اور لیز",
+    ar: "الإيجار وعقود الإيجار",
+    fa: "اجاره و کرایه",
+    ps: "کرایه او اجاره"
+  },
+  salariesWages: {
+    en: "Salaries & Wages",
+    ur: "تنخواہیں اور اجرت",
+    ar: "الرواتب والأجور",
+    fa: "حقوق و دستمزد",
+    ps: "معاشونه او مزدوري"
+  },
+  travelTransport: {
+    en: "Travel & Transport",
+    ur: "سفر اور ٹرانسپورٹ",
+    ar: "السفر والمواصلات",
+    fa: "سفر و ترابری",
+    ps: "سفر او ترانسپورت"
+  },
+  marketingAdvertising: {
+    en: "Marketing & Advertising",
+    ur: "مارکیٹنگ اور اشتہارات",
+    ar: "التسويق والإعلان",
+    fa: "بازاریابی و تبلیغات",
+    ps: "بازارموندنه او اعلانونه"
+  },
+  legalProfessional: {
+    en: "Legal & Professional",
+    ur: "قانونی اور پیشہ ورانہ",
+    ar: "الخدمات القانونية والمهنية",
+    fa: "حقوقی و حرفه‌ای",
+    ps: "حقوقي او مسلکي"
+  },
+  maintenanceRepairs: {
+    en: "Maintenance & Repairs",
+    ur: "دیکھ بھال اور مرمت",
+    ar: "الصيانة والإصلاحات",
+    fa: "نگهداری و تعمیرات",
+    ps: "ساتنه او ترمیم"
+  },
+  miscellaneousExpenses: {
+    en: "Miscellaneous Expenses",
+    ur: "متفرق اخراجات",
+    ar: "مصروفات متنوعة",
+    fa: "هزینه‌های متفرقه",
+    ps: "متفرقه لګښتونه"
+  },
   subType: {
     en: "Sub Type",
     ur: "ذیلی قسم",

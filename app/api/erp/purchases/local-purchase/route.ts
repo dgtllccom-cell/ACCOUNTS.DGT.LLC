@@ -305,15 +305,31 @@ export async function PATCH(request: NextRequest) {
   try {
     const session = await requireErpSession();
     const payload = localGoodsReceiptSchema.parse(await request.json());
-    const supabase = createSupabaseAdminClient();
 
-    const { data: purchase, error: fetchError } = await (supabase as any).from("local_purchases")
-      .select("id,country_id,country_branch_id,city_branch_id")
-      .eq("id", payload.purchaseId)
-      .is("deleted_at", null)
-      .single();
+    let purchase = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        select id, country_id, country_branch_id, city_branch_id
+        from local_purchases
+        where id = ${payload.purchaseId}
+          and deleted_at is null
+        limit 1
+      `;
+      return rows[0] ?? null;
+    });
 
-    if (fetchError) throw fetchError;
+    if (!purchase) {
+      const supabase = createSupabaseAdminClient();
+      const { data, error } = await (supabase as any).from("local_purchases")
+        .select("id,country_id,country_branch_id,city_branch_id")
+        .eq("id", payload.purchaseId)
+        .is("deleted_at", null)
+        .single();
+      if (error) throw error;
+      if (!data) throw new Error("Local purchase record not found");
+      purchase = data;
+    }
+
+    if (!purchase) throw new Error("Local purchase record not found");
 
     authorizeApiScope(session, {
       resource: "purchases",
@@ -323,19 +339,37 @@ export async function PATCH(request: NextRequest) {
       cityBranchId: purchase.city_branch_id ?? null,
     });
 
-    const { data: updated, error } = await (supabase as any).from("local_purchases")
-      .update({
-        goods_receipt_type: payload.receiptType,
-        goods_receipt_status: payload.status,
-        goods_receipt_details: payload.details,
-        goods_received_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", payload.purchaseId)
-      .select()
-      .single();
+    const now = new Date().toISOString();
+    const updated = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        update local_purchases set
+          goods_receipt_type   = ${payload.receiptType},
+          goods_receipt_status = ${payload.status},
+          goods_receipt_details = ${JSON.stringify(payload.details)}::jsonb,
+          goods_received_at    = ${now},
+          updated_at           = ${now}
+        where id = ${payload.purchaseId}
+        returning *
+      `;
+      return rows[0] ?? null;
+    });
 
-    if (error) throw error;
+    if (!updated) {
+      const supabase = createSupabaseAdminClient();
+      const { data, error } = await (supabase as any).from("local_purchases")
+        .update({
+          goods_receipt_type: payload.receiptType,
+          goods_receipt_status: payload.status,
+          goods_receipt_details: payload.details,
+          goods_received_at: now,
+          updated_at: now,
+        })
+        .eq("id", payload.purchaseId)
+        .select()
+        .single();
+      if (error) throw error;
+      return NextResponse.json({ ok: true, data: { purchase: data } });
+    }
 
     return NextResponse.json({ ok: true, data: { purchase: updated } });
   } catch (err: any) {

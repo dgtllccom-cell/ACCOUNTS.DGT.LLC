@@ -8,7 +8,8 @@ import {
   FileText,
   Award,
   Trash2,
-  Printer
+  Printer,
+  Layers
 } from "lucide-react";
 import { apiGet, apiDelete } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { Party360Modal } from "@/features/customers/components/party-360-modal";
 
 export function EmployeeManagementView() {
   const lang = useActiveLanguage();
@@ -72,6 +74,7 @@ export function EmployeeManagementView() {
 
   const [selectedEmployeeForLoan, setSelectedEmployeeForLoan] = useState<any | null>(null);
   const [selectedEmployeeForHistory, setSelectedEmployeeForHistory] = useState<any | null>(null);
+  const [party360PersonId, setParty360PersonId] = useState<string | null>(null);
 
   // Load location options for filters
   useEffect(() => {
@@ -234,7 +237,7 @@ export function EmployeeManagementView() {
             <div>
               <select
                 value={countryId}
-                onChange={(e) => setCountryId(e.target.value)}
+                onChange={(e) => { setCountryId(e.target.value); setCategory(""); }}
                 className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-slate-900 dark:text-slate-100 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold"
               >
                 <option value="">{t(lang, "common.all_countries", "All Countries")}</option>
@@ -245,7 +248,21 @@ export function EmployeeManagementView() {
             </div>
 
             <div>
-              {countryId ? (
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-slate-900 dark:text-slate-100 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold"
+              >
+                <option value="">{t(lang, "common.all_categories", "All Categories")}</option>
+                <option value="Manager">{t(lang, "hr.cat_manager", "Manager")}</option>
+                <option value="Normal Staff">{t(lang, "hr.cat_normal_staff", "Normal Staff")}</option>
+                <option value="Employee">{t(lang, "hr.cat_employee", "Employee")}</option>
+                <option value="Others">{t(lang, "hr.cat_others", "Others")}</option>
+              </select>
+            </div>
+
+            {countryId ? (
+              <div>
                 <select
                   value={branchId}
                   onChange={(e) => setBranchId(e.target.value)}
@@ -256,20 +273,8 @@ export function EmployeeManagementView() {
                     <option key={b.id} value={b.id}>{b.name} {b.code ? `(${b.code})` : ""}</option>
                   ))}
                 </select>
-              ) : (
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-slate-900 dark:text-slate-100 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold"
-                >
-                  <option value="">{t(lang, "common.all_categories", "All Categories")}</option>
-                  <option value="Manager">{t(lang, "hr.cat_manager", "Manager")}</option>
-                  <option value="Normal Staff">{t(lang, "hr.cat_normal_staff", "Normal Staff")}</option>
-                  <option value="Employee">{t(lang, "hr.cat_employee", "Employee")}</option>
-                  <option value="Others">{t(lang, "hr.cat_others", "Others")}</option>
-                </select>
-              )}
-            </div>
+              </div>
+            ) : null}
             
             <div>
               <select
@@ -319,16 +324,16 @@ export function EmployeeManagementView() {
             <table className="min-w-full text-xs sm:text-sm text-left text-slate-700 dark:text-slate-300">
               <thead className="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-200 uppercase font-black text-[11px] sm:text-xs border-b border-slate-200 dark:border-slate-800">
                 <tr>
-                  <Th className="px-5 py-4">Emp Code</Th>
-                  <Th className="px-5 py-4">Employee / Person Name</Th>
-                  <Th className="px-5 py-4">Assigned Country / Branch</Th>
-                  <Th className="px-5 py-4">Category</Th>
-                  <Th className="px-5 py-4">Designation / Department</Th>
-                  <Th className="px-5 py-4">Joining Date</Th>
-                  <Th className="px-5 py-4">Net Payroll</Th>
-                  <Th className="px-5 py-4">Deductions (Adv/Loan)</Th>
-                  <Th className="px-5 py-4">Status</Th>
-                  <Th className="px-5 py-4 text-center">Actions</Th>
+                  <Th className="px-5 py-4">{t(lang, "hr.col_emp_code", "Emp Code")}</Th>
+                  <Th className="px-5 py-4">{t(lang, "hr.col_employee_name", "Employee / Person Name")}</Th>
+                  <Th className="px-5 py-4">{t(lang, "hr.col_country_branch", "Assigned Country / Branch")}</Th>
+                  <Th className="px-5 py-4">{t(lang, "common.category", "Category")}</Th>
+                  <Th className="px-5 py-4">{t(lang, "hr.col_designation_dept", "Designation / Department")}</Th>
+                  <Th className="px-5 py-4">{t(lang, "hr.col_joining_date", "Joining Date")}</Th>
+                  <Th className="px-5 py-4">{t(lang, "hr.col_net_payroll", "Net Payroll")}</Th>
+                  <Th className="px-5 py-4">{t(lang, "hr.col_deductions", "Deductions (Adv/Loan)")}</Th>
+                  <Th className="px-5 py-4">{t(lang, "common.status", "Status")}</Th>
+                  <Th className="px-5 py-4 text-center">{t(lang, "common.actions", "Actions")}</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800 font-medium">
@@ -346,6 +351,9 @@ export function EmployeeManagementView() {
                       <td className="px-5 py-4 font-mono font-bold text-slate-900 dark:text-slate-100 text-sm align-middle max-w-[200px] break-all">{emp.employee_code}</td>
                       <td className="px-5 py-4 align-middle max-w-[220px]">
                         <div className="font-bold text-slate-900 dark:text-slate-100 text-sm break-words">{emp.person?.customer_name}</div>
+                        {emp.person?.person_code ? (
+                          <div className="text-[10px] font-mono font-black text-blue-600 dark:text-blue-400 mt-0.5">{emp.person.person_code}</div>
+                        ) : null}
                         <div className="text-xs text-slate-500 font-mono mt-0.5">{emp.person?.mobile || "-"}</div>
                       </td>
                       <td className="px-5 py-4 align-middle">
@@ -468,6 +476,15 @@ export function EmployeeManagementView() {
                                 <span>{t(lang, "hr.l_certificate", "Print Certificate")}</span>
                               </button>
 
+                              <button
+                                type="button"
+                                onClick={() => { setOpenActionMenuId(null); setParty360PersonId(emp.person_master_id); }}
+                                className="flex w-full items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                              >
+                                <Layers className="h-4 w-4 text-purple-500" />
+                                <span>{t(lang, "hr.erp_links", "ERP Links / 360°")}</span>
+                              </button>
+
                               <div className="my-1 border-t border-slate-200 dark:border-slate-800" />
 
                               <button
@@ -543,6 +560,13 @@ export function EmployeeManagementView() {
             employeeId={selectedEmployeeForHistory.id}
           />
         </SimpleModal>
+      )}
+
+      {party360PersonId && (
+        <Party360Modal
+          customerId={party360PersonId}
+          onClose={() => setParty360PersonId(null)}
+        />
       )}
 
       <UniversalReportModal

@@ -2172,7 +2172,7 @@ export type UiKey =
   | "acct.adv_account_not_found" | "acct.adv_currently_linked" | "acct.adv_no_linked_records" | "acct.adv_available_to_link" | "acct.adv_link_btn" | "acct.adv_linked_companies" | "acct.adv_linked_banks" | "acct.adv_linked_warehouses" | "acct.adv_linked_customers_owners" | "acct.adv_all_linked_suffix"
   | "acct.adv_failed_to_link" | "acct.adv_failed_to_unlink"
   | "acct.areg_title" | "acct.areg_subtitle" | "acct.areg_new_account" | "acct.areg_search_placeholder" | "acct.areg_no_accounts_found" | "acct.areg_delete_account" | "acct.areg_delete_confirm" | "acct.areg_fill_account_name" | "acct.areg_registry_report_title"
-  | "acct.asr_clear_filters" | "acct.asr_no_country_accounts_found" | "acct.asr_cust_abbr" | "acct.asr_comp_abbr" | "acct.asr_pers_abbr" | "acct.asr_export_share" | "acct.asr_click_view_company_profile" | "acct.asr_click_view_bank_profile" | "acct.asr_view_account_profile" | "acct.asr_edit_account"
+  | "acct.asr_clear_filters" | "acct.asr_no_country_accounts_found" | "acct.asr_cust_abbr" | "acct.asr_comp_abbr" | "acct.asr_exp_abbr" | "acct.asr_pers_abbr" | "acct.asr_export_share" | "acct.asr_click_view_company_profile" | "acct.asr_click_view_bank_profile" | "acct.asr_view_account_profile" | "acct.asr_edit_account"
   | "acct.asr_acc_singular" | "acct.asr_acc_plural"
   | "acct.asr_no_phone" | "acct.asr_no_email"
   | "acct.asr_accounts_word_lc"
@@ -3430,6 +3430,7 @@ export type UiKey =
   | "roz.cef_manual_rate_saved" | "roz.cef_buy_colon" | "roz.cef_sell_colon" | "status.active" | "status.online_synced" | "report.density_comfortable" | "report.density_compact" | "report.columns" | "report.move_up" | "report.move_down" | "report.locked" | "report.advanced_filters" | "report.filter_all_salesmen" | "report.stat_total_bills" | "report.stat_total_net_weight" | "report.stat_quantity_dc" | "report.stat_final_purchase" | "report.stat_final_advance" | "report.stat_final_remaining" | "report.badge_super_admin" | "report.branch_breakdown" | "report.paid_adv" | "report.rem_bal" | "report.total_label" | "report.all_label" | "report.close_overlay" | "hr.f_wizard_title" | "hr.f_sec_user" | "hr.f_sec_kyc" | "hr.f_role_scope" | "god.prev_day" | "god.next_day" | "god.today" | "god.att_desc" | "god.att_add" | "god.att_in" | "god.att_out" | "god.att_hours" | "god.att_present" | "god.att_absent" | "god.att_late" | "god.att_half" | "god.att_onleave" | "god.leave_desc" | "god.leave_add" | "god.leave_type" | "god.leave_reason" | "god.leave_pending" | "god.leave_approved" | "god.leave_rejected" | "god.lt_annual" | "god.lt_sick" | "god.lt_casual" | "god.lt_unpaid" | "god.lt_other" | "god.asset_desc" | "god.asset_add" | "god.asset_name" | "god.asset_tag" | "god.asset_category" | "god.asset_serial" | "god.asset_assigned" | "god.asset_purchase" | "god.asset_value" | "god.as_available" | "god.as_inuse" | "god.as_repair" | "god.as_retired" | "god.this_week" | "god.this_month" | "god.last_30" | "god.all_dates" | "god.from_date" | "god.to_date" | "god.apply" | "god.daily_activity" | "god.new_employees" | "god.updated_employees" | "god.active" | "god.inactive" | "god.in_range" | "hr.f_first_name" | "hr.f_last_name" | "hr.f_full_name" | "hr.f_gender" | "hr.f_gender_select" | "hr.f_gender_male" | "hr.f_gender_female" | "hr.f_gender_other" | "hr.f_ph_first_name" | "hr.f_ph_last_name" | "hr.f_job_status" | "hr.f_working_shift" | "hr.f_status" | "hr.f_currency" | "hr.f_net_salary" | "hr.f_total_allowances" | "hr.f_deductions" | "hr.f_salary_type" | "hr.f_duty_hours" | "hr.f_weekly_off" | "hr.f_register_title" | "hr.f_edit_title" | "hr.f_step1_title" | "hr.f_step1_of5" | "hr.f_step1_preview" | "hr.f_select_category" | "hr.f_select_person" | "hr.f_lbl_designation" | "hr.f_lbl_department" | "hr.f_lbl_category" | "hr.f_lbl_name" | "hr.f_lbl_designation_short" | "hr.f_not_selected" | "hr.f_cat_manager" | "hr.f_cat_normal_staff" | "hr.f_cat_employee" | "hr.f_cat_others" | "hr.f_selected_profile" | "hr.f_view_master" | "hr.f_change_selection" | "hr.f_no_person_selected" | "hr.f_sec_identity" | "hr.f_sec_employment" | "hr.f_sec_location" | "hr.f_sec_shift" | "hr.f_sec_payroll" | "hr.f_sec_status" | "hr.pp_view_title" | "hr.pp_company" | "hr.pp_independent" | "hr.pp_active_master" | "hr.pp_contact_person" | "hr.pp_mobile_phone" | "hr.pp_email_address" | "hr.pp_address_location" | "hr.pp_edit_master" | "hr.pp_select_this_person"
   | "hr.confirm_delete_employee" | "hr.error_deleting_employee" | "hr.journal_title" | "hr.journal_subtitle" | "hr.report_title" | "hr.report_subtitle" | "hr.col_emp_code" | "hr.col_employee_name" | "hr.department_word" | "hr.col_joining_date" | "hr.col_net_payroll" | "hr.employee_code_full" | "hr.person_customer_name" | "hr.col_salary" | "hr.col_join_date"
   | "hr.select_person_first" | "hr.error_saving_profile"
+  | "hr.col_country_branch" | "hr.col_designation_dept" | "hr.col_deductions" | "hr.erp_links" | "hr.col_per_code"
   | "nav.branch_setup_network" | "nav.branch_general_report" | "nav.locations_management" | "nav.new_user_registration" | "nav.user_general_report" | "nav.super_admin_user" | "nav.country_user" | "nav.branch_user" | "nav.new_account" | "nav.ledger_account" | "nav.register_employee" | "nav.new_entry_hub" | "nav.entry_reports"
   | (string & {});
 
@@ -5795,6 +5796,11 @@ const en: Dict = {
   "hr.department_word": "Department",
   "hr.col_joining_date": "Joining Date",
   "hr.col_net_payroll": "Net Payroll",
+  "hr.col_country_branch": "Assigned Country / Branch",
+  "hr.col_designation_dept": "Designation / Department",
+  "hr.col_deductions": "Deductions (Adv/Loan)",
+  "hr.erp_links": "ERP Links / 360°",
+  "hr.col_per_code": "PER Code",
   "hr.employee_code_full": "Employee Code",
   "hr.person_customer_name": "Person / Customer Name",
   "hr.col_salary": "Salary",
@@ -6963,6 +6969,7 @@ const en: Dict = {
   "acct.asr_no_country_accounts_found": "No country accounts found matching the criteria.",
   "acct.asr_cust_abbr": "Cust",
   "acct.asr_comp_abbr": "Comp",
+  "acct.asr_exp_abbr": "Exp",
   "acct.asr_pers_abbr": "Pers",
   "acct.asr_export_share": "Export & Share",
   "acct.asr_click_view_company_profile": "Click to view company profile file",
@@ -12301,6 +12308,11 @@ const ur: Dict = {
   "hr.department_word": "شعبہ",
   "hr.col_joining_date": "شمولیت کی تاریخ",
   "hr.col_net_payroll": "خالص تنخواہ",
+  "hr.col_country_branch": "مختص ملک / برانچ",
+  "hr.col_designation_dept": "عہدہ / شعبہ",
+  "hr.col_deductions": "کٹوتیاں (ایڈوانس/قرض)",
+  "hr.erp_links": "ERP روابط / 360°",
+  "hr.col_per_code": "PER کوڈ",
   "hr.employee_code_full": "ملازم کوڈ",
   "hr.person_customer_name": "شخص / کسٹمر کا نام",
   "hr.col_salary": "تنخواہ",
@@ -13922,6 +13934,7 @@ const ur: Dict = {
   "acct.asr_no_country_accounts_found": "معیار سے مماثل کوئی ملک اکاؤنٹ نہیں ملا۔",
   "acct.asr_cust_abbr": "کسٹ",
   "acct.asr_comp_abbr": "کمپ",
+  "acct.asr_exp_abbr": "خرچ",
   "acct.asr_pers_abbr": "پرس",
   "acct.asr_export_share": "ایکسپورٹ اور شیئر",
   "acct.asr_click_view_company_profile": "کمپنی پروفائل فائل دیکھنے کے لیے کلک کریں",
@@ -17831,6 +17844,11 @@ const ar: Dict = {
   "hr.department_word": "القسم",
   "hr.col_joining_date": "تاريخ الالتحاق",
   "hr.col_net_payroll": "صافي الراتب",
+  "hr.col_country_branch": "الدولة / الفرع المخصص",
+  "hr.col_designation_dept": "المسمى الوظيفي / القسم",
+  "hr.col_deductions": "الاستقطاعات (سلفة/قرض)",
+  "hr.erp_links": "روابط ERP / 360°",
+  "hr.col_per_code": "رمز PER",
   "hr.employee_code_full": "رمز الموظف",
   "hr.person_customer_name": "اسم الشخص / العميل",
   "hr.col_salary": "الراتب",
@@ -19439,6 +19457,7 @@ const ar: Dict = {
   "acct.asr_no_country_accounts_found": "لم يتم العثور على حسابات دولة مطابقة للمعايير.",
   "acct.asr_cust_abbr": "عم",
   "acct.asr_comp_abbr": "شرك",
+  "acct.asr_exp_abbr": "مصرف",
   "acct.asr_pers_abbr": "شخص",
   "acct.asr_export_share": "تصدير ومشاركة",
   "acct.asr_click_view_company_profile": "انقر لعرض ملف الشركة",
@@ -23356,6 +23375,11 @@ const fa: Dict = {
   "hr.department_word": "بخش",
   "hr.col_joining_date": "تاریخ استخدام",
   "hr.col_net_payroll": "خالص حقوق",
+  "hr.col_country_branch": "کشور / شعبه اختصاصی",
+  "hr.col_designation_dept": "عنوان شغلی / بخش",
+  "hr.col_deductions": "کسورات (پیش‌پرداخت/وام)",
+  "hr.erp_links": "پیوندهای ERP / 360°",
+  "hr.col_per_code": "کد PER",
   "hr.employee_code_full": "کد کارمند",
   "hr.person_customer_name": "نام شخص / مشتری",
   "hr.col_salary": "حقوق",
@@ -24943,6 +24967,7 @@ const fa: Dict = {
   "acct.asr_no_country_accounts_found": "هیچ حساب کشوری مطابق با معیارها یافت نشد.",
   "acct.asr_cust_abbr": "مشت",
   "acct.asr_comp_abbr": "شرکت",
+  "acct.asr_exp_abbr": "هزینه",
   "acct.asr_pers_abbr": "شخص",
   "acct.asr_export_share": "خروجی و اشتراک‌گذاری",
   "acct.asr_click_view_company_profile": "برای مشاهده فایل نمایه شرکت کلیک کنید",
@@ -28876,6 +28901,11 @@ const ps: Dict = {
   "hr.department_word": "څانګه",
   "hr.col_joining_date": "د شاملیدو نېټه",
   "hr.col_net_payroll": "خالص معاش",
+  "hr.col_country_branch": "ټاکل شوی هېواد / څانګه",
+  "hr.col_designation_dept": "دنده / خدمتي بست",
+  "hr.col_deductions": "کموالی (ودانه/پور)",
+  "hr.erp_links": "ERP اړیکې / 360°",
+  "hr.col_per_code": "PER کوډ",
   "hr.employee_code_full": "د کارمند کوډ",
   "hr.person_customer_name": "د شخص / پیرودونکي نوم",
   "hr.col_salary": "معاش",
@@ -30474,6 +30504,7 @@ const ps: Dict = {
   "acct.asr_no_country_accounts_found": "د معیارونو سره سم هیڅ هیواد حساب ونه موندل شو.",
   "acct.asr_cust_abbr": "پیر",
   "acct.asr_comp_abbr": "شرک",
+  "acct.asr_exp_abbr": "لګښت",
   "acct.asr_pers_abbr": "کس",
   "acct.asr_export_share": "ایکسپورټ او شریکول",
   "acct.asr_click_view_company_profile": "د شرکت پروفایل فایل لیدلو لپاره کلیک وکړئ",

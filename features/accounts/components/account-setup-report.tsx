@@ -278,19 +278,23 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
   const customers = useMemo(() => filtered.filter(r => r.accountCategory.toLowerCase().includes("customer") || r.customerNumber?.startsWith("CUST")).length, [filtered]);
   const companies = useMemo(() => filtered.filter(r => r.companyName && r.companyName !== "-").length, [filtered]);
   const banks     = useMemo(() => filtered.filter(r => r.accountCategory.toLowerCase().includes("bank") || r.accountCategory.toLowerCase().includes("asset")).length, [filtered]);
+  const expenses  = useMemo(() => filtered.filter(r => r.accountCategory.toLowerCase().includes("expense") || r.subType.toLowerCase().includes("expense")).length, [filtered]);
 
   /* Country-Wise Breakdown */
   const countryBreakdowns = useMemo(() => {
-    const map = new Map<string, { total: number; customers: number; companies: number; banks: number; personal: number; currency: string }>();
+    const map = new Map<string, { total: number; customers: number; companies: number; banks: number; expenses: number; personal: number; currency: string }>();
     for (const r of filtered) {
       const c = r.countryName || "Unknown Country";
       if (!map.has(c)) {
-        map.set(c, { total: 0, customers: 0, companies: 0, banks: 0, personal: 0, currency: r.currency || "-" });
+        map.set(c, { total: 0, customers: 0, companies: 0, banks: 0, expenses: 0, personal: 0, currency: r.currency || "-" });
       }
       const item = map.get(c)!;
       item.total += 1;
       const cat = (r.accountCategory || "").toLowerCase();
-      if (cat.includes("bank") || cat.includes("asset")) {
+      const sub = (r.subType || "").toLowerCase();
+      if (cat.includes("expense") || sub.includes("expense")) {
+        item.expenses += 1;
+      } else if (cat.includes("bank") || cat.includes("asset")) {
         item.banks += 1;
       } else if (r.companyName && r.companyName !== "-") {
         item.companies += 1;
@@ -342,6 +346,7 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
     TotalCustomers: countryBreakdowns.reduce((acc, c) => acc + c.customers, 0),
     TotalCompanies: countryBreakdowns.reduce((acc, c) => acc + c.companies, 0),
     TotalBanks: countryBreakdowns.reduce((acc, c) => acc + c.banks, 0),
+    TotalExpenses: countryBreakdowns.reduce((acc, c) => acc + (c.expenses || 0), 0),
   };
 
   const reportRows = useMemo(() => {
@@ -609,11 +614,12 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
               <h2 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
                 {tr("Country-Wise Accounts Summary Report")} ({countryBreakdowns.length} {countryBreakdowns.length === 1 ? tr("Country") : tr("Countries")})
               </h2>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-extrabold text-slate-600 dark:text-slate-300">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-extrabold text-slate-600 dark:text-slate-300 flex-wrap">
                 <span>{tr("Total Accounts")}: <strong className="text-blue-600 dark:text-blue-400">{filtered.length}</strong></span> |
                 <span>{tr("Customers")}: <strong className="text-emerald-600 dark:text-emerald-400">{customers}</strong></span> |
                 <span>{tr("Companies")}: <strong className="text-purple-600 dark:text-purple-400">{companies}</strong></span> |
-                <span>{tr("Banks")}: <strong className="text-amber-600 dark:text-amber-400">{banks}</strong></span>
+                <span>{tr("Banks")}: <strong className="text-amber-600 dark:text-amber-400">{banks}</strong></span> |
+                <span>{tr("Expenses")}: <strong className="text-rose-600 dark:text-rose-400">{expenses}</strong></span>
               </span>
             </div>
             {hasActiveFilters && (
@@ -660,21 +666,25 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-4 gap-1 text-center">
+                    <div className="grid grid-cols-5 gap-1 text-center">
                       <div className="rounded bg-emerald-50 dark:bg-emerald-950/40 p-1 border border-emerald-100 dark:border-emerald-900/40">
-                        <div className="text-[7.5px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-wider">{t(lang, "acct.asr_cust_abbr", "Cust")}</div>
+                        <div className="text-[7px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-wider">{t(lang, "acct.asr_cust_abbr", "Cust")}</div>
                         <div className="text-[11px] font-black text-emerald-700 dark:text-emerald-300 font-mono leading-none mt-0.5">{cb.customers}</div>
                       </div>
                       <div className="rounded bg-purple-50 dark:bg-purple-950/40 p-1 border border-purple-100 dark:border-purple-900/40">
-                        <div className="text-[7.5px] font-black uppercase text-purple-600 dark:text-purple-400 tracking-wider">{t(lang, "acct.asr_comp_abbr", "Comp")}</div>
+                        <div className="text-[7px] font-black uppercase text-purple-600 dark:text-purple-400 tracking-wider">{t(lang, "acct.asr_comp_abbr", "Comp")}</div>
                         <div className="text-[11px] font-black text-purple-700 dark:text-purple-300 font-mono leading-none mt-0.5">{cb.companies}</div>
                       </div>
                       <div className="rounded bg-amber-50 dark:bg-amber-950/40 p-1 border border-amber-100 dark:border-amber-900/40">
-                        <div className="text-[7.5px] font-black uppercase text-amber-600 dark:text-amber-400 tracking-wider">{t(lang, "bdash.bank", "Bank")}</div>
+                        <div className="text-[7px] font-black uppercase text-amber-600 dark:text-amber-400 tracking-wider">{t(lang, "bdash.bank", "Bank")}</div>
                         <div className="text-[11px] font-black text-amber-700 dark:text-amber-300 font-mono leading-none mt-0.5">{cb.banks}</div>
                       </div>
+                      <div className="rounded bg-rose-50 dark:bg-rose-950/40 p-1 border border-rose-100 dark:border-rose-900/40">
+                        <div className="text-[7px] font-black uppercase text-rose-600 dark:text-rose-400 tracking-wider">{t(lang, "acct.asr_exp_abbr", "Exp")}</div>
+                        <div className="text-[11px] font-black text-rose-700 dark:text-rose-300 font-mono leading-none mt-0.5">{cb.expenses}</div>
+                      </div>
                       <div className="rounded bg-slate-50 dark:bg-slate-800/60 p-1 border border-slate-150 dark:border-slate-700/50">
-                        <div className="text-[7.5px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">{t(lang, "acct.asr_pers_abbr", "Pers")}</div>
+                        <div className="text-[7px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">{t(lang, "acct.asr_pers_abbr", "Pers")}</div>
                         <div className="text-[11px] font-black text-slate-700 dark:text-slate-200 font-mono leading-none mt-0.5">{cb.personal}</div>
                       </div>
                     </div>

@@ -3,7 +3,6 @@ import { ErpAuthError, requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { auditApiAction } from "@/lib/api/audit";
 import { authorize, resolveReportScope } from "@/lib/permissions/middleware";
-import { withLocalPg } from "@/lib/db/local-postgres";
 
 type KycEntityType = "country_branch" | "city_branch" | "user_account" | "new_account";
 
@@ -99,78 +98,6 @@ export async function GET(request: Request) {
     authorize(session, { resource: "reports", action: "read" });
     authorize(session, { resource: "kyc", action: "read" });
     const reportScope = resolveReportScope(session);
-    const sourceData = await withLocalPg(async (sql) => {
-      const [
-        countries,
-        countryBranches,
-        cityBranches,
-        users,
-        assignments,
-        enterpriseAccounts,
-        companies,
-        customers
-      ] = await Promise.all([
-        sql`
-          select id, name, iso2, currency_code, official_email, admin_email, created_at
-          from public.countries
-          where deleted_at is null
-        `,
-        sql`
-          select id, country_id, name, code, is_main, address, phone, email, whatsapp_number, owner_name, owner_customer_id, owner_profile_id, documents, contacts, created_at
-          from public.country_branches
-          where deleted_at is null
-        `,
-        sql`
-          select id, country_id, country_branch_id, name, code, address, phone, email, owner_name, owner_customer_id, owner_profile_id, contacts, documents, created_at
-          from public.city_branches
-          where deleted_at is null
-        `,
-        sql`
-          select id, full_name, preferred_language_code, created_at
-          from public.profiles
-          order by created_at desc
-          limit 50
-        `,
-        sql`
-          select user_id, role, country_id, country_branch_id, city_branch_id, is_active, created_at
-          from public.user_role_assignments
-          where deleted_at is null
-        `,
-        sql`
-          select id, code, name, country_id, country_branch_id, city_branch_id, company_id, bank_id, customer_id, created_at
-          from public.enterprise_accounts
-          where deleted_at is null
-          order by created_at desc
-          limit 100
-        `,
-        sql`
-          select id, company_name, registration_number, phone, email, address, country_id, city_id, created_at
-          from public.companies
-          where deleted_at is null
-          order by created_at desc
-          limit 50
-        `,
-        sql`
-          select id, customer_name, country_id, phone, email, address, created_at
-          from public.customers
-          where deleted_at is null
-          order by created_at desc
-          limit 50
-        `
-      ]);
-
-      return {
-        countries,
-        countryBranches,
-        cityBranches,
-        users,
-        assignments,
-        enterpriseAccounts,
-        companies,
-        customers
-      };
-    });
-
     const supabase = createSupabaseAdminClient() as any;
     const [
       countriesRes,
@@ -181,27 +108,16 @@ export async function GET(request: Request) {
       enterpriseAccountsRes,
       companiesRes,
       customersRes
-    ] = sourceData
-      ? [
-          { data: sourceData.countries },
-          { data: sourceData.countryBranches },
-          { data: sourceData.cityBranches },
-          { data: sourceData.users },
-          { data: sourceData.assignments },
-          { data: sourceData.enterpriseAccounts },
-          { data: sourceData.companies },
-          { data: sourceData.customers }
-        ]
-      : await Promise.all([
-          supabase.from("countries").select("id, name, iso2, currency_code, official_email, admin_email, created_at").is("deleted_at", null),
-          supabase.from("country_branches").select("id, country_id, name, code, is_main, address, phone, email, whatsapp_number, owner_name, owner_customer_id, owner_profile_id, documents, contacts, created_at").is("deleted_at", null),
-          supabase.from("city_branches").select("id, country_id, country_branch_id, name, code, address, phone, email, owner_name, owner_customer_id, owner_profile_id, contacts, documents, created_at").is("deleted_at", null),
-          supabase.from("profiles").select("id, full_name, preferred_language_code, created_at").limit(50),
-          supabase.from("user_role_assignments").select("user_id, role, country_id, country_branch_id, city_branch_id, is_active, created_at").is("deleted_at", null),
-          supabase.from("enterprise_accounts").select("id, code, name, country_id, country_branch_id, city_branch_id, company_id, bank_id, customer_id, created_at").is("deleted_at", null).order("created_at", { ascending: false }).limit(100),
-          supabase.from("companies").select("id, company_name, registration_number, phone, email, address, country_id, city_id, created_at").is("deleted_at", null).limit(50),
-          supabase.from("customers").select("id, customer_name, country_id, phone, email, address, created_at").is("deleted_at", null).limit(50)
-        ]);
+    ] = await Promise.all([
+      supabase.from("countries").select("id, name, iso2, currency_code, official_email, admin_email, created_at").is("deleted_at", null),
+      supabase.from("country_branches").select("id, country_id, name, code, is_main, address, phone, email, whatsapp_number, owner_name, owner_customer_id, owner_profile_id, documents, contacts, created_at").is("deleted_at", null),
+      supabase.from("city_branches").select("id, country_id, country_branch_id, name, code, address, phone, email, owner_name, owner_customer_id, owner_profile_id, contacts, documents, created_at").is("deleted_at", null),
+      supabase.from("profiles").select("id, full_name, preferred_language_code, created_at").order("created_at", { ascending: false }).limit(50),
+      supabase.from("user_role_assignments").select("user_id, role, country_id, country_branch_id, city_branch_id, is_active, created_at").is("deleted_at", null),
+      supabase.from("enterprise_accounts").select("id, code, name, country_id, country_branch_id, city_branch_id, company_id, bank_id, customer_id, created_at").is("deleted_at", null).order("created_at", { ascending: false }).limit(100),
+      supabase.from("companies").select("id, company_name, registration_number, phone, email, address, country_id, city_id, created_at").is("deleted_at", null).limit(50),
+      supabase.from("customers").select("id, customer_name, country_id, phone, email, address, created_at").is("deleted_at", null).limit(50)
+    ]);
 
     const countriesMap = new Map<string, string>();
     (countriesRes.data ?? []).forEach((c: any) => {

@@ -88,7 +88,7 @@ type AccountGeneralReportRow = {
   branchAccountSequence?: number;
 };
 
-type AccountTitle = "Customer" | "Company" | "Bank" | "Employee" | "Personal";
+type AccountTitle = "Customer" | "Company" | "Bank" | "Employee" | "Personal" | "Expenses Account";
 
 type BranchInfo = {
   company: string;
@@ -152,7 +152,19 @@ const subTypes: Record<AccountTitle, string[]> = {
   Company: ["Trading Company", "Supplier Company", "Service Provider", "Logistics Company"],
   Bank: ["Personal Bank", "Company Bank"],
   Employee: ["Employee Position: Manager", "Employee Position: Cashier", "Employee Position: Clerk"],
-  Personal: []
+  Personal: [],
+  "Expenses Account": [
+    "Office Expenses",
+    "Operational Expenses",
+    "Utility & Bills",
+    "Rent & Lease",
+    "Salaries & Wages",
+    "Travel & Transport",
+    "Marketing & Advertising",
+    "Legal & Professional",
+    "Maintenance & Repairs",
+    "Miscellaneous Expenses"
+  ]
 };
 
 const categories = ["P/S", "B/C", "B/P", "EX", "S"];
@@ -248,7 +260,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
   // Dynamic active steps list based on accountTitle, category and subType
   const activeSteps = useMemo(() => {
     const steps: number[] = [1];
-    const isExpense = category === "EX";
+    const isExpense = category === "EX" || accountTitle === "Expenses Account";
     const isBank = accountTitle === "Bank";
     const isCompany = accountTitle === "Company" || (accountTitle === "Customer" && subType === "Business Account");
     const isPersonal = accountTitle === "Personal" || (accountTitle === "Customer" && subType !== "Business Account") || accountTitle === "Employee";
@@ -637,7 +649,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
           code: accountCode || undefined,  // omit code if empty so PATCH doesn't fail min(2) validation
           manualReferenceNumber: manualReferenceNumber.trim() || null,
           name: accountName.trim(),
-          kind: category === "P/S" ? "income" : category === "EX" ? "expense" : "asset",
+          kind: accountTitle === "Expenses Account" || category === "EX" ? "expense" : category === "P/S" ? "income" : "asset",
           currency: branchInfo.currency || selectedCountry?.currency_code || "USD",
           isControlAccount: accountTitle === "Bank",
           contacts
@@ -671,7 +683,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
           code: "AUTO",
           manualReferenceNumber: manualReferenceNumber.trim() || null,
           name: accountName.trim(),
-          kind: category === "P/S" ? "income" : category === "EX" ? "expense" : "asset",
+          kind: accountTitle === "Expenses Account" || category === "EX" ? "expense" : category === "P/S" ? "income" : "asset",
           currency: branchInfo.currency || selectedCountry?.currency_code || "USD",
           openingBalance: 0,
           status: "active",
@@ -872,13 +884,26 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="accountTitle">{getLabel("accountTitle", lang)} *</Label>
-                  <select id="accountTitle" value={accountTitle} onChange={(event) => { setAccountTitle(event.target.value as AccountTitle); setSubType(""); }} className={selectClass()}>
+                  <select
+                    id="accountTitle"
+                    value={accountTitle}
+                    onChange={(event) => {
+                      const val = event.target.value as AccountTitle;
+                      setAccountTitle(val);
+                      setSubType("");
+                      if (val === "Expenses Account" && !category) {
+                        setCategory("EX");
+                      }
+                    }}
+                    className={selectClass()}
+                  >
                     <option value="">{getLabel("selectAccountTitle", lang)}</option>
                     <option value="Customer">{getLabel("customerAccount", lang)}</option>
                     <option value="Bank">{getLabel("bankAccount", lang)}</option>
                     <option value="Personal">{getLabel("personal", lang)}</option>
                     <option value="Company">{getLabel("company", lang)}</option>
                     <option value="Employee">{getLabel("employee", lang)}</option>
+                    <option value="Expenses Account">{getLabel("expensesAccount", lang)}</option>
                   </select>
                 </div>
               </div>
