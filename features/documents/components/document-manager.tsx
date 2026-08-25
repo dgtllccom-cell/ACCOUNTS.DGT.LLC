@@ -36,7 +36,12 @@ import {
   Move,
   Folder,
   SlidersHorizontal,
-  ChevronDown
+  ChevronDown,
+  Calendar,
+  Sparkles,
+  Filter,
+  Check,
+  RotateCcw
 } from "lucide-react";
 import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
@@ -143,13 +148,6 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     fa: "فهرست ذخیره‌سازی اسناد سوپر ادمین",
     en: "Super Admin Document Storage Directory"
   },
-  page_subtitle: {
-    ur: "خودکار فولڈر تنظیم: سپر ایڈمن ← ملک ← برانچ ← ماڈیول / اکاؤنٹ",
-    ar: "تنظيم المجلدات التلقائي: المشرف العام ← الدولة ← الفرع ← الوحدة",
-    ps: "د فولډر خپلسري تنظیم: سوپر اډمین ← هیواد ← څانګه ← ماډیول",
-    fa: "سازماندهی خودکار پوشه‌ها: سوپر ادمین ← کشور ← شعبه ← ماژول",
-    en: "Automatic folder organization: Super Admin → Country → Branch → Module / Account"
-  },
   upload_file: {
     ur: "فائل اپ لوڈ کریں",
     ar: "تحميل ملف",
@@ -185,54 +183,12 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     fa: "ساختار دایرکتوری",
     en: "Directory Hierarchy"
   },
-  super_admin_storage: {
-    ur: "سپر ایڈمن اسٹوریج",
-    ar: "تخزين المشرف العام",
-    ps: "د سوپر اډمین ذخیره",
-    fa: "ذخیره‌سازی سوپر ادمین",
-    en: "Super Admin Storage"
-  },
-  countries: {
-    ur: "ممالک",
-    ar: "الدول",
-    ps: "هیوادونه",
-    fa: "کشورها",
-    en: "Countries"
-  },
-  main_branches: {
-    ur: "مین برانچز",
-    ar: "الفروع الرئيسية",
-    ps: "اصلي څانګې",
-    fa: "شعب اصلی",
-    en: "Main Branches"
-  },
-  city_branches: {
-    ur: "سٹی برانچز",
-    ar: "فروع المدن",
-    ps: "د ښار څانګې",
-    fa: "شعب شهری",
-    en: "City Branches"
-  },
-  module_categories: {
-    ur: "ماڈیول کیٹیگریز",
-    ar: "فئات الوحدات",
-    ps: "د ماډیول کټګورۍ",
-    fa: "دسته‌بندی‌های ماژول",
-    en: "Module Categories"
-  },
-  all_module_folders: {
-    ur: "تمام ماڈیول فولڈرز",
-    ar: "جميع مجلدات الوحدات",
-    ps: "د ټولو ماډیولونو فولډرونه",
-    fa: "همه پوشه‌های ماژول",
-    en: "All Module Folders"
-  },
   search_placeholder: {
-    ur: "عنوان، فائل کا نام، پارٹی، کمپنی، یا ٹیگز سے تلاش کریں...",
-    ar: "البحث عن المستندات بالعنوان، اسم الملف، الطرف، الشركة...",
-    ps: "د سرلیک، فایل نوم، پارټۍ یا شرکت له مخې لټون وکړئ...",
-    fa: "جستجوی اسناد بر اساس عنوان، نام فایل، طرف حساب، شرکت...",
-    en: "Search documents by title, file name, party, company, or tags..."
+    ur: "عنوان، پارٹی، کمپنی، یا ٹیگز سے تلاش کریں...",
+    ar: "البحث بالعنوان، الطرف، الشركة...",
+    ps: "د سرلیک، پارټۍ، شرکت له مخې لټون...",
+    fa: "جستجوی اسناد بر اساس عنوان، طرف حساب...",
+    en: "Search documents by title, party, invoice #..."
   },
   refresh: {
     ur: "تازہ کریں",
@@ -248,27 +204,6 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     fa: "مسیر فعال:",
     en: "Active Path:"
   },
-  super_admin: {
-    ur: "سپر ایڈمن",
-    ar: "المشرف العام",
-    ps: "سوپر اډمین",
-    fa: "سوپر ادمین",
-    en: "Super Admin"
-  },
-  all_branches: {
-    ur: "تمام برانچز",
-    ar: "جميع الفروع",
-    ps: "ټولې څانګې",
-    fa: "همه شعب",
-    en: "All Branches"
-  },
-  all_modules: {
-    ur: "تمام ماڈیولز",
-    ar: "جميع الوحدات",
-    ps: "ټول ماډیولونه",
-    fa: "همه ماژول‌ها",
-    en: "All Modules"
-  },
   no_docs: {
     ur: "اس ڈائریکٹری فولڈر میں کوئی دستاویزات نہیں ملیں۔",
     ar: "لم يتم العثور على مستندات في هذا المجلد.",
@@ -282,13 +217,6 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     ps: "اسناد لوډ کیږي...",
     fa: "در حال بارگذاری اسناد...",
     en: "Loading document repository..."
-  },
-  edit_title: {
-    ur: "دستاویز میں ترمیم / منتقل کریں",
-    ar: "تعديل / نقل المستند",
-    ps: "سند سم کړئ / انتقال کړئ",
-    fa: "ویرایش / انتقال سند",
-    en: "Edit / Move Document"
   }
 };
 
@@ -316,7 +244,7 @@ export function DocumentManager() {
     [lang]
   );
 
-  // ── Session Context (for Card 1 & Role Scoping) ──
+  // ── Session Context ──
   const [sessionCtx, setSessionCtx] = useState<{
     userName: string;
     userEmail: string;
@@ -358,6 +286,12 @@ export function DocumentManager() {
   const [selectedDocumentType, setSelectedDocumentType] = useState<string>("");
   const [scopeRole, setScopeRole] = useState<"super_admin" | "country_admin" | "branch_user">("super_admin");
 
+  // Dropdown / Popover states for clean collapsible UI
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState<boolean>(false);
+  const [isQuickLinksOpen, setIsQuickLinksOpen] = useState<boolean>(false);
+  const [isDateMenuOpen, setIsDateMenuOpen] = useState<boolean>(false);
+  const [isScopeMenuOpen, setIsScopeMenuOpen] = useState<boolean>(false);
+
   // Filter & Search
   const [documents, setDocuments] = useState<OfficeDocument[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -366,7 +300,7 @@ export function DocumentManager() {
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
 
-  // Custom User-Created Folders
+  // Custom Folders
   const [customFolders, setCustomFolders] = useState<CustomFolder[]>(() => {
     try {
       const saved = localStorage.getItem("dgt_erp_custom_folders");
@@ -393,7 +327,7 @@ export function DocumentManager() {
   const [selectedAccountCode, setSelectedAccountCode] = useState<string>("");
   const [selectedAccountName, setSelectedAccountName] = useState<string>("");
 
-  // Modals & Actions
+  // Modals
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [isScannerOpen, setIsScannerOpen] = useState<boolean>(false);
   const [scanStatus, setScanStatus] = useState<string>("");
@@ -414,7 +348,21 @@ export function DocumentManager() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // ── Load Countries & Hierarchy ──
+  // Close popovers on outside click
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsQuickLinksOpen(false);
+        setIsDateMenuOpen(false);
+        setIsScopeMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // ── Load Hierarchy ──
   const fetchHierarchy = useCallback(async () => {
     try {
       const res = await apiGet<any>("/api/erp/branch-hierarchy");
@@ -471,7 +419,7 @@ export function DocumentManager() {
     void fetchDocs();
   }, [fetchDocs]);
 
-  // ── Load Dropdown Select Options (Company / Person / Account) ──
+  // ── Load Select Options ──
   useEffect(() => {
     let active = true;
     async function loadOptions() {
@@ -535,7 +483,7 @@ export function DocumentManager() {
     };
   }, []);
 
-  // ── Date Range Filtering ──
+  // ── Date Filtering ──
   const filteredDocuments = useMemo(() => {
     return documents.filter((doc) => {
       if (dateFilter === "all") return true;
@@ -556,7 +504,7 @@ export function DocumentManager() {
     });
   }, [documents, dateFilter]);
 
-  // ── Summary Stats for Top 5 KPI Cards ──
+  // ── Summary Stats for KPI Cards ──
   const summaryStats = useMemo(() => {
     const totalDocs = documents.length;
     const totalBytes = documents.reduce((acc, d) => acc + (Number(d.file_size) || 0), 0);
@@ -578,7 +526,18 @@ export function DocumentManager() {
     };
   }, [documents, countries]);
 
-  // ── Handlers for Upload, Scan, Move, Delete ──
+  // Active filters count
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (selectedCountryId) count++;
+    if (selectedMainBranchId) count++;
+    if (selectedCityBranchId) count++;
+    if (selectedModule && selectedModule !== "all") count++;
+    if (selectedCompanyId) count++;
+    if (selectedAccountId || selectedPersonId) count++;
+    return count;
+  }, [selectedCountryId, selectedMainBranchId, selectedCityBranchId, selectedModule, selectedCompanyId, selectedAccountId, selectedPersonId]);
+
   const activeCountry = countries.find((c) => c.id === selectedCountryId);
   const activeMainBranch = activeCountry?.mainBranches?.find((b: any) => b.id === selectedMainBranchId);
   const activeCityBranch = activeMainBranch?.cityBranches?.find((b: any) => b.id === selectedCityBranchId);
@@ -795,7 +754,20 @@ export function DocumentManager() {
     }
   };
 
-  // All Folders (Default Modules + User Custom Folders)
+  // Reset Filters
+  const handleResetFilters = () => {
+    setSelectedCountryId("");
+    setSelectedMainBranchId("");
+    setSelectedCityBranchId("");
+    setSelectedModule("all");
+    setSelectedCompanyId("");
+    setSelectedAccountId("");
+    setSelectedPersonId("");
+    setSearchQuery("");
+    setDateFilter("all");
+  };
+
+  // All Folders
   const allFolderList = useMemo(() => {
     const customNames = customFolders.map((f) => f.name);
     return Array.from(new Set([...DEFAULT_MODULE_FOLDERS, ...customNames]));
@@ -813,112 +785,255 @@ export function DocumentManager() {
 
   return (
     <div className={cn("space-y-4 pb-16 min-h-screen font-sans", isRtl && "text-right")} dir={isRtl ? "rtl" : "ltr"}>
-      {/* ── Top Header Bar with Scope Switcher & Primary Action Buttons ── */}
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3.5 bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
-        {/* Left: Module Title & Badge */}
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="h-10 w-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-200/60 dark:border-indigo-900 shrink-0 shadow-xs">
-            <FolderOpen className="h-5 w-5" />
+      {/* ── Top Unified Header Bar ("Safaid Patti" / Header Toolbar) ── */}
+      <div
+        ref={dropdownRef}
+        className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3 sm:p-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs relative z-20"
+      >
+        {/* Left: Module Icon + Title + Active Count */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          <div className="h-9 w-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-200/60 dark:border-indigo-900 shrink-0 shadow-xs">
+            <FolderOpen className="h-4.5 w-4.5" />
           </div>
-          <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
-            <h1 className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight whitespace-nowrap">
-              {t("page_tag", "Document Management & Hardware Scanner")}
-            </h1>
-            <span className="inline-flex items-center justify-center whitespace-nowrap px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-xs leading-none">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1.5 shrink-0" />
-              {filteredDocuments.length} {t("active_docs", "Active Documents")}
-            </span>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-sm sm:text-base font-black text-slate-900 dark:text-slate-100 tracking-tight whitespace-nowrap">
+                {t("page_tag", "Document Management & Hardware Scanner")}
+              </h1>
+              <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-xs leading-none">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1 shrink-0" />
+                {filteredDocuments.length} {t("active_docs", "Active")}
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Center: Role Scope Selector Pills (Super Admin / Country Admin / Branch User) */}
-        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl text-xs font-bold border border-slate-200/80 dark:border-slate-800 shadow-xs">
+        {/* Center: Scope Selector Dropdown + Search + Date Range Dropdown + Filter Trigger */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {/* 1. Scope Dropdown Button */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setIsScopeMenuOpen(!isScopeMenuOpen);
+                setIsDateMenuOpen(false);
+                setIsQuickLinksOpen(false);
+              }}
+              className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/80 hover:bg-slate-100 px-2.5 text-xs font-bold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 flex items-center gap-1.5 shadow-xs transition-colors"
+            >
+              <span>{scopeRole === "super_admin" ? "👑 Super Admin" : scopeRole === "country_admin" ? "🌍 Country Admin" : "🏢 Branch User"}</span>
+              <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+            </button>
+
+            {isScopeMenuOpen && (
+              <div className="absolute left-0 mt-1.5 w-48 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xl p-1 z-50 text-xs font-semibold space-y-0.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setScopeRole("super_admin");
+                    setIsScopeMenuOpen(false);
+                  }}
+                  className={cn(
+                    "w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between transition-colors",
+                    scopeRole === "super_admin" ? "bg-blue-50 text-blue-700 dark:bg-blue-950 font-bold" : "hover:bg-slate-50 text-slate-700 dark:text-slate-300"
+                  )}
+                >
+                  <span className="flex items-center gap-1.5">👑 Super Admin Storage</span>
+                  {scopeRole === "super_admin" && <Check className="h-3.5 w-3.5" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setScopeRole("country_admin");
+                    setIsScopeMenuOpen(false);
+                  }}
+                  className={cn(
+                    "w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between transition-colors",
+                    scopeRole === "country_admin" ? "bg-blue-50 text-blue-700 dark:bg-blue-950 font-bold" : "hover:bg-slate-50 text-slate-700 dark:text-slate-300"
+                  )}
+                >
+                  <span className="flex items-center gap-1.5">🌍 Country Admin Scope</span>
+                  {scopeRole === "country_admin" && <Check className="h-3.5 w-3.5" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setScopeRole("branch_user");
+                    setIsScopeMenuOpen(false);
+                  }}
+                  className={cn(
+                    "w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between transition-colors",
+                    scopeRole === "branch_user" ? "bg-blue-50 text-blue-700 dark:bg-blue-950 font-bold" : "hover:bg-slate-50 text-slate-700 dark:text-slate-300"
+                  )}
+                >
+                  <span className="flex items-center gap-1.5">🏢 Branch User Scope</span>
+                  {scopeRole === "branch_user" && <Check className="h-3.5 w-3.5" />}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* 2. Compact Search Input */}
+          <div className="relative min-w-[170px] sm:min-w-[210px]">
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t("search_placeholder", "Search documents...")}
+              className="h-8.5 pl-8 pr-2 text-xs bg-slate-50/70 dark:bg-slate-950 border-slate-200 dark:border-slate-700 rounded-xl"
+            />
+          </div>
+
+          {/* 3. Date Range Dropdown Button */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setIsDateMenuOpen(!isDateMenuOpen);
+                setIsScopeMenuOpen(false);
+                setIsQuickLinksOpen(false);
+              }}
+              className={cn(
+                "h-8.5 rounded-xl border px-2.5 text-xs font-bold flex items-center gap-1.5 shadow-xs transition-colors",
+                dateFilter !== "all"
+                  ? "bg-blue-50 text-blue-700 border-blue-300 dark:bg-blue-950 dark:border-blue-800"
+                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+              )}
+            >
+              <Calendar className="h-3.5 w-3.5 text-slate-500" />
+              <span>
+                {dateFilter === "all"
+                  ? "All Dates"
+                  : dateFilter === "today"
+                  ? "Today"
+                  : dateFilter === "yesterday"
+                  ? "Yesterday"
+                  : "This Month"}
+              </span>
+              <ChevronDown className="h-3 w-3 text-slate-400" />
+            </button>
+
+            {isDateMenuOpen && (
+              <div className="absolute left-0 mt-1.5 w-36 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xl p-1 z-50 text-xs font-semibold space-y-0.5">
+                {[
+                  { key: "all", label: "All Dates" },
+                  { key: "today", label: "Today" },
+                  { key: "yesterday", label: "Yesterday" },
+                  { key: "this_month", label: "This Month" }
+                ].map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => {
+                      setDateFilter(item.key as any);
+                      setIsDateMenuOpen(false);
+                    }}
+                    className={cn(
+                      "w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between transition-colors",
+                      dateFilter === item.key
+                        ? "bg-blue-50 text-blue-700 dark:bg-blue-950 font-bold"
+                        : "hover:bg-slate-50 text-slate-700 dark:text-slate-300"
+                    )}
+                  >
+                    <span>{item.label}</span>
+                    {dateFilter === item.key && <Check className="h-3.5 w-3.5" />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* 4. Collapsible Filters Toggle Button ("Parda" / Curtain Button) */}
           <button
             type="button"
-            onClick={() => setScopeRole("super_admin")}
+            onClick={() => setIsFilterDrawerOpen(!isFilterDrawerOpen)}
             className={cn(
-              "px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5",
-              scopeRole === "super_admin"
-                ? "bg-white dark:bg-slate-800 text-blue-600 shadow-xs"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+              "h-8.5 rounded-xl border px-2.5 text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all",
+              isFilterDrawerOpen || activeFiltersCount > 0
+                ? "bg-indigo-600 text-white border-indigo-600 shadow-sm"
+                : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
             )}
           >
-            <span>👑</span>
-            <span>{t("super_admin_role", "Super Admin")}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setScopeRole("country_admin")}
-            className={cn(
-              "px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5",
-              scopeRole === "country_admin"
-                ? "bg-white dark:bg-slate-800 text-blue-600 shadow-xs"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+            <Filter className="h-3.5 w-3.5" />
+            <span>{t("filters", "Scope & Hierarchy Filters")}</span>
+            {activeFiltersCount > 0 && (
+              <span className="h-4 w-4 rounded-full bg-white text-indigo-700 font-black text-[10px] flex items-center justify-center">
+                {activeFiltersCount}
+              </span>
             )}
-          >
-            <span>🌍</span>
-            <span>{t("country_admin_role", "Country Admin")}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setScopeRole("branch_user")}
-            className={cn(
-              "px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5",
-              scopeRole === "branch_user"
-                ? "bg-white dark:bg-slate-800 text-blue-600 shadow-xs"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-            )}
-          >
-            <span>🏢</span>
-            <span>{t("branch_role", "Branch User")}</span>
+            <ChevronDown className={cn("h-3 w-3 transition-transform", isFilterDrawerOpen && "rotate-180")} />
           </button>
         </div>
 
-        {/* Right: Primary Action Buttons Toolbar */}
-        <div className="flex flex-wrap items-center gap-1.5 font-sans">
-          {/* Person / Customer Link */}
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.push("/dashboard/settings/customers" as Route)}
-            className="h-8.5 rounded-xl border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200 text-xs font-bold px-2.5 gap-1 shadow-xs"
-          >
-            <UserCheck className="h-3.5 w-3.5" />
-            {t("person_customer", "Person / Customer")}
-          </Button>
+        {/* Right: Quick Links Dropdown + Primary Action Buttons */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {/* Quick Links Dropdown (Person, Company, Bank, New Folder) */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setIsQuickLinksOpen(!isQuickLinksOpen);
+                setIsScopeMenuOpen(false);
+                setIsDateMenuOpen(false);
+              }}
+              className="h-8.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 px-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 shadow-xs transition-colors"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+              <span>{t("quick_setup", "Setup & Links")}</span>
+              <ChevronDown className="h-3 w-3 text-slate-400" />
+            </button>
 
-          {/* Company Link */}
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.push("/dashboard/settings/company" as Route)}
-            className="h-8.5 rounded-xl border-indigo-300 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-200 text-xs font-bold px-2.5 gap-1 shadow-xs"
-          >
-            <Building2 className="h-3.5 w-3.5" />
-            {t("company", "Company")}
-          </Button>
-
-          {/* Bank / Account Link */}
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.push("/dashboard/settings/bank" as Route)}
-            className="h-8.5 rounded-xl border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200 text-xs font-bold px-2.5 gap-1 shadow-xs"
-          >
-            <CreditCard className="h-3.5 w-3.5" />
-            {t("bank", "Bank")}
-          </Button>
-
-          {/* New Custom Folder Button */}
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setIsNewFolderOpen(true)}
-            className="h-8.5 rounded-xl border-purple-300 bg-purple-50 hover:bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-200 text-xs font-bold px-2.5 gap-1 shadow-xs"
-          >
-            <FolderPlus className="h-3.5 w-3.5" />
-            {t("new_folder", "New Folder")}
-          </Button>
+            {isQuickLinksOpen && (
+              <div className="absolute right-0 mt-1.5 w-48 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xl p-1 z-50 text-xs font-semibold space-y-0.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsQuickLinksOpen(false);
+                    router.push("/dashboard/settings/customers" as Route);
+                  }}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg flex items-center gap-2 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/60"
+                >
+                  <UserCheck className="h-3.5 w-3.5" />
+                  <span>Person / Customer</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsQuickLinksOpen(false);
+                    router.push("/dashboard/settings/company" as Route);
+                  }}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg flex items-center gap-2 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/60"
+                >
+                  <Building2 className="h-3.5 w-3.5" />
+                  <span>Company Setup</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsQuickLinksOpen(false);
+                    router.push("/dashboard/settings/bank" as Route);
+                  }}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg flex items-center gap-2 text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/60"
+                >
+                  <CreditCard className="h-3.5 w-3.5" />
+                  <span>Bank Accounts</span>
+                </button>
+                <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsQuickLinksOpen(false);
+                    setIsNewFolderOpen(true);
+                  }}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg flex items-center gap-2 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-950/60 font-bold"
+                >
+                  <FolderPlus className="h-3.5 w-3.5" />
+                  <span>New Custom Folder</span>
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Upload File Input (Hidden) */}
           <input
@@ -951,199 +1066,159 @@ export function DocumentManager() {
         </div>
       </div>
 
-      {/* ── Top Scope & Hierarchy Dropdowns Filter Bar (Directly Under Header) ── */}
-      <div className="bg-white dark:bg-slate-900 p-3 sm:p-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs font-sans space-y-2.5">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
-          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 shrink-0">
-            <SlidersHorizontal className="h-4 w-4 text-indigo-600" />
-            <span>{t("scope_hierarchy_filters", "Scope & Hierarchy Filters")}</span>
-          </div>
-
-          {/* Search & Date Filter Controls */}
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Search Input */}
-            <div className="relative min-w-[200px] sm:min-w-[260px]">
-              <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t("search_placeholder", "Search documents by title, party, invoice #...")}
-                className="h-8.5 pl-8.5 pr-2.5 text-xs bg-slate-50/70 dark:bg-slate-950 border-slate-200 dark:border-slate-700 rounded-xl"
-              />
+      {/* ── Collapsible Scope & Hierarchy Filters Curtain ("Chhota Sa Parda") ── */}
+      {isFilterDrawerOpen && (
+        <div className="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-indigo-200/80 dark:border-indigo-900/60 shadow-md font-sans space-y-3 animate-in fade-in slide-in-from-top-2 duration-200 relative z-10">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+            <div className="flex items-center gap-2">
+              <SlidersHorizontal className="h-4 w-4 text-indigo-600" />
+              <span className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">
+                {t("hierarchy_selectors", "Directory Scope & Hierarchy Dropdowns")}
+              </span>
             </div>
 
-            {/* Date Filters */}
-            <div className="flex items-center gap-1 font-sans">
+            <div className="flex items-center gap-2">
+              {activeFiltersCount > 0 && (
+                <button
+                  type="button"
+                  onClick={handleResetFilters}
+                  className="text-[11px] font-bold text-red-600 hover:underline flex items-center gap-1"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  {t("reset_filters", "Reset All")}
+                </button>
+              )}
               <button
                 type="button"
-                onClick={() => setDateFilter("all")}
-                className={`h-8.5 rounded-xl border px-2.5 text-xs font-bold transition-colors ${
-                  dateFilter === "all"
-                    ? "bg-blue-600 text-white border-blue-600 shadow-xs"
-                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-                }`}
+                onClick={() => setIsFilterDrawerOpen(false)}
+                className="h-6 w-6 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 flex items-center justify-center text-slate-500"
               >
-                {t("all_records", "All")}
-              </button>
-              <button
-                type="button"
-                onClick={() => setDateFilter("today")}
-                className={`h-8.5 rounded-xl border px-2.5 text-xs font-bold transition-colors ${
-                  dateFilter === "today"
-                    ? "bg-blue-600 text-white border-blue-600 shadow-xs"
-                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-                }`}
-              >
-                {t("today", "Today")}
-              </button>
-              <button
-                type="button"
-                onClick={() => setDateFilter("yesterday")}
-                className={`h-8.5 rounded-xl border px-2.5 text-xs font-bold transition-colors ${
-                  dateFilter === "yesterday"
-                    ? "bg-blue-600 text-white border-blue-600 shadow-xs"
-                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-                }`}
-              >
-                {t("yesterday", "Yesterday")}
-              </button>
-              <button
-                type="button"
-                onClick={() => setDateFilter("this_month")}
-                className={`h-8.5 rounded-xl border px-2.5 text-xs font-bold transition-colors ${
-                  dateFilter === "this_month"
-                    ? "bg-blue-600 text-white border-blue-600 shadow-xs"
-                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-                }`}
-              >
-                {t("this_month", "This Month")}
+                <X className="h-3.5 w-3.5" />
               </button>
             </div>
           </div>
-        </div>
 
-        {/* Hierarchy Dropdowns Grid */}
-        <div className="grid gap-2.5 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 pt-1 border-t border-slate-100 dark:border-slate-800">
-          {/* 1. Country Dropdown */}
-          <SearchSelect
-            label={t("countries", "Country")}
-            value={selectedCountryId}
-            placeholder={t("all_countries", "All Countries")}
-            options={countries.map((country) => ({
-              value: country.id,
-              label: country.name,
-              keywords: [country.name, country.code, country.iso_code].filter(Boolean).join(" ")
-            }))}
-            onValueChange={(value) => {
-              setSelectedCountryId(value);
-              setSelectedMainBranchId("");
-              setSelectedCityBranchId("");
-            }}
-            searchPlaceholder={t("search", "Search...")}
-            emptyLabel={t("no_matches_found", "No matches found")}
-          />
+          <div className="grid gap-2.5 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+            {/* 1. Country Dropdown */}
+            <SearchSelect
+              label={t("countries", "Country")}
+              value={selectedCountryId}
+              placeholder={t("all_countries", "All Countries")}
+              options={countries.map((country) => ({
+                value: country.id,
+                label: country.name,
+                keywords: [country.name, country.code, country.iso_code].filter(Boolean).join(" ")
+              }))}
+              onValueChange={(value) => {
+                setSelectedCountryId(value);
+                setSelectedMainBranchId("");
+                setSelectedCityBranchId("");
+              }}
+              searchPlaceholder={t("search", "Search...")}
+              emptyLabel={t("no_matches_found", "No matches found")}
+            />
 
-          {/* 2. Main Branch Dropdown */}
-          <SearchSelect
-            label={t("main_branches", "Main Branch")}
-            value={selectedMainBranchId}
-            placeholder={t("all_main_branches", "All Main Branches")}
-            options={(activeCountry?.mainBranches || []).map((branch: any) => ({
-              value: branch.id,
-              label: branch.name,
-              keywords: [branch.name, branch.code, branch.branch_code, branch.owner_name].filter(Boolean).join(" ")
-            }))}
-            disabled={!activeCountry && countries.length > 0}
-            onValueChange={(value) => {
-              setSelectedMainBranchId(value);
-              setSelectedCityBranchId("");
-            }}
-            searchPlaceholder={t("search", "Search...")}
-            emptyLabel={t("no_matches_found", "No matches found")}
-          />
+            {/* 2. Main Branch Dropdown */}
+            <SearchSelect
+              label={t("main_branches", "Main Branch")}
+              value={selectedMainBranchId}
+              placeholder={t("all_main_branches", "All Main Branches")}
+              options={(activeCountry?.mainBranches || []).map((branch: any) => ({
+                value: branch.id,
+                label: branch.name,
+                keywords: [branch.name, branch.code, branch.branch_code, branch.owner_name].filter(Boolean).join(" ")
+              }))}
+              disabled={!activeCountry && countries.length > 0}
+              onValueChange={(value) => {
+                setSelectedMainBranchId(value);
+                setSelectedCityBranchId("");
+              }}
+              searchPlaceholder={t("search", "Search...")}
+              emptyLabel={t("no_matches_found", "No matches found")}
+            />
 
-          {/* 3. City Branch Dropdown */}
-          <SearchSelect
-            label={t("city_branches", "City Branch")}
-            value={selectedCityBranchId}
-            placeholder={t("all_city_branches", "All City Branches")}
-            options={(activeMainBranch?.cityBranches || []).map((branch: any) => ({
-              value: branch.id,
-              label: branch.name,
-              keywords: [branch.name, branch.code, branch.branch_code, branch.owner_name].filter(Boolean).join(" ")
-            }))}
-            disabled={!activeMainBranch}
-            onValueChange={(value) => setSelectedCityBranchId(value)}
-            searchPlaceholder={t("search", "Search...")}
-            emptyLabel={t("no_matches_found", "No matches found")}
-          />
+            {/* 3. City Branch Dropdown */}
+            <SearchSelect
+              label={t("city_branches", "City Branch")}
+              value={selectedCityBranchId}
+              placeholder={t("all_city_branches", "All City Branches")}
+              options={(activeMainBranch?.cityBranches || []).map((branch: any) => ({
+                value: branch.id,
+                label: branch.name,
+                keywords: [branch.name, branch.code, branch.branch_code, branch.owner_name].filter(Boolean).join(" ")
+              }))}
+              disabled={!activeMainBranch}
+              onValueChange={(value) => setSelectedCityBranchId(value)}
+              searchPlaceholder={t("search", "Search...")}
+              emptyLabel={t("no_matches_found", "No matches found")}
+            />
 
-          {/* 4. Module / Custom Folder Dropdown */}
-          <div>
-            <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
-              {t("module_folders", "Module / Folder")}
-            </label>
-            <select
-              value={selectedModule}
-              onChange={(e) => setSelectedModule(e.target.value)}
-              className="w-full h-9 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-            >
-              <option value="all">{t("all_module_folders", "📁 All Module Folders")}</option>
-              <optgroup label="ERP Modules">
-                {DEFAULT_MODULE_FOLDERS.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-              </optgroup>
-              {customFolders.length > 0 && (
-                <optgroup label="Custom Folders">
-                  {customFolders.map((cf) => (
-                    <option key={cf.id} value={cf.name}>
-                      ⭐ {cf.name}
+            {/* 4. Module / Custom Folder Dropdown */}
+            <div>
+              <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                {t("module_folders", "Module / Folder")}
+              </label>
+              <select
+                value={selectedModule}
+                onChange={(e) => setSelectedModule(e.target.value)}
+                className="w-full h-9 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+              >
+                <option value="all">{t("all_module_folders", "📁 All Module Folders")}</option>
+                <optgroup label="ERP Modules">
+                  {DEFAULT_MODULE_FOLDERS.map((m) => (
+                    <option key={m} value={m}>
+                      {m}
                     </option>
                   ))}
                 </optgroup>
-              )}
-            </select>
+                {customFolders.length > 0 && (
+                  <optgroup label="Custom Folders">
+                    {customFolders.map((cf) => (
+                      <option key={cf.id} value={cf.name}>
+                        ⭐ {cf.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+              </select>
+            </div>
+
+            {/* 5. Company Filter Dropdown */}
+            <SearchSelect
+              label={t("company", "Company")}
+              value={selectedCompanyId}
+              placeholder={t("all_companies", "All Companies")}
+              options={companyOptions}
+              onValueChange={(val) => {
+                setSelectedCompanyId(val);
+                const found = companyOptions.find((o) => o.value === val);
+                setSelectedCompanyName(found ? found.label.split(" • ")[1] || found.label : "");
+              }}
+              searchPlaceholder={t("search", "Search...")}
+              emptyLabel={t("no_matches_found", "No matches found")}
+            />
+
+            {/* 6. Account / Person Filter Dropdown */}
+            <SearchSelect
+              label={t("account_person", "Account / Party")}
+              value={selectedAccountId || selectedPersonId}
+              placeholder={t("all_accounts", "All Accounts")}
+              options={[...accountOptions, ...personOptions]}
+              onValueChange={(val) => {
+                if (val.startsWith("cust_") || val.startsWith("emp_")) {
+                  setSelectedPersonId(val);
+                  setSelectedAccountId("");
+                } else {
+                  setSelectedAccountId(val);
+                  setSelectedPersonId("");
+                }
+              }}
+              searchPlaceholder={t("search", "Search...")}
+              emptyLabel={t("no_matches_found", "No matches found")}
+            />
           </div>
-
-          {/* 5. Company Filter Dropdown */}
-          <SearchSelect
-            label={t("company", "Company")}
-            value={selectedCompanyId}
-            placeholder={t("all_companies", "All Companies")}
-            options={companyOptions}
-            onValueChange={(val) => {
-              setSelectedCompanyId(val);
-              const found = companyOptions.find((o) => o.value === val);
-              setSelectedCompanyName(found ? found.label.split(" • ")[1] || found.label : "");
-            }}
-            searchPlaceholder={t("search", "Search...")}
-            emptyLabel={t("no_matches_found", "No matches found")}
-          />
-
-          {/* 6. Account / Person Filter Dropdown */}
-          <SearchSelect
-            label={t("account_person", "Account / Party")}
-            value={selectedAccountId || selectedPersonId}
-            placeholder={t("all_accounts", "All Accounts")}
-            options={[...accountOptions, ...personOptions]}
-            onValueChange={(val) => {
-              if (val.startsWith("cust_") || val.startsWith("emp_")) {
-                setSelectedPersonId(val);
-                setSelectedAccountId("");
-              } else {
-                setSelectedAccountId(val);
-                setSelectedPersonId("");
-              }
-            }}
-            searchPlaceholder={t("search", "Search...")}
-            emptyLabel={t("no_matches_found", "No matches found")}
-          />
         </div>
-      </div>
+      )}
 
       {/* ── 5 KPI SUMMARY CARDS GRID (Exact Alignment with General Office) ── */}
       <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 font-sans">
@@ -1731,7 +1806,6 @@ export function DocumentManager() {
           </DialogHeader>
 
           <div className="space-y-3.5 py-2 text-xs">
-            {/* Scanner Device Selection */}
             <div>
               <label className="font-bold text-slate-700 block mb-1">
                 {t("select_device", "Hardware Scanner Device")}
@@ -1777,7 +1851,6 @@ export function DocumentManager() {
               </div>
             </div>
 
-            {/* Destination Preview */}
             <div className="rounded-xl bg-slate-50 p-3 border border-slate-200 space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Destination Filing Path</span>
               <div className="text-[11px] font-mono text-slate-700 truncate">
@@ -1785,7 +1858,6 @@ export function DocumentManager() {
               </div>
             </div>
 
-            {/* Live Scanner Activity Status */}
             {scanStatus && (
               <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-emerald-800 space-y-1.5">
                 <div className="flex items-center gap-2 font-bold">
@@ -1959,7 +2031,6 @@ export function DocumentManager() {
 
           {previewDoc && (
             <div className="space-y-3.5 py-2 text-xs">
-              {/* Document Meta Breakdown */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 rounded-xl bg-slate-50 dark:bg-slate-900 p-3 border border-slate-200 dark:border-slate-800 text-[11px]">
                 <div>
                   <span className="text-slate-400 block text-[9.5px] uppercase font-bold">Module</span>
@@ -1981,14 +2052,12 @@ export function DocumentManager() {
                 </div>
               </div>
 
-              {/* Document Path */}
               {previewDoc.document_path && (
                 <div className="rounded-xl bg-slate-100/70 p-2 text-[11px] font-mono text-slate-600 truncate">
                   📂 {previewDoc.document_path}
                 </div>
               )}
 
-              {/* Document Actions Bar */}
               <div className="flex items-center justify-end gap-2 pt-2">
                 {previewDoc.file_url && (
                   <Button
