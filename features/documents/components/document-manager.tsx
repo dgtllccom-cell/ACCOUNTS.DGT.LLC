@@ -983,7 +983,7 @@ export function DocumentManager() {
           </button>
         </div>
 
-        {/* Right: New Folder + Primary Action Buttons */}
+        {/* Right: New Folder + Action Buttons + View Mode & Refresh */}
         <div className="flex flex-wrap items-center gap-1.5">
           {/* New Custom Folder Button */}
           <Button
@@ -1024,6 +1024,49 @@ export function DocumentManager() {
             <Camera className="h-3.5 w-3.5" />
             {t("start_scan", "Start Direct Scan")}
           </Button>
+
+          {/* Divider */}
+          <div className="h-5 w-px bg-slate-200 dark:bg-slate-700 mx-0.5" />
+
+          {/* Refresh Button */}
+          <button
+            type="button"
+            onClick={() => fetchDocs()}
+            title={t("refresh", "Refresh")}
+            className="h-8.5 w-8.5 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-900 shadow-xs"
+          >
+            <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin text-blue-600")} />
+          </button>
+
+          {/* View Mode Grid/Table Switcher */}
+          <div className="flex items-center rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 p-0.5 shadow-xs">
+            <button
+              type="button"
+              onClick={() => setViewMode("grid")}
+              title="Grid View"
+              className={cn(
+                "h-7 w-7 rounded-lg flex items-center justify-center transition-colors",
+                viewMode === "grid"
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "text-slate-500 hover:text-slate-900"
+              )}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("table")}
+              title="Table View"
+              className={cn(
+                "h-7 w-7 rounded-lg flex items-center justify-center transition-colors",
+                viewMode === "table"
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "text-slate-500 hover:text-slate-900"
+              )}
+            >
+              <List className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1488,7 +1531,7 @@ export function DocumentManager() {
                 type="button"
                 onClick={() => handleResetFilters()}
                 className={cn(
-                  "hover:underline hover:text-blue-600 transition-colors flex items-center gap-1 px-1 py-0.5 rounded",
+                  "hover:underline hover:text-blue-600 transition-colors flex items-center gap-1 px-1.5 py-0.5 rounded",
                   !selectedCountryId ? "text-blue-600 font-black bg-blue-50 dark:bg-blue-950" : "text-slate-600"
                 )}
               >
@@ -1507,7 +1550,7 @@ export function DocumentManager() {
                       setSelectedModule("all");
                     }}
                     className={cn(
-                      "hover:underline hover:text-blue-600 transition-colors flex items-center gap-1 px-1 py-0.5 rounded",
+                      "hover:underline hover:text-blue-600 transition-colors flex items-center gap-1 px-1.5 py-0.5 rounded",
                       !selectedMainBranchId ? "text-blue-600 font-black bg-blue-50 dark:bg-blue-950" : "text-slate-600"
                     )}
                   >
@@ -1527,7 +1570,7 @@ export function DocumentManager() {
                       setSelectedModule("all");
                     }}
                     className={cn(
-                      "hover:underline hover:text-blue-600 transition-colors flex items-center gap-1 px-1 py-0.5 rounded",
+                      "hover:underline hover:text-blue-600 transition-colors flex items-center gap-1 px-1.5 py-0.5 rounded",
                       !selectedCityBranchId && selectedModule === "all" ? "text-blue-600 font-black bg-blue-50 dark:bg-blue-950" : "text-slate-600"
                     )}
                   >
@@ -1557,181 +1600,13 @@ export function DocumentManager() {
               )}
             </div>
 
-            <div className="flex items-center gap-1.5 self-end sm:self-auto">
-              <button
-                type="button"
-                onClick={() => fetchDocs()}
-                title={t("refresh", "Refresh")}
-                className="h-8 w-8 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-900"
-              >
-                <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin text-blue-600")} />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setViewMode("grid")}
-                className={cn(
-                  "h-8 w-8 rounded-lg border flex items-center justify-center transition-colors",
-                  viewMode === "grid"
-                    ? "bg-blue-600 text-white border-blue-600 shadow-xs"
-                    : "border-slate-200 text-slate-600 dark:border-slate-700 hover:bg-slate-50"
-                )}
-              >
-                <LayoutGrid className="h-3.5 w-3.5" />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setViewMode("table")}
-                className={cn(
-                  "h-8 w-8 rounded-lg border flex items-center justify-center transition-colors",
-                  viewMode === "table"
-                    ? "bg-blue-600 text-white border-blue-600 shadow-xs"
-                    : "border-slate-200 text-slate-600 dark:border-slate-700 hover:bg-slate-50"
-                )}
-              >
-                <List className="h-3.5 w-3.5" />
-              </button>
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-semibold">
+              <span>{filteredDocuments.length} {filteredDocuments.length === 1 ? "document" : "documents"} in view</span>
             </div>
           </div>
 
-          {/* ── Drill-Down Folders Grid (Country / Branch / Module Folders) ── */}
-          {!selectedCountryId ? (
-            /* Super Admin View: Show Country Folders */
-            <div className="space-y-2">
-              <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                <Folder className="h-3.5 w-3.5 text-amber-500" />
-                <span>Countries Folders ({countries.length})</span>
-              </div>
-              <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
-                {countries.map((c) => {
-                  const docCount = documents.filter((d) => d.country_id === c.id || d.country_name === c.name).length;
-                  const branchCount = c.mainBranches?.length || 0;
-                  return (
-                    <div
-                      key={c.id}
-                      onClick={() => {
-                        setSelectedCountryId(c.id);
-                        setSelectedMainBranchId("");
-                        setSelectedCityBranchId("");
-                        setSelectedModule("all");
-                      }}
-                      className="p-3.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/60 hover:bg-blue-50/70 hover:border-blue-300 dark:bg-slate-900/60 dark:hover:bg-blue-950/40 transition-all cursor-pointer group shadow-xs space-y-2"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="h-9 w-9 rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400 flex items-center justify-center font-bold">
-                          <Folder className="h-5 w-5 fill-amber-400 text-amber-500" />
-                        </div>
-                        <span className="text-[10px] font-mono font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
-                          {docCount} files
-                        </span>
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-black text-slate-900 dark:text-slate-100 group-hover:text-blue-600 transition-colors">
-                          {c.name}
-                        </h4>
-                        <p className="text-[10.5px] text-slate-400 font-semibold">
-                          {branchCount} {branchCount === 1 ? "Branch" : "Branches"}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ) : !selectedMainBranchId ? (
-            /* Country View: Show Main Branches for Country */
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-wider text-slate-400">
-                <span className="flex items-center gap-1.5">
-                  <FolderOpen className="h-3.5 w-3.5 text-indigo-500" />
-                  <span>{activeCountry?.name} Branches Folders</span>
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setSelectedCountryId("")}
-                  className="text-blue-600 hover:underline text-[10.5px] font-bold"
-                >
-                  ← Back to Super Admin
-                </button>
-              </div>
-              <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 xl:grid-cols-4">
-                {(activeCountry?.mainBranches || []).map((mb: any) => {
-                  const mbDocCount = documents.filter(
-                    (d) => d.country_branch_id === mb.id || d.main_branch_name === mb.name
-                  ).length;
-                  return (
-                    <div
-                      key={mb.id}
-                      onClick={() => {
-                        setSelectedMainBranchId(mb.id);
-                        setSelectedCityBranchId("");
-                        setSelectedModule("all");
-                      }}
-                      className="p-3.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/60 hover:bg-indigo-50/70 hover:border-indigo-300 dark:bg-slate-900/60 dark:hover:bg-indigo-950/40 transition-all cursor-pointer group shadow-xs space-y-2"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="h-9 w-9 rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400 flex items-center justify-center font-bold">
-                          <FolderOpen className="h-5 w-5" />
-                        </div>
-                        <span className="text-[10px] font-mono font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
-                          {mbDocCount} files
-                        </span>
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-black text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 transition-colors">
-                          {mb.name}
-                        </h4>
-                        <p className="text-[10.5px] text-slate-400 font-semibold">
-                          Main Branch
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ) : selectedModule === "all" ? (
-            /* Branch View: Show Module & Custom Folders */
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-wider text-slate-400">
-                <span className="flex items-center gap-1.5">
-                  <Folder className="h-3.5 w-3.5 text-emerald-500" />
-                  <span>{activeMainBranch?.name} Module Folders</span>
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setSelectedMainBranchId("")}
-                  className="text-blue-600 hover:underline text-[10.5px] font-bold"
-                >
-                  ← Back to {activeCountry?.name}
-                </button>
-              </div>
-              <div className="grid gap-3 grid-cols-2 sm:grid-cols-4 xl:grid-cols-5">
-                {allFolderList.map((folderName) => {
-                  const fDocCount = documents.filter((d) => d.module_type === folderName).length;
-                  return (
-                    <div
-                      key={folderName}
-                      onClick={() => setSelectedModule(folderName)}
-                      className="p-3 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/60 hover:bg-emerald-50/70 hover:border-emerald-300 dark:bg-slate-900/60 dark:hover:bg-emerald-950/40 transition-all cursor-pointer group shadow-xs space-y-1.5"
-                    >
-                      <div className="flex items-center justify-between">
-                        <Folder className="h-4 w-4 text-emerald-600" />
-                        <span className="text-[9.5px] font-mono text-slate-400">{fDocCount}</span>
-                      </div>
-                      <h4 className="text-[11.5px] font-bold text-slate-800 dark:text-slate-200 truncate group-hover:text-emerald-700 transition-colors">
-                        {folderName}
-                      </h4>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ) : null}
-
           {/* ── Files & Documents List / Grid ── */}
-          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-3">
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                 <FileText className="h-4 w-4 text-blue-600" />
