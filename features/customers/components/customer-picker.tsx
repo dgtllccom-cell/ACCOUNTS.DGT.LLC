@@ -5,6 +5,7 @@ import { apiGet } from "@/lib/api/client";
 import { CustomerForm } from "./customer-form";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
 
 type CustomerRow = {
@@ -27,7 +28,7 @@ type CustomerRow = {
   updated_at: string;
 };
 
-function toOption(row: CustomerRow, lang: string = "en"): SearchSelectOption {
+function toOption(row: CustomerRow, lang: SupportedLanguage = "en"): SearchSelectOption {
   const customerName = transliterateProperNoun(row.customer_name, lang);
   const companyName = row.company_name ? localizeTerm(row.company_name, lang) : null;
   const label = companyName
@@ -69,7 +70,7 @@ export function CustomerPicker({
   disabled?: boolean;
   placeholder?: string;
 }) {
-  const lang = useActiveLanguage();
+  const lang = useActiveLanguage() as SupportedLanguage;
   const [loading, setLoading] = useState(false);
   const [customers, setCustomers] = useState<CustomerRow[]>([]);
   const [openCreate, setOpenCreate] = useState(false);

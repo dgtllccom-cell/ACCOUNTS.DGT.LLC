@@ -545,6 +545,10 @@ const KYC_ENTITY_LABELS: Record<KycEntityType, Record<SupportedLanguage, string>
   }
 };
 
+function getKycEntityLabel(type: KycEntityType, lang: SupportedLanguage) {
+  return KYC_ENTITY_LABELS[type]?.[lang] ?? KYC_ENTITY_LABELS[type]?.en ?? type;
+}
+
 function formatKycStatusLabel(lang: SupportedLanguage, status: KycItem["status"], daysRemaining: number) {
   if (status === "compliant") return KYC_UI.verifiedLabel[lang];
   if (status === "suspended") return KYC_UI.suspendedStatus[lang];
@@ -722,11 +726,11 @@ export default function KycReportsPage() {
         { key: "email", label: tt("acct.email", "Email") },
         { key: "status", label: tt("acct.status", "Status") }
       ],
-      rows: (filteredItems as any[]).map((item, idx) => ({
+      rows: filteredItems.map((item, idx) => ({
         sno: String(idx + 1),
         code: item.code,
         name: item.name,
-        type: KYC_ENTITY_LABELS[item.type][activeLang],
+        type: getKycEntityLabel(item.type, activeLang),
         country: item.countryName,
         owner: item.ownerName,
         phone: item.phone,
@@ -1015,7 +1019,7 @@ export default function KycReportsPage() {
 
                     <td className="px-5 py-4 whitespace-nowrap">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-muted text-foreground border border-border/60 whitespace-nowrap">
-                        {KYC_ENTITY_LABELS[item.type][activeLang]}
+                        {getKycEntityLabel(item.type, activeLang)}
                       </span>
                       <p className="text-[11px] font-semibold text-muted-foreground mt-1 whitespace-nowrap">{item.countryName}</p>
                     </td>
