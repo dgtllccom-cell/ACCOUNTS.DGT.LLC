@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { withLocalPg } from "@/lib/db/local-postgres";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
 
-/** Clearing Agent — Transit Loading (secure CRUD). Table: transit_truck_loadings. */
-const COLS =
-  "id, country_id, country_branch_id, city_branch_id, super_admin_serial, country_serial, branch_serial, entry_serial, truck_id, transit_date, transit_serial, transit_company, transit_company_id, truck_number, driver_name, driver_mobile, goods_name, quantity, unit, transit_route, border, destination, dest_country_id, dest_state_province_id, dest_district_id, dest_city_id, customs_information, container_number, seal_number, remarks, status, is_active, created_at, updated_at";
-
+/**
+ * Clearing Agent — Transit Loading (secure CRUD). Table: transit_truck_loadings.
+ * withLocalPg, not the RLS-gated Supabase admin client — same root cause as
+ * ../import-loading/route.ts (transit_truck_loadings_scope_all's WITH CHECK requires a real
+ * Supabase JWT that createSupabaseAdminClient() doesn't have on DEV).
+ */
 const FIELDS = [
   "truck_id", "transit_date", "transit_serial", "transit_company", "transit_company_id", "truck_number", "driver_name", "driver_mobile",
   "goods_name", "unit", "transit_route", "border", "destination", "customs_information", "container_number", "seal_number", "remarks",
@@ -22,17 +24,25 @@ export async function GET(req: Request) {
     authorizeApiScope(session, { resource: "shipping_records", action: "read" });
     const { searchParams } = new URL(req.url);
     const search = (searchParams.get("search") || "").trim();
-    const supabase = createSupabaseAdminClient();
-    let q = supabase.from("transit_truck_loadings").select(COLS).is("deleted_at", null).order("transit_date", { ascending: false });
-    if (!session.isSuperAdmin && session.countryIds && session.countryIds.length > 0) {
-      q = q.or(`country_id.in.(${session.countryIds.join(",")}),country_id.is.null`);
-    }
-    if (search) {
-      q = q.or(`truck_number.ilike.%${search}%,transit_company.ilike.%${search}%,goods_name.ilike.%${search}%,transit_serial.ilike.%${search}%,container_number.ilike.%${search}%`);
-    }
-    const { data, error } = await q;
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ records: data || [] });
+    const searchLike = search ? `%${search}%` : null;
+
+    const rows = await withLocalPg(async (sql) => {
+      return sql`
+        select id, country_id, country_branch_id, city_branch_id, super_admin_serial, country_serial,
+               branch_serial, entry_serial, truck_id, transit_date, transit_serial, transit_company,
+               transit_company_id, truck_number, driver_name, driver_mobile, goods_name, quantity, unit,
+               transit_route, border, destination, dest_country_id, dest_state_province_id,
+               dest_district_id, dest_city_id, customs_information, container_number, seal_number,
+               remarks, status, is_active, created_at, updated_at
+        from public.transit_truck_loadings
+        where deleted_at is null
+          and (${session.isSuperAdmin ? sql`true` : sql`(country_id = any(${session.countryIds}) or country_id is null)`})
+          and (${searchLike ? sql`(truck_number ilike ${searchLike} or transit_company ilike ${searchLike} or goods_name ilike ${searchLike} or transit_serial ilike ${searchLike} or container_number ilike ${searchLike})` : sql`true`})
+        order by transit_date desc
+      `;
+    });
+
+    return NextResponse.json({ records: rows || [] });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -66,9 +76,20 @@ export async function POST(req: Request) {
     row.entry_serial = serials.entrySerial;
     if (!row.transit_serial) row.transit_serial = serials.entrySerial;
 
-    const supabase = createSupabaseAdminClient();
-    const { data, error } = await supabase.from("transit_truck_loadings").insert(row).select(COLS).single();
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    const data = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        insert into public.transit_truck_loadings ${sql(row as any)}
+        returning id, country_id, country_branch_id, city_branch_id, super_admin_serial, country_serial,
+                  branch_serial, entry_serial, truck_id, transit_date, transit_serial, transit_company,
+                  transit_company_id, truck_number, driver_name, driver_mobile, goods_name, quantity, unit,
+                  transit_route, border, destination, dest_country_id, dest_state_province_id,
+                  dest_district_id, dest_city_id, customs_information, container_number, seal_number,
+                  remarks, status, is_active, created_at, updated_at
+      `;
+      return rows[0];
+    });
+
+    if (!data) return NextResponse.json({ error: "Insert failed." }, { status: 500 });
 
     void saveVerifiedEnterpriseRecordTranslations({
       recordTable: "transit_truck_loadings",

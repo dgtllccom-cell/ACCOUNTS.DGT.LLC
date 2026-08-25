@@ -1,14 +1,18 @@
 import { NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { withLocalPg } from "@/lib/db/local-postgres";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
 
-/** Clearing Agent — Import Loading (secure, scoped CRUD). Table: import_truck_loadings. */
-const COLS =
-  "id, country_id, country_branch_id, city_branch_id, super_admin_serial, country_serial, branch_serial, entry_serial, truck_id, import_date, import_bill_number, import_serial, importer_name, importer_person_id, supplier_name, supplier_person_id, driver_name, driver_mobile, truck_number, truck_type, goods_name, quantity, unit, customs_office, border_crossing, country_of_origin, destination_country, clearing_agent, clearing_agent_id, dest_country_id, dest_state_province_id, dest_district_id, dest_city_id, remarks, status, is_active, created_at, updated_at";
-
+/**
+ * Clearing Agent — Import Loading (secure, scoped CRUD). Table: import_truck_loadings.
+ * withLocalPg, not the RLS-gated Supabase admin client — import_truck_loadings_scope_all's
+ * WITH CHECK requires is_super_admin()/can_access_country(), which only evaluates against a
+ * real Supabase JWT; createSupabaseAdminClient() has no real service-role key on DEV, so every
+ * insert was silently rejected by RLS (confirmed live: POST always 500'd with "new row
+ * violates row-level security policy"). Same root cause already fixed for trucks/warehouses.
+ */
 const FIELDS = [
   "dest_country_id", "dest_state_province_id", "dest_district_id", "dest_city_id",
   "truck_id", "import_date", "import_bill_number", "import_serial", "importer_name", "importer_person_id", "supplier_name", "supplier_person_id",
@@ -23,17 +27,26 @@ export async function GET(req: Request) {
     authorizeApiScope(session, { resource: "shipping_records", action: "read" });
     const { searchParams } = new URL(req.url);
     const search = (searchParams.get("search") || "").trim();
-    const supabase = createSupabaseAdminClient();
-    let q = supabase.from("import_truck_loadings").select(COLS).is("deleted_at", null).order("import_date", { ascending: false });
-    if (!session.isSuperAdmin && session.countryIds && session.countryIds.length > 0) {
-      q = q.or(`country_id.in.(${session.countryIds.join(",")}),country_id.is.null`);
-    }
-    if (search) {
-      q = q.or(`truck_number.ilike.%${search}%,importer_name.ilike.%${search}%,supplier_name.ilike.%${search}%,import_bill_number.ilike.%${search}%,goods_name.ilike.%${search}%`);
-    }
-    const { data, error } = await q;
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ records: data || [] });
+    const searchLike = search ? `%${search}%` : null;
+
+    const rows = await withLocalPg(async (sql) => {
+      return sql`
+        select id, country_id, country_branch_id, city_branch_id, super_admin_serial, country_serial,
+               branch_serial, entry_serial, truck_id, import_date, import_bill_number, import_serial,
+               importer_name, importer_person_id, supplier_name, supplier_person_id, driver_name,
+               driver_mobile, truck_number, truck_type, goods_name, quantity, unit, customs_office,
+               border_crossing, country_of_origin, destination_country, clearing_agent, clearing_agent_id,
+               dest_country_id, dest_state_province_id, dest_district_id, dest_city_id, remarks, status,
+               is_active, created_at, updated_at
+        from public.import_truck_loadings
+        where deleted_at is null
+          and (${session.isSuperAdmin ? sql`true` : sql`(country_id = any(${session.countryIds}) or country_id is null)`})
+          and (${searchLike ? sql`(truck_number ilike ${searchLike} or importer_name ilike ${searchLike} or supplier_name ilike ${searchLike} or import_bill_number ilike ${searchLike} or goods_name ilike ${searchLike})` : sql`true`})
+        order by import_date desc
+      `;
+    });
+
+    return NextResponse.json({ records: rows || [] });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -67,9 +80,21 @@ export async function POST(req: Request) {
     row.entry_serial = serials.entrySerial;
     if (!row.import_serial) row.import_serial = serials.entrySerial;
 
-    const supabase = createSupabaseAdminClient();
-    const { data, error } = await supabase.from("import_truck_loadings").insert(row).select(COLS).single();
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    const data = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        insert into public.import_truck_loadings ${sql(row as any)}
+        returning id, country_id, country_branch_id, city_branch_id, super_admin_serial, country_serial,
+                  branch_serial, entry_serial, truck_id, import_date, import_bill_number, import_serial,
+                  importer_name, importer_person_id, supplier_name, supplier_person_id, driver_name,
+                  driver_mobile, truck_number, truck_type, goods_name, quantity, unit, customs_office,
+                  border_crossing, country_of_origin, destination_country, clearing_agent, clearing_agent_id,
+                  dest_country_id, dest_state_province_id, dest_district_id, dest_city_id, remarks, status,
+                  is_active, created_at, updated_at
+      `;
+      return rows[0];
+    });
+
+    if (!data) return NextResponse.json({ error: "Insert failed." }, { status: 500 });
 
     void saveVerifiedEnterpriseRecordTranslations({
       recordTable: "import_truck_loadings",

@@ -7,6 +7,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { ReportActions } from "@/components/ui/report-actions";
 import { Th } from "@/components/ui/translated-th";
+import { ClearingAgentPicker } from "@/features/shipping/components/clearing-agent-picker";
 
 type PaymentBillRow = {
   id: string;
@@ -15,6 +16,7 @@ type PaymentBillRow = {
   bl_number: string | null;
   gd_number: string | null;
   agent_name: string;
+  agent_id: string | null;
   port_name: string;
   customs_duty: number;
   port_charges: number;
@@ -37,6 +39,7 @@ const EMPTY_BILL: any = {
   bl_number: "",
   gd_number: "",
   agent_name: "",
+  agent_id: "",
   port_name: "Karachi Port",
   customs_duty: 0,
   port_charges: 0,
@@ -134,15 +137,18 @@ export function PaymentBillManagementView({ lang }: { lang: SupportedLanguage })
     };
 
     try {
-      const res = await fetch("/api/erp/clearing-agent/payment-bill", {
-        method: "POST",
+      const url = isEditing && form.id
+        ? `/api/erp/clearing-agent/payment-bill/${form.id}`
+        : "/api/erp/clearing-agent/payment-bill";
+      const res = await fetch(url, {
+        method: isEditing && form.id ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "Failed to save bill");
 
-      setSuccessMessage(`Payment Bill ${json.data.bill_no || "saved"} successfully!`);
+      setSuccessMessage(`Payment Bill ${json.data.bill_no || "saved"} ${isEditing ? "updated" : "created"} successfully!`);
       setForm(EMPTY_BILL);
       setIsEditing(false);
       loadData();
@@ -312,13 +318,18 @@ export function PaymentBillManagementView({ lang }: { lang: SupportedLanguage })
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-2">Clearing Agent / Company Name *</label>
-              <input
-                type="text"
-                placeholder="e.g. DGT Clearing Services"
-                value={form.agent_name}
-                onChange={(e) => setForm({ ...form, agent_name: e.target.value })}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-indigo-500"
-                required
+              <ClearingAgentPicker
+                label=""
+                value={form.agent_id || ""}
+                onValueChange={async (agentId) => {
+                  setForm({ ...form, agent_id: agentId });
+                  if (!agentId) return;
+                  try {
+                    const res = await fetch(`/api/erp/clearing-agents/${agentId}`);
+                    const json = await res.json();
+                    if (json?.clearingAgent?.name) setForm((prev: any) => ({ ...prev, agent_name: json.clearingAgent.name }));
+                  } catch { /* ignore */ }
+                }}
               />
             </div>
 

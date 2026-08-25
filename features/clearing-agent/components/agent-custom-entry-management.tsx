@@ -108,15 +108,18 @@ export function AgentCustomEntryManagementView({ lang }: { lang: SupportedLangua
     setSuccessMessage(null);
 
     try {
-      const res = await fetch("/api/erp/clearing-agent/agent-custom-entry", {
-        method: "POST",
+      const url = isEditing && form.id
+        ? `/api/erp/clearing-agent/agent-custom-entry/${form.id}`
+        : "/api/erp/clearing-agent/agent-custom-entry";
+      const res = await fetch(url, {
+        method: isEditing && form.id ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "Failed to save entry");
 
-      setSuccessMessage(`Custom Declaration ${json.data.entry_no || "saved"} created successfully!`);
+      setSuccessMessage(`Custom Declaration ${json.data.entry_no || "saved"} ${isEditing ? "updated" : "created"} successfully!`);
       setForm(EMPTY_ENTRY);
       setIsEditing(false);
       loadData();
@@ -237,35 +240,52 @@ export function AgentCustomEntryManagementView({ lang }: { lang: SupportedLangua
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-2">Clearing Agent Company *</label>
-              <input
-                type="text"
-                placeholder="e.g. DGT Logistics Clearing"
-                value={form.agent_name}
-                onChange={(e) => setForm({ ...form, agent_name: e.target.value })}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-indigo-500"
-                required
+              <ClearingAgentPicker
+                label=""
+                value={form.agent_id || ""}
+                onValueChange={async (agentId) => {
+                  setForm({ ...form, agent_id: agentId });
+                  if (!agentId) return;
+                  try {
+                    const res = await fetch(`/api/erp/clearing-agents/${agentId}`);
+                    const json = await res.json();
+                    if (json?.clearingAgent?.name) setForm((prev: any) => ({ ...prev, agent_name: json.clearingAgent.name }));
+                  } catch { /* ignore */ }
+                }}
               />
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-2">Consignee Name (Importer)</label>
-              <input
-                type="text"
-                placeholder="e.g. Damaan Global LLC"
-                value={form.consignee_name}
-                onChange={(e) => setForm({ ...form, consignee_name: e.target.value })}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-indigo-500"
+              <PersonPicker
+                label=""
+                value={form.consignee_person_id || ""}
+                onValueChange={async (personId) => {
+                  setForm({ ...form, consignee_person_id: personId });
+                  if (!personId) return;
+                  try {
+                    const res = await fetch(`/api/erp/customers/${personId}`);
+                    const json = await res.json();
+                    if (json?.customer?.customer_name) setForm((prev: any) => ({ ...prev, consignee_name: json.customer.customer_name }));
+                  } catch { /* ignore */ }
+                }}
               />
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-2">Consignor Name (Exporter)</label>
-              <input
-                type="text"
-                placeholder="e.g. Global Trade Corp"
-                value={form.consignor_name}
-                onChange={(e) => setForm({ ...form, consignor_name: e.target.value })}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-indigo-500"
+              <PersonPicker
+                label=""
+                value={form.consignor_person_id || ""}
+                onValueChange={async (personId) => {
+                  setForm({ ...form, consignor_person_id: personId });
+                  if (!personId) return;
+                  try {
+                    const res = await fetch(`/api/erp/customers/${personId}`);
+                    const json = await res.json();
+                    if (json?.customer?.customer_name) setForm((prev: any) => ({ ...prev, consignor_name: json.customer.customer_name }));
+                  } catch { /* ignore */ }
+                }}
               />
             </div>
           </div>

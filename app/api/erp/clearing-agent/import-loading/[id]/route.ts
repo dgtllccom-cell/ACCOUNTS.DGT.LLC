@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { withLocalPg } from "@/lib/db/local-postgres";
 import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
 
-const COLS =
-  "id, country_id, country_branch_id, city_branch_id, super_admin_serial, country_serial, branch_serial, entry_serial, truck_id, import_date, import_bill_number, import_serial, importer_name, importer_person_id, supplier_name, supplier_person_id, driver_name, driver_mobile, truck_number, truck_type, goods_name, quantity, unit, customs_office, border_crossing, country_of_origin, destination_country, clearing_agent, clearing_agent_id, dest_country_id, dest_state_province_id, dest_district_id, dest_city_id, remarks, status, is_active, created_at, updated_at";
+// withLocalPg, not the RLS-gated Supabase admin client — see ../route.ts for the root cause.
 
 const FIELDS = [
   "dest_country_id", "dest_state_province_id", "dest_district_id", "dest_city_id",
@@ -26,9 +25,22 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     for (const n of NUM) if (body[n] !== undefined) patch[n] = body[n] === "" || body[n] === null ? null : Number(body[n]);
     if (body.is_active !== undefined) patch.is_active = Boolean(body.is_active);
 
-    const supabase = createSupabaseAdminClient();
-    const { data, error } = await supabase.from("import_truck_loadings").update(patch).eq("id", id).is("deleted_at", null).select(COLS).single();
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    const data = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        update public.import_truck_loadings set ${(sql as any)(patch)}
+        where id = ${id}::uuid and deleted_at is null
+        returning id, country_id, country_branch_id, city_branch_id, super_admin_serial, country_serial,
+                  branch_serial, entry_serial, truck_id, import_date, import_bill_number, import_serial,
+                  importer_name, importer_person_id, supplier_name, supplier_person_id, driver_name,
+                  driver_mobile, truck_number, truck_type, goods_name, quantity, unit, customs_office,
+                  border_crossing, country_of_origin, destination_country, clearing_agent, clearing_agent_id,
+                  dest_country_id, dest_state_province_id, dest_district_id, dest_city_id, remarks, status,
+                  is_active, created_at, updated_at
+      `;
+      return rows[0];
+    });
+
+    if (!data) return NextResponse.json({ error: "Record not found." }, { status: 404 });
 
     if (patch.goods_name !== undefined || patch.supplier_name !== undefined || patch.importer_name !== undefined || patch.driver_name !== undefined) {
       void saveVerifiedEnterpriseRecordTranslations({
@@ -57,12 +69,13 @@ export async function DELETE(_req: Request, context: { params: Promise<{ id: str
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "shipping_records", action: "delete" });
     const { id } = await context.params;
-    const supabase = createSupabaseAdminClient();
-    const { error } = await supabase
-      .from("import_truck_loadings")
-      .update({ deleted_at: new Date().toISOString(), updated_at: new Date().toISOString(), is_active: false })
-      .eq("id", id).is("deleted_at", null);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    await withLocalPg(async (sql) => {
+      await sql`
+        update public.import_truck_loadings
+        set deleted_at = now(), updated_at = now(), is_active = false
+        where id = ${id}::uuid and deleted_at is null
+      `;
+    });
     return NextResponse.json({ ok: true });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

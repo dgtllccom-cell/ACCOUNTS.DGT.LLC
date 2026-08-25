@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { withLocalPg } from "@/lib/db/local-postgres";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
 
@@ -9,9 +9,13 @@ import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterpr
  * Truck Registration master (Settings -> Truck Management).
  * One central truck record reused by all loading forms. Secure + scoped.
  * Table: trucks (migration 20260801_truck_registration.sql).
+ *
+ * withLocalPg, not the RLS-gated Supabase admin client: trucks_scope_all's WITH CHECK requires
+ * is_super_admin()/can_access_country(), which only evaluates against a real Supabase JWT —
+ * createSupabaseAdminClient() has no real service-role key on DEV, so every insert/update was
+ * silently rejected by RLS (confirmed live: POST always 500'd with "new row violates row-level
+ * security policy"). Same root cause already fixed for warehouses/roznamcha/purchase-payments.
  */
-const COLS =
-  "id, country_id, country_branch_id, city_branch_id, super_admin_serial, country_serial, branch_serial, entry_serial, truck_serial, truck_number, registration_number, registration_country_id, truck_type, make, model, manufacturing_year, color, chassis_number, engine_number, capacity, owner_name, owner_mobile, owner_person_id, transport_company, transport_company_id, driver_name, driver_mobile, driver_cnic_passport, driver_person_id, registration_expiry_date, insurance_expiry_date, driver_docs_expiry_date, base_state_province_id, base_district_id, base_city_id, status, notes, is_active, created_at, updated_at";
 
 const TEXT = [
   "truck_serial", "truck_number", "registration_number", "truck_type", "make", "model",
@@ -28,21 +32,28 @@ export async function GET(req: Request) {
     const search = (searchParams.get("search") || "").trim();
     const status = (searchParams.get("status") || "").trim();
     const selectable = searchParams.get("selectable") === "true";
+    const searchLike = search ? `%${search}%` : null;
 
-    const supabase = createSupabaseAdminClient();
-    let q = supabase.from("trucks").select(COLS).is("deleted_at", null).order("truck_number", { ascending: true });
-    if (!session.isSuperAdmin && session.countryIds && session.countryIds.length > 0) {
-      q = q.or(`country_id.in.(${session.countryIds.join(",")}),country_id.is.null`);
-    }
-    // #6: expired/inactive/suspended trucks are not selectable for new loadings.
-    if (selectable) q = q.eq("status", "active");
-    else if (status) q = q.eq("status", status);
-    if (search) {
-      q = q.or(`truck_number.ilike.%${search}%,registration_number.ilike.%${search}%,owner_name.ilike.%${search}%,driver_name.ilike.%${search}%,transport_company.ilike.%${search}%`);
-    }
-    const { data, error } = await q;
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ trucks: data || [] });
+    const rows = await withLocalPg(async (sql) => {
+      return sql`
+        select id, country_id, country_branch_id, city_branch_id, super_admin_serial, country_serial,
+               branch_serial, entry_serial, truck_serial, truck_number, registration_number,
+               registration_country_id, truck_type, make, model, manufacturing_year, color,
+               chassis_number, engine_number, capacity, owner_name, owner_mobile, owner_person_id,
+               transport_company, transport_company_id, driver_name, driver_mobile, driver_cnic_passport,
+               driver_person_id, registration_expiry_date, insurance_expiry_date, driver_docs_expiry_date,
+               base_state_province_id, base_district_id, base_city_id, status, notes, is_active,
+               created_at, updated_at
+        from public.trucks
+        where deleted_at is null
+          and (${session.isSuperAdmin ? sql`true` : sql`(country_id = any(${session.countryIds}) or country_id is null)`})
+          and (${selectable ? sql`status = 'active'` : status ? sql`status = ${status}` : sql`true`})
+          and (${searchLike ? sql`(truck_number ilike ${searchLike} or registration_number ilike ${searchLike} or owner_name ilike ${searchLike} or driver_name ilike ${searchLike} or transport_company ilike ${searchLike})` : sql`true`})
+        order by truck_number asc
+      `;
+    });
+
+    return NextResponse.json({ trucks: rows || [] });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -88,9 +99,22 @@ export async function POST(req: Request) {
     row.entry_serial = serials.entrySerial;
     if (!row.truck_serial) row.truck_serial = serials.entrySerial;
 
-    const supabase = createSupabaseAdminClient() as any;
-    const { data, error } = await supabase.from("trucks").insert(row).select(COLS).single();
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    const data = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        insert into public.trucks ${sql(row as any)}
+        returning id, country_id, country_branch_id, city_branch_id, super_admin_serial, country_serial,
+                  branch_serial, entry_serial, truck_serial, truck_number, registration_number,
+                  registration_country_id, truck_type, make, model, manufacturing_year, color,
+                  chassis_number, engine_number, capacity, owner_name, owner_mobile, owner_person_id,
+                  transport_company, transport_company_id, driver_name, driver_mobile, driver_cnic_passport,
+                  driver_person_id, registration_expiry_date, insurance_expiry_date, driver_docs_expiry_date,
+                  base_state_province_id, base_district_id, base_city_id, status, notes, is_active,
+                  created_at, updated_at
+      `;
+      return rows[0];
+    });
+
+    if (!data) return NextResponse.json({ error: "Insert failed." }, { status: 500 });
 
     void saveVerifiedEnterpriseRecordTranslations({
       recordTable: "trucks",

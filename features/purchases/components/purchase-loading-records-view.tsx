@@ -351,8 +351,8 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
       ? (loadedNetWeight > 0 ? loadedNetWeight : Number(hRecord?.report_payload?.netWeight || finance.netWeight || 0))
       : Number(hRecord?.report_payload?.netWeight || finance.netWeight || 0);
 
-    const priceRate = Number(hRecord?.report_payload?.priceRateC1 || finance.priceRate || (totalQuantity > 0 ? contractPurchaseAmount / totalQuantity : 0));
     const contractPurchaseAmount = Number(poRow?.order_total || poData.totals?.grandFinal || form.totalAmount || 0);
+    const priceRate = Number(hRecord?.report_payload?.priceRateC1 || finance.priceRate || (totalQuantity > 0 ? contractPurchaseAmount / totalQuantity : 0));
     const exRate = Number(finance.exRate || exchangeRatePKR || form.exchangeRate || 1);
 
     const loadedPurchaseFC = isOverallRecord
