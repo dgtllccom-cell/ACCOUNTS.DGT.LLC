@@ -11,6 +11,7 @@ import { t } from "@/lib/i18n/ui";
 
 function PurchaseBookingOrderPageWrapperContent({ session }: { session: any }) {
   const lang = useActiveLanguage();
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const searchParams = useSearchParams();
   const router = useRouter();
   
@@ -45,7 +46,7 @@ function PurchaseBookingOrderPageWrapperContent({ session }: { session: any }) {
 
   if (isFormMode) {
     return (
-      <div className="w-full space-y-4">
+      <div dir={isRtl ? "rtl" : "ltr"} className="w-full space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <div className="flex items-center gap-3">
             <Button
@@ -82,7 +83,7 @@ function PurchaseBookingOrderPageWrapperContent({ session }: { session: any }) {
   }
 
   return (
-    <div className="w-full space-y-4">
+    <div dir={isRtl ? "rtl" : "ltr"} className="w-full space-y-4">
       {/* Header bar with + New Purchase Booking button */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="flex items-center gap-3">
