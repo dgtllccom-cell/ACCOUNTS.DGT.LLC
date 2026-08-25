@@ -983,74 +983,18 @@ export function DocumentManager() {
           </button>
         </div>
 
-        {/* Right: Quick Links Dropdown + Primary Action Buttons */}
+        {/* Right: New Folder + Primary Action Buttons */}
         <div className="flex flex-wrap items-center gap-1.5">
-          {/* Quick Links Dropdown (Person, Company, Bank, New Folder) */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => {
-                setIsQuickLinksOpen(!isQuickLinksOpen);
-                setIsScopeMenuOpen(false);
-                setIsDateMenuOpen(false);
-              }}
-              className="h-8.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 px-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 shadow-xs transition-colors"
-            >
-              <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-              <span>{t("quick_setup", "Setup & Links")}</span>
-              <ChevronDown className="h-3 w-3 text-slate-400" />
-            </button>
-
-            {isQuickLinksOpen && (
-              <div className="absolute right-0 mt-1.5 w-48 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xl p-1 z-50 text-xs font-semibold space-y-0.5">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsQuickLinksOpen(false);
-                    router.push("/dashboard/settings/customers" as Route);
-                  }}
-                  className="w-full text-left px-2.5 py-1.5 rounded-lg flex items-center gap-2 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/60"
-                >
-                  <UserCheck className="h-3.5 w-3.5" />
-                  <span>Person / Customer</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsQuickLinksOpen(false);
-                    router.push("/dashboard/settings/company" as Route);
-                  }}
-                  className="w-full text-left px-2.5 py-1.5 rounded-lg flex items-center gap-2 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/60"
-                >
-                  <Building2 className="h-3.5 w-3.5" />
-                  <span>Company Setup</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsQuickLinksOpen(false);
-                    router.push("/dashboard/settings/bank" as Route);
-                  }}
-                  className="w-full text-left px-2.5 py-1.5 rounded-lg flex items-center gap-2 text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/60"
-                >
-                  <CreditCard className="h-3.5 w-3.5" />
-                  <span>Bank Accounts</span>
-                </button>
-                <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsQuickLinksOpen(false);
-                    setIsNewFolderOpen(true);
-                  }}
-                  className="w-full text-left px-2.5 py-1.5 rounded-lg flex items-center gap-2 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-950/60 font-bold"
-                >
-                  <FolderPlus className="h-3.5 w-3.5" />
-                  <span>New Custom Folder</span>
-                </button>
-              </div>
-            )}
-          </div>
+          {/* New Custom Folder Button */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsNewFolderOpen(true)}
+            className="h-8.5 rounded-xl border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-850 dark:bg-purple-950 dark:text-purple-200 dark:border-purple-800 text-xs font-bold px-2.5 gap-1.5 shadow-xs"
+          >
+            <FolderPlus className="h-3.5 w-3.5 text-purple-600" />
+            <span>{t("new_folder", "New Custom Folder")}</span>
+          </Button>
 
           {/* Upload File Button */}
           <input
