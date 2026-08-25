@@ -293,12 +293,15 @@ export function DocumentManager() {
   const [isQuickLinksOpen, setIsQuickLinksOpen] = useState<boolean>(false);
   const [isDateMenuOpen, setIsDateMenuOpen] = useState<boolean>(false);
   const [isScopeMenuOpen, setIsScopeMenuOpen] = useState<boolean>(false);
+  const [isActionsMenuOpen, setIsActionsMenuOpen] = useState<boolean>(false);
 
   // Filter & Search
   const [documents, setDocuments] = useState<OfficeDocument[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [dateFilter, setDateFilter] = useState<"all" | "today" | "yesterday" | "this_month">("all");
+  const [dateFilter, setDateFilter] = useState<"all" | "today" | "yesterday" | "this_month" | "last_30_days" | "custom">("all");
+  const [customDateFrom, setCustomDateFrom] = useState<string>("");
+  const [customDateTo, setCustomDateTo] = useState<string>("");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
 
@@ -514,9 +517,19 @@ export function DocumentManager() {
       if (dateFilter === "this_month") {
         return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
       }
+      if (dateFilter === "last_30_days") {
+        const past30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        return created >= past30;
+      }
+      if (dateFilter === "custom") {
+        const docDateStr = (doc.created_at || doc.scanned_at || "").slice(0, 10);
+        if (customDateFrom && docDateStr < customDateFrom) return false;
+        if (customDateTo && docDateStr > customDateTo) return false;
+        return true;
+      }
       return true;
     });
-  }, [documents, dateFilter]);
+  }, [documents, dateFilter, customDateFrom, customDateTo]);
 
   // ── Summary Stats for KPI Cards ──
   const summaryStats = useMemo(() => {
@@ -814,35 +827,278 @@ export function DocumentManager() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-sm sm:text-base font-black text-slate-900 dark:text-slate-100 tracking-tight whitespace-nowrap">
-                {t("page_tag", "Document Management & Hardware Scanner")}
+                Document Management
               </h1>
               <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-xs leading-none">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1 shrink-0" />
                 {filteredDocuments.length} {t("active_docs", "Active")}
               </span>
             </div>
+            <p className="text-[10px] text-slate-400 font-semibold -mt-0.5 hidden sm:block">Hardware Scanner & Cloud Storage</p>
           </div>
         </div>
 
-        {/* Center: Scope Selector Dropdown + Search + Date Range Dropdown + Filter Trigger */}
-        <div className="flex flex-wrap items-center gap-1.5">
-          {/* 1. Scope Dropdown Button */}
+        {/* Center: Search + Date Range Dropdown + Filter Trigger */}
+        <div className="flex flex-1 flex-wrap items-center gap-2 max-w-2xl">
+          {/* 1. Spacious Search Input */}
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t("search_placeholder", "Search documents by title, party, code...")}
+              className="h-8.5 pl-8 pr-2 text-xs bg-slate-50/70 dark:bg-slate-950 border-slate-200 dark:border-slate-700 rounded-xl w-full"
+            />
+          </div>
+
+          {/* 2. Enhanced Date Range Dropdown (with Date-to-Date Picker) */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setIsDateMenuOpen(!isDateMenuOpen);
+                setIsActionsMenuOpen(false);
+                setIsScopeMenuOpen(false);
+              }}
+              className={cn(
+                "h-8.5 rounded-xl border px-2.5 text-xs font-bold flex items-center gap-1.5 shadow-xs transition-colors",
+                dateFilter !== "all"
+                  ? "bg-blue-50 text-blue-700 border-blue-300 dark:bg-blue-950 dark:border-blue-800"
+                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+              )}
+            >
+              <Calendar className="h-3.5 w-3.5 text-slate-500" />
+              <span>
+                {dateFilter === "all"
+                  ? "All Dates"
+                  : dateFilter === "today"
+                  ? "Today"
+                  : dateFilter === "yesterday"
+                  ? "Yesterday"
+                  : dateFilter === "this_month"
+                  ? "This Month"
+                  : dateFilter === "last_30_days"
+                  ? "Last 30 Days"
+                  : customDateFrom || customDateTo
+                  ? `${customDateFrom || "..."} → ${customDateTo || "..."}`
+                  : "Custom Date"}
+              </span>
+              <ChevronDown className="h-3 w-3 text-slate-400" />
+            </button>
+
+            {isDateMenuOpen && (
+              <div className="absolute left-0 mt-1.5 w-72 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-2xl p-3 z-50 text-xs space-y-3 font-sans">
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Quick Presets</span>
+                  <div className="grid grid-cols-2 gap-1 mt-1.5">
+                    {[
+                      { key: "all", label: "All Dates" },
+                      { key: "today", label: "Today" },
+                      { key: "yesterday", label: "Yesterday" },
+                      { key: "this_month", label: "This Month" },
+                      { key: "last_30_days", label: "Last 30 Days" }
+                    ].map((item) => (
+                      <button
+                        key={item.key}
+                        type="button"
+                        onClick={() => {
+                          setDateFilter(item.key as any);
+                          setIsDateMenuOpen(false);
+                        }}
+                        className={cn(
+                          "px-2 py-1.5 rounded-lg text-left text-xs font-semibold flex items-center justify-between transition-colors",
+                          dateFilter === item.key
+                            ? "bg-blue-50 text-blue-700 dark:bg-blue-950 font-bold"
+                            : "hover:bg-slate-100 text-slate-700 dark:text-slate-300 dark:hover:bg-slate-900"
+                        )}
+                      >
+                        <span>{item.label}</span>
+                        {dateFilter === item.key && <Check className="h-3.5 w-3.5 text-blue-600" />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-t border-slate-100 dark:border-slate-800 pt-2.5 space-y-2">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Date to Date (Custom)</span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500">From Date</label>
+                      <input
+                        type="date"
+                        value={customDateFrom}
+                        onChange={(e) => setCustomDateFrom(e.target.value)}
+                        className="w-full h-8 px-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500">To Date</label>
+                      <input
+                        type="date"
+                        value={customDateTo}
+                        onChange={(e) => setCustomDateTo(e.target.value)}
+                        className="w-full h-8 px-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCustomDateFrom("");
+                        setCustomDateTo("");
+                        setDateFilter("all");
+                        setIsDateMenuOpen(false);
+                      }}
+                      className="text-[11px] text-slate-500 hover:text-slate-800 font-semibold"
+                    >
+                      Clear
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDateFilter("custom");
+                        setIsDateMenuOpen(false);
+                      }}
+                      className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs"
+                    >
+                      Apply Range
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 3. Collapsible Filters Toggle Button ("Parda" / Curtain Button) */}
+          <button
+            type="button"
+            onClick={() => setIsFilterDrawerOpen(!isFilterDrawerOpen)}
+            className={cn(
+              "h-8.5 rounded-xl border px-2.5 text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all",
+              isFilterDrawerOpen || activeFiltersCount > 0
+                ? "bg-indigo-600 text-white border-indigo-600 shadow-sm"
+                : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+            )}
+          >
+            <Filter className="h-3.5 w-3.5" />
+            <span>{t("filters", "Scope & Hierarchy Filters")}</span>
+            {activeFiltersCount > 0 && (
+              <span className="h-4 w-4 rounded-full bg-white text-indigo-700 font-black text-[10px] flex items-center justify-center">
+                {activeFiltersCount}
+              </span>
+            )}
+            <ChevronDown className={cn("h-3 w-3 transition-transform", isFilterDrawerOpen && "rotate-180")} />
+          </button>
+        </div>
+
+        {/* Right: Actions Dropdown + Scope Selector + Refresh & View Mode */}
+        <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+          {/* 1. Combined Actions Dropdown Button (Scan / Upload / New Folder) */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            className="hidden"
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+          />
+
+          <div className="relative">
+            <Button
+              type="button"
+              onClick={() => {
+                setIsActionsMenuOpen(!isActionsMenuOpen);
+                setIsDateMenuOpen(false);
+                setIsScopeMenuOpen(false);
+              }}
+              className="h-8.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 gap-1.5 shadow-sm"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>{t("actions_menu", "New / Actions")}</span>
+              <ChevronDown className={cn("h-3 w-3 transition-transform", isActionsMenuOpen && "rotate-180")} />
+            </Button>
+
+            {isActionsMenuOpen && (
+              <div className="absolute right-0 mt-1.5 w-56 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-2xl p-1.5 z-50 text-xs font-semibold space-y-1">
+                {/* 1. Start Direct Scan */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsActionsMenuOpen(false);
+                    setIsScannerOpen(true);
+                  }}
+                  className="w-full text-left px-3 py-2 rounded-xl flex items-center gap-2.5 hover:bg-emerald-50 text-emerald-800 dark:hover:bg-emerald-950 dark:text-emerald-300 transition-colors"
+                >
+                  <div className="h-7 w-7 rounded-lg bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 flex items-center justify-center">
+                    <Camera className="h-3.5 w-3.5" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-xs">{t("start_scan", "Start Direct Scan")}</p>
+                    <p className="text-[10px] text-slate-400 font-normal">Hardware TWAIN Scanner</p>
+                  </div>
+                </button>
+
+                {/* 2. Upload File */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsActionsMenuOpen(false);
+                    fileInputRef.current?.click();
+                  }}
+                  disabled={isUploading}
+                  className="w-full text-left px-3 py-2 rounded-xl flex items-center gap-2.5 hover:bg-blue-50 text-blue-800 dark:hover:bg-blue-950 dark:text-blue-300 transition-colors"
+                >
+                  <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 flex items-center justify-center">
+                    <Upload className="h-3.5 w-3.5" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-xs">{isUploading ? t("uploading", "Uploading...") : t("upload_file", "Upload File")}</p>
+                    <p className="text-[10px] text-slate-400 font-normal">PDF, DOC, Images, XLS</p>
+                  </div>
+                </button>
+
+                {/* 3. New Custom Folder */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsActionsMenuOpen(false);
+                    setIsNewFolderOpen(true);
+                  }}
+                  className="w-full text-left px-3 py-2 rounded-xl flex items-center gap-2.5 hover:bg-purple-50 text-purple-850 dark:hover:bg-purple-950 dark:text-purple-300 transition-colors border-t border-slate-100 dark:border-slate-800 pt-1.5"
+                >
+                  <div className="h-7 w-7 rounded-lg bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 flex items-center justify-center">
+                    <FolderPlus className="h-3.5 w-3.5" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-xs">{t("new_folder", "New Custom Folder")}</p>
+                    <p className="text-[10px] text-slate-400 font-normal">Create repository folder</p>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Divider */}
+          <div className="h-5 w-px bg-slate-200 dark:bg-slate-700 mx-0.5" />
+
+          {/* 2. Scope Selector Dropdown Button (Super Admin) - Placed on the right side next to View switcher */}
           <div className="relative">
             <button
               type="button"
               onClick={() => {
                 setIsScopeMenuOpen(!isScopeMenuOpen);
                 setIsDateMenuOpen(false);
-                setIsQuickLinksOpen(false);
+                setIsActionsMenuOpen(false);
               }}
-              className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/80 hover:bg-slate-100 px-2.5 text-xs font-bold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 flex items-center gap-1.5 shadow-xs transition-colors"
+              className="h-8.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 text-xs font-bold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 flex items-center gap-1.5 shadow-xs transition-colors"
             >
               <span>{scopeRole === "super_admin" ? "👑 Super Admin" : scopeRole === "country_admin" ? "🌍 Country Admin" : "🏢 Branch User"}</span>
               <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
             </button>
 
             {isScopeMenuOpen && (
-              <div className="absolute left-0 mt-1.5 w-48 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xl p-1 z-50 text-xs font-semibold space-y-0.5">
+              <div className="absolute right-0 mt-1.5 w-48 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xl p-1 z-50 text-xs font-semibold space-y-0.5">
                 <button
                   type="button"
                   onClick={() => {
@@ -889,144 +1145,6 @@ export function DocumentManager() {
               </div>
             )}
           </div>
-
-          {/* 2. Compact Search Input */}
-          <div className="relative min-w-[170px] sm:min-w-[210px]">
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t("search_placeholder", "Search documents...")}
-              className="h-8.5 pl-8 pr-2 text-xs bg-slate-50/70 dark:bg-slate-950 border-slate-200 dark:border-slate-700 rounded-xl"
-            />
-          </div>
-
-          {/* 3. Date Range Dropdown Button */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => {
-                setIsDateMenuOpen(!isDateMenuOpen);
-                setIsScopeMenuOpen(false);
-                setIsQuickLinksOpen(false);
-              }}
-              className={cn(
-                "h-8.5 rounded-xl border px-2.5 text-xs font-bold flex items-center gap-1.5 shadow-xs transition-colors",
-                dateFilter !== "all"
-                  ? "bg-blue-50 text-blue-700 border-blue-300 dark:bg-blue-950 dark:border-blue-800"
-                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-              )}
-            >
-              <Calendar className="h-3.5 w-3.5 text-slate-500" />
-              <span>
-                {dateFilter === "all"
-                  ? "All Dates"
-                  : dateFilter === "today"
-                  ? "Today"
-                  : dateFilter === "yesterday"
-                  ? "Yesterday"
-                  : "This Month"}
-              </span>
-              <ChevronDown className="h-3 w-3 text-slate-400" />
-            </button>
-
-            {isDateMenuOpen && (
-              <div className="absolute left-0 mt-1.5 w-36 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xl p-1 z-50 text-xs font-semibold space-y-0.5">
-                {[
-                  { key: "all", label: "All Dates" },
-                  { key: "today", label: "Today" },
-                  { key: "yesterday", label: "Yesterday" },
-                  { key: "this_month", label: "This Month" }
-                ].map((item) => (
-                  <button
-                    key={item.key}
-                    type="button"
-                    onClick={() => {
-                      setDateFilter(item.key as any);
-                      setIsDateMenuOpen(false);
-                    }}
-                    className={cn(
-                      "w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between transition-colors",
-                      dateFilter === item.key
-                        ? "bg-blue-50 text-blue-700 dark:bg-blue-950 font-bold"
-                        : "hover:bg-slate-50 text-slate-700 dark:text-slate-300"
-                    )}
-                  >
-                    <span>{item.label}</span>
-                    {dateFilter === item.key && <Check className="h-3.5 w-3.5" />}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* 4. Collapsible Filters Toggle Button ("Parda" / Curtain Button) */}
-          <button
-            type="button"
-            onClick={() => setIsFilterDrawerOpen(!isFilterDrawerOpen)}
-            className={cn(
-              "h-8.5 rounded-xl border px-2.5 text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all",
-              isFilterDrawerOpen || activeFiltersCount > 0
-                ? "bg-indigo-600 text-white border-indigo-600 shadow-sm"
-                : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-            )}
-          >
-            <Filter className="h-3.5 w-3.5" />
-            <span>{t("filters", "Scope & Hierarchy Filters")}</span>
-            {activeFiltersCount > 0 && (
-              <span className="h-4 w-4 rounded-full bg-white text-indigo-700 font-black text-[10px] flex items-center justify-center">
-                {activeFiltersCount}
-              </span>
-            )}
-            <ChevronDown className={cn("h-3 w-3 transition-transform", isFilterDrawerOpen && "rotate-180")} />
-          </button>
-        </div>
-
-        {/* Right: New Folder + Action Buttons + View Mode & Refresh */}
-        <div className="flex flex-wrap items-center gap-1.5">
-          {/* New Custom Folder Button */}
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setIsNewFolderOpen(true)}
-            className="h-8.5 rounded-xl border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-850 dark:bg-purple-950 dark:text-purple-200 dark:border-purple-800 text-xs font-bold px-2.5 gap-1.5 shadow-xs"
-          >
-            <FolderPlus className="h-3.5 w-3.5 text-purple-600" />
-            <span>{t("new_folder", "New Custom Folder")}</span>
-          </Button>
-
-          {/* Upload File Button */}
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileUpload}
-            className="hidden"
-            accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-            className="h-8.5 rounded-xl border-blue-300 bg-blue-50 hover:bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200 text-xs font-bold px-2.5 gap-1 shadow-xs"
-          >
-            <Upload className="h-3.5 w-3.5" />
-            {isUploading ? t("uploading", "Uploading...") : t("upload_file", "Upload File")}
-          </Button>
-
-          {/* Start Direct Scan Button */}
-          <Button
-            type="button"
-            onClick={() => setIsScannerOpen(true)}
-            className="h-8.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 gap-1.5 shadow-sm"
-          >
-            <Camera className="h-3.5 w-3.5" />
-            {t("start_scan", "Start Direct Scan")}
-          </Button>
-
-          {/* Divider */}
-          <div className="h-5 w-px bg-slate-200 dark:bg-slate-700 mx-0.5" />
 
           {/* Refresh Button */}
           <button
