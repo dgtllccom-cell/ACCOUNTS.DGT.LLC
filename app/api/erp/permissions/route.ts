@@ -5,6 +5,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorize, hasRolePermission } from "@/lib/permissions/middleware";
 import { enterpriseRolePermissions, enterpriseRoleScopes } from "@/lib/permissions/enterprise-roles";
 import { permissionCatalog, permissionHierarchy, permissionTemplates } from "@/lib/permissions/catalog";
+import { buildAccessSummary, groupPermissionsByDomain } from "@/lib/permissions/access-architecture";
 
 export async function GET(request: NextRequest) {
   try {
@@ -57,6 +58,8 @@ export async function GET(request: NextRequest) {
       },
       permissions: ownPermissions,
       catalog: permissionCatalog,
+      catalogByDomain: groupPermissionsByDomain(permissionCatalog),
+      accessSummary: buildAccessSummary(ownPermissions, permissionCatalog),
       templates: permissionTemplates,
       hierarchy: permissionHierarchy,
       roleScopes: enterpriseRoleScopes,

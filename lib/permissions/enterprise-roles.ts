@@ -160,7 +160,16 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "approvals:approve",
     "financial_periods:create",
     "financial_periods:read",
-    "financial_periods:update"
+    "financial_periods:update",
+    "kyc:read",
+    "kyc:update",
+    "kyc:approve",
+    "documents:read",
+    "documents:create",
+    "documents:update",
+    "documents:delete",
+    "documents:export",
+    "documents:print"
   ],
   country_user: [
     "dashboard:read",
@@ -190,7 +199,10 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "sales:read",
     "shipping_records:read",
     "messages:read",
-    "email_management:read"
+    "email_management:read",
+    "kyc:read",
+    "documents:read",
+    "documents:create"
   ],
   main_branch_admin: [
     "companies:read",
@@ -260,7 +272,13 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "currency_rates:read",
     "approvals:create",
     "approvals:read",
-    "reports:read"
+    "reports:read",
+    "kyc:read",
+    "documents:read",
+    "documents:create",
+    "documents:update",
+    "documents:export",
+    "documents:print"
   ],
   city_branch_admin: [
     "companies:read",
@@ -324,7 +342,13 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "currency_rates:read",
     "approvals:create",
     "approvals:read",
-    "reports:read"
+    "reports:read",
+    "kyc:read",
+    "documents:read",
+    "documents:create",
+    "documents:update",
+    "documents:export",
+    "documents:print"
   ],
   accountant: [
     "companies:read",
@@ -413,7 +437,7 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "whatsapp:create"
   ],
   staff_user: ["transactions:create", "transactions:read", "customers:read", "companies:read", "shipping_records:read", "whatsapp:read"],
-  auditor_viewer: ["reports:read", "audit_logs:read", "ledgers:read", "companies:read"]
+  auditor_viewer: ["reports:read", "audit_logs:read", "ledgers:read", "companies:read", "kyc:read", "documents:read"]
 };
 
 export const dashboardByRole: Record<EnterpriseRole, string> = {

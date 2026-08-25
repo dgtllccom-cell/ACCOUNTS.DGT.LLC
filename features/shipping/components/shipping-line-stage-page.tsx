@@ -23,6 +23,9 @@ import { Label } from "@/components/ui/label";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
+import { ClearingAgentPicker } from "@/features/shipping/components/clearing-agent-picker";
+import { ShippingLinePicker } from "@/features/shipping/components/shipping-line-picker";
+import { apiGet } from "@/lib/api/client";
 
 type ShippingLineStagePageProps = {
   title: string;
@@ -34,6 +37,8 @@ type ShippingLineStagePageProps = {
 type ShippingRecord = {
   id: string;
   shipping_line_name: string;
+  shipping_line_id: string | null;
+  clearing_agent_id: string | null;
   bl_number: string;
   container_number: string | null;
   vessel_name: string | null;
@@ -83,6 +88,8 @@ export function ShippingLineStagePage({
 
   // Form fields
   const [shippingLineName, setShippingLineName] = useState("");
+  const [shippingLineId, setShippingLineId] = useState("");
+  const [clearingAgentId, setClearingAgentId] = useState("");
   const [blNumber, setBlNumber] = useState("");
   const [containerNumber, setContainerNumber] = useState("");
   const [vesselName, setVesselName] = useState("");
@@ -119,6 +126,8 @@ export function ShippingLineStagePage({
   useEffect(() => {
     if (!selectedRecord) {
       setShippingLineName("");
+      setShippingLineId("");
+      setClearingAgentId("");
       setBlNumber("");
       setContainerNumber("");
       setVesselName("");
@@ -132,6 +141,8 @@ export function ShippingLineStagePage({
       return;
     }
     setShippingLineName(selectedRecord.shipping_line_name || "");
+    setShippingLineId(selectedRecord.shipping_line_id || "");
+    setClearingAgentId(selectedRecord.clearing_agent_id || "");
     setBlNumber(selectedRecord.bl_number || "");
     setContainerNumber(selectedRecord.container_number || "");
     setVesselName(selectedRecord.vessel_name || "");
@@ -166,6 +177,8 @@ export function ShippingLineStagePage({
         body: JSON.stringify({
           id: selectedRecord.id,
           shippingLineName,
+          shippingLineId: shippingLineId || null,
+          clearingAgentId: clearingAgentId || null,
           blNumber,
           containerNumber,
           vesselName,
@@ -490,12 +503,26 @@ export function ShippingLineStagePage({
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label className="text-xs font-semibold text-foreground">Shipping Line Name</Label>
-                        <Input
-                          value={shippingLineName}
-                          onChange={(e) => setShippingLineName(e.target.value)}
-                          placeholder="e.g. MAERSK / MSC / COSCO"
-                          className="bg-background border-border/80 text-foreground mt-1.5 h-10 rounded-xl focus:border-cyan-500 text-xs"
+                        <ShippingLinePicker
+                          label="Shipping Line"
+                          value={shippingLineId}
+                          onValueChange={async (id) => {
+                            setShippingLineId(id);
+                            if (!id) return;
+                            try {
+                              const res = await apiGet<{ shippingLine: { name: string } }>(`/api/erp/shipping-lines/${encodeURIComponent(id)}`);
+                              if (res.shippingLine?.name) setShippingLineName(res.shippingLine.name);
+                            } catch {
+                              // ignore
+                            }
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <ClearingAgentPicker
+                          label="Clearing Agent"
+                          value={clearingAgentId}
+                          onValueChange={setClearingAgentId}
                         />
                       </div>
                       <div>

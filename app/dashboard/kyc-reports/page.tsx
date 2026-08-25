@@ -70,6 +70,13 @@ type KycMetrics = {
 };
 
 const KYC_UI: Record<string, Record<SupportedLanguage, string>> = {
+  reportBrand: {
+    en: "Regulatory Compliance & Verification Center",
+    ur: "ریگولیٹری کمپلائنس و توثیق سینٹر",
+    ar: "مركز الامتثال والتحقق التنظيمي",
+    fa: "مرکز انطباق و تأیید مقرراتی",
+    ps: "د مقرراتي اطاعت او تایید مرکز"
+  },
   title: {
     en: "KYC Reports & Master Record Audit Center",
     ur: "کے وائی سی رپورٹ اور ماسٹر ریکارڈ آڈٹ سینٹر",
@@ -118,8 +125,431 @@ const KYC_UI: Record<string, Record<SupportedLanguage, string>> = {
     ar: "+ إكمال الملف",
     fa: "+ تکمیل پرونده",
     ps: "+ پروفایل بشپړ کړئ"
+  },
+  printPdf: {
+    en: "Print / PDF",
+    ur: "پرنٹ / پی ڈی ایف",
+    ar: "طباعة / PDF",
+    fa: "چاپ / PDF",
+    ps: "چاپ / PDF"
+  },
+  refreshMatrix: {
+    en: "Refresh KYC Matrix",
+    ur: "KYC میٹرکس ریفریش کریں",
+    ar: "تحديث مصفوفة KYC",
+    fa: "بازآوری ماتریس KYC",
+    ps: "د KYC میټریکس تازه کړئ"
+  },
+  searchPlaceholder: {
+    en: "Search entity name, code, email, or country…",
+    ur: "ریکارڈ نام، کوڈ، ای میل، یا ملک تلاش کریں…",
+    ar: "ابحث عن الاسم أو الكود أو البريد أو الدولة…",
+    fa: "جستجوی نام، کد، ایمیل یا کشور…",
+    ps: "د ریکارډ نوم، کوډ، ایمیل یا هېواد ولټوئ…"
+  },
+  allEntities: {
+    en: "All Entities",
+    ur: "تمام ریکارڈز",
+    ar: "جميع السجلات",
+    fa: "همه پرونده‌ها",
+    ps: "ټول ریکارډونه"
+  },
+  allStatuses: {
+    en: "All Statuses",
+    ur: "تمام اسٹیٹس",
+    ar: "جميع الحالات",
+    fa: "همه وضعیت‌ها",
+    ps: "ټول حالتونه"
+  },
+  countryBranches: {
+    en: "Countries & Main Branches",
+    ur: "ممالک اور مین برانچز",
+    ar: "الدول والفروع الرئيسية",
+    fa: "کشورها و شعب اصلی",
+    ps: "هیوادونه او اصلي څانګې"
+  },
+  cityBranches: {
+    en: "City Branch Nodes",
+    ur: "سٹی برانچ نوڈز",
+    ar: "فروع المدن",
+    fa: "شعب شهری",
+    ps: "ښاري څانګې"
+  },
+  usersStaff: {
+    en: "Users & Staff",
+    ur: "صارفین و عملہ",
+    ar: "المستخدمون والموظفون",
+    fa: "کاربران و کارمندان",
+    ps: "کاروونکي او کارکوونکي"
+  },
+  commercialAccounts: {
+    en: "Commercial Accounts",
+    ur: "تجارتی اکاؤنٹس",
+    ar: "الحسابات التجارية",
+    fa: "حساب‌های تجاری",
+    ps: "تجارتي حسابونه"
+  },
+  filterStatus: {
+    en: "Filter Status:",
+    ur: "اسٹیٹس فلٹر:",
+    ar: "تصفية الحالة:",
+    fa: "فیلتر وضعیت:",
+    ps: "د حالت فلټر:"
+  },
+  incompleteStatus: {
+    en: "Incomplete (Red Alert)",
+    ur: "نامکمل (سرخ الرٹ)",
+    ar: "غير مكتمل (تنبيه أحمر)",
+    fa: "ناقص (هشدار قرمز)",
+    ps: "نیمګړی (سور خبرداری)"
+  },
+  nearExpiryStatus: {
+    en: "Near Expiry (< 5 Days)",
+    ur: "ختم ہونے کے قریب (< 5 دن)",
+    ar: "قريب من الانتهاء (< 5 أيام)",
+    fa: "نزدیک انقضا (< 5 روز)",
+    ps: "د پای نېټې ته نږدې (< 5 ورځې)"
+  },
+  suspendedStatus: {
+    en: "Suspended / Overdue",
+    ur: "معطل / تاخیر شدہ",
+    ar: "موقوف / متأخر",
+    fa: "معلق / معوق",
+    ps: "ځنډول شوی / پاتې"
+  },
+  compliantStatus: {
+    en: "Compliant & Verified",
+    ur: "مطابق اور تصدیق شدہ",
+    ar: "متوافق ومتحقق منه",
+    fa: "منطبق و تأیید شده",
+    ps: "مطابقت لرونکی او تایید شوی"
+  },
+  scopeGlobal: {
+    en: "ERP-wide review set",
+    ur: "ERP-وائڈ جائزہ سیٹ",
+    ar: "نطاق مراجعة على مستوى النظام",
+    fa: "مجموعه بررسی کل ERP",
+    ps: "د ERP پراخه بیاکتنې مجموعه"
+  },
+  scopeCountry: {
+    en: "Country-wide review set",
+    ur: "ملکی جائزہ سیٹ",
+    ar: "نطاق مراجعة على مستوى الدولة",
+    fa: "مجموعه بررسی کشوری",
+    ps: "د هېواد په کچه بیاکتنه"
+  },
+  scopeBranch: {
+    en: "Branch-restricted review set",
+    ur: "برانچ محدود جائزہ سیٹ",
+    ar: "نطاق مراجعة خاص بالفرع",
+    fa: "مجموعه بررسی محدود به شعبه",
+    ps: "د څانګې پورې محدوده بیاکتنه"
+  },
+  countryBranchCount: {
+    en: "Country Branches",
+    ur: "ملکی برانچز",
+    ar: "فروع الدولة",
+    fa: "شعب کشوری",
+    ps: "د هېواد څانګې"
+  },
+  cityBranchCount: {
+    en: "City Branches",
+    ur: "سٹی برانچز",
+    ar: "فروع المدن",
+    fa: "شعب شهری",
+    ps: "ښاري څانګې"
+  },
+  userCount: {
+    en: "Users / Accounts",
+    ur: "صارفین / اکاؤنٹس",
+    ar: "المستخدمون / الحسابات",
+    fa: "کاربران / حساب‌ها",
+    ps: "کاروونکي / حسابونه"
+  },
+  loadingText: {
+    en: "Loading live KYC reports and compliance audit timers...",
+    ur: "لائیو KYC رپورٹس اور کمپلائنس آڈٹ ٹائمرز لوڈ ہو رہے ہیں...",
+    ar: "جارٍ تحميل تقارير KYC المباشرة ومؤقتات التدقيق...",
+    fa: "در حال بارگذاری گزارش‌های زنده KYC و زمان‌سنج‌های انطباق...",
+    ps: "د KYC ژوندۍ راپورونه او د اطاعت د پلټنې ټایمرونه لوډ کېږي..."
+  },
+  noRecords: {
+    en: "No KYC compliance records match your search criteria.",
+    ur: "آپ کی تلاش کے مطابق کوئی KYC ریکارڈ نہیں ملا۔",
+    ar: "لا توجد سجلات KYC مطابقة لبحثك.",
+    fa: "هیچ رکورد KYC مطابق جستجوی شما یافت نشد.",
+    ps: "ستاسو له لټون سره سم د KYC کوم ریکارډ ونه موندل شو."
+  },
+  scopeLabel: {
+    en: "Active reporting scope",
+    ur: "فعال رپورٹنگ اسکوپ",
+    ar: "نطاق التقارير النشط",
+    fa: "دامنه فعال گزارش",
+    ps: "د راپور فعال ساحه"
+  },
+  typeLabel: {
+    en: "Entity type",
+    ur: "ریکارڈ کی قسم",
+    ar: "نوع السجل",
+    fa: "نوع پرونده",
+    ps: "د ریکارډ ډول"
+  },
+  codeLabel: {
+    en: "Code",
+    ur: "کوڈ",
+    ar: "الرمز",
+    fa: "کد",
+    ps: "کوډ"
+  },
+  entityRecordTitle: {
+    en: "Entity & Record Title",
+    ur: "ریکارڈ اور عنوان",
+    ar: "الكيان وعنوان السجل",
+    fa: "عنوان موجودیت و رکورد",
+    ps: "د ریکارډ او عنوان"
+  },
+  entityTypeLocation: {
+    en: "Type & Location",
+    ur: "قسمت اور مقام",
+    ar: "النوع والموقع",
+    fa: "نوع و موقعیت",
+    ps: "ډول او ځای"
+  },
+  missingRequirementsHeader: {
+    en: "Missing Profile Requirements",
+    ur: "نامکمل پروفائل تقاضے",
+    ar: "متطلبات الملف المفقودة",
+    fa: "نیازمندی‌های ناقص پرونده",
+    ps: "ورکې شوې د پروفایل اړتیاوې"
+  },
+  gracePeriodHeader: {
+    en: "Grace Period (15 Days)",
+    ur: "مہلت مدت (15 دن)",
+    ar: "فترة السماح (15 يومًا)",
+    fa: "مهلت (15 روز)",
+    ps: "د مهلت موده (۱۵ ورځې)"
+  },
+  statusHeader: {
+    en: "Status",
+    ur: "اسٹیٹس",
+    ar: "الحالة",
+    fa: "وضعیت",
+    ps: "حالت"
+  },
+  actionsHeader: {
+    en: "Actions",
+    ur: "کارروائیاں",
+    ar: "الإجراءات",
+    fa: "اقدامات",
+    ps: "کړنې"
+  },
+  allRequirementsVerified: {
+    en: "All requirements verified",
+    ur: "تمام تقاضے تصدیق شدہ",
+    ar: "تم التحقق من جميع المتطلبات",
+    fa: "همه نیازمندی‌ها تأیید شده‌اند",
+    ps: "ټولې اړتیاوې تایید شوې"
+  },
+  verifiedLabel: {
+    en: "Verified",
+    ur: "تصدیق شدہ",
+    ar: "موثّق",
+    fa: "تأیید شدہ",
+    ps: "تایید شوی"
+  },
+  daysRemainingLabel: {
+    en: "Days Remaining",
+    ur: "دن باقی",
+    ar: "الأيام المتبقية",
+    fa: "روز باقی",
+    ps: "پاتې ورځې"
+  },
+  directEdit: {
+    en: "Direct Edit",
+    ur: "براہِ راست ترمیم",
+    ar: "تعديل مباشر",
+    fa: "ویرایش مستقیم",
+    ps: "مستقیم سمون"
+  },
+  kycVerificationPortal: {
+    en: "KYC Verification Portal",
+    ur: "KYC تصدیقی پورٹل",
+    ar: "بوابة التحقق من KYC",
+    fa: "درگاه تأیید KYC",
+    ps: "د KYC د تایید دروازه"
+  },
+  registeredNameTitle: {
+    en: "Registered Name / Title",
+    ur: "رجسٹرڈ نام / عنوان",
+    ar: "الاسم / العنوان المسجل",
+    fa: "نام / عنوان ثبت‌شده",
+    ps: "ثبت شوی نوم / عنوان"
+  },
+  ownerOrEntityTitle: {
+    en: "Owner or Entity Title",
+    ur: "مالک یا ادارہ عنوان",
+    ar: "اسم المالك أو الكيان",
+    fa: "نام مالک یا موجودیت",
+    ps: "د مالک یا ادارې عنوان"
+  },
+  officialPhoneTitle: {
+    en: "Official Phone / WhatsApp",
+    ur: "سرکاری فون / واٹس ایپ",
+    ar: "الهاتف الرسمي / واتساب",
+    fa: "تلفن رسمی / واتساپ",
+    ps: "رسمي ټیلیفون / واټساپ"
+  },
+  officialEmailTitle: {
+    en: "Official Email Address",
+    ur: "سرکاری ای میل ایڈریس",
+    ar: "البريد الإلكتروني الرسمي",
+    fa: "ایمیل رسمی",
+    ps: "رسمي برېښنالیک"
+  },
+  physicalAddressTitle: {
+    en: "Physical Address",
+    ur: "جسمانی پتہ",
+    ar: "العنوان الفعلي",
+    fa: "نشانی فیزیکی",
+    ps: "فزیکي پته"
+  },
+  attachedComplianceDocuments: {
+    en: "Attached Compliance Documents",
+    ur: "منسلک کمپلائنس دستاویزات",
+    ar: "مستندات الامتثال المرفقة",
+    fa: "اسناد انطباق پیوست‌شده",
+    ps: "نښلول شوي د اطاعت اسناد"
+  },
+  docNamePlaceholder: {
+    en: "Doc name (e.g. Pakistan_NTN_Registration.pdf)",
+    ur: "دستاویز نام (مثلاً Pakistan_NTN_Registration.pdf)",
+    ar: "اسم المستند (مثال: Pakistan_NTN_Registration.pdf)",
+    fa: "نام سند (مثلاً Pakistan_NTN_Registration.pdf)",
+    ps: "د سند نوم (لکه Pakistan_NTN_Registration.pdf)"
+  },
+  addDoc: {
+    en: "Add Doc",
+    ur: "دستاویز شامل کریں",
+    ar: "إضافة مستند",
+    fa: "افزودن سند",
+    ps: "سند اضافه کړئ"
+  },
+  remove: {
+    en: "Remove",
+    ur: "ہٹائیں",
+    ar: "إزالة",
+    fa: "حذف",
+    ps: "لرې کړئ"
+  },
+  cancel: {
+    en: "Cancel",
+    ur: "منسوخ",
+    ar: "إلغاء",
+    fa: "لغو",
+    ps: "لغوه"
+  },
+  saveAndComplete: {
+    en: "Save & Complete Verification",
+    ur: "محفوظ کریں اور تصدیق مکمل کریں",
+    ar: "حفظ وإكمال التحقق",
+    fa: "ذخیره و تکمیل تأیید",
+    ps: "ساتنه او تایید بشپړول"
+  },
+  savingKycDocuments: {
+    en: "Saving KYC Documents...",
+    ur: "KYC دستاویزات محفوظ ہو رہی ہیں...",
+    ar: "جارٍ حفظ مستندات KYC...",
+    fa: "در حال ذخیره اسناد KYC...",
+    ps: "د KYC اسناد خوندي کېږي..."
+  },
+  kycUpdatedSuccess: {
+    en: "KYC records updated successfully.",
+    ur: "KYC ریکارڈز کامیابی سے اپ ڈیٹ ہو گئے۔",
+    ar: "تم تحديث سجلات KYC بنجاح.",
+    fa: "رکوردهای KYC با موفقیت به‌روزرسانی شد.",
+    ps: "د KYC ریکارډونه په بریالیتوب سره تازه شول."
+  },
+  kycUpdatedEntity: {
+    en: "Updated for",
+    ur: "کے لیے اپ ڈیٹ ہوا",
+    ar: "تم التحديث لـ",
+    fa: "به‌روزرسانی شد برای",
+    ps: "تازه شو د"
+  },
+  kycUpdateFailed: {
+    en: "Failed to update KYC record.",
+    ur: "KYC ریکارڈ اپ ڈیٹ نہ ہو سکا۔",
+    ar: "فشل تحديث سجل KYC.",
+    fa: "به‌روزرسانی رکورد KYC ناموفق بود.",
+    ps: "د KYC ریکارډ تازه کول ناکام شول."
+  },
+  showingRecordsOf: {
+    en: "Showing",
+    ur: "دکھا رہے ہیں",
+    ar: "عرض",
+    fa: "نمایش",
+    ps: "ښودل کېږي"
+  },
+  ofRecords: {
+    en: "of",
+    ur: "میں سے",
+    ar: "من",
+    fa: "از",
+    ps: "له"
+  },
+  complianceAuditRecords: {
+    en: "compliance audit records",
+    ur: "کمپلائنس آڈٹ ریکارڈز",
+    ar: "سجلات تدقيق الامتثال",
+    fa: "رکوردهای حسابرسی انطباق",
+    ps: "د اطاعت د پلټنې ریکارډونه"
+  },
+  missingRequiredFields: {
+    en: "Missing required profile fields",
+    ur: "ضروری پروفائل فیلڈز غائب ہیں",
+    ar: "حقول الملف المطلوبة مفقودة",
+    fa: "فیلدهای ضروری پرونده ناقص هستند",
+    ps: "اړین د پروفایل ساحې ورکې دي"
   }
 };
+
+const KYC_ENTITY_LABELS: Record<KycEntityType, Record<SupportedLanguage, string>> = {
+  country_branch: {
+    en: "Country Main Branch",
+    ur: "ملکی مرکزی برانچ",
+    ar: "الفرع الرئيسي للدولة",
+    fa: "شعبه اصلی کشور",
+    ps: "د هېواد اصلي څانګه"
+  },
+  city_branch: {
+    en: "City Branch Node",
+    ur: "سٹی برانچ نوڈ",
+    ar: "فرع مدينة",
+    fa: "گره شعبه شهری",
+    ps: "ښاري څانګه"
+  },
+  user_account: {
+    en: "Employee / User Account",
+    ur: "ملازم / صارف اکاؤنٹ",
+    ar: "حساب موظف / مستخدم",
+    fa: "حساب کارمند / کاربر",
+    ps: "کارکوونکی / کارن حساب"
+  },
+  new_account: {
+    en: "New Ledger Account",
+    ur: "نیا لیجر اکاؤنٹ",
+    ar: "حساب دفتر أستاذ جديد",
+    fa: "حساب کل جدید",
+    ps: "نوی لېجر حساب"
+  }
+};
+
+function formatKycStatusLabel(lang: SupportedLanguage, status: KycItem["status"], daysRemaining: number) {
+  if (status === "compliant") return KYC_UI.verifiedLabel[lang];
+  if (status === "suspended") return KYC_UI.suspendedStatus[lang];
+  const daysText = `${daysRemaining} ${KYC_UI.daysRemainingLabel[lang]}`;
+  return status === "near_expiry" ? `${KYC_UI.nearExpiryStatus[lang]} — ${daysText}` : `${KYC_UI.incompleteStatus[lang]} — ${daysText}`;
+}
 
 export default function KycReportsPage() {
   const [activeLang, setActiveLang] = useState<SupportedLanguage>("en");
@@ -133,6 +563,8 @@ export default function KycReportsPage() {
     suspended: 0,
     compliant: 0
   });
+  const [scopeSummary, setScopeSummary] = useState<{ level: string; label: string; countryId: string | null; branchId: string | null } | null>(null);
+  const [scopeTotals, setScopeTotals] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<string>("all");
@@ -159,6 +591,13 @@ export default function KycReportsPage() {
       if (res.ok && json.items) {
         setItems(json.items);
         setMetrics(json.metrics || { total: 0, incomplete: 0, nearExpiry: 0, suspended: 0, compliant: 0 });
+        setScopeSummary(json.scope ? {
+          level: json.scope.level,
+          label: json.scope.scopeLabel || json.scope.label || "Global",
+          countryId: json.scope.countryId ?? null,
+          branchId: json.scope.branchId ?? null
+        } : null);
+        setScopeTotals(json.totals || {});
       }
     } catch (err: any) {
       console.error("Failed to load KYC reports:", err);
@@ -237,11 +676,12 @@ export default function KycReportsPage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Failed to update KYC record");
 
-      setMessage(`✅ KYC Records & Verification Documents updated successfully for "${activeItem.name}"!`);
+      setMessage(`✅ ${tUI("kycUpdatedSuccess")} ${tUI("kycUpdatedEntity")} "${activeItem.name}"!`);
       setActiveItem(null);
       await fetchKycData();
     } catch (err: any) {
-      setMessage("❌ " + (err.message || "Failed to update KYC record"));
+      console.error("Failed to update KYC record:", err);
+      setMessage("❌ " + tUI("kycUpdateFailed"));
     } finally {
       setSavingKyc(false);
     }
@@ -275,12 +715,12 @@ export default function KycReportsPage() {
         sno: String(idx + 1),
         code: item.code,
         name: item.name,
-        type: item.typeLabel || item.type,
+        type: KYC_ENTITY_LABELS[item.type][activeLang],
         country: item.countryName,
         owner: item.ownerName,
         phone: item.phone,
         email: item.email,
-        status: item.status
+        status: formatKycStatusLabel(activeLang, item.status, item.daysRemaining)
       }))
     });
   }
@@ -306,7 +746,7 @@ export default function KycReportsPage() {
           <div className="flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full bg-rose-500 animate-pulse" />
             <p className="text-[10px] font-bold uppercase tracking-widest text-rose-600 dark:text-rose-400">
-              Regulatory Compliance & Verification Center
+              {tUI("reportBrand")}
             </p>
           </div>
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-foreground mt-1">
@@ -324,7 +764,7 @@ export default function KycReportsPage() {
             className="border-border/80 bg-card hover:bg-muted text-foreground h-9 px-3.5 rounded-xl shadow-xs text-xs font-bold transition-all"
           >
             <FileText className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-            {t(activeLang, "bankroz.print_pdf", "Print / PDF")}
+            {tUI("printPdf")}
           </Button>
 
           <Button
@@ -334,7 +774,7 @@ export default function KycReportsPage() {
             className="border-border/80 bg-card hover:bg-muted text-foreground h-9 px-3.5 rounded-xl shadow-xs text-xs font-bold transition-all"
           >
             <RefreshCw className={cn("h-3.5 w-3.5 mr-1.5", loading ? "animate-spin text-rose-600" : "")} />
-            Refresh KYC Matrix
+            {tUI("refreshMatrix")}
           </Button>
         </div>
       </div>
@@ -358,7 +798,9 @@ export default function KycReportsPage() {
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{tUI("totalTracked")}</p>
               <p className="mt-1.5 text-2xl font-black text-foreground">{metrics.total}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Tracked across system databases</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                {scopeSummary ? `${tUI("scopeLabel")}: ${scopeSummary.label}` : tUI("scopeGlobal")}
+              </p>
             </div>
             <div className="p-3 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
               <Building2 className="h-6 w-6" />
@@ -371,7 +813,9 @@ export default function KycReportsPage() {
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">{tUI("actionRequired")}</p>
               <p className="mt-1.5 text-2xl font-black text-rose-600 dark:text-rose-400">{metrics.incomplete}</p>
-              <p className="text-[10px] text-rose-600/80 dark:text-rose-400/80 mt-0.5">Missing required profile fields</p>
+              <p className="text-[10px] text-rose-600/80 dark:text-rose-400/80 mt-0.5">
+                {scopeTotals.total ? `${tUI("typeLabel")}: ${scopeTotals.total}` : tUI("missingRequiredFields")}
+              </p>
             </div>
             <div className="p-3 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
               <AlertTriangle className="h-6 w-6" />
@@ -384,7 +828,7 @@ export default function KycReportsPage() {
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">{tUI("nearExpiry")}</p>
               <p className="mt-1.5 text-2xl font-black text-rose-600 dark:text-rose-400">{metrics.nearExpiry + metrics.suspended}</p>
-              <p className="text-[10px] text-rose-600/80 dark:text-rose-400/80 mt-0.5">&le; 5 Days before suspension</p>
+              <p className="text-[10px] text-rose-600/80 dark:text-rose-400/80 mt-0.5">{tUI("nearExpiryStatus")}</p>
             </div>
             <div className="p-3 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400">
               <ShieldAlert className="h-6 w-6" />
@@ -397,12 +841,40 @@ export default function KycReportsPage() {
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">{tUI("compliant")}</p>
               <p className="mt-1.5 text-2xl font-black text-emerald-600 dark:text-emerald-400">{metrics.compliant}</p>
-              <p className="text-[10px] text-emerald-600/80 dark:text-emerald-400/80 mt-0.5">100% verified status</p>
+              <p className="text-[10px] text-emerald-600/80 dark:text-emerald-400/80 mt-0.5">{tUI("compliantStatus")}</p>
             </div>
             <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
               <BadgeCheck className="h-6 w-6" />
             </div>
           </div>
+        </Card>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <Card className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{tUI("scopeLabel")}</p>
+          <p className="mt-1 text-sm font-black text-foreground">{scopeSummary?.label ?? tUI("scopeGlobal")}</p>
+          <p className="mt-1 text-[10px] text-muted-foreground">
+            {scopeSummary?.level === "branch" ? tUI("scopeBranch") : scopeSummary?.level === "country" ? tUI("scopeCountry") : tUI("scopeGlobal")}
+          </p>
+        </Card>
+
+        <Card className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{tUI("countryBranchCount")}</p>
+          <p className="mt-1 text-sm font-black text-foreground">{scopeTotals.countryBranches ?? 0}</p>
+          <p className="mt-1 text-[10px] text-muted-foreground">{tUI("scopeCountry")}</p>
+        </Card>
+
+        <Card className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{tUI("cityBranchCount")}</p>
+          <p className="mt-1 text-sm font-black text-foreground">{scopeTotals.cityBranches ?? 0}</p>
+          <p className="mt-1 text-[10px] text-muted-foreground">{tUI("scopeBranch")}</p>
+        </Card>
+
+        <Card className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{tUI("userCount")}</p>
+          <p className="mt-1 text-sm font-black text-foreground">{scopeTotals.users ?? 0}</p>
+          <p className="mt-1 text-[10px] text-muted-foreground">{scopeSummary ? scopeSummary.label : tUI("scopeGlobal")}</p>
         </Card>
       </div>
 
@@ -416,7 +888,7 @@ export default function KycReportsPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search entity name, code, email, or country..."
+              placeholder={tUI("searchPlaceholder")}
               className="w-full bg-background border border-border/80 rounded-xl pl-10 pr-4 py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 text-foreground placeholder:text-muted-foreground/60 transition-all"
             />
           </div>
@@ -424,11 +896,11 @@ export default function KycReportsPage() {
           {/* Type Filter Pills */}
           <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
             {[
-              { id: "all", label: "All Entities" },
-              { id: "country_branch", label: "Countries & Main Branches" },
-              { id: "city_branch", label: "City Branch Nodes" },
-              { id: "user_account", label: "Users & Staff" },
-              { id: "new_account", label: "Commercial Accounts" }
+              { id: "all", label: tUI("allEntities") },
+              { id: "country_branch", label: tUI("countryBranches") },
+              { id: "city_branch", label: tUI("cityBranches") },
+              { id: "user_account", label: tUI("usersStaff") },
+              { id: "new_account", label: tUI("commercialAccounts") }
             ].map((type) => (
               <button
                 key={type.id}
@@ -448,14 +920,14 @@ export default function KycReportsPage() {
 
         {/* Status Filter Row */}
         <div className="flex flex-wrap items-center gap-2 border-t border-border/50 pt-2.5">
-          <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground shrink-0 mr-1">FILTER STATUS:</span>
+          <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground shrink-0 mr-1">{tUI("filterStatus")}</span>
           <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto">
             {[
-              { id: "all", label: "All Statuses" },
-              { id: "incomplete", label: "Incomplete (Red Alert)" },
-              { id: "near_expiry", label: "Near Expiry (< 5 Days)" },
-              { id: "suspended", label: "Suspended / Overdue" },
-              { id: "compliant", label: "Compliant & Verified" }
+              { id: "all", label: tUI("allStatuses") },
+              { id: "incomplete", label: tUI("incompleteStatus") },
+              { id: "near_expiry", label: tUI("nearExpiryStatus") },
+              { id: "suspended", label: tUI("suspendedStatus") },
+              { id: "compliant", label: tUI("compliantStatus") }
             ].map((st) => (
               <button
                 key={st.id}
@@ -480,10 +952,10 @@ export default function KycReportsPage() {
           <div>
             <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
               <FileCheck2 className="h-4 w-4 text-rose-600 dark:text-rose-400" />
-              KYC Verification & Grace Period Audit Directory
+              {tUI("title")}
             </CardTitle>
-            <CardDescription className="text-xs text-muted-foreground mt-0.5">
-              Showing {filteredItems.length} of {items.length} compliance audit records.
+              <CardDescription className="text-xs text-muted-foreground mt-0.5">
+              {tUI("showingRecordsOf")} {filteredItems.length} {tUI("ofRecords")} {items.length} {tUI("complianceAuditRecords")}.
             </CardDescription>
           </div>
         </CardHeader>
@@ -492,25 +964,25 @@ export default function KycReportsPage() {
           <table className="w-full text-xs text-left text-foreground">
             <thead className="bg-muted/40 text-muted-foreground uppercase text-[10px] font-bold tracking-wider border-b border-border/60">
               <tr>
-                <Th className="px-5 py-3.5">Entity & Record Title</Th>
-                <Th className="px-5 py-3.5">Type & Location</Th>
-                <Th className="px-5 py-3.5">Missing Profile Requirements</Th>
-                <Th className="px-5 py-3.5">Grace Period (15 Days)</Th>
-                <Th className="px-5 py-3.5">Status</Th>
-                <Th className="px-5 py-3.5 text-right">Actions</Th>
+                <Th className="px-5 py-3.5">{tUI("entityRecordTitle")}</Th>
+                <Th className="px-5 py-3.5">{tUI("entityTypeLocation")}</Th>
+                <Th className="px-5 py-3.5">{tUI("missingRequirementsHeader")}</Th>
+                <Th className="px-5 py-3.5">{tUI("gracePeriodHeader")}</Th>
+                <Th className="px-5 py-3.5">{tUI("statusHeader")}</Th>
+                <Th className="px-5 py-3.5 text-right">{tUI("actionsHeader")}</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/40">
               {loading ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground font-semibold">
-                    Loading live KYC reports and compliance audit timers...
+                    {tUI("loadingText")}
                   </td>
                 </tr>
               ) : filteredItems.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground font-medium">
-                    No KYC compliance records match your search criteria.
+                    {tUI("noRecords")}
                   </td>
                 </tr>
               ) : (
@@ -525,14 +997,14 @@ export default function KycReportsPage() {
                         <span>{item.name}</span>
                       </div>
                       <div className="text-[10px] font-mono text-muted-foreground mt-0.5 flex items-center gap-2">
-                        <span>Code: {item.code || "N/A"}</span>
+                        <span>{tUI("codeLabel")}: {item.code || "N/A"}</span>
                         {item.email && <span>&bull; {item.email}</span>}
                       </div>
                     </td>
 
                     <td className="px-5 py-4 whitespace-nowrap">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-muted text-foreground border border-border/60 whitespace-nowrap">
-                        {item.typeLabel}
+                        {KYC_ENTITY_LABELS[item.type][activeLang]}
                       </span>
                       <p className="text-[11px] font-semibold text-muted-foreground mt-1 whitespace-nowrap">{item.countryName}</p>
                     </td>
@@ -548,7 +1020,7 @@ export default function KycReportsPage() {
                         </div>
                       ) : (
                         <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                          <CheckCircle2 className="h-3.5 w-3.5" /> All requirements verified
+                          <CheckCircle2 className="h-3.5 w-3.5" /> {tUI("allRequirementsVerified")}
                         </span>
                       )}
                     </td>
@@ -560,7 +1032,7 @@ export default function KycReportsPage() {
                           item.status === "suspended" ? "text-rose-600 dark:text-rose-400" :
                           item.daysRemaining <= 5 ? "text-rose-600 dark:text-rose-400" : "text-amber-600 dark:text-amber-400"
                         )}>
-                          {item.status === "compliant" ? "Verified" : `${item.daysRemaining} Days Remaining`}
+                          {formatKycStatusLabel(activeLang, item.status, item.daysRemaining)}
                         </span>
                         <span className="text-muted-foreground font-mono">{item.progressPercent}%</span>
                       </div>
@@ -588,7 +1060,7 @@ export default function KycReportsPage() {
                           ? "bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/20"
                           : "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20"
                       )}>
-                        {item.statusBadge}
+                        {formatKycStatusLabel(activeLang, item.status, item.daysRemaining)}
                       </span>
                     </td>
 
@@ -600,16 +1072,16 @@ export default function KycReportsPage() {
                               variant="outline"
                               className="h-8 px-2.5 text-[11px] font-bold border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
                             >
-                              <ExternalLink className="h-3 w-3 mr-1 text-slate-600 dark:text-slate-400" /> Direct Edit
-                            </Button>
-                          </Link>
-                        )}
-                        <Button
-                          onClick={() => handleOpenKycModal(item)}
-                          className="bg-rose-600 hover:bg-rose-700 text-white font-bold h-8 px-3 rounded-lg text-xs shadow-xs"
-                        >
-                          <Upload className="h-3.5 w-3.5 mr-1" /> {tUI("completeNow")}
-                        </Button>
+                            <ExternalLink className="h-3 w-3 mr-1 text-slate-600 dark:text-slate-400" /> {tUI("directEdit")}
+                          </Button>
+                        </Link>
+                      )}
+                      <Button
+                        onClick={() => handleOpenKycModal(item)}
+                        className="bg-rose-600 hover:bg-rose-700 text-white font-bold h-8 px-3 rounded-lg text-xs shadow-xs"
+                      >
+                        <Upload className="h-3.5 w-3.5 mr-1" /> {tUI("completeNow")}
+                      </Button>
                       </div>
                     </td>
                   </tr>
@@ -626,7 +1098,7 @@ export default function KycReportsPage() {
           <div className="bg-card text-card-foreground border border-border/80 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between border-b border-border/60 pb-3">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">KYC Verification Portal</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">{tUI("kycVerificationPortal")}</span>
                 <h3 className="text-base font-extrabold text-foreground">{activeItem.name}</h3>
               </div>
               <button onClick={() => setActiveItem(null)} className="p-1 rounded-lg text-muted-foreground hover:bg-muted">
@@ -637,16 +1109,16 @@ export default function KycReportsPage() {
             <form onSubmit={handleSaveKyc} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label className="text-xs font-semibold text-foreground">Registered Name / Title</Label>
+                  <Label className="text-xs font-semibold text-foreground">{tUI("registeredNameTitle")}</Label>
                   <Input
                     value={editOwnerName}
                     onChange={(e) => setEditOwnerName(e.target.value)}
-                    placeholder="Owner or Entity Title"
+                    placeholder={tUI("ownerOrEntityTitle")}
                     className="bg-background text-xs h-9 rounded-lg mt-1"
                   />
                 </div>
                 <div>
-                  <Label className="text-xs font-semibold text-foreground">Official Phone / WhatsApp</Label>
+                  <Label className="text-xs font-semibold text-foreground">{tUI("officialPhoneTitle")}</Label>
                   <Input
                     value={editPhone}
                     onChange={(e) => setEditPhone(e.target.value)}
@@ -657,7 +1129,7 @@ export default function KycReportsPage() {
               </div>
 
               <div>
-                <Label className="text-xs font-semibold text-foreground">Official Email Address</Label>
+                <Label className="text-xs font-semibold text-foreground">{tUI("officialEmailTitle")}</Label>
                 <Input
                   type="email"
                   value={editEmail}
@@ -668,7 +1140,7 @@ export default function KycReportsPage() {
               </div>
 
               <div>
-                <Label className="text-xs font-semibold text-foreground">Physical Address</Label>
+                <Label className="text-xs font-semibold text-foreground">{tUI("physicalAddressTitle")}</Label>
                 <Input
                   value={editAddress}
                   onChange={(e) => setEditAddress(e.target.value)}
@@ -680,7 +1152,7 @@ export default function KycReportsPage() {
               {/* Uploaded Documents List */}
               <div className="space-y-2 pt-2 border-t border-border/60">
                 <Label className="text-xs font-semibold text-foreground flex items-center justify-between">
-                  <span>Attached Compliance Documents</span>
+                  <span>{tUI("attachedComplianceDocuments")}</span>
                   <span className="text-[10px] text-muted-foreground">NTN, Trade License, CNIC/Passport</span>
                 </Label>
 
@@ -688,36 +1160,36 @@ export default function KycReportsPage() {
                   <Input
                     value={newDocName}
                     onChange={(e) => setNewDocName(e.target.value)}
-                    placeholder="Doc name (e.g. Pakistan_NTN_Registration.pdf)"
+                    placeholder={tUI("docNamePlaceholder")}
                     className="bg-background text-xs h-9 rounded-lg flex-1"
                   />
                   <Button type="button" onClick={handleAddDocument} variant="outline" className="h-9 px-3 text-xs font-bold">
-                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Doc
+                    <Plus className="h-3.5 w-3.5 mr-1" /> {tUI("addDoc")}
                   </Button>
                 </div>
 
                 <div className="space-y-1.5 max-h-32 overflow-y-auto">
                   {docList.map((doc, idx) => (
                     <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-muted/40 border border-border/40 text-xs">
-                      <span className="font-mono text-[11px] text-foreground truncate">{doc}</span>
-                      <button
-                        type="button"
-                        onClick={() => setDocList(docList.filter((_, i) => i !== idx))}
-                        className="text-rose-600 dark:text-rose-400 hover:text-rose-700 text-xs font-bold"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
+                        <span className="font-mono text-[11px] text-foreground truncate">{doc}</span>
+                        <button
+                          type="button"
+                          onClick={() => setDocList(docList.filter((_, i) => i !== idx))}
+                          className="text-rose-600 dark:text-rose-400 hover:text-rose-700 text-xs font-bold"
+                        >
+                        {tUI("remove")}
+                        </button>
+                      </div>
+                    ))}
                 </div>
               </div>
 
               <div className="flex justify-end gap-2 pt-3 border-t border-border/60">
                 <Button type="button" variant="outline" onClick={() => setActiveItem(null)} className="h-9 text-xs font-bold">
-                  Cancel
+                  {tUI("cancel")}
                 </Button>
                 <Button type="submit" disabled={savingKyc} className="bg-rose-600 hover:bg-rose-700 text-white font-bold h-9 px-4 text-xs">
-                  {savingKyc ? "Saving KYC Documents..." : "Save & Complete Verification"}
+                  {savingKyc ? tUI("savingKycDocuments") : tUI("saveAndComplete")}
                 </Button>
               </div>
             </form>

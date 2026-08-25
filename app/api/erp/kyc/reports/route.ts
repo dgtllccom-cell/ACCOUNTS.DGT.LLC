@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { ErpAuthError, requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { auditApiAction } from "@/lib/api/audit";
+import { authorize, resolveReportScope } from "@/lib/permissions/middleware";
 
 type KycEntityType = "country_branch" | "city_branch" | "user_account" | "new_account";
 
@@ -27,6 +28,25 @@ export type KycReportItem = {
   editUrl?: string;
   rawDetails: Record<string, any>;
 };
+
+type ScopedEntityRow = {
+  country_id?: string | null;
+  country_branch_id?: string | null;
+  city_branch_id?: string | null;
+};
+
+function rowMatchesScope(row: ScopedEntityRow, scope: ReturnType<typeof resolveReportScope>) {
+  if (scope.level === "global") return true;
+  if (scope.level === "country") {
+    const countryId = row.country_id ?? null;
+    return !countryId || countryId === scope.countryId;
+  }
+  return Boolean(
+    (row.city_branch_id && row.city_branch_id === scope.branchId) ||
+    (row.country_branch_id && row.country_branch_id === scope.countryBranchId) ||
+    (row.country_id && row.country_id === scope.countryId)
+  );
+}
 
 function calculateGraceStatus(createdAt: string, missingReqs: string[]) {
   const GRACE_PERIOD_DAYS = 15;
@@ -75,6 +95,9 @@ function calculateGraceStatus(createdAt: string, missingReqs: string[]) {
 export async function GET(request: Request) {
   try {
     const session = await requireErpSession();
+    authorize(session, { resource: "reports", action: "read" });
+    authorize(session, { resource: "kyc", action: "read" });
+    const reportScope = resolveReportScope(session);
     const supabase = createSupabaseAdminClient() as any;
 
     const [
@@ -82,6 +105,7 @@ export async function GET(request: Request) {
       countryBranchesRes,
       cityBranchesRes,
       usersRes,
+      assignmentsRes,
       enterpriseAccountsRes,
       companiesRes,
       customersRes
@@ -90,9 +114,10 @@ export async function GET(request: Request) {
       supabase.from("country_branches").select("id, country_id, name, code, is_main, address, phone, email, whatsapp_number, owner_name, documents, contacts, created_at").is("deleted_at", null),
       supabase.from("city_branches").select("id, country_id, country_branch_id, name, code, address, phone, email, contacts, documents, created_at").is("deleted_at", null),
       supabase.from("profiles").select("id, full_name, preferred_language_code, created_at").limit(50),
-      supabase.from("enterprise_accounts").select("id, code, name, country_id, created_at").is("deleted_at", null).order("created_at", { ascending: false }).limit(100),
-      supabase.from("companies").select("id, company_name, registration_number, phone, email, address, created_at").is("deleted_at", null).limit(50),
-      supabase.from("customers").select("id, customer_name, phone, email, address, created_at").is("deleted_at", null).limit(50)
+      supabase.from("user_role_assignments").select("user_id, role, country_id, country_branch_id, city_branch_id, is_active, created_at").is("deleted_at", null),
+      supabase.from("enterprise_accounts").select("id, code, name, country_id, country_branch_id, city_branch_id, company_id, bank_id, customer_id, created_at").is("deleted_at", null).order("created_at", { ascending: false }).limit(100),
+      supabase.from("companies").select("id, company_name, registration_number, phone, email, address, country_id, city_id, created_at").is("deleted_at", null).limit(50),
+      supabase.from("customers").select("id, customer_name, country_id, phone, email, address, created_at").is("deleted_at", null).limit(50)
     ]);
 
     const countriesMap = new Map<string, string>();
@@ -100,10 +125,25 @@ export async function GET(request: Request) {
       countriesMap.set(c.id, c.name);
     });
 
+    const userAssignmentScope = new Map<string, { countryIds: Set<string>; countryBranchIds: Set<string>; cityBranchIds: Set<string> }>();
+    (assignmentsRes.data ?? []).forEach((assignment: any) => {
+      if (!assignment?.user_id || assignment.is_active === false) return;
+      const current = userAssignmentScope.get(assignment.user_id) ?? {
+        countryIds: new Set<string>(),
+        countryBranchIds: new Set<string>(),
+        cityBranchIds: new Set<string>()
+      };
+      if (assignment.country_id) current.countryIds.add(assignment.country_id);
+      if (assignment.country_branch_id) current.countryBranchIds.add(assignment.country_branch_id);
+      if (assignment.city_branch_id) current.cityBranchIds.add(assignment.city_branch_id);
+      userAssignmentScope.set(assignment.user_id, current);
+    });
+
     const items: KycReportItem[] = [];
 
     // 1. Process Country Branches (e.g. Pakistan Country Branch)
     (countryBranchesRes.data ?? []).forEach((cb: any) => {
+      if (!rowMatchesScope(cb, reportScope)) return;
       const missing: string[] = [];
       if (!cb.owner_name) missing.push("Missing Registered Owner Name");
       if (!cb.phone && !cb.whatsapp_number) missing.push("Missing Contact Phone / WhatsApp");
@@ -139,6 +179,7 @@ export async function GET(request: Request) {
 
     // 2. Process City Branches (e.g. Lahore / Karachi Branches)
     (cityBranchesRes.data ?? []).forEach((cbr: any) => {
+      if (!rowMatchesScope(cbr, reportScope)) return;
       const missing: string[] = [];
       if (!cbr.phone) missing.push("Missing Branch Telephone");
       if (!cbr.address) missing.push("Missing City Branch Physical Address");
@@ -173,6 +214,16 @@ export async function GET(request: Request) {
 
     // 3. Process User Accounts (Staff / Employees)
     (usersRes.data ?? []).forEach((u: any) => {
+      const assignment = userAssignmentScope.get(u.id);
+      const assignmentMatches =
+        reportScope.level === "global" ||
+        (reportScope.level === "country" && assignment?.countryIds.has(reportScope.countryId || "") ) ||
+        (reportScope.level === "branch" && (
+          assignment?.cityBranchIds.has(reportScope.branchId || "") ||
+          assignment?.countryBranchIds.has(reportScope.countryBranchId || "") ||
+          assignment?.countryIds.has(reportScope.countryId || "")
+        ));
+      if (!assignmentMatches) return;
       const missing: string[] = [];
       if (!u.full_name) missing.push("Missing Official Full Name Verification");
       missing.push("Missing Identity CNIC / Passport Copy");
@@ -201,6 +252,7 @@ export async function GET(request: Request) {
 
     // 4. Process Commercial / New Enterprise Accounts (including newly created ones)
     (enterpriseAccountsRes.data ?? []).forEach((acc: any) => {
+      if (!rowMatchesScope(acc, reportScope)) return;
       const missing: string[] = [];
       if (!acc.name) missing.push("Missing Account Title");
       missing.push("Missing Commercial Tax / NTN Registration");
@@ -238,7 +290,29 @@ export async function GET(request: Request) {
       compliant: items.filter((i) => i.status === "compliant").length
     };
 
-    return NextResponse.json({ items, metrics }, { status: 200 });
+    return NextResponse.json({
+      items,
+      metrics,
+      scope: reportScope,
+      totals: {
+        countries: (countriesRes.data ?? []).length,
+        countryBranches: (countryBranchesRes.data ?? []).filter((row: any) => rowMatchesScope(row, reportScope)).length,
+        cityBranches: (cityBranchesRes.data ?? []).filter((row: any) => rowMatchesScope(row, reportScope)).length,
+        users: (usersRes.data ?? []).filter((row: any) => {
+          const assignment = userAssignmentScope.get(row.id);
+          return reportScope.level === "global" ||
+            (reportScope.level === "country" && assignment?.countryIds.has(reportScope.countryId || "")) ||
+            (reportScope.level === "branch" && (
+              assignment?.cityBranchIds.has(reportScope.branchId || "") ||
+              assignment?.countryBranchIds.has(reportScope.countryBranchId || "") ||
+              assignment?.countryIds.has(reportScope.countryId || "")
+            ));
+        }).length,
+        enterpriseAccounts: (enterpriseAccountsRes.data ?? []).filter((row: any) => rowMatchesScope(row, reportScope)).length,
+        companies: (companiesRes.data ?? []).filter((row: any) => rowMatchesScope(row, reportScope)).length,
+        customers: (customersRes.data ?? []).filter((row: any) => rowMatchesScope(row, reportScope)).length
+      }
+    }, { status: 200 });
   } catch (error) {
     if (error instanceof ErpAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
@@ -251,6 +325,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const session = await requireErpSession();
+    authorize(session, { resource: "kyc", action: "update" });
     const body = await request.json();
 
     const { entityId, entityType, action, ownerName, phone, email, address, documents } = body;

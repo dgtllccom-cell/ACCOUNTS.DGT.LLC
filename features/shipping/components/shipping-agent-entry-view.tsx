@@ -5,12 +5,17 @@ import { Plus, Pencil, Search, Loader2, RefreshCw, Ship, CheckCircle2, Building2
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { Th } from "@/components/ui/translated-th";
+import { ClearingAgentPicker, type ClearingAgentRow as ClearingAgentPickerRow } from "@/features/shipping/components/clearing-agent-picker";
+import { ShippingLinePicker, type ShippingLineRow as ShippingLinePickerRow } from "@/features/shipping/components/shipping-line-picker";
+import { apiGet } from "@/lib/api/client";
 
 type ShippingAgentRow = {
   id: string;
   agent_code: string;
   agent_name: string;
+  clearing_agent_id: string | null;
   shipping_line_name: string;
+  shipping_line_id: string | null;
   contact_person: string | null;
   email: string | null;
   phone: string | null;
@@ -25,7 +30,9 @@ const EMPTY_AGENT: any = {
   id: "",
   agent_code: "",
   agent_name: "",
-  shipping_line_name: "DGT Logistics",
+  clearing_agent_id: "",
+  shipping_line_name: "",
+  shipping_line_id: "",
   contact_person: "",
   email: "",
   phone: "",
@@ -179,24 +186,43 @@ export function ShippingAgentEntryView({ lang }: { lang: SupportedLanguage }) {
 
             <div>
               <label className="block text-xs font-semibold text-foreground/80 mb-2">Agent / Agency Name *</label>
-              <input
-                type="text"
-                placeholder="e.g. Gulf Shipping Agency"
-                value={form.agent_name}
-                onChange={(e) => setForm({ ...form, agent_name: e.target.value })}
-                className="w-full bg-background border border-border/80 rounded-xl px-4 py-2.5 text-foreground placeholder:text-muted-foreground/50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-                required
+              <ClearingAgentPicker
+                value={form.clearing_agent_id || ""}
+                onValueChange={async (clearingAgentId) => {
+                  setForm((prev: any) => ({ ...prev, clearing_agent_id: clearingAgentId }));
+                  if (!clearingAgentId) return;
+                  try {
+                    const res = await apiGet<{ clearingAgent: ClearingAgentPickerRow }>(`/api/erp/clearing-agents/${encodeURIComponent(clearingAgentId)}`);
+                    const agent = res.clearingAgent;
+                    setForm((prev: any) => ({
+                      ...prev,
+                      agent_name: agent?.name || prev.agent_name,
+                      contact_person: agent?.contact_person || prev.contact_person,
+                      phone: agent?.phone || prev.phone,
+                      email: agent?.email || prev.email
+                    }));
+                  } catch {
+                    // ignore
+                  }
+                }}
               />
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-foreground/80 mb-2">Associated Shipping Line</label>
-              <input
-                type="text"
-                placeholder="e.g. Maersk / MSC / DGT Logistics"
-                value={form.shipping_line_name}
-                onChange={(e) => setForm({ ...form, shipping_line_name: e.target.value })}
-                className="w-full bg-background border border-border/80 rounded-xl px-4 py-2.5 text-foreground placeholder:text-muted-foreground/50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+              <ShippingLinePicker
+                value={form.shipping_line_id || ""}
+                onValueChange={async (shippingLineId) => {
+                  setForm((prev: any) => ({ ...prev, shipping_line_id: shippingLineId }));
+                  if (!shippingLineId) return;
+                  try {
+                    const res = await apiGet<{ shippingLine: ShippingLinePickerRow }>(`/api/erp/shipping-lines/${encodeURIComponent(shippingLineId)}`);
+                    const line = res.shippingLine;
+                    setForm((prev: any) => ({ ...prev, shipping_line_name: line?.name || prev.shipping_line_name }));
+                  } catch {
+                    // ignore
+                  }
+                }}
               />
             </div>
           </div>

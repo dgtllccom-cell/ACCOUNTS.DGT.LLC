@@ -581,6 +581,46 @@ export const permissionCatalog: PermissionDefinition[] = [
     resources: ["messages"],
     actions: ["create", "read", "update"],
     hidden: true
+  },
+  {
+    key: "kyc.reports",
+    label: "KYC Reports",
+    description: "View compliance dashboards, missing requirements, and KYC completion progress.",
+    group: "KYC / Compliance",
+    resources: ["kyc", "reports"],
+    actions: ["read", "export", "print"]
+  },
+  {
+    key: "kyc.review",
+    label: "KYC Review & Verification",
+    description: "Open, review, update, and verify KYC records inside the authorized scope.",
+    group: "KYC / Compliance",
+    resources: ["kyc", "customers", "companies", "profiles", "accounts"],
+    actions: ["read", "update", "approve"]
+  },
+  {
+    key: "kyc.link",
+    label: "Send KYC Link",
+    description: "Generate secure expiring KYC review links for authorized customers and companies.",
+    group: "KYC / Compliance",
+    resources: ["kyc", "messages", "email_management"],
+    actions: ["create", "read", "update"]
+  },
+  {
+    key: "documents.kyc",
+    label: "KYC Documents",
+    description: "View, upload, scan, download, and manage KYC-related documents.",
+    group: "Document Management",
+    resources: ["office_documents", "attachments", "documents"],
+    actions: ["create", "read", "update", "delete", "export", "print"]
+  },
+  {
+    key: "documents.scanner",
+    label: "Document Scanner",
+    description: "Capture documents directly from scanner hardware for KYC and filing.",
+    group: "Document Management",
+    resources: ["office_documents", "scanner_devices", "attachments"],
+    actions: ["create", "read", "update"]
   }
 ];
 
@@ -754,6 +794,96 @@ export const permissionTemplates: PermissionTemplate[] = [
     description: "Basic user operations and reports.",
     level: "user",
     permissions: ["dashboard.access", "messages.inbox", "messages.notifications"]
+  },
+  {
+    key: "report-viewer",
+    label: "Report Viewer",
+    description: "Read-only reporting, print, and export access with compliance visibility.",
+    level: "user",
+    permissions: [
+      "dashboard.access",
+      "reports.view",
+      "reports:read",
+      "reports:export",
+      "accounts.reports",
+      "ledgers.reports",
+      "journal.roznamcha.daily_report",
+      "purchase.reports",
+      "sales.reports",
+      "branch.general_report",
+      "reports.management.financial_summary",
+      "reports.management.branch_analysis",
+      "reports.ledger.general",
+      "reports.roznamcha.country",
+      "reports.roznamcha.city",
+      "kyc.reports",
+      "kyc.review",
+      "documents.kyc",
+      "documents.scanner"
+    ]
+  },
+  {
+    key: "kyc-officer-country",
+    label: "Country KYC Officer",
+    description: "Country-scoped KYC reviewer with document and compliance workflow access.",
+    level: "country",
+    permissions: [
+      "dashboard.access",
+      "reports.view",
+      "reports:read",
+      "kyc.reports",
+      "kyc.review",
+      "kyc.link",
+      "documents.kyc",
+      "documents.scanner",
+      "documents:read",
+      "documents:create",
+      "documents:update",
+      "documents:export",
+      "documents:print",
+      "messages.inbox",
+      "messages.notifications"
+    ]
+  },
+  {
+    key: "kyc-officer-branch",
+    label: "Branch KYC Officer",
+    description: "Branch-scoped KYC reviewer with compliance and document actions.",
+    level: "branch",
+    permissions: [
+      "dashboard.access",
+      "reports.view",
+      "reports:read",
+      "kyc.reports",
+      "kyc.review",
+      "kyc.link",
+      "documents.kyc",
+      "documents.scanner",
+      "documents:read",
+      "documents:create",
+      "documents:update",
+      "documents:export",
+      "documents:print",
+      "messages.inbox",
+      "messages.notifications"
+    ]
+  },
+  {
+    key: "document-officer",
+    label: "Document Officer",
+    description: "Document filing, scanner, upload, download, and archival access.",
+    level: "branch",
+    permissions: [
+      "dashboard.access",
+      "documents.kyc",
+      "documents.scanner",
+      "documents:read",
+      "documents:create",
+      "documents:update",
+      "documents:delete",
+      "documents:export",
+      "documents:print"
+    ]
   },
   {
     key: "agent-basic",

@@ -5,10 +5,14 @@ import { Search, ShieldCheck, ChevronDown } from "lucide-react";
 import {
   getPermissionKeysForTemplate,
   groupPermissionCatalog,
+  permissionCatalog,
   permissionTemplates,
   type PermissionDefinition,
   type PermissionLevel
 } from "@/lib/permissions/catalog";
+import { buildAccessSummary } from "@/lib/permissions/access-architecture";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 import { cn } from "@/lib/utils";
 
 type PermissionAssignmentSectionProps = {
@@ -40,6 +44,8 @@ const GROUP_META: Record<string, { label: string; icon: string; color: string; b
   "HR / Payroll":                                     { label: "HR & Payroll",             icon: "👔", color: "text-pink-700 dark:text-pink-400",    bg: "bg-pink-50 dark:bg-pink-950/30",   border: "border-pink-200 dark:border-pink-900/60" },
   "Reports":                                          { label: "Reports & Export",         icon: "📄", color: "text-rose-700 dark:text-rose-400",    bg: "bg-rose-50 dark:bg-rose-950/30",   border: "border-rose-200 dark:border-rose-900/60" },
   "Messages":                                         { label: "Messages & Alerts",        icon: "💬", color: "text-fuchsia-700 dark:text-fuchsia-400", bg: "bg-fuchsia-50 dark:bg-fuchsia-950/30", border: "border-fuchsia-200 dark:border-fuchsia-900/60" },
+  "KYC / Compliance":                                 { label: "KYC / Compliance",        icon: "🪪", color: "text-amber-700 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-950/30", border: "border-amber-200 dark:border-amber-900/60" },
+  "Document Management":                              { label: "Documents / Scanner",      icon: "🗂️", color: "text-slate-700 dark:text-slate-300", bg: "bg-slate-50 dark:bg-slate-900/40", border: "border-slate-200 dark:border-slate-700" },
   "Settings":                                         { label: "Settings & Admin",         icon: "⚙️", color: "text-gray-700 dark:text-gray-400",    bg: "bg-gray-50 dark:bg-gray-900/40",   border: "border-gray-200 dark:border-gray-700" },
 };
 
@@ -54,7 +60,7 @@ function getGroupMeta(group: string) {
 }
 
 export function PermissionAssignmentSection({
-  title = "Roles & Permissions",
+  title,
   level,
   template,
   selected,
@@ -64,6 +70,7 @@ export function PermissionAssignmentSection({
   required = false,
   note
 }: PermissionAssignmentSectionProps) {
+  const lang = useActiveLanguage();
   const [query, setQuery] = useState("");
   const [closedGroups, setClosedGroups] = useState<string[]>([]);
 
@@ -97,6 +104,10 @@ export function PermissionAssignmentSection({
 
   const selectedAllowedCount = selected.filter((k) => allowedPermissionKeys.includes(k)).length;
   const selectedSet = useMemo(() => new Set(selected), [selected]);
+  const selectedDomainSummary = useMemo(
+    () => buildAccessSummary(selected, permissionCatalog),
+    [selected]
+  );
 
   function setTemplate(nextTemplate: string) {
     onTemplateChange(nextTemplate);
@@ -136,23 +147,28 @@ export function PermissionAssignmentSection({
   const groupEntries = Object.entries(filteredGroups);
   const totalSelected = selected.length;
   const totalAllowed = allowedPermissionKeys.length;
+  const titleText = title || t(lang, "urf.role_permissions", "Role Permissions");
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-col gap-1">
+        <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">{titleText}</h3>
+        <p className="text-xs text-slate-500 dark:text-slate-400">{t(lang, "urf.role_permissions_hint", "Defaults load by role. You can customize permissions before saving.")}</p>
+      </div>
 
       {/* ── Top Toolbar ─────────────────────────────────────────── */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         {/* Template picker */}
         <div className="min-w-[220px] flex-1">
           <label className="mb-1 block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
-            Permission Template {required ? <span className="text-rose-500">*</span> : null}
+            {t(lang, "urf.permission_template", "Permission Template")} {required ? <span className="text-rose-500">*</span> : null}
           </label>
           <select
             className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             value={template}
             onChange={(e) => setTemplate(e.target.value)}
           >
-            <option value="">Select template…</option>
+            <option value="">{t(lang, "urf.select_permissions", "Select Permissions")}…</option>
             {availableTemplates.map((item) => (
               <option key={item.key} value={item.key}>{item.label}</option>
             ))}
@@ -163,24 +179,53 @@ export function PermissionAssignmentSection({
         <div className="flex flex-wrap items-center gap-2 pt-5">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-[11px] font-bold text-indigo-700 dark:border-indigo-900/60 dark:bg-indigo-950/30 dark:text-indigo-300">
             <ShieldCheck className="h-3.5 w-3.5" />
-            {selectedAllowedCount} / {totalAllowed} selected
+            {t(lang, "urf.selected_colon", "Selected:")} {selectedAllowedCount} / {totalAllowed} {t(lang, "urf.selected_permissions", "Selected Permissions")}
           </span>
           <button
             type="button"
             onClick={selectAllAllowed}
             className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-bold text-emerald-700 hover:bg-emerald-100 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/50 transition-colors"
           >
-            ✓ Select All
+            ✓ {t(lang, "urf.select_all", "Select All")}
           </button>
           <button
             type="button"
             onClick={clearAllSelected}
             className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1 text-[11px] font-bold text-rose-700 hover:bg-rose-100 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300 dark:hover:bg-rose-950/50 transition-colors"
           >
-            ✕ Clear All
+            ✕ {t(lang, "urf.clear_all", "Clear All")}
           </button>
         </div>
       </div>
+
+      {!!selectedDomainSummary.length && (
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+          {selectedDomainSummary.map((summary) => (
+            <div key={summary.domain} className="rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-950/40">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  {summary.label}
+                </span>
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                  {summary.count}
+                </span>
+              </div>
+              <div className="mt-1.5 flex flex-wrap gap-1">
+                {summary.permissions.slice(0, 4).map((perm) => (
+                  <span key={perm} className="rounded-full bg-indigo-50 px-2 py-0.5 text-[9px] font-semibold text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-300">
+                    {perm}
+                  </span>
+                ))}
+                {summary.permissions.length > 4 && (
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                    +{summary.permissions.length - 4}
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Note */}
       {note && (
@@ -196,7 +241,7 @@ export function PermissionAssignmentSection({
           className="h-9 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm shadow-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search permissions, modules, or actions…"
+          placeholder={t(lang, "urf.search_permissions_ph", "Search permissions...")}
         />
       </div>
 
@@ -252,7 +297,7 @@ export function PermissionAssignmentSection({
                     )}
                     onClick={(e) => { e.stopPropagation(); toggleGroupPermissions(permKeys); }}
                   >
-                    {allSel ? "Clear" : "Select All"}
+                    {allSel ? t(lang, "urf.clear_all", "Clear All") : t(lang, "urf.select_all", "Select All")}
                   </button>
                   <ChevronDown
                     className={cn("h-3.5 w-3.5 text-slate-400 transition-transform duration-200", isOpen && "rotate-180")}
@@ -325,7 +370,7 @@ export function PermissionAssignmentSection({
 
         {groupEntries.length === 0 && (
           <div className="rounded-xl border border-dashed border-slate-200 py-8 text-center text-sm text-slate-400 dark:border-slate-700">
-            No permissions match your search.
+            {t(lang, "urf.no_permissions_match_search", "No permissions match your search.")}
           </div>
         )}
       </div>
@@ -335,14 +380,14 @@ export function PermissionAssignmentSection({
         <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 px-4 py-3 dark:border-indigo-900/40 dark:bg-indigo-950/20">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-[10px] font-black uppercase tracking-widest text-indigo-700 dark:text-indigo-400">
-              ✓ {totalSelected} Permission{totalSelected !== 1 ? "s" : ""} Selected
+              ✓ {totalSelected} {t(lang, "urf.selected_permissions", "Selected Permissions")}
             </span>
             <button
               type="button"
               onClick={clearAllSelected}
               className="text-[9px] font-semibold text-rose-500 hover:text-rose-700 dark:text-rose-400"
             >
-              Clear All
+              {t(lang, "urf.clear_all", "Clear All")}
             </button>
           </div>
           <div className="flex flex-wrap gap-1">
