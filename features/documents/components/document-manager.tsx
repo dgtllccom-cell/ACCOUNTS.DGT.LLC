@@ -41,7 +41,8 @@ import {
   Sparkles,
   Filter,
   Check,
-  RotateCcw
+  RotateCcw,
+  ArrowRight
 } from "lucide-react";
 import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
@@ -286,7 +287,7 @@ export function DocumentManager() {
   const [selectedDocumentType, setSelectedDocumentType] = useState<string>("");
   const [scopeRole, setScopeRole] = useState<"super_admin" | "country_admin" | "branch_user">("super_admin");
 
-  // Dropdown / Popover states for clean collapsible UI
+  // Dropdown / Popover states
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState<boolean>(false);
   const [isQuickLinksOpen, setIsQuickLinksOpen] = useState<boolean>(false);
   const [isDateMenuOpen, setIsDateMenuOpen] = useState<boolean>(false);
@@ -773,16 +774,6 @@ export function DocumentManager() {
     return Array.from(new Set([...DEFAULT_MODULE_FOLDERS, ...customNames]));
   }, [customFolders]);
 
-  const activePathString = useMemo(() => {
-    const parts = [
-      scopeRole === "super_admin" ? "Super Admin" : scopeRole === "country_admin" ? "Country Admin" : "Branch User",
-      activeCountry?.name || "All Countries",
-      activeCityBranch?.name || activeMainBranch?.name || "All Branches",
-      selectedModule === "all" ? "All Modules" : selectedModule
-    ];
-    return parts.filter(Boolean).join("  ›  ");
-  }, [scopeRole, activeCountry, activeMainBranch, activeCityBranch, selectedModule]);
-
   return (
     <div className={cn("space-y-4 pb-16 min-h-screen font-sans", isRtl && "text-right")} dir={isRtl ? "rtl" : "ltr"}>
       {/* ── Top Unified Header Bar ("Safaid Patti" / Header Toolbar) ── */}
@@ -831,6 +822,7 @@ export function DocumentManager() {
                   type="button"
                   onClick={() => {
                     setScopeRole("super_admin");
+                    handleResetFilters();
                     setIsScopeMenuOpen(false);
                   }}
                   className={cn(
@@ -1035,7 +1027,7 @@ export function DocumentManager() {
             )}
           </div>
 
-          {/* Upload File Input (Hidden) */}
+          {/* Upload File Button */}
           <input
             type="file"
             ref={fileInputRef}
@@ -1220,7 +1212,7 @@ export function DocumentManager() {
         </div>
       )}
 
-      {/* ── 5 KPI SUMMARY CARDS GRID (Exact Alignment with General Office) ── */}
+      {/* ── 5 KPI SUMMARY CARDS GRID ── */}
       <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 font-sans">
         {/* Card 1: BRANCH & USER DETAILS */}
         <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-950">
@@ -1384,12 +1376,7 @@ export function DocumentManager() {
           <div className="space-y-1 text-xs">
             {/* Root: Storage Scope */}
             <div
-              onClick={() => {
-                setSelectedCountryId("");
-                setSelectedMainBranchId("");
-                setSelectedCityBranchId("");
-                setSelectedModule("all");
-              }}
+              onClick={() => handleResetFilters()}
               className={cn(
                 "flex items-center justify-between p-2 rounded-xl cursor-pointer font-bold transition-colors",
                 !selectedCountryId && selectedModule === "all"
@@ -1399,7 +1386,7 @@ export function DocumentManager() {
             >
               <span className="flex items-center gap-1.5 truncate">
                 <Globe className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-                {scopeRole === "super_admin" ? "Super Admin Storage" : "Corporate Document Vault"}
+                👑 Super Admin Storage (All)
               </span>
               <span className="text-[10px] bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded-full font-mono">
                 {documents.length}
@@ -1418,6 +1405,7 @@ export function DocumentManager() {
                         setSelectedCountryId(c.id);
                         setSelectedMainBranchId("");
                         setSelectedCityBranchId("");
+                        setSelectedModule("all");
                       }}
                       className={cn(
                         "flex items-center justify-between p-1.5 rounded-lg cursor-pointer font-bold transition-colors",
@@ -1444,6 +1432,7 @@ export function DocumentManager() {
                                 onClick={() => {
                                   setSelectedMainBranchId(mb.id);
                                   setSelectedCityBranchId("");
+                                  setSelectedModule("all");
                                 }}
                                 className={cn(
                                   "flex items-center justify-between p-1 rounded-md cursor-pointer text-[11px] font-semibold transition-colors",
@@ -1520,13 +1509,83 @@ export function DocumentManager() {
 
         {/* Right Main Document Explorer Area */}
         <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-950 space-y-4">
-          {/* Active Path & View Switcher Bar */}
+          {/* Active Clickable Breadcrumb Path Bar */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
-              <span className="text-slate-400">{t("active_path", "Active Path:")}</span>
-              <span className="text-blue-600 dark:text-blue-400 font-mono text-[11px] truncate max-w-[380px] sm:max-w-[500px]">
-                {activePathString}
-              </span>
+            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 flex-wrap">
+              <span className="text-slate-400 mr-1">{t("active_path", "Active Path:")}</span>
+
+              {/* 1. Super Admin Storage Root Link */}
+              <button
+                type="button"
+                onClick={() => handleResetFilters()}
+                className={cn(
+                  "hover:underline hover:text-blue-600 transition-colors flex items-center gap-1 px-1 py-0.5 rounded",
+                  !selectedCountryId ? "text-blue-600 font-black bg-blue-50 dark:bg-blue-950" : "text-slate-600"
+                )}
+              >
+                👑 Super Admin
+              </button>
+
+              {/* 2. Country Link */}
+              {activeCountry && (
+                <>
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedMainBranchId("");
+                      setSelectedCityBranchId("");
+                      setSelectedModule("all");
+                    }}
+                    className={cn(
+                      "hover:underline hover:text-blue-600 transition-colors flex items-center gap-1 px-1 py-0.5 rounded",
+                      !selectedMainBranchId ? "text-blue-600 font-black bg-blue-50 dark:bg-blue-950" : "text-slate-600"
+                    )}
+                  >
+                    🌍 {activeCountry.name}
+                  </button>
+                </>
+              )}
+
+              {/* 3. Main Branch Link */}
+              {activeMainBranch && (
+                <>
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedCityBranchId("");
+                      setSelectedModule("all");
+                    }}
+                    className={cn(
+                      "hover:underline hover:text-blue-600 transition-colors flex items-center gap-1 px-1 py-0.5 rounded",
+                      !selectedCityBranchId && selectedModule === "all" ? "text-blue-600 font-black bg-blue-50 dark:bg-blue-950" : "text-slate-600"
+                    )}
+                  >
+                    🏢 {activeMainBranch.name}
+                  </button>
+                </>
+              )}
+
+              {/* 4. City Branch Link */}
+              {activeCityBranch && (
+                <>
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                  <span className="text-slate-800 dark:text-slate-200 font-bold">
+                    📍 {activeCityBranch.name}
+                  </span>
+                </>
+              )}
+
+              {/* 5. Module Link */}
+              {selectedModule !== "all" && (
+                <>
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                  <span className="text-emerald-700 dark:text-emerald-300 font-bold bg-emerald-50 dark:bg-emerald-950 px-1.5 py-0.5 rounded">
+                    📁 {selectedModule}
+                  </span>
+                </>
+              )}
             </div>
 
             <div className="flex items-center gap-1.5 self-end sm:self-auto">
@@ -1567,231 +1626,382 @@ export function DocumentManager() {
             </div>
           </div>
 
-          {/* Loading / Empty / Content View */}
-          {loading ? (
-            <div className="py-16 text-center text-slate-400 space-y-2">
-              <RefreshCw className="h-6 w-6 animate-spin mx-auto text-blue-600" />
-              <p className="text-xs font-semibold">{t("loading_docs", "Loading document repository...")}</p>
-            </div>
-          ) : filteredDocuments.length === 0 ? (
-            <div className="py-16 text-center text-slate-400 space-y-3">
-              <div className="h-12 w-12 rounded-2xl bg-slate-100 dark:bg-slate-900 flex items-center justify-center mx-auto text-slate-400">
-                <FolderOpen className="h-6 w-6" />
+          {/* ── Drill-Down Folders Grid (Country / Branch / Module Folders) ── */}
+          {!selectedCountryId ? (
+            /* Super Admin View: Show Country Folders */
+            <div className="space-y-2">
+              <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <Folder className="h-3.5 w-3.5 text-amber-500" />
+                <span>Countries Folders ({countries.length})</span>
               </div>
-              <p className="text-xs font-semibold">{t("no_docs", "No documents found in this directory folder.")}</p>
-              <div className="flex items-center justify-center gap-2 pt-1">
-                <Button
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="rounded-xl bg-blue-600 text-white text-xs font-bold"
-                >
-                  <Upload className="h-3.5 w-3.5 mr-1" />
-                  {t("upload_first_doc", "Upload Document")}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setIsScannerOpen(true)}
-                  className="rounded-xl border-emerald-300 text-emerald-700 bg-emerald-50 text-xs font-bold"
-                >
-                  <Camera className="h-3.5 w-3.5 mr-1" />
-                  {t("start_scan", "Start Direct Scan")}
-                </Button>
+              <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
+                {countries.map((c) => {
+                  const docCount = documents.filter((d) => d.country_id === c.id || d.country_name === c.name).length;
+                  const branchCount = c.mainBranches?.length || 0;
+                  return (
+                    <div
+                      key={c.id}
+                      onClick={() => {
+                        setSelectedCountryId(c.id);
+                        setSelectedMainBranchId("");
+                        setSelectedCityBranchId("");
+                        setSelectedModule("all");
+                      }}
+                      className="p-3.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/60 hover:bg-blue-50/70 hover:border-blue-300 dark:bg-slate-900/60 dark:hover:bg-blue-950/40 transition-all cursor-pointer group shadow-xs space-y-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="h-9 w-9 rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400 flex items-center justify-center font-bold">
+                          <Folder className="h-5 w-5 fill-amber-400 text-amber-500" />
+                        </div>
+                        <span className="text-[10px] font-mono font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
+                          {docCount} files
+                        </span>
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-black text-slate-900 dark:text-slate-100 group-hover:text-blue-600 transition-colors">
+                          {c.name}
+                        </h4>
+                        <p className="text-[10.5px] text-slate-400 font-semibold">
+                          {branchCount} {branchCount === 1 ? "Branch" : "Branches"}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
-          ) : viewMode === "grid" ? (
-            /* ── Grid View ── */
-            <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
-              {filteredDocuments.map((doc) => {
-                const isPdf = doc.file_type?.toLowerCase().includes("pdf") || doc.file_name?.toLowerCase().endsWith(".pdf");
-                const isImg =
-                  doc.file_type?.toLowerCase().includes("image") ||
-                  /\.(png|jpe?g|webp)$/i.test(doc.file_name || "");
-                const isSheet =
-                  doc.file_type?.toLowerCase().includes("sheet") ||
-                  /\.(xlsx?|csv)$/i.test(doc.file_name || "");
+          ) : !selectedMainBranchId ? (
+            /* Country View: Show Main Branches for Country */
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-wider text-slate-400">
+                <span className="flex items-center gap-1.5">
+                  <FolderOpen className="h-3.5 w-3.5 text-indigo-500" />
+                  <span>{activeCountry?.name} Branches Folders</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedCountryId("")}
+                  className="text-blue-600 hover:underline text-[10.5px] font-bold"
+                >
+                  ← Back to Super Admin
+                </button>
+              </div>
+              <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 xl:grid-cols-4">
+                {(activeCountry?.mainBranches || []).map((mb: any) => {
+                  const mbDocCount = documents.filter(
+                    (d) => d.country_branch_id === mb.id || d.main_branch_name === mb.name
+                  ).length;
+                  return (
+                    <div
+                      key={mb.id}
+                      onClick={() => {
+                        setSelectedMainBranchId(mb.id);
+                        setSelectedCityBranchId("");
+                        setSelectedModule("all");
+                      }}
+                      className="p-3.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/60 hover:bg-indigo-50/70 hover:border-indigo-300 dark:bg-slate-900/60 dark:hover:bg-indigo-950/40 transition-all cursor-pointer group shadow-xs space-y-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="h-9 w-9 rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400 flex items-center justify-center font-bold">
+                          <FolderOpen className="h-5 w-5" />
+                        </div>
+                        <span className="text-[10px] font-mono font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
+                          {mbDocCount} files
+                        </span>
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-black text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 transition-colors">
+                          {mb.name}
+                        </h4>
+                        <p className="text-[10.5px] text-slate-400 font-semibold">
+                          Main Branch
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : selectedModule === "all" ? (
+            /* Branch View: Show Module & Custom Folders */
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-wider text-slate-400">
+                <span className="flex items-center gap-1.5">
+                  <Folder className="h-3.5 w-3.5 text-emerald-500" />
+                  <span>{activeMainBranch?.name} Module Folders</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedMainBranchId("")}
+                  className="text-blue-600 hover:underline text-[10.5px] font-bold"
+                >
+                  ← Back to {activeCountry?.name}
+                </button>
+              </div>
+              <div className="grid gap-3 grid-cols-2 sm:grid-cols-4 xl:grid-cols-5">
+                {allFolderList.map((folderName) => {
+                  const fDocCount = documents.filter((d) => d.module_type === folderName).length;
+                  return (
+                    <div
+                      key={folderName}
+                      onClick={() => setSelectedModule(folderName)}
+                      className="p-3 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/60 hover:bg-emerald-50/70 hover:border-emerald-300 dark:bg-slate-900/60 dark:hover:bg-emerald-950/40 transition-all cursor-pointer group shadow-xs space-y-1.5"
+                    >
+                      <div className="flex items-center justify-between">
+                        <Folder className="h-4 w-4 text-emerald-600" />
+                        <span className="text-[9.5px] font-mono text-slate-400">{fDocCount}</span>
+                      </div>
+                      <h4 className="text-[11.5px] font-bold text-slate-800 dark:text-slate-200 truncate group-hover:text-emerald-700 transition-colors">
+                        {folderName}
+                      </h4>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
 
-                return (
-                  <div
-                    key={doc.id}
-                    className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 p-3.5 hover:shadow-md transition-all flex flex-col justify-between space-y-3 group"
+          {/* ── Files & Documents List / Grid ── */}
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                <FileText className="h-4 w-4 text-blue-600" />
+                <span>
+                  {selectedModule !== "all"
+                    ? `${selectedModule} Documents`
+                    : activeMainBranch
+                    ? `${activeMainBranch.name} Documents`
+                    : activeCountry
+                    ? `${activeCountry.name} Documents`
+                    : "All Super Admin Repository Documents"}{" "}
+                  ({filteredDocuments.length})
+                </span>
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="py-12 text-center text-slate-400 space-y-2">
+                <RefreshCw className="h-6 w-6 animate-spin mx-auto text-blue-600" />
+                <p className="text-xs font-semibold">{t("loading_docs", "Loading documents...")}</p>
+              </div>
+            ) : filteredDocuments.length === 0 ? (
+              <div className="py-12 text-center text-slate-400 space-y-3">
+                <div className="h-10 w-10 rounded-2xl bg-slate-100 dark:bg-slate-900 flex items-center justify-center mx-auto text-slate-400">
+                  <FolderOpen className="h-5 w-5" />
+                </div>
+                <p className="text-xs font-semibold">{t("no_docs", "No documents found in this directory level.")}</p>
+                <div className="flex items-center justify-center gap-2 pt-1">
+                  <Button
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="rounded-xl bg-blue-600 text-white text-xs font-bold"
                   >
-                    <div>
-                      {/* Top Badges & Type */}
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-900 flex items-center justify-center shrink-0">
-                            {isPdf ? (
-                              <FileText className="h-4 w-4 text-red-500" />
-                            ) : isImg ? (
-                              <ImageIcon className="h-4 w-4 text-blue-500" />
-                            ) : isSheet ? (
-                              <FileSpreadsheet className="h-4 w-4 text-emerald-500" />
-                            ) : (
-                              <FileCheck className="h-4 w-4 text-indigo-500" />
-                            )}
+                    <Upload className="h-3.5 w-3.5 mr-1" />
+                    {t("upload_first_doc", "Upload Document")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setIsScannerOpen(true)}
+                    className="rounded-xl border-emerald-300 text-emerald-700 bg-emerald-50 text-xs font-bold"
+                  >
+                    <Camera className="h-3.5 w-3.5 mr-1" />
+                    {t("start_scan", "Start Direct Scan")}
+                  </Button>
+                </div>
+              </div>
+            ) : viewMode === "grid" ? (
+              /* Grid View */
+              <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+                {filteredDocuments.map((doc) => {
+                  const isPdf = doc.file_type?.toLowerCase().includes("pdf") || doc.file_name?.toLowerCase().endsWith(".pdf");
+                  const isImg =
+                    doc.file_type?.toLowerCase().includes("image") ||
+                    /\.(png|jpe?g|webp)$/i.test(doc.file_name || "");
+                  const isSheet =
+                    doc.file_type?.toLowerCase().includes("sheet") ||
+                    /\.(xlsx?|csv)$/i.test(doc.file_name || "");
+
+                  return (
+                    <div
+                      key={doc.id}
+                      className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 p-3.5 hover:shadow-md transition-all flex flex-col justify-between space-y-3 group"
+                    >
+                      <div>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-900 flex items-center justify-center shrink-0">
+                              {isPdf ? (
+                                <FileText className="h-4 w-4 text-red-500" />
+                              ) : isImg ? (
+                                <ImageIcon className="h-4 w-4 text-blue-500" />
+                              ) : isSheet ? (
+                                <FileSpreadsheet className="h-4 w-4 text-emerald-500" />
+                              ) : (
+                                <FileCheck className="h-4 w-4 text-indigo-500" />
+                              )}
+                            </div>
+                            <div className="overflow-hidden">
+                              <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate" title={doc.title}>
+                                {doc.title}
+                              </h3>
+                              <p className="text-[10px] font-mono text-slate-400 truncate" title={doc.file_name}>
+                                {doc.file_name}
+                              </p>
+                            </div>
                           </div>
-                          <div className="overflow-hidden">
-                            <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate" title={doc.title}>
-                              {doc.title}
-                            </h3>
-                            <p className="text-[10px] font-mono text-slate-400 truncate" title={doc.file_name}>
-                              {doc.file_name}
-                            </p>
-                          </div>
+
+                          <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                            {formatBytes(doc.file_size)}
+                          </span>
                         </div>
 
-                        <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                          {formatBytes(doc.file_size)}
-                        </span>
+                        <div className="mt-2.5 flex flex-wrap gap-1">
+                          <span className="text-[9.5px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                            {doc.module_type}
+                          </span>
+                          {doc.country_name && (
+                            <span className="text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                              🌍 {doc.country_name}
+                            </span>
+                          )}
+                          {doc.main_branch_name && (
+                            <span className="text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                              🏢 {doc.main_branch_name}
+                            </span>
+                          )}
+                          {doc.company_name && (
+                            <span className="text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 truncate max-w-[130px]">
+                              {doc.company_name}
+                            </span>
+                          )}
+                          {doc.person_account_name && (
+                            <span className="text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 truncate max-w-[130px]">
+                              👤 {doc.person_account_name}
+                            </span>
+                          )}
+                        </div>
                       </div>
 
-                      {/* Context Chips */}
-                      <div className="mt-2.5 flex flex-wrap gap-1">
-                        <span className="text-[9.5px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                          {doc.module_type}
+                      <div className="pt-2 border-t border-slate-100 dark:border-slate-850 flex items-center justify-between gap-2">
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          {new Date(doc.scanned_at || doc.created_at).toLocaleDateString()}
                         </span>
-                        {doc.document_type && (
-                          <span className="text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300">
-                            {doc.document_type}
-                          </span>
-                        )}
-                        {doc.company_name && (
-                          <span className="text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 truncate max-w-[140px]">
-                            🏢 {doc.company_name}
-                          </span>
-                        )}
-                        {doc.person_account_name && (
-                          <span className="text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 truncate max-w-[140px]">
-                            👤 {doc.person_account_name}
-                          </span>
-                        )}
-                        {doc.account_name && (
-                          <span className="text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300 truncate max-w-[140px]">
-                            💳 {doc.account_name}
-                          </span>
-                        )}
-                      </div>
-                    </div>
 
-                    {/* Footer Date & Actions */}
-                    <div className="pt-2 border-t border-slate-100 dark:border-slate-850 flex items-center justify-between gap-2">
-                      <span className="text-[10px] text-slate-400 font-mono">
-                        {new Date(doc.scanned_at || doc.created_at).toLocaleDateString()}
-                      </span>
-
-                      <div className="flex items-center gap-1">
-                        {/* Preview / View */}
-                        <button
-                          type="button"
-                          onClick={() => setPreviewDoc(doc)}
-                          className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-blue-50 hover:text-blue-600 flex items-center justify-center text-slate-600 transition-colors"
-                          title={t("view", "View")}
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                        </button>
-
-                        {/* Download */}
-                        {doc.file_url && (
-                          <a
-                            href={doc.file_url}
-                            download={doc.file_name}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-600 flex items-center justify-center text-slate-600 transition-colors"
-                            title={t("download", "Download")}
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => setPreviewDoc(doc)}
+                            className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-blue-50 hover:text-blue-600 flex items-center justify-center text-slate-600 transition-colors"
+                            title={t("view", "View")}
                           >
-                            <Download className="h-3.5 w-3.5" />
-                          </a>
-                        )}
+                            <Eye className="h-3.5 w-3.5" />
+                          </button>
 
-                        {/* Edit / Move */}
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEdit(doc)}
-                          className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-purple-50 hover:text-purple-600 flex items-center justify-center text-slate-600 transition-colors"
-                          title={t("edit_move", "Edit / Move")}
-                        >
-                          <Move className="h-3.5 w-3.5" />
-                        </button>
+                          {doc.file_url && (
+                            <a
+                              href={doc.file_url}
+                              download={doc.file_name}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-600 flex items-center justify-center text-slate-600 transition-colors"
+                              title={t("download", "Download")}
+                            >
+                              <Download className="h-3.5 w-3.5" />
+                            </a>
+                          )}
 
-                        {/* Delete */}
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(doc.id)}
-                          className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-red-50 hover:text-red-600 flex items-center justify-center text-slate-600 transition-colors"
-                          title={t("delete", "Delete")}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEdit(doc)}
+                            className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-purple-50 hover:text-purple-600 flex items-center justify-center text-slate-600 transition-colors"
+                            title={t("edit_move", "Edit / Move")}
+                          >
+                            <Move className="h-3.5 w-3.5" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(doc.id)}
+                            className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-red-50 hover:text-red-600 flex items-center justify-center text-slate-600 transition-colors"
+                            title={t("delete", "Delete")}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            /* ── Table View ── */
-            <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-              <table className="w-full text-xs text-left">
-                <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-bold uppercase text-[10px]">
-                  <tr>
-                    <th className="p-2.5">Title / File</th>
-                    <th className="p-2.5">Module & Type</th>
-                    <th className="p-2.5">Company / Account</th>
-                    <th className="p-2.5">Size</th>
-                    <th className="p-2.5">Date</th>
-                    <th className="p-2.5 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {filteredDocuments.map((doc) => (
-                    <tr key={doc.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/50">
-                      <td className="p-2.5 font-bold text-slate-900 dark:text-slate-100">
-                        <div className="truncate max-w-[200px]">{doc.title}</div>
-                        <div className="text-[10px] font-mono text-slate-400 truncate max-w-[200px]">{doc.file_name}</div>
-                      </td>
-                      <td className="p-2.5">
-                        <span className="font-semibold text-blue-600">{doc.module_type}</span>
-                        {doc.document_type && <span className="text-slate-400"> • {doc.document_type}</span>}
-                      </td>
-                      <td className="p-2.5 text-slate-600 dark:text-slate-300">
-                        <div>{doc.company_name || "—"}</div>
-                        <div className="text-[10px] text-slate-400">{doc.person_account_name || doc.account_name || ""}</div>
-                      </td>
-                      <td className="p-2.5 font-mono text-slate-500">{formatBytes(doc.file_size)}</td>
-                      <td className="p-2.5 text-slate-500 font-mono text-[10px]">
-                        {new Date(doc.scanned_at || doc.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="p-2.5 text-right space-x-1">
-                        <button
-                          onClick={() => setPreviewDoc(doc)}
-                          className="p-1 text-blue-600 hover:bg-blue-50 rounded"
-                          title="View"
-                        >
-                          <Eye className="h-3.5 w-3.5 inline" />
-                        </button>
-                        <button
-                          onClick={() => handleOpenEdit(doc)}
-                          className="p-1 text-purple-600 hover:bg-purple-50 rounded"
-                          title="Edit / Move"
-                        >
-                          <Move className="h-3.5 w-3.5 inline" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(doc.id)}
-                          className="p-1 text-red-600 hover:bg-red-50 rounded"
-                          title="Delete"
-                        >
-                          <Trash2 className="h-3.5 w-3.5 inline" />
-                        </button>
-                      </td>
+                  );
+                })}
+              </div>
+            ) : (
+              /* Table View */
+              <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                <table className="w-full text-xs text-left">
+                  <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-bold uppercase text-[10px]">
+                    <tr>
+                      <th className="p-2.5">Title / File</th>
+                      <th className="p-2.5">Country & Branch</th>
+                      <th className="p-2.5">Module & Type</th>
+                      <th className="p-2.5">Party / Company</th>
+                      <th className="p-2.5">Size</th>
+                      <th className="p-2.5">Date</th>
+                      <th className="p-2.5 text-right">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {filteredDocuments.map((doc) => (
+                      <tr key={doc.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/50">
+                        <td className="p-2.5 font-bold text-slate-900 dark:text-slate-100">
+                          <div className="truncate max-w-[180px]">{doc.title}</div>
+                          <div className="text-[10px] font-mono text-slate-400 truncate max-w-[180px]">{doc.file_name}</div>
+                        </td>
+                        <td className="p-2.5 text-slate-600 dark:text-slate-300">
+                          <div>{doc.country_name || "—"}</div>
+                          <div className="text-[10px] text-slate-400">{doc.main_branch_name || ""}</div>
+                        </td>
+                        <td className="p-2.5">
+                          <span className="font-semibold text-blue-600">{doc.module_type}</span>
+                          {doc.document_type && <span className="text-slate-400"> • {doc.document_type}</span>}
+                        </td>
+                        <td className="p-2.5 text-slate-600 dark:text-slate-300">
+                          <div>{doc.company_name || "—"}</div>
+                          <div className="text-[10px] text-slate-400">{doc.person_account_name || doc.account_name || ""}</div>
+                        </td>
+                        <td className="p-2.5 font-mono text-slate-500">{formatBytes(doc.file_size)}</td>
+                        <td className="p-2.5 text-slate-500 font-mono text-[10px]">
+                          {new Date(doc.scanned_at || doc.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="p-2.5 text-right space-x-1">
+                          <button
+                            onClick={() => setPreviewDoc(doc)}
+                            className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                            title="View"
+                          >
+                            <Eye className="h-3.5 w-3.5 inline" />
+                          </button>
+                          <button
+                            onClick={() => handleOpenEdit(doc)}
+                            className="p-1 text-purple-600 hover:bg-purple-50 rounded"
+                            title="Edit / Move"
+                          >
+                            <Move className="h-3.5 w-3.5 inline" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(doc.id)}
+                            className="p-1 text-red-600 hover:bg-red-50 rounded"
+                            title="Delete"
+                          >
+                            <Trash2 className="h-3.5 w-3.5 inline" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -1854,7 +2064,7 @@ export function DocumentManager() {
             <div className="rounded-xl bg-slate-50 p-3 border border-slate-200 space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Destination Filing Path</span>
               <div className="text-[11px] font-mono text-slate-700 truncate">
-                {activePathString}
+                {activeCountry?.name || "Super Admin Storage"} › {activeMainBranch?.name || "All Branches"} › {selectedModule}
               </div>
             </div>
 
