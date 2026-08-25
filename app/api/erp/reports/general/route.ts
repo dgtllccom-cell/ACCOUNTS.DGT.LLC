@@ -124,23 +124,10 @@ export async function GET(request: NextRequest) {
             };
           });
 
-          if (mapped.length > 0) {
-            data = mapped;
-          } else {
-            data = [
-              { id: "1", serial: "SA-2026-0001", journalNo: "J-902", voucherNo: "V-102", date: "2026-06-12", narration: "Opening cash load Pakistan Main Branch", creator: "Jan Ali", debit: 500000, credit: 0, currency: "PKR", status: "posted" },
-              { id: "2", serial: "SA-2026-0002", journalNo: "J-903", voucherNo: "V-103", date: "2026-06-11", narration: "Cash purchase office supplies", creator: "Ahmad Shah", debit: 0, credit: 12500, currency: "PKR", status: "posted" },
-              { id: "3", serial: "SA-2026-0003", journalNo: "J-904", voucherNo: "V-104", date: "2026-06-10", narration: "USD Transfer from UAE Corporate holding", creator: "Julfer Admin", debit: 85000, credit: 0, currency: "USD", status: "posted" },
-              { id: "4", serial: "SA-2026-0004", journalNo: "J-905", voucherNo: "V-105", date: "2026-06-09", narration: "Local rent payment Kabul office", creator: "Sayed Akbar", debit: 0, credit: 45000, currency: "AFN", status: "pending" }
-            ];
-          }
+          data = mapped;
         } catch (e) {
           console.error("CASH_ENTRY_QUERY_ERROR:", e);
-          data = [
-            { id: "1", serial: "SA-2026-0001", journalNo: "J-902", voucherNo: "V-102", date: "2026-06-12", narration: "Opening cash load Pakistan Main Branch", creator: "Jan Ali", debit: 500000, credit: 0, currency: "PKR", status: "posted" },
-            { id: "2", serial: "SA-2026-0002", journalNo: "J-903", voucherNo: "V-103", date: "2026-06-11", narration: "Cash purchase office supplies", creator: "Ahmad Shah", debit: 0, credit: 12500, currency: "PKR", status: "posted" },
-            { id: "3", serial: "SA-2026-0003", journalNo: "J-904", voucherNo: "V-104", date: "2026-06-10", narration: "USD Transfer from UAE Corporate holding", creator: "Julfer Admin", debit: 85000, credit: 0, currency: "USD", status: "posted" }
-          ];
+          data = [];
         }
 
         const totalDebit = data.reduce((sum: number, r: any) => sum + (r.currency === "PKR" ? r.debit : r.debit * 280), 0);
@@ -179,21 +166,10 @@ export async function GET(request: NextRequest) {
             receivedBy: "System"
           }));
 
-          if (mapped.length > 0) {
-            data = mapped;
-          } else {
-            data = [
-              { id: "r1", date: "2026-06-12", voucherNo: "V-201", serial: "SA-PK-003", description: "Advance received for Cargo shipment #920", amount: 150000, currency: "PKR", customerNo: "CUST-0021", refNo: "REF-9201", receivedBy: "Jan Ali" },
-              { id: "r2", date: "2026-06-11", voucherNo: "V-202", serial: "SA-AE-004", description: "Inward bank deposit Dubai Branch", amount: 4500, currency: "AED", customerNo: "CUST-0143", refNo: "DXB-872", receivedBy: "Julfer Admin" },
-              { id: "r3", date: "2026-06-09", voucherNo: "V-203", serial: "SA-AF-009", description: "Cash customer invoice payment Kabul", amount: 80000, currency: "AFN", customerNo: "CUST-0082", refNo: "KBL-0012", receivedBy: "Sayed Akbar" }
-            ];
-          }
+          data = mapped;
         } catch (e) {
           console.error("RECEIPTS_QUERY_ERROR:", e);
-          data = [
-            { id: "r1", date: "2026-06-12", voucherNo: "V-201", serial: "SA-PK-003", description: "Advance received for Cargo shipment #920", amount: 150000, currency: "PKR", customerNo: "CUST-0021", refNo: "REF-9201", receivedBy: "Jan Ali" },
-            { id: "r2", date: "2026-06-11", voucherNo: "V-202", serial: "SA-AE-004", description: "Inward bank deposit Dubai Branch", amount: 4500, currency: "AED", customerNo: "CUST-0143", refNo: "DXB-872", receivedBy: "Julfer Admin" }
-          ];
+          data = [];
         }
 
         summary = {
@@ -230,21 +206,10 @@ export async function GET(request: NextRequest) {
             paidBy: "System"
           }));
 
-          if (mapped.length > 0) {
-            data = mapped;
-          } else {
-            data = [
-              { id: "p1", date: "2026-06-12", voucherNo: "V-301", serial: "SA-PK-015", description: "Office rent payment Islamabad HQ", amount: 120000, currency: "PKR", customerNo: "CUST-8812", refNo: "RENT-06", paidBy: "Jan Ali" },
-              { id: "p2", date: "2026-06-10", voucherNo: "V-302", serial: "SA-PK-016", description: "Fuel charges generator backup Quetta", amount: 32000, currency: "PKR", customerNo: "- ", refNo: "FUEL-812", paidBy: "Ahmad Shah" },
-              { id: "p3", date: "2026-06-08", voucherNo: "V-303", serial: "SA-US-001", description: "Settlement payment supplier global logistics", amount: 15000, currency: "USD", customerNo: "CUST-0003", refNo: "SUPP-981", paidBy: "Julfer Admin" }
-            ];
-          }
+          data = mapped;
         } catch (e) {
           console.error("PAYMENTS_QUERY_ERROR:", e);
-          data = [
-            { id: "p1", date: "2026-06-12", voucherNo: "V-301", serial: "SA-PK-015", description: "Office rent payment Islamabad HQ", amount: 120000, currency: "PKR", customerNo: "CUST-8812", refNo: "RENT-06", paidBy: "Jan Ali" },
-            { id: "p2", date: "2026-06-10", voucherNo: "V-302", serial: "SA-PK-016", description: "Fuel charges generator backup Quetta", amount: 32000, currency: "PKR", customerNo: "- ", refNo: "FUEL-812", paidBy: "Ahmad Shah" }
-          ];
+          data = [];
         }
 
         summary = {
@@ -287,21 +252,10 @@ export async function GET(request: NextRequest) {
             };
           });
 
-          if (mapped.length > 0) {
-            data = mapped;
-          } else {
-            data = [
-              { id: "c1", customerNo: "CUST-2026-01", accountName: "Mohammad Shah Custom Imports", accountNumber: "ACT-88129", manualRef: "REF-MS-01", phone: "+92 300 1234567", email: "shah@shahimports.com", currency: "PKR", balance: 425000, dateAdded: "2026-06-01" },
-              { id: "c2", customerNo: "CUST-2026-02", accountName: "Kabul Logistic Services Co.", accountNumber: "ACT-77612", manualRef: "KBL-LOG-9", phone: "+93 79 123 456", email: "info@kabullogistics.af", currency: "AFN", balance: -89000, dateAdded: "2026-05-15" },
-              { id: "c3", customerNo: "CUST-2026-03", accountName: "Al-Futtaim Trading UAE", accountNumber: "ACT-99120", manualRef: "DXB-AFT-8", phone: "+971 4 987 6543", email: "finance@alfuttaim.ae", currency: "AED", balance: 14500, dateAdded: "2026-06-05" }
-            ];
-          }
+          data = mapped;
         } catch (e) {
           console.error("CUSTOMER_ACCOUNTS_QUERY_ERROR:", e);
-          data = [
-            { id: "c1", customerNo: "CUST-2026-01", accountName: "Mohammad Shah Custom Imports", accountNumber: "ACT-88129", manualRef: "REF-MS-01", phone: "+92 300 1234567", email: "shah@shahimports.com", currency: "PKR", balance: 425000, dateAdded: "2026-06-01" },
-            { id: "c2", customerNo: "CUST-2026-02", accountName: "Kabul Logistic Services Co.", accountNumber: "ACT-77612", manualRef: "KBL-LOG-9", phone: "+93 79 123 456", email: "info@kabullogistics.af", currency: "AFN", balance: -89000, dateAdded: "2026-05-15" }
-          ];
+          data = [];
         }
 
         summary = {
@@ -336,21 +290,10 @@ export async function GET(request: NextRequest) {
             createdAt: row.created_at?.slice(0, 10)
           }));
 
-          if (mapped.length > 0) {
-            data = mapped;
-          } else {
-            data = [
-              { id: "cmp1", name: "Damaan Logistics LLC", legalName: "Damaan Logistics Group LLC", baseCurrency: "AED", status: "active", createdAt: "2026-01-15" },
-              { id: "cmp2", name: "Damaan Trading Pakistan", legalName: "Damaan Trading Private Limited", baseCurrency: "PKR", status: "active", createdAt: "2026-02-10" },
-              { id: "cmp3", name: "KBL Dry Fruits Transit", legalName: "Kabul dry fruits transit corp", baseCurrency: "AFN", status: "active", createdAt: "2026-03-01" }
-            ];
-          }
+          data = mapped;
         } catch (e) {
           console.error("CUSTOMER_COMPANIES_QUERY_ERROR:", e);
-          data = [
-            { id: "cmp1", name: "Damaan Logistics LLC", legalName: "Damaan Logistics Group LLC", baseCurrency: "AED", status: "active", createdAt: "2026-01-15" },
-            { id: "cmp2", name: "Damaan Trading Pakistan", legalName: "Damaan Trading Private Limited", baseCurrency: "PKR", status: "active", createdAt: "2026-02-10" }
-          ];
+          data = [];
         }
 
         summary = {
@@ -379,21 +322,10 @@ export async function GET(request: NextRequest) {
             updater: "System"
           }));
 
-          if (mapped.length > 0) {
-            data = mapped;
-          } else {
-            data = [
-              { id: "ex1", country: "Pakistan", date: "2026-06-12", buying: 278.50, selling: 279.10, creditRate: 279.10, debitRate: 278.50, updater: "Julfer Admin" },
-              { id: "ex2", country: "Afghanistan", date: "2026-06-12", buying: 71.20, selling: 71.80, creditRate: 71.80, debitRate: 71.20, updater: "Jan Ali" },
-              { id: "ex3", country: "UAE", date: "2026-06-12", buying: 3.672, selling: 3.673, creditRate: 3.673, debitRate: 3.672, updater: "System Engine" }
-            ];
-          }
+          data = mapped;
         } catch (e) {
           console.error("EXCHANGE_RATES_QUERY_ERROR:", e);
-          data = [
-            { id: "ex1", country: "Pakistan", date: "2026-06-12", buying: 278.50, selling: 279.10, creditRate: 279.10, debitRate: 278.50, updater: "Julfer Admin" },
-            { id: "ex2", country: "Afghanistan", date: "2026-06-12", buying: 71.20, selling: 71.80, creditRate: 71.80, debitRate: 71.20, updater: "Jan Ali" }
-          ];
+          data = [];
         }
 
         summary = {
@@ -434,22 +366,10 @@ export async function GET(request: NextRequest) {
 
           const list = Object.values(branchGroups);
 
-          if (list.length > 0) {
-            data = list;
-          } else {
-            data = [
-              { branch: "Islamabad Main HQ", code: "ISB-01", txCount: 145, volumeUSD: 420500 },
-              { branch: "Quetta City Branch", code: "QTA-02", txCount: 98, volumeUSD: 185000 },
-              { branch: "Kabul Transit Station", code: "KBL-01", txCount: 76, volumeUSD: 95000 },
-              { branch: "Dubai Corporate Center", code: "DXB-01", txCount: 112, volumeUSD: 850000 }
-            ];
-          }
+          data = list;
         } catch (e) {
           console.error("BRANCH_TRANSACTIONS_QUERY_ERROR:", e);
-          data = [
-            { branch: "Islamabad Main HQ", code: "ISB-01", txCount: 145, volumeUSD: 420500 },
-            { branch: "Quetta City Branch", code: "QTA-02", txCount: 98, volumeUSD: 185000 }
-          ];
+          data = [];
         }
 
         summary = {
@@ -484,21 +404,10 @@ export async function GET(request: NextRequest) {
             };
           });
 
-          if (mapped.length > 0) {
-            data = mapped;
-          } else {
-            data = [
-              { userId: "7719341B", fullName: "Julfer Admin", userCode: "SUPERADMIN", logins: 45, posts: 112, lastActive: "2026-06-12 21:45" },
-              { userId: "DE812A9B", fullName: "Jan Ali", userCode: "PK-ACC-02", logins: 29, posts: 84, lastActive: "2026-06-12 20:15" },
-              { userId: "FE7718A2", fullName: "Sayed Akbar", userCode: "AF-CASH-01", logins: 12, posts: 33, lastActive: "2026-06-11 18:30" }
-            ];
-          }
+          data = mapped;
         } catch (e) {
           console.error("USER_ACTIVITY_QUERY_ERROR:", e);
-          data = [
-            { userId: "7719341B", fullName: "Julfer Admin", userCode: "SUPERADMIN", logins: 45, posts: 112, lastActive: "2026-06-12 21:45" },
-            { userId: "DE812A9B", fullName: "Jan Ali", userCode: "PK-ACC-02", logins: 29, posts: 84, lastActive: "2026-06-12 20:15" }
-          ];
+          data = [];
         }
 
         summary = {
@@ -525,22 +434,10 @@ export async function GET(request: NextRequest) {
             ip: row.ip_address || "127.0.0.1"
           }));
 
-          if (mapped.length > 0) {
-            data = mapped;
-          } else {
-            data = [
-              { id: "aud1", date: "2026-06-12T21:40:22Z", user: "Julfer Admin", action: "users.create.api", table: "profiles", ip: "72.60.209.121" },
-              { id: "aud2", date: "2026-06-12T20:15:44Z", user: "Jan Ali", action: "roznamcha.create.api", table: "roznamcha_entries", ip: "39.40.15.22" },
-              { id: "aud3", date: "2026-06-12T19:33:10Z", user: "Sayed Akbar", action: "auth.login.success", table: "auth", ip: "103.88.22.11" },
-              { id: "aud4", date: "2026-06-12T18:02:15Z", user: "System Engine", action: "approvals.workflow.post", table: "approval_requests", ip: "localhost" }
-            ];
-          }
+          data = mapped;
         } catch (e) {
           console.error("AUDIT_LOGS_QUERY_ERROR:", e);
-          data = [
-            { id: "aud1", date: "2026-06-12T21:40:22Z", user: "Julfer Admin", action: "users.create.api", table: "profiles", ip: "72.60.209.121" },
-            { id: "aud2", date: "2026-06-12T20:15:44Z", user: "Jan Ali", action: "roznamcha.create.api", table: "roznamcha_entries", ip: "39.40.15.22" }
-          ];
+          data = [];
         }
 
         summary = {
@@ -569,21 +466,10 @@ export async function GET(request: NextRequest) {
             decidedAt: row.decided_at || "-"
           }));
 
-          if (mapped.length > 0) {
-            data = mapped;
-          } else {
-            data = [
-              { id: "apv1", requestNo: "REQ-0021", action: "daily_usd_rates.create", status: "approved", table: "daily_usd_rates", requester: "Jan Ali", requestedAt: "2026-06-12T10:15:00Z", decidedAt: "2026-06-12T10:30:00Z" },
-              { id: "apv2", requestNo: "REQ-0022", action: "roznamcha.post", status: "pending", table: "roznamcha_entries", requester: "Sayed Akbar", requestedAt: "2026-06-12T20:45:00Z", decidedAt: "-" },
-              { id: "apv3", requestNo: "REQ-0019", action: "city_branches.create", status: "approved", table: "city_branches", requester: "Ahmad Shah", requestedAt: "2026-06-11T12:00:00Z", decidedAt: "2026-06-11T14:15:00Z" }
-            ];
-          }
+          data = mapped;
         } catch (e) {
           console.error("APPROVAL_WORKFLOWS_QUERY_ERROR:", e);
-          data = [
-            { id: "apv1", requestNo: "REQ-0021", action: "daily_usd_rates.create", status: "approved", table: "daily_usd_rates", requester: "Jan Ali", requestedAt: "2026-06-12T10:15:00Z", decidedAt: "2026-06-12T10:30:00Z" },
-            { id: "apv2", requestNo: "REQ-0022", action: "roznamcha.post", status: "pending", table: "roznamcha_entries", requester: "Sayed Akbar", requestedAt: "2026-06-12T20:45:00Z", decidedAt: "-" }
-          ];
+          data = [];
         }
 
         summary = {
@@ -624,22 +510,10 @@ export async function GET(request: NextRequest) {
               };
             });
 
-          if (expenses.length > 0) {
-            data = expenses;
-          } else {
-            data = [
-              { id: "e1", date: "2026-06-12", amount: 15000, currency: "PKR", amountUSD: 54, description: "Fuel for office standby generator", branch: "Quetta City Branch", company: "Damaan Trading Pakistan", user: "Ahmad Shah" },
-              { id: "e2", date: "2026-06-10", amount: 1200, currency: "AED", amountUSD: 324, description: "High-speed internet annual subscription", branch: "Dubai Corporate Center", company: "Damaan Logistics LLC", user: "Julfer Admin" },
-              { id: "e3", date: "2026-06-05", amount: 45000, currency: "AFN", amountUSD: 630, description: "Kabul warehouse security services payment", branch: "Kabul Transit Station", company: "KBL Dry Fruits Transit", user: "Sayed Akbar" },
-              { id: "e4", date: "2026-06-01", amount: 180000, currency: "PKR", amountUSD: 642, description: "Monthly utilities & office rent Islamabad HQ", branch: "Islamabad Main HQ", company: "Damaan Trading Pakistan", user: "Jan Ali" }
-            ];
-          }
+          data = expenses;
         } catch (e) {
           console.error("EXPENSES_QUERY_ERROR:", e);
-          data = [
-            { id: "e1", date: "2026-06-12", amount: 15000, currency: "PKR", amountUSD: 54, description: "Fuel for office standby generator", branch: "Quetta City Branch", company: "Damaan Trading Pakistan", user: "Ahmad Shah" },
-            { id: "e2", date: "2026-06-10", amount: 1200, currency: "AED", amountUSD: 324, description: "High-speed internet annual subscription", branch: "Dubai Corporate Center", company: "Damaan Logistics LLC", user: "Julfer Admin" }
-          ];
+          data = [];
         }
 
         const totalUSD = data.reduce((sum: number, r: any) => sum + r.amountUSD, 0);
@@ -743,21 +617,10 @@ export async function GET(request: NextRequest) {
             };
           });
 
-          if (mapped.length > 0) {
-            data = mapped;
-          } else {
-            data = [
-              { id: "pb1", bookingNo: "PO-2026-0001", date: "2026-06-12", branch: "Islamabad Main HQ", supplier: "Al-Futtaim Trading UAE", goods: "Almonds, Pistachios", qty: 25000, containers: 4, amount: 85000, currency: "USD", status: "active" },
-              { id: "pb2", bookingNo: "PO-2026-0002", date: "2026-06-11", branch: "Quetta City Branch", supplier: "KBL Dry Fruits Transit", goods: "Raisins", qty: 12000, containers: 2, amount: 32000, currency: "USD", status: "pending" },
-              { id: "pb3", bookingNo: "PO-2026-0003", date: "2026-06-09", branch: "Kabul Transit Station", supplier: "Ahmad Shah Logistics", goods: "Walnuts", qty: 18000, containers: 3, amount: 48000, currency: "USD", status: "active" }
-            ];
-          }
+          data = mapped;
         } catch (e) {
           console.error("PURCHASE_BOOKING_REGISTER_QUERY_ERROR:", e);
-          data = [
-            { id: "pb1", bookingNo: "PO-2026-0001", date: "2026-06-12", branch: "Islamabad Main HQ", supplier: "Al-Futtaim Trading UAE", goods: "Almonds, Pistachios", qty: 25000, containers: 4, amount: 85000, currency: "USD", status: "active" },
-            { id: "pb2", bookingNo: "PO-2026-0002", date: "2026-06-11", branch: "Quetta City Branch", supplier: "KBL Dry Fruits Transit", goods: "Raisins", qty: 12000, containers: 2, amount: 32000, currency: "USD", status: "pending" }
-          ];
+          data = [];
         }
 
         const totalContainers = data.reduce((sum: number, r: any) => sum + r.containers, 0);

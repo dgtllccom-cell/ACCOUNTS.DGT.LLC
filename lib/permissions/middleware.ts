@@ -111,8 +111,8 @@ export type ReportScope = {
  *   - auditor_viewer: restricted to assigned scope (country or branch)
  */
 export function resolveReportScope(session: ErpSession): ReportScope {
-  // Super Admin: global access
-  if (session.isSuperAdmin) {
+  // Super Admin and Super Admin Reports: global access
+  if (session.isSuperAdmin || session.roles?.includes("super_admin_reports")) {
     return {
       level: "global",
       countryId: null,
@@ -227,4 +227,3 @@ export function enforceScopeFilters(
     effectiveBranchId: scope.branchId
   };
 }
-
