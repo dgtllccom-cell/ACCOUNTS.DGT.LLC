@@ -14,7 +14,7 @@ import { localizeRecordNames } from "@/lib/i18n/localize-records";
  * so no duplicate UI/logic. Table: migration 20260730_warehouses_master.sql.
  */
 const COLS =
-  "id, country_id, state_province_id, district_id, city_id, area_id, owner_name, warehouse_code, warehouse_name, warehouse_type, full_address, contact_number, status, description, is_active, created_at, updated_at";
+  "id, country_id, state_province_id, district_id, city_id, area_id, owner_name, owner_person_id, responsible_person_id, warehouse_code, warehouse_name, warehouse_type, full_address, contact_number, status, description, is_active, created_at, updated_at";
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
     const rows = await withLocalPg(async (sql) => {
       return sql`
         select id, country_id, state_province_id, district_id, city_id, area_id, owner_name,
+               owner_person_id, responsible_person_id,
                warehouse_code, warehouse_name, warehouse_type, full_address, contact_number,
                status, description, is_active, created_at, updated_at
         from warehouses
@@ -67,6 +68,8 @@ export async function POST(req: Request) {
         city_id: body.city_id ?? null,
         area_id: body.area_id ?? null,
         owner_name: body.owner_name ? String(body.owner_name).trim() : null,
+        owner_person_id: body.owner_person_id || null,
+        responsible_person_id: body.responsible_person_id || null,
         warehouse_code: body.warehouse_code ? String(body.warehouse_code).trim() : null,
         warehouse_name: warehouseName,
         warehouse_type: body.warehouse_type ? String(body.warehouse_type).trim() : null,

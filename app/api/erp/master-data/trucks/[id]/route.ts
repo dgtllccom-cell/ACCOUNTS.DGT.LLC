@@ -5,7 +5,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
 
 const COLS =
-  "id, country_id, country_branch_id, city_branch_id, super_admin_serial, country_serial, branch_serial, entry_serial, truck_serial, truck_number, registration_number, registration_country_id, truck_type, make, model, manufacturing_year, color, chassis_number, engine_number, capacity, owner_name, owner_mobile, transport_company, driver_name, driver_mobile, driver_cnic_passport, registration_expiry_date, insurance_expiry_date, driver_docs_expiry_date, base_state_province_id, base_district_id, base_city_id, status, notes, is_active, created_at, updated_at";
+  "id, country_id, country_branch_id, city_branch_id, super_admin_serial, country_serial, branch_serial, entry_serial, truck_serial, truck_number, registration_number, registration_country_id, truck_type, make, model, manufacturing_year, color, chassis_number, engine_number, capacity, owner_name, owner_mobile, owner_person_id, transport_company, driver_name, driver_mobile, driver_cnic_passport, driver_person_id, registration_expiry_date, insurance_expiry_date, driver_docs_expiry_date, base_state_province_id, base_district_id, base_city_id, status, notes, is_active, created_at, updated_at";
 
 const TEXT = [
   "truck_serial", "truck_number", "registration_number", "truck_type", "make", "model",
@@ -31,6 +31,8 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     if (body.base_city_id !== undefined) patch.base_city_id = body.base_city_id ?? null;
     if (body.status !== undefined && ["active", "inactive", "suspended", "expired"].includes(body.status)) patch.status = body.status;
     if (body.is_active !== undefined) patch.is_active = Boolean(body.is_active);
+    if (body.owner_person_id !== undefined) patch.owner_person_id = body.owner_person_id || null;
+    if (body.driver_person_id !== undefined) patch.driver_person_id = body.driver_person_id || null;
 
     const supabase = createSupabaseAdminClient() as any;
     const { data, error } = await supabase.from("trucks").update(patch).eq("id", id).is("deleted_at", null).select(COLS).single();

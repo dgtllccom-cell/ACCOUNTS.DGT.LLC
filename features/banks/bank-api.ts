@@ -4,6 +4,9 @@ import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api/client";
 
 export type BankRecord = {
   id: string;
+  account_code?: string | null;
+  owner_person_id?: string | null;
+  owner_company_id?: string | null;
   bank_type: string;
   account_type: string;
   bank_name: string;
@@ -53,6 +56,8 @@ export async function getBankById(id: string) {
 }
 
 export async function createBank(data: {
+  ownerPersonId?: string | null;
+  ownerCompanyId?: string | null;
   bankType: string;
   accountType: string;
   bankName: string;
@@ -76,8 +81,10 @@ export async function createBank(data: {
   website?: string | null;
   remarks?: string | null;
 }) {
-  const res = await apiPost<{ bankId: string }>("/api/erp/banks", data);
-  return res.bankId;
+  // The route returns { bank }, not { bankId } — reading res.bankId here always
+  // produced undefined, silently breaking the picker's post-create selection.
+  const res = await apiPost<{ bank: BankRecord }>("/api/erp/banks", data);
+  return res.bank.id;
 }
 
 export async function updateBank(id: string, data: Partial<Parameters<typeof createBank>[0]>) {

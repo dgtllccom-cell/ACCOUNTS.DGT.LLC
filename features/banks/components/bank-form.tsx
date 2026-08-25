@@ -22,6 +22,8 @@ import {
 import { createBank, type BankRecord } from "@/features/banks/bank-api";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { PersonPicker } from "@/components/erp/person-picker";
+import { CompanyPicker } from "@/features/companies/components/company-picker";
 
 const DEFAULT_BANK_TYPES = [
   "Customer Account",
@@ -178,6 +180,9 @@ export function BankForm({
     districtId: "",
     cityId: ""
   });
+  const [ownerType, setOwnerType] = useState<"person" | "company" | "none">("none");
+  const [ownerPersonId, setOwnerPersonId] = useState("");
+  const [ownerCompanyId, setOwnerCompanyId] = useState("");
   const [saving, setSaving] = useState(false);
   const [savedBank, setSavedBank] = useState<BankRecord | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -247,6 +252,8 @@ export function BankForm({
     try {
       const computedBranchName = `${form.branchCodeType} - ${form.branchCode}`;
       const bankId = await createBank({
+        ownerPersonId: ownerType === "person" ? ownerPersonId || null : null,
+        ownerCompanyId: ownerType === "company" ? ownerCompanyId || null : null,
         bankType: form.bankType,
         accountType: form.accountType,
         bankName: form.bankName,
@@ -273,6 +280,8 @@ export function BankForm({
 
       const saved: BankRecord = {
         id: bankId,
+        owner_person_id: ownerType === "person" ? ownerPersonId || null : null,
+        owner_company_id: ownerType === "company" ? ownerCompanyId || null : null,
         bank_type: form.bankType,
         account_type: form.accountType,
         bank_name: form.bankName,
@@ -396,6 +405,42 @@ export function BankForm({
             <div className="flex items-center gap-2 border-b pb-3">
               <Landmark className="h-4 w-4 text-primary" aria-hidden />
               <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">{tr("bank.section_bank_info", "Bank Information")}</h2>
+            </div>
+
+            {/* Account owner — Person Master or Company Master, or neither (legacy/unassigned) */}
+            <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
+              <Label className="text-xs font-semibold">{tr("bank.account_owner", "Account Owner")}</Label>
+              <div className="flex gap-2">
+                {(["none", "person", "company"] as const).map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => setOwnerType(opt)}
+                    className={`rounded-lg border px-3 py-1.5 text-xs font-bold transition ${
+                      ownerType === opt ? "border-primary bg-primary text-primary-foreground" : "border-input bg-background text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    {opt === "none" && tr("bank.owner_none", "Unassigned")}
+                    {opt === "person" && tr("bank.owner_individual", "Individual (Person)")}
+                    {opt === "company" && tr("bank.owner_firm", "Firm (Company)")}
+                  </button>
+                ))}
+              </div>
+              {ownerType === "person" && (
+                <PersonPicker
+                  label={tr("bank.owner_person_label", "Account Owner (Person)")}
+                  value={ownerPersonId}
+                  onValueChange={setOwnerPersonId}
+                  lang={lang}
+                />
+              )}
+              {ownerType === "company" && (
+                <CompanyPicker
+                  label={tr("bank.owner_company_label", "Account Owner (Company)")}
+                  value={ownerCompanyId}
+                  onValueChange={setOwnerCompanyId}
+                />
+              )}
             </div>
 
             <div className="grid gap-4 sm:grid-cols-3">

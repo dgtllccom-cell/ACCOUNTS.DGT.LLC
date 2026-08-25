@@ -5,7 +5,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 
 const COLS =
-  "id, country_id, state_province_id, district_id, city_id, area_id, owner_name, warehouse_code, warehouse_name, warehouse_type, full_address, contact_number, status, description, is_active, created_at, updated_at";
+  "id, country_id, state_province_id, district_id, city_id, area_id, owner_name, owner_person_id, responsible_person_id, warehouse_code, warehouse_name, warehouse_type, full_address, contact_number, status, description, is_active, created_at, updated_at";
 
 /** Warehouses master — update + soft-delete (secure-by-default). */
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
@@ -31,6 +31,8 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     if (body.city_id !== undefined) patch.city_id = body.city_id ?? null;
     if (body.area_id !== undefined) patch.area_id = body.area_id ?? null;
     if (body.is_active !== undefined) patch.is_active = Boolean(body.is_active);
+    if (body.owner_person_id !== undefined) patch.owner_person_id = body.owner_person_id || null;
+    if (body.responsible_person_id !== undefined) patch.responsible_person_id = body.responsible_person_id || null;
 
     const supabase = createSupabaseAdminClient() as any;
     const { data, error } = await supabase

@@ -11,6 +11,7 @@ import { TruckAttachments } from "@/features/clearing-agent/components/truck-att
 import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { CompanyPicker } from "@/features/companies/components/company-picker";
 
 type Loading = {
   id: string;
@@ -69,6 +70,7 @@ const EMPTY: any = {
   bookingNo: "",
   bookingCompanyType: "Shipping Line",
   bookingCompanyName: "",
+  booking_company_id: "",
   bookingName: "",
   bookingDate: new Date().toISOString().slice(0, 10),
   vesselName: "",
@@ -133,6 +135,28 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
     } catch (e: any) { setError(e.message); } finally { setLoading(false); }
   }
   useEffect(() => { load(); }, []);
+
+  // Resolve the Company Master name for display in the live summary panel — the
+  // form only stores booking_company_id now, no free-text company name is typed.
+  useEffect(() => {
+    if (!form.booking_company_id) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/erp/companies/${encodeURIComponent(form.booking_company_id)}`).then((r) => r.json());
+        if (cancelled) return;
+        const company = res?.data?.company ?? res?.company;
+        if (company?.name) {
+          setForm((prev: any) => ({ ...prev, bookingCompanyName: company.name }));
+        }
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [form.booking_company_id]);
 
   const filtered = useMemo(() => {
     let result = rows;
@@ -517,12 +541,10 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "tl.company_name_label")}</label>
-                        <input
-                          type="text"
-                          value={form.bookingCompanyName || "DGT Logistics"}
-                          onChange={e => setForm({ ...form, bookingCompanyName: e.target.value })}
-                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold dark:border-slate-800 dark:bg-slate-900"
+                        <CompanyPicker
+                          label={t(lang, "tl.company_name_label", "Booking Company")}
+                          value={form.booking_company_id || ""}
+                          onValueChange={(companyId) => setForm({ ...form, booking_company_id: companyId })}
                         />
                       </div>
                     </div>

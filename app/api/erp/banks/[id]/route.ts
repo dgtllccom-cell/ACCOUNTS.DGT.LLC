@@ -7,6 +7,9 @@ import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 
 type BankRow = {
   id: string;
+  account_code: string | null;
+  owner_person_id: string | null;
+  owner_company_id: string | null;
   bank_type: string;
   account_type: string;
   bank_name: string;
@@ -37,6 +40,9 @@ type BankRow = {
 
 type LegacyBankRecord = {
   id: string;
+  account_code: string | null;
+  owner_person_id: string | null;
+  owner_company_id: string | null;
   bank_code: string | null;
   bank_name: string;
   branch_name: string | null;
@@ -55,6 +61,9 @@ type LegacyBankRecord = {
 function mapBank(row: BankRow): LegacyBankRecord {
   return {
     id: row.id,
+    account_code: row.account_code ?? null,
+    owner_person_id: row.owner_person_id ?? null,
+    owner_company_id: row.owner_company_id ?? null,
     bank_code: row.branch_code ?? null,
     bank_name: row.bank_name,
     branch_name: row.branch_name ?? null,
@@ -76,6 +85,9 @@ async function getBankById(id: string): Promise<LegacyBankRecord | null> {
     const rows = await sql<BankRow[]>`
       SELECT
         b.id,
+        b.account_code,
+        b.owner_person_id,
+        b.owner_company_id,
         b.bank_type,
         b.account_type,
         b.bank_name,
@@ -146,6 +158,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const bank = await withLocalPg(async (sql) => {
       await sql`
         UPDATE public.banks SET
+          owner_person_id = COALESCE(${body.ownerPersonId !== undefined ? (body.ownerPersonId || null) : null}::uuid, owner_person_id),
+          owner_company_id = COALESCE(${body.ownerCompanyId !== undefined ? (body.ownerCompanyId || null) : null}::uuid, owner_company_id),
           bank_name = COALESCE(${body.bankName ?? null}, bank_name),
           branch_name = COALESCE(${body.branchName ?? null}, branch_name),
           branch_code = COALESCE(${body.bankCode ?? null}, branch_code),

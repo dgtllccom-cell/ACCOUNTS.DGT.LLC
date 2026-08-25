@@ -6,6 +6,9 @@ import { searchRecordIdsByTranslation } from "@/lib/i18n/localize-records";
 
 export type BankRow = {
   id: string;
+  account_code: string | null;
+  owner_person_id: string | null;
+  owner_company_id: string | null;
   bank_type: string;
   account_type: string;
   bank_name: string;
@@ -34,7 +37,7 @@ export type BankRow = {
 };
 
 const BANK_COLUMNS =
-  "id, bank_type, account_type, bank_name, branch_name, branch_code, branch_code_type, short_name, account_title, account_number, iban_number, currency, account_status, country_id, state_province_id, district_id, city_id, full_address, phone, email, swift_bic, website, remarks, is_active, created_at, updated_at";
+  "id, account_code, owner_person_id, owner_company_id, bank_type, account_type, bank_name, branch_name, branch_code, branch_code_type, short_name, account_title, account_number, iban_number, currency, account_status, country_id, state_province_id, district_id, city_id, full_address, phone, email, swift_bic, website, remarks, is_active, created_at, updated_at";
 
 function cleanQuery(value: string) {
   return value.trim().replace(/\s+/g, " ");
@@ -125,6 +128,8 @@ export class BanksRepository {
   }
 
   async create(input: {
+    ownerPersonId?: string | null;
+    ownerCompanyId?: string | null;
     bankType: string;
     accountType: string;
     bankName: string;
@@ -150,6 +155,8 @@ export class BanksRepository {
     originalLanguage?: string;
   }, actorId?: string | null) {
     const insertRow = {
+      owner_person_id: input.ownerPersonId || null,
+      owner_company_id: input.ownerCompanyId || null,
       bank_type: input.bankType || "Commercial Bank",
       account_type: input.accountType || "Current Account",
       bank_name: input.bankName?.trim() || "Bank",
@@ -216,10 +223,33 @@ export class BanksRepository {
       }
     } catch { /* non-fatal */ }
 
+    // Bank Account Master identity code (ACC-000001 style) — a single global
+    // sequence, same direct next_entity_serial() pattern as customers.person_code
+    // and companies.company_code, distinct from the 4-scope allocateFormSerials()
+    // call above (that one is for transactional country/branch numbering).
+    try {
+      const code = await withLocalPg(async (sql) => {
+        const [row] = await sql`SELECT next_entity_serial('global', 'GLOBAL', 'bank_account', 'ACC') AS code`;
+        return row?.code as string | undefined;
+      });
+      if (code) {
+        const viaPgCode = await withLocalPg(async (sql) => {
+          await sql`UPDATE public.banks SET account_code = ${code} WHERE id = ${bankId}::uuid AND account_code IS NULL`;
+          return true;
+        });
+        if (!viaPgCode) {
+          const supabase = createSupabaseAdminClient() as any;
+          await supabase.from("banks").update({ account_code: code }).eq("id", bankId);
+        }
+      }
+    } catch { /* non-fatal */ }
+
     return bankId;
   }
 
   async update(id: string, input: Partial<{
+    ownerPersonId: string | null;
+    ownerCompanyId: string | null;
     bankType: string;
     accountType: string;
     bankName: string;
@@ -246,6 +276,8 @@ export class BanksRepository {
     originalLanguage: string;
   }>, actorId?: string | null) {
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if ("ownerPersonId" in input) patch.owner_person_id = input.ownerPersonId;
+    if ("ownerCompanyId" in input) patch.owner_company_id = input.ownerCompanyId;
     if ("bankType" in input) patch.bank_type = input.bankType;
     if ("accountType" in input) patch.account_type = input.accountType;
     if ("bankName" in input) patch.bank_name = input.bankName;

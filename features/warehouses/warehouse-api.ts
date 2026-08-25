@@ -8,7 +8,8 @@ export type WarehouseRecord = {
   id: string;
   warehouse_name: string;
   owner_name: string;
-  owner_customer_id?: string | null;
+  owner_person_id?: string | null;
+  responsible_person_id?: string | null;
   warehouse_type: string;
   country_id: string | null;
   country_name?: string | null;

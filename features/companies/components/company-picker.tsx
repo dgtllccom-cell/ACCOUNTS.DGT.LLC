@@ -9,10 +9,13 @@ import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteratio
 
 export type CompanyRow = {
   id: string;
+  company_code?: string | null;
   name: string;
   legal_name: string | null;
   base_currency: string;
   owner_name?: string | null;
+  owner_person_id?: string | null;
+  manager_person_id?: string | null;
   business_type?: string | null;
   country_id?: string | null;
   state_province_id?: string | null;
@@ -115,9 +118,17 @@ export function CompanyPicker({
   const [viewCompany, setViewCompany] = useState<CompanyRow | null>(null);
   const [editCompanyId, setEditCompanyId] = useState<string | null>(null);
 
-  // Find all companies owned by the same owner when viewing a company
+  // Find all companies owned by the same owner when viewing a company. FK-first
+  // (owner_person_id, set by PersonPicker in company-incorporation-form.tsx since
+  // Phase 1) — fuzzy owner_name matching is only a fallback for legacy companies
+  // registered before that FK existed.
   const ownerCompanies = useMemo(() => {
-    if (!viewCompany || !viewCompany.owner_name) return [viewCompany].filter(Boolean) as CompanyRow[];
+    if (!viewCompany) return [];
+    if (viewCompany.owner_person_id) {
+      const matches = companies.filter((c) => c.owner_person_id === viewCompany.owner_person_id);
+      return matches.length > 0 ? matches : [viewCompany];
+    }
+    if (!viewCompany.owner_name) return [viewCompany];
     const ownerNameNorm = viewCompany.owner_name.trim().toLowerCase();
     const matches = companies.filter(
       (c) => c.owner_name && c.owner_name.trim().toLowerCase() === ownerNameNorm

@@ -102,8 +102,9 @@ export function WarehouseForm({
   const [saving, setSaving] = useState(false);
   const [savedWarehouse, setSavedWarehouse] = useState<WarehouseRecord | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [ownerCustomerId, setOwnerCustomerId] = useState("");
+  const [ownerPersonId, setOwnerPersonId] = useState("");
   const [ownerDetails, setOwnerDetails] = useState<any | null>(null);
+  const [responsiblePersonId, setResponsiblePersonId] = useState("");
 
   function set(field: keyof WarehouseFormState, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -115,8 +116,9 @@ export function WarehouseForm({
       setLocation({ countryId: "", stateProvinceId: "", districtId: "", cityId: "", areaId: "" });
       setSavedWarehouse(null);
       setMessage(null);
-      setOwnerCustomerId("");
+      setOwnerPersonId("");
       setOwnerDetails(null);
+      setResponsiblePersonId("");
       setCurrentStep(1);
       return;
     }
@@ -152,12 +154,13 @@ export function WarehouseForm({
       areaId: initialWarehouse.area_id || ""
     });
     setSavedWarehouse(initialWarehouse);
-    setOwnerCustomerId(initialWarehouse.owner_customer_id || "");
+    setOwnerPersonId(initialWarehouse.owner_person_id || "");
+    setResponsiblePersonId(initialWarehouse.responsible_person_id || "");
     setCurrentStep(1);
   }, [initialWarehouse]);
 
   useEffect(() => {
-    if (!ownerCustomerId) {
+    if (!ownerPersonId) {
       setOwnerDetails(null);
       return;
     }
@@ -165,7 +168,7 @@ export function WarehouseForm({
     let cancelled = false;
     (async () => {
       try {
-        const res = await apiGet<{ customer: any }>(`/api/erp/customers/${encodeURIComponent(ownerCustomerId)}`);
+        const res = await apiGet<{ customer: any }>(`/api/erp/customers/${encodeURIComponent(ownerPersonId)}`);
         if (cancelled) return;
         const customer = res.customer;
         setOwnerDetails(customer || null);
@@ -180,7 +183,7 @@ export function WarehouseForm({
     return () => {
       cancelled = true;
     };
-  }, [ownerCustomerId]);
+  }, [ownerPersonId]);
 
   function handleLocationChange(next: LocationHierarchyValue, meta: LocationHierarchyMeta) {
     setLocation(next);
@@ -219,7 +222,8 @@ export function WarehouseForm({
       const payload = {
         warehouse_name: form.warehouseName,
         owner_name: form.ownerName || "",
-        owner_customer_id: ownerCustomerId || null,
+        owner_person_id: ownerPersonId || null,
+        responsible_person_id: responsiblePersonId || null,
         warehouse_type: form.warehouseType,
         country_id: form.countryId || null,
         state_province_id: form.stateProvinceId || null,
@@ -240,7 +244,8 @@ export function WarehouseForm({
         warehouseId = await createWarehouse(payload as any);
         saved = {
           id: warehouseId,
-          owner_customer_id: ownerCustomerId || null,
+          owner_person_id: ownerPersonId || null,
+          responsible_person_id: responsiblePersonId || null,
           warehouse_name: form.warehouseName,
           owner_name: form.ownerName,
           warehouse_type: form.warehouseType,
@@ -259,7 +264,8 @@ export function WarehouseForm({
 
       const normalizedSaved: WarehouseRecord = {
         ...saved,
-        owner_customer_id: ownerCustomerId || saved.owner_customer_id || null,
+        owner_person_id: ownerPersonId || saved.owner_person_id || null,
+        responsible_person_id: responsiblePersonId || saved.responsible_person_id || null,
         warehouse_name: form.warehouseName,
         owner_name: form.ownerName,
       };
@@ -278,7 +284,7 @@ export function WarehouseForm({
     setLocation({ countryId: "", stateProvinceId: "", districtId: "", cityId: "", areaId: "" });
     setSavedWarehouse(null);
     setMessage(null);
-    setOwnerCustomerId("");
+    setOwnerPersonId("");
     setOwnerDetails(null);
     setCurrentStep(1);
   }
@@ -386,12 +392,23 @@ export function WarehouseForm({
                   <Label className="text-xs font-semibold">{t(lang, "whf.warehouse_owner")}</Label>
                   <CustomerPicker
                     label=""
-                    value={ownerCustomerId}
-                    onValueChange={(customerId) => setOwnerCustomerId(customerId)}
+                    value={ownerPersonId}
+                    onValueChange={(customerId) => setOwnerPersonId(customerId)}
                     countryId={form.countryId || null}
                     placeholder={t(lang, "wh.wf_search_owner_customer_person", "Search owner from Customer / Person Master")}
                   />
                   <p className="text-[10px] text-muted-foreground">Select an existing shared customer/person/business owner or create one from the same master form.</p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold">{t(lang, "whf.warehouse_responsible_person", "Responsible Person / Manager")}</Label>
+                  <CustomerPicker
+                    label=""
+                    value={responsiblePersonId}
+                    onValueChange={(customerId) => setResponsiblePersonId(customerId)}
+                    countryId={form.countryId || null}
+                    placeholder={t(lang, "wh.wf_search_responsible_person", "Search responsible person from Person Master")}
+                  />
                 </div>
 
                 <div className="space-y-1.5">

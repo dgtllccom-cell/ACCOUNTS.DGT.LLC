@@ -7,6 +7,9 @@ import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 
 type BankRow = {
   id: string;
+  account_code: string | null;
+  owner_person_id: string | null;
+  owner_company_id: string | null;
   bank_type: string;
   account_type: string;
   bank_name: string;
@@ -37,6 +40,9 @@ type BankRow = {
 
 type LegacyBankRecord = {
   id: string;
+  account_code: string | null;
+  owner_person_id: string | null;
+  owner_company_id: string | null;
   bank_code: string | null;
   bank_name: string;
   branch_name: string | null;
@@ -55,6 +61,9 @@ type LegacyBankRecord = {
 function mapBank(row: BankRow): LegacyBankRecord {
   return {
     id: row.id,
+    account_code: row.account_code ?? null,
+    owner_person_id: row.owner_person_id ?? null,
+    owner_company_id: row.owner_company_id ?? null,
     bank_code: row.branch_code ?? null,
     bank_name: row.bank_name,
     branch_name: row.branch_name ?? null,
@@ -76,6 +85,9 @@ async function loadBanks(): Promise<LegacyBankRecord[]> {
     const rows = await sql<BankRow[]>`
       SELECT
         b.id,
+        b.account_code,
+        b.owner_person_id,
+        b.owner_company_id,
         b.bank_type,
         b.account_type,
         b.bank_name,
@@ -118,6 +130,9 @@ async function getBankById(id: string): Promise<LegacyBankRecord | null> {
     const rows = await sql<BankRow[]>`
       SELECT
         b.id,
+        b.account_code,
+        b.owner_person_id,
+        b.owner_company_id,
         b.bank_type,
         b.account_type,
         b.bank_name,
@@ -220,11 +235,14 @@ export async function POST(request: NextRequest) {
     const bank = await withLocalPg(async (sql) => {
       const rows = await sql<BankRow[]>`
         INSERT INTO public.banks (
+          owner_person_id, owner_company_id,
           bank_type, account_type, bank_name, branch_name, branch_code, branch_code_type,
           short_name, account_title, account_number, iban_number, currency, account_status,
           country_id, state_province_id, district_id, city_id, full_address, phone, email,
           swift_bic, website, remarks, is_active, created_at, updated_at
         ) VALUES (
+          ${body.ownerPersonId || null}::uuid,
+          ${body.ownerCompanyId || null}::uuid,
           ${body.bankType || "Customer Account"},
           ${body.accountType || "Business Account"},
           ${bankName},
@@ -252,13 +270,28 @@ export async function POST(request: NextRequest) {
           ${new Date().toISOString()}
         )
         RETURNING
-          id, bank_type, account_type, bank_name, branch_name, branch_code, branch_code_type, short_name,
+          id, account_code, owner_person_id, owner_company_id, bank_type, account_type, bank_name, branch_name, branch_code, branch_code_type, short_name,
           account_title, account_number, iban_number, currency, account_status, country_id, state_province_id,
           district_id, city_id, full_address, phone, email, swift_bic, website, remarks, is_active, created_at, updated_at,
           NULL::text AS country_name
       `;
       return mapBank(rows[0] as unknown as BankRow);
     });
+
+    // Bank Account Master identity code (ACC-000001 style) — same direct
+    // next_entity_serial() pattern as customers.person_code/companies.company_code.
+    if (bank?.id) {
+      try {
+        await withLocalPg(async (sql) => {
+          const [row] = await sql`SELECT next_entity_serial('global', 'GLOBAL', 'bank_account', 'ACC') AS code`;
+          if (row?.code) {
+            await sql`UPDATE public.banks SET account_code = ${row.code} WHERE id = ${bank.id}::uuid AND account_code IS NULL`;
+            bank.account_code = row.code as string;
+          }
+          return true;
+        });
+      } catch { /* non-fatal */ }
+    }
 
     // Register the bank's names in all 5 languages (honest engine; fire-and-forget).
     if (bank?.id) {

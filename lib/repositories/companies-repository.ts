@@ -37,6 +37,7 @@ export type CompanyRegistration = {
 
 export type CompanyRow = {
   id: string;
+  company_code: string | null;
   name: string;
   legal_name: string | null;
   base_currency: string;
@@ -92,6 +93,7 @@ export type CompanyWriteInput = {
 
 const COMPANY_SELECT = [
   "id",
+  "company_code",
   "name",
   "legal_name",
   "base_currency",
@@ -147,6 +149,7 @@ function parseJsonField(val: any) {
 function mapRawRow(r: any): CompanyRow {
   return {
     id: r.id,
+    company_code: r.company_code ?? null,
     name: r.name,
     legal_name: r.legal_name ?? null,
     base_currency: r.base_currency ?? "USD",
@@ -328,7 +331,17 @@ export class CompaniesRepository {
           RETURNING id
         `;
         if (rows && rows[0]?.id) {
-          return rows[0].id as string;
+          const createdId = rows[0].id as string;
+          // Company Master identity code (COMP-000001 style) — a single global
+          // sequence, same direct next_entity_serial() pattern as
+          // customers.person_code (see customers-repository.ts create()).
+          try {
+            const [row] = await localSql`SELECT next_entity_serial('global', 'GLOBAL', 'company', 'COMP') AS code`;
+            if (row?.code) {
+              await localSql`UPDATE public.companies SET company_code = ${row.code} WHERE id = ${createdId}::uuid AND company_code IS NULL`;
+            }
+          } catch { /* non-fatal */ }
+          return createdId;
         }
       } catch (err) {
         console.error("Direct postgres create error:", err);

@@ -1832,6 +1832,7 @@ export function CashEntryForm({
           mobileNumber: typeDetails.mobileNumber ?? null,
           whatsappNumber: typeDetails.whatsappNumber ?? null,
           idCardCopyName: typeDetails.idCardCopyName ?? null,
+          bankId: typeDetails.bankId ?? null,
           bankName: typeDetails.bankName ?? null,
           bankAccount: typeDetails.bankAccount ?? null,
           transferReferenceNumber: typeDetails.transferReferenceNumber ?? typeDetails.refNo ?? typeDetails.ref ?? null,
@@ -2654,30 +2655,24 @@ export function CashEntryForm({
                       {paymentType === "bank" && (
                         <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
                           <div className="space-y-1.5">
-                            <Label className="text-[10px] font-black uppercase text-slate-500">{t(lang, "bank.bank_name", "Bank Name")}</Label>
-                            <select
-                              className="h-8 w-full rounded-md border border-input bg-background px-2 text-[11px] font-semibold outline-none"
-                              value={typeDetails.bankName || ""}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                if (val === "__new_bank__") {
-                                  openAddOption("bank");
-                                } else {
-                                  setTypeDetails((prev) => ({ ...prev, bankName: val }));
+                            <BankPicker
+                              label={t(lang, "bank.bank_name", "Bank Name")}
+                              value={typeDetails.bankId || ""}
+                              onValueChange={async (bankId) => {
+                                setTypeDetails((prev) => ({ ...prev, bankId }));
+                                if (!bankId) return;
+                                try {
+                                  const bank = await getBankById(bankId);
+                                  setTypeDetails((prev) => ({
+                                    ...prev,
+                                    bankName: bank?.bank_name || prev.bankName,
+                                    bankAccount: bank?.account_number || prev.bankAccount
+                                  }));
+                                } catch {
+                                  // ignore
                                 }
                               }}
-                            >
-                              <option value="">{t(lang, "roz.cef_select_bank", "Select Bank")}</option>
-                              {selectedCountry?.iso2 === "AE" && ["Dubai Islamic Bank", "Emirates NBD", "ADCB", "Mashreq Bank", "FAB"].map((bank) => <option key={bank} value={bank}>{bank}</option>)}
-                              {selectedCountry?.iso2 === "PK" && ["HBL", "MCB", "UBL", "Meezan", "Bank Alfalah"].map((bank) => <option key={bank} value={bank}>{bank}</option>)}
-                              {selectedCountry?.iso2 === "IN" && ["State Bank of India", "HDFC", "ICICI", "Axis Bank"].map((bank) => <option key={bank} value={bank}>{bank}</option>)}
-                              {selectedCountry?.iso2 === "AF" && ["Da Afghanistan Bank", "Azizi Bank", "Kabul Bank", "AIB"].map((bank) => <option key={bank} value={bank}>{bank}</option>)}
-                              {(!selectedCountry?.iso2 || !["AE", "PK", "IN", "AF"].includes(selectedCountry.iso2)) && ["Central Bank", "Commercial Bank", "National Bank"].map((bank) => <option key={bank} value={bank}>{bank}</option>)}
-                              {savedBanks.map((bank, index) => (
-                                <option key={`${bank.name}-${index}`} value={bank.name}>{bank.name}</option>
-                              ))}
-                              <option value="__new_bank__" className="text-blue-700 font-bold">+ New Bank</option>
-                            </select>
+                            />
                           </div>
 
                           <div className="space-y-1.5">

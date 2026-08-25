@@ -3,6 +3,8 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { writeRecordChangeHistory } from "@/lib/api/record-change-history";
 
 export type BankInput = {
+  ownerPersonId?: string | null;
+  ownerCompanyId?: string | null;
   bankType: string;
   accountType: string;
   bankName: string;

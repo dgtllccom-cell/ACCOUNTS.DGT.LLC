@@ -434,6 +434,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
         fuel_type: formData.fuelType,
         purchase_date: formData.purchaseDate || null,
 
+        owner_person_id: selectedOwnerId || null,
         owner_name: formData.ownerName.en || formData.ownerName.ur || "Owner Name",
         owner_name_en: formData.ownerName.en,
         owner_name_ur: formData.ownerName.ur,
@@ -445,6 +446,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
         owner_address: formData.ownerAddress,
         transport_company: formData.transportCompany.en || formData.transportCompany.ur,
 
+        driver_person_id: selectedDriverId || null,
         driver_name: formData.driverName.en || formData.driverName.ur || "Driver Name",
         driver_name_en: formData.driverName.en,
         driver_name_ur: formData.driverName.ur,

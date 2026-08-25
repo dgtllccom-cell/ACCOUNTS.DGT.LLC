@@ -588,6 +588,11 @@ async function postRoznamchaWithErpSessionPg(sql: any, input: {
     | "transfer"
     | null;
 
+  // Bank Master FK — the Cash Entry form's bank payment branch sends this
+  // as body.paymentDetails.bankId once a real bank is selected via
+  // BankPicker (see features/roznamcha/components/cash-entry-form.tsx).
+  const bankId = (body as any).bankId ?? (body.paymentDetails as any)?.bankId ?? null;
+
   const entryRows = await sql`
     insert into public.roznamcha_entries (
       type, country_id, country_branch_id, city_branch_id, journal_no, voucher_no, entry_date,
@@ -595,7 +600,7 @@ async function postRoznamchaWithErpSessionPg(sql: any, input: {
       super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number,
       main_branch_transaction_serial, city_branch_transaction_serial, entry_serial_number,
       source_module, source_transaction_type, source_transaction_id, source_reference_no,
-      entry_category, posted_at
+      entry_category, bank_id, posted_at
     ) values (
       ${body.type}, ${body.countryId ?? null}, ${body.countryBranchId ?? null}, ${body.cityBranchId ?? null},
       ${body.journalNo}, ${body.voucherNo}, ${body.entryDate}, ${body.paymentMethodId ?? null},
@@ -604,7 +609,7 @@ async function postRoznamchaWithErpSessionPg(sql: any, input: {
       ${transactionSerials.branchTransactionSerialNumber}, ${transactionSerials.mainBranchTransactionSerialNumber},
       ${transactionSerials.cityBranchTransactionSerialNumber}, ${transactionSerials.entrySerialNumber},
       ${body.sourceModule ?? null}, ${body.sourceTransactionType ?? null}, ${body.sourceTransactionId ?? null},
-      ${body.sourceReferenceNo ?? null}, ${entryCategory}, now()
+      ${body.sourceReferenceNo ?? null}, ${entryCategory}, ${bankId}, now()
     )
     returning id
   `;
