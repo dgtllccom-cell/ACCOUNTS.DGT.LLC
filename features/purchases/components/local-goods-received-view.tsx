@@ -51,6 +51,7 @@ export function LocalGoodsReceivedView({
   cityBranches,
 }: LocalGoodsReceivedViewProps) {
   const lang = useActiveLanguage();
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const [purchases, setPurchases] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -236,7 +237,7 @@ export function LocalGoodsReceivedView({
   }
 
   return (
-    <div className="w-full px-3 sm:px-6 py-4 space-y-4">
+    <div dir={isRtl ? "rtl" : "ltr"} className="w-full px-3 sm:px-6 py-4 space-y-4">
       
       {/* ── ERP Top Header Title Portal ── */}
       {titleSlot && createPortal(

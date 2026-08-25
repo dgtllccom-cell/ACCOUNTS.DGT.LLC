@@ -237,6 +237,7 @@ export function PurchaseModuleWorkspace({
   type?: PurchaseModuleType;
 }) {
   const lang = useActiveLanguage();
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const [orders, setOrders] = useState<PurchaseOrderRow[]>([]);
   const [query, setQuery] = useState("");
   const [countryFilter, setCountryFilter] = useState("");
@@ -337,7 +338,7 @@ export function PurchaseModuleWorkspace({
   }), [rows]);
 
   return (
-    <div className="w-full space-y-3 px-2 py-2 sm:px-4">
+    <div dir={isRtl ? "rtl" : "ltr"} className="w-full space-y-3 px-2 py-2 sm:px-4">
       <section className="rounded-xl border border-border bg-card px-3 py-2 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
