@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { normalizeDocumentSearch } from "@/lib/documents/document-filing";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,12 @@ export async function GET(request: NextRequest) {
     const countryId = searchParams.get("countryId");
     const mainBranchId = searchParams.get("mainBranchId");
     const cityBranchId = searchParams.get("cityBranchId");
+    const personAccountId = searchParams.get("personAccountId");
+    const personAccountCode = searchParams.get("personAccountCode");
+    const personAccountName = searchParams.get("personAccountName");
     const moduleType = searchParams.get("moduleType");
+    const documentType = searchParams.get("documentType");
+    const sourceRecordNo = searchParams.get("sourceRecordNo");
     const searchQuery = searchParams.get("search");
 
     // Root-cause bypass (see lib/db/local-postgres.ts): office_documents_scope_read
@@ -20,7 +26,7 @@ export async function GET(request: NextRequest) {
     // Supabase client below silently returns zero rows. Try a direct-Postgres read
     // first (bypasses RLS via DATABASE_URL); fall back to the Supabase-client path
     // only when DATABASE_URL isn't configured.
-    const safeSearch = searchQuery ? searchQuery.replace(/[%,]/g, "") : null;
+    const safeSearch = normalizeDocumentSearch(searchQuery);
     const viaPg = await withLocalPg(async (sql) => {
       return await sql`
         select *
@@ -29,11 +35,23 @@ export async function GET(request: NextRequest) {
           and (${countryId ? sql`country_id = ${countryId}` : sql`true`})
           and (${mainBranchId ? sql`country_branch_id = ${mainBranchId}` : sql`true`})
           and (${cityBranchId ? sql`city_branch_id = ${cityBranchId}` : sql`true`})
+          and (${personAccountId ? sql`person_account_id = ${personAccountId}` : sql`true`})
+          and (${personAccountCode ? sql`person_account_code = ${personAccountCode}` : sql`true`})
+          and (${personAccountName ? sql`person_account_name ilike ${"%" + personAccountName + "%"}` : sql`true`})
           and (${moduleType && moduleType !== "all" ? sql`module_type = ${moduleType}` : sql`true`})
+          and (${documentType ? sql`document_type = ${documentType}` : sql`true`})
+          and (${sourceRecordNo ? sql`source_record_no = ${sourceRecordNo}` : sql`true`})
           and (${safeSearch ? sql`(
                 title ilike ${"%" + safeSearch + "%"}
                 or file_name ilike ${"%" + safeSearch + "%"}
                 or category ilike ${"%" + safeSearch + "%"}
+                or document_type ilike ${"%" + safeSearch + "%"}
+                or module_type ilike ${"%" + safeSearch + "%"}
+                or person_account_code ilike ${"%" + safeSearch + "%"}
+                or person_account_name ilike ${"%" + safeSearch + "%"}
+                or source_record_no ilike ${"%" + safeSearch + "%"}
+                or storage_key ilike ${"%" + safeSearch + "%"}
+                or document_path ilike ${"%" + safeSearch + "%"}
               )` : sql`true`})
         order by created_at desc
       `;
@@ -53,9 +71,27 @@ export async function GET(request: NextRequest) {
     if (countryId) query = query.eq("country_id", countryId);
     if (mainBranchId) query = query.eq("country_branch_id", mainBranchId);
     if (cityBranchId) query = query.eq("city_branch_id", cityBranchId);
+    if (personAccountId) query = query.eq("person_account_id", personAccountId);
+    if (personAccountCode) query = query.eq("person_account_code", personAccountCode);
+    if (personAccountName) query = query.ilike("person_account_name", `%${personAccountName}%`);
     if (moduleType && moduleType !== "all") query = query.eq("module_type", moduleType);
+    if (documentType) query = query.eq("document_type", documentType);
+    if (sourceRecordNo) query = query.eq("source_record_no", sourceRecordNo);
     if (searchQuery) {
-      query = query.or(`title.ilike.%${searchQuery}%,file_name.ilike.%${searchQuery}%,category.ilike.%${searchQuery}%`);
+      query = query.or(
+        [
+          `title.ilike.%${searchQuery}%`,
+          `file_name.ilike.%${searchQuery}%`,
+          `category.ilike.%${searchQuery}%`,
+          `document_type.ilike.%${searchQuery}%`,
+          `module_type.ilike.%${searchQuery}%`,
+          `person_account_code.ilike.%${searchQuery}%`,
+          `person_account_name.ilike.%${searchQuery}%`,
+          `source_record_no.ilike.%${searchQuery}%`,
+          `storage_key.ilike.%${searchQuery}%`,
+          `document_path.ilike.%${searchQuery}%`
+        ].join(",")
+      );
     }
 
     const { data: docs, error } = await query;
@@ -86,10 +122,21 @@ export async function POST(request: NextRequest) {
       city_branch_id,
       city_branch_name,
       module_type = "Purchase Documents",
+      document_type = "Document",
+      source_module,
+      source_record_id,
+      source_record_no,
+      person_account_id,
+      person_account_code,
+      person_account_name,
+      document_path,
+      storage_key,
       category = "General",
       tags = [],
       metadata = {},
-      created_by = "Admin"
+      created_by = "Admin",
+      scanner_device_name = null,
+      scanner_bridge = null
     } = body;
 
     if (!title || !file_name || !file_url) {
@@ -104,13 +151,17 @@ export async function POST(request: NextRequest) {
         insert into public.office_documents (
           title, file_name, file_url, file_type, file_size,
           country_id, country_name, country_branch_id, main_branch_name,
-          city_branch_id, city_branch_name, module_type, category, tags, metadata,
-          scanned_at, created_by
+          city_branch_id, city_branch_name, module_type, document_type, source_module, source_record_id, source_record_no,
+          person_account_id, person_account_code, person_account_name,
+          document_path, storage_key, category, tags, metadata,
+          scanned_at, created_by, scanner_device_name, scanner_bridge
         ) values (
           ${title}, ${file_name}, ${file_url}, ${file_type}, ${file_size},
           ${country_id ?? null}, ${country_name ?? null}, ${country_branch_id ?? null}, ${main_branch_name ?? null},
-          ${city_branch_id ?? null}, ${city_branch_name ?? null}, ${module_type}, ${category}, ${sql.json(tags)}, ${sql.json(metadata)},
-          ${scannedAt}, ${created_by}
+          ${city_branch_id ?? null}, ${city_branch_name ?? null}, ${module_type}, ${document_type}, ${source_module ?? null}, ${source_record_id ?? null}, ${source_record_no ?? null},
+          ${person_account_id ?? null}, ${person_account_code ?? null}, ${person_account_name ?? null},
+          ${document_path ?? null}, ${storage_key ?? null}, ${category}, ${sql.json(tags)}, ${sql.json(metadata)},
+          ${scannedAt}, ${created_by}, ${scanner_device_name ?? null}, ${scanner_bridge ?? null}
         )
         returning *
       `;
@@ -137,11 +188,22 @@ export async function POST(request: NextRequest) {
         city_branch_id,
         city_branch_name,
         module_type,
+        document_type,
+        source_module,
+        source_record_id,
+        source_record_no,
+        person_account_id,
+        person_account_code,
+        person_account_name,
+        document_path,
+        storage_key,
         category,
         tags,
         metadata,
         scanned_at: scannedAt,
-        created_by
+        created_by,
+        scanner_device_name,
+        scanner_bridge
       })
       .select()
       .single();
@@ -156,7 +218,22 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
-    const { id, title, module_type, category, tags } = body;
+    const {
+      id,
+      title,
+      module_type,
+      document_type,
+      category,
+      tags,
+      person_account_id,
+      person_account_code,
+      person_account_name,
+      source_module,
+      source_record_id,
+      source_record_no,
+      document_path,
+      storage_key
+    } = body;
 
     if (!id) return NextResponse.json({ error: "Document ID required" }, { status: 400 });
 
@@ -170,7 +247,16 @@ export async function PATCH(request: NextRequest) {
         set updated_at = ${updatedAt},
             title = coalesce(${title ?? null}, title),
             module_type = coalesce(${module_type ?? null}, module_type),
+            document_type = coalesce(${document_type ?? null}, document_type),
             category = coalesce(${category ?? null}, category),
+            person_account_id = coalesce(${person_account_id ?? null}, person_account_id),
+            person_account_code = coalesce(${person_account_code ?? null}, person_account_code),
+            person_account_name = coalesce(${person_account_name ?? null}, person_account_name),
+            source_module = coalesce(${source_module ?? null}, source_module),
+            source_record_id = coalesce(${source_record_id ?? null}, source_record_id),
+            source_record_no = coalesce(${source_record_no ?? null}, source_record_no),
+            document_path = coalesce(${document_path ?? null}, document_path),
+            storage_key = coalesce(${storage_key ?? null}, storage_key),
             tags = coalesce(${tags !== undefined ? sql.json(tags) : null}, tags)
         where id = ${id}
         returning *
@@ -186,7 +272,16 @@ export async function PATCH(request: NextRequest) {
     const updates: Record<string, any> = { updated_at: updatedAt };
     if (title !== undefined) updates.title = title;
     if (module_type !== undefined) updates.module_type = module_type;
+    if (document_type !== undefined) updates.document_type = document_type;
     if (category !== undefined) updates.category = category;
+    if (person_account_id !== undefined) updates.person_account_id = person_account_id;
+    if (person_account_code !== undefined) updates.person_account_code = person_account_code;
+    if (person_account_name !== undefined) updates.person_account_name = person_account_name;
+    if (source_module !== undefined) updates.source_module = source_module;
+    if (source_record_id !== undefined) updates.source_record_id = source_record_id;
+    if (source_record_no !== undefined) updates.source_record_no = source_record_no;
+    if (document_path !== undefined) updates.document_path = document_path;
+    if (storage_key !== undefined) updates.storage_key = storage_key;
     if (tags !== undefined) updates.tags = tags;
 
     const { data: updatedDoc, error } = await admin

@@ -24,6 +24,8 @@ import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
+import { buildDocumentDestinationLabel, buildDocumentFileName, buildDocumentFolderPath } from "@/lib/documents/document-filing";
 
 interface OfficeDocument {
   id: string;
@@ -57,6 +59,22 @@ const MODULE_FOLDERS = [
   "Payment Documents",
   "Customs Documents",
   "Other Attachments"
+];
+
+const DOCUMENT_TYPES = [
+  "Document",
+  "Purchase",
+  "Sales",
+  "Invoice",
+  "Payment Receipt",
+  "Journal",
+  "Ledger",
+  "Shipping",
+  "Bill of Lading",
+  "Loading",
+  "Receiving",
+  "Customs",
+  "Attachment"
 ];
 
 const TRANSLATIONS: Record<string, Record<string, string>> = {
@@ -430,6 +448,15 @@ export function DocumentManager() {
   const [editingDoc, setEditingDoc] = useState<OfficeDocument | null>(null);
   const [editTitle, setEditTitle] = useState<string>("");
   const [editModule, setEditModule] = useState<string>("");
+  const [selectedDocumentType, setSelectedDocumentType] = useState<string>(DOCUMENT_TYPES[0]);
+  const [selectedAccountId, setSelectedAccountId] = useState<string>("");
+  const [selectedAccountCode, setSelectedAccountCode] = useState<string>("");
+  const [selectedAccountName, setSelectedAccountName] = useState<string>("");
+  const [selectedAccountOption, setSelectedAccountOption] = useState<SearchSelectOption | null>(null);
+  const [accountSearchQuery, setAccountSearchQuery] = useState<string>("");
+  const [accountOptions, setAccountOptions] = useState<SearchSelectOption[]>([]);
+  const [accountLookupLoading, setAccountLookupLoading] = useState<boolean>(false);
+  const accountLookupRef = useRef<Record<string, any>>({});
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -479,6 +506,77 @@ export function DocumentManager() {
     fetchDocs();
   }, [fetchDocs]);
 
+  useEffect(() => {
+    let cancelled = false;
+    const query = accountSearchQuery.trim();
+
+    if (!query) {
+      setAccountOptions(selectedAccountOption ? [selectedAccountOption] : []);
+      accountLookupRef.current = selectedAccountOption ? { [selectedAccountOption.value]: selectedAccountOption } : {};
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setAccountLookupLoading(true);
+      try {
+        const params = new URLSearchParams({ q: query, limit: "25" });
+        if (selectedCountryId) params.set("countryId", selectedCountryId);
+        if (selectedMainBranchId) params.set("countryBranchId", selectedMainBranchId);
+        if (selectedCityBranchId) params.set("cityBranchId", selectedCityBranchId);
+
+        const res = await apiGet<any>(`/api/erp/accounting/accounts/lookup?${params.toString()}`);
+        const account = res?.account;
+
+        if (cancelled) return;
+
+        const nextOptions: SearchSelectOption[] = [];
+        const nextLookup: Record<string, any> = {};
+
+        if (account) {
+          const accountCode = account.accountCode || account.rawAccountCode || account.manualReferenceNumber || account.ledgerCode || account.accountNumber || account.code || account.id;
+          const accountName = account.accountName || account.companyName || account.ledgerName || account.name || account.displayName || accountCode;
+          const label = [accountCode, accountName].filter(Boolean).join(" • ");
+
+          nextOptions.push({
+            value: account.id,
+            label,
+            keywords: [
+              accountCode,
+              accountName,
+              account.companyName,
+              account.ledgerName,
+              account.countryName,
+              account.countryBranchName,
+              account.cityBranchName
+            ]
+              .filter(Boolean)
+              .join(" ")
+          });
+          nextLookup[account.id] = { ...account, label, accountCode, accountName };
+        }
+
+        if (selectedAccountOption && !nextLookup[selectedAccountOption.value]) {
+          nextOptions.unshift(selectedAccountOption);
+          nextLookup[selectedAccountOption.value] = accountLookupRef.current[selectedAccountOption.value] ?? selectedAccountOption;
+        }
+
+        accountLookupRef.current = nextLookup;
+        setAccountOptions(nextOptions);
+      } catch (error) {
+        if (!cancelled) {
+          setAccountOptions(selectedAccountOption ? [selectedAccountOption] : []);
+        }
+      } finally {
+        if (!cancelled) setAccountLookupLoading(false);
+      }
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [accountSearchQuery, selectedCountryId, selectedMainBranchId, selectedCityBranchId, selectedAccountOption]);
+
   // Upload Document Handler
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
@@ -493,19 +591,56 @@ export function DocumentManager() {
       if (["doc", "docx"].includes(extension)) docType = "word";
       if (["xls", "xlsx", "csv"].includes(extension)) docType = "excel";
 
+      const moduleLabel = selectedModule === "all" ? "Purchase Documents" : selectedModule;
+      const destinationFileName = buildDocumentFileName({
+        personAccountCode: selectedAccountCode,
+        personAccountName: selectedAccountName,
+        moduleType: moduleLabel,
+        documentType: selectedDocumentType,
+        sourceRecordNo: searchQuery.trim() || file.name.replace(/\.[^/.]+$/, ""),
+        createdAt: new Date(),
+        extension: docType === "image" ? extension : docType === "word" ? "docx" : docType === "excel" ? "xlsx" : "pdf"
+      });
+      const destinationPath = buildDocumentFolderPath({
+        countryName: activeCountry?.name,
+        branchName: selectedCityBranchId || selectedMainBranchId ? (selectedCityBranchId ? "City Branch" : "Main Branch") : null,
+        personAccountCode: selectedAccountCode,
+        personAccountName: selectedAccountName,
+        moduleType: moduleLabel,
+        documentType: selectedDocumentType
+      });
+
       const payload = {
         title: file.name.replace(/\.[^/.]+$/, ""),
-        file_name: file.name,
+        file_name: destinationFileName,
         file_url: "/exports/DGT_Standard_Branch_Users.pdf",
         file_type: docType,
         file_size: file.size,
         country_id: selectedCountryId,
+        country_name: activeCountry?.name ?? null,
         country_branch_id: selectedMainBranchId || null,
+        main_branch_name: activeMainBranch?.name ?? null,
         city_branch_id: selectedCityBranchId || null,
+        city_branch_name: activeCityBranch?.name ?? null,
         module_type: selectedModule === "all" ? "Purchase Documents" : selectedModule,
+        document_type: selectedDocumentType,
+        source_module: moduleLabel,
+        source_record_no: searchQuery.trim() || null,
+        person_account_id: selectedAccountId || null,
+        person_account_code: selectedAccountCode || null,
+        person_account_name: selectedAccountName || null,
         category: "Uploaded",
-        tags: [extension.toUpperCase(), "Uploaded"],
-        created_by: "User"
+        tags: [extension.toUpperCase(), "Uploaded", selectedDocumentType],
+        metadata: {
+          destinationPath,
+          destinationFileName,
+          uploadedFrom: "DocumentsPage"
+        },
+        document_path: destinationPath,
+        storage_key: `${destinationPath}/${destinationFileName}`,
+        created_by: selectedAccountName || "User",
+        scanner_device_name: null,
+        scanner_bridge: null
       };
 
       await fetch("/api/documents", {
@@ -534,19 +669,56 @@ export function DocumentManager() {
     setTimeout(async () => {
       setScanStatus(t("scanner_status_saving", "Processing OCR & saving scanned PDF..."));
       try {
+        const moduleLabel = selectedModule === "all" ? "Purchase Documents" : selectedModule;
+        const destinationFileName = buildDocumentFileName({
+          personAccountCode: selectedAccountCode,
+          personAccountName: selectedAccountName,
+          moduleType: moduleLabel,
+          documentType: selectedDocumentType,
+          sourceRecordNo: searchQuery.trim() || null,
+          createdAt: new Date(),
+          extension: "pdf"
+        });
+        const destinationPath = buildDocumentFolderPath({
+          countryName: activeCountry?.name,
+          branchName: selectedCityBranchId || selectedMainBranchId ? (selectedCityBranchId ? "City Branch" : "Main Branch") : null,
+          personAccountCode: selectedAccountCode,
+          personAccountName: selectedAccountName,
+          moduleType: moduleLabel,
+          documentType: selectedDocumentType
+        });
+
         const scanPayload = {
           title: `Scanned Document #${Math.floor(1000 + Math.random() * 9000)}`,
-          file_name: `SCANNED-${Date.now()}.pdf`,
+          file_name: destinationFileName,
           file_url: "/exports/DGT_Standard_Branch_Users.pdf",
           file_type: "pdf",
           file_size: 340000,
           country_id: selectedCountryId,
+          country_name: activeCountry?.name ?? null,
           country_branch_id: selectedMainBranchId || null,
+          main_branch_name: activeMainBranch?.name ?? null,
           city_branch_id: selectedCityBranchId || null,
+          city_branch_name: activeCityBranch?.name ?? null,
           module_type: selectedModule === "all" ? "Purchase Documents" : selectedModule,
+          document_type: selectedDocumentType,
+          source_module: moduleLabel,
+          source_record_no: searchQuery.trim() || null,
+          person_account_id: selectedAccountId || null,
+          person_account_code: selectedAccountCode || null,
+          person_account_name: selectedAccountName || null,
           category: "Scanned",
-          tags: ["Scanned", "PDF", "TWAIN"],
-          created_by: "Scanner Hardware API"
+          tags: ["Scanned", "PDF", "TWAIN", selectedDocumentType],
+          metadata: {
+            destinationPath,
+            destinationFileName,
+            scannerBridge: "TWAIN/W3C API"
+          },
+          document_path: destinationPath,
+          storage_key: `${destinationPath}/${destinationFileName}`,
+          created_by: selectedAccountName || "Scanner Hardware API",
+          scanner_device_name: "Default Scanner",
+          scanner_bridge: "TWAIN/W3C API"
         };
 
         await fetch("/api/documents", {
@@ -597,6 +769,49 @@ export function DocumentManager() {
   }
 
   const activeCountry = countries.find((c) => c.id === selectedCountryId);
+  const activeMainBranch = activeCountry?.mainBranches?.find((branch: any) => branch.id === selectedMainBranchId) ?? null;
+  const activeCityBranch = (activeMainBranch?.cityBranches || []).find((branch: any) => branch.id === selectedCityBranchId) ?? null;
+  const selectedModuleLabel = selectedModule === "all" ? "Purchase Documents" : selectedModule;
+  const documentDestinationPreview = buildDocumentDestinationLabel({
+    countryName: activeCountry?.name,
+    branchName: activeCityBranch?.name || activeMainBranch?.name || null,
+    personAccountCode: selectedAccountCode,
+    personAccountName: selectedAccountName,
+    moduleType: selectedModuleLabel,
+    documentType: selectedDocumentType
+  });
+  const documentFileNamePreview = buildDocumentFileName({
+    countryName: activeCountry?.name,
+    branchName: activeCityBranch?.name || activeMainBranch?.name || null,
+    personAccountCode: selectedAccountCode,
+    personAccountName: selectedAccountName,
+    moduleType: selectedModuleLabel,
+    documentType: selectedDocumentType,
+    sourceRecordNo: searchQuery.trim() || null,
+    createdAt: new Date(),
+    extension: "pdf"
+  });
+
+  const handleAccountSelect = (value: string) => {
+    const found = accountLookupRef.current[value];
+    const nextLabel = found?.accountName || found?.companyName || found?.ledgerName || "";
+    const nextCode = found?.accountCode || found?.rawAccountCode || found?.manualReferenceNumber || found?.ledgerCode || "";
+    setSelectedAccountId(value);
+    setSelectedAccountName(nextLabel);
+    setSelectedAccountCode(nextCode);
+    const nextOption = accountOptions.find((opt) => opt.value === value) ?? (found ? {
+      value,
+      label: [nextCode, nextLabel].filter(Boolean).join(" • "),
+      keywords: [nextCode, nextLabel, found?.companyName, found?.ledgerName].filter(Boolean).join(" ")
+    } : null);
+    setSelectedAccountOption(nextOption);
+    if (nextOption) {
+      setAccountOptions((prev) => {
+        const rest = prev.filter((opt) => opt.value !== nextOption.value);
+        return [nextOption, ...rest];
+      });
+    }
+  };
 
   return (
     <div className="space-y-4 font-sans">
@@ -639,6 +854,144 @@ export function DocumentManager() {
             <Camera className="h-4 w-4" />
             {t("start_scan", "Start Direct Scan")}
           </button>
+        </div>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-emerald-600">{t("start_scan", "Start Direct Scan")}</div>
+              <h2 className="text-sm font-black text-slate-950">{t("edit_title", "Edit / Move Document")}</h2>
+            </div>
+            <div className="text-[10px] font-semibold text-slate-500 text-right">
+              {documentDestinationPreview || t("active_path", "Active Path:")}
+            </div>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <SearchSelect
+              label={t("countries", "Countries")}
+              value={selectedCountryId}
+              placeholder={t("common.select", "Select")}
+              options={countries.map((country) => ({
+                value: country.id,
+                label: country.name,
+                keywords: [country.name, country.code, country.iso_code].filter(Boolean).join(" ")
+              }))}
+              onValueChange={(value) => {
+                setSelectedCountryId(value);
+                setSelectedMainBranchId("");
+                setSelectedCityBranchId("");
+              }}
+              searchPlaceholder={t("common.search", "Search")}
+              emptyLabel={t("common.no_matches_found", "No matches found")}
+            />
+
+            <SearchSelect
+              label={t("main_branches", "Main Branches")}
+              value={selectedMainBranchId}
+              placeholder={t("common.select", "Select")}
+              options={(activeCountry?.mainBranches || []).map((branch: any) => ({
+                value: branch.id,
+                label: branch.name,
+                keywords: [branch.name, branch.code, branch.branch_code, branch.owner_name].filter(Boolean).join(" ")
+              }))}
+              disabled={!activeCountry}
+              onValueChange={(value) => {
+                setSelectedMainBranchId(value);
+                setSelectedCityBranchId("");
+              }}
+              searchPlaceholder={t("common.search", "Search")}
+              emptyLabel={t("common.no_matches_found", "No matches found")}
+            />
+
+            <SearchSelect
+              label={t("city_branches", "City Branches")}
+              value={selectedCityBranchId}
+              placeholder={t("common.select", "Select")}
+              options={(activeMainBranch?.cityBranches || []).map((branch: any) => ({
+                value: branch.id,
+                label: branch.name,
+                keywords: [branch.name, branch.code, branch.branch_code, branch.owner_name].filter(Boolean).join(" ")
+              }))}
+              disabled={!activeMainBranch}
+              onValueChange={setSelectedCityBranchId}
+              searchPlaceholder={t("common.search", "Search")}
+              emptyLabel={t("common.no_matches_found", "No matches found")}
+            />
+
+            <SearchSelect
+              label={t("common.person_account", "Person / Account")}
+              value={selectedAccountId}
+              placeholder={t("common.search", "Search")}
+              options={accountOptions}
+              loading={accountLookupLoading}
+              onValueChange={handleAccountSelect}
+              onSearchValueChange={setAccountSearchQuery}
+              searchPlaceholder={t("common.search", "Search")}
+              emptyLabel={t("common.no_matches_found", "No matches found")}
+            />
+
+            <SearchSelect
+              label={t("module_categories", "Module Categories")}
+              value={selectedModule}
+              placeholder={t("common.select", "Select")}
+              options={[
+                { value: "all", label: t("all_module_folders", "All Module Folders") },
+                ...MODULE_FOLDERS.map((mod) => ({ value: mod, label: t(mod, mod), keywords: mod }))
+              ]}
+              onValueChange={setSelectedModule}
+              searchPlaceholder={t("common.search", "Search")}
+              emptyLabel={t("common.no_matches_found", "No matches found")}
+            />
+
+            <SearchSelect
+              label={t("nav.document_type", "Document Type")}
+              value={selectedDocumentType}
+              placeholder={t("common.select", "Select")}
+              options={DOCUMENT_TYPES.map((type) => ({
+                value: type,
+                label: type,
+                keywords: type
+              }))}
+              onValueChange={setSelectedDocumentType}
+              searchPlaceholder={t("common.search", "Search")}
+              emptyLabel={t("common.no_matches_found", "No matches found")}
+            />
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 shadow-sm space-y-3">
+          <div className="text-[10px] font-black uppercase tracking-widest text-slate-500">{t("doc_ready", "Document Ready for Viewer & Print")}</div>
+          <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm space-y-2">
+            <div className="text-[10px] font-black uppercase text-slate-400">{t("active_path", "Active Path:")}</div>
+            <div className="text-xs font-bold text-slate-900 leading-6">{documentDestinationPreview || t("no_docs", "No documents found in this directory folder.")}</div>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+            <div className="text-[10px] font-black uppercase text-slate-400">{t("doc_title_label", "Document Title")}</div>
+            <div className="mt-1 text-xs font-semibold text-slate-700">{documentFileNamePreview}</div>
+            <div className="mt-2 text-[10px] text-slate-500">
+              {selectedAccountName ? `${selectedAccountCode ? `${selectedAccountCode} · ` : ""}${selectedAccountName}` : t("common.select", "Select")}
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={handleDirectScan}
+              className="flex flex-1 min-w-[150px] items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 transition cursor-pointer"
+            >
+              <Camera className="h-4 w-4" />
+              {t("start_scan", "Start Direct Scan")}
+            </button>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className="flex flex-1 min-w-[150px] items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:bg-indigo-700 transition cursor-pointer disabled:opacity-60"
+            >
+              <Upload className="h-4 w-4" />
+              {isUploading ? t("uploading", "Uploading...") : t("upload_file", "Upload File")}
+            </button>
+          </div>
         </div>
       </div>
 

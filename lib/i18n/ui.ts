@@ -2114,6 +2114,7 @@ export type UiKey =
   | "common.delete"
   | "common.view"
   | "common.settings"
+  | "common.person_account"
   | "common.add_new"
   | "common.create"
   | "common.register"
@@ -4741,6 +4742,7 @@ const en: Dict = {
   "common.delete": "Delete",
   "common.view": "View",
   "common.settings": "Settings",
+  "common.person_account": "Person / Account",
   "common.add_new": "Add New",
   "common.create": "Create",
   "common.register": "Register",
@@ -11001,6 +11003,7 @@ const ur: Dict = {
   "common.delete": "حذف کریں",
   "common.view": "دیکھیں",
   "common.settings": "ترتیبات",
+  "common.person_account": "شخص / اکاؤنٹ",
   "common.add_new": "نیا شامل کریں",
   "common.create": "بنائیں",
   "common.register": "رجسٹر کریں",
@@ -16366,6 +16369,7 @@ const ar: Dict = {
   "common.delete": "حذف",
   "common.view": "عرض",
   "common.settings": "الإعدادات",
+  "common.person_account": "شخص / حساب",
   "common.add_new": "إضافة جديد",
   "common.create": "إنشاء",
   "common.register": "تسجيل",
@@ -21734,6 +21738,7 @@ const fa: Dict = {
   "common.delete": "حذف",
   "common.view": "نمایش",
   "common.settings": "تنظیمات",
+  "common.person_account": "شخص / حساب",
   "common.add_new": "افزودن جدید",
   "common.create": "ایجاد",
   "common.register": "ثبت",
@@ -27093,6 +27098,7 @@ const ps: Dict = {
   "common.delete": "ړنګول",
   "common.view": "کتل",
   "common.settings": "ترتیبات",
+  "common.person_account": "شخص / حساب",
   "common.add_new": "نوی اضافه کړئ",
   "common.create": "جوړول",
   "common.register": "ثبتول",
