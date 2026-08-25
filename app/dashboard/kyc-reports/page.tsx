@@ -2,9 +2,13 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import type { Route } from "next";
 import {
+  Activity,
   AlertCircle,
   AlertTriangle,
+  ArrowLeft,
   BadgeCheck,
   Building2,
   CheckCircle2,
@@ -13,6 +17,7 @@ import {
   FileCheck2,
   FileText,
   Filter,
+  Globe,
   Globe2,
   Info,
   Plus,
@@ -557,8 +562,19 @@ function formatKycStatusLabel(lang: SupportedLanguage, status: KycItem["status"]
 }
 
 export default function KycReportsPage() {
+  const router = useRouter();
   const [activeLang, setActiveLang] = useState<SupportedLanguage>("en");
   const dir = getLanguageDirection(activeLang);
+
+  const [sessionCtx, setSessionCtx] = useState<{
+    userName: string;
+    userEmail: string;
+    userId: string;
+    countryName: string;
+    branchName: string;
+    isSuperAdmin: boolean;
+    roles: string[];
+  } | null>(null);
 
   const [items, setItems] = useState<KycItem[]>([]);
   const [metrics, setMetrics] = useState<KycMetrics>({
@@ -613,6 +629,28 @@ export default function KycReportsPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/erp/auth/session", { credentials: "include" })
+      .then((r) => r.json())
+      .then((json: any) => {
+        if (!active || !json?.user) return;
+        setSessionCtx({
+          userName: json.user.fullName || json.user.email || "Super Admin",
+          userEmail: json.user.email || "",
+          userId: json.user.id || "",
+          countryName: json.scopes?.summary?.countryName || "United Arab Emirates",
+          branchName: json.scopes?.summary?.branchDisplayName || "DUBAI HEAD OFFICE",
+          isSuperAdmin: !!json.scopes?.isSuperAdmin,
+          roles: json.roles || []
+        });
+      })
+      .catch(console.error);
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     function updateLang() {
@@ -754,42 +792,58 @@ export default function KycReportsPage() {
   });
 
   return (
-    <div dir={dir} className="w-full space-y-6 text-foreground p-3 sm:p-5 lg:p-6">
-      {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between border-b border-border/60 pb-4 gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="h-2.5 w-2.5 rounded-full bg-rose-500 animate-pulse" />
-            <p className="text-[10px] font-bold uppercase tracking-widest text-rose-600 dark:text-rose-400">
-              {tUI("reportBrand")}
-            </p>
+    <div dir={dir} className="w-full space-y-4 text-foreground p-3 sm:p-5 lg:p-6 font-sans">
+      {/* ── Top Unified Header Bar ("Safaid Patti" / Header Toolbar) ── */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-card p-3 sm:p-3.5 rounded-2xl border border-border/80 shadow-xs">
+        {/* Left: Back Button + Shield Icon + Title + Active Compliant Count */}
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => router.push("/dashboard" as Route)}
+            className="h-8.5 px-2.5 rounded-xl border-border/80 bg-muted/40 hover:bg-muted text-foreground text-xs font-bold gap-1 shadow-xs"
+            title="Back to Dashboard"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Back</span>
+          </Button>
+
+          <div className="h-9 w-9 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center border border-rose-200/60 dark:border-rose-900 shrink-0 shadow-xs">
+            <ShieldCheck className="h-4.5 w-4.5" />
           </div>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-foreground mt-1">
-            {tUI("title")}
-          </h1>
-          <p className="text-xs text-muted-foreground mt-1 max-w-3xl">
-            {tUI("subtitle")}
-          </p>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-sm sm:text-base font-black text-foreground tracking-tight whitespace-nowrap">
+                {tUI("title")}
+              </h1>
+              <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-xs leading-none">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1 shrink-0" />
+                {metrics.compliant} {tUI("compliant")}
+              </span>
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2.5 shrink-0 self-start md:self-auto">
+        {/* Right: Print PDF + Refresh KYC Matrix */}
+        <div className="flex items-center gap-2 shrink-0">
           <Button
             onClick={handleKycPrint}
             variant="outline"
-            className="border-border/80 bg-card hover:bg-muted text-foreground h-9 px-3.5 rounded-xl shadow-xs text-xs font-bold transition-all"
+            className="h-8.5 px-3 rounded-xl border-border/80 bg-card hover:bg-muted text-foreground text-xs font-bold gap-1.5 shadow-xs"
           >
-            <FileText className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-            {tUI("printPdf")}
+            <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+            <span>{tUI("printPdf")}</span>
           </Button>
 
           <Button
             onClick={fetchKycData}
             disabled={loading}
             variant="outline"
-            className="border-border/80 bg-card hover:bg-muted text-foreground h-9 px-3.5 rounded-xl shadow-xs text-xs font-bold transition-all"
+            className="h-8.5 px-3 rounded-xl border-border/80 bg-card hover:bg-muted text-foreground text-xs font-bold gap-1.5 shadow-xs"
           >
-            <RefreshCw className={cn("h-3.5 w-3.5 mr-1.5", loading ? "animate-spin text-rose-600" : "")} />
-            {tUI("refreshMatrix")}
+            <RefreshCw className={cn("h-3.5 w-3.5", loading ? "animate-spin text-rose-600" : "")} />
+            <span>{tUI("refreshMatrix")}</span>
           </Button>
         </div>
       </div>
@@ -806,92 +860,146 @@ export default function KycReportsPage() {
         </div>
       )}
 
-      {/* 4 Summary KPI Cards */}
-      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-card border-border/60 p-4 rounded-2xl shadow-sm hover:border-border transition-all">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{tUI("totalTracked")}</p>
-              <p className="mt-1.5 text-2xl font-black text-foreground">{metrics.total}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">
-                {scopeSummary ? `${tUI("scopeLabel")}: ${scopeSummary.label}` : tUI("scopeGlobal")}
-              </p>
+      {/* ── 5 KPI SUMMARY CARDS GRID ── */}
+      <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 font-sans">
+        {/* Card 1: BRANCH & USER DETAILS */}
+        <div className="rounded-2xl border border-border/80 bg-card p-3.5 shadow-xs">
+          <div className="flex items-center gap-2 pb-2 border-b border-border/60">
+            <Globe className="h-4 w-4 text-blue-600" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">1. BRANCH & USER DETAILS</span>
+          </div>
+          <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-muted-foreground">
+            <div className="flex justify-between">
+              <span>Country:</span>
+              <span className="font-bold text-foreground">{sessionCtx?.countryName || "United Arab Emirates"}</span>
             </div>
-            <div className="p-3 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
-              <Building2 className="h-6 w-6" />
+            <div className="flex justify-between">
+              <span>Branch Name:</span>
+              <span className="font-bold text-foreground uppercase truncate max-w-[130px]">{sessionCtx?.branchName || "DUBAI HEAD OFFICE"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>User ID / Name:</span>
+              <span className="font-bold text-foreground truncate max-w-[120px]">{sessionCtx?.userName || "Super Admin"}</span>
+            </div>
+            <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
+              <span>Status:</span>
+              <span className="bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded text-[10px] flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                Active Session
+              </span>
             </div>
           </div>
-        </Card>
+        </div>
 
-        <Card className="bg-card border-border/60 p-4 rounded-2xl shadow-sm hover:border-border transition-all">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">{tUI("actionRequired")}</p>
-              <p className="mt-1.5 text-2xl font-black text-rose-600 dark:text-rose-400">{metrics.incomplete}</p>
-              <p className="text-[10px] text-rose-600/80 dark:text-rose-400/80 mt-0.5">
-                {scopeTotals.total ? `${tUI("typeLabel")}: ${scopeTotals.total}` : tUI("missingRequiredFields")}
-              </p>
+        {/* Card 2: KYC & COMPLIANCE SUMMARY */}
+        <div className="rounded-2xl border border-border/80 bg-card p-3.5 shadow-xs">
+          <div className="flex items-center gap-2 pb-2 border-b border-border/60">
+            <ShieldCheck className="h-4 w-4 text-emerald-600" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">2. KYC & COMPLIANCE</span>
+          </div>
+          <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
+            <div className="flex justify-between text-muted-foreground">
+              <span>Total Audited:</span>
+              <span className="font-bold text-foreground">{metrics.total}</span>
             </div>
-            <div className="p-3 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
-              <AlertTriangle className="h-6 w-6" />
+            <div className="flex justify-between text-emerald-600 font-bold">
+              <span>Compliant & Verified:</span>
+              <span>{metrics.compliant}</span>
+            </div>
+            <div className="flex justify-between text-rose-600 font-bold">
+              <span>Action Required:</span>
+              <span>{metrics.incomplete}</span>
             </div>
           </div>
-        </Card>
+        </div>
 
-        <Card className="bg-card border-border/60 p-4 rounded-2xl shadow-sm hover:border-border transition-all">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">{tUI("nearExpiry")}</p>
-              <p className="mt-1.5 text-2xl font-black text-rose-600 dark:text-rose-400">{metrics.nearExpiry + metrics.suspended}</p>
-              <p className="text-[10px] text-rose-600/80 dark:text-rose-400/80 mt-0.5">{tUI("nearExpiryStatus")}</p>
+        {/* Card 3: AUDIT & GRACE PERIOD */}
+        <div className="rounded-2xl border border-border/80 bg-card p-3.5 shadow-xs">
+          <div className="flex items-center gap-2 pb-2 border-b border-border/60">
+            <Clock className="h-4 w-4 text-amber-500" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">3. AUDIT & GRACE PERIOD</span>
+          </div>
+          <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
+            <div className="flex justify-between text-amber-600 font-bold">
+              <span>Near Expiry:</span>
+              <span>{metrics.nearExpiry + metrics.suspended}</span>
             </div>
-            <div className="p-3 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400">
-              <ShieldAlert className="h-6 w-6" />
+            <div className="flex justify-between text-muted-foreground">
+              <span>Grace Allowed:</span>
+              <span className="font-bold text-foreground">15 Days</span>
+            </div>
+            <div className="flex justify-between text-indigo-600 font-bold">
+              <span>Audit Policy:</span>
+              <span className="text-[10px] bg-indigo-50 dark:bg-indigo-950/40 px-1.5 py-0.5 rounded">Live Monitored</span>
             </div>
           </div>
-        </Card>
+        </div>
 
-        <Card className="bg-card border-border/60 p-4 rounded-2xl shadow-sm hover:border-border transition-all">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">{tUI("compliant")}</p>
-              <p className="mt-1.5 text-2xl font-black text-emerald-600 dark:text-emerald-400">{metrics.compliant}</p>
-              <p className="text-[10px] text-emerald-600/80 dark:text-emerald-400/80 mt-0.5">{tUI("compliantStatus")}</p>
+        {/* Card 4: ENTITIES AUDITED */}
+        <div className="rounded-2xl border border-border/80 bg-card p-3.5 shadow-xs">
+          <div className="flex items-center gap-2 pb-2 border-b border-border/60">
+            <Building2 className="h-4 w-4 text-indigo-600" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">4. ENTITIES AUDITED</span>
+          </div>
+          <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
+            <div className="flex justify-between text-muted-foreground">
+              <span>Total Entities:</span>
+              <span className="font-bold text-foreground">{items.length}</span>
             </div>
-            <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-              <BadgeCheck className="h-6 w-6" />
+            <div className="flex justify-between text-indigo-600 font-bold">
+              <span>Country Branches:</span>
+              <span>{scopeTotals.countryBranches ?? items.filter((i) => i.type === "country_branch").length}</span>
+            </div>
+            <div className="flex justify-between text-emerald-600 font-bold">
+              <span>City Branches & Users:</span>
+              <span>{(scopeTotals.cityBranches ?? 0) + (scopeTotals.users ?? 0)}</span>
             </div>
           </div>
-        </Card>
+        </div>
+
+        {/* Card 5: QUICK ACTIONS */}
+        <div className="rounded-2xl border border-border/80 bg-card p-3.5 shadow-xs">
+          <div className="flex items-center gap-2 pb-2 border-b border-border/60">
+            <Activity className="h-4 w-4 text-rose-500" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">5. QUICK ACTIONS</span>
+          </div>
+          <div className="mt-2 space-y-1 text-[10px] font-semibold">
+            <div
+              onClick={() => {
+                setSelectedType("all");
+                setSelectedStatus("all");
+              }}
+              className="flex justify-between items-center text-muted-foreground hover:text-blue-600 cursor-pointer"
+            >
+              <span>All Entities</span>
+              <span className="text-blue-600 font-bold">📊 View All</span>
+            </div>
+            <div
+              onClick={() => setSelectedStatus("incomplete")}
+              className="flex justify-between items-center text-muted-foreground hover:text-rose-600 cursor-pointer"
+            >
+              <span>Incomplete (Alert)</span>
+              <span className="text-rose-600 font-bold">⚠️ Filter</span>
+            </div>
+            <div
+              onClick={() => setSelectedStatus("near_expiry")}
+              className="flex justify-between items-center text-muted-foreground hover:text-amber-600 cursor-pointer"
+            >
+              <span>Near Expiry (&lt; 5d)</span>
+              <span className="text-amber-600 font-bold">⏰ Review</span>
+            </div>
+            <div
+              onClick={handleKycPrint}
+              className="flex justify-between items-center text-muted-foreground hover:text-indigo-600 cursor-pointer"
+            >
+              <span>Print Audit PDF</span>
+              <span className="text-indigo-600 font-bold">🖨️ Print</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Card className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{tUI("scopeLabel")}</p>
-          <p className="mt-1 text-sm font-black text-foreground">{scopeSummary?.label ?? tUI("scopeGlobal")}</p>
-          <p className="mt-1 text-[10px] text-muted-foreground">
-            {scopeSummary?.level === "branch" ? tUI("scopeBranch") : scopeSummary?.level === "country" ? tUI("scopeCountry") : tUI("scopeGlobal")}
-          </p>
-        </Card>
 
-        <Card className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{tUI("countryBranchCount")}</p>
-          <p className="mt-1 text-sm font-black text-foreground">{scopeTotals.countryBranches ?? 0}</p>
-          <p className="mt-1 text-[10px] text-muted-foreground">{tUI("scopeCountry")}</p>
-        </Card>
-
-        <Card className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{tUI("cityBranchCount")}</p>
-          <p className="mt-1 text-sm font-black text-foreground">{scopeTotals.cityBranches ?? 0}</p>
-          <p className="mt-1 text-[10px] text-muted-foreground">{tUI("scopeBranch")}</p>
-        </Card>
-
-        <Card className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{tUI("userCount")}</p>
-          <p className="mt-1 text-sm font-black text-foreground">{scopeTotals.users ?? 0}</p>
-          <p className="mt-1 text-[10px] text-muted-foreground">{scopeSummary ? scopeSummary.label : tUI("scopeGlobal")}</p>
-        </Card>
-      </div>
 
       {/* Unified Search & Filter Strip (Picture 2 Design) */}
       <div className="bg-card border border-border/80 rounded-2xl p-3 sm:p-4 shadow-sm space-y-3">

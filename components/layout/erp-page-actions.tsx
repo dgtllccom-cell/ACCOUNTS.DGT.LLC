@@ -84,13 +84,15 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
-  // Report pages, documents manager, and specialized studio pages render their own dedicated toolbar directly
+  // Report pages, documents manager, KYC reports, and specialized studio pages render their own dedicated toolbar directly
   const isReportPage =
     pathname?.startsWith("/dashboard/reports") ||
     pathname?.startsWith("/dashboard/roznamcha/reports") ||
     pathname?.startsWith("/dashboard/ledger") ||
     pathname === "/dashboard/documents" ||
-    pathname?.startsWith("/dashboard/documents/");
+    pathname?.startsWith("/dashboard/documents/") ||
+    pathname === "/dashboard/kyc-reports" ||
+    pathname?.startsWith("/dashboard/kyc-reports/");
   if (isReportPage) return null;
 
   const title = titleOverride || titleFromPath(pathname || "/dashboard", lang);
