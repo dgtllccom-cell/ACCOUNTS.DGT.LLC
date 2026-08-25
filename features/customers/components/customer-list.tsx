@@ -19,6 +19,7 @@ import { apiGet, apiDelete } from "@/lib/api/client";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLabel } from "./translations";
 import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { Th } from "@/components/ui/translated-th";
 import { UniversalReportModal } from "@/components/ui/universal-report-modal";
 
@@ -87,8 +88,10 @@ function translateCustomerText(value: string | null | undefined, targetLang: Sup
   return value;
 }
 
-export function CustomerList({ lang }: { lang: SupportedLanguage }) {
+export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
   const router = useRouter();
+  const activeLang = useActiveLanguage();
+  const lang = (activeLang !== "en" ? activeLang : langProp) as SupportedLanguage;
   const [loading, setLoading] = useState(true);
   const [customers, setCustomers] = useState<CustomerRow[]>([]);
   const [searchQuery, setSearchQuery] = useState("");

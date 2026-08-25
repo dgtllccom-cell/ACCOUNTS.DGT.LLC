@@ -28,6 +28,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import type { PartyAffiliationSummary } from "@/lib/services/party-360-service";
 import { Button } from "@/components/ui/button";
 import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 export type Party360ModalProps = {
   customerId?: string;
@@ -41,10 +42,12 @@ export function Party360Modal({
   customerId,
   name,
   employeeId,
-  lang = "ur",
+  lang: langProp = "en",
   onClose
 }: Party360ModalProps) {
   const router = useRouter();
+  const activeLang = useActiveLanguage();
+  const lang = (activeLang !== "en" ? activeLang : langProp) as SupportedLanguage;
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState<PartyAffiliationSummary | null>(null);
   const [activeTab, setActiveTab] = useState<"all" | "companies" | "employees" | "banks" | "warehouses" | "trucks" | "clearingAgents">("all");
