@@ -11,7 +11,10 @@ import {
   ArrowLeft,
   BadgeCheck,
   Building2,
+  Calendar,
+  Check,
   CheckCircle2,
+  ChevronDown,
   Clock,
   ExternalLink,
   FileCheck2,
@@ -20,11 +23,13 @@ import {
   Globe,
   Globe2,
   Info,
+  Layers,
   Plus,
   RefreshCw,
   Search,
   ShieldAlert,
   ShieldCheck,
+  SlidersHorizontal,
   Upload,
   UserCheck,
   Users,
@@ -590,6 +595,15 @@ export default function KycReportsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [dateFilter, setDateFilter] = useState<"all" | "today" | "this_week" | "this_month" | "last_30_days" | "custom">("all");
+  const [customDateFrom, setCustomDateFrom] = useState<string>("");
+  const [customDateTo, setCustomDateTo] = useState<string>("");
+
+  // Dropdown menus open/close states
+  const [isStatusMenuOpen, setIsStatusMenuOpen] = useState(false);
+  const [isTypeMenuOpen, setIsTypeMenuOpen] = useState(false);
+  const [isDateMenuOpen, setIsDateMenuOpen] = useState(false);
+
   const [message, setMessage] = useState("");
 
   // Modal state for Uploading & Completing KYC
@@ -788,14 +802,35 @@ export default function KycReportsPage() {
     const matchesType = selectedType === "all" || item.type === selectedType;
     const matchesStatus = selectedStatus === "all" || item.status === selectedStatus;
 
-    return matchesSearch && matchesType && matchesStatus;
+    let matchesDate = true;
+    if (dateFilter !== "all" && item.createdAt) {
+      const created = new Date(item.createdAt);
+      const now = new Date();
+      if (dateFilter === "today") {
+        matchesDate = created.toDateString() === now.toDateString();
+      } else if (dateFilter === "this_week") {
+        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        matchesDate = created >= weekAgo;
+      } else if (dateFilter === "this_month") {
+        matchesDate = created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
+      } else if (dateFilter === "last_30_days") {
+        const past30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        matchesDate = created >= past30;
+      } else if (dateFilter === "custom") {
+        const dStr = item.createdAt.slice(0, 10);
+        if (customDateFrom && dStr < customDateFrom) matchesDate = false;
+        if (customDateTo && dStr > customDateTo) matchesDate = false;
+      }
+    }
+
+    return matchesSearch && matchesType && matchesStatus && matchesDate;
   });
 
   return (
     <div dir={dir} className="w-full space-y-4 text-foreground p-3 sm:p-5 lg:p-6 font-sans">
       {/* ── Top Unified Header Bar ("Safaid Patti" / Header Toolbar) ── */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-card p-3 sm:p-3.5 rounded-2xl border border-border/80 shadow-xs">
-        {/* Left: Back Button + Shield Icon + Title + Active Compliant Count */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-card p-3 sm:p-3.5 rounded-2xl border border-border/80 shadow-xs relative z-20">
+        {/* Left: Back Button + Shield Icon + Title & Green Badge */}
         <div className="flex items-center gap-2 shrink-0">
           <Button
             type="button"
@@ -815,13 +850,284 @@ export default function KycReportsPage() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-sm sm:text-base font-black text-foreground tracking-tight whitespace-nowrap">
-                {tUI("title")}
+                KYC Management
               </h1>
               <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-xs leading-none">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1 shrink-0" />
                 {metrics.compliant} {tUI("compliant")}
               </span>
             </div>
+            <p className="text-[10px] text-muted-foreground font-semibold -mt-0.5 hidden sm:block">Master Record Audit Center</p>
+          </div>
+        </div>
+
+        {/* Center: Search + 3 Dropdowns (Status + Entity Scope + Dates with Date-to-Date) */}
+        <div className="flex flex-1 flex-wrap items-center gap-2 max-w-3xl">
+          {/* 1. Spacious Search Box */}
+          <div className="relative flex-1 min-w-[180px]">
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={tUI("searchPlaceholder")}
+              className="h-8.5 pl-8 pr-2 text-xs bg-muted/30 border-border/80 rounded-xl w-full"
+            />
+          </div>
+
+          {/* 2. Status Filter Dropdown */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setIsStatusMenuOpen(!isStatusMenuOpen);
+                setIsTypeMenuOpen(false);
+                setIsDateMenuOpen(false);
+              }}
+              className={cn(
+                "h-8.5 rounded-xl border px-2.5 text-xs font-bold flex items-center gap-1.5 shadow-xs transition-colors",
+                selectedStatus !== "all"
+                  ? "bg-rose-50 text-rose-700 border-rose-300 dark:bg-rose-950 dark:border-rose-800"
+                  : "border-border/80 bg-card text-foreground hover:bg-muted"
+              )}
+            >
+              <ShieldAlert className="h-3.5 w-3.5 text-rose-600" />
+              <span>
+                {selectedStatus === "all"
+                  ? tUI("allStatuses")
+                  : selectedStatus === "incomplete"
+                  ? tUI("incompleteStatus")
+                  : selectedStatus === "near_expiry"
+                  ? tUI("nearExpiryStatus")
+                  : selectedStatus === "suspended"
+                  ? tUI("suspendedStatus")
+                  : tUI("compliantStatus")}
+              </span>
+              <ChevronDown className="h-3 w-3 text-muted-foreground" />
+            </button>
+
+            {isStatusMenuOpen && (
+              <div className="absolute left-0 mt-1.5 w-52 rounded-2xl bg-card border border-border/80 shadow-2xl p-1.5 z-50 text-xs font-semibold space-y-0.5">
+                {[
+                  { id: "all", label: tUI("allStatuses"), icon: ShieldCheck, color: "text-foreground" },
+                  { id: "incomplete", label: tUI("incompleteStatus"), icon: AlertTriangle, color: "text-rose-600" },
+                  { id: "near_expiry", label: tUI("nearExpiryStatus"), icon: Clock, color: "text-amber-600" },
+                  { id: "suspended", label: tUI("suspendedStatus"), icon: AlertCircle, color: "text-red-700" },
+                  { id: "compliant", label: tUI("compliantStatus"), icon: BadgeCheck, color: "text-emerald-600" }
+                ].map((st) => {
+                  const Icon = st.icon;
+                  return (
+                    <button
+                      key={st.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedStatus(st.id);
+                        setIsStatusMenuOpen(false);
+                      }}
+                      className={cn(
+                        "w-full text-left px-2.5 py-1.5 rounded-xl flex items-center justify-between transition-colors",
+                        selectedStatus === st.id
+                          ? "bg-rose-50 text-rose-800 dark:bg-rose-950 dark:text-rose-200 font-bold"
+                          : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <span className={cn("flex items-center gap-1.5", st.color)}>
+                        <Icon className="h-3.5 w-3.5" />
+                        {st.label}
+                      </span>
+                      {selectedStatus === st.id && <Check className="h-3.5 w-3.5 text-rose-600" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* 3. Entity Scope Filter Dropdown */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setIsTypeMenuOpen(!isTypeMenuOpen);
+                setIsStatusMenuOpen(false);
+                setIsDateMenuOpen(false);
+              }}
+              className={cn(
+                "h-8.5 rounded-xl border px-2.5 text-xs font-bold flex items-center gap-1.5 shadow-xs transition-colors",
+                selectedType !== "all"
+                  ? "bg-blue-50 text-blue-700 border-blue-300 dark:bg-blue-950 dark:border-blue-800"
+                  : "border-border/80 bg-card text-foreground hover:bg-muted"
+              )}
+            >
+              <Building2 className="h-3.5 w-3.5 text-blue-600" />
+              <span>
+                {selectedType === "all"
+                  ? tUI("allEntities")
+                  : selectedType === "country_branch"
+                  ? tUI("countryBranches")
+                  : selectedType === "city_branch"
+                  ? tUI("cityBranches")
+                  : selectedType === "user_account"
+                  ? tUI("usersStaff")
+                  : tUI("commercialAccounts")}
+              </span>
+              <ChevronDown className="h-3 w-3 text-muted-foreground" />
+            </button>
+
+            {isTypeMenuOpen && (
+              <div className="absolute left-0 mt-1.5 w-56 rounded-2xl bg-card border border-border/80 shadow-2xl p-1.5 z-50 text-xs font-semibold space-y-0.5">
+                {[
+                  { id: "all", label: tUI("allEntities"), icon: Layers },
+                  { id: "country_branch", label: tUI("countryBranches"), icon: Globe2 },
+                  { id: "city_branch", label: tUI("cityBranches"), icon: Building2 },
+                  { id: "user_account", label: tUI("usersStaff"), icon: Users },
+                  { id: "new_account", label: tUI("commercialAccounts"), icon: UserCheck }
+                ].map((type) => {
+                  const Icon = type.icon;
+                  return (
+                    <button
+                      key={type.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedType(type.id);
+                        setIsTypeMenuOpen(false);
+                      }}
+                      className={cn(
+                        "w-full text-left px-2.5 py-1.5 rounded-xl flex items-center justify-between transition-colors",
+                        selectedType === type.id
+                          ? "bg-blue-50 text-blue-800 dark:bg-blue-950 dark:text-blue-200 font-bold"
+                          : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <span className="flex items-center gap-1.5 text-foreground">
+                        <Icon className="h-3.5 w-3.5 text-blue-600" />
+                        {type.label}
+                      </span>
+                      {selectedType === type.id && <Check className="h-3.5 w-3.5 text-blue-600" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* 4. Date Range Dropdown with Date-to-Date (Custom Range) */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setIsDateMenuOpen(!isDateMenuOpen);
+                setIsStatusMenuOpen(false);
+                setIsTypeMenuOpen(false);
+              }}
+              className={cn(
+                "h-8.5 rounded-xl border px-2.5 text-xs font-bold flex items-center gap-1.5 shadow-xs transition-colors",
+                dateFilter !== "all"
+                  ? "bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:border-emerald-800"
+                  : "border-border/80 bg-card text-foreground hover:bg-muted"
+              )}
+            >
+              <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+              <span>
+                {dateFilter === "all"
+                  ? "All Dates"
+                  : dateFilter === "today"
+                  ? "Today"
+                  : dateFilter === "this_week"
+                  ? "This Week"
+                  : dateFilter === "this_month"
+                  ? "This Month"
+                  : dateFilter === "last_30_days"
+                  ? "Last 30 Days"
+                  : customDateFrom || customDateTo
+                  ? `${customDateFrom || "..."} → ${customDateTo || "..."}`
+                  : "Custom Date"}
+              </span>
+              <ChevronDown className="h-3 w-3 text-muted-foreground" />
+            </button>
+
+            {isDateMenuOpen && (
+              <div className="absolute left-0 mt-1.5 w-72 rounded-2xl bg-card border border-border/80 shadow-2xl p-3 z-50 text-xs space-y-3 font-sans">
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Quick Presets</span>
+                  <div className="grid grid-cols-2 gap-1 mt-1.5">
+                    {[
+                      { key: "all", label: "All Dates" },
+                      { key: "today", label: "Today" },
+                      { key: "this_week", label: "This Week" },
+                      { key: "this_month", label: "This Month" },
+                      { key: "last_30_days", label: "Last 30 Days" }
+                    ].map((item) => (
+                      <button
+                        key={item.key}
+                        type="button"
+                        onClick={() => {
+                          setDateFilter(item.key as any);
+                          setIsDateMenuOpen(false);
+                        }}
+                        className={cn(
+                          "px-2 py-1.5 rounded-lg text-left text-xs font-semibold flex items-center justify-between transition-colors",
+                          dateFilter === item.key
+                            ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-950 font-bold"
+                            : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        <span>{item.label}</span>
+                        {dateFilter === item.key && <Check className="h-3.5 w-3.5 text-emerald-600" />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-t border-border/60 pt-2.5 space-y-2">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Date to Date (Custom)</span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] font-bold text-muted-foreground">From Date</label>
+                      <input
+                        type="date"
+                        value={customDateFrom}
+                        onChange={(e) => setCustomDateFrom(e.target.value)}
+                        className="w-full h-8 px-2 text-xs rounded-lg border border-border/80 bg-background text-foreground"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-muted-foreground">To Date</label>
+                      <input
+                        type="date"
+                        value={customDateTo}
+                        onChange={(e) => setCustomDateTo(e.target.value)}
+                        className="w-full h-8 px-2 text-xs rounded-lg border border-border/80 bg-background text-foreground"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCustomDateFrom("");
+                        setCustomDateTo("");
+                        setDateFilter("all");
+                        setIsDateMenuOpen(false);
+                      }}
+                      className="text-[11px] text-muted-foreground hover:text-foreground font-semibold"
+                    >
+                      Clear
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDateFilter("custom");
+                        setIsDateMenuOpen(false);
+                      }}
+                      className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs"
+                    >
+                      Apply Range
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -995,76 +1301,6 @@ export default function KycReportsPage() {
               <span>Print Audit PDF</span>
               <span className="text-indigo-600 font-bold">🖨️ Print</span>
             </div>
-          </div>
-        </div>
-      </div>
-
-
-
-      {/* Unified Search & Filter Strip (Picture 2 Design) */}
-      <div className="bg-card border border-border/80 rounded-2xl p-3 sm:p-4 shadow-sm space-y-3">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-          {/* Search Box */}
-          <div className="relative flex-1 min-w-[260px] max-w-xl">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={tUI("searchPlaceholder")}
-              className="w-full bg-background border border-border/80 rounded-xl pl-10 pr-4 py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 text-foreground placeholder:text-muted-foreground/60 transition-all"
-            />
-          </div>
-
-          {/* Type Filter Pills */}
-          <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
-            {[
-              { id: "all", label: tUI("allEntities") },
-              { id: "country_branch", label: tUI("countryBranches") },
-              { id: "city_branch", label: tUI("cityBranches") },
-              { id: "user_account", label: tUI("usersStaff") },
-              { id: "new_account", label: tUI("commercialAccounts") }
-            ].map((type) => (
-              <button
-                key={type.id}
-                onClick={() => setSelectedType(type.id)}
-                className={cn(
-                  "px-3.5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap",
-                  selectedType === type.id
-                    ? "bg-rose-600 text-white shadow-xs"
-                    : "bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground"
-                )}
-              >
-                {type.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Status Filter Row */}
-        <div className="flex flex-wrap items-center gap-2 border-t border-border/50 pt-2.5">
-          <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground shrink-0 mr-1">{tUI("filterStatus")}</span>
-          <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto">
-            {[
-              { id: "all", label: tUI("allStatuses") },
-              { id: "incomplete", label: tUI("incompleteStatus") },
-              { id: "near_expiry", label: tUI("nearExpiryStatus") },
-              { id: "suspended", label: tUI("suspendedStatus") },
-              { id: "compliant", label: tUI("compliantStatus") }
-            ].map((st) => (
-              <button
-                key={st.id}
-                onClick={() => setSelectedStatus(st.id)}
-                className={cn(
-                  "px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all shrink-0 border",
-                  selectedStatus === st.id
-                    ? "bg-slate-900 text-white border-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:border-slate-100 shadow-xs"
-                    : "bg-background border-border/70 text-muted-foreground hover:text-foreground hover:border-border"
-                )}
-              >
-                {st.label}
-              </button>
-            ))}
           </div>
         </div>
       </div>
