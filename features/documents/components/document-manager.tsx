@@ -7,6 +7,7 @@ import {
   FileText,
   FolderOpen,
   FolderPlus,
+  Plus,
   ChevronRight,
   Upload,
   Camera,
