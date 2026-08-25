@@ -35,6 +35,7 @@ const moneyExchangePayloadSchema = z.object({
 
 import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
 import { NextRequest } from "next/server";
+import { withLocalPg } from "@/lib/db/local-postgres";
 
 export async function POST(req: NextRequest) {
   let idempotencyKey = "";
@@ -70,47 +71,68 @@ export async function POST(req: NextRequest) {
     idempotencyKey = lockRes.idempotencyKey;
     tenantHash = lockRes.tenantHash;
 
-    const supabase = createSupabaseAdminClient() as any;
+    const now = new Date().toISOString();
+    let insertedId: string | null = null;
 
-    const { data, error } = await supabase
-      .from("money_exchange_entries")
-      .insert({
-        serial_no: parsed.serialNo,
-        branch_id: parsed.branchId,
-        entry_date: parsed.entryDate,
-        transaction_type: parsed.transactionType,
-        account_no: parsed.accountNo || null,
-        qty_currency: parsed.qtyCurrency,
-        ex_currency: parsed.exCurrency,
-        operation: parsed.operation,
-        rate: parsed.rate,
-        quantity: parsed.quantity,
-        final_amount: parsed.finalAmount,
-        receipt_name: parsed.receiptName || null,
-        receipt_person_id: parsed.receiptPersonId || null,
-        receipt_bank_id: parsed.receiptBankId || null,
-        received_from: parsed.receivedFrom || null,
-        mobile: parsed.mobile || null,
-        details: parsed.details || null,
-        profit_base_currency: parsed.profitBaseCurrency,
-        received_type: parsed.receivedType || null,
-        purchase_country: parsed.purchaseCountry || null,
-        purchase_city: parsed.purchaseCity || null,
-        purchased_from: parsed.purchasedFrom || null,
-        purchased_from_person_id: parsed.purchasedFromPersonId || null,
-        received_country: parsed.receivedCountry || null,
-        received_city: parsed.receivedCity || null,
-        received_office_name: parsed.receivedOfficeName || null,
-        received_office_numbers: parsed.receivedOfficeNumbers || null,
-        created_at: new Date().toISOString(),
-        created_by: session.userId || null
-      })
-      .select("id")
-      .single();
+    const viaPg = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        insert into public.money_exchange_entries (
+          serial_no, branch_id, entry_date, transaction_type, account_no,
+          qty_currency, ex_currency, operation, rate, quantity, final_amount,
+          receipt_name, receipt_person_id, receipt_bank_id, received_from, mobile,
+          details, profit_base_currency, received_type,
+          purchase_country, purchase_city, purchased_from, purchased_from_person_id,
+          received_country, received_city, received_office_name, received_office_numbers,
+          created_at, created_by
+        ) values (
+          ${parsed.serialNo}, ${parsed.branchId}, ${parsed.entryDate}, ${parsed.transactionType},
+          ${parsed.accountNo || null}, ${parsed.qtyCurrency}, ${parsed.exCurrency},
+          ${parsed.operation}, ${parsed.rate}, ${parsed.quantity}, ${parsed.finalAmount},
+          ${parsed.receiptName || null}, ${parsed.receiptPersonId || null},
+          ${parsed.receiptBankId || null}, ${parsed.receivedFrom || null},
+          ${parsed.mobile || null}, ${parsed.details || null}, ${parsed.profitBaseCurrency},
+          ${parsed.receivedType || null}, ${parsed.purchaseCountry || null},
+          ${parsed.purchaseCity || null}, ${parsed.purchasedFrom || null},
+          ${parsed.purchasedFromPersonId || null}, ${parsed.receivedCountry || null},
+          ${parsed.receivedCity || null}, ${parsed.receivedOfficeName || null},
+          ${parsed.receivedOfficeNumbers || null}, ${now}, ${session.userId || null}
+        )
+        returning id
+      `;
+      return rows[0]?.id ?? null;
+    });
 
-    if (error) throw new Error(error.message);
+    if (viaPg) {
+      insertedId = viaPg;
+    } else {
+      const supabase = createSupabaseAdminClient() as any;
+      const { data, error } = await supabase
+        .from("money_exchange_entries")
+        .insert({
+          serial_no: parsed.serialNo, branch_id: parsed.branchId, entry_date: parsed.entryDate,
+          transaction_type: parsed.transactionType, account_no: parsed.accountNo || null,
+          qty_currency: parsed.qtyCurrency, ex_currency: parsed.exCurrency,
+          operation: parsed.operation, rate: parsed.rate, quantity: parsed.quantity,
+          final_amount: parsed.finalAmount, receipt_name: parsed.receiptName || null,
+          receipt_person_id: parsed.receiptPersonId || null, receipt_bank_id: parsed.receiptBankId || null,
+          received_from: parsed.receivedFrom || null, mobile: parsed.mobile || null,
+          details: parsed.details || null, profit_base_currency: parsed.profitBaseCurrency,
+          received_type: parsed.receivedType || null, purchase_country: parsed.purchaseCountry || null,
+          purchase_city: parsed.purchaseCity || null, purchased_from: parsed.purchasedFrom || null,
+          purchased_from_person_id: parsed.purchasedFromPersonId || null,
+          received_country: parsed.receivedCountry || null, received_city: parsed.receivedCity || null,
+          received_office_name: parsed.receivedOfficeName || null,
+          received_office_numbers: parsed.receivedOfficeNumbers || null,
+          created_at: now, created_by: session.userId || null
+        })
+        .select("id").single();
+      if (error) throw new Error(error.message);
+      insertedId = data?.id ?? null;
+    }
 
-    const resPayload = { success: true, id: data.id };
+    if (!insertedId) throw new Error("Failed to insert money exchange entry");
+
+    const resPayload = { success: true, id: insertedId };
     if (idempotencyKey && tenantHash) {
       await commitIdempotencySuccess(idempotencyKey, tenantHash, 200, resPayload);
     }
@@ -123,8 +145,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: err.message || "Failed to save exchange entry" }, { status: 500 });
   }
 }
-
-import { withLocalPg } from "@/lib/db/local-postgres";
 
 export async function GET(req: Request) {
   try {

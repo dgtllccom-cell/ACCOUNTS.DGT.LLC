@@ -199,62 +199,79 @@ export async function POST(request: NextRequest) {
       cityBranchId: payload.cityBranchId ?? null,
     });
 
-    const supabase = createSupabaseAdminClient();
-    const { data: inserted, error } = await (supabase as any).from("local_purchases")
-      .insert({
-        company_id: payload.companyId,
-        country_id: payload.countryId,
-        country_branch_id: payload.countryBranchId,
-        city_branch_id: payload.cityBranchId || null,
-        goods_id: payload.goodsId || null,
-        purchase_account_no: payload.purchaseAccountNo || null,
-        sales_account_no: payload.salesAccountNo || null,
-        broker_account_no: payload.brokerAccountNo || null,
-        brand: payload.brand || null,
-        size: payload.size || null,
-        chassis_code: payload.chassisCode || null,
-        lot_no: payload.lotNo || null,
-        goods_name: payload.goodsName,
-        supplier_name: payload.supplierName || null,
-        payment_mode: payload.paymentMode || "Cash",
-        shipping_mode: payload.shippingMode || "Local Market",
-        origin_country_id: payload.originCountryId || null,
-        origin_country_name: payload.originCountryName || "Local",
-        advance_percentage: payload.advancePercentage || 0,
-        advance_amount: payload.advanceAmount || 0,
-        remaining_balance: payload.remainingBalance || 0,
-        warehouse_name: payload.warehouseName || null,
-        warehouse_id: payload.warehouseId || null,
-        supplier_person_id: payload.supplierPersonId || null,
-        warehouse_plot_no: payload.warehousePlotNo || null,
-        transfer_date: payload.transferDate || null,
-        truck_no: payload.truckNo || null,
-        driver_name: payload.driverName || null,
-        quantity_name: payload.quantityName,
-        quantity_kgs: payload.quantityKgs,
-        total_gross_weight: payload.totalGrossWeight,
-        empty_kgs: payload.emptyKgs,
-        net_weight: payload.netWeight,
-        divide_kgs: payload.divideKgs,
-        numbers: payload.numbers,
-        rate_type: payload.rateType,
-        purchase_rate: payload.purchaseRate,
-        purchase_currency: payload.purchaseCurrency,
-        exchange_rate: payload.exchangeRate,
-        local_currency: payload.localCurrency,
-        purchase_cost: payload.purchaseCost,
-        apply_tax: payload.applyTax || "No",
-        tax_type: payload.taxType || "VAT",
-        tax_percentage: payload.taxPercentage || 0,
-        tax_amount: payload.taxAmount || 0,
-        final_cost: payload.finalCost,
-        status: "draft",
-        created_by: session.userId,
-      })
-      .select()
-      .single();
+    const insertedViaPg = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        insert into public.local_purchases (
+          company_id, country_id, country_branch_id, city_branch_id,
+          goods_id, purchase_account_no, sales_account_no, broker_account_no,
+          brand, size, chassis_code, lot_no, goods_name, supplier_name,
+          payment_mode, shipping_mode, origin_country_id, origin_country_name,
+          advance_percentage, advance_amount, remaining_balance,
+          warehouse_name, warehouse_id, supplier_person_id, warehouse_plot_no,
+          transfer_date, truck_no, driver_name, quantity_name,
+          quantity_kgs, total_gross_weight, empty_kgs, net_weight, divide_kgs, numbers,
+          rate_type, purchase_rate, purchase_currency, exchange_rate, local_currency,
+          purchase_cost, apply_tax, tax_type, tax_percentage, tax_amount, final_cost,
+          status, created_by
+        ) values (
+          ${payload.companyId}, ${payload.countryId}, ${payload.countryBranchId},
+          ${payload.cityBranchId || null}, ${payload.goodsId || null},
+          ${payload.purchaseAccountNo || null}, ${payload.salesAccountNo || null},
+          ${payload.brokerAccountNo || null}, ${payload.brand || null},
+          ${payload.size || null}, ${payload.chassisCode || null}, ${payload.lotNo || null},
+          ${payload.goodsName}, ${payload.supplierName || null},
+          ${payload.paymentMode || "Cash"}, ${payload.shippingMode || "Local Market"},
+          ${payload.originCountryId || null}, ${payload.originCountryName || "Local"},
+          ${payload.advancePercentage || 0}, ${payload.advanceAmount || 0},
+          ${payload.remainingBalance || 0}, ${payload.warehouseName || null},
+          ${payload.warehouseId || null}, ${payload.supplierPersonId || null},
+          ${payload.warehousePlotNo || null}, ${payload.transferDate || null},
+          ${payload.truckNo || null}, ${payload.driverName || null}, ${payload.quantityName},
+          ${payload.quantityKgs}, ${payload.totalGrossWeight}, ${payload.emptyKgs},
+          ${payload.netWeight}, ${payload.divideKgs}, ${payload.numbers},
+          ${payload.rateType}, ${payload.purchaseRate}, ${payload.purchaseCurrency},
+          ${payload.exchangeRate}, ${payload.localCurrency}, ${payload.purchaseCost},
+          ${payload.applyTax || "No"}, ${payload.taxType || "VAT"},
+          ${payload.taxPercentage || 0}, ${payload.taxAmount || 0}, ${payload.finalCost},
+          'draft', ${session.userId}
+        )
+        returning *
+      `;
+      return rows[0] ?? null;
+    });
 
-    if (error) throw error;
+    let inserted = insertedViaPg;
+    if (!inserted) {
+      const supabase = createSupabaseAdminClient();
+      const { data, error } = await (supabase as any).from("local_purchases").insert({
+        company_id: payload.companyId, country_id: payload.countryId,
+        country_branch_id: payload.countryBranchId, city_branch_id: payload.cityBranchId || null,
+        goods_id: payload.goodsId || null, purchase_account_no: payload.purchaseAccountNo || null,
+        sales_account_no: payload.salesAccountNo || null, broker_account_no: payload.brokerAccountNo || null,
+        brand: payload.brand || null, size: payload.size || null, chassis_code: payload.chassisCode || null,
+        lot_no: payload.lotNo || null, goods_name: payload.goodsName, supplier_name: payload.supplierName || null,
+        payment_mode: payload.paymentMode || "Cash", shipping_mode: payload.shippingMode || "Local Market",
+        origin_country_id: payload.originCountryId || null, origin_country_name: payload.originCountryName || "Local",
+        advance_percentage: payload.advancePercentage || 0, advance_amount: payload.advanceAmount || 0,
+        remaining_balance: payload.remainingBalance || 0, warehouse_name: payload.warehouseName || null,
+        warehouse_id: payload.warehouseId || null, supplier_person_id: payload.supplierPersonId || null,
+        warehouse_plot_no: payload.warehousePlotNo || null, transfer_date: payload.transferDate || null,
+        truck_no: payload.truckNo || null, driver_name: payload.driverName || null,
+        quantity_name: payload.quantityName, quantity_kgs: payload.quantityKgs,
+        total_gross_weight: payload.totalGrossWeight, empty_kgs: payload.emptyKgs,
+        net_weight: payload.netWeight, divide_kgs: payload.divideKgs, numbers: payload.numbers,
+        rate_type: payload.rateType, purchase_rate: payload.purchaseRate,
+        purchase_currency: payload.purchaseCurrency, exchange_rate: payload.exchangeRate,
+        local_currency: payload.localCurrency, purchase_cost: payload.purchaseCost,
+        apply_tax: payload.applyTax || "No", tax_type: payload.taxType || "VAT",
+        tax_percentage: payload.taxPercentage || 0, tax_amount: payload.taxAmount || 0,
+        final_cost: payload.finalCost, status: "draft", created_by: session.userId,
+      }).select().single();
+      if (error) throw error;
+      inserted = data;
+    }
+
+    if (!inserted) throw new Error("Failed to insert local purchase record");
 
     // Synchronous 5-language database storage across dedicated tables
     try {

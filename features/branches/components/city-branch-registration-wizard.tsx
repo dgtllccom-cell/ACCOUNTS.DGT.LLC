@@ -24,6 +24,7 @@ import {
   type LocationHierarchyValue
 } from "@/features/locations/components/location-hierarchy-select";
 import { CompanyPicker } from "@/features/companies/components/company-picker";
+import { PersonPicker } from "@/components/erp/person-picker";
 import { PermissionAssignmentSection } from "@/features/users/components/permission-assignment-section";
 import { apiGet, apiPost } from "@/lib/api/client";
 import { getPermissionKeysForTemplate } from "@/lib/permissions/catalog";
@@ -104,6 +105,7 @@ export function CityBranchRegistrationWizard() {
   const [phone, setPhone] = useState("");
   const [companyId, setCompanyId] = useState("");
   const [ownerName, setOwnerName] = useState("");
+  const [ownerCustomerId, setOwnerCustomerId] = useState("");
   const [permissionTemplate, setPermissionTemplate] = useState("city-standard");
   const [permissionGrants, setPermissionGrants] = useState<string[]>(() => getPermissionKeysForTemplate("city-standard"));
   const [adminUser, setAdminUser] = useState({
@@ -268,6 +270,7 @@ export function CityBranchRegistrationWizard() {
         whatsappNumber: communication.whatsappNumber,
         companyId: companyId || null,
         ownerName: ownerName || adminUser.fullName,
+        ownerCustomerId: ownerCustomerId || null,
         contacts: [
           adminUser.phone ? { type: "Mobile", value: adminUser.phone } : null,
           generatedEmail ? { type: "Email", value: generatedEmail } : null,
@@ -440,7 +443,17 @@ export function CityBranchRegistrationWizard() {
                 <CompanyPicker label="Linked Company / Owner Master" value={companyId} onValueChange={setCompanyId} placeholder="Search company master..." />
               </div>
               <div className="grid gap-3 md:grid-cols-2">
-                <InputField label="Owner / Manager Name" value={ownerName} onChange={setOwnerName} placeholder="Branch owner or manager" />
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-muted-foreground block">Owner / Manager Person</label>
+                  <PersonPicker
+                    label=""
+                    value={ownerCustomerId}
+                    onValueChange={(id) => setOwnerCustomerId(id)}
+                    countryId={location.countryId || null}
+                    placeholder="Search Person Master for branch owner / manager..."
+                  />
+                  <p className="text-[10px] text-muted-foreground">Select from Central Person Master. Use + Add New Person if the person is not yet registered.</p>
+                </div>
                 <div />
               </div>
               <label className="block space-y-1.5">

@@ -16,7 +16,7 @@ import {
   type LocationHierarchyValue
 } from "@/features/locations/components/location-hierarchy-select";
 import { createWarehouse, updateWarehouse, type WarehouseRecord } from "@/features/warehouses/warehouse-api";
-import { CustomerPicker } from "@/features/customers/components/customer-picker";
+import { PersonPicker } from "@/components/erp/person-picker";
 import { apiGet } from "@/lib/api/client";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
@@ -390,24 +390,26 @@ export function WarehouseForm({
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold">{t(lang, "whf.warehouse_owner")}</Label>
-                  <CustomerPicker
+                  <PersonPicker
                     label=""
                     value={ownerPersonId}
-                    onValueChange={(customerId) => setOwnerPersonId(customerId)}
+                    onValueChange={(personId) => setOwnerPersonId(personId)}
                     countryId={form.countryId || null}
-                    placeholder={t(lang, "wh.wf_search_owner_customer_person", "Search owner from Customer / Person Master")}
+                    placeholder={t(lang, "wh.wf_search_owner_customer_person", "Search owner from Person Master")}
+                    lang={lang}
                   />
-                  <p className="text-[10px] text-muted-foreground">Select an existing shared customer/person/business owner or create one from the same master form.</p>
+                  <p className="text-[10px] text-muted-foreground">Select an existing person from the Central Person Master or register a new one.</p>
                 </div>
 
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold">{t(lang, "whf.warehouse_responsible_person", "Responsible Person / Manager")}</Label>
-                  <CustomerPicker
+                  <PersonPicker
                     label=""
                     value={responsiblePersonId}
-                    onValueChange={(customerId) => setResponsiblePersonId(customerId)}
+                    onValueChange={(personId) => setResponsiblePersonId(personId)}
                     countryId={form.countryId || null}
                     placeholder={t(lang, "wh.wf_search_responsible_person", "Search responsible person from Person Master")}
+                    lang={lang}
                   />
                 </div>
 
