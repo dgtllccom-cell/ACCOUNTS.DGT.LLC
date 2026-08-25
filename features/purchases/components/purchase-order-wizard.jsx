@@ -494,6 +494,7 @@ function LightStatusBadge({ status }) {
 export function PurchaseOrderWizard({ session }) {
   const router = useRouter();
   const lang = useActiveLanguage();
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const trUi = useCallback((label) => {
     if (lang === "en") return label;
     // translateHeader() already returns the original label unchanged when no dictionary
@@ -3633,7 +3634,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
   };
 
   return (
-    <div className="space-y-2 text-foreground bg-background mt-[-10px] max-w-[1500px] mx-auto">
+    <div dir={isRtl ? "rtl" : "ltr"} className="space-y-2 text-foreground bg-background mt-[-10px] max-w-[1500px] mx-auto">
       {isSuperAdmin && (!form.countryId || !form.countryBranchId || !scopeConfirmed) && (
         <SimpleModal
           isOpen={true}
