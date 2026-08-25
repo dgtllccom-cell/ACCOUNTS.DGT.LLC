@@ -813,7 +813,7 @@ export function DocumentManager() {
 
   return (
     <div className={cn("space-y-4 pb-16 min-h-screen font-sans", isRtl && "text-right")} dir={isRtl ? "rtl" : "ltr"}>
-      {/* ── Top Header & Action Controls Toolbar (Matching General Office Design) ── */}
+      {/* ── Top Header Bar with Scope Switcher & Primary Action Buttons ── */}
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3.5 bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
         {/* Left: Module Title & Badge */}
         <div className="flex items-center gap-3 shrink-0">
@@ -831,143 +831,317 @@ export function DocumentManager() {
           </div>
         </div>
 
-        {/* Right: Search, Date Filters & Primary Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Search Input */}
-          <div className="relative min-w-[200px] sm:min-w-[240px]">
-            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t("search_placeholder", "Search documents by title, party, invoice #...")}
-              className="h-8.5 pl-8.5 pr-2.5 text-xs bg-slate-50/70 dark:bg-slate-950 border-slate-200 dark:border-slate-700 rounded-xl font-sans"
-            />
+        {/* Center: Role Scope Selector Pills (Super Admin / Country Admin / Branch User) */}
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl text-xs font-bold border border-slate-200/80 dark:border-slate-800 shadow-xs">
+          <button
+            type="button"
+            onClick={() => setScopeRole("super_admin")}
+            className={cn(
+              "px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5",
+              scopeRole === "super_admin"
+                ? "bg-white dark:bg-slate-800 text-blue-600 shadow-xs"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+            )}
+          >
+            <span>👑</span>
+            <span>{t("super_admin_role", "Super Admin")}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setScopeRole("country_admin")}
+            className={cn(
+              "px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5",
+              scopeRole === "country_admin"
+                ? "bg-white dark:bg-slate-800 text-blue-600 shadow-xs"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+            )}
+          >
+            <span>🌍</span>
+            <span>{t("country_admin_role", "Country Admin")}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setScopeRole("branch_user")}
+            className={cn(
+              "px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5",
+              scopeRole === "branch_user"
+                ? "bg-white dark:bg-slate-800 text-blue-600 shadow-xs"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+            )}
+          >
+            <span>🏢</span>
+            <span>{t("branch_role", "Branch User")}</span>
+          </button>
+        </div>
+
+        {/* Right: Primary Action Buttons Toolbar */}
+        <div className="flex flex-wrap items-center gap-1.5 font-sans">
+          {/* Person / Customer Link */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.push("/dashboard/settings/customers" as Route)}
+            className="h-8.5 rounded-xl border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200 text-xs font-bold px-2.5 gap-1 shadow-xs"
+          >
+            <UserCheck className="h-3.5 w-3.5" />
+            {t("person_customer", "Person / Customer")}
+          </Button>
+
+          {/* Company Link */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.push("/dashboard/settings/company" as Route)}
+            className="h-8.5 rounded-xl border-indigo-300 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-200 text-xs font-bold px-2.5 gap-1 shadow-xs"
+          >
+            <Building2 className="h-3.5 w-3.5" />
+            {t("company", "Company")}
+          </Button>
+
+          {/* Bank / Account Link */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.push("/dashboard/settings/bank" as Route)}
+            className="h-8.5 rounded-xl border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200 text-xs font-bold px-2.5 gap-1 shadow-xs"
+          >
+            <CreditCard className="h-3.5 w-3.5" />
+            {t("bank", "Bank")}
+          </Button>
+
+          {/* New Custom Folder Button */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsNewFolderOpen(true)}
+            className="h-8.5 rounded-xl border-purple-300 bg-purple-50 hover:bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-200 text-xs font-bold px-2.5 gap-1 shadow-xs"
+          >
+            <FolderPlus className="h-3.5 w-3.5" />
+            {t("new_folder", "New Folder")}
+          </Button>
+
+          {/* Upload File Input (Hidden) */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            className="hidden"
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            className="h-8.5 rounded-xl border-blue-300 bg-blue-50 hover:bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200 text-xs font-bold px-2.5 gap-1 shadow-xs"
+          >
+            <Upload className="h-3.5 w-3.5" />
+            {isUploading ? t("uploading", "Uploading...") : t("upload_file", "Upload File")}
+          </Button>
+
+          {/* Start Direct Scan Button */}
+          <Button
+            type="button"
+            onClick={() => setIsScannerOpen(true)}
+            className="h-8.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 gap-1.5 shadow-sm"
+          >
+            <Camera className="h-3.5 w-3.5" />
+            {t("start_scan", "Start Direct Scan")}
+          </Button>
+        </div>
+      </div>
+
+      {/* ── Top Scope & Hierarchy Dropdowns Filter Bar (Directly Under Header) ── */}
+      <div className="bg-white dark:bg-slate-900 p-3 sm:p-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs font-sans space-y-2.5">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 shrink-0">
+            <SlidersHorizontal className="h-4 w-4 text-indigo-600" />
+            <span>{t("scope_hierarchy_filters", "Scope & Hierarchy Filters")}</span>
           </div>
 
-          {/* Quick Date Range Presets */}
-          <div className="hidden sm:flex items-center gap-1 font-sans">
-            <button
-              type="button"
-              onClick={() => setDateFilter("all")}
-              className={`h-8.5 rounded-xl border px-2.5 text-xs font-bold transition-colors ${
-                dateFilter === "all"
-                  ? "bg-blue-600 text-white border-blue-600 shadow-xs"
-                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-              }`}
+          {/* Search & Date Filter Controls */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Search Input */}
+            <div className="relative min-w-[200px] sm:min-w-[260px]">
+              <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t("search_placeholder", "Search documents by title, party, invoice #...")}
+                className="h-8.5 pl-8.5 pr-2.5 text-xs bg-slate-50/70 dark:bg-slate-950 border-slate-200 dark:border-slate-700 rounded-xl"
+              />
+            </div>
+
+            {/* Date Filters */}
+            <div className="flex items-center gap-1 font-sans">
+              <button
+                type="button"
+                onClick={() => setDateFilter("all")}
+                className={`h-8.5 rounded-xl border px-2.5 text-xs font-bold transition-colors ${
+                  dateFilter === "all"
+                    ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+                }`}
+              >
+                {t("all_records", "All")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setDateFilter("today")}
+                className={`h-8.5 rounded-xl border px-2.5 text-xs font-bold transition-colors ${
+                  dateFilter === "today"
+                    ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+                }`}
+              >
+                {t("today", "Today")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setDateFilter("yesterday")}
+                className={`h-8.5 rounded-xl border px-2.5 text-xs font-bold transition-colors ${
+                  dateFilter === "yesterday"
+                    ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+                }`}
+              >
+                {t("yesterday", "Yesterday")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setDateFilter("this_month")}
+                className={`h-8.5 rounded-xl border px-2.5 text-xs font-bold transition-colors ${
+                  dateFilter === "this_month"
+                    ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+                }`}
+              >
+                {t("this_month", "This Month")}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Hierarchy Dropdowns Grid */}
+        <div className="grid gap-2.5 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 pt-1 border-t border-slate-100 dark:border-slate-800">
+          {/* 1. Country Dropdown */}
+          <SearchSelect
+            label={t("countries", "Country")}
+            value={selectedCountryId}
+            placeholder={t("all_countries", "All Countries")}
+            options={countries.map((country) => ({
+              value: country.id,
+              label: country.name,
+              keywords: [country.name, country.code, country.iso_code].filter(Boolean).join(" ")
+            }))}
+            onValueChange={(value) => {
+              setSelectedCountryId(value);
+              setSelectedMainBranchId("");
+              setSelectedCityBranchId("");
+            }}
+            searchPlaceholder={t("search", "Search...")}
+            emptyLabel={t("no_matches_found", "No matches found")}
+          />
+
+          {/* 2. Main Branch Dropdown */}
+          <SearchSelect
+            label={t("main_branches", "Main Branch")}
+            value={selectedMainBranchId}
+            placeholder={t("all_main_branches", "All Main Branches")}
+            options={(activeCountry?.mainBranches || []).map((branch: any) => ({
+              value: branch.id,
+              label: branch.name,
+              keywords: [branch.name, branch.code, branch.branch_code, branch.owner_name].filter(Boolean).join(" ")
+            }))}
+            disabled={!activeCountry && countries.length > 0}
+            onValueChange={(value) => {
+              setSelectedMainBranchId(value);
+              setSelectedCityBranchId("");
+            }}
+            searchPlaceholder={t("search", "Search...")}
+            emptyLabel={t("no_matches_found", "No matches found")}
+          />
+
+          {/* 3. City Branch Dropdown */}
+          <SearchSelect
+            label={t("city_branches", "City Branch")}
+            value={selectedCityBranchId}
+            placeholder={t("all_city_branches", "All City Branches")}
+            options={(activeMainBranch?.cityBranches || []).map((branch: any) => ({
+              value: branch.id,
+              label: branch.name,
+              keywords: [branch.name, branch.code, branch.branch_code, branch.owner_name].filter(Boolean).join(" ")
+            }))}
+            disabled={!activeMainBranch}
+            onValueChange={(value) => setSelectedCityBranchId(value)}
+            searchPlaceholder={t("search", "Search...")}
+            emptyLabel={t("no_matches_found", "No matches found")}
+          />
+
+          {/* 4. Module / Custom Folder Dropdown */}
+          <div>
+            <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
+              {t("module_folders", "Module / Folder")}
+            </label>
+            <select
+              value={selectedModule}
+              onChange={(e) => setSelectedModule(e.target.value)}
+              className="w-full h-9 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
             >
-              {t("all_records", "All Records")}
-            </button>
-            <button
-              type="button"
-              onClick={() => setDateFilter("today")}
-              className={`h-8.5 rounded-xl border px-2.5 text-xs font-bold transition-colors ${
-                dateFilter === "today"
-                  ? "bg-blue-600 text-white border-blue-600 shadow-xs"
-                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-              }`}
-            >
-              {t("today", "Today")}
-            </button>
-            <button
-              type="button"
-              onClick={() => setDateFilter("yesterday")}
-              className={`h-8.5 rounded-xl border px-2.5 text-xs font-bold transition-colors ${
-                dateFilter === "yesterday"
-                  ? "bg-blue-600 text-white border-blue-600 shadow-xs"
-                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-              }`}
-            >
-              {t("yesterday", "Yesterday")}
-            </button>
-            <button
-              type="button"
-              onClick={() => setDateFilter("this_month")}
-              className={`h-8.5 rounded-xl border px-2.5 text-xs font-bold transition-colors ${
-                dateFilter === "this_month"
-                  ? "bg-blue-600 text-white border-blue-600 shadow-xs"
-                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-              }`}
-            >
-              {t("this_month", "This Month")}
-            </button>
+              <option value="all">{t("all_module_folders", "📁 All Module Folders")}</option>
+              <optgroup label="ERP Modules">
+                {DEFAULT_MODULE_FOLDERS.map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
+              </optgroup>
+              {customFolders.length > 0 && (
+                <optgroup label="Custom Folders">
+                  {customFolders.map((cf) => (
+                    <option key={cf.id} value={cf.name}>
+                      ⭐ {cf.name}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+            </select>
           </div>
 
-          {/* Action Buttons Toolbar */}
-          <div className="flex flex-wrap items-center gap-1.5 font-sans">
-            {/* Person / Customer Link */}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push("/dashboard/settings/customers" as Route)}
-              className="h-8.5 rounded-xl border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200 text-xs font-bold px-2.5 gap-1 shadow-xs"
-            >
-              <UserCheck className="h-3.5 w-3.5" />
-              {t("person_customer", "Person / Customer")}
-            </Button>
+          {/* 5. Company Filter Dropdown */}
+          <SearchSelect
+            label={t("company", "Company")}
+            value={selectedCompanyId}
+            placeholder={t("all_companies", "All Companies")}
+            options={companyOptions}
+            onValueChange={(val) => {
+              setSelectedCompanyId(val);
+              const found = companyOptions.find((o) => o.value === val);
+              setSelectedCompanyName(found ? found.label.split(" • ")[1] || found.label : "");
+            }}
+            searchPlaceholder={t("search", "Search...")}
+            emptyLabel={t("no_matches_found", "No matches found")}
+          />
 
-            {/* Company Link */}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push("/dashboard/settings/company" as Route)}
-              className="h-8.5 rounded-xl border-indigo-300 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-200 text-xs font-bold px-2.5 gap-1 shadow-xs"
-            >
-              <Building2 className="h-3.5 w-3.5" />
-              {t("company", "Company")}
-            </Button>
-
-            {/* Bank / Account Link */}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push("/dashboard/settings/bank" as Route)}
-              className="h-8.5 rounded-xl border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200 text-xs font-bold px-2.5 gap-1 shadow-xs"
-            >
-              <CreditCard className="h-3.5 w-3.5" />
-              {t("bank", "Bank")}
-            </Button>
-
-            {/* New Custom Folder Button */}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsNewFolderOpen(true)}
-              className="h-8.5 rounded-xl border-purple-300 bg-purple-50 hover:bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-200 text-xs font-bold px-2.5 gap-1 shadow-xs"
-            >
-              <FolderPlus className="h-3.5 w-3.5" />
-              {t("new_folder", "New Folder")}
-            </Button>
-
-            {/* Upload File Input (Hidden) */}
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileUpload}
-              className="hidden"
-              accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading}
-              className="h-8.5 rounded-xl border-blue-300 bg-blue-50 hover:bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200 text-xs font-bold px-2.5 gap-1 shadow-xs"
-            >
-              <Upload className="h-3.5 w-3.5" />
-              {isUploading ? t("uploading", "Uploading...") : t("upload_file", "Upload File")}
-            </Button>
-
-            {/* Start Direct Scan Button */}
-            <Button
-              type="button"
-              onClick={() => setIsScannerOpen(true)}
-              className="h-8.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 gap-1.5 shadow-sm"
-            >
-              <Camera className="h-3.5 w-3.5" />
-              {t("start_scan", "Start Direct Scan")}
-            </Button>
-          </div>
+          {/* 6. Account / Person Filter Dropdown */}
+          <SearchSelect
+            label={t("account_person", "Account / Party")}
+            value={selectedAccountId || selectedPersonId}
+            placeholder={t("all_accounts", "All Accounts")}
+            options={[...accountOptions, ...personOptions]}
+            onValueChange={(val) => {
+              if (val.startsWith("cust_") || val.startsWith("emp_")) {
+                setSelectedPersonId(val);
+                setSelectedAccountId("");
+              } else {
+                setSelectedAccountId(val);
+                setSelectedPersonId("");
+              }
+            }}
+            searchPlaceholder={t("search", "Search...")}
+            emptyLabel={t("no_matches_found", "No matches found")}
+          />
         </div>
       </div>
 
@@ -1104,179 +1278,6 @@ export function DocumentManager() {
               <span className="text-indigo-600 font-bold">🔄 {t("sync", "Sync")}</span>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* ── Top Role-Aware Hierarchy & Filter Dropdowns Bar ── */}
-      <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-950 font-sans space-y-3">
-        <div className="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-2.5">
-          <div className="flex items-center gap-2">
-            <SlidersHorizontal className="h-4 w-4 text-indigo-600" />
-            <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-              {t("hierarchy_selectors", "Directory Hierarchy & Scope Dropdowns")}
-            </span>
-          </div>
-
-          {/* Role Scope Selector Tabs */}
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl text-xs font-bold">
-            <button
-              type="button"
-              onClick={() => setScopeRole("super_admin")}
-              className={cn(
-                "px-2.5 py-1 rounded-lg transition-all",
-                scopeRole === "super_admin"
-                  ? "bg-white dark:bg-slate-800 text-blue-600 shadow-xs"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-              )}
-            >
-              👑 {t("super_admin_role", "Super Admin Storage")}
-            </button>
-            <button
-              type="button"
-              onClick={() => setScopeRole("country_admin")}
-              className={cn(
-                "px-2.5 py-1 rounded-lg transition-all",
-                scopeRole === "country_admin"
-                  ? "bg-white dark:bg-slate-800 text-blue-600 shadow-xs"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-              )}
-            >
-              🌍 {t("country_admin_role", "Country Admin")}
-            </button>
-            <button
-              type="button"
-              onClick={() => setScopeRole("branch_user")}
-              className={cn(
-                "px-2.5 py-1 rounded-lg transition-all",
-                scopeRole === "branch_user"
-                  ? "bg-white dark:bg-slate-800 text-blue-600 shadow-xs"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-              )}
-            >
-              🏢 {t("branch_role", "Branch User")}
-            </button>
-          </div>
-        </div>
-
-        {/* Scope Dropdowns Row */}
-        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-          {/* 1. Country Dropdown */}
-          <SearchSelect
-            label={t("countries", "Country")}
-            value={selectedCountryId}
-            placeholder={t("all_countries", "All Countries")}
-            options={countries.map((country) => ({
-              value: country.id,
-              label: country.name,
-              keywords: [country.name, country.code, country.iso_code].filter(Boolean).join(" ")
-            }))}
-            onValueChange={(value) => {
-              setSelectedCountryId(value);
-              setSelectedMainBranchId("");
-              setSelectedCityBranchId("");
-            }}
-            searchPlaceholder={t("search", "Search...")}
-            emptyLabel={t("no_matches_found", "No matches found")}
-          />
-
-          {/* 2. Main Branch Dropdown */}
-          <SearchSelect
-            label={t("main_branches", "Main Branch")}
-            value={selectedMainBranchId}
-            placeholder={t("all_main_branches", "All Main Branches")}
-            options={(activeCountry?.mainBranches || []).map((branch: any) => ({
-              value: branch.id,
-              label: branch.name,
-              keywords: [branch.name, branch.code, branch.branch_code, branch.owner_name].filter(Boolean).join(" ")
-            }))}
-            disabled={!activeCountry && countries.length > 0}
-            onValueChange={(value) => {
-              setSelectedMainBranchId(value);
-              setSelectedCityBranchId("");
-            }}
-            searchPlaceholder={t("search", "Search...")}
-            emptyLabel={t("no_matches_found", "No matches found")}
-          />
-
-          {/* 3. City Branch Dropdown */}
-          <SearchSelect
-            label={t("city_branches", "City Branch")}
-            value={selectedCityBranchId}
-            placeholder={t("all_city_branches", "All City Branches")}
-            options={(activeMainBranch?.cityBranches || []).map((branch: any) => ({
-              value: branch.id,
-              label: branch.name,
-              keywords: [branch.name, branch.code, branch.branch_code, branch.owner_name].filter(Boolean).join(" ")
-            }))}
-            disabled={!activeMainBranch}
-            onValueChange={(value) => setSelectedCityBranchId(value)}
-            searchPlaceholder={t("search", "Search...")}
-            emptyLabel={t("no_matches_found", "No matches found")}
-          />
-
-          {/* 4. Module / Custom Folder Dropdown */}
-          <div>
-            <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
-              {t("module_folders", "Module / Folder")}
-            </label>
-            <select
-              value={selectedModule}
-              onChange={(e) => setSelectedModule(e.target.value)}
-              className="w-full h-9 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-            >
-              <option value="all">{t("all_module_folders", "📁 All Module Folders")}</option>
-              <optgroup label="ERP Modules">
-                {DEFAULT_MODULE_FOLDERS.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-              </optgroup>
-              {customFolders.length > 0 && (
-                <optgroup label="Custom Folders">
-                  {customFolders.map((cf) => (
-                    <option key={cf.id} value={cf.name}>
-                      ⭐ {cf.name}
-                    </option>
-                  ))}
-                </optgroup>
-              )}
-            </select>
-          </div>
-
-          {/* 5. Company Filter Dropdown */}
-          <SearchSelect
-            label={t("company", "Company")}
-            value={selectedCompanyId}
-            placeholder={t("all_companies", "All Companies")}
-            options={companyOptions}
-            onValueChange={(val) => {
-              setSelectedCompanyId(val);
-              const found = companyOptions.find((o) => o.value === val);
-              setSelectedCompanyName(found ? found.label.split(" • ")[1] || found.label : "");
-            }}
-            searchPlaceholder={t("search", "Search...")}
-            emptyLabel={t("no_matches_found", "No matches found")}
-          />
-
-          {/* 6. Account / Person Filter Dropdown */}
-          <SearchSelect
-            label={t("account_person", "Account / Party")}
-            value={selectedAccountId || selectedPersonId}
-            placeholder={t("all_accounts", "All Accounts")}
-            options={[...accountOptions, ...personOptions]}
-            onValueChange={(val) => {
-              if (val.startsWith("cust_") || val.startsWith("emp_")) {
-                setSelectedPersonId(val);
-                setSelectedAccountId("");
-              } else {
-                setSelectedAccountId(val);
-                setSelectedPersonId("");
-              }
-            }}
-            searchPlaceholder={t("search", "Search...")}
-            emptyLabel={t("no_matches_found", "No matches found")}
-          />
         </div>
       </div>
 
