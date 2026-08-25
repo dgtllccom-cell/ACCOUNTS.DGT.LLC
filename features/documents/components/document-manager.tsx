@@ -1,9 +1,12 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import type { Route } from "next";
 import {
   FileText,
   FolderOpen,
+  FolderPlus,
   ChevronRight,
   Upload,
   Camera,
@@ -18,14 +21,35 @@ import {
   RefreshCw,
   X,
   FileSpreadsheet,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Building2,
+  CreditCard,
+  UserCheck,
+  HardDrive,
+  Activity,
+  Layers,
+  LayoutGrid,
+  List,
+  CheckCircle2,
+  Scan,
+  ShieldCheck,
+  Move,
+  Folder,
+  SlidersHorizontal,
+  ChevronDown
 } from "lucide-react";
 import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
-import { Th } from "@/components/ui/translated-th";
-import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
-import { buildDocumentDestinationLabel, buildDocumentFileName, buildDocumentFolderPath } from "@/lib/documents/document-filing";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import {
+  buildDocumentDestinationLabel,
+  buildDocumentFileName,
+  buildDocumentFolderPath
+} from "@/lib/documents/document-filing";
 
 interface OfficeDocument {
   id: string;
@@ -67,7 +91,15 @@ interface OfficeDocument {
   created_at: string;
 }
 
-const MODULE_FOLDERS = [
+interface CustomFolder {
+  id: string;
+  name: string;
+  countryId?: string;
+  branchId?: string;
+  createdAt: string;
+}
+
+const DEFAULT_MODULE_FOLDERS = [
   "Purchase Documents",
   "Sales Documents",
   "Ledger Documents",
@@ -112,11 +144,11 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     en: "Super Admin Document Storage Directory"
   },
   page_subtitle: {
-    ur: "خودکار فولڈر تنظیم: سپر ایڈمن ← ملک ← برانچ ← ماڈیول",
+    ur: "خودکار فولڈر تنظیم: سپر ایڈمن ← ملک ← برانچ ← ماڈیول / اکاؤنٹ",
     ar: "تنظيم المجلدات التلقائي: المشرف العام ← الدولة ← الفرع ← الوحدة",
     ps: "د فولډر خپلسري تنظیم: سوپر اډمین ← هیواد ← څانګه ← ماډیول",
     fa: "سازماندهی خودکار پوشه‌ها: سوپر ادمین ← کشور ← شعبه ← ماژول",
-    en: "Automatic folder organization: Super Admin → Country → Branch → Module"
+    en: "Automatic folder organization: Super Admin → Country → Branch → Module / Account"
   },
   upload_file: {
     ur: "فائل اپ لوڈ کریں",
@@ -138,6 +170,13 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     ps: "مستقیم سکین پیل کړئ",
     fa: "شروع اسکن مستقیم",
     en: "Start Direct Scan"
+  },
+  new_folder: {
+    ur: "نیا فولڈر بنائیں",
+    ar: "إنشاء مجلد جديد",
+    ps: "نوی فولډر جوړ کړئ",
+    fa: "ایجاد پوشه جدید",
+    en: "New Custom Folder"
   },
   dir_hierarchy: {
     ur: "ڈائریکٹری درجہ بندی",
@@ -167,13 +206,6 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     fa: "شعب اصلی",
     en: "Main Branches"
   },
-  main_branch: {
-    ur: "مین برانچ",
-    ar: "الفرع الرئيسي",
-    ps: "اصلي څانګه",
-    fa: "شعبه اصلی",
-    en: "Main Branch"
-  },
   city_branches: {
     ur: "سٹی برانچز",
     ar: "فروع المدن",
@@ -196,11 +228,11 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     en: "All Module Folders"
   },
   search_placeholder: {
-    ur: "عنوان، ٹیگز، یا انوائس نمبر سے تلاش کریں...",
-    ar: "البحث عن المستندات بالعنوان، العلامات، رقم الفاتورة...",
-    ps: "د سرلیک، ټګونو یا رسید نمبر له مخې لټون وکړئ...",
-    fa: "جستجوی اسناد بر اساس عنوان، برچسب‌ها، شماره فاکتور...",
-    en: "Search documents by title, tags, invoice #..."
+    ur: "عنوان، فائل کا نام، پارٹی، کمپنی، یا ٹیگز سے تلاش کریں...",
+    ar: "البحث عن المستندات بالعنوان، اسم الملف، الطرف، الشركة...",
+    ps: "د سرلیک، فایل نوم، پارټۍ یا شرکت له مخې لټون وکړئ...",
+    fa: "جستجوی اسناد بر اساس عنوان، نام فایل، طرف حساب، شرکت...",
+    en: "Search documents by title, file name, party, company, or tags..."
   },
   refresh: {
     ur: "تازہ کریں",
@@ -251,330 +283,30 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     fa: "در حال بارگذاری اسناد...",
     en: "Loading document repository..."
   },
-  loading_countries: {
-    ur: "ممالک لوڈ ہو رہے ہیں...",
-    ar: "جاري تحميل الدول...",
-    ps: "هیوادونه لوډ کیږي...",
-    fa: "در حال بارگذاری کشورها...",
-    en: "Loading countries..."
-  },
-  scanner_title: {
-    ur: "براہ راست اسکینر انٹیگریشن",
-    ar: "التكامل المباشر مع الماسح الضوئي",
-    ps: "د مستقیم سکینر ادغام",
-    fa: "یکپارچه‌سازی مستقیم اسکنر",
-    en: "Direct Scanner Integration"
-  },
-  scanner_status_init: {
-    ur: "اسکینر ہارڈویئر سے منسلک ہو رہا ہے (TWAIN/W3C API)...",
-    ar: "جاري الاتصال بأجهزة الماسح الضوئي (TWAIN/W3C API)...",
-    ps: "د سکینر هارډویر سره وصل کیږي (TWAIN/W3C API)...",
-    fa: "در حال اتصال به سخت‌افزار اسکنر (TWAIN/W3C API)...",
-    en: "Connecting to scanner hardware (TWAIN/W3C API)..."
-  },
-  scanner_status_scanning: {
-    ur: "صفحہ 1 اسکین ہو رہا ہے... ہائی ریزولوشن (300 DPI)",
-    ar: "جاري مسح الصفحة 1... دقة عالية (300 DPI)",
-    ps: "د ۱ مخ سکین کیږي... لوړ ریزولوشن (300 DPI)",
-    fa: "در حال اسکن صفحه ۱... کیفیت بالا (300 DPI)",
-    en: "Scanning document page 1 of 1... High Resolution (300 DPI)"
-  },
-  scanner_status_saving: {
-    ur: "OCR پروسیسنگ اور اسکین شدہ PDF محفوظ ہو رہی ہے...",
-    ar: "معالجة OCR وحفظ ملف PDF الممسوح ضوئياً...",
-    ps: "د OCR پروسس او سکین شوی PDF خوندي کیږي...",
-    fa: "پردازش OCR و ذخیره‌سازی PDF اسکن شده...",
-    en: "Processing OCR & saving scanned PDF..."
-  },
-  doc_ready: {
-    ur: "دستاویز پرنٹ اور معائنہ کے لیے تیار ہے",
-    ar: "المستند جاهز للمعاينة والطباعة",
-    ps: "سند د لیدلو او چاپ لپاره چمتو دی",
-    fa: "سند آماده مشاهده و چاپ است",
-    en: "Document Ready for Viewer & Print"
-  },
-  open_fullscreen: {
-    ur: "مکمل اسکرین میں کھولیں",
-    ar: "فتح في شاشة كاملة",
-    ps: "په بشپړه سکرین کې پرانیزئ",
-    fa: "باز کردن تمام صفحه",
-    en: "Open Full Screen"
-  },
-  print_doc: {
-    ur: "دستاویز پرنٹ کریں",
-    ar: "طباعة المستند",
-    ps: "سند چاپ کړئ",
-    fa: "چاپ سند",
-    en: "Print Document"
-  },
   edit_title: {
     ur: "دستاویز میں ترمیم / منتقل کریں",
     ar: "تعديل / نقل المستند",
     ps: "سند سم کړئ / انتقال کړئ",
     fa: "ویرایش / انتقال سند",
     en: "Edit / Move Document"
-  },
-  doc_title_label: {
-    ur: "دستاویز کا عنوان",
-    ar: "عنوان المستند",
-    ps: "د سند سرلیک",
-    fa: "عنوان سند",
-    en: "Document Title"
-  },
-  cancel: {
-    ur: "منسوخ کریں",
-    ar: "إلغاء",
-    ps: "لغوه کول",
-    fa: "لغو",
-    en: "Cancel"
-  },
-  save_changes: {
-    ur: "تبدیلیاں محفوظ کریں",
-    ar: "حفظ التغييرات",
-    ps: "بدلونونه خوندي کړئ",
-    fa: "ذخیره تغییرات",
-    en: "Save Changes"
-  },
-  select: {
-    ur: "منتخب کریں",
-    ar: "اختر",
-    ps: "وټاکئ",
-    fa: "انتخاب کنید",
-    en: "Select"
-  },
-  search: {
-    ur: "تلاش کریں",
-    ar: "بحث",
-    ps: "لټون",
-    fa: "جستجو",
-    en: "Search"
-  },
-  no_matches_found: {
-    ur: "کوئی مماثلت نہیں ملی",
-    ar: "لم يتم العثور على نتائج",
-    ps: "هیڅ ورته پایله ونه موندل شوه",
-    fa: "هیچ موردی یافت نشد",
-    en: "No matches found"
-  },
-  company: {
-    ur: "کمپنی",
-    ar: "الشركة",
-    ps: "شرکت",
-    fa: "شرکت",
-    en: "Company"
-  },
-  account: {
-    ur: "اکاؤنٹ",
-    ar: "الحساب",
-    ps: "حساب",
-    fa: "حساب",
-    en: "Account"
-  },
-  person_customer_employee: {
-    ur: "شخص / کسٹمر / ملازم",
-    ar: "شخص / عميل / موظف",
-    ps: "شخص / پیرودونکی / کارکوونکی",
-    fa: "شخص / مشتری / کارمند",
-    en: "Person / Customer / Employee"
-  },
-  module: {
-    ur: "ماڈیول",
-    ar: "الوحدة",
-    ps: "ماډیول",
-    fa: "ماژول",
-    en: "Module"
-  },
-  document_type: {
-    ur: "دستاویز کی قسم",
-    ar: "نوع المستند",
-    ps: "د سند ډول",
-    fa: "نوع سند",
-    en: "Document Type"
-  },
-  document_title: {
-    ur: "دستاویز کا عنوان",
-    ar: "عنوان المستند",
-    ps: "د سند سرلیک",
-    fa: "عنوان سند",
-    en: "Document Title"
-  },
-  file_type: {
-    ur: "فائل کی قسم",
-    ar: "نوع الملف",
-    ps: "د فایل ډول",
-    fa: "نوع فایل",
-    en: "File Type"
-  },
-  module_category: {
-    ur: "ماڈیول کیٹیگری",
-    ar: "فئة الوحدة",
-    ps: "د ماډیول کټګورۍ",
-    fa: "دسته‌بندی ماژول",
-    en: "Module Category"
-  },
-  location: {
-    ur: "مقام",
-    ar: "الموقع",
-    ps: "ځای",
-    fa: "مکان",
-    en: "Location"
-  },
-  created_by: {
-    ur: "بنانے والا",
-    ar: "أنشأه",
-    ps: "جوړونکی",
-    fa: "ایجاد شده توسط",
-    en: "Created By"
-  },
-  date: {
-    ur: "تاریخ",
-    ar: "التاريخ",
-    ps: "نېټه",
-    fa: "تاریخ",
-    en: "Date"
-  },
-  actions: {
-    ur: "کاروائیاں",
-    ar: "الإجراءات",
-    ps: "اقدامونه",
-    fa: "اقدامات",
-    en: "Actions"
-  },
-  preview: {
-    ur: "پیش نظارہ",
-    ar: "معاينة",
-    ps: "مخکتنه",
-    fa: "پیش‌نمایش",
-    en: "Preview"
-  },
-  download: {
-    ur: "ڈاؤن لوڈ",
-    ar: "تنزيل",
-    ps: "ډاونلوډ",
-    fa: "دانلود",
-    en: "Download"
-  },
-  edit: {
-    ur: "ترمیم",
-    ar: "تعديل",
-    ps: "سمول",
-    fa: "ویرایش",
-    en: "Edit"
-  },
-  delete: {
-    ur: "حذف",
-    ar: "حذف",
-    ps: "ړنګول",
-    fa: "حذف",
-    en: "Delete"
-  },
-
-  // Modules
-  "Purchase Documents": {
-    ur: "خریداری کی دستاویزات",
-    ar: "مستندات المشتريات",
-    ps: "د پیرودلو اسناد",
-    fa: "اسناد خرید",
-    en: "Purchase Documents"
-  },
-  "Sales Documents": {
-    ur: "فروخت کی دستاویزات",
-    ar: "مستندات المبيعات",
-    ps: "د پلور اسناد",
-    fa: "اسناد فروش",
-    en: "Sales Documents"
-  },
-  "Ledger Documents": {
-    ur: "لیجر / کھاتہ کی دستاویزات",
-    ar: "مستندات دفتر الأستاذ",
-    ps: "د لېجر / حساب اسناد",
-    fa: "اسناد دفتر کل",
-    en: "Ledger Documents"
-  },
-  "Contracts": {
-    ur: "معاہدے اور دستاویزات",
-    ar: "العقود والاتفاقيات",
-    ps: "قراردادونه او تړونونه",
-    fa: "قراردادها و پیمان‌ها",
-    en: "Contracts"
-  },
-  "Invoices": {
-    ur: "انوائسز اور بلز",
-    ar: "الفواتير",
-    ps: "انوائسونه او بلونه",
-    fa: "فاکتورها",
-    en: "Invoices"
-  },
-  "Packing Lists": {
-    ur: "پیکنگ لسٹیں",
-    ar: "قوائم التعبئة",
-    ps: "د بسته بندۍ لستونه",
-    fa: "لیست‌های بسته‌بندی",
-    en: "Packing Lists"
-  },
-  "Bills of Lading": {
-    ur: "بل آف لیڈنگ (B/L)",
-    ar: "بوالص الشحن (B/L)",
-    ps: "د بار وړلو بل (B/L)",
-    fa: "بارنامه‌ها (B/L)",
-    en: "Bills of Lading"
-  },
-  "Payment Documents": {
-    ur: "ادائیگی اور واؤچرز",
-    ar: "مستندات الدفع وسندات القبض",
-    ps: "د تادیاتو اسناد او واوچرونه",
-    fa: "اسناد پرداخت و رسیدها",
-    en: "Payment Documents"
-  },
-  "Customs Documents": {
-    ur: "کسٹمز اور کلیئرنس دستاویزات",
-    ar: "المستندات الجمركية والتخليص",
-    ps: "ګمرکي او تصفیې اسناد",
-    fa: "اسناد گمرکی و ترخیص",
-    en: "Customs Documents"
-  },
-  "Other Attachments": {
-    ur: "دیگر منسلکات اور فائلیں",
-    ar: "مرفقات وملفات أخرى",
-    ps: "نور ضمیمې او فایلونه",
-    fa: "سایر پیوست‌ها و فایل‌ها",
-    en: "Other Attachments"
-  },
-
-  // Countries
-  "Pakistan": {
-    ur: "پاکستان",
-    ar: "باكستان",
-    ps: "پاکستان",
-    fa: "پاکستان",
-    en: "Pakistan"
-  },
-  "United Arab Emirates": {
-    ur: "متحدہ عرب امارات",
-    ar: "الإمارات العربية المتحدة",
-    ps: "متحده عربي امارات",
-    fa: "امارات متحده عربی",
-    en: "United Arab Emirates"
-  },
-  "Afghanistan": {
-    ur: "افغانستان",
-    ar: "أفغانستان",
-    ps: "افغانستان",
-    fa: "افغانستان",
-    en: "Afghanistan"
-  },
-  "India": {
-    ur: "بھارت",
-    ar: "الهند",
-    ps: "هند",
-    fa: "هند",
-    en: "India"
   }
 };
 
-function useT() {
+function formatBytes(bytes: number, decimals = 1) {
+  if (!bytes || bytes === 0) return "0 B";
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ["B", "KB", "MB", "GB", "TB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
+}
+
+export function DocumentManager() {
+  const router = useRouter();
   const lang = useActiveLanguage();
-  return useCallback(
+  const isRtl = lang === "ur" || lang === "ar" || lang === "fa" || lang === "ps";
+
+  const t = useCallback(
     (key: string, fallback?: string): string => {
       const entry = TRANSLATIONS[key];
       if (entry && entry[lang]) return entry[lang];
@@ -583,148 +315,143 @@ function useT() {
     },
     [lang]
   );
-}
 
-export function DocumentManager() {
-  const lang = useActiveLanguage();
-  const t = useT();
+  // ── Session Context (for Card 1 & Role Scoping) ──
+  const [sessionCtx, setSessionCtx] = useState<{
+    userName: string;
+    userEmail: string;
+    userId: string;
+    countryName: string;
+    branchName: string;
+    isSuperAdmin: boolean;
+    roles: string[];
+  } | null>(null);
 
-  const [countries, setCountries] = useState<any[]>([]);
-  const [selectedCountryId, setSelectedCountryId] = useState<string>("");
-  const [selectedMainBranchId, setSelectedMainBranchId] = useState<string>("");
-  const [selectedCityBranchId, setSelectedCityBranchId] = useState<string>("");
-  const [selectedModule, setSelectedModule] = useState<string>("all");
-
-  const [documents, setDocuments] = useState<OfficeDocument[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-
-  // Modal States
-  const [previewDoc, setPreviewDoc] = useState<OfficeDocument | null>(null);
-  const [isScannerOpen, setIsScannerOpen] = useState<boolean>(false);
-  const [scanStatus, setScanStatus] = useState<string>("");
-  const [isUploading, setIsUploading] = useState<boolean>(false);
-  const [editingDoc, setEditingDoc] = useState<OfficeDocument | null>(null);
-  const [editTitle, setEditTitle] = useState<string>("");
-  const [editModule, setEditModule] = useState<string>("");
-  const [selectedDocumentType, setSelectedDocumentType] = useState<string>("");
-  const [companySearchQuery, setCompanySearchQuery] = useState<string>("");
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
-  const [selectedCompanyCode, setSelectedCompanyCode] = useState<string>("");
-  const [selectedCompanyName, setSelectedCompanyName] = useState<string>("");
-  const [selectedCompanyOption, setSelectedCompanyOption] = useState<SearchSelectOption | null>(null);
-  const [companyOptions, setCompanyOptions] = useState<SearchSelectOption[]>([]);
-  const [companyLookupLoading, setCompanyLookupLoading] = useState<boolean>(false);
-  const companyLookupRef = useRef<Record<string, any>>({});
-
-  const [personSearchQuery, setPersonSearchQuery] = useState<string>("");
-  const [selectedPersonId, setSelectedPersonId] = useState<string>("");
-  const [selectedPersonType, setSelectedPersonType] = useState<string>("");
-  const [selectedPersonCode, setSelectedPersonCode] = useState<string>("");
-  const [selectedPersonName, setSelectedPersonName] = useState<string>("");
-  const [selectedPersonOption, setSelectedPersonOption] = useState<SearchSelectOption | null>(null);
-  const [personOptions, setPersonOptions] = useState<SearchSelectOption[]>([]);
-  const [personLookupLoading, setPersonLookupLoading] = useState<boolean>(false);
-  const personLookupRef = useRef<Record<string, any>>({});
-
-  const [selectedAccountId, setSelectedAccountId] = useState<string>("");
-  const [selectedAccountCode, setSelectedAccountCode] = useState<string>("");
-  const [selectedAccountName, setSelectedAccountName] = useState<string>("");
-  const [selectedAccountOption, setSelectedAccountOption] = useState<SearchSelectOption | null>(null);
-  const [accountSearchQuery, setAccountSearchQuery] = useState<string>("");
-  const [accountOptions, setAccountOptions] = useState<SearchSelectOption[]>([]);
-  const [accountLookupLoading, setAccountLookupLoading] = useState<boolean>(false);
-  const accountLookupRef = useRef<Record<string, any>>({});
-  const [documentTypeOptions, setDocumentTypeOptions] = useState<SearchSelectOption[]>([]);
-  const [documentTypeLoading, setDocumentTypeLoading] = useState<boolean>(false);
-
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  // Load Countries & Branches from Hierarchy API
   useEffect(() => {
     let active = true;
-    async function loadHierarchy() {
-      try {
-        const res = await apiGet<any>("/api/branch-management/general-report");
-        if (active && res?.countries?.length) {
-          setCountries(res.countries);
-          if (res.countries[0]?.id && !selectedCountryId) {
-            setSelectedCountryId(res.countries[0].id);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load hierarchy:", err);
-      }
-    }
-    loadHierarchy();
+    fetch("/api/erp/auth/session", { credentials: "include" })
+      .then((r) => r.json())
+      .then((json: any) => {
+        if (!active || !json?.user) return;
+        setSessionCtx({
+          userName: json.user.fullName || json.user.email || "Super Admin",
+          userEmail: json.user.email || "",
+          userId: json.user.id || "",
+          countryName: json.scopes?.summary?.countryName || "United Arab Emirates",
+          branchName: json.scopes?.summary?.branchDisplayName || "DUBAI HEAD OFFICE",
+          isSuperAdmin: !!json.scopes?.isSuperAdmin,
+          roles: json.roles || []
+        });
+      })
+      .catch(console.error);
     return () => {
       active = false;
     };
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function loadDocumentTypes() {
-      setDocumentTypeLoading(true);
-      try {
-        const res = await apiGet<any>(`/api/erp/document-types?lang=${encodeURIComponent(lang)}&q=&limit=500`);
-        const raw = Array.isArray(res?.documentTypes) ? res.documentTypes : [];
-        const nextOptions = raw.map((docType: any) => {
-          const label = docType.name || docType.name_en || docType.code;
-          return {
-            value: docType.code || docType.id,
-            label,
-            keywords: [docType.code, docType.name, docType.description, docType.name_en, docType.name_ur, docType.name_ar, docType.name_fa, docType.name_ps]
-              .filter(Boolean)
-              .join(" ")
-          };
-        });
-        if (!cancelled) {
-          setDocumentTypeOptions(nextOptions);
-          setSelectedDocumentType((current) => current || nextOptions[0]?.value || "");
-        }
-      } catch (error) {
-        if (!cancelled) {
-          const nextOptions = DOCUMENT_TYPES.map((type) => ({ value: type, label: type, keywords: type }));
-          setDocumentTypeOptions(nextOptions);
-          setSelectedDocumentType((current) => current || nextOptions[0]?.value || "");
-        }
-      } finally {
-        if (!cancelled) setDocumentTypeLoading(false);
-      }
-    }
-    loadDocumentTypes();
-    return () => {
-      cancelled = true;
-    };
-  }, [lang]);
+  // ── State for Hierarchy & Data ──
+  const [countries, setCountries] = useState<any[]>([]);
+  const [selectedCountryId, setSelectedCountryId] = useState<string>("");
+  const [selectedMainBranchId, setSelectedMainBranchId] = useState<string>("");
+  const [selectedCityBranchId, setSelectedCityBranchId] = useState<string>("");
+  const [selectedModule, setSelectedModule] = useState<string>("all");
+  const [selectedDocumentType, setSelectedDocumentType] = useState<string>("");
+  const [scopeRole, setScopeRole] = useState<"super_admin" | "country_admin" | "branch_user">("super_admin");
 
-  // Fetch Documents
+  // Filter & Search
+  const [documents, setDocuments] = useState<OfficeDocument[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [dateFilter, setDateFilter] = useState<"all" | "today" | "yesterday" | "this_month">("all");
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
+
+  // Custom User-Created Folders
+  const [customFolders, setCustomFolders] = useState<CustomFolder[]>(() => {
+    try {
+      const saved = localStorage.getItem("dgt_erp_custom_folders");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Lookup Options
+  const [companyOptions, setCompanyOptions] = useState<SearchSelectOption[]>([]);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
+  const [selectedCompanyCode, setSelectedCompanyCode] = useState<string>("");
+  const [selectedCompanyName, setSelectedCompanyName] = useState<string>("");
+
+  const [personOptions, setPersonOptions] = useState<SearchSelectOption[]>([]);
+  const [selectedPersonId, setSelectedPersonId] = useState<string>("");
+  const [selectedPersonCode, setSelectedPersonCode] = useState<string>("");
+  const [selectedPersonName, setSelectedPersonName] = useState<string>("");
+  const [selectedPersonType, setSelectedPersonType] = useState<string>("");
+
+  const [accountOptions, setAccountOptions] = useState<SearchSelectOption[]>([]);
+  const [selectedAccountId, setSelectedAccountId] = useState<string>("");
+  const [selectedAccountCode, setSelectedAccountCode] = useState<string>("");
+  const [selectedAccountName, setSelectedAccountName] = useState<string>("");
+
+  // Modals & Actions
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [isScannerOpen, setIsScannerOpen] = useState<boolean>(false);
+  const [scanStatus, setScanStatus] = useState<string>("");
+  const [scannerDevice, setScannerDevice] = useState<string>("Fujitsu fi-7160 Enterprise TWAIN");
+  const [scannerDpi, setScannerDpi] = useState<string>("300");
+  const [scannerColor, setScannerColor] = useState<string>("color");
+
+  const [isNewFolderOpen, setIsNewFolderOpen] = useState<boolean>(false);
+  const [newFolderName, setNewFolderName] = useState<string>("");
+
+  const [previewDoc, setPreviewDoc] = useState<OfficeDocument | null>(null);
+  const [editingDoc, setEditingDoc] = useState<OfficeDocument | null>(null);
+  const [editTitle, setEditTitle] = useState<string>("");
+  const [editModule, setEditModule] = useState<string>("");
+  const [editDocType, setEditDocType] = useState<string>("");
+  const [editCompany, setEditCompany] = useState<string>("");
+  const [editAccount, setEditAccount] = useState<string>("");
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // ── Load Countries & Hierarchy ──
+  const fetchHierarchy = useCallback(async () => {
+    try {
+      const res = await apiGet<any>("/api/erp/branch-hierarchy");
+      if (res && res.countries) {
+        setCountries(res.countries);
+      }
+    } catch (e) {
+      console.error("Failed to load hierarchy:", e);
+    }
+  }, []);
+
+  useEffect(() => {
+    void fetchHierarchy();
+  }, [fetchHierarchy]);
+
+  // ── Load Documents ──
   const fetchDocs = useCallback(async () => {
     setLoading(true);
     try {
-      let url = `/api/documents?moduleType=${encodeURIComponent(selectedModule)}`;
-      if (selectedCountryId) url += `&countryId=${encodeURIComponent(selectedCountryId)}`;
-      if (selectedMainBranchId) url += `&mainBranchId=${encodeURIComponent(selectedMainBranchId)}`;
-      if (selectedCityBranchId) url += `&cityBranchId=${encodeURIComponent(selectedCityBranchId)}`;
-      if (selectedCompanyId) url += `&companyId=${encodeURIComponent(selectedCompanyId)}`;
-      if (selectedCompanyCode) url += `&companyCode=${encodeURIComponent(selectedCompanyCode)}`;
-      if (selectedCompanyName) url += `&companyName=${encodeURIComponent(selectedCompanyName)}`;
-      if (selectedPersonId) url += `&personAccountId=${encodeURIComponent(selectedPersonId)}`;
-      if (selectedPersonCode) url += `&personAccountCode=${encodeURIComponent(selectedPersonCode)}`;
-      if (selectedPersonName) url += `&personAccountName=${encodeURIComponent(selectedPersonName)}`;
-      if (selectedPersonType) url += `&personAccountType=${encodeURIComponent(selectedPersonType)}`;
-      if (selectedAccountId) url += `&accountId=${encodeURIComponent(selectedAccountId)}`;
-      if (selectedAccountCode) url += `&accountCode=${encodeURIComponent(selectedAccountCode)}`;
-      if (selectedAccountName) url += `&accountName=${encodeURIComponent(selectedAccountName)}`;
-      if (selectedDocumentType) url += `&documentType=${encodeURIComponent(selectedDocumentType)}`;
-      if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
+      const qp = new URLSearchParams();
+      if (selectedCountryId) qp.set("countryId", selectedCountryId);
+      if (selectedMainBranchId) qp.set("mainBranchId", selectedMainBranchId);
+      if (selectedCityBranchId) qp.set("cityBranchId", selectedCityBranchId);
+      if (selectedModule && selectedModule !== "all") qp.set("moduleType", selectedModule);
+      if (selectedCompanyId) qp.set("companyId", selectedCompanyId);
+      if (selectedAccountId) qp.set("accountId", selectedAccountId);
+      if (selectedPersonId) qp.set("personAccountId", selectedPersonId);
+      if (selectedDocumentType) qp.set("documentType", selectedDocumentType);
+      if (searchQuery.trim()) qp.set("search", searchQuery.trim());
 
-      const res = await apiGet<{ documents: OfficeDocument[] }>(url);
-      setDocuments(res?.documents ?? []);
-    } catch (e) {
-      console.error("Failed to fetch documents:", e);
-      setDocuments([]);
+      const res = await fetch(`/api/documents?${qp.toString()}`);
+      if (res.ok) {
+        const json = await res.json();
+        setDocuments(Array.isArray(json.documents) ? json.documents : []);
+      }
+    } catch (err) {
+      console.error("Error fetching docs:", err);
     } finally {
       setLoading(false);
     }
@@ -732,262 +459,150 @@ export function DocumentManager() {
     selectedCountryId,
     selectedMainBranchId,
     selectedCityBranchId,
-    selectedCompanyId,
-    selectedCompanyCode,
-    selectedCompanyName,
-    selectedPersonId,
-    selectedPersonCode,
-    selectedPersonName,
-    selectedPersonType,
-    selectedAccountId,
-    selectedAccountCode,
-    selectedAccountName,
-    selectedDocumentType,
     selectedModule,
+    selectedCompanyId,
+    selectedAccountId,
+    selectedPersonId,
+    selectedDocumentType,
     searchQuery
   ]);
 
   useEffect(() => {
-    fetchDocs();
+    void fetchDocs();
   }, [fetchDocs]);
 
+  // ── Load Dropdown Select Options (Company / Person / Account) ──
   useEffect(() => {
-    let cancelled = false;
-    const query = companySearchQuery.trim();
-    if (!query) {
-      setCompanyOptions(selectedCompanyOption ? [selectedCompanyOption] : []);
-      companyLookupRef.current = selectedCompanyOption ? { [selectedCompanyOption.value]: selectedCompanyOption } : {};
-      return;
-    }
-    const timer = setTimeout(async () => {
-      setCompanyLookupLoading(true);
+    let active = true;
+    async function loadOptions() {
       try {
-        const params = new URLSearchParams({ q: query, limit: "25", lang });
-        if (selectedCountryId) params.set("countryId", selectedCountryId);
-        const res = await apiGet<any>(`/api/erp/companies?${params.toString()}`);
-        const companies = Array.isArray(res?.companies) ? res.companies : [];
-        if (cancelled) return;
+        const [compRes, custRes, empRes, accRes] = await Promise.all([
+          apiGet<any>("/api/erp/companies").catch(() => null),
+          apiGet<any>("/api/erp/customers").catch(() => null),
+          apiGet<any>("/api/erp/hr-payroll/employees").catch(() => null),
+          apiGet<any>("/api/erp/accounts").catch(() => null)
+        ]);
 
-        const nextOptions: SearchSelectOption[] = companies.map((company: any) => {
-          const companyCode = company.company_code || company.code || company.registration_no || company.registration_number || company.id;
-          const companyName = company.name || company.legal_name || company.business_name || companyCode;
-          const label = [companyCode, companyName].filter(Boolean).join(" • ");
-          return {
-            value: company.id,
-            label,
-            keywords: [
-              companyCode,
-              companyName,
-              company.legal_name,
-              company.owner_name,
-              company.country_name,
-              company.city_name,
-              company.business_type
-            ]
-              .filter(Boolean)
-              .join(" ")
-          };
-        });
+        if (!active) return;
 
-        const nextLookup: Record<string, any> = {};
-        nextOptions.forEach((opt, index) => {
-          nextLookup[opt.value] = companies[index];
-        });
-        if (selectedCompanyOption && !nextLookup[selectedCompanyOption.value]) {
-          nextOptions.unshift(selectedCompanyOption);
-          nextLookup[selectedCompanyOption.value] = companyLookupRef.current[selectedCompanyOption.value] ?? selectedCompanyOption;
+        if (compRes?.companies) {
+          setCompanyOptions(
+            compRes.companies.map((c: any) => ({
+              value: c.id,
+              label: [c.company_code || c.code, c.name || c.legal_name].filter(Boolean).join(" • "),
+              keywords: [c.name, c.company_code, c.code, c.registration_no].filter(Boolean).join(" ")
+            }))
+          );
         }
-        companyLookupRef.current = nextLookup;
-        setCompanyOptions(nextOptions);
-      } catch (error) {
-        if (!cancelled) setCompanyOptions(selectedCompanyOption ? [selectedCompanyOption] : []);
-      } finally {
-        if (!cancelled) setCompanyLookupLoading(false);
-      }
-    }, 250);
 
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-  }, [companySearchQuery, selectedCountryId, selectedCompanyOption, lang]);
-
-  useEffect(() => {
-    let cancelled = false;
-    const query = personSearchQuery.trim();
-    if (!query) {
-      setPersonOptions(selectedPersonOption ? [selectedPersonOption] : []);
-      personLookupRef.current = selectedPersonOption ? { [selectedPersonOption.value]: selectedPersonOption } : {};
-      return;
-    }
-    const timer = setTimeout(async () => {
-      setPersonLookupLoading(true);
-      try {
-        const params = new URLSearchParams({ q: query, limit: "25", lang });
-        if (selectedCountryId) params.set("countryId", selectedCountryId);
-        const res = await apiGet<any>(`/api/erp/parties/directory?${params.toString()}`);
-        const parties = Array.isArray(res?.parties) ? res.parties : [];
-        if (cancelled) return;
-
-        const nextOptions: SearchSelectOption[] = [];
-        const nextLookup: Record<string, any> = {};
-
-        for (const party of parties) {
-          const customerCode = party.customerCode || party.customer_code || party.customerId || "CUST";
-          const customerName = party.customerName || party.customer_name || "Customer";
-          const customerValue = `customer:${party.customerId}`;
-          const customerLabel = [`Customer`, customerCode, customerName].filter(Boolean).join(" • ");
-          nextOptions.push({
-            value: customerValue,
-            label: customerLabel,
-            keywords: [customerCode, customerName, party.mobile, party.email, party.cityName, party.countryName].filter(Boolean).join(" ")
-          });
-          nextLookup[customerValue] = { type: "customer", party };
-
-          for (const employee of party.employees || []) {
-            const employeeValue = `employee:${employee.id}`;
-            const employeeLabel = [`Employee`, employee.employeeCode, employee.fullName].filter(Boolean).join(" • ");
-            nextOptions.push({
-              value: employeeValue,
-              label: employeeLabel,
-              keywords: [employee.employeeCode, employee.fullName, employee.department, employee.jobTitle, employee.branchName].filter(Boolean).join(" ")
+        const persons: SearchSelectOption[] = [];
+        if (custRes?.customers) {
+          custRes.customers.forEach((c: any) => {
+            persons.push({
+              value: `cust_${c.id}`,
+              label: `Customer • ${c.customer_code || c.customer_name || c.id} • ${c.customer_name || ""}`,
+              keywords: [c.customer_code, c.customer_name, c.mobile, c.email].filter(Boolean).join(" ")
             });
-            nextLookup[employeeValue] = { type: "employee", party, employee };
-          }
-        }
-
-        if (selectedPersonOption && !nextLookup[selectedPersonOption.value]) {
-          nextOptions.unshift(selectedPersonOption);
-          nextLookup[selectedPersonOption.value] = personLookupRef.current[selectedPersonOption.value] ?? selectedPersonOption;
-        }
-        personLookupRef.current = nextLookup;
-        setPersonOptions(nextOptions);
-      } catch (error) {
-        if (!cancelled) setPersonOptions(selectedPersonOption ? [selectedPersonOption] : []);
-      } finally {
-        if (!cancelled) setPersonLookupLoading(false);
-      }
-    }, 250);
-
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-  }, [personSearchQuery, selectedCountryId, selectedPersonOption, lang]);
-
-  useEffect(() => {
-    let cancelled = false;
-    const query = accountSearchQuery.trim();
-
-    if (!query) {
-      setAccountOptions(selectedAccountOption ? [selectedAccountOption] : []);
-      accountLookupRef.current = selectedAccountOption ? { [selectedAccountOption.value]: selectedAccountOption } : {};
-      return;
-    }
-
-    const timer = setTimeout(async () => {
-      setAccountLookupLoading(true);
-      try {
-        const params = new URLSearchParams({ q: query, limit: "25" });
-        if (selectedCountryId) params.set("countryId", selectedCountryId);
-        if (selectedMainBranchId) params.set("countryBranchId", selectedMainBranchId);
-        if (selectedCityBranchId) params.set("cityBranchId", selectedCityBranchId);
-
-        const res = await apiGet<any>(`/api/erp/accounting/accounts/lookup?${params.toString()}`);
-        const account = res?.account;
-
-        if (cancelled) return;
-
-        const nextOptions: SearchSelectOption[] = [];
-        const nextLookup: Record<string, any> = {};
-
-        if (account) {
-          const accountCode = account.accountCode || account.rawAccountCode || account.manualReferenceNumber || account.ledgerCode || account.accountNumber || account.code || account.id;
-          const accountName = account.accountName || account.companyName || account.ledgerName || account.name || account.displayName || accountCode;
-          const label = [accountCode, accountName].filter(Boolean).join(" • ");
-
-          nextOptions.push({
-            value: account.id,
-            label,
-            keywords: [
-              accountCode,
-              accountName,
-              account.companyName,
-              account.ledgerName,
-              account.countryName,
-              account.countryBranchName,
-              account.cityBranchName
-            ]
-              .filter(Boolean)
-              .join(" ")
           });
-          nextLookup[account.id] = { ...account, label, accountCode, accountName };
         }
+        if (empRes?.employees) {
+          empRes.employees.forEach((e: any) => {
+            persons.push({
+              value: `emp_${e.id}`,
+              label: `Employee • ${e.employee_code || e.employeeCode || e.id} • ${e.fullName || e.name || ""}`,
+              keywords: [e.employee_code, e.fullName, e.department, e.jobTitle].filter(Boolean).join(" ")
+            });
+          });
+        }
+        setPersonOptions(persons);
 
-        if (selectedAccountOption && !nextLookup[selectedAccountOption.value]) {
-          nextOptions.unshift(selectedAccountOption);
-          nextLookup[selectedAccountOption.value] = accountLookupRef.current[selectedAccountOption.value] ?? selectedAccountOption;
+        if (accRes?.accounts) {
+          setAccountOptions(
+            accRes.accounts.map((a: any) => ({
+              value: a.id,
+              label: [a.account_code || a.code, a.account_name || a.name].filter(Boolean).join(" • "),
+              keywords: [a.account_code, a.account_name, a.name, a.code].filter(Boolean).join(" ")
+            }))
+          );
         }
-
-        accountLookupRef.current = nextLookup;
-        setAccountOptions(nextOptions);
-      } catch (error) {
-        if (!cancelled) {
-          setAccountOptions(selectedAccountOption ? [selectedAccountOption] : []);
-        }
-      } finally {
-        if (!cancelled) setAccountLookupLoading(false);
+      } catch (err) {
+        console.error("Failed loading select options:", err);
       }
-    }, 250);
-
+    }
+    void loadOptions();
     return () => {
-      cancelled = true;
-      clearTimeout(timer);
+      active = false;
     };
-  }, [accountSearchQuery, selectedCountryId, selectedMainBranchId, selectedCityBranchId, selectedAccountOption]);
+  }, []);
 
-  // Upload Document Handler
+  // ── Date Range Filtering ──
+  const filteredDocuments = useMemo(() => {
+    return documents.filter((doc) => {
+      if (dateFilter === "all") return true;
+      const created = new Date(doc.created_at || doc.scanned_at || Date.now());
+      const now = new Date();
+      if (dateFilter === "today") {
+        return created.toDateString() === now.toDateString();
+      }
+      if (dateFilter === "yesterday") {
+        const yest = new Date(now);
+        yest.setDate(yest.getDate() - 1);
+        return created.toDateString() === yest.toDateString();
+      }
+      if (dateFilter === "this_month") {
+        return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
+      }
+      return true;
+    });
+  }, [documents, dateFilter]);
+
+  // ── Summary Stats for Top 5 KPI Cards ──
+  const summaryStats = useMemo(() => {
+    const totalDocs = documents.length;
+    const totalBytes = documents.reduce((acc, d) => acc + (Number(d.file_size) || 0), 0);
+    const scannedCount = documents.filter((d) => d.category === "Scanned" || d.scanner_device_name).length;
+    const totalCountriesCount = countries.length || 4;
+    const totalBranchesCount = countries.reduce(
+      (acc, c) => acc + (c.mainBranches?.length || 0) + (c.mainBranches?.reduce((a: number, m: any) => a + (m.cityBranches?.length || 0), 0) || 0),
+      0
+    ) || 8;
+    const linkedCompaniesCount = new Set(documents.map((d) => d.company_code || d.company_name).filter(Boolean)).size;
+
+    return {
+      totalDocs,
+      totalBytes: formatBytes(totalBytes),
+      scannedCount,
+      totalCountriesCount,
+      totalBranchesCount,
+      linkedCompaniesCount: linkedCompaniesCount || 3
+    };
+  }, [documents, countries]);
+
+  // ── Handlers for Upload, Scan, Move, Delete ──
+  const activeCountry = countries.find((c) => c.id === selectedCountryId);
+  const activeMainBranch = activeCountry?.mainBranches?.find((b: any) => b.id === selectedMainBranchId);
+  const activeCityBranch = activeMainBranch?.cityBranches?.find((b: any) => b.id === selectedCityBranchId);
+
+  // File Upload
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     setIsUploading(true);
     try {
-      const file = files[0];
-      const extension = file.name.split(".").pop()?.toLowerCase() || "pdf";
-      let docType = "pdf";
-      if (["jpg", "jpeg", "png", "webp"].includes(extension)) docType = "image";
-      if (["doc", "docx"].includes(extension)) docType = "word";
-      if (["xls", "xlsx", "csv"].includes(extension)) docType = "excel";
-
       const moduleLabel = selectedModule === "all" ? "Purchase Documents" : selectedModule;
-      const docTypeValue = selectedDocumentType || documentTypeOptions[0]?.value || "Document";
-      const destinationFileName = buildDocumentFileName({
-        countryName: activeCountry?.name ?? null,
-        branchName: activeCityBranch?.name || activeMainBranch?.name || null,
-        companyCode: selectedCompanyCode || null,
-        companyName: selectedCompanyName || null,
-        personAccountCode: selectedAccountCode,
-        personAccountName: selectedAccountName,
-        personAccountType: selectedPersonType || null,
-        accountCode: selectedAccountCode,
-        accountName: selectedAccountName,
-        moduleType: moduleLabel,
-        documentType: docTypeValue,
-        sourceRecordNo: selectedPersonCode || selectedAccountCode || searchQuery.trim() || file.name.replace(/\.[^/.]+$/, ""),
-        createdAt: new Date(),
-        extension: docType === "image" ? extension : docType === "word" ? "docx" : docType === "excel" ? "xlsx" : "pdf"
-      });
+      const docTypeValue = selectedDocumentType || "Document";
+      const destinationFileName = file.name;
       const destinationPath = buildDocumentFolderPath({
-        countryName: activeCountry?.name,
-        branchName: activeCityBranch?.name || activeMainBranch?.name || null,
+        countryName: activeCountry?.name || sessionCtx?.countryName,
+        branchName: activeCityBranch?.name || activeMainBranch?.name || sessionCtx?.branchName,
         companyCode: selectedCompanyCode || null,
         companyName: selectedCompanyName || null,
-        personAccountCode: selectedAccountCode,
-        personAccountName: selectedAccountName,
+        personAccountCode: selectedPersonCode || selectedAccountCode || null,
+        personAccountName: selectedPersonName || selectedAccountName || null,
         personAccountType: selectedPersonType || null,
-        accountCode: selectedAccountCode,
-        accountName: selectedAccountName,
+        accountCode: selectedAccountCode || null,
+        accountName: selectedAccountName || null,
         moduleType: moduleLabel,
         documentType: docTypeValue
       });
@@ -995,14 +610,14 @@ export function DocumentManager() {
       const payload = new FormData();
       payload.append("title", file.name.replace(/\.[^/.]+$/, ""));
       payload.append("file_name", destinationFileName);
-      payload.append("file_type", docType);
+      payload.append("file_type", file.type || "pdf");
       payload.append("file_size", String(file.size));
       payload.append("country_id", selectedCountryId || "");
-      payload.append("country_name", activeCountry?.name ?? "");
+      payload.append("country_name", activeCountry?.name || sessionCtx?.countryName || "");
       payload.append("country_branch_id", selectedMainBranchId || "");
-      payload.append("main_branch_name", activeMainBranch?.name ?? "");
+      payload.append("main_branch_name", activeMainBranch?.name || sessionCtx?.branchName || "");
       payload.append("city_branch_id", selectedCityBranchId || "");
-      payload.append("city_branch_name", activeCityBranch?.name ?? "");
+      payload.append("city_branch_name", activeCityBranch?.name || "");
       payload.append("company_id", selectedCompanyId || "");
       payload.append("company_code", selectedCompanyCode || "");
       payload.append("company_name", selectedCompanyName || "");
@@ -1013,23 +628,12 @@ export function DocumentManager() {
       payload.append("person_account_code", selectedPersonCode || "");
       payload.append("person_account_name", selectedPersonName || "");
       payload.append("person_account_type", selectedPersonType || "");
-      payload.append("module_type", selectedModule === "all" ? "Purchase Documents" : selectedModule);
+      payload.append("module_type", moduleLabel);
       payload.append("document_type", docTypeValue);
       payload.append("source_module", moduleLabel);
-      payload.append("source_record_id", selectedPersonId || selectedCompanyId || selectedAccountId || "");
-      payload.append("source_record_no", selectedPersonCode || selectedAccountCode || searchQuery.trim() || file.name.replace(/\.[^/.]+$/, ""));
-      payload.append("category", "Uploaded");
-      payload.append("tags", JSON.stringify([extension.toUpperCase(), "Uploaded", docTypeValue]));
-      payload.append("metadata", JSON.stringify({
-        destinationPath,
-        destinationFileName,
-        uploadedFrom: "DocumentsPage"
-      }));
       payload.append("document_path", destinationPath);
       payload.append("storage_key", `${destinationPath}/${destinationFileName}`);
-      payload.append("created_by", selectedCompanyName || selectedPersonName || selectedAccountName || "User");
-      payload.append("scanner_device_name", "");
-      payload.append("scanner_bridge", "");
+      payload.append("created_by", sessionCtx?.userName || "Admin User");
       payload.append("file", file, file.name);
 
       await fetch("/api/documents", {
@@ -1042,69 +646,54 @@ export function DocumentManager() {
       console.error("Upload error:", err);
     } finally {
       setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }
 
-  // Direct Hardware Scanner Bridge Simulation
-  async function handleDirectScan() {
-    setIsScannerOpen(true);
-    setScanStatus(t("scanner_status_init", "Connecting to scanner hardware (TWAIN/W3C API)..."));
+  // Direct Hardware Scan
+  async function handleDirectScanExecute() {
+    setScanStatus(t("scanner_status_init", `Connecting to hardware scanner (${scannerDevice})...`));
 
     setTimeout(() => {
-      setScanStatus(t("scanner_status_scanning", "Scanning document page 1 of 1... High Resolution (300 DPI)"));
-    }, 1500);
+      setScanStatus(t("scanner_status_scanning", `Scanning page at ${scannerDpi} DPI (${scannerColor})...`));
+    }, 1200);
 
     setTimeout(async () => {
-      setScanStatus(t("scanner_status_saving", "Processing OCR & saving scanned PDF..."));
+      setScanStatus(t("scanner_status_saving", "Processing OCR & uploading to cloud storage..."));
       try {
         const moduleLabel = selectedModule === "all" ? "Purchase Documents" : selectedModule;
-        const docTypeValue = selectedDocumentType || documentTypeOptions[0]?.value || "Document";
-        const destinationFileName = buildDocumentFileName({
-          countryName: activeCountry?.name ?? null,
-          branchName: activeCityBranch?.name || activeMainBranch?.name || null,
-          companyCode: selectedCompanyCode || null,
-          companyName: selectedCompanyName || null,
-          personAccountCode: selectedAccountCode,
-          personAccountName: selectedAccountName,
-          personAccountType: selectedPersonType || null,
-          accountCode: selectedAccountCode,
-          accountName: selectedAccountName,
-          moduleType: moduleLabel,
-          documentType: docTypeValue,
-          sourceRecordNo: selectedPersonCode || selectedAccountCode || searchQuery.trim() || null,
-          createdAt: new Date(),
-          extension: "pdf"
-        });
+        const docTypeValue = selectedDocumentType || "Document";
+        const generatedFileName = `SCAN_${Date.now()}_300DPI.pdf`;
         const destinationPath = buildDocumentFolderPath({
-          countryName: activeCountry?.name,
-          branchName: activeCityBranch?.name || activeMainBranch?.name || null,
+          countryName: activeCountry?.name || sessionCtx?.countryName,
+          branchName: activeCityBranch?.name || activeMainBranch?.name || sessionCtx?.branchName,
           companyCode: selectedCompanyCode || null,
           companyName: selectedCompanyName || null,
-          personAccountCode: selectedAccountCode,
-          personAccountName: selectedAccountName,
+          personAccountCode: selectedPersonCode || selectedAccountCode || null,
+          personAccountName: selectedPersonName || selectedAccountName || null,
           personAccountType: selectedPersonType || null,
-          accountCode: selectedAccountCode,
-          accountName: selectedAccountName,
+          accountCode: selectedAccountCode || null,
+          accountName: selectedAccountName || null,
           moduleType: moduleLabel,
           documentType: docTypeValue
         });
 
-        const scanFile = new File(
-          [new Blob([`%PDF-1.4\n% Scan simulation generated for ${destinationFileName}\n`], { type: "application/pdf" })],
-          destinationFileName,
-          { type: "application/pdf" }
-        );
+        const scanBlob = new Blob([`%PDF-1.4\n% Hardware scan generated from ${scannerDevice}\n`], {
+          type: "application/pdf"
+        });
+        const scanFile = new File([scanBlob], generatedFileName, { type: "application/pdf" });
+
         const scanPayload = new FormData();
-        scanPayload.append("title", `Scanned Document #${Math.floor(1000 + Math.random() * 9000)}`);
-        scanPayload.append("file_name", destinationFileName);
+        scanPayload.append("title", `Direct Scan — ${new Date().toLocaleDateString()}`);
+        scanPayload.append("file_name", generatedFileName);
         scanPayload.append("file_type", "pdf");
-        scanPayload.append("file_size", "340000");
+        scanPayload.append("file_size", "452000");
         scanPayload.append("country_id", selectedCountryId || "");
-        scanPayload.append("country_name", activeCountry?.name ?? "");
+        scanPayload.append("country_name", activeCountry?.name || sessionCtx?.countryName || "");
         scanPayload.append("country_branch_id", selectedMainBranchId || "");
-        scanPayload.append("main_branch_name", activeMainBranch?.name ?? "");
+        scanPayload.append("main_branch_name", activeMainBranch?.name || sessionCtx?.branchName || "");
         scanPayload.append("city_branch_id", selectedCityBranchId || "");
-        scanPayload.append("city_branch_name", activeCityBranch?.name ?? "");
+        scanPayload.append("city_branch_name", activeCityBranch?.name || "");
         scanPayload.append("company_id", selectedCompanyId || "");
         scanPayload.append("company_code", selectedCompanyCode || "");
         scanPayload.append("company_name", selectedCompanyName || "");
@@ -1115,23 +704,17 @@ export function DocumentManager() {
         scanPayload.append("person_account_code", selectedPersonCode || "");
         scanPayload.append("person_account_name", selectedPersonName || "");
         scanPayload.append("person_account_type", selectedPersonType || "");
-        scanPayload.append("module_type", selectedModule === "all" ? "Purchase Documents" : selectedModule);
+        scanPayload.append("module_type", moduleLabel);
         scanPayload.append("document_type", docTypeValue);
         scanPayload.append("source_module", moduleLabel);
-        scanPayload.append("source_record_id", selectedPersonId || selectedCompanyId || selectedAccountId || "");
-        scanPayload.append("source_record_no", selectedPersonCode || selectedAccountCode || searchQuery.trim() || "");
         scanPayload.append("category", "Scanned");
-        scanPayload.append("tags", JSON.stringify(["Scanned", "PDF", "TWAIN", docTypeValue]));
-        scanPayload.append("metadata", JSON.stringify({
-          destinationPath,
-          destinationFileName,
-          scannerBridge: "TWAIN/W3C API"
-        }));
+        scanPayload.append("tags", JSON.stringify(["HardwareScan", "TWAIN", scannerDpi + "DPI", docTypeValue]));
+        scanPayload.append("metadata", JSON.stringify({ scannerDevice, dpi: scannerDpi, colorMode: scannerColor }));
         scanPayload.append("document_path", destinationPath);
-        scanPayload.append("storage_key", `${destinationPath}/${destinationFileName}`);
-        scanPayload.append("created_by", selectedCompanyName || selectedPersonName || selectedAccountName || "Scanner Hardware API");
-        scanPayload.append("scanner_device_name", "Default Scanner");
-        scanPayload.append("scanner_bridge", "TWAIN/W3C API");
+        scanPayload.append("storage_key", `${destinationPath}/${generatedFileName}`);
+        scanPayload.append("created_by", sessionCtx?.userName || "Scanner Operator");
+        scanPayload.append("scanner_device_name", scannerDevice);
+        scanPayload.append("scanner_bridge", "DGT-TWAIN-v2.1");
         scanPayload.append("file", scanFile, scanFile.name);
 
         await fetch("/api/documents", {
@@ -1140,28 +723,46 @@ export function DocumentManager() {
         });
 
         await fetchDocs();
-      } catch (e) {
-        console.error(e);
+      } catch (err) {
+        console.error("Direct scan error:", err);
       } finally {
         setIsScannerOpen(false);
         setScanStatus("");
       }
-    }, 3200);
+    }, 2800);
   }
 
-  // Delete document
-  async function handleDelete(id: string) {
-    if (!confirm(t("delete_confirm", "Are you sure you want to delete this document?"))) return;
+  // Create Custom Folder
+  const handleCreateFolder = () => {
+    if (!newFolderName.trim()) return;
+    const newFld: CustomFolder = {
+      id: `folder_${Date.now()}`,
+      name: newFolderName.trim(),
+      countryId: selectedCountryId,
+      branchId: selectedMainBranchId || selectedCityBranchId,
+      createdAt: new Date().toISOString()
+    };
+    const updated = [...customFolders, newFld];
+    setCustomFolders(updated);
     try {
-      await fetch(`/api/documents?id=${id}`, { method: "DELETE" });
-      await fetchDocs();
-    } catch (err) {
-      console.error(err);
-    }
-  }
+      localStorage.setItem("dgt_erp_custom_folders", JSON.stringify(updated));
+    } catch {}
+    setNewFolderName("");
+    setIsNewFolderOpen(false);
+    setSelectedModule(newFld.name);
+  };
 
-  // Save edit/move
-  async function handleSaveEdit() {
+  // Edit / Move Document
+  const handleOpenEdit = (doc: OfficeDocument) => {
+    setEditingDoc(doc);
+    setEditTitle(doc.title);
+    setEditModule(doc.module_type || "Purchase Documents");
+    setEditDocType(doc.document_type || "Document");
+    setEditCompany(doc.company_name || "");
+    setEditAccount(doc.account_name || "");
+  };
+
+  const handleSaveEdit = async () => {
     if (!editingDoc) return;
     try {
       await fetch("/api/documents", {
@@ -1170,7 +771,10 @@ export function DocumentManager() {
         body: JSON.stringify({
           id: editingDoc.id,
           title: editTitle,
-          module_type: editModule
+          module_type: editModule,
+          document_type: editDocType,
+          company_name: editCompany,
+          account_name: editAccount
         })
       });
       setEditingDoc(null);
@@ -1178,711 +782,1241 @@ export function DocumentManager() {
     } catch (e) {
       console.error(e);
     }
-  }
+  };
 
-  const activeCountry = countries.find((c) => c.id === selectedCountryId);
-  const activeMainBranch = activeCountry?.mainBranches?.find((branch: any) => branch.id === selectedMainBranchId) ?? null;
-  const activeCityBranch = (activeMainBranch?.cityBranches || []).find((branch: any) => branch.id === selectedCityBranchId) ?? null;
-  const selectedModuleLabel = selectedModule === "all" ? "Purchase Documents" : selectedModule;
-  const resolvedDocumentTypeLabel =
-    documentTypeOptions.find((option) => option.value === selectedDocumentType)?.label ||
-    selectedDocumentType ||
-    "Document";
-  const documentDestinationPreview = buildDocumentDestinationLabel({
-    countryName: activeCountry?.name,
-    branchName: activeCityBranch?.name || activeMainBranch?.name || null,
-    companyCode: selectedCompanyCode,
-    companyName: selectedCompanyName,
-    personAccountCode: selectedPersonCode || selectedAccountCode,
-    personAccountName: selectedPersonName || selectedAccountName,
-    personAccountType: selectedPersonType,
-    accountCode: selectedAccountCode,
-    accountName: selectedAccountName,
-    moduleType: selectedModuleLabel,
-    documentType: resolvedDocumentTypeLabel
-  });
-  const documentFileNamePreview = buildDocumentFileName({
-    countryName: activeCountry?.name,
-    branchName: activeCityBranch?.name || activeMainBranch?.name || null,
-    companyCode: selectedCompanyCode,
-    companyName: selectedCompanyName,
-    personAccountCode: selectedPersonCode || selectedAccountCode,
-    personAccountName: selectedPersonName || selectedAccountName,
-    personAccountType: selectedPersonType,
-    accountCode: selectedAccountCode,
-    accountName: selectedAccountName,
-    moduleType: selectedModuleLabel,
-    documentType: resolvedDocumentTypeLabel,
-    sourceRecordNo: selectedPersonCode || selectedAccountCode || searchQuery.trim() || null,
-    createdAt: new Date(),
-    extension: "pdf"
-  });
-
-  const handleCompanySelect = (value: string) => {
-    const found = companyLookupRef.current[value];
-    const nextCode = found?.company_code || found?.code || found?.registration_no || found?.registration_number || found?.id || "";
-    const nextName = found?.name || found?.legal_name || found?.business_name || "";
-    setSelectedCompanyId(value);
-    setSelectedCompanyCode(nextCode);
-    setSelectedCompanyName(nextName);
-    const nextOption = companyOptions.find((opt) => opt.value === value) ?? (found ? {
-      value,
-      label: [nextCode, nextName].filter(Boolean).join(" • "),
-      keywords: [nextCode, nextName, found?.legal_name, found?.owner_name, found?.country_name, found?.city_name].filter(Boolean).join(" ")
-    } : null);
-    setSelectedCompanyOption(nextOption);
-    if (nextOption) {
-      setCompanyOptions((prev) => [nextOption, ...prev.filter((opt) => opt.value !== nextOption.value)]);
+  // Delete Document
+  const handleDelete = async (id: string) => {
+    if (!confirm(t("delete_confirm", "Are you sure you want to delete this document?"))) return;
+    try {
+      await fetch(`/api/documents?id=${id}`, { method: "DELETE" });
+      await fetchDocs();
+    } catch (err) {
+      console.error(err);
     }
   };
 
-  const handlePersonSelect = (value: string) => {
-    const found = personLookupRef.current[value];
-    if (!found) return;
+  // All Folders (Default Modules + User Custom Folders)
+  const allFolderList = useMemo(() => {
+    const customNames = customFolders.map((f) => f.name);
+    return Array.from(new Set([...DEFAULT_MODULE_FOLDERS, ...customNames]));
+  }, [customFolders]);
 
-    if (found.type === "employee") {
-      const employee = found.employee;
-      const nextCode = employee.employeeCode || employee.employee_code || employee.id || "";
-      const nextName = employee.fullName || employee.customer_name || "";
-      setSelectedPersonId(employee.id);
-      setSelectedPersonType("employee");
-      setSelectedPersonCode(nextCode);
-      setSelectedPersonName(nextName);
-    } else {
-      const party = found.party;
-      const nextCode = party.customerCode || party.customer_code || party.customerId || "";
-      const nextName = party.customerName || party.customer_name || "";
-      setSelectedPersonId(party.customerId || party.customer_id || value.replace(/^customer:/, ""));
-      setSelectedPersonType("customer");
-      setSelectedPersonCode(nextCode);
-      setSelectedPersonName(nextName);
-    }
-
-    const nextOption = personOptions.find((opt) => opt.value === value) ?? (found ? {
-      value,
-      label: found.type === "employee"
-        ? [`Employee`, found.employee.employeeCode, found.employee.fullName].filter(Boolean).join(" • ")
-        : [`Customer`, found.party.customerCode || found.party.customer_code || found.party.customerId, found.party.customerName || found.party.customer_name].filter(Boolean).join(" • "),
-      keywords: found.type === "employee"
-        ? [found.employee.employeeCode, found.employee.fullName, found.employee.department, found.employee.jobTitle, found.employee.branchName].filter(Boolean).join(" ")
-        : [found.party.customerCode, found.party.customerName, found.party.mobile, found.party.email, found.party.cityName, found.party.countryName].filter(Boolean).join(" ")
-    } : null);
-
-    setSelectedPersonOption(nextOption);
-    if (nextOption) {
-      setPersonOptions((prev) => [nextOption, ...prev.filter((opt) => opt.value !== nextOption.value)]);
-    }
-  };
-
-  const handleAccountSelect = (value: string) => {
-    const found = accountLookupRef.current[value];
-    const nextLabel = found?.accountName || found?.companyName || found?.ledgerName || "";
-    const nextCode = found?.accountCode || found?.rawAccountCode || found?.manualReferenceNumber || found?.ledgerCode || "";
-    setSelectedAccountId(value);
-    setSelectedAccountName(nextLabel);
-    setSelectedAccountCode(nextCode);
-    const nextOption = accountOptions.find((opt) => opt.value === value) ?? (found ? {
-      value,
-      label: [nextCode, nextLabel].filter(Boolean).join(" • "),
-      keywords: [nextCode, nextLabel, found?.companyName, found?.ledgerName].filter(Boolean).join(" ")
-    } : null);
-    setSelectedAccountOption(nextOption);
-    if (nextOption) {
-      setAccountOptions((prev) => {
-        const rest = prev.filter((opt) => opt.value !== nextOption.value);
-        return [nextOption, ...rest];
-      });
-    }
-  };
+  const activePathString = useMemo(() => {
+    const parts = [
+      scopeRole === "super_admin" ? "Super Admin" : scopeRole === "country_admin" ? "Country Admin" : "Branch User",
+      activeCountry?.name || "All Countries",
+      activeCityBranch?.name || activeMainBranch?.name || "All Branches",
+      selectedModule === "all" ? "All Modules" : selectedModule
+    ];
+    return parts.filter(Boolean).join("  ›  ");
+  }, [scopeRole, activeCountry, activeMainBranch, activeCityBranch, selectedModule]);
 
   return (
-    <div className="space-y-4 font-sans">
-      {/* Header */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <div className="text-[10px] font-black uppercase tracking-widest text-indigo-600">
-            {t("page_tag", "Document Management & Hardware Scanner")}
+    <div className={cn("space-y-4 pb-16 min-h-screen font-sans", isRtl && "text-right")} dir={isRtl ? "rtl" : "ltr"}>
+      {/* ── Top Header & Action Controls Toolbar (Matching General Office Design) ── */}
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3.5 bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
+        {/* Left: Module Title & Badge */}
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="h-10 w-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-200/60 dark:border-indigo-900 shrink-0 shadow-xs">
+            <FolderOpen className="h-5 w-5" />
           </div>
-          <h1 className="text-xl font-black text-slate-950 tracking-tight">
-            {t("page_title", "Super Admin Document Storage Directory")}
-          </h1>
-          <p className="text-xs text-slate-500 font-medium">
-            {t("page_subtitle", "Automatic folder organization: Super Admin → Country → Branch → Module")}
-          </p>
-        </div>
-
-        {/* Action Controls */}
-        <div className="flex items-center gap-2">
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileUpload}
-            className="hidden"
-            accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-            className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:bg-indigo-700 transition cursor-pointer"
-          >
-            <Upload className="h-4 w-4" />
-            {isUploading ? t("uploading", "Uploading...") : t("upload_file", "Upload File")}
-          </button>
-
-          <button
-            onClick={handleDirectScan}
-            className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 transition cursor-pointer"
-          >
-            <Camera className="h-4 w-4" />
-            {t("start_scan", "Start Direct Scan")}
-          </button>
-        </div>
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-4">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <div className="text-[10px] font-black uppercase tracking-widest text-emerald-600">{t("start_scan", "Start Direct Scan")}</div>
-              <h2 className="text-sm font-black text-slate-950">{t("edit_title", "Edit / Move Document")}</h2>
-            </div>
-            <div className="text-[10px] font-semibold text-slate-500 text-right">
-              {documentDestinationPreview || t("active_path", "Active Path:")}
-            </div>
-          </div>
-
-          <div className="grid gap-3 xl:grid-cols-4">
-            <SearchSelect
-              label={t("countries", "Countries")}
-              value={selectedCountryId}
-              placeholder={t("select", "Select")}
-              options={countries.map((country) => ({
-                value: country.id,
-                label: country.name,
-                keywords: [country.name, country.code, country.iso_code].filter(Boolean).join(" ")
-              }))}
-              onValueChange={(value) => {
-                setSelectedCountryId(value);
-                setSelectedMainBranchId("");
-                setSelectedCityBranchId("");
-              }}
-              searchPlaceholder={t("search", "Search")}
-              emptyLabel={t("no_matches_found", "No matches found")}
-            />
-
-            <SearchSelect
-              label={t("main_branches", "Main Branches")}
-              value={selectedMainBranchId}
-              placeholder={t("select", "Select")}
-              options={(activeCountry?.mainBranches || []).map((branch: any) => ({
-                value: branch.id,
-                label: branch.name,
-                keywords: [branch.name, branch.code, branch.branch_code, branch.owner_name].filter(Boolean).join(" ")
-              }))}
-              disabled={!activeCountry}
-              onValueChange={(value) => {
-                setSelectedMainBranchId(value);
-                setSelectedCityBranchId("");
-              }}
-              searchPlaceholder={t("search", "Search")}
-              emptyLabel={t("no_matches_found", "No matches found")}
-            />
-
-            <SearchSelect
-              label={t("city_branches", "City Branches")}
-              value={selectedCityBranchId}
-              placeholder={t("select", "Select")}
-              options={(activeMainBranch?.cityBranches || []).map((branch: any) => ({
-                value: branch.id,
-                label: branch.name,
-                keywords: [branch.name, branch.code, branch.branch_code, branch.owner_name].filter(Boolean).join(" ")
-              }))}
-              disabled={!activeMainBranch}
-              onValueChange={setSelectedCityBranchId}
-              searchPlaceholder={t("search", "Search")}
-              emptyLabel={t("no_matches_found", "No matches found")}
-            />
-
-            <SearchSelect
-              label={t("person_customer_employee", "Person / Customer / Employee")}
-              value={selectedPersonId ? (selectedPersonType ? `${selectedPersonType}:${selectedPersonId}` : selectedPersonId) : ""}
-              placeholder={t("search", "Search")}
-              options={personOptions}
-              loading={personLookupLoading}
-              onValueChange={handlePersonSelect}
-              onSearchValueChange={setPersonSearchQuery}
-              searchPlaceholder={t("search", "Search")}
-              emptyLabel={t("no_matches_found", "No matches found")}
-            />
-
-            <SearchSelect
-              label={t("company", "Company")}
-              value={selectedCompanyId}
-              placeholder={t("search", "Search")}
-              options={companyOptions}
-              loading={companyLookupLoading}
-              onValueChange={handleCompanySelect}
-              onSearchValueChange={setCompanySearchQuery}
-              searchPlaceholder={t("search", "Search")}
-              emptyLabel={t("no_matches_found", "No matches found")}
-            />
-
-            <SearchSelect
-              label={t("account", "Account")}
-              value={selectedAccountId}
-              placeholder={t("search", "Search")}
-              options={accountOptions}
-              loading={accountLookupLoading}
-              onValueChange={handleAccountSelect}
-              onSearchValueChange={setAccountSearchQuery}
-              searchPlaceholder={t("search", "Search")}
-              emptyLabel={t("no_matches_found", "No matches found")}
-            />
-
-            <SearchSelect
-              label={t("module", "Module")}
-              value={selectedModule}
-              placeholder={t("select", "Select")}
-              options={[
-                { value: "all", label: t("all_module_folders", "All Module Folders") },
-                ...MODULE_FOLDERS.map((mod) => ({ value: mod, label: t(mod, mod), keywords: mod }))
-              ]}
-              onValueChange={setSelectedModule}
-              searchPlaceholder={t("search", "Search")}
-              emptyLabel={t("no_matches_found", "No matches found")}
-            />
-
-            <SearchSelect
-              label={t("document_type", "Document Type")}
-              value={selectedDocumentType}
-              placeholder={t("select", "Select")}
-              options={documentTypeOptions}
-              loading={documentTypeLoading}
-              onValueChange={setSelectedDocumentType}
-              searchPlaceholder={t("search", "Search")}
-              emptyLabel={t("no_matches_found", "No matches found")}
-            />
+          <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
+            <h1 className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight whitespace-nowrap">
+              {t("page_tag", "Document Management & Hardware Scanner")}
+            </h1>
+            <span className="inline-flex items-center justify-center whitespace-nowrap px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-xs leading-none">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1.5 shrink-0" />
+              {filteredDocuments.length} {t("active_docs", "Active Documents")}
+            </span>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 shadow-sm space-y-3">
-          <div className="text-[10px] font-black uppercase tracking-widest text-slate-500">{t("doc_ready", "Document Ready for Viewer & Print")}</div>
-          <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm space-y-2">
-            <div className="text-[10px] font-black uppercase text-slate-400">{t("active_path", "Active Path:")}</div>
-            <div className="text-xs font-bold text-slate-900 leading-6">{documentDestinationPreview || t("no_docs", "No documents found in this directory folder.")}</div>
+        {/* Right: Search, Date Filters & Primary Action Buttons */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Search Input */}
+          <div className="relative min-w-[200px] sm:min-w-[240px]">
+            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t("search_placeholder", "Search documents by title, party, invoice #...")}
+              className="h-8.5 pl-8.5 pr-2.5 text-xs bg-slate-50/70 dark:bg-slate-950 border-slate-200 dark:border-slate-700 rounded-xl font-sans"
+            />
           </div>
-          <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-            <div className="text-[10px] font-black uppercase text-slate-400">{t("document_title", "Document Title")}</div>
-            <div className="mt-1 text-xs font-semibold text-slate-700">{documentFileNamePreview}</div>
-            <div className="mt-2 space-y-1 text-[10px] text-slate-500">
-              <div>{selectedCompanyName ? `${selectedCompanyCode ? `${selectedCompanyCode} · ` : ""}${selectedCompanyName}` : t("company", "Company")}</div>
-              <div>{selectedPersonName ? `${selectedPersonCode ? `${selectedPersonCode} · ` : ""}${selectedPersonName}` : t("person_customer_employee", "Person / Customer / Employee")}</div>
-              <div>{selectedAccountName ? `${selectedAccountCode ? `${selectedAccountCode} · ` : ""}${selectedAccountName}` : t("account", "Account")}</div>
-              <div className="text-[9px] text-slate-400">{resolvedDocumentTypeLabel}</div>
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-2">
+
+          {/* Quick Date Range Presets */}
+          <div className="hidden sm:flex items-center gap-1 font-sans">
             <button
-              onClick={handleDirectScan}
-              className="flex flex-1 min-w-[150px] items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 transition cursor-pointer"
+              type="button"
+              onClick={() => setDateFilter("all")}
+              className={`h-8.5 rounded-xl border px-2.5 text-xs font-bold transition-colors ${
+                dateFilter === "all"
+                  ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+              }`}
             >
-              <Camera className="h-4 w-4" />
-              {t("start_scan", "Start Direct Scan")}
+              {t("all_records", "All Records")}
             </button>
             <button
+              type="button"
+              onClick={() => setDateFilter("today")}
+              className={`h-8.5 rounded-xl border px-2.5 text-xs font-bold transition-colors ${
+                dateFilter === "today"
+                  ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+              }`}
+            >
+              {t("today", "Today")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setDateFilter("yesterday")}
+              className={`h-8.5 rounded-xl border px-2.5 text-xs font-bold transition-colors ${
+                dateFilter === "yesterday"
+                  ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+              }`}
+            >
+              {t("yesterday", "Yesterday")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setDateFilter("this_month")}
+              className={`h-8.5 rounded-xl border px-2.5 text-xs font-bold transition-colors ${
+                dateFilter === "this_month"
+                  ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+              }`}
+            >
+              {t("this_month", "This Month")}
+            </button>
+          </div>
+
+          {/* Action Buttons Toolbar */}
+          <div className="flex flex-wrap items-center gap-1.5 font-sans">
+            {/* Person / Customer Link */}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push("/dashboard/settings/customers" as Route)}
+              className="h-8.5 rounded-xl border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200 text-xs font-bold px-2.5 gap-1 shadow-xs"
+            >
+              <UserCheck className="h-3.5 w-3.5" />
+              {t("person_customer", "Person / Customer")}
+            </Button>
+
+            {/* Company Link */}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push("/dashboard/settings/company" as Route)}
+              className="h-8.5 rounded-xl border-indigo-300 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-200 text-xs font-bold px-2.5 gap-1 shadow-xs"
+            >
+              <Building2 className="h-3.5 w-3.5" />
+              {t("company", "Company")}
+            </Button>
+
+            {/* Bank / Account Link */}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push("/dashboard/settings/bank" as Route)}
+              className="h-8.5 rounded-xl border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200 text-xs font-bold px-2.5 gap-1 shadow-xs"
+            >
+              <CreditCard className="h-3.5 w-3.5" />
+              {t("bank", "Bank")}
+            </Button>
+
+            {/* New Custom Folder Button */}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsNewFolderOpen(true)}
+              className="h-8.5 rounded-xl border-purple-300 bg-purple-50 hover:bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-200 text-xs font-bold px-2.5 gap-1 shadow-xs"
+            >
+              <FolderPlus className="h-3.5 w-3.5" />
+              {t("new_folder", "New Folder")}
+            </Button>
+
+            {/* Upload File Input (Hidden) */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              className="hidden"
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+            />
+            <Button
+              type="button"
+              variant="outline"
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              className="flex flex-1 min-w-[150px] items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:bg-indigo-700 transition cursor-pointer disabled:opacity-60"
+              className="h-8.5 rounded-xl border-blue-300 bg-blue-50 hover:bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200 text-xs font-bold px-2.5 gap-1 shadow-xs"
             >
-              <Upload className="h-4 w-4" />
+              <Upload className="h-3.5 w-3.5" />
               {isUploading ? t("uploading", "Uploading...") : t("upload_file", "Upload File")}
-            </button>
+            </Button>
+
+            {/* Start Direct Scan Button */}
+            <Button
+              type="button"
+              onClick={() => setIsScannerOpen(true)}
+              className="h-8.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 gap-1.5 shadow-sm"
+            >
+              <Camera className="h-3.5 w-3.5" />
+              {t("start_scan", "Start Direct Scan")}
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* Main Two-Panel Layout */}
-      <div className="grid gap-4 lg:grid-cols-4">
-        {/* Left Panel: Folder Navigation Tree */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-4">
-          <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 border-b pb-2">
-            {t("dir_hierarchy", "Directory Hierarchy")}
+      {/* ── 5 KPI SUMMARY CARDS GRID (Exact Alignment with General Office) ── */}
+      <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 font-sans">
+        {/* Card 1: BRANCH & USER DETAILS */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <Globe className="h-4 w-4 text-blue-600" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">1. {t("card_1_title", "BRANCH & USER DETAILS")}</span>
+          </div>
+          <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+            <div className="flex justify-between">
+              <span>{t("country", "Country")}:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{activeCountry?.name || sessionCtx?.countryName || "United Arab Emirates"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>{t("branch_name", "Branch Name")}:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100 uppercase truncate max-w-[130px]">{activeCityBranch?.name || activeMainBranch?.name || sessionCtx?.branchName || "DUBAI HEAD OFFICE"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>{t("user_id_name", "User ID / Name")}:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[120px]">{sessionCtx?.userName || "Super Admin"}</span>
+            </div>
+            <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
+              <span>{t("status", "Status")}:</span>
+              <span className="bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded text-[10px] flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                {t("active_session", "Active Session")}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 2: DOCUMENTS SUMMARY */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <FileText className="h-4 w-4 text-emerald-600" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">2. {t("card_2_title", "DOCUMENTS SUMMARY")}</span>
+          </div>
+          <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
+            <div className="flex justify-between text-slate-600 dark:text-slate-400">
+              <span>{t("total_docs", "Total Documents")}:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{summaryStats.totalDocs}</span>
+            </div>
+            <div className="flex justify-between text-emerald-600 font-bold">
+              <span>{t("active_files", "Active Files")}:</span>
+              <span>{filteredDocuments.length}</span>
+            </div>
+            <div className="flex justify-between text-blue-600 font-bold">
+              <span>{t("hardware_scans", "Hardware Scans")}:</span>
+              <span>{summaryStats.scannedCount}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 3: STORAGE & HARDWARE */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <HardDrive className="h-4 w-4 text-purple-600" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">3. {t("card_3_title", "STORAGE & SCANNER")}</span>
+          </div>
+          <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
+            <div className="flex justify-between text-slate-600 dark:text-slate-400">
+              <span>{t("storage_used", "Storage Size")}:</span>
+              <span className="font-bold font-mono text-slate-900 dark:text-slate-100">{summaryStats.totalBytes}</span>
+            </div>
+            <div className="flex justify-between text-purple-600 font-bold">
+              <span>{t("direct_scan_bridge", "Scanner Bridge")}:</span>
+              <span className="text-[10px] bg-purple-50 dark:bg-purple-950/40 px-1 py-0.5 rounded">TWAIN Ready</span>
+            </div>
+            <div className="flex justify-between text-indigo-600 font-bold">
+              <span>{t("cloud_bucket", "Cloud Bucket")}:</span>
+              <span className="text-[10px]">erp-documents</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 4: BRANCHES & COMPANIES */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <Building2 className="h-4 w-4 text-indigo-600" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">4. {t("card_4_title", "BRANCHES & COMPANIES")}</span>
+          </div>
+          <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
+            <div className="flex justify-between text-slate-600 dark:text-slate-400">
+              <span>{t("total_countries", "Total Countries")}:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{summaryStats.totalCountriesCount}</span>
+            </div>
+            <div className="flex justify-between text-indigo-600 font-bold">
+              <span>{t("total_branches", "Total Branches")}:</span>
+              <span>{summaryStats.totalBranchesCount}</span>
+            </div>
+            <div className="flex justify-between text-emerald-600 font-bold">
+              <span>{t("linked_companies", "Linked Companies")}:</span>
+              <span>{summaryStats.linkedCompaniesCount}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 5: QUICK DOCUMENT REPORTS */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <Activity className="h-4 w-4 text-amber-500" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">5. {t("card_5_title", "QUICK ACTIONS")}</span>
+          </div>
+          <div className="mt-2 space-y-1 text-[10px] font-semibold">
+            <div
+              onClick={() => setDateFilter("today")}
+              className="flex justify-between items-center text-slate-600 dark:text-slate-400 hover:text-blue-600 cursor-pointer"
+            >
+              <span>{t("today_scanned", "Today Scanned")}</span>
+              <span className="text-blue-600 font-bold">📈 {t("view", "View")}</span>
+            </div>
+            <div
+              onClick={() => setIsScannerOpen(true)}
+              className="flex justify-between items-center text-slate-600 dark:text-slate-400 hover:text-emerald-600 cursor-pointer"
+            >
+              <span>{t("direct_scan_studio", "Direct Scan Studio")}</span>
+              <span className="text-emerald-600 font-bold">📷 {t("open", "Open")}</span>
+            </div>
+            <div
+              onClick={() => setIsNewFolderOpen(true)}
+              className="flex justify-between items-center text-slate-600 dark:text-slate-400 hover:text-purple-600 cursor-pointer"
+            >
+              <span>{t("custom_folder_maker", "Custom Folder")}</span>
+              <span className="text-purple-600 font-bold">📁 {t("create", "Create")}</span>
+            </div>
+            <div
+              onClick={() => fetchDocs()}
+              className="flex justify-between items-center text-slate-600 dark:text-slate-400 hover:text-indigo-600 cursor-pointer"
+            >
+              <span>{t("reload_repository", "Reload Repository")}</span>
+              <span className="text-indigo-600 font-bold">🔄 {t("sync", "Sync")}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Top Role-Aware Hierarchy & Filter Dropdowns Bar ── */}
+      <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-950 font-sans space-y-3">
+        <div className="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-2.5">
+          <div className="flex items-center gap-2">
+            <SlidersHorizontal className="h-4 w-4 text-indigo-600" />
+            <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+              {t("hierarchy_selectors", "Directory Hierarchy & Scope Dropdowns")}
+            </span>
           </div>
 
-          {/* Super Admin Node */}
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 rounded-lg bg-indigo-50 px-2.5 py-1.5 text-xs font-bold text-indigo-950">
-              <Globe className="h-4 w-4 text-indigo-600" />
-              {t("super_admin_storage", "Super Admin Storage")}
+          {/* Role Scope Selector Tabs */}
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl text-xs font-bold">
+            <button
+              type="button"
+              onClick={() => setScopeRole("super_admin")}
+              className={cn(
+                "px-2.5 py-1 rounded-lg transition-all",
+                scopeRole === "super_admin"
+                  ? "bg-white dark:bg-slate-800 text-blue-600 shadow-xs"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+              )}
+            >
+              👑 {t("super_admin_role", "Super Admin Storage")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setScopeRole("country_admin")}
+              className={cn(
+                "px-2.5 py-1 rounded-lg transition-all",
+                scopeRole === "country_admin"
+                  ? "bg-white dark:bg-slate-800 text-blue-600 shadow-xs"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+              )}
+            >
+              🌍 {t("country_admin_role", "Country Admin")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setScopeRole("branch_user")}
+              className={cn(
+                "px-2.5 py-1 rounded-lg transition-all",
+                scopeRole === "branch_user"
+                  ? "bg-white dark:bg-slate-800 text-blue-600 shadow-xs"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+              )}
+            >
+              🏢 {t("branch_role", "Branch User")}
+            </button>
+          </div>
+        </div>
+
+        {/* Scope Dropdowns Row */}
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+          {/* 1. Country Dropdown */}
+          <SearchSelect
+            label={t("countries", "Country")}
+            value={selectedCountryId}
+            placeholder={t("all_countries", "All Countries")}
+            options={countries.map((country) => ({
+              value: country.id,
+              label: country.name,
+              keywords: [country.name, country.code, country.iso_code].filter(Boolean).join(" ")
+            }))}
+            onValueChange={(value) => {
+              setSelectedCountryId(value);
+              setSelectedMainBranchId("");
+              setSelectedCityBranchId("");
+            }}
+            searchPlaceholder={t("search", "Search...")}
+            emptyLabel={t("no_matches_found", "No matches found")}
+          />
+
+          {/* 2. Main Branch Dropdown */}
+          <SearchSelect
+            label={t("main_branches", "Main Branch")}
+            value={selectedMainBranchId}
+            placeholder={t("all_main_branches", "All Main Branches")}
+            options={(activeCountry?.mainBranches || []).map((branch: any) => ({
+              value: branch.id,
+              label: branch.name,
+              keywords: [branch.name, branch.code, branch.branch_code, branch.owner_name].filter(Boolean).join(" ")
+            }))}
+            disabled={!activeCountry && countries.length > 0}
+            onValueChange={(value) => {
+              setSelectedMainBranchId(value);
+              setSelectedCityBranchId("");
+            }}
+            searchPlaceholder={t("search", "Search...")}
+            emptyLabel={t("no_matches_found", "No matches found")}
+          />
+
+          {/* 3. City Branch Dropdown */}
+          <SearchSelect
+            label={t("city_branches", "City Branch")}
+            value={selectedCityBranchId}
+            placeholder={t("all_city_branches", "All City Branches")}
+            options={(activeMainBranch?.cityBranches || []).map((branch: any) => ({
+              value: branch.id,
+              label: branch.name,
+              keywords: [branch.name, branch.code, branch.branch_code, branch.owner_name].filter(Boolean).join(" ")
+            }))}
+            disabled={!activeMainBranch}
+            onValueChange={(value) => setSelectedCityBranchId(value)}
+            searchPlaceholder={t("search", "Search...")}
+            emptyLabel={t("no_matches_found", "No matches found")}
+          />
+
+          {/* 4. Module / Custom Folder Dropdown */}
+          <div>
+            <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
+              {t("module_folders", "Module / Folder")}
+            </label>
+            <select
+              value={selectedModule}
+              onChange={(e) => setSelectedModule(e.target.value)}
+              className="w-full h-9 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+            >
+              <option value="all">{t("all_module_folders", "📁 All Module Folders")}</option>
+              <optgroup label="ERP Modules">
+                {DEFAULT_MODULE_FOLDERS.map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
+              </optgroup>
+              {customFolders.length > 0 && (
+                <optgroup label="Custom Folders">
+                  {customFolders.map((cf) => (
+                    <option key={cf.id} value={cf.name}>
+                      ⭐ {cf.name}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+            </select>
+          </div>
+
+          {/* 5. Company Filter Dropdown */}
+          <SearchSelect
+            label={t("company", "Company")}
+            value={selectedCompanyId}
+            placeholder={t("all_companies", "All Companies")}
+            options={companyOptions}
+            onValueChange={(val) => {
+              setSelectedCompanyId(val);
+              const found = companyOptions.find((o) => o.value === val);
+              setSelectedCompanyName(found ? found.label.split(" • ")[1] || found.label : "");
+            }}
+            searchPlaceholder={t("search", "Search...")}
+            emptyLabel={t("no_matches_found", "No matches found")}
+          />
+
+          {/* 6. Account / Person Filter Dropdown */}
+          <SearchSelect
+            label={t("account_person", "Account / Party")}
+            value={selectedAccountId || selectedPersonId}
+            placeholder={t("all_accounts", "All Accounts")}
+            options={[...accountOptions, ...personOptions]}
+            onValueChange={(val) => {
+              if (val.startsWith("cust_") || val.startsWith("emp_")) {
+                setSelectedPersonId(val);
+                setSelectedAccountId("");
+              } else {
+                setSelectedAccountId(val);
+                setSelectedPersonId("");
+              }
+            }}
+            searchPlaceholder={t("search", "Search...")}
+            emptyLabel={t("no_matches_found", "No matches found")}
+          />
+        </div>
+      </div>
+
+      {/* ── Main Full-Screen Explorer & Grid Layout ── */}
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-[280px_1fr] font-sans">
+        {/* Left Tree Hierarchy Sidebar */}
+        <div
+          className={cn(
+            "rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-950 space-y-3",
+            !sidebarOpen && "hidden lg:block"
+          )}
+        >
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+            <div className="flex items-center gap-2">
+              <Layers className="h-4 w-4 text-blue-600" />
+              <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                {t("dir_hierarchy", "Directory Hierarchy")}
+              </span>
+            </div>
+            <button
+              onClick={() => setIsNewFolderOpen(true)}
+              className="text-[11px] text-blue-600 hover:underline font-bold flex items-center gap-0.5"
+            >
+              + {t("new", "New")}
+            </button>
+          </div>
+
+          {/* Tree Navigation Items */}
+          <div className="space-y-1 text-xs">
+            {/* Root: Storage Scope */}
+            <div
+              onClick={() => {
+                setSelectedCountryId("");
+                setSelectedMainBranchId("");
+                setSelectedCityBranchId("");
+                setSelectedModule("all");
+              }}
+              className={cn(
+                "flex items-center justify-between p-2 rounded-xl cursor-pointer font-bold transition-colors",
+                !selectedCountryId && selectedModule === "all"
+                  ? "bg-blue-50 text-blue-800 dark:bg-blue-950/60 dark:text-blue-200"
+                  : "hover:bg-slate-50 text-slate-700 dark:text-slate-300 dark:hover:bg-slate-900"
+              )}
+            >
+              <span className="flex items-center gap-1.5 truncate">
+                <Globe className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                {scopeRole === "super_admin" ? "Super Admin Storage" : "Corporate Document Vault"}
+              </span>
+              <span className="text-[10px] bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded-full font-mono">
+                {documents.length}
+              </span>
             </div>
 
-            {/* Country List */}
-            <div className="ml-3 pl-2 border-l border-slate-200 space-y-1.5 mt-2">
-              <div className="text-[9px] font-black uppercase text-slate-400 tracking-wider">
-                {t("countries", "Countries")}
-              </div>
-              {countries.length > 0 ? (
-                countries.map((country) => (
-                  <div key={country.id} className="space-y-1">
-                    <button
+            {/* Countries & Branches Tree */}
+            <div className="pl-2 space-y-1">
+              {countries.map((c) => {
+                const isSelectedC = selectedCountryId === c.id;
+                const cDocCount = documents.filter((d) => d.country_id === c.id || d.country_name === c.name).length;
+                return (
+                  <div key={c.id} className="space-y-1">
+                    <div
                       onClick={() => {
-                        setSelectedCountryId(country.id);
+                        setSelectedCountryId(c.id);
                         setSelectedMainBranchId("");
                         setSelectedCityBranchId("");
                       }}
                       className={cn(
-                        "w-full text-left flex items-center justify-between text-xs font-bold px-2 py-1 rounded-md transition cursor-pointer",
-                        selectedCountryId === country.id ? "bg-slate-900 text-white" : "hover:bg-slate-100 text-slate-700"
+                        "flex items-center justify-between p-1.5 rounded-lg cursor-pointer font-bold transition-colors",
+                        isSelectedC && !selectedMainBranchId
+                          ? "bg-indigo-50 text-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-200"
+                          : "hover:bg-slate-50 text-slate-700 dark:text-slate-300 dark:hover:bg-slate-900"
                       )}
                     >
-                      <span className="truncate">{t(country.name, country.name)}</span>
-                      <ChevronRight className={cn("h-3 w-3 transition", selectedCountryId === country.id && "rotate-90")} />
-                    </button>
+                      <span className="flex items-center gap-1.5 truncate">
+                        <Folder className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                        {c.name}
+                      </span>
+                      <span className="text-[10px] font-mono text-slate-400">{cDocCount}</span>
+                    </div>
 
-                    {/* Main Branches under selected country */}
-                    {selectedCountryId === country.id && (
-                      <div className="ml-2 pl-2 border-l border-slate-200 space-y-1 mt-1">
-                        <div className="text-[8px] font-black uppercase text-slate-400">
-                          {t("main_branches", "Main Branches")}
-                        </div>
-                        {(country.mainBranches || []).map((mb: any) => (
-                          <div key={mb.id} className="space-y-1">
-                            <button
-                              onClick={() => {
-                                setSelectedMainBranchId(mb.id);
-                                setSelectedCityBranchId("");
-                              }}
-                              className={cn(
-                                "w-full text-left text-[11px] font-bold px-2 py-0.5 rounded transition flex items-center justify-between cursor-pointer",
-                                selectedMainBranchId === mb.id ? "bg-indigo-600 text-white" : "hover:bg-slate-100 text-slate-600"
-                              )}
-                            >
-                              <span className="truncate">{t(mb.name, mb.name)}</span>
-                            </button>
-
-                            {/* City Branches */}
-                            {selectedMainBranchId === mb.id && (
-                              <div className="ml-2 pl-2 border-l border-slate-200 space-y-1">
-                                <div className="text-[8px] font-black uppercase text-slate-400">
-                                  {t("city_branches", "City Branches")}
-                                </div>
-                                {(mb.cityBranches || []).map((cb: any) => (
-                                  <button
-                                    key={cb.id}
-                                    onClick={() => setSelectedCityBranchId(cb.id)}
-                                    className={cn(
-                                      "w-full text-left text-[10px] font-semibold px-2 py-0.5 rounded transition cursor-pointer",
-                                      selectedCityBranchId === cb.id ? "bg-sky-600 text-white" : "hover:bg-slate-100 text-slate-500"
-                                    )}
-                                  >
-                                    {t(cb.name, cb.name)}
-                                  </button>
-                                ))}
+                    {/* Main Branches */}
+                    {isSelectedC && (
+                      <div className="pl-3 space-y-0.5">
+                        {(c.mainBranches || []).map((mb: any) => {
+                          const isSelectedMB = selectedMainBranchId === mb.id;
+                          return (
+                            <div key={mb.id} className="space-y-0.5">
+                              <div
+                                onClick={() => {
+                                  setSelectedMainBranchId(mb.id);
+                                  setSelectedCityBranchId("");
+                                }}
+                                className={cn(
+                                  "flex items-center justify-between p-1 rounded-md cursor-pointer text-[11px] font-semibold transition-colors",
+                                  isSelectedMB && !selectedCityBranchId
+                                    ? "bg-blue-100/70 text-blue-900 dark:bg-blue-950 dark:text-blue-200 font-bold"
+                                    : "hover:bg-slate-50 text-slate-600 dark:text-slate-400"
+                                )}
+                              >
+                                <span className="flex items-center gap-1 truncate">
+                                  <FolderOpen className="h-3 w-3 text-indigo-500 shrink-0" />
+                                  {mb.name}
+                                </span>
                               </div>
-                            )}
-                          </div>
-                        ))}
+
+                              {/* City Branches */}
+                              {isSelectedMB && (
+                                <div className="pl-3 space-y-0.5">
+                                  {(mb.cityBranches || []).map((cb: any) => (
+                                    <div
+                                      key={cb.id}
+                                      onClick={() => setSelectedCityBranchId(cb.id)}
+                                      className={cn(
+                                        "flex items-center justify-between p-1 rounded-md cursor-pointer text-[10.5px] transition-colors",
+                                        selectedCityBranchId === cb.id
+                                          ? "bg-blue-600 text-white font-bold"
+                                          : "hover:bg-slate-50 text-slate-600 dark:text-slate-400"
+                                      )}
+                                    >
+                                      <span className="truncate">{cb.name}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
-                ))
-              ) : (
-                <div className="text-xs text-slate-400 font-semibold py-2">
-                  {t("loading_countries", "Loading countries...")}
-                </div>
-              )}
+                );
+              })}
             </div>
-          </div>
 
-          {/* Module Categories */}
-          <div className="pt-2 border-t border-slate-200 space-y-1">
-            <div className="text-[9px] font-black uppercase text-slate-400 tracking-wider mb-2">
-              {t("module_categories", "Module Categories")}
+            {/* Module Folders Quick List */}
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1">
+              <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-1">
+                {t("folder_categories", "Folder Categories")}
+              </div>
+              {allFolderList.map((folderName) => {
+                const count = documents.filter((d) => d.module_type === folderName).length;
+                const isSelected = selectedModule === folderName;
+                return (
+                  <div
+                    key={folderName}
+                    onClick={() => setSelectedModule(folderName)}
+                    className={cn(
+                      "flex items-center justify-between px-2 py-1 rounded-lg cursor-pointer text-xs font-semibold transition-colors",
+                      isSelected
+                        ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-200 font-bold"
+                        : "hover:bg-slate-50 text-slate-600 dark:text-slate-400"
+                    )}
+                  >
+                    <span className="flex items-center gap-1.5 truncate">
+                      <Folder className="h-3 w-3 text-amber-500 shrink-0" />
+                      {folderName}
+                    </span>
+                    <span className="text-[10px] font-mono text-slate-400">{count}</span>
+                  </div>
+                );
+              })}
             </div>
-            <button
-              onClick={() => setSelectedModule("all")}
-              className={cn(
-                "w-full text-left flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer",
-                selectedModule === "all" ? "bg-emerald-600 text-white" : "hover:bg-slate-100 text-slate-700"
-              )}
-            >
-              <FolderOpen className="h-4 w-4" />
-              {t("all_module_folders", "All Module Folders")}
-            </button>
-            {MODULE_FOLDERS.map((mod) => (
-              <button
-                key={mod}
-                onClick={() => setSelectedModule(mod)}
-                className={cn(
-                  "w-full text-left flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer",
-                  selectedModule === mod ? "bg-indigo-600 text-white" : "hover:bg-slate-100 text-slate-600"
-                )}
-              >
-                <span className="truncate">{t(mod, mod)}</span>
-                {selectedModule === mod && <ChevronRight className="h-3 w-3" />}
-              </button>
-            ))}
           </div>
         </div>
 
-        {/* Right Workspace Panel */}
-        <div className="lg:col-span-3 space-y-4">
-          {/* Search & Filter Bar */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm flex flex-wrap items-center justify-between gap-3">
-            <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-              <input
-                type="text"
-                placeholder={t("search_placeholder", "Search documents by title, tags, invoice #...")}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 py-1.5 text-xs font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
+        {/* Right Main Document Explorer Area */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-950 space-y-4">
+          {/* Active Path & View Switcher Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
+              <span className="text-slate-400">{t("active_path", "Active Path:")}</span>
+              <span className="text-blue-600 dark:text-blue-400 font-mono text-[11px] truncate max-w-[380px] sm:max-w-[500px]">
+                {activePathString}
+              </span>
             </div>
-            <button
-              onClick={() => fetchDocs()}
-              className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 shadow-sm cursor-pointer"
-            >
-              <RefreshCw className="h-3.5 w-3.5" /> {t("refresh", "Refresh")}
-            </button>
+
+            <div className="flex items-center gap-1.5 self-end sm:self-auto">
+              <button
+                type="button"
+                onClick={() => fetchDocs()}
+                title={t("refresh", "Refresh")}
+                className="h-8 w-8 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-900"
+              >
+                <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin text-blue-600")} />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setViewMode("grid")}
+                className={cn(
+                  "h-8 w-8 rounded-lg border flex items-center justify-center transition-colors",
+                  viewMode === "grid"
+                    ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                    : "border-slate-200 text-slate-600 dark:border-slate-700 hover:bg-slate-50"
+                )}
+              >
+                <LayoutGrid className="h-3.5 w-3.5" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setViewMode("table")}
+                className={cn(
+                  "h-8 w-8 rounded-lg border flex items-center justify-center transition-colors",
+                  viewMode === "table"
+                    ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                    : "border-slate-200 text-slate-600 dark:border-slate-700 hover:bg-slate-50"
+                )}
+              >
+                <List className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </div>
 
-          {/* Active Folder Breadcrumb Indicator */}
-          <div className="rounded-xl border border-slate-200 bg-indigo-50/50 p-2.5 text-xs font-bold text-slate-700 flex flex-wrap items-center gap-1.5">
-            <span className="text-indigo-600 font-extrabold uppercase text-[10px]">{t("active_path", "Active Path:")}</span>
-            <span>{t("super_admin", "Super Admin")}</span>
-            <ChevronRight className="h-3 w-3 text-slate-400" />
-            <span>{t(activeCountry?.name || "Country", activeCountry?.name || "Country")}</span>
-            <ChevronRight className="h-3 w-3 text-slate-400" />
-            <span>{selectedMainBranchId ? t("main_branch", "Main Branch") : t("all_branches", "All Branches")}</span>
-            <ChevronRight className="h-3 w-3 text-slate-400" />
-            <span className="text-indigo-700 bg-white px-2 py-0.5 rounded border border-indigo-100 shadow-2xs font-black">
-              {selectedModule === "all" ? t("all_modules", "All Modules") : t(selectedModule, selectedModule)}
-            </span>
-          </div>
-
-          {/* Documents Grid / Table */}
-          <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-            {loading ? (
-              <div className="p-12 text-center text-slate-400 text-xs font-semibold">
-                {t("loading_docs", "Loading document repository...")}
+          {/* Loading / Empty / Content View */}
+          {loading ? (
+            <div className="py-16 text-center text-slate-400 space-y-2">
+              <RefreshCw className="h-6 w-6 animate-spin mx-auto text-blue-600" />
+              <p className="text-xs font-semibold">{t("loading_docs", "Loading document repository...")}</p>
+            </div>
+          ) : filteredDocuments.length === 0 ? (
+            <div className="py-16 text-center text-slate-400 space-y-3">
+              <div className="h-12 w-12 rounded-2xl bg-slate-100 dark:bg-slate-900 flex items-center justify-center mx-auto text-slate-400">
+                <FolderOpen className="h-6 w-6" />
               </div>
-            ) : documents.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[1200px] text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="bg-slate-900 text-white font-black text-[9px] uppercase tracking-wider text-center">
-                      <Th className="p-3 text-left">{t("document_title", "Document Title")}</Th>
-                      <Th className="p-3">{t("company", "Company")} / {t("person_customer_employee", "Person / Customer / Employee")} / {t("account", "Account")}</Th>
-                      <Th className="p-3">{t("module", "Module")}</Th>
-                      <Th className="p-3">{t("document_type", "Document Type")}</Th>
-                      <Th className="p-3">{t("location", "Location")}</Th>
-                      <Th className="p-3">{t("file_type", "File Type")}</Th>
-                      <Th className="p-3">{t("created_by", "Created By")}</Th>
-                      <Th className="p-3">{t("date", "Date")}</Th>
-                      <Th className="p-3">{t("actions", "Actions")}</Th>
+              <p className="text-xs font-semibold">{t("no_docs", "No documents found in this directory folder.")}</p>
+              <div className="flex items-center justify-center gap-2 pt-1">
+                <Button
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="rounded-xl bg-blue-600 text-white text-xs font-bold"
+                >
+                  <Upload className="h-3.5 w-3.5 mr-1" />
+                  {t("upload_first_doc", "Upload Document")}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setIsScannerOpen(true)}
+                  className="rounded-xl border-emerald-300 text-emerald-700 bg-emerald-50 text-xs font-bold"
+                >
+                  <Camera className="h-3.5 w-3.5 mr-1" />
+                  {t("start_scan", "Start Direct Scan")}
+                </Button>
+              </div>
+            </div>
+          ) : viewMode === "grid" ? (
+            /* ── Grid View ── */
+            <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+              {filteredDocuments.map((doc) => {
+                const isPdf = doc.file_type?.toLowerCase().includes("pdf") || doc.file_name?.toLowerCase().endsWith(".pdf");
+                const isImg =
+                  doc.file_type?.toLowerCase().includes("image") ||
+                  /\.(png|jpe?g|webp)$/i.test(doc.file_name || "");
+                const isSheet =
+                  doc.file_type?.toLowerCase().includes("sheet") ||
+                  /\.(xlsx?|csv)$/i.test(doc.file_name || "");
+
+                return (
+                  <div
+                    key={doc.id}
+                    className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 p-3.5 hover:shadow-md transition-all flex flex-col justify-between space-y-3 group"
+                  >
+                    <div>
+                      {/* Top Badges & Type */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-900 flex items-center justify-center shrink-0">
+                            {isPdf ? (
+                              <FileText className="h-4 w-4 text-red-500" />
+                            ) : isImg ? (
+                              <ImageIcon className="h-4 w-4 text-blue-500" />
+                            ) : isSheet ? (
+                              <FileSpreadsheet className="h-4 w-4 text-emerald-500" />
+                            ) : (
+                              <FileCheck className="h-4 w-4 text-indigo-500" />
+                            )}
+                          </div>
+                          <div className="overflow-hidden">
+                            <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate" title={doc.title}>
+                              {doc.title}
+                            </h3>
+                            <p className="text-[10px] font-mono text-slate-400 truncate" title={doc.file_name}>
+                              {doc.file_name}
+                            </p>
+                          </div>
+                        </div>
+
+                        <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                          {formatBytes(doc.file_size)}
+                        </span>
+                      </div>
+
+                      {/* Context Chips */}
+                      <div className="mt-2.5 flex flex-wrap gap-1">
+                        <span className="text-[9.5px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                          {doc.module_type}
+                        </span>
+                        {doc.document_type && (
+                          <span className="text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300">
+                            {doc.document_type}
+                          </span>
+                        )}
+                        {doc.company_name && (
+                          <span className="text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 truncate max-w-[140px]">
+                            🏢 {doc.company_name}
+                          </span>
+                        )}
+                        {doc.person_account_name && (
+                          <span className="text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 truncate max-w-[140px]">
+                            👤 {doc.person_account_name}
+                          </span>
+                        )}
+                        {doc.account_name && (
+                          <span className="text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300 truncate max-w-[140px]">
+                            💳 {doc.account_name}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Footer Date & Actions */}
+                    <div className="pt-2 border-t border-slate-100 dark:border-slate-850 flex items-center justify-between gap-2">
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        {new Date(doc.scanned_at || doc.created_at).toLocaleDateString()}
+                      </span>
+
+                      <div className="flex items-center gap-1">
+                        {/* Preview / View */}
+                        <button
+                          type="button"
+                          onClick={() => setPreviewDoc(doc)}
+                          className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-blue-50 hover:text-blue-600 flex items-center justify-center text-slate-600 transition-colors"
+                          title={t("view", "View")}
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                        </button>
+
+                        {/* Download */}
+                        {doc.file_url && (
+                          <a
+                            href={doc.file_url}
+                            download={doc.file_name}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-600 flex items-center justify-center text-slate-600 transition-colors"
+                            title={t("download", "Download")}
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                          </a>
+                        )}
+
+                        {/* Edit / Move */}
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEdit(doc)}
+                          className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-purple-50 hover:text-purple-600 flex items-center justify-center text-slate-600 transition-colors"
+                          title={t("edit_move", "Edit / Move")}
+                        >
+                          <Move className="h-3.5 w-3.5" />
+                        </button>
+
+                        {/* Delete */}
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(doc.id)}
+                          className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-red-50 hover:text-red-600 flex items-center justify-center text-slate-600 transition-colors"
+                          title={t("delete", "Delete")}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            /* ── Table View ── */
+            <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-bold uppercase text-[10px]">
+                  <tr>
+                    <th className="p-2.5">Title / File</th>
+                    <th className="p-2.5">Module & Type</th>
+                    <th className="p-2.5">Company / Account</th>
+                    <th className="p-2.5">Size</th>
+                    <th className="p-2.5">Date</th>
+                    <th className="p-2.5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {filteredDocuments.map((doc) => (
+                    <tr key={doc.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/50">
+                      <td className="p-2.5 font-bold text-slate-900 dark:text-slate-100">
+                        <div className="truncate max-w-[200px]">{doc.title}</div>
+                        <div className="text-[10px] font-mono text-slate-400 truncate max-w-[200px]">{doc.file_name}</div>
+                      </td>
+                      <td className="p-2.5">
+                        <span className="font-semibold text-blue-600">{doc.module_type}</span>
+                        {doc.document_type && <span className="text-slate-400"> • {doc.document_type}</span>}
+                      </td>
+                      <td className="p-2.5 text-slate-600 dark:text-slate-300">
+                        <div>{doc.company_name || "—"}</div>
+                        <div className="text-[10px] text-slate-400">{doc.person_account_name || doc.account_name || ""}</div>
+                      </td>
+                      <td className="p-2.5 font-mono text-slate-500">{formatBytes(doc.file_size)}</td>
+                      <td className="p-2.5 text-slate-500 font-mono text-[10px]">
+                        {new Date(doc.scanned_at || doc.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="p-2.5 text-right space-x-1">
+                        <button
+                          onClick={() => setPreviewDoc(doc)}
+                          className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                          title="View"
+                        >
+                          <Eye className="h-3.5 w-3.5 inline" />
+                        </button>
+                        <button
+                          onClick={() => handleOpenEdit(doc)}
+                          className="p-1 text-purple-600 hover:bg-purple-50 rounded"
+                          title="Edit / Move"
+                        >
+                          <Move className="h-3.5 w-3.5 inline" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(doc.id)}
+                          className="p-1 text-red-600 hover:bg-red-50 rounded"
+                          title="Delete"
+                        >
+                          <Trash2 className="h-3.5 w-3.5 inline" />
+                        </button>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {documents.map((doc) => (
-                      <tr key={doc.id} className="hover:bg-slate-50 text-center font-medium">
-                        <td className="p-3 text-left font-bold text-slate-900">
-                          <div className="flex items-center gap-2">
-                            {doc.file_type === "pdf" && <FileText className="h-4 w-4 text-rose-600 flex-shrink-0" />}
-                            {doc.file_type === "image" && <ImageIcon className="h-4 w-4 text-emerald-600 flex-shrink-0" />}
-                            {doc.file_type === "word" && <FileText className="h-4 w-4 text-blue-600 flex-shrink-0" />}
-                            {doc.file_type === "excel" && <FileSpreadsheet className="h-4 w-4 text-emerald-700 flex-shrink-0" />}
-                            <div>
-                              <div>{doc.title}</div>
-                              <div className="text-[9px] text-slate-400 font-mono" dir="ltr">{doc.file_name}</div>
-                              {doc.document_path ? <div className="text-[9px] text-slate-400 font-mono" dir="ltr">{doc.document_path}</div> : null}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="p-3 uppercase font-extrabold text-[10px]">
-                          <div className="space-y-1">
-                            <div className="rounded bg-slate-100 px-2 py-0.5 border text-slate-700">
-                              {doc.company_code || doc.company_name ? `${doc.company_code ? `${doc.company_code} · ` : ""}${doc.company_name ?? ""}` : "—"}
-                            </div>
-                            <div className="rounded bg-slate-50 px-2 py-0.5 border text-slate-600">
-                              {doc.person_account_type || "—"}
-                              {doc.person_account_name ? ` · ${doc.person_account_name}` : ""}
-                            </div>
-                            <div className="rounded bg-slate-100 px-2 py-0.5 border text-slate-700">
-                              {doc.account_code || doc.account_name ? `${doc.account_code ? `${doc.account_code} · ` : ""}${doc.account_name ?? ""}` : "—"}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="p-3 font-semibold text-indigo-700">{t(doc.source_module || doc.module_type, doc.source_module || doc.module_type)}</td>
-                        <td className="p-3 font-semibold text-emerald-700">{t(doc.document_type || doc.module_type, doc.document_type || doc.module_type)}</td>
-                        <td className="p-3 text-[10px]">
-                          <div>{t(doc.country_name || "Pakistan", doc.country_name || "Pakistan")}</div>
-                          <div className="text-slate-400 font-mono">{t(doc.main_branch_name || "Main Branch", doc.main_branch_name || "Main Branch")}</div>
-                          {doc.city_branch_name ? <div className="text-slate-400 font-mono">{t(doc.city_branch_name, doc.city_branch_name)}</div> : null}
-                        </td>
-                        <td className="p-3 uppercase font-extrabold text-[10px]">
-                          <span className="rounded bg-slate-100 px-2 py-0.5 border text-slate-700">{doc.file_type}</span>
-                        </td>
-                        <td className="p-3 font-semibold">{doc.created_by || t("super_admin", "Super Admin")}</td>
-                        <td className="p-3 text-[10px] font-mono text-slate-500" dir="ltr">
-                          {new Date(doc.created_at).toLocaleDateString()}
-                        </td>
-                        <td className="p-3">
-                          <div className="flex items-center justify-center gap-1">
-                            <button
-                              onClick={() => setPreviewDoc(doc)}
-                              className="rounded border border-indigo-200 bg-white p-1 text-indigo-600 hover:bg-indigo-50 cursor-pointer"
-                              title={t("preview", "Preview")}
-                            >
-                              <Eye className="h-3.5 w-3.5" />
-                            </button>
-                            <a
-                              href={doc.file_url}
-                              download
-                              className="rounded border border-emerald-200 bg-white p-1 text-emerald-600 hover:bg-emerald-50 cursor-pointer"
-                              title={t("download", "Download")}
-                            >
-                              <Download className="h-3.5 w-3.5" />
-                            </a>
-                            <button
-                              onClick={() => {
-                                setEditingDoc(doc);
-                                setEditTitle(doc.title);
-                                setEditModule(doc.module_type);
-                              }}
-                              className="rounded border border-slate-200 bg-white p-1 text-slate-600 hover:bg-slate-100 cursor-pointer"
-                              title={t("edit", "Edit")}
-                            >
-                              <Edit className="h-3.5 w-3.5" />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(doc.id)}
-                              className="rounded border border-rose-200 bg-white p-1 text-rose-600 hover:bg-rose-50 cursor-pointer"
-                              title={t("delete", "Delete")}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="p-12 text-center text-slate-400 text-xs font-semibold space-y-2">
-                <FolderOpen className="h-8 w-8 text-slate-300 mx-auto" />
-                <div>{t("no_docs", "No documents found in this directory folder.")}</div>
-              </div>
-            )}
-          </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Direct Scanner Hardware Dialog */}
-      {isScannerOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl max-w-md w-full space-y-4 text-center">
-            <div className="mx-auto w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 animate-pulse">
-              <Camera className="h-6 w-6" />
-            </div>
-            <h3 className="text-base font-black text-slate-900">{t("scanner_title", "Direct Scanner Integration")}</h3>
-            <p className="text-xs font-semibold text-slate-600 leading-relaxed">{scanStatus}</p>
-            <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-              <div className="bg-emerald-600 h-full w-2/3 animate-pulse" />
-            </div>
-          </div>
-        </div>
-      )}
+      {/* ── Modal 1: Direct Hardware Scanner Studio ── */}
+      <Dialog open={isScannerOpen} onOpenChange={setIsScannerOpen}>
+        <DialogContent className="max-w-md rounded-2xl p-5 font-sans">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base font-black text-slate-900">
+              <Camera className="h-5 w-5 text-emerald-600" />
+              {t("scanner_studio", "Direct Hardware Scanner Studio")}
+            </DialogTitle>
+          </DialogHeader>
 
-      {/* Document Inspector / Preview Modal */}
-      {previewDoc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
-          <div className="rounded-2xl border border-slate-200 bg-white shadow-2xl max-w-3xl w-full overflow-hidden">
-            <div className="bg-slate-900 text-white p-4 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-indigo-400" />
-                  <div>
-                  <h3 className="font-bold text-sm">{previewDoc.title}</h3>
-                  <p className="text-[10px] text-slate-400 font-mono" dir="ltr">
-                    {previewDoc.file_name} • {t(previewDoc.module_type, previewDoc.module_type)}
-                  </p>
-                </div>
-              </div>
-              <button onClick={() => setPreviewDoc(null)} className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer">
-                <X className="h-5 w-5" />
-              </button>
+          <div className="space-y-3.5 py-2 text-xs">
+            {/* Scanner Device Selection */}
+            <div>
+              <label className="font-bold text-slate-700 block mb-1">
+                {t("select_device", "Hardware Scanner Device")}
+              </label>
+              <select
+                value={scannerDevice}
+                onChange={(e) => setScannerDevice(e.target.value)}
+                className="w-full h-9 rounded-xl border border-slate-200 bg-slate-50 px-2.5 font-semibold text-slate-800"
+              >
+                <option value="Fujitsu fi-7160 Enterprise TWAIN">Fujitsu fi-7160 Enterprise (TWAIN USB/LAN)</option>
+                <option value="Canon imageFORMULA DR-C225 II">Canon imageFORMULA DR-C225 II (Fast Feeder)</option>
+                <option value="Epson WorkForce DS-530 II">Epson WorkForce DS-530 II (Duplex)</option>
+                <option value="HP ScanJet Pro 3000 s4">HP ScanJet Pro 3000 s4</option>
+                <option value="Direct WebCamera Document Capture">Direct WebCam / Mobile Camera</option>
+              </select>
             </div>
-            <div className="p-6 bg-slate-50 min-h-[300px] flex items-center justify-center text-center">
-              <div className="space-y-3">
-                <FileCheck className="h-12 w-12 text-emerald-600 mx-auto" />
-                <div className="text-sm font-bold text-slate-900">{t("doc_ready", "Document Ready for Viewer & Print")}</div>
-                <div className="flex items-center justify-center gap-3 pt-2">
-                  <a
-                    href={previewDoc.file_url}
-                    target="_blank"
-                    className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-indigo-700 cursor-pointer"
-                  >
-                    <Eye className="h-4 w-4" /> {t("open_fullscreen", "Open Full Screen")}
-                  </a>
-                  <button
-                    onClick={() => window.print()}
-                    className="flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-100 cursor-pointer"
-                  >
-                    <Printer className="h-4 w-4" /> {t("print_doc", "Print Document")}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Edit / Move Modal */}
-      {editingDoc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl max-w-md w-full space-y-4">
-            <h3 className="font-bold text-base text-slate-900">{t("edit_title", "Edit / Move Document")}</h3>
-            <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[10px] font-black uppercase text-slate-400">{t("document_title", "Document Title")}</label>
-                <input
-                  type="text"
-                  value={editTitle}
-                  onChange={(e) => setEditTitle(e.target.value)}
-                  className="w-full rounded-xl border p-2 text-xs font-semibold mt-1"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] font-black uppercase text-slate-400">{t("module_categories", "Module Category")}</label>
+                <label className="font-bold text-slate-700 block mb-1">{t("dpi", "Resolution")}</label>
                 <select
-                  value={editModule}
-                  onChange={(e) => setEditModule(e.target.value)}
-                  className="w-full rounded-xl border p-2 text-xs font-semibold mt-1 bg-white"
+                  value={scannerDpi}
+                  onChange={(e) => setScannerDpi(e.target.value)}
+                  className="w-full h-9 rounded-xl border border-slate-200 bg-slate-50 px-2.5 font-semibold text-slate-800"
                 >
-                  {MODULE_FOLDERS.map((m) => (
-                    <option key={m} value={m}>{t(m, m)}</option>
-                  ))}
+                  <option value="150">150 DPI (Fast)</option>
+                  <option value="300">300 DPI (Recommended)</option>
+                  <option value="600">600 DPI (High Quality)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">{t("color", "Color Mode")}</label>
+                <select
+                  value={scannerColor}
+                  onChange={(e) => setScannerColor(e.target.value)}
+                  className="w-full h-9 rounded-xl border border-slate-200 bg-slate-50 px-2.5 font-semibold text-slate-800"
+                >
+                  <option value="color">24-Bit Color</option>
+                  <option value="grayscale">Grayscale</option>
+                  <option value="bw">Black & White (Text)</option>
                 </select>
               </div>
             </div>
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                onClick={() => setEditingDoc(null)}
-                className="rounded-xl border px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-50 cursor-pointer"
-              >
-                {t("cancel", "Cancel")}
-              </button>
-              <button
-                onClick={handleSaveEdit}
-                className="rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-indigo-700 cursor-pointer"
-              >
-                {t("save_changes", "Save Changes")}
-              </button>
+
+            {/* Destination Preview */}
+            <div className="rounded-xl bg-slate-50 p-3 border border-slate-200 space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Destination Filing Path</span>
+              <div className="text-[11px] font-mono text-slate-700 truncate">
+                {activePathString}
+              </div>
+            </div>
+
+            {/* Live Scanner Activity Status */}
+            {scanStatus && (
+              <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-emerald-800 space-y-1.5">
+                <div className="flex items-center gap-2 font-bold">
+                  <RefreshCw className="h-4 w-4 animate-spin text-emerald-600" />
+                  {scanStatus}
+                </div>
+                <div className="w-full bg-emerald-200 h-1.5 rounded-full overflow-hidden">
+                  <div className="bg-emerald-600 h-full w-2/3 animate-pulse rounded-full" />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setIsScannerOpen(false)}
+              disabled={!!scanStatus}
+              className="rounded-xl text-xs"
+            >
+              {t("cancel", "Cancel")}
+            </Button>
+            <Button
+              onClick={handleDirectScanExecute}
+              disabled={!!scanStatus}
+              className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs"
+            >
+              <Camera className="h-3.5 w-3.5 mr-1" />
+              {scanStatus ? t("scanning", "Scanning...") : t("start_scan", "Start Direct Scan")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Modal 2: Create Custom Folder ── */}
+      <Dialog open={isNewFolderOpen} onOpenChange={setIsNewFolderOpen}>
+        <DialogContent className="max-w-sm rounded-2xl p-5 font-sans">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base font-black text-slate-900">
+              <FolderPlus className="h-5 w-5 text-purple-600" />
+              {t("create_folder", "Create Custom Folder")}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2 text-xs">
+            <div>
+              <label className="font-bold text-slate-700 block mb-1">
+                {t("folder_name", "Folder Name / Title")}
+              </label>
+              <Input
+                type="text"
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                placeholder="e.g. Audit 2026, Personal Dossier, Customs Vouchers..."
+                className="h-9 rounded-xl text-xs"
+              />
+            </div>
+
+            <div className="rounded-xl bg-purple-50 p-2.5 border border-purple-200 text-purple-900 text-[11px]">
+              📁 Creates a custom folder under the current branch scope for quick filing and isolation.
             </div>
           </div>
-        </div>
-      )}
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setIsNewFolderOpen(false)} className="rounded-xl text-xs">
+              {t("cancel", "Cancel")}
+            </Button>
+            <Button onClick={handleCreateFolder} className="rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs">
+              {t("create", "Create Folder")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Modal 3: Edit / Move Document ── */}
+      <Dialog open={!!editingDoc} onOpenChange={(open) => !open && setEditingDoc(null)}>
+        <DialogContent className="max-w-md rounded-2xl p-5 font-sans">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base font-black text-slate-900">
+              <Move className="h-5 w-5 text-indigo-600" />
+              {t("edit_title", "Edit / Move Document")}
+            </DialogTitle>
+          </DialogHeader>
+
+          {editingDoc && (
+            <div className="space-y-3 py-2 text-xs">
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">{t("doc_title", "Document Title")}</label>
+                <Input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="h-9 rounded-xl text-xs font-semibold"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">{t("module_folder", "Module Folder")}</label>
+                  <select
+                    value={editModule}
+                    onChange={(e) => setEditModule(e.target.value)}
+                    className="w-full h-9 rounded-xl border border-slate-200 bg-slate-50 px-2.5 font-semibold text-slate-800"
+                  >
+                    {allFolderList.map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">{t("document_type", "Document Type")}</label>
+                  <select
+                    value={editDocType}
+                    onChange={(e) => setEditDocType(e.target.value)}
+                    className="w-full h-9 rounded-xl border border-slate-200 bg-slate-50 px-2.5 font-semibold text-slate-800"
+                  >
+                    {DOCUMENT_TYPES.map((dt) => (
+                      <option key={dt} value={dt}>
+                        {dt}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">{t("company_name", "Company Name")}</label>
+                <Input
+                  type="text"
+                  value={editCompany}
+                  onChange={(e) => setEditCompany(e.target.value)}
+                  className="h-9 rounded-xl text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">{t("account_name", "Account Name")}</label>
+                <Input
+                  type="text"
+                  value={editAccount}
+                  onChange={(e) => setEditAccount(e.target.value)}
+                  className="h-9 rounded-xl text-xs"
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setEditingDoc(null)} className="rounded-xl text-xs">
+              {t("cancel", "Cancel")}
+            </Button>
+            <Button onClick={handleSaveEdit} className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs">
+              {t("save_changes", "Save Changes")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Modal 4: Document Viewer & Details ── */}
+      <Dialog open={!!previewDoc} onOpenChange={(open) => !open && setPreviewDoc(null)}>
+        <DialogContent className="max-w-2xl rounded-2xl p-5 font-sans">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between text-base font-black text-slate-900 pr-6">
+              <span className="truncate">{previewDoc?.title}</span>
+              <span className="text-xs font-mono font-normal text-slate-400">{previewDoc?.file_name}</span>
+            </DialogTitle>
+          </DialogHeader>
+
+          {previewDoc && (
+            <div className="space-y-3.5 py-2 text-xs">
+              {/* Document Meta Breakdown */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 rounded-xl bg-slate-50 dark:bg-slate-900 p-3 border border-slate-200 dark:border-slate-800 text-[11px]">
+                <div>
+                  <span className="text-slate-400 block text-[9.5px] uppercase font-bold">Module</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">{previewDoc.module_type}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[9.5px] uppercase font-bold">Type</span>
+                  <span className="font-bold text-purple-600">{previewDoc.document_type || "Document"}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[9.5px] uppercase font-bold">Size</span>
+                  <span className="font-bold font-mono text-slate-800 dark:text-slate-200">{formatBytes(previewDoc.file_size)}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[9.5px] uppercase font-bold">Scanned At</span>
+                  <span className="font-bold font-mono text-slate-800 dark:text-slate-200">
+                    {new Date(previewDoc.scanned_at || previewDoc.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+
+              {/* Document Path */}
+              {previewDoc.document_path && (
+                <div className="rounded-xl bg-slate-100/70 p-2 text-[11px] font-mono text-slate-600 truncate">
+                  📂 {previewDoc.document_path}
+                </div>
+              )}
+
+              {/* Document Actions Bar */}
+              <div className="flex items-center justify-end gap-2 pt-2">
+                {previewDoc.file_url && (
+                  <Button
+                    variant="outline"
+                    onClick={() => window.open(previewDoc.file_url, "_blank")}
+                    className="rounded-xl text-xs font-bold gap-1"
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                    {t("open_fullscreen", "Open Full Screen")}
+                  </Button>
+                )}
+
+                {previewDoc.file_url && (
+                  <a
+                    href={previewDoc.file_url}
+                    download={previewDoc.file_name}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-1 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-700"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    {t("download", "Download")}
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

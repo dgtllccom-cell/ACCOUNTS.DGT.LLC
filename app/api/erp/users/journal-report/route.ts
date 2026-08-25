@@ -222,7 +222,7 @@ async function requireJournalSession(request: NextRequest) {
       clearingAgentIds: [],
       ledgerVisibility: "full",
       isShippingScoped: false
-    } satisfies ErpSession;
+    } as ErpSession;
   }
 
   return fallbackReportSession();

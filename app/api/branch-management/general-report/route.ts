@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireErpSession } from "@/lib/auth/session";
+import { requireErpSession, type ErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import postgres from "postgres";
 
@@ -224,8 +224,11 @@ export async function GET() {
       countryIds: [],
       countryBranchIds: [],
       cityBranchIds: [],
-      isSuperAdmin: true
-    }));
+      isSuperAdmin: true,
+      clearingAgentIds: [],
+      ledgerVisibility: "full" as const,
+      isShippingScoped: false
+    } as unknown as ErpSession));
     const admin = createSupabaseAdminClient();
 
     const accessibleCountryIds = await resolveAccessibleCountryIds(admin, session);
