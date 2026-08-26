@@ -692,3 +692,35 @@ export async function getEntityVersionTimeline(entityType: string, entityId: str
     return events;
   });
 }
+
+export async function getMonthlyEditSummary({
+  year,
+  month,
+  countryId,
+  cityBranchId
+}: {
+  year?: number;
+  month?: number;
+  countryId?: string | null;
+  cityBranchId?: string | null;
+} = {}) {
+  return withLocalPg(async (sql) => {
+    const currentYear = year || new Date().getFullYear();
+    const currentMonth = month || new Date().getMonth() + 1;
+    const events = await sql`
+      SELECT 
+        DATE_TRUNC('day', created_at) as edit_date,
+        COUNT(*) as total_edits,
+        COUNT(CASE WHEN risk_level = 'High' THEN 1 END) as high_risk_edits,
+        COUNT(DISTINCT user_id) as active_users
+      FROM enterprise_audit_events
+      WHERE EXTRACT(YEAR FROM created_at) = ${currentYear}
+        AND EXTRACT(MONTH FROM created_at) = ${currentMonth}
+        ${countryId ? sql`AND country_id = ${countryId}` : sql``}
+        ${cityBranchId ? sql`AND city_branch_id = ${cityBranchId}` : sql``}
+      GROUP BY DATE_TRUNC('day', created_at)
+      ORDER BY edit_date ASC;
+    `;
+    return events;
+  });
+}
