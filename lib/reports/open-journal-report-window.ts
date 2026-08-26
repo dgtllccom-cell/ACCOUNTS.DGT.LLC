@@ -1,16 +1,8 @@
-import { t } from "@/lib/i18n/ui";
+import { openUniversalPrintReport } from "./universal-print-engine";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
-import { renderA4Document, escapeReportHtml, A4_SHARED_CSS } from "@/lib/reports/report-shell";
+import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
 
-/**
- * Reusable daily / period JOURNAL print engine (General/Cash/Bank Roznamcha, Purchase, Sales,
- * Transfer, Expense journals, ledger statements). One engine, thin per-module config. Renders a dark
- * overview banner with the journal name + scope + summary KPIs (opening / total debit / total credit /
- * closing / entry count), a chip row of the active filters/date range/scope, and a full-width data
- * table with repeated header across pages. Labels come from the central dictionary; real data only.
- */
-
-export type JournalColumn = { key: string; label: string; num?: boolean; align?: "start" | "center" | "end" };
+export type JournalColumn = { key: string; label: string; num?: boolean; align?: "start" | "center" | "end"; width?: string };
 export type JournalKpi = { label: string; value: string; tone?: "open" | "current" | "debit" | "credit" | "neutral" };
 export type JournalChip = { label: string; value: string | null | undefined };
 
@@ -19,73 +11,81 @@ export type JournalReportConfig = {
   autoPrint?: boolean;
   title: string;
   subtitle: string;
-  overviewLabel: string;   // "Journal Overview" translated
-  scopeName: string;       // e.g. journal display name / branch scope
+  overviewLabel?: string;
+  scopeName?: string;
   status?: string;
-  chips: JournalChip[];    // date range, branch, user, currency, filters
-  kpis: JournalKpi[];      // 0..4 summary cards
+  chips?: JournalChip[];
+  kpis?: JournalKpi[];
   columns: JournalColumn[];
-  rows: Array<Record<string, string | null | undefined>>;
-  totals?: Record<string, string | null | undefined>;
+  rows: Array<Record<string, any>>;
+  totals?: Record<string, string | number | null | undefined>;
   createdBy?: string;
   reportIdPrefix?: string;
   reportIdValue?: string;
   signatures?: string[];
+  orientation?: "portrait" | "landscape" | "auto";
 };
 
 export function openJournalReportWindow(config: JournalReportConfig) {
   if (typeof window === "undefined") return;
-  const lang = (config.lang || "en") as SupportedLanguage;
-  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
-  const e = escapeReportHtml;
-  const DASH = tt("acct.no_data", "-");
-  const cell = (v: string | null | undefined) => (v === null || v === undefined || String(v).trim() === "" ? DASH : e(v));
 
-  const toneClass: Record<string, string> = { open: "kpi-open", current: "kpi-current", debit: "kpi-debit", credit: "kpi-credit", neutral: "kpi-current" };
-  const kpiCells = (config.kpis || [])
-    .map((k) => `<div class="kpi"><span class="kpi-label">${e(k.label)}</span><div class="kpi-val ${toneClass[k.tone || "neutral"]}">${e(k.value)}</div></div>`)
-    .join("");
-  const chips = (config.chips || [])
+  const targetLang = (config.lang || (typeof document !== "undefined" ? (localStorage.getItem("erp_lang") || "en") : "en")) as SupportedLanguage;
+  const tr = (str: string) => {
+    if (!str) return str;
+    const res = autoTranslate5Languages(str);
+    return res[targetLang] || str;
+  };
+
+  const columns = config.columns.map((c) => ({
+    key: c.key,
+    label: c.label,
+    align: c.num || c.align === "end" ? ("right" as const) : c.align === "center" ? ("center" as const) : ("left" as const),
+    width: c.width,
+    format: c.num ? ("number" as const) : ("text" as const),
+  }));
+
+  const filters = (config.chips || [])
     .filter((c) => c.value !== null && c.value !== undefined && String(c.value).trim() !== "")
-    .map((c) => `<span class="chip"><b>${e(c.label)}:</b> ${e(c.value)}</span>`)
-    .join("");
+    .map((c) => ({
+      label: c.label,
+      value: String(c.value),
+    }));
 
-  const align = (c: JournalColumn) => c.num ? "end" : (c.align || "start");
-  const thead = `<tr>${config.columns.map((c) => `<th style="text-align:${align(c)}">${e(c.label)}</th>`).join("")}</tr>`;
-  const tbody = (config.rows || []).length
-    ? config.rows.map((r) => `<tr>${config.columns.map((c) => `<td class="${c.num ? "num" : ""}" style="text-align:${align(c)}">${cell(r[c.key])}</td>`).join("")}</tr>`).join("")
-    : `<tr><td colspan="${config.columns.length}" style="text-align:center;color:#94a3b8;padding:16px;">${tt("report.builder_no_records", "No records found")}</td></tr>`;
-  const tfoot = config.totals
-    ? `<tfoot><tr>${config.columns.map((c, i) => {
-        const v = config.totals![c.key];
-        const empty = v === undefined || v === null || String(v).trim() === "";
-        const content = empty ? (i === 0 ? e(tt("bankroz.totals", "Totals")) : "") : e(v);
-        return `<td class="${c.num ? "num" : ""}" style="text-align:${align(c)}">${content}</td>`;
-      }).join("")}</tr></tfoot>`
-    : "";
+  const kpis = (config.kpis || []).map((k) => ({
+    label: k.label,
+    value: k.value,
+  }));
 
-  const bodyHtml = `
-    <div class="overview-banner">
-      <div class="overview-top">
-        <div><div class="overview-title">${e(config.overviewLabel)}</div><div class="overview-name">${cell(config.scopeName)}</div></div>
-        ${config.status ? `<span class="overview-status">${cell(config.status)}</span>` : ""}
-      </div>
-      ${kpiCells ? `<div class="overview-kpis">${kpiCells}</div>` : ""}
-    </div>
-    ${chips ? `<div class="chip-row">${chips}</div>` : ""}
-    <table class="data-table"><thead>${thead}</thead><tbody>${tbody}</tbody>${tfoot}</table>
-  `;
+  const cleanedTotals: Record<string, string | number> = {};
+  if (config.totals) {
+    for (const [k, v] of Object.entries(config.totals)) {
+      if (v !== null && v !== undefined && String(v).trim() !== "") {
+        cleanedTotals[k] = v;
+      }
+    }
+  }
 
-  renderA4Document({
-    lang,
-    autoPrint: config.autoPrint,
+  openUniversalPrintReport({
     title: config.title,
     subtitle: config.subtitle,
-    reportType: config.subtitle,
-    createdBy: config.createdBy,
-    bodyHtml,
-    reportId: `${config.reportIdPrefix || "JRN"}-${(config.reportIdValue || "").replace(/[^a-zA-Z0-9-]/g, "") || "ALL"}`,
-    signatures: config.signatures,
+    documentNo: config.reportIdValue || `${config.reportIdPrefix || "JRN"}-REG`,
+    orientation: config.orientation || (columns.length > 7 ? "landscape" : "portrait"),
+    reportType: "register",
+    scope: {
+      scopeLevel: config.scopeName || "Universal Journal Register",
+      userName: config.createdBy || "ERP Accountant",
+    },
+    generalBrand: {
+      name: "DAMAAN GENERAL TRADING LLC",
+      tagline: "UNIVERSAL JOURNAL & AUDIT REGISTER",
+    },
+    columns,
+    rows: config.rows || [],
+    totals: Object.keys(cleanedTotals).length > 0 ? cleanedTotals : undefined,
+    kpis,
+    filters,
+    lang: targetLang,
+    autoPrint: config.autoPrint,
   });
-  void A4_SHARED_CSS; // css is applied inside renderA4Document
 }
+

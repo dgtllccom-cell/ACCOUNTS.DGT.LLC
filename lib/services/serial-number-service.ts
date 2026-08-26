@@ -9,6 +9,7 @@ export type HierarchicalSerials = {
   entrySerial: string | null;
   debitSerial?: string | null;
   creditSerial?: string | null;
+  uniqueGlobalReferenceId?: string | null;
 };
 
 export type SerialAllocationOptions = {
@@ -95,6 +96,8 @@ export async function allocateHierarchicalSerials(
     allocDbSerial(admin, "global", "ENTRY", entryEntity, entryPrefix),
   ]);
 
+  const uniqueGlobalReferenceId = `GREF-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+
   return {
     globalSerial: globalSerial || `ERP-${Date.now().toString(36).toUpperCase()}`,
     countrySerial: options.countryId ? (countrySerial || `${countryPrefix}-${Date.now().toString(36).toUpperCase()}`) : null,
@@ -102,6 +105,7 @@ export async function allocateHierarchicalSerials(
     entrySerial: entrySerial || `${entryPrefix}-${Date.now().toString(36).toUpperCase()}`,
     debitSerial: options.entryType === "debit" ? (entrySerial || `DR-${Date.now().toString(36).toUpperCase()}`) : null,
     creditSerial: options.entryType === "credit" ? (entrySerial || `CR-${Date.now().toString(36).toUpperCase()}`) : null,
+    uniqueGlobalReferenceId,
   };
 }
 

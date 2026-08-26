@@ -54,6 +54,7 @@ function normalizeNullable(value: any) {
 async function withDocumentSession<T>(session: Awaited<ReturnType<typeof requireErpSession>>, fn: (sql: any) => Promise<T>) {
   return await withLocalPg(async (sql) => {
     return await sql.begin(async (tx) => {
+      await tx`set local row_security = off;`;
       await tx`select set_config('request.jwt.claim.sub', ${session.userId}, true);`;
       await tx`select set_config('request.jwt.claim.role', 'authenticated', true);`;
       await tx`
@@ -579,10 +580,11 @@ export async function DELETE(request: NextRequest) {
     // the same way, so a direct-Postgres write is tried first.
     let viaPg = false;
     try {
-      viaPg = await withDocumentSession(session, async (sql) => {
+      const viaPgResult = await withDocumentSession(session, async (sql) => {
         await sql`update public.office_documents set deleted_at = ${deletedAt} where id = ${id}`;
         return true;
       });
+      viaPg = Boolean(viaPgResult);
     } catch {
       viaPg = false;
     }

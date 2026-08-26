@@ -26,6 +26,7 @@ import {
   Clock,
   Container,
   Coins,
+  ArrowRightLeft,
   FileBarChart,
   FileText,
   Flag,
@@ -46,6 +47,7 @@ import {
   ShoppingCart,
   Sparkles,
   Star,
+  TrendingUp,
   Truck,
   Users,
   Users2,
@@ -82,6 +84,7 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
       { icon: Users, label: "New User", href: "/dashboard/new-entry/users/registration" },
       { icon: Globe2, label: "New Country", href: "/dashboard/new-entry/branch-entry/country-branch" },
       { icon: Building2, label: "New Branch", href: "/dashboard/new-entry/branch-entry/city-branch" },
+      { icon: TrendingUp, label: "Country Investments", href: "/dashboard/super-admin/investments" },
     ],
   },
   {
@@ -93,6 +96,7 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
         children: [
           { label: "Journal", href: "/dashboard/journal/sales-order-payment/advance", icon: NotebookPen },
           { label: "Ledgers", href: "/dashboard/ledger", icon: BookOpen },
+          { label: "Inter-Country Transfers", href: "/dashboard/inter-country-transfers", icon: ArrowRightLeft },
           { label: "Journal Report PDF ERP", href: "/dashboard/reports/handover", icon: FileText, badge: "PDF" },
         ],
       },

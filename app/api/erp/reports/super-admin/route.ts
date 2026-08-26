@@ -486,7 +486,7 @@ export async function GET(request: NextRequest) {
               where is_active = true and deleted_at is null and user_id = any(${actorIds})
             `) as any[]
           : [];
-        return buildEditHistoryReport({
+        return apiOk(buildEditHistoryReport({
           session,
           scopeLevel: scope.level,
           scopeLabel: scope.scopeLabel,
@@ -496,7 +496,7 @@ export async function GET(request: NextRequest) {
           profiles: profiles as Array<{ id: string; full_name?: string | null; user_code?: string | null }>,
           assignments: assignments as Array<{ user_id: string; role: string; country_id?: string | null; country_branch_id?: string | null; city_branch_id?: string | null }>,
           rows: filteredHistoryRows
-        });
+        }));
       }
 
       if (params.reportType === "branch") {
@@ -522,7 +522,7 @@ export async function GET(request: NextRequest) {
               order by name
             `) as any[]
           : [];
-        return {
+        return apiOk({
           reportType: params.reportType,
           data: [
             ...mainBranches.map((row: any) => ({
@@ -573,7 +573,7 @@ export async function GET(request: NextRequest) {
             year: params.fromDate ? params.fromDate.slice(0, 4) : null
           },
           scope: { level: scope.level, label: scope.scopeLabel }
-        };
+        });
       }
 
       if (params.reportType === "user-activity") {
@@ -621,7 +621,7 @@ export async function GET(request: NextRequest) {
         }
         const profileMap = new Map((profiles as Array<{ id: string; full_name?: string | null; user_code?: string | null }>)
           .map((row) => [row.id, row]));
-        return {
+        return apiOk({
           reportType: params.reportType,
           data: activities.map((row: any) => ({
             id: row.id,
@@ -657,7 +657,7 @@ export async function GET(request: NextRequest) {
             year: params.fromDate ? params.fromDate.slice(0, 4) : null
           },
           scope: { level: scope.level, label: scope.scopeLabel }
-        };
+        });
       }
 
       return null;

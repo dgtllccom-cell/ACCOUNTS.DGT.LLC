@@ -26,6 +26,8 @@ import { Th } from "@/components/ui/translated-th";
 import { ClearingAgentPicker } from "@/features/shipping/components/clearing-agent-picker";
 import { ShippingLinePicker } from "@/features/shipping/components/shipping-line-picker";
 import { apiGet } from "@/lib/api/client";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 type ShippingLineStagePageProps = {
   title: string;
@@ -77,6 +79,9 @@ export function ShippingLineStagePage({
   description,
   activeStage
 }: ShippingLineStagePageProps) {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const [records, setRecords] = useState<ShippingRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -326,7 +331,7 @@ export function ShippingLineStagePage({
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 to-blue-500" />
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">Total Shipments</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">{tt("slstage.total_shipments", "Total Shipments")}</span>
               <span className="text-2xl font-black text-foreground mt-1 block">{stats.total}</span>
             </div>
             <div className="h-10 w-10 rounded-xl bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0">
@@ -339,7 +344,7 @@ export function ShippingLineStagePage({
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">In Transit</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">{tt("slstage.in_transit", "In Transit")}</span>
               <span className="text-2xl font-black text-foreground mt-1 block">{stats.inTransit}</span>
             </div>
             <div className="h-10 w-10 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
@@ -352,7 +357,7 @@ export function ShippingLineStagePage({
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-500" />
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">Arrived at Port</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">{tt("slstage.arrived", "Arrived at Port")}</span>
               <span className="text-2xl font-black text-foreground mt-1 block">{stats.arrived}</span>
             </div>
             <div className="h-10 w-10 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
@@ -365,7 +370,7 @@ export function ShippingLineStagePage({
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">Delivered</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">{tt("slstage.delivered", "Delivered")}</span>
               <span className="text-2xl font-black text-foreground mt-1 block">{stats.delivered}</span>
             </div>
             <div className="h-10 w-10 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
@@ -385,12 +390,12 @@ export function ShippingLineStagePage({
               <CardTitle className="text-sm font-bold tracking-tight text-foreground flex items-center gap-2">
                 <Ship className="h-4 w-4 text-cyan-600 dark:text-cyan-400" /> Select Shipment B/L
               </CardTitle>
-              <CardDescription className="text-xs text-muted-foreground">Choose a Bill of Lading record to edit tracking matrix.</CardDescription>
+              <CardDescription className="text-xs text-muted-foreground">{tt("slstage.choose_bl", "Choose a Bill of Lading record to edit tracking matrix.")}</CardDescription>
             </CardHeader>
             <CardContent className="p-4 space-y-4">
               {/* Real-time Search Input with Search Icon */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-foreground/80">Search B/L Registry</Label>
+                <Label className="text-xs font-semibold text-foreground/80">{tt("slstage.search_bl", "Search B/L Registry")}</Label>
                 <div className="relative">
                   <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -415,7 +420,7 @@ export function ShippingLineStagePage({
 
               <div className="pt-2">
                 <div className="flex items-center justify-between mb-2.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Available Registry</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{tt("slstage.available_registry", "Available Registry")}</span>
                   <span className="text-[10px] font-bold text-cyan-600 dark:text-cyan-400">
                     {filteredRecords.length} {filteredRecords.length === records.length ? "records" : `of ${records.length} matches`}
                   </span>
@@ -526,7 +531,7 @@ export function ShippingLineStagePage({
                         />
                       </div>
                       <div>
-                        <Label className="text-xs font-semibold text-foreground">Bill of Lading (B/L) Number</Label>
+                        <Label className="text-xs font-semibold text-foreground">{tt("slstage.bl_full", "Bill of Lading (B/L) Number")}</Label>
                         <Input
                           value={blNumber}
                           onChange={(e) => setBlNumber(e.target.value)}
@@ -543,7 +548,7 @@ export function ShippingLineStagePage({
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <Label className="text-xs font-semibold text-foreground">Vessel Name</Label>
+                        <Label className="text-xs font-semibold text-foreground">{tt("slstage.vessel_name", "Vessel Name")}</Label>
                         <Input
                           value={vesselName}
                           onChange={(e) => setVesselName(e.target.value)}
@@ -552,7 +557,7 @@ export function ShippingLineStagePage({
                         />
                       </div>
                       <div>
-                        <Label className="text-xs font-semibold text-foreground">Voyage Number</Label>
+                        <Label className="text-xs font-semibold text-foreground">{tt("slstage.voyage_number", "Voyage Number")}</Label>
                         <Input
                           value={voyageNumber}
                           onChange={(e) => setVoyageNumber(e.target.value)}
@@ -561,7 +566,7 @@ export function ShippingLineStagePage({
                         />
                       </div>
                       <div>
-                        <Label className="text-xs font-semibold text-foreground">Container Number</Label>
+                        <Label className="text-xs font-semibold text-foreground">{tt("slstage.container_number", "Container Number")}</Label>
                         <Input
                           value={containerNumber}
                           onChange={(e) => setContainerNumber(e.target.value)}
@@ -644,7 +649,7 @@ export function ShippingLineStagePage({
 
                   {/* Section 4: Carrier Remarks */}
                   <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-foreground">Carrier Remarks & Transshipment Info</Label>
+                    <Label className="text-xs font-semibold text-foreground">{tt("slstage.carrier_remarks", "Carrier Remarks & Transshipment Info")}</Label>
                     <textarea
                       rows={3}
                       value={remarks}
@@ -669,7 +674,7 @@ export function ShippingLineStagePage({
                   <div className="mx-auto h-12 w-12 rounded-2xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center mb-3">
                     <Ship className="h-6 w-6" />
                   </div>
-                  <h3 className="text-sm font-bold text-foreground">No B/L Record Selected</h3>
+                  <h3 className="text-sm font-bold text-foreground">{tt("slstage.no_bl_selected", "No B/L Record Selected")}</h3>
                   <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
                     Select a Shipment B/L record from the left panel to edit its tracking stages, dates, and port details.
                   </p>
@@ -695,16 +700,17 @@ export function ShippingLineStagePage({
                   <Th className="px-5 py-4">ETA</Th>
                   <Th className="px-5 py-4">Status</Th>
                   <Th className="px-5 py-4">Remarks</Th>
+                  {/* Note: Th keys use table-headers.ts; these hardcoded strings are passed as children and auto-translated */}
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40">
                 {loading ? (
                   <tr>
-                    <td colSpan={10} className="px-6 py-12 text-center text-muted-foreground font-medium">Loading shipment report...</td>
+                    <td colSpan={10} className="px-6 py-12 text-center text-muted-foreground font-medium">{tt("slstage.loading", "Loading shipment report...")}</td>
                   </tr>
                 ) : records.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="px-6 py-12 text-center text-muted-foreground">No shipment tracking records found.</td>
+                    <td colSpan={10} className="px-6 py-12 text-center text-muted-foreground">{tt("slstage.no_records", "No shipment tracking records found.")}</td>
                   </tr>
                 ) : (
                   records.map((r) => {

@@ -28,8 +28,13 @@ import {
 import { EntityVersionTimelineDialog } from "./entity-version-timeline-dialog";
 import { DeletedRecordDetailDialog } from "./deleted-record-detail-dialog";
 import { SecurityPinAuthDialog } from "./security-pin-auth-dialog";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 export function EnterpriseAuditMonitoringDashboard() {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const [activeTab, setActiveTab] = useState("edits");
 
   // Edit history states
@@ -184,7 +189,7 @@ export function EnterpriseAuditMonitoringDashboard() {
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-6" dir={isRtl ? "rtl" : "ltr"}>
       {/* Top Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-4">
         <div>
@@ -219,12 +224,12 @@ export function EnterpriseAuditMonitoringDashboard() {
         <Card className="border-sky-200 dark:border-sky-900 bg-sky-50/40 dark:bg-sky-950/20">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-semibold uppercase text-sky-800 dark:text-sky-300">
-              Total Entries Created
+              {tt("eaud.entries_created", "Entries Created")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{monthlyEdits?.stats?.total_created || "—"}</div>
-            <p className="text-xs text-muted-foreground">This Month</p>
+            <p className="text-xs text-muted-foreground">{tt("eaud.this_month", "This Month")}</p>
           </CardContent>
         </Card>
 
@@ -270,19 +275,19 @@ export function EnterpriseAuditMonitoringDashboard() {
         <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:w-[650px]">
           <TabsTrigger value="edits" className="gap-1.5">
             <History className="h-4 w-4" />
-            Edit History
+            {tt("eaud.monthly_tab", "Edit History")}
           </TabsTrigger>
           <TabsTrigger value="deleted" className="gap-1.5">
             <Trash2 className="h-4 w-4" />
-            Deleted Records
+            {tt("eaud.entries_deleted", "Deleted Records")}
           </TabsTrigger>
           <TabsTrigger value="daily" className="gap-1.5">
             <Building2 className="h-4 w-4" />
-            Daily Activity
+            {tt("eaud.daily_tab", "Daily Activity")}
           </TabsTrigger>
           <TabsTrigger value="users" className="gap-1.5">
             <Users className="h-4 w-4" />
-            User Productivity
+            {tt("eaud.title", "User Productivity")}
           </TabsTrigger>
         </TabsList>
 
@@ -292,7 +297,7 @@ export function EnterpriseAuditMonitoringDashboard() {
             <CardHeader>
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <CardTitle className="text-base font-bold">Monthly Edit History & Version Drilldown</CardTitle>
+                  <CardTitle className="text-base font-bold">{tt("eaud.monthly_tab", "Monthly Edit History & Version Drilldown")}</CardTitle>
                   <CardDescription>
                     Every modification across Purchases, Sales, Roznamcha, and Ledgers creates an immutable timeline version.
                   </CardDescription>
@@ -305,13 +310,13 @@ export function EnterpriseAuditMonitoringDashboard() {
             </CardHeader>
             <CardContent>
               {loadingEdits ? (
-                <div className="py-12 text-center text-sm text-muted-foreground">Loading edit analytics...</div>
+                <div className="py-12 text-center text-sm text-muted-foreground">{tt("eaud.loading_analytics", "Loading edit analytics...")}</div>
               ) : (
                 <div className="space-y-6">
                   {/* Module Breakdown Grid */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="border rounded-lg p-3 bg-muted/20">
-                      <div className="font-semibold text-xs text-muted-foreground mb-2">Edits by Module</div>
+                      <div className="font-semibold text-xs text-muted-foreground mb-2">{tt("eaud.edits_by_module", "Edits by Module")}</div>
                       <div className="space-y-1.5 text-xs max-h-40 overflow-y-auto">
                         {monthlyEdits?.moduleBreakdown?.length ? (
                           monthlyEdits.moduleBreakdown.map((m: any, idx: number) => (
@@ -321,13 +326,13 @@ export function EnterpriseAuditMonitoringDashboard() {
                             </div>
                           ))
                         ) : (
-                          <div className="text-muted-foreground py-2">No edits recorded this month.</div>
+                          <div className="text-muted-foreground py-2">{tt("eaud.no_edits_month", "No edits recorded this month.")}</div>
                         )}
                       </div>
                     </div>
 
                     <div className="border rounded-lg p-3 bg-muted/20">
-                      <div className="font-semibold text-xs text-muted-foreground mb-2">Edits by Country</div>
+                      <div className="font-semibold text-xs text-muted-foreground mb-2">{tt("eaud.edits_by_country", "Edits by Country")}</div>
                       <div className="space-y-1.5 text-xs max-h-40 overflow-y-auto">
                         {monthlyEdits?.countryBreakdown?.length ? (
                           monthlyEdits.countryBreakdown.map((c: any, idx: number) => (
@@ -337,13 +342,13 @@ export function EnterpriseAuditMonitoringDashboard() {
                             </div>
                           ))
                         ) : (
-                          <div className="text-muted-foreground py-2">No edits by country yet.</div>
+                          <div className="text-muted-foreground py-2">{tt("eaud.no_edits_country", "No edits by country yet.")}</div>
                         )}
                       </div>
                     </div>
 
                     <div className="border rounded-lg p-3 bg-sky-50/50 dark:bg-sky-950/20 border-sky-200">
-                      <div className="font-semibold text-xs text-sky-800 dark:text-sky-300 mb-1">Timeline Inspection</div>
+                      <div className="font-semibold text-xs text-sky-800 dark:text-sky-300 mb-1">{tt("eaud.timeline", "Timeline Inspection")}</div>
                       <p className="text-xs text-muted-foreground mb-3">
                         Click on any record below to view its complete date-by-date version history, exact time, and field-level diffs.
                       </p>
@@ -355,17 +360,17 @@ export function EnterpriseAuditMonitoringDashboard() {
 
                   {/* Top Edited Records Table */}
                   <div>
-                    <h3 className="text-sm font-bold mb-2">Edited Records Drilldown (Click to view timeline)</h3>
+                    <h3 className="text-sm font-bold mb-2">{tt("eaud.edits_drilldown", "Edited Records Drilldown (Click to view timeline)")}</h3>
                     <div className="border rounded-lg overflow-x-auto">
                       <table className="w-full text-xs text-left border-collapse">
                         <thead className="bg-muted text-muted-foreground font-semibold">
                           <tr>
-                            <th className="p-2.5 border-b">Entity Type</th>
-                            <th className="p-2.5 border-b">Reference No</th>
-                            <th className="p-2.5 border-b">Country / Branch</th>
-                            <th className="p-2.5 border-b text-center">Edit Count</th>
-                            <th className="p-2.5 border-b">Last Edited</th>
-                            <th className="p-2.5 border-b text-right">Actions</th>
+                            <th className="p-2.5 border-b">{tt("eaud.entity_type", "Entity Type")}</th>
+                            <th className="p-2.5 border-b">{tt("common.ref_no", "Reference No")}</th>
+                            <th className="p-2.5 border-b">{tt("common.country", "Country")} / {tt("common.branch", "Branch")}</th>
+                            <th className="p-2.5 border-b text-center">{tt("eaud.edit_count", "Edit Count")}</th>
+                            <th className="p-2.5 border-b">{tt("eaud.last_edited", "Last Edited")}</th>
+                            <th className="p-2.5 border-b text-right">{tt("common.actions", "Actions")}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -443,20 +448,20 @@ export function EnterpriseAuditMonitoringDashboard() {
             </CardHeader>
             <CardContent>
               {loadingDeleted ? (
-                <div className="py-12 text-center text-sm text-muted-foreground">Loading deleted records vault...</div>
+                <div className="py-12 text-center text-sm text-muted-foreground">{tt("eaud.loading_deleted", "Loading deleted records vault...")}</div>
               ) : (
                 <div className="border rounded-lg overflow-x-auto">
                   <table className="w-full text-xs text-left border-collapse">
                     <thead className="bg-rose-50/50 dark:bg-rose-950/20 text-rose-900 dark:text-rose-300 font-semibold">
                       <tr>
-                        <th className="p-2.5 border-b">Status</th>
-                        <th className="p-2.5 border-b">Entity</th>
-                        <th className="p-2.5 border-b">Reference No</th>
-                        <th className="p-2.5 border-b">Deleted By</th>
-                        <th className="p-2.5 border-b">Country / Branch</th>
-                        <th className="p-2.5 border-b">Deletion Reason</th>
-                        <th className="p-2.5 border-b">Deleted At</th>
-                        <th className="p-2.5 border-b text-right">Actions</th>
+                        <th className="p-2.5 border-b">{tt("common.status", "Status")}</th>
+                        <th className="p-2.5 border-b">{tt("eaud.entity_type", "Entity")}</th>
+                        <th className="p-2.5 border-b">{tt("common.ref_no", "Reference No")}</th>
+                        <th className="p-2.5 border-b">{tt("eaud.deleted_by", "Deleted By")}</th>
+                        <th className="p-2.5 border-b">{tt("common.country", "Country")} / {tt("common.branch", "Branch")}</th>
+                        <th className="p-2.5 border-b">{tt("eaud.deletion_reason", "Deletion Reason")}</th>
+                        <th className="p-2.5 border-b">{tt("eaud.deleted_at", "Deleted At")}</th>
+                        <th className="p-2.5 border-b text-right">{tt("common.actions", "Actions")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -464,7 +469,7 @@ export function EnterpriseAuditMonitoringDashboard() {
                         deletedRecords.map((del: any) => (
                           <tr key={del.id} className="border-b last:border-0 hover:bg-rose-50/30">
                             <td className="p-2.5">
-                              <Badge className="bg-rose-600 text-white font-mono text-[10px]">DELETED</Badge>
+                              <Badge className="bg-rose-600 text-white font-mono text-[10px]">{tt("eaud.deleted_label", "DELETED")}</Badge>
                             </td>
                             <td className="p-2.5 font-semibold capitalize">{del.entity_type.replace(/_/g, " ")}</td>
                             <td className="p-2.5 font-mono">{del.reference_no || del.entity_id}</td>
@@ -524,7 +529,7 @@ export function EnterpriseAuditMonitoringDashboard() {
             <CardHeader>
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <CardTitle className="text-base font-bold">Daily Branch Monitoring & Accountability</CardTitle>
+                  <CardTitle className="text-base font-bold">{tt("eaud.daily_tab", "Daily Branch Monitoring & Accountability")}</CardTitle>
                   <CardDescription>
                     Live daily aggregated breakdown of Purchases, Sales, Payments, Roznamcha, Cash Flow, and Edits by Branch.
                   </CardDescription>
@@ -544,31 +549,31 @@ export function EnterpriseAuditMonitoringDashboard() {
             </CardHeader>
             <CardContent>
               {loadingDaily ? (
-                <div className="py-12 text-center text-sm text-muted-foreground">Generating daily branch summaries...</div>
+                <div className="py-12 text-center text-sm text-muted-foreground">{tt("eaud.generating", "Generating daily branch summaries...")}</div>
               ) : (
                 <div className="space-y-4">
                   {/* Totals Summary */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 bg-muted/40 rounded-lg text-xs">
                     <div>
-                      <div className="text-muted-foreground">Purchases Volume</div>
+                      <div className="text-muted-foreground">{tt("eaud.purchases_vol", "Purchases Volume")}</div>
                       <div className="font-bold text-sm text-emerald-700">
                         AED {Number(dailyBranchData?.totals?.totalPurchasesAmt || 0).toLocaleString()}
                       </div>
                     </div>
                     <div>
-                      <div className="text-muted-foreground">Sales Volume</div>
+                      <div className="text-muted-foreground">{tt("eaud.sales_vol", "Sales Volume")}</div>
                       <div className="font-bold text-sm text-blue-700">
                         AED {Number(dailyBranchData?.totals?.totalSalesAmt || 0).toLocaleString()}
                       </div>
                     </div>
                     <div>
-                      <div className="text-muted-foreground">Payments Processed</div>
+                      <div className="text-muted-foreground">{tt("eaud.payments_processed", "Payments Processed")}</div>
                       <div className="font-bold text-sm text-purple-700">
                         AED {Number(dailyBranchData?.totals?.totalPaymentsAmt || 0).toLocaleString()}
                       </div>
                     </div>
                     <div>
-                      <div className="text-muted-foreground">Roznamcha Entries</div>
+                      <div className="text-muted-foreground">{tt("eaud.roznamcha_entries", "Roznamcha Entries")}</div>
                       <div className="font-bold text-sm text-slate-800 dark:text-slate-200">
                         {dailyBranchData?.totals?.totalRoznamcha || 0} entries
                       </div>
@@ -580,13 +585,13 @@ export function EnterpriseAuditMonitoringDashboard() {
                     <table className="w-full text-xs text-left border-collapse">
                       <thead className="bg-muted text-muted-foreground font-semibold">
                         <tr>
-                          <th className="p-2.5 border-b">Country</th>
-                          <th className="p-2.5 border-b">Branch Name</th>
-                          <th className="p-2.5 border-b text-right">Purchases</th>
-                          <th className="p-2.5 border-b text-right">Sales</th>
-                          <th className="p-2.5 border-b text-right">Payments</th>
-                          <th className="p-2.5 border-b text-center">Roznamcha</th>
-                          <th className="p-2.5 border-b text-center">Edits/Deletes</th>
+                          <th className="p-2.5 border-b">{tt("common.country", "Country")}</th>
+                          <th className="p-2.5 border-b">{tt("common.branch_name", "Branch Name")}</th>
+                          <th className="p-2.5 border-b text-right">{tt("nav.purchases", "Purchases")}</th>
+                          <th className="p-2.5 border-b text-right">{tt("nav.sales", "Sales")}</th>
+                          <th className="p-2.5 border-b text-right">{tt("nav.payments", "Payments")}</th>
+                          <th className="p-2.5 border-b text-center">{tt("nav.roznamcha", "Roznamcha")}</th>
+                          <th className="p-2.5 border-b text-center">{tt("eaud.edits_deletes", "Edits/Deletes")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -637,14 +642,14 @@ export function EnterpriseAuditMonitoringDashboard() {
         <TabsContent value="users" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base font-bold">User Activity & Productivity Audit</CardTitle>
+              <CardTitle className="text-base font-bold">{tt("eaud.title", "User Activity & Productivity Audit")}</CardTitle>
               <CardDescription>
                 Track user login sessions, records created, edited, and soft-deleted across all forms.
               </CardDescription>
             </CardHeader>
             <CardContent>
               {loadingUsers ? (
-                <div className="py-12 text-center text-sm text-muted-foreground">Loading user activity matrix...</div>
+                <div className="py-12 text-center text-sm text-muted-foreground">{tt("eaud.loading_matrix", "Loading user activity matrix...")}</div>
               ) : (
                 <div className="border rounded-lg overflow-x-auto">
                   <table className="w-full text-xs text-left border-collapse">

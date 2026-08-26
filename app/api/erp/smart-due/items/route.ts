@@ -143,7 +143,7 @@ export async function GET(request: NextRequest) {
           LEFT JOIN public.country_branches cb ON cb.id = t.country_branch_id
           WHERE t.deleted_at IS NULL
             AND t.status NOT IN ('cleared','dishonored')
-            AND (${scopeWhere})
+            AND (${mkScopeWhere('t')})
             AND (${explicitWhere})
         )
         , purchases AS (
@@ -179,7 +179,7 @@ export async function GET(request: NextRequest) {
           WHERE po.deleted_at IS NULL
             AND po.payment_status::text NOT IN ('completed','cancelled')
             AND po.remaining_due > 0
-            AND (${scopeWhere})
+            AND (${mkScopeWhere('po')})
             AND (${explicitWhere})
         )
         , sales AS (
@@ -214,7 +214,7 @@ export async function GET(request: NextRequest) {
           WHERE so.deleted_at IS NULL
             AND so.payment_status NOT IN ('completed','paid','cancelled')
             AND so.remaining_amount > 0
-            AND (${scopeWhere})
+            AND (${mkScopeWhere('so')})
             AND (${explicitWhere})
         )
         , shipping_bl AS (
@@ -251,7 +251,7 @@ export async function GET(request: NextRequest) {
           LEFT JOIN public.country_branches cb ON cb.id = bl.country_branch_id
           WHERE bl.deleted_at IS NULL
             AND bl.shipment_status NOT IN ('delivered','completed')
-            AND (${scopeWhere})
+            AND (${mkScopeWhere('bl')})
             AND (${explicitWhere})
         )
         , shipping_line AS (
@@ -288,7 +288,7 @@ export async function GET(request: NextRequest) {
           LEFT JOIN public.country_branches cb ON cb.id = sl.country_branch_id
           WHERE sl.deleted_at IS NULL
             AND sl.shipment_status NOT IN ('delivered','completed')
-            AND (${scopeWhere})
+            AND (${mkScopeWhere('sl')})
             AND (${explicitWhere})
         )
         , followups AS (
@@ -325,7 +325,7 @@ export async function GET(request: NextRequest) {
           LEFT JOIN public.country_branches cb2 ON cb2.id = f.country_branch_id
           LEFT JOIN public.profiles p2 ON p2.id = f.assigned_to
           WHERE f.deleted_at IS NULL AND f.status != 'closed'
-            AND (${scopeWhere})
+            AND (${mkScopeWhere('f')})
         )
         , combined AS (
           ${isShipping

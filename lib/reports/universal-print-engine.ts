@@ -1,13 +1,18 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { escapeHtml, formatMoney, formatNumber, formatDate, type ERPCompanyInfo } from "./erp-report-template-builder";
 import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
 
 export type PrintModuleType = 
   | "ledger" 
+  | "journal"
+  | "roznamcha"
   | "sales_invoice" 
   | "purchase_procurement" 
   | "inventory" 
+  | "shipping"
   | "hr_payroll" 
-  | "custom";
+  | "custom"
+  | "register";
 
 export type UniversalPrintColumn = {
   key: string;
@@ -33,6 +38,8 @@ export type UniversalPrintInput = {
   title: string;
   subtitle?: string;
   documentNo?: string;
+  reportType?: "single_document" | "register";
+  orientation?: "portrait" | "landscape" | "auto";
   
   // Scope / Metadata
   scope?: {
@@ -42,10 +49,20 @@ export type UniversalPrintInput = {
     currency?: string;
     userName?: string;
     role?: string;
+    company?: string;
+    scopeLevel?: string;
   };
   
-  // Company & Branding
+  // Company & Branding (General Brand Tier 1 + Operating Entity Tier 2)
   companyInfo?: ERPCompanyInfo;
+  generalBrand?: {
+    name?: string;
+    logoUrl?: string;
+    tagline?: string;
+    address?: string;
+    contact?: string;
+    taxNo?: string;
+  };
   
   // Summary Metric Cards
   kpis?: UniversalPrintKpi[];
@@ -53,7 +70,7 @@ export type UniversalPrintInput = {
   
   // Billing / Entity Details (for Invoices, GRNs, Salary Slips, etc.)
   partyDetails?: {
-    type: "customer" | "supplier" | "employee" | "branch";
+    type: "customer" | "supplier" | "employee" | "branch" | "entity";
     name: string;
     code?: string;
     address?: string;
@@ -91,6 +108,7 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
     documentNo,
     scope = {},
     companyInfo = {},
+    generalBrand = {},
     kpis = [],
     filters = [],
     partyDetails,
@@ -106,45 +124,58 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
       { title: "Verified & Audited", subtitle: "Accounts Department" },
       { title: "Authorized Signature", subtitle: "Chief Executive / Director" }
     ],
-    autoPrint = true,
+    autoPrint = false,
     lang = "en"
   } = input;
 
+  // Auto-detect orientation: if columns > 7 or total width exceeds portrait, default to landscape
+  const effectiveOrientation: "portrait" | "landscape" =
+    input.orientation === "landscape" || (input.orientation !== "portrait" && columns.length > 7)
+      ? "landscape"
+      : "portrait";
+
   const targetLang = (lang || (typeof document !== "undefined" ? (localStorage.getItem("erp_lang") || document.documentElement.lang || "en") : "en")) as "en" | "ur" | "ar" | "fa" | "ps";
+  
   const tr = (str: string) => {
     if (!str || str === "-") return str;
     const res = autoTranslate5Languages(str);
     return res[targetLang] || str;
   };
 
-  const orgName = companyInfo.name || "DAMAAN GENERAL TRADING LLC";
-  const logoText = "DIGITAL DOCK ERP";
-  const address = companyInfo.address || "Operating Address: Office 402, Business Bay, Dubai, United Arab Emirates";
-  const trnNumber = "TRN: 100458923400003";
-  const emailContact = companyInfo.email || "accounts@dgt.llc | support@dgt.llc";
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(targetLang);
+
+  // Two-Tier Branding: General Brand (Tier 1) + Operating Entity (Tier 2)
+  const brandName = generalBrand.name || "DAMAAN GENERAL TRADING LLC";
+  const brandTagline = generalBrand.tagline || "GLOBAL ENTERPRISE MANAGEMENT SYSTEM";
+  const brandAddress = generalBrand.address || companyInfo.address || "Operating Address: Office 402, Business Bay, Dubai, United Arab Emirates";
+  const brandTaxNo = generalBrand.taxNo || "TRN: 100458923400003";
+  const brandContact = generalBrand.contact || companyInfo.email || "accounts@dgt.llc | support@dgt.llc";
+
+  const entityName = scope.company || companyInfo.name || brandName;
+  const countryName = scope.country || "Global Scope";
+  const branchName = scope.branch || "All Branches";
+  const baseCurrency = scope.currency || "USD";
+  const dateRange = scope.dateRange || "All Available Records";
 
   const printDate = new Date();
   const printDateFormatted = printDate.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
   const printTimeFormatted = printDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true });
   const fullDateTime = `${printDateFormatted}, ${printTimeFormatted}`;
-
-  const userName = scope.userName || companyInfo.printedBy || "ERP USER (Super Admin)";
-  const countryName = scope.country || "All Countries";
-  const branchName = scope.branch || "ALL BRANCHES";
-  const baseCurrency = scope.currency || "AED";
-  const dateRange = scope.dateRange || "All Available Records";
+  const userName = scope.userName || companyInfo.printedBy || "ERP User";
 
   const html = `<!DOCTYPE html>
-<html lang="${escapeHtml(targetLang)}" dir="${["ur", "ar", "fa", "ps"].includes(targetLang) ? "rtl" : "ltr"}">
+<html lang="${escapeHtml(targetLang)}" dir="${isRtl ? "rtl" : "ltr"}">
 <head>
   <meta charset="utf-8" />
   <title>${escapeHtml(title)} - ${escapeHtml(printDateFormatted)}</title>
   <style>
     @page {
-      size: A4 portrait;
-      margin: 10mm 10mm 15mm 10mm;
+      size: A4 ${effectiveOrientation};
+      margin: 8mm 8mm 12mm 8mm;
       @bottom-right {
-        content: "Page " counter(page) " of " counter(pages);
+        content: "${tr("Page")} " counter(page) " ${tr("of")} " counter(pages);
+        font-size: 7pt;
+        color: #64748b;
       }
     }
     
@@ -155,10 +186,10 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
     }
     
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      font-size: 8.5pt;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 8pt;
       line-height: 1.35;
-      color: #1e293b;
+      color: #0f172a;
       background: #ffffff;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
@@ -182,6 +213,9 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
       thead {
         display: table-header-group !important;
       }
+      tfoot {
+        display: table-footer-group !important;
+      }
       tr {
         page-break-inside: avoid !important;
       }
@@ -190,69 +224,84 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
     .toolbar {
       background: #0f172a;
       color: #ffffff;
-      padding: 10px 16px;
+      padding: 8px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       position: sticky;
       top: 0;
-      z-index: 100;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      z-index: 1000;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      font-size: 11px;
+    }
+    .toolbar-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
     }
     .toolbar button {
       background: #2563eb;
       color: #ffffff;
       border: none;
-      padding: 6px 14px;
-      border-radius: 6px;
+      padding: 6px 12px;
+      border-radius: 5px;
       font-size: 11px;
       font-weight: 700;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
+      transition: background 0.15s;
     }
     .toolbar button:hover {
       background: #1d4ed8;
     }
-    .toolbar button.close-btn {
+    .toolbar button.secondary-btn {
+      background: #334155;
+    }
+    .toolbar button.secondary-btn:hover {
       background: #475569;
+    }
+    .toolbar button.close-btn {
+      background: #64748b;
     }
 
     .report-container {
-      max-width: 1000px;
+      max-width: ${effectiveOrientation === "landscape" ? "1350px" : "980px"};
       margin: 0 auto;
-      padding: 12px 15px;
+      padding: 10px 14px;
     }
 
-    /* ── 1. STANDARDIZED HEADER ─────────────────────────── */
+    /* ── 1. TWO-TIER BRAND & TITLE HEADER ──────────────── */
     .header-table {
       width: 100%;
       border-bottom: 2px solid #0f172a;
-      padding-bottom: 8px;
-      margin-bottom: 12px;
+      padding-bottom: 6px;
+      margin-bottom: 10px;
     }
     .brand-title {
-      font-size: 14pt;
+      font-size: 13pt;
       font-weight: 900;
       color: #0f172a;
-      letter-spacing: -0.5px;
-    }
-    .brand-sub {
-      font-size: 8pt;
-      color: #64748b;
-      font-weight: 700;
+      letter-spacing: -0.3px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+    }
+    .brand-tagline {
+      font-size: 7.5pt;
+      color: #2563eb;
+      font-weight: 800;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      margin-top: 1px;
     }
     .brand-meta {
-      font-size: 7.5pt;
+      font-size: 7pt;
       color: #475569;
       margin-top: 2px;
-      line-height: 1.3;
+      line-height: 1.25;
     }
     .doc-title-block {
-      text-align: right;
+      text-align: ${isRtl ? "left" : "right"};
     }
     .doc-title {
       font-size: 13pt;
@@ -268,10 +317,10 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
       margin-top: 1px;
     }
     .doc-meta {
-      font-size: 7.5pt;
+      font-size: 7pt;
       color: #475569;
       margin-top: 3px;
-      line-height: 1.4;
+      line-height: 1.35;
     }
     .doc-scope-pill {
       display: inline-block;
@@ -281,87 +330,87 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
       border-radius: 4px;
       font-weight: 800;
       color: #0f172a;
-      font-size: 7pt;
+      font-size: 6.8pt;
       margin-top: 3px;
     }
 
-    /* ── 2. FILTER & PARTY DETAILS ──────────────────────── */
+    /* ── 2. METADATA & PARTY BOXES ─────────────────────── */
     .meta-boxes-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-      margin-bottom: 12px;
+      gap: 8px;
+      margin-bottom: 10px;
     }
     .meta-box {
       border: 1px solid #cbd5e1;
-      border-radius: 6px;
-      padding: 8px 10px;
+      border-radius: 5px;
+      padding: 6px 8px;
       background: #f8fafc;
-      font-size: 7.5pt;
+      font-size: 7.2pt;
     }
     .meta-box-header {
       font-weight: 900;
       text-transform: uppercase;
       color: #1e3a8a;
       border-bottom: 1px solid #e2e8f0;
-      padding-bottom: 3px;
-      margin-bottom: 4px;
-      font-size: 7.5pt;
+      padding-bottom: 2px;
+      margin-bottom: 3px;
+      font-size: 7.2pt;
     }
 
-    /* ── 3. SUMMARY METRIC CARDS ────────────────────────── */
+    /* ── 3. SUMMARY KPI METRIC CARDS ───────────────────── */
     .summary-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      gap: 8px;
-      margin-bottom: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 6px;
+      margin-bottom: 10px;
     }
     .summary-card {
       border: 1px solid #cbd5e1;
-      border-radius: 6px;
+      border-radius: 5px;
       background: #f8fafc;
-      padding: 6px 8px;
-      font-size: 7.5pt;
+      padding: 5px 7px;
+      font-size: 7.2pt;
     }
     .card-label {
       color: #64748b;
       font-weight: 700;
-      font-size: 7pt;
+      font-size: 6.5pt;
       text-transform: uppercase;
     }
     .card-val {
-      font-size: 11pt;
+      font-size: 10.5pt;
       font-weight: 900;
       color: #0f172a;
-      font-family: monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       margin-top: 2px;
     }
 
-    /* ── 4. MAIN DATA TABLE ─────────────────────────────── */
-    .ledger-table {
+    /* ── 4. DATA TABLE ─────────────────────────────────── */
+    .report-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 7.8pt;
-      margin-bottom: 12px;
+      font-size: 7.5pt;
+      margin-bottom: 10px;
     }
-    .ledger-table th {
+    .report-table th {
       background: #0f172a;
       color: #ffffff;
       font-weight: 800;
       text-transform: uppercase;
-      font-size: 7pt;
-      letter-spacing: 0.4px;
+      font-size: 6.8pt;
+      letter-spacing: 0.3px;
       padding: 5px 6px;
       border: 1px solid #0f172a;
-      text-align: left;
+      text-align: ${isRtl ? "right" : "left"};
     }
-    .ledger-table td {
-      padding: 5px 6px;
+    .report-table td {
+      padding: 4px 6px;
       border: 1px solid #cbd5e1;
       color: #1e293b;
       vertical-align: middle;
     }
-    .ledger-table tbody tr:nth-child(even) {
+    .report-table tbody tr:nth-child(even) {
       background-color: #f8fafc;
     }
     .text-center { text-align: center !important; }
@@ -377,31 +426,31 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
     }
     .totals-row td {
       border: 1px solid #94a3b8;
-      padding: 6px;
-      font-size: 8pt;
+      padding: 5px 6px;
+      font-size: 7.8pt;
     }
 
-    /* ── 5. TERMS & SIGNATURES ──────────────────────────── */
+    /* ── 5. TERMS & SIGNATURES ─────────────────────────── */
     .terms-box {
       border: 1px solid #cbd5e1;
-      border-radius: 6px;
-      padding: 8px 10px;
+      border-radius: 5px;
+      padding: 6px 8px;
       background: #f8fafc;
-      font-size: 7.5pt;
-      margin-bottom: 15px;
+      font-size: 7pt;
+      margin-bottom: 12px;
     }
     .signature-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      margin-top: 25px;
-      margin-bottom: 15px;
+      gap: 16px;
+      margin-top: 20px;
+      margin-bottom: 12px;
     }
     .signature-block {
       text-align: center;
       border-top: 1px solid #475569;
-      padding-top: 5px;
-      font-size: 7.5pt;
+      padding-top: 4px;
+      font-size: 7pt;
     }
     .signature-title {
       font-weight: 800;
@@ -409,19 +458,19 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
     }
     .signature-sub {
       color: #64748b;
-      font-size: 6.5pt;
+      font-size: 6.2pt;
       margin-top: 1px;
     }
 
-    /* ── 6. PAGE FOOTER ─────────────────────────────────── */
+    /* ── 6. PAGE FOOTER ────────────────────────────────── */
     .page-footer {
       border-top: 1px solid #cbd5e1;
-      padding-top: 6px;
-      margin-top: 12px;
+      padding-top: 5px;
+      margin-top: 10px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 7pt;
+      font-size: 6.8pt;
       color: #64748b;
     }
   </style>
@@ -430,12 +479,15 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
 
   <!-- Screen Only Toolbar -->
   <div class="toolbar no-print">
-    <div style="font-weight: 800; font-size: 13px;">
-      🖨️ ${escapeHtml(title)} - ${tr("Print Preview")}
+    <div style="font-weight: 800; font-size: 12px; display: flex; align-items: center; gap: 6px;">
+      <span>🖨️</span> ${escapeHtml(title)} [${effectiveOrientation.toUpperCase()}]
     </div>
-    <div style="display: flex; gap: 8px;">
+    <div class="toolbar-actions">
       <button onclick="window.print()">
-        <span>🖨️</span> ${tr("Print / Save as PDF")}
+        <span>📄</span> ${tr("Print / Save as PDF")}
+      </button>
+      <button class="secondary-btn" onclick="toggleOrientation()">
+        <span>🔄</span> ${effectiveOrientation === 'landscape' ? tr("Portrait") : tr("Landscape")}
       </button>
       <button class="close-btn" onclick="window.close()">
         ${tr("Close")}
@@ -445,15 +497,16 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
 
   <div class="report-container">
     
-    <!-- ── 1. HEADER SECTION ─────────────────────────────── -->
+    <!-- ── 1. TWO-TIER HEADER ────────────────────────────── -->
     <table class="header-table">
       <tr>
         <td style="width: 55%; vertical-align: top;">
-          <div class="brand-title">${escapeHtml(orgName)}</div>
-          <div class="brand-sub">${escapeHtml(logoText)}</div>
+          <div class="brand-title">${escapeHtml(brandName)}</div>
+          <div class="brand-tagline">${escapeHtml(brandTagline)}</div>
           <div class="brand-meta">
-            ${escapeHtml(address)}<br />
-            <strong>${escapeHtml(trnNumber)}</strong> | ${escapeHtml(emailContact)}
+            ${escapeHtml(brandAddress)}<br />
+            <strong>${escapeHtml(brandTaxNo)}</strong> | ${escapeHtml(brandContact)}<br />
+            <strong>${tr("Operating Entity")}:</strong> ${escapeHtml(entityName)}
           </div>
         </td>
         <td style="width: 45%; vertical-align: top;" class="doc-title-block">
@@ -471,7 +524,7 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
       </tr>
     </table>
 
-    <!-- ── 2. PARTY / METADATA SUMMARY ────────────────────── -->
+    <!-- ── 2. METADATA & PARTY SUMMARY ───────────────────── -->
     ${partyDetails || filters.length > 0 ? `
     <div class="meta-boxes-grid">
       ${partyDetails ? `
@@ -479,7 +532,7 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
         <div class="meta-box-header">
           📋 ${partyDetails.type === "customer" ? tr("Customer / Buyer Details") : partyDetails.type === "supplier" ? tr("Supplier / Vendor Details") : partyDetails.type === "employee" ? tr("Employee Details") : tr("Entity Details")}
         </div>
-        <div style="font-weight: 800; font-size: 8.5pt; color: #0f172a;">${escapeHtml(partyDetails.name)}</div>
+        <div style="font-weight: 800; font-size: 8pt; color: #0f172a;">${escapeHtml(partyDetails.name)}</div>
         ${partyDetails.code ? `<div style="font-family: monospace; color: #64748b;">${escapeHtml(partyDetails.code)}</div>` : ""}
         ${partyDetails.address ? `<div>${escapeHtml(partyDetails.address)}</div>` : ""}
         ${partyDetails.trn ? `<div><strong>TRN:</strong> ${escapeHtml(partyDetails.trn)}</div>` : ""}
@@ -499,20 +552,20 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
     </div>
     ` : ""}
 
-    <!-- ── 3. SUMMARY KPI METRIC CARDS ────────────────────── -->
+    <!-- ── 3. SUMMARY KPI CARDS ──────────────────────────── -->
     ${kpis.length > 0 ? `
     <div class="summary-grid">
       ${kpis.map(k => `
       <div class="summary-card">
         <div class="card-label">${escapeHtml(tr(k.label))}</div>
-        <div class="card-val">${typeof k.value === "number" ? formatMoney(k.value) : escapeHtml(k.value)}</div>
+        <div class="card-val">${typeof k.value === "number" ? formatMoney(k.value) : escapeHtml(String(k.value))}</div>
       </div>
       `).join("")}
     </div>
     ` : ""}
 
     <!-- ── 4. DATA TABLE ─────────────────────────────────── -->
-    <table class="ledger-table">
+    <table class="report-table">
       <thead>
         <tr>
           ${columns.map(c => `
@@ -542,7 +595,7 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
           </tr>
         `).join("") : `
           <tr>
-            <td colspan="${columns.length}" class="text-center" style="padding: 20px; color: #64748b;">
+            <td colspan="${columns.length}" class="text-center" style="padding: 16px; color: #64748b;">
               ${tr("No records found for this report.")}
             </td>
           </tr>
@@ -567,7 +620,7 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
       ` : ""}
     </table>
 
-    <!-- ── 5. PAYMENT TERMS & BANK DETAILS ───────────────── -->
+    <!-- ── 5. TERMS & BANK DETAILS ───────────────────────── -->
     ${paymentTerms || bankDetails || notes ? `
     <div class="terms-box">
       ${paymentTerms ? `<div><strong>${tr("Payment Terms")}:</strong> ${escapeHtml(paymentTerms)}</div>` : ""}
@@ -590,21 +643,29 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
 
     <!-- ── 7. STANDARDIZED PAGE FOOTER ───────────────────── -->
     <div class="page-footer">
-      <div>${escapeHtml(orgName)} • ${escapeHtml(title)} • ${escapeHtml(fullDateTime)}</div>
+      <div>${escapeHtml(brandName)} • ${escapeHtml(title)} • ${escapeHtml(fullDateTime)}</div>
       <div>${tr("Page")} 1 of 1 — <strong>${tr("Confidential ERP Report")}</strong></div>
     </div>
 
   </div>
 
-  ${autoPrint ? `
   <script>
+    function toggleOrientation() {
+      const styleEl = document.querySelector('style');
+      const isCurrentlyLandscape = styleEl.innerHTML.includes('size: A4 landscape');
+      const newOrientation = isCurrentlyLandscape ? 'portrait' : 'landscape';
+      styleEl.innerHTML = styleEl.innerHTML.replace(/size: A4 (portrait|landscape)/, 'size: A4 ' + newOrientation);
+      document.querySelector('.report-container').style.maxWidth = newOrientation === 'landscape' ? '1350px' : '980px';
+    }
+
+    ${autoPrint ? `
     window.addEventListener('load', function() {
       setTimeout(function() {
         window.print();
       }, 400);
     });
+    ` : ""}
   </script>
-  ` : ""}
 </body>
 </html>`;
 

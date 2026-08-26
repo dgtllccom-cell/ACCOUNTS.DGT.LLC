@@ -149,8 +149,10 @@ export async function readTempSession(): Promise<
   };
 }
 
-// DEV: Creates a temp session for any role/scope — used for E2E testing of scope isolation.
-export async function setTempAgentSession(options: {
+// Returns the raw signed token string without writing to cookies.
+// Use this in Route Handlers that return NextResponse.redirect() — those must set cookies
+// directly on the response object, not via the cookies() API.
+export function buildTempAgentToken(options: {
   userId: string;
   email: string;
   fullName: string;
@@ -163,9 +165,7 @@ export async function setTempAgentSession(options: {
     clearingAgentId?: string | null;
     ledgerVisibility?: string;
   }>;
-  remember?: boolean;
-}) {
-  const cookieStore = await cookies();
+}): string {
   const payload: TempSessionPayloadV1 = {
     v: 1,
     kind: "temp",
@@ -177,11 +177,5 @@ export async function setTempAgentSession(options: {
     createdAt: Date.now()
   };
   const payloadB64 = base64UrlEncode(JSON.stringify(payload));
-  const token = `${payloadB64}.${sign(payloadB64)}`;
-  cookieStore.set(ERP_SESSION_COOKIE, token, {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: options.remember ? 60 * 60 * 24 * 30 : 60 * 60 * 8
-  });
+  return `${payloadB64}.${sign(payloadB64)}`;
 }

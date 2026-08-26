@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const BUCKET_NAME = "erp-documents";
 const LOCAL_UPLOAD_ROOT = path.join(process.cwd(), "public", "uploads", BUCKET_NAME);
@@ -34,7 +34,7 @@ export async function resolveDocumentFileUrl(storageKey: string | null | undefin
   }
 
   try {
-    const supabase = await createServerSupabaseClient();
+    const supabase = createSupabaseAdminClient();
     const { data } = await supabase.storage.from(BUCKET_NAME).createSignedUrl(normalized, 60 * 60 * 24);
     return data?.signedUrl ?? null;
   } catch {
@@ -50,7 +50,7 @@ export async function saveDocumentBlob(options: {
 }) {
   const normalizedStorageKey = normalizeDocumentStorageKey(options.storageKey);
   try {
-    const supabase = await createServerSupabaseClient();
+    const supabase = createSupabaseAdminClient();
     const { error } = await supabase.storage.from(BUCKET_NAME).upload(normalizedStorageKey, options.buffer, {
       contentType: options.contentType || "application/octet-stream",
       upsert: options.upsert ?? false
@@ -83,7 +83,7 @@ export async function deleteDocumentBlob(storageKey: string | null | undefined) 
   const normalized = normalizeDocumentStorageKey(storageKey);
 
   try {
-    const supabase = await createServerSupabaseClient();
+    const supabase = createSupabaseAdminClient();
     await supabase.storage.from(BUCKET_NAME).remove([normalized]);
   } catch {
     // Ignore and continue with local cleanup.

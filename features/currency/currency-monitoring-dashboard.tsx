@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { apiGet, apiPost } from "@/lib/api/client";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 type CountryCurrencyRow = {
   countryId: string;
@@ -59,6 +61,10 @@ function startOfMonth() {
 }
 
 export function CurrencyMonitoringDashboard() {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+
   const [from, setFrom] = useState(startOfMonth());
   const [to, setTo] = useState(isoToday());
   const [data, setData] = useState<MonitoringResponse | null>(null);
@@ -96,7 +102,6 @@ export function CurrencyMonitoringDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Load branches when country changes
   useEffect(() => {
     if (!selectedCountryId) {
       setBranches([]);
@@ -120,7 +125,6 @@ export function CurrencyMonitoringDashboard() {
     };
   }, [selectedCountryId]);
 
-  // Load active rate inputs when country or branch changes
   useEffect(() => {
     if (!selectedCountryId) return;
     let cancelled = false;
@@ -142,7 +146,6 @@ export function CurrencyMonitoringDashboard() {
             setCreditRate(res.creditRate ? String(res.creditRate) : "");
             if (res.effectiveDate) setRateDate(res.effectiveDate);
           } else {
-            // Find fallback country rate from static data if available
             const countries = data?.countries ?? [];
             const current = countries.find((country) => country.countryId === selectedCountryId);
             if (current && !selectedBranchId) {
@@ -171,7 +174,7 @@ export function CurrencyMonitoringDashboard() {
 
   async function saveRate() {
     if (!selectedCountryId) {
-      setRateMessage("Select a country first.");
+      setRateMessage(tt("cur.select_country_first", "Select a country first."));
       return;
     }
     setSavingRate(true);
@@ -186,7 +189,7 @@ export function CurrencyMonitoringDashboard() {
         debitRate: debitRate || buyRate,
         creditRate: creditRate || sellRate
       });
-      setRateMessage("Active currency rate saved successfully.");
+      setRateMessage(tt("cur.rate_saved_ok", "Active currency rate saved successfully."));
       await load();
     } catch (err) {
       setRateMessage(err instanceof Error ? err.message : "Currency rate save failed.");
@@ -219,17 +222,18 @@ export function CurrencyMonitoringDashboard() {
 
   if (data && !data.isSuperAdmin) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4" dir={isRtl ? "rtl" : "ltr"}>
         <section className="rounded-xl border bg-card p-6 shadow-sm">
           <div className="flex items-center gap-3">
             <Shield className="h-5 w-5 text-amber-600" aria-hidden />
             <div>
-              <h1 className="text-xl font-black">Currency Monitoring Dashboard</h1>
+              <h1 className="text-xl font-black">{tt("cur.title", "Currency Monitoring Dashboard")}</h1>
               <p className="text-sm text-muted-foreground">{data.message}</p>
             </div>
           </div>
         </section>
         <RatePanel
+          lang={lang}
           countries={data.countries}
           selectedCountryId={selectedCountryId}
           onCountryChange={setSelectedCountryId}
@@ -255,22 +259,20 @@ export function CurrencyMonitoringDashboard() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" dir={isRtl ? "rtl" : "ltr"}>
       <section className="rounded-xl border bg-card p-4 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-primary">Super Admin</p>
-            <h1 className="text-2xl font-black tracking-tight">Currency Monitoring Dashboard</h1>
-            <p className="text-sm text-muted-foreground">
-              Monitor local currency transactions and saved transaction-time USD equivalents across all countries.
-            </p>
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-primary">{tt("common.system", "Super Admin")}</p>
+            <h1 className="text-2xl font-black tracking-tight">{tt("cur.title", "Currency Monitoring Dashboard")}</h1>
+            <p className="text-sm text-muted-foreground">{tt("cur.subtitle", "Monitor local currency transactions and saved transaction-time USD equivalents across all countries.")}</p>
           </div>
           <div className="grid gap-2 sm:grid-cols-[150px_150px_auto]">
             <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="h-9 text-xs font-bold" />
             <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="h-9 text-xs font-bold" />
             <Button className="h-9 gap-2 text-xs font-black" onClick={() => void load()} disabled={loading}>
               <RefreshCw className="h-4 w-4" aria-hidden />
-              {loading ? "Loading" : "Refresh"}
+              {loading ? tt("common.loading", "Loading") : tt("common.refresh", "Refresh")}
             </Button>
           </div>
         </div>
@@ -283,6 +285,7 @@ export function CurrencyMonitoringDashboard() {
       ) : null}
 
       <RatePanel
+        lang={lang}
         countries={data?.countries ?? []}
         selectedCountryId={selectedCountryId}
         onCountryChange={setSelectedCountryId}
@@ -305,20 +308,20 @@ export function CurrencyMonitoringDashboard() {
       />
 
       <section className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
-        <Metric label="Total Debit Local" value={money(totals.localDebit)} />
-        <Metric label="Total Credit Local" value={money(totals.localCredit)} />
-        <Metric label="Total Balance Local" value={money(totals.localBalance)} />
-        <Metric label="Total Debit USD" value={`$${money(totals.usdDebit)}`} tone="blue" />
-        <Metric label="Total Credit USD" value={`$${money(totals.usdCredit)}`} tone="blue" />
-        <Metric label="Total Balance USD" value={`$${money(totals.usdBalance)}`} tone="green" />
+        <Metric label={tt("cur.total_debit_local", "Total Debit Local")} value={money(totals.localDebit)} />
+        <Metric label={tt("cur.total_credit_local", "Total Credit Local")} value={money(totals.localCredit)} />
+        <Metric label={tt("cur.total_balance_local", "Total Balance Local")} value={money(totals.localBalance)} />
+        <Metric label={tt("cur.total_debit_usd", "Total Debit USD")} value={`$${money(totals.usdDebit)}`} tone="blue" />
+        <Metric label={tt("cur.total_credit_usd", "Total Credit USD")} value={`$${money(totals.usdCredit)}`} tone="blue" />
+        <Metric label={tt("cur.total_balance_usd", "Total Balance USD")} value={`$${money(totals.usdBalance)}`} tone="green" />
       </section>
 
       <section className="grid gap-3 lg:grid-cols-[1fr_0.65fr]">
         <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
           <div className="flex items-center justify-between border-b px-4 py-3">
             <div>
-              <h2 className="font-black">Country Currency Monitor</h2>
-              <p className="text-xs text-muted-foreground">Old transactions keep their saved USD rate and USD amount.</p>
+              <h2 className="font-black">{tt("cur.country_monitor", "Country Currency Monitor")}</h2>
+              <p className="text-xs text-muted-foreground">{tt("cur.old_txn_note", "Old transactions keep their saved USD rate and USD amount.")}</p>
             </div>
             <BarChart3 className="h-5 w-5 text-primary" aria-hidden />
           </div>
@@ -354,7 +357,7 @@ export function CurrencyMonitoringDashboard() {
                   } else if (row.rateDate) {
                     dateStr = new Date(row.rateDate).toLocaleDateString();
                   }
-                  
+
                   return (
                   <tr key={row.countryId} className="border-t">
                     <td className="px-3 py-2 font-black">{row.countryName}</td>
@@ -382,28 +385,28 @@ export function CurrencyMonitoringDashboard() {
         <div className="rounded-xl border bg-card p-4 shadow-sm">
           <div className="mb-3 flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-primary" aria-hidden />
-            <h2 className="font-black">Currency-wise Balances</h2>
+            <h2 className="font-black">{tt("cur.ccy_balances", "Currency-wise Balances")}</h2>
           </div>
           <div className="space-y-2">
             {currencyGroups.map((row) => (
               <div key={row.currency} className="rounded-lg border bg-muted/20 p-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-black">{row.currency}</span>
-                  <span className="text-xs text-muted-foreground">{row.countries} countries</span>
+                  <span className="text-xs text-muted-foreground">{row.countries} {tt("cur.n_countries", "countries")}</span>
                 </div>
                 <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
                   <div>
-                    <p className="text-muted-foreground">Local Balance</p>
+                    <p className="text-muted-foreground">{tt("cur.local_balance", "Local Balance")}</p>
                     <p className="font-black">{money(row.balance)}</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground">USD Balance</p>
+                    <p className="text-muted-foreground">{tt("cur.usd_balance", "USD Balance")}</p>
                     <p className="font-black text-emerald-700 dark:text-emerald-300">${money(row.usd)}</p>
                   </div>
                 </div>
               </div>
             ))}
-            {!currencyGroups.length ? <p className="text-sm text-muted-foreground">No currency activity found.</p> : null}
+            {!currencyGroups.length ? <p className="text-sm text-muted-foreground">{tt("cur.no_activity", "No currency activity found.")}</p> : null}
           </div>
         </div>
       </section>
@@ -412,6 +415,7 @@ export function CurrencyMonitoringDashboard() {
 }
 
 function RatePanel({
+  lang,
   countries,
   selectedCountryId,
   onCountryChange,
@@ -432,6 +436,7 @@ function RatePanel({
   message,
   onSave
 }: {
+  lang: string;
   countries: CountryCurrencyRow[];
   selectedCountryId: string;
   onCountryChange: (value: string) => void;
@@ -452,18 +457,17 @@ function RatePanel({
   message: string | null;
   onSave: () => void;
 }) {
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   return (
     <section className="rounded-xl border bg-card p-4 shadow-sm">
       <div className="mb-3">
-        <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">Active Exchange Rate</p>
-        <h2 className="text-lg font-black">Country USD Rate Entry</h2>
-        <p className="text-xs text-muted-foreground">
-          New transactions use the latest active rate. Posted transactions keep their saved rate and USD amount.
-        </p>
+        <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">{tt("cur.active_rate_label", "Active Exchange Rate")}</p>
+        <h2 className="text-lg font-black">{tt("cur.rate_entry_title", "Country USD Rate Entry")}</h2>
+        <p className="text-xs text-muted-foreground">{tt("cur.rate_entry_note", "New transactions use the latest active rate. Posted transactions keep their saved rate and USD amount.")}</p>
       </div>
       <div className="grid gap-2 md:grid-cols-8">
         <label className="grid gap-1 text-xs font-bold md:col-span-2">
-          Country
+          {tt("common.country", "Country")}
           <select
             value={selectedCountryId}
             onChange={(event) => onCountryChange(event.target.value)}
@@ -477,13 +481,13 @@ function RatePanel({
           </select>
         </label>
         <label className="grid gap-1 text-xs font-bold">
-          Branch Scope
+          {tt("cur.branch_scope", "Branch Scope")}
           <select
             value={selectedBranchId}
             onChange={(event) => onBranchChange(event.target.value)}
             className="h-9 rounded-md border bg-background px-2 text-xs font-bold"
           >
-            <option value="">All Branches</option>
+            <option value="">{tt("common.all_branches", "All Branches")}</option>
             {branches.map((b) => (
               <option key={b.id} value={b.id}>
                 {b.name}
@@ -492,19 +496,19 @@ function RatePanel({
           </select>
         </label>
         <label className="grid gap-1 text-xs font-bold">
-          Effective Date
+          {tt("cur.effective_date", "Effective Date")}
           <Input type="date" value={rateDate} onChange={(event) => onRateDateChange(event.target.value)} className="h-9 text-xs font-bold" />
         </label>
-        <RateInput label="Buy Rate" value={buyRate} onChange={onBuyRateChange} />
-        <RateInput label="Sell Rate" value={sellRate} onChange={onSellRateChange} />
-        <RateInput label="Debit Rate" value={debitRate} onChange={onDebitRateChange} />
-        <RateInput label="Credit Rate" value={creditRate} onChange={onCreditRateChange} />
+        <RateInput label={tt("cur.buy_rate", "Buy Rate")} value={buyRate} onChange={onBuyRateChange} />
+        <RateInput label={tt("cur.sell_rate", "Sell Rate")} value={sellRate} onChange={onSellRateChange} />
+        <RateInput label={tt("cur.debit_rate", "Debit Rate")} value={debitRate} onChange={onDebitRateChange} />
+        <RateInput label={tt("cur.credit_rate", "Credit Rate")} value={creditRate} onChange={onCreditRateChange} />
       </div>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs font-semibold text-muted-foreground">{message ?? "Rates are stored in production daily_usd_rates and snapshotted on posting."}</p>
+        <p className="text-xs font-semibold text-muted-foreground">{message ?? tt("cur.rate_info_note", "Rates are stored in production daily_usd_rates and snapshotted on posting.")}</p>
         <Button className="h-9 gap-2 text-xs font-black" onClick={onSave} disabled={saving || !countries.length}>
           <Save className="h-4 w-4" aria-hidden />
-          {saving ? "Saving" : "Save Active Rate"}
+          {saving ? tt("cur.saving", "Saving...") : tt("cur.save_rate", "Save Active Rate")}
         </Button>
       </div>
     </section>
