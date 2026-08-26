@@ -16,11 +16,21 @@ const sql = postgres(getDbUrl(), { max: 1 });
 async function ensure4CountryLedgers() {
   console.log("Checking and ensuring 4 Main Country Hub Master Accounts...");
 
-  const countries = await sql`SELECT id, name, iso2, currency_code FROM countries;`;
-  const uae = countries.find(c => c.name.toLowerCase().includes('emirates') || c.iso2 === 'AE');
-  const pak = countries.find(c => c.name.toLowerCase().includes('pakistan') || c.iso2 === 'PK');
-  const afg = countries.find(c => c.name.toLowerCase().includes('afghanistan') || c.iso2 === 'AF');
-  const chn = countries.find(c => c.name.toLowerCase().includes('china') || c.iso2 === 'CN');
+  const countries = await sql`SELECT * FROM countries;`;
+  let uae = countries.find(c => (c.name || '').toLowerCase().includes('emirates') || c.code === 'AE' || c.code === 'UAE' || c.country_code === 'AE');
+  let pak = countries.find(c => (c.name || '').toLowerCase().includes('pakistan') || c.code === 'PK' || c.code === 'PAK' || c.country_code === 'PK');
+  let afg = countries.find(c => (c.name || '').toLowerCase().includes('afghanistan') || c.code === 'AF' || c.code === 'AFG' || c.country_code === 'AF');
+  let chn = countries.find(c => (c.name || '').toLowerCase().includes('china') || c.code === 'CN' || c.code === 'CHN' || c.country_code === 'CN');
+
+  if (!chn) {
+    const [newChn] = await sql`
+      INSERT INTO countries (name, code, is_active)
+      VALUES ('China', 'CN', true)
+      ON CONFLICT DO NOTHING
+      RETURNING id, name, code;
+    `;
+    chn = newChn || (await sql`SELECT id, name, code FROM countries WHERE code = 'CN' OR name ILIKE '%China%' LIMIT 1;`)[0];
+  }
 
   const hubs = [
     {
