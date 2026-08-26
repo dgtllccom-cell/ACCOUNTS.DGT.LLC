@@ -27,10 +27,11 @@ import { EmployeeLedgerPanel } from "@/features/hr-payroll/components/employee-l
 import { openUserA4ReportWindow } from "@/lib/reports/open-user-a4-report-window";
 import { Th } from "@/components/ui/translated-th";
 import { translateHeader } from "@/lib/i18n/table-headers";
-import { transliterateProperNoun } from "@/lib/i18n/transliteration";
 import { Party360Modal } from "@/features/customers/components/party-360-modal";
 import { UniversalPartyDirectoryReport } from "@/features/customers/components/universal-party-directory-report";
-import { Layers } from "lucide-react";
+import { Layers, MoreVertical } from "lucide-react";
+import { EmployeeProfileDrawer } from "@/features/hr-payroll/components/employee-profile-drawer";
+import { printEmployeeCertificate } from "@/components/ui/employee-certificate-print";
 
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
@@ -722,8 +723,60 @@ export function GeneralOfficeDashboardView() {
   // Modals State
   const [showFormModal, setShowFormModal] = useState(false);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
+  const [viewingEmployeeId, setViewingEmployeeId] = useState<string | null>(null);
+  const [actionMenuOpenId, setActionMenuOpenId] = useState<string | null>(null);
   const [selectedEmployeeForLoan, setSelectedEmployeeForLoan] = useState<any | null>(null);
   const [selectedEmployeeForHistory, setSelectedEmployeeForHistory] = useState<any | null>(null);
+
+  const handlePrintCertificate = async (emp: any) => {
+    let company: any = {};
+    try {
+      const r = await fetch(`/api/erp/branding?countryId=${emp.country_id ?? ""}`);
+      const j = await r.json();
+      if (j?.branding) {
+        company = {
+          name: j.branding.companyName,
+          logoUrl: j.branding.logoUrl,
+          stampUrl: j.branding.stampUrl,
+          certificateHeader: j.branding.certificateHeader,
+          hrManagerName: j.branding.hrManagerName,
+          address: j.branding.address,
+          country: j.branding.countryName,
+          branch: emp.country_branch?.name || emp.city_branch?.name || null
+        };
+      }
+    } catch {
+      // fallback
+    }
+
+    printEmployeeCertificate(
+      {
+        employeeId: emp.employee_code,
+        name: emp.person?.customer_name || emp.name,
+        photoUrl: emp.person?.photo_url || emp.photo_url || null,
+        cnicPassport: emp.person?.cnic || emp.person?.passport || emp.cnic_passport || null,
+        department: emp.department,
+        designation: emp.designation,
+        joiningDate: emp.joining_date,
+        employmentType: emp.employment_type || emp.category,
+        status: emp.status,
+        nationality: emp.person?.nationality,
+        address: emp.person?.address || emp.address,
+        mobile: emp.person?.mobile,
+        email: emp.person?.email,
+        emergencyContact: emp.person?.emergency_contact || emp.person?.whatsapp,
+        salary: emp.salary || emp.net_salary ? `${emp.net_salary || emp.salary} ${emp.salary_currency || "USD"}` : null,
+        reportingManager: emp.reporting_manager_name || emp.reporting_manager?.customer_name || null,
+        serials: {
+          superAdmin: emp.super_admin_serial || emp.employee_code,
+          country: emp.country_serial,
+          branch: emp.branch_serial,
+          entry: emp.entry_serial
+        }
+      },
+      company
+    );
+  };
 
   // Automatically trigger form modal if navigated directly to master-setup
   useEffect(() => {
@@ -1166,21 +1219,25 @@ export function GeneralOfficeDashboardView() {
           <table className="w-full text-xs text-left">
             <thead className="bg-slate-50/70 dark:bg-slate-950 text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200/80 dark:border-slate-800">
               <tr>
+                <th className="p-3.5 w-10">#</th>
                 <th className="p-3.5">{t.colEmpCode}</th>
                 <th className="p-3.5">{t.colName}</th>
                 <th className="p-3.5">{t.colCategory}</th>
                 <th className="p-3.5">{t.colDesigDept}</th>
+                <th className="p-3.5">{ct(lang, "common.country", "Country")}</th>
+                <th className="p-3.5">{ct(lang, "common.branch", "Branch")}</th>
                 <th className="p-3.5">{t.colJoining}</th>
                 <th className="p-3.5">{t.colNetSalary}</th>
                 <th className="p-3.5">{t.colDeductions}</th>
                 <th className="p-3.5">{t.colStatus}</th>
-                <th className="p-3.5 text-right">{t.colActions}</th>
+                <th className="p-3.5 text-center">{t.colActions}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
               {loading ? (
                 [...Array(6)].map((_, i) => (
                   <tr key={`skel-${i}`} className="animate-pulse">
+                    <td className="p-3.5"><div className="h-3.5 w-6 bg-slate-200 dark:bg-slate-700 rounded" /></td>
                     <td className="p-3.5"><div className="h-3.5 w-16 bg-slate-200 dark:bg-slate-700 rounded" /></td>
                     <td className="p-3.5">
                       <div className="flex items-center gap-2.5">
@@ -1190,16 +1247,18 @@ export function GeneralOfficeDashboardView() {
                     </td>
                     <td className="p-3.5"><div className="h-3 w-16 bg-slate-100 dark:bg-slate-800 rounded" /></td>
                     <td className="p-3.5"><div className="h-3 w-28 bg-slate-100 dark:bg-slate-800 rounded" /></td>
+                    <td className="p-3.5"><div className="h-3 w-16 bg-slate-100 dark:bg-slate-800 rounded" /></td>
+                    <td className="p-3.5"><div className="h-3 w-20 bg-slate-100 dark:bg-slate-800 rounded" /></td>
                     <td className="p-3.5"><div className="h-3 w-20 bg-slate-100 dark:bg-slate-800 rounded" /></td>
                     <td className="p-3.5"><div className="h-3.5 w-24 bg-slate-200 dark:bg-slate-700 rounded" /></td>
                     <td className="p-3.5"><div className="h-3 w-8 bg-slate-100 dark:bg-slate-800 rounded" /></td>
                     <td className="p-3.5"><div className="h-5 w-14 bg-emerald-100 dark:bg-emerald-950/60 rounded-full" /></td>
-                    <td className="p-3.5 text-right"><div className="h-7 w-12 bg-slate-100 dark:bg-slate-800 rounded-lg ml-auto" /></td>
+                    <td className="p-3.5 text-center"><div className="h-7 w-20 bg-slate-100 dark:bg-slate-800 rounded-lg mx-auto" /></td>
                   </tr>
                 ))
               ) : loadError ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center">
+                  <td colSpan={12} className="py-12 text-center">
                     <div className="flex flex-col items-center justify-center gap-2 max-w-md mx-auto">
                       <div className="h-12 w-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
                         <AlertCircle className="h-6 w-6" />
@@ -1217,7 +1276,7 @@ export function GeneralOfficeDashboardView() {
                 </tr>
               ) : employeesByDate.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-16 text-center">
+                  <td colSpan={12} className="py-16 text-center">
                     <div className="flex flex-col items-center justify-center gap-2 max-w-sm mx-auto">
                       <div className="h-12 w-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
                         <Users className="h-6 w-6" />
@@ -1238,14 +1297,26 @@ export function GeneralOfficeDashboardView() {
                   </td>
                 </tr>
               ) : (
-                employeesByDate.map((emp) => {
+                employeesByDate.map((emp, idx) => {
                   const companyName = localizeVisibleName(emp.person?.company_name || emp.company_name || "");
-                  const branchName = localizeVisibleName(emp.country_branch?.name || emp.city_branch?.name || "");
+                  const countryName = localizeVisibleName(emp.country?.name || emp.country_name || "");
+                  const branchName = localizeVisibleName(emp.country_branch?.name || emp.city_branch?.name || emp.branch_name || "");
+                  const isMenuOpen = actionMenuOpenId === emp.id;
+
                   return (
-                    <tr key={emp.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                      <td className="p-3.5 font-mono font-bold text-blue-600">{emp.employee_code}</td>
+                    <tr
+                      key={emp.id}
+                      onClick={() => setViewingEmployeeId(emp.id)}
+                      className="hover:bg-slate-50/70 dark:hover:bg-slate-800/60 cursor-pointer transition-colors"
+                    >
+                      <td className="p-3.5 font-bold text-slate-400 font-mono text-center">
+                        {idx + 1}
+                      </td>
+                      <td className="p-3.5 font-mono font-black text-blue-600 dark:text-blue-400">
+                        {emp.employee_code}
+                      </td>
                       <td className="p-3.5 font-bold text-slate-900 dark:text-slate-100 font-sans">
-                        <div className="font-bold text-slate-900 dark:text-slate-100">
+                        <div className="font-extrabold text-slate-900 dark:text-slate-100 text-sm">
                           {localizeVisibleName(personFullName(emp.person || {}) || emp.name)}
                         </div>
                         {companyName && (
@@ -1262,34 +1333,159 @@ export function GeneralOfficeDashboardView() {
                         )}
                       </td>
                       <td className="p-3.5 text-muted-foreground font-sans">
-                        <div className="font-semibold text-slate-800 dark:text-slate-200">{tr(emp.category || "Staff")}</div>
-                        {branchName && (
-                          <div className="text-[10px] text-slate-400 font-medium mt-0.5">
-                            {branchName}
+                        <span className="inline-flex items-center px-2.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-md font-bold text-[11px] uppercase">
+                          {tr(emp.category || "Staff")}
+                        </span>
+                      </td>
+                      <td className="p-3.5 font-sans">
+                        <div className="font-semibold text-slate-800 dark:text-slate-200">{tr(emp.designation || "-")}</div>
+                        <div className="text-[10px] text-slate-400">{tr(emp.department || "-")}</div>
+                      </td>
+                      <td className="p-3.5 font-medium text-slate-700 dark:text-slate-300">
+                        {countryName || "—"}
+                      </td>
+                      <td className="p-3.5 font-medium text-slate-700 dark:text-slate-300">
+                        <div className="font-semibold text-slate-800 dark:text-slate-200">{branchName || "—"}</div>
+                        {emp.city_branch?.name && emp.country_branch?.name && (
+                          <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                            {localizeVisibleName(emp.city_branch.name)}
                           </div>
                         )}
                       </td>
-                      <td className="p-3.5">{tr(emp.designation)} / {tr(emp.department)}</td>
                       <td className="p-3.5 font-mono text-muted-foreground">{emp.joining_date || "—"}</td>
-                      <td className="p-3.5 font-mono font-bold">{emp.net_salary ? `${Number(emp.net_salary).toLocaleString()} ${emp.salary_currency || "USD"}` : "—"}</td>
-                      <td className="p-3.5 font-mono text-muted-foreground">0</td>
+                      <td className="p-3.5 font-mono font-black text-emerald-600 dark:text-emerald-400">
+                        {emp.net_salary ? `${Number(emp.net_salary).toLocaleString()} ${emp.salary_currency || "USD"}` : "—"}
+                      </td>
+                      <td className="p-3.5 font-mono text-red-600 dark:text-red-400 font-semibold">
+                        {((emp.advance_deduction || 0) + (emp.loan_deduction || 0)) > 0
+                          ? `-${Number((emp.advance_deduction || 0) + (emp.loan_deduction || 0)).toLocaleString()}`
+                          : "0"}
+                      </td>
                       <td className="p-3.5">
-                        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-300 font-bold text-[10px]">
+                        <Badge
+                          variant="outline"
+                          className={`font-black text-[10px] uppercase px-2 py-0.5 rounded-full ${
+                            emp.status === "Active"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-300"
+                              : "bg-slate-100 text-slate-600 border-slate-300"
+                          }`}
+                        >
                           {tr(emp.status || "Active")}
                         </Badge>
                       </td>
-                      <td className="p-3.5 text-right space-x-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            setSelectedEmployeeId(emp.id);
-                            setShowFormModal(true);
-                          }}
-                          className="h-7 text-xs text-blue-600 hover:bg-blue-50"
-                        >
-                          {t.edit}
-                        </Button>
+                      
+                      {/* Action Menu with View, Edit, Print */}
+                      <td className="p-3.5 text-center" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setViewingEmployeeId(emp.id)}
+                            className="h-7 w-7 p-0 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/50 rounded-lg"
+                            title="View Employee Dossier"
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                          </Button>
+
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              setSelectedEmployeeId(emp.id);
+                              setShowFormModal(true);
+                            }}
+                            className="h-7 w-7 p-0 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 rounded-lg"
+                            title="Edit Employee Profile"
+                          >
+                            <Edit3 className="h-3.5 w-3.5" />
+                          </Button>
+
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handlePrintCertificate(emp)}
+                            className="h-7 w-7 p-0 text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+                            title="Print Employee Certificate"
+                          >
+                            <Printer className="h-3.5 w-3.5" />
+                          </Button>
+
+                          {/* Extra Dropdown for Advance & 360 */}
+                          <div className="relative inline-block text-left">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setActionMenuOpenId(isMenuOpen ? null : emp.id)}
+                              className="h-7 w-7 p-0 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+                              title="More Options"
+                            >
+                              <MoreVertical className="h-3.5 w-3.5" />
+                            </Button>
+
+                            {isMenuOpen && (
+                              <div className="absolute right-0 top-8 w-44 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1 shadow-2xl z-50 text-xs font-semibold text-slate-800 dark:text-slate-200 animate-in fade-in zoom-in-95 duration-100 text-left">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActionMenuOpenId(null);
+                                    setViewingEmployeeId(emp.id);
+                                  }}
+                                  className="flex w-full items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-blue-600"
+                                >
+                                  <Eye className="h-3.5 w-3.5" />
+                                  <span>View Full Dossier</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActionMenuOpenId(null);
+                                    setSelectedEmployeeId(emp.id);
+                                    setShowFormModal(true);
+                                  }}
+                                  className="flex w-full items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-emerald-600"
+                                >
+                                  <Edit3 className="h-3.5 w-3.5" />
+                                  <span>Edit Profile</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActionMenuOpenId(null);
+                                    handlePrintCertificate(emp);
+                                  }}
+                                  className="flex w-full items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                                >
+                                  <Printer className="h-3.5 w-3.5" />
+                                  <span>Print Certificate</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActionMenuOpenId(null);
+                                    setSelectedEmployeeForLoan(emp);
+                                  }}
+                                  className="flex w-full items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-amber-600"
+                                >
+                                  <CreditCard className="h-3.5 w-3.5" />
+                                  <span>Loan / Advance</span>
+                                </button>
+                                {emp.person?.id && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setActionMenuOpenId(null);
+                                      setSelected360Party({ id: emp.person.id, name: emp.person.customer_name || emp.name });
+                                    }}
+                                    className="flex w-full items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-purple-600"
+                                  >
+                                    <Layers className="h-3.5 w-3.5" />
+                                    <span>360° ERP Links</span>
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -1628,6 +1824,30 @@ export function GeneralOfficeDashboardView() {
             }}
           />
         </SimpleModal>
+      )}
+
+      {/* Employee 360° Profile Dossier Drawer */}
+      <EmployeeProfileDrawer
+        isOpen={viewingEmployeeId !== null}
+        onClose={() => setViewingEmployeeId(null)}
+        employeeId={viewingEmployeeId}
+        onEdit={(id) => {
+          setSelectedEmployeeId(id);
+          setShowFormModal(true);
+        }}
+        onOpen360={(personId) => setSelected360Party({ id: personId, name: "Employee" })}
+        onOpenLoan={(emp) => setSelectedEmployeeForLoan(emp)}
+      />
+
+      {/* Party 360 Modal */}
+      {selected360Party && (
+        <Party360Modal
+          isOpen={!!selected360Party}
+          onClose={() => setSelected360Party(null)}
+          personId={selected360Party.id || ""}
+          personName={selected360Party.name || ""}
+          lang={lang}
+        />
       )}
     </div>
   );

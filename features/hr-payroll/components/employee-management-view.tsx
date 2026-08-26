@@ -22,9 +22,9 @@ import { printEmployeeCertificate } from "@/components/ui/employee-certificate-p
 import { UniversalReportModal } from "@/components/ui/universal-report-modal";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { Th } from "@/components/ui/translated-th";
-import { useActiveLanguage } from "@/lib/i18n/use-active-language";
-import { t } from "@/lib/i18n/ui";
 import { Party360Modal } from "@/features/customers/components/party-360-modal";
+import { EmployeeProfileDrawer } from "./employee-profile-drawer";
+import { Eye } from "lucide-react";
 
 export function EmployeeManagementView() {
   const lang = useActiveLanguage();
@@ -71,6 +71,7 @@ export function EmployeeManagementView() {
   const [showFormModal, setShowFormModal] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
+  const [viewingEmployeeId, setViewingEmployeeId] = useState<string | null>(null);
 
   const [selectedEmployeeForLoan, setSelectedEmployeeForLoan] = useState<any | null>(null);
   const [selectedEmployeeForHistory, setSelectedEmployeeForHistory] = useState<any | null>(null);
@@ -332,6 +333,7 @@ export function EmployeeManagementView() {
             <table className="min-w-full text-xs sm:text-sm text-left text-slate-700 dark:text-slate-300">
               <thead className="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-200 uppercase font-black text-[11px] sm:text-xs border-b border-slate-200 dark:border-slate-800">
                 <tr>
+                  <Th className="px-3 py-4 w-10">#</Th>
                   <Th className="px-5 py-4">{t(lang, "hr.col_emp_code", "Emp Code")}</Th>
                   <Th className="px-5 py-4">{t(lang, "hr.col_employee_name", "Employee / Person Name")}</Th>
                   <Th className="px-5 py-4">{t(lang, "hr.col_country_branch", "Assigned Country / Branch")}</Th>
@@ -347,16 +349,23 @@ export function EmployeeManagementView() {
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800 font-medium">
                 {loading ? (
                   <tr>
-                    <td colSpan={10} className="px-6 py-12 text-center text-slate-500 font-medium">{t(lang, "common.loading", "Loading...")}</td>
+                    <td colSpan={11} className="px-6 py-12 text-center text-slate-500 font-medium">{t(lang, "common.loading", "Loading...")}</td>
                   </tr>
                 ) : employees.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="px-6 py-12 text-center text-slate-500 font-medium">{t(lang, "hr.no_employees_cta", "No employees registered yet.")}</td>
+                    <td colSpan={11} className="px-6 py-12 text-center text-slate-500 font-medium">{t(lang, "hr.no_employees_cta", "No employees registered yet.")}</td>
                   </tr>
                 ) : (
-                  employees.map((emp) => (
-                    <tr key={emp.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                      <td className="px-5 py-4 font-mono font-bold text-slate-900 dark:text-slate-100 text-sm align-middle max-w-[200px] break-all">
+                  employees.map((emp, idx) => (
+                    <tr
+                      key={emp.id}
+                      onClick={() => setViewingEmployeeId(emp.id)}
+                      className="hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer transition-colors"
+                    >
+                      <td className="px-3 py-4 font-bold text-slate-400 font-mono text-center">
+                        {idx + 1}
+                      </td>
+                      <td className="px-5 py-4 font-mono font-bold text-blue-600 dark:text-blue-400 text-sm align-middle max-w-[200px] break-all">
                         {emp.employee_code}
                       </td>
                       <td className="px-5 py-4 align-middle max-w-[220px]">
@@ -405,31 +414,67 @@ export function EmployeeManagementView() {
                       </td>
                       
                       {/* Clean 3-Dots Dropdown Menu per Row */}
-                      <td className="px-5 py-4 text-center relative align-middle">
-                        <div className="inline-block text-left relative">
-                          <button
-                            type="button"
-                            onClick={() => setOpenActionMenuId(openActionMenuId === emp.id ? null : emp.id)}
-                            className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition shadow-xs"
-                            title={t(lang, "common.actions", "Actions")}
+                      <td className="px-5 py-4 text-center relative align-middle" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setViewingEmployeeId(emp.id)}
+                            className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/50 rounded-xl"
+                            title="View Full Dossier"
                           >
-                            <MoreVertical className="h-4 w-4" />
-                          </button>
+                            <Eye className="h-4 w-4" />
+                          </Button>
 
-                          {openActionMenuId === emp.id ? (
-                            <div className="absolute right-0 z-30 mt-1 w-52 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1.5 shadow-2xl text-xs font-bold text-slate-800 dark:text-slate-200">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setOpenActionMenuId(null);
-                                  setSelectedEmployeeId(emp.id);
-                                  setShowFormModal(true);
-                                }}
-                                className="flex w-full items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                              >
-                                <Edit3 className="h-4 w-4 text-blue-500" />
-                                <span>{t(lang, "common.edit", "Edit Profile")}</span>
-                              </button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              setSelectedEmployeeId(emp.id);
+                              setShowFormModal(true);
+                            }}
+                            className="h-8 w-8 p-0 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 rounded-xl"
+                            title="Edit Profile"
+                          >
+                            <Edit3 className="h-4 w-4" />
+                          </Button>
+
+                          <div className="inline-block text-left relative">
+                            <button
+                              type="button"
+                              onClick={() => setOpenActionMenuId(openActionMenuId === emp.id ? null : emp.id)}
+                              className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition shadow-xs"
+                              title={t(lang, "common.actions", "Actions")}
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </button>
+
+                            {openActionMenuId === emp.id ? (
+                              <div className="absolute right-0 z-30 mt-1 w-52 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1.5 shadow-2xl text-xs font-bold text-slate-800 dark:text-slate-200">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setOpenActionMenuId(null);
+                                    setViewingEmployeeId(emp.id);
+                                  }}
+                                  className="flex w-full items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-blue-600 transition"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                  <span>View Full Dossier</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setOpenActionMenuId(null);
+                                    setSelectedEmployeeId(emp.id);
+                                    setShowFormModal(true);
+                                  }}
+                                  className="flex w-full items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-emerald-600 transition"
+                                >
+                                  <Edit3 className="h-4 w-4" />
+                                  <span>{t(lang, "common.edit", "Edit Profile")}</span>
+                                </button>
 
                               <button
                                 type="button"
@@ -613,6 +658,18 @@ export function EmployeeManagementView() {
           status: e.status || "Active",
           join_date: e.join_date ? new Date(e.join_date).toLocaleDateString() : "-"
         }))}
+      />
+      {/* Employee 360° Profile Dossier Drawer */}
+      <EmployeeProfileDrawer
+        isOpen={viewingEmployeeId !== null}
+        onClose={() => setViewingEmployeeId(null)}
+        employeeId={viewingEmployeeId}
+        onEdit={(id) => {
+          setSelectedEmployeeId(id);
+          setShowFormModal(true);
+        }}
+        onOpen360={(personId) => setParty360PersonId(personId)}
+        onOpenLoan={(emp) => setSelectedEmployeeForLoan(emp)}
       />
     </div>
   );
