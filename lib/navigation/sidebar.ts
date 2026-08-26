@@ -458,110 +458,33 @@ export const sidebarTree: SidebarNode[] = [
   {
     key: "purchase",
     labelKey: "nav.purchase",
-    iconKey: "gantt",
+    iconKey: "shopping-bag",
     href: "/dashboard/purchase/new-purchase-booking-order" as Route,
+    roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "cashier"],
     children: [
       {
-        key: "branch-purchase-management",
-        labelKey: "nav.branch_purchase",
-        iconKey: "shopping-bag",
-        href: "/dashboard/purchase/new-purchase-booking-order" as Route,
-        children: [
-          {
-            key: "purchase-new-booking-order",
-            labelKey: "nav.new_purchase_booking",
-            href: "/dashboard/purchase/new-purchase-booking-order" as Route
-          },
-          {
-            key: "purchase-order-master",
-            labelKey: "nav.purchase_transfer_payment",
-            href: "/dashboard/purchase/purchase-order" as Route
-          },
-          {
-            key: "purchase-booking-orders",
-            labelKey: "nav.purchase_entry",
-            href: "/dashboard/purchase/purchase-order?stage=booking" as Route
-          },
-          {
-            key: "purchase-confirmed-orders",
-            labelKey: "nav.booking_purchase_confirmation",
-            href: "/dashboard/purchase/purchase-confirm" as Route
-          },
-          {
-            key: "purchase-container-loading",
-            labelKey: "nav.local_loading",
-            href: "/dashboard/purchase/purchase-loading-records" as Route
-          },
-          {
-            key: "purchase-finalized-orders",
-            labelKey: "nav.final_purchase_order",
-            href: "/dashboard/purchase/finalized-purchase-orders" as Route
-          },
-          {
-            key: "completed-purchase-bills",
-            labelKey: "nav.completed_purchase_bills",
-            href: "/dashboard/purchase/completed-purchase-bills" as Route
-          },
-          {
-            key: "purchase-order-tracking",
-            labelKey: "nav.purchase_order_tracking",
-            href: "/dashboard/purchase/purchase-order-tracking" as Route
-          }
-        ]
+        key: "purchase-new-booking-order",
+        labelKey: "nav.new_purchase_booking",
+        iconKey: "clipboard-list",
+        href: "/dashboard/purchase/new-purchase-booking-order" as Route
       },
       {
-        key: "local-branch-purchase-management",
-        labelKey: "nav.local_branch_purchase",
-        iconKey: "building-2",
-        children: [
-          {
-            key: "local-purchase",
-            labelKey: "nav.local_purchase",
-            href: "/dashboard/purchase/local-purchase" as Route
-          },
-          {
-            key: "local-branch-transfer",
-            labelKey: "nav.local_transfer",
-            href: "/dashboard/purchase/local-purchase-transfer-payment" as Route
-          },
-          {
-            key: "local-branch-loading",
-            labelKey: "nav.local_loading",
-            href: "/dashboard/purchase/local-goods-received" as Route
-          }
-        ]
+        key: "purchase-order-master",
+        labelKey: "nav.purchase_transfer_payment",
+        iconKey: "send",
+        href: "/dashboard/purchase/purchase-order" as Route
       },
       {
-        key: "country-purchase-management",
-        labelKey: "nav.country_purchase",
-        iconKey: "globe",
-        children: [
-          {
-            key: "country-branch-purchase",
-            labelKey: "nav.country_branch_purchase",
-            href: "/dashboard/purchase/new-purchase-booking-order" as Route
-          },
-          {
-            key: "country-transfer",
-            labelKey: "nav.country_transfer",
-            href: "/dashboard/purchase/country-transfer" as Route
-          },
-          {
-            key: "country-transport-loading",
-            labelKey: "nav.country_transport_loading",
-            href: "/dashboard/purchase/purchase-loading-records" as Route
-          },
-          {
-            key: "country-receiving",
-            labelKey: "nav.country_receiving",
-            href: "/dashboard/purchase/purchase-loading-records?focus=receiving" as Route
-          },
-          {
-            key: "country-reports",
-            labelKey: "nav.country_reports",
-            href: "/dashboard/purchase/country-purchase-reports" as Route
-          }
-        ]
+        key: "purchase-confirmed-orders",
+        labelKey: "nav.booking_purchase_confirmation",
+        iconKey: "check-square",
+        href: "/dashboard/purchase/purchase-confirm" as Route
+      },
+      {
+        key: "purchase-order-tracking",
+        labelKey: "nav.purchase_order_tracking",
+        iconKey: "gantt",
+        href: "/dashboard/purchase/purchase-order-tracking" as Route
       }
     ]
   },
