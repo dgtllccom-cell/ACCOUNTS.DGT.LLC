@@ -27,6 +27,8 @@ import {
   Zap
 } from "lucide-react";
 import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api/client";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -96,6 +98,10 @@ function countryFlag(iso2: string | null) {
 }
 
 export function EmailAccountsManagement() {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<AccountsResponse | null>(null);
@@ -293,34 +299,34 @@ export function EmailAccountsManagement() {
   const summary = data?.summary || { total: 0, active: 0, connected: 0, failed: 0 };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={isRtl ? "rtl" : "ltr"}>
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">Settings</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">Email Accounts</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">{tt("nav.settings", "Settings")}</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight">{tt("email_acct.title", "Email Accounts")}</h1>
           <p className="text-sm text-muted-foreground">
-            Manage official branch email accounts, SMTP settings, passwords, and connection status.
+            {tt("email_acct.security_notice", "Manage official branch email accounts, SMTP settings, passwords, and connection status.")}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={refresh} disabled={loading}>
             <RefreshCw className={cn("mr-2 h-3.5 w-3.5", loading && "animate-spin")} />
-            Refresh
+            {tt("common.refresh", "Refresh")}
           </Button>
           <Button size="sm" onClick={openCreate}>
             <Plus className="mr-2 h-3.5 w-3.5" />
-            Create Email Account
+            {tt("email_acct.create", "Create Email Account")}
           </Button>
         </div>
       </div>
 
       {/* Summary Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <SummaryCard icon={Mail} label="Total Accounts" value={summary.total} color="text-blue-600 bg-blue-50 dark:bg-blue-950/30" />
-        <SummaryCard icon={Zap} label="Active" value={summary.active} color="text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30" />
-        <SummaryCard icon={Wifi} label="Connected" value={summary.connected} color="text-green-600 bg-green-50 dark:bg-green-950/30" />
-        <SummaryCard icon={WifiOff} label="Failed / Incomplete" value={summary.failed} color="text-red-600 bg-red-50 dark:bg-red-950/30" />
+        <SummaryCard icon={Mail} label={tt("email_acct.no_accounts", "Total Accounts")} value={summary.total} color="text-blue-600 bg-blue-50 dark:bg-blue-950/30" />
+        <SummaryCard icon={Zap} label={tt("common.active", "Active")} value={summary.active} color="text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30" />
+        <SummaryCard icon={Wifi} label={tt("email_acct.smtp_status", "Connected")} value={summary.connected} color="text-green-600 bg-green-50 dark:bg-green-950/30" />
+        <SummaryCard icon={WifiOff} label={tt("email_acct.email_status", "Failed / Incomplete")} value={summary.failed} color="text-red-600 bg-red-50 dark:bg-red-950/30" />
       </div>
 
       {/* Filters Row */}
@@ -330,17 +336,17 @@ export function EmailAccountsManagement() {
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search accounts..."
+            placeholder={tt("common.search", "Search accounts...")}
             className="pl-9 h-9 text-sm"
           />
         </div>
         <div className="flex gap-1.5 flex-wrap">
           {[
-            { key: "all", label: "All" },
-            { key: "active", label: "Active" },
-            { key: "inactive", label: "Inactive" },
-            { key: "connected", label: "Connected" },
-            { key: "failed", label: "Failed" }
+            { key: "all", label: tt("common.all", "All") },
+            { key: "active", label: tt("common.active", "Active") },
+            { key: "inactive", label: tt("common.inactive", "Inactive") },
+            { key: "connected", label: tt("email_acct.smtp_status", "Connected") },
+            { key: "failed", label: tt("email_acct.email_status", "Failed") }
           ].map((f) => (
             <button
               key={f.key}
@@ -370,7 +376,7 @@ export function EmailAccountsManagement() {
       {loading && !data && (
         <div className="flex items-center justify-center py-20">
           <RefreshCw className="h-6 w-6 animate-spin text-primary" />
-          <span className="ml-3 text-sm text-muted-foreground">Loading email accounts...</span>
+          <span className="ml-3 text-sm text-muted-foreground">{tt("email_acct.loading", "Loading email accounts...")}</span>
         </div>
       )}
 
@@ -384,13 +390,13 @@ export function EmailAccountsManagement() {
                   <Th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">Country</Th>
                   <Th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">Company</Th>
                   <Th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">Branch</Th>
-                  <Th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">Official Email</Th>
-                  <Th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">Provider</Th>
-                  <Th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">SMTP Status</Th>
-                  <Th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">Email Status</Th>
-                  <Th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">Last Tested</Th>
-                  <Th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">Last Sent</Th>
-                  <Th className="px-4 py-3 text-center font-semibold text-xs uppercase tracking-wider text-muted-foreground">Actions</Th>
+                  <Th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">{tt("email_acct.official_email", "Official Email")}</Th>
+                  <Th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">{tt("email_acct.provider", "Provider")}</Th>
+                  <Th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">{tt("email_acct.smtp_status", "SMTP Status")}</Th>
+                  <Th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">{tt("email_acct.email_status", "Email Status")}</Th>
+                  <Th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">{tt("email_acct.last_tested", "Last Tested")}</Th>
+                  <Th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">{tt("email_acct.last_sent", "Last Sent")}</Th>
+                  <Th className="px-4 py-3 text-center font-semibold text-xs uppercase tracking-wider text-muted-foreground">{tt("common.actions", "Actions")}</Th>
                 </tr>
               </thead>
               <tbody>
@@ -398,8 +404,8 @@ export function EmailAccountsManagement() {
                   <tr>
                     <td colSpan={10} className="px-4 py-12 text-center text-muted-foreground">
                       <Mail className="mx-auto mb-3 h-8 w-8 text-muted-foreground/40" />
-                      <p className="font-medium">No email accounts found</p>
-                      <p className="text-xs mt-1">Create a new email account to get started.</p>
+                      <p className="font-medium">{tt("email_acct.empty", "No email accounts found")}</p>
+                      <p className="text-xs mt-1">{tt("email_acct.no_accounts", "Create a new email account to get started.")}</p>
                     </td>
                   </tr>
                 ) : (
@@ -496,10 +502,9 @@ export function EmailAccountsManagement() {
         <div className="flex items-start gap-3">
           <ShieldCheck className="mt-0.5 h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
           <div>
-            <h3 className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">Security Notice</h3>
+            <h3 className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">{tt("email_acct.security_notice", "Security Notice")}</h3>
             <p className="mt-1 text-xs leading-relaxed text-emerald-700 dark:text-emerald-400">
-              All SMTP passwords and API tokens are encrypted using AES-256-CBC before saving to the database.
-              Passwords are never displayed in plain text. Only <strong>Change Password</strong> and <strong>Reset Password</strong> actions are available.
+              {tt("email_acct.security_notice", "All SMTP passwords and API tokens are encrypted using AES-256-CBC before saving to the database. Passwords are never displayed in plain text.")}
             </p>
           </div>
         </div>
@@ -508,7 +513,7 @@ export function EmailAccountsManagement() {
       {/* Create/Edit Modal */}
       {modalOpen && (
         <SimpleModal
-          title={editingAccount ? "Edit Email Account" : "Create Email Account"}
+          title={editingAccount ? tt("email_acct.update", "Edit Email Account") : tt("email_acct.create", "Create Email Account")}
           onClose={() => setModalOpen(false)}
           className="max-w-xl"
         >
@@ -635,14 +640,14 @@ export function EmailAccountsManagement() {
             <div className="flex gap-2 pt-2">
               <Button onClick={handleSave} disabled={saving || !formEmail || !formSmtpHost} className="flex-1">
                 {saving ? (
-                  <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Saving...</>
+                  <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> {tt("email_acct.saving", "Saving...")}</>
                 ) : editingAccount ? (
-                  <><CheckCircle2 className="mr-2 h-4 w-4" /> Update Account</>
+                  <><CheckCircle2 className="mr-2 h-4 w-4" /> {tt("email_acct.update", "Update Account")}</>
                 ) : (
-                  <><MailPlus className="mr-2 h-4 w-4" /> Create Account</>
+                  <><MailPlus className="mr-2 h-4 w-4" /> {tt("email_acct.create", "Create Account")}</>
                 )}
               </Button>
-              <Button variant="outline" onClick={() => setModalOpen(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setModalOpen(false)}>{tt("common.cancel", "Cancel")}</Button>
             </div>
           </div>
         </SimpleModal>
@@ -651,7 +656,7 @@ export function EmailAccountsManagement() {
       {/* Change Password Modal */}
       {passwordModalOpen && (
         <SimpleModal
-          title="Change SMTP Password"
+          title={tt("email_acct.change_password", "Change SMTP Password")}
           onClose={() => setPasswordModalOpen(false)}
           className="max-w-sm"
         >
@@ -682,7 +687,7 @@ export function EmailAccountsManagement() {
             </div>
             <div className="flex gap-2">
               <Button onClick={handleChangePassword} disabled={saving || !newPassword} className="flex-1">
-                {saving ? "Encrypting..." : "Update Password"}
+                {saving ? tt("email_acct.saving", "Encrypting...") : tt("email_acct.change_password", "Update Password")}
               </Button>
               <Button variant="outline" onClick={() => setPasswordModalOpen(false)}>Cancel</Button>
             </div>
@@ -693,21 +698,21 @@ export function EmailAccountsManagement() {
       {/* Delete Confirmation Modal */}
       {deleteConfirmId && (
         <SimpleModal
-          title="Delete Email Account"
+          title={tt("common.confirm_delete", "Delete Email Account")}
           onClose={() => setDeleteConfirmId(null)}
           className="max-w-sm"
         >
           <div className="space-y-4">
             <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-800 dark:border-red-900/60 dark:bg-red-950/20 dark:text-red-300">
               <AlertTriangle className="mr-1.5 inline h-3.5 w-3.5" />
-              This will deactivate and soft-delete this email account. No emails will be sent from this account after deletion.
+              {tt("email_acct.empty", "This will deactivate and soft-delete this email account.")}
             </div>
             <div className="flex gap-2">
               <Button variant="destructive" onClick={() => handleDelete(deleteConfirmId)} className="flex-1">
                 <Trash2 className="mr-2 h-4 w-4" />
-                Delete Account
+                {tt("common.delete", "Delete Account")}
               </Button>
-              <Button variant="outline" onClick={() => setDeleteConfirmId(null)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setDeleteConfirmId(null)}>{tt("common.cancel", "Cancel")}</Button>
             </div>
           </div>
         </SimpleModal>

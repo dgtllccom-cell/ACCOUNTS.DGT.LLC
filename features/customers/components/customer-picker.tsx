@@ -74,15 +74,25 @@ export function CustomerPicker({
   const [loading, setLoading] = useState(false);
   const [customers, setCustomers] = useState<CustomerRow[]>([]);
   const [openCreate, setOpenCreate] = useState(false);
+  const [viewCustomer, setViewCustomer] = useState<CustomerRow | null>(null);
+  const [editCustomerId, setEditCustomerId] = useState<string | null>(null);
 
   async function loadList() {
     setLoading(true);
     try {
       const qp = new URLSearchParams();
-      if (countryId) qp.set("countryId", countryId);
-      qp.set("limit", "50");
+      qp.set("limit", "500");
       const res = await apiGet<{ customers: CustomerRow[] }>(`/api/erp/customers?${qp.toString()}`);
-      setCustomers(res.customers ?? []);
+      let list = res.customers ?? [];
+      if (countryId && list.length > 0) {
+        // Sort country-matching customers first
+        list = [...list].sort((a, b) => {
+          const aMatch = a.country_id === countryId ? 1 : 0;
+          const bMatch = b.country_id === countryId ? 1 : 0;
+          return bMatch - aMatch;
+        });
+      }
+      setCustomers(list);
     } finally {
       setLoading(false);
     }
@@ -119,8 +129,6 @@ export function CustomerPicker({
   }, [value]);
 
   const options: SearchSelectOption[] = useMemo(() => customers.map((c) => toOption(c, lang)), [customers, lang]);
-  const [viewCustomer, setViewCustomer] = useState<CustomerRow | null>(null);
-  const [editCustomerId, setEditCustomerId] = useState<string | null>(null);
 
   return (
     <>
@@ -282,4 +290,3 @@ export function CustomerPicker({
     </>
   );
 }
-

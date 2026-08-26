@@ -31,6 +31,8 @@ import { Badge } from "@/components/ui/badge";
 import { RolePermissionMatrix } from "./role-permission-matrix";
 import { UserLiveReportPanel } from "./user-live-report-panel";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 export type BranchUser = {
   id: string;
@@ -92,6 +94,10 @@ export type CountryData = {
 };
 
 export function AdminUserManagementPanel() {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [countries, setCountries] = useState<CountryData[]>([]);
@@ -387,7 +393,7 @@ export function AdminUserManagementPanel() {
               }}
             >
               <Eye className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span>View Details</span>
+              <span>{tt("common.view_details", "View Details")}</span>
             </Button>
 
             <Button
@@ -397,7 +403,7 @@ export function AdminUserManagementPanel() {
               onClick={() => resetUserPassword(u)}
             >
               <ShieldCheck className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-              <span>Reset Password</span>
+              <span>{tt("email_acct.reset_password", "Reset Password")}</span>
             </Button>
 
             <Button
@@ -407,12 +413,12 @@ export function AdminUserManagementPanel() {
               onClick={() => toggleUserStatus(u)}
             >
               <ShieldCheck className="h-3.5 w-3.5 text-slate-500" />
-              <span>{isUserActive(u) ? "Disable" : "Activate"}</span>
+              <span>{isUserActive(u) ? tt("common.disable", "Disable") : tt("common.activate", "Activate")}</span>
             </Button>
 
             <Link href={`/dashboard/users/edit/${u.id}`}>
               <Button size="sm" variant="ghost" className="h-8 px-2 text-xs">
-                Edit Scope
+                {tt("common.edit_scope", "Edit Scope")}
               </Button>
             </Link>
           </div>
@@ -422,7 +428,7 @@ export function AdminUserManagementPanel() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={isRtl ? "rtl" : "ltr"}>
       {/* Live Report Modal */}
       {selectedReportUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
@@ -450,13 +456,13 @@ export function AdminUserManagementPanel() {
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
             <ShieldCheck className="h-4 w-4" />
-            <span>Admin Control Panel</span>
+            <span>{tt("nav.admin_panel", "Admin Control Panel")}</span>
           </div>
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            User Login Management & Branch Scope Directory
+            {tt("nav.user_management", "User Login Management & Branch Scope Directory")}
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Country Main Branches, City Branch Codes, Login IDs & Hierarchical Access Table
+            {tt("nav.user_management", "Country Main Branches, City Branch Codes, Login IDs & Hierarchical Access Table")}
           </p>
         </div>
 
@@ -469,20 +475,20 @@ export function AdminUserManagementPanel() {
             className="gap-2"
           >
             <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-            <span>Refresh</span>
+            <span>{tt("common.refresh", "Refresh")}</span>
           </Button>
 
           <Link href="/dashboard/country">
             <Button variant="outline" size="sm" className="gap-2">
               <Building2 className="h-4 w-4 text-slate-500" />
-              <span>+ Add Branch / Country</span>
+              <span>+ {tt("nav.country_management", "Add Branch / Country")}</span>
             </Button>
           </Link>
 
           <Link href="/dashboard/users/new">
             <Button size="sm" className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-sm">
               <UserPlus className="h-4 w-4" />
-              <span>+ Register New User</span>
+              <span>+ {tt("nav.user_registration", "Register New User")}</span>
             </Button>
           </Link>
         </div>
@@ -492,7 +498,7 @@ export function AdminUserManagementPanel() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-xl border bg-card p-4 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Users</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">{tt("nav.users", "Total Users")}</span>
             <div className="grid h-8 w-8 place-items-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
               <Users className="h-4 w-4" />
             </div>
@@ -503,7 +509,7 @@ export function AdminUserManagementPanel() {
 
         <div className="rounded-xl border bg-card p-4 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Countries</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">{tt("nav.countries", "Countries")}</span>
             <div className="grid h-8 w-8 place-items-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
               <Globe2 className="h-4 w-4" />
             </div>
@@ -514,7 +520,7 @@ export function AdminUserManagementPanel() {
 
         <div className="rounded-xl border bg-card p-4 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Main Country Branches</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">{tt("nav.country_branch", "Main Country Branches")}</span>
             <div className="grid h-8 w-8 place-items-center rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400">
               <Building2 className="h-4 w-4" />
             </div>
@@ -525,7 +531,7 @@ export function AdminUserManagementPanel() {
 
         <div className="rounded-xl border bg-card p-4 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">City / Sub Branches</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">{tt("nav.city_branch", "City / Sub Branches")}</span>
             <div className="grid h-8 w-8 place-items-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
               <GitBranch className="h-4 w-4" />
             </div>
@@ -548,7 +554,7 @@ export function AdminUserManagementPanel() {
             }`}
           >
             <Layers className="h-4 w-4" />
-            <span>Country & Branch Hierarchy</span>
+            <span>{tt("nav.country_management", "Country & Branch Hierarchy")}</span>
           </button>
 
           <button
@@ -561,7 +567,7 @@ export function AdminUserManagementPanel() {
             }`}
           >
             <Users className="h-4 w-4" />
-            <span>All Users List ({allUsersFlattened.length})</span>
+            <span>{tt("nav.users", "All Users List")} ({allUsersFlattened.length})</span>
           </button>
 
           <button
@@ -574,7 +580,7 @@ export function AdminUserManagementPanel() {
             }`}
           >
             <ShieldCheck className="h-4 w-4" />
-            <span>System Role Matrix</span>
+            <span>{tt("nav.roles", "System Role Matrix")}</span>
           </button>
         </div>
 
@@ -583,7 +589,7 @@ export function AdminUserManagementPanel() {
             <div className="relative w-full sm:w-72">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
               <Input
-                placeholder="Search user, branch code, city..."
+                placeholder={tt("common.search", "Search user, branch code, city...")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9 text-xs h-9"
@@ -597,7 +603,7 @@ export function AdminUserManagementPanel() {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-16 text-slate-400">
           <RefreshCw className="h-8 w-8 animate-spin text-emerald-600 mb-3" />
-          <p className="text-sm font-medium">Loading Branch Codes & User Hierarchy...</p>
+          <p className="text-sm font-medium">{tt("common.loading", "Loading Branch Codes & User Hierarchy...")}</p>
         </div>
       ) : activeTab === "roles" ? (
         <RolePermissionMatrix />
@@ -615,7 +621,7 @@ export function AdminUserManagementPanel() {
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1.5 text-xs text-slate-500">
                 <Filter className="h-3.5 w-3.5" />
-                <span>Country:</span>
+                <span>{tt("nav.countries", "Country")}:</span>
                 <select
                   value={selectedCountryFilter}
                   onChange={(e) => setSelectedCountryFilter(e.target.value)}
@@ -652,7 +658,7 @@ export function AdminUserManagementPanel() {
                 {filteredUsers.length === 0 ? (
                   <tr>
                     <td colSpan={10} className="px-4 py-12 text-center text-slate-400">
-                      No matching users found for your search criteria.
+                      {tt("inv.no_records", "No matching users found for your search criteria.")}
                     </td>
                   </tr>
                 ) : (
@@ -673,7 +679,7 @@ export function AdminUserManagementPanel() {
               <Link href="/dashboard/country" className="inline-block mt-4">
                 <Button size="sm" className="gap-2">
                   <Plus className="h-4 w-4" />
-                  <span>Create Country & Main Branch</span>
+                  <span>{tt("nav.country_management", "Create Country & Main Branch")}</span>
                 </Button>
               </Link>
             </div>
@@ -732,7 +738,7 @@ export function AdminUserManagementPanel() {
                         <div className="rounded-lg border bg-white dark:bg-slate-900 p-4 shadow-2xs">
                           <h4 className="font-semibold text-xs uppercase tracking-wider text-slate-500 mb-3 flex items-center gap-1.5">
                             <Globe2 className="h-3.5 w-3.5 text-blue-500" />
-                            <span>Country Level Admin Users</span>
+                            <span>{tt("nav.country_management", "Country Level Admin Users")}</span>
                           </h4>
                           <div className="overflow-x-auto">
                             <table className="w-full text-left text-sm">
@@ -814,7 +820,7 @@ export function AdminUserManagementPanel() {
                                   <div className="flex items-center justify-between mb-2">
                                     <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
                                       <Users className="h-3.5 w-3.5 text-emerald-600" />
-                                      <span>Main Branch Registered Users ({mainBranch.users?.length || 0})</span>
+                                      <span>{tt("nav.user_registration", "Main Branch Registered Users")} ({mainBranch.users?.length || 0})</span>
                                     </h4>
                                   </div>
 
@@ -842,7 +848,7 @@ export function AdminUserManagementPanel() {
                                     </div>
                                   ) : (
                                     <div className="rounded-md border border-dashed p-4 text-center text-xs text-slate-400">
-                                      No direct users registered for this main branch yet.
+                                      {tt("inv.no_records", "No direct users registered for this main branch yet.")}
                                     </div>
                                   )}
                                 </div>
@@ -852,7 +858,7 @@ export function AdminUserManagementPanel() {
                                   <div className="pt-2 border-t space-y-4">
                                     <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                                       <MapPin className="h-3.5 w-3.5 text-amber-500" />
-                                      <span>City Branches under {mainBranch.name}</span>
+                                      <span>{tt("nav.city_branch", "City Branches under")} {mainBranch.name}</span>
                                     </h4>
 
                                     <div className="grid gap-4">

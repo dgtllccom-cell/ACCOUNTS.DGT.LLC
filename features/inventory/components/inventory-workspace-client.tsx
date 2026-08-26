@@ -29,6 +29,8 @@ import { listGoods, type GoodsListRow } from "@/features/inventory/goods-api";
 import { rtlLanguages, normalizeSupportedLanguage } from "@/lib/i18n/languages";
 import { translateValue } from "@/lib/i18n/table-values";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 type InventoryBalance = {
   id: string;
@@ -154,10 +156,12 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
     }
   }
 
-  const activeLang = normalizeSupportedLanguage(session?.lang || (typeof document !== "undefined" ? document.documentElement.lang : "en"));
+  const hookLang = useActiveLanguage();
+  const activeLang = normalizeSupportedLanguage(hookLang || session?.lang || (typeof document !== "undefined" ? document.documentElement.lang : "en"));
   const isRtl = rtlLanguages.includes(activeLang);
   const tv = (value: string | null | undefined) => translateValue(activeLang, value);
   const tr = (label: string) => translateHeader(activeLang, label);
+  const tt = (key: string, fallback: string) => t(activeLang, key as never, fallback);
 
   async function fetchBalances() {
     setBusy(true);
@@ -286,7 +290,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
       {/* Top Title & Header Actions */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Stock & Inventory Management</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">{tt("inv.title", "Stock & Inventory Management")}</h1>
           <p className="text-sm text-muted-foreground">
             Track stock balances, record Stock In/Out movements, and monitor warehouse inventory across all branches.
           </p>
@@ -427,8 +431,8 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
               className="px-3 py-1.5 text-sm border rounded-md bg-background"
             >
               <option value="">All Types</option>
-              <option value="STOCK_IN">Stock In</option>
-              <option value="STOCK_OUT">Stock Out</option>
+              <option value="STOCK_IN">{tt("inv.stock_in", "Stock In")}</option>
+              <option value="STOCK_OUT">{tt("inv.stock_out", "Stock Out")}</option>
               <option value="ADJUSTMENT">Adjustment</option>
               <option value="TRANSFER">Transfer</option>
             </select>
@@ -466,7 +470,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
                 {balances.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="py-8 text-center text-muted-foreground">
-                      {busy ? "Loading inventory balances..." : "No inventory balance records found."}
+                      {busy ? tt("inv.loading", "Loading inventory balances...") : tt("inv.no_records", "No inventory balance records found.")}
                     </td>
                   </tr>
                 ) : (
@@ -515,7 +519,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
                 {movements.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="py-8 text-center text-muted-foreground">
-                      {busy ? "Loading stock movements..." : "No stock movement records found."}
+                      {busy ? tt("slstage.loading", "Loading stock movements...") : tt("inv.no_records", "No stock movement records found.")}
                     </td>
                   </tr>
                 ) : (
@@ -661,7 +665,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-muted-foreground block mb-1">Unit Cost ($)</label>
+              <label className="text-xs font-semibold text-muted-foreground block mb-1">{tt("common.unit_cost", "Unit Cost")} ($)</label>
               <input
                 type="number"
                 min="0"
@@ -705,7 +709,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
               disabled={busy}
               className={movementModalType === "STOCK_IN" ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "bg-rose-600 hover:bg-rose-700 text-white"}
             >
-              {busy ? "Saving..." : `Confirm ${movementModalType === "STOCK_IN" ? "Stock In" : "Stock Out"}`}
+              {busy ? tt("inv.saving", "Saving...") : `${tt("common.confirm", "Confirm")} ${movementModalType === "STOCK_IN" ? tt("inv.stock_in", "Stock In") : tt("inv.stock_out", "Stock Out")}`}
             </Button>
           </div>
         </div>
@@ -721,53 +725,53 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
           <div className="space-y-4 pt-2 text-sm">
             <div className="grid grid-cols-2 gap-4 bg-muted/40 p-3 rounded-md">
               <div>
-                <span className="text-xs text-muted-foreground block">Movement ID</span>
+                <span className="text-xs text-muted-foreground block">{tt("inv.movement_id", "Movement ID")}</span>
                 <span className="font-mono font-medium">{viewMovement.id}</span>
               </div>
               <div>
-                <span className="text-xs text-muted-foreground block">Movement Type</span>
+                <span className="text-xs text-muted-foreground block">{tt("inv.movement_type", "Movement Type")}</span>
                 <span className="font-bold">{tv(viewMovement.movement_type)}</span>
               </div>
             </div>
 
             <div className="space-y-2 border-t pt-2">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Goods Item:</span>
+                <span className="text-muted-foreground">{tt("inv.goods_item", "Goods Item")}:</span>
                 <span className="font-medium">{viewMovement.goods_name} (CHS: {viewMovement.chs_code})</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Warehouse:</span>
+                <span className="text-muted-foreground">{tt("common.warehouse", "Warehouse")}:</span>
                 <span className="font-medium">{viewMovement.warehouse_name} ({viewMovement.warehouse_code})</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Country Scope:</span>
+                <span className="text-muted-foreground">{tt("inv.country_scope", "Country Scope")}:</span>
                 <span>{viewMovement.country_name || "Global Scope"}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Quantity:</span>
+                <span className="text-muted-foreground">{tt("common.quantity", "Quantity")}:</span>
                 <span className="font-bold">{viewMovement.quantity}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Unit Cost:</span>
+                <span className="text-muted-foreground">{tt("common.unit_cost", "Unit Cost")}:</span>
                 <span>${Number(viewMovement.unit_cost || 0).toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Total Amount:</span>
+                <span className="text-muted-foreground">{tt("inv.total_amount", "Total Amount")}:</span>
                 <span className="font-bold text-foreground">${Number(viewMovement.total_amount || 0).toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Reference No:</span>
+                <span className="text-muted-foreground">{tt("common.ref_no", "Reference No")}:</span>
                 <span>{viewMovement.reference_no || "N/A"}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Date:</span>
+                <span className="text-muted-foreground">{tt("inv.date_ref", "Date")}:</span>
                 <span>{new Date(viewMovement.movement_date || viewMovement.created_at).toLocaleString()}</span>
               </div>
             </div>
 
             {viewMovement.notes && (
               <div className="border-t pt-2">
-                <span className="text-xs text-muted-foreground block">Notes</span>
+                <span className="text-xs text-muted-foreground block">{tt("inv.notes_desc", "Notes")}</span>
                 <p className="text-sm bg-muted/30 p-2 rounded-md mt-1">{viewMovement.notes}</p>
               </div>
             )}
@@ -786,17 +790,17 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
         <SimpleModal
           isOpen={!!editMovement}
           onClose={() => setEditMovement(null)}
-          title="Edit Stock Movement"
+          title={tt("inv.title", "Stock & Inventory Management")}
         >
           <div className="space-y-4 pt-2">
             <div className="bg-muted/40 p-3 rounded-md text-xs space-y-1">
-              <div><strong>Item:</strong> {editMovement.goods_name} (CHS: {editMovement.chs_code})</div>
-              <div><strong>Warehouse:</strong> {editMovement.warehouse_name}</div>
-              <div><strong>Type:</strong> {tv(editMovement.movement_type)}</div>
+              <div><strong>{tt("inv.goods_item", "Item")}:</strong> {editMovement.goods_name} (CHS: {editMovement.chs_code})</div>
+              <div><strong>{tt("common.warehouse", "Warehouse")}:</strong> {editMovement.warehouse_name}</div>
+              <div><strong>{tt("inv.movement_type", "Type")}:</strong> {tv(editMovement.movement_type)}</div>
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-muted-foreground block mb-1">Quantity *</label>
+              <label className="text-xs font-semibold text-muted-foreground block mb-1">{tt("common.quantity", "Quantity")} *</label>
               <input
                 type="number"
                 min="0.01"
@@ -808,7 +812,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-muted-foreground block mb-1">Unit Cost ($)</label>
+              <label className="text-xs font-semibold text-muted-foreground block mb-1">{tt("common.unit_cost", "Unit Cost")} ($)</label>
               <input
                 type="number"
                 min="0"
@@ -820,7 +824,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-muted-foreground block mb-1">Reference No</label>
+              <label className="text-xs font-semibold text-muted-foreground block mb-1">{tt("common.ref_no", "Reference No")}</label>
               <input
                 type="text"
                 value={editForm.referenceNo}
@@ -830,7 +834,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-muted-foreground block mb-1">Notes</label>
+              <label className="text-xs font-semibold text-muted-foreground block mb-1">{tt("inv.notes_desc", "Notes")}</label>
               <textarea
                 rows={2}
                 value={editForm.notes}
@@ -841,10 +845,10 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
 
             <div className="flex justify-end gap-2 pt-3 border-t">
               <Button variant="outline" onClick={() => setEditMovement(null)}>
-                Cancel
+                {tt("common.cancel", "Cancel")}
               </Button>
               <Button onClick={submitEditMovement} disabled={busy}>
-                {busy ? "Saving..." : "Save Changes"}
+                {busy ? tt("cur.saving", "Saving...") : tt("common.save", "Save Changes")}
               </Button>
             </div>
           </div>

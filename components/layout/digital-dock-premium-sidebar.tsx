@@ -5,10 +5,7 @@
  * -------------------------------------------------------------
  * Standalone premium left navigation menu for Digital Dock ERP.
  *
- * Pure UI component — no business logic, API calls, database access,
- * or authentication. Design-only reference (hardcoded English menu +
- * plain <a> links). To use it as the real ERP navigation it must be
- * wired to the app's nav tree, i18n labels, permissions and routing.
+ * Pure UI component — design reference aligned with ERP navigation tree.
  *
  * Requirements: React 18+, Tailwind CSS, lucide-react.
  */
@@ -134,7 +131,6 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
           { label: "Purchase Booking", href: "/dashboard/purchase", active: true },
           { label: "Advance Payment", href: "/dashboard/journal/purchase-order-payment/advance" },
           { label: "Remaining Payment", href: "/dashboard/journal/purchase-order-payment/remaining" },
-          { label: "Credit Payment", href: "/dashboard/journal/purchase-order-payment/remaining" },
           { label: "Payment History", href: "/dashboard/journal/purchase-order-payment/history" },
         ],
       },
@@ -149,7 +145,6 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
         children: [
           { label: "Sales Booking", href: "/dashboard/sales" },
           { label: "Sales Payment", href: "/dashboard/journal/sales-order-payment/advance" },
-          { label: "Sales Reports", href: "/dashboard/reports/sales" },
         ],
       },
     ],
@@ -189,10 +184,10 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
         icon: FileBarChart,
         label: "Reports",
         children: [
-          { label: "Purchase Reports", href: "/dashboard/reports/purchase" },
-          { label: "Sales Reports", href: "/dashboard/reports/sales" },
-          { label: "Journal Reports", href: "/dashboard/reports/journal" },
-          { label: "Ledger Reports", href: "/dashboard/reports/ledger" },
+          { label: "Super Admin Reports", href: "/dashboard/reports/super-admin" },
+          { label: "Country Admin Reports", href: "/dashboard/reports/country" },
+          { label: "Branch Reports", href: "/dashboard/reports/branch" },
+          { label: "Shipping / Clearing Reports", href: "/dashboard/reports/shipping" },
         ],
       },
     ],
@@ -213,7 +208,7 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
     ],
   },
   {
-    title: "System & Reports",
+    title: "System & Settings",
     items: [
       { icon: FileText, label: "Journal Report PDF ERP", href: "/dashboard/reports/handover", badge: "PDF" },
       { icon: Settings, label: "Settings", href: "/dashboard/settings" }
@@ -492,7 +487,10 @@ export interface DigitalDockPremiumSidebarWithDrawerProps extends DigitalDockPre
   onOpenChange: (open: boolean) => void;
 }
 
-export function DigitalDockPremiumSidebarWithDrawer({ open, onOpenChange, ...sidebarProps }: DigitalDockPremiumSidebarWithDrawerProps) {
+export function DigitalDockPremiumSidebarWithDrawer({ open, onOpenChange, ...sidebarProps }: DigitalDockPremiumSidebarProps = {
+  open: false,
+  onOpenChange: () => {}
+}) {
   return (
     <>
       <button onClick={() => onOpenChange(true)} className="rounded-md p-1.5 text-slate-600 hover:bg-slate-100" aria-label="Open navigation">

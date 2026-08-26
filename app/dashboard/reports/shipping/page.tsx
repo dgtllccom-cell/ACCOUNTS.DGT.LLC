@@ -4,11 +4,11 @@ import { resolveReportScope } from "@/lib/permissions/middleware";
 import { ReportPanel } from "@/features/reports/components/report-panel";
 
 export const metadata: Metadata = {
-  title: "Country Admin Reports — ERP",
-  description: "Country-level reports for all branches and transactions within your assigned country."
+  title: "Shipping & Clearing Reports — ERP",
+  description: "Shipping line, clearing agent, container tracking, and customs cargo reports."
 };
 
-export default async function CountryReportsPage() {
+export default async function ShippingReportsPage() {
   const session = await requireErpSession();
   const scope = resolveReportScope(session);
   const lang = session.preferredLanguage ?? "en";
@@ -18,8 +18,8 @@ export default async function CountryReportsPage() {
       <div className="w-full px-3 sm:px-6 lg:px-8 py-4">
         <ReportPanel
           lang={lang}
-          initialScopeLevel={scope.level === "global" ? "global" : "country"}
-          viewerName={session.fullName || session.email || "Country Admin"}
+          initialScopeLevel={scope.level === "global" ? "global" : "branch"}
+          viewerName={session.fullName || session.email || "ERP User"}
           viewerId={session.userId}
         />
       </div>

@@ -7,6 +7,7 @@ import { createApiSupabaseClient } from "@/lib/api/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { getSupabasePublicKey, getSupabaseSecretKey } from "@/lib/supabase/config";
+import { allocateFormSerials } from "@/lib/services/form-serials";
 
 function isUuid(value: string | null | undefined) {
   return Boolean(
