@@ -51,8 +51,11 @@ export async function GET(request: Request) {
     return NextResponse.json({
       ok: true,
       data: {
-        cityBranches
-      }
+        cityBranches,
+        branches: cityBranches
+      },
+      cityBranches,
+      branches: cityBranches
     });
   } catch (error) {
     if (error instanceof ErpAuthError) {

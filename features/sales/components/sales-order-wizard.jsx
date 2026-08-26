@@ -688,6 +688,75 @@ export function SalesOrderWizard({ session }) {
   const [dbAccounts, setDbAccounts] = useState([]);
   const [customQtyNames, setCustomQtyNames] = useState([]);
 
+  // Load Countries
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/erp/locations/countries")
+      .then((r) => r.json())
+      .then((res) => {
+        if (cancelled) return;
+        const list = res?.countries || res?.data?.countries || [];
+        setCountries(list);
+        setAllCountries(list);
+        if (list.length > 0 && !form.countryId) {
+          const first = list[0];
+          setForm((p) => ({
+            ...p,
+            countryId: first.id,
+            salesCurrency: first.currency_code || first.currencyCode || "USD",
+            secondaryCurrency: first.currency_code || first.currencyCode || "USD",
+            paymentCurrency: first.currency_code || first.currencyCode || "USD"
+          }));
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  // Load Main Branches when Country changes
+  useEffect(() => {
+    if (!form.countryId) {
+      setMainBranches([]);
+      return;
+    }
+    let cancelled = false;
+    fetch(`/api/erp/locations/branches/main?countryId=${encodeURIComponent(form.countryId)}`)
+      .then((r) => r.json())
+      .then((res) => {
+        if (cancelled) return;
+        const list = res?.data?.branches || res?.branches || [];
+        setMainBranches(list);
+        if (list.length === 1 && !form.countryBranchId) {
+          setForm((p) => ({ ...p, countryBranchId: list[0].id }));
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [form.countryId]);
+
+  // Load City Branches when Country or Main Branch changes
+  useEffect(() => {
+    if (!form.countryId) {
+      setCityBranches([]);
+      return;
+    }
+    let cancelled = false;
+    const qp = new URLSearchParams({ countryId: form.countryId });
+    if (form.countryBranchId) qp.set("countryBranchId", form.countryBranchId);
+    fetch(`/api/erp/locations/branches/city?${qp.toString()}`)
+      .then((r) => r.json())
+      .then((res) => {
+        if (cancelled) return;
+        const list = res?.data?.cityBranches || res?.data?.branches || res?.cityBranches || [];
+        setCityBranches(list);
+        if (list.length === 1 && !form.cityBranchId) {
+          setForm((p) => ({ ...p, cityBranchId: list[0].id }));
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [form.countryId, form.countryBranchId]);
+
   const mapEnterpriseAccount = (acc) => ({
     accountCode: acc.code || acc.account_number || "",
     accountName: acc.name || "",

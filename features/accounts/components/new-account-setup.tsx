@@ -529,30 +529,40 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
   useEffect(() => {
     if (!country) { setMainBranches([]); return; }
     let cancelled = false;
-    fetch(`/api/branch-management/country-branches?countryId=${encodeURIComponent(country)}`)
+    fetch(`/api/erp/locations/branches/main?countryId=${encodeURIComponent(country)}`)
       .then((res) => res.json())
-      .then((json: { countryBranches?: CountryBranchRow[] }) => {
-        if (!cancelled) setMainBranches(Array.isArray(json.countryBranches) ? json.countryBranches : []);
+      .then((json) => {
+        if (!cancelled) {
+          const list = json?.data?.branches || json?.branches || json?.countryBranches || [];
+          setMainBranches(Array.isArray(list) ? list : []);
+          if (list.length === 1 && branchType === "Main" && !branch) {
+            setBranch(list[0].id);
+          }
+        }
       })
       .catch(() => { if (!cancelled) setMessage("Could not load main branches."); });
     return () => { cancelled = true; };
-  }, [country]);
+  }, [country, branchType, branch]);
 
   // Load City Branches
   useEffect(() => {
     if (!country) { setCityBranches([]); return; }
     let cancelled = false;
-    const mainBranchId = branchType === "City" ? mainBranches[0]?.id ?? "" : "";
     const params = new URLSearchParams({ countryId: country });
-    if (mainBranchId) params.set("countryBranchId", mainBranchId);
-    fetch(`/api/branch-management/city-branches?${params.toString()}`)
+    fetch(`/api/erp/locations/branches/city?${params.toString()}`)
       .then((res) => res.json())
-      .then((json: { cityBranches?: CityBranchRow[] }) => {
-        if (!cancelled) setCityBranches(Array.isArray(json.cityBranches) ? json.cityBranches : []);
+      .then((json) => {
+        if (!cancelled) {
+          const list = json?.data?.cityBranches || json?.data?.branches || json?.cityBranches || [];
+          setCityBranches(Array.isArray(list) ? list : []);
+          if (list.length === 1 && branchType === "City" && !branch) {
+            setBranch(list[0].id);
+          }
+        }
       })
       .catch(() => { if (!cancelled) setMessage("Could not load city branches."); });
     return () => { cancelled = true; };
-  }, [branchType, country, mainBranches]);
+  }, [country, branchType, branch]);
 
   const selectedCountry = useMemo(() => countries.find((item) => item.id === country) ?? null, [countries, country]);
   const canonicalCountryId = selectedCountry?.id ?? "";

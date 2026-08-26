@@ -839,7 +839,7 @@ export const sidebarTree: SidebarNode[] = [
     labelKey: "nav.smart_due_center" as any,
     iconKey: "clock",
     href: "/dashboard/smart-due" as Route,
-    roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "clearing_agent"]
+    roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "agent_user"]
   },
   {
     key: "super-admin-menu",

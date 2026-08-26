@@ -266,6 +266,71 @@ export function CashEntryForm({
   const [mainBranches, setMainBranches] = useState<CountryBranchRow[]>([]);
   const [cityBranches, setCityBranches] = useState<CityBranchRow[]>([]);
 
+  // Load Countries
+  useEffect(() => {
+    let cancelled = false;
+    setLoadingCountries(true);
+    fetch("/api/erp/locations/countries")
+      .then((r) => r.json())
+      .then((res) => {
+        if (cancelled) return;
+        const list = res?.countries || res?.data?.countries || [];
+        setCountries(list);
+        if (list.length > 0 && !countryId) {
+          setCountryId(list[0].id);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoadingCountries(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Load Main Branches when Country changes
+  useEffect(() => {
+    if (!countryId) {
+      setMainBranches([]);
+      return;
+    }
+    let cancelled = false;
+    fetch(`/api/erp/locations/branches/main?countryId=${encodeURIComponent(countryId)}`)
+      .then((r) => r.json())
+      .then((res) => {
+        if (cancelled) return;
+        const list = res?.data?.branches || res?.branches || [];
+        setMainBranches(list);
+        if (list.length === 1 && !countryBranchId) {
+          setCountryBranchId(list[0].id);
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [countryId]);
+
+  // Load City Branches when Country or Main Branch changes
+  useEffect(() => {
+    if (!countryId) {
+      setCityBranches([]);
+      return;
+    }
+    let cancelled = false;
+    const qp = new URLSearchParams({ countryId });
+    if (countryBranchId) qp.set("countryBranchId", countryBranchId);
+    fetch(`/api/erp/locations/branches/city?${qp.toString()}`)
+      .then((r) => r.json())
+      .then((res) => {
+        if (cancelled) return;
+        const list = res?.data?.cityBranches || res?.data?.branches || res?.cityBranches || [];
+        setCityBranches(list);
+        if (list.length === 1 && !cityBranchId) {
+          setCityBranchId(list[0].id);
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [countryId, countryBranchId]);
+
   const [ledgers, setLedgers] = useState<LedgerLookupRow[]>([]);
   const [loadingLedgers, setLoadingLedgers] = useState(false);
   const [cashLedgerId, setCashLedgerId] = useState("");

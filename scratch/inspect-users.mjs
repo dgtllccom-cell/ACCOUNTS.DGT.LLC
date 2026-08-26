@@ -1,25 +1,27 @@
+import postgres from 'postgres';
 
-import postgres from "postgres";
-import fs from "fs";
+const devUrl = "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:5432/postgres";
+const prodUrl = "postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres";
 
-const envLines = fs.readFileSync('.env.local', 'utf8').split('\n');
-let dbUrl = '';
-for (const line of envLines) {
-  if (line.startsWith('DATABASE_URL=')) {
-    dbUrl = line.substring('DATABASE_URL='.length).trim().replace(/^["']|["']$/g, '');
-    break;
-  }
-}
-
-async function run() {
-  const sql = postgres(dbUrl, { max: 1, prepare: false });
+async function inspectUsers(name, url) {
+  const sql = postgres(url, { ssl: 'require' });
   try {
-    const users = await sql`SELECT id, email, role, is_active FROM public.users LIMIT 10;`;
-    console.log("Users:", users);
-  } catch (e) {
-    console.error(e);
+    console.log(`=== Inspecting ${name} Users ===`);
+    const users = await sql`
+      SELECT u.id, u.email, p.full_name, p.user_code, a.role, a.country_id, a.country_branch_id, a.city_branch_id
+      FROM auth.users u
+      LEFT JOIN public.user_profiles p ON p.id = u.id
+      LEFT JOIN public.user_branch_assignments a ON a.user_id = u.id
+    `;
+    console.log(`${name} Users count: ${users.length}`, users);
   } finally {
     await sql.end();
   }
 }
-run();
+
+async function main() {
+  await inspectUsers("DEV", devUrl);
+  await inspectUsers("PROD", prodUrl);
+}
+
+main();
