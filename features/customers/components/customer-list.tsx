@@ -29,6 +29,9 @@ type CustomerRow = {
   state_province_id: string | null;
   city_id: string | null;
   area_location_id: string | null;
+  country_name?: string | null;
+  state_province_name?: string | null;
+  city_name?: string | null;
   customer_name: string;
   first_name: string | null;
   last_name: string | null;
@@ -160,6 +163,11 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
           // Keep default parsed details
         }
       }
+
+      if (!meta.country && c.country_name) meta.country = c.country_name;
+      if (!meta.stateProvince && c.state_province_name) meta.stateProvince = c.state_province_name;
+      if (!meta.city && c.city_name) meta.city = c.city_name;
+      if (!meta.fatherName && c.father_name) meta.fatherName = c.father_name;
 
       // Backwards compatibility fallbacks
       if (!meta.contacts || !meta.contacts.length) {

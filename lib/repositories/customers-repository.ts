@@ -10,6 +10,9 @@ export type CustomerRow = {
   district_id: string | null;
   city_id: string | null;
   area_location_id: string | null;
+  country_name?: string | null;
+  state_province_name?: string | null;
+  city_name?: string | null;
   customer_name: string;
   first_name: string | null;
   last_name: string | null;
@@ -80,18 +83,29 @@ export class CustomersRepository {
 
     const viaPg = await withLocalPg(async (sql) => {
       const rows = await sql`
-        SELECT ${sql(CUSTOMER_COLUMNS)} FROM public.customers
-        WHERE deleted_at IS NULL
-          AND (${input.countryId ? sql`country_id = ${input.countryId}::uuid` : sql`true`})
+        SELECT 
+          c.id, c.country_id, c.state_province_id, c.district_id, c.city_id, c.area_location_id,
+          c.customer_name, c.first_name, c.last_name, c.father_name, c.gender, c.photo_url, c.person_code,
+          c.company_name, c.contact_person, c.mobile, c.whatsapp, c.email, c.address,
+          c.notes, c.original_language_code, c.is_active, c.created_at, c.updated_at,
+          cnt.name as country_name,
+          sp.name as state_province_name,
+          ct.name as city_name
+        FROM public.customers c
+        LEFT JOIN public.countries cnt ON c.country_id = cnt.id
+        LEFT JOIN public.states_provinces sp ON c.state_province_id = sp.id
+        LEFT JOIN public.cities ct ON c.city_id = ct.id
+        WHERE c.deleted_at IS NULL
+          AND (${input.countryId ? sql`c.country_id = ${input.countryId}::uuid` : sql`true`})
           AND (${
             like
-              ? sql`(customer_name ILIKE ${like} OR first_name ILIKE ${like} OR last_name ILIKE ${like} OR father_name ILIKE ${like} OR person_code ILIKE ${like} OR company_name ILIKE ${like} OR contact_person ILIKE ${like} OR email ILIKE ${like} OR mobile ILIKE ${like} OR whatsapp ILIKE ${like} OR address ILIKE ${like} OR notes ILIKE ${like}
-                  OR EXISTS (SELECT 1 FROM public.customer_registrations cr WHERE cr.customer_id = customers.id AND cr.deleted_at IS NULL AND cr.registration_value ILIKE ${like}) ${
-                  translatedMatchIds.length > 0 ? sql`OR id = ANY(${translatedMatchIds}::uuid[])` : sql``
+              ? sql`(c.customer_name ILIKE ${like} OR c.first_name ILIKE ${like} OR c.last_name ILIKE ${like} OR c.father_name ILIKE ${like} OR c.person_code ILIKE ${like} OR c.company_name ILIKE ${like} OR c.contact_person ILIKE ${like} OR c.email ILIKE ${like} OR c.mobile ILIKE ${like} OR c.whatsapp ILIKE ${like} OR c.address ILIKE ${like} OR c.notes ILIKE ${like}
+                  OR EXISTS (SELECT 1 FROM public.customer_registrations cr WHERE cr.customer_id = c.id AND cr.deleted_at IS NULL AND cr.registration_value ILIKE ${like}) ${
+                  translatedMatchIds.length > 0 ? sql`OR c.id = ANY(${translatedMatchIds}::uuid[])` : sql``
                 })`
               : sql`true`
           })
-        ORDER BY customer_name ASC
+        ORDER BY c.customer_name ASC
         LIMIT ${limit}
       `;
       return { customers: rows as unknown as CustomerRow[], limit };
@@ -132,7 +146,19 @@ export class CustomersRepository {
   async getById(id: string) {
     const viaPg = await withLocalPg(async (sql) => {
       const rows = await sql`
-        SELECT ${sql(CUSTOMER_COLUMNS)} FROM public.customers WHERE id = ${id}::uuid AND deleted_at IS NULL LIMIT 1
+        SELECT 
+          c.id, c.country_id, c.state_province_id, c.district_id, c.city_id, c.area_location_id,
+          c.customer_name, c.first_name, c.last_name, c.father_name, c.gender, c.photo_url, c.person_code,
+          c.company_name, c.contact_person, c.mobile, c.whatsapp, c.email, c.address,
+          c.notes, c.original_language_code, c.is_active, c.created_at, c.updated_at,
+          cnt.name as country_name,
+          sp.name as state_province_name,
+          ct.name as city_name
+        FROM public.customers c
+        LEFT JOIN public.countries cnt ON c.country_id = cnt.id
+        LEFT JOIN public.states_provinces sp ON c.state_province_id = sp.id
+        LEFT JOIN public.cities ct ON c.city_id = ct.id
+        WHERE c.id = ${id}::uuid AND c.deleted_at IS NULL LIMIT 1
       `;
       return (rows[0] as unknown as CustomerRow) ?? null;
     });
