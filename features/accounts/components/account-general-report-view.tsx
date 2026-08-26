@@ -742,6 +742,27 @@ export function AccountGeneralReportView({
       }>;
     }> = {};
 
+    const standardHubs = [
+      { name: "United Arab Emirates", code: "AE", currency: "AED" },
+      { name: "Pakistan", code: "PK", currency: "PKR" },
+      { name: "Afghanistan", code: "AF", currency: "AFN" },
+      { name: "China", code: "CN", currency: "USD" },
+    ];
+
+    standardHubs.forEach(hub => {
+      groups[hub.name] = {
+        countryName: hub.name,
+        countryCode: hub.code,
+        totalAccounts: 0,
+        activeAccounts: 0,
+        debitTotal: 0,
+        creditTotal: 0,
+        netBalance: 0,
+        currency: hub.currency,
+        branches: {}
+      };
+    });
+
     allFilteredRows.forEach(row => {
       const country = row.countryName || t(lang, "acct.agrv_unknown_country", "Unknown Country");
       const branch = row.branchName || t(lang, "report.scope_main_branch", "Main Branch");
@@ -789,7 +810,15 @@ export function AccountGeneralReportView({
     return Object.values(groups).map(g => ({
       ...g,
       branches: Object.values(g.branches).sort((a, b) => a.branchName.localeCompare(b.branchName))
-    })).sort((a, b) => a.countryName.localeCompare(b.countryName));
+    })).sort((a, b) => {
+      const order = ["United Arab Emirates", "Pakistan", "Afghanistan", "China"];
+      const idxA = order.indexOf(a.countryName);
+      const idxB = order.indexOf(b.countryName);
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA !== -1) return -1;
+      if (idxB !== -1) return 1;
+      return a.countryName.localeCompare(b.countryName);
+    });
   }, [allFilteredRows]);
 
   useEffect(() => {
@@ -1355,6 +1384,247 @@ export function AccountGeneralReportView({
         </div>
       )}
 
+      {/* 5 Primary Reports & Scopes Navigation Banner */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        {/* Report 1: User & Branch Reports (Position 1 / Leftmost) */}
+        <button
+          type="button"
+          onClick={() => {
+            setDashboardScope("branch");
+            setSelectedUserBranchOnly(true);
+          }}
+          className={cn(
+            "flex items-center justify-between p-3.5 rounded-xl border text-left transition-all cursor-pointer shadow-xs",
+            dashboardScope === "branch" && selectedUserBranchOnly
+              ? "bg-blue-600 text-white border-blue-600 shadow-md ring-2 ring-blue-500/20"
+              : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-blue-300"
+          )}
+        >
+          <div className="flex items-center gap-3">
+            <div className={cn("p-2 rounded-lg", dashboardScope === "branch" && selectedUserBranchOnly ? "bg-white/20 text-white" : "bg-blue-50 text-blue-600 dark:bg-blue-950/40")}>
+              <User className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-[11px] font-black uppercase tracking-wider">
+                {tr("USER & BRANCH REPORTS")}
+              </div>
+              <div className={cn("text-[10px] font-semibold mt-0.5", dashboardScope === "branch" && selectedUserBranchOnly ? "text-blue-100" : "text-slate-500")}>
+                {tr("Active Operator & Local Branch")}
+              </div>
+            </div>
+          </div>
+          <ChevronRight className={cn("h-4 w-4 shrink-0", dashboardScope === "branch" && selectedUserBranchOnly ? "text-white" : "text-slate-400")} />
+        </button>
+
+        {/* Report 2: Super Admin Reports */}
+        <button
+          type="button"
+          onClick={() => {
+            setDashboardScope("super_admin");
+            setSelectedUserBranchOnly(false);
+            setCountryName("all");
+            setBranchCode("all");
+          }}
+          className={cn(
+            "flex items-center justify-between p-3.5 rounded-xl border text-left transition-all cursor-pointer shadow-xs",
+            dashboardScope === "super_admin" && !selectedUserBranchOnly
+              ? "bg-indigo-600 text-white border-indigo-600 shadow-md ring-2 ring-indigo-500/20"
+              : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-indigo-300"
+          )}
+        >
+          <div className="flex items-center gap-3">
+            <div className={cn("p-2 rounded-lg", dashboardScope === "super_admin" && !selectedUserBranchOnly ? "bg-white/20 text-white" : "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40")}>
+              <Landmark className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-[11px] font-black uppercase tracking-wider">
+                {tr("SUPER ADMIN REPORTS")}
+              </div>
+              <div className={cn("text-[10px] font-semibold mt-0.5", dashboardScope === "super_admin" && !selectedUserBranchOnly ? "text-indigo-100" : "text-slate-500")}>
+                {tr("Multi-Country & Global Capital")}
+              </div>
+            </div>
+          </div>
+          <ChevronRight className={cn("h-4 w-4 shrink-0", dashboardScope === "super_admin" && !selectedUserBranchOnly ? "text-white" : "text-slate-400")} />
+        </button>
+
+        {/* Report 3: Country Reports */}
+        <button
+          type="button"
+          onClick={() => {
+            setDashboardScope("country");
+            setSelectedUserBranchOnly(false);
+          }}
+          className={cn(
+            "flex items-center justify-between p-3.5 rounded-xl border text-left transition-all cursor-pointer shadow-xs",
+            dashboardScope === "country" && !selectedUserBranchOnly
+              ? "bg-emerald-600 text-white border-emerald-600 shadow-md ring-2 ring-emerald-500/20"
+              : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-emerald-300"
+          )}
+        >
+          <div className="flex items-center gap-3">
+            <div className={cn("p-2 rounded-lg", dashboardScope === "country" && !selectedUserBranchOnly ? "bg-white/20 text-white" : "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40")}>
+              <Globe className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-[11px] font-black uppercase tracking-wider">
+                {tr("COUNTRY REPORTS")}
+              </div>
+              <div className={cn("text-[10px] font-semibold mt-0.5", dashboardScope === "country" && !selectedUserBranchOnly ? "text-emerald-100" : "text-slate-500")}>
+                {tr("National & Regional Hubs")}
+              </div>
+            </div>
+          </div>
+          <ChevronRight className={cn("h-4 w-4 shrink-0", dashboardScope === "country" && !selectedUserBranchOnly ? "text-white" : "text-slate-400")} />
+        </button>
+
+        {/* Report 4: Branch Reports */}
+        <button
+          type="button"
+          onClick={() => {
+            setDashboardScope("branch");
+            setSelectedUserBranchOnly(false);
+          }}
+          className={cn(
+            "flex items-center justify-between p-3.5 rounded-xl border text-left transition-all cursor-pointer shadow-xs",
+            dashboardScope === "branch" && !selectedUserBranchOnly
+              ? "bg-purple-600 text-white border-purple-600 shadow-md ring-2 ring-purple-500/20"
+              : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-purple-300"
+          )}
+        >
+          <div className="flex items-center gap-3">
+            <div className={cn("p-2 rounded-lg", dashboardScope === "branch" && !selectedUserBranchOnly ? "bg-white/20 text-white" : "bg-purple-50 text-purple-600 dark:bg-purple-950/40")}>
+              <Building className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-[11px] font-black uppercase tracking-wider">
+                {tr("BRANCH REPORTS")}
+              </div>
+              <div className={cn("text-[10px] font-semibold mt-0.5", dashboardScope === "branch" && !selectedUserBranchOnly ? "text-purple-100" : "text-slate-500")}>
+                {tr("Local Branch Ledgers")}
+              </div>
+            </div>
+          </div>
+          <ChevronRight className={cn("h-4 w-4 shrink-0", dashboardScope === "branch" && !selectedUserBranchOnly ? "text-white" : "text-slate-400")} />
+        </button>
+
+        {/* Report 5: Shipping & Clearing */}
+        <button
+          type="button"
+          onClick={() => {
+            setDraftQuery("shipping");
+            setQuery("shipping");
+          }}
+          className={cn(
+            "flex items-center justify-between p-3.5 rounded-xl border text-left transition-all cursor-pointer shadow-xs",
+            query.toLowerCase().includes("shipping")
+              ? "bg-amber-600 text-white border-amber-600 shadow-md ring-2 ring-amber-500/20"
+              : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-amber-300"
+          )}
+        >
+          <div className="flex items-center gap-3">
+            <div className={cn("p-2 rounded-lg", query.toLowerCase().includes("shipping") ? "bg-white/20 text-white" : "bg-amber-50 text-amber-600 dark:bg-amber-950/40")}>
+              <Truck className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-[11px] font-black uppercase tracking-wider">
+                {tr("SHIPPING & CLEARING")}
+              </div>
+              <div className={cn("text-[10px] font-semibold mt-0.5", query.toLowerCase().includes("shipping") ? "text-amber-100" : "text-slate-500")}>
+                {tr("Shipping Line & Freight Ledgers")}
+              </div>
+            </div>
+          </div>
+          <ChevronRight className={cn("h-4 w-4 shrink-0", query.toLowerCase().includes("shipping") ? "text-white" : "text-slate-400")} />
+        </button>
+      </div>
+
+      {/* Scope Subtitle Bar */}
+      <div className="flex items-center gap-6 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 px-1 pt-1">
+        <span>BRANCH SCOPE: <strong className="text-blue-600 dark:text-blue-400">{isSuperAdmin ? "GLOBAL ADMIN" : "BRANCH"}</strong></span>
+        <span>SESSION ROLE: <strong className="text-emerald-600 dark:text-emerald-400">{session?.roles?.[0]?.replace(/_/g, " ") || "SUPER ADMIN"}</strong></span>
+        <span>TOTAL LEDGERS: <strong className="text-slate-800 dark:text-slate-200">{filteredRows.length}</strong></span>
+      </div>
+
+      {/* Country-Wise Financial Breakdown Cards */}
+      <div className="space-y-2">
+        <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 px-1">
+          {tr("COUNTRY-WISE FINANCIAL BREAKDOWN & HUBS")}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+          {/* General Report (Consolidated) */}
+          <div
+            onClick={() => { setSelectedCountryForSummary(null); setCountryName("all"); }}
+            className={cn(
+              "p-3.5 rounded-xl border bg-white dark:bg-slate-900 cursor-pointer transition shadow-xs",
+              !selectedCountryForSummary && countryName === "all" ? "border-blue-500 ring-1 ring-blue-500" : "border-slate-200 dark:border-slate-800 hover:border-slate-300"
+            )}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">📊 GENERAL REPORT</span>
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600">SYSTEM</span>
+            </div>
+            <div className="text-[9px] text-slate-400 mt-0.5">{filteredRows.length} Total Accounts</div>
+            <div className="mt-2 space-y-0.5 font-mono text-[10px]">
+              <div className="flex justify-between text-rose-600"><span>DR:</span> <span>{fmtNumber(filteredRows.reduce((s, r) => s + r.debitTotal, 0))}</span></div>
+              <div className="flex justify-between text-emerald-600"><span>CR:</span> <span>{fmtNumber(filteredRows.reduce((s, r) => s + r.creditTotal, 0))}</span></div>
+              <div className="flex justify-between font-bold border-t border-slate-100 dark:border-slate-800 pt-0.5 text-slate-800 dark:text-slate-200"><span>NET:</span> <span>AED {fmtNumber(filteredRows.reduce((s, r) => s + r.currentBalance, 0))}</span></div>
+            </div>
+          </div>
+
+          {/* User & Branch Card */}
+          <div
+            onClick={() => { setDashboardScope("branch"); setSelectedUserBranchOnly(true); }}
+            className={cn(
+              "p-3.5 rounded-xl border bg-white dark:bg-slate-900 cursor-pointer transition shadow-xs",
+              selectedUserBranchOnly ? "border-blue-500 ring-1 ring-blue-500" : "border-slate-200 dark:border-slate-800 hover:border-slate-300"
+            )}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">👤 USER & BRANCH</span>
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700">AED</span>
+            </div>
+            <div className="text-[9px] text-slate-400 mt-0.5">Assigned: {session?.user?.fullName || (session as any)?.user?.name || "Super Admin"}</div>
+            <div className="mt-2 space-y-0.5 font-mono text-[10px]">
+              <div className="flex justify-between text-rose-600"><span>DR:</span> <span>{fmtNumber(filteredRows.reduce((s, r) => s + r.debitTotal, 0))}</span></div>
+              <div className="flex justify-between text-emerald-600"><span>CR:</span> <span>{fmtNumber(filteredRows.reduce((s, r) => s + r.creditTotal, 0))}</span></div>
+              <div className="flex justify-between font-bold border-t border-slate-100 dark:border-slate-800 pt-0.5 text-slate-800 dark:text-slate-200"><span>NET:</span> <span>AED {fmtNumber(filteredRows.reduce((s, r) => s + r.currentBalance, 0))}</span></div>
+            </div>
+          </div>
+
+          {/* 4 Country Hub Cards */}
+          {countrySummaries.slice(0, 4).map(c => {
+            const isSelected = selectedCountryForSummary === c.countryName;
+            return (
+              <div
+                key={c.countryName}
+                onClick={() => {
+                  setSelectedCountryForSummary(isSelected ? null : c.countryName);
+                  setCountryName(isSelected ? "all" : c.countryName);
+                }}
+                className={cn(
+                  "p-3.5 rounded-xl border bg-white dark:bg-slate-900 cursor-pointer transition shadow-xs",
+                  isSelected ? "border-emerald-500 ring-1 ring-emerald-500" : "border-slate-200 dark:border-slate-800 hover:border-slate-300"
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate flex items-center gap-1">
+                    <span>{getFlag(c.countryName)}</span> <span className="truncate">{c.countryName}</span>
+                  </span>
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700">{c.currency}</span>
+                </div>
+                <div className="text-[9px] text-slate-400 mt-0.5">{c.totalAccounts} Accounts</div>
+                <div className="mt-2 space-y-0.5 font-mono text-[10px]">
+                  <div className="flex justify-between text-rose-600"><span>DR:</span> <span>{fmtNumber(c.debitTotal)}</span></div>
+                  <div className="flex justify-between text-emerald-600"><span>CR:</span> <span>{fmtNumber(c.creditTotal)}</span></div>
+                  <div className="flex justify-between font-bold border-t border-slate-100 dark:border-slate-800 pt-0.5 text-slate-800 dark:text-slate-200"><span>NET:</span> <span>{c.currency} {fmtNumber(c.netBalance)}</span></div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* 4 Primary Summary Panels Grid (Matching Outstanding & Recovery Ledger) */}
       <div className="summary-cards-container grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         {/* Panel 1: Branch & User Details */}
@@ -1771,7 +2041,15 @@ export function AccountGeneralReportView({
                           <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-medium">{row.companyName ? localizeTerm(row.companyName, lang) : "-"}</td>
                           <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-medium text-emerald-700 dark:text-emerald-400">{row.bankName ? localizeTerm(row.bankName, lang) : "-"}</td>
                           <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-medium text-amber-700 dark:text-amber-400">{row.warehouseName ? localizeTerm(row.warehouseName, lang) : "-"}</td>
-                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-bold text-slate-900 dark:text-slate-100">{transliterateProperNoun(row.ownerName || row.companyOwner || "-", lang)}</td>
+                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-bold text-slate-900 dark:text-slate-100">
+                            {transliterateProperNoun(
+                              (row.ownerName && row.ownerName !== "-" && !row.ownerName.toLowerCase().includes("import export") ? row.ownerName : "") ||
+                              ((row as any).customerName && (row as any).customerName !== "-" ? (row as any).customerName : "") ||
+                              (row.companyOwner && row.companyOwner !== "-" && !row.companyOwner.toLowerCase().includes("import export") ? row.companyOwner : "") ||
+                              "-",
+                              lang
+                            )}
+                          </td>
                           <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 text-center align-middle">
                             <ContactIconPopup row={row} />
                           </td>

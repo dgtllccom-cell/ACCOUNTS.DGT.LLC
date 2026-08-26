@@ -117,10 +117,31 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
     ],
   },
   {
+    title: "CRM",
+    items: [
+      {
+        icon: CalendarCheck,
+        label: "CRM Control Center",
+        badge: "Live",
+        children: [
+          { label: "CRM Dashboard", href: "/dashboard/crm", icon: LayoutDashboard },
+          { label: "Today's Action Center", href: "/dashboard/crm?tab=today", icon: CheckCircle2 },
+          { label: "Due & Follow-Up", href: "/dashboard/smart-due", icon: Clock },
+          { label: "Cheques Reminders", href: "/dashboard/crm?tab=cheques", icon: CreditCard },
+          { label: "Purchase Payments Due", href: "/dashboard/crm?tab=purchases", icon: ShoppingCart },
+          { label: "Sales Recovery Due", href: "/dashboard/crm?tab=sales", icon: CircleDollarSign },
+          { label: "Shipping / Clearing Due", href: "/dashboard/crm?tab=shipping", icon: Truck },
+          { label: "Customer & Supplier Follow-Up", href: "/dashboard/crm?tab=customers", icon: Users },
+          { label: "CRM Calendar", href: "/dashboard/crm?tab=calendar", icon: Calendar },
+          { label: "CRM Universal Reports", href: "/dashboard/crm/reports", icon: BarChart3 },
+        ],
+      },
+    ],
+  },
+  {
     title: "Overview",
     items: [
       { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", active: true },
-      { icon: CalendarCheck, label: "Smart CRM & Due Center", href: "/dashboard/crm", badge: "Live" }
     ],
   },
   {

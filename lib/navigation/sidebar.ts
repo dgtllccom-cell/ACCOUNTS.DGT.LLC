@@ -88,12 +88,77 @@ export const sidebarTree: SidebarNode[] = [
         labelKey: "nav.shipping_clearing",
         href: "/dashboard/logistics" as Route,
         roles: ["super_admin", "agent_user"]
-      },
+      }
+    ]
+  },
+  {
+    key: "crm-main-group",
+    labelKey: "crm.title" as any,
+    iconKey: "calendar",
+    roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "cashier", "agent_user"],
+    children: [
       {
-        key: "dash-smart-crm",
-        labelKey: "crm.title" as any,
+        key: "crm-dashboard",
+        labelKey: "crm.menu_dashboard" as any,
+        iconKey: "layout-dashboard",
         href: "/dashboard/crm" as Route,
         roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "cashier", "agent_user"]
+      },
+      {
+        key: "crm-today-action",
+        labelKey: "crm.menu_today_action" as any,
+        iconKey: "check-square",
+        href: "/dashboard/crm?tab=today" as Route,
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "cashier", "agent_user"]
+      },
+      {
+        key: "crm-smart-due",
+        labelKey: "crm.menu_due_followup" as any,
+        iconKey: "clock",
+        href: "/dashboard/smart-due" as Route,
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "cashier", "agent_user"]
+      },
+      {
+        key: "crm-cheques",
+        labelKey: "crm.menu_cheques" as any,
+        iconKey: "credit-card",
+        href: "/dashboard/crm?tab=cheques" as Route,
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+      },
+      {
+        key: "crm-purchase-due",
+        labelKey: "crm.menu_purchase_due" as any,
+        iconKey: "shopping-bag",
+        href: "/dashboard/crm?tab=purchases" as Route,
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "crm-sales-recovery",
+        labelKey: "crm.menu_sales_recovery" as any,
+        iconKey: "coins",
+        href: "/dashboard/crm?tab=sales" as Route,
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "crm-shipping-due",
+        labelKey: "crm.menu_shipping_due" as any,
+        iconKey: "truck",
+        href: "/dashboard/crm?tab=shipping" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "agent_user"]
+      },
+      {
+        key: "crm-customer-followup",
+        labelKey: "crm.menu_customers" as any,
+        iconKey: "users",
+        href: "/dashboard/crm?tab=customers" as Route,
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "cashier", "agent_user"]
+      },
+      {
+        key: "crm-reports",
+        labelKey: "crm.menu_reports" as any,
+        iconKey: "bar-chart-3",
+        href: "/dashboard/crm/reports" as Route,
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"]
       }
     ]
   },

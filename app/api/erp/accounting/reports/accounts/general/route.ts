@@ -777,7 +777,20 @@ export async function GET(request: NextRequest) {
       const mobileVal = findContact("mobile") || findContact("phone") || linkedBnk?.phone || "-";
       const whatsappVal = findContact("whatsapp") || findContact("wa") || mobileVal;
       const emailVal = findContact("email") || linkedBnk?.email || "-";
-      const ownerVal = findContact("owner") || linkedComp?.legal_name || linkedComp?.name || profile?.full_name || "-";
+      const custNameFromId = account.customer_id ? customerLookup.get(account.customer_id) ?? null : null;
+      const ownerVal = 
+        findContact("owner") ||
+        findContact("customer") ||
+        findContact("contact") ||
+        account.customer_name ||
+        custNameFromId ||
+        account.owner_name ||
+        account.contact_name ||
+        account.company_owner_name ||
+        linkedComp?.owner_name ||
+        linkedComp?.contact_person ||
+        profile?.full_name ||
+        "-";
       const warehouseVal = findContact("warehouse") || "-";
       const bankVal = linkedBnk?.bank_name || (account.is_control_account ? accountName : "-");
       // Linked company name (raw); localized as a batch below (companies table) via the
