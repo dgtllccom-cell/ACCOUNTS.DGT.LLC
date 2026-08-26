@@ -704,760 +704,792 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
         })}
       </div>
 
-      {/* 2-Column Split: Left-Side Live Report + Right-Side Step Packets */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* LEFT COLUMN: LIVE DYNAMIC EMPLOYEE PROFILE REPORT CARD (5 cols) */}
-        <div className="lg:col-span-5 space-y-4 lg:sticky lg:top-4">
-          <div className="rounded-2xl border-2 border-emerald-500/30 bg-gradient-to-b from-slate-50 to-emerald-50/20 dark:from-slate-900 dark:to-slate-950 p-4 shadow-md space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
-              <div className="flex items-center gap-2">
-                <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                  {translateHr("Live Employee Master Report", lang)}
-                </span>
-              </div>
-              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                {catLabel(category)}
-              </span>
-            </div>
-
-            {/* Profile Header */}
-            <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-2xl bg-emerald-600 text-white font-black text-lg flex items-center justify-center shadow-md shrink-0 uppercase">
-                {(fullName || "?").charAt(0)}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="text-sm font-black text-slate-900 dark:text-slate-100 truncate">
-                  {fullName || translateHr("No Person Selected", lang)}
-                </div>
-                <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 truncate">
-                  {designation || "-"}
-                </div>
-                <div className="text-[10px] text-slate-500 font-medium truncate">
-                  {department || "-"}
-                </div>
-              </div>
-            </div>
-
-            {/* 4 Packet Summary Badges */}
-            <div className="space-y-2 text-xs">
-              {/* Scope & Branch */}
-              <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1">
-                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  📍 {translateHr("Location & Branch", lang)}
-                </div>
-                <div className="font-semibold text-slate-800 dark:text-slate-200 truncate">
-                  {selectedCountryObj?.name || translateHr("Country: -", lang)}
-                </div>
-                <div className="text-[11px] text-slate-600 dark:text-slate-400 truncate">
-                  🏢 {selectedMainBranchObj ? `${selectedMainBranchObj.name}` : translateHr("Main Branch: -", lang)}
-                </div>
-                <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium truncate">
-                  🏙️ {selectedCityBranchObj ? selectedCityBranchObj.name : translateHr("City Branch: -", lang)}
-                </div>
-              </div>
-
-              {/* Contact Details */}
-              {selectedPersonObj && (
-                <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1 text-[11px]">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                    📞 {translateHr("Contact Details", lang)}
-                  </div>
-                  <div className="truncate text-slate-700 dark:text-slate-300" dir="ltr">
-                    📱 {selectedPersonObj.mobile || "-"}
-                  </div>
-                  <div className="truncate text-slate-700 dark:text-slate-300" dir="ltr">
-                    ✉️ {selectedPersonObj.email || "-"}
-                  </div>
-                  <div className="truncate text-slate-700 dark:text-slate-300">
-                    🏠 {selectedPersonObj.address || "-"}
+      {/* 2-Column Split for Steps 1-4, Full-Width for Step 5 */}
+      {activeStep < 5 ? (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* LEFT COLUMN: PROMINENT LIVE EMPLOYEE MASTER REPORT (6 cols) */}
+          <div className="lg:col-span-6 space-y-4 lg:sticky lg:top-4">
+            <div className="rounded-2xl border-2 border-emerald-500/40 bg-gradient-to-b from-white via-slate-50 to-emerald-50/20 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 p-5 shadow-lg space-y-4">
+              
+              {/* Live Report Top Bar */}
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <span className="inline-block h-3 w-3 rounded-full bg-emerald-500 animate-pulse shadow-sm" />
+                  <div>
+                    <div className="text-[10px] font-black tracking-widest text-emerald-700 dark:text-emerald-400 uppercase">
+                      RECORD TYPE: EMPLOYEE
+                    </div>
+                    <div className="text-xs font-black text-slate-800 dark:text-slate-200">
+                      {translateHr("Live Employee Master Report", lang)}
+                    </div>
                   </div>
                 </div>
-              )}
-
-              {/* Duty & Shift */}
-              <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1 text-[11px]">
-                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  ⏰ {translateHr("Shift & Timelines", lang)}
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">{translateHr("Shift", lang)}:</span>
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">{translateHr(workingShift || "Day Shift", lang)} ({dutyStartTime} - {dutyEndTime})</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">{translateHr("Joining", lang)}:</span>
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">{joiningDate || "-"}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono font-extrabold px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-xs">
+                    {catLabel(category)}
+                  </span>
                 </div>
               </div>
 
-              {/* Salary / Partner Equity */}
-              <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1 text-[11px]">
-                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  💰 {translateHr("Salary / Compensation", lang)}
+              {/* Identity & Person Profile Card */}
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-3.5 shadow-xs">
+                <div className="flex items-start gap-3.5">
+                  <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white font-black text-xl flex items-center justify-center shadow-md shrink-0 uppercase">
+                    {(fullName || "?").charAt(0)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-base font-black text-slate-900 dark:text-slate-100 truncate">
+                        {fullName || <span className="text-slate-400 font-normal italic">{translateHr("No Person Selected", lang)}</span>}
+                      </div>
+                      {selectedPersonObj?.person_code && (
+                        <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                          {selectedPersonObj.person_code}
+                        </span>
+                      )}
+                    </div>
+
+                    {selectedPersonObj?.father_name && (
+                      <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                        S/O {selectedPersonObj.father_name}
+                      </div>
+                    )}
+
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
+                      <span className="font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded">
+                        {designation || "Role / Designation Pending"}
+                      </span>
+                      <span className="text-slate-400">·</span>
+                      <span className="text-slate-600 dark:text-slate-400 font-medium">
+                        {department || "General Operations"}
+                      </span>
+                    </div>
+
+                    {selectedPersonObj && (
+                      <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 grid grid-cols-2 gap-2 text-[11px] text-slate-600 dark:text-slate-400">
+                        {selectedPersonObj.mobile && (
+                          <div className="flex items-center gap-1 truncate" dir="ltr">
+                            <Phone className="h-3 w-3 text-emerald-600 shrink-0" />
+                            <span className="font-mono">{selectedPersonObj.mobile}</span>
+                          </div>
+                        )}
+                        {selectedPersonObj.email && (
+                          <div className="flex items-center gap-1 truncate" dir="ltr">
+                            <Mail className="h-3 w-3 text-blue-600 shrink-0" />
+                            <span className="truncate">{selectedPersonObj.email}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
+              </div>
+
+              {/* Packet 2: Location, Branch & Hierarchy */}
+              <div className={`p-3 rounded-xl border transition-all ${
+                activeStep >= 2
+                  ? "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xs"
+                  : "bg-slate-50/50 dark:bg-slate-900/30 border-dashed border-slate-200 dark:border-slate-800/60 opacity-80"
+              }`}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+                    <MapPin className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>2. {translateHr("Location & Branch", lang)}</span>
+                  </span>
+                  {activeStep >= 2 && (
+                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-1.5 py-0.5 rounded">
+                      Configured
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] text-slate-400 font-semibold">{t(lang, "rozrep.country", "Country")}:</span>
+                    <div className="font-bold text-slate-900 dark:text-slate-100 truncate">
+                      {selectedCountryObj?.name || <span className="text-slate-400 font-normal">Pending Selection</span>}
+                    </div>
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] text-slate-400 font-semibold">{t(lang, "hr.f_main_branch", "Main Branch")}:</span>
+                    <div className="font-bold text-slate-800 dark:text-slate-200 truncate">
+                      {selectedMainBranchObj ? selectedMainBranchObj.name : <span className="text-slate-400 font-normal">Default Main</span>}
+                    </div>
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] text-slate-400 font-semibold">{t(lang, "hr.f_city_branch", "City Branch")}:</span>
+                    <div className="font-bold text-emerald-700 dark:text-emerald-400 truncate">
+                      {selectedCityBranchObj ? selectedCityBranchObj.name : <span className="text-slate-400 font-normal">All Branches</span>}
+                    </div>
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] text-slate-400 font-semibold">{t(lang, "hr.f_reporting_manager", "Reporting Manager")}:</span>
+                    <div className="font-bold text-indigo-700 dark:text-indigo-400 truncate">
+                      {selectedManagerObj ? `${selectedManagerObj.person?.customer_name || selectedManagerObj.employee_code}` : <span className="text-slate-400 font-normal">Direct to Board</span>}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Packet 3: Timelines, Duty Shift & Hours */}
+              <div className={`p-3 rounded-xl border transition-all ${
+                activeStep >= 3
+                  ? "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xs"
+                  : "bg-slate-50/50 dark:bg-slate-900/30 border-dashed border-slate-200 dark:border-slate-800/60 opacity-80"
+              }`}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+                    <Clock className="h-3.5 w-3.5 text-blue-600" />
+                    <span>3. {translateHr("Shift & Timelines", lang)}</span>
+                  </span>
+                  {activeStep >= 3 && (
+                    <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 px-1.5 py-0.5 rounded">
+                      Active
+                    </span>
+                  )}
+                </div>
+
+                <div className="space-y-1.5 text-xs">
+                  <div className="flex items-center justify-between font-bold text-slate-800 dark:text-slate-200">
+                    <span className="text-slate-500 font-medium">Schedule:</span>
+                    <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[11px]">
+                      {employmentType || "Full-time"} | {workingShift || "Day Shift"} | {dutyStartTime || "09:00"} – {dutyEndTime || "18:00"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-slate-400 font-medium">{translateHr("Joining", lang)}:</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-100">{joiningDate || "Immediate"}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Packet 4: Salary, Allowances & GL Ledgers */}
+              <div className={`p-3 rounded-xl border transition-all ${
+                activeStep >= 4
+                  ? "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xs"
+                  : "bg-slate-50/50 dark:bg-slate-900/30 border-dashed border-slate-200 dark:border-slate-800/60 opacity-80"
+              }`}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+                    <BadgeDollarSign className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>4. {translateHr("Salary / Compensation", lang)}</span>
+                  </span>
+                  {activeStep >= 4 && (
+                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-1.5 py-0.5 rounded">
+                      Calculated
+                    </span>
+                  )}
+                </div>
+
                 {category === "Country Owner" || category === "Branch Owner" || category === "Company Owner" ? (
-                  <div className="text-xs font-bold text-amber-600 dark:text-amber-400">
+                  <div className="rounded-lg bg-amber-50 dark:bg-amber-950/40 p-2 border border-amber-200 dark:border-amber-900/50 text-[11px] font-bold text-amber-800 dark:text-amber-300">
                     👑 {catLabel(category)} · {translateHr("Executive Partner (Fixed Salary N/A / Optional)", lang)}
                   </div>
                 ) : (
-                  <div className="flex justify-between items-center font-bold text-slate-800 dark:text-slate-200">
-                    <span>{translateHr(salaryType, lang)} {translateHr("Rate", lang)}:</span>
-                    <span className="text-emerald-600">{basicSalary ? `${basicSalary.toLocaleString()} ${salaryCurrency}` : `0.00 ${salaryCurrency}`}</span>
+                  <div className="space-y-2 text-xs">
+                    <div className="grid grid-cols-3 gap-2 p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 text-[11px]">
+                      <div>
+                        <span className="text-slate-400 block text-[10px] font-medium">Basic ({salaryCurrency})</span>
+                        <strong className="text-slate-900 dark:text-slate-100">{Number(basicSalary || 0).toLocaleString()}</strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[10px] font-medium">Allowances</span>
+                        <strong className="text-emerald-600">+{totalAllowances.toLocaleString()}</strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[10px] font-medium">Net Payroll</span>
+                        <strong className="text-emerald-700 dark:text-emerald-400 font-extrabold">{netSalary.toLocaleString()} {salaryCurrency}</strong>
+                      </div>
+                    </div>
+
+                    {(salaryExpenseAccountId || employeePayableAccountId) && (
+                      <div className="pt-1 text-[10px] text-slate-500 space-y-0.5">
+                        {salaryExpenseAccountId && (
+                          <div className="truncate">GL Expense: <span className="font-mono text-slate-700 dark:text-slate-300">{ledgers.find(l => l.id === salaryExpenseAccountId)?.name || "Mapped"}</span></div>
+                        )}
+                        {employeePayableAccountId && (
+                          <div className="truncate">GL Payable: <span className="font-mono text-slate-700 dark:text-slate-300">{ledgers.find(l => l.id === employeePayableAccountId)?.name || "Mapped"}</span></div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
+
             </div>
           </div>
-        </div>
 
-        {/* RIGHT COLUMN: STEP PACKETS (7 cols) */}
-        <div className="lg:col-span-7 space-y-5">
-          {/* STEP 1 PACKET: Category & Identity */}
-          {activeStep === 1 && (
-            <div className="space-y-5">
-              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
-                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                  <UserCheck className="h-4 w-4 text-emerald-600" />
-                  <span>{translateHr("Step 1 Packet: Employee Category & Person Selection", lang)}</span>
-                </h3>
-                <span className="text-xs font-semibold text-slate-400">{t(lang, "hr.f_step1_of5", "Step 1 of 5")}</span>
-              </div>
+          {/* RIGHT COLUMN: STEP PACKETS (6 cols) */}
+          <div className="lg:col-span-6 space-y-5">
+            {/* STEP 1 PACKET: Category & Identity */}
+            {activeStep === 1 && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                    <UserCheck className="h-4 w-4 text-emerald-600" />
+                    <span>{translateHr("Step 1 Packet: Employee Category & Person Selection", lang)}</span>
+                  </h3>
+                  <span className="text-xs font-semibold text-slate-400">{t(lang, "hr.f_step1_of5", "Step 1 of 5")}</span>
+                </div>
 
-          <div>
-            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5 font-sans">
-              {t(lang, "hr.f_select_category", "Select Employee / Master Category *")}
-            </label>
-            <select
-              value={category}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (val === "__GO_TO_COMPANY__") {
-                  router.push("/dashboard/settings/company" as Route);
-                  return;
-                }
-                if (val === "__GO_TO_CUSTOMER__") {
-                  router.push("/dashboard/settings/customers" as Route);
-                  return;
-                }
-                if (val === "__GO_TO_BANK__") {
-                  router.push("/dashboard/settings/bank" as Route);
-                  return;
-                }
-                const cat = val as any;
-                setCategory(cat);
-                const def = (CATEGORY_DEFAULTS[lang] || CATEGORY_DEFAULTS.en)[cat] || CATEGORY_DEFAULTS.en[cat];
-                if (def) {
-                  setDesignation(def.designation);
-                  setDepartment(def.department);
-                }
-              }}
-              className="flex h-11 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3.5 text-xs font-bold text-slate-900 dark:text-slate-100 shadow-xs outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-sans"
-            >
-              <optgroup label={lang === "ur" ? "ملازمین کے زمرے" : lang === "ar" ? "فئات الموظفين" : "Employee Categories"}>
-                <option value="Country Owner">{catLabel("Country Owner")}</option>
-                <option value="Branch Owner">{catLabel("Branch Owner")}</option>
-                <option value="Company Owner">{catLabel("Company Owner")}</option>
-                <option value="Manager">{catLabel("Manager")}</option>
-                <option value="Employee">{catLabel("Employee")}</option>
-                <option value="Normal Staff">{catLabel("Normal Staff")}</option>
-                <option value="Others">{catLabel("Others")}</option>
-              </optgroup>
-              <optgroup label={lang === "ur" ? "دیگر ماسٹر فارمز" : lang === "ar" ? "النماذج الرئيسية الأخرى" : "Other Master Forms"}>
-                <option value="__GO_TO_CUSTOMER__">👤 {lang === "ur" ? "کسٹمر / پرسن ماسٹر فارم کھولیں ↗" : lang === "ar" ? "فتح نموذج الشخص / العميل ↗" : "Open Customer / Person Master ↗"}</option>
-                <option value="__GO_TO_COMPANY__">🏢 {lang === "ur" ? "کمپنی رجسٹریشن فارم کھولیں ↗" : lang === "ar" ? "فتح نموذج تسجيل الشركة ↗" : "Open Company Master Form ↗"}</option>
-                <option value="__GO_TO_BANK__">🏦 {lang === "ur" ? "بینک اکاؤنٹ ماسٹر فارم کھولیں ↗" : lang === "ar" ? "فتح نموذج الحساب البنكي ↗" : "Open Bank Master Form ↗"}</option>
-              </optgroup>
-            </select>
-          </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5 font-sans">
+                    {t(lang, "hr.f_select_category", "Select Employee / Master Category *")}
+                  </label>
+                  <select
+                    value={category}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "__GO_TO_COMPANY__") {
+                        router.push("/dashboard/settings/company" as Route);
+                        return;
+                      }
+                      if (val === "__GO_TO_CUSTOMER__") {
+                        router.push("/dashboard/settings/customers" as Route);
+                        return;
+                      }
+                      if (val === "__GO_TO_BANK__") {
+                        router.push("/dashboard/settings/bank" as Route);
+                        return;
+                      }
+                      const cat = val as any;
+                      setCategory(cat);
+                      const def = (CATEGORY_DEFAULTS[lang] || CATEGORY_DEFAULTS.en)[cat] || CATEGORY_DEFAULTS.en[cat];
+                      if (def) {
+                        setDesignation(def.designation);
+                        setDepartment(def.department);
+                      }
+                    }}
+                    className="flex h-10 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100 shadow-xs outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-sans"
+                  >
+                    <optgroup label={lang === "ur" ? "ملازمین کے زمرے" : lang === "ar" ? "فئات الموظفين" : "Employee Categories"}>
+                      <option value="Country Owner">{catLabel("Country Owner")}</option>
+                      <option value="Branch Owner">{catLabel("Branch Owner")}</option>
+                      <option value="Company Owner">{catLabel("Company Owner")}</option>
+                      <option value="Manager">{catLabel("Manager")}</option>
+                      <option value="Employee">{catLabel("Employee")}</option>
+                      <option value="Normal Staff">{catLabel("Normal Staff")}</option>
+                      <option value="Others">{catLabel("Others")}</option>
+                    </optgroup>
+                    <optgroup label={lang === "ur" ? "دیگر ماسٹر فارمز" : lang === "ar" ? "النماذج الرئيسية الأخرى" : "Other Master Forms"}>
+                      <option value="__GO_TO_CUSTOMER__">👤 {lang === "ur" ? "کسٹمر / پرسن ماسٹر فارم کھولیں ↗" : lang === "ar" ? "فتح نموذج الشخص / العميل ↗" : "Open Customer / Person Master ↗"}</option>
+                      <option value="__GO_TO_COMPANY__">🏢 {lang === "ur" ? "کمپنی رجسٹریشن فارم کھولیں ↗" : lang === "ar" ? "فتح نموذج تسجيل الشركة ↗" : "Open Company Master Form ↗"}</option>
+                      <option value="__GO_TO_BANK__">🏦 {lang === "ur" ? "بینک اکاؤنٹ ماسٹر فارم کھولیں ↗" : lang === "ar" ? "فتح نموذج الحساب البنكي ↗" : "Open Bank Master Form ↗"}</option>
+                    </optgroup>
+                  </select>
+                </div>
 
-          <div>
-            <PersonPicker
-              label={t(lang, "hr.f_select_person", "Select or Add Employee / Person Master Name *")}
-              value={personMasterId}
-              onValueChange={setPersonMasterId}
-              countryId={countryId}
-              lang={lang}
-            />
-          </div>
+                <div>
+                  <PersonPicker
+                    label={t(lang, "hr.f_select_person", "Select or Add Employee / Person Master Name *")}
+                    value={personMasterId}
+                    onValueChange={setPersonMasterId}
+                    countryId={countryId}
+                    lang={lang}
+                  />
+                </div>
 
-          {/* Selected Employee Master Profile card */}
-          {selectedPersonObj ? (
-            <div className="rounded-2xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50/40 dark:bg-emerald-950/20 p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white text-base font-black uppercase shadow-sm">
-                    {(fullName || "?").trim().charAt(0)}
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                      {t(lang, "hr.f_lbl_designation_short", "Designation / Job Role *")}
+                    </label>
+                    <input
+                      type="text"
+                      value={designation}
+                      onChange={(e) => setDesignation(e.target.value)}
+                      placeholder="e.g. Manager, Accountant, Cook, Driver"
+                      className="flex h-10 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 text-xs font-semibold text-slate-900 dark:text-slate-100 shadow-xs outline-none focus:border-emerald-500"
+                    />
                   </div>
-                  <div className="min-w-0">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">{t(lang, "hr.f_selected_profile", "Selected Employee Master Profile")}</div>
-                    <div className="truncate text-base font-black text-slate-900 dark:text-slate-100">{fullName}</div>
-                    <div className="truncate text-xs text-slate-500 font-medium">{selectedPersonObj.company_name || t(lang, "hr.pp_independent", "Independent Account")} · {catLabel(category)}</div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                      {t(lang, "hr.f_lbl_department", "Department *")}
+                    </label>
+                    <input
+                      type="text"
+                      value={department}
+                      onChange={(e) => setDepartment(e.target.value)}
+                      placeholder="e.g. Finance, Operations, Logistics"
+                      className="flex h-10 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 text-xs font-semibold text-slate-900 dark:text-slate-100 shadow-xs outline-none focus:border-emerald-500"
+                    />
                   </div>
                 </div>
-                <div className="flex flex-shrink-0 items-center gap-2">
-                  <button type="button" onClick={() => setPersonMasterId("")} className="rounded-lg border border-slate-300 dark:border-slate-700 px-2.5 py-1 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800">
-                    {t(lang, "hr.f_change_selection", "Change / Clear Selection")}
-                  </button>
+
+                {/* Packet Summary Box */}
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs space-y-1">
+                  <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">{t(lang, "hr.f_step1_preview", "STEP 1 PACKET PREVIEW")}</div>
+                  <div className="grid grid-cols-3 gap-2 text-[11px]">
+                    <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_lbl_category", "Category:")}</span> <span className="font-bold text-emerald-600">{catLabel(category)}</span></div>
+                    <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_lbl_name", "Name:")}</span> <span className="font-bold truncate block">{fullName || t(lang, "hr.f_not_selected", "Not Selected")}</span></div>
+                    <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_lbl_designation_short", "Role:")}</span> <span className="font-bold truncate block">{designation || "-"}</span></div>
+                  </div>
                 </div>
               </div>
-              <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4 border-t border-emerald-100 dark:border-emerald-900/60 pt-2.5">
-                {[
-                  [t(lang, "hr.pp_contact_person", "Contact Person"), selectedPersonObj.contact_person],
-                  [t(lang, "hr.pp_mobile_phone", "Mobile Phone"), selectedPersonObj.mobile],
-                  [t(lang, "sed.f_whatsapp", "WhatsApp"), selectedPersonObj.whatsapp],
-                  [t(lang, "hr.pp_email_address", "Email Address"), selectedPersonObj.email],
-                  [t(lang, "hr.pp_address_location", "Address / Location"), selectedPersonObj.address]
-                ].map(([lbl, v], i) => (
-                  <div key={i} className="min-w-0">
-                    <div className="text-[9px] font-bold uppercase tracking-wide text-slate-400">{lbl}</div>
-                    <div className="truncate text-xs font-semibold text-slate-800 dark:text-slate-200" dir="ltr">{v || "-"}</div>
+            )}
+
+            {/* STEP 2 PACKET: Location & Branch Scopes */}
+            {activeStep === 2 && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-emerald-600" />
+                    <span>{t(lang, "hr.f_step2_title", "Step 2 Packet: Country, Branch Scopes & Reporting Manager")}</span>
+                  </h3>
+                  <span className="text-xs font-semibold text-slate-400">{t(lang, "hr.f_step2_of5", "Step 2 of 5")}</span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "common.country", "Country")} *</label>
+                    <select
+                      value={countryId}
+                      onChange={(e) => setCountryId(e.target.value)}
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
+                    >
+                      <option value="">{t(lang, "hr.f_select_country", "Select Country")}</option>
+                      {countries.map((c) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
                   </div>
-                ))}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_main_branch", "Main Branch")}</label>
+                    <select
+                      value={countryBranchId}
+                      onChange={(e) => setCountryBranchId(e.target.value)}
+                      disabled={!countryId}
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100 disabled:opacity-40"
+                    >
+                      <option value="">{t(lang, "hr.f_select_main_branch", "Select Main Branch")}</option>
+                      {branches.map((b) => (
+                        <option key={b.id} value={b.id}>
+                          {b.name} {b.code ? `(${b.code})` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_city_branch", "City Branch")}</label>
+                    <select
+                      value={cityBranchId}
+                      onChange={(e) => setCityBranchId(e.target.value)}
+                      disabled={!countryId}
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100 disabled:opacity-40"
+                    >
+                      <option value="">{t(lang, "hr.f_select_city_branch", "Select City Branch")}</option>
+                      {cityBranches.map((cb) => (
+                        <option key={cb.id} value={cb.id}>
+                          {cb.name} {cb.code ? `(${cb.code})` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {category !== "Manager" && (
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_reporting_manager", "Reporting Manager")}</label>
+                    <select
+                      value={reportingManagerId}
+                      onChange={(e) => setReportingManagerId(e.target.value)}
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
+                    >
+                      <option value="">{t(lang, "hr.f_select_manager", "Select Manager (Optional)")}</option>
+                      {managers.map((m) => (
+                        <option key={m.id} value={m.id}>{m.person?.customer_name} ({m.employee_code})</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Packet Summary Box */}
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs space-y-1">
+                  <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">{t(lang, "hr.f_step2_preview", "Step 2 Packet Preview")}</div>
+                  <div className="grid grid-cols-3 gap-2 text-[11px]">
+                    <div><span className="font-semibold text-slate-400">{t(lang, "common.country", "Country")}:</span> {selectedCountryObj?.name || "-"}</div>
+                    <div>
+                      <span className="font-semibold text-slate-400">{t(lang, "hr.f_main_branch", "Main Branch")}:</span>{" "}
+                      {selectedMainBranchObj ? `${selectedMainBranchObj.name}` : "-"}
+                    </div>
+                    <div>
+                      <span className="font-semibold text-slate-400">{t(lang, "hr.f_city_branch", "City Branch")}:</span>{" "}
+                      {selectedCityBranchObj ? `${selectedCityBranchObj.name}` : "-"}
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-3 text-[11px] text-slate-400">
-              {t(lang, "hr.f_no_person_selected", "No person selected yet — search and select a Person / Employee Master above.")}
-            </div>
-          )}
+            )}
 
-          {/* Designation & Department */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_lbl_designation", "Designation / Position *")}</label>
-              <input
-                type="text"
-                value={designation}
-                onChange={(e) => setDesignation(e.target.value)}
-                placeholder={t(lang, "hr.f_ph_designation", "e.g. Finance Manager / General Staff")}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900 dark:text-slate-100 shadow-xs"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_lbl_department", "Department *")}</label>
-              <input
-                type="text"
-                value={department}
-                onChange={(e) => setDepartment(e.target.value)}
-                placeholder={t(lang, "hr.f_ph_department", "e.g. Accounts / Operations")}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900 dark:text-slate-100 shadow-xs"
-              />
-            </div>
-          </div>
+            {/* STEP 3 PACKET: Timelines, Duty Shift & Contract */}
+            {activeStep === 3 && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-emerald-600" />
+                    <span>{t(lang, "hr.f_step3_title", "Step 3 Packet: Employment Type, Shift & Contract Timelines")}</span>
+                  </h3>
+                  <span className="text-xs font-semibold text-slate-400">{t(lang, "hr.f_step3_of5", "Step 3 of 5")}</span>
+                </div>
 
-          {/* Packet Summary Box */}
-          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs space-y-1.5">
-            <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">{t(lang, "hr.f_step1_preview", "STEP 1 PACKET PREVIEW")}</div>
-            <div className="grid grid-cols-3 gap-2">
-              <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_lbl_category", "Category:")}</span> <span className="font-bold text-emerald-600">{catLabel(category)}</span></div>
-              <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_lbl_name", "Name:")}</span> <span className="font-bold">{fullName || t(lang, "hr.f_not_selected", "Not Selected")}</span></div>
-              <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_lbl_designation_short", "Designation:")}</span> <span className="font-bold">{designation || "-"}</span></div>
-            </div>
-          </div>
-        </div>
-      )}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_joining_date", "Joining Date")} *</label>
+                    <input
+                      type="date"
+                      value={joiningDate}
+                      onChange={(e) => setJoiningDate(e.target.value)}
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
+                    />
+                  </div>
 
-      {/* STEP 2 PACKET: Location & Branch Scopes */}
-      {activeStep === 2 && (
-        <div className="space-y-5">
-          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-emerald-600" />
-              <span>{t(lang, "hr.f_step2_title", "Step 2 Packet: Country, Branch Scopes & Reporting Manager")}</span>
-            </h3>
-            <span className="text-xs font-semibold text-slate-400">{t(lang, "hr.f_step2_of5", "Step 2 of 5")}</span>
-          </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_employment_type", "Employment Type")}</label>
+                    <select
+                      value={employmentType}
+                      onChange={(e) => setEmploymentType(e.target.value)}
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
+                    >
+                      <option value="Full-time">{t(lang, "hr.f_full_time", "Full-time")}</option>
+                      <option value="Part-time">{t(lang, "hr.f_part_time", "Part-time")}</option>
+                      <option value="Contract">{t(lang, "hr.f_contract", "Contract")}</option>
+                      <option value="Internship">{t(lang, "hr.f_internship", "Internship")}</option>
+                    </select>
+                  </div>
+                </div>
 
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "common.country", "Country")} *</label>
-              <select
-                value={countryId}
-                onChange={(e) => setCountryId(e.target.value)}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
-              >
-                <option value="">{t(lang, "hr.f_select_country", "Select Country")}</option>
-                {countries.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_main_branch", "Main Branch")}</label>
-              <select
-                value={countryBranchId}
-                onChange={(e) => setCountryBranchId(e.target.value)}
-                disabled={!countryId}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100 disabled:opacity-40"
-              >
-                <option value="">{t(lang, "hr.f_select_main_branch", "Select Main Branch")}</option>
-                {branches.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.name} {b.code ? `(${b.code})` : ""}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_city_branch", "City Branch")}</label>
-              <select
-                value={cityBranchId}
-                onChange={(e) => setCityBranchId(e.target.value)}
-                disabled={!countryId}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100 disabled:opacity-40"
-              >
-                <option value="">{t(lang, "hr.f_select_city_branch", "Select City Branch")}</option>
-                {cityBranches.map((cb) => (
-                  <option key={cb.id} value={cb.id}>
-                    {cb.name} {cb.code ? `(${cb.code})` : ""}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_duty_shift", "Duty Shift")}</label>
+                    <input
+                      type="text"
+                      value={workingShift}
+                      onChange={(e) => setWorkingShift(e.target.value)}
+                      placeholder={t(lang, "hr.f_ph_day_shift", "Day Shift")}
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-100"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_duty_start", "Duty Start Time")}</label>
+                    <input
+                      type="time"
+                      value={dutyStartTime}
+                      onChange={(e) => setDutyStartTime(e.target.value)}
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-100"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_duty_end", "Duty End Time")}</label>
+                    <input
+                      type="time"
+                      value={dutyEndTime}
+                      onChange={(e) => setDutyEndTime(e.target.value)}
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-100"
+                    />
+                  </div>
+                </div>
 
-          {category !== "Manager" && (
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_reporting_manager", "Reporting Manager")}</label>
-              <select
-                value={reportingManagerId}
-                onChange={(e) => setReportingManagerId(e.target.value)}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
-              >
-                <option value="">{t(lang, "hr.f_select_manager", "Select Manager")}</option>
-                {managers.map((m) => (
-                  <option key={m.id} value={m.id}>{m.person?.customer_name} ({m.employee_code})</option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {/* Packet Summary Box */}
-          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs space-y-1.5">
-            <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">{t(lang, "hr.f_step2_preview", "Step 2 Packet Preview")}</div>
-            <div className="grid grid-cols-3 gap-2">
-              <div><span className="font-semibold text-slate-400">{t(lang, "common.country", "Country")}:</span> {selectedCountryObj?.name || "-"}</div>
-              <div>
-                <span className="font-semibold text-slate-400">{t(lang, "hr.f_main_branch", "Main Branch")}:</span>{" "}
-                {selectedMainBranchObj ? `${selectedMainBranchObj.name} ${selectedMainBranchObj.code ? `(${selectedMainBranchObj.code})` : ""}` : "-"}
+                {/* Packet Summary Box */}
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs space-y-1">
+                  <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">{t(lang, "hr.f_step3_preview", "Step 3 Packet Preview")}</div>
+                  <div className="grid grid-cols-3 gap-2 text-[11px]">
+                    <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_joining_date", "Joining:")}</span> {joiningDate || "-"}</div>
+                    <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_type", "Type:")}</span> {employmentType}</div>
+                    <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_shift", "Shift:")}</span> {workingShift} ({dutyStartTime}-{dutyEndTime})</div>
+                  </div>
+                </div>
               </div>
-              <div>
-                <span className="font-semibold text-slate-400">{t(lang, "hr.f_city_branch", "City Branch")}:</span>{" "}
-                {selectedCityBranchObj ? `${selectedCityBranchObj.name} ${selectedCityBranchObj.code ? `(${selectedCityBranchObj.code})` : ""}` : "-"}
+            )}
+
+            {/* STEP 4 PACKET: Salary Details & Account Mapping */}
+            {activeStep === 4 && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                    <BadgeDollarSign className="h-4 w-4 text-emerald-600" />
+                    <span>{t(lang, "hr.f_step4_title", "Step 4 Packet: Basic Salary, Allowances & GL Ledgers")}</span>
+                  </h3>
+                  <span className="text-xs font-semibold text-slate-400">{t(lang, "hr.f_step4_of5", "Step 4 of 5")}</span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_salary_basis", "Salary Basis")}</label>
+                    <select
+                      value={salaryType}
+                      onChange={(e) => setSalaryType(e.target.value)}
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
+                    >
+                      <option value="Monthly">{t(lang, "hr.f_monthly", "Monthly")}</option>
+                      <option value="Daily">{t(lang, "hr.f_daily", "Daily")}</option>
+                      <option value="Hourly">{t(lang, "hr.f_hourly", "Hourly")}</option>
+                    </select>
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_basic_salary", "Basic Salary Rate")} ({salaryCurrency})</label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        value={basicSalary || ""}
+                        onChange={(e) => setBasicSalary(Number(e.target.value))}
+                        placeholder="0.00"
+                        className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl pl-3.5 pr-14 py-2 text-xs font-bold text-slate-900 dark:text-slate-100"
+                      />
+                      <span className="absolute right-3 top-2 text-xs font-bold text-slate-400">{salaryCurrency}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block mb-1.5">{t(lang, "hr.f_monthly_allowances", "Allowances Breakdown")}</label>
+                  <div className="grid grid-cols-2 gap-2.5 bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-0.5">{t(lang, "hr.f_housing", "Housing")}</label>
+                      <input
+                        type="number"
+                        value={accommodationAllowance || ""}
+                        onChange={(e) => setAccommodationAllowance(Number(e.target.value))}
+                        placeholder="0"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-900 dark:text-slate-100"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-0.5">{t(lang, "hr.f_transport", "Transport")}</label>
+                      <input
+                        type="number"
+                        value={transportAllowance || ""}
+                        onChange={(e) => setTransportAllowance(Number(e.target.value))}
+                        placeholder="0"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-900 dark:text-slate-100"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-0.5">{t(lang, "hr.f_food", "Food")}</label>
+                      <input
+                        type="number"
+                        value={foodAllowance || ""}
+                        onChange={(e) => setFoodAllowance(Number(e.target.value))}
+                        placeholder="0"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-900 dark:text-slate-100"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-0.5">{t(lang, "hr.f_mobile_utility", "Mobile / Utility")}</label>
+                      <input
+                        type="number"
+                        value={mobileAllowance || ""}
+                        onChange={(e) => setMobileAllowance(Number(e.target.value))}
+                        placeholder="0"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-900 dark:text-slate-100"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "hr.f_general_deduction", "Monthly Deduction")}</label>
+                    <input
+                      type="number"
+                      value={deduction || ""}
+                      onChange={(e) => setDeduction(Number(e.target.value))}
+                      placeholder="0.00"
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "hr.f_tax_social", "Tax / Social Security")}</label>
+                    <input
+                      type="number"
+                      value={taxDeduction || ""}
+                      onChange={(e) => setTaxDeduction(Number(e.target.value))}
+                      placeholder="0.00"
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "hr.f_salary_expense_acc", "Salary Expense Account")}</label>
+                    <select
+                      value={salaryExpenseAccountId}
+                      onChange={(e) => setSalaryExpenseAccountId(e.target.value)}
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-slate-100"
+                    >
+                      <option value="">{t(lang, "hr.f_select_ledger", "Select Ledger")}</option>
+                      {ledgers.map((l) => (
+                        <option key={l.id} value={l.id}>{l.code} - {l.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "hr.f_payable_acc", "Employee Payable Account")}</label>
+                    <select
+                      value={employeePayableAccountId}
+                      onChange={(e) => setEmployeePayableAccountId(e.target.value)}
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-slate-100"
+                    >
+                      <option value="">{t(lang, "hr.f_select_ledger", "Select Ledger")}</option>
+                      {ledgers.map((l) => (
+                        <option key={l.id} value={l.id}>{l.code} - {l.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* STEP 3 PACKET: Timelines, Duty Shift & Contract */}
-      {activeStep === 3 && (
-        <div className="space-y-5">
-          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <Clock className="h-4 w-4 text-emerald-600" />
-              <span>{t(lang, "hr.f_step3_title", "Step 3 Packet: Employment Type, Shift & Contract Timelines")}</span>
-            </h3>
-            <span className="text-xs font-semibold text-slate-400">{t(lang, "hr.f_step3_of5", "Step 3 of 5")}</span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_joining_date", "Joining Date")} *</label>
-              <input
-                type="date"
-                value={joiningDate}
-                onChange={(e) => setJoiningDate(e.target.value)}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_employment_type", "Employment Type")}</label>
-              <select
-                value={employmentType}
-                onChange={(e) => setEmploymentType(e.target.value)}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
-              >
-                <option value="Full-time">{t(lang, "hr.f_full_time", "Full-time")}</option>
-                <option value="Part-time">{t(lang, "hr.f_part_time", "Part-time")}</option>
-                <option value="Contract">{t(lang, "hr.f_contract", "Contract")}</option>
-                <option value="Internship">{t(lang, "hr.f_internship", "Internship")}</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_duty_shift", "Duty Shift")}</label>
-              <input
-                type="text"
-                value={workingShift}
-                onChange={(e) => setWorkingShift(e.target.value)}
-                placeholder={t(lang, "hr.f_ph_day_shift", "Day Shift")}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-slate-100"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_duty_start", "Duty Start Time")}</label>
-              <input
-                type="time"
-                value={dutyStartTime}
-                onChange={(e) => setDutyStartTime(e.target.value)}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-slate-100"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_duty_end", "Duty End Time")}</label>
-              <input
-                type="time"
-                value={dutyEndTime}
-                onChange={(e) => setDutyEndTime(e.target.value)}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-slate-100"
-              />
-            </div>
-          </div>
-
-          {/* Conditional Timelines */}
-          {(category === "Normal Staff" || category === "Employee") && (
-            <div className="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
-              <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">{t(lang, "hr.f_probation_start", "Probation Start Date")}</label>
-                <input
-                  type="date"
-                  value={probationStartDate}
-                  onChange={(e) => setProbationStartDate(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">{t(lang, "hr.f_probation_end", "Probation End Date")}</label>
-                <input
-                  type="date"
-                  value={probationEndDate}
-                  onChange={(e) => setProbationEndDate(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100"
-                />
-              </div>
-            </div>
-          )}
-
-          {(category === "Employee" || category === "Others") && (
-            <div className="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
-              <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">{t(lang, "hr.f_contract_start", "Contract Start Date")}</label>
-                <input
-                  type="date"
-                  value={contractStartDate}
-                  onChange={(e) => setContractStartDate(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">{t(lang, "hr.f_contract_end", "Contract End Date")}</label>
-                <input
-                  type="date"
-                  value={contractEndDate}
-                  onChange={(e) => setContractEndDate(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Packet Summary Box */}
-          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs space-y-1.5">
-            <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">{t(lang, "hr.f_step3_preview", "Step 3 Packet Preview")}</div>
-            <div className="grid grid-cols-3 gap-2">
-              <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_joining_date", "Joining Date")}:</span> {joiningDate || "-"}</div>
-              <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_type", "Type")}:</span> {employmentType}</div>
-              <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_shift", "Shift")}:</span> {workingShift} ({dutyStartTime} - {dutyEndTime})</div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* STEP 4 PACKET: Salary Details & Account Mapping */}
-      {activeStep === 4 && (
-        <div className="space-y-5">
-          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <BadgeDollarSign className="h-4 w-4 text-emerald-600" />
-              <span>{t(lang, "hr.f_step4_title", "Step 4 Packet: Basic Salary, Allowances & GL Ledgers")}</span>
-            </h3>
-            <span className="text-xs font-semibold text-slate-400">{t(lang, "hr.f_step4_of5", "Step 4 of 5")}</span>
-          </div>
-
-          {/* Executive Owner Notice */}
-          {(category === "Country Owner" || category === "Branch Owner" || category === "Company Owner") && (
-            <div className="rounded-xl border border-amber-300 dark:border-amber-700/60 bg-amber-50 dark:bg-amber-950/30 p-3.5 flex items-center gap-3">
-              <div className="h-9 w-9 rounded-xl bg-amber-500 text-white font-black flex items-center justify-center text-base shrink-0 shadow-sm">
-                👑
-              </div>
-              <div className="text-xs text-amber-900 dark:text-amber-200">
-                <strong className="block font-bold mb-0.5">{catLabel(category)} — Executive Drawing / Partner Equity Mode</strong>
-                <span>As an executive owner/partner, fixed salary is optional. You can keep basic salary as 0.00 or specify executive drawings/allowances.</span>
-              </div>
-            </div>
-          )}
-
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_salary_basis", "Salary Basis")}</label>
-              <select
-                value={salaryType}
-                onChange={(e) => setSalaryType(e.target.value)}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
-              >
-                <option value="Monthly">{t(lang, "hr.f_monthly", "Monthly")}</option>
-                <option value="Daily">{t(lang, "hr.f_daily", "Daily")}</option>
-                <option value="Hourly">{t(lang, "hr.f_hourly", "Hourly")}</option>
-                <option value="Custom">{t(lang, "hr.f_custom", "Custom")}</option>
-              </select>
-            </div>
-            <div className="col-span-2">
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_basic_salary", "Basic Salary Rate")} ({salaryCurrency})</label>
-              <div className="relative">
-                <input
-                  type="number"
-                  value={basicSalary || ""}
-                  onChange={(e) => setBasicSalary(Number(e.target.value))}
-                  placeholder="0.00"
-                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-3.5 pr-14 py-2 text-xs font-bold text-slate-900 dark:text-slate-100"
-                />
-                <span className="absolute right-3 top-2 text-xs font-bold text-slate-400">{salaryCurrency}</span>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block mb-2">{t(lang, "hr.f_monthly_allowances", "Monthly Allowances")}</label>
-            <div className="grid grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
-              <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">{t(lang, "hr.f_housing", "Housing")}</label>
-                <input
-                  type="number"
-                  value={accommodationAllowance || ""}
-                  onChange={(e) => setAccommodationAllowance(Number(e.target.value))}
-                  placeholder="0"
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">{t(lang, "hr.f_transport", "Transport")}</label>
-                <input
-                  type="number"
-                  value={transportAllowance || ""}
-                  onChange={(e) => setTransportAllowance(Number(e.target.value))}
-                  placeholder="0"
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">{t(lang, "hr.f_food", "Food")}</label>
-                <input
-                  type="number"
-                  value={foodAllowance || ""}
-                  onChange={(e) => setFoodAllowance(Number(e.target.value))}
-                  placeholder="0"
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">{t(lang, "hr.f_mobile_utility", "Mobile / Utility")}</label>
-                <input
-                  type="number"
-                  value={mobileAllowance || ""}
-                  onChange={(e) => setMobileAllowance(Number(e.target.value))}
-                  placeholder="0"
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_general_deduction", "General Monthly Deduction")}</label>
-              <input
-                type="number"
-                value={deduction || ""}
-                onChange={(e) => setDeduction(Number(e.target.value))}
-                placeholder="0.00"
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-slate-100"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_tax_social", "Tax / Social Security")}</label>
-              <input
-                type="number"
-                value={taxDeduction || ""}
-                onChange={(e) => setTaxDeduction(Number(e.target.value))}
-                placeholder="0.00"
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-slate-100"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-3 pt-2">
-            <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block border-b border-slate-200 dark:border-slate-800 pb-1">
-              {t(lang, "hr.f_gl_mapping", "General Ledger Accounts Mapping")}
-            </label>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "hr.f_salary_expense_acc", "Salary Expense Account")}</label>
-                <select
-                  value={salaryExpenseAccountId}
-                  onChange={(e) => setSalaryExpenseAccountId(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-2 text-xs text-slate-900 dark:text-slate-100"
-                >
-                  <option value="">{t(lang, "hr.f_select_ledger", "Select Ledger")}</option>
-                  {ledgers.map((l) => (
-                    <option key={l.id} value={l.id}>{l.code} - {l.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "hr.f_payable_acc", "Employee Payable Account")}</label>
-                <select
-                  value={employeePayableAccountId}
-                  onChange={(e) => setEmployeePayableAccountId(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-2 text-xs text-slate-900 dark:text-slate-100"
-                >
-                  <option value="">{t(lang, "hr.f_select_ledger", "Select Ledger")}</option>
-                  {ledgers.map((l) => (
-                    <option key={l.id} value={l.id}>{l.code} - {l.name}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Packet Summary Box */}
-          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs space-y-1.5">
-            <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">{t(lang, "hr.f_step4_preview", "Step 4 Packet Preview")}</div>
-            <div className="grid grid-cols-3 gap-2">
-              <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_basic_salary", "Basic Salary")}:</span> {basicSalary} {salaryCurrency}</div>
-              <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_allowances", "Allowances")}:</span> +{totalAllowances}</div>
-              <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_net_payroll", "Net Payroll")}:</span> {netSalary.toLocaleString()} {salaryCurrency}</div>
-            </div>
+            )}
           </div>
         </div>
-      )}
-
-      {/* STEP 5 PACKET: Entry Verification Report */}
-      {activeStep === 5 && (
-        <div className="space-y-5">
-          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <FileText className="h-4 w-4 text-emerald-600" />
-              <span>{t(lang, "hr.f_step5_title", "Step 5 Packet: Employee Master Entry Verification Report")}</span>
-            </h3>
+      ) : (
+        /* STEP 5: FULL-WIDTH EXECUTIVE EMPLOYEE MASTER VERIFICATION REPORT */
+        <div className="space-y-6">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
             <div className="flex items-center gap-2">
-              <button type="button" onClick={printProfile} className="inline-flex items-center gap-1 rounded-lg border border-blue-300 dark:border-blue-800 px-2.5 py-1 text-xs font-bold text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/40">
-                <Printer className="h-3.5 w-3.5" /> {t(lang, "bankroz.print_pdf", "Print / PDF")}
+              <span className="h-3 w-3 rounded-full bg-emerald-500 animate-pulse" />
+              <h3 className="text-base font-black text-slate-900 dark:text-slate-100">
+                Step 5: Employee Master Full Verification Report
+              </h3>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={printProfile}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-blue-300 dark:border-blue-800 px-3 py-1.5 text-xs font-bold text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/40 shadow-xs"
+              >
+                <Printer className="h-4 w-4" />
+                <span>{t(lang, "bankroz.print_pdf", "Print / PDF Report")}</span>
               </button>
-              <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-2.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
-                {t(lang, "hr.f_verified_ready", "Verified & Ready")}
+              <span className="text-xs font-black text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/80 px-3 py-1 rounded-xl border border-emerald-300 dark:border-emerald-800 shadow-xs">
+                ✓ Verified & Ready for Master Registration
               </span>
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 dark:border-emerald-500/30 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white p-5 sm:p-6 space-y-4 shadow-sm">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
-              <div>
-                <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400">{t(lang, "hr.f_master_report_card", "Employee Master Report Card")}</div>
-                <h2 className="text-lg font-black text-slate-900 dark:text-white">{fullName || "Employee Name"}</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">{designation || "Staff"} — {department || "General"}</p>
+          {/* Large Executive Master Card */}
+          <div className="rounded-2xl border-2 border-emerald-500/40 bg-gradient-to-b from-white via-slate-50 to-emerald-50/20 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 p-6 shadow-md space-y-6">
+            
+            {/* Top Identity Banner */}
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
+              <div className="flex items-center gap-4">
+                <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white font-black text-2xl flex items-center justify-center shadow-lg shrink-0 uppercase">
+                  {(fullName || "?").charAt(0)}
+                </div>
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                    RECORD TYPE: EMPLOYEE MASTER
+                  </div>
+                  <h1 className="text-xl font-black text-slate-900 dark:text-slate-100">
+                    {fullName || "Unnamed Employee"}
+                  </h1>
+                  {selectedPersonObj?.father_name && (
+                    <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                      S/O {selectedPersonObj.father_name}
+                    </div>
+                  )}
+                  <div className="mt-1 flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
+                    <span className="text-emerald-600 font-extrabold">{designation || "Designation"}</span>
+                    <span>·</span>
+                    <span>{department || "Department"}</span>
+                  </div>
+                </div>
               </div>
-              <div className="text-right">
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-600 text-white shadow-xs">
+
+              <div className="flex flex-col items-end gap-2">
+                <span className="px-4 py-1.5 rounded-xl text-xs font-black bg-emerald-600 text-white shadow-md">
                   {catLabel(category)}
                 </span>
+                {selectedPersonObj?.person_code && (
+                  <span className="font-mono text-xs font-bold text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700">
+                    Person Code: {selectedPersonObj.person_code}
+                  </span>
+                )}
               </div>
             </div>
 
-            {/* Comprehensive sectioned review (item 7) — every value from the wizard's own state. */}
-            {(() => {
-              const dash = "-";
-              const sections: Array<{ title: string; rows: Array<[string, string]> }> = [
-                { title: t(lang, "hr.f_sec_identity", "Identity & Contact"), rows: [
-                  [t(lang, "hr.f_lbl_name", "Name:"), fullName || dash],
-                  [t(lang, "hr.f_first_name", "First Name"), firstName || dash],
-                  [t(lang, "hr.f_last_name", "Last Name"), lastName || dash],
-                  [t(lang, "hr.f_gender", "Gender"), gender || dash],
-                  [t(lang, "hr.f_lbl_category", "Category:"), catLabel(category)],
-                  [t(lang, "hr.pp_contact_person", "Contact Person"), selectedPersonObj?.contact_person || dash],
-                  [t(lang, "hr.pp_mobile_phone", "Mobile Phone"), selectedPersonObj?.mobile || dash],
-                  [t(lang, "sed.f_whatsapp", "WhatsApp"), selectedPersonObj?.whatsapp || dash],
-                  [t(lang, "hr.pp_email_address", "Email Address"), selectedPersonObj?.email || dash],
-                  [t(lang, "hr.pp_address_location", "Address / Location"), selectedPersonObj?.address || dash]
-                ] },
-                { title: t(lang, "hr.f_sec_employment", "Employment & Designation"), rows: [
-                  [t(lang, "hr.f_lbl_designation_short", "Designation:"), designation || dash],
-                  [t(lang, "hr.f_lbl_department", "Department *"), department || dash],
-                  [t(lang, "hr.f_employment_type", "Employment Type"), employmentType || dash],
-                  [t(lang, "hr.f_job_status", "Job Status"), jobStatus || dash],
-                  [t(lang, "hr.f_reporting_manager", "Reporting Manager"), selectedManagerObj?.person?.customer_name || selectedManagerObj?.employee_code || dash]
-                ] },
-                { title: t(lang, "hr.f_sec_location", "Country / Main Branch / City Branch"), rows: [
-                  [t(lang, "common.country", "Country"), selectedCountryObj?.name || dash],
-                  [t(lang, "hr.f_main_branch", "Main Branch"), selectedMainBranchObj ? `${selectedMainBranchObj.name}${selectedMainBranchObj.code ? ` (${selectedMainBranchObj.code})` : ""}` : dash],
-                  [t(lang, "hr.f_city_branch", "City Branch"), selectedCityBranchObj ? `${selectedCityBranchObj.name}${selectedCityBranchObj.code ? ` (${selectedCityBranchObj.code})` : ""}` : dash]
-                ] },
-                { title: t(lang, "hr.f_sec_shift", "Shift / Timings / Attendance"), rows: [
-                  [t(lang, "hr.f_working_shift", "Working Shift"), workingShift || dash],
-                  [t(lang, "hr.f_duty_hours", "Duty Hours"), (dutyStartTime && dutyEndTime) ? `${dutyStartTime} – ${dutyEndTime}` : dash],
-                  [t(lang, "hr.f_weekly_off", "Weekly Off"), weeklyOffDay || dash],
-                  [t(lang, "hr.f_joining_date", "Joining Date"), joiningDate || dash]
-                ] },
-                { title: t(lang, "hr.f_sec_payroll", "Salary / Payroll / Currency"), rows: [
-                  [t(lang, "hr.f_salary_type", "Salary Type"), salaryType || dash],
-                  [t(lang, "hr.f_basic_salary", "Basic Salary Rate"), `${Number(basicSalary).toLocaleString()} ${salaryCurrency}`],
-                  [t(lang, "hr.f_total_allowances", "Total Allowances"), `${totalAllowances.toLocaleString()} ${salaryCurrency}`],
-                  [t(lang, "hr.f_deductions", "Deductions"), `${(Number(deduction) + Number(taxDeduction)).toLocaleString()} ${salaryCurrency}`],
-                  [t(lang, "hr.f_net_salary", "Net Salary"), `${netSalary.toLocaleString()} ${salaryCurrency}`],
-                  [t(lang, "hr.f_currency", "Currency"), salaryCurrency || dash]
-                ] },
-                { title: t(lang, "hr.f_sec_user", "User / Role / Permissions"), rows: [
-                  [t(lang, "sed.f_user_code", "User Code"), personDetail?.user?.userCode || t(lang, "sed.state_not_linked", "Not linked")],
-                  [t(lang, "report.role", "Role"), (personDetail?.roles || []).map((r: any) => r.role).join(", ") || t(lang, "sed.state_not_linked", "Not linked")],
-                  [t(lang, "hr.f_role_scope", "Access Scope"), (personDetail?.roles || []).map((r: any) => r.scope).filter(Boolean).join("; ") || dash]
-                ] },
-                { title: t(lang, "hr.f_sec_kyc", "KYC & Documents"), rows: [
-                  [t(lang, "sed.attachments", "Documents"), (personDetail?.documents?.length ? personDetail.documents.map((d: any) => d.name).join(", ") : t(lang, "sed.no_attachments", "No documents attached"))]
-                ] },
-                { title: t(lang, "hr.f_sec_status", "Status & Audit Information"), rows: [
-                  [t(lang, "hr.f_status", "Status"), status || dash],
-                  [t(lang, "hr.f_job_status", "Job Status"), jobStatus || dash]
-                ] }
-              ];
-              return (
-                <div className="grid gap-4 md:grid-cols-2">
-                  {sections.map((sec, i) => (
-                    <div key={i} className="rounded-xl bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 p-4 shadow-xs">
-                      <div className="mb-2 border-b border-slate-100 dark:border-slate-700 pb-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-400">{sec.title}</div>
-                      <div className="space-y-1.5">
-                        {sec.rows.map(([lbl, val], j) => (
-                          <div key={j} className="flex items-start justify-between gap-3 text-xs">
-                            <span className="text-slate-500 dark:text-slate-400 font-medium">{lbl}</span>
-                            <span className="text-end font-semibold text-slate-900 dark:text-white break-words">{val}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+            {/* 4 Multi-Column Section Dossiers */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              
+              {/* Card 1: Identity & Contact Details */}
+              <div className="rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 p-4 shadow-xs space-y-2.5">
+                <div className="text-xs font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-2 border-b border-slate-100 dark:border-slate-700 pb-1.5">
+                  <UserCheck className="h-4 w-4" />
+                  <span>1. Identity & Contact Information</span>
                 </div>
-              );
-            })()}
+                <div className="space-y-1.5 text-xs">
+                  <div className="flex justify-between"><span className="text-slate-500">Full Name:</span><span className="font-bold text-slate-900 dark:text-slate-100">{fullName || "-"}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Father's Name:</span><span className="font-semibold text-slate-800 dark:text-slate-200">{selectedPersonObj?.father_name || "-"}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Gender:</span><span className="font-semibold">{gender || selectedPersonObj?.gender || "Male"}</span></div>
+                  <div className="flex justify-between" dir="ltr"><span className="text-slate-500">Mobile Phone:</span><span className="font-mono font-bold text-emerald-600">{selectedPersonObj?.mobile || "-"}</span></div>
+                  <div className="flex justify-between" dir="ltr"><span className="text-slate-500">Email Address:</span><span className="font-medium text-blue-600 truncate">{selectedPersonObj?.email || "-"}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Address / City:</span><span className="font-medium truncate text-slate-700 dark:text-slate-300">{selectedPersonObj?.address || selectedCityBranchObj?.name || "-"}</span></div>
+                </div>
+              </div>
+
+              {/* Card 2: Organizational Scope & Location */}
+              <div className="rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 p-4 shadow-xs space-y-2.5">
+                <div className="text-xs font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-2 border-b border-slate-100 dark:border-slate-700 pb-1.5">
+                  <MapPin className="h-4 w-4" />
+                  <span>2. Organization, Branch & Hierarchy</span>
+                </div>
+                <div className="space-y-1.5 text-xs">
+                  <div className="flex justify-between"><span className="text-slate-500">Country:</span><span className="font-bold text-slate-900 dark:text-slate-100">{selectedCountryObj?.name || "-"}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Main Branch:</span><span className="font-semibold text-slate-800 dark:text-slate-200">{selectedMainBranchObj?.name || "-"}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">City Branch:</span><span className="font-bold text-emerald-600">{selectedCityBranchObj?.name || "All Branches"}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Reporting Manager:</span><span className="font-bold text-indigo-600">{selectedManagerObj ? `${selectedManagerObj.person?.customer_name} (${selectedManagerObj.employee_code})` : "Direct to Executive Management"}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Master Category:</span><span className="font-bold text-slate-900 dark:text-slate-100">{catLabel(category)}</span></div>
+                </div>
+              </div>
+
+              {/* Card 3: Duty Shift & Employment Timelines */}
+              <div className="rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 p-4 shadow-xs space-y-2.5">
+                <div className="text-xs font-black uppercase tracking-wider text-blue-700 dark:text-blue-400 flex items-center gap-2 border-b border-slate-100 dark:border-slate-700 pb-1.5">
+                  <Clock className="h-4 w-4" />
+                  <span>3. Employment Type, Shift & Timelines</span>
+                </div>
+                <div className="space-y-1.5 text-xs">
+                  <div className="flex justify-between"><span className="text-slate-500">Joining Date:</span><span className="font-bold text-slate-900 dark:text-slate-100">{joiningDate || "Immediate"}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Employment Type:</span><span className="font-semibold">{employmentType || "Full-time"}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Working Shift:</span><span className="font-semibold">{workingShift || "Day Shift"}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Duty Hours:</span><span className="font-bold text-blue-600">{dutyStartTime || "09:00"} – {dutyEndTime || "18:00"}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Weekly Off Day:</span><span className="font-semibold">{weeklyOffDay || "Friday / Sunday"}</span></div>
+                </div>
+              </div>
+
+              {/* Card 4: Compensation & GL Mapping */}
+              <div className="rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 p-4 shadow-xs space-y-2.5">
+                <div className="text-xs font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-2 border-b border-slate-100 dark:border-slate-700 pb-1.5">
+                  <BadgeDollarSign className="h-4 w-4" />
+                  <span>4. Compensation, Allowances & GL Mapping</span>
+                </div>
+                {category === "Country Owner" || category === "Branch Owner" || category === "Company Owner" ? (
+                  <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-xs text-amber-800 dark:text-amber-300 font-bold">
+                    👑 Executive Owner / Partner Mode — Drawings & equity-based compensation.
+                  </div>
+                ) : (
+                  <div className="space-y-1.5 text-xs">
+                    <div className="flex justify-between"><span className="text-slate-500">Salary Basis:</span><span className="font-semibold">{salaryType || "Monthly"}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500">Basic Salary:</span><span className="font-bold text-slate-900 dark:text-slate-100">{Number(basicSalary || 0).toLocaleString()} {salaryCurrency}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500">Total Allowances:</span><span className="font-bold text-emerald-600">+{totalAllowances.toLocaleString()} {salaryCurrency}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500">Deductions:</span><span className="font-semibold text-rose-600">-{((Number(deduction) || 0) + (Number(taxDeduction) || 0)).toLocaleString()} {salaryCurrency}</span></div>
+                    <div className="flex justify-between border-t border-slate-100 dark:border-slate-700 pt-1">
+                      <span className="font-extrabold text-slate-900 dark:text-slate-100">Net Monthly Payroll:</span>
+                      <span className="font-black text-sm text-emerald-700 dark:text-emerald-400">{netSalary.toLocaleString()} {salaryCurrency}</span>
+                    </div>
+                    {salaryExpenseAccountId && (
+                      <div className="text-[10px] text-slate-500 pt-0.5 truncate">
+                        GL Expense: <span className="font-mono">{ledgers.find(l => l.id === salaryExpenseAccountId)?.name || "Mapped"}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+            </div>
           </div>
         </div>
       )}
-
-        </div>
-      </div>
 
       {/* Footer Actions */}
       <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-800">
