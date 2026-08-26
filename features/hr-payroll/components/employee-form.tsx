@@ -45,48 +45,73 @@ type EmployeeFormProps = {
 
 const CATEGORY_DEFAULTS: Record<string, Record<string, { designation: string; department: string }>> = {
   en: {
-    "Country Owner": { designation: "Country Director / Managing Partner", department: "Executive Management" },
-    "Branch Owner": { designation: "Branch Managing Director", department: "Branch Administration" },
-    "Company Owner": { designation: "Chief Executive Officer / Owner", department: "Executive Board" },
     "Manager": { designation: "General Operations Manager", department: "Operations & Management" },
+    "Accountant": { designation: "Chief Accountant", department: "Finance & Accounts" },
+    "Branch Administrator": { designation: "Branch Administrator", department: "Branch Administration" },
+    "Cashier": { designation: "Cashier / Counter Executive", department: "Finance & Cash Desk" },
+    "Driver": { designation: "Transport Driver", department: "Logistics & Transport" },
+    "Cook": { designation: "Head Cook", department: "General Services & Hospitality" },
+    "Cleaner": { designation: "Facilities Cleaner", department: "Facilities Management" },
     "Normal Staff": { designation: "Senior Office Associate", department: "General Administration" },
     "Employee": { designation: "Executive Staff Officer", department: "General Operations" },
+    "Security": { designation: "Security Guard", department: "Security & Safety" },
+    "Worker": { designation: "General Worker / Helper", department: "Operations" },
     "Others": { designation: "General Staff Officer", department: "Operations" }
   },
   ur: {
-    "Country Owner": { designation: "کنٹری ڈائریکٹر / مینجنگ پارٹنر", department: "ایگزیکٹو مینجمنٹ" },
-    "Branch Owner": { designation: "برانچ مینجنگ ڈائریکٹر", department: "برانچ ایڈمنسٹریشن" },
-    "Company Owner": { designation: "چیف ایگزیکٹو آفیسر / اونر", department: "ایگزیکٹو بورڈ" },
     "Manager": { designation: "جنرل آپریشنز منیجر", department: "آپریشنز و مینجمنٹ" },
+    "Accountant": { designation: "چیف اکاؤنٹنٹ", department: "فنانس و اکاؤنٹس" },
+    "Branch Administrator": { designation: "برانچ ایڈمنسٹریٹر", department: "برانچ ایڈمنسٹریشن" },
+    "Cashier": { designation: "کیشیئر", department: "فنانس و کیش ڈیسک" },
+    "Driver": { designation: "ٹرانسپورٹ ڈرائیور", department: "لاجسٹکس و ٹرانسپورٹ" },
+    "Cook": { designation: "باورچی / کوک", department: "جنرل سروسز" },
+    "Cleaner": { designation: "صفائی پرسنل / کلینر", department: "فیسیلٹیز مینجمنٹ" },
     "Normal Staff": { designation: "سینئر آفس ایسوسی ایٹ", department: "جنرل ایڈمنسٹریشن" },
     "Employee": { designation: "ایگزیکٹو اسٹاف آفیسر", department: "جنرل آپریشنز" },
+    "Security": { designation: "سیکیورٹی گارڈ", department: "سیکیورٹی و حفاظت" },
+    "Worker": { designation: "ورکر / ہیلپر", department: "آپریشنز" },
     "Others": { designation: "جنرل اسٹاف آفیسر", department: "آپریشنز" }
   },
   ps: {
-    "Country Owner": { designation: "د هیواد مدیر / ملګری", department: "اجرایوي اداره" },
-    "Branch Owner": { designation: "د څانګې مدیر", department: "د څانګې اداره" },
-    "Company Owner": { designation: "اجرایوي مشر / مالک", department: "اجرایوي بورډ" },
     "Manager": { designation: "عمومي عملیاتي مدیر", department: "عملیات او مدیریت" },
+    "Accountant": { designation: "محاسب / محاسب مشر", department: "مالي چارې او حسابونه" },
+    "Branch Administrator": { designation: "د څانګې پازوال", department: "د څانګې اداره" },
+    "Cashier": { designation: "خزانه دار / کیشیر", department: "مالي چارې" },
+    "Driver": { designation: "موټر چلوونکی", department: "ټرانسپورټ" },
+    "Cook": { designation: "پخلی کوونکی / اشپز", department: "خدمات" },
+    "Cleaner": { designation: "صفاکار", department: "خدمات" },
     "Normal Staff": { designation: "لوړپوړی دفتري همکار", department: "عمومي اداره" },
     "Employee": { designation: "اجرایوي کارمند", department: "عمومي عملیات" },
+    "Security": { designation: "امنیتي ساتونکی", department: "امنیت او ساتنه" },
+    "Worker": { designation: "کارګر / مرستیال", department: "عملیات" },
     "Others": { designation: "عمومي کارمند", department: "عملیات" }
   },
   fa: {
-    "Country Owner": { designation: "مدیر کشوری / شریک مدیر", department: "مدیریت اجرایی" },
-    "Branch Owner": { designation: "مدیر عامل شعبه", department: "امور اداری شعبه" },
-    "Company Owner": { designation: "مدیرعامل / مالک شرکت", department: "هیئت اجرایی" },
     "Manager": { designation: "مدیر عملیات عمومی", department: "عملیات و مدیریت" },
+    "Accountant": { designation: "حسابدار ارشد", department: "امور مالی و حسابداری" },
+    "Branch Administrator": { designation: "مدیر امور اداری شعبه", department: "امور اداری شعبه" },
+    "Cashier": { designation: "صندوقدار", department: "امور مالی" },
+    "Driver": { designation: "راننده ترابری", department: "لجستیک و حمل و نقل" },
+    "Cook": { designation: "آشپز", department: "خدمات عمومی" },
+    "Cleaner": { designation: "نیروی خدماتی / نظافتچی", department: "امور خدمات" },
     "Normal Staff": { designation: "کارشناس ارشد دفتر", department: "امور اداری عمومی" },
     "Employee": { designation: "افسر اجرایی پرسنل", department: "عملیات عمومی" },
+    "Security": { designation: "نگهبان / حراست", department: "حراست و امنیت" },
+    "Worker": { designation: "کارگر عمومی / همکار", department: "عملیات" },
     "Others": { designation: "افسر عمومی پرسنل", department: "عملیات" }
   },
   ar: {
-    "Country Owner": { designation: "المدير الإقليمي / شريك إداري", department: "الإدارة التنفيذية" },
-    "Branch Owner": { designation: "المدير الإداري للفرع", department: "إدارة الفرع" },
-    "Company Owner": { designation: "الرئيس التنفيذي / المالك", department: "المجلس التنفيذي" },
     "Manager": { designation: "مدير العمليات العامة", department: "العمليات والإدارة" },
+    "Accountant": { designation: "رئيس الحسابات", department: "المالية والحسابات" },
+    "Branch Administrator": { designation: "مسؤول إدارة الفرع", department: "إدارة الفرع" },
+    "Cashier": { designation: "أمين الصندوق / كاشير", department: "المالية والصندوق" },
+    "Driver": { designation: "سائق نقليات", department: "اللوجستيات والنقل" },
+    "Cook": { designation: "طاهي / طباخ", department: "الخدمات العامة" },
+    "Cleaner": { designation: "عامل نظافة", department: "إدارة المرافق" },
     "Normal Staff": { designation: "أخصائي مكتب أول", department: "الإدارة العامة" },
     "Employee": { designation: "مسؤول تنفيذي", department: "العمليات العامة" },
+    "Security": { designation: "حارس أمن", department: "الأمن والسلامة" },
+    "Worker": { designation: "عامل عام / مساعد", department: "العمليات" },
     "Others": { designation: "موظف عام", department: "العمليات" }
   }
 };
@@ -963,18 +988,18 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                     className="flex h-10 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100 shadow-xs outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-sans"
                   >
                     <optgroup label={lang === "ur" ? "ملازمین کے زمرے" : lang === "ar" ? "فئات الموظفين" : "Employee Categories"}>
-                      <option value="Country Owner">{catLabel("Country Owner")}</option>
-                      <option value="Branch Owner">{catLabel("Branch Owner")}</option>
-                      <option value="Company Owner">{catLabel("Company Owner")}</option>
                       <option value="Manager">{catLabel("Manager")}</option>
-                      <option value="Employee">{catLabel("Employee")}</option>
+                      <option value="Accountant">{catLabel("Accountant")}</option>
+                      <option value="Branch Administrator">{catLabel("Branch Administrator")}</option>
+                      <option value="Cashier">{catLabel("Cashier")}</option>
+                      <option value="Driver">{catLabel("Driver")}</option>
+                      <option value="Cook">{catLabel("Cook")}</option>
+                      <option value="Cleaner">{catLabel("Cleaner")}</option>
+                      <option value="Security">{catLabel("Security")}</option>
+                      <option value="Worker">{catLabel("Worker")}</option>
                       <option value="Normal Staff">{catLabel("Normal Staff")}</option>
+                      <option value="Employee">{catLabel("Employee")}</option>
                       <option value="Others">{catLabel("Others")}</option>
-                    </optgroup>
-                    <optgroup label={lang === "ur" ? "دیگر ماسٹر فارمز" : lang === "ar" ? "النماذج الرئيسية الأخرى" : "Other Master Forms"}>
-                      <option value="__GO_TO_CUSTOMER__">👤 {lang === "ur" ? "کسٹمر / پرسن ماسٹر فارم کھولیں ↗" : lang === "ar" ? "فتح نموذج الشخص / العميل ↗" : "Open Customer / Person Master ↗"}</option>
-                      <option value="__GO_TO_COMPANY__">🏢 {lang === "ur" ? "کمپنی رجسٹریشن فارم کھولیں ↗" : lang === "ar" ? "فتح نموذج تسجيل الشركة ↗" : "Open Company Master Form ↗"}</option>
-                      <option value="__GO_TO_BANK__">🏦 {lang === "ur" ? "بینک اکاؤنٹ ماسٹر فارم کھولیں ↗" : lang === "ar" ? "فتح نموذج الحساب البنكي ↗" : "Open Bank Master Form ↗"}</option>
                     </optgroup>
                   </select>
                 </div>

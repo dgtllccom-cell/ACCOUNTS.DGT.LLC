@@ -255,6 +255,14 @@ export function EmployeeManagementView() {
               >
                 <option value="">{t(lang, "common.all_categories", "All Categories")}</option>
                 <option value="Manager">{t(lang, "hr.cat_manager", "Manager")}</option>
+                <option value="Accountant">Accountant</option>
+                <option value="Branch Administrator">Branch Administrator</option>
+                <option value="Cashier">Cashier</option>
+                <option value="Driver">Driver</option>
+                <option value="Cook">Cook</option>
+                <option value="Cleaner">Cleaner</option>
+                <option value="Security">Security</option>
+                <option value="Worker">Worker</option>
                 <option value="Normal Staff">{t(lang, "hr.cat_normal_staff", "Normal Staff")}</option>
                 <option value="Employee">{t(lang, "hr.cat_employee", "Employee")}</option>
                 <option value="Others">{t(lang, "hr.cat_others", "Others")}</option>
@@ -348,9 +356,16 @@ export function EmployeeManagementView() {
                 ) : (
                   employees.map((emp) => (
                     <tr key={emp.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                      <td className="px-5 py-4 font-mono font-bold text-slate-900 dark:text-slate-100 text-sm align-middle max-w-[200px] break-all">{emp.employee_code}</td>
+                      <td className="px-5 py-4 font-mono font-bold text-slate-900 dark:text-slate-100 text-sm align-middle max-w-[200px] break-all">
+                        {emp.employee_code}
+                      </td>
                       <td className="px-5 py-4 align-middle max-w-[220px]">
-                        <div className="font-bold text-slate-900 dark:text-slate-100 text-sm break-words">{emp.person?.customer_name}</div>
+                        <div className="font-extrabold text-slate-900 dark:text-slate-100 text-sm break-words">{emp.person?.customer_name}</div>
+                        {emp.person?.father_name && (
+                          <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                            S/O {emp.person.father_name}
+                          </div>
+                        )}
                         {emp.person?.person_code ? (
                           <div className="text-[10px] font-mono font-black text-blue-600 dark:text-blue-400 mt-0.5">{emp.person.person_code}</div>
                         ) : null}
