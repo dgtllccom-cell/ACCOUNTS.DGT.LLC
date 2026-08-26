@@ -28,8 +28,7 @@ import { openUserA4ReportWindow } from "@/lib/reports/open-user-a4-report-window
 import { Th } from "@/components/ui/translated-th";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { Party360Modal } from "@/features/customers/components/party-360-modal";
-import { UniversalPartyDirectoryReport } from "@/features/customers/components/universal-party-directory-report";
-import { Layers, MoreVertical } from "lucide-react";
+import { Layers } from "lucide-react";
 import { EmployeeProfileDrawer } from "@/features/hr-payroll/components/employee-profile-drawer";
 import { printEmployeeCertificate } from "@/components/ui/employee-certificate-print";
 

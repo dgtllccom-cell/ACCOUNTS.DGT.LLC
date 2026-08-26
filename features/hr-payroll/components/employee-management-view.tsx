@@ -561,7 +561,8 @@ export function EmployeeManagementView() {
                             </div>
                           ) : null}
                         </div>
-                      </td>
+                      </div>
+                    </td>
                     </tr>
                   ))
                 )}
