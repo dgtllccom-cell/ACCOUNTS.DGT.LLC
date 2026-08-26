@@ -13,6 +13,43 @@ export default function NewEntryError({
 }) {
   useEffect(() => {
     console.error("New Entry module exception caught:", error);
+    const msg = String(error?.message || error || "");
+    const isChunkError =
+      error?.name === "ChunkLoadError" ||
+      msg.includes("Loading chunk") ||
+      msg.includes("ChunkLoadError") ||
+      msg.includes("failed to fetch") ||
+      msg.includes("Failed to fetch dynamically imported module") ||
+      (msg.toLowerCase().includes("failed to fetch") && msg.includes("_next/static"));
+
+    if (isChunkError) {
+      const countKey = "erp_new_entry_chunk_cnt";
+      const tsKey = "erp_new_entry_chunk_ts";
+      const now = Date.now();
+      const lastTs = parseInt(sessionStorage.getItem(tsKey) || "0", 10);
+      let currentCount = parseInt(sessionStorage.getItem(countKey) || "0", 10);
+
+      if (now - lastTs > 15000) {
+        currentCount = 0;
+      }
+
+      if (currentCount < 3) {
+        try {
+          sessionStorage.removeItem("chunk_reload_attempt");
+          sessionStorage.removeItem("erp_chunk_reload_timestamp");
+          for (let i = sessionStorage.length - 1; i >= 0; i--) {
+            const key = sessionStorage.key(i);
+            if (key && (key.startsWith("chunk_reload") || key.startsWith("erp_chunk_reload"))) {
+              sessionStorage.removeItem(key);
+            }
+          }
+        } catch {}
+        sessionStorage.setItem(countKey, String(currentCount + 1));
+        sessionStorage.setItem(tsKey, String(now));
+        window.location.reload();
+        return;
+      }
+    }
   }, [error]);
 
   const handleRetry = () => {
@@ -20,9 +57,11 @@ export default function NewEntryError({
       if (typeof window !== "undefined") {
         sessionStorage.removeItem("chunk_reload_attempt");
         sessionStorage.removeItem("erp_chunk_reload_timestamp");
+        sessionStorage.removeItem("erp_new_entry_chunk_cnt");
+        sessionStorage.removeItem("erp_new_entry_chunk_ts");
         for (let i = sessionStorage.length - 1; i >= 0; i--) {
           const key = sessionStorage.key(i);
-          if (key && (key.startsWith("chunk_reload") || key.startsWith("erp_chunk_reload"))) {
+          if (key && (key.startsWith("chunk_reload") || key.startsWith("erp_chunk_reload") || key.startsWith("erp_new_entry"))) {
             sessionStorage.removeItem(key);
           }
         }

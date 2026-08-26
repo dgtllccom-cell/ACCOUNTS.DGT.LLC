@@ -88,9 +88,7 @@ export default function DashboardError({
         clearChunkReloadCache();
         sessionStorage.setItem(countKey, String(currentCount + 1));
         sessionStorage.setItem(tsKey, String(now));
-        const targetRoute = extractTargetRouteFromChunkError(msg) || window.location.pathname;
-        const cleanRoute = targetRoute.replace(/\/page$/, "");
-        window.location.replace(cleanRoute + (cleanRoute.includes("?") ? "&" : "?") + "_v=" + now);
+        window.location.reload();
         return;
       }
     }
