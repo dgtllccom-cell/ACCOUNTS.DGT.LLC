@@ -15,6 +15,10 @@ const listSchema = z.object({
   entityId: z.string().uuid(),
 });
 
+function readFormText(value: FormDataEntryValue | null): string {
+  return typeof value === "string" ? value : "";
+}
+
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
@@ -25,12 +29,16 @@ export async function GET(request: NextRequest) {
       entityType: searchParams.get("entityType"),
       entityId: searchParams.get("entityId"),
     });
+    const companyId =
+      searchParams.get("companyId") ||
+      searchParams.get("company_id") ||
+      (query.entityType === "company" ? query.entityId : null);
 
     const docs = await db.query.erpDocuments.findMany({
       where: and(
         eq(erpDocuments.entityType, query.entityType),
         eq(erpDocuments.entityId, query.entityId),
-        eq(erpDocuments.companyId, session.companyId)
+        companyId ? eq(erpDocuments.companyId, companyId) : eq(erpDocuments.companyId, query.entityId)
       ),
       orderBy: (docs, { desc }) => [desc(docs.createdAt)],
     });
@@ -67,11 +75,21 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
 
     const file = formData.get("file") as File | null;
-    const entityType = formData.get("entityType") as string;
-    const entityId = formData.get("entityId") as string;
+    const entityType = readFormText(formData.get("entityType"));
+    const entityId = readFormText(formData.get("entityId"));
+    const companyId =
+      readFormText(formData.get("companyId")) ||
+      readFormText(formData.get("company_id")) ||
+      (entityType === "company" ? entityId : null);
+    const sessionCountryId = (session as { countryId?: string; countryIds?: string[] }).countryId ?? session.countryIds?.[0] ?? null;
+    const sessionCityBranchId = (session as { cityBranchId?: string; cityBranchIds?: string[] }).cityBranchId ?? session.cityBranchIds?.[0] ?? null;
 
     if (!file || !entityType || !entityId) {
       return apiError("Missing required fields (file, entityType, entityId)", 400);
+    }
+
+    if (!companyId) {
+      return apiError("Missing required field (companyId or company_id)", 400);
     }
 
     if (file.size > 20 * 1024 * 1024) { // 20MB limit
@@ -95,7 +113,7 @@ export async function POST(request: NextRequest) {
     // Create random filename
     const ext = file.name.split(".").pop();
     const randomName = crypto.randomUUID();
-    const filePath = `${session.companyId}/${entityType}/${entityId}/${randomName}.${ext}`;
+    const filePath = `${companyId}/${entityType}/${entityId}/${randomName}.${ext}`;
 
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
@@ -108,9 +126,9 @@ export async function POST(request: NextRequest) {
 
     const result = await db.transaction(async (tx) => {
       const [doc] = await tx.insert(erpDocuments).values({
-        companyId: session.companyId,
-        countryId: session.countryId,
-        cityBranchId: session.cityBranchId,
+        companyId,
+        countryId: sessionCountryId,
+        cityBranchId: sessionCityBranchId,
         name: file.name,
         entityType,
         entityId,
@@ -130,7 +148,7 @@ export async function POST(request: NextRequest) {
       }).returning();
 
       await tx.insert(auditLogs).values({
-        companyId: session.companyId,
+        companyId,
         actorId: session.userId,
         action: "upload_document",
         entityTable: "erp_documents",

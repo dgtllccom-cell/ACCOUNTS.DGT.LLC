@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "attachments", action: "read" });
     const { searchParams } = new URL(request.url);
+    const sessionCompanyId = (session as { companyId?: string }).companyId ?? null;
 
     const query = downloadSchema.parse({
       id: searchParams.get("id"),
@@ -26,14 +27,14 @@ export async function GET(request: NextRequest) {
 
     // Verify document access
     const doc = await db.query.erpDocuments.findFirst({
-      where: and(
-        eq(erpDocuments.id, query.id),
-        eq(erpDocuments.companyId, session.companyId)
-      ),
+      where: eq(erpDocuments.id, query.id),
     });
 
     if (!doc) {
       return apiError("Document not found", 404);
+    }
+    if (!session.roles?.includes("super_admin") && sessionCompanyId && doc.companyId !== sessionCompanyId) {
+      return apiError("You do not have permission to read this document", 403);
     }
 
     let version;

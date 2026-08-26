@@ -9,6 +9,10 @@ import { saveDocumentBlob } from "@/lib/documents/document-storage";
 
 const BUCKET_NAME = "erp-documents";
 
+function jsonSafe<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -17,16 +21,18 @@ export async function POST(
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "attachments", action: "create" });
     const { id } = await params;
+    const sessionCompanyId = (session as { companyId?: string }).companyId ?? null;
 
     const doc = await db.query.erpDocuments.findFirst({
-      where: and(
-        eq(erpDocuments.id, id),
-        eq(erpDocuments.companyId, session.companyId)
-      ),
+      where: eq(erpDocuments.id, id),
     });
 
     if (!doc) {
       return apiError("Document not found", 404);
+    }
+    const isSuperAdmin = session.roles?.includes("super_admin");
+    if (!isSuperAdmin && sessionCompanyId && doc.companyId !== sessionCompanyId) {
+      return apiError("You do not have permission to update this document", 403);
     }
 
     const formData = await request.formData();
@@ -49,7 +55,7 @@ export async function POST(
     // Create random filename
     const ext = file.name.split(".").pop();
     const randomName = crypto.randomUUID();
-    const filePath = `${session.companyId}/${doc.entityType}/${doc.entityId}/${randomName}.${ext}`;
+    const filePath = `${doc.companyId}/${doc.entityType}/${doc.entityId}/${randomName}.${ext}`;
 
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
@@ -82,12 +88,12 @@ export async function POST(
       }).returning();
 
       await tx.insert(auditLogs).values({
-        companyId: session.companyId,
+        companyId: doc.companyId,
         actorId: session.userId,
         action: "update_document_version",
         entityTable: "erp_documents",
         entityId: doc.id,
-        after: { document: doc, version },
+        after: jsonSafe({ document: doc, version }),
       });
 
       return { doc, latestVersion: version };

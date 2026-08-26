@@ -28,6 +28,8 @@ import {
 } from "lucide-react";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 import { autoTranslate5Languages, resolveActiveText, type MultilingualText } from "@/lib/i18n/multilingual-translator";
 import { PersonPicker } from "@/features/hr-payroll/components/person-picker";
 import { Th } from "@/components/ui/translated-th";
@@ -131,129 +133,15 @@ const INITIAL_FORM: TruckFormData = {
   contracts: []
 };
 
-const UI_DICT: Record<string, Record<SupportedLanguage, string>> = {
-  title: {
-    en: "TRUCK NEW RECREATION",
-    ur: "ٹرک کی نئی رجسٹریشن",
-    ar: "تسجيل شاحنة جديدة",
-    fa: "ثبت جدید کامیون",
-    ps: "د نوي ټراک ثبتول"
-  },
-  subtitle: {
-    en: "Create complete truck record with all details and documents",
-    ur: "تمام تفصیلات اور دستاویزات کے ساتھ مکمل ٹرک ریکارڈ بنائیں",
-    ar: "إنشاء سجل شاحنة كامل مع كافة التفاصيل والمستندات",
-    fa: "ایجاد پرونده کامل کامیون با تمام جزئیات و مدارک",
-    ps: "د ټولو جزییاتو او اسنادو سره بشپړ ټراک ریکارډ جوړ کړئ"
-  },
-  step1: {
-    en: "Truck Information",
-    ur: "ٹرک کی معلومات",
-    ar: "معلومات الشاحنة",
-    fa: "اطلاعات کامیون",
-    ps: "د ټراک معلومات"
-  },
-  step1Sub: {
-    en: "Enter truck and registration details",
-    ur: "ٹرک اور رجسٹریشن کی تفصیلات درج کریں",
-    ar: "أدخل تفاصيل الشاحنة والتسجيل",
-    fa: "جزئیات کامیون و ثبت نام را وارد کنید",
-    ps: "د ټراک او راجستر جزییات داخل کړئ"
-  },
-  step2: {
-    en: "Owner Information",
-    ur: "مالک کی معلومات",
-    ar: "معلومات المالك",
-    fa: "اطلاعات مالک",
-    ps: "د مالک معلومات"
-  },
-  step2Sub: {
-    en: "Enter owner details",
-    ur: "مالک کی تفصیلات درج کریں",
-    ar: "أدخل تفاصيل المالك",
-    fa: "جزئیات مالک را وارد کنید",
-    ps: "د مالک جزییات داخل کړئ"
-  },
-  step3: {
-    en: "Driver Information",
-    ur: "ڈرائیور کی معلومات",
-    ar: "معلومات السائق",
-    fa: "اطلاعات راننده",
-    ps: "د ډرایور معلومات"
-  },
-  step3Sub: {
-    en: "Enter driver details",
-    ur: "ڈرائیور کی تفصیلات درج کریں",
-    ar: "أدخل تفاصيل السائق",
-    fa: "جزئیات راننده را وارد کنید",
-    ps: "د ډرایور جزییات داخل کړئ"
-  },
-  step4: {
-    en: "Contract & Documents",
-    ur: "معاہدہ اور دستاویزات",
-    ar: "العقد والمستندات",
-    fa: "قرارداد و مدارک",
-    ps: "تړون او اسناد"
-  },
-  step4Sub: {
-    en: "Contracts and attachments",
-    ur: "معاہدے اور منسلک فائلیں",
-    ar: "العقود والمرفقات",
-    fa: "قراردادها و پیوست‌ها",
-    ps: "تړونونه او نښلول شوي فايلونه"
-  },
-  step5: {
-    en: "Review & Confirm",
-    ur: "جائزہ اور تصدیق",
-    ar: "المراجعة والتأكيد",
-    fa: "بررسی و تایید",
-    ps: "کتنه او تایید"
-  },
-  step5Sub: {
-    en: "Verify and submit",
-    ur: "تصدیق کریں اور جمع کرائیں",
-    ar: "التحقق والتقديم",
-    fa: "بررسی و ارسال",
-    ps: "تایید او استول"
-  },
-  liveReportTitle: {
-    en: "LIVE SUMMARY REPORT",
-    ur: "لائیو خلاصہ رپورٹ",
-    ar: "تقرير الملخص المباشر",
-    fa: "گزارش خلاصه زنده",
-    ps: "د ژوندی لنډیز راپور"
-  },
-  liveReportSub: {
-    en: "Real-time summary of entered information",
-    ur: "درج شدہ معلومات کا ریئل ٹائم خلاصہ",
-    ar: "ملخص مباشر للمعلومات المدخلة",
-    fa: "خلاصه لحظه‌ای اطلاعات وارد شده",
-    ps: "د داخل شوو معلوماتو د پام وړ لنډیز"
-  },
-  cancel: { en: "Cancel", ur: "منسوخ", ar: "إلغاء", fa: "انصراف", ps: "کینسل" },
-  saveDraft: { en: "Save Draft", ur: "ڈرافٹ محفوظ کریں", ar: "حفظ مسودة", fa: "ذخیره پیش‌نویس", ps: "مسوده خوندي کړئ" },
-  nextStep: { en: "Next Step →", ur: "اگلا مرحلہ ←", ar: "الخطوة التالية ←", fa: "مرحله بعدی ←", ps: "بل ګام →" },
-  prevStep: { en: "← Previous", ur: "← پچھلا", ar: "← السابق", fa: "← قبلی", ps: "← پخوانی" },
-  submit: { en: "Submit Truck Record", ur: "ٹرک ریکارڈ جمع کرائیں", ar: "تقديم سجل الشاحنة", fa: "ثبت نهایی پرونده کامیون", ps: "د ټراک ریکارډ وسپارئ" },
-  truckType: { en: "Truck Type *", ur: "ٹرک کی قسم *", ar: "نوع الشاحنة *", fa: "نوع کامیون *", ps: "د ټراک ډول *" },
-  regNo: { en: "Registration No *", ur: "رجسٹریشن نمبر *", ar: "رقم التسجيل *", fa: "شماره ثبت *", ps: "د راجستر شمیره *" },
-  truckNo: { en: "Truck Number *", ur: "ٹرک نمبر *", ar: "رقم الشاحنة *", fa: "شماره کامیون *", ps: "د ټراک شمیره *" },
-  make: { en: "Make *", ur: "کمپنی / میک *", ar: "الماركة *", fa: "سازنده *", ps: "جوړونکی *" },
-  model: { en: "Model *", ur: "ماڈل *", ar: "الموديل *", fa: "مدل *", ps: "ماډل *" },
-  year: { en: "Year *", ur: "سال *", ar: "السنة *", fa: "سال ساخت *", ps: "کال *" },
-  capacity: { en: "Capacity (Tons) *", ur: "گنجائش (ٹن) *", ar: "الحمولة (طن) *", fa: "ظرفیت (تن) *", ps: "ظرفیت (ټنه) *" },
-  chassisNo: { en: "Chassis No *", ur: "چیسس نمبر *", ar: "رقم الشاسي *", fa: "شماره شاسی *", ps: "د شاسۍ شمیره *" },
-  engineNo: { en: "Engine No", ur: "انجن نمبر", ar: "رقم المحرك", fa: "شماره موتور", ps: "د انجن شمیره" },
-  color: { en: "Color", ur: "رنگ", ar: "اللون", fa: "رنگ", ps: "رنګ" },
-  fuelType: { en: "Fuel Type", ur: "ایندھن کی قسم", ar: "نوع الوقود", fa: "نوع سوخت", ps: "د تیلو ډول" },
-  purchaseDate: { en: "Purchase Date", ur: "خریداری کی تاریخ", ar: "تاريخ الشراء", fa: "تاریخ خرید", ps: "د اخیستلو نیټه" },
-  addDocument: { en: "+ Add Document", ur: "+ دستاویز شامل کریں", ar: "+ إضافة مستند", fa: "+ افزودن مدرک", ps: "+ سند اضافه کړئ" },
-  remarks: { en: "Remarks (Optional)", ur: "ریمارکس (اختیاری)", ar: "ملاحظات (اختياري)", fa: "توضیحات (اختیاری)", ps: "نوټونه (اختیاري)" }
-};
 
 export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: SupportedLanguage }) {
-  const [activeLang, setActiveLang] = useState<SupportedLanguage>(initialLang);
+  const globalLang = useActiveLanguage();
+  const [activeLang, setActiveLang] = useState<SupportedLanguage>(
+    initialLang !== "en" ? initialLang : (globalLang as SupportedLanguage)
+  );
   const dir = getLanguageDirection(activeLang);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(activeLang);
+  const tt = (key: string, fallback: string) => t(activeLang, key as never, fallback);
   const [activeStep, setActiveStep] = useState<number>(1);
   const [formData, setFormData] = useState<TruckFormData>(INITIAL_FORM);
 
@@ -359,8 +247,6 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
     }
     loadOptions();
   }, []);
-
-  const tUI = (key: string) => UI_DICT[key]?.[activeLang] || UI_DICT[key]?.en || key;
 
   // Auto 5-language field updater helper
   const handleAutoTranslateField = (
@@ -469,7 +355,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
 
       if (!res.ok) throw new Error("Failed to save truck record");
 
-      setSuccessMessage("Truck Record Successfully Created in 5 Languages!");
+      setSuccessMessage(tt("trk.success_msg", "Truck Record Successfully Created!"));
       setTimeout(() => setSuccessMessage(null), 4000);
     } catch (e: any) {
       alert(e.message || "Error saving record");
@@ -498,14 +384,14 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-                {tUI("title")}
+                {tt("trk.title", "TRUCK NEW RECREATION")}
               </h1>
               <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
-                5-Language Active
+                {tt("trk.badge_5lang", "5-Language Active")}
               </span>
             </div>
             <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">
-              {tUI("subtitle")}
+              {tt("trk.subtitle", "Create complete truck record with all details and documents")}
             </p>
           </div>
         </div>
@@ -540,13 +426,13 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
               type="button"
               className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
             >
-              <X className="h-4 w-4" /> {tUI("cancel")}
+              <X className="h-4 w-4" /> {tt("common.cancel", "Cancel")}
             </button>
             <button
               type="button"
               className="inline-flex items-center gap-2 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950/60 dark:text-blue-300"
             >
-              <Save className="h-4 w-4" /> {tUI("saveDraft")}
+              <Save className="h-4 w-4" /> {tt("trk.save_draft", "Save Draft")}
             </button>
             {activeStep < 5 ? (
               <button
@@ -554,7 +440,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                 onClick={() => setActiveStep((prev) => Math.min(5, prev + 1))}
                 className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-600/25 hover:bg-blue-700 active:scale-95"
               >
-                {tUI("nextStep")}
+                {tt("trk.next_step", "Next Step →")}
               </button>
             ) : (
               <button
@@ -564,7 +450,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                 className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-600/25 hover:bg-emerald-700 active:scale-95 disabled:opacity-50"
               >
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                {tUI("submit")}
+                {tt("trk.submit", "Submit Truck Record")}
               </button>
             )}
           </div>
@@ -580,11 +466,11 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
       {/* 5-Wizard Steps Progress Bar */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-5">
         {[
-          { id: 1, title: tUI("step1"), sub: tUI("step1Sub"), icon: TruckIcon },
-          { id: 2, title: tUI("step2"), sub: tUI("step2Sub"), icon: User },
-          { id: 3, title: tUI("step3"), sub: tUI("step3Sub"), icon: UserCheck },
-          { id: 4, title: tUI("step4"), sub: tUI("step4Sub"), icon: FileText },
-          { id: 5, title: tUI("step5"), sub: tUI("step5Sub"), icon: CheckCircle2 }
+          { id: 1, title: tt("trk.step1", "Truck Information"), sub: tt("trk.step1_sub", "Enter truck and registration details"), icon: TruckIcon },
+          { id: 2, title: tt("trk.step2", "Owner Information"), sub: tt("trk.step2_sub", "Enter owner details"), icon: User },
+          { id: 3, title: tt("trk.step3", "Driver Information"), sub: tt("trk.step3_sub", "Enter driver details"), icon: UserCheck },
+          { id: 4, title: tt("trk.step4", "Contract & Documents"), sub: tt("trk.step4_sub", "Contracts and attachments"), icon: FileText },
+          { id: 5, title: tt("trk.step5", "Review & Confirm"), sub: tt("trk.step5_sub", "Verify and submit"), icon: CheckCircle2 }
         ].map((s) => {
           const IconComponent = s.icon;
           const isActive = activeStep === s.id;
@@ -638,9 +524,9 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                   <TruckIcon className="h-6 w-6" />
                   <div>
                     <h2 className="text-lg font-black uppercase tracking-wide">
-                      {tUI("step1")}
+                      {tt("trk.step1", "Truck Information")}
                     </h2>
-                    <p className="text-xs font-medium text-blue-100">{tUI("step1Sub")}</p>
+                    <p className="text-xs font-medium text-blue-100">{tt("trk.step1_sub", "Enter truck and registration details")}</p>
                   </div>
                 </div>
               </div>
@@ -648,7 +534,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
               {/* Truck Details Form Card */}
               <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <h3 className="mb-4 flex items-center gap-2 text-base font-black text-slate-900 dark:text-white">
-                  <FileText className="h-5 w-5 text-blue-600" /> Truck Details
+                  <FileText className="h-5 w-5 text-blue-600" /> {tt("trk.truck_details", "Truck Details")}
                 </h3>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">

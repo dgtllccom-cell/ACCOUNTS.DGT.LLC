@@ -33,6 +33,8 @@ import {
 } from "lucide-react";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -129,8 +131,12 @@ const DEFAULT_ENTRY: TransitEntryData = {
   notes: "Transit shipment cleared at Chaman border customs point."
 };
 
-export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLanguage }) {
-  const dir = getLanguageDirection(lang);
+export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: SupportedLanguage }) {
+  const activeLang = useActiveLanguage();
+  const lang = (activeLang && activeLang !== "en") ? activeLang : langProp;
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+  const dir = isRtl ? "rtl" : "ltr";
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const [formData, setFormData] = useState<TransitEntryData>(DEFAULT_ENTRY);
   const [activeTab, setActiveTab] = useState<"form" | "report" | "split" | "list">("split");
   const [savedEntries, setSavedEntries] = useState<TransitEntryData[]>([]);
@@ -202,7 +208,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
         ...prev,
         documents: [...prev.documents, ...newDocs]
       }));
-      showNotification(`${files.length} document(s) uploaded successfully!`);
+      showNotification(`${files.length} ${tt("transit.docs_uploaded", "document(s) uploaded successfully!")}`);
     }
   };
 
@@ -211,16 +217,16 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
       ...prev,
       documents: prev.documents.filter((doc) => doc.id !== id)
     }));
-    showNotification("Document removed", "info");
+    showNotification(tt("transit.doc_removed", "Document removed"), "info");
   };
 
   const handleSaveEntry = async () => {
     if (!formData.goods_name?.trim()) {
-      showNotification("Please enter Goods Name", "error");
+      showNotification(tt("transit.err_goods_name", "Please enter Goods Name"), "error");
       return;
     }
     if (!formData.invoice_no?.trim()) {
-      showNotification("Please enter Invoice Number", "error");
+      showNotification(tt("transit.err_invoice_no", "Please enter Invoice Number"), "error");
       return;
     }
 
@@ -233,20 +239,20 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
       });
       const json = await res.json();
       if (json.success) {
-        showNotification(`Transit Entry ${json.data.entry_serial} saved to ERP Database!`);
+        showNotification(`${tt("transit.entry_saved_prefix", "Transit Entry")} ${json.data.entry_serial} ${tt("transit.entry_saved_suffix", "saved to ERP Database!")}`);
         await loadRecords();
       } else {
         throw new Error(json.error || "Failed to save");
       }
     } catch (err: any) {
-      showNotification(err.message || "Error saving transit entry", "error");
+      showNotification(err.message || tt("transit.err_save", "Error saving transit entry"), "error");
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDeleteEntry = async (serial: string, id?: string) => {
-    if (!confirm(`Are you sure you want to delete transit entry ${serial}?`)) return;
+    if (!confirm(`${tt("transit.delete_entry_confirm", "Are you sure you want to delete transit entry")} ${serial}?`)) return;
     try {
       const queryParam = id ? `id=${id}` : `serial=${encodeURIComponent(serial)}`;
       const res = await fetch(`/api/erp/clearing-agent/transit-entry?${queryParam}`, {
@@ -254,20 +260,20 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
       });
       const json = await res.json();
       if (json.success) {
-        showNotification(`Transit entry ${serial} deleted successfully`, "info");
+        showNotification(`${tt("transit.entry_saved_prefix", "Transit entry")} ${serial} ${tt("transit.entry_deleted_suffix", "deleted successfully")}`, "info");
         await loadRecords();
       } else {
         throw new Error(json.error || "Failed to delete");
       }
     } catch (err: any) {
-      showNotification(err.message || "Error deleting entry", "error");
+      showNotification(err.message || tt("transit.err_delete", "Error deleting entry"), "error");
     }
   };
 
   const handleSaveDraft = () => {
     if (typeof window !== "undefined") {
       localStorage.setItem("transit_entry_draft", JSON.stringify(formData));
-      showNotification("Draft saved to browser storage!", "info");
+      showNotification(tt("transit.draft_saved", "Draft saved to browser storage!"), "info");
     }
   };
 
@@ -279,7 +285,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
       invoice_no: "INV-2026-" + String(Math.floor(100000 + Math.random() * 900000)),
       documents: []
     });
-    showNotification(`New Transit Entry initialized (${randomSerial})`, "info");
+    showNotification(`${tt("transit.new_initialized", "New Transit Entry initialized")} (${randomSerial})`, "info");
   };
 
   const handlePrint = () => {
@@ -359,13 +365,13 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
           </div>
           <div>
             <h1 className="text-base font-black tracking-tight text-foreground sm:text-lg flex items-center gap-2">
-              TRANSIT ENTRY
+              {tt("transit.title", "TRANSIT ENTRY")}
               <span className="rounded-md bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800 flex items-center gap-1">
                 <Database className="h-3 w-3 text-emerald-500" />
-                DB ACTIVE
+                {tt("transit.db_active", "DB ACTIVE")}
               </span>
             </h1>
-            <p className="text-xs text-muted-foreground font-medium">Create / Manage Transit Entries & Public Verification Reports</p>
+            <p className="text-xs text-muted-foreground font-medium">{tt("transit.subtitle", "Create / Manage Transit Entries & Public Verification Reports")}</p>
           </div>
         </div>
 
@@ -381,7 +387,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
               )}
             >
               <Layers className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Split View</span>
+              <span className="hidden sm:inline">{tt("transit.split_view", "Split View")}</span>
             </button>
             <button
               type="button"
@@ -392,7 +398,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
               )}
             >
               <FileText className="h-3.5 w-3.5" />
-              <span>Form View</span>
+              <span>{tt("transit.form_view", "Form View")}</span>
             </button>
             <button
               type="button"
@@ -403,7 +409,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
               )}
             >
               <FileCheck2 className="h-3.5 w-3.5" />
-              <span>Public Check</span>
+              <span>{tt("transit.public_check", "Public Check")}</span>
             </button>
             <button
               type="button"
@@ -414,7 +420,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
               )}
             >
               <Search className="h-3.5 w-3.5" />
-              <span>Entries ({savedEntries.length})</span>
+              <span>{tt("transit.entries_tab", "Entries")} ({savedEntries.length})</span>
             </button>
           </div>
 
@@ -426,7 +432,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
             className="h-9 gap-1.5 rounded-xl font-bold cursor-pointer"
           >
             <Plus className="h-4 w-4 text-emerald-600" />
-            <span className="hidden sm:inline">New Entry</span>
+            <span className="hidden sm:inline">{tt("transit.new_entry", "New Entry")}</span>
           </Button>
 
           <Button
@@ -435,7 +441,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
             className="h-9 gap-1.5 rounded-xl bg-blue-600 font-bold text-white hover:bg-blue-700 shadow-sm cursor-pointer"
           >
             <Printer className="h-4 w-4" />
-            <span>Print A4</span>
+            <span>{tt("transit.print_a4", "Print A4")}</span>
           </Button>
         </div>
       </div>
@@ -458,8 +464,8 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
                   <Truck className="h-5 w-5" />
                 </div>
                 <div>
-                  <h2 className="text-sm font-black tracking-wide sm:text-base">TRANSIT ENTRY</h2>
-                  <p className="text-[11px] text-blue-100/90 font-medium">Create / Manage Transit Entries</p>
+                  <h2 className="text-sm font-black tracking-wide sm:text-base">{tt("transit.title", "TRANSIT ENTRY")}</h2>
+                  <p className="text-[11px] text-blue-100/90 font-medium">{tt("transit.form_subtitle", "Create / Manage Transit Entries")}</p>
                 </div>
               </div>
 
@@ -471,7 +477,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
                   className="flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white transition-colors cursor-pointer shadow-xs"
                 >
                   <Bookmark className="h-3.5 w-3.5" />
-                  <span>Save Draft</span>
+                  <span>{tt("trk.save_draft", "Save Draft")}</span>
                 </button>
 
                 <button
@@ -480,7 +486,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
                   className="flex items-center gap-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 px-3 py-1.5 text-xs font-bold text-white transition-colors cursor-pointer shadow-xs"
                 >
                   <Eye className="h-3.5 w-3.5" />
-                  <span>Print Preview</span>
+                  <span>{tt("transit.print_preview", "Print Preview")}</span>
                 </button>
 
                 <button
@@ -490,7 +496,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
                   className="flex items-center gap-1.5 rounded-lg bg-indigo-700 hover:bg-indigo-800 px-3.5 py-1.5 text-xs font-bold text-white transition-colors cursor-pointer shadow-xs disabled:opacity-50"
                 >
                   {isSaving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-                  <span>Save Entry</span>
+                  <span>{tt("transit.save_entry", "Save Entry")}</span>
                 </button>
               </div>
             </div>
@@ -501,11 +507,11 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
               {/* SECTION 1: SERIAL NUMBERS (System) */}
               <div>
                 <h3 className="text-xs font-black uppercase tracking-wider text-[#1e40af] dark:text-blue-400 mb-3 pb-1 border-b border-border/80 flex items-center gap-1.5">
-                  SERIAL NUMBERS (System)
+                  {tt("transit.sec_serial_numbers", "SERIAL NUMBERS (System)")}
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   <div>
-                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">1. Super Agent</label>
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">1. {tt("transit.lbl_super_agent", "Super Agent")}</label>
                     <select
                       value={formData.super_agent}
                       onChange={(e) => handleInputChange("super_agent", e.target.value)}
@@ -518,7 +524,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">2. Country</label>
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">2. {tt("common.country", "Country")}</label>
                     <select
                       value={formData.country}
                       onChange={(e) => handleInputChange("country", e.target.value)}
@@ -532,7 +538,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">3. Branch</label>
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">3. {tt("common.branch", "Branch")}</label>
                     <select
                       value={formData.branch}
                       onChange={(e) => handleInputChange("branch", e.target.value)}
@@ -546,7 +552,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">4. Entry Serial</label>
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">4. {tt("transit.lbl_entry_serial", "Entry Serial")}</label>
                     <input
                       type="text"
                       value={formData.entry_serial}
@@ -560,11 +566,11 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
               {/* SECTION 2: BASIC INFORMATION */}
               <div>
                 <h3 className="text-xs font-black uppercase tracking-wider text-[#1e40af] dark:text-blue-400 mb-3 pb-1 border-b border-border/80">
-                  BASIC INFORMATION
+                  {tt("transit.sec_basic_info", "BASIC INFORMATION")}
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   <div>
-                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">Invoice Number</label>
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">{tt("transit.lbl_invoice_number", "Invoice Number")}</label>
                     <input
                       type="text"
                       value={formData.invoice_no}
@@ -575,7 +581,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">Invoice Date</label>
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">{tt("transit.lbl_invoice_date", "Invoice Date")}</label>
                     <input
                       type="date"
                       value={formData.invoice_date}
@@ -585,7 +591,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">Supplier Number</label>
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">{tt("transit.lbl_supplier_number", "Supplier Number")}</label>
                     <input
                       type="text"
                       value={formData.supplier_no}
@@ -596,7 +602,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">Supplier Date</label>
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">{tt("transit.lbl_supplier_date", "Supplier Date")}</label>
                     <input
                       type="date"
                       value={formData.supplier_date}
@@ -606,7 +612,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">Python Number</label>
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">{tt("transit.lbl_python_number", "Python Number")}</label>
                     <input
                       type="text"
                       value={formData.python_no}
@@ -617,7 +623,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">Python Date</label>
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">{tt("transit.lbl_python_date", "Python Date")}</label>
                     <input
                       type="date"
                       value={formData.python_date}
@@ -627,7 +633,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">Transit Number</label>
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">{tt("transit.lbl_transit_number", "Transit Number")}</label>
                     <input
                       type="text"
                       value={formData.transit_no}
@@ -638,7 +644,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">Transit Date</label>
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">{tt("transit.lbl_transit_date", "Transit Date")}</label>
                     <input
                       type="date"
                       value={formData.transit_date}
@@ -652,11 +658,11 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
               {/* SECTION 3: GOODS INFORMATION */}
               <div>
                 <h3 className="text-xs font-black uppercase tracking-wider text-[#1e40af] dark:text-blue-400 mb-3 pb-1 border-b border-border/80">
-                  GOODS INFORMATION
+                  {tt("transit.sec_goods_info", "GOODS INFORMATION")}
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                   <div className="sm:col-span-2">
-                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">Goods Name</label>
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">{tt("transit.lbl_goods_name", "Goods Name")}</label>
                     <input
                       type="text"
                       value={formData.goods_name}
@@ -667,7 +673,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">Total Quantity</label>
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">{tt("transit.lbl_total_quantity", "Total Quantity")}</label>
                     <input
                       type="number"
                       value={formData.quantity}
@@ -678,7 +684,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">Quantity Unit</label>
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">{tt("transit.lbl_quantity_unit", "Quantity Unit")}</label>
                     <select
                       value={formData.unit}
                       onChange={(e) => handleInputChange("unit", e.target.value)}
@@ -695,7 +701,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">Gross Weight (KG)</label>
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">{tt("tl.gross_weight_kg", "Gross Weight (KG)")}</label>
                     <input
                       type="text"
                       value={formData.gross_weight}
@@ -706,7 +712,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">Net Weight (KG)</label>
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">{tt("transit.lbl_net_weight_kg", "Net Weight (KG)")}</label>
                     <input
                       type="text"
                       value={formData.net_weight}
@@ -717,7 +723,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">Price (Per Unit)</label>
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">{tt("transit.lbl_price_per_unit", "Price (Per Unit)")}</label>
                     <input
                       type="text"
                       value={formData.price_per_unit}
@@ -728,7 +734,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">Total Amount (Calculated)</label>
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">{tt("transit.lbl_total_amount_calc", "Total Amount (Calculated)")}</label>
                     <input
                       type="text"
                       value={formData.total_amount}
@@ -742,11 +748,11 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
               {/* SECTION 4: PARTIES / PEOPLE */}
               <div>
                 <h3 className="text-xs font-black uppercase tracking-wider text-[#1e40af] dark:text-blue-400 mb-3 pb-1 border-b border-border/80">
-                  PARTIES / PEOPLE
+                  {tt("transit.sec_parties", "PARTIES / PEOPLE")}
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">Created By (Maker Name)</label>
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">{tt("transit.lbl_created_by", "Created By (Maker Name)")}</label>
                     <input
                       type="text"
                       value={formData.created_by}
@@ -757,7 +763,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">Delivered To (Handed By)</label>
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">{tt("transit.lbl_delivered_to", "Delivered To (Handed By)")}</label>
                     <input
                       type="text"
                       value={formData.delivered_to}
@@ -772,11 +778,11 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
               {/* SECTION 5: COMPANIES & NOTIFY PARTY */}
               <div>
                 <h3 className="text-xs font-black uppercase tracking-wider text-[#1e40af] dark:text-blue-400 mb-3 pb-1 border-b border-border/80">
-                  COMPANIES & NOTIFY PARTY
+                  {tt("transit.sec_companies", "COMPANIES & NOTIFY PARTY")}
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">Export Company Name</label>
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">{tt("transit.lbl_export_company", "Export Company Name")}</label>
                     <input
                       type="text"
                       value={formData.export_company}
@@ -787,7 +793,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">Import Company Name</label>
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">{tt("transit.lbl_import_company", "Import Company Name")}</label>
                     <input
                       type="text"
                       value={formData.import_company}
@@ -798,7 +804,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">Notify Party</label>
+                    <label className="text-[11px] font-bold text-muted-foreground block mb-1">{tt("transit.lbl_notify_party", "Notify Party")}</label>
                     <input
                       type="text"
                       value={formData.notify_party}
@@ -813,18 +819,18 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
               {/* SECTION 6: DOCUMENTS ATTACHED */}
               <div>
                 <h3 className="text-xs font-black uppercase tracking-wider text-[#1e40af] dark:text-blue-400 mb-3 pb-1 border-b border-border/80">
-                  DOCUMENTS ATTACHED
+                  {tt("transit.sec_documents", "DOCUMENTS ATTACHED")}
                 </h3>
-                
+
                 {/* Documents Table */}
                 {formData.documents.length > 0 && (
                   <div className="mb-3 overflow-hidden rounded-xl border border-border bg-card">
                     <table className="w-full text-xs text-left">
                       <thead className="bg-muted/50 text-[10px] font-black uppercase tracking-wider text-muted-foreground border-b border-border">
                         <tr>
-                          <th className="px-3 py-2">File Name</th>
-                          <th className="px-3 py-2 text-center w-28">Size</th>
-                          <th className="px-3 py-2 text-center w-20">Action</th>
+                          <th className="px-3 py-2">{tt("transit.col_file_name", "File Name")}</th>
+                          <th className="px-3 py-2 text-center w-28">{tt("transit.col_size", "Size")}</th>
+                          <th className="px-3 py-2 text-center w-20">{tt("common.actions", "Action")}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
@@ -867,9 +873,9 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
                 >
                   <UploadCloud className="h-8 w-8 text-blue-500 mb-2 group-hover:scale-110 transition-transform" />
                   <p className="text-xs font-bold text-foreground">
-                    Drag & Drop files here or <span className="text-blue-600 dark:text-blue-400 underline">Click to Browse</span>
+                    {tt("transit.upload_hint", "Drag & Drop files here or")} <span className="text-blue-600 dark:text-blue-400 underline">{tt("transit.click_browse", "Click to Browse")}</span>
                   </p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">(PDF, JPG, PNG – Max 5MB each)</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{tt("transit.upload_formats", "(PDF, JPG, PNG – Max 5MB each)")}</p>
                 </div>
               </div>
 

@@ -4,7 +4,7 @@ import { DownloadActionIcon } from "@/components/ui/download-action-icon";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Download, Expand, Eye, FileSpreadsheet, FileText, MoreVertical, PencilLine, Printer, Search, Trash2, CalendarDays, RefreshCw, SlidersHorizontal, Landmark, CheckCircle2, ChevronDown, ChevronRight, PackageCheck, FileCheck2, Building, Building2, MapPin, Phone, MessageCircle, Mail, Plus, X } from "lucide-react";
+import { Download, Expand, Eye, FileSpreadsheet, FileText, MoreVertical, PencilLine, Printer, Search, Trash2, CalendarDays, RefreshCw, SlidersHorizontal, Landmark, CheckCircle2, ChevronDown, ChevronRight, PackageCheck, FileCheck2, Building, Building2, MapPin, Phone, MessageCircle, Mail, Plus, X, Globe, User, Coins, DollarSign, Wallet } from "lucide-react";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 
@@ -514,6 +514,7 @@ export function AccountGeneralReportView({
   const [selectedCountryForSummary, setSelectedCountryForSummary] = useState<string | null>(null);
   const [selectedUserBranchOnly, setSelectedUserBranchOnly] = useState<boolean>(false);
   const [expandedCountries, setExpandedCountries] = useState<Record<string, boolean>>({});
+  const [showAllCountries, setShowAllCountries] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [draftQuery, setDraftQuery] = useState("");
   const [draftAccountId, setDraftAccountId] = useState("all");
@@ -1354,422 +1355,296 @@ export function AccountGeneralReportView({
         </div>
       )}
 
-      {/* ── 4 PRIMARY REPORTING CENTERS & MULTI-COUNTRY LEDGERS QUICK ACCESS ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        {/* Center 1: Super Admin Reports & Multi-Country Investments */}
-        <div
-          onClick={() => router.push("/dashboard/reports/super-admin" as Route)}
-          className="rounded-2xl border border-blue-200/70 bg-gradient-to-br from-blue-50/80 to-indigo-50/40 dark:border-blue-900/60 dark:from-blue-950/30 dark:to-slate-900 p-3.5 shadow-2xs hover:shadow-md hover:border-blue-400 transition-all cursor-pointer flex items-center justify-between group"
-        >
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold shadow-sm shadow-blue-500/20 group-hover:scale-105 transition-transform">
-              <Landmark className="h-5 w-5" />
+      {/* 4 Primary Summary Panels Grid (Matching Outstanding & Recovery Ledger) */}
+      <div className="summary-cards-container grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        {/* Panel 1: Branch & User Details */}
+        <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-blue-50/50 dark:bg-blue-900/10">
+            <div className="bg-blue-600 p-1 rounded-full text-white">
+              <User className="h-3.5 w-3.5" />
             </div>
-            <div>
-              <div className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400">
-                {t(lang, "nav.super_admin_reports", "Super Admin Ledgers")}
-              </div>
-              <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                {t(lang, "nav.sa_investments_title", "Multi-Country & Capital")}
-              </div>
+            <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">
+              {tr("1. BRANCH & USER DETAILS")}
+            </h4>
+          </div>
+          <div className="p-4 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+            <div className="flex justify-between items-center">
+              <span>{tr("COUNTRY:")}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">
+                {selectedCountryForSummary || (isSuperAdmin ? "All Countries" : (filteredRows[0]?.countryName || "United Arab Emirates"))}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>{tr("BRANCH NAME:")}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">
+                {branchCode !== "all" ? branchCode : (isSuperAdmin ? "ALL BRANCHES" : (filteredRows[0]?.branchName || "MAIN BRANCH"))}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>{tr("USER ID:")}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase text-[9px] font-mono">
+                {(session as any)?.userId || (session as any)?.user?.id || (session as any)?.id || "-"}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>{tr("USER NAME:")}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">
+                {(session as any)?.fullName || (session as any)?.user?.fullName || (session as any)?.email || "Super Admin"}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>{tr("ROLE:")}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">
+                {isSuperAdmin ? "Super Admin" : ((session as any)?.roles?.[0]?.replace(/_/g, " ") || "Branch Admin")}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>{tr("DATE & TIME:")}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">
+                {new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}, {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}
+              </span>
+            </div>
+            <div className="flex justify-between items-center mt-auto pt-1">
+              <span>{tr("STATUS:")}</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">
+                ACTIVE
+              </span>
             </div>
           </div>
-          <ChevronRight className="h-4 w-4 text-blue-500 group-hover:translate-x-1 transition-transform" />
         </div>
 
-        {/* Center 2: Country Admin Reports & Ledgers */}
-        <div
-          onClick={() => router.push("/dashboard/reports/country" as Route)}
-          className="rounded-2xl border border-emerald-200/70 bg-gradient-to-br from-emerald-50/80 to-teal-50/40 dark:border-emerald-900/60 dark:from-emerald-950/30 dark:to-slate-900 p-3.5 shadow-2xs hover:shadow-md hover:border-emerald-400 transition-all cursor-pointer flex items-center justify-between group"
-        >
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shadow-sm shadow-emerald-500/20 group-hover:scale-105 transition-transform">
-              <Building2 className="h-5 w-5" />
+        {/* Panel 2: Global Financial Summary */}
+        <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-emerald-50/50 dark:bg-emerald-900/10">
+            <div className="bg-emerald-600 p-1 rounded-full text-white">
+              <Coins className="h-3.5 w-3.5" />
             </div>
-            <div>
-              <div className="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
-                {t(lang, "nav.country_reports", "Country Admin Ledgers")}
-              </div>
-              <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                {t(lang, "nav.country_regional_title", "National & Regional Hubs")}
-              </div>
+            <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
+              {tr("2. GLOBAL FINANCIAL SUMMARY")}
+            </h4>
+          </div>
+          <div className="p-4 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+            <div className="flex justify-between items-center">
+              <span>{tr("TOTAL ACCOUNTS:")}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">
+                {filteredRows.length} ({filteredRows.filter(r => r.status === "active").length} {tr("Active")})
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>{tr("TOTAL DEBIT (RECEIVABLES):")}</span>
+              <span className="font-mono font-bold text-rose-600 dark:text-rose-400">
+                AED {fmtNumber(filteredRows.reduce((sum, r) => sum + r.debitTotal, 0))}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>{tr("TOTAL CREDIT (PAYABLES):")}</span>
+              <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                AED {fmtNumber(filteredRows.reduce((sum, r) => sum + r.creditTotal, 0))}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>{tr("TOTAL OPENING:")}</span>
+              <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
+                AED {fmtNumber(filteredRows.reduce((sum, r) => sum + r.openingBalance, 0))}
+              </span>
+            </div>
+            <div className="flex justify-between items-center mt-auto border-t border-slate-100 dark:border-slate-800 pt-2">
+              <span className="font-bold text-slate-700 dark:text-slate-300">{tr("NET BALANCE:")}</span>
+              {(() => {
+                const bal = filteredRows.reduce((sum, r) => sum + r.currentBalance, 0);
+                return (
+                  <span className={cn("font-mono font-black text-xs", bal < 0 ? "text-rose-600 dark:text-rose-400" : "text-blue-600 dark:text-blue-400")}>
+                    AED {fmtNumber(bal)}
+                  </span>
+                );
+              })()}
             </div>
           </div>
-          <ChevronRight className="h-4 w-4 text-emerald-500 group-hover:translate-x-1 transition-transform" />
         </div>
 
-        {/* Center 3: Branch Reports & Operations */}
-        <div
-          onClick={() => router.push("/dashboard/reports/branch" as Route)}
-          className="rounded-2xl border border-purple-200/70 bg-gradient-to-br from-purple-50/80 to-violet-50/40 dark:border-purple-900/60 dark:from-purple-950/30 dark:to-slate-900 p-3.5 shadow-2xs hover:shadow-md hover:border-purple-400 transition-all cursor-pointer flex items-center justify-between group"
-        >
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold shadow-sm shadow-purple-500/20 group-hover:scale-105 transition-transform">
-              <Building className="h-5 w-5" />
+        {/* Panel 3: Account Categories & Status Summary */}
+        <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-purple-50/50 dark:bg-purple-900/10">
+            <div className="bg-purple-600 p-1 rounded-full text-white">
+              <FileText className="h-3.5 w-3.5" />
             </div>
-            <div>
-              <div className="text-[10px] font-black uppercase tracking-wider text-purple-700 dark:text-purple-400">
-                {t(lang, "nav.branch_reports", "Branch Reports & Ops")}
-              </div>
-              <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                {t(lang, "nav.branch_ops_title", "Local Branch Ledgers")}
-              </div>
+            <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400">
+              {tr("3. CATEGORIES & LEDGERS")}
+            </h4>
+          </div>
+          <div className="p-4 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+            <div className="flex justify-between items-center">
+              <span>{tr("TOTAL LEDGERS:")}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">{filteredRows.reduce((sum, r) => sum + r.linkedLedgerCount, 0)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>{tr("ASSET ACCOUNTS:")}</span>
+              <span className="font-bold text-blue-600 dark:text-blue-400">{filteredRows.filter(r => (r.accountCategory || "").toLowerCase().includes("asset")).length}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>{tr("LIABILITY ACCOUNTS:")}</span>
+              <span className="font-bold text-amber-600 dark:text-amber-400">{filteredRows.filter(r => (r.accountCategory || "").toLowerCase().includes("liability")).length}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>{tr("INCOME / EXPENSES:")}</span>
+              <span className="font-bold text-slate-700 dark:text-slate-300">
+                {filteredRows.filter(r => (r.accountCategory || "").toLowerCase().includes("income")).length} / {filteredRows.filter(r => (r.accountCategory || "").toLowerCase().includes("expense")).length}
+              </span>
+            </div>
+            <div className="flex justify-between items-center mt-auto border-t border-slate-100 dark:border-slate-800 pt-2">
+              <span className="font-bold text-slate-700 dark:text-slate-300">{tr("SYSTEM STATUS:")}</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">ALL CLEAR</span>
             </div>
           </div>
-          <ChevronRight className="h-4 w-4 text-purple-500 group-hover:translate-x-1 transition-transform" />
         </div>
 
-        {/* Center 4: Shipping Line & Clearing Agent Ledgers */}
-        <div
-          onClick={() => router.push("/dashboard/reports/shipping" as Route)}
-          className="rounded-2xl border border-amber-200/70 bg-gradient-to-br from-amber-50/80 to-orange-50/40 dark:border-amber-900/60 dark:from-amber-950/30 dark:to-slate-900 p-3.5 shadow-2xs hover:shadow-md hover:border-amber-400 transition-all cursor-pointer flex items-center justify-between group"
-        >
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-amber-600 text-white flex items-center justify-center font-bold shadow-sm shadow-amber-500/20 group-hover:scale-105 transition-transform">
-              <PackageCheck className="h-5 w-5" />
+        {/* Panel 4: All Countries Report with View List Toggle */}
+        <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-amber-50/50 dark:bg-amber-900/10">
+            <div className="flex items-center gap-2">
+              <div className="bg-amber-600 p-1 rounded-full text-white">
+                <Globe className="h-3.5 w-3.5" />
+              </div>
+              <h4 className="text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">
+                {tr("4. ALL COUNTRIES REPORT")}
+              </h4>
             </div>
-            <div>
-              <div className="text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">
-                {t(lang, "nav.shipping_reports", "Shipping & Clearing")}
-              </div>
-              <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                {t(lang, "nav.shipping_ledgers_title", "Shipping Line Ledgers")}
-              </div>
+            <button
+              onClick={() => setShowAllCountries(!showAllCountries)}
+              className="text-[11px] font-bold text-amber-700 dark:text-amber-400 hover:underline inline-flex items-center gap-0.5 cursor-pointer"
+            >
+              {showAllCountries ? "Hide List" : "View List"}
+              <ChevronDown className={cn("h-3 w-3 transition-transform", showAllCountries ? "rotate-180" : "")} />
+            </button>
+          </div>
+          <div className="p-4 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+            <div className="flex justify-between items-center">
+              <span>{tr("TOTAL COUNTRIES:")}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">{countrySummaries.length || 1}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>{tr("TOTAL BRANCHES:")}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">{countrySummaries.reduce((sum, c) => sum + c.branches.length, 0) || 1}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>{tr("ACTIVE CURRENCY:")}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">{filteredRows[0]?.currency || "AED"}</span>
+            </div>
+            <div className="flex justify-between items-center mt-auto border-t border-slate-100 dark:border-slate-800 pt-2">
+              <span className="font-bold text-slate-700 dark:text-slate-300">{tr("COVERAGE:")}</span>
+              <span className="font-bold text-blue-600 dark:text-blue-400">{isSuperAdmin ? "GLOBAL NETWORK" : (selectedCountryForSummary || "COUNTRY NETWORK")}</span>
             </div>
           </div>
-          <ChevronRight className="h-4 w-4 text-amber-500 group-hover:translate-x-1 transition-transform" />
         </div>
       </div>
 
-      {/* Unified Executive & Operations Summary Box */}
-      <div className="border border-slate-200/60 rounded-2xl bg-white/80 backdrop-blur-xl dark:border-slate-800/60 dark:bg-slate-950/60 p-5 shadow-sm text-xs font-semibold text-slate-500 uppercase flex flex-col gap-4 transition-all hover:shadow-md">
-        
-        {/* Row 1: Session Info */}
-        <div className="flex flex-wrap items-center justify-between border-b border-slate-100 dark:border-slate-850 pb-2.5">
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-            <div className="flex items-center gap-2">
-              <span className="text-slate-400">{tr("BRANCH SCOPE")}:</span>
-              <span className="text-slate-800 dark:text-slate-200 font-bold uppercase">{branchCode !== "all" ? branchCode : tr(session?.scopes?.isSuperAdmin ? "GLOBAL ADMIN" : session?.roles?.[0] ?? "MAIN BRANCH")}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-slate-400">{tr("SESSION ROLE")}:</span>
-              <span className="text-slate-800 dark:text-slate-200 font-bold">{isSuperAdmin ? tr("SUPER ADMIN") : tr("AUTHORIZED USER")}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-slate-400">{tr("TOTAL LEDGERS")}:</span>
-              <span className="text-slate-800 dark:text-slate-200 font-bold">{visibleSummary.totalLedgers}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Row 1.5: Super Admin Country Breakdown Grid */}
-        {isSuperAdmin && countrySummaries.length > 0 && (
-          <div className="border-b border-slate-100 dark:border-slate-850 pb-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t(lang, "acct.agrv_country_financial_breakdown", "Country-wise Financial Breakdown")}</div>
+      {/* Accordion Expandable Detailed Countries Drawer */}
+      {showAllCountries && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50/20 p-4 dark:border-amber-900/40 dark:bg-amber-950/10 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center justify-between border-b border-amber-200/60 pb-2 dark:border-amber-900/60">
+            <h5 className="text-xs font-black uppercase text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
+              <Globe className="h-4 w-4 text-amber-600" />
+              {t(lang, "ledger.orlv_global_breakdown", "GLOBAL BREAKDOWN BY COUNTRY & BRANCH")}
+            </h5>
+            <div className="flex items-center gap-3">
               {selectedCountryForSummary && (
                 <button
                   type="button"
                   onClick={() => setSelectedCountryForSummary(null)}
-                  className="text-[9px] font-black text-rose-500 hover:text-rose-655 underline uppercase cursor-pointer"
+                  className="text-[10px] font-bold text-rose-600 hover:underline uppercase cursor-pointer"
                 >
-                  {t(lang, "acct.agrv_clear_selection_all_countries", "Clear Selection (Show All Countries)")}
+                  Clear Selection (Show All Countries)
                 </button>
               )}
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">{countrySummaries.length} active region(s)</span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full normal-case">
-              {/* General Report (System-wide summary) Card */}
-              <div 
-                className={cn(
-                  "rounded-xl border shadow-sm transition-all bg-white dark:bg-slate-900 overflow-hidden flex flex-col cursor-pointer",
-                  selectedCountryForSummary === null && !selectedUserBranchOnly
-                    ? "border-blue-500 ring-1 ring-blue-500 dark:border-blue-400 dark:ring-blue-400" 
-                    : "border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-slate-600"
-                )}
-                onClick={() => {
-                  setSelectedCountryForSummary(null);
-                  setSelectedUserBranchOnly(false);
-                }}
-              >
-                {/* Header */}
-                <div 
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {countrySummaries.map((c) => {
+              const isSelected = selectedCountryForSummary === c.countryName;
+              return (
+                <details
+                  key={c.countryName}
+                  open={isSelected}
                   className={cn(
-                    "px-4 py-3 flex items-center justify-between border-b",
-                    selectedCountryForSummary === null && !selectedUserBranchOnly ? "bg-blue-50/50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-900/30" : "bg-slate-50/50 dark:bg-slate-800/20 border-slate-100 dark:border-slate-800"
+                    "group rounded-lg border bg-white p-3 shadow-xs dark:bg-slate-900 transition-all",
+                    isSelected ? "border-blue-500 ring-1 ring-blue-500" : "border-slate-200 dark:border-slate-800"
                   )}
                 >
-                  <div className="flex items-center gap-2">
-                    <div className="text-lg">📊</div>
-                    <div>
-                      <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-[11px] uppercase tracking-wider">{t(lang, "acct.agrv_general_report", "General Report")}</h3>
-                      <div className="text-[9px] font-bold text-slate-500">{allFilteredRows.length} {tr("TOTAL ACCOUNTS")} ({allFilteredRows.filter(row => row.status === "active").length} {tr("ACTIVE")})</div>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <span className="text-[10px] font-black text-slate-800 dark:text-slate-200 bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded">{t(lang, "common.system", "System")}</span>
-                    <span className="text-[9px] font-bold text-slate-500 mt-0.5">{t(lang, "report.consolidated", "Consolidated")}</span>
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-4 flex flex-col gap-3 flex-1">
-                  <div className="bg-slate-50 dark:bg-slate-800/40 rounded-lg p-2.5 space-y-2 border border-slate-100 dark:border-slate-800">
-                    <div className="flex justify-between items-center text-[11px]">
-                      <span className="font-bold text-slate-500 dark:text-slate-400 uppercase text-[9px] tracking-wider">{t(lang, "acct.agrv_debit_receivables", "Debit (Receivables)")}</span>
-                      <span className="font-mono font-extrabold text-rose-600 dark:text-rose-450">{fmtNumber(allFilteredRows.reduce((sum, r) => sum + r.debitTotal, 0))}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-[11px]">
-                      <span className="font-bold text-slate-500 dark:text-slate-400 uppercase text-[9px] tracking-wider">{t(lang, "acct.agrv_credit_payables", "Credit (Payables)")}</span>
-                      <span className="font-mono font-extrabold text-emerald-600 dark:text-emerald-450">{fmtNumber(allFilteredRows.reduce((sum, r) => sum + r.creditTotal, 0))}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-[11px] pt-1.5 border-t border-dashed border-slate-200 dark:border-slate-750">
-                      <span className="font-bold text-slate-650 dark:text-slate-300 uppercase text-[9px] tracking-wider">{tr("NET BALANCE")}</span>
-                      {(() => {
-                        const bal = allFilteredRows.reduce((sum, r) => sum + r.currentBalance, 0);
-                        return (
-                          <span className={cn("font-mono font-black", bal < 0 ? "text-rose-600 dark:text-rose-405" : "text-emerald-600 dark:text-emerald-455")}>
-                            {fmtNumber(bal)}
-                          </span>
-                        );
-                      })()}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* User & Branch Summary Card */}
-              <div 
-                className={cn(
-                  "rounded-xl border shadow-sm transition-all bg-white dark:bg-slate-900 overflow-hidden flex flex-col cursor-pointer",
-                  selectedUserBranchOnly 
-                    ? "border-blue-500 ring-1 ring-blue-500 dark:border-blue-400 dark:ring-blue-400" 
-                    : "border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-slate-600"
-                )}
-                onClick={() => {
-                  setSelectedUserBranchOnly(true);
-                  setSelectedCountryForSummary(null);
-                }}
-              >
-                {/* Header */}
-                <div 
-                  className={cn(
-                    "px-4 py-3 flex items-center justify-between border-b",
-                    selectedUserBranchOnly ? "bg-blue-50/50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-900/30" : "bg-slate-50/50 dark:bg-slate-800/20 border-slate-100 dark:border-slate-800"
-                  )}
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="text-lg">🏢</div>
-                    <div>
-                      <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-[11px] uppercase tracking-wider">{t(lang, "acct.agrv_user_branch", "User & Branch")}</h3>
-                      <div className="text-[9px] font-bold text-slate-500">
-                        {userBranchRows.length} Accounts ({userBranchRows.filter(row => row.status === "active").length} Active)
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <span className="text-[10px] font-black text-slate-800 dark:text-slate-200 bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded">
-                      {userBranchRows[0]?.currency || "USD"}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-4 flex flex-col gap-3 flex-1">
-                  <div className="bg-slate-50 dark:bg-slate-800/40 rounded-lg p-2.5 space-y-2 border border-slate-100 dark:border-slate-800">
-                    <div className="flex justify-between items-center text-[11px]">
-                      <span className="font-bold text-slate-500 dark:text-slate-400 uppercase text-[9px] tracking-wider">{t(lang, "acct.agrv_debit_receivables", "Debit (Receivables)")}</span>
-                      <span className="font-mono font-extrabold text-rose-600 dark:text-rose-450">
-                        {fmtNumber(userBranchRows.reduce((sum, r) => sum + r.debitTotal, 0))} {userBranchRows[0]?.currency || "USD"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-[11px]">
-                      <span className="font-bold text-slate-500 dark:text-slate-400 uppercase text-[9px] tracking-wider">{t(lang, "acct.agrv_credit_payables", "Credit (Payables)")}</span>
-                      <span className="font-mono font-extrabold text-emerald-600 dark:text-emerald-450">
-                        {fmtNumber(userBranchRows.reduce((sum, r) => sum + r.creditTotal, 0))} {userBranchRows[0]?.currency || "USD"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-[11px] pt-1.5 border-t border-dashed border-slate-200 dark:border-slate-750">
-                      <span className="font-bold text-slate-650 dark:text-slate-300 uppercase text-[9px] tracking-wider">{tr("NET BALANCE")}</span>
-                      {(() => {
-                        const bal = userBranchRows.reduce((sum, r) => sum + r.currentBalance, 0);
-                        return (
-                          <span className={cn("font-mono font-black", bal < 0 ? "text-rose-600 dark:text-rose-405" : "text-emerald-600 dark:text-emerald-455")}>
-                            {fmtNumber(bal)} {userBranchRows[0]?.currency || "USD"}
-                          </span>
-                        );
-                      })()}
-                    </div>
-                  </div>
-                  {/* Assigned Info */}
-                  <div className="text-[9px] text-slate-450 font-bold mt-auto pt-1 truncate max-w-[250px]">
-                    {t(lang, "acct.agrv_assigned_colon", "Assigned:")} {(session as any)?.fullName || (session as any)?.email || t(lang, "nav.super_admin_menu", "Super Admin")} — {userBranchRows[0]?.branchName || t(lang, "report.scope_main_branch", "Main Branch")}
-                  </div>
-                </div>
-              </div>
-
-              {countrySummaries.map((r, idx) => {
-                const isSelected = selectedCountryForSummary === r.countryName;
-                const isExpanded = !!expandedCountries[r.countryName];
-
-                return (
-                  <div 
-                    key={idx}
-                    className={cn(
-                      "rounded-xl border shadow-sm transition-all bg-white dark:bg-slate-900 overflow-hidden flex flex-col",
-                      isSelected 
-                        ? "border-blue-500 ring-1 ring-blue-500 dark:border-blue-400 dark:ring-blue-400" 
-                        : "border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-slate-600"
-                    )}
+                  <summary
+                    className="flex cursor-pointer items-center justify-between text-xs font-bold text-slate-800 dark:text-slate-200"
+                    onClick={(e) => {
+                      if ((e.target as HTMLElement).tagName !== "DETAILS") {
+                        setSelectedCountryForSummary(isSelected ? null : c.countryName);
+                      }
+                    }}
                   >
-                    {/* Header */}
-                    <div 
-                      className={cn(
-                        "px-4 py-3 flex items-center justify-between cursor-pointer border-b",
-                        isSelected ? "bg-blue-50/50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-900/30" : "bg-slate-50/50 dark:bg-slate-800/20 border-slate-100 dark:border-slate-800"
-                      )}
-                      onClick={() => {
-                        setSelectedCountryForSummary(isSelected ? null : r.countryName);
-                      }}
-                    >
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <div className="flex h-8 w-8 min-w-8 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-sm font-bold" title={r.countryCode || r.countryName}>{getFlag(r.countryName)}</div>
-                        <div>
-                          <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-[11px] uppercase tracking-wider truncate">{r.countryName}</h3>
-                          <div className="text-[9px] font-bold text-slate-500">{r.totalAccounts} Accounts ({r.activeAccounts} Active)</div>
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-end flex-shrink-0 ml-2" onClick={(e) => {
-                        e.stopPropagation();
-                        setExpandedCountries(prev => ({
-                          ...prev,
-                          [r.countryName]: !prev[r.countryName]
-                        }));
-                      }}>
-                        <span className="text-[10px] font-black text-slate-800 dark:text-slate-200 bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded">{r.currency}</span>
-                        <span className="text-[9px] text-slate-400 mt-0.5 flex items-center gap-0.5 hover:text-blue-500 transition-colors">
-                          {isExpanded ? t(lang, "acct.agrv_hide_branches", "Hide Branches") : t(lang, "acct.agrv_view_branches", "View Branches")} {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                    <span className="flex items-center gap-2">
+                      <span className="text-base">{getFlag(c.countryName)}</span>
+                      <span className="hover:text-blue-600 transition">{c.countryName}</span>
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                        {c.totalAccounts} accounts
+                      </span>
+                      {isSelected && (
+                        <span className="rounded bg-blue-100 text-blue-700 px-1.5 py-0.5 text-[9px] font-black uppercase">
+                          FILTERED
                         </span>
+                      )}
+                    </span>
+                    <div className="flex items-center gap-3">
+                      <span className={cn("font-mono text-xs font-bold", c.netBalance < 0 ? "text-rose-600" : "text-blue-600")}>
+                        {c.currency} {fmtNumber(c.netBalance)}
+                      </span>
+                      <ChevronDown className="h-3.5 w-3.5 transition-transform group-open:rotate-180 text-slate-400" />
+                    </div>
+                  </summary>
+
+                  <div className="mt-3 space-y-2 border-t border-slate-100 pt-2 text-[11px] dark:border-slate-800">
+                    <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-bold">
+                      <div className="rounded bg-rose-50 p-1.5 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300">
+                        DR: {fmtNumber(c.debitTotal)}
+                      </div>
+                      <div className="rounded bg-emerald-50 p-1.5 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300">
+                        CR: {fmtNumber(c.creditTotal)}
+                      </div>
+                      <div className="rounded bg-blue-50 p-1.5 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300">
+                        NET: {fmtNumber(c.netBalance)}
                       </div>
                     </div>
 
-                    {/* Content */}
-                    <div className="p-4 flex flex-col gap-3 flex-1" onClick={() => setSelectedCountryForSummary(isSelected ? null : r.countryName)}>
-                      <div className="bg-slate-50 dark:bg-slate-800/40 rounded-lg p-2.5 space-y-2 border border-slate-100 dark:border-slate-800">
-                        <div className="flex justify-between items-center text-[11px]">
-                          <span className="font-bold text-slate-500 dark:text-slate-400 uppercase text-[9px] tracking-wider">{t(lang, "acct.agrv_debit_receivables", "Debit (Receivables)")}</span>
-                          <span className="font-mono font-extrabold text-rose-600 dark:text-rose-450">{fmtNumber(r.debitTotal)} {r.currency}</span>
+                    <div className="space-y-1 pt-1">
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Branches</div>
+                      {c.branches.map((b) => (
+                        <div
+                          key={b.branchCode}
+                          onClick={() => {
+                            setBranchCode(b.branchCode);
+                            setSelectedCountryForSummary(c.countryName);
+                          }}
+                          className={cn(
+                            "flex items-center justify-between rounded px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800/40 text-slate-700 dark:text-slate-300 hover:bg-blue-50 hover:text-blue-700 cursor-pointer transition",
+                            branchCode === b.branchCode ? "border border-blue-400 bg-blue-50/80 text-blue-700 font-bold" : ""
+                          )}
+                        >
+                          <span className="font-semibold text-[10px] uppercase">{b.branchName} ({b.totalAccounts} accs)</span>
+                          <div className="flex items-center gap-2 font-mono text-[10px]">
+                            <span className="text-rose-600">Dr: {fmtNumber(b.debitTotal)}</span>
+                            <span className="text-emerald-600">Cr: {fmtNumber(b.creditTotal)}</span>
+                            <span className={cn("font-bold", b.netBalance < 0 ? "text-rose-600" : "text-emerald-600")}>
+                              Bal: {fmtNumber(b.netBalance)}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex justify-between items-center text-[11px]">
-                          <span className="font-bold text-slate-500 dark:text-slate-400 uppercase text-[9px] tracking-wider">{t(lang, "acct.agrv_credit_payables", "Credit (Payables)")}</span>
-                          <span className="font-mono font-extrabold text-emerald-600 dark:text-emerald-450">{fmtNumber(r.creditTotal)} {r.currency}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-[11px] pt-1.5 border-t border-dashed border-slate-200 dark:border-slate-750">
-                          <span className="font-bold text-slate-650 dark:text-slate-300 uppercase text-[9px] tracking-wider">{tr("NET BALANCE")}</span>
-                          <span className={cn("font-mono font-black", r.netBalance < 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-450")}>
-                            {fmtNumber(r.netBalance)} {r.currency}
-                          </span>
-                        </div>
-                      </div>
+                      ))}
                     </div>
-
-                    {/* Branch Breakdown */}
-                    {isExpanded && r.branches.length > 0 && (
-                      <div className="border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 p-3 space-y-2">
-                        <div className="text-[9px] font-black uppercase tracking-wider text-slate-400 mb-1 flex items-center justify-between">
-                          <span>{r.countryName} Branches</span>
-                          <span className="bg-slate-250 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[9px] font-bold text-slate-600 dark:text-slate-350">{r.branches.length}</span>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          {r.branches.map((b, bIdx) => (
-                            <div key={bIdx} className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md p-2">
-                              <div className="font-extrabold uppercase text-[9px] text-slate-700 dark:text-slate-200 mb-1.5 pb-1 border-b border-slate-100 dark:border-slate-800">{b.branchName}</div>
-                              <div className="flex justify-between items-center text-[9px]">
-                                <span className="text-slate-500">{t(lang, "acct.agrv_dr_colon", "Dr:")} <span className="font-mono font-bold text-rose-600">{fmtNumber(b.debitTotal)}</span></span>
-                                <span className="text-slate-500">{t(lang, "acct.agrv_cr_colon", "Cr:")} <span className="font-mono font-bold text-emerald-600">{fmtNumber(b.creditTotal)}</span></span>
-                                <span className="text-slate-500">{t(lang, "acct.agrv_bal_colon", "Bal:")} <span className={cn("font-mono font-bold", b.netBalance < 0 ? "text-rose-600" : "text-emerald-600")}>{fmtNumber(b.netBalance)}</span></span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
-                );
-              })}
-            </div>
+                </details>
+              );
+            })}
           </div>
-        )}
-
-        {/* Row 2: Account Financial Summary Cards (Hidden for Super Admin to avoid duplicate dashboard panels) */}
-        {!isSuperAdmin && (
-          <div className="grid gap-3 pt-1 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <div className="mb-2 flex items-start justify-between gap-2">
-                <div>
-                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">{tr("TOTAL ACCOUNTS")}</div>
-                  <div className="text-xs font-black text-blue-700 dark:text-blue-300">{tr("SYSTEM WIDE")}</div>
-                </div>
-                <span className="rounded-full bg-blue-50 px-2 py-1 text-[10px] font-black text-blue-700 dark:bg-blue-950/30 dark:text-blue-300">{visibleSummary.activeAccounts} {tr("ACTIVE")}</span>
-              </div>
-              <div className="grid grid-cols-1 gap-2 text-[10px] normal-case">
-                <div className="rounded-lg bg-slate-50 p-2 dark:bg-slate-950/50">
-                  <div className="font-bold uppercase text-slate-400">{t(lang, "acct.agrv_count_word", "Count")}</div>
-                  <div className="font-mono text-sm font-black text-slate-900 dark:text-slate-100">{visibleSummary.totalAccounts.toLocaleString()}</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <div className="mb-2 flex items-start justify-between gap-2">
-                <div>
-                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">{tr("TOTAL DEBIT")}</div>
-                  <div className="text-xs font-black text-rose-700 dark:text-rose-300">{tr("RECEIVABLES / DR")}</div>
-                </div>
-                <span className="rounded-full bg-rose-50 px-2 py-1 text-[10px] font-black text-rose-700 dark:bg-rose-950/30 dark:text-rose-300">{t(lang, "acct.agrv_aggregated", "Aggregated")}</span>
-              </div>
-              <div className="grid grid-cols-1 gap-2 text-[10px] normal-case">
-                <div className="rounded-lg bg-rose-50 p-2 dark:bg-rose-950/20">
-                  <div className="font-bold uppercase text-rose-600">{tr("TOTAL DEBIT")}</div>
-                  <div className="font-mono text-sm font-black text-rose-700 dark:text-rose-300">{fmtNumber(visibleSummary.debitTotal)}</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <div className="mb-2 flex items-start justify-between gap-2">
-                <div>
-                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">{tr("TOTAL CREDIT")}</div>
-                  <div className="text-xs font-black text-emerald-700 dark:text-emerald-300">{tr("PAYABLES / CR")}</div>
-                </div>
-                <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-black text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300">{t(lang, "acct.agrv_aggregated", "Aggregated")}</span>
-              </div>
-              <div className="grid grid-cols-1 gap-2 text-[10px] normal-case">
-                <div className="rounded-lg bg-emerald-50 p-2 dark:bg-rose-950/20">
-                  <div className="font-bold uppercase text-emerald-600">{tr("TOTAL CREDIT")}</div>
-                  <div className="font-mono text-sm font-black text-emerald-700 dark:text-emerald-300">{fmtNumber(visibleSummary.creditTotal)}</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <div className="mb-2 flex items-start justify-between gap-2">
-                <div>
-                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">{tr("NET BALANCE")}</div>
-                  <div className="text-xs font-black text-blue-700 dark:text-blue-300">{tr("OVERALL POSITION")}</div>
-                </div>
-                <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-black text-slate-700 dark:bg-slate-800 dark:text-slate-300">{t(lang, "report.consolidated", "Consolidated")}</span>
-              </div>
-              <div className="grid grid-cols-1 gap-2 text-[10px] normal-case">
-                <div className={cn("rounded-lg p-2", visibleSummary.totalBalance < 0 ? "bg-rose-50 dark:bg-rose-950/20" : "bg-emerald-50 dark:bg-emerald-950/20")}>
-                  <div className={cn("font-bold uppercase", visibleSummary.totalBalance < 0 ? "text-rose-600" : "text-emerald-600")}>{tr("BALANCE")}</div>
-                  <div className={cn("font-mono text-sm font-black", visibleSummary.totalBalance < 0 ? "text-rose-700 dark:text-rose-300" : "text-emerald-700 dark:text-emerald-300")}>{fmtNumber(visibleSummary.totalBalance)}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* REPORT-3: SEARCH & TRANSACTION REPORT */}
       <section className="bg-white border border-slate-200 dark:border-slate-800 dark:bg-slate-950 p-6 rounded-2xl shadow-sm space-y-6">

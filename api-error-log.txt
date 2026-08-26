@@ -45016,3 +45016,126 @@ PostgresError: column reference "country_id" is ambiguous
     at sql (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:110:11)
     at eval (webpack-internal:///(rsc)/./app/api/erp/smart-due/items/route.ts:67:35)
 2026-08-26T13:45:11.191Z - SERVER_ERROR - column reference "country_id" is ambiguous - {}
+
+[2026-08-26T18:27:36.872Z] PostgresError: relation "erp_documents" does not exist
+PostgresError: relation "erp_documents" does not exist
+    at ErrorResponse (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:830:70)
+    at handle (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:504:6)
+    at TLSSocket.data (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:339:9)
+    at TLSSocket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:189:23)
+    at TLSWrap.callbackTrampoline (node:internal/async_hooks:130:17)
+2026-08-26T18:27:38.794Z - SERVER_ERROR - relation "erp_documents" does not exist - {}
+
+[2026-08-26T18:27:57.263Z] PostgresError: relation "erp_documents" does not exist
+PostgresError: relation "erp_documents" does not exist
+    at ErrorResponse (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:830:70)
+    at handle (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:504:6)
+    at TLSSocket.data (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:339:9)
+    at TLSSocket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:189:23)
+    at TLSWrap.callbackTrampoline (node:internal/async_hooks:130:17)
+2026-08-26T18:27:57.712Z - SERVER_ERROR - relation "erp_documents" does not exist - {}
+
+[2026-08-26T18:37:49.068Z] PostgresError: null value in column "company_id" of relation "erp_documents" violates not-null constraint
+PostgresError: null value in column "company_id" of relation "erp_documents" violates not-null constraint
+    at ErrorResponse (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:830:70)
+    at handle (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:504:6)
+    at TLSSocket.data (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:339:9)
+    at TLSSocket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:189:23)
+    at TLSWrap.callbackTrampoline (node:internal/async_hooks:130:17)
+2026-08-26T18:37:50.080Z - SERVER_ERROR - null value in column "company_id" of relation "erp_documents" violates not-null constraint - {}
+
+[2026-08-26T18:40:00.396Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-26T18:40:01.717Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-26T18:40:08.352Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at ReadyForQuery (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:582:38)
+    at handle (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:504:6)
+    at TLSSocket.data (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:339:9)
+    at TLSSocket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:189:23)
+    at TLSWrap.callbackTrampoline (node:internal/async_hooks:130:17)
+2026-08-26T18:40:08.829Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-26T18:41:38.976Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at ReadyForQuery (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:582:38)
+    at handle (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:504:6)
+    at TLSSocket.data (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:339:9)
+    at TLSSocket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:189:23)
+    at TLSWrap.callbackTrampoline (node:internal/async_hooks:130:17)
+2026-08-26T18:41:39.604Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-26T18:42:38.522Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-26T18:42:39.284Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-26T18:43:45.890Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-26T18:43:46.941Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-26T18:44:38.275Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-26T18:44:38.887Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}

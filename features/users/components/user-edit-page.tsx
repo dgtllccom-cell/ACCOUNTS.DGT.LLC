@@ -151,6 +151,22 @@ export function UserEditPage({ userId }: Props) {
   // Activity data
   const [activityLog, setActivityLog] = useState<any[]>([]);
 
+  // Translated toggle lists (defined here so tt() is in scope)
+  const securityToggles = [
+    { label: tt("user.sec_2fa_label", "Two-Factor Authentication (2FA)"), sub: tt("user.sec_2fa_sub", "Require 2FA for login"), value: twoFaEnabled, set: setTwoFaEnabled },
+    { label: tt("user.sec_allow_pwd_label", "Allow Password Change"), sub: tt("user.sec_allow_pwd_sub", "User can change their own password"), value: allowPasswordChange, set: setAllowPasswordChange },
+    { label: tt("user.sec_login_notify_label", "Login Notifications"), sub: tt("user.sec_login_notify_sub", "Send email on new login"), value: loginNotifications, set: setLoginNotifications },
+    { label: tt("user.sec_lockout_label", "Account Lockout"), sub: tt("user.sec_lockout_sub", "Lock after failed attempts"), value: accountLockout, set: setAccountLockout },
+  ];
+
+  const notifToggles = [
+    { label: tt("user.notif_login_alerts", "Login Alerts"), sub: tt("user.notif_login_alerts_sub", "Notify on new login from unknown device") },
+    { label: tt("user.notif_pwd_change", "Password Change Alerts"), sub: tt("user.notif_pwd_change_sub", "Notify when password is changed") },
+    { label: tt("user.notif_role_change", "Role Change Alerts"), sub: tt("user.notif_role_change_sub", "Notify when role or permissions change") },
+    { label: tt("user.notif_activity_digest", "Activity Digest"), sub: tt("user.notif_activity_digest_sub", "Weekly activity summary email") },
+    { label: tt("user.notif_system_announce", "System Announcements"), sub: tt("user.notif_system_announce_sub", "Receive ERP system update announcements") },
+  ];
+
   // Load user data
   useEffect(() => {
     async function load() {
@@ -187,12 +203,13 @@ export function UserEditPage({ userId }: Props) {
           }
         }
       } catch {
-        setBanner({ tone: "err", text: "Failed to load user data." });
+        setBanner({ tone: "err", text: tt("user.err_load_failed", "Failed to load user data.") });
       } finally {
         setLoading(false);
       }
     }
     if (userId) load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   // Load countries
@@ -274,11 +291,11 @@ export function UserEditPage({ userId }: Props) {
   async function handleSave() {
     setBanner(null);
     if (password && password.length < 8) {
-      setBanner({ tone: "err", text: "Password must be at least 8 characters." });
+      setBanner({ tone: "err", text: tt("user.err_pwd_too_short", "Password must be at least 8 characters.") });
       return;
     }
     if (password && password !== confirmPassword) {
-      setBanner({ tone: "err", text: "Passwords do not match." });
+      setBanner({ tone: "err", text: tt("user.err_pwd_no_match", "Passwords do not match.") });
       return;
     }
 
@@ -319,13 +336,13 @@ export function UserEditPage({ userId }: Props) {
         body: JSON.stringify(payload),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json?.error?.message || json?.error || "Failed to update user.");
+      if (!res.ok) throw new Error(json?.error?.message || json?.error || tt("user.err_save_failed", "Failed to save changes."));
 
       localStorage.setItem("user_journal_dirty", new Date().toISOString());
-      setBanner({ tone: "ok", text: "User updated successfully! Returning to report..." });
+      setBanner({ tone: "ok", text: tt("user.ok_user_updated", "User updated successfully! Returning to report...") });
       setTimeout(() => router.push("/dashboard/new-entry/users/journal-report"), 1500);
     } catch (e: any) {
-      setBanner({ tone: "err", text: e?.message || "Failed to save changes." });
+      setBanner({ tone: "err", text: e?.message || tt("user.err_save_failed", "Failed to save changes.") });
     } finally {
       setSaving(false);
     }
@@ -477,11 +494,11 @@ export function UserEditPage({ userId }: Props) {
                     </select>
                   </div>
                   <div className="ue-field">
-                    <label className="ue-label">Email</label>
+                    <label className="ue-label">{tt("user.label_email", "Email")}</label>
                     <input className="ue-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="user@example.com" type="email" />
                   </div>
                   <div className="ue-field">
-                    <label className="ue-label">Phone</label>
+                    <label className="ue-label">{tt("user.label_phone", "Phone")}</label>
                     <input className="ue-input" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+971 50 123 4567" />
                   </div>
                 </div>
@@ -506,13 +523,13 @@ export function UserEditPage({ userId }: Props) {
                     </div>
                   </div>
                   <div className="ue-field sm:col-span-2">
-                    <label className="ue-label">Access Level</label>
+                    <label className="ue-label">{tt("user.label_access_level", "Access Level")}</label>
                     <div className="ue-badge-row">
-                      {role === "super_admin" && <span className="ue-badge ue-badge-violet">Full Access</span>}
-                      {(role === "country_admin" || role === "country_user") && <span className="ue-badge ue-badge-blue">Country Level</span>}
-                      {(role === "main_branch_admin" || role === "city_branch_admin") && <span className="ue-badge ue-badge-orange">Branch Level</span>}
-                      {(role === "accountant" || role === "cashier") && <span className="ue-badge ue-badge-green">Finance Level</span>}
-                      {role === "auditor_viewer" && <span className="ue-badge ue-badge-slate">Read Only</span>}
+                      {role === "super_admin" && <span className="ue-badge ue-badge-violet">{tt("user.access_full", "Full Access")}</span>}
+                      {(role === "country_admin" || role === "country_user") && <span className="ue-badge ue-badge-blue">{tt("user.access_country_level", "Country Level")}</span>}
+                      {(role === "main_branch_admin" || role === "city_branch_admin") && <span className="ue-badge ue-badge-orange">{tt("user.access_branch_level", "Branch Level")}</span>}
+                      {(role === "accountant" || role === "cashier") && <span className="ue-badge ue-badge-green">{tt("user.access_finance_level", "Finance Level")}</span>}
+                      {role === "auditor_viewer" && <span className="ue-badge ue-badge-slate">{tt("user.access_read_only", "Read Only")}</span>}
                     </div>
                   </div>
                 </div>
@@ -531,7 +548,7 @@ export function UserEditPage({ userId }: Props) {
                   <div>
                     <div className="text-xs font-black text-[var(--ue-title)]">{tt("user.account_status_card", "Account Status")}</div>
                     <div className="text-[10px] text-[var(--ue-muted)] mt-0.5">
-                      {isActive ? "User is active and can login" : "User is inactive and cannot login"}
+                      {isActive ? tt("user.status_active_desc", "User is active and can login") : tt("user.status_inactive_desc", "User is inactive and cannot login")}
                     </div>
                   </div>
                   <button
@@ -545,15 +562,15 @@ export function UserEditPage({ userId }: Props) {
                 <div className="mt-3 grid grid-cols-1 gap-2 text-[10px]">
                   <div className="flex items-center gap-2 p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800">
                     <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                    <span className="font-bold text-emerald-700 dark:text-emerald-300">Active — User is active and can login</span>
+                    <span className="font-bold text-emerald-700 dark:text-emerald-300">{tt("user.status_active_label", "Active — User is active and can login")}</span>
                   </div>
                   <div className="flex items-center gap-2 p-2 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800">
                     <div className="h-2 w-2 rounded-full bg-red-500" />
-                    <span className="font-bold text-red-700 dark:text-red-300">Inactive — User is inactive and cannot login</span>
+                    <span className="font-bold text-red-700 dark:text-red-300">{tt("user.status_inactive_label", "Inactive — User is inactive and cannot login")}</span>
                   </div>
                   <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
                     <div className="h-2 w-2 rounded-full bg-amber-500" />
-                    <span className="font-bold text-amber-700 dark:text-amber-300">Locked — Account is locked out</span>
+                    <span className="font-bold text-amber-700 dark:text-amber-300">{tt("user.status_locked_label", "Locked — Account is locked out")}</span>
                   </div>
                 </div>
               </div>
@@ -566,25 +583,25 @@ export function UserEditPage({ userId }: Props) {
                 </div>
                 <div className="space-y-2.5 text-xs">
                   <div className="ue-info-row">
-                    <span className="ue-info-label">System ID</span>
+                    <span className="ue-info-label">{tt("user.label_system_id", "System ID")}</span>
                     <span className="ue-info-value font-mono">{userId?.slice(0, 12).toUpperCase() || "—"}</span>
                   </div>
                   <div className="ue-info-row">
-                    <span className="ue-info-label">Branch Code</span>
+                    <span className="ue-info-label">{tt("user.label_branch_code", "Branch Code")}</span>
                     <span className="ue-info-value font-mono text-[#1455ff]">
                       {selectedMainBranch?.code || selectedCityBranch?.code || (userData as any)?.branchCode || "—"}
                     </span>
                   </div>
                   <div className="ue-info-row">
-                    <span className="ue-info-label">Branch Name</span>
+                    <span className="ue-info-label">{tt("user.label_branch_name", "Branch Name")}</span>
                     <span className="ue-info-value">{selectedMainBranch?.name || selectedCityBranch?.name || userData?.branchName || "—"}</span>
                   </div>
                   <div className="ue-info-row">
-                    <span className="ue-info-label">Country</span>
+                    <span className="ue-info-label">{tt("common.country", "Country")}</span>
                     <span className="ue-info-value">{selectedCountry?.name || userData?.countryName || "Global"}</span>
                   </div>
                   <div className="ue-info-row">
-                    <span className="ue-info-label">Last Login</span>
+                    <span className="ue-info-label">{tt("user.label_last_login", "Last Login")}</span>
                     <span className="ue-info-value">{userData?.lastActivity ? new Date(userData.lastActivity).toLocaleString() : "—"}</span>
                   </div>
                 </div>
@@ -610,13 +627,13 @@ export function UserEditPage({ userId }: Props) {
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Leave blank to keep current"
+                      placeholder={tt("user.hint_pwd_blank", "Leave blank to keep current")}
                     />
                     <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--ue-muted)] hover:text-[var(--ue-title)]" onClick={() => setShowPassword((v) => !v)}>
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
-                  <div className="text-[10px] text-[var(--ue-muted)] mt-1">Minimum 8 characters. Leave blank to keep current password.</div>
+                  <div className="text-[10px] text-[var(--ue-muted)] mt-1">{tt("user.hint_pwd_rules", "Minimum 8 characters. Leave blank to keep current password.")}</div>
                 </div>
                 <div className="ue-field">
                   <label className="ue-label">{tt("user.label_confirm_password", "Confirm Password")}</label>
@@ -626,27 +643,27 @@ export function UserEditPage({ userId }: Props) {
                       type={showConfirmPassword ? "text" : "password"}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Confirm new password"
+                      placeholder={tt("user.hint_confirm_pwd", "Confirm new password")}
                     />
                     <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--ue-muted)] hover:text-[var(--ue-title)]" onClick={() => setShowConfirmPassword((v) => !v)}>
                       {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                   {password && confirmPassword && password !== confirmPassword && (
-                    <div className="text-[10px] text-red-600 font-semibold mt-1">Passwords do not match</div>
+                    <div className="text-[10px] text-red-600 font-semibold mt-1">{tt("user.pwd_no_match", "Passwords do not match")}</div>
                   )}
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="ue-field">
-                    <label className="ue-label">Session Timeout (min)</label>
+                    <label className="ue-label">{tt("user.label_session_timeout", "Session Timeout (min)")}</label>
                     <input className="ue-input" type="number" value={sessionTimeout} onChange={(e) => setSessionTimeout(Number(e.target.value))} min={5} max={1440} />
                   </div>
                   <div className="ue-field">
-                    <label className="ue-label">Password Expiry (days)</label>
+                    <label className="ue-label">{tt("user.label_password_expiry", "Password Expiry (days)")}</label>
                     <input className="ue-input" type="number" value={passwordExpiry} onChange={(e) => setPasswordExpiry(Number(e.target.value))} min={1} max={365} />
                   </div>
                   <div className="ue-field">
-                    <label className="ue-label">Max Login Attempts</label>
+                    <label className="ue-label">{tt("user.label_max_attempts", "Max Login Attempts")}</label>
                     <input className="ue-input" type="number" value={maxLoginAttempts} onChange={(e) => setMaxLoginAttempts(Number(e.target.value))} min={1} max={20} />
                   </div>
                 </div>
@@ -656,15 +673,10 @@ export function UserEditPage({ userId }: Props) {
             <div className="ue-card">
               <div className="ue-card-header">
                 <Shield className="h-4 w-4 text-violet-600" />
-                <h2 className="ue-card-title">Additional Settings</h2>
+                <h2 className="ue-card-title">{tt("user.additional_settings", "Additional Settings")}</h2>
               </div>
               <div className="space-y-3">
-                {[
-                  { label: "Two-Factor Authentication (2FA)", sub: "Require 2FA for login", value: twoFaEnabled, set: setTwoFaEnabled },
-                  { label: "Allow Password Change", sub: "User can change their own password", value: allowPasswordChange, set: setAllowPasswordChange },
-                  { label: "Login Notifications", sub: "Send email on new login", value: loginNotifications, set: setLoginNotifications },
-                  { label: "Account Lockout", sub: "Lock after failed attempts", value: accountLockout, set: setAccountLockout },
-                ].map(({ label, sub, value, set }) => (
+                {securityToggles.map(({ label, sub, value, set }) => (
                   <div key={label} className="flex items-center justify-between p-3 rounded-xl border border-[var(--ue-line)] bg-slate-50/50 dark:bg-slate-900/30">
                     <div>
                       <div className="text-xs font-bold text-[var(--ue-title)]">{label}</div>
@@ -678,17 +690,17 @@ export function UserEditPage({ userId }: Props) {
               </div>
 
               <div className="mt-4 pt-4 border-t border-[var(--ue-line)] space-y-2">
-                <div className="text-[10px] font-black uppercase tracking-wider text-[var(--ue-muted)]">Login Info</div>
+                <div className="text-[10px] font-black uppercase tracking-wider text-[var(--ue-muted)]">{tt("user.login_info", "Login Info")}</div>
                 <div className="ue-info-row">
-                  <span className="ue-info-label">Last Login</span>
+                  <span className="ue-info-label">{tt("user.label_last_login", "Last Login")}</span>
                   <span className="ue-info-value">{userData?.lastActivity ? new Date(userData.lastActivity).toLocaleString() : "—"}</span>
                 </div>
                 <div className="ue-info-row">
-                  <span className="ue-info-label">Last Activity</span>
+                  <span className="ue-info-label">{tt("user.label_last_activity", "Last Activity")}</span>
                   <span className="ue-info-value">{userData?.lastActivityAction || "—"}</span>
                 </div>
                 <div className="ue-info-row">
-                  <span className="ue-info-label">Login IP</span>
+                  <span className="ue-info-label">{tt("user.label_login_ip", "Login IP")}</span>
                   <span className="ue-info-value font-mono">—</span>
                 </div>
               </div>
@@ -701,17 +713,17 @@ export function UserEditPage({ userId }: Props) {
           <div className="ue-card">
             <div className="ue-card-header">
               <Shield className="h-4 w-4 text-violet-600" />
-              <h2 className="ue-card-title">Roles & Permissions</h2>
+              <h2 className="ue-card-title">{tt("user.tab_permissions", "Roles & Permissions")}</h2>
               <div className="ml-auto flex items-center gap-2">
-                <span className="text-[10px] font-bold text-[var(--ue-muted)]">{selectedPermissions.length} permissions assigned</span>
+                <span className="text-[10px] font-bold text-[var(--ue-muted)]">{selectedPermissions.length} {tt("user.perms_assigned", "permissions assigned")}</span>
                 <button type="button" className="ue-btn-sm" onClick={applyRoleDefaults}>
-                  <RefreshCw className="h-3.5 w-3.5" /> Apply Role Defaults
+                  <RefreshCw className="h-3.5 w-3.5" /> {tt("user.apply_role_defaults", "Apply Role Defaults")}
                 </button>
               </div>
             </div>
 
             <div className="mb-4">
-              <label className="ue-label">Role</label>
+              <label className="ue-label">{tt("user.label_role", "Role")}</label>
               <select className="ue-input max-w-xs" value={role} onChange={(e) => setRole(e.target.value as EnterpriseRole)}>
                 {roleOptions.map((r) => (
                   <option key={r.value} value={r.value}>{r.label}</option>
@@ -722,7 +734,7 @@ export function UserEditPage({ userId }: Props) {
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
               {/* Permission Group Sidebar */}
               <div className="space-y-1.5">
-                <div className="text-[10px] font-black uppercase tracking-wider text-[var(--ue-muted)] mb-2">Permission Groups</div>
+                <div className="text-[10px] font-black uppercase tracking-wider text-[var(--ue-muted)] mb-2">{tt("user.permission_groups", "Permission Groups")}</div>
                 <div className="space-y-0.5 max-h-[500px] overflow-y-auto">
                   {filteredGroups.map(([group, perms]) => {
                     const count = perms.filter((p) => selectedPermissions.includes(p)).length;
@@ -754,7 +766,7 @@ export function UserEditPage({ userId }: Props) {
                     className="ue-input pl-9"
                     value={permQuery}
                     onChange={(e) => setPermQuery(e.target.value)}
-                    placeholder="Search permissions..."
+                    placeholder={tt("user.search_permissions", "Search permissions...")}
                   />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-[460px] overflow-y-auto pr-1">
@@ -784,40 +796,40 @@ export function UserEditPage({ userId }: Props) {
             <div className="ue-card">
               <div className="ue-card-header">
                 <Building2 className="h-4 w-4 text-orange-500" />
-                <h2 className="ue-card-title">Branch Assignment</h2>
+                <h2 className="ue-card-title">{tt("user.branch_assignment", "Branch Assignment")}</h2>
               </div>
               <div className="space-y-4">
                 <div className="ue-field">
-                  <label className="ue-label">Country *</label>
+                  <label className="ue-label">{tt("common.country", "Country")} *</label>
                   <SearchSelect
-                    label={loadingCountries ? "Loading..." : "Select Country"}
+                    label={loadingCountries ? tt("common.loading", "Loading...") : tt("user.select_country", "Select Country")}
                     value={countryId}
-                    placeholder="Select country"
+                    placeholder={tt("user.select_country", "Select Country")}
                     options={countryOptions}
                     disabled={loadingCountries || role === "super_admin"}
                     onValueChange={setCountryId}
                   />
                 </div>
                 <div className="ue-field">
-                  <label className="ue-label">Branch Type</label>
+                  <label className="ue-label">{tt("user.label_branch_type", "Branch Type")}</label>
                   <select
                     className="ue-input"
                     value={branchType}
                     onChange={(e) => setBranchType(e.target.value as "" | "main" | "city")}
                     disabled={!countryId || role === "super_admin" || role === "country_admin" || role === "country_user"}
                   >
-                    <option value="">Select Branch Type</option>
-                    <option value="main">Main Branch</option>
-                    <option value="city">City Branch</option>
+                    <option value="">{tt("user.select_branch_type", "Select Branch Type")}</option>
+                    <option value="main">{tt("user.main_branch", "Main Branch")}</option>
+                    <option value="city">{tt("user.city_branch", "City Branch")}</option>
                   </select>
                 </div>
                 {branchType === "main" && (
                   <div className="ue-field">
-                    <label className="ue-label">Main Branch *</label>
+                    <label className="ue-label">{tt("user.main_branch", "Main Branch")} *</label>
                     <SearchSelect
-                      label="Select Main Branch"
+                      label={tt("user.select_main_branch", "Select Main Branch")}
                       value={countryBranchId}
-                      placeholder="Select main branch"
+                      placeholder={tt("user.select_main_branch", "Select Main Branch")}
                       options={mainBranchOptions}
                       disabled={!countryId}
                       onValueChange={setCountryBranchId}
@@ -826,11 +838,11 @@ export function UserEditPage({ userId }: Props) {
                 )}
                 {branchType === "city" && (
                   <div className="ue-field">
-                    <label className="ue-label">City Branch *</label>
+                    <label className="ue-label">{tt("user.city_branch", "City Branch")} *</label>
                     <SearchSelect
-                      label="Select City Branch"
+                      label={tt("user.select_city_branch", "Select City Branch")}
                       value={cityBranchId}
-                      placeholder="Select city branch"
+                      placeholder={tt("user.select_city_branch", "Select City Branch")}
                       options={cityBranchOptions}
                       disabled={!countryId}
                       onValueChange={setCityBranchId}
@@ -843,29 +855,31 @@ export function UserEditPage({ userId }: Props) {
             <div className="ue-card">
               <div className="ue-card-header">
                 <MapPin className="h-4 w-4 text-emerald-600" />
-                <h2 className="ue-card-title">Branch Details</h2>
+                <h2 className="ue-card-title">{tt("user.branch_details", "Branch Details")}</h2>
               </div>
               <div className="space-y-2.5">
                 <div className="ue-info-row">
-                  <span className="ue-info-label">Branch Code</span>
+                  <span className="ue-info-label">{tt("user.label_branch_code", "Branch Code")}</span>
                   <span className="ue-info-value font-mono text-[#1455ff]">
                     {selectedMainBranch?.code || selectedCityBranch?.code || "—"}
                   </span>
                 </div>
                 <div className="ue-info-row">
-                  <span className="ue-info-label">Branch Name</span>
+                  <span className="ue-info-label">{tt("user.label_branch_name", "Branch Name")}</span>
                   <span className="ue-info-value">{selectedMainBranch?.name || selectedCityBranch?.name || "—"}</span>
                 </div>
                 <div className="ue-info-row">
-                  <span className="ue-info-label">Branch Type</span>
-                  <span className="ue-info-value">{branchType === "main" ? "Main Branch" : branchType === "city" ? "City Branch" : "—"}</span>
+                  <span className="ue-info-label">{tt("user.label_branch_type", "Branch Type")}</span>
+                  <span className="ue-info-value">
+                    {branchType === "main" ? tt("user.main_branch", "Main Branch") : branchType === "city" ? tt("user.city_branch", "City Branch") : "—"}
+                  </span>
                 </div>
                 <div className="ue-info-row">
-                  <span className="ue-info-label">City</span>
+                  <span className="ue-info-label">{tt("common.city", "City")}</span>
                   <span className="ue-info-value">{selectedCityBranch?.city_name || "—"}</span>
                 </div>
                 <div className="ue-info-row">
-                  <span className="ue-info-label">Currency</span>
+                  <span className="ue-info-label">{tt("user.label_currency", "Currency")}</span>
                   <span className="ue-info-value font-mono">{selectedMainBranch?.local_currency || selectedCityBranch?.local_currency || "—"}</span>
                 </div>
               </div>
@@ -879,21 +893,21 @@ export function UserEditPage({ userId }: Props) {
             <div className="ue-card">
               <div className="ue-card-header">
                 <Globe2 className="h-4 w-4 text-blue-600" />
-                <h2 className="ue-card-title">Country Assignment</h2>
+                <h2 className="ue-card-title">{tt("user.country_assignment", "Country Assignment")}</h2>
               </div>
               <div className="space-y-4">
                 <div className="ue-field">
-                  <label className="ue-label">Assigned Country</label>
+                  <label className="ue-label">{tt("user.label_assigned_country", "Assigned Country")}</label>
                   <SearchSelect
-                    label={loadingCountries ? "Loading..." : "Select Country"}
+                    label={loadingCountries ? tt("common.loading", "Loading...") : tt("user.select_country", "Select Country")}
                     value={countryId}
-                    placeholder="Select country"
+                    placeholder={tt("user.select_country", "Select Country")}
                     options={countryOptions}
                     disabled={loadingCountries || role === "super_admin"}
                     onValueChange={setCountryId}
                   />
                   {role === "super_admin" && (
-                    <div className="text-[10px] text-amber-600 font-semibold mt-1">Super Admin has global access — no country restriction.</div>
+                    <div className="text-[10px] text-amber-600 font-semibold mt-1">{tt("user.superadmin_note", "Super Admin has global access — no country restriction.")}</div>
                   )}
                 </div>
               </div>
@@ -902,25 +916,25 @@ export function UserEditPage({ userId }: Props) {
             <div className="ue-card">
               <div className="ue-card-header">
                 <Globe2 className="h-4 w-4 text-blue-500" />
-                <h2 className="ue-card-title">Country Details</h2>
+                <h2 className="ue-card-title">{tt("user.country_details", "Country Details")}</h2>
               </div>
               {selectedCountry ? (
                 <div className="space-y-2.5">
                   <div className="ue-info-row">
-                    <span className="ue-info-label">Country Name</span>
+                    <span className="ue-info-label">{tt("user.label_country_name", "Country Name")}</span>
                     <span className="ue-info-value">{selectedCountry.name}</span>
                   </div>
                   <div className="ue-info-row">
-                    <span className="ue-info-label">ISO Code</span>
+                    <span className="ue-info-label">{tt("user.label_iso_code", "ISO Code")}</span>
                     <span className="ue-info-value font-mono">{selectedCountry.iso2 || "—"}</span>
                   </div>
                   <div className="ue-info-row">
-                    <span className="ue-info-label">Currency</span>
+                    <span className="ue-info-label">{tt("user.label_currency", "Currency")}</span>
                     <span className="ue-info-value font-mono">{(selectedCountry as any).currency_code || "—"}</span>
                   </div>
                 </div>
               ) : (
-                <div className="text-sm text-[var(--ue-muted)] py-4">{role === "super_admin" ? "Super Admin — Global Access" : "No country selected"}</div>
+                <div className="text-sm text-[var(--ue-muted)] py-4">{role === "super_admin" ? tt("user.superadmin_global", "Super Admin — Global Access") : tt("user.no_country_selected", "No country selected")}</div>
               )}
             </div>
           </div>
@@ -931,7 +945,7 @@ export function UserEditPage({ userId }: Props) {
           <div className="ue-card">
             <div className="ue-card-header">
               <Activity className="h-4 w-4 text-cyan-600" />
-              <h2 className="ue-card-title">Activity Log</h2>
+              <h2 className="ue-card-title">{tt("user.tab_activity", "Activity Log")}</h2>
             </div>
             {userData?.activityCounts && (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
@@ -945,7 +959,7 @@ export function UserEditPage({ userId }: Props) {
             )}
             <div className="text-sm text-[var(--ue-muted)] py-6 text-center">
               <Activity className="h-10 w-10 mx-auto mb-2 opacity-30" />
-              Detailed activity log coming soon
+              {tt("user.activity_coming_soon", "Detailed activity log coming soon")}
             </div>
           </div>
         )}
@@ -955,25 +969,25 @@ export function UserEditPage({ userId }: Props) {
           <div className="ue-card">
             <div className="ue-card-header">
               <Clock className="h-4 w-4 text-indigo-600" />
-              <h2 className="ue-card-title">Login History</h2>
+              <h2 className="ue-card-title">{tt("user.tab_history", "Login History")}</h2>
             </div>
             <div className="space-y-2.5 mb-4">
               <div className="ue-info-row">
-                <span className="ue-info-label">Last Login</span>
+                <span className="ue-info-label">{tt("user.label_last_login", "Last Login")}</span>
                 <span className="ue-info-value">{userData?.lastActivity ? new Date(userData.lastActivity).toLocaleString() : "—"}</span>
               </div>
               <div className="ue-info-row">
-                <span className="ue-info-label">Last Action</span>
+                <span className="ue-info-label">{tt("user.label_last_action", "Last Action")}</span>
                 <span className="ue-info-value">{userData?.lastActivityAction || "—"}</span>
               </div>
               <div className="ue-info-row">
-                <span className="ue-info-label">Total Logins</span>
+                <span className="ue-info-label">{tt("user.label_total_logins", "Total Logins")}</span>
                 <span className="ue-info-value">{userData?.activityCounts?.logins ?? "—"}</span>
               </div>
             </div>
             <div className="text-sm text-[var(--ue-muted)] py-6 text-center">
               <Clock className="h-10 w-10 mx-auto mb-2 opacity-30" />
-              Full login history coming soon
+              {tt("user.history_coming_soon", "Full login history coming soon")}
             </div>
           </div>
         )}
@@ -983,16 +997,10 @@ export function UserEditPage({ userId }: Props) {
           <div className="ue-card max-w-xl">
             <div className="ue-card-header">
               <Bell className="h-4 w-4 text-amber-600" />
-              <h2 className="ue-card-title">Notification Preferences</h2>
+              <h2 className="ue-card-title">{tt("user.notification_prefs", "Notification Preferences")}</h2>
             </div>
             <div className="space-y-3">
-              {[
-                { label: "Login Alerts", sub: "Notify on new login from unknown device" },
-                { label: "Password Change Alerts", sub: "Notify when password is changed" },
-                { label: "Role Change Alerts", sub: "Notify when role or permissions change" },
-                { label: "Activity Digest", sub: "Weekly activity summary email" },
-                { label: "System Announcements", sub: "Receive ERP system update announcements" },
-              ].map(({ label, sub }) => (
+              {notifToggles.map(({ label, sub }) => (
                 <div key={label} className="flex items-center justify-between p-3 rounded-xl border border-[var(--ue-line)] bg-slate-50/50">
                   <div>
                     <div className="text-xs font-bold text-[var(--ue-title)]">{label}</div>

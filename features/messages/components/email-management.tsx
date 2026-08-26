@@ -46,6 +46,8 @@ import { ReportPageHeader } from "@/components/reports/report-page-header";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 type EmailFolder = "inbox" | "sent" | "draft" | "trash" | "spam" | "attachments" | "notifications" | "dashboard";
 type EmailChannel = "email" | "whatsapp" | "internal" | "notifications";

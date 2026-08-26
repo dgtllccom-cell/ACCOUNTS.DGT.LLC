@@ -12,6 +12,8 @@ import {
   MoreHorizontal, ArrowRightLeft, CheckCircle2, LayoutDashboard, Edit, Search
 } from "lucide-react";
 import { SupportedLanguage } from "@/lib/i18n/languages";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { ExpensesInvoicePrint } from "@/components/reports/expenses-invoice-print";
@@ -27,6 +29,8 @@ type TaxCodeRow = {
 };
 
 const ExpensesBillRow = ({ b, total, countryName, currencyCode, branchName, userName, onView, onTransfer, onEdit }: any) => {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const [menuOpen, setMenuOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -59,21 +63,21 @@ const ExpensesBillRow = ({ b, total, countryName, currencyCode, branchName, user
       <td className="px-4 py-3 text-center">
         {b.transferred_to_roznamcha ? (
           <div className="flex flex-col items-center justify-center text-emerald-600 font-medium">
-            <span className="flex items-center gap-1 text-xs"><CheckCircle2 className="w-3.5 h-3.5"/> Transferred</span>
+            <span className="flex items-center gap-1 text-xs"><CheckCircle2 className="w-3.5 h-3.5"/> {tt("exp.transferred", "Transferred")}</span>
             <span className="text-[9px] text-slate-400 mt-0.5">{new Date(b.updated_at || b.created_at || Date.now()).toLocaleString("en-GB", { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center">
-            <span className="text-[10px] text-slate-500 mb-1">No Transfer</span>
+            <span className="text-[10px] text-slate-500 mb-1">{tt("exp.no_transfer", "No Transfer")}</span>
             <Button size="sm" className="h-6 px-3 text-[10px] font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200" onClick={onTransfer}>
-              Transfer
+              {tt("exp.transfer_btn", "Transfer")}
             </Button>
           </div>
         )}
       </td>
       <td className="px-4 py-3 text-center relative">
         <div className="flex justify-center items-center gap-2" ref={ref}>
-          <Button variant="ghost" size="sm" className="h-7 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50" onClick={onView} title="View Bill">
+          <Button variant="ghost" size="sm" className="h-7 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50" onClick={onView} title={tt("exp.view_print", "View Bill")}>
             <Eye className="h-4 w-4" />
           </Button>
 
@@ -84,12 +88,12 @@ const ExpensesBillRow = ({ b, total, countryName, currencyCode, branchName, user
             {menuOpen && (
               <div className="absolute right-0 mt-1 w-36 bg-white border rounded-md shadow-lg z-50 overflow-hidden text-left text-sm py-1">
                 <button className="flex w-full px-3 py-2 text-slate-700 hover:bg-slate-50 items-center gap-2" onClick={() => { onView(); setMenuOpen(false); }}>
-                  <Eye className="w-4 h-4" /> View / Print
+                  <Eye className="w-4 h-4" /> {tt("exp.view_print", "View / Print")}
                 </button>
                 {!b.transferred_to_roznamcha && (
                   <>
                     <button className="flex w-full px-3 py-2 text-blue-600 hover:bg-slate-50 items-center gap-2" onClick={() => { onEdit(); setMenuOpen(false); }}>
-                      <Edit className="w-4 h-4" /> Edit
+                      <Edit className="w-4 h-4" /> {tt("common.edit", "Edit")}
                     </button>
                   </>
                 )}
@@ -120,6 +124,8 @@ type RowEntry = {
 };
 
 const RenderAccountDetail = ({ ledger, colorClass, borderColorClass }: { ledger: any, colorClass: string, borderColorClass: string }) => {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   if (!ledger) return null;
   // `ledgers` state holds camelCase LedgerLookupRow rows (ledgerId/ledgerName/ledgerCurrency/
   // countryName/cityBranchName/accountCode). Read those, with a fallback to the older raw shape
@@ -139,35 +145,35 @@ const RenderAccountDetail = ({ ledger, colorClass, borderColorClass }: { ledger:
        <div className="grid grid-cols-2 gap-x-2 gap-y-1 mt-1 text-[10px]">
          {displayId && (
            <>
-             <span className="text-slate-500">ID:</span>
+             <span className="text-slate-500">{tt("exp.id_label", "ID:")}</span>
              <span className="font-mono text-slate-700 text-right">{displayId.substring(0,8).toUpperCase()}</span>
            </>
          )}
 
          {accountNo && (
            <>
-             <span className="text-slate-500">Account No:</span>
+             <span className="text-slate-500">{tt("exp.account_no", "Account No:")}</span>
              <span className="font-mono text-slate-700 text-right">{accountNo}</span>
            </>
          )}
 
          {countryName && (
            <>
-             <span className="text-slate-500">Country:</span>
+             <span className="text-slate-500">{tt("common.country", "Country:")}</span>
              <span className="text-slate-700 text-right">{countryName}</span>
            </>
          )}
 
          {branchName && (
            <>
-             <span className="text-slate-500">Branch:</span>
+             <span className="text-slate-500">{tt("common.branch", "Branch:")}</span>
              <span className="text-slate-700 text-right">{branchName}</span>
            </>
          )}
 
          {currency && (
            <>
-             <span className="text-slate-500">Currency:</span>
+             <span className="text-slate-500">{tt("exp.currency_label", "Currency:")}</span>
              <span className={`font-bold ${colorClass} text-right`}>{currency}</span>
            </>
          )}
@@ -196,13 +202,18 @@ const RenderAccountDetail = ({ ledger, colorClass, borderColorClass }: { ledger:
   );
 };
 
-export function ExpensesBillEntryForm({ 
-  lang, 
-  initialBillCategory = "office_home" 
-}: { 
+export function ExpensesBillEntryForm({
+  lang: langProp,
+  initialBillCategory = "office_home"
+}: {
   lang: SupportedLanguage;
   initialBillCategory?: "office_home" | "daily_expenses";
 }) {
+  const activeLang = useActiveLanguage();
+  const lang = activeLang !== "en" ? activeLang : langProp;
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+
   const [viewMode, setViewMode] = useState<"list" | "form">("list");
   const [portalNode, setPortalNode] = useState<HTMLElement | null>(null);
 
@@ -855,7 +866,7 @@ export function ExpensesBillEntryForm({
   }, [ledgers, selectedCountry, branch]);
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 md:p-6 pb-24 text-sm font-sans">
+    <div dir={isRtl ? "rtl" : "ltr"} className="min-h-screen bg-slate-50 p-4 md:p-6 pb-24 text-sm font-sans">
       <div id="pdf-print-container" className="hidden print:block">
         {printStyle === 1 ? (
           <ExpensesInvoicePrint bill={previewBill} />
@@ -870,32 +881,32 @@ export function ExpensesBillEntryForm({
         <div className="flex items-center gap-3">
           <h1 className="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-2 mr-2">
             <FileText className="h-4 w-4 text-primary" />
-            {initialBillCategory === "daily_expenses" ? "Daily Operational Expenses Bill" : "Office / Home Expenses Bill"}
+            {initialBillCategory === "daily_expenses" ? tt("exp.daily_bill_title", "Daily Operational Expenses Bill") : tt("exp.office_bill_title", "Office / Home Expenses Bill")}
             <span className="bg-amber-400 text-amber-950 text-[9px] font-black px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider">NEW</span>
           </h1>
           {viewMode === "list" ? (
             <Button size="sm" onClick={() => setViewMode("form")} className="h-7 text-xs bg-primary hover:bg-primary/90 text-white shadow-sm">
-              <Plus className="h-3 w-3 mr-1" /> New Bill
+              <Plus className="h-3 w-3 mr-1" /> {tt("exp.new_bill", "New Bill")}
             </Button>
           ) : (
             <div className="flex gap-2 items-center" ref={headerMenuRef}>
               <Button size="sm" variant="outline" onClick={() => setViewMode("list")} className="h-7 text-xs shadow-sm">
-                Cancel
+                {tt("common.cancel", "Cancel")}
               </Button>
               <Button size="sm" className="h-7 text-xs bg-blue-600 hover:bg-blue-700 text-white shadow-sm" onClick={() => setViewMode("list")}>
-                <Eye className="h-3 w-3 mr-1" /> View History
+                <Eye className="h-3 w-3 mr-1" /> {tt("exp.view_history", "View History")}
               </Button>
               <div className="relative">
                 <Button size="sm" variant="outline" className="h-7 px-2 shadow-sm bg-white" onClick={() => setHeaderMenuOpen(!headerMenuOpen)}>
-                  Actions <MoreHorizontal className="h-4 w-4 text-slate-600 ml-1" />
+                  {tt("exp.actions", "Actions")} <MoreHorizontal className="h-4 w-4 text-slate-600 ml-1" />
                 </Button>
                 {headerMenuOpen && (
                   <div className="absolute right-0 mt-1 w-48 bg-white border rounded-md shadow-lg z-50 overflow-hidden text-left text-sm py-1">
                     <button className="flex w-full px-3 py-2 text-slate-700 hover:bg-slate-50 items-center gap-2" onClick={() => { setHeaderMenuOpen(false); handleGeneratePdf(1); }}>
-                      <Printer className="w-4 h-4" /> PDF / Print (Style 1)
+                      <Printer className="w-4 h-4" /> {tt("exp.pdf_style1", "PDF / Print (Style 1)")}
                     </button>
                     <button className="flex w-full px-3 py-2 text-slate-700 hover:bg-slate-50 items-center gap-2" onClick={() => { setHeaderMenuOpen(false); handleGeneratePdf(2); }}>
-                      <Printer className="w-4 h-4" /> PDF / Print (Style 2)
+                      <Printer className="w-4 h-4" /> {tt("exp.pdf_style2", "PDF / Print (Style 2)")}
                     </button>
                   </div>
                 )}
@@ -913,12 +924,12 @@ export function ExpensesBillEntryForm({
             {/* Report 1: Branch & Session Details */}
             <Card className="shadow-sm border-t-4 border-t-indigo-500 opacity-90 hover:opacity-100 transition-opacity">
               <CardHeader className="py-2 px-3 bg-slate-50 border-b border-slate-100">
-                <CardTitle className="text-xs uppercase font-bold text-slate-600 flex items-center gap-1.5"><Building2 className="w-3.5 h-3.5" /> 1. Branch & Session Details</CardTitle>
+                <CardTitle className="text-xs uppercase font-bold text-slate-600 flex items-center gap-1.5"><Building2 className="w-3.5 h-3.5" /> {tt("exp.branch_session", "1. Branch & Session Details")}</CardTitle>
               </CardHeader>
               <CardContent className="p-3 space-y-3">
                 {/* User / Role Row */}
                 <div className="flex justify-between items-center text-xs pb-2 border-b border-slate-100">
-                  <span className="text-slate-500 font-medium">User</span>
+                  <span className="text-slate-500 font-medium">{tt("common.user", "User")}</span>
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-slate-700">{sessionInfo?.user?.fullName || "superadmin"}</span>
                     <span className="font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded text-[10px]">
@@ -929,33 +940,33 @@ export function ExpensesBillEntryForm({
 
                 {/* Name Row */}
                 <div className="flex justify-between items-center text-xs pb-2 border-b border-slate-100">
-                  <span className="text-slate-500 font-medium">Name</span>
+                  <span className="text-slate-500 font-medium">{tt("common.name", "Name")}</span>
                   <span className="font-semibold text-slate-700">{sessionInfo?.user?.fullName || "superadmin"}</span>
                 </div>
 
                 {/* Date Row */}
                 <div className="flex justify-between items-center text-xs pb-2 border-b border-slate-100">
-                  <span className="text-slate-500 font-medium">Date</span>
+                  <span className="text-slate-500 font-medium">{tt("common.date", "Date")}</span>
                   <span className="font-semibold text-slate-700">{new Date().toLocaleDateString()}</span>
                 </div>
 
                 {/* Day Row */}
                 <div className="flex justify-between items-center text-xs pb-2 border-b border-slate-100">
-                  <span className="text-slate-500 font-medium">Day</span>
+                  <span className="text-slate-500 font-medium">{tt("exp.day_label", "Day")}</span>
                   <span className="font-semibold text-slate-700">{new Date().toLocaleDateString(undefined, { weekday: 'long' })}</span>
                 </div>
 
                 {/* Country Row */}
                 <div className="flex justify-between items-center text-xs pb-1 border-b border-slate-100">
-                  <span className="text-slate-500 font-medium">Country</span>
+                  <span className="text-slate-500 font-medium">{tt("common.country", "Country")}</span>
                   <div className="relative inline-flex items-center group cursor-pointer">
-                    <select 
-                      className="appearance-none bg-transparent border-0 p-0 pr-5 font-bold text-slate-700 text-right focus:ring-0 cursor-pointer text-xs z-10 w-[140px]" 
+                    <select
+                      className="appearance-none bg-transparent border-0 p-0 pr-5 font-bold text-slate-700 text-right focus:ring-0 cursor-pointer text-xs z-10 w-[140px]"
                       value={selectedCountry}
                       onChange={(e) => setSelectedCountry(e.target.value)}
                       disabled={headerLocked}
                     >
-                      <option value="">Select...</option>
+                      <option value="">{tt("exp.select_placeholder", "Select...")}</option>
                       {countries.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                     <MapPin className="w-3.5 h-3.5 text-blue-500 absolute right-0 pointer-events-none group-hover:scale-110 transition-transform" />
@@ -964,15 +975,15 @@ export function ExpensesBillEntryForm({
 
                 {/* Main Branch Row */}
                 <div className="flex justify-between items-center text-xs pb-1 border-b border-slate-100">
-                  <span className="text-slate-500 font-medium">Main Branch</span>
+                  <span className="text-slate-500 font-medium">{tt("exp.main_branch", "Main Branch")}</span>
                   <div className="relative inline-flex items-center group cursor-pointer">
-                    <select 
-                      className="appearance-none bg-transparent border-0 p-0 pr-5 font-bold text-slate-700 text-right focus:ring-0 cursor-pointer text-xs z-10 w-[140px]" 
+                    <select
+                      className="appearance-none bg-transparent border-0 p-0 pr-5 font-bold text-slate-700 text-right focus:ring-0 cursor-pointer text-xs z-10 w-[140px]"
                       value={selectedMainBranch}
                       onChange={(e) => setSelectedMainBranch(e.target.value)}
                       disabled={headerLocked}
                     >
-                      <option value="">Select...</option>
+                      <option value="">{tt("exp.select_placeholder", "Select...")}</option>
                       {mainBranches.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                     </select>
                     <MapPin className="w-3.5 h-3.5 text-blue-500 absolute right-0 pointer-events-none group-hover:scale-110 transition-transform" />
@@ -981,15 +992,15 @@ export function ExpensesBillEntryForm({
 
                 {/* City Branch Row */}
                 <div className="flex justify-between items-center text-xs pb-1 border-b border-slate-100">
-                  <span className="text-slate-500 font-medium">City Branch</span>
+                  <span className="text-slate-500 font-medium">{tt("exp.city_branch", "City Branch")}</span>
                   <div className="relative inline-flex items-center group cursor-pointer">
-                    <select 
-                      className="appearance-none bg-transparent border-0 p-0 pr-5 font-bold text-slate-700 text-right focus:ring-0 cursor-pointer text-xs z-10 w-[140px]" 
-                      disabled={headerLocked} 
-                      value={branch} 
+                    <select
+                      className="appearance-none bg-transparent border-0 p-0 pr-5 font-bold text-slate-700 text-right focus:ring-0 cursor-pointer text-xs z-10 w-[140px]"
+                      disabled={headerLocked}
+                      value={branch}
                       onChange={e=>setBranch(e.target.value)}
                     >
-                      <option value="">Select...</option>
+                      <option value="">{tt("exp.select_placeholder", "Select...")}</option>
                       {cityBranches.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                     <MapPin className="w-3.5 h-3.5 text-blue-500 absolute right-0 pointer-events-none group-hover:scale-110 transition-transform" />
@@ -998,13 +1009,13 @@ export function ExpensesBillEntryForm({
 
                 {/* Base Currency Row */}
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-500 font-medium">Base Currency</span>
+                  <span className="text-slate-500 font-medium">{tt("exp.base_currency", "Base Currency")}</span>
                   <span className="font-bold text-slate-700">{branchCurrency}</span>
                 </div>
 
                 {/* Session Time */}
                 <div className="flex justify-between items-center text-xs pt-1 border-t border-slate-50">
-                  <span className="text-slate-500 font-medium">Session Time</span>
+                  <span className="text-slate-500 font-medium">{tt("exp.session_time", "Session Time")}</span>
                   <span className="font-semibold text-slate-700">{new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}</span>
                 </div>
               </CardContent>
@@ -1013,7 +1024,7 @@ export function ExpensesBillEntryForm({
             {/* Report 2: Bill Info */}
             <Card className={`shadow-sm border-t-4 transition-colors duration-300 opacity-90 hover:opacity-100 ${headerLocked ? "border-t-emerald-500 bg-emerald-50/10" : "border-t-amber-400"}`}>
               <CardHeader className="py-2 px-3 bg-slate-50 border-b border-slate-100">
-                <CardTitle className="text-xs uppercase font-bold text-slate-600 flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" /> 2. Bill Info</CardTitle>
+                <CardTitle className="text-xs uppercase font-bold text-slate-600 flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" /> {tt("exp.bill_info", "2. Bill Info")}</CardTitle>
               </CardHeader>
               <CardContent className="p-3 space-y-2">
                 <div className="flex justify-between items-center text-xs pb-2 border-b border-slate-100">
@@ -1029,33 +1040,33 @@ export function ExpensesBillEntryForm({
                     }}
                     disabled={headerLocked}
                   >
-                    <option value="new-office_home">Office / Home Bill</option>
-                    <option value="new-daily_expenses">Daily Operational Bill</option>
-                    <option value="new-purchase">General Purchase Bill</option>
-                    <option value="attached-purchase">Attached (Purchase)</option>
-                    <option value="attached-sale">Attached (Sale)</option>
+                    <option value="new-office_home">{tt("exp.office_home_bill", "Office / Home Bill")}</option>
+                    <option value="new-daily_expenses">{tt("exp.daily_ops_bill", "Daily Operational Bill")}</option>
+                    <option value="new-purchase">{tt("exp.general_purchase_bill", "General Purchase Bill")}</option>
+                    <option value="attached-purchase">{tt("exp.attached_purchase", "Attached (Purchase)")}</option>
+                    <option value="attached-sale">{tt("exp.attached_sale", "Attached (Sale)")}</option>
                   </select>
-                  <Input placeholder="Search Bill No..." className="h-6 text-xs w-[130px] border-slate-200" disabled={headerLocked || billMode === 'new'} />
+                  <Input placeholder={tt("exp.search_bill_no", "Search Bill No...")} className="h-6 text-xs w-[130px] border-slate-200" disabled={headerLocked || billMode === 'new'} />
                 </div>
                 <div className="text-[10px] bg-slate-50 p-1.5 rounded border border-slate-100 text-slate-600 italic">
-                  Select bill type to attach references.
+                  {tt("exp.bill_type_hint", "Select bill type to attach references.")}
                 </div>
-                
+
                 <div className="flex justify-between items-center text-xs pt-1">
-                  <span className="text-slate-500 font-medium">Bill Number</span>
+                  <span className="text-slate-500 font-medium">{tt("exp.bill_number", "Bill Number")}</span>
                   <span className="font-bold text-slate-800 bg-slate-100 px-1 rounded">{billSerial}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-500 font-medium">Date</span>
+                  <span className="text-slate-500 font-medium">{tt("common.date", "Date")}</span>
                   <input type="date" className="border border-slate-200 rounded px-1 w-[110px] h-6 text-slate-700 bg-white" disabled={headerLocked} value={billDate} onChange={e=>setBillDate(e.target.value)} />
                 </div>
 
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-500 font-medium">Super Admin Sr.</span>
+                  <span className="text-slate-500 font-medium">{tt("exp.super_admin_sr", "Super Admin Sr.")}</span>
                   <span className="font-semibold text-slate-600">SA-{billSerial.split('-')[1]}-{Math.floor(Math.random() * 900) + 100}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-500 font-medium">Country Sr.</span>
+                  <span className="text-slate-500 font-medium">{tt("exp.country_sr", "Country Sr.")}</span>
                   <span className="font-semibold text-slate-600">CT-{billSerial.split('-')[1]}-{Math.floor(Math.random() * 90) + 10}</span>
                 </div>
               </CardContent>

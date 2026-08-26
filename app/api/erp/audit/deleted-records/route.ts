@@ -10,13 +10,18 @@ export async function GET(request: NextRequest) {
 
     let countryId = searchParams.get("countryId");
     let cityBranchId = searchParams.get("cityBranchId");
-    const entityType = searchParams.get("entityType");
+    const moduleName = searchParams.get("module") || searchParams.get("entityType");
+    const deletedBy = searchParams.get("deletedBy");
+    const riskLevel = searchParams.get("riskLevel");
+    const reviewStatus = searchParams.get("reviewStatus");
+    const fromDate = searchParams.get("fromDate");
+    const toDate = searchParams.get("toDate");
     const search = searchParams.get("search");
     const limit = Number(searchParams.get("limit") || 50);
     const offset = Number(searchParams.get("offset") || 0);
 
-    // Isolation: Country Admin only sees own country
-    if (!session.isSuperAdmin && !session.roles.includes("super_admin_reports")) {
+    // Permission Scope
+    if (!session.isSuperAdmin && !session.roles.includes("super_admin_reports") && !session.roles.includes("audit_viewer")) {
       if (session.countryIds.length > 0) {
         countryId = session.countryIds[0];
       }
@@ -28,7 +33,12 @@ export async function GET(request: NextRequest) {
     const result = await getDeletedRecords({
       countryId,
       cityBranchId,
-      entityType,
+      module: moduleName,
+      deletedBy,
+      riskLevel,
+      reviewStatus,
+      fromDate,
+      toDate,
       search,
       limit,
       offset
@@ -48,7 +58,21 @@ export async function POST(request: NextRequest) {
     const session = await requireErpSession(request);
     const body = await request.json();
 
-    const { entityType, entityId, referenceNo, reason, countryId, cityBranchId } = body;
+    const {
+      entityType,
+      entityId,
+      referenceNo,
+      module,
+      reason,
+      partyName,
+      amount,
+      currency,
+      countryId,
+      countryName,
+      cityBranchId,
+      branchName,
+      snapshot
+    } = body;
 
     if (!entityType || !entityId) {
       return NextResponse.json({ error: "entityType and entityId are required." }, { status: 400 });
@@ -59,11 +83,20 @@ export async function POST(request: NextRequest) {
       entityType,
       entityId,
       referenceNo,
+      module: module || entityType,
       actionType: "SOFT_DELETE",
       reason: reason || "Archived via Soft Delete",
+      previousSnapshot: snapshot || null,
+      currentSnapshot: null,
+      partyName,
+      amount,
+      currency,
       session,
       countryId,
-      cityBranchId
+      countryName,
+      cityBranchId,
+      branchName,
+      riskLevel: "High"
     });
 
     // Also update deleted_at in the actual database table if it exists
@@ -75,7 +108,6 @@ export async function POST(request: NextRequest) {
           WHERE id::text = ${entityId} OR code = ${entityId};
         `);
       } catch (e) {
-        // Table might not have deleted_at or might use status column
         try {
           await sql.unsafe(`
             UPDATE ${sql(entityType)} 

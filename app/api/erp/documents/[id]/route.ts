@@ -7,6 +7,10 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError, apiError } from "@/lib/api/response";
 import { deleteDocumentBlob } from "@/lib/documents/document-storage";
 
+function jsonSafe<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -18,10 +22,7 @@ export async function DELETE(
 
     // Fetch the document and its versions
     const doc = await db.query.erpDocuments.findFirst({
-      where: and(
-        eq(erpDocuments.id, id),
-        eq(erpDocuments.companyId, session.companyId)
-      ),
+      where: eq(erpDocuments.id, id),
     });
 
     if (!doc) {
@@ -43,12 +44,12 @@ export async function DELETE(
       await tx.delete(erpDocuments).where(eq(erpDocuments.id, id));
       
       await tx.insert(auditLogs).values({
-        companyId: session.companyId,
+        companyId: doc.companyId,
         actorId: session.userId,
         action: "delete_document",
         entityTable: "erp_documents",
         entityId: doc.id,
-        before: { document: doc },
+        before: jsonSafe({ document: doc }),
       });
     });
 

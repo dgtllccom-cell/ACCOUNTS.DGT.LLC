@@ -3062,7 +3062,318 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             document.getElementById("erp-page-actions-slot")
           )}
 
-          {activeTab !== "report" && (
+          {activeTab === "reports_tab" ? (
+            <div className="w-full mt-4 space-y-4 animate-in fade-in duration-200">
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-center space-y-4 max-w-xl mx-auto shadow-sm">
+                <div className="inline-flex p-3 rounded-full bg-blue-50 text-blue-600 mb-1">
+                  <FileText className="h-6 w-6" />
+                </div>
+                <h3 className="text-sm font-black uppercase text-slate-800 tracking-wider">
+                  {t(lang, "sales.step4_review_reports", "Step 4: Review Reports")}
+                </h3>
+                <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                  {t(lang, "sales.review_reports_subtitle", "Review all generated reports and notes before final verification.")}
+                </p>
+                <div className="flex items-center justify-between gap-4 pt-4 border-t border-slate-200 mt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setActiveTab("others")}
+                    className="font-bold text-xs h-10 px-8 border-slate-200 text-slate-700 hover:bg-slate-50"
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1.5" /> {t(lang, "common.back", "Back")}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => setActiveTab("report")}
+                    className="font-black text-xs h-10 px-8 bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all uppercase tracking-wider flex items-center gap-2"
+                  >
+                    {t(lang, "common.next", "Next")} <ChevronRight className="h-4 w-4 ml-1.5" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : activeTab === "others" ? (
+            <div className="w-full mt-4 space-y-4 animate-in fade-in duration-200">
+              {/* Global Info Cards at top */}
+              {renderGlobalInfoCards()}
+
+              {/* Step 3 Form: Spacious 2-Column Layout */}
+              <fieldset disabled={isTransferred && !session?.scopes?.isSuperAdmin} className="space-y-4 w-full">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+                  {/* LEFT COLUMN: Shipping & Location */}
+                  <div className="space-y-4">
+                    {/* SECTION 1: SHIPPING & LOCATION */}
+                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+                      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
+                        <div className="flex items-center gap-2.5">
+                          <div className="grid h-9 w-9 place-items-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300">
+                            <Globe2 className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-black uppercase tracking-[0.18em] text-slate-900 dark:text-slate-100">{t(lang, "purchase.shipping_location_title", "Shipping & Location")}</h4>
+                            <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">{t(lang, "purchase.shipping_location_subtitle", "Essential route information only: country, port, mode and dates.")}</p>
+                          </div>
+                        </div>
+                        <label className="min-w-[150px] space-y-1">
+                          <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.shipping_mode_label", "Shipping Mode")}</span>
+                          <select
+                            value={form.shippingMode || "By Sea"}
+                            onChange={(e) => {
+                              const mode = e.target.value;
+                              setValue("shippingMode", mode);
+                              setValue("shipmentType", mode === "By Sea" ? "By Ship" : mode);
+                            }}
+                            className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-900 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                          >
+                            {LOADING_TYPES.map((type) => <option key={type} value={type}>{type}</option>)}
+                          </select>
+                        </label>
+                      </div>
+
+                      <div className="flex flex-col gap-4">
+                        <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-4 dark:border-amber-900/50 dark:bg-amber-950/10">
+                          <div className="mb-3 flex items-center gap-2 border-b border-amber-100 pb-2 dark:border-amber-900/40">
+                            <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+                            <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{t(lang, "purchase.loading_departure_title", "Loading / Departure")}</h5>
+                          </div>
+                          <div className="grid gap-3 sm:grid-cols-3">
+                            <label className="space-y-1">
+                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.loading_country_label", "Loading Country")}</span>
+                              <SearchableSelect
+                                value={form.loadingCountry || ""}
+                                onChange={(val) => {
+                                  if (val === "__ADD_NEW__") {
+                                    handleAddNewLocationItem("country", "loadingCountry");
+                                  } else {
+                                    setValue("loadingCountry", val);
+                                    setValue("originCountry", val);
+                                    setValue("origin", val);
+                                    setValue("loadingPort", "");
+                                    setValue("loadingLocation", "");
+                                  }
+                                }}
+                                options={masterCountryOptions.map((c) => ({ label: `${c.name} ${c.iso2 ? `(${c.iso2})` : ""}`, value: c.name }))}
+                                placeholder={t(lang, "sales.select_country_ph", "Select Country")}
+                                addOptionLabel="Add New Country"
+                              />
+                            </label>
+                            <label className="space-y-1">
+                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.loading_port_label", "Loading Port")}</span>
+                              <SearchableSelect
+                                value={form.loadingPort || form.airportName || form.loadingBorder || ""}
+                                onChange={(val) => {
+                                  if (val === "__ADD_NEW__") {
+                                    handleAddNewLocationItem("port", "loadingPort");
+                                  } else {
+                                    setValue("loadingPort", val);
+                                    setValue("loadingLocation", val);
+                                    if (form.shippingMode === "By Air") setValue("airportName", val);
+                                    if (form.shippingMode === "By Road") setValue("loadingBorder", val);
+                                  }
+                                }}
+                                options={currentLoadingPorts.map((p, idx) => ({ label: `${p.port_name} ${p.port_code ? `[${p.port_code}]` : ""}`, value: p.port_name }))}
+                                placeholder={t(lang, "sales.select_port_ph", "Select Port")}
+                                addOptionLabel="Add New Port"
+                                disabled={!form.loadingCountry && currentLoadingPorts.length === 0}
+                              />
+                            </label>
+                            <label className="space-y-1">
+                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.loading_date_label", "Loading Date")}</span>
+                              <input
+                                type="date"
+                                value={form.loadingDate || ""}
+                                onChange={(e) => setValue("loadingDate", e.target.value)}
+                                className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-900 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                              />
+                            </label>
+                          </div>
+                        </div>
+
+                        <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-4 dark:border-emerald-900/50 dark:bg-emerald-950/10">
+                          <div className="mb-3 flex items-center gap-2 border-b border-emerald-100 pb-2 dark:border-emerald-900/40">
+                            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                            <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{t(lang, "purchase.receiving_arrival_title", "Receiving / Arrival")}</h5>
+                          </div>
+                          <div className="grid gap-3 sm:grid-cols-3">
+                            <label className="space-y-1">
+                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.receiving_country_label", "Receiving Country")}</span>
+                              <SearchableSelect
+                                value={form.receivingCountry || form.destinationCountry || form.receivedCountry || ""}
+                                onChange={(val) => {
+                                  if (val === "__ADD_NEW__") {
+                                    handleAddNewLocationItem("country", "receivingCountry");
+                                  } else {
+                                    setValue("receivingCountry", val);
+                                    setValue("receivedCountry", val);
+                                    setValue("destinationCountry", val);
+                                    setValue("receivingPort", "");
+                                    setValue("destinationPort", "");
+                                    setValue("receivedPort", "");
+                                  }
+                                }}
+                                options={masterCountryOptions.map((c) => ({ label: `${c.name} ${c.iso2 ? `(${c.iso2})` : ""}`, value: c.name }))}
+                                placeholder={t(lang, "sales.select_country_ph", "Select Country")}
+                                addOptionLabel="Add New Country"
+                              />
+                            </label>
+                            <label className="space-y-1">
+                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.receiving_port_label", "Receiving Port")}</span>
+                              <SearchableSelect
+                                value={form.receivingPort || form.destinationPort || form.receivedPort || ""}
+                                onChange={(val) => {
+                                  if (val === "__ADD_NEW__") {
+                                    handleAddNewLocationItem("port", "receivingPort");
+                                  } else {
+                                    setValue("receivingPort", val);
+                                    setValue("destinationPort", val);
+                                    setValue("receivedPort", val);
+                                    if (form.shippingMode === "By Air") setValue("destinationAirportName", val);
+                                    if (form.shippingMode === "By Road") setValue("receivingBorder", val);
+                                  }
+                                }}
+                                options={currentReceivedPorts.map((p, idx) => ({ label: `${p.port_name} ${p.port_code ? `[${p.port_code}]` : ""}`, value: p.port_name }))}
+                                placeholder={t(lang, "sales.select_port_ph", "Select Port")}
+                                addOptionLabel="Add New Port"
+                                disabled={!(form.receivingCountry || form.destinationCountry || form.receivedCountry) && currentReceivedPorts.length === 0}
+                              />
+                            </label>
+                            <label className="space-y-1">
+                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.receiving_date_label", "Receiving Date")}</span>
+                              <input
+                                type="date"
+                                value={form.receivedDate || ""}
+                                onChange={(e) => setValue("receivedDate", e.target.value)}
+                                className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-900 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                              />
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* RIGHT COLUMN: Advance & Payment Terms + Transport & Container Details + Remarks & Narration */}
+                  <div className="space-y-4">
+                    {/* SECTION 2: ADVANCE & PAYMENT TERMS */}
+                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950 space-y-4">
+                      <div className="flex items-center gap-2 border-b border-slate-100 pb-3 dark:border-slate-800">
+                        <CreditCard className="h-4 w-4 text-blue-600" />
+                        <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">{t(lang, "purchase.advance_payment_terms_title", "Advance & Payment Terms")}</h4>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.payment_type_label", "Payment Type")}</label>
+                          <select
+                            value={form.paymentType || "Advance Payment"}
+                            onChange={(e) => setValue("paymentType", e.target.value)}
+                            className="w-full h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500"
+                          >
+                            {PAYMENT_TYPES.map((p) => <option key={p} value={p}>{p}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.advance_percentage_label", "Advance Percentage (%)")}</label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={form.advancePercent ?? ""}
+                            onChange={(e) => setValue("advancePercent", e.target.value ? Number(e.target.value) : null)}
+                            placeholder={t(lang, "sales.qty_example_ph", "e.g. 20")}
+                            className="w-full h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 font-mono"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.advance_payment_date_label", "Advance Payment Date")}</label>
+                          <input
+                            type="date"
+                            value={form.advancePaymentDate || ""}
+                            onChange={(e) => setValue("advancePaymentDate", e.target.value)}
+                            className="w-full h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 text-xs font-semibold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.final_payment_date_label", "Final Payment Date")}</label>
+                          <input
+                            type="date"
+                            value={form.paymentDate || ""}
+                            onChange={(e) => setValue("paymentDate", e.target.value)}
+                            className="w-full h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 text-xs font-semibold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* SECTION 3: TRANSPORT & CONTAINER DETAILS */}
+                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950 space-y-4">
+                      <div className="flex items-center gap-2 border-b border-slate-100 pb-3 dark:border-slate-800">
+                        <Truck className="h-4 w-4 text-blue-600" />
+                        <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">{t(lang, "purchase.transport_container_title", "Transport & Container Details")}</h4>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.container_numbers_label", "Container Numbers")}</label>
+                          <input
+                            type="text"
+                            value={form.containerNumbers || ""}
+                            onChange={(e) => setValue("containerNumbers", e.target.value)}
+                            placeholder={t(lang, "sales.container_example_ph", "e.g. ABCU1234567")}
+                            className="w-full h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 font-mono uppercase"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.container_size_type_label", "Container Size / Type")}</label>
+                          <select
+                            value={form.containerSize || ""}
+                            onChange={(e) => setValue("containerSize", e.target.value)}
+                            className="w-full h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500"
+                          >
+                            <option value="">{t(lang, "purchase.select_type_placeholder", "Select Type...")}</option>
+                            {CONTAINER_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* SECTION 4: REMARKS & NARRATION */}
+                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950 space-y-3">
+                      <div className="flex items-center gap-2 border-b border-slate-100 pb-2 dark:border-slate-800">
+                        <MessageSquare className="h-4 w-4 text-blue-600" />
+                        <label className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">{t(lang, "purchase.remarks_narration_title", "Remarks & Narration")}</label>
+                      </div>
+                      <textarea
+                        rows={3}
+                        value={form.remarks || ""}
+                        onChange={(e) => setValue("remarks", e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 resize-none leading-relaxed"
+                        placeholder={t(lang, "sales.remarks_narration_ph", "Add any remarks or narration here...")}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Step 3 Action Navigation */}
+                <div className="flex items-center justify-between gap-4 pt-4 border-t border-slate-200 mt-6">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setActiveTab("goods")}
+                    className="font-bold text-xs h-10 px-8 border-slate-200 text-slate-700 hover:bg-slate-50"
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1.5" /> {t(lang, "common.back", "Back")}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => setActiveTab("reports_tab")}
+                    className="font-black text-xs h-10 px-8 bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all uppercase tracking-wider flex items-center gap-2"
+                  >
+                    {t(lang, "common.next", "Next")} <ChevronRight className="h-4 w-4 ml-1.5" />
+                  </Button>
+                </div>
+              </fieldset>
+            </div>
+          ) : (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-0 items-start w-full">
               <section className="lg:col-span-9 space-y-4 order-2 lg:order-2 mt-4">
                 {/* GLOBAL INFO CARDS (Always visible at top) */}
@@ -3239,7 +3550,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 )}
 
                 {/* GOODS LIST TABLE */}
-                {(activeTab === "goods" || activeTab === "others") && (
+                {activeTab === "goods" && (
                   <div className="mt-4">
                     <div className="overflow-x-auto rounded-lg border border-border bg-background shadow-sm">
                       <table className="w-full text-[9px] text-foreground border-collapse text-left whitespace-nowrap">
@@ -4089,299 +4400,6 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     </div>
                   </div>
                 </fieldset>
-              )}
-
-              {activeTab === "others" && (
-                <fieldset disabled={isTransferred && !session?.scopes?.isSuperAdmin} className="space-y-3 order-2 w-full mt-0 rounded-2xl border border-border bg-card p-4 shadow-sm animate-in fade-in zoom-in-95 duration-200">
-                  <div className="border-b border-border pb-2">
-                    <h3 className="text-xs font-black uppercase tracking-wider text-foreground flex items-center gap-2">
-                      {t(lang, "purchase.step3_other_details", "STEP 3: OTHER DETAILS")}
-                    </h3>
-                  </div>
-
-                  <div className="space-y-4">
-                    {/* SECTION 1: SHIPPING & LOCATION */}
-                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                      <div className="mb-3 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
-                        <div className="flex items-center gap-2.5">
-                          <div className="grid h-9 w-9 place-items-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300">
-                            <Globe2 className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <h4 className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-900 dark:text-slate-100">{t(lang, "purchase.shipping_location_title", "Shipping & Location")}</h4>
-                            <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">{t(lang, "purchase.shipping_location_subtitle", "Essential route information only: country, port, mode and dates.")}</p>
-                          </div>
-                        </div>
-                        <label className="min-w-[150px] space-y-1">
-                          <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.shipping_mode_label", "Shipping Mode")}</span>
-                          <select
-                            value={form.shippingMode || "By Sea"}
-                            onChange={(e) => {
-                              const mode = e.target.value;
-                              setValue("shippingMode", mode);
-                              setValue("shipmentType", mode === "By Sea" ? "By Ship" : mode);
-                            }}
-                            className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-900 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
-                          >
-                            {LOADING_TYPES.map((type) => <option key={type} value={type}>{type}</option>)}
-                          </select>
-                        </label>
-                      </div>
-
-                      <div className="flex flex-col gap-3">
-                        <div className="rounded-lg border border-amber-200 bg-amber-50/40 p-3 dark:border-amber-900/50 dark:bg-amber-950/10">
-                          <div className="mb-3 flex items-center gap-2 border-b border-amber-100 pb-2 dark:border-amber-900/40">
-                            <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
-                            <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{t(lang, "purchase.loading_departure_title", "Loading / Departure")}</h5>
-                          </div>
-                          <div className="grid gap-4 sm:grid-cols-3">
-                            <label className="space-y-1">
-                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.loading_country_label", "Loading Country")}</span>
-                              <SearchableSelect
-                                value={form.loadingCountry || ""}
-                                onChange={(val) => {
-                                  if (val === "__ADD_NEW__") {
-                                    handleAddNewLocationItem("country", "loadingCountry");
-                                  } else {
-                                    setValue("loadingCountry", val);
-                                    setValue("originCountry", val);
-                                    setValue("origin", val);
-                                    setValue("loadingPort", "");
-                                    setValue("loadingLocation", "");
-                                  }
-                                }}
-                                options={masterCountryOptions.map((c) => ({ label: `${c.name} ${c.iso2 ? `(${c.iso2})` : ""}`, value: c.name }))}
-                                placeholder={t(lang, "sales.select_country_ph", "Select Country")}
-                                addOptionLabel="Add New Country"
-                              />
-                            </label>
-                            <label className="space-y-1">
-                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.loading_port_label", "Loading Port")}</span>
-                              <SearchableSelect
-                                value={form.loadingPort || form.airportName || form.loadingBorder || ""}
-                                onChange={(val) => {
-                                  if (val === "__ADD_NEW__") {
-                                    handleAddNewLocationItem("port", "loadingPort");
-                                  } else {
-                                    setValue("loadingPort", val);
-                                    setValue("loadingLocation", val);
-                                    if (form.shippingMode === "By Air") setValue("airportName", val);
-                                    if (form.shippingMode === "By Road") setValue("loadingBorder", val);
-                                  }
-                                }}
-                                options={currentLoadingPorts.map((p, idx) => ({ label: `${p.port_name} ${p.port_code ? `[${p.port_code}]` : ""}`, value: p.port_name }))}
-                                placeholder={t(lang, "sales.select_port_ph", "Select Port")}
-                                addOptionLabel="Add New Port"
-                                disabled={!form.loadingCountry && currentLoadingPorts.length === 0}
-                              />
-                            </label>
-                            <label className="space-y-1">
-                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.loading_date_label", "Loading Date")}</span>
-                              <input
-                                type="date"
-                                value={form.loadingDate || ""}
-                                onChange={(e) => setValue("loadingDate", e.target.value)}
-                                className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-semibold text-slate-900 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
-                              />
-                            </label>
-                          </div>
-                        </div>
-
-                        <div className="rounded-lg border border-emerald-200 bg-emerald-50/40 p-3 dark:border-emerald-900/50 dark:bg-emerald-950/10">
-                          <div className="mb-3 flex items-center gap-2 border-b border-emerald-100 pb-2 dark:border-emerald-900/40">
-                            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                            <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{t(lang, "purchase.receiving_arrival_title", "Receiving / Arrival")}</h5>
-                          </div>
-                          <div className="grid gap-4 sm:grid-cols-3">
-                            <label className="space-y-1">
-                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.receiving_country_label", "Receiving Country")}</span>
-                              <SearchableSelect
-                                value={form.receivingCountry || form.destinationCountry || form.receivedCountry || ""}
-                                onChange={(val) => {
-                                  if (val === "__ADD_NEW__") {
-                                    handleAddNewLocationItem("country", "receivingCountry");
-                                  } else {
-                                    setValue("receivingCountry", val);
-                                    setValue("receivedCountry", val);
-                                    setValue("destinationCountry", val);
-                                    setValue("receivingPort", "");
-                                    setValue("destinationPort", "");
-                                    setValue("receivedPort", "");
-                                  }
-                                }}
-                                options={masterCountryOptions.map((c) => ({ label: `${c.name} ${c.iso2 ? `(${c.iso2})` : ""}`, value: c.name }))}
-                                placeholder={t(lang, "sales.select_country_ph", "Select Country")}
-                                addOptionLabel="Add New Country"
-                              />
-                            </label>
-                            <label className="space-y-1">
-                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.receiving_port_label", "Receiving Port")}</span>
-                              <SearchableSelect
-                                value={form.receivingPort || form.destinationPort || form.receivedPort || ""}
-                                onChange={(val) => {
-                                  if (val === "__ADD_NEW__") {
-                                    handleAddNewLocationItem("port", "receivingPort");
-                                  } else {
-                                    setValue("receivingPort", val);
-                                    setValue("destinationPort", val);
-                                    setValue("receivedPort", val);
-                                    if (form.shippingMode === "By Air") setValue("destinationAirportName", val);
-                                    if (form.shippingMode === "By Road") setValue("receivingBorder", val);
-                                  }
-                                }}
-                                options={currentReceivedPorts.map((p, idx) => ({ label: `${p.port_name} ${p.port_code ? `[${p.port_code}]` : ""}`, value: p.port_name }))}
-                                placeholder={t(lang, "sales.select_port_ph", "Select Port")}
-                                addOptionLabel="Add New Port"
-                                disabled={!(form.receivingCountry || form.destinationCountry || form.receivedCountry) && currentReceivedPorts.length === 0}
-                              />
-                            </label>
-                            <label className="space-y-1">
-                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.receiving_date_label", "Receiving Date")}</span>
-                              <input
-                                type="date"
-                                value={form.receivedDate || ""}
-                                onChange={(e) => setValue("receivedDate", e.target.value)}
-                                className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-semibold text-slate-900 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
-                              />
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    {/* --- SECTION 2: ADVANCE & PAYMENT TERMS --- */}
-                    <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded p-3 space-y-3">
-                      <h4 className="text-[10px] font-black uppercase text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-800 pb-1">{t(lang, "purchase.advance_payment_terms_title", "Advance & Payment Terms")}</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                        <div>
-                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">{t(lang, "purchase.payment_type_label", "Payment Type")}</label>
-                          <select
-                            value={form.paymentType || "Advance Payment"}
-                            onChange={(e) => setValue("paymentType", e.target.value)}
-                            className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
-                          >
-                            {PAYMENT_TYPES.map((p) => <option key={p} value={p}>{p}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">{t(lang, "purchase.advance_percentage_label", "Advance Percentage (%)")}</label>
-                          <input
-                            type="number"
-                            min="0"
-                            max="100"
-                            value={form.advancePercent ?? ""}
-                            onChange={(e) => setValue("advancePercent", e.target.value ? Number(e.target.value) : null)}
-                            placeholder={t(lang, "sales.qty_example_ph", "e.g. 20")}
-                            className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">{t(lang, "purchase.advance_payment_date_label", "Advance Payment Date")}</label>
-                          <input
-                            type="date"
-                            value={form.advancePaymentDate || ""}
-                            onChange={(e) => setValue("advancePaymentDate", e.target.value)}
-                            className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">{t(lang, "purchase.final_payment_date_label", "Final Payment Date")}</label>
-                          <input
-                            type="date"
-                            value={form.paymentDate || ""}
-                            onChange={(e) => setValue("paymentDate", e.target.value)}
-                            className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* --- SECTION 3: TRANSPORT & CONTAINER DETAILS --- */}
-                    <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded p-3 space-y-3">
-                      <h4 className="text-[10px] font-black uppercase text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-800 pb-1">{t(lang, "purchase.transport_container_title", "Transport & Container Details")}</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                        <div>
-                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">{t(lang, "purchase.container_numbers_label", "Container Numbers")}</label>
-                          <input
-                            type="text"
-                            value={form.containerNumbers || ""}
-                            onChange={(e) => setValue("containerNumbers", e.target.value)}
-                            placeholder={t(lang, "sales.container_example_ph", "e.g. ABCU1234567")}
-                            className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">{t(lang, "purchase.container_size_type_label", "Container Size / Type")}</label>
-                          <select
-                            value={form.containerSize || ""}
-                            onChange={(e) => setValue("containerSize", e.target.value)}
-                            className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
-                          >
-                            <option value="">{t(lang, "purchase.select_type_placeholder", "Select Type...")}</option>
-                            {CONTAINER_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* --- SECTION 4: REMARKS & NARRATION --- */}
-                    <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded p-3">
-                      <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">{t(lang, "purchase.remarks_narration_title", "Remarks & Narration")}</label>
-                      <textarea
-                        value={form.remarks || ""}
-                        onChange={(e) => setValue("remarks", e.target.value)}
-                        className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-16 resize-none"
-                        placeholder={t(lang, "sales.remarks_narration_ph", "Add any remarks or narration here...")}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 pt-4 border-t border-border mt-4">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setActiveTab("goods")}
-                      className="flex-1 font-bold h-10 rounded-lg text-xs text-slate-600 hover:bg-slate-50 border border-input"
-                    >
-                      {t(lang, "common.back", "Back")}
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={() => setActiveTab("reports_tab")}
-                      className="flex-1 font-bold h-10 rounded-lg text-xs bg-primary text-primary-foreground hover:bg-primary/90 transition-all"
-                    >
-                      {t(lang, "common.next", "Next")}
-                    </Button>
-                  </div>
-                </fieldset>
-              )}
-              {activeTab === "reports_tab" && (
-                <div className="space-y-3 order-2 w-full mt-0 rounded-2xl border border-border bg-card p-4 shadow-sm animate-in fade-in zoom-in-95 duration-200">
-                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center space-y-3">
-                    <h3 className="text-[11px] font-black uppercase text-slate-800">
-                      {t(lang, "sales.step4_review_reports", "Step 4: Review Reports")}
-                    </h3>
-                    <p className="text-[9px] text-slate-500 font-semibold">
-                      {t(lang, "sales.review_reports_subtitle", "Review all generated reports and notes before final verification.")}
-                    </p>
-                    <div className="flex gap-3 pt-3 border-t border-slate-200 mt-3">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setActiveTab("others")}
-                        className="flex-1 font-bold h-10 rounded-lg text-xs text-slate-600 hover:bg-slate-50 border border-input"
-                      >
-                        {t(lang, "common.back", "Back")}
-                      </Button>
-                      <Button
-                        type="button"
-                        onClick={() => setActiveTab("report")}
-                        className="flex-1 font-bold h-10 rounded-lg text-xs bg-primary text-primary-foreground hover:bg-primary/90 transition-all"
-                      >
-                        {t(lang, "common.next", "Next")}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
               )}
             </main>
           </div>
