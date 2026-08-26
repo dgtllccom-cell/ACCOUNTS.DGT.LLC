@@ -55,6 +55,8 @@ for (const lang of langs) {
     const page = await context.newPage();
     await page.goto(`${baseUrl}${pageInfo.slug}`, { waitUntil: "networkidle" });
     await page.waitForTimeout(2000);
+    await page.locator('button[title="Close"]').first().click({ force: true }).catch(() => {});
+    await page.waitForTimeout(1000);
     const title = await page.locator("body").innerText({ timeout: 5000 }).catch(() => "");
     const file = path.join(outDir, `${pageInfo.name}-${lang}.png`);
     await page.screenshot({ path: file, fullPage: true });
