@@ -57,13 +57,24 @@ export async function GET(request: NextRequest) {
     const isShipping = session.isShippingScoped;
 
     const result = await withLocalPg(async (sql) => {
-      // Scope WHERE fragment reused across all sub-queries
+      // Scope WHERE fragment reused across count sub-queries (no JOINs, so bare column names are safe).
+      // For the main rows query, use mkScopeWhere(alias) to avoid ambiguous column refs in JOINed CTEs.
       const scopeWhere = session.isSuperAdmin
         ? sql`true`
         : sql`(
             city_branch_id = ANY(${scopeCityBranchIds}::uuid[])
             OR country_branch_id = ANY(${scopeCountryBranchIds}::uuid[])
             OR country_id = ANY(${scopeCountryIds}::uuid[])
+          )`;
+
+      // Qualified scope WHERE for JOINed CTEs (table alias prefix prevents ambiguous column references
+      // when joined tables like country_branches also have a country_id column).
+      const mkScopeWhere = (tableAlias: string) => session.isSuperAdmin
+        ? sql`true`
+        : sql`(
+            ${sql.unsafe(tableAlias + ".city_branch_id")} = ANY(${scopeCityBranchIds}::uuid[])
+            OR ${sql.unsafe(tableAlias + ".country_branch_id")} = ANY(${scopeCountryBranchIds}::uuid[])
+            OR ${sql.unsafe(tableAlias + ".country_id")} = ANY(${scopeCountryIds}::uuid[])
           )`;
 
       // Explicit scope narrow (from query params)

@@ -44982,3 +44982,37 @@ Error: UNDEFINED_VALUE: Undefined values are not allowed
 2026-08-25T18:08:59.972Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
 2026-08-25T18:09:00.098Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
 2026-08-25T18:09:00.230Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-26T13:44:53.643Z] PostgresError: column reference "country_id" is ambiguous
+PostgresError: column reference "country_id" is ambiguous
+    at ErrorResponse (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:830:70)
+    at handle (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:504:6)
+    at TLSSocket.data (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:339:9)
+    at TLSSocket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:189:23)
+    at TLSWrap.callbackTrampoline (node:internal/async_hooks:130:17)
+    at cachedError (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:175:23)
+    at new Query (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:41:24)
+    at sql (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:110:11)
+    at eval (webpack-internal:///(rsc)/./app/api/erp/smart-due/items/route.ts:67:35)
+2026-08-26T13:44:54.157Z - SERVER_ERROR - column reference "country_id" is ambiguous - {}
+
+[2026-08-26T13:45:10.679Z] PostgresError: column reference "country_id" is ambiguous
+PostgresError: column reference "country_id" is ambiguous
+    at ErrorResponse (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:830:70)
+    at handle (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:504:6)
+    at TLSSocket.data (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:339:9)
+    at TLSSocket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:189:23)
+    at TLSWrap.callbackTrampoline (node:internal/async_hooks:130:17)
+    at cachedError (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:175:23)
+    at new Query (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:41:24)
+    at sql (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:110:11)
+    at eval (webpack-internal:///(rsc)/./app/api/erp/smart-due/items/route.ts:67:35)
+2026-08-26T13:45:11.191Z - SERVER_ERROR - column reference "country_id" is ambiguous - {}

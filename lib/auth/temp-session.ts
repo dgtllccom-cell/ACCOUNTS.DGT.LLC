@@ -1,4 +1,4 @@
-import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+﻿import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import type { EnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { supportedLanguages, type SupportedLanguage } from "@/lib/i18n/languages";
@@ -22,6 +22,8 @@ type TempSessionPayloadV1 = {
     countryId: string | null;
     countryBranchId: string | null;
     cityBranchId: string | null;
+    clearingAgentId?: string | null;
+    ledgerVisibility?: string;
   }>;
   createdAt: number;
 };
@@ -34,12 +36,6 @@ function base64UrlDecode(value: string) {
   return Buffer.from(value, "base64url").toString("utf8");
 }
 
-// SECURITY: previously fell back to the hardcoded literal
-// "dev-insecure-erp-session-secret" when no secret was configured. That
-// string is public (visible in source), so any deployment that forgot to set
-// ERP_SESSION_SECRET let anyone forge a valid super-admin session cookie
-// offline. Instead, generate a random secret once per server process. Set
-// ERP_SESSION_SECRET in the environment for secrets that survive restarts.
 let ephemeralSessionSecret: string | null = null;
 
 function getSessionSecret() {
@@ -86,7 +82,6 @@ export async function setTempSuperAdminSession(options: { remember: boolean }) {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
-    // 30 days when Remember Me is checked; otherwise 8 hours.
     maxAge: options.remember ? 60 * 60 * 24 * 30 : 60 * 60 * 8
   });
 }
@@ -107,6 +102,8 @@ export async function readTempSession(): Promise<
         countryId: string | null;
         countryBranchId: string | null;
         cityBranchId: string | null;
+        clearingAgentId?: string | null;
+        ledgerVisibility?: string;
       }>;
       preferredLanguage: SupportedLanguage;
     }
@@ -150,4 +147,41 @@ export async function readTempSession(): Promise<
     assignments: payload.assignments ?? [],
     preferredLanguage
   };
+}
+
+// DEV: Creates a temp session for any role/scope — used for E2E testing of scope isolation.
+export async function setTempAgentSession(options: {
+  userId: string;
+  email: string;
+  fullName: string;
+  roles: EnterpriseRole[];
+  assignments: Array<{
+    role: EnterpriseRole;
+    countryId: string | null;
+    countryBranchId: string | null;
+    cityBranchId: string | null;
+    clearingAgentId?: string | null;
+    ledgerVisibility?: string;
+  }>;
+  remember?: boolean;
+}) {
+  const cookieStore = await cookies();
+  const payload: TempSessionPayloadV1 = {
+    v: 1,
+    kind: "temp",
+    userId: options.userId,
+    email: options.email,
+    fullName: options.fullName,
+    roles: options.roles,
+    assignments: options.assignments,
+    createdAt: Date.now()
+  };
+  const payloadB64 = base64UrlEncode(JSON.stringify(payload));
+  const token = `${payloadB64}.${sign(payloadB64)}`;
+  cookieStore.set(ERP_SESSION_COOKIE, token, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: options.remember ? 60 * 60 * 24 * 30 : 60 * 60 * 8
+  });
 }

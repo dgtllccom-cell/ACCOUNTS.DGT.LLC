@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+﻿import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { type EnterpriseRole, enterpriseRoles } from "@/lib/permissions/enterprise-roles";
@@ -32,7 +32,7 @@ export type ErpSession = {
   isSuperAdmin: boolean;
   // Shipping/Clearing scope. `clearingAgentIds` = the clearing agents this login is bound to.
   // `isShippingScoped` = true only for a shipping-only login (bound to an agent, no 'full' grant,
-  // not super admin) — such a login must see ONLY its own agent's shipping transactions.
+  // not super admin) â€” such a login must see ONLY its own agent's shipping transactions.
   clearingAgentIds: string[];
   ledgerVisibility: LedgerVisibility;
   isShippingScoped: boolean;
@@ -215,14 +215,13 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
       const adminSupabase: any = null;
 
       const perms = [...new Set(temp.roles.flatMap((role) => enterpriseRolePermissions[role] ?? []))];
-      // A bootstrap/temp session has no clearing-agent binding; normalize to full RoleAssignmentScope.
       const tempAssignments: RoleAssignmentScope[] = (temp.assignments ?? []).map((a) => ({
         role: a.role,
         countryId: a.countryId,
         countryBranchId: a.countryBranchId,
         cityBranchId: a.cityBranchId,
-        clearingAgentId: null,
-        ledgerVisibility: "scoped" as const
+        clearingAgentId: (a as any).clearingAgentId ?? null,
+        ledgerVisibility: ((a as any).ledgerVisibility as LedgerVisibility) ?? "scoped"
       }));
       const { initialCountryIds, initialCountryBranchIds, initialCityBranchIds } = getAssignmentRoots(tempAssignments);
       const isSuperAdmin = temp.roles.includes("super_admin");
@@ -271,7 +270,7 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
     const profileResult = await profileQuery.maybeSingle();
 
     // Select the shipping/clearing scope columns when present, but fall back gracefully for
-    // databases where the 20260818_shipping_clearing_rbac migration has not been applied yet —
+    // databases where the 20260818_shipping_clearing_rbac migration has not been applied yet â€”
     // otherwise an unknown-column error here would return null and break authentication.
     let assignmentsResult = await db
       .from("user_role_assignments")
