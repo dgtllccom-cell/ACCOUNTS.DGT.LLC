@@ -140,9 +140,12 @@ export function PreferencesControls() {
       if (event.key === "erp_lang" && event.newValue) {
         const next = event.newValue as SupportedLanguage;
         if (supportedLanguages.some((l) => l.code === next)) {
-          document.documentElement.lang = getHtmlLanguage(next);
-          document.documentElement.dir = rtlLanguages.includes(next) ? "rtl" : "ltr";
-          setLanguage(next);
+          setLanguage((prev) => {
+            if (prev === next) return prev;
+            document.documentElement.lang = getHtmlLanguage(next);
+            document.documentElement.dir = rtlLanguages.includes(next) ? "rtl" : "ltr";
+            return next;
+          });
         }
       }
     };

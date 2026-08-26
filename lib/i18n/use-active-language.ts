@@ -12,18 +12,14 @@ import type { SupportedLanguage } from "./languages";
  * localStorage/document.documentElement.lang immediately and return e.g. "ar" while
  * the server (which has no localStorage/document) always rendered "en". That mismatch
  * between what the server sent and what the client's first render expects is exactly
- * what React's hydration diffing compares — it does not resolve itself gracefully:
- * React logs a "Hydration failed" error and its recovery is per-node and inconsistent,
- * so some translated text ends up fixed and other text is silently left as the
- * server's stale English. useSyncExternalStore avoids this because getServerSnapshot
- * always returns "en" (matching SSR) and the real value is only applied after mount,
- * through the subscription — never during the initial render itself.
+ * what React's hydration diffing compares.
  */
 
 const LANGS = ["en", "ur", "ar", "fa", "ps"] as const;
 
 let currentLang: SupportedLanguage = "en";
 let initialized = false;
+let isEmitting = false;
 const listeners = new Set<() => void>();
 
 function readLang(): SupportedLanguage {
@@ -36,16 +32,34 @@ function readLang(): SupportedLanguage {
 function applyHtmlAttributes(lang: SupportedLanguage) {
   if (typeof document === "undefined" || !document.documentElement) return;
   const isRtl = lang === "ur" || lang === "ar" || lang === "fa" || lang === "ps";
-  document.documentElement.lang = lang;
-  document.documentElement.dir = isRtl ? "rtl" : "ltr";
+  
+  if (document.documentElement.lang !== lang) {
+    document.documentElement.lang = lang;
+  }
+  const nextDir = isRtl ? "rtl" : "ltr";
+  if (document.documentElement.dir !== nextDir) {
+    document.documentElement.dir = nextDir;
+  }
 }
 
 function emit() {
-  const next = readLang();
-  applyHtmlAttributes(next);
-  if (next !== currentLang) {
-    currentLang = next;
-    listeners.forEach((l) => l());
+  if (isEmitting) return;
+  isEmitting = true;
+  try {
+    const next = readLang();
+    applyHtmlAttributes(next);
+    if (next !== currentLang) {
+      currentLang = next;
+      listeners.forEach((l) => {
+        try {
+          l();
+        } catch (err) {
+          console.error("Language listener error:", err);
+        }
+      });
+    }
+  } finally {
+    isEmitting = false;
   }
 }
 
@@ -56,16 +70,25 @@ function ensureInit() {
   applyHtmlAttributes(initial);
   if (initial !== currentLang) {
     currentLang = initial;
-    // Notify synchronously-mounted subscribers once the real language is known —
-    // ensureInit() runs inside subscribe(), which React calls right after commit,
-    // so without this, components that mounted before any language-change event
-    // would stay on "en" until something else happened to trigger emit().
     queueMicrotask(() => listeners.forEach((l) => l()));
   }
-  window.addEventListener("storage", emit);
+  
+  window.addEventListener("storage", (e) => {
+    if (e.key === "erp_lang") {
+      emit();
+    }
+  });
+  
   window.addEventListener("erp_language_changed", emit);
+  
   if (document.documentElement) {
-    const observer = new MutationObserver(emit);
+    const observer = new MutationObserver(() => {
+      if (isEmitting) return;
+      const parsed = (document.documentElement.lang || "").split("-")[0].toLowerCase();
+      if (parsed && (LANGS as readonly string[]).includes(parsed) && parsed !== currentLang) {
+        emit();
+      }
+    });
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
   }
 }

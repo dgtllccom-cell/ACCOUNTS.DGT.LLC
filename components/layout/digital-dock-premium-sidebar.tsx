@@ -118,7 +118,10 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
   },
   {
     title: "Overview",
-    items: [{ icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", active: true }],
+    items: [
+      { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", active: true },
+      { icon: CalendarCheck, label: "Smart CRM & Due Center", href: "/dashboard/crm", badge: "Live" }
+    ],
   },
   {
     title: "Purchase",
@@ -128,10 +131,15 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
         label: "Purchase",
         badge: "8",
         children: [
-          { label: "Purchase Booking", href: "/dashboard/purchase", active: true },
+          { label: "Purchase Booking", href: "/dashboard/purchase/new-purchase-booking-order", active: true },
+          { label: "Local Purchase", href: "/dashboard/purchase/local-purchase" },
+          { label: "Country-to-Country Transfer", href: "/dashboard/purchase/country-transfer" },
+          { label: "Loading Records", href: "/dashboard/purchase/purchase-loading-records" },
+          { label: "Completed Purchase Bills", href: "/dashboard/purchase/completed-purchase-bills" },
           { label: "Advance Payment", href: "/dashboard/journal/purchase-order-payment/advance" },
           { label: "Remaining Payment", href: "/dashboard/journal/purchase-order-payment/remaining" },
           { label: "Payment History", href: "/dashboard/journal/purchase-order-payment/history" },
+          { label: "Purchase Reports", href: "/dashboard/purchase/purchase-booking-journal-report" },
         ],
       },
     ],
@@ -203,6 +211,20 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
           { label: "Countries", href: "/dashboard/country", icon: Globe2 },
           { label: "Branches", href: "/dashboard/branch-management", icon: Building2 },
           { label: "Exchange Rates", href: "/dashboard/reports/exchange-rate", icon: RefreshCw },
+        ],
+      },
+    ],
+  },
+  {
+    title: "Enterprise Audit & Control",
+    items: [
+      {
+        icon: ShieldCheck,
+        label: "Enterprise Audit & Control",
+        children: [
+          { label: "Edit / Version History", href: "/dashboard/audit/edit-history", icon: History },
+          { label: "Deleted Records", href: "/dashboard/audit/deleted-records", icon: Trash2 },
+          { label: "Audit Monitoring Center", href: "/dashboard/audit-monitoring", icon: ShieldCheck },
         ],
       },
     ],

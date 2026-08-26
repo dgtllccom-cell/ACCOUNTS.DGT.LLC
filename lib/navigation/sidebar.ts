@@ -88,6 +88,38 @@ export const sidebarTree: SidebarNode[] = [
         labelKey: "nav.shipping_clearing",
         href: "/dashboard/logistics" as Route,
         roles: ["super_admin", "agent_user"]
+      },
+      {
+        key: "dash-smart-crm",
+        labelKey: "crm.title" as any,
+        href: "/dashboard/crm" as Route,
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "cashier", "agent_user"]
+      }
+    ]
+  },
+  {
+    key: "enterprise-audit-group",
+    labelKey: "nav.enterprise_audit_monitoring" as any,
+    iconKey: "shield-check",
+    roles: ["super_admin", "country_admin", "main_branch_admin"],
+    children: [
+      {
+        key: "audit-edit-version-history",
+        labelKey: "nav.edit_version_history" as any,
+        href: "/dashboard/audit/edit-history" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin"]
+      },
+      {
+        key: "audit-deleted-records",
+        labelKey: "nav.deleted_records" as any,
+        href: "/dashboard/audit/deleted-records" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin"]
+      },
+      {
+        key: "audit-monitoring-center",
+        labelKey: "nav.enterprise_audit_monitoring" as any,
+        href: "/dashboard/audit-monitoring" as Route,
+        roles: ["super_admin"]
       }
     ]
   },

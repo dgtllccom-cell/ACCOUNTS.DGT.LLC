@@ -4312,13 +4312,16 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
 
                         <div className="flex flex-col gap-4">
                           <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-4 dark:border-amber-900/50 dark:bg-amber-950/10">
-                            <div className="mb-3 flex items-center gap-2 border-b border-amber-100 pb-2 dark:border-amber-900/40">
-                              <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
-                              <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{t(lang, "purchase.loading_departure_title", "Loading / Departure")}</h5>
+                            <div className="mb-3 flex items-center justify-between gap-2 border-b border-amber-100 pb-2 dark:border-amber-900/40">
+                              <div className="flex items-center gap-2">
+                                <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+                                <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{t(lang, "purchase.loading_departure_title", "Loading / Departure")}</h5>
+                              </div>
+                              <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300">1. Country → 2. Port → 3. Date</span>
                             </div>
-                            <div className="grid gap-3 sm:grid-cols-3">
+                            <div className="grid gap-3 grid-cols-1 md:grid-cols-3">
                               <label className="space-y-1">
-                                <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.loading_country_label", "Loading Country")}</span>
+                                <span className="block text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">{t(lang, "purchase.loading_country_label", "1. Loading Country")}</span>
                                 <SearchableSelect
                                   value={form.loadingCountry || ""}
                                   onChange={(val) => {
@@ -4338,7 +4341,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                 />
                               </label>
                               <label className="space-y-1">
-                                <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.loading_port_label", "Loading Port")}</span>
+                                <span className="block text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">{t(lang, "purchase.loading_port_label", "2. Loading Port / Terminal")}</span>
                                 <SearchableSelect
                                   value={form.loadingPort || form.airportName || form.loadingBorder || ""}
                                   onChange={(val) => {
@@ -4358,7 +4361,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                 />
                               </label>
                               <label className="space-y-1">
-                                <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.loading_date_label", "Loading Date")}</span>
+                                <span className="block text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">{t(lang, "purchase.loading_date_label", "3. Loading Date")}</span>
                                 <input
                                   type="date"
                                   value={form.loadingDate || ""}
@@ -4370,13 +4373,16 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                           </div>
 
                           <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-4 dark:border-emerald-900/50 dark:bg-emerald-950/10">
-                            <div className="mb-3 flex items-center gap-2 border-b border-emerald-100 pb-2 dark:border-emerald-900/40">
-                              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                              <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{t(lang, "purchase.receiving_arrival_title", "Receiving / Arrival")}</h5>
+                            <div className="mb-3 flex items-center justify-between gap-2 border-b border-emerald-100 pb-2 dark:border-emerald-900/40">
+                              <div className="flex items-center gap-2">
+                                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                                <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{t(lang, "purchase.receiving_arrival_title", "Receiving / Arrival")}</h5>
+                              </div>
+                              <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300">1. Country → 2. Port → 3. Date</span>
                             </div>
-                            <div className="grid gap-3 sm:grid-cols-3">
+                            <div className="grid gap-3 grid-cols-1 md:grid-cols-3">
                               <label className="space-y-1">
-                                <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.receiving_country_label", "Receiving Country")}</span>
+                                <span className="block text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">{t(lang, "purchase.receiving_country_label", "1. Receiving Country")}</span>
                                 <SearchableSelect
                                   value={form.receivingCountry || form.destinationCountry || form.receivedCountry || ""}
                                   onChange={(val) => {
@@ -4397,7 +4403,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                 />
                               </label>
                               <label className="space-y-1">
-                                <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.receiving_port_label", "Receiving Port")}</span>
+                                <span className="block text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">{t(lang, "purchase.receiving_port_label", "2. Receiving Port / Terminal")}</span>
                                 <SearchableSelect
                                   value={form.receivingPort || form.destinationPort || form.receivedPort || ""}
                                   onChange={(val) => {
@@ -4418,7 +4424,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                 />
                               </label>
                               <label className="space-y-1">
-                                <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.receiving_date_label", "Receiving Date")}</span>
+                                <span className="block text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">{t(lang, "purchase.receiving_date_label", "3. Receiving Date")}</span>
                                 <input
                                   type="date"
                                   value={form.receivedDate || ""}
@@ -5401,13 +5407,16 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
 
                         <div className="flex flex-col gap-4">
                           <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-4 dark:border-amber-900/50 dark:bg-amber-950/10">
-                            <div className="mb-3 flex items-center gap-2 border-b border-amber-100 pb-2 dark:border-amber-900/40">
-                              <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
-                              <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{t(lang, "purchase.loading_departure_title", "Loading / Departure")}</h5>
+                            <div className="mb-3 flex items-center justify-between gap-2 border-b border-amber-100 pb-2 dark:border-amber-900/40">
+                              <div className="flex items-center gap-2">
+                                <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+                                <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{t(lang, "purchase.loading_departure_title", "Loading / Departure")}</h5>
+                              </div>
+                              <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300">1. Country → 2. Port → 3. Date</span>
                             </div>
-                            <div className="grid gap-3 sm:grid-cols-3">
+                            <div className="grid gap-3 grid-cols-1 md:grid-cols-3">
                               <label className="space-y-1">
-                                <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.loading_country_label", "Loading Country")}</span>
+                                <span className="block text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">{t(lang, "purchase.loading_country_label", "1. Loading Country")}</span>
                                 <SearchableSelect
                                   value={form.loadingCountry || ""}
                                   onChange={(val) => {
@@ -5427,7 +5436,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                 />
                               </label>
                               <label className="space-y-1">
-                                <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.loading_port_label", "Loading Port")}</span>
+                                <span className="block text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">{t(lang, "purchase.loading_port_label", "2. Loading Port / Terminal")}</span>
                                 <SearchableSelect
                                   value={form.loadingPort || form.airportName || form.loadingBorder || ""}
                                   onChange={(val) => {
@@ -5447,7 +5456,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                 />
                               </label>
                               <label className="space-y-1">
-                                <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.loading_date_label", "Loading Date")}</span>
+                                <span className="block text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">{t(lang, "purchase.loading_date_label", "3. Loading Date")}</span>
                                 <input
                                   type="date"
                                   value={form.loadingDate || ""}
@@ -5459,13 +5468,16 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                           </div>
 
                           <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-4 dark:border-emerald-900/50 dark:bg-emerald-950/10">
-                            <div className="mb-3 flex items-center gap-2 border-b border-emerald-100 pb-2 dark:border-emerald-900/40">
-                              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                              <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{t(lang, "purchase.receiving_arrival_title", "Receiving / Arrival")}</h5>
+                            <div className="mb-3 flex items-center justify-between gap-2 border-b border-emerald-100 pb-2 dark:border-emerald-900/40">
+                              <div className="flex items-center gap-2">
+                                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                                <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{t(lang, "purchase.receiving_arrival_title", "Receiving / Arrival")}</h5>
+                              </div>
+                              <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300">1. Country → 2. Port → 3. Date</span>
                             </div>
-                            <div className="grid gap-3 sm:grid-cols-3">
+                            <div className="grid gap-3 grid-cols-1 md:grid-cols-3">
                               <label className="space-y-1">
-                                <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.receiving_country_label", "Receiving Country")}</span>
+                                <span className="block text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">{t(lang, "purchase.receiving_country_label", "1. Receiving Country")}</span>
                                 <SearchableSelect
                                   value={form.receivingCountry || form.destinationCountry || form.receivedCountry || ""}
                                   onChange={(val) => {
@@ -5486,7 +5498,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                 />
                               </label>
                               <label className="space-y-1">
-                                <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.receiving_port_label", "Receiving Port")}</span>
+                                <span className="block text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">{t(lang, "purchase.receiving_port_label", "2. Receiving Port / Terminal")}</span>
                                 <SearchableSelect
                                   value={form.receivingPort || form.destinationPort || form.receivedPort || ""}
                                   onChange={(val) => {
@@ -5507,7 +5519,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                 />
                               </label>
                               <label className="space-y-1">
-                                <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.receiving_date_label", "Receiving Date")}</span>
+                                <span className="block text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">{t(lang, "purchase.receiving_date_label", "3. Receiving Date")}</span>
                                 <input
                                   type="date"
                                   value={form.receivedDate || ""}

@@ -6,6 +6,6 @@ export const metadata: Metadata = {
   description: "Enterprise Smart CRM, Due Date Engine, and Follow-Up Action Control Center"
 };
 
-export default function SmartDuePage() {
+export default function SmartCrmPage() {
   return <SmartCrmControlCenter />;
 }
