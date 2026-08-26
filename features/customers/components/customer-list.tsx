@@ -667,20 +667,16 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                       <td className="px-5 py-3.5 font-bold text-slate-900 font-mono">
                         {c.meta.customerAccountNumber}
                       </td>
-                      <td className="px-5 py-3.5 font-extrabold text-slate-900">
-                        <div className="flex items-center gap-2">
-                          <span>{translateCustomerText(c.customer_name, lang)}</span>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelected360Party({ id: c.id, name: c.customer_name });
-                            }}
-                            className="flex h-5 w-5 items-center justify-center rounded-md bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-black text-xs shadow-xs transition hover:scale-105 cursor-pointer"
-                            title={t(lang, "p360.view_360_profile", "View 360° cross-system profile")}
-                          >
-                            +
-                          </button>
+                      <td className="px-5 py-3.5">
+                        <div className="flex flex-col">
+                          <span className="font-extrabold text-slate-900 dark:text-slate-100 text-[13px]">
+                            {translateCustomerText(c.customer_name, lang)}
+                          </span>
+                          {c.father_name && (
+                            <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500">
+                              S/O {translateCustomerText(c.father_name, lang)}
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td className="px-5 py-3.5 font-medium text-slate-800">{translateCustomerText(c.meta.customerType, lang)}</td>

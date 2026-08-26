@@ -531,32 +531,16 @@ export async function POST(request: NextRequest) {
           branchPrefix = normalizeCodePart(countryBranch?.code ?? countryBranch?.name ?? null, "MAIN");
         }
 
-        const totalCountRows = await tx`
-          select count(*)::int as count
-          from enterprise_accounts;
-        `;
-        const countryCountRows = await tx`
-          select count(*)::int as count
-          from enterprise_accounts
-          where deleted_at is null
-            and manual_reference_number is not null
-            and ${body.countryId ?? null}::uuid is not distinct from country_id;
-        `;
-        const branchCountRows = await tx`
-          select count(*)::int as count
-          from enterprise_accounts
-          where scope = ${body.scope}
-            and deleted_at is null
-            and manual_reference_number is not null
-            and ${body.countryId ?? null}::uuid is not distinct from country_id
-            and ${body.countryBranchId ?? null}::uuid is not distinct from country_branch_id
-            and ${body.cityBranchId ?? null}::uuid is not distinct from city_branch_id;
-        `;
+        const serials = await allocateFormSerials("account", {
+          countryId: body.countryId ?? null,
+          branchKey: body.cityBranchId ?? body.countryBranchId ?? null,
+          prefix: "ACC"
+        });
 
-        const accountSerialNumber = Number((totalCountRows[0] as any)?.count ?? 0) + 1;
-        const countrySerialNumber = `${countryPrefix}-${String(Number((countryCountRows[0] as any)?.count ?? 0) + 1).padStart(6, "0")}`;
-        const branchSequence = Number((branchCountRows[0] as any)?.count ?? 0) + 1;
-        const branchSerialNumber = `${countryPrefix}-${branchPrefix}-${String(branchSequence).padStart(6, "0")}`;
+        const accountSerialNumber = Number(serials.superAdminSerial?.split("-").pop() ?? 1);
+        const countrySerialNumber = serials.countrySerial ?? `${countryPrefix}-00000001`;
+        const branchSequence = Number(serials.branchSerial?.split("-").pop() ?? 1);
+        const branchSerialNumber = serials.branchSerial ?? `${branchPrefix}-00000001`;
         const customerNumber = `CUST-${issuedCode}`;
         const manualReferenceNumber = body.manualReferenceNumber?.trim() || null;
         const nowIso = new Date().toISOString();
@@ -630,6 +614,10 @@ export async function POST(request: NextRequest) {
             code: issuedCode,
             account_number: issuedCode,
             customer_number: customerNumber,
+            super_admin_serial: serials.superAdminSerial,
+            country_serial: serials.countrySerial,
+            branch_serial: serials.branchSerial,
+            entry_serial: serials.entrySerial,
             account_serial_number: accountSerialNumber,
             country_serial_number: countrySerialNumber,
             branch_serial_number: branchSerialNumber,
@@ -678,6 +666,10 @@ export async function POST(request: NextRequest) {
             enterprise_account_id: accountId,
             parent_ledger_id: parentLedgerId,
             code: issuedCode,
+            super_admin_serial: serials.superAdminSerial,
+            country_serial: serials.countrySerial,
+            branch_serial: serials.branchSerial,
+            entry_serial: serials.entrySerial,
             name: body.name || "Account",
             currency: (body.currency || "USD").toUpperCase(),
             opening_balance: body.openingBalance ?? 0,

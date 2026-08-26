@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { deleteDocumentBlob, resolveDocumentFileUrl, saveDocumentBlob } from "@/lib/documents/document-storage";
 import {
   buildDocumentFileName,
   buildDocumentFolderPath,
@@ -48,13 +49,6 @@ function normalizeNullable(value: any) {
   if (value === undefined || value === null) return null;
   if (typeof value === "string" && value.trim() === "") return null;
   return value;
-}
-
-async function resolveStorageUrl(storageKey: string | null | undefined) {
-  if (!storageKey) return null;
-  const admin = createSupabaseAdminClient();
-  const { data } = await admin.storage.from(BUCKET_NAME).createSignedUrl(storageKey, 60 * 60 * 24);
-  return data?.signedUrl ?? null;
 }
 
 async function withDocumentSession<T>(session: Awaited<ReturnType<typeof requireErpSession>>, fn: (sql: any) => Promise<T>) {
@@ -208,7 +202,7 @@ export async function GET(request: NextRequest) {
 
     const resolvedDocs = await Promise.all(
       (docs ?? []).map(async (doc: any) => {
-        const resolvedFileUrl = doc.storage_key ? await resolveStorageUrl(doc.storage_key) : null;
+        const resolvedFileUrl = doc.storage_key ? await resolveDocumentFileUrl(doc.storage_key) : null;
         return {
           ...doc,
           file_url: resolvedFileUrl || doc.file_url
@@ -343,19 +337,19 @@ export async function POST(request: NextRequest) {
       });
     const resolvedStorageKey = normalizedStorageKey || (generatedPath ? `${generatedPath}/${generatedFileName}` : generatedFileName);
     let resolvedFileUrl = typeof rawFileUrl === "string" && rawFileUrl.trim() ? rawFileUrl.trim() : null;
+    let storageProvider: "supabase" | "local" | null = null;
 
     if (file) {
-      const admin = createSupabaseAdminClient();
       const buffer = Buffer.from(await file.arrayBuffer());
-      const uploadResult = await admin.storage.from(BUCKET_NAME).upload(resolvedStorageKey, buffer, {
-        contentType: file.type || "application/octet-stream",
-        upsert: false
+      const uploadResult = await saveDocumentBlob({
+        storageKey: resolvedStorageKey,
+        buffer,
+        contentType: file.type || "application/octet-stream"
       });
-      if (uploadResult.error) throw new Error(uploadResult.error.message);
-      const signed = await admin.storage.from(BUCKET_NAME).createSignedUrl(resolvedStorageKey, 60 * 60 * 24);
-      resolvedFileUrl = signed.data?.signedUrl ?? resolvedStorageKey;
+      resolvedFileUrl = uploadResult.fileUrl;
+      storageProvider = uploadResult.storageProvider;
     } else if (!resolvedFileUrl) {
-      resolvedFileUrl = resolvedStorageKey;
+      resolvedFileUrl = await resolveDocumentFileUrl(resolvedStorageKey) ?? resolvedStorageKey;
     }
 
     // Root-cause bypass — see GET above: office_documents_scope_insert is RLS-gated
@@ -376,7 +370,7 @@ export async function POST(request: NextRequest) {
           ${normalizedCityBranchId}, ${normalizedCityBranchName}, ${normalizedCompanyId}, ${normalizedCompanyCode}, ${normalizedCompanyName}, ${normalizedAccountId}, ${normalizedAccountCode}, ${normalizedAccountName},
           ${normalizedPersonAccountId}, ${normalizedPersonAccountCode}, ${normalizedPersonAccountName}, ${normalizedPersonAccountType},
           ${normalizedModuleType}, ${normalizedDocumentType}, ${normalizedSourceModule}, ${normalizedSourceRecordId}, ${normalizedSourceRecordNo},
-          ${generatedPath}, ${resolvedStorageKey}, ${normalizedCategory}, ${sql.json(parsedTags)}, ${sql.json(parsedMetadata)},
+          ${generatedPath}, ${resolvedStorageKey}, ${normalizedCategory}, ${sql.json(parsedTags)}, ${sql.json({ ...parsedMetadata, storageProvider })},
           ${scannedAt}, ${normalizedCreatedBy}, ${normalizedScannerDeviceName}, ${normalizedScannerBridge}
         )
         returning *
@@ -422,7 +416,7 @@ export async function POST(request: NextRequest) {
         storage_key: resolvedStorageKey,
         category: normalizedCategory,
         tags: parsedTags,
-        metadata: parsedMetadata,
+        metadata: { ...parsedMetadata, storageProvider },
         scanned_at: scannedAt,
         created_by: normalizedCreatedBy,
         scanner_device_name: normalizedScannerDeviceName,
@@ -551,6 +545,15 @@ export async function DELETE(request: NextRequest) {
     if (!id) return NextResponse.json({ error: "Document ID required" }, { status: 400 });
 
     const deletedAt = new Date().toISOString();
+    const storageKey = await withDocumentSession(session, async (sql) => {
+      const rows = await sql`
+        select storage_key
+        from public.office_documents
+        where id = ${id}
+        limit 1
+      `;
+      return rows[0]?.storage_key ?? null;
+    });
 
     // Root-cause bypass — see GET above: office_documents_scope_update is RLS-gated
     // the same way, so a direct-Postgres write is tried first.
@@ -560,16 +563,25 @@ export async function DELETE(request: NextRequest) {
     });
 
     if (viaPg) {
+      await deleteDocumentBlob(storageKey);
       return NextResponse.json({ success: true });
     }
 
     const admin = createSupabaseAdminClient();
+    const { data: existingDoc, error: fetchError } = await (admin
+      .from("office_documents" as any) as any)
+      .select("storage_key")
+      .eq("id", id)
+      .maybeSingle();
+    if (fetchError) throw fetchError;
+
     const { error } = await (admin
       .from("office_documents" as any) as any)
       .update({ deleted_at: deletedAt })
       .eq("id", id);
 
     if (error) throw error;
+    await deleteDocumentBlob(existingDoc?.storage_key ?? null);
     return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

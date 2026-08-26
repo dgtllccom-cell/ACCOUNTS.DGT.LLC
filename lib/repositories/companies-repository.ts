@@ -332,14 +332,20 @@ export class CompaniesRepository {
         `;
         if (rows && rows[0]?.id) {
           const createdId = rows[0].id as string;
-          // Company Master identity code (COMP-000001 style) — a single global
-          // sequence, same direct next_entity_serial() pattern as
-          // customers.person_code (see customers-repository.ts create()).
           try {
-            const [row] = await localSql`SELECT next_entity_serial('global', 'GLOBAL', 'company', 'COMP') AS code`;
-            if (row?.code) {
-              await localSql`UPDATE public.companies SET company_code = ${row.code} WHERE id = ${createdId}::uuid AND company_code IS NULL`;
-            }
+            const serials = await allocateFormSerials("companies", {
+              countryId: (payload.country_id as string) || null,
+              branchKey: (payload.city_id as string) || null,
+              prefix: "CMP"
+            });
+            const serialPatch = {
+              super_admin_serial: serials.superAdminSerial,
+              country_serial: serials.countrySerial,
+              branch_serial: serials.branchSerial,
+              entry_serial: serials.entrySerial,
+              company_code: serials.entrySerial
+            };
+            await localSql`UPDATE public.companies SET ${localSql(serialPatch)} WHERE id = ${createdId}::uuid`;
           } catch { /* non-fatal */ }
           return createdId;
         }
@@ -358,7 +364,22 @@ export class CompaniesRepository {
       updated_at: now
     }).select("id").single();
     if (error) throw new Error(error.message);
-    return data.id as string;
+    const createdId = data.id as string;
+    try {
+      const serials = await allocateFormSerials("companies", {
+        countryId: (payload.country_id as string) || null,
+        branchKey: (payload.city_id as string) || null,
+        prefix: "CMP"
+      });
+      await supabase.from("companies").update({
+        super_admin_serial: serials.superAdminSerial,
+        country_serial: serials.countrySerial,
+        branch_serial: serials.branchSerial,
+        entry_serial: serials.entrySerial,
+        company_code: serials.entrySerial
+      }).eq("id", createdId);
+    } catch {}
+    return createdId;
   }
 
   async update(id: string, input: Partial<CompanyWriteInput>) {

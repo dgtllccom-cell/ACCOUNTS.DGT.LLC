@@ -4,8 +4,8 @@ import { db } from "@/lib/db/client";
 import { erpDocuments, erpDocumentVersions, auditLogs } from "@/lib/db/schema";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { apiOk, handleApiError, apiError } from "@/lib/api/response";
+import { deleteDocumentBlob } from "@/lib/documents/document-storage";
 
 export async function DELETE(
   request: NextRequest,
@@ -37,21 +37,7 @@ export async function DELETE(
     const versions = await db.query.erpDocumentVersions.findMany({
       where: eq(erpDocumentVersions.documentId, id),
     });
-
-    const supabase = createSupabaseAdminClient();
-    
-    // Delete files from Supabase Storage
-    const pathsToDelete = versions.map((v) => v.path);
-    if (pathsToDelete.length > 0) {
-      const { error: storageError } = await supabase.storage
-        .from(versions[0].bucket)
-        .remove(pathsToDelete);
-
-      if (storageError) {
-        console.error("Storage delete error:", storageError);
-        // Continue deleting from DB even if storage cleanup fails to avoid orphaned DB records
-      }
-    }
+    await Promise.all(versions.map((version) => deleteDocumentBlob(version.path)));
 
     await db.transaction(async (tx) => {
       await tx.delete(erpDocuments).where(eq(erpDocuments.id, id));

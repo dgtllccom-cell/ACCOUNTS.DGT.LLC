@@ -5,8 +5,8 @@ import { db } from "@/lib/db/client";
 import { erpDocuments, erpDocumentVersions } from "@/lib/db/schema";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { apiOk, handleApiError, apiError } from "@/lib/api/response";
+import { resolveDocumentFileUrl } from "@/lib/documents/document-storage";
 
 const downloadSchema = z.object({
   id: z.string().uuid(),
@@ -55,20 +55,12 @@ export async function GET(request: NextRequest) {
       return apiError("Document version not found", 404);
     }
 
-    const supabase = createSupabaseAdminClient();
-    
-    // Create a 5-minute signed URL
-    const { data, error } = await supabase.storage
-      .from(version.bucket)
-      .createSignedUrl(version.path, 300, {
-        download: doc.name,
-      });
-
-    if (error || !data) {
+    const resolvedUrl = await resolveDocumentFileUrl(version.path);
+    if (!resolvedUrl) {
       return apiError("Failed to generate download URL", 500);
     }
 
-    return apiOk({ url: data.signedUrl });
+    return apiOk({ url: resolvedUrl });
   } catch (error) {
     return handleApiError(error);
   }

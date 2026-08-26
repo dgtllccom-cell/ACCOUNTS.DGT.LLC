@@ -264,7 +264,11 @@ export class ProductsRepository {
       source: "auto"
     });
     try {
-      const s = await allocateFormSerials("products", { countryId: input.countryId ?? null });
+      const s = await allocateFormSerials("products", {
+        countryId: input.countryId ?? null,
+        branchKey: input.cityBranchId ?? input.countryBranchId ?? null,
+        prefix: "PRD"
+      });
       await supabase.from("products").update({ super_admin_serial: s.superAdminSerial, country_serial: s.countrySerial, branch_serial: s.branchSerial, entry_serial: s.entrySerial }).eq("id", data.id as string);
     } catch { /* non-fatal */ }
     return data.id as string;

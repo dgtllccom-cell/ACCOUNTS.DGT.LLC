@@ -4,8 +4,8 @@ import { db } from "@/lib/db/client";
 import { erpDocuments, erpDocumentVersions, auditLogs } from "@/lib/db/schema";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { apiOk, handleApiError, apiError } from "@/lib/api/response";
+import { saveDocumentBlob } from "@/lib/documents/document-storage";
 
 const BUCKET_NAME = "erp-documents";
 
@@ -46,8 +46,6 @@ export async function POST(
     const latestVersion = versions.sort((a, b) => b.versionNumber - a.versionNumber)[0];
     const newVersionNumber = (latestVersion?.versionNumber || 0) + 1;
 
-    const supabase = createSupabaseAdminClient();
-    
     // Create random filename
     const ext = file.name.split(".").pop();
     const randomName = crypto.randomUUID();
@@ -55,17 +53,12 @@ export async function POST(
 
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-
-    const { error: uploadError } = await supabase.storage
-      .from(BUCKET_NAME)
-      .upload(filePath, buffer, {
-        contentType: file.type,
-        upsert: false,
-      });
-
-    if (uploadError) {
-      throw new Error(`Upload failed: ${uploadError.message}`);
-    }
+    const uploadResult = await saveDocumentBlob({
+      storageKey: filePath,
+      buffer,
+      contentType: file.type,
+      upsert: false
+    });
 
     const result = await db.transaction(async (tx) => {
       // Update main document stats
@@ -82,7 +75,7 @@ export async function POST(
         documentId: doc.id,
         versionNumber: newVersionNumber,
         bucket: BUCKET_NAME,
-        path: filePath,
+        path: uploadResult.storageKey,
         mimeType: file.type,
         sizeBytes: file.size,
         uploadedBy: session.userId,
