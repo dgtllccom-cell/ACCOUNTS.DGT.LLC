@@ -989,30 +989,77 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 pt-1">
-                  <div>
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                      {t(lang, "hr.f_lbl_designation_short", "Designation / Job Role *")}
-                    </label>
-                    <input
-                      type="text"
-                      value={designation}
-                      onChange={(e) => setDesignation(e.target.value)}
-                      placeholder="e.g. Manager, Accountant, Cook, Driver"
-                      className="flex h-10 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 text-xs font-semibold text-slate-900 dark:text-slate-100 shadow-xs outline-none focus:border-emerald-500"
-                    />
+                <div className="space-y-2 pt-1">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                        {t(lang, "hr.f_lbl_designation_short", "Designation / Job Role *")}
+                      </label>
+                      <input
+                        type="text"
+                        list="common-job-roles"
+                        value={designation}
+                        onChange={(e) => setDesignation(e.target.value)}
+                        placeholder="e.g. Manager, Accountant, Cook, Driver"
+                        className="flex h-10 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 text-xs font-semibold text-slate-900 dark:text-slate-100 shadow-xs outline-none focus:border-emerald-500"
+                      />
+                      <datalist id="common-job-roles">
+                        <option value="General Operations Manager" />
+                        <option value="Chief Accountant" />
+                        <option value="Accountant" />
+                        <option value="Branch Administrator" />
+                        <option value="Cashier" />
+                        <option value="Transport Driver" />
+                        <option value="Cook" />
+                        <option value="Cleaner" />
+                        <option value="Store / Warehouse In-Charge" />
+                        <option value="Customs Clearing Supervisor" />
+                        <option value="Logistics Coordinator" />
+                        <option value="Executive Staff Officer" />
+                      </datalist>
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                        {t(lang, "hr.f_lbl_department", "Department / Position *")}
+                      </label>
+                      <input
+                        type="text"
+                        value={department}
+                        onChange={(e) => setDepartment(e.target.value)}
+                        placeholder="e.g. Finance, Operations, Logistics"
+                        className="flex h-10 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 text-xs font-semibold text-slate-900 dark:text-slate-100 shadow-xs outline-none focus:border-emerald-500"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                      {t(lang, "hr.f_lbl_department", "Department *")}
-                    </label>
-                    <input
-                      type="text"
-                      value={department}
-                      onChange={(e) => setDepartment(e.target.value)}
-                      placeholder="e.g. Finance, Operations, Logistics"
-                      className="flex h-10 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 text-xs font-semibold text-slate-900 dark:text-slate-100 shadow-xs outline-none focus:border-emerald-500"
-                    />
+
+                  {/* Quick Role Selection Chips */}
+                  <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">Quick Roles:</span>
+                    {[
+                      { role: "Manager", dept: "Operations" },
+                      { role: "Accountant", dept: "Finance" },
+                      { role: "Branch Administrator", dept: "Administration" },
+                      { role: "Driver", dept: "Logistics" },
+                      { role: "Cook", dept: "General Services" },
+                      { role: "Cleaner", dept: "Facilities" },
+                      { role: "Cashier", dept: "Finance" }
+                    ].map((item) => (
+                      <button
+                        key={item.role}
+                        type="button"
+                        onClick={() => {
+                          setDesignation(item.role);
+                          setDepartment(item.dept);
+                        }}
+                        className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border transition ${
+                          designation === item.role
+                            ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
+                            : "bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-emerald-400"
+                        }`}
+                      >
+                        {item.role}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
