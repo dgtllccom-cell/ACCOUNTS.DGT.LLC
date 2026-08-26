@@ -46,6 +46,9 @@ export type CompanyRow = {
   manager_person_id: string | null;
   business_type: string | null;
   country_id: string | null;
+  country_branch_id?: string | null;
+  city_branch_id?: string | null;
+  is_branch_operative?: boolean;
   state_province_id: string | null;
   district_id: string | null;
   city_id: string | null;
@@ -74,6 +77,9 @@ export type CompanyWriteInput = {
   managerPersonId?: string | null;
   businessType?: string | null;
   countryId?: string | null;
+  countryBranchId?: string | null;
+  cityBranchId?: string | null;
+  isBranchOperative?: boolean;
   stateProvinceId?: string | null;
   districtId?: string | null;
   cityId?: string | null;
@@ -102,6 +108,9 @@ const COMPANY_SELECT = [
   "manager_person_id",
   "business_type",
   "country_id",
+  "country_branch_id",
+  "city_branch_id",
+  "is_branch_operative",
   "state_province_id",
   "district_id",
   "city_id",
@@ -158,6 +167,9 @@ function mapRawRow(r: any): CompanyRow {
     manager_person_id: r.manager_person_id ?? null,
     business_type: r.business_type ?? null,
     country_id: r.country_id ?? null,
+    country_branch_id: r.country_branch_id ?? null,
+    city_branch_id: r.city_branch_id ?? null,
+    is_branch_operative: r.is_branch_operative ?? false,
     state_province_id: r.state_province_id ?? null,
     district_id: r.district_id ?? null,
     city_id: r.city_id ?? null,
@@ -188,6 +200,9 @@ function toPayload(input: Partial<CompanyWriteInput>) {
   if ("managerPersonId" in input) payload.manager_person_id = input.managerPersonId || null;
   if ("businessType" in input) payload.business_type = cleanText(input.businessType);
   if ("countryId" in input) payload.country_id = input.countryId || null;
+  if ("countryBranchId" in input) payload.country_branch_id = input.countryBranchId || null;
+  if ("cityBranchId" in input) payload.city_branch_id = input.cityBranchId || null;
+  if ("isBranchOperative" in input) payload.is_branch_operative = Boolean(input.isBranchOperative);
   if ("stateProvinceId" in input) payload.state_province_id = input.stateProvinceId || null;
   if ("districtId" in input) payload.district_id = input.districtId || null;
   if ("cityId" in input) payload.city_id = input.cityId || null;
@@ -207,12 +222,10 @@ function toPayload(input: Partial<CompanyWriteInput>) {
 }
 
 export class CompaniesRepository {
-  async search(input: { query?: string | null; limit?: number }) {
+  async search(input: { query?: string | null; limit?: number; ownerPersonId?: string | null; countryId?: string | null; countryBranchId?: string | null; cityBranchId?: string | null; isBranchOperative?: boolean }) {
     const limit = Math.min(Math.max(input.limit ?? 500, 1), 500);
     const q = cleanQuery(input.query ?? "");
     const localDbUrl = getDbUrl();
-    // Multilingual search: an approved translation/transliteration of a company name
-    // should also match. Central resolver, same as goods/customers/accounts/banks search.
     const translatedMatchIds = q
       ? await searchRecordIdsByTranslation("companies", ["name", "legal_name", "owner_name"], q)
       : [];
@@ -220,32 +233,41 @@ export class CompaniesRepository {
     if (localDbUrl) {
       const localSql = postgres(localDbUrl, { max: 1, prepare: false });
       try {
-        const rows = q
-          ? await localSql`
-              SELECT * FROM public.companies
-              WHERE deleted_at IS NULL
-                AND (name ILIKE ${'%' + q + '%'} OR legal_name ILIKE ${'%' + q + '%'} OR owner_name ILIKE ${'%' + q + '%'} OR country_name ILIKE ${'%' + q + '%'} OR city_name ILIKE ${'%' + q + '%'} OR id = ANY(${translatedMatchIds}::uuid[]))
-              ORDER BY name ASC
-              LIMIT ${limit}
-            `
-          : await localSql`
-              SELECT * FROM public.companies 
-              WHERE deleted_at IS NULL 
-              ORDER BY name ASC 
-              LIMIT ${limit}
-            `;
-        if (rows && rows.length > 0) {
-          return { companies: rows.map(mapRawRow), limit };
+        let whereClause = localSql`deleted_at IS NULL`;
+        if (q) {
+          const like = `%${q}%`;
+          whereClause = localSql`${whereClause} AND (
+            name ILIKE ${like} OR legal_name ILIKE ${like} OR owner_name ILIKE ${like} OR country_name ILIKE ${like} OR city_name ILIKE ${like}
+            ${translatedMatchIds.length > 0 ? localSql`OR id IN ${localSql(translatedMatchIds)}` : localSql``}
+          )`;
         }
+        if (input.ownerPersonId) {
+          whereClause = localSql`${whereClause} AND owner_person_id = ${input.ownerPersonId}::uuid`;
+        }
+        if (input.countryId) {
+          whereClause = localSql`${whereClause} AND country_id = ${input.countryId}::uuid`;
+        }
+        if (input.countryBranchId) {
+          whereClause = localSql`${whereClause} AND country_branch_id = ${input.countryBranchId}::uuid`;
+        }
+        if (input.cityBranchId) {
+          whereClause = localSql`${whereClause} AND city_branch_id = ${input.cityBranchId}::uuid`;
+        }
+        if (input.isBranchOperative !== undefined) {
+          whereClause = localSql`${whereClause} AND is_branch_operative = ${input.isBranchOperative}`;
+        }
+        const rows = await localSql`
+          SELECT * FROM public.companies WHERE ${whereClause} ORDER BY name ASC LIMIT ${limit}
+        `;
+        return { companies: rows.map(mapRawRow), limit };
       } catch (err) {
-        console.error("Direct postgres search error:", err);
+        console.error("Direct postgres search companies error:", err);
       } finally {
         await localSql.end({ timeout: 5 });
       }
     }
 
-    const supabase = createSupabaseAdminClient() as any;
-    let query = supabase
+    let query = (createSupabaseAdminClient() as any)
       .from("companies")
       .select(COMPANY_SELECT)
       .is("deleted_at", null)
@@ -254,6 +276,21 @@ export class CompaniesRepository {
     if (q) {
       const like = `%${q}%`;
       query = query.or([`name.ilike.${like}`, `legal_name.ilike.${like}`, `owner_name.ilike.${like}`, `country_name.ilike.${like}`, `city_name.ilike.${like}`].join(","));
+    }
+    if (input.ownerPersonId) {
+      query = query.eq("owner_person_id", input.ownerPersonId);
+    }
+    if (input.countryId) {
+      query = query.eq("country_id", input.countryId);
+    }
+    if (input.countryBranchId) {
+      query = query.eq("country_branch_id", input.countryBranchId);
+    }
+    if (input.cityBranchId) {
+      query = query.eq("city_branch_id", input.cityBranchId);
+    }
+    if (input.isBranchOperative !== undefined) {
+      query = query.eq("is_branch_operative", input.isBranchOperative);
     }
 
     const { data } = await query.limit(limit);
@@ -300,7 +337,8 @@ export class CompaniesRepository {
         const rows = await localSql`
           INSERT INTO public.companies (
             name, legal_name, base_currency, owner_name, owner_person_id, manager_person_id, business_type,
-            country_id, state_province_id, district_id, city_id, area_location_id,
+            country_id, country_branch_id, city_branch_id, is_branch_operative,
+            state_province_id, district_id, city_id, area_location_id,
             country_name, state_name, district_name, city_name, area_name, zip_code, address,
             contacts, registrations, owner_ids, is_active, created_at, updated_at
           ) VALUES (
@@ -312,6 +350,9 @@ export class CompaniesRepository {
             ${payload.manager_person_id ? String(payload.manager_person_id) : null}::uuid,
             ${(payload.business_type as string) || null},
             ${payload.country_id ? String(payload.country_id) : null}::uuid,
+            ${payload.country_branch_id ? String(payload.country_branch_id) : null}::uuid,
+            ${payload.city_branch_id ? String(payload.city_branch_id) : null}::uuid,
+            ${Boolean(payload.is_branch_operative)},
             ${payload.state_province_id ? String(payload.state_province_id) : null}::uuid,
             ${payload.district_id ? String(payload.district_id) : null}::uuid,
             ${payload.city_id ? String(payload.city_id) : null}::uuid,

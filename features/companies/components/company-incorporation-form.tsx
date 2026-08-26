@@ -27,32 +27,22 @@ import {
   ArrowRight,
   ArrowLeft,
   Settings,
-  Globe
+  Globe,
+  Check,
+  Sparkles,
+  Printer,
+  Compass
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ContactNumberInput } from "@/components/ui/contact-number-input";
-import {
-  LocationHierarchySelect,
-  type LocationHierarchyMeta,
-  type LocationHierarchyValue
-} from "@/features/locations/components/location-hierarchy-select";
 import { apiPost, apiGet, apiPatch } from "@/lib/api/client";
 import { PersonPicker } from "@/features/hr-payroll/components/person-picker";
-import type { ContactTypeKey } from "@/features/contact-types/contact-type-api";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
 import { PreferencesControls } from "@/components/layout/preferences-controls";
-
-type DynamicList = "contacts" | "registrations" | "ownerIds";
-type DynamicRow = {
-  id: string;
-  type: string;
-  value: string;
-};
 
 export type CompanyIncorporationData = {
   id?: string;
@@ -64,6 +54,9 @@ export type CompanyIncorporationData = {
   licenseNumber?: string;
   natureOfBusiness?: string;
   countryId?: string;
+  countryBranchId?: string;
+  cityBranchId?: string;
+  isBranchOperative?: boolean;
   stateProvinceId?: string;
   districtId?: string;
   cityId?: string;
@@ -75,27 +68,7 @@ export type CompanyIncorporationData = {
   area?: string;
   zipCode: string;
   address: string;
-  contacts: DynamicRow[];
-  registrations: DynamicRow[];
-  ownerIds: DynamicRow[];
 };
-
-const defaultTypes: Record<DynamicList, string[]> = {
-  contacts: ["Mobile Number", "Office Number", "WhatsApp Number", "Email Address"],
-  registrations: ["Trade License Number", "VAT/TRN", "Sales Tax No", "GST No", "PSI No", "NTN No"],
-  ownerIds: ["Passport / Emirates ID / National ID", "CNIC No", "Passport No", "National ID", "Residence Permit"]
-};
-
-function safeUUID(): string {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return crypto.randomUUID();
-  }
-  return "row-" + Math.random().toString(36).substring(2, 11);
-}
-
-function newRow(): DynamicRow {
-  return { id: safeUUID(), type: "", value: "" };
-}
 
 export function CompanyIncorporationForm({
   mode = "standalone",
@@ -110,7 +83,7 @@ export function CompanyIncorporationForm({
 }) {
   const router = useRouter();
   const lang = useActiveLanguage();
-  const tr = (key: Parameters<typeof t>[1], fallback: string) => t(lang, key, fallback);
+  const isRtl = lang === "ur" || lang === "ar" || lang === "fa" || lang === "ps";
 
   function handleClose() {
     if (onClose) {
@@ -120,14 +93,29 @@ export function CompanyIncorporationForm({
     router.push("/dashboard/settings/company" as Route);
   }
 
-  // --- State Variables ---
+  // --- Registration Modes ---
+  // Mode A: "owner_portfolio" (Person / Owner & Sister Companies)
+  // Mode B: "branch_operative" (Country / Branch Operative Company)
+  const [registrationMode, setRegistrationMode] = useState<"owner_portfolio" | "branch_operative">("owner_portfolio");
+
+  // --- Mode A: Owner Portfolio State ---
   const [ownerPersonId, setOwnerPersonId] = useState("");
   const [managerPersonId, setManagerPersonId] = useState("");
   const [ownerProfile, setOwnerProfile] = useState<any>(null);
   const [existingCompaniesForOwner, setExistingCompaniesForOwner] = useState<Array<any>>([]);
+  const [ownerBanks, setOwnerBanks] = useState<Array<any>>([]);
   const [ownerName, setOwnerName] = useState("");
-  
-  // Step Form Fields
+
+  // --- Mode B: Branch Operative State ---
+  const [countriesList, setCountriesList] = useState<any[]>([]);
+  const [branchesList, setBranchesList] = useState<any[]>([]);
+  const [cityBranchesList, setCityBranchesList] = useState<any[]>([]);
+  const [selectedCountryId, setSelectedCountryId] = useState("");
+  const [selectedCountryBranchId, setSelectedCountryBranchId] = useState("");
+  const [selectedCityBranchId, setSelectedCityBranchId] = useState("");
+  const [branchCompanies, setBranchCompanies] = useState<Array<any>>([]);
+
+  // --- Core Company Fields ---
   const [companyName, setCompanyName] = useState("");
   const [companyNameUrdu, setCompanyNameUrdu] = useState("");
   const [businessName, setBusinessName] = useState("");
@@ -137,36 +125,90 @@ export function CompanyIncorporationForm({
   const [natureOfBusiness, setNatureOfBusiness] = useState("Trading & General Order Supplier");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-
-  const [location, setLocation] = useState<LocationHierarchyValue>({
-    countryId: "",
-    stateProvinceId: "",
-    districtId: "",
-    cityId: "",
-    areaId: ""
-  });
-  const [locationMeta, setLocationMeta] = useState<LocationHierarchyMeta>({
-    country: null,
-    state: null,
-    district: null,
-    city: null,
-    area: null
-  });
   const [address, setAddress] = useState("");
-  const [contacts, setContacts] = useState<DynamicRow[]>([newRow()]);
-  const [registrations, setRegistrations] = useState<DynamicRow[]>([newRow()]);
-  const [ownerIds, setOwnerIds] = useState<DynamicRow[]>([newRow()]);
-  const [types, setTypes] = useState(defaultTypes);
-  
+  const [baseCurrency, setBaseCurrency] = useState("USD");
+
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
-  // Load Owner Profile and Existing Sister Companies
+  // Load Countries
+  useEffect(() => {
+    async function loadCountries() {
+      try {
+        const res = await apiGet<{ countries: any[] }>("/api/erp/locations/countries");
+        setCountriesList(res.countries || []);
+        if (res.countries?.length && !selectedCountryId) {
+          setSelectedCountryId(res.countries[0].id);
+        }
+      } catch {}
+    }
+    loadCountries();
+  }, []);
+
+  // Load Main Branches when Country changes
+  useEffect(() => {
+    if (!selectedCountryId) {
+      setBranchesList([]);
+      setSelectedCountryBranchId("");
+      return;
+    }
+    async function loadBranches() {
+      try {
+        const res = await apiGet<{ ok: boolean; data: { branches: any[] } }>(`/api/erp/locations/branches/main?countryId=${selectedCountryId}`);
+        if (res.ok && res.data?.branches) {
+          setBranchesList(res.data.branches);
+          if (res.data.branches.length && !selectedCountryBranchId) {
+            setSelectedCountryBranchId(res.data.branches[0].id);
+          }
+        }
+      } catch {}
+    }
+    loadBranches();
+  }, [selectedCountryId]);
+
+  // Load City Branches when Country changes
+  useEffect(() => {
+    if (!selectedCountryId) {
+      setCityBranchesList([]);
+      setSelectedCityBranchId("");
+      return;
+    }
+    async function loadCityBranches() {
+      try {
+        const res = await apiGet<{ ok: boolean; data: { branches: any[] } }>(`/api/erp/locations/branches/city?countryId=${selectedCountryId}`);
+        if (res.ok && res.data?.branches) {
+          setCityBranchesList(res.data.branches);
+          if (res.data.branches.length && !selectedCityBranchId) {
+            setSelectedCityBranchId(res.data.branches[0].id);
+          }
+        }
+      } catch {}
+    }
+    loadCityBranches();
+  }, [selectedCountryId]);
+
+  // Load Branch Operative Companies
+  useEffect(() => {
+    if (registrationMode !== "branch_operative" || (!selectedCountryId && !selectedCountryBranchId)) return;
+    async function loadBranchComps() {
+      try {
+        const qp = new URLSearchParams();
+        if (selectedCountryId) qp.set("countryId", selectedCountryId);
+        if (selectedCountryBranchId) qp.set("countryBranchId", selectedCountryBranchId);
+        const res = await apiGet<{ companies: any[] }>(`/api/erp/companies?${qp.toString()}`);
+        setBranchCompanies(res.companies || []);
+      } catch {}
+    }
+    loadBranchComps();
+  }, [registrationMode, selectedCountryId, selectedCountryBranchId]);
+
+  // Load Owner Profile, Sister Companies, and Linked Banks
   useEffect(() => {
     if (!ownerPersonId) {
       setOwnerProfile(null);
       setExistingCompaniesForOwner([]);
+      setOwnerBanks([]);
       return;
     }
 
@@ -175,7 +217,7 @@ export function CompanyIncorporationForm({
         const [pRes, summaryRes, cRes] = await Promise.allSettled([
           apiGet<{ customer: any }>(`/api/erp/customers/${encodeURIComponent(ownerPersonId)}?lang=${encodeURIComponent(lang)}`),
           apiGet<{ summary: any }>(`/api/erp/parties/360-summary?customerId=${encodeURIComponent(ownerPersonId)}&lang=${encodeURIComponent(lang)}`),
-          apiGet<{ companies: any[] }>("/api/erp/companies?limit=200")
+          apiGet<{ companies: any[] }>(`/api/erp/companies?ownerPersonId=${encodeURIComponent(ownerPersonId)}&limit=200`)
         ]);
 
         let pData: any = null;
@@ -187,25 +229,18 @@ export function CompanyIncorporationForm({
           if (pData.email) setEmail(pData.email);
         }
 
-        let summaryData: any = null;
         let sisterComps: Array<any> = [];
+        let banks: Array<any> = [];
+        let summaryData: any = null;
+
         if (summaryRes.status === "fulfilled" && summaryRes.value?.summary) {
           summaryData = summaryRes.value.summary;
-          if (summaryData.companies?.length) {
-            sisterComps = summaryData.companies;
-          } else if (summaryData.sister_companies?.length) {
-            sisterComps = summaryData.sister_companies;
-          }
+          if (summaryData.companies?.length) sisterComps = summaryData.companies;
+          if (summaryData.banks?.length) banks = summaryData.banks;
         }
 
-        if (!sisterComps.length && cRes.status === "fulfilled" && cRes.value?.companies) {
-          const list = cRes.value.companies;
-          const matched = list.filter((c: any) =>
-            (c.owner_person_id && c.owner_person_id === ownerPersonId) ||
-            (c.owner_id && c.owner_id === ownerPersonId) ||
-            (pData && c.owner_name && c.owner_name.toLowerCase().includes(pData.customer_name?.toLowerCase()))
-          );
-          sisterComps = matched;
+        if (cRes.status === "fulfilled" && cRes.value?.companies?.length) {
+          sisterComps = cRes.value.companies;
         }
 
         setOwnerProfile({
@@ -213,23 +248,12 @@ export function CompanyIncorporationForm({
           summary: summaryData,
           customerCode: pData?.customer_code || `CUST-${ownerPersonId.slice(0, 6).toUpperCase()}`,
           employeeCode: summaryData?.employees?.[0]?.employeeCode || "EMP-0010",
-          fatherName: pData?.contact_person || pData?.father_name || "عبداللہ",
-          personType: "Customer & Employee",
+          fatherName: pData?.father_name || pData?.contact_person || "عبداللہ",
           locationStr: [pData?.city_name || "Deira", pData?.state_name || "Dubai", pData?.country_name || "UAE"].filter(Boolean).join(" / ")
         });
 
-        // Set default mock sister companies if database has only few so user gets rich 5 sister companies preview as in audio/image
-        if (!sisterComps || sisterComps.length === 0) {
-          sisterComps = [
-            { id: "comp-1", name: "DAMAANIMPEX", businessType: "LLC", cityName: "Dubai", countryName: "UAE", createdAt: "12-Jan-2024", status: "Active" },
-            { id: "comp-2", name: "ASMATULLAH RETAIL SHOP", businessType: "Sole Prop.", cityName: "Dubai", countryName: "UAE", createdAt: "18-Feb-2024", status: "Active" },
-            { id: "comp-3", name: "M/S ASMATULLAH AND COMPANY", businessType: "LLC", cityName: "Sharjah", countryName: "UAE", createdAt: "05-Mar-2024", status: "Active" },
-            { id: "comp-4", name: "ASMATULLAH COMMISSION AGENT", businessType: "LLC", cityName: "Dubai", countryName: "UAE", createdAt: "20-Mar-2024", status: "Active" },
-            { id: "comp-5", name: "Indus Traders", businessType: "LLC", cityName: "Abu Dhabi", countryName: "UAE", createdAt: "15-Apr-2024", status: "Active" }
-          ];
-        }
-
         setExistingCompaniesForOwner(sisterComps);
+        setOwnerBanks(banks);
       } catch (err) {
         console.error("Failed to load owner profile:", err);
       }
@@ -249,12 +273,12 @@ export function CompanyIncorporationForm({
             setBusinessName(comp.legal_name || "");
             setLegalStructure(comp.business_type || "LLC");
             setAddress(comp.address || "");
-            if (comp.owner_person_id) {
-              setOwnerPersonId(comp.owner_person_id);
-            }
-            if (comp.manager_person_id) {
-              setManagerPersonId(comp.manager_person_id);
-            }
+            if (comp.country_id) setSelectedCountryId(comp.country_id);
+            if (comp.country_branch_id) setSelectedCountryBranchId(comp.country_branch_id);
+            if (comp.city_branch_id) setSelectedCityBranchId(comp.city_branch_id);
+            if (comp.is_branch_operative) setRegistrationMode("branch_operative");
+            if (comp.owner_person_id) setOwnerPersonId(comp.owner_person_id);
+            if (comp.manager_person_id) setManagerPersonId(comp.manager_person_id);
           }
         })
         .catch(() => null);
@@ -270,11 +294,10 @@ export function CompanyIncorporationForm({
 
   // Validation
   const isStep1Valid = Boolean(companyName.trim() && legalStructure && registrationType);
-  const isStep2Valid = Boolean(ownerName.trim() || ownerPersonId);
-  const isStep3Valid = Boolean(location.countryId || address || phone);
+  const isStep2Valid = Boolean(ownerName.trim() || ownerPersonId || selectedCountryBranchId);
   const ready = isStep1Valid && isStep2Valid;
 
-  // Save / Register Handler
+  // Save Handler
   async function handleSubmit(event?: React.FormEvent) {
     event?.preventDefault();
     if (!ready) {
@@ -286,16 +309,19 @@ export function CompanyIncorporationForm({
     setMessage("");
 
     try {
+      const isOperative = registrationMode === "branch_operative";
       const payload = {
         name: companyName.trim(),
         legalName: businessName.trim() || companyName.trim(),
-        ownerName: ownerName.trim(),
+        ownerName: ownerName.trim() || (isOperative ? "Branch Corporate Entity" : "Company Owner"),
         ownerPersonId: ownerPersonId || undefined,
         managerPersonId: managerPersonId || undefined,
         businessType: legalStructure,
-        countryId: location.countryId || undefined,
-        stateProvinceId: location.stateProvinceId || undefined,
-        cityId: location.cityId || undefined,
+        countryId: selectedCountryId || undefined,
+        countryBranchId: selectedCountryBranchId || undefined,
+        cityBranchId: selectedCityBranchId || undefined,
+        isBranchOperative: isOperative,
+        baseCurrency: baseCurrency || "USD",
         address: address.trim(),
         contacts: [{ type: "Mobile Number", value: phone }, { type: "Email Address", value: email }].filter(c => c.value),
         registrations: [{ type: registrationType, value: licenseNumber }].filter(r => r.value)
@@ -319,43 +345,77 @@ export function CompanyIncorporationForm({
     }
   }
 
-  // Quick reset for adding another sister company
+  // Reset for adding another sister company
   function handleResetForNewSisterCompany() {
     setCompanyName("");
     setCompanyNameUrdu("");
     setBusinessName("");
     setLicenseNumber("");
     setCurrentStep(1);
-    setMessage(lang === "ur" ? "اسی مالک کے لیے نئی کمپنی کا فارم تیار ہے۔" : "Ready to enter new sister company for same owner.");
+    setMessage(lang === "ur" ? "اسی مالک کے لیے نئی سسٹر کمپنی کا فارم تیار ہے۔" : "Ready to enter new sister company for same owner.");
   }
 
-  const isRtl = lang === "ur" || lang === "ar" || lang === "fa" || lang === "ps";
+  const selectedCountry = countriesList.find((c) => c.id === selectedCountryId);
+  const selectedCountryBranch = branchesList.find((b) => b.id === selectedCountryBranchId);
+  const selectedCityBranch = cityBranchesList.find((b) => b.id === selectedCityBranchId);
 
   return (
     <div className="mx-auto w-full max-w-[1680px] p-4 lg:p-6 space-y-6 font-sans" dir={isRtl ? "rtl" : "ltr"}>
-      {/* ── TOP BAR: Header, Breadcrumbs, Settings, Owner Picker ── */}
+      
+      {/* ── TOP BAR: Header, Mode Toggle, Step Tracker, Close ── */}
       <header className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 lg:p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-md">
             <Building2 className="h-6 w-6" />
           </div>
           <div>
             <h1 className="text-lg lg:text-xl font-black text-slate-900 dark:text-white tracking-tight">
-              {lang === "ur" ? "کمپنی رجسٹریشن" : "Company Registration"}
+              {lang === "ur" ? "کمپنی رجسٹریشن و کارپوریٹ سیٹ اپ" : "Company Registration & Corporate Setup"}
             </h1>
             <p className="text-xs text-slate-500 font-medium">
-              {lang === "ur" ? "مالک کا انتخاب، سسٹر کمپنیاں اور نیا سیٹ اپ" : "Owner Selection, Sister Companies & New Setup"}
+              {lang === "ur" 
+                ? "سسٹر کمپنیوں کا پورٹ فولیو اور برانچ آپریشنل کمپنی کا قیام" 
+                : "Owner Sister Companies Portfolio & Branch Operative Entities"}
             </p>
           </div>
         </div>
 
+        {/* Dual Mode Switcher Tabs */}
+        <div className="flex bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-black">
+          <button
+            type="button"
+            onClick={() => setRegistrationMode("owner_portfolio")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition cursor-pointer ${
+              registrationMode === "owner_portfolio"
+                ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm border border-slate-200 dark:border-slate-700"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+            }`}
+          >
+            <User className="h-4 w-4" />
+            <span>{lang === "ur" ? "شخص / مالک سسٹر کمپنیاں (Owner Portfolio)" : "Owner / Sister Companies"}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setRegistrationMode("branch_operative")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition cursor-pointer ${
+              registrationMode === "branch_operative"
+                ? "bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-sm border border-slate-200 dark:border-slate-700"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+            }`}
+          >
+            <Compass className="h-4 w-4" />
+            <span>{lang === "ur" ? "برانچ آپریشنل کمپنی (Branch Operative)" : "Branch Operative Company"}</span>
+          </button>
+        </div>
+
         {/* Horizontal Step Tracker */}
-        <div className="hidden md:flex items-center gap-2 bg-slate-50 dark:bg-slate-800/60 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold">
+        <div className="hidden xl:flex items-center gap-2 bg-slate-50 dark:bg-slate-800/60 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold">
           {[
             { id: 1, label: lang === "ur" ? "کمپنی معلومات" : "Company Info" },
-            { id: 2, label: lang === "ur" ? "مالک تفصیلات" : "Owner Details" },
-            { id: 3, label: lang === "ur" ? "پتہ اور رابطہ" : "Address & Contact" },
-            { id: 4, label: lang === "ur" ? "جائزہ اور محفوظ کریں" : "Review & Save" }
+            { id: 2, label: lang === "ur" ? "مالک / برانچ" : "Owner / Branch" },
+            { id: 3, label: lang === "ur" ? "پتہ و رابطے" : "Address & Contact" },
+            { id: 4, label: lang === "ur" ? "جائزہ و محفوظ" : "Review & Save" }
           ].map((s) => {
             const active = currentStep === s.id;
             const done = currentStep > s.id;
@@ -383,7 +443,7 @@ export function CompanyIncorporationForm({
           })}
         </div>
 
-        {/* Right Controls: Preferences & Close */}
+        {/* Right Controls */}
         <div className="flex items-center gap-2">
           <PreferencesControls />
           <Button
@@ -399,227 +459,409 @@ export function CompanyIncorporationForm({
         </div>
       </header>
 
-      {/* ── TOP MASTER OWNER PICKER BAR ── */}
+      {/* ── TOP SELECTOR BAR: Dynamic based on Mode ── */}
       <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex-1 max-w-xl grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <PersonPicker
-              label={lang === "ur" ? "مالک / شخص کا انتخاب کریں (Select Owner / Person)" : "Select Owner / Person"}
-              value={ownerPersonId}
-              onValueChange={(id) => {
-                setOwnerPersonId(id);
-              }}
-              placeholder={lang === "ur" ? "مالک یا شخص کا نام یا کسٹمر کوڈ درج کریں..." : "Search owner name or customer code..."}
-              lang={lang}
-            />
-            <PersonPicker
-              label={lang === "ur" ? "کمپنی منیجر (Company Manager)" : "Company Manager"}
-              value={managerPersonId}
-              onValueChange={(id) => {
-                setManagerPersonId(id);
-              }}
-              placeholder={lang === "ur" ? "منیجر کا نام تلاش کریں..." : "Search manager name..."}
-              lang={lang}
-            />
-          </div>
+        {registrationMode === "owner_portfolio" ? (
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex-1 max-w-2xl grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <PersonPicker
+                label={lang === "ur" ? "مالک / شخص کا انتخاب کریں (Select Owner / Person) *" : "Select Owner / Person *"}
+                value={ownerPersonId}
+                onValueChange={(id) => setOwnerPersonId(id)}
+                placeholder={lang === "ur" ? "مالک کا نام یا کسٹمر کوڈ درج کریں..." : "Search owner name or customer code..."}
+                lang={lang}
+              />
+              <PersonPicker
+                label={lang === "ur" ? "کمپنی منیجر (Company Manager)" : "Company Manager"}
+                value={managerPersonId}
+                onValueChange={(id) => setManagerPersonId(id)}
+                placeholder={lang === "ur" ? "منیجر کا نام تلاش کریں..." : "Search manager name..."}
+                lang={lang}
+              />
+            </div>
 
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              onClick={handleResetForNewSisterCompany}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-10 px-4 rounded-xl flex items-center gap-2 shadow-xs cursor-pointer"
-            >
-              <Plus className="h-4 w-4" />
-              <span>{lang === "ur" ? "+ نئی کمپنی بنائیں (+ New Company)" : "+ Add New Sister Company"}</span>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                onClick={handleResetForNewSisterCompany}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-10 px-4 rounded-xl flex items-center gap-2 shadow-xs cursor-pointer"
+              >
+                <Plus className="h-4 w-4" />
+                <span>{lang === "ur" ? "+ نئی سسٹر کمپنی بنائیں (+ New Sister Company)" : "+ Add New Sister Company"}</span>
+              </Button>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex-1 max-w-3xl grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  {lang === "ur" ? "ملک کا انتخاب کریں (Country) *" : "Country *"}
+                </Label>
+                <select
+                  value={selectedCountryId}
+                  onChange={(e) => setSelectedCountryId(e.target.value)}
+                  className="w-full h-10 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100"
+                >
+                  <option value="">{lang === "ur" ? "ملک منتخب کریں..." : "Select Country..."}</option>
+                  {countriesList.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  {lang === "ur" ? "مین برانچ (Main Branch) *" : "Main Branch *"}
+                </Label>
+                <select
+                  value={selectedCountryBranchId}
+                  onChange={(e) => setSelectedCountryBranchId(e.target.value)}
+                  className="w-full h-10 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100"
+                >
+                  <option value="">{lang === "ur" ? "مین برانچ منتخب کریں..." : "Select Main Branch..."}</option>
+                  {branchesList.map((b) => (
+                    <option key={b.id} value={b.id}>{b.name} {b.code ? `(${b.code})` : ""}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  {lang === "ur" ? "سٹی برانچ (City Branch)" : "City Branch"}
+                </Label>
+                <select
+                  value={selectedCityBranchId}
+                  onChange={(e) => setSelectedCityBranchId(e.target.value)}
+                  className="w-full h-10 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100"
+                >
+                  <option value="">{lang === "ur" ? "تمام سٹی برانچز..." : "All City Branches..."}</option>
+                  {cityBranchesList.map((b) => (
+                    <option key={b.id} value={b.id}>{b.name} {b.code ? `(${b.code})` : ""}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 text-xs font-bold">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                {lang === "ur" ? "برانچ آپریشنل کمپنی موڈ فعال" : "Branch Operative Mode Active"}
+              </span>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* ── MAIN TWO-COLUMN MASTER-DETAIL LAYOUT ── */}
       <main className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
-        {/* ════════ LEFT COLUMN: Owner Profile Dossier & Existing Sister Companies ════════ */}
+        {/* ════════ LEFT COLUMN: Live Profile & Existing Companies ════════ */}
         <div className="lg:col-span-5 space-y-5">
           
-          {/* Card 1: Selected Owner Profile Card */}
-          <Card className="border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
-            <CardHeader className="bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 pb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                    <User className="h-4 w-4" />
-                  </span>
-                  <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                    {lang === "ur" ? "منتخب شخص کی تفصیلات" : "Selected Owner Details"}
-                  </CardTitle>
-                </div>
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  {lang === "ur" ? "فعال Active" : "Active"}
-                </span>
-              </div>
-            </CardHeader>
+          {registrationMode === "owner_portfolio" ? (
+            <>
+              {/* Card 1: Owner Profile Dossier */}
+              <Card className="border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
+                <CardHeader className="bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                        <User className="h-4 w-4" />
+                      </span>
+                      <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                        {lang === "ur" ? "منتخب مالک / شخص کی تفصیلات" : "Selected Owner Details"}
+                      </CardTitle>
+                    </div>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      {lang === "ur" ? "فعال Active" : "Active"}
+                    </span>
+                  </div>
+                </CardHeader>
 
-            <CardContent className="p-4 space-y-4">
-              {/* Avatar + Main Names */}
-              <div className="flex items-center gap-3.5 pb-3 border-b border-slate-100 dark:border-slate-800">
-                <div className="flex h-13 w-13 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white font-black text-xl shadow-xs">
-                  {ownerName ? ownerName.slice(0, 2) : "عا"}
-                </div>
-                <div>
-                  <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
-                    {transliterateProperNoun(ownerName || "عصمت اللہ عبداللہ", lang)}
-                  </h2>
-                  <p className="text-xs text-slate-500 font-medium">
-                    {lang === "ur" ? "ولدیت:" : "S/O:"} {transliterateProperNoun(ownerProfile?.fatherName || "عبداللہ", lang)}
-                  </p>
-                </div>
-              </div>
+                <CardContent className="p-4 space-y-4">
+                  {/* Avatar + Main Names */}
+                  <div className="flex items-center gap-3.5 pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white font-black text-lg shadow-xs">
+                      {ownerName ? ownerName.slice(0, 2) : "عا"}
+                    </div>
+                    <div>
+                      <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
+                        {transliterateProperNoun(ownerName || "عصمت اللہ عبداللہ", lang)}
+                      </h2>
+                      <p className="text-xs text-slate-500 font-medium">
+                        {lang === "ur" ? "ولدیت:" : "S/O:"} {transliterateProperNoun(ownerProfile?.fatherName || "عبداللہ", lang)}
+                      </p>
+                    </div>
+                  </div>
 
-              {/* 2x3 Grid of Detail Cards */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
-                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                  <span className="text-[10px] font-bold text-slate-400 block mb-0.5">
-                    {lang === "ur" ? "کسٹمر کوڈ" : "Customer Code"}
-                  </span>
-                  <span className="font-bold text-slate-900 dark:text-white font-mono">
-                    {ownerProfile?.customerCode || "CUST-807580"}
-                  </span>
-                </div>
+                  {/* 2x3 Grid of Detail Cards */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+                    <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                      <span className="text-[10px] font-bold text-slate-400 block mb-0.5">
+                        {lang === "ur" ? "کسٹمر کوڈ" : "Customer Code"}
+                      </span>
+                      <span className="font-bold text-slate-900 dark:text-white font-mono">
+                        {ownerProfile?.customerCode || "CUST-807580"}
+                      </span>
+                    </div>
 
-                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                  <span className="text-[10px] font-bold text-slate-400 block mb-0.5">
-                    {lang === "ur" ? "ایمپلائی کوڈ" : "Employee Code"}
-                  </span>
-                  <span className="font-bold text-slate-900 dark:text-white font-mono">
-                    {ownerProfile?.employeeCode || "EMP-0010"}
-                  </span>
-                </div>
+                    <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                      <span className="text-[10px] font-bold text-slate-400 block mb-0.5">
+                        {lang === "ur" ? "ایمپلائی کوڈ" : "Employee Code"}
+                      </span>
+                      <span className="font-bold text-slate-900 dark:text-white font-mono">
+                        {ownerProfile?.employeeCode || "EMP-0010"}
+                      </span>
+                    </div>
 
-                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                  <span className="text-[10px] font-bold text-slate-400 block mb-0.5">
-                    {lang === "ur" ? "موبائل / واٹس ایپ" : "Mobile / WhatsApp"}
-                  </span>
-                  <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono text-[11px]" dir="ltr">
-                    {phone || "+971 50 123 4567"}
-                  </span>
-                </div>
+                    <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                      <span className="text-[10px] font-bold text-slate-400 block mb-0.5">
+                        {lang === "ur" ? "موبائل / واٹس ایپ" : "Mobile / WhatsApp"}
+                      </span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono text-[11px]" dir="ltr">
+                        {phone || "+971 50 123 4567"}
+                      </span>
+                    </div>
 
-                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 sm:col-span-2">
-                  <span className="text-[10px] font-bold text-slate-400 block mb-0.5">
-                    {lang === "ur" ? "ای میل" : "Email"}
-                  </span>
-                  <span className="font-bold text-blue-600 dark:text-blue-400 font-mono text-[11px] truncate block" dir="ltr">
-                    {email || "asmatullah@gmail.com"}
-                  </span>
-                </div>
+                    <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 sm:col-span-2">
+                      <span className="text-[10px] font-bold text-slate-400 block mb-0.5">
+                        {lang === "ur" ? "ای میل" : "Email"}
+                      </span>
+                      <span className="font-bold text-blue-600 dark:text-blue-400 font-mono text-[11px] truncate block" dir="ltr">
+                        {email || "asmatullah@gmail.com"}
+                      </span>
+                    </div>
 
-                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                  <span className="text-[10px] font-bold text-slate-400 block mb-0.5">
-                    {lang === "ur" ? "ملک / برانچ / شہر" : "Country / City"}
-                  </span>
-                  <span className="font-bold text-slate-800 dark:text-slate-200 text-[11px] truncate block">
-                    {ownerProfile?.locationStr || "UAE / Dubai / Deira"}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                    <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                      <span className="text-[10px] font-bold text-slate-400 block mb-0.5">
+                        {lang === "ur" ? "ملک / شہر" : "Country / City"}
+                      </span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200 text-[11px] truncate block">
+                        {ownerProfile?.locationStr || "UAE / Dubai / Deira"}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-          {/* Card 2: Existing Registered Sister Companies Table */}
-          <Card className="border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
-            <CardHeader className="bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 pb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
-                    <Building className="h-4 w-4" />
-                  </span>
-                  <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                    {lang === "ur" 
-                      ? `اس شخص کی رجسٹرڈ کمپنیاں (${existingCompaniesForOwner.length})` 
-                      : `Registered Companies under this Owner (${existingCompaniesForOwner.length})`}
-                  </CardTitle>
-                </div>
-              </div>
-            </CardHeader>
+              {/* Card 2: Registered Sister Companies Table */}
+              <Card className="border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
+                <CardHeader className="bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                        <Building className="h-4 w-4" />
+                      </span>
+                      <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                        {lang === "ur" 
+                          ? `اس شخص کی رجسٹرڈ سسٹر کمپنیاں (${existingCompaniesForOwner.length})` 
+                          : `Sister Companies under this Owner (${existingCompaniesForOwner.length})`}
+                      </CardTitle>
+                    </div>
+                  </div>
+                </CardHeader>
 
-            <CardContent className="p-0">
-              <div className="overflow-auto max-h-[300px]">
-                <table className="w-full text-[11px] text-left rtl:text-right">
-                  <thead className="bg-slate-50/60 dark:bg-slate-800/30 text-slate-500 border-b border-slate-100 dark:border-slate-800 font-bold uppercase sticky top-0 bg-white dark:bg-slate-900">
-                    <tr>
-                      <th className="px-3 py-2.5 text-center w-8">#</th>
-                      <th className="px-3 py-2.5">{lang === "ur" ? "کمپنی کا نام" : "Company Name"}</th>
-                      <th className="px-3 py-2.5">{lang === "ur" ? "رجسٹریشن قسم" : "Structure"}</th>
-                      <th className="px-3 py-2.5">{lang === "ur" ? "ملک / برانچ" : "Location"}</th>
-                      <th className="px-3 py-2.5 text-center">{lang === "ur" ? "حالت" : "Status"}</th>
-                      <th className="px-3 py-2.5">{lang === "ur" ? "تاریخ" : "Date"}</th>
-                      <th className="px-3 py-2.5 text-center">{lang === "ur" ? "ایکشن" : "Action"}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {existingCompaniesForOwner.map((co, idx) => (
-                      <tr key={co.id || idx} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition">
-                        <td className="px-3 py-2.5 text-center font-bold text-slate-400">{idx + 1}</td>
-                        <td className="px-3 py-2.5 font-bold text-slate-900 dark:text-slate-100">
-                          {localizeTerm(co.name || co.company_name, lang)}
-                        </td>
-                        <td className="px-3 py-2.5 text-slate-600 dark:text-slate-400 font-mono text-[10px]">
-                          {co.businessType || co.business_type || "LLC"}
-                        </td>
-                        <td className="px-3 py-2.5 text-slate-600 dark:text-slate-400">
-                          {[co.countryName || "UAE", co.cityName || "Dubai"].filter(Boolean).join(" / ")}
-                        </td>
-                        <td className="px-3 py-2.5 text-center">
-                          <span className="inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            {lang === "ur" ? "فعال" : "Active"}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2.5 text-slate-500 font-mono text-[10px]">
-                          {co.createdAt || "12-Jan-2024"}
-                        </td>
-                        <td className="px-3 py-2.5 text-center">
-                          <button
-                            type="button"
-                            onClick={() => router.push(`/dashboard/settings/company-setup?companyId=${co.id}` as Route)}
-                            className="p-1 rounded-md text-blue-600 hover:bg-blue-50 transition cursor-pointer"
-                            title="View / Edit Company"
-                          >
-                            <Eye className="h-3.5 w-3.5" />
-                          </button>
-                        </td>
-                      </tr>
+                <CardContent className="p-0">
+                  <div className="overflow-auto max-h-[260px]">
+                    <table className="w-full text-[11px] text-left rtl:text-right">
+                      <thead className="bg-slate-50/60 dark:bg-slate-800/30 text-slate-500 border-b border-slate-100 dark:border-slate-800 font-bold uppercase sticky top-0 bg-white dark:bg-slate-900">
+                        <tr>
+                          <th className="px-3 py-2.5 text-center w-8">#</th>
+                          <th className="px-3 py-2.5">{lang === "ur" ? "کمپنی کا نام" : "Company Name"}</th>
+                          <th className="px-3 py-2.5">{lang === "ur" ? "ساخت" : "Structure"}</th>
+                          <th className="px-3 py-2.5">{lang === "ur" ? "مقام" : "Location"}</th>
+                          <th className="px-3 py-2.5 text-center">{lang === "ur" ? "حالت" : "Status"}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {existingCompaniesForOwner.length === 0 ? (
+                          <tr>
+                            <td colSpan={5} className="px-4 py-8 text-center text-slate-400 font-medium">
+                              {lang === "ur" ? "کوئی سسٹر کمپنی رجسٹر نہیں ہے۔ نئی کمپنی درج کریں۔" : "No sister companies registered yet."}
+                            </td>
+                          </tr>
+                        ) : (
+                          existingCompaniesForOwner.map((co, idx) => (
+                            <tr key={co.id || idx} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition">
+                              <td className="px-3 py-2.5 text-center font-bold text-slate-400">{idx + 1}</td>
+                              <td className="px-3 py-2.5 font-bold text-slate-900 dark:text-slate-100">
+                                {localizeTerm(co.name || co.company_name, lang)}
+                              </td>
+                              <td className="px-3 py-2.5 text-slate-600 dark:text-slate-400 font-mono text-[10px]">
+                                {co.businessType || co.business_type || "LLC"}
+                              </td>
+                              <td className="px-3 py-2.5 text-slate-600 dark:text-slate-400">
+                                {[co.countryName || co.country_name || "UAE", co.cityName || co.city_name || "Dubai"].filter(Boolean).join(" / ")}
+                              </td>
+                              <td className="px-3 py-2.5 text-center">
+                                <span className="inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                  {lang === "ur" ? "فعال" : "Active"}
+                                </span>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Informational Banner */}
+                  <div className="p-3 bg-blue-50/60 dark:bg-blue-950/30 border-t border-blue-100 dark:border-blue-900/40 text-xs text-blue-900 dark:text-blue-200 flex items-start gap-2.5">
+                    <span className="text-blue-600 text-sm mt-0.5">ℹ️</span>
+                    <div>
+                      <p className="font-bold">
+                        {lang === "ur"
+                          ? `اس شخص کے نام پہلے سے ${existingCompaniesForOwner.length} کمپنیاں رجسٹرڈ ہیں۔`
+                          : `This owner already has ${existingCompaniesForOwner.length} registered companies.`}
+                      </p>
+                      <p className="text-[11px] text-blue-700 dark:text-blue-300 mt-0.5">
+                        {lang === "ur"
+                          ? `آپ اس شخص کے نام نئی کمپنی رجسٹر کر رہے ہیں (کمپنی نمبر: ${existingCompaniesForOwner.length + 1})`
+                          : `You are registering a new sister company under this owner (Company #${existingCompaniesForOwner.length + 1})`}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Card 3: Linked Banks Summary */}
+              {ownerBanks.length > 0 && (
+                <Card className="border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
+                  <CardHeader className="bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 pb-2.5">
+                    <div className="flex items-center gap-2">
+                      <Landmark className="h-4 w-4 text-emerald-600" />
+                      <CardTitle className="text-xs font-black uppercase text-slate-700 dark:text-slate-300">
+                        {lang === "ur" ? `منسلک بینک اکاؤنٹس (${ownerBanks.length})` : `Linked Bank Accounts (${ownerBanks.length})`}
+                      </CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-3 space-y-2">
+                    {ownerBanks.map((b: any, idx: number) => (
+                      <div key={b.id || idx} className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-xs">
+                        <span className="font-bold text-slate-800 dark:text-slate-200">{b.bankName}</span>
+                        <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">{b.accountNumber || b.accountTitle}</span>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                  </CardContent>
+                </Card>
+              )}
+            </>
+          ) : (
+            /* Mode B: Branch Operative Left Dossier */
+            <>
+              <Card className="border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
+                <CardHeader className="bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                        <Compass className="h-4 w-4" />
+                      </span>
+                      <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                        {lang === "ur" ? "منتخب برانچ کے کوائف" : "Selected Branch Details"}
+                      </CardTitle>
+                    </div>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      {lang === "ur" ? "آپریشنل برانچ" : "Operative Branch"}
+                    </span>
+                  </div>
+                </CardHeader>
 
-              {/* Informational Banner */}
-              <div className="p-3.5 bg-blue-50/60 dark:bg-blue-950/30 border-t border-blue-100 dark:border-blue-900/40 text-xs text-blue-900 dark:text-blue-200 flex items-start gap-2.5">
-                <span className="text-blue-600 text-sm mt-0.5">ℹ️</span>
-                <div>
-                  <p className="font-bold">
-                    {lang === "ur"
-                      ? `اس شخص کے نام پہلے سے ${existingCompaniesForOwner.length} کمپنیاں رجسٹرڈ ہیں۔`
-                      : `This owner already has ${existingCompaniesForOwner.length} registered companies.`}
-                  </p>
-                  <p className="text-[11px] text-blue-700 dark:text-blue-300 mt-0.5">
-                    {lang === "ur"
-                      ? `آپ اس شخص کے نام نئی کمپنی رجسٹر کر رہے ہیں (کمپنی نمبر: ${existingCompaniesForOwner.length + 1})`
-                      : `You are registering a new sister company under this owner (Company #${existingCompaniesForOwner.length + 1})`}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                <CardContent className="p-4 space-y-4">
+                  <div className="flex items-center gap-3.5 pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-600 text-white font-black text-lg shadow-xs">
+                      {selectedCountryBranch?.name?.slice(0, 2) || "BR"}
+                    </div>
+                    <div>
+                      <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
+                        {selectedCountryBranch?.name || "Select Branch"}
+                      </h2>
+                      <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">
+                        {selectedCountry?.name || "Country"} · {selectedCityBranch?.name || "City Branch"}
+                      </p>
+                    </div>
+                  </div>
 
-          {/* Card 3: 4 KPI Summary Cards */}
+                  <div className="p-3 bg-emerald-50/60 dark:bg-emerald-950/30 rounded-xl border border-emerald-100 dark:border-emerald-900/40 text-xs text-emerald-900 dark:text-emerald-200">
+                    <p className="font-bold mb-1">
+                      {lang === "ur" ? "✨ پورے ERP میں اس برانچ کا آپریشنل کردار:" : "✨ ERP-Wide Operative Role:"}
+                    </p>
+                    <p className="text-[11px] leading-relaxed text-emerald-800 dark:text-emerald-300">
+                      {lang === "ur" 
+                        ? "یہ کمپنی اس برانچ کے تمام پرچیز آرڈرز، سیلز واؤچرز، روزنامچہ انٹریز اور لیٹر ہیڈ پرنٹنگ کے لیے باقاعدہ رجسٹرڈ آپریشنل ادارہ بنے گی۔"
+                        : "This company will serve as the official operational entity for purchase orders, sales invoices, roznamcha entries, and voucher prints in this branch."}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Existing Operative Companies in this Branch */}
+              <Card className="border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
+                <CardHeader className="bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Building className="h-4 w-4 text-emerald-600" />
+                      <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                        {lang === "ur" ? `اس برانچ کی موجودہ کمپنیاں (${branchCompanies.length})` : `Branch Operative Companies (${branchCompanies.length})`}
+                      </CardTitle>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="overflow-auto max-h-[260px]">
+                    <table className="w-full text-[11px] text-left rtl:text-right">
+                      <thead className="bg-slate-50 text-slate-500 font-bold uppercase border-b">
+                        <tr>
+                          <th className="px-3 py-2">#</th>
+                          <th className="px-3 py-2">{lang === "ur" ? "کمپنی کا نام" : "Company"}</th>
+                          <th className="px-3 py-2">{lang === "ur" ? "ساخت" : "Structure"}</th>
+                          <th className="px-3 py-2 text-center">{lang === "ur" ? "حالت" : "Status"}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {branchCompanies.length === 0 ? (
+                          <tr>
+                            <td colSpan={4} className="px-4 py-8 text-center text-slate-400 font-medium">
+                              {lang === "ur" ? "اس برانچ میں ابھی کوئی آپریشنل کمپنی نہیں ہے۔" : "No operative companies registered yet."}
+                            </td>
+                          </tr>
+                        ) : (
+                          branchCompanies.map((c, i) => (
+                            <tr key={c.id || i} className="hover:bg-slate-50">
+                              <td className="px-3 py-2 text-slate-400 font-bold">{i + 1}</td>
+                              <td className="px-3 py-2 font-bold text-slate-800">{c.name}</td>
+                              <td className="px-3 py-2 font-mono text-[10px]">{c.business_type || "LLC"}</td>
+                              <td className="px-3 py-2 text-center">
+                                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700">
+                                  {lang === "ur" ? "فعال" : "Active"}
+                                </span>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
+
+          {/* 4 Quick Stat KPIs */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 text-center shadow-xs">
               <Building2 className="h-5 w-5 text-blue-600 mx-auto mb-1" />
-              <span className="text-base font-black text-slate-900 dark:text-white block">{existingCompaniesForOwner.length}</span>
+              <span className="text-base font-black text-slate-900 dark:text-white block">
+                {registrationMode === "owner_portfolio" ? existingCompaniesForOwner.length : branchCompanies.length}
+              </span>
               <span className="text-[10px] font-bold text-slate-400 uppercase">{lang === "ur" ? "کل کمپنیاں" : "Companies"}</span>
+            </div>
+
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 text-center shadow-xs">
+              <Landmark className="h-5 w-5 text-emerald-600 mx-auto mb-1" />
+              <span className="text-base font-black text-slate-900 dark:text-white block">{ownerBanks.length || 1}</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase">{lang === "ur" ? "بینک اکاؤنٹس" : "Banks"}</span>
             </div>
 
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 text-center shadow-xs">
@@ -629,30 +871,28 @@ export function CompanyIncorporationForm({
             </div>
 
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 text-center shadow-xs">
-              <Landmark className="h-5 w-5 text-emerald-600 mx-auto mb-1" />
-              <span className="text-base font-black text-slate-900 dark:text-white block">2</span>
-              <span className="text-[10px] font-bold text-slate-400 uppercase">{lang === "ur" ? "کل بینک اکاؤنٹس" : "Banks"}</span>
-            </div>
-
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 text-center shadow-xs">
-              <Users className="h-5 w-5 text-purple-600 mx-auto mb-1" />
-              <span className="text-base font-black text-slate-900 dark:text-white block">1</span>
-              <span className="text-[10px] font-bold text-slate-400 uppercase">{lang === "ur" ? "کسٹمر اکاؤنٹ" : "Customer"}</span>
+              <ShieldCheck className="h-5 w-5 text-purple-600 mx-auto mb-1" />
+              <span className="text-base font-black text-slate-900 dark:text-white block">4-Lvl</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase">{lang === "ur" ? "سیریل سسٹم" : "Serials"}</span>
             </div>
           </div>
         </div>
 
-        {/* ════════ RIGHT COLUMN: New Company Registration Steps & Live Preview ════════ */}
+        {/* ════════ RIGHT COLUMN: 4-Step Registration Form ════════ */}
         <div className="lg:col-span-7 space-y-5">
           <Card className="border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
             <CardHeader className="bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 pb-4">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-base font-black text-slate-900 dark:text-white">
-                    {lang === "ur" ? "نئی کمپنی رجسٹریشن" : "New Company Registration"}
+                    {registrationMode === "owner_portfolio" 
+                      ? (lang === "ur" ? "نئی سسٹر کمپنی رجسٹریشن" : "New Sister Company Registration")
+                      : (lang === "ur" ? "نئی برانچ آپریشنل کمپنی رجسٹریشن" : "New Branch Operative Company Registration")}
                   </h2>
                   <p className="text-xs text-slate-500 font-medium">
-                    {lang === "ur" ? "منتخب شخص کے نام پر نئی کمپنی رجسٹر کریں" : "Register a new company under the selected owner"}
+                    {registrationMode === "owner_portfolio"
+                      ? (lang === "ur" ? "منتخب مالک کے نام پر نئی سسٹر کمپنی رجسٹر کریں" : "Register a new company under the selected owner")
+                      : (lang === "ur" ? "منتخب برانچ کے لیے آپریشنل کمپنی قائم کریں" : "Establish an official operative company for this branch")}
                   </p>
                 </div>
                 <div className="text-xs font-bold text-blue-600 bg-blue-50 dark:bg-blue-950 px-3 py-1 rounded-full border border-blue-200 dark:border-blue-900">
@@ -662,12 +902,12 @@ export function CompanyIncorporationForm({
             </CardHeader>
 
             <CardContent className="p-5 lg:p-6 space-y-6">
-              {/* Step 1: کمپنی کی معلومات */}
+              {/* Step 1: کمپنی کی بنیادی معلومات */}
               {currentStep === 1 && (
                 <div className="space-y-4 animate-in fade-in">
                   <div className="p-3 bg-blue-50/60 dark:bg-blue-950/30 rounded-xl border border-blue-100 dark:border-blue-900/40 text-xs font-semibold text-blue-900 dark:text-blue-200 flex items-center gap-2">
                     <span>ℹ️</span>
-                    <span>{lang === "ur" ? "برائے کرم کمپنی کی بنیادی معلومات درج کریں۔" : "Please enter the core details of the new company."}</span>
+                    <span>{lang === "ur" ? "برائے کرم کمپنی کا نام اور بنیادی قانونی ساخت درج کریں۔" : "Please enter company name and corporate structure."}</span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -678,7 +918,7 @@ export function CompanyIncorporationForm({
                       <Input
                         value={companyName}
                         onChange={(e) => setCompanyName(e.target.value)}
-                        placeholder="Company Name (English)"
+                        placeholder="e.g. DAMAAN IMPEX LLC"
                         className="bg-white dark:bg-slate-950 border-slate-200 text-xs h-10 font-bold"
                         dir="ltr"
                       />
@@ -731,12 +971,12 @@ export function CompanyIncorporationForm({
 
                     <div className="space-y-1.5">
                       <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {lang === "ur" ? "موبائل / فون *" : "Mobile / Phone *"}
+                        {lang === "ur" ? "لائسنس / دستاویز نمبر" : "License / Document Number"}
                       </Label>
                       <Input
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        placeholder="+971 50 123 4567"
+                        value={licenseNumber}
+                        onChange={(e) => setLicenseNumber(e.target.value)}
+                        placeholder="e.g. TL-998822-DXB"
                         className="bg-white dark:bg-slate-950 border-slate-200 text-xs h-10 font-mono"
                         dir="ltr"
                       />
@@ -744,12 +984,61 @@ export function CompanyIncorporationForm({
 
                     <div className="space-y-1.5">
                       <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {lang === "ur" ? "کاروبار کی نوعیت" : "Nature of Business"}
+                        {lang === "ur" ? "بنیادی کرنسی (Base Currency)" : "Base Currency"}
                       </Label>
+                      <select
+                        value={baseCurrency}
+                        onChange={(e) => setBaseCurrency(e.target.value)}
+                        className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-800 dark:text-slate-200"
+                      >
+                        <option value="USD">USD ($) - US Dollar</option>
+                        <option value="AED">AED (د.إ) - UAE Dirham</option>
+                        <option value="PKR">PKR (Rs) - Pakistani Rupee</option>
+                        <option value="AFN">AFN (؋) - Afghan Afghani</option>
+                        <option value="INR">INR (₹) - Indian Rupee</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 2: تصدیق و کاروباری نام */}
+              {currentStep === 2 && (
+                <div className="space-y-4 animate-in fade-in">
+                  <div className="p-4 rounded-xl border border-indigo-200 bg-indigo-50/70 dark:bg-indigo-950/40 space-y-2">
+                    <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300 block">
+                      {registrationMode === "owner_portfolio" 
+                        ? (lang === "ur" ? "منسلک مالک کی تصدیق:" : "Linked Owner Confirmation:")
+                        : (lang === "ur" ? "منسلک برانچ کی تصدیق:" : "Linked Branch Confirmation:")}
+                    </span>
+                    <p className="text-sm font-black text-indigo-950 dark:text-indigo-100">
+                      {registrationMode === "owner_portfolio"
+                        ? `${transliterateProperNoun(ownerName || "عصمت اللہ عبداللہ", lang)} (S/O: ${transliterateProperNoun(ownerProfile?.fatherName || "عبداللہ", lang)})`
+                        : `${selectedCountry?.name || "Country"} / ${selectedCountryBranch?.name || "Branch"}`}
+                    </p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
+                      {registrationMode === "owner_portfolio"
+                        ? (lang === "ur" ? "ملکیت کی قسم: 100% پرسنل ہولڈنگ / سسٹر کمپنی" : "Ownership: 100% Personal Holding / Sister Entity")
+                        : (lang === "ur" ? "آپریشنل حیثیت: پورے ERP میں برانچ انوائسز اور لیٹر ہیڈ کے لیے مجاز" : "Status: Authorized for Branch Invoicing, POs & Vouchers")}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700">{lang === "ur" ? "کاروباری نام (Trading Name)" : "Business / Trading Name"}</Label>
+                      <Input
+                        value={businessName}
+                        onChange={(e) => setBusinessName(e.target.value)}
+                        placeholder="e.g. DAMAAN Trading"
+                        className="bg-white dark:bg-slate-950 border-slate-200 text-xs h-10 font-bold"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700">{lang === "ur" ? "کاروبار کی نوعیت" : "Nature of Business"}</Label>
                       <select
                         value={natureOfBusiness}
                         onChange={(e) => setNatureOfBusiness(e.target.value)}
-                        className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-semibold text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-semibold"
                       >
                         <option value="Trading & General Order Supplier">Trading & General Order Supplier (تجارت و سپلائی)</option>
                         <option value="Retail & Wholesale">Retail & Wholesale (تھوک و پرچون)</option>
@@ -758,15 +1047,22 @@ export function CompanyIncorporationForm({
                         <option value="Logistics & Transport">Logistics & Transport (نقل و حمل)</option>
                       </select>
                     </div>
+                  </div>
+                </div>
+              )}
 
+              {/* Step 3: پتہ و رابطہ */}
+              {currentStep === 3 && (
+                <div className="space-y-4 animate-in fade-in">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {lang === "ur" ? "لائسنس / دستاویز نمبر" : "License / Document Number"}
+                        {lang === "ur" ? "موبائل / فون *" : "Mobile / Phone *"}
                       </Label>
                       <Input
-                        value={licenseNumber}
-                        onChange={(e) => setLicenseNumber(e.target.value)}
-                        placeholder="e.g. TL-998822-DXB"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="+971 50 123 4567"
                         className="bg-white dark:bg-slate-950 border-slate-200 text-xs h-10 font-mono"
                         dir="ltr"
                       />
@@ -785,60 +1081,6 @@ export function CompanyIncorporationForm({
                       />
                     </div>
                   </div>
-                </div>
-              )}
-
-              {/* Step 2: مالک کی تفصیلات */}
-              {currentStep === 2 && (
-                <div className="space-y-4 animate-in fade-in">
-                  <div className="p-4 rounded-xl border border-indigo-200 bg-indigo-50/70 dark:bg-indigo-950/40 space-y-2">
-                    <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300 block">
-                      {lang === "ur" ? "منسلک مالک کی توثیق:" : "Linked Owner Verification:"}
-                    </span>
-                    <p className="text-sm font-black text-indigo-950 dark:text-indigo-100">
-                      {transliterateProperNoun(ownerName || "عصمت اللہ عبداللہ", lang)} ({lang === "ur" ? "ولدیت:" : "S/O:"} {transliterateProperNoun(ownerProfile?.fatherName || "عبداللہ", lang)})
-                    </p>
-                    <p className="text-xs text-slate-600 dark:text-slate-400">
-                      {lang === "ur" ? "حصص داری: 100% مکمل ملکیت" : "Ownership Share: 100% Full Ownership"}
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700">{lang === "ur" ? "کاروباری نام (Trading Name)" : "Business / Trading Name"}</Label>
-                      <Input
-                        value={businessName}
-                        onChange={(e) => setBusinessName(e.target.value)}
-                        placeholder="e.g. DAMAAN Trading"
-                        className="bg-white dark:bg-slate-950 border-slate-200 text-xs h-10 font-bold"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700">{lang === "ur" ? "پاسپورٹ / قومی شناختی کارڈ" : "Passport / National ID"}</Label>
-                      <Input
-                        placeholder="784-1980-1234567-1"
-                        className="bg-white dark:bg-slate-950 border-slate-200 text-xs h-10 font-mono"
-                        dir="ltr"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 3: پتہ اور رابطہ */}
-              {currentStep === 3 && (
-                <div className="space-y-4 animate-in fade-in">
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold text-slate-700">{lang === "ur" ? "مقام کا انتخاب کریں" : "Select Location"}</Label>
-                    <LocationHierarchySelect
-                      value={location}
-                      onChange={(next, meta) => {
-                        setLocation(next);
-                        if (meta) setLocationMeta(meta);
-                      }}
-                      lang={lang}
-                    />
-                  </div>
 
                   <div className="space-y-1.5">
                     <Label className="text-xs font-bold text-slate-700">{lang === "ur" ? "مکمل گلی / عمارت کا پتہ" : "Full Street / Building Address"}</Label>
@@ -852,7 +1094,7 @@ export function CompanyIncorporationForm({
                 </div>
               )}
 
-              {/* Step 4: جائزہ اور لائیو رپورٹ پریویو */}
+              {/* Step 4: جائزہ اور محفوظ کریں */}
               {currentStep === 4 && (
                 <div className="space-y-4 animate-in fade-in">
                   <div className="border border-slate-200 dark:border-slate-800 rounded-2xl p-5 bg-slate-50/50 dark:bg-slate-900/60 space-y-4">
@@ -862,18 +1104,24 @@ export function CompanyIncorporationForm({
                           {companyName || "DAMAAN Trading Company LLC"}
                         </h3>
                         <p className="text-xs text-slate-500 font-bold">
-                          {legalStructure} · {natureOfBusiness}
+                          {legalStructure} · {natureOfBusiness} · {baseCurrency}
                         </p>
                       </div>
                       <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold">
-                        {lang === "ur" ? "تیار برائے اندراج" : "Ready to Register"}
+                        {lang === "ur" ? "تیار برائے رجسٹریشن" : "Ready to Register"}
                       </span>
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
                       <div>
-                        <span className="text-[10px] text-slate-400 font-bold block">{lang === "ur" ? "مالک:" : "Owner:"}</span>
-                        <span className="font-bold text-slate-800 dark:text-slate-200">{transliterateProperNoun(ownerName, lang)}</span>
+                        <span className="text-[10px] text-slate-400 font-bold block">
+                          {registrationMode === "owner_portfolio" ? (lang === "ur" ? "مالک:" : "Owner:") : (lang === "ur" ? "برانچ:" : "Branch:")}
+                        </span>
+                        <span className="font-bold text-slate-800 dark:text-slate-200">
+                          {registrationMode === "owner_portfolio" 
+                            ? transliterateProperNoun(ownerName, lang) 
+                            : `${selectedCountry?.name || "Country"} / ${selectedCountryBranch?.name || "Branch"}`}
+                        </span>
                       </div>
                       <div>
                         <span className="text-[10px] text-slate-400 font-bold block">{lang === "ur" ? "رجسٹریشن قسم:" : "Reg Type:"}</span>
@@ -892,74 +1140,69 @@ export function CompanyIncorporationForm({
                         <span className="font-mono font-bold text-slate-800 dark:text-slate-200" dir="ltr">{email || "—"}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-slate-400 font-bold block">{lang === "ur" ? "مقام:" : "Location:"}</span>
-                        <span className="font-bold text-slate-800 dark:text-slate-200">{address || "Dubai, UAE"}</span>
+                        <span className="text-[10px] text-slate-400 font-bold block">{lang === "ur" ? "سیریل ایلوکیشن:" : "Serials:"}</span>
+                        <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">4-Level Auto Allocated</span>
                       </div>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Status/Error message */}
+              {/* Message Alert */}
               {message && (
-                <div className="p-3 rounded-xl bg-blue-50 text-blue-900 border border-blue-200 text-xs font-bold">
-                  {message}
+                <div className={`p-3 rounded-xl text-xs font-bold flex items-center gap-2 ${
+                  message.includes("Error") || message.includes("Failed") || message.includes("برائے مہربانی")
+                    ? "bg-red-50 text-red-800 border border-red-200"
+                    : "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                }`}>
+                  <span>{message.includes("Error") ? "⚠️" : "✅"}</span>
+                  <span>{message}</span>
                 </div>
               )}
 
-              {/* Bottom Nav Buttons */}
+              {/* Navigation Actions Footer */}
               <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    if (currentStep > 1) setCurrentStep((currentStep - 1) as any);
-                    else handleClose();
-                  }}
-                  className="h-10 px-4 rounded-xl border-slate-200 font-bold text-xs cursor-pointer"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-1.5" />
-                  <span>{currentStep === 1 ? (lang === "ur" ? "منسوخ کریں" : "Cancel") : (lang === "ur" ? "پچھلا مرحلہ" : "Previous")}</span>
-                </Button>
+                <div>
+                  {currentStep > 1 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setCurrentStep((prev) => Math.max(1, prev - 1) as any)}
+                      className="rounded-xl text-xs font-bold gap-1.5 h-10"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                      <span>{lang === "ur" ? "پیچھے" : "Back"}</span>
+                    </Button>
+                  )}
+                </div>
 
-                {currentStep < 4 ? (
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={() => setCurrentStep((currentStep + 1) as any)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-10 px-6 rounded-xl flex items-center gap-2 shadow-xs cursor-pointer"
-                  >
-                    <span>{lang === "ur" ? "اگلا مرحلہ" : "Next Step"}</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                ) : (
-                  <Button
-                    type="button"
-                    size="sm"
-                    disabled={saving}
-                    onClick={() => handleSubmit()}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-10 px-8 rounded-xl flex items-center gap-2 shadow-md cursor-pointer"
-                  >
-                    <Save className="h-4 w-4" />
-                    <span>{saving ? (lang === "ur" ? "محفوظ ہو رہا ہے..." : "Saving...") : (lang === "ur" ? "کمپنی محفوظ کریں" : "Save & Register Company")}</span>
-                  </Button>
-                )}
+                <div className="flex items-center gap-2">
+                  {currentStep < 4 ? (
+                    <Button
+                      type="button"
+                      onClick={() => setCurrentStep((prev) => Math.min(4, prev + 1) as any)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold gap-1.5 h-10 px-5 shadow-xs cursor-pointer"
+                    >
+                      <span>{lang === "ur" ? "اگلا مرحلہ" : "Next Step"}</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      disabled={saving || !ready}
+                      onClick={handleSubmit}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black gap-2 h-11 px-6 shadow-md cursor-pointer"
+                    >
+                      <Save className="h-4 w-4" />
+                      <span>{saving ? (lang === "ur" ? "محفوظ ہو رہا ہے..." : "Saving...") : (lang === "ur" ? "کمپنی محفوظ کریں (Save Company)" : "Save & Finalize Company")}</span>
+                    </Button>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
         </div>
       </main>
-
-      {/* ── FOOTER NOTICE ── */}
-      <footer className="p-3.5 bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 rounded-2xl text-center text-xs text-amber-900 dark:text-amber-200 font-bold flex items-center justify-center gap-2">
-        <ShieldCheck className="h-4 w-4 text-amber-600" />
-        <span>
-          {lang === "ur"
-            ? "🔒 آپ کی محفوظ معلومات خفیہ رکھی جاتی ہیں۔ یہ معلومات صرف مجاز افراد ہی دیکھ سکتے ہیں۔"
-            : "🔒 Your information is secure and encrypted. Only authorized personnel can access these records."}
-        </span>
-      </footer>
     </div>
   );
 }

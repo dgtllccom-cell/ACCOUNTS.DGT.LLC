@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 const BUCKET_NAME = "erp-documents";
 const LOCAL_UPLOAD_ROOT = path.join(process.cwd(), "public", "uploads", BUCKET_NAME);
@@ -34,8 +34,8 @@ export async function resolveDocumentFileUrl(storageKey: string | null | undefin
   }
 
   try {
-    const admin = createSupabaseAdminClient();
-    const { data } = await admin.storage.from(BUCKET_NAME).createSignedUrl(normalized, 60 * 60 * 24);
+    const supabase = await createServerSupabaseClient();
+    const { data } = await supabase.storage.from(BUCKET_NAME).createSignedUrl(normalized, 60 * 60 * 24);
     return data?.signedUrl ?? null;
   } catch {
     return null;
@@ -49,29 +49,32 @@ export async function saveDocumentBlob(options: {
   upsert?: boolean;
 }) {
   const normalizedStorageKey = normalizeDocumentStorageKey(options.storageKey);
-  const admin = createSupabaseAdminClient();
   try {
-    const { error } = await admin.storage.from(BUCKET_NAME).upload(normalizedStorageKey, options.buffer, {
+    const supabase = await createServerSupabaseClient();
+    const { error } = await supabase.storage.from(BUCKET_NAME).upload(normalizedStorageKey, options.buffer, {
       contentType: options.contentType || "application/octet-stream",
       upsert: options.upsert ?? false
     });
     if (error) throw error;
 
-    const signed = await admin.storage.from(BUCKET_NAME).createSignedUrl(normalizedStorageKey, 60 * 60 * 24);
+    const signed = await supabase.storage.from(BUCKET_NAME).createSignedUrl(normalizedStorageKey, 60 * 60 * 24);
     return {
       storageKey: normalizedStorageKey,
       fileUrl: signed.data?.signedUrl ?? localDocumentUrl(normalizedStorageKey),
       storageProvider: "supabase" as const
     };
   } catch (error) {
-    await ensureLocalDocumentDir(normalizedStorageKey);
-    await fs.writeFile(localDocumentPath(normalizedStorageKey), options.buffer);
-    return {
-      storageKey: normalizedStorageKey,
-      fileUrl: localDocumentUrl(normalizedStorageKey),
-      storageProvider: "local" as const,
-      uploadError: error instanceof Error ? error.message : String(error)
-    };
+    if (process.env.ALLOW_DOCUMENT_LOCAL_FALLBACK === "true") {
+      await ensureLocalDocumentDir(normalizedStorageKey);
+      await fs.writeFile(localDocumentPath(normalizedStorageKey), options.buffer);
+      return {
+        storageKey: normalizedStorageKey,
+        fileUrl: localDocumentUrl(normalizedStorageKey),
+        storageProvider: "local" as const,
+        uploadError: error instanceof Error ? error.message : String(error)
+      };
+    }
+    throw error;
   }
 }
 
@@ -80,8 +83,8 @@ export async function deleteDocumentBlob(storageKey: string | null | undefined) 
   const normalized = normalizeDocumentStorageKey(storageKey);
 
   try {
-    const admin = createSupabaseAdminClient();
-    await admin.storage.from(BUCKET_NAME).remove([normalized]);
+    const supabase = await createServerSupabaseClient();
+    await supabase.storage.from(BUCKET_NAME).remove([normalized]);
   } catch {
     // Ignore and continue with local cleanup.
   }

@@ -13,6 +13,9 @@ export type CompanyInput = {
   managerPersonId?: string | null;
   businessType?: string | null;
   countryId?: string | null;
+  countryBranchId?: string | null;
+  cityBranchId?: string | null;
+  isBranchOperative?: boolean;
   stateProvinceId?: string | null;
   districtId?: string | null;
   cityId?: string | null;
@@ -30,7 +33,7 @@ export type CompanyInput = {
 };
 
 export class CompaniesService {
-  async search(input: { query?: string | null; limit?: number }) {
+  async search(input: { query?: string | null; limit?: number; ownerPersonId?: string | null; countryId?: string | null; countryBranchId?: string | null; cityBranchId?: string | null; isBranchOperative?: boolean }) {
     return await companiesRepository.search(input);
   }
 
@@ -48,6 +51,9 @@ export class CompaniesService {
       managerPersonId: input.managerPersonId ?? null,
       businessType: input.businessType ?? null,
       countryId: input.countryId ?? null,
+      countryBranchId: input.countryBranchId ?? null,
+      cityBranchId: input.cityBranchId ?? null,
+      isBranchOperative: input.isBranchOperative ?? false,
       stateProvinceId: input.stateProvinceId ?? null,
       districtId: input.districtId ?? null,
       cityId: input.cityId ?? null,

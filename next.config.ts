@@ -169,8 +169,7 @@ const nextConfig: NextConfig = {
     ];
   },
   experimental: {
-    // Reduces initial memory footprint in dev by avoiding eager preloading of every route entrypoint.
-    preloadEntriesOnStart: false,
+    preloadEntriesOnStart: true,
     webpackBuildWorker: false,
     workerThreads: true,
   },

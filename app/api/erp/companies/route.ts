@@ -17,16 +17,25 @@ export async function GET(request: NextRequest) {
 
     const query = request.nextUrl.searchParams.get("q");
     const limit = request.nextUrl.searchParams.get("limit");
+    const ownerPersonId = request.nextUrl.searchParams.get("ownerPersonId");
+    const countryId = request.nextUrl.searchParams.get("countryId");
+    const countryBranchId = request.nextUrl.searchParams.get("countryBranchId");
+    const cityBranchId = request.nextUrl.searchParams.get("cityBranchId");
+    const isBranchOperativeParam = request.nextUrl.searchParams.get("isBranchOperative");
+    const isBranchOperative = isBranchOperativeParam !== null ? isBranchOperativeParam === "true" : undefined;
     const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
 
     const result = await companiesService.search({
       query,
+      ownerPersonId,
+      countryId,
+      countryBranchId,
+      cityBranchId,
+      isBranchOperative,
       limit: limit ? Number(limit) : 500
     });
 
     let companies: any[] = (result as any).companies ?? [];
-    // Always resolve — see customers/[id]/route.ts for why skipping lang === "en" would leak
-    // non-English source text into the English view.
     if (Array.isArray(companies) && companies.length > 0) {
       companies = await localizeRecordNames<any>(companies, "companies", "name", lang, { phraseFallback: true });
       companies = await localizeRecordNames<any>(companies, "companies", "legal_name", lang, { phraseFallback: true });
@@ -65,6 +74,9 @@ export async function POST(request: NextRequest) {
         managerPersonId: body.managerPersonId ?? null,
         businessType: body.businessType ?? null,
         countryId: body.countryId ?? null,
+        countryBranchId: body.countryBranchId ?? null,
+        cityBranchId: body.cityBranchId ?? null,
+        isBranchOperative: body.isBranchOperative ?? false,
         stateProvinceId: body.stateProvinceId ?? null,
         districtId: body.districtId ?? null,
         cityId: body.cityId ?? null,
