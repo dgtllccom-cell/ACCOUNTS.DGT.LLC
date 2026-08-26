@@ -100,8 +100,10 @@ export async function GET(request: NextRequest) {
     // first (bypasses RLS via DATABASE_URL); fall back to the Supabase-client path
     // only when DATABASE_URL isn't configured.
     const safeSearch = normalizeDocumentSearch(searchQuery);
-    const viaPg = await withDocumentSession(session, async (sql) => {
-      return await sql`
+    let viaPg: any = null;
+    try {
+      viaPg = await withDocumentSession(session, async (sql) => {
+        return await sql`
         select *
         from public.office_documents
         where deleted_at is null
@@ -143,7 +145,10 @@ export async function GET(request: NextRequest) {
               )` : sql`true`})
         order by created_at desc
       `;
-    });
+      });
+    } catch {
+      viaPg = null;
+    }
 
     if (viaPg) {
       return NextResponse.json({ documents: viaPg });
@@ -354,8 +359,10 @@ export async function POST(request: NextRequest) {
 
     // Root-cause bypass — see GET above: office_documents_scope_insert is RLS-gated
     // the same way, so a direct-Postgres write is tried first.
-    const viaPg = await withDocumentSession(session, async (sql) => {
-      const rows = await sql`
+    let viaPg: any = null;
+    try {
+      viaPg = await withDocumentSession(session, async (sql) => {
+        const rows = await sql`
         insert into public.office_documents (
           title, file_name, file_url, file_type, file_size,
           country_id, country_name, country_branch_id, main_branch_name,
@@ -375,8 +382,11 @@ export async function POST(request: NextRequest) {
         )
         returning *
       `;
-      return rows[0];
-    });
+        return rows[0];
+      });
+    } catch {
+      viaPg = null;
+    }
 
     if (viaPg) {
       return NextResponse.json({ success: true, document: viaPg });
@@ -466,8 +476,10 @@ export async function PATCH(request: NextRequest) {
 
     // Root-cause bypass — see GET above: office_documents_scope_update is RLS-gated
     // the same way, so a direct-Postgres write is tried first.
-    const viaPg = await withDocumentSession(session, async (sql) => {
-      const rows = await sql`
+    let viaPg: any = null;
+    try {
+      viaPg = await withDocumentSession(session, async (sql) => {
+        const rows = await sql`
         update public.office_documents
         set updated_at = ${updatedAt},
             title = coalesce(${title ?? null}, title),
@@ -492,8 +504,11 @@ export async function PATCH(request: NextRequest) {
         where id = ${id}
         returning *
       `;
-      return rows[0] ?? null;
-    });
+        return rows[0] ?? null;
+      });
+    } catch {
+      viaPg = null;
+    }
 
     if (viaPg) {
       return NextResponse.json({ success: true, document: viaPg });
@@ -545,22 +560,32 @@ export async function DELETE(request: NextRequest) {
     if (!id) return NextResponse.json({ error: "Document ID required" }, { status: 400 });
 
     const deletedAt = new Date().toISOString();
-    const storageKey = await withDocumentSession(session, async (sql) => {
-      const rows = await sql`
+    let storageKey = null as string | null;
+    try {
+      storageKey = await withDocumentSession(session, async (sql) => {
+        const rows = await sql`
         select storage_key
         from public.office_documents
         where id = ${id}
         limit 1
       `;
-      return rows[0]?.storage_key ?? null;
-    });
+        return rows[0]?.storage_key ?? null;
+      });
+    } catch {
+      storageKey = null;
+    }
 
     // Root-cause bypass — see GET above: office_documents_scope_update is RLS-gated
     // the same way, so a direct-Postgres write is tried first.
-    const viaPg = await withDocumentSession(session, async (sql) => {
-      await sql`update public.office_documents set deleted_at = ${deletedAt} where id = ${id}`;
-      return true;
-    });
+    let viaPg = false;
+    try {
+      viaPg = await withDocumentSession(session, async (sql) => {
+        await sql`update public.office_documents set deleted_at = ${deletedAt} where id = ${id}`;
+        return true;
+      });
+    } catch {
+      viaPg = false;
+    }
 
     if (viaPg) {
       await deleteDocumentBlob(storageKey);
