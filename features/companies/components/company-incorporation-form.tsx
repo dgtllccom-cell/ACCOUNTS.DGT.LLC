@@ -327,12 +327,24 @@ export function CompanyIncorporationForm({
         registrations: [{ type: registrationType, value: licenseNumber }].filter(r => r.value)
       };
 
+      let savedCompanyId = initialCompanyId;
       if (initialCompanyId) {
         await apiPatch(`/api/erp/companies/${encodeURIComponent(initialCompanyId)}`, payload);
         setMessage(lang === "ur" ? "کمپنی کے کوائف کامیابی سے اپ ڈیٹ ہو گئے۔" : "Company updated successfully.");
       } else {
-        await apiPost("/api/erp/companies", payload);
+        const res = await apiPost<{ companyId: string }>("/api/erp/companies", payload);
+        savedCompanyId = res.companyId ?? (res as any).data?.companyId ?? (res as any)?.id;
         setMessage(lang === "ur" ? "نئی کمپنی کامیابی سے رجسٹر ہو گئی۔" : "New company registered successfully.");
+      }
+
+      if (mode === "embedded") {
+        onSave?.({
+          id: savedCompanyId,
+          name: payload.name,
+          legalName: payload.legalName,
+          baseCurrency: payload.baseCurrency
+        } as any);
+        return;
       }
 
       setTimeout(() => {

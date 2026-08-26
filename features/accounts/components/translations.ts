@@ -819,6 +819,41 @@ export const accountTranslations: Record<string, Record<SupportedLanguage, strin
     ar: "ابحث عن البنوك الحالية...",
     fa: "جستجوی بانک‌های موجود...",
     ps: "موجود بانکونه وپلټئ..."
+  },
+  contactValue: {
+    en: "Contact Number / Details",
+    ur: "رابطہ نمبر / تفصیل",
+    ar: "بيانات / رقم الاتصال",
+    fa: "شماره / مشخصات تماس",
+    ps: "د اړیکې شمېره / ارزښت"
+  },
+  contactNumber: {
+    en: "Enter phone or contact number",
+    ur: "فون یا رابطہ نمبر درج کریں",
+    ar: "أدخل الهاتف أو رقم الاتصال",
+    fa: "شماره تلفن یا تماس را وارد کنید",
+    ps: "د تلیفون یا اړیکې شمیره ولیکئ"
+  },
+  customType: {
+    en: "Custom Type",
+    ur: "کسٹم قسم",
+    ar: "نوع مخصص",
+    fa: "نوع سفارشی",
+    ps: "ځانګړی ډول"
+  },
+  landline: {
+    en: "Landline",
+    ur: "لینڈ لائن",
+    ar: "هاتف أرضي",
+    fa: "تلفن ثابت",
+    ps: "ځمکنی تلیفون"
+  },
+  office: {
+    en: "Office",
+    ur: "دفتر",
+    ar: "المكتب",
+    fa: "دفتر",
+    ps: "دفتر"
   }
 };
 

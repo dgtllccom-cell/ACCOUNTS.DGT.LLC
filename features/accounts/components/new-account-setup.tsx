@@ -33,6 +33,7 @@ import { WarehousePicker } from "@/features/warehouses/components/warehouse-pick
 import { fetchWarehouses } from "@/features/warehouses/warehouse-api";
 import { rtlLanguages, type SupportedLanguage } from "@/lib/i18n/languages";
 import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
+import { localizeTerm } from "@/lib/i18n/transliteration";
 import { getLabel } from "./translations";
 import { AccountLiveReportPanel } from "./account-live-report-panel";
 import { openAccountA4ReportWindow } from "@/lib/reports/open-account-a4-report-window";
@@ -864,7 +865,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                   <select id="country" value={country} onChange={(event) => handleCountryChange(event.target.value)} className={selectClass()}>
                     <option value="">{getLabel("selectCountry", lang)}</option>
                     {countries.map((item) => (
-                      <option key={item.id} value={item.id}>{item.name} ({item.iso2 ?? "-"})</option>
+                      <option key={item.id} value={item.id}>{localizeTerm(item.name, lang)} ({item.iso2 ?? "-"})</option>
                     ))}
                   </select>
                 </div>
@@ -883,13 +884,19 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                   <Label htmlFor="branch">{getLabel("selectBranch", lang)} *</Label>
                   <select id="branch" value={branch} onChange={(event) => { setBranch(event.target.value); setMessage(""); }} disabled={!country || !branchType} className={selectClass()}>
                     <option value="">{getLabel("selectBranch", lang)}</option>
-                    {branchOptions.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {branchType === "Main"
-                          ? `${(item as CountryBranchRow).name} (${(item as CountryBranchRow).code})`
-                          : `${(item as CityBranchRow).city_name} - ${(item as CityBranchRow).name} (${(item as CityBranchRow).code})`}
-                      </option>
-                    ))}
+                    {branchOptions.map((item) => {
+                      const mainName = (item as CountryBranchRow).name;
+                      const cityName = (item as CityBranchRow).city_name;
+                      const branchName = (item as CityBranchRow).name;
+                      const code = item.code;
+                      return (
+                        <option key={item.id} value={item.id}>
+                          {branchType === "Main"
+                            ? `${localizeTerm(mainName, lang)} (${code})`
+                            : `${localizeTerm(cityName, lang)} - ${localizeTerm(branchName, lang)} (${code})`}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
                 <div className="space-y-2">

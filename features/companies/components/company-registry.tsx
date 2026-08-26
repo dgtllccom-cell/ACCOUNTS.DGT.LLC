@@ -13,29 +13,29 @@ import {
   Trash2,
   Copy,
   RotateCcw,
-  Calendar,
-  Layers,
   Users,
   FileText,
   DollarSign,
-  ShieldCheck,
   MoreVertical,
   Loader2,
   X,
-  Check
+  Phone,
+  Mail,
+  MessageSquare,
+  Globe
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { apiGet, apiDelete } from "@/lib/api/client";
+import { apiGet } from "@/lib/api/client";
 import type { CompanyRow } from "@/lib/repositories/companies-repository";
 import { printStore } from "@/lib/store/print-store";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { transliterateProperNoun } from "@/lib/i18n/transliteration";
 import { Party360Modal } from "@/features/customers/components/party-360-modal";
-import { Mail, Phone, MessageSquare, MoreHorizontal, Globe } from "lucide-react";
+import { SimpleModal } from "@/components/ui/simple-modal";
+import { CompanyIncorporationForm } from "@/features/companies/components/company-incorporation-form";
 
 export type CompanyRegistryItem = {
   id: string;
@@ -53,160 +53,6 @@ export type CompanyRegistryItem = {
   address: string;
   raw?: CompanyRow;
 };
-
-// Mock fallback data matching the reference screenshot exactly when DB is empty
-const INITIAL_DEMO_COMPANIES: CompanyRegistryItem[] = [
-  {
-    id: "comp-1",
-    accountNo: "1001001",
-    consortium: "Al-Razi Consortium",
-    branchRules: "Multi Branch Allowed",
-    accountName: "Al-Razi Trading LLC",
-    companiesCount: 5,
-    contractsCount: 8,
-    primaryContact: "+971 50 123 4567",
-    email: "info@alrazi.ae",
-    country: "UAE",
-    state: "Dubai",
-    city: "Dubai",
-    address: "Business Bay, Tower 4, Suite 1201"
-  },
-  {
-    id: "comp-2",
-    accountNo: "1001002",
-    consortium: "Ghani Group",
-    branchRules: "Branch by Country",
-    accountName: "Ghani International",
-    companiesCount: 6,
-    contractsCount: 10,
-    primaryContact: "+92 300 1234567",
-    email: "contact@ghani.com.pk",
-    country: "Pakistan",
-    state: "Punjab",
-    city: "Lahore",
-    address: "Gulberg III, Main Boulevard"
-  },
-  {
-    id: "comp-3",
-    accountNo: "1001003",
-    consortium: "Shahbaz Consortium",
-    branchRules: "Single Country Only",
-    accountName: "Shahbaz Industries Ltd.",
-    companiesCount: 4,
-    contractsCount: 6,
-    primaryContact: "+92 321 9876543",
-    email: "info@shahbaz.com",
-    country: "Pakistan",
-    state: "Sindh",
-    city: "Karachi",
-    address: "SITE Industrial Area"
-  },
-  {
-    id: "comp-4",
-    accountNo: "1001004",
-    consortium: "Damaan Group",
-    branchRules: "All Branches Allowed",
-    accountName: "Damaan Business Group",
-    companiesCount: 7,
-    contractsCount: 12,
-    primaryContact: "+971 55 765 4321",
-    email: "info@damaan.com",
-    country: "UAE",
-    state: "Dubai",
-    city: "Deira Hub",
-    address: "Al Maktoum Road"
-  },
-  {
-    id: "comp-5",
-    accountNo: "1001005",
-    consortium: "Iqbal Consortium",
-    branchRules: "City Branch Rule",
-    accountName: "Iqbal Corporation",
-    companiesCount: 3,
-    contractsCount: 5,
-    primaryContact: "+92 333 1112223",
-    email: "admin@iqbalcorp.com",
-    country: "Pakistan",
-    state: "KPK",
-    city: "Peshawar",
-    address: "University Road"
-  },
-  {
-    id: "comp-6",
-    accountNo: "1001006",
-    consortium: "Khan Brothers",
-    branchRules: "Branch by Country",
-    accountName: "Khan Brothers LLC",
-    companiesCount: 5,
-    contractsCount: 9,
-    primaryContact: "+971 52 654 7890",
-    email: "info@khanbrothers.ae",
-    country: "UAE",
-    state: "Sharjah",
-    city: "Sharjah",
-    address: "Industrial Area 3"
-  },
-  {
-    id: "comp-7",
-    accountNo: "1001007",
-    consortium: "Sial Traders",
-    branchRules: "Multi Branch Allowed",
-    accountName: "Sial Traders International",
-    companiesCount: 2,
-    contractsCount: 4,
-    primaryContact: "+92 344 5556677",
-    email: "contact@sialtraders.com",
-    country: "Pakistan",
-    state: "Punjab",
-    city: "Sialkot",
-    address: "Kashmir Road"
-  },
-  {
-    id: "comp-8",
-    accountNo: "1001008",
-    consortium: "Malik Enterprises",
-    branchRules: "All Branches Allowed",
-    accountName: "Malik Enterprises Ltd.",
-    companiesCount: 6,
-    contractsCount: 11,
-    primaryContact: "+92 300 7654321",
-    email: "info@malikent.com",
-    country: "Pakistan",
-    state: "Islamabad",
-    city: "Islamabad",
-    address: "Blue Area, G-7"
-  },
-  {
-    id: "comp-9",
-    accountNo: "1001009",
-    consortium: "Global Links",
-    branchRules: "Single Country Only",
-    accountName: "Global Links FZCO",
-    companiesCount: 4,
-    contractsCount: 7,
-    primaryContact: "+971 56 987 1234",
-    email: "info@globallinks.ae",
-    country: "UAE",
-    state: "Dubai",
-    city: "JAFZA",
-    address: "Jebel Ali Free Zone"
-  },
-  {
-    id: "comp-10",
-    accountNo: "1001010",
-    consortium: "Future Vision",
-    branchRules: "City Branch Rule",
-    accountName: "Future Vision Group",
-    companiesCount: 8,
-    contractsCount: 15,
-    primaryContact: "+92 311 2223344",
-    email: "info@futurevision.com",
-    country: "Pakistan",
-    state: "Punjab",
-    city: "Rawalpindi",
-    address: "Saddar Cantt"
-  }
-];
 
 const BUSINESS_TERMS_I18N: Record<string, Record<string, string>> = {
   "Multi Branch Allowed": { ur: "ملٹی برانچز کی اجازت ہے", ar: "يسمح بالفروع المتعددة", ps: "د څو څانګو اجازه شته", fa: "چندین شعبه مجاز است" },
@@ -276,12 +122,10 @@ function localizeTerm(term: string, lang: string): string {
   const trimmed = term.trim();
   if (!trimmed) return "";
 
-  // 1. Direct match
   if (BUSINESS_TERMS_I18N[trimmed]?.[lang]) {
     return BUSINESS_TERMS_I18N[trimmed][lang];
   }
 
-  // 2. Case-insensitive exact match
   const lower = trimmed.toLowerCase();
   for (const [k, v] of Object.entries(BUSINESS_TERMS_I18N)) {
     if (k.toLowerCase() === lower && v[lang]) {
@@ -289,7 +133,6 @@ function localizeTerm(term: string, lang: string): string {
     }
   }
 
-  // 3. Multi-word substitution and transliteration
   const words = trimmed.split(/(\s+)/);
   const mapped = words.map((w) => {
     if (/\s+/.test(w)) return w;
@@ -327,6 +170,7 @@ export function CompanyRegistry() {
   const [previewCompany, setPreviewCompany] = useState<CompanyRegistryItem | null>(null);
   const [selected360Party, setSelected360Party] = useState<{ id?: string; name: string } | null>(null);
   const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
+  const [openCreateModal, setOpenCreateModal] = useState(false);
 
   const [page, setPage] = useState(1);
   const pageSize = 10;
@@ -505,7 +349,7 @@ export function CompanyRegistry() {
           <select
             value={companyTypeFilter}
             onChange={(e) => setCompanyTypeFilter(e.target.value)}
-            className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 font-sans"
+            className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 font-sans cursor-pointer"
           >
             <option value="all">{tt("creg.all_types", "All Types")}</option>
             <option value="trading">{tt("creg.type_trading", "Trading")}</option>
@@ -517,7 +361,7 @@ export function CompanyRegistry() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 font-sans"
+            className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 font-sans cursor-pointer"
           >
             <option value="all">{tt("creg.all_status", "All Status")}</option>
             <option value="active">{tt("creg.status_active", "Active")}</option>
@@ -528,7 +372,7 @@ export function CompanyRegistry() {
           <select
             value={countryFilter}
             onChange={(e) => setCountryFilter(e.target.value)}
-            className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 font-sans"
+            className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 font-sans cursor-pointer"
           >
             <option value="all">{tt("creg.all_countries", "All Countries")}</option>
             <option value="pakistan">{tt("creg.country_pakistan", "Pakistan")}</option>
@@ -540,7 +384,7 @@ export function CompanyRegistry() {
           <select
             value={branchFilter}
             onChange={(e) => setBranchFilter(e.target.value)}
-            className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 font-sans"
+            className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 font-sans cursor-pointer"
           >
             <option value="all">{tt("creg.all_branches", "All Branches")}</option>
             <option value="main">{tt("creg.branch_main_hq", "Main Headquarters")}</option>
@@ -560,7 +404,7 @@ export function CompanyRegistry() {
                 setCountryFilter("all");
                 setBranchFilter("all");
               }}
-              className="h-8.5 rounded-xl border-slate-200 bg-white text-xs font-bold px-3 gap-1 shadow-xs hover:bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 font-sans"
+              className="h-8.5 rounded-xl border-slate-200 bg-white text-xs font-bold px-3 gap-1 shadow-xs hover:bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 font-sans cursor-pointer"
             >
               <RotateCcw className="h-3 w-3" />
               {tt("common.reset", "Reset")}
@@ -568,8 +412,8 @@ export function CompanyRegistry() {
 
             <Button
               type="button"
-              onClick={() => router.push("/dashboard/settings/company-setup" as Route)}
-              className="h-8.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 gap-1.5 shadow-sm font-sans"
+              onClick={() => setOpenCreateModal(true)}
+              className="h-8.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 gap-1.5 shadow-sm font-sans cursor-pointer"
             >
               <Plus className="h-3.5 w-3.5" />
               {tt("creg.new_company", "New Company")}
@@ -648,29 +492,27 @@ export function CompanyRegistry() {
             <thead className="bg-slate-50/80 dark:bg-slate-950 text-slate-500 uppercase font-black text-[10px] tracking-wider border-b border-slate-200/80 dark:border-slate-800">
               <tr>
                 <th className="p-3.5 text-center w-12">#</th>
-                <th className="p-3.5">{tt("creg.col_account_no", "Account No.")}</th>
+                <th className="p-3.5">{tt("creg.col_account_no", "Account No. & Serials")}</th>
                 <th className="p-3.5">{tt("creg.col_consortium", "Consortium")}</th>
                 <th className="p-3.5">{tt("creg.col_branch_rules", "Branch Rules")}</th>
                 <th className="p-3.5">{tt("creg.col_account_name", "Account Name")}</th>
                 <th className="p-3.5 text-center">{tt("creg.col_companies_count", "Companies Count")}</th>
                 <th className="p-3.5 text-center">{tt("creg.col_contracts", "Contracts")}</th>
-                <th className="p-3.5">{tt("creg.col_primary_contact", "Primary Contact (Mobile)")}</th>
-                <th className="p-3.5">{tt("creg.col_email", "E-Mail")}</th>
-                <th className="p-3.5 text-center">{tt("creg.col_preview", "Preview")}</th>
+                <th className="p-3.5 text-center">{tt("creg.col_contacts_combined", "Contacts")}</th>
                 <th className="p-3.5 text-center">{tt("common.actions", "Actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
               {loading ? (
                 <tr>
-                  <td colSpan={11} className="py-12 text-center text-muted-foreground">
+                  <td colSpan={9} className="py-12 text-center text-muted-foreground">
                     <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-600 mb-2" />
                     {tt("creg.loading", "Loading company registry...")}
                   </td>
                 </tr>
               ) : paginatedCompanies.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="py-12 text-center text-muted-foreground">
+                  <td colSpan={9} className="py-12 text-center text-muted-foreground">
                     {tt("creg.no_results", "No company accounts found matching your filters.")}
                   </td>
                 </tr>
@@ -682,9 +524,29 @@ export function CompanyRegistry() {
                       {(page - 1) * pageSize + idx + 1}
                     </td>
 
-                    {/* Account No (Linked in blue) */}
-                    <td className="p-3.5 font-bold font-mono text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
-                      {c.accountNo}
+                    {/* Account No & Serials */}
+                    <td className="p-3.5">
+                      <div className="flex flex-col gap-0.5">
+                        <span
+                          className="font-bold font-mono text-blue-600 dark:text-blue-400 hover:underline cursor-pointer text-xs"
+                          onClick={() => setSelected360Party({ id: c.id, name: c.accountName })}
+                          title={tt("cusm.view_360", "View 360 Profile")}
+                        >
+                          {c.accountNo}
+                        </span>
+                        <div className="flex items-center gap-1 flex-wrap text-[9px] font-mono">
+                          {c.raw?.company_code && (
+                            <span className="px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold" title={tt("creg.company_code_label", "Company Serial")}>
+                              {c.raw.company_code}
+                            </span>
+                          )}
+                          {c.raw?.owner_person_id && (
+                            <span className="px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 font-bold" title={tt("cusm.customer_master_serial", "Customer Master Serial")}>
+                              CUST-LINK
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </td>
 
                     {/* Consortium */}
@@ -716,60 +578,113 @@ export function CompanyRegistry() {
                       </span>
                     </td>
 
-                    {/* Primary Contact */}
-                    <td className="p-3.5 font-mono text-slate-600 dark:text-slate-400" dir="ltr">
-                      {c.primaryContact}
-                    </td>
-
-                    {/* Email */}
-                    <td className="p-3.5 font-mono text-blue-600 dark:text-blue-400" dir="ltr">
-                      {c.email}
-                    </td>
-
-                    {/* Preview Button */}
+                    {/* Combined Contacts Column (Phone, WhatsApp, Email) */}
                     <td className="p-3.5 text-center">
-                      <button
-                        type="button"
-                        onClick={() => setPreviewCompany(c)}
-                        className="h-7 w-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 inline-flex items-center justify-center cursor-pointer transition"
-                        title={tt("creg.crtr_preview_details", "Preview Details")}
-                      >
-                        <Eye className="h-3.5 w-3.5 text-slate-600 dark:text-slate-300" />
-                      </button>
+                      <div className="flex items-center justify-center gap-1.5" dir="ltr">
+                        {c.primaryContact && c.primaryContact !== "—" ? (
+                          <a
+                            href={`tel:${c.primaryContact.replace(/[^0-9+]/g, "")}`}
+                            className="h-7 w-7 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:hover:bg-emerald-900 dark:text-emerald-300 flex items-center justify-center transition border border-emerald-200/60 shadow-2xs"
+                            title={`${tt("creg.call_phone", "Call")}: ${c.primaryContact}`}
+                          >
+                            <Phone className="h-3.5 w-3.5" />
+                          </a>
+                        ) : null}
+                        {c.primaryContact && c.primaryContact !== "—" ? (
+                          <a
+                            href={`https://wa.me/${c.primaryContact.replace(/[^0-9]/g, "")}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="h-7 w-7 rounded-lg bg-green-50 hover:bg-green-100 text-green-700 dark:bg-green-950 dark:hover:bg-green-900 dark:text-green-300 flex items-center justify-center transition border border-green-200/60 shadow-2xs"
+                            title={`${tt("creg.whatsapp_chat", "WhatsApp")}: ${c.primaryContact}`}
+                          >
+                            <MessageSquare className="h-3.5 w-3.5" />
+                          </a>
+                        ) : null}
+                        {c.email && c.email !== "—" ? (
+                          <a
+                            href={`mailto:${c.email}`}
+                            className="h-7 w-7 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950 dark:hover:bg-blue-900 dark:text-blue-300 flex items-center justify-center transition border border-blue-200/60 shadow-2xs"
+                            title={`${tt("creg.official_email", "Email")}: ${c.email}`}
+                          >
+                            <Mail className="h-3.5 w-3.5" />
+                          </a>
+                        ) : null}
+                      </div>
                     </td>
 
-                    {/* Actions */}
-                    <td className="p-3.5 text-center">
+                    {/* Unified Actions Column with 3-Dots Menu */}
+                    <td className="p-3.5 text-center relative">
                       <div className="flex items-center justify-center gap-1">
                         <button
                           type="button"
-                          onClick={() => router.push(`/dashboard/settings/company-setup?companyId=${c.id}` as Route)}
-                          className="h-7 w-7 rounded-lg border border-slate-200 hover:bg-blue-50 text-blue-600 flex items-center justify-center"
-                          title={tt("branch.edit", "Edit")}
+                          onClick={() => setPreviewCompany(c)}
+                          className="h-7 w-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 inline-flex items-center justify-center cursor-pointer transition"
+                          title={tt("creg.crtr_preview_details", "Preview Details")}
                         >
-                          <PencilLine className="h-3.5 w-3.5" />
+                          <Eye className="h-3.5 w-3.5" />
                         </button>
                         <button
                           type="button"
-                          onClick={() => handlePrint(c)}
-                          className="h-7 w-7 rounded-lg border border-slate-200 hover:bg-emerald-50 text-emerald-600 flex items-center justify-center"
-                          title={tt("creg.crtr_duplicate_print", "Duplicate / Print")}
+                          onClick={() => setOpenActionMenuId(openActionMenuId === c.id ? null : c.id)}
+                          className="h-7 w-7 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:text-slate-300 flex items-center justify-center transition cursor-pointer"
+                          title={tt("common.actions", "Actions")}
                         >
-                          <Copy className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (confirm(`${tt("creg.crtr_confirm_delete_prefix", "Are you sure you want to delete")} ${c.accountName}?`)) {
-                              setCompanies((prev) => prev.filter((item) => item.id !== c.id));
-                            }
-                          }}
-                          className="h-7 w-7 rounded-lg border border-slate-200 hover:bg-rose-50 text-rose-600 flex items-center justify-center"
-                          title={tt("common.delete", "Delete")}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <MoreVertical className="h-3.5 w-3.5" />
                         </button>
                       </div>
+
+                      {openActionMenuId === c.id && (
+                        <div className="absolute right-3 top-10 w-44 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl z-50 p-1 text-left animate-in fade-in zoom-in-95 duration-150">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setOpenActionMenuId(null);
+                              router.push(`/dashboard/settings/company-setup?companyId=${c.id}` as Route);
+                            }}
+                            className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                          >
+                            <PencilLine className="h-3.5 w-3.5 text-blue-500" />
+                            <span>{tt("branch.edit", "Edit Master")}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setOpenActionMenuId(null);
+                              handlePrint(c);
+                            }}
+                            className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                          >
+                            <Printer className="h-3.5 w-3.5 text-emerald-500" />
+                            <span>{tt("creg.crtr_duplicate_print", "Print Dossier")}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setOpenActionMenuId(null);
+                              setSelected360Party({ id: c.id, name: c.accountName });
+                            }}
+                            className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                          >
+                            <Globe className="h-3.5 w-3.5 text-indigo-500" />
+                            <span>{tt("cusm.view_360", "View 360 Profile")}</span>
+                          </button>
+                          <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setOpenActionMenuId(null);
+                              if (confirm(`${tt("creg.crtr_confirm_delete_prefix", "Are you sure you want to delete")} ${c.accountName}?`)) {
+                                setCompanies((prev) => prev.filter((item) => item.id !== c.id));
+                              }
+                            }}
+                            className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition cursor-pointer"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            <span>{tt("common.delete", "Delete")}</span>
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -788,7 +703,7 @@ export function CompanyRegistry() {
               type="button"
               disabled={page <= 1}
               onClick={() => setPage((p) => Math.max(p - 1, 1))}
-              className="h-7 w-7 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 disabled:opacity-40"
+              className="h-7 w-7 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 disabled:opacity-40 cursor-pointer"
             >
               «
             </button>
@@ -796,7 +711,7 @@ export function CompanyRegistry() {
               type="button"
               disabled={page <= 1}
               onClick={() => setPage((p) => Math.max(p - 1, 1))}
-              className="h-7 w-7 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 disabled:opacity-40"
+              className="h-7 w-7 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 disabled:opacity-40 cursor-pointer"
             >
               ‹
             </button>
@@ -806,7 +721,7 @@ export function CompanyRegistry() {
                 type="button"
                 onClick={() => setPage(pNum)}
                 className={cn(
-                  "h-7 w-7 rounded-lg font-bold flex items-center justify-center",
+                  "h-7 w-7 rounded-lg font-bold flex items-center justify-center cursor-pointer",
                   page === pNum ? "bg-blue-600 text-white" : "border border-slate-200 hover:bg-slate-100"
                 )}
               >
@@ -818,7 +733,7 @@ export function CompanyRegistry() {
               type="button"
               onClick={() => setPage(13)}
               className={cn(
-                "h-7 w-7 rounded-lg font-bold flex items-center justify-center",
+                "h-7 w-7 rounded-lg font-bold flex items-center justify-center cursor-pointer",
                 page === 13 ? "bg-blue-600 text-white" : "border border-slate-200 hover:bg-slate-100"
               )}
             >
@@ -827,20 +742,37 @@ export function CompanyRegistry() {
             <button
               type="button"
               onClick={() => setPage((p) => p + 1)}
-              className="h-7 w-7 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100"
+              className="h-7 w-7 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 cursor-pointer"
             >
               ›
             </button>
             <button
               type="button"
               onClick={() => setPage(13)}
-              className="h-7 w-7 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100"
+              className="h-7 w-7 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 cursor-pointer"
             >
               »
             </button>
           </div>
         </div>
       </div>
+
+      {/* ── CREATE NEW COMPANY MODAL ── */}
+      {openCreateModal && (
+        <SimpleModal
+          title={tt("creg.new_company", "New Company - Company Master")}
+          onClose={() => setOpenCreateModal(false)}
+          className="w-[96vw] max-w-[1100px] h-[90vh] max-h-[90vh] rounded-2xl font-sans"
+        >
+          <CompanyIncorporationForm
+            mode="embedded"
+            onSave={() => {
+              loadCompaniesFromDb();
+              setOpenCreateModal(false);
+            }}
+          />
+        </SimpleModal>
+      )}
 
       {/* ── PARTY 360 MODAL ── */}
       {selected360Party && (
@@ -868,7 +800,7 @@ export function CompanyRegistry() {
               <button
                 type="button"
                 onClick={() => setPreviewCompany(null)}
-                className="h-8 w-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center"
+                className="h-8 w-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -906,14 +838,14 @@ export function CompanyRegistry() {
                 variant="outline"
                 size="sm"
                 onClick={() => handlePrint(previewCompany)}
-                className="text-xs font-bold gap-1.5"
+                className="text-xs font-bold gap-1.5 cursor-pointer"
               >
                 <Printer className="h-3.5 w-3.5" /> {tt("creg.print_dossier", "Print Dossier")}
               </Button>
               <Button
                 size="sm"
                 onClick={() => setPreviewCompany(null)}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold"
+                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold cursor-pointer"
               >
                 {tt("common.close", "Close")}
               </Button>

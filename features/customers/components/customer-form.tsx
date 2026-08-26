@@ -458,13 +458,14 @@ export function CustomerForm({
       } else {
         // Creation mode
         const res = await apiPost<{ customerId: string }>("/api/erp/customers", payload);
+        const newId = res.customerId ?? (res as any)?.data?.customerId ?? (res as any)?.id;
         setMessage(getLabel("customerCreatedMsg", lang));
         if (mode === "standalone") {
           setTimeout(() => {
-            router.push(`/dashboard/settings/customers/view?customerId=${res.customerId}` as Route);
+            router.push(`/dashboard/settings/customers/view?customerId=${newId}` as Route);
           }, 1000);
         } else {
-          onSave?.(res.customerId);
+          onSave?.(newId);
         }
       }
     } catch (e: any) {

@@ -4,7 +4,7 @@ import { DownloadActionIcon } from "@/components/ui/download-action-icon";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Download, Expand, Eye, FileSpreadsheet, FileText, MoreVertical, PencilLine, Printer, Search, Trash2, CalendarDays, RefreshCw, SlidersHorizontal, Landmark, CheckCircle2, ChevronDown, ChevronRight, PackageCheck, FileCheck2, Building2, MapPin, Phone, MessageCircle, Mail, Plus, X } from "lucide-react";
+import { Download, Expand, Eye, FileSpreadsheet, FileText, MoreVertical, PencilLine, Printer, Search, Trash2, CalendarDays, RefreshCw, SlidersHorizontal, Landmark, CheckCircle2, ChevronDown, ChevronRight, PackageCheck, FileCheck2, Building, Building2, MapPin, Phone, MessageCircle, Mail, Plus, X } from "lucide-react";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 
@@ -40,6 +40,7 @@ import { ReportTd, ReportTh } from "@/components/reports/report-primitives";
 import { cn } from "@/lib/utils";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { Th } from "@/components/ui/translated-th";
+import { localizeTerm, transliterateProperNoun } from "@/lib/i18n/transliteration";
 
 type AccountGeneralReportRow = {
   accountId: string;
@@ -170,58 +171,46 @@ function fmtNumber(value: number) {
 function ContactIconPopup({ row }: { row: AccountGeneralReportRow }) {
   const [activeTab, setActiveTab] = useState<"mobile" | "whatsapp" | "email" | null>(null);
 
-  const mobile = row.mobile || row.contacts?.find(c => c.type?.toLowerCase().includes("mobile") || c.type?.toLowerCase().includes("phone"))?.value || "-";
+  const mobile = row.mobile || row.contacts?.find(c => c.type?.toLowerCase().includes("mobile") || c.type?.toLowerCase().includes("phone"))?.value || "";
   const whatsapp = row.whatsapp || row.contacts?.find(c => c.type?.toLowerCase().includes("whatsapp") || c.type?.toLowerCase().includes("wa"))?.value || mobile;
-  const email = row.email || row.contacts?.find(c => c.type?.toLowerCase().includes("email"))?.value || "-";
+  const email = row.email || row.contacts?.find(c => c.type?.toLowerCase().includes("email"))?.value || "";
 
   return (
-    <div className="relative inline-flex items-center justify-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-      <button
-        type="button"
-        onClick={() => setActiveTab(activeTab === "mobile" ? null : "mobile")}
-        title={`Mobile: ${mobile}`}
-        className={cn(
-          "p-1 rounded-full border transition hover:scale-110",
-          activeTab === "mobile" ? "bg-blue-600 text-white border-blue-600 shadow-md" : "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-950/40 dark:border-blue-800"
-        )}
-      >
-        <Phone className="h-3 w-3" />
-      </button>
+    <div className="relative inline-flex items-center justify-center gap-1" dir="ltr" onClick={(e) => e.stopPropagation()}>
+      {mobile && mobile !== "-" ? (
+        <a
+          href={`tel:${mobile.replace(/[^0-9+]/g, "")}`}
+          title={`Call: ${mobile}`}
+          className="h-6 w-6 rounded-md border border-blue-200 bg-blue-50/80 text-blue-600 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-400 flex items-center justify-center hover:scale-105 hover:bg-blue-100 transition shadow-2xs cursor-pointer"
+        >
+          <Phone className="h-2.5 w-2.5" />
+        </a>
+      ) : null}
 
-      <button
-        type="button"
-        onClick={() => setActiveTab(activeTab === "whatsapp" ? null : "whatsapp")}
-        title={`WhatsApp: ${whatsapp}`}
-        className={cn(
-          "p-1 rounded-full border transition hover:scale-110",
-          activeTab === "whatsapp" ? "bg-emerald-600 text-white border-emerald-600 shadow-md" : "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-800"
-        )}
-      >
-        <MessageCircle className="h-3 w-3" />
-      </button>
+      {whatsapp && whatsapp !== "-" ? (
+        <a
+          href={`https://wa.me/${whatsapp.replace(/[^0-9]/g, "")}`}
+          target="_blank"
+          rel="noreferrer"
+          title={`WhatsApp: ${whatsapp}`}
+          className="h-6 w-6 rounded-md border border-emerald-200 bg-emerald-50/80 text-emerald-600 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-400 flex items-center justify-center hover:scale-105 hover:bg-emerald-100 transition shadow-2xs cursor-pointer"
+        >
+          <MessageCircle className="h-2.5 w-2.5" />
+        </a>
+      ) : null}
 
-      <button
-        type="button"
-        onClick={() => setActiveTab(activeTab === "email" ? null : "email")}
-        title={`Email: ${email}`}
-        className={cn(
-          "p-1 rounded-full border transition hover:scale-110",
-          activeTab === "email" ? "bg-amber-600 text-white border-amber-600 shadow-md" : "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-950/40 dark:border-amber-800"
-        )}
-      >
-        <Mail className="h-3 w-3" />
-      </button>
+      {email && email !== "-" ? (
+        <a
+          href={`mailto:${email}`}
+          title={`Email: ${email}`}
+          className="h-6 w-6 rounded-md border border-amber-200 bg-amber-50/80 text-amber-600 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-400 flex items-center justify-center hover:scale-105 hover:bg-amber-100 transition shadow-2xs cursor-pointer"
+        >
+          <Mail className="h-2.5 w-2.5" />
+        </a>
+      ) : null}
 
-      {activeTab && (
-        <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-1.5 min-w-[180px] rounded-lg border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in zoom-in-95">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-1 mb-1 text-[9px] font-bold uppercase tracking-wider text-slate-400">
-            <span>{activeTab.toUpperCase()}</span>
-            <button type="button" onClick={() => setActiveTab(null)} className="text-slate-400 hover:text-slate-600">×</button>
-          </div>
-          <div className="font-mono text-[11px] font-black text-slate-800 dark:text-slate-100 break-all select-all">
-            {activeTab === "mobile" ? mobile : activeTab === "whatsapp" ? whatsapp : email}
-          </div>
-        </div>
+      {!mobile && !whatsapp && !email && (
+        <span className="text-slate-400 text-[10px]">—</span>
       )}
     </div>
   );
@@ -1365,6 +1354,93 @@ export function AccountGeneralReportView({
         </div>
       )}
 
+      {/* ── 4 PRIMARY REPORTING CENTERS & MULTI-COUNTRY LEDGERS QUICK ACCESS ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {/* Center 1: Super Admin Reports & Multi-Country Investments */}
+        <div
+          onClick={() => router.push("/dashboard/reports/super-admin" as Route)}
+          className="rounded-2xl border border-blue-200/70 bg-gradient-to-br from-blue-50/80 to-indigo-50/40 dark:border-blue-900/60 dark:from-blue-950/30 dark:to-slate-900 p-3.5 shadow-2xs hover:shadow-md hover:border-blue-400 transition-all cursor-pointer flex items-center justify-between group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold shadow-sm shadow-blue-500/20 group-hover:scale-105 transition-transform">
+              <Landmark className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400">
+                {t(lang, "nav.super_admin_reports", "Super Admin Ledgers")}
+              </div>
+              <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                {t(lang, "nav.sa_investments_title", "Multi-Country & Capital")}
+              </div>
+            </div>
+          </div>
+          <ChevronRight className="h-4 w-4 text-blue-500 group-hover:translate-x-1 transition-transform" />
+        </div>
+
+        {/* Center 2: Country Admin Reports & Ledgers */}
+        <div
+          onClick={() => router.push("/dashboard/reports/country" as Route)}
+          className="rounded-2xl border border-emerald-200/70 bg-gradient-to-br from-emerald-50/80 to-teal-50/40 dark:border-emerald-900/60 dark:from-emerald-950/30 dark:to-slate-900 p-3.5 shadow-2xs hover:shadow-md hover:border-emerald-400 transition-all cursor-pointer flex items-center justify-between group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shadow-sm shadow-emerald-500/20 group-hover:scale-105 transition-transform">
+              <Building2 className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                {t(lang, "nav.country_reports", "Country Admin Ledgers")}
+              </div>
+              <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                {t(lang, "nav.country_regional_title", "National & Regional Hubs")}
+              </div>
+            </div>
+          </div>
+          <ChevronRight className="h-4 w-4 text-emerald-500 group-hover:translate-x-1 transition-transform" />
+        </div>
+
+        {/* Center 3: Branch Reports & Operations */}
+        <div
+          onClick={() => router.push("/dashboard/reports/branch" as Route)}
+          className="rounded-2xl border border-purple-200/70 bg-gradient-to-br from-purple-50/80 to-violet-50/40 dark:border-purple-900/60 dark:from-purple-950/30 dark:to-slate-900 p-3.5 shadow-2xs hover:shadow-md hover:border-purple-400 transition-all cursor-pointer flex items-center justify-between group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold shadow-sm shadow-purple-500/20 group-hover:scale-105 transition-transform">
+              <Building className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-[10px] font-black uppercase tracking-wider text-purple-700 dark:text-purple-400">
+                {t(lang, "nav.branch_reports", "Branch Reports & Ops")}
+              </div>
+              <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                {t(lang, "nav.branch_ops_title", "Local Branch Ledgers")}
+              </div>
+            </div>
+          </div>
+          <ChevronRight className="h-4 w-4 text-purple-500 group-hover:translate-x-1 transition-transform" />
+        </div>
+
+        {/* Center 4: Shipping Line & Clearing Agent Ledgers */}
+        <div
+          onClick={() => router.push("/dashboard/reports/shipping" as Route)}
+          className="rounded-2xl border border-amber-200/70 bg-gradient-to-br from-amber-50/80 to-orange-50/40 dark:border-amber-900/60 dark:from-amber-950/30 dark:to-slate-900 p-3.5 shadow-2xs hover:shadow-md hover:border-amber-400 transition-all cursor-pointer flex items-center justify-between group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-amber-600 text-white flex items-center justify-center font-bold shadow-sm shadow-amber-500/20 group-hover:scale-105 transition-transform">
+              <PackageCheck className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                {t(lang, "nav.shipping_reports", "Shipping & Clearing")}
+              </div>
+              <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                {t(lang, "nav.shipping_ledgers_title", "Shipping Line Ledgers")}
+              </div>
+            </div>
+          </div>
+          <ChevronRight className="h-4 w-4 text-amber-500 group-hover:translate-x-1 transition-transform" />
+        </div>
+      </div>
+
       {/* Unified Executive & Operations Summary Box */}
       <div className="border border-slate-200/60 rounded-2xl bg-white/80 backdrop-blur-xl dark:border-slate-800/60 dark:bg-slate-950/60 p-5 shadow-sm text-xs font-semibold text-slate-500 uppercase flex flex-col gap-4 transition-all hover:shadow-md">
         
@@ -1741,11 +1817,13 @@ export function AccountGeneralReportView({
         {error ? <div className="rounded border border-red-300 bg-red-50 px-4 py-3 text-xs text-red-900 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-200">{error}</div> : null}
         
         {highlightCreated && selectedRow ? (
-          <div className="rounded border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-emerald-200 flex items-center gap-3">
-            <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50/90 dark:border-emerald-900/50 dark:bg-emerald-950/30 p-4 text-xs text-emerald-900 dark:text-emerald-200 flex items-center gap-3 shadow-xs">
+            <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <div>
-              <span className="font-bold">Account Created Successfully!</span>
-              <span className="block mt-0.5">{t(lang, "roz.account", "Account")} <span className="font-mono font-black">{selectedRow.accountCode}</span> in {selectedRow.countryName} has been selected.</span>
+              <span className="font-bold text-sm">{t(lang, "acct.created_success_title", "Account Created Successfully!")}</span>
+              <span className="block mt-0.5 font-medium">
+                {t(lang, "roz.account", "Account")} <span className="font-mono font-black text-emerald-800 dark:text-emerald-200">{selectedRow.accountCode}</span> {t(lang, "acct.in_country_selected", "in")} <span className="font-bold">{localizeTerm(selectedRow.countryName, lang)}</span> {t(lang, "acct.has_been_selected", "has been selected.")}
+              </span>
             </div>
           </div>
         ) : null}
@@ -1753,11 +1831,11 @@ export function AccountGeneralReportView({
         <div className={cn("grid gap-6 items-start", showProfilePanel ? "xl:grid-cols-[minmax(0,1fr)_420px]" : "xl:grid-cols-1")}>
           <div className="overflow-hidden rounded border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
             <div className="overflow-auto max-h-[calc(100vh-320px)] min-h-[350px]">
-              <table className="min-w-[1400px] w-full text-xs text-left border-collapse">
+              <table className="min-w-[1550px] w-full text-xs text-left border-collapse">
                 <thead className="sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
                   <tr>
                     {[
-                      { label: tr("MASTER REFERENCE & ACCOUNT OVERVIEW"), span: 7, cls: "bg-slate-50 dark:bg-slate-900/40 text-slate-700 dark:text-slate-300 border-t-2 border-t-slate-400" },
+                      { label: tr("MASTER REFERENCE & ACCOUNT OVERVIEW"), span: 9, cls: "bg-slate-50 dark:bg-slate-900/40 text-slate-700 dark:text-slate-300 border-t-2 border-t-slate-400" },
                       { label: tr("CONTACT DETAILS"), span: 1, cls: "bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-400 border-t-2 border-t-emerald-500" },
                       { label: tr("BRANCH & LOCATION"), span: 3, cls: "bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-800 dark:text-indigo-400 border-t-2 border-t-indigo-500" },
                       { label: tr("FINANCIAL INFORMATION"), span: 4, cls: "bg-blue-50/50 dark:bg-blue-950/20 text-blue-800 dark:text-blue-400 border-t-2 border-t-blue-500" },
@@ -1775,7 +1853,7 @@ export function AccountGeneralReportView({
                   </tr>
                   <tr className="bg-white dark:bg-slate-950 text-[9px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 border-b-2 border-slate-200 dark:border-slate-800">
                     {[
-                      "MANUAL REF", "ACCOUNT CODE", "ACCOUNT NAME", "COMPANY NAME",
+                      "MANUAL REF", "ACCOUNT CODE", "ACCOUNT NAME", "CATEGORY", "ACCOUNT TYPE", "COMPANY NAME",
                       "BANK NAME", "WAREHOUSE NAME", "OWNER NAME", "CONTACTS",
                       "COUNTRY", "MAIN BRANCH", "CITY BRANCH", "CURRENCY",
                       "DEBIT", "CREDIT", "BALANCE", "START DATE",
@@ -1790,7 +1868,7 @@ export function AccountGeneralReportView({
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-850">
                   {loading ? (
                     <tr>
-                      <td colSpan={18} className="px-5 py-10 text-center text-sm text-slate-500 font-medium">
+                      <td colSpan={20} className="px-5 py-10 text-center text-sm text-slate-500 font-medium">
                         <RefreshCw className="h-5 w-5 animate-spin mx-auto mb-2 text-blue-500" />
                         {t(lang, "acct.agrv_loading_accounts_registry", "Loading accounts registry...")}
                       </td>
@@ -1812,17 +1890,19 @@ export function AccountGeneralReportView({
                         >
                           <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-mono text-slate-600 dark:text-slate-400">{row.manualReferenceNumber || "-"}</td>
                           <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-mono font-bold text-blue-700 dark:text-blue-400">{row.accountCode}</td>
-                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-bold text-left">{row.accountName}</td>
-                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-medium">{row.companyName || "-"}</td>
-                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-medium text-emerald-700 dark:text-emerald-400">{row.bankName || "-"}</td>
-                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-medium text-amber-700 dark:text-amber-400">{row.warehouseName || "-"}</td>
-                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-medium">{row.ownerName || row.companyOwner || "-"}</td>
+                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-bold text-left">{localizeTerm(row.accountName, lang)}</td>
+                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-bold text-purple-700 dark:text-purple-400 text-[9px] uppercase">{localizeTerm(row.accountCategory || "Asset", lang)}</td>
+                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-medium text-slate-600 dark:text-slate-300 text-[9px]">{localizeTerm(row.subType || "Normal Account", lang)}</td>
+                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-medium">{row.companyName ? localizeTerm(row.companyName, lang) : "-"}</td>
+                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-medium text-emerald-700 dark:text-emerald-400">{row.bankName ? localizeTerm(row.bankName, lang) : "-"}</td>
+                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-medium text-amber-700 dark:text-amber-400">{row.warehouseName ? localizeTerm(row.warehouseName, lang) : "-"}</td>
+                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-bold text-slate-900 dark:text-slate-100">{transliterateProperNoun(row.ownerName || row.companyOwner || "-", lang)}</td>
                           <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 text-center align-middle">
                             <ContactIconPopup row={row} />
                           </td>
-                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850">{row.countryName}</td>
-                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850">{row.mainBranchName ?? (row.branchType === "Main Branch" ? row.branchName : "-")}</td>
-                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850">{row.cityBranchName ?? (row.branchType === "City Branch" ? row.branchName : "-")}</td>
+                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850">{localizeTerm(row.countryName, lang)}</td>
+                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850">{localizeTerm(row.mainBranchName ?? (row.branchType === "Main Branch" ? row.branchName : "-"), lang)}</td>
+                          <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850">{localizeTerm(row.cityBranchName ?? (row.branchType === "City Branch" ? row.branchName : "-"), lang)}</td>
                           <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-black">{row.currency}</td>
                           <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-mono text-rose-600 dark:text-rose-400 text-right">{fmtNumber(row.debitTotal)}</td>
                           <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-mono text-emerald-600 dark:text-emerald-400 text-right">{fmtNumber(row.creditTotal)}</td>
@@ -1830,7 +1910,7 @@ export function AccountGeneralReportView({
                           <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850 font-mono text-[9px] text-slate-500">{row.createdAt ? row.createdAt.slice(0, 10) : "-"}</td>
                           <td className="px-3 py-2 border-r border-slate-100 dark:border-slate-850">
                             <span className={cn("inline-block px-1.5 py-0.5 rounded text-[8px] font-black uppercase text-white tracking-widest", row.status === "active" ? "bg-emerald-600" : "bg-slate-500")}>
-                              {row.status}
+                              {row.status === "active" ? t(lang, "god.active", "Active") : t(lang, "god.inactive", "Inactive")}
                             </span>
                           </td>
                           <td className="px-3 py-2 text-center align-middle">
@@ -1861,7 +1941,7 @@ export function AccountGeneralReportView({
                     })
                   ) : (
                     <tr>
-                      <td colSpan={18} className="px-5 py-10 text-center text-sm text-slate-500">
+                      <td colSpan={20} className="px-5 py-10 text-center text-sm text-slate-500">
                         {tr("NO ACCOUNTS MATCH THE SELECTED FILTERS")}
                       </td>
                     </tr>

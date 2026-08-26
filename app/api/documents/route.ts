@@ -556,7 +556,8 @@ export async function DELETE(request: NextRequest) {
   try {
     const session = await requireErpSession();
     const { searchParams } = request.nextUrl;
-    const id = searchParams.get("id");
+    const body = await request.json().catch(() => ({}));
+    const id = searchParams.get("id") || body?.id || null;
 
     if (!id) return NextResponse.json({ error: "Document ID required" }, { status: 400 });
 

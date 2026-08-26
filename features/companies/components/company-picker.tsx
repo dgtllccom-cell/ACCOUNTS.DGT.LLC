@@ -77,7 +77,7 @@ export function CompanyPicker({
     setLoading(true);
     try {
       const qp = new URLSearchParams();
-      qp.set("limit", "50");
+      qp.set("limit", "500");
       const res = await apiGet<{ companies: CompanyRow[] }>(`/api/erp/companies?${qp.toString()}`);
       setCompanies(res.companies ?? []);
     } finally {
@@ -330,10 +330,11 @@ export function CompanyPicker({
         >
           <CompanyIncorporationForm
             mode="embedded"
-            onSave={(newCompany) => {
+            onSave={(newCompany: any) => {
               loadList().catch(() => null);
-              if (newCompany.id) {
-                onValueChange(newCompany.id);
+              const compId = newCompany?.id || newCompany?.companyId;
+              if (compId) {
+                onValueChange(compId);
               }
               setOpenCreate(false);
             }}
