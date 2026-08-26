@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import {
   buildDocumentFileName,
@@ -56,8 +57,26 @@ async function resolveStorageUrl(storageKey: string | null | undefined) {
   return data?.signedUrl ?? null;
 }
 
+async function withDocumentSession<T>(session: Awaited<ReturnType<typeof requireErpSession>>, fn: (sql: any) => Promise<T>) {
+  return await withLocalPg(async (sql) => {
+    return await sql.begin(async (tx) => {
+      await tx`select set_config('request.jwt.claim.sub', ${session.userId}, true);`;
+      await tx`select set_config('request.jwt.claim.role', 'authenticated', true);`;
+      await tx`
+        select set_config(
+          'request.jwt.claims',
+          ${JSON.stringify({ sub: session.userId, role: "authenticated" })},
+          true
+        );
+      `;
+      return await fn(tx);
+    });
+  });
+}
+
 export async function GET(request: NextRequest) {
   try {
+    const session = await requireErpSession();
     const { searchParams } = request.nextUrl;
 
     const countryId = searchParams.get("countryId");
@@ -87,7 +106,7 @@ export async function GET(request: NextRequest) {
     // first (bypasses RLS via DATABASE_URL); fall back to the Supabase-client path
     // only when DATABASE_URL isn't configured.
     const safeSearch = normalizeDocumentSearch(searchQuery);
-    const viaPg = await withLocalPg(async (sql) => {
+    const viaPg = await withDocumentSession(session, async (sql) => {
       return await sql`
         select *
         from public.office_documents
@@ -207,6 +226,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await requireErpSession();
     const { body, file } = await parseJsonOrFormData(request);
 
     const {
@@ -340,7 +360,7 @@ export async function POST(request: NextRequest) {
 
     // Root-cause bypass — see GET above: office_documents_scope_insert is RLS-gated
     // the same way, so a direct-Postgres write is tried first.
-    const viaPg = await withLocalPg(async (sql) => {
+    const viaPg = await withDocumentSession(session, async (sql) => {
       const rows = await sql`
         insert into public.office_documents (
           title, file_name, file_url, file_type, file_size,
@@ -420,6 +440,7 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    const session = await requireErpSession();
     const body = await request.json();
     const {
       id,
@@ -451,7 +472,7 @@ export async function PATCH(request: NextRequest) {
 
     // Root-cause bypass — see GET above: office_documents_scope_update is RLS-gated
     // the same way, so a direct-Postgres write is tried first.
-    const viaPg = await withLocalPg(async (sql) => {
+    const viaPg = await withDocumentSession(session, async (sql) => {
       const rows = await sql`
         update public.office_documents
         set updated_at = ${updatedAt},
@@ -523,6 +544,7 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const session = await requireErpSession();
     const { searchParams } = request.nextUrl;
     const id = searchParams.get("id");
 
@@ -532,7 +554,7 @@ export async function DELETE(request: NextRequest) {
 
     // Root-cause bypass — see GET above: office_documents_scope_update is RLS-gated
     // the same way, so a direct-Postgres write is tried first.
-    const viaPg = await withLocalPg(async (sql) => {
+    const viaPg = await withDocumentSession(session, async (sql) => {
       await sql`update public.office_documents set deleted_at = ${deletedAt} where id = ${id}`;
       return true;
     });

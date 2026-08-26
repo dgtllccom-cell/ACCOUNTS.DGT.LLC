@@ -123,22 +123,13 @@ function compactAccountRawDetails(row: any) {
 
 export async function GET(request: Request) {
   try {
-    const startedAt = Date.now();
-    console.log("[kyc-reports] GET start");
     const session = await requireErpSession();
-    console.log("[kyc-reports] session ok", Date.now() - startedAt);
     authorize(session, { resource: "reports", action: "read" });
     authorize(session, { resource: "kyc", action: "read" });
     const reportScope = resolveReportScope(session);
-    console.log("[kyc-reports] scope", reportScope.level, Date.now() - startedAt);
     const sourceData = await withLocalPg(async (sql) => {
-      const queryStartedAt = Date.now();
-      console.log("[kyc-reports] db query start");
       async function timedQuery<T>(label: string, query: Promise<T>) {
-        const start = Date.now();
-        const result = await query;
-        console.log(`[kyc-reports] ${label} done`, Date.now() - start);
-        return result;
+        return await query;
       }
 
       const countries = await timedQuery(
@@ -212,11 +203,8 @@ export async function GET(request: Request) {
           limit 50
         `
       );
-      console.log("[kyc-reports] db query ok", Date.now() - queryStartedAt);
-
       return { countries, countryBranches, cityBranches, users, assignments, enterpriseAccounts, companies, customers };
     });
-    console.log("[kyc-reports] sourceData ready", Boolean(sourceData), Date.now() - startedAt);
     const supabase = createSupabaseAdminClient() as any;
     const [
       countriesRes,
@@ -418,8 +406,6 @@ export async function GET(request: Request) {
       suspended: items.filter((i) => i.status === "suspended").length,
       compliant: items.filter((i) => i.status === "compliant").length
     };
-    console.log("[kyc-reports] response ready", { total: items.length, metrics }, Date.now() - startedAt);
-
     return NextResponse.json({
       items,
       metrics,

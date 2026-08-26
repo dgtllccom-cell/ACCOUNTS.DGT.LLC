@@ -123,7 +123,7 @@ export async function GET(request: NextRequest) {
             END AS urgency_class,
             t.user_name AS responsible_user,
             COALESCE(t.particulars, '') AS remarks,
-            '/dashboard/bank-roznamcha' AS source_href,
+            '/dashboard/roznamcha/reports/bank' AS source_href,
             t.country_id::text AS country_id,
             t.country_branch_id::text AS country_branch_id,
             t.city_branch_id::text AS city_branch_id
@@ -231,7 +231,7 @@ export async function GET(request: NextRequest) {
             END AS urgency_class,
             '' AS responsible_user,
             COALESCE(bl.vessel_name, '') AS remarks,
-            '/dashboard/shipping/bl' AS source_href,
+            '/dashboard/shipping-line/bl-entry' AS source_href,
             bl.country_id::text AS country_id,
             bl.country_branch_id::text AS country_branch_id,
             bl.city_branch_id::text AS city_branch_id
@@ -268,7 +268,7 @@ export async function GET(request: NextRequest) {
             END AS urgency_class,
             '' AS responsible_user,
             COALESCE(sl.vessel_name, sl.voyage_number, '') AS remarks,
-            '/dashboard/shipping/shipping-line' AS source_href,
+            '/dashboard/shipping-line/shipment-details' AS source_href,
             sl.country_id::text AS country_id,
             sl.country_branch_id::text AS country_branch_id,
             sl.city_branch_id::text AS city_branch_id

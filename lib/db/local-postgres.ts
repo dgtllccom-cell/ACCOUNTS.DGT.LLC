@@ -43,7 +43,14 @@ export function getDbUrl(): string {
 export async function withLocalPg<T>(fn: (sql: ReturnType<typeof postgres>) => Promise<T>): Promise<T | null> {
   const url = getDbUrl();
   if (!url) return null;
-  const sql = postgres(url, { max: 1, prepare: false });
+  const isLocal = /@(localhost|127\.0\.0\.1|\[::1\])[:/]/i.test(url);
+  const sql = postgres(url, {
+    max: 1,
+    prepare: false,
+    idle_timeout: 20,
+    connect_timeout: 15,
+    ssl: isLocal ? false : "require"
+  });
   try {
     return await fn(sql);
   } finally {
