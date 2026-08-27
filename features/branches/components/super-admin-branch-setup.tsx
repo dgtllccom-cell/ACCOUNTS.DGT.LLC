@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Building2,
@@ -238,6 +238,7 @@ function ChipList({
   rows: Array<{ id: string; type: string; value: string }>;
   onRemove: (id: string) => void;
 }) {
+  const lang = useActiveLanguage();
   if (!rows.length) {
     return <p className="rounded-lg border border-dashed bg-muted/30 p-3 text-sm text-muted-foreground">{empty}</p>;
   }
@@ -254,7 +255,7 @@ function ChipList({
             type="button"
             onClick={() => onRemove(row.id)}
             className="rounded-md p-2 text-muted-foreground hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30"
-            aria-label="Remove row"
+            aria-label={t(lang, "sabs.remove_row" as never, "Remove row")}
           >
             <Trash2 className="h-4 w-4" aria-hidden />
           </button>
@@ -266,7 +267,7 @@ function ChipList({
 
 function SuperAdminBranchSetupContent() {
   const lang = useActiveLanguage();
-  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+  const tt = useCallback((key: string, fallback: string) => t(lang, key as never, fallback), [lang]);
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const searchParams = useSearchParams();
   const editId = searchParams.get("editId") ?? "";
@@ -353,87 +354,88 @@ function SuperAdminBranchSetupContent() {
 
   const reportRows = useMemo(
     () => [
-      { label: "Branch Code", value: branchCode || "-" },
-      { label: "Branch Type", value: "Super Admin Branch" },
-      { label: "Country", value: countryName || "-" },
-      { label: "Country Code", value: locationMeta.country?.iso2 || locationMeta.country?.iso3 || "-" },
-      { label: "State / Province", value: stateName || "-" },
-      { label: "State Code", value: locationMeta.state?.code || "-" },
-      { label: "City", value: cityName || "-" },
-      { label: "City Code", value: locationMeta.city?.code || "-" },
-      { label: "Zip / Postal Code", value: zip || "-" },
-      { label: "Company Name", value: companyName || "-" },
-      { label: "Company Code", value: companyCode || "-" },
-      { label: "Company Owner", value: ownerPreview?.name || owner || "-" },
-      { label: "Owner Details", value: ownerPreview ? `${ownerPreview.source.toUpperCase()} · ${ownerPreview.code}` : owner || "-" },
-      { label: "Branch Name", value: "Super Admin Branch" },
-      { label: "Currency", value: currency || "USD" },
-      { label: "Address", value: address || "-" },
-      { label: "Contacts", value: contactsText }
+      { label: tt("sabs.branch_code", "Branch Code"), value: branchCode || "-" },
+      { label: tt("sabs.branch_type", "Branch Type"), value: "Super Admin Branch" },
+      { label: tt("sabs.country", "Country"), value: countryName || "-" },
+      { label: tt("sabs.country_code", "Country Code"), value: locationMeta.country?.iso2 || locationMeta.country?.iso3 || "-" },
+      { label: tt("sabs.state_province", "State / Province"), value: stateName || "-" },
+      { label: tt("sabs.state_code", "State Code"), value: locationMeta.state?.code || "-" },
+      { label: tt("sabs.city", "City"), value: cityName || "-" },
+      { label: tt("sabs.city_code", "City Code"), value: locationMeta.city?.code || "-" },
+      { label: tt("sabs.zip_postal", "Zip / Postal Code"), value: zip || "-" },
+      { label: tt("sabs.company_name", "Company Name"), value: companyName || "-" },
+      { label: tt("sabs.company_code", "Company Code"), value: companyCode || "-" },
+      { label: tt("sabs.company_owner", "Company Owner"), value: ownerPreview?.name || owner || "-" },
+      { label: tt("sabs.owner_details", "Owner Details"), value: ownerPreview ? `${ownerPreview.source.toUpperCase()} · ${ownerPreview.code}` : owner || "-" },
+      { label: tt("sabs.branch_name", "Branch Name"), value: "Super Admin Branch" },
+      { label: tt("sabs.currency", "Currency"), value: currency || "USD" },
+      { label: tt("sabs.address", "Address"), value: address || "-" },
+      { label: tt("sabs.contacts", "Contacts"), value: contactsText }
     ],
-    [address, branchCode, cityName, companyCode, companyName, contactsText, countryName, currency, locationMeta.city?.code, locationMeta.country?.iso2, locationMeta.country?.iso3, locationMeta.state?.code, owner, ownerPreview, stateName, zip]
+    [tt, address, branchCode, cityName, companyCode, companyName, contactsText, countryName, currency, locationMeta.city?.code, locationMeta.country?.iso2, locationMeta.country?.iso3, locationMeta.state?.code, owner, ownerPreview, stateName, zip]
   );
   const editIdentityRows = useMemo(
     () => [
-      { label: "Country", value: countryName || "-" },
-      { label: "Branch Type", value: "Super Admin Branch" },
-      { label: "Branch Code", value: branchCode },
-      { label: "Record ID", value: editingBranchId },
-      { label: "Status", value: "active" },
-      { label: "Currency", value: currency }
+      { label: tt("sabs.country", "Country"), value: countryName || "-" },
+      { label: tt("sabs.branch_type", "Branch Type"), value: "Super Admin Branch" },
+      { label: tt("sabs.branch_code", "Branch Code"), value: branchCode },
+      { label: tt("sabs.record_id", "Record ID"), value: editingBranchId },
+      { label: tt("sabs.status", "Status"), value: "active" },
+      { label: tt("sabs.currency", "Currency"), value: currency }
     ],
-    [branchCode, currency, editingBranchId, countryName]
+    [tt, branchCode, currency, editingBranchId, countryName]
   );
 
   const editProfileSections: BranchProfileSection[] = useMemo(
     () => [
       {
-        title: "Branch Information",
+        title: tt("sabs.sec_branch_info", "Branch Information"),
         items: [
-          { label: "Branch Type", value: "Super Admin Branch" },
-          { label: "Branch Code", value: branchCode },
-          { label: "Currency", value: currency },
-          { label: "Status", value: "active" }
+          { label: tt("sabs.branch_type", "Branch Type"), value: "Super Admin Branch" },
+          { label: tt("sabs.branch_code", "Branch Code"), value: branchCode },
+          { label: tt("sabs.currency", "Currency"), value: currency },
+          { label: tt("sabs.status", "Status"), value: "active" }
         ]
       },
       {
-        title: "Location Information",
+        title: tt("sabs.sec_location_info", "Location Information"),
         items: [
-          { label: "Country", value: countryName || "-" },
-          { label: "Country Code", value: locationMeta.country?.iso2 || locationMeta.country?.iso3 || "-" },
-          { label: "State", value: stateName || "-" },
-          { label: "City", value: cityName || "-" },
-          { label: "Address", value: address }
+          { label: tt("sabs.country", "Country"), value: countryName || "-" },
+          { label: tt("sabs.country_code", "Country Code"), value: locationMeta.country?.iso2 || locationMeta.country?.iso3 || "-" },
+          { label: tt("sabs.state", "State"), value: stateName || "-" },
+          { label: tt("sabs.city", "City"), value: cityName || "-" },
+          { label: tt("sabs.address", "Address"), value: address }
         ]
       },
       {
-        title: "Company Information",
+        title: tt("sabs.sec_company_info", "Company Information"),
         items: [
-          { label: "Company Name", value: companyDetails?.name || "-" },
-          { label: "Company Code", value: companyCode },
-          { label: "Legal Name", value: companyDetails?.legal_name || "-" },
-          { label: "Base Currency", value: companyDetails?.base_currency || "-" }
+          { label: tt("sabs.company_name", "Company Name"), value: companyDetails?.name || "-" },
+          { label: tt("sabs.company_code", "Company Code"), value: companyCode },
+          { label: tt("sabs.legal_name", "Legal Name"), value: companyDetails?.legal_name || "-" },
+          { label: tt("sabs.base_currency", "Base Currency"), value: companyDetails?.base_currency || "-" }
         ]
       },
       {
-        title: "Owner Information",
+        title: tt("sabs.sec_owner_info", "Owner Information"),
         items: [
-          { label: "Owner Name", value: ownerPreview?.name || owner },
-          { label: "Owner Code", value: ownerPreview?.code || "N/A" },
-          { label: "Owner Source", value: ownerPreview?.source || "custom" },
-          { label: "Owner Role", value: ownerPreview?.role || "Owner" }
+          { label: tt("sabs.owner_name", "Owner Name"), value: ownerPreview?.name || owner },
+          { label: tt("sabs.owner_code", "Owner Code"), value: ownerPreview?.code || "N/A" },
+          { label: tt("sabs.owner_source", "Owner Source"), value: ownerPreview?.source || "custom" },
+          { label: tt("sabs.owner_role", "Owner Role"), value: ownerPreview?.role || "Owner" }
         ]
       },
       {
-        title: "Contact Information",
+        title: tt("sabs.sec_contact_info", "Contact Information"),
         items: [
-          { label: "Contacts", value: contactsText },
-          { label: "Phone", value: contacts.find((row) => row.type.toLowerCase().includes("phone"))?.value || "-" },
-          { label: "Email", value: contacts.find((row) => row.type.toLowerCase().includes("email"))?.value || "-" }
+          { label: tt("sabs.contacts", "Contacts"), value: contactsText },
+          { label: tt("sabs.phone", "Phone"), value: contacts.find((row) => row.type.toLowerCase().includes("phone"))?.value || "-" },
+          { label: tt("sabs.email", "Email"), value: contacts.find((row) => row.type.toLowerCase().includes("email"))?.value || "-" }
         ]
       }
     ],
     [
+      tt,
       branchCode,
       companyCode,
       companyDetails,
@@ -546,8 +548,8 @@ function SuperAdminBranchSetupContent() {
   function openReport(autoPrint: boolean) {
     const activeLang = typeof document !== "undefined" ? document.documentElement.lang : "en";
     openA4ReportWindow({
-      title: "Super Admin Branch Report",
-      subtitle: "Store Entry Preview (A4)",
+      title: t(activeLang, "sabs.report_title" as never, "Super Admin Branch Report"),
+      subtitle: t(activeLang, "sabs.report_subtitle_a4" as never, "Store Entry Preview (A4)"),
       autoPrint,
       branchData: liveBranchData,
       lang: activeLang
@@ -1023,10 +1025,10 @@ function SuperAdminBranchSetupContent() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <CompanyPicker
-                    label="Company Name"
+                    label={tt("sabs.company_name", "Company Name")}
                     value={companyId}
                     onValueChange={setCompanyId}
-                    placeholder="Search company"
+                    placeholder={tt("sabs.search_company", "Search company")}
                     createButtonPlacement="below"
                   />
                 </div>
@@ -1040,7 +1042,7 @@ function SuperAdminBranchSetupContent() {
                       setOwnerCustomerId(resolved?.kind === "customer" ? resolved.id : null);
                       setOwnerProfileId(resolved?.kind === "profile" ? resolved.id : null);
                     }}
-                    placeholder="Search owner"
+                    placeholder={tt("sabs.search_owner", "Search owner")}
                     createButtonPlacement="below"
                   />
                 </div>
@@ -1129,18 +1131,18 @@ function SuperAdminBranchSetupContent() {
 
         <div className="space-y-4 lg:sticky lg:top-4">
           <BranchLiveReportPanel
-            title="Store Entry (Live Preview)"
+            title={tt("sabs.live_preview_title", "Store Entry (Live Preview)")}
             status={hasAny ? "Draft" : "Empty"}
             branchData={liveBranchData}
             summary={[
-              { label: "Branch", value: branchCode || "-" },
-              { label: "Country", value: locationMeta.country?.iso2 || countryName || "-" },
-              { label: "State", value: locationMeta.state?.code || stateName || "-" },
-              { label: "City", value: locationMeta.city?.code || cityName || "-" }
+              { label: tt("sabs.branch", "Branch"), value: branchCode || "-" },
+              { label: tt("sabs.country", "Country"), value: locationMeta.country?.iso2 || countryName || "-" },
+              { label: tt("sabs.state", "State"), value: locationMeta.state?.code || stateName || "-" },
+              { label: tt("sabs.city", "City"), value: locationMeta.city?.code || cityName || "-" }
             ]}
             actions={
               <BranchReportActionsMenu
-                ariaLabel="Super Admin branch actions"
+                ariaLabel={tt("sabs.actions_aria", "Super Admin branch actions")}
                 disabled={!hasAny}
                 onView={viewReport}
                 onEdit={editReport}
@@ -1152,39 +1154,39 @@ function SuperAdminBranchSetupContent() {
             }
             steps={[
               {
-                title: "Step 1 - Company & Owner",
+                title: tt("sabs.step1_company_owner", "Step 1 - Company & Owner"),
                 rows: [
-                  { label: "Company Name", value: companyName || "-" },
-                  { label: "Company Code", value: companyCode || "-" },
-                  { label: "Legal Name", value: companyDetails?.legal_name || "-" },
-                  { label: "Base Currency", value: companyDetails?.base_currency || currency || "USD" },
-                  { label: "Owner", value: ownerPreview?.name || owner || "-" },
-                  { label: "Owner Code", value: ownerPreview?.code || "-" },
-                  { label: "Source", value: ownerPreview ? ownerPreview.source : "-" },
-                  { label: "Role / Branch", value: ownerPreview ? [ownerPreview.role, ownerPreview.branch].filter(Boolean).join(" · ") : "-" }
+                  { label: tt("sabs.company_name", "Company Name"), value: companyName || "-" },
+                  { label: tt("sabs.company_code", "Company Code"), value: companyCode || "-" },
+                  { label: tt("sabs.legal_name", "Legal Name"), value: companyDetails?.legal_name || "-" },
+                  { label: tt("sabs.base_currency", "Base Currency"), value: companyDetails?.base_currency || currency || "USD" },
+                  { label: tt("sabs.owner", "Owner"), value: ownerPreview?.name || owner || "-" },
+                  { label: tt("sabs.owner_code", "Owner Code"), value: ownerPreview?.code || "-" },
+                  { label: tt("sabs.source", "Source"), value: ownerPreview ? ownerPreview.source : "-" },
+                  { label: tt("sabs.role_branch", "Role / Branch"), value: ownerPreview ? [ownerPreview.role, ownerPreview.branch].filter(Boolean).join(" · ") : "-" }
                 ]
               },
               {
-                title: "Step 2 - Location",
+                title: tt("sabs.step2_location", "Step 2 - Location"),
                 rows: [
-                  { label: "Country", value: countryName || "-" },
-                  { label: "Country Code", value: locationMeta.country?.iso2 || locationMeta.country?.iso3 || "-" },
-                  { label: "State", value: stateName || "-" },
-                  { label: "State Code", value: locationMeta.state?.code || "-" },
-                  { label: "District", value: districtName || "-" },
-                  { label: "City", value: cityName || "-" },
-                  { label: "City Code", value: locationMeta.city?.code || "-" },
-                  { label: "Branch Name", value: companyName ? `${companyName} Super Admin Branch` : "Super Admin Branch" },
-                  { label: "Branch Code", value: branchCode || "-" },
-                  { label: "Zip Code", value: zip || "-" }
+                  { label: tt("sabs.country", "Country"), value: countryName || "-" },
+                  { label: tt("sabs.country_code", "Country Code"), value: locationMeta.country?.iso2 || locationMeta.country?.iso3 || "-" },
+                  { label: tt("sabs.state", "State"), value: stateName || "-" },
+                  { label: tt("sabs.state_code", "State Code"), value: locationMeta.state?.code || "-" },
+                  { label: tt("sabs.district", "District"), value: districtName || "-" },
+                  { label: tt("sabs.city", "City"), value: cityName || "-" },
+                  { label: tt("sabs.city_code", "City Code"), value: locationMeta.city?.code || "-" },
+                  { label: tt("sabs.branch_name", "Branch Name"), value: companyName ? `${companyName} Super Admin Branch` : "Super Admin Branch" },
+                  { label: tt("sabs.branch_code", "Branch Code"), value: branchCode || "-" },
+                  { label: tt("sabs.zip_code", "Zip Code"), value: zip || "-" }
                 ]
               },
               {
-                title: "Step 3 - Contact & Address",
+                title: tt("sabs.step3_contact_address", "Step 3 - Contact & Address"),
                 rows: [
-                  { label: "Currency", value: currency || "USD" },
-                  { label: "Address", value: address || "-" },
-                  { label: "Contacts", value: contactsText }
+                  { label: tt("sabs.currency", "Currency"), value: currency || "USD" },
+                  { label: tt("sabs.address", "Address"), value: address || "-" },
+                  { label: tt("sabs.contacts", "Contacts"), value: contactsText }
                 ]
               }
             ]}
@@ -1192,8 +1194,8 @@ function SuperAdminBranchSetupContent() {
               <div className="space-y-3">
                 {editingBranchId ? (
                   <BranchRecordProfile
-                    title="Editing Existing Branch"
-                    subtitle="Saved data, completed fields, and missing information."
+                    title={tt("sabs.editing_title", "Editing Existing Branch")}
+                    subtitle={tt("sabs.editing_subtitle", "Saved data, completed fields, and missing information.")}
                     identity={editIdentityRows}
                     sections={editProfileSections}
                   />
@@ -1255,7 +1257,7 @@ function SuperAdminBranchSetupContent() {
       ) : null}
 
       {modal === "report" ? (
-        <Modal title="Super Admin Branch Report" onClose={() => setModal(null)}>
+        <Modal title={tt("sabs.report_title", "Super Admin Branch Report")} onClose={() => setModal(null)}>
           <div>
             {reportRows.map((row) => (
               <ReportRow key={row.label} label={row.label} value={row.value} />
@@ -1267,12 +1269,12 @@ function SuperAdminBranchSetupContent() {
       <DetailDrawer
         isOpen={drawerBranchData !== null}
         onClose={() => setDrawerBranchData(null)}
-        title="Super Admin Branch Details"
-        subtitle="Verification certificate and branch permissions"
+        title={tt("sabs.details_title", "Super Admin Branch Details")}
+        subtitle={tt("sabs.details_subtitle", "Verification certificate and branch permissions")}
       >
         {drawerBranchData && (
           <BranchLiveReportPanel
-            title="Saved Super Admin Branch"
+            title={tt("sabs.saved_branch_title", "Saved Super Admin Branch")}
             status={drawerBranchData.branchStatus}
             branchData={drawerBranchData}
           />
@@ -1282,9 +1284,18 @@ function SuperAdminBranchSetupContent() {
   );
 }
 
+function SuperAdminBranchSetupFallback() {
+  const lang = useActiveLanguage();
+  return (
+    <div className="p-8 text-center text-sm font-semibold text-slate-500">
+      {t(lang, "sabs.loading" as never, "Loading...")}
+    </div>
+  );
+}
+
 export function SuperAdminBranchSetup() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">Loading...</div>}>
+    <Suspense fallback={<SuperAdminBranchSetupFallback />}>
       <SuperAdminBranchSetupContent />
     </Suspense>
   );
