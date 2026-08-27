@@ -36,6 +36,7 @@ import { transliterateProperNoun } from "@/lib/i18n/transliteration";
 import { Party360Modal } from "@/features/customers/components/party-360-modal";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { CompanyIncorporationForm } from "@/features/companies/components/company-incorporation-form";
+import { openCompany360Report } from "@/lib/reports/open-company-360-report-window";
 
 export type CompanyRegistryItem = {
   id: string;
@@ -268,41 +269,117 @@ export function CompanyRegistry() {
     return { totalCompanies, totalBranches, totalAccounts, totalContracts, totalInAccounts };
   }, [companies, totalDbBranches]);
 
-  // Print Handler
-  const handlePrint = (c: CompanyRegistryItem) => {
-    const html = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Company Registry - ${c.accountName}</title>
-          <style>
-            body { font-family: sans-serif; padding: 24px; color: #1e293b; }
-            .header { border-bottom: 2px solid #2563eb; padding-bottom: 12px; margin-bottom: 20px; }
-            .title { font-size: 20px; font-weight: 800; color: #0f172a; }
-            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
-            .card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; background: #f8fafc; }
-            .label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #64748b; }
-            .value { font-size: 14px; font-weight: 700; color: #0f172a; margin-top: 4px; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <div class="title">DAMAAN GROUP • COMPANY REGISTRY DOSSIER</div>
-            <div style="font-size: 12px; color: #64748b;">Account No: ${c.accountNo} | Consortium: ${c.consortium}</div>
-          </div>
-          <div class="grid">
-            <div class="card"><div class="label">${tt("creg.account_name", "Account Name")}</div><div class="value">${c.accountName}</div></div>
-            <div class="card"><div class="label">${tt("creg.branch_rules", "Branch Rules")}</div><div class="value">${c.branchRules}</div></div>
-            <div class="card"><div class="label">${tt("creg.companies_count", "Companies Count")}</div><div class="value">${c.companiesCount} ${tt("creg.companies_word", "Companies")}</div></div>
-            <div class="card"><div class="label">${tt("creg.total_contracts", "Total Contracts")}</div><div class="value">${c.contractsCount} ${tt("creg.active_contracts", "Active Contracts")}</div></div>
-            <div class="card"><div class="label">${tt("creg.primary_contact", "Primary Contact")}</div><div class="value">${c.primaryContact}</div></div>
-            <div class="card"><div class="label">${tt("creg.official_email", "Official Email")}</div><div class="value">${c.email}</div></div>
-          </div>
-          <script>window.onload = function() { window.print(); };</script>
-        </body>
-      </html>
-    `;
-    printStore.openPrint(html, `Company - ${c.accountName}`);
+  // 360 Degree Dossier Print & PDF Handler
+  const handlePrint = async (c: CompanyRegistryItem) => {
+    let fullComp: any = c.raw || {};
+    let ownerDetails: any = null;
+    let managerDetails: any = null;
+    let sisterComps: any[] = [];
+    let banks: any[] = [];
+
+    try {
+      if (c.id) {
+        const cRes: any = await apiGet(`/api/erp/companies/${c.id}`);
+        if (cRes?.company) fullComp = { ...fullComp, ...cRes.company };
+      }
+    } catch {}
+
+    const ownerPersonId = fullComp?.owner_person_id;
+    const managerPersonId = fullComp?.manager_person_id;
+
+    if (ownerPersonId) {
+      try {
+        const [pRes, sumRes]: any[] = await Promise.allSettled([
+          apiGet(`/api/erp/customers/${ownerPersonId}?lang=${lang}`),
+          apiGet(`/api/erp/parties/360-summary?customerId=${ownerPersonId}&lang=${lang}`)
+        ]);
+        const pData = pRes.status === "fulfilled" && pRes.value?.customer ? pRes.value.customer : null;
+        const sData = sumRes.status === "fulfilled" && sumRes.value?.summary ? sumRes.value.summary : null;
+        ownerDetails = {
+          id: ownerPersonId,
+          name: pData?.customer_name || sData?.customerName || fullComp?.owner_name || c.consortium.replace(/ Group$/, ""),
+          fatherName: pData?.father_name || sData?.fatherName || "—",
+          customerCode: pData?.customer_code || pData?.person_code || sData?.customerCode || "CUST-OWNER",
+          employeeCode: sData?.employees?.[0]?.employeeCode || "EMP-0010",
+          phone: pData?.mobile || sData?.mobile || sData?.phone || c.primaryContact,
+          email: pData?.email || sData?.email || c.email,
+          country: pData?.country_name || sData?.countryName || c.country,
+          city: pData?.city_name || sData?.cityName || c.city,
+          address: pData?.address || sData?.address || c.address
+        };
+        if (sData?.companies?.length) sisterComps = sData.companies;
+        if (sData?.banks?.length) banks = sData.banks;
+      } catch {}
+    } else {
+      ownerDetails = {
+        name: fullComp?.owner_name || c.consortium.replace(/ Group$/, "") || "Company Owner",
+        fatherName: "—",
+        customerCode: "CUST-OWNER",
+        employeeCode: "EMP-0010",
+        phone: c.primaryContact,
+        email: c.email,
+        country: c.country,
+        city: c.city,
+        address: c.address
+      };
+    }
+
+    if (managerPersonId) {
+      try {
+        const [mRes, mSumRes]: any[] = await Promise.allSettled([
+          apiGet(`/api/erp/customers/${managerPersonId}?lang=${lang}`),
+          apiGet(`/api/erp/parties/360-summary?customerId=${managerPersonId}&lang=${lang}`)
+        ]);
+        const mData = mRes.status === "fulfilled" && mRes.value?.customer ? mRes.value.customer : null;
+        const msData = mSumRes.status === "fulfilled" && mSumRes.value?.summary ? mSumRes.value.summary : null;
+        managerDetails = {
+          id: managerPersonId,
+          name: mData?.customer_name || msData?.customerName || "Company Manager",
+          fatherName: mData?.father_name || msData?.fatherName || "—",
+          customerCode: mData?.customer_code || mData?.person_code || "MGR-001",
+          employeeCode: msData?.employees?.[0]?.employeeCode || "EMP-MGR",
+          phone: mData?.mobile || msData?.mobile || msData?.phone || "—",
+          email: mData?.email || msData?.email || "—",
+          country: mData?.country_name || msData?.countryName || "—",
+          city: mData?.city_name || msData?.cityName || "—"
+        };
+      } catch {}
+    }
+
+    openCompany360Report({
+      company: {
+        id: c.id,
+        accountNo: c.accountNo,
+        name: c.accountName,
+        legalName: fullComp?.legal_name || c.accountName,
+        nameUrdu: fullComp?.name_ur || transliterateProperNoun(c.accountName, "ur"),
+        businessType: fullComp?.business_type || "LLC (Limited Liability Company)",
+        natureOfBusiness: fullComp?.nature_of_business || "Trading & General Order Supplier",
+        registrationType: fullComp?.registrations?.[0]?.type || "Trade License",
+        licenseNumber: fullComp?.registrations?.[0]?.value || "TL-998822",
+        baseCurrency: fullComp?.base_currency || "USD",
+        countryName: c.country,
+        stateName: c.state,
+        cityName: c.city,
+        address: c.address,
+        phone: c.primaryContact,
+        email: c.email,
+        branchRules: c.branchRules,
+        isBranchOperative: fullComp?.is_branch_operative,
+        mainBranchName: fullComp?.main_branch_name || "Main Headquarters",
+        cityBranchName: fullComp?.city_branch_name || c.city,
+        superAdminSerial: fullComp?.super_admin_serial || "SA-CMP-001",
+        countrySerial: fullComp?.country_serial || "CT-CMP-001",
+        branchSerial: fullComp?.branch_serial || "BR-CMP-001",
+        entrySerial: fullComp?.entry_serial || fullComp?.company_code || "CMP-001",
+        companyCode: fullComp?.company_code || fullComp?.entry_serial || "CMP-001"
+      },
+      owner: ownerDetails,
+      manager: managerDetails,
+      sisterCompanies: sisterComps,
+      banks,
+      lang
+    });
   };
 
   return (
@@ -635,55 +712,65 @@ export function CompanyRegistry() {
                       </div>
 
                       {openActionMenuId === c.id && (
-                        <div className="absolute right-3 top-10 w-44 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl z-50 p-1 text-left animate-in fade-in zoom-in-95 duration-150">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setOpenActionMenuId(null);
-                              router.push(`/dashboard/settings/company-setup?companyId=${c.id}` as Route);
-                            }}
-                            className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                          >
-                            <PencilLine className="h-3.5 w-3.5 text-blue-500" />
-                            <span>{tt("branch.edit", "Edit Master")}</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setOpenActionMenuId(null);
-                              handlePrint(c);
-                            }}
-                            className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                          >
-                            <Printer className="h-3.5 w-3.5 text-emerald-500" />
-                            <span>{tt("creg.crtr_duplicate_print", "Print Dossier")}</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setOpenActionMenuId(null);
-                              setSelected360Party({ id: c.id, name: c.accountName });
-                            }}
-                            className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                          >
-                            <Globe className="h-3.5 w-3.5 text-indigo-500" />
-                            <span>{tt("cusm.view_360", "View 360 Profile")}</span>
-                          </button>
-                          <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setOpenActionMenuId(null);
-                              if (confirm(`${tt("creg.crtr_confirm_delete_prefix", "Are you sure you want to delete")} ${c.accountName}?`)) {
-                                setCompanies((prev) => prev.filter((item) => item.id !== c.id));
-                              }
-                            }}
-                            className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition cursor-pointer"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                            <span>{tt("common.delete", "Delete")}</span>
-                          </button>
-                        </div>
+                        <>
+                          <div
+                            className="fixed inset-0 z-40"
+                            onClick={() => setOpenActionMenuId(null)}
+                          />
+                          <div className={cn(
+                            "absolute right-3 w-48 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl z-50 p-1.5 text-left animate-in fade-in zoom-in-95 duration-150",
+                            idx >= Math.max(paginatedCompanies.length - 2, 1) ? "bottom-8 mb-1" : "top-10"
+                          )}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOpenActionMenuId(null);
+                                router.push(`/dashboard/settings/company-setup?companyId=${c.id}` as Route);
+                              }}
+                              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                            >
+                              <PencilLine className="h-3.5 w-3.5 text-blue-500" />
+                              <span>{tt("branch.edit", "Edit Master")}</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOpenActionMenuId(null);
+                                handlePrint(c);
+                              }}
+                              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                            >
+                              <Printer className="h-3.5 w-3.5 text-emerald-500" />
+                              <span>{tt("creg.crtr_duplicate_print", "Print Dossier (PDF)")}</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOpenActionMenuId(null);
+                                handlePrint(c);
+                                setSelected360Party({ id: c.id, name: c.accountName });
+                              }}
+                              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                            >
+                              <Globe className="h-3.5 w-3.5 text-indigo-500" />
+                              <span>{tt("cusm.view_360", "View 360 Profile & PDF")}</span>
+                            </button>
+                            <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOpenActionMenuId(null);
+                                if (confirm(`${tt("creg.crtr_confirm_delete_prefix", "Are you sure you want to delete")} ${c.accountName}?`)) {
+                                  setCompanies((prev) => prev.filter((item) => item.id !== c.id));
+                                }
+                              }}
+                              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition cursor-pointer"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                              <span>{tt("common.delete", "Delete")}</span>
+                            </button>
+                          </div>
+                        </>
                       )}
                     </td>
                   </tr>
@@ -837,10 +924,20 @@ export function CompanyRegistry() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handlePrint(previewCompany)}
-                className="text-xs font-bold gap-1.5 cursor-pointer"
+                onClick={() => {
+                  setSelected360Party({ id: previewCompany.id, name: previewCompany.accountName });
+                }}
+                className="text-xs font-bold gap-1.5 cursor-pointer text-indigo-600 border-indigo-200 hover:bg-indigo-50"
               >
-                <Printer className="h-3.5 w-3.5" /> {tt("creg.print_dossier", "Print Dossier")}
+                <Globe className="h-3.5 w-3.5" /> {tt("cusm.view_360", "View 360 Profile")}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePrint(previewCompany)}
+                className="text-xs font-bold gap-1.5 cursor-pointer text-emerald-600 border-emerald-200 hover:bg-emerald-50"
+              >
+                <Printer className="h-3.5 w-3.5" /> {tt("creg.print_dossier", "Print 360° PDF Dossier")}
               </Button>
               <Button
                 size="sm"

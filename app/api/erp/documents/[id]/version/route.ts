@@ -28,22 +28,22 @@ export async function POST(
     });
 
     if (!doc) {
-      return apiError("Document not found", 404);
+      return apiError("NOT_FOUND", "Document not found", 404);
     }
     const isSuperAdmin = session.roles?.includes("super_admin");
     if (!isSuperAdmin && sessionCompanyId && doc.companyId !== sessionCompanyId) {
-      return apiError("You do not have permission to update this document", 403);
+      return apiError("FORBIDDEN", "You do not have permission to update this document", 403);
     }
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
 
     if (!file) {
-      return apiError("Missing required field (file)", 400);
+      return apiError("BAD_REQUEST", "Missing required field (file)", 400);
     }
 
     if (file.size > 20 * 1024 * 1024) {
-      return apiError("File size exceeds 20MB limit", 400);
+      return apiError("BAD_REQUEST", "File size exceeds 20MB limit", 400);
     }
 
     const versions = await db.query.erpDocumentVersions.findMany({

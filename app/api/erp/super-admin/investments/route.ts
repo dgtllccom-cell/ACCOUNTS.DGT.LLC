@@ -9,8 +9,8 @@ export const revalidate = 0;
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireErpSession(request);
-    if (session.role !== "super_admin") {
+    const session = await requireErpSession();
+    if (!session.isSuperAdmin && !session.roles.includes("super_admin")) {
       throw new Error("Forbidden: Super Admin access required");
     }
 

@@ -4,7 +4,7 @@ import { restoreDeletedRecord } from "@/lib/audit/enterprise-audit-service";
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireErpSession(request);
+    const session = await requireErpSession();
 
     if (!session.isSuperAdmin && !session.roles.includes("super_admin_reports")) {
       return NextResponse.json({ error: "Unauthorized. Only authorized Super Admin can restore deleted records." }, { status: 403 });

@@ -53,7 +53,7 @@ export function QuickPreferencesPopover({
       themeModes.map((mode) => ({
         value: mode.id,
         label: uiText(language, mode.labelKey),
-        keywords: [mode.id, mode.label, uiText(language, "nav.theme_mode")].join(" ")
+        keywords: [mode.id, uiText(language, mode.labelKey), uiText(language, "nav.theme_mode")].join(" ")
       })),
     [language]
   );

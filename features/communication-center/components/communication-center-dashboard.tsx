@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 import {
   AlertTriangle,
   BarChart3,
@@ -36,24 +38,13 @@ type Props = {
 };
 
 const tabs = [
-  { key: "activity", label: "Inbox & Activity", icon: Mail },
-  { key: "crm", label: "CRM Leads", icon: Users },
-  { key: "followups", label: "Follow-ups", icon: CalendarDays },
-  { key: "campaigns", label: "Campaigns", icon: Megaphone },
-  { key: "reports", label: "Reports", icon: BarChart3 },
-  { key: "settings", label: "Settings", icon: Settings }
+  { key: "activity", labelKey: "cc.tab_inbox", labelFallback: "Inbox & Activity", icon: Mail },
+  { key: "crm", labelKey: "cc.tab_crm", labelFallback: "CRM Leads", icon: Users },
+  { key: "followups", labelKey: "cc.tab_followups", labelFallback: "Follow-ups", icon: CalendarDays },
+  { key: "campaigns", labelKey: "cc.tab_campaigns", labelFallback: "Campaigns", icon: Megaphone },
+  { key: "reports", labelKey: "cc.tab_reports", labelFallback: "Reports", icon: BarChart3 },
+  { key: "settings", labelKey: "cc.tab_settings", labelFallback: "Settings", icon: Settings }
 ];
-
-function metricCards(metrics: Record<string, number> = {}) {
-  return [
-    { label: "Emails Sent", value: metrics.emailsSent ?? 0, icon: Mail, tone: "blue" },
-    { label: "WhatsApp Sent", value: metrics.whatsappsSent ?? 0, icon: MessageCircle, tone: "green" },
-    { label: "Open Leads", value: metrics.openLeads ?? 0, icon: Users, tone: "violet" },
-    { label: "Due Follow-ups", value: metrics.dueFollowups ?? 0, icon: Clock, tone: "amber" },
-    { label: "Campaigns", value: metrics.campaigns ?? 0, icon: Megaphone, tone: "cyan" },
-    { label: "Failed Messages", value: metrics.failedMessages ?? 0, icon: AlertTriangle, tone: "red" }
-  ];
-}
 
 function toneClass(tone: string) {
   const tones: Record<string, string> = {
@@ -68,6 +59,10 @@ function toneClass(tone: string) {
 }
 
 export function CommunicationCenterDashboard({ session }: Props) {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+
   const [activeTab, setActiveTab] = useState("activity");
   const [data, setData] = useState<DashboardData>({});
   const [loading, setLoading] = useState(true);
@@ -103,7 +98,14 @@ export function CommunicationCenterDashboard({ session }: Props) {
   }, []);
 
   const sender = data.sender ?? {};
-  const cards = useMemo(() => metricCards(data.metrics), [data.metrics]);
+  const cards = useMemo(() => [
+    { label: tt("cc.emails_sent", "Emails Sent"), value: data.metrics?.emailsSent ?? 0, icon: Mail, tone: "blue" },
+    { label: tt("cc.whatsapp_sent", "WhatsApp Sent"), value: data.metrics?.whatsappsSent ?? 0, icon: MessageCircle, tone: "green" },
+    { label: tt("cc.open_leads", "Open Leads"), value: data.metrics?.openLeads ?? 0, icon: Users, tone: "violet" },
+    { label: tt("cc.due_followups", "Due Follow-ups"), value: data.metrics?.dueFollowups ?? 0, icon: Clock, tone: "amber" },
+    { label: tt("cc.tab_campaigns", "Campaigns"), value: data.metrics?.campaigns ?? 0, icon: Megaphone, tone: "cyan" },
+    { label: tt("cc.failed_msgs", "Failed Messages"), value: data.metrics?.failedMessages ?? 0, icon: AlertTriangle, tone: "red" }
+  ], [data.metrics, lang]);
 
   async function submitMessage() {
     setNotice("");
@@ -140,31 +142,31 @@ export function CommunicationCenterDashboard({ session }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 px-5 py-5 text-slate-900">
+    <div className="min-h-screen bg-slate-50 px-5 py-5 text-slate-900" dir={isRtl ? "rtl" : "ltr"}>
       <div className="mx-auto flex max-w-[1600px] flex-col gap-5">
         <header className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 ring-1 ring-blue-100">
                 <MessageCircle className="h-3.5 w-3.5" />
-                New Separate Module
+                {tt("cc.new_module", "New Separate Module")}
               </div>
-              <h1 className="mt-3 text-2xl font-bold tracking-tight text-slate-950">Communication Center</h1>
+              <h1 className="mt-3 text-2xl font-bold tracking-tight text-slate-950">{tt("cc.title", "Communication Center")}</h1>
               <p className="mt-1 max-w-3xl text-sm text-slate-500">
-                Central email, WhatsApp, CRM, follow-ups, campaigns and communication reports for multi-country ERP operations.
+                {tt("cc.description", "Central email, WhatsApp, CRM, follow-ups, campaigns and communication reports for multi-country ERP operations.")}
               </p>
             </div>
             <div className="grid gap-2 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm sm:min-w-[420px]">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-slate-500">Active sender</span>
+                <span className="text-slate-500">{tt("cc.active_sender", "Active sender")}</span>
                 <span className="font-semibold text-slate-950">{sender.fromName ?? "Not configured"}</span>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <span className="text-slate-500">Email</span>
+                <span className="text-slate-500">{tt("cc.opt_email", "Email")}</span>
                 <span className="font-medium text-blue-700">{sender.fromEmail ?? "Not configured"}</span>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <span className="text-slate-500">WhatsApp</span>
+                <span className="text-slate-500">{tt("cc.opt_whatsapp", "WhatsApp")}</span>
                 <span className="font-medium text-emerald-700">{sender.whatsappNumber ?? "Not configured"}</span>
               </div>
             </div>
@@ -206,7 +208,7 @@ export function CommunicationCenterDashboard({ session }: Props) {
                     }`}
                   >
                     <Icon className="h-4 w-4" />
-                    {tab.label}
+                    {tt(tab.labelKey, tab.labelFallback)}
                   </button>
                 );
               })}
@@ -215,9 +217,9 @@ export function CommunicationCenterDashboard({ session }: Props) {
             {activeTab === "activity" ? (
               <div className="p-4">
                 <div className="mb-3 flex items-center justify-between">
-                  <h2 className="text-base font-bold text-slate-950">Recent Communications</h2>
+                  <h2 className="text-base font-bold text-slate-950">{tt("cc.recent_comms", "Recent Communications")}</h2>
                   <button type="button" onClick={loadOverview} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50">
-                    Refresh
+                    {tt("crm.refresh", "Refresh")}
                   </button>
                 </div>
                 <div className="overflow-hidden rounded-xl border border-slate-200">
@@ -248,7 +250,7 @@ export function CommunicationCenterDashboard({ session }: Props) {
                       {!loading && !(data.recentMessages ?? []).length ? (
                         <tr>
                           <td className="px-4 py-8 text-center text-slate-500" colSpan={6}>
-                            No communication records yet.
+                            {tt("cc.no_comms", "No communication records yet.")}
                           </td>
                         </tr>
                       ) : null}
@@ -261,10 +263,10 @@ export function CommunicationCenterDashboard({ session }: Props) {
             {activeTab !== "activity" ? (
               <div className="grid gap-4 p-5 md:grid-cols-2">
                 {[
-                  ["CRM Pipeline", "Lead management, customer history, supplier follow-ups and task tracking."],
-                  ["Calendar & Appointments", "Meeting schedules, reminders, due follow-ups and customer appointments."],
-                  ["Marketing Campaigns", "Email and WhatsApp campaigns with branch and country segmentation."],
-                  ["Communication Reports", "Sent messages, failed messages, delivery, read status, campaign and branch reports."]
+                  [tt("cc.plan_crm", "CRM Pipeline"), tt("cc.plan_crm_desc", "Lead management, customer history, supplier follow-ups and task tracking.")],
+                  [tt("cc.plan_calendar", "Calendar & Appointments"), tt("cc.plan_calendar_desc", "Meeting schedules, reminders, due follow-ups and customer appointments.")],
+                  [tt("cc.plan_campaigns", "Marketing Campaigns"), tt("cc.plan_campaigns_desc", "Email and WhatsApp campaigns with branch and country segmentation.")],
+                  [tt("cc.plan_reports", "Communication Reports"), tt("cc.plan_reports_desc", "Sent messages, failed messages, delivery, read status, campaign and branch reports.")]
                 ].map(([title, description]) => (
                   <div key={title} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <div className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-950">
@@ -282,7 +284,7 @@ export function CommunicationCenterDashboard({ session }: Props) {
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               <div className="mb-4 flex items-center gap-2">
                 <Send className="h-5 w-5 text-blue-600" />
-                <h2 className="text-base font-bold text-slate-950">Compose / Log Communication</h2>
+                <h2 className="text-base font-bold text-slate-950">{tt("cc.compose_title", "Compose / Log Communication")}</h2>
               </div>
               <div className="grid gap-3">
                 <select
@@ -290,9 +292,9 @@ export function CommunicationCenterDashboard({ session }: Props) {
                   onChange={(event) => setMessageForm((prev) => ({ ...prev, channel: event.target.value }))}
                   className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
                 >
-                  <option value="email">Email</option>
-                  <option value="whatsapp">WhatsApp</option>
-                  <option value="internal">Internal Note</option>
+                  <option value="email">{tt("cc.opt_email", "Email")}</option>
+                  <option value="whatsapp">{tt("cc.opt_whatsapp", "WhatsApp")}</option>
+                  <option value="internal">{tt("cc.opt_internal", "Internal Note")}</option>
                 </select>
                 <input
                   value={messageForm.to}

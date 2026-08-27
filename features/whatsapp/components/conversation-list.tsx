@@ -6,6 +6,8 @@ import type { WhatsAppConversation, ConversationFilters, ConversationStatus, Wha
 import { ConversationItem } from "./conversation-item";
 import { FiltersBar } from "./filters-bar";
 import type { ErpSession } from "@/lib/auth/session";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 type Props = {
   conversations: WhatsAppConversation[];
@@ -18,11 +20,11 @@ type Props = {
   accounts: WhatsAppAccount[];
 };
 
-const STATUS_TABS: { label: string; value: ConversationStatus | "all" }[] = [
-  { label: "All", value: "all" },
-  { label: "Open", value: "open" },
-  { label: "Assigned", value: "assigned" },
-  { label: "Resolved", value: "resolved" }
+const STATUS_TABS: { labelKey: string; labelFallback: string; value: ConversationStatus | "all" }[] = [
+  { labelKey: "wa.all",      labelFallback: "All",      value: "all" },
+  { labelKey: "wa.open",     labelFallback: "Open",     value: "open" },
+  { labelKey: "wa.assigned", labelFallback: "Assigned", value: "assigned" },
+  { labelKey: "wa.resolved", labelFallback: "Resolved", value: "resolved" },
 ];
 
 export function ConversationList({
@@ -35,6 +37,8 @@ export function ConversationList({
   session,
   accounts
 }: Props) {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const [search, setSearch] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -68,7 +72,7 @@ export function ConversationList({
           <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Search conversations..."
+            placeholder={tt("wa.search", "Search conversations...")}
             value={search}
             onChange={(e) => handleSearch(e.target.value)}
             className="w-full rounded-md border border-input bg-background/60 ps-8 pe-3 py-1.5 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-[#25D366]/50 focus:border-[#25D366]/50 transition-colors"
@@ -88,7 +92,7 @@ export function ConversationList({
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
-            {tab.label}
+            {tt(tab.labelKey, tab.labelFallback)}
             {tab.value !== "all" && (
               <span className="ms-1 text-[9px] opacity-70">
                 ({conversations.filter((c) => c.status === tab.value).length})
@@ -118,7 +122,7 @@ export function ConversationList({
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-10 text-center">
-            <p className="text-xs text-muted-foreground">No conversations found</p>
+            <p className="text-xs text-muted-foreground">{tt("wa.no_convs", "No conversations found")}</p>
           </div>
         ) : (
           <div className="space-y-0.5 p-1">

@@ -51,7 +51,7 @@ const defaultModuleDefinitions: Array<{ key: string; label: string; category: Mo
 export async function GET(req: NextRequest) {
   try {
     const session = await requireErpSession();
-    const supabase = createSupabaseAdminClient();
+    const supabase = createSupabaseAdminClient() as any;
 
     // Fetch saved settings from app_settings table or fallback
     const { data, error } = await supabase
@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
       return apiOk({ ok: false, message: "Invalid payload: allotments object required." }, { status: 400 });
     }
 
-    const supabase = createSupabaseAdminClient();
+    const supabase = createSupabaseAdminClient() as any;
 
     const { error } = await supabase
       .from("app_settings")

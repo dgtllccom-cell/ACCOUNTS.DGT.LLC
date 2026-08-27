@@ -190,21 +190,22 @@ export function AllEditVersionHistoryView() {
 
   function handleExportCsv() {
     if (!records.length) return;
-    const exportRows = records.map((r, i) => ({
-      "#": i + 1,
-      "Bill / Ref No": r.reference_no || r.entity_id,
-      "Module": r.module,
-      "Country": r.country_name || "Global",
-      "Branch": r.branch_name || "Main Branch",
-      "Party": r.party_name || "-",
-      "Total Edits": r.edit_count || 1,
-      "Original Date": new Date(r.original_created_at).toLocaleString(),
-      "Last Edited At": new Date(r.created_at).toLocaleString(),
-      "Last Edited By": `${r.user_name} (${r.user_role})`,
-      "Risk Level": r.risk_level,
-      "Approval Status": r.approval_status
-    }));
-    downloadCsv(exportRows, `all_edit_version_history_${new Date().toISOString().split("T")[0]}`);
+    const headers = ["#", "Bill / Ref No", "Module", "Country", "Branch", "Party", "Total Edits", "Original Date", "Last Edited At", "Last Edited By", "Risk Level", "Approval Status"];
+    const exportRows = records.map((r, i) => [
+      String(i + 1),
+      String(r.reference_no || r.entity_id || ""),
+      String(r.module || ""),
+      String(r.country_name || "Global"),
+      String(r.branch_name || "Main Branch"),
+      String(r.party_name || "-"),
+      String(r.edit_count || 1),
+      new Date(r.original_created_at).toLocaleString(),
+      new Date(r.created_at).toLocaleString(),
+      `${r.user_name} (${r.user_role})`,
+      String(r.risk_level || ""),
+      String(r.approval_status || "")
+    ]);
+    downloadCsv(`all_edit_version_history_${new Date().toISOString().split("T")[0]}.csv`, [headers, ...exportRows]);
   }
 
   function handlePrint() {

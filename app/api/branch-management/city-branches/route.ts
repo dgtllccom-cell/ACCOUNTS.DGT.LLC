@@ -172,6 +172,9 @@ export async function POST(request: Request) {
   let session: Awaited<ReturnType<typeof requireErpSession>> | undefined;
   try {
     session = await requireErpSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const parsed = createCityBranchSchema.safeParse(await request.json());
 
     if (!parsed.success) {
@@ -263,9 +266,10 @@ export async function POST(request: Request) {
     }
 
     let validCreatedBy: string | null = null;
-    if (isUuid(session.userId)) {
+    const actorUserId = session.userId;
+    if (isUuid(actorUserId)) {
       const profileRow = await withLocalPg(async (sql) => {
-        const rows = await sql`select id from public.profiles where id = ${session.userId} and deleted_at is null limit 1`;
+        const rows = await sql`select id from public.profiles where id = ${actorUserId} and deleted_at is null limit 1`;
         return rows[0] ?? null;
       });
       if (profileRow?.id) {

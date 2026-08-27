@@ -31,7 +31,7 @@ export type CreateCapitalEntryInput = {
 };
 
 export async function createCapitalEntry(input: CreateCapitalEntryInput) {
-  if (input.session.role !== "super_admin") {
+  if (!input.session.isSuperAdmin && !input.session.roles?.includes("super_admin")) {
     throw new Error("Unauthorized: Only Super Admin can post capital / investment transactions");
   }
 
@@ -95,13 +95,13 @@ export async function createCapitalEntry(input: CreateCapitalEntryInput) {
           ],
           sourceModule: "super_admin_capital",
           sourceTransactionType: input.accountType,
-          sourceTransactionId: row.id as string,
+          sourceTransactionId: (row?.id as string) || "",
           sourceReferenceNo: globalRef,
           originalLanguage: "en",
         } as any,
       });
 
-      if (rozResult?.entryId) {
+      if (rozResult?.entryId && row?.id) {
         await withLocalPg(async (sql) => {
           await sql`
             update public.super_admin_capital_accounts
@@ -120,7 +120,7 @@ export async function createCapitalEntry(input: CreateCapitalEntryInput) {
     await recalculateCountryInvestmentLedger(input.countryId, input.financialPeriodId || null);
   }
 
-  return { id: row.id, globalReferenceId: row.global_reference_id };
+  return { id: row?.id ?? "", globalReferenceId: row?.global_reference_id ?? globalRef };
 }
 
 export async function recalculateCountryInvestmentLedger(countryId: string, financialPeriodId: string | null) {

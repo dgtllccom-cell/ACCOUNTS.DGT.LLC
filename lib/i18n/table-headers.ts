@@ -1519,9 +1519,7 @@ export const HEADER_TRANSLATIONS: Record<string, Row> = {
   "PORTRAIT": { ur: "پورٹریٹ", ar: "عمودي", fa: "عمودی", ps: "عمودي" },
   "LANDSCAPE": { ur: "لینڈ سکیپ", ar: "أفقي", fa: "افقی", ps: "افقي" },
   "PAGE X OF Y": { ur: "صفحہ X از Y", ar: "الصفحة X من Y", fa: "صفحه X از Y", ps: "پاڼه X له Y" },
-  "PREPARED BY": { ur: "تیار کنندہ", ar: "إعداد", fa: "تنظیم‌کننده", ps: "ترتیب کوونکی" },
   "CHECKED BY": { ur: "جانچ کنندہ", ar: "تدقيق", fa: "بررسی‌کننده", ps: "کتونکی" },
-  "APPROVED BY": { ur: "منظور کنندہ", ar: "اعتماد", fa: "تأییدکننده", ps: "تایید کوونکی" },
 };
 
 /** Normalize an English header for lookup: trim, collapse whitespace, uppercase. */

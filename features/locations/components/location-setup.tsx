@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { supportedLanguages } from "@/lib/i18n/languages";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 type CountryRow = {
   id: string;
@@ -67,7 +69,11 @@ function pillClassName() {
   return "inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs text-slate-700 dark:text-slate-200";
 }
 
-export function LocationSetup({ lang = "en" }: { lang?: SupportedLanguage }) {
+export function LocationSetup({ lang: langProp = "en" }: { lang?: SupportedLanguage }) {
+  const activeLang = useActiveLanguage();
+  const lang = activeLang !== "en" ? activeLang : langProp;
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const [loading, setLoading] = useState(true);
   const [banner, setBanner] = useState<{ tone: "ok" | "err"; text: string } | null>(null);
 
@@ -283,18 +289,18 @@ export function LocationSetup({ lang = "en" }: { lang?: SupportedLanguage }) {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" dir={isRtl ? "rtl" : "ltr"}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">Settings</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">Location Management</h1>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight">{tt("locsetup.title", "Location Management")}</h1>
           <p className="text-sm text-muted-foreground">
-            Centralized Country → State/Province → City → Area master data. Create once, reuse everywhere.
+            {tt("locsetup.subtitle", "Centralized Country → State/Province → City → Area master data. Create once, reuse everywhere.")}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button type="button" variant="outline" onClick={() => setModal("country")}>
-            <Plus className="h-4 w-4" aria-hidden /> Add Country
+            <Plus className="h-4 w-4" aria-hidden /> {tt("locsetup.add_country", "Add Country")}
           </Button>
         </div>
       </div>
@@ -317,14 +323,14 @@ export function LocationSetup({ lang = "en" }: { lang?: SupportedLanguage }) {
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <MapPin className="h-5 w-5 text-primary" aria-hidden />
-                <CardTitle>Directory</CardTitle>
+                <CardTitle>{tt("locsetup.directory", "Directory")}</CardTitle>
               </div>
               <div className="relative w-full max-w-sm">
                 <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" aria-hidden />
                 <Input
                   value={countrySearch}
                   onChange={(e) => setCountrySearch(e.target.value)}
-                  placeholder="Search countries..."
+                  placeholder={tt("locsetup.search_countries", "Search countries...")}
                   className="pl-9"
                 />
               </div>
@@ -332,7 +338,7 @@ export function LocationSetup({ lang = "en" }: { lang?: SupportedLanguage }) {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <p className="text-sm text-muted-foreground">Loading...</p>
+              <p className="text-sm text-muted-foreground">{tt("locsetup.loading", "Loading...")}</p>
             ) : countries.length ? (
               <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
                 {countries.map((c) => (
@@ -354,20 +360,20 @@ export function LocationSetup({ lang = "en" }: { lang?: SupportedLanguage }) {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No countries found.</p>
+              <p className="text-sm text-muted-foreground">{tt("locsetup.no_countries", "No countries found.")}</p>
             )}
 
             <div className="mt-5 grid gap-4 rounded-lg border bg-muted/20 p-4 lg:grid-cols-3">
               <div>
-                <p className="text-xs font-semibold uppercase text-muted-foreground">Selected Country</p>
+                <p className="text-xs font-semibold uppercase text-muted-foreground">{tt("locsetup.country_pill", "Selected Country")}</p>
                 <p className="mt-1 font-semibold">{selectedCountry?.name || "-"}</p>
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase text-muted-foreground">Currency</p>
+                <p className="text-xs font-semibold uppercase text-muted-foreground">{tt("locsetup.currency_label", "Currency")}</p>
                 <p className="mt-1 font-semibold">{selectedCountry?.currency_code || "-"}</p>
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase text-muted-foreground">Default Language</p>
+                <p className="text-xs font-semibold uppercase text-muted-foreground">{tt("locsetup.default_lang_label", "Default Language")}</p>
                 <p className="mt-1 font-semibold">{selectedCountry?.default_language_code || "en"}</p>
               </div>
             </div>
@@ -380,19 +386,19 @@ export function LocationSetup({ lang = "en" }: { lang?: SupportedLanguage }) {
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <Building2 className="h-5 w-5 text-primary" aria-hidden />
-                  <CardTitle>Hierarchy</CardTitle>
+                  <CardTitle>{tt("locsetup.hierarchy", "Hierarchy")}</CardTitle>
                 </div>
                 <span className={pillClassName()}>
-                  <b>Country:</b> <span>{selectedCountry?.name || "-"}</span>
+                  <b>{tt("locsetup.banner_country", "Country")}:</b> <span>{selectedCountry?.name || "-"}</span>
                 </span>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-2">
-                  <Label>State / Province</Label>
+                  <Label>{tt("locsetup.state_label", "State / Province")}</Label>
                   <Button type="button" variant="outline" size="sm" className="h-8" disabled={!countryId} onClick={() => setModal("state")}>
-                    <Plus className="h-4 w-4" aria-hidden /> Add
+                    <Plus className="h-4 w-4" aria-hidden /> {tt("locsetup.add_btn", "Add")}
                   </Button>
                 </div>
                 <select
@@ -401,7 +407,7 @@ export function LocationSetup({ lang = "en" }: { lang?: SupportedLanguage }) {
                   disabled={!countryId}
                   className="flex h-10 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm"
                 >
-                  <option value="">Select state</option>
+                  <option value="">{tt("locsetup.select_state_ph", "Select state")}</option>
                   {states.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name}
@@ -412,7 +418,7 @@ export function LocationSetup({ lang = "en" }: { lang?: SupportedLanguage }) {
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-2">
-                  <Label>City</Label>
+                  <Label>{tt("locsetup.city_label", "City")}</Label>
                   <Button
                     type="button"
                     variant="outline"
@@ -421,7 +427,7 @@ export function LocationSetup({ lang = "en" }: { lang?: SupportedLanguage }) {
                     disabled={!countryId || !stateId}
                     onClick={() => setModal("city")}
                   >
-                    <Plus className="h-4 w-4" aria-hidden /> Add
+                    <Plus className="h-4 w-4" aria-hidden /> {tt("locsetup.add_btn", "Add")}
                   </Button>
                 </div>
                 <select
@@ -430,7 +436,7 @@ export function LocationSetup({ lang = "en" }: { lang?: SupportedLanguage }) {
                   disabled={!countryId || !stateId}
                   className="flex h-10 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm"
                 >
-                  <option value="">Select city</option>
+                  <option value="">{tt("locsetup.select_city_ph", "Select city")}</option>
                   {cities.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name} {c.zip_code ? `(${c.zip_code})` : ""}
@@ -441,7 +447,7 @@ export function LocationSetup({ lang = "en" }: { lang?: SupportedLanguage }) {
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-2">
-                  <Label>Area / Location</Label>
+                  <Label>{tt("locsetup.area_label", "Area / Location")}</Label>
                   <Button
                     type="button"
                     variant="outline"
@@ -450,7 +456,7 @@ export function LocationSetup({ lang = "en" }: { lang?: SupportedLanguage }) {
                     disabled={!countryId || !cityId}
                     onClick={() => setModal("area")}
                   >
-                    <Plus className="h-4 w-4" aria-hidden /> Add
+                    <Plus className="h-4 w-4" aria-hidden /> {tt("locsetup.add_btn", "Add")}
                   </Button>
                 </div>
                 <div className="rounded-lg border bg-muted/20 p-3 text-sm">
@@ -464,13 +470,13 @@ export function LocationSetup({ lang = "en" }: { lang?: SupportedLanguage }) {
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-muted-foreground">No areas for this city.</p>
+                    <p className="text-muted-foreground">{tt("locsetup.no_areas", "No areas for this city.")}</p>
                   )}
                 </div>
               </div>
 
               <div className="rounded-lg border bg-muted/10 p-3 text-xs text-muted-foreground">
-                Selected: {selectedCountry?.name || "-"} → {selectedState?.name || "-"} → {selectedCity?.name || "-"}
+                {tt("locsetup.selected_path", "Selected")}: {selectedCountry?.name || "-"} → {selectedState?.name || "-"} → {selectedCity?.name || "-"}
               </div>
             </CardContent>
           </Card>
@@ -478,26 +484,26 @@ export function LocationSetup({ lang = "en" }: { lang?: SupportedLanguage }) {
       </div>
 
       {modal === "country" ? (
-        <SimpleModal title="Add Country" onClose={() => setModal(null)} className="max-w-xl">
+        <SimpleModal title={tt("locsetup.add_country", "Add Country")} onClose={() => setModal(null)} className="max-w-xl">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2 md:col-span-2">
-              <Label>Country Name</Label>
+              <Label>{tt("locsetup.country_name", "Country Name")}</Label>
               <Input value={newCountryName} onChange={(e) => setNewCountryName(e.target.value)} placeholder="Pakistan" />
             </div>
             <div className="space-y-2">
-              <Label>ISO2</Label>
+              <Label>{tt("locsetup.country_iso2", "ISO2")}</Label>
               <Input value={newCountryIso2} onChange={(e) => setNewCountryIso2(e.target.value)} placeholder="PK" />
             </div>
             <div className="space-y-2">
-              <Label>ISO3</Label>
+              <Label>{tt("locsetup.country_iso3", "ISO3")}</Label>
               <Input value={newCountryIso3} onChange={(e) => setNewCountryIso3(e.target.value)} placeholder="PAK" />
             </div>
             <div className="space-y-2">
-              <Label>Currency Code</Label>
+              <Label>{tt("locsetup.currency_code", "Currency Code")}</Label>
               <Input value={newCountryCurrency} onChange={(e) => setNewCountryCurrency(e.target.value)} placeholder="PKR" />
             </div>
             <div className="space-y-2">
-              <Label>Default Language</Label>
+              <Label>{tt("locsetup.default_lang", "Default Language")}</Label>
               <select
                 value={newCountryLang}
                 onChange={(e) => setNewCountryLang(e.target.value as SupportedLanguage)}
@@ -513,7 +519,7 @@ export function LocationSetup({ lang = "en" }: { lang?: SupportedLanguage }) {
           </div>
           <div className="modal-footer flex items-center justify-end gap-2 pt-2">
             <Button type="button" variant="outline" className="btn-secondary" onClick={() => setModal(null)}>
-              Cancel
+              {tt("common.cancel", "Cancel")}
             </Button>
             <Button
               type="button"
@@ -521,29 +527,29 @@ export function LocationSetup({ lang = "en" }: { lang?: SupportedLanguage }) {
               onClick={addCountry}
               disabled={!newCountryName.trim() || !newCountryCurrency.trim()}
             >
-              Save Country
+              {tt("locsetup.save_country", "Save Country")}
             </Button>
           </div>
         </SimpleModal>
       ) : null}
 
       {modal === "state" ? (
-        <SimpleModal title="Add State / Province" onClose={() => setModal(null)} className="max-w-lg">
+        <SimpleModal title={tt("locsetup.banner_state", "Add State / Province")} onClose={() => setModal(null)} className="max-w-lg">
           <div className="space-y-2">
-            <Label>Country</Label>
+            <Label>{tt("common.country", "Country")}</Label>
             <Input value={selectedCountry?.name || ""} readOnly className="bg-muted/50" />
           </div>
           <div className="space-y-2">
-            <Label>State / Province Name</Label>
+            <Label>{tt("locsetup.state_name", "State / Province Name")}</Label>
             <Input value={newStateName} onChange={(e) => setNewStateName(e.target.value)} placeholder="Balochistan" />
           </div>
           <div className="space-y-2">
-            <Label>State Code (optional)</Label>
+            <Label>{tt("locsetup.state_code", "State Code (optional)")}</Label>
             <Input value={newStateCode} onChange={(e) => setNewStateCode(e.target.value)} placeholder="BAL" />
           </div>
           <div className="modal-footer flex items-center justify-end gap-2 pt-2">
             <Button type="button" variant="outline" className="btn-secondary" onClick={() => setModal(null)}>
-              Cancel
+              {tt("common.cancel", "Cancel")}
             </Button>
             <Button
               type="button"
@@ -551,41 +557,41 @@ export function LocationSetup({ lang = "en" }: { lang?: SupportedLanguage }) {
               onClick={addState}
               disabled={!newStateName.trim()}
             >
-              Save State
+              {tt("locsetup.save_state", "Save State")}
             </Button>
           </div>
         </SimpleModal>
       ) : null}
 
       {modal === "city" ? (
-        <SimpleModal title="Add City" onClose={() => setModal(null)} className="max-w-lg">
+        <SimpleModal title={tt("locsetup.banner_city", "Add City")} onClose={() => setModal(null)} className="max-w-lg">
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-2">
-              <Label>Country</Label>
+              <Label>{tt("common.country", "Country")}</Label>
               <Input value={selectedCountry?.name || ""} readOnly className="bg-muted/50" />
             </div>
             <div className="space-y-2">
-              <Label>State</Label>
+              <Label>{tt("locsetup.state_label", "State")}</Label>
               <Input value={selectedState?.name || ""} readOnly className="bg-muted/50" />
             </div>
           </div>
           <div className="space-y-2">
-            <Label>City Name</Label>
+            <Label>{tt("locsetup.city_name", "City Name")}</Label>
             <Input value={newCityName} onChange={(e) => setNewCityName(e.target.value)} placeholder="Chaman" />
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-2">
-              <Label>City Code (optional)</Label>
+              <Label>{tt("locsetup.city_code", "City Code (optional)")}</Label>
               <Input value={newCityCode} onChange={(e) => setNewCityCode(e.target.value)} placeholder="CHM" />
             </div>
             <div className="space-y-2">
-              <Label>Zip / Postal Code (optional)</Label>
+              <Label>{tt("locsetup.city_zip", "Zip / Postal Code (optional)")}</Label>
               <Input value={newCityZip} onChange={(e) => setNewCityZip(e.target.value)} placeholder="86000" />
             </div>
           </div>
           <div className="modal-footer flex items-center justify-end gap-2 pt-2">
             <Button type="button" variant="outline" className="btn-secondary" onClick={() => setModal(null)}>
-              Cancel
+              {tt("common.cancel", "Cancel")}
             </Button>
             <Button
               type="button"
@@ -593,29 +599,29 @@ export function LocationSetup({ lang = "en" }: { lang?: SupportedLanguage }) {
               onClick={addCity}
               disabled={!newCityName.trim()}
             >
-              Save City
+              {tt("locsetup.save_city", "Save City")}
             </Button>
           </div>
         </SimpleModal>
       ) : null}
 
       {modal === "area" ? (
-        <SimpleModal title="Add Area / Location" onClose={() => setModal(null)} className="max-w-lg">
+        <SimpleModal title={tt("locsetup.banner_area", "Add Area / Location")} onClose={() => setModal(null)} className="max-w-lg">
           <div className="space-y-2">
-            <Label>City</Label>
+            <Label>{tt("locsetup.city_label", "City")}</Label>
             <Input value={selectedCity?.name || ""} readOnly className="bg-muted/50" />
           </div>
           <div className="space-y-2">
-            <Label>Area / Location Name</Label>
+            <Label>{tt("locsetup.area_name", "Area / Location Name")}</Label>
             <Input value={newAreaName} onChange={(e) => setNewAreaName(e.target.value)} placeholder="Main Bazaar" />
           </div>
           <div className="space-y-2">
-            <Label>Area Code (optional)</Label>
+            <Label>{tt("locsetup.area_code", "Area Code (optional)")}</Label>
             <Input value={newAreaCode} onChange={(e) => setNewAreaCode(e.target.value)} placeholder="MBZ" />
           </div>
           <div className="modal-footer flex items-center justify-end gap-2 pt-2">
             <Button type="button" variant="outline" className="btn-secondary" onClick={() => setModal(null)}>
-              Cancel
+              {tt("common.cancel", "Cancel")}
             </Button>
             <Button
               type="button"
@@ -623,7 +629,7 @@ export function LocationSetup({ lang = "en" }: { lang?: SupportedLanguage }) {
               onClick={addArea}
               disabled={!newAreaName.trim()}
             >
-              Save Area
+              {tt("locsetup.save_area", "Save Area")}
             </Button>
           </div>
         </SimpleModal>

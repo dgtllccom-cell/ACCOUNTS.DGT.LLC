@@ -27,6 +27,7 @@ import { EmployeeLedgerPanel } from "@/features/hr-payroll/components/employee-l
 import { openUserA4ReportWindow } from "@/lib/reports/open-user-a4-report-window";
 import { Th } from "@/components/ui/translated-th";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { transliterateProperNoun } from "@/lib/i18n/transliteration";
 import { Party360Modal } from "@/features/customers/components/party-360-modal";
 import { Layers } from "lucide-react";
 import { EmployeeProfileDrawer } from "@/features/hr-payroll/components/employee-profile-drawer";
@@ -1841,10 +1842,9 @@ export function GeneralOfficeDashboardView() {
       {/* Party 360 Modal */}
       {selected360Party && (
         <Party360Modal
-          isOpen={!!selected360Party}
           onClose={() => setSelected360Party(null)}
-          personId={selected360Party.id || ""}
-          personName={selected360Party.name || ""}
+          employeeId={selected360Party.id || ""}
+          name={selected360Party.name || ""}
           lang={lang}
         />
       )}

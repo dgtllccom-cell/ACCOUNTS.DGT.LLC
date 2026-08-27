@@ -4,6 +4,8 @@ import { useState, useRef, useCallback } from "react";
 import { Send, StickyNote, Paperclip, Smile, X, FileText, Image } from "lucide-react";
 import type { SendMessagePayload, ConversationStatus } from "../types";
 import { cn } from "@/lib/utils";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 type Props = {
   onSend: (payload: SendMessagePayload) => Promise<void>;
@@ -15,6 +17,8 @@ type Props = {
 type Mode = "text" | "note";
 
 export function SendMessageForm({ onSend, isSending, conversationStatus, windowExpiresAt }: Props) {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const [mode, setMode] = useState<Mode>("text");
   const [text, setText] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -68,7 +72,7 @@ export function SendMessageForm({ onSend, isSending, conversationStatus, windowE
           )}
         >
           <Send className="h-2.5 w-2.5" />
-          Reply
+          {tt("wa.reply", "Reply")}
         </button>
         <button
           onClick={() => setMode("note")}
@@ -80,14 +84,14 @@ export function SendMessageForm({ onSend, isSending, conversationStatus, windowE
           )}
         >
           <StickyNote className="h-2.5 w-2.5" />
-          Internal Note
+          {tt("wa.note", "Internal Note")}
         </button>
       </div>
 
       {/* Window warning */}
       {windowExpired && mode === "text" && (
         <div className="mb-2 rounded-md bg-amber-50 border border-amber-200 px-2.5 py-1.5 text-[10px] text-amber-700 dark:bg-amber-900/20 dark:border-amber-800/40 dark:text-amber-400">
-          ⚠️ The 24-hour messaging window has expired. You can only send template messages or internal notes.
+          ⚠️ {tt("wa.window_expired", "The 24-hour messaging window has expired. You can only send template messages or internal notes.")}
         </div>
       )}
 
@@ -107,10 +111,10 @@ export function SendMessageForm({ onSend, isSending, conversationStatus, windowE
           onKeyDown={handleKeyDown}
           placeholder={
             mode === "note"
-              ? "Add an internal note (not visible to customer)…"
+              ? tt("wa.note_placeholder", "Add an internal note (not visible to customer)…")
               : isResolved
-              ? "Conversation resolved — type to reopen…"
-              : "Type a message… (Enter to send, Shift+Enter for newline)"
+              ? tt("wa.resolved_placeholder", "Conversation resolved — type to reopen…")
+              : tt("wa.msg_placeholder", "Type a message… (Enter to send, Shift+Enter for newline)")
           }
           rows={1}
           className="flex-1 resize-none bg-transparent px-3 py-2.5 text-sm placeholder:text-muted-foreground/60 focus:outline-none min-h-[40px]"
@@ -141,7 +145,7 @@ export function SendMessageForm({ onSend, isSending, conversationStatus, windowE
       </div>
 
       <p className="mt-1 text-[9px] text-muted-foreground/50 text-end">
-        {mode === "note" ? "Only visible to your team" : "Sent via WhatsApp"}
+        {mode === "note" ? tt("wa.note_visibility", "Only visible to your team") : tt("wa.sent_via_wa", "Sent via WhatsApp")}
       </p>
     </div>
   );

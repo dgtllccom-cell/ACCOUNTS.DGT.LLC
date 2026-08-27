@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
 
     const customerId = await customersService.create(
       {
-        countryId: body.countryId,
+        countryId: body.countryId || session.countryIds?.[0] || "",
         stateProvinceId: body.stateProvinceId ?? null,
         districtId: body.districtId ?? null,
         cityId: body.cityId ?? null,

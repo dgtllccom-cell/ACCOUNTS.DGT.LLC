@@ -154,6 +154,7 @@ export class Party360Service {
       const localizedCompanies = await localizeRecordNames<any>(allCompanies as any[], "companies", "name", lang, { phraseFallback: true });
       const matchedCompanies = (localizedCompanies as any[]).filter((comp: any) => {
         if (resolvedCustomerId && comp.owner_person_id === resolvedCustomerId) return true;
+        if (targetName && comp.owner_name && (nameMatches(comp.owner_name, targetName) || comp.owner_name.toLowerCase().includes(targetName.toLowerCase()) || targetName.toLowerCase().includes(comp.owner_name.toLowerCase()))) return true;
         return false;
       }).map((comp: any) => ({
         id: comp.id,

@@ -11,8 +11,7 @@ export async function GET(request: NextRequest) {
     authorizeApiScope(session, { resource: "account_types", action: "read" });
 
     const db = createSupabaseAdminClient();
-    const { data, error, count } = await db
-      .from("account_types")
+    const { data, error, count } = await (db.from("account_types" as any) as any)
       .select(`id, code, name, ledger_group, description, is_active, created_at`)
       .order("created_at", { ascending: false })
       .limit(500);
@@ -42,8 +41,7 @@ export async function POST(request: NextRequest) {
     }
 
     const db = createSupabaseAdminClient();
-    const { data, error } = await db
-      .from("account_types")
+    const { data, error } = await (db.from("account_types" as any) as any)
       .insert([{ name, code, ledger_group: ledgerGroup || null, description: description || null, is_active: isActive !== false, created_at: new Date().toISOString() }])
       .select();
 

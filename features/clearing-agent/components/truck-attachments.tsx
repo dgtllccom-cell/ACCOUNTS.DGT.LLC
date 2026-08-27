@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Upload, Download, Trash2, Loader2, FileText, Paperclip } from "lucide-react";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 /**
  * Truck Documents & Attachments — reuses the existing Storage-backed document
@@ -9,13 +11,13 @@ import { Upload, Download, Trash2, Loader2, FileText, Paperclip } from "lucide-r
  * Photo, Registration Card, Insurance, Driver Documents, Vehicle Documents,
  * Other. Upload / list / download / delete, 20MB, pdf|image|xlsx|docx.
  */
-const CATEGORIES: { key: string; label: string }[] = [
-  { key: "photo", label: "Photo" },
-  { key: "registration", label: "Registration Card" },
-  { key: "insurance", label: "Insurance Documents" },
-  { key: "driver_docs", label: "Driver Documents" },
-  { key: "vehicle_docs", label: "Vehicle / Goods Documents" },
-  { key: "other", label: "Other Attachments" },
+const CATEGORIES: { key: string; labelKey: string; labelFallback: string }[] = [
+  { key: "photo", labelKey: "ta.cat_photo", labelFallback: "Photo" },
+  { key: "registration", labelKey: "ta.cat_registration", labelFallback: "Registration Card" },
+  { key: "insurance", labelKey: "ta.cat_insurance", labelFallback: "Insurance Documents" },
+  { key: "driver_docs", labelKey: "ta.cat_driver", labelFallback: "Driver Documents" },
+  { key: "vehicle_docs", labelKey: "ta.cat_vehicle", labelFallback: "Vehicle / Goods Documents" },
+  { key: "other", labelKey: "ta.cat_other", labelFallback: "Other Attachments" },
 ];
 
 type Doc = { id: string; name: string; mimeType?: string; sizeBytes?: number };
@@ -27,6 +29,10 @@ type Doc = { id: string; name: string; mimeType?: string; sizeBytes?: number };
  *   Loading forms pass entityKey="truck_loading" | "import_loading" | "transit_loading".
  */
 export function TruckAttachments({ truckId, entityId, entityKey = "truck" }: { truckId?: string | null; entityId?: string | null; entityKey?: string }) {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+
   const recordId = entityId ?? truckId ?? null;
   const [category, setCategory] = useState(CATEGORIES[0].key);
   const [docs, setDocs] = useState<Doc[]>([]);
@@ -71,18 +77,18 @@ export function TruckAttachments({ truckId, entityId, entityKey = "truck" }: { t
   }
 
   if (!recordId) {
-    return <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-950/40">Save the record first to add documents & attachments.</div>;
+    return <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-950/40">{tt("ta.save_first", "Save the record first to add documents & attachments.")}</div>;
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" dir={isRtl ? "rtl" : "ltr"}>
       <div className="flex flex-wrap items-center gap-2">
-        <span className="inline-flex items-center gap-1 text-[11px] font-black uppercase tracking-wide text-slate-400"><Paperclip className="h-3.5 w-3.5" /> Documents</span>
+        <span className="inline-flex items-center gap-1 text-[11px] font-black uppercase tracking-wide text-slate-400"><Paperclip className="h-3.5 w-3.5" /> {tt("ta.documents", "Documents")}</span>
         <select value={category} onChange={(e) => setCategory(e.target.value)} className="h-9 rounded-lg border border-slate-200 px-2 text-sm dark:border-slate-800 dark:bg-slate-950">
-          {CATEGORIES.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
+          {CATEGORIES.map((c) => <option key={c.key} value={c.key}>{tt(c.labelKey, c.labelFallback)}</option>)}
         </select>
         <label className="inline-flex cursor-pointer items-center gap-1 rounded-lg bg-blue-700 px-3 py-2 text-sm font-bold text-white hover:bg-blue-800">
-          {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} Upload
+          {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} {tt("ta.upload", "Upload")}
           <input type="file" className="hidden" accept=".pdf,image/*,.xlsx,.docx" disabled={uploading} onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.currentTarget.value = ""; }} />
         </label>
       </div>
@@ -93,7 +99,7 @@ export function TruckAttachments({ truckId, entityId, entityKey = "truck" }: { t
         {loading ? (
           <div className="px-4 py-6 text-center text-slate-400"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></div>
         ) : docs.length === 0 ? (
-          <div className="px-4 py-6 text-center text-sm text-slate-400">No documents in this category yet.</div>
+          <div className="px-4 py-6 text-center text-sm text-slate-400">{tt("ta.empty", "No documents in this category yet.")}</div>
         ) : (
           <ul className="divide-y divide-slate-100 dark:divide-slate-800">
             {docs.map((d) => (

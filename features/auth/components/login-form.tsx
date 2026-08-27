@@ -20,6 +20,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { t } from "@/lib/i18n/ui";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -27,12 +28,12 @@ import { listCountries, listCities, type LocationCountry, type LocationCity } fr
 
 export type LoginTab = "super_admin" | "country" | "city" | "branch" | "agent";
 
-const TABS: { id: LoginTab; label: string; short: string }[] = [
-  { id: "super_admin", label: "Super Admin", short: "Admin" },
-  { id: "country", label: "Country Admin", short: "Country" },
-  { id: "city", label: "City Branch", short: "City" },
-  { id: "branch", label: "Branch User", short: "Branch" },
-  { id: "agent", label: "Clearing Agent", short: "Agent" },
+const TABS: { id: LoginTab; label: string; shortKey: string }[] = [
+  { id: "super_admin", label: "Super Admin", shortKey: "login.tab_admin" },
+  { id: "country", label: "Country Admin", shortKey: "login.tab_country" },
+  { id: "city", label: "City Branch", shortKey: "login.tab_city" },
+  { id: "branch", label: "Branch User", shortKey: "login.tab_branch" },
+  { id: "agent", label: "Clearing Agent", shortKey: "login.tab_agent" },
 ];
 
 const ACCESS_PROFILES: Record<
@@ -166,6 +167,9 @@ export function LoginForm({
   const [idFocused, setIdFocused] = useState(false);
   const [pwFocused, setPwFocused] = useState(false);
 
+  const lang = (selectedLang || "en") as SupportedLanguage;
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+
   const [masterCountries, setMasterCountries] = useState<LocationCountry[]>([]);
   const [masterCities, setMasterCities] = useState<LocationCity[]>([]);
 
@@ -237,7 +241,7 @@ export function LoginForm({
     setErrorState(null);
 
     if (!identifier.trim() || !password.trim()) {
-      setErrorState("Please enter both User ID / Email and Password.");
+      setErrorState(tt("login.err_required", "Please enter both User ID / Email and Password."));
       return;
     }
 
@@ -292,24 +296,24 @@ export function LoginForm({
         </div>
         <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 text-[10px] font-extrabold">
           <ShieldCheck className="h-3.5 w-3.5" />
-          <span>Secure ERP Access</span>
+          <span>{tt("login.secure_access", "Secure ERP Access")}</span>
         </div>
       </div>
 
       {/* ── Welcome Heading ── */}
       <div className="mb-4 text-center sm:text-left">
         <h2 className="text-xl sm:text-2xl font-black leading-tight tracking-tight text-slate-900 dark:text-white">
-          Welcome to Digital Dock ERP
+          {tt("login.welcome_title", "Welcome to Digital Dock ERP")}
         </h2>
         <p className="mt-1 text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
-          Authorized Multi-Country Enterprise Management System
+          {tt("login.welcome_sub", "Authorized Multi-Country Enterprise Management System")}
         </p>
       </div>
 
       {/* ── 5-Language Switcher Pills ── */}
       <div className="mb-4">
         <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1">
-          <Globe className="h-3 w-3 text-blue-600" /> Select System Language
+          <Globe className="h-3 w-3 text-blue-600" /> {tt("login.select_lang", "Select System Language")}
         </div>
         <div className="flex flex-wrap gap-1.5" style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
           {LANGUAGES.map((l) => (
@@ -377,7 +381,7 @@ export function LoginForm({
                   : "border-transparent bg-transparent text-slate-500 hover:border-slate-200 hover:bg-white hover:text-slate-900 dark:text-slate-400 dark:hover:border-slate-700 dark:hover:bg-slate-900/60 dark:hover:text-white"
               )}
             >
-              {tab.short}
+              {tt(tab.shortKey, tab.label)}
             </button>
           ))}
         </div>
@@ -397,7 +401,7 @@ export function LoginForm({
             </p>
           </div>
           <div className="hidden sm:flex flex-col items-end gap-1 rounded-2xl border border-blue-100 bg-white px-3 py-2 text-right shadow-sm dark:border-blue-900/40 dark:bg-slate-900">
-            <span className="text-[9px] font-black uppercase tracking-[0.22em] text-slate-400">Scope</span>
+            <span className="text-[9px] font-black uppercase tracking-[0.22em] text-slate-400">{tt("login.scope_heading", "Scope")}</span>
             <span className="text-[11px] font-extrabold text-blue-700 dark:text-blue-300">
               {ACCESS_PROFILES[activeTab].scopeLabel}
             </span>
@@ -420,7 +424,7 @@ export function LoginForm({
       <form method="post" action="/api/erp/auth/login" onSubmit={handleSubmit} className="space-y-4">
         {needsCountry && (
           <SelectField
-            label="Country Scope"
+            label={tt("login.country_scope", "Country Scope")}
             name="country"
             icon={Globe}
             value={selectedCountry}
@@ -430,13 +434,13 @@ export function LoginForm({
               setSelectedBranch("");
             }}
             options={countryOptions}
-            placeholder="Select Country"
+            placeholder={tt("login.select_country", "Select Country")}
           />
         )}
 
         {needsCity && (
           <SelectField
-            label="City Branch Scope"
+            label={tt("login.city_scope", "City Branch Scope")}
             name="city"
             icon={MapPin}
             value={selectedCity}
@@ -445,26 +449,26 @@ export function LoginForm({
               setSelectedBranch("");
             }}
             options={availableCities}
-            placeholder={selectedCountry ? "Select City" : "Select a country first"}
+            placeholder={selectedCountry ? tt("login.select_city", "Select City") : tt("login.select_country_first", "Select a country first")}
           />
         )}
 
         {needsBranch && (
           <SelectField
-            label="Branch"
+            label={tt("login.tab_branch", "Branch")}
             name="branch"
             icon={Building2}
             value={selectedBranch}
             onChange={setSelectedBranch}
             options={BRANCHES}
-            placeholder="Select Branch"
+            placeholder={tt("login.select_branch", "Select Branch")}
           />
         )}
 
         {/* Email / User ID */}
         <div className="space-y-1.5">
           <label htmlFor="identifier" className="block text-[10px] font-black uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-            Email Address / User ID
+            {tt("login.email_label", "Email Address / User ID")}
           </label>
           <div className="relative">
             <Mail
@@ -494,13 +498,13 @@ export function LoginForm({
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <label htmlFor="password" className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-              Password
+              {tt("login.password_label", "Password")}
             </label>
             <Link
               href="/auth/forgot-password"
               className="text-[11px] font-bold text-blue-600 hover:text-blue-700 transition-colors hover:underline dark:text-blue-400"
             >
-              Forgot Password?
+              {tt("login.forgot_password", "Forgot Password?")}
             </Link>
           </div>
           <div className="relative">
@@ -545,7 +549,7 @@ export function LoginForm({
             className="h-4 w-4 cursor-pointer rounded border-slate-300 accent-blue-600 dark:accent-blue-400"
           />
           <label htmlFor="remember" className="cursor-pointer select-none text-xs font-semibold text-slate-600 dark:text-slate-400">
-            Remember Me
+            {tt("login.remember_me", "Remember Me")}
           </label>
         </div>
 
@@ -558,12 +562,12 @@ export function LoginForm({
           {loading ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin text-white" />
-              Authenticating Security Credentials...
+              {tt("login.authenticating", "Authenticating Security Credentials...")}
             </>
           ) : (
             <>
               <ShieldCheck className="h-4 w-4 text-white" />
-              SECURE ERP LOGIN <ArrowRight className="h-4 w-4 ml-1" />
+              {tt("login.btn", "SECURE ERP LOGIN")} <ArrowRight className="h-4 w-4 ml-1" />
             </>
           )}
         </Button>
@@ -572,7 +576,7 @@ export function LoginForm({
       {/* Security footer note */}
       <div className="mt-5 flex items-center justify-center gap-2 border-t border-slate-100 pt-4 text-[10.5px] font-bold text-slate-400 dark:border-slate-800">
         <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
-        <span>Private ERP System • 256-Bit SSL Encrypted Access Only</span>
+        <span>{tt("login.footer", "Private ERP System • 256-Bit SSL Encrypted Access Only")}</span>
       </div>
     </div>
   );

@@ -250,6 +250,10 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
   const [saving, setSaving] = useState(false);
   const [compactList, setCompactList] = useState(false);
 
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+
   const refreshWorkspace = useCallback(async () => {
     try {
       setLoading(true);
@@ -659,7 +663,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
     !emailConfig.hasPassword;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" dir={isRtl ? "rtl" : "ltr"}>
       <ReportPageHeader
         title={channelLabels[channel].title}
         subtitle={channelLabels[channel].subtitle}
@@ -667,14 +671,14 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
           <>
             <Button type="button" className="h-9 rounded-lg px-3" onClick={openCompose}>
               <Plus className="mr-2 h-4 w-4" aria-hidden />
-              Compose
+              {tt("email_mgmt.compose", "Compose")}
             </Button>
             <ReportActionsMenu disabled={loading} onPrint={printWorkspace} onPdf={exportPdf} onExcel={exportCsv} ariaLabel="Email workspace actions" />
             <ReportFilterMenu ariaLabel="Email workspace filters" disabled={loading}>
-              <div className="border-b bg-muted/10 px-3 py-2 text-sm font-semibold">Email Filters</div>
+              <div className="border-b bg-muted/10 px-3 py-2 text-sm font-semibold">{tt("email_mgmt.email_filters", "Email Filters")}</div>
               <div className="space-y-3 p-3">
                 <div className="space-y-1">
-                  <Label className="text-[11px] text-muted-foreground">Search</Label>
+                  <Label className="text-[11px] text-muted-foreground">{tt("common.search", "Search")}</Label>
                   <div className="relative">
                     <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
                     <Input className="h-9 pl-9 text-xs" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search subject, sender, branch, label..." />
@@ -682,48 +686,48 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                 </div>
 
                 <SearchSelect
-                  label="Company"
+                  label={tt("email_mgmt.company", "Company")}
                   value={companyId}
-                  options={[{ value: "all", label: "All Companies", keywords: "all companies" }, ...(data?.filters.companies ?? [])]}
-                  placeholder="All companies"
+                  options={[{ value: "all", label: tt("email_mgmt.all_companies", "All Companies"), keywords: "all companies" }, ...(data?.filters.companies ?? [])]}
+                  placeholder={tt("email_mgmt.all_companies", "All Companies")}
                   onValueChange={setCompanyId}
                   disabled={loading}
                 />
 
                 <SearchSelect
-                  label="Branch"
+                  label={tt("common.branch", "Branch")}
                   value={branchId}
-                  options={[{ value: "all", label: "All Branches", keywords: "all branches" }, ...(data?.filters.branches ?? [])]}
-                  placeholder="All branches"
+                  options={[{ value: "all", label: tt("email_mgmt.all_branches", "All Branches"), keywords: "all branches" }, ...(data?.filters.branches ?? [])]}
+                  placeholder={tt("email_mgmt.all_branches", "All Branches")}
                   onValueChange={setBranchId}
                   disabled={loading}
                 />
 
                 <SearchSelect
-                  label="Provider"
+                  label={tt("email_acct.provider", "Provider")}
                   value={provider}
-                  options={[{ value: "all", label: "All Providers", keywords: "all providers" }, ...(data?.filters.providers ?? providerOptions)]}
-                  placeholder="All providers"
+                  options={[{ value: "all", label: tt("email_mgmt.all_providers", "All Providers"), keywords: "all providers" }, ...(data?.filters.providers ?? providerOptions)]}
+                  placeholder={tt("email_mgmt.all_providers", "All Providers")}
                   onValueChange={setProvider}
                   disabled={loading}
                 />
 
                 <SearchSelect
-                  label="Label"
+                  label={tt("email_mgmt.label", "Label")}
                   value={label}
-                  options={[{ value: "all", label: "All Labels", keywords: "all labels" }, ...(data?.filters.labels ?? [])]}
-                  placeholder="All labels"
+                  options={[{ value: "all", label: tt("email_mgmt.all_labels", "All Labels"), keywords: "all labels" }, ...(data?.filters.labels ?? [])]}
+                  placeholder={tt("email_mgmt.all_labels", "All Labels")}
                   onValueChange={setLabel}
                   disabled={loading}
                 />
 
                 <div className="grid gap-2 sm:grid-cols-2">
                   <div className="space-y-1">
-                    <Label className="text-[11px] text-muted-foreground">From Date</Label>
+                    <Label className="text-[11px] text-muted-foreground">{tt("email_mgmt.from_date", "From Date")}</Label>
                     <Input type="date" className="h-9 text-xs" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[11px] text-muted-foreground">To Date</Label>
+                    <Label className="text-[11px] text-muted-foreground">{tt("email_mgmt.to_date", "To Date")}</Label>
                     <Input type="date" className="h-9 text-xs" value={toDate} onChange={(e) => setToDate(e.target.value)} />
                   </div>
                 </div>
@@ -740,7 +744,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                     setSelectedFolder("inbox");
                     setSelectedId(null);
                   }}>
-                    Reset
+                    {tt("common.reset", "Reset")}
                   </Button>
                 </div>
               </div>
@@ -750,12 +754,12 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
       />
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
-        <MetricCard icon={Inbox} label="Inbox" value={summary.inbox} />
-        <MetricCard icon={Send} label="Sent" value={summary.sent} />
-        <MetricCard icon={Pencil} label="Drafts" value={summary.drafts} />
-        <MetricCard icon={MessageSquareText} label="ERP Notifications" value={summary.notifications} />
-        <MetricCard icon={Paperclip} label="Attachments" value={summary.attachments} />
-        <MetricCard icon={Globe2} label="Providers" value={summary.providers} />
+        <MetricCard icon={Inbox} label={tt("email_mgmt.inbox", "Inbox")} value={summary.inbox} />
+        <MetricCard icon={Send} label={tt("email_mgmt.sent", "Sent")} value={summary.sent} />
+        <MetricCard icon={Pencil} label={tt("email_mgmt.drafts", "Drafts")} value={summary.drafts} />
+        <MetricCard icon={MessageSquareText} label={tt("email_mgmt.erp_notifications", "ERP Notifications")} value={summary.notifications} />
+        <MetricCard icon={Paperclip} label={tt("email_mgmt.attachments", "Attachments")} value={summary.attachments} />
+        <MetricCard icon={Globe2} label={tt("email_mgmt.providers", "Providers")} value={summary.providers} />
       </section>
 
       <section className="grid gap-4 lg:grid-cols-4">
@@ -763,14 +767,14 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
           <CardContent className="p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-700 dark:text-blue-300">SMTP / Email</p>
-                <h3 className="mt-1 text-sm font-black text-slate-950 dark:text-white">Outbound Mail Control</h3>
-                <p className="mt-2 text-xs leading-5 text-slate-600 dark:text-slate-350">Messages are saved to ERP audit and email tables; SMTP provider can be connected per country/branch.</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-700 dark:text-blue-300">{tt("email_mgmt.smtp_email", "SMTP / Email")}</p>
+                <h3 className="mt-1 text-sm font-black text-slate-950 dark:text-white">{tt("email_mgmt.outbound_mail_control", "Outbound Mail Control")}</h3>
+                <p className="mt-2 text-xs leading-5 text-slate-600 dark:text-slate-350">{tt("email_mgmt.outbound_mail_desc", "Messages are saved to ERP audit and email tables; SMTP provider can be connected per country/branch.")}</p>
               </div>
               <Mail className="h-5 w-5 text-blue-600" aria-hidden />
             </div>
             <button type="button" onClick={openCompose} className="mt-4 w-full rounded-lg border border-blue-200 bg-white px-3 py-2 text-xs font-black text-blue-700 hover:bg-blue-50 dark:border-blue-900 dark:bg-slate-950 dark:text-blue-300">
-              Compose Email
+              {tt("email_mgmt.compose_email", "Compose Email")}
             </button>
           </CardContent>
         </Card>
@@ -779,13 +783,13 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">WhatsApp</p>
-                <h3 className="mt-1 text-sm font-black text-slate-950 dark:text-white">Message Templates</h3>
-                <p className="mt-2 text-xs leading-5 text-slate-600 dark:text-slate-350">WhatsApp communication uses the same ERP history and branch visibility rules.</p>
+                <h3 className="mt-1 text-sm font-black text-slate-950 dark:text-white">{tt("email_mgmt.message_templates", "Message Templates")}</h3>
+                <p className="mt-2 text-xs leading-5 text-slate-600 dark:text-slate-350">{tt("email_mgmt.whatsapp_desc", "WhatsApp communication uses the same ERP history and branch visibility rules.")}</p>
               </div>
               <MessageSquareText className="h-5 w-5 text-emerald-600" aria-hidden />
             </div>
             <button type="button" onClick={() => { setProvider("WhatsApp"); setComposeProvider("WhatsApp"); setComposeSubject("WhatsApp Customer Message"); setComposeBody("Dear Customer,\n\n"); setComposeOpen(true); }} className="mt-4 w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-xs font-black text-emerald-700 hover:bg-emerald-50 dark:border-emerald-900 dark:bg-slate-950 dark:text-emerald-300">
-              New WhatsApp Message
+              {tt("email_mgmt.new_whatsapp_msg", "New WhatsApp Message")}
             </button>
           </CardContent>
         </Card>
@@ -793,14 +797,14 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
           <CardContent className="p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-700 dark:text-orange-300">Templates</p>
-                <h3 className="mt-1 text-sm font-black text-slate-950 dark:text-white">Professional Replies</h3>
-                <p className="mt-2 text-xs leading-5 text-slate-600 dark:text-slate-350">Purchase, payment, stock alert, approval, and customer follow-up templates are ready for compose.</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-700 dark:text-orange-300">{tt("email_mgmt.templates", "Templates")}</p>
+                <h3 className="mt-1 text-sm font-black text-slate-950 dark:text-white">{tt("email_mgmt.professional_replies", "Professional Replies")}</h3>
+                <p className="mt-2 text-xs leading-5 text-slate-600 dark:text-slate-350">{tt("email_mgmt.templates_desc", "Purchase, payment, stock alert, approval, and customer follow-up templates are ready for compose.")}</p>
               </div>
               <FilePlus2 className="h-5 w-5 text-orange-600" aria-hidden />
             </div>
             <button type="button" onClick={() => { setComposeSubject("ERP Notification"); setComposeBody("Dear Customer\\n\\nYour ERP record has been updated.\\n\\nRegards,"); setComposeLabels("ERP, Template"); setComposeOpen(true); }} className="mt-4 w-full rounded-lg border border-orange-200 bg-white px-3 py-2 text-xs font-black text-orange-700 hover:bg-orange-50 dark:border-orange-900 dark:bg-slate-950 dark:text-orange-300">
-              Use Template
+              {tt("email_mgmt.use_template", "Use Template")}
             </button>
           </CardContent>
         </Card>
@@ -808,14 +812,14 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
           <CardContent className="p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-purple-700 dark:text-purple-300">Audit Trail</p>
-                <h3 className="mt-1 text-sm font-black text-slate-950 dark:text-white">Communication History</h3>
-                <p className="mt-2 text-xs leading-5 text-slate-600 dark:text-slate-350">Every sent/draft message stays linked with country, branch, user, module, and document history.</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-purple-700 dark:text-purple-300">{tt("email_mgmt.audit_trail", "Audit Trail")}</p>
+                <h3 className="mt-1 text-sm font-black text-slate-950 dark:text-white">{tt("email_mgmt.comm_history", "Communication History")}</h3>
+                <p className="mt-2 text-xs leading-5 text-slate-600 dark:text-slate-350">{tt("email_mgmt.audit_desc", "Every sent/draft message stays linked with country, branch, user, module, and document history.")}</p>
               </div>
               <ShieldAlert className="h-5 w-5 text-purple-600" aria-hidden />
             </div>
             <div className="mt-4 rounded-lg border border-purple-200 bg-white px-3 py-2 text-xs font-black text-purple-700 dark:border-purple-900 dark:bg-slate-950 dark:text-purple-300">
-              {summary.totalMessages} logged records
+              {summary.totalMessages} {tt("email_mgmt.logged_records", "logged records")}
             </div>
           </CardContent>
         </Card>
@@ -831,8 +835,8 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
         <Card className="border-slate-200/80 shadow-sm">
           <CardContent className="space-y-4 p-4">
             <div>
-              <div className="text-sm font-semibold text-foreground">Folders</div>
-              <p className="text-xs text-muted-foreground">Global communication and ERP notifications.</p>
+              <div className="text-sm font-semibold text-foreground">{tt("email_mgmt.folders", "Folders")}</div>
+              <p className="text-xs text-muted-foreground">{tt("email_mgmt.folders_desc", "Global communication and ERP notifications.")}</p>
             </div>
             <div className="space-y-1">
               {data?.folders.map((folder) => {
@@ -867,15 +871,15 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
               >
                 <span className="flex items-center gap-2">
                   <Globe2 className="h-4 w-4" aria-hidden />
-                  Branch Settings
+                  {tt("email_mgmt.branch_settings", "Branch Settings")}
                 </span>
-                <span className="rounded bg-muted px-2 py-0.5 text-[10px] font-bold text-foreground uppercase tracking-wider">Dashboard</span>
+                <span className="rounded bg-muted px-2 py-0.5 text-[10px] font-bold text-foreground uppercase tracking-wider">{tt("email_mgmt.dashboard_label", "Dashboard")}</span>
               </button>
             </div>
 
             <div className="border-t pt-3">
               <div className="mb-2 flex items-center justify-between">
-                <div className="text-sm font-semibold text-foreground">Labels</div>
+                <div className="text-sm font-semibold text-foreground">{tt("email_mgmt.labels", "Labels")}</div>
                 <Button type="button" variant="ghost" size="icon" className="h-7 w-7">
                   <Plus className="h-3.5 w-3.5" aria-hidden />
                 </Button>
@@ -901,8 +905,8 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
           <Card className="xl:col-span-2 border-slate-200/80 shadow-sm">
             <CardContent className="p-6 space-y-4">
               <div>
-                <h3 className="text-base font-bold text-foreground">Branch Email Status Dashboard</h3>
-                <p className="text-xs text-muted-foreground mt-1">Monitor SMTP connectivity and outbound status across all active offices.</p>
+                <h3 className="text-base font-bold text-foreground">{tt("email_mgmt.branch_email_dashboard", "Branch Email Status Dashboard")}</h3>
+                <p className="text-xs text-muted-foreground mt-1">{tt("email_mgmt.branch_email_dashboard_desc", "Monitor SMTP connectivity and outbound status across all active offices.")}</p>
               </div>
               
               <div className="rounded-lg border bg-background overflow-hidden shadow-sm">
@@ -968,7 +972,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                                 }
                               }}
                             >
-                              Test SMTP
+                              {tt("email_mgmt.test_smtp", "Test SMTP")}
                             </Button>
                           </td>
                         </tr>
@@ -990,16 +994,16 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                       <Input
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
-                        placeholder="Search emails, notifications, companies, branches..."
+                        placeholder={tt("email_mgmt.search_placeholder", "Search emails, notifications, companies, branches...")}
                         className="h-10 rounded-lg pl-9"
                       />
                     </div>
                     <Button type="button" variant="outline" size="sm" onClick={() => setCompactList((value) => !value)}>
-                      {compactList ? "Comfort" : "Compact"}
+                      {compactList ? tt("email_mgmt.comfort", "Comfort") : tt("email_mgmt.compact", "Compact")}
                     </Button>
                     <Button type="button" variant="outline" size="sm" onClick={openCompose}>
                       <FilePlus2 className="mr-2 h-4 w-4" aria-hidden />
-                      New Message
+                      {tt("email_mgmt.new_message", "New Message")}
                     </Button>
                   </div>
                 </div>
@@ -1028,7 +1032,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
 
                 <div className="divide-y overflow-hidden max-h-[760px]">
                   {loading ? (
-                    <div className="p-8 text-center text-sm text-muted-foreground">Loading email workspace...</div>
+                    <div className="p-8 text-center text-sm text-muted-foreground">{tt("email_mgmt.loading", "Loading email workspace...")}</div>
                   ) : filteredRows.length ? (
                     filteredRows.map((row) => {
                       const active = selected?.id === row.id;
@@ -1070,7 +1074,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                       );
                     })
                   ) : (
-                    <div className="p-8 text-center text-sm text-muted-foreground">No email records found for the selected filters.</div>
+                    <div className="p-8 text-center text-sm text-muted-foreground">{tt("email_mgmt.empty_filter", "No email records found for the selected filters.")}</div>
                   )}
                 </div>
               </CardContent>
@@ -1084,7 +1088,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <h2 className="truncate text-lg font-semibold text-foreground">{selected.subject}</h2>
-                          {selected.isUnread ? <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">Unread</span> : null}
+                          {selected.isUnread ? <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">{tt("email_mgmt.unread", "Unread")}</span> : null}
                         </div>
                         <p className="text-sm text-muted-foreground">{selected.senderName} - {selected.companyName} - {selected.branchName}</p>
                       </div>
@@ -1112,11 +1116,11 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                         <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-950/40 dark:bg-red-950/20">
                           <div className="flex items-start justify-between gap-3">
                             <div>
-                              <div className="text-sm font-semibold text-red-800 dark:text-red-300">Email Delivery Failed</div>
+                              <div className="text-sm font-semibold text-red-800 dark:text-red-300">{tt("email_mgmt.delivery_failed", "Email Delivery Failed")}</div>
                               <p className="text-xs text-red-600 dark:text-red-400 mt-1">Error: {selected.preview || "SMTP Authentication or Connection Failure"}</p>
                             </div>
                             <Button type="button" variant="destructive" size="sm" onClick={() => handleRetry(selected.id)} disabled={retrying}>
-                              {retrying ? "Retrying..." : "Retry Send"}
+                              {retrying ? tt("email_mgmt.retrying", "Retrying...") : tt("email_mgmt.retry_send", "Retry Send")}
                             </Button>
                           </div>
                         </div>
@@ -1124,7 +1128,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
 
                       <div className="rounded-lg border bg-background p-4">
                         <div className="space-y-2">
-                          <div className="text-sm font-semibold text-foreground">Message</div>
+                          <div className="text-sm font-semibold text-foreground">{tt("email_mgmt.message", "Message")}</div>
                           <p className="whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{selected.body}</p>
                         </div>
                       </div>
@@ -1132,10 +1136,10 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                       {selected.attachmentCount ? (
                         <div className="rounded-lg border bg-background p-4">
                           <div className="mb-3 flex items-center justify-between">
-                            <div className="text-sm font-semibold text-foreground">Attachments ({selected.attachmentCount})</div>
+                            <div className="text-sm font-semibold text-foreground">{tt("email_mgmt.attachments", "Attachments")} ({selected.attachmentCount})</div>
                             <Button type="button" variant="outline" size="sm" onClick={downloadAttachmentSummary}>
                               <DownloadActionIcon className="mr-2 h-4 w-4" aria-hidden />
-                              Download
+                              {tt("email_mgmt.download_attachment", "Download")}
                             </Button>
                           </div>
                           <div className="grid gap-2 sm:grid-cols-2">
@@ -1143,7 +1147,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                               <div key={`${selected.id}-att-${index}`} className="flex items-center gap-3 rounded-lg border px-3 py-2">
                                 <Paperclip className="h-4 w-4 text-primary" aria-hidden />
                                 <div className="min-w-0">
-                                  <div className="truncate text-sm font-medium text-foreground">Attachment {index + 1}</div>
+                                  <div className="truncate text-sm font-medium text-foreground">{tt("email_mgmt.attachment_n", "Attachment")} {index + 1}</div>
                                   <div className="text-xs text-muted-foreground">{selected.provider}</div>
                                 </div>
                               </div>
@@ -1154,36 +1158,36 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
 
                       <div className="rounded-lg border bg-background p-4">
                         <div className="mb-3 flex items-center justify-between">
-                          <div className="text-sm font-semibold text-foreground">Linked ERP Information</div>
+                          <div className="text-sm font-semibold text-foreground">{tt("email_mgmt.linked_erp_info", "Linked ERP Information")}</div>
                           <Button type="button" variant="outline" size="sm" onClick={openInErp} disabled={!selected.linkedRoute}>
                             <ExternalLink className="mr-2 h-4 w-4" aria-hidden />
-                            Open in ERP
+                            {tt("email_mgmt.open_in_erp", "Open in ERP")}
                           </Button>
                         </div>
                         <div className="grid gap-3 sm:grid-cols-2">
-                          <InfoBlock label="Module" value={selected.linkedModule ?? "ERP"} />
-                          <InfoBlock label="Document No." value={selected.linkedDocumentNo ?? "-"} />
-                          <InfoBlock label="Provider" value={selected.provider} />
-                          <InfoBlock label="Status" value={selected.status.toUpperCase()} />
+                          <InfoBlock label={tt("email_mgmt.module", "Module")} value={selected.linkedModule ?? "ERP"} />
+                          <InfoBlock label={tt("email_mgmt.document_no", "Document No.")} value={selected.linkedDocumentNo ?? "-"} />
+                          <InfoBlock label={tt("email_acct.provider", "Provider")} value={selected.provider} />
+                          <InfoBlock label={tt("common.status", "Status")} value={selected.status.toUpperCase()} />
                         </div>
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2">
                         <Button type="button" variant="outline" onClick={openCompose}>
                           <Reply className="mr-2 h-4 w-4" aria-hidden />
-                          Reply
+                          {tt("email_mgmt.reply", "Reply")}
                         </Button>
                         <Button type="button" variant="outline" onClick={openReplyAll}>
                           <ReplyAll className="mr-2 h-4 w-4" aria-hidden />
-                          Reply All
+                          {tt("email_mgmt.reply_all", "Reply All")}
                         </Button>
                         <Button type="button" variant="outline" onClick={openForward}>
                           <ArrowLeftRight className="mr-2 h-4 w-4" aria-hidden />
-                          Forward
+                          {tt("email_mgmt.forward", "Forward")}
                         </Button>
                         <Button type="button" variant="outline" onClick={openInErp} disabled={!selected.linkedRoute}>
                           <ExternalLink className="mr-2 h-4 w-4" aria-hidden />
-                          Open in ERP
+                          {tt("email_mgmt.open_in_erp", "Open in ERP")}
                         </Button>
                       </div>
                     </div>
@@ -1192,8 +1196,8 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                   <div className="grid min-h-[560px] place-items-center text-center">
                     <div className="max-w-sm space-y-3">
                       <MailOpen className="mx-auto h-12 w-12 text-muted-foreground" aria-hidden />
-                      <div className="text-lg font-semibold text-foreground">Select an email thread</div>
-                      <p className="text-sm text-muted-foreground">Open an ERP communication, notification, or draft to inspect the full linked document history.</p>
+                      <div className="text-lg font-semibold text-foreground">{tt("email_mgmt.select_thread", "Select an email thread")}</div>
+                      <p className="text-sm text-muted-foreground">{tt("email_mgmt.select_thread_desc", "Open an ERP communication, notification, or draft to inspect the full linked document history.")}</p>
                     </div>
                   </div>
                 )}
@@ -1204,7 +1208,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
       </div>
 
       {composeOpen ? (
-        <SimpleModal title={composeFolder === "draft" ? "Save Draft" : "Compose Message"} onClose={() => setComposeOpen(false)} className="max-w-5xl">
+        <SimpleModal title={composeFolder === "draft" ? tt("email_mgmt.save_draft", "Save Draft") : tt("email_mgmt.compose_message", "Compose Message")} onClose={() => setComposeOpen(false)} className="max-w-5xl">
           <div className="flex border-b mb-4">
             <button
               type="button"
@@ -1214,7 +1218,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
               )}
               onClick={() => setPreviewMode(false)}
             >
-              Compose / Edit
+              {tt("email_mgmt.compose_edit", "Compose / Edit")}
             </button>
             <button
               type="button"
@@ -1224,7 +1228,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
               )}
               onClick={() => setPreviewMode(true)}
             >
-              Email Preview
+              {tt("email_mgmt.email_preview", "Email Preview")}
             </button>
           </div>
 
@@ -1240,7 +1244,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                   
                   <div className="grid gap-3 sm:grid-cols-2 bg-slate-50/50 p-3 rounded-lg border border-slate-200/80">
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-semibold">Country</Label>
+                      <Label className="text-xs font-semibold">{tt("common.country", "Country")}</Label>
                       <select
                         value={composeCountryId}
                         onChange={(e) => {
@@ -1251,7 +1255,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                         }}
                         className="h-10 w-full rounded-lg border bg-background px-3 text-sm shadow-sm outline-none focus:border-primary"
                       >
-                        <option value="">-- Select Country --</option>
+                        <option value="">-- {tt("email_mgmt.select_country", "Select Country")} --</option>
                         {data?.countries?.map((c: any) => (
                           <option key={c.id} value={c.id}>{c.name}</option>
                         ))}
@@ -1259,7 +1263,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-semibold">Branch (Main / City)</Label>
+                      <Label className="text-xs font-semibold">{tt("email_mgmt.branch_main_city", "Branch (Main / City)")}</Label>
                       <select
                         value={composeBranchId}
                         onChange={(e) => {
@@ -1270,7 +1274,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                         className="h-10 w-full rounded-lg border bg-background px-3 text-sm shadow-sm outline-none focus:border-primary"
                         disabled={!composeCountryId}
                       >
-                        <option value="">-- Select Branch --</option>
+                        <option value="">-- {tt("email_mgmt.select_branch", "Select Branch")} --</option>
                         {data?.cityBranches
                           ?.filter((b: any) => b.country_id === composeCountryId)
                           ?.map((b: any) => (
@@ -1281,15 +1285,15 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                   </div>
                   
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <Field label="Subject" value={composeSubject} onChange={setComposeSubject} placeholder="Email subject" />
+                    <Field label={tt("email_mgmt.subject", "Subject")} value={composeSubject} onChange={setComposeSubject} placeholder="Email subject" />
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-semibold">Apply Template</Label>
+                      <Label className="text-xs font-semibold">{tt("email_mgmt.apply_template", "Apply Template")}</Label>
                       <select
                         value={selectedTemplate}
                         onChange={(e) => handleTemplateChange(e.target.value)}
                         className="h-10 w-full rounded-lg border bg-background px-3 text-sm shadow-sm outline-none focus:border-primary"
                       >
-                        <option value="">-- Apply Template --</option>
+                        <option value="">-- {tt("email_mgmt.apply_template", "Apply Template")} --</option>
                         <option value="quotation">Quotation Request</option>
                         <option value="invoice">Sales Invoice</option>
                         <option value="purchase_order">Purchase Order Request</option>
@@ -1300,17 +1304,17 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold">Body</Label>
+                    <Label className="text-xs font-semibold">{tt("email_mgmt.body", "Body")}</Label>
                     <textarea
                       value={composeBody}
                       onChange={(e) => setComposeBody(e.target.value)}
                       className="min-h-[260px] w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      placeholder="Write the email body..."
+                      placeholder={tt("email_mgmt.body_placeholder", "Write the email body...")}
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold">Attachments</Label>
+                    <Label className="text-xs font-semibold">{tt("email_mgmt.attachments", "Attachments")}</Label>
                     <div className="flex items-center gap-3">
                       <input
                         type="file"
@@ -1324,10 +1328,10 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                         className="inline-flex h-9 cursor-pointer items-center justify-center rounded-lg border border-input bg-background px-3.5 text-xs font-semibold shadow-sm transition-colors hover:bg-muted hover:text-accent-foreground"
                       >
                         <Paperclip className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
-                        Attach Files
+                        {tt("email_mgmt.attach_files", "Attach Files")}
                       </label>
                       <span className="text-xs text-muted-foreground">
-                        {composeAttachments.length} file(s) attached
+                        {composeAttachments.length} {tt("email_mgmt.files_attached", "file(s) attached")}
                       </span>
                     </div>
 
@@ -1353,30 +1357,30 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                 <div className="rounded-lg border bg-muted/10 p-5 space-y-4">
                   <div className="border-b pb-3 space-y-2 text-xs">
                     <div>
-                      <span className="font-semibold text-muted-foreground">From:</span>{" "}
+                      <span className="font-semibold text-muted-foreground">{tt("email_mgmt.from", "From")}:</span>{" "}
                       <span className="font-medium text-foreground">
-                        {configLoading ? "Resolving official server configuration..." : emailConfig?.fromName ? `${emailConfig.fromName} <${emailConfig.fromEmail}>` : "Default Official Mail"}
+                        {configLoading ? tt("email_mgmt.resolving_config", "Resolving official server configuration...") : emailConfig?.fromName ? `${emailConfig.fromName} <${emailConfig.fromEmail}>` : tt("email_mgmt.default_official_mail", "Default Official Mail")}
                       </span>
                     </div>
                     <div>
-                      <span className="font-semibold text-muted-foreground">To:</span>{" "}
+                      <span className="font-semibold text-muted-foreground">{tt("email_mgmt.to", "To")}:</span>{" "}
                       <span className="font-medium text-foreground">{composeTo || "-"}</span>
                     </div>
                     {composeCc && (
                       <div>
-                        <span className="font-semibold text-muted-foreground">CC:</span>{" "}
+                        <span className="font-semibold text-muted-foreground">{tt("email_mgmt.cc", "CC")}:</span>{" "}
                         <span className="font-medium text-foreground">{composeCc}</span>
                       </div>
                     )}
                     {composeBcc && (
                       <div>
-                        <span className="font-semibold text-muted-foreground">BCC:</span>{" "}
+                        <span className="font-semibold text-muted-foreground">{tt("email_mgmt.bcc", "BCC")}:</span>{" "}
                         <span className="font-medium text-foreground">{composeBcc}</span>
                       </div>
                     )}
                     <div>
-                      <span className="font-semibold text-muted-foreground">Subject:</span>{" "}
-                      <span className="font-medium text-foreground">{composeSubject || "(No Subject)"}</span>
+                      <span className="font-semibold text-muted-foreground">{tt("email_mgmt.subject", "Subject")}:</span>{" "}
+                      <span className="font-medium text-foreground">{composeSubject || tt("email_mgmt.no_subject", "(No Subject)")}</span>
                     </div>
                   </div>
 
@@ -1388,7 +1392,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                     )}
                     
                     <div className="flex-1 whitespace-pre-wrap text-sm text-slate-800 dark:text-slate-200 leading-relaxed">
-                      {composeBody || "Type body text in Edit mode."}
+                      {composeBody || tt("email_mgmt.type_body_hint", "Type body text in Edit mode.")}
                     </div>
 
                     {emailConfig?.signatureText && (
@@ -1400,7 +1404,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
 
                   {composeAttachments.length > 0 && (
                     <div className="space-y-1.5">
-                      <div className="text-xs font-semibold text-muted-foreground">Attachments:</div>
+                      <div className="text-xs font-semibold text-muted-foreground">{tt("email_mgmt.attachments", "Attachments")}:</div>
                       <div className="flex flex-wrap gap-2">
                         {composeAttachments.map((att, idx) => (
                           <div key={idx} className="flex items-center gap-2 rounded bg-muted/60 border px-2 py-0.5 text-xs text-muted-foreground">
@@ -1416,29 +1420,29 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
             </div>
 
             <div className="space-y-4 rounded-lg border bg-muted/20 p-4">
-              <div className="text-sm font-semibold text-foreground">Official Email Router</div>
-              
+              <div className="text-sm font-semibold text-foreground">{tt("email_mgmt.official_email_router", "Official Email Router")}</div>
+
               {configLoading ? (
                 <div className="rounded-lg bg-background border p-3.5 text-xs text-muted-foreground animate-pulse">
-                  Checking Branch Email configuration...
+                  {tt("email_mgmt.checking_config", "Checking Branch Email configuration...")}
                 </div>
               ) : emailConfig ? (
                 <div className="rounded-lg border border-green-200 bg-green-50 p-3.5 space-y-2 text-xs shadow-sm dark:border-green-900/60 dark:bg-green-950/20">
                   <div className="flex items-center gap-2 font-bold text-green-700 dark:text-green-400">
                     <span className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse" />
-                    Status: ✅ Email Ready
+                    Status: ✅ {tt("email_mgmt.status_ready", "Email Ready")}
                   </div>
                   <div className="space-y-1 text-[11px] text-muted-foreground pt-1.5 border-t">
-                    <div><span className="font-semibold text-foreground">Country:</span> {emailConfig.countryName}</div>
-                    <div><span className="font-semibold text-foreground">Branch:</span> {emailConfig.branchName}</div>
-                    <div><span className="font-semibold text-foreground">Official Email:</span> {emailConfig.fromEmail || "-"}</div>
-                    <div><span className="font-semibold text-foreground">Provider:</span> {emailConfig.providerName || "-"}</div>
+                    <div><span className="font-semibold text-foreground">{tt("common.country", "Country")}:</span> {emailConfig.countryName}</div>
+                    <div><span className="font-semibold text-foreground">{tt("common.branch", "Branch")}:</span> {emailConfig.branchName}</div>
+                    <div><span className="font-semibold text-foreground">{tt("email_acct.official_email", "Official Email")}:</span> {emailConfig.fromEmail || "-"}</div>
+                    <div><span className="font-semibold text-foreground">{tt("email_acct.provider", "Provider")}:</span> {emailConfig.providerName || "-"}</div>
                     <div>
-                      <span className="font-semibold text-foreground">SMTP Status:</span>{" "}
+                      <span className="font-semibold text-foreground">{tt("email_acct.smtp_status", "SMTP Status")}:</span>{" "}
                       {emailConfig.hasPassword ? (
-                        <span className="text-green-600 font-bold">Connected 🟢</span>
+                        <span className="text-green-600 font-bold">{tt("email_mgmt.connected", "Connected")} 🟢</span>
                       ) : (
-                        <span className="text-amber-500 font-bold">Incomplete 🟡</span>
+                        <span className="text-amber-500 font-bold">{tt("email_mgmt.incomplete", "Incomplete")} 🟡</span>
                       )}
                     </div>
                   </div>
@@ -1447,19 +1451,19 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                 <div className="rounded-lg border border-red-200 bg-red-50 p-3.5 space-y-1 text-xs shadow-sm dark:border-red-900/60 dark:bg-red-950/20">
                   <div className="flex items-center gap-2 font-bold text-red-700 dark:text-red-450">
                     <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
-                    Status: ❌ Email Not Configured
+                    Status: ❌ {tt("email_mgmt.status_not_configured", "Email Not Configured")}
                   </div>
                   <p className="text-[11px] text-red-700 pt-1.5 border-t leading-relaxed font-medium">
-                    {configError || "No official email account is configured for this branch."}
+                    {configError || tt("email_mgmt.no_email_configured", "No official email account is configured for this branch.")}
                   </p>
                 </div>
               )}
 
               {!configLoading && emailConfig?.providerName?.toLowerCase() === "gmail" && (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-850 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-300">
-                  <div className="font-semibold text-amber-800 dark:text-amber-400">Gmail Notice:</div>
+                  <div className="font-semibold text-amber-800 dark:text-amber-400">{tt("email_mgmt.gmail_notice", "Gmail Notice")}:</div>
                   <p className="mt-1 leading-relaxed text-[11px]">
-                    Google App Password is required to send emails via Gmail. Traditional account passwords are blocked by Google security.
+                    {tt("email_mgmt.gmail_notice_desc", "Google App Password is required to send emails via Gmail. Traditional account passwords are blocked by Google security.")}
                   </p>
                 </div>
               )}
@@ -1467,7 +1471,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
               {(!composeTo || !composeTo.includes("@")) && (
                 <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-850 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-300">
                   <p className="leading-relaxed font-semibold text-red-800 dark:text-red-400">
-                    Recipient email address is missing for this ERP record.
+                    {tt("email_mgmt.recipient_missing", "Recipient email address is missing for this ERP record.")}
                   </p>
                 </div>
               )}
@@ -1475,7 +1479,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
               {!configLoading && !emailConfig && (
                 <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-800 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-300">
                   <p className="leading-relaxed">
-                    {configError || "Email configuration could not be loaded. Please configure an active SMTP account first."}
+                    {configError || tt("email_mgmt.config_load_error", "Email configuration could not be loaded. Please configure an active SMTP account first.")}
                   </p>
                 </div>
               )}
@@ -1489,21 +1493,21 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                     disabled={testingConnection || configLoading}
                     onClick={handleTestConnection}
                   >
-                    {testingConnection ? "Testing Connection..." : "Test SMTP Connection"}
+                    {testingConnection ? tt("email_mgmt.testing_connection", "Testing Connection...") : tt("email_mgmt.test_smtp_connection", "Test SMTP Connection")}
                   </Button>
                 </div>
               )}
 
               <div className="space-y-3">
-                <div className="font-semibold text-xs text-foreground">ERP Document Linking</div>
+                <div className="font-semibold text-xs text-foreground">{tt("email_mgmt.erp_doc_linking", "ERP Document Linking")}</div>
                 <div className="space-y-2">
-                  <Label className="text-[11px] text-muted-foreground">Linked Module</Label>
+                  <Label className="text-[11px] text-muted-foreground">{tt("email_mgmt.linked_module", "Linked Module")}</Label>
                   <select
                     className="h-9 w-full rounded-lg border bg-background px-2.5 text-xs outline-none"
                     value={composeModule}
                     onChange={(e) => setComposeModule(e.target.value)}
                   >
-                    <option value="">-- No Linking --</option>
+                    <option value="">-- {tt("email_mgmt.no_linking", "No Linking")} --</option>
                     <option value="Purchase Order">Purchase Order</option>
                     <option value="Sales Invoice">Sales Invoice</option>
                     <option value="Customer">Customer</option>
@@ -1513,7 +1517,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                   </select>
                 </div>
                 <Field
-                  label="Document No."
+                  label={tt("email_mgmt.document_no", "Document No.")}
                   value={composeDocumentNo}
                   onChange={setComposeDocumentNo}
                   placeholder="PO-2026-0012"
@@ -1529,11 +1533,11 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                   onClick={() => saveCompose("sent")}
                 >
                   <Send className="mr-2 h-4 w-4" aria-hidden />
-                  {saving ? "Sending..." : "Send Email"}
+                  {saving ? tt("email_mgmt.sending", "Sending...") : tt("email_mgmt.send_email", "Send Email")}
                 </Button>
                 <Button type="button" variant="outline" className="w-full" disabled={saving || configLoading} onClick={() => saveCompose("draft")}>
                   <Pencil className="mr-2 h-4 w-4" aria-hidden />
-                  Save Draft
+                  {tt("email_mgmt.save_draft", "Save Draft")}
                 </Button>
               </div>
             </div>
@@ -1615,6 +1619,8 @@ function EmailActionsMenu({
 }) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [open, setOpen] = useState(false);
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
 
   useEffect(() => {
     if (!open) return;
@@ -1647,16 +1653,16 @@ function EmailActionsMenu({
       </Button>
       {open ? (
         <div className="absolute right-0 top-full z-30 mt-2 w-64 overflow-hidden rounded-lg border bg-background shadow-lg">
-          <ActionRow icon={Reply} label="Reply" onClick={() => action(onReply)} />
-          <ActionRow icon={ReplyAll} label="Reply All" onClick={() => action(onReplyAll)} />
-          <ActionRow icon={ArrowLeftRight} label="Forward" onClick={() => action(onForward)} />
-          <ActionRow icon={Printer} label="Print" onClick={() => action(onPrint)} />
-          <ActionRow icon={Paperclip} label="Download Attachment" onClick={() => action(onDownload)} />
-          <ActionRow icon={ExternalLink} label="Open in ERP" onClick={() => action(onOpenInErp)} />
-          <ActionRow icon={Link2} label="Link ERP Document" onClick={() => action(onLinkDocument)} />
-          <ActionRow icon={FilePlus2} label="Create Purchase Order" onClick={() => action(onCreatePurchaseOrder)} />
-          <ActionRow icon={FilePlus2} label="Create Invoice" onClick={() => action(onCreateInvoice)} />
-          <ActionRow icon={FilePlus2} label="Create Payment" onClick={() => action(onCreatePayment)} />
+          <ActionRow icon={Reply} label={tt("email_mgmt.reply", "Reply")} onClick={() => action(onReply)} />
+          <ActionRow icon={ReplyAll} label={tt("email_mgmt.reply_all", "Reply All")} onClick={() => action(onReplyAll)} />
+          <ActionRow icon={ArrowLeftRight} label={tt("email_mgmt.forward", "Forward")} onClick={() => action(onForward)} />
+          <ActionRow icon={Printer} label={tt("common.print", "Print")} onClick={() => action(onPrint)} />
+          <ActionRow icon={Paperclip} label={tt("email_mgmt.download_attachment", "Download Attachment")} onClick={() => action(onDownload)} />
+          <ActionRow icon={ExternalLink} label={tt("email_mgmt.open_in_erp", "Open in ERP")} onClick={() => action(onOpenInErp)} />
+          <ActionRow icon={Link2} label={tt("email_mgmt.link_erp_doc", "Link ERP Document")} onClick={() => action(onLinkDocument)} />
+          <ActionRow icon={FilePlus2} label={tt("email_mgmt.create_purchase_order", "Create Purchase Order")} onClick={() => action(onCreatePurchaseOrder)} />
+          <ActionRow icon={FilePlus2} label={tt("email_mgmt.create_invoice", "Create Invoice")} onClick={() => action(onCreateInvoice)} />
+          <ActionRow icon={FilePlus2} label={tt("email_mgmt.create_payment", "Create Payment")} onClick={() => action(onCreatePayment)} />
         </div>
       ) : null}
     </div>

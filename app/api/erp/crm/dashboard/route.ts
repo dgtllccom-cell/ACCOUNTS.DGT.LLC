@@ -7,7 +7,7 @@ export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await requireErpSession(request);
+    const session = await requireErpSession();
     const { searchParams } = new URL(request.url);
 
     const generalBrand = searchParams.get("generalBrand");

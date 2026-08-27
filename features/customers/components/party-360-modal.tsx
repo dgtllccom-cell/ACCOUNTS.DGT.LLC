@@ -20,7 +20,8 @@ import {
   Layers,
   Warehouse,
   Truck,
-  ShieldCheck
+  ShieldCheck,
+  Printer
 } from "lucide-react";
 import { apiGet } from "@/lib/api/client";
 import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
@@ -29,6 +30,7 @@ import type { PartyAffiliationSummary } from "@/lib/services/party-360-service";
 import { Button } from "@/components/ui/button";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { openCompany360Report } from "@/lib/reports/open-company-360-report-window";
 
 export type Party360ModalProps = {
   customerId?: string;
@@ -117,13 +119,61 @@ export function Party360Modal({
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 transition"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                openCompany360Report({
+                  company: {
+                    name: summary?.companies?.[0]?.name || displayName,
+                    legalName: summary?.companies?.[0]?.legalName || summary?.companies?.[0]?.name || displayName,
+                    nameUrdu: urduName,
+                    businessType: summary?.companies?.[0]?.businessType || "LLC",
+                    countryName: summary?.countryName || "United Arab Emirates",
+                    cityName: summary?.cityName || "Dubai",
+                    address: summary?.address || "—",
+                    phone: summary?.mobile || summary?.phone || "—",
+                    email: summary?.email || "—"
+                  },
+                  owner: {
+                    name: displayName,
+                    fatherName: summary?.fatherName,
+                    customerCode: summary?.customerCode,
+                    employeeCode: summary?.employees?.[0]?.employeeCode,
+                    phone: summary?.mobile || summary?.phone,
+                    email: summary?.email,
+                    country: summary?.countryName,
+                    city: summary?.cityName,
+                    address: summary?.address
+                  },
+                  manager: summary?.employees?.[0] ? {
+                    name: summary.employees[0].fullName,
+                    fatherName: summary.employees[0].fatherName,
+                    customerCode: summary.employees[0].employeeCode,
+                    employeeCode: summary.employees[0].employeeCode,
+                    phone: summary.mobile,
+                    email: summary.email
+                  } : null,
+                  sisterCompanies: summary?.companies || [],
+                  banks: summary?.banks || [],
+                  lang
+                });
+              }}
+              className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200 text-xs font-bold gap-1.5 h-8.5 rounded-xl cursor-pointer"
+            >
+              <Printer className="h-3.5 w-3.5" />
+              <span>{t(lang, "creg.print_dossier", "Print 360° PDF")}</span>
+            </Button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 transition cursor-pointer"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Modal Body */}

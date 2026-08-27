@@ -7,6 +7,8 @@ import {
 import type { ConversationDetail } from "../types";
 import { StatusBadge } from "./status-badge";
 import { formatDateTime } from "../utils/date";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 type Props = {
   detail: ConversationDetail;
@@ -26,11 +28,13 @@ function InfoRow({ icon: Icon, label, value }: { icon: React.ComponentType<{ cla
 }
 
 export function ContactPanel({ detail }: Props) {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const conv = detail.conversation;
   const contact = conv.contact;
   const customer = detail.erpCustomer;
 
-  const contactLabel = contact?.displayName ?? contact?.waProfileName ?? customer?.customerName ?? contact?.phoneNumber ?? "Unknown";
+  const contactLabel = contact?.displayName ?? contact?.waProfileName ?? customer?.customerName ?? contact?.phoneNumber ?? tt("wa.unknown", "Unknown");
 
   return (
     <div className="flex flex-col gap-0">
@@ -52,21 +56,21 @@ export function ContactPanel({ detail }: Props) {
 
       {/* Contact info */}
       <div className="border-b border-border/50 px-4 py-2">
-        <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Contact</p>
+        <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{tt("wa.contact_section", "Contact")}</p>
         <InfoRow icon={Phone} label="WhatsApp" value={contact?.phoneNumber} />
         {customer && (
           <>
-            <InfoRow icon={User} label="Customer Name" value={customer.customerName} />
-            <InfoRow icon={Building2} label="Company" value={customer.companyName} />
-            <InfoRow icon={Mail} label="Email" value={customer.email} />
-            <InfoRow icon={Phone} label="Mobile" value={customer.mobile} />
-            <InfoRow icon={MapPin} label="Address" value={customer.address} />
+            <InfoRow icon={User} label={tt("wa.customer_name", "Customer Name")} value={customer.customerName} />
+            <InfoRow icon={Building2} label={tt("wa.company", "Company")} value={customer.companyName} />
+            <InfoRow icon={Mail} label={tt("wa.email_label", "Email")} value={customer.email} />
+            <InfoRow icon={Phone} label={tt("wa.mobile", "Mobile")} value={customer.mobile} />
+            <InfoRow icon={MapPin} label={tt("wa.address", "Address")} value={customer.address} />
           </>
         )}
         {!customer && (
           <div className="flex items-center gap-2 rounded-md bg-amber-50 dark:bg-amber-900/20 px-2 py-1.5 text-[10px] text-amber-700 dark:text-amber-400">
             <AlertTriangle className="h-3 w-3 flex-shrink-0" />
-            <span>Not linked to an ERP customer</span>
+            <span>{tt("wa.not_linked", "Not linked to an ERP customer")}</span>
           </div>
         )}
       </div>
@@ -74,8 +78,8 @@ export function ContactPanel({ detail }: Props) {
       {/* ERP customer data */}
       {customer && (
         <div className="border-b border-border/50 px-4 py-2">
-          <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">ERP Account</p>
-          <InfoRow icon={Receipt} label="Country" value={customer.country?.name} />
+          <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{tt("wa.erp_account", "ERP Account")}</p>
+          <InfoRow icon={Receipt} label={tt("common.country", "Country")} value={customer.country?.name} />
           {customer.notes && (
             <div className="mt-1 rounded-md bg-muted/50 p-2 text-[10px] text-muted-foreground">
               {customer.notes}
@@ -86,19 +90,19 @@ export function ContactPanel({ detail }: Props) {
 
       {/* Conversation meta */}
       <div className="border-b border-border/50 px-4 py-2">
-        <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Conversation</p>
-        <InfoRow icon={Building2} label="Branch" value={conv.cityBranch ? `${conv.cityBranch.cityName} — ${conv.cityBranch.name}` : conv.country?.name} />
-        <InfoRow icon={User} label="Assigned To" value={conv.assignedUser?.fullName} />
-        <InfoRow icon={Clock} label="Created" value={formatDateTime(conv.createdAt, "dd MMM yyyy, HH:mm")} />
+        <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{tt("wa.conversation_section", "Conversation")}</p>
+        <InfoRow icon={Building2} label={tt("common.branch", "Branch")} value={conv.cityBranch ? `${conv.cityBranch.cityName} — ${conv.cityBranch.name}` : conv.country?.name} />
+        <InfoRow icon={User} label={tt("wa.assigned_to", "Assigned To")} value={conv.assignedUser?.fullName} />
+        <InfoRow icon={Clock} label={tt("wa.created", "Created")} value={formatDateTime(conv.createdAt, "dd MMM yyyy, HH:mm")} />
         {conv.linkedModule && (
-          <InfoRow icon={ExternalLink} label="Linked Module" value={`${conv.linkedModule}: ${conv.linkedDocumentNo ?? ""}`} />
+          <InfoRow icon={ExternalLink} label={tt("wa.linked_module", "Linked Module")} value={`${conv.linkedModule}: ${conv.linkedDocumentNo ?? ""}`} />
         )}
       </div>
 
       {/* Labels */}
       {(contact?.labels?.length ?? 0) > 0 && (
         <div className="px-4 py-2">
-          <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Labels</p>
+          <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{tt("wa.labels", "Labels")}</p>
           <div className="flex flex-wrap gap-1">
             {contact!.labels.map((label) => (
               <span key={label} className="flex items-center gap-0.5 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
@@ -113,14 +117,14 @@ export function ContactPanel({ detail }: Props) {
       {/* Activity log */}
       {detail.activity.length > 0 && (
         <div className="px-4 py-2">
-          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Activity</p>
+          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{tt("wa.activity", "Activity")}</p>
           <div className="space-y-2">
             {detail.activity.slice(0, 8).map((a) => (
               <div key={a.id} className="flex items-start gap-2 text-[10px]">
                 <div className="mt-0.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary/50 mt-1" />
                 <div>
                   <span className="text-foreground/80 capitalize">{a.eventType.replace(/_/g, " ")}</span>
-                  {a.actorName && <span className="text-muted-foreground"> by {a.actorName}</span>}
+                  {a.actorName && <span className="text-muted-foreground"> {tt("wa.by", "by")} {a.actorName}</span>}
                   <p className="text-muted-foreground/60">{formatDateTime(a.createdAt, "dd MMM, HH:mm")}</p>
                 </div>
               </div>

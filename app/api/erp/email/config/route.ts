@@ -50,9 +50,9 @@ export async function GET(request: NextRequest) {
           if (po.supplier_company_id) {
             const { data: comp } = await admin.from("companies").select("contacts").eq("id", po.supplier_company_id).maybeSingle();
             if (comp) {
-              const contacts = Array.isArray(comp.contacts) ? comp.contacts : [];
-              const emailContact = contacts.find((c: any) => c.email || c.emailAddress);
-              recipientEmail = emailContact?.email || emailContact?.emailAddress || null;
+              const contacts = Array.isArray(comp.contacts) ? (comp.contacts as any[]) : [];
+              const emailContact = contacts.find((c: any) => c?.email || c?.emailAddress);
+              recipientEmail = (emailContact?.email as string) || (emailContact?.emailAddress as string) || null;
             }
           }
         }

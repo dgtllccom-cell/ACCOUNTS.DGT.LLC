@@ -135,7 +135,7 @@ export function CrmReportsView({ session }: CrmReportsViewProps) {
         <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] bg-slate-50 dark:bg-slate-950 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
           <span className="text-slate-500">GS: <strong className="text-slate-800 dark:text-slate-200">GS-CRM-REP-01</strong></span>
           <span className="text-slate-300">|</span>
-          <span className="text-slate-500">USER: <strong className="text-blue-600">{session.user?.username || "SUPERADMIN"}</strong></span>
+          <span className="text-slate-500">USER: <strong className="text-blue-600">{session.fullName || session.email || "SUPERADMIN"}</strong></span>
           <span className="text-slate-300">|</span>
           <span className="text-slate-500">SCOPE: <strong className="text-emerald-600">{session.isSuperAdmin ? "GLOBAL" : "BRANCH"}</strong></span>
         </div>

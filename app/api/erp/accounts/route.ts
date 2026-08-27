@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "accounts", action: "read" });
 
-    const db = createSupabaseAdminClient();
+    const db = createSupabaseAdminClient() as any;
 
     // Get accounts (using existing ledger accounts table)
     const { data: accounts, error } = await db
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const db = createSupabaseAdminClient();
+    const db = createSupabaseAdminClient() as any;
 
     // Create account record in existing ledger accounts table
     const { data, error } = await db

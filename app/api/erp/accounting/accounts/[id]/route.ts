@@ -242,7 +242,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
 
     if (body.name !== undefined) {
       const actorLanguage = (session.preferredLanguage || "en") as "en" | "ar" | "ur" | "fa" | "ps";
-      supabase.from("ledgers").select("id").eq("enterprise_account_id", id).maybeSingle().then(({ data: ledger }) => {
+      (supabase.from("ledgers" as any) as any).select("id").eq("enterprise_account_id", id).maybeSingle().then(({ data: ledger }: { data: { id?: string } | null }) => {
         import("@/lib/services/enterprise-multilingual-service")
           .then(({ saveEnterpriseRecordTranslations }) => {
             const promises = [

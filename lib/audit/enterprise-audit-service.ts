@@ -637,7 +637,7 @@ export async function restoreDeletedRecord(input: {
 
     return {
       success: true,
-      auditEventId: event.id
+      auditEventId: event?.id ?? null
     };
   });
 }

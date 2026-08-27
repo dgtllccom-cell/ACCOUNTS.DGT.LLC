@@ -35,7 +35,7 @@ function clearFailedAttempts(ip: string) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireErpSession(request);
+    const session = await requireErpSession();
     const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "127.0.0.1";
 
     // Strictly restricted to Super Admin only
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: "Permanent deletion executed and permanently logged in Super Admin audit vault.",
-      auditEventId: event.id
+      auditEventId: event?.id ?? null
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || "Failed to execute permanent deletion." }, { status: 500 });

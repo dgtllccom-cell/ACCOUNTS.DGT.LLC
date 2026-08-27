@@ -4,7 +4,7 @@ import { withLocalPg } from "@/lib/db/local-postgres";
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireErpSession(request);
+    const session = await requireErpSession();
     const body = await request.json();
     const { crmItemId, noteType, noteText, promiseDate, promiseAmount, nextFollowUp } = body;
 

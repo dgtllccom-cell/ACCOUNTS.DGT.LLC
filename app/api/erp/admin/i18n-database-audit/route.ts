@@ -116,7 +116,7 @@ async function findIncompleteRecordIds(
   const safeTable = assertSafeIdentifier(table);
   const safeField = assertSafeIdentifier(field);
   const restrictClause = restrictIds ? `and t.id = any($4::uuid[])` : "";
-  const params: unknown[] = [table, field, limit];
+  const params: any[] = [table, field, limit];
   if (restrictIds) params.push(restrictIds);
   // Base condition: missing entirely, or one of the 5 slots empty.
   // When includeFallbackOnly is set, ALSO catch rows where all 5 slots are present but the

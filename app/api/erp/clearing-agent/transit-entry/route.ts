@@ -52,7 +52,7 @@ function parseNumeric(val: any): number {
 
 export async function GET(req: NextRequest) {
   try {
-    const supabase = createSupabaseAdminClient();
+    const supabase = createSupabaseAdminClient() as any;
     const { searchParams } = new URL(req.url);
     const q = searchParams.get("q")?.toLowerCase();
     const serial = searchParams.get("serial");
@@ -124,7 +124,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createSupabaseAdminClient();
+    const supabase = createSupabaseAdminClient() as any;
     const body = await req.json();
 
     const entry_serial = body.entry_serial || "TE-" + String(Math.floor(1000000 + Math.random() * 9000000)).substring(0, 7);

@@ -129,7 +129,7 @@ export async function getSmartCrmDashboardData(params: {
   pageSize?: number;
   search?: string | null;
 }): Promise<CrmDashboardPayload> {
-  return withLocalPg(async (sql) => {
+  const result = await withLocalPg(async (sql) => {
     const activeDate = params.targetDate || new Date().toISOString().split("T")[0];
     const activeTab = params.tab || "today";
     const page = Math.max(1, params.page || 1);
@@ -376,7 +376,7 @@ export async function getSmartCrmDashboardData(params: {
         countrySerial: "CS-PK-CRM-4402",
         branchSerial: "BS-KHI-CRM-1105",
         entrySerial: "ES-2026-0827-01",
-        userCode: params.session.user?.username || "SUPERADMIN"
+        userCode: params.session.fullName || "SUPERADMIN"
       },
       pagination: {
         total,
@@ -386,6 +386,10 @@ export async function getSmartCrmDashboardData(params: {
       }
     };
   });
+  if (!result) {
+    throw new Error("DATABASE_URL is required for CRM Dashboard operations.");
+  }
+  return result;
 }
 
 /**
@@ -399,8 +403,13 @@ export async function recordCrmFollowUp(params: {
   promiseAmount?: number | null;
   session: ErpSession;
 }): Promise<{ success: boolean; noteId: string }> {
-  return withLocalPg(async (sql) => {
-    const result = await sql`
+  const result = await withLocalPg(async (sql) => {
+    const actorId = params.session.userId || "usr-admin";
+    const actorName = params.session.fullName || "Admin User";
+    const actorRole = params.session.roles?.[0] || "super_admin";
+    const pDate = params.promiseDate ?? null;
+    const pAmount = params.promiseAmount ?? null;
+    const dbResult = await sql`
       INSERT INTO crm_followup_notes (
         crm_item_id,
         user_id,
@@ -413,13 +422,13 @@ export async function recordCrmFollowUp(params: {
         created_at
       ) VALUES (
         ${params.crmItemId},
-        ${params.session.user?.id || "usr-admin"},
-        ${params.session.user?.name || "Admin User"},
-        ${params.session.roles?.[0] || "super_admin"},
+        ${actorId},
+        ${actorName},
+        ${actorRole},
         ${params.noteType || "Call Follow-Up"},
         ${params.noteText},
-        ${params.promiseDate ? `${params.promiseDate}::date` : null},
-        ${params.promiseAmount ?? null},
+        ${pDate ? sql`${pDate}::date` : null},
+        ${pAmount},
         NOW()
       )
       RETURNING id;
@@ -442,9 +451,10 @@ export async function recordCrmFollowUp(params: {
 
     return {
       success: true,
-      noteId: result[0]?.id
+      noteId: String(dbResult[0]?.id || "")
     };
   });
+  return result || { success: false, noteId: "" };
 }
 
 /**
@@ -455,7 +465,9 @@ export async function completeCrmActionItem(params: {
   resolutionNotes?: string;
   session: ErpSession;
 }): Promise<{ success: boolean }> {
-  return withLocalPg(async (sql) => {
+  const result = await withLocalPg(async (sql) => {
+    const actorName = params.session.fullName || "Super Admin";
+    const notesValue = params.resolutionNotes ?? null;
     await sql`
       UPDATE crm_action_items
       SET 
@@ -463,14 +475,15 @@ export async function completeCrmActionItem(params: {
         status = 'Completed',
         urgency_class = 'completed',
         completed_at = NOW(),
-        completed_by = ${params.session.user?.name || "Super Admin"},
-        notes = COALESCE(${params.resolutionNotes}, notes),
+        completed_by = ${actorName},
+        notes = COALESCE(${notesValue}, notes),
         updated_at = NOW()
       WHERE id = ${params.crmItemId};
     `;
 
     return { success: true };
   });
+  return result || { success: false };
 }
 
 /**
@@ -532,7 +545,7 @@ export async function getCrmUniversalReportData(params: {
       totalRemaining,
       totalPaid,
       generatedAt: new Date().toISOString(),
-      generatedBy: params.session.user?.name || "Super Admin",
+      generatedBy: params.session.fullName || "Super Admin",
       records: rows.map((r: any, idx: number) => ({
         srNo: idx + 1,
         id: r.id,

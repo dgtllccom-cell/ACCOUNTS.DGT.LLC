@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { apiGet } from "@/lib/api/client";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 import { Th } from "@/components/ui/translated-th";
 
 type SessionResponse = { user: { id: string; email: string | null; fullName: string | null }; roles: string[]; scopes: { countryIds: string[]; countryBranchIds: string[]; cityBranchIds: string[]; isSuperAdmin: boolean } };
@@ -23,6 +25,11 @@ function valueText(value: unknown) {
 }
 
 export function DataPageClient({ lang: _lang }: { lang: SupportedLanguage }) {
+  const activeLang = useActiveLanguage();
+  const lang = activeLang !== "en" ? activeLang : (_lang || "en");
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+
   const [session, setSession] = useState<SessionResponse | null>(null);
   const [tables, setTables] = useState<TableMeta[]>([]);
   const [selectedTable, setSelectedTable] = useState("enterprise_accounts");
@@ -123,31 +130,31 @@ export function DataPageClient({ lang: _lang }: { lang: SupportedLanguage }) {
   const rows = data?.rows || [];
 
   return (
-    <div className="space-y-4 p-4 lg:p-6">
+    <div className="space-y-4 p-4 lg:p-6" dir={isRtl ? "rtl" : "ltr"}>
       <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary"><Database className="h-5 w-5" /></div>
-          <div><h1 className="text-xl font-bold text-foreground">ERP Data Page</h1><p className="text-xs text-muted-foreground">Live database tables with country, branch, account and transaction visibility.</p></div>
+          <div><h1 className="text-xl font-bold text-foreground">{tt("dpc.title", "ERP Data Page")}</h1><p className="text-xs text-muted-foreground">{tt("dpc.subtitle", "Live database tables with country, branch, account and transaction visibility.")}</p></div>
         </div>
-        <Button onClick={loadData} disabled={loading} size="sm"><RefreshCw className="h-4 w-4" /> Refresh</Button>
+        <Button onClick={loadData} disabled={loading} size="sm"><RefreshCw className="h-4 w-4" /> {tt("common.refresh", "Refresh")}</Button>
       </div>
       <Card>
-        <CardHeader className="pb-3"><CardTitle className="text-sm">Filters</CardTitle></CardHeader>
+        <CardHeader className="pb-3"><CardTitle className="text-sm">{tt("dpc.filters", "Filters")}</CardTitle></CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
-          <label className="space-y-1 text-xs font-semibold text-muted-foreground">Table<select className="h-9 w-full rounded-lg border bg-background px-3 text-sm text-foreground" value={selectedTable} onChange={(e) => setSelectedTable(e.target.value)}>{tables.map((table) => <option key={table.name} value={table.name}>{table.label}</option>)}</select></label>
-          <label className="space-y-1 text-xs font-semibold text-muted-foreground">Country<select className="h-9 w-full rounded-lg border bg-background px-3 text-sm text-foreground" value={countryId} disabled={!isSuperAdmin && Boolean(session?.scopes.countryIds.length)} onChange={(e) => { setCountryId(e.target.value); setCountryBranchId(""); setCityBranchId(""); }}><option value="">All Countries</option>{countries.map((country) => <option key={country.id} value={country.id}>{country.name}</option>)}</select></label>
-          <label className="space-y-1 text-xs font-semibold text-muted-foreground">Branch<select className="h-9 w-full rounded-lg border bg-background px-3 text-sm text-foreground" value={countryBranchId} onChange={(e) => { setCountryBranchId(e.target.value); setCityBranchId(""); }}><option value="">All Branches</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name} ({branch.code})</option>)}</select></label>
-          <label className="space-y-1 text-xs font-semibold text-muted-foreground">City Branch<select className="h-9 w-full rounded-lg border bg-background px-3 text-sm text-foreground" value={cityBranchId} onChange={(e) => setCityBranchId(e.target.value)}><option value="">All City Branches</option>{cityBranches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name || branch.city_name} ({branch.code})</option>)}</select></label>
-          <label className="space-y-1 text-xs font-semibold text-muted-foreground xl:col-span-2">Search<div className="relative"><Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" /><Input className="pl-9" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") loadData(); }} placeholder="Account no, name, manual code, PO, SO, serial..." /></div></label>
+          <label className="space-y-1 text-xs font-semibold text-muted-foreground">{tt("dpc.table", "Table")}<select className="h-9 w-full rounded-lg border bg-background px-3 text-sm text-foreground" value={selectedTable} onChange={(e) => setSelectedTable(e.target.value)}>{tables.map((table) => <option key={table.name} value={table.name}>{table.label}</option>)}</select></label>
+          <label className="space-y-1 text-xs font-semibold text-muted-foreground">{tt("common.country", "Country")}<select className="h-9 w-full rounded-lg border bg-background px-3 text-sm text-foreground" value={countryId} disabled={!isSuperAdmin && Boolean(session?.scopes.countryIds.length)} onChange={(e) => { setCountryId(e.target.value); setCountryBranchId(""); setCityBranchId(""); }}><option value="">{tt("common.all_countries", "All Countries")}</option>{countries.map((country) => <option key={country.id} value={country.id}>{country.name}</option>)}</select></label>
+          <label className="space-y-1 text-xs font-semibold text-muted-foreground">{tt("common.branch", "Branch")}<select className="h-9 w-full rounded-lg border bg-background px-3 text-sm text-foreground" value={countryBranchId} onChange={(e) => { setCountryBranchId(e.target.value); setCityBranchId(""); }}><option value="">{tt("common.all_branches", "All Branches")}</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name} ({branch.code})</option>)}</select></label>
+          <label className="space-y-1 text-xs font-semibold text-muted-foreground">{tt("dpc.city_branch", "City Branch")}<select className="h-9 w-full rounded-lg border bg-background px-3 text-sm text-foreground" value={cityBranchId} onChange={(e) => setCityBranchId(e.target.value)}><option value="">{tt("dpc.all_city_branches", "All City Branches")}</option>{cityBranches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name || branch.city_name} ({branch.code})</option>)}</select></label>
+          <label className="space-y-1 text-xs font-semibold text-muted-foreground xl:col-span-2">{tt("common.search", "Search")}<div className="relative"><Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" /><Input className="pl-9" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") loadData(); }} placeholder="Account no, name, manual code, PO, SO, serial..." /></div></label>
         </CardContent>
       </Card>
       {error && <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-semibold text-destructive">{error}</div>}
       <Card>
-        <CardHeader className="flex-row items-center justify-between pb-3"><div><CardTitle className="text-sm">{data?.label || tableMeta?.label || "Table"}</CardTitle><p className="text-xs text-muted-foreground">Showing {rows.length} live rows from {selectedTable}</p></div></CardHeader>
+        <CardHeader className="flex-row items-center justify-between pb-3"><div><CardTitle className="text-sm">{data?.label || tableMeta?.label || tt("dpc.table", "Table")}</CardTitle><p className="text-xs text-muted-foreground">Showing {rows.length} live rows from {selectedTable}</p></div></CardHeader>
         <CardContent className="overflow-auto px-0">
           <table className="min-w-full border-y text-xs">
             <thead className="sticky top-0 bg-muted/80 text-muted-foreground"><tr>{columns.map((column) => <Th key={column} className="whitespace-nowrap border-r px-3 py-2 text-left font-bold uppercase">{column}</Th>)}</tr></thead>
-            <tbody>{loading ? <tr><td className="px-4 py-8 text-center text-muted-foreground" colSpan={Math.max(columns.length, 1)}>Loading live database rows...</td></tr> : rows.length ? rows.map((row, index) => <tr key={String(row.id ?? index)} className="border-b hover:bg-muted/40">{columns.map((column) => <td key={column} className="max-w-[260px] truncate border-r px-3 py-2 align-top text-foreground" title={valueText(row[column])}>{valueText(row[column])}</td>)}</tr>) : <tr><td className="px-4 py-8 text-center text-muted-foreground" colSpan={Math.max(columns.length, 1)}>No records found for this table and scope.</td></tr>}</tbody>
+            <tbody>{loading ? <tr><td className="px-4 py-8 text-center text-muted-foreground" colSpan={Math.max(columns.length, 1)}>{tt("dpc.loading", "Loading live database rows...")}</td></tr> : rows.length ? rows.map((row, index) => <tr key={String(row.id ?? index)} className="border-b hover:bg-muted/40">{columns.map((column) => <td key={column} className="max-w-[260px] truncate border-r px-3 py-2 align-top text-foreground" title={valueText(row[column])}>{valueText(row[column])}</td>)}</tr>) : <tr><td className="px-4 py-8 text-center text-muted-foreground" colSpan={Math.max(columns.length, 1)}>{tt("dpc.empty", "No records found for this table and scope.")}</td></tr>}</tbody>
           </table>
         </CardContent>
       </Card>

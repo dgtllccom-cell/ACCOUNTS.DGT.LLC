@@ -782,11 +782,11 @@ export async function GET(request: NextRequest) {
         findContact("owner") ||
         findContact("customer") ||
         findContact("contact") ||
-        account.customer_name ||
+        (account as any).customer_name ||
         custNameFromId ||
-        account.owner_name ||
-        account.contact_name ||
-        account.company_owner_name ||
+        (account as any).owner_name ||
+        (account as any).contact_name ||
+        (account as any).company_owner_name ||
         linkedComp?.owner_name ||
         linkedComp?.contact_person ||
         profile?.full_name ||

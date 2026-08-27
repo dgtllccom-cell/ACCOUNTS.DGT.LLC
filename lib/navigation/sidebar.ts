@@ -945,7 +945,7 @@ export const sidebarTree: SidebarNode[] = [
     labelKey: "nav.reports",
     iconKey: "bar-chart",
     href: "/dashboard/reports" as Route,
-    roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "shipping_line", "clearing_agent", "auditor_viewer"],
+    roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "agent_user", "staff_user", "auditor_viewer"],
     children: [
       {
         key: "reports-super-admin-panel",
@@ -976,7 +976,7 @@ export const sidebarTree: SidebarNode[] = [
         labelKey: "nav.shipping_clearing",
         iconKey: "truck",
         href: "/dashboard/reports/shipping" as Route,
-        roles: ["super_admin", "super_admin_reports", "country_admin", "shipping_line", "clearing_agent", "customs_agent", "main_branch_admin", "city_branch_admin"],
+        roles: ["super_admin", "super_admin_reports", "country_admin", "agent_user", "staff_user", "main_branch_admin", "city_branch_admin"],
         permission: { resource: "reports", action: "read" }
       }
     ]

@@ -28,7 +28,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     for (const n of NUM) if (body[n] !== undefined) patch[n] = body[n] === "" || body[n] === null ? null : Number(body[n]);
     if (body.is_active !== undefined) patch.is_active = Boolean(body.is_active);
 
-    const supabase = createSupabaseAdminClient();
+    const supabase = createSupabaseAdminClient() as any;
     const { data, error } = await supabase.from("truck_loadings").update(patch).eq("id", id).is("deleted_at", null).select(COLS).single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
@@ -59,7 +59,7 @@ export async function DELETE(_req: Request, context: { params: Promise<{ id: str
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "shipping_records", action: "delete" });
     const { id } = await context.params;
-    const supabase = createSupabaseAdminClient();
+    const supabase = createSupabaseAdminClient() as any;
     const { error } = await supabase
       .from("truck_loadings")
       .update({ deleted_at: new Date().toISOString(), updated_at: new Date().toISOString(), is_active: false })

@@ -833,27 +833,6 @@ export const accountTranslations: Record<string, Record<SupportedLanguage, strin
     ar: "أدخل الهاتف أو رقم الاتصال",
     fa: "شماره تلفن یا تماس را وارد کنید",
     ps: "د تلیفون یا اړیکې شمیره ولیکئ"
-  },
-  customType: {
-    en: "Custom Type",
-    ur: "کسٹم قسم",
-    ar: "نوع مخصص",
-    fa: "نوع سفارشی",
-    ps: "ځانګړی ډول"
-  },
-  landline: {
-    en: "Landline",
-    ur: "لینڈ لائن",
-    ar: "هاتف أرضي",
-    fa: "تلفن ثابت",
-    ps: "ځمکنی تلیفون"
-  },
-  office: {
-    en: "Office",
-    ur: "دفتر",
-    ar: "المكتب",
-    fa: "دفتر",
-    ps: "دفتر"
   }
 };
 

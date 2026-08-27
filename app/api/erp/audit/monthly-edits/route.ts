@@ -5,7 +5,7 @@ import { canAccessCountry, canAccessCityBranch } from "@/lib/permissions/middlew
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await requireErpSession(request);
+    const session = await requireErpSession();
     const { searchParams } = new URL(request.url);
 
     const year = searchParams.get("year") ? Number(searchParams.get("year")) : undefined;

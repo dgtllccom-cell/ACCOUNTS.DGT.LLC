@@ -165,21 +165,22 @@ export function AllDeletedRecordsView() {
 
   function handleExportCsv() {
     if (!records.length) return;
-    const exportRows = records.map((r, i) => ({
-      "#": i + 1,
-      "Deleted At": new Date(r.deleted_at).toLocaleString(),
-      "Original Date": r.original_date ? new Date(r.original_date).toLocaleString() : "-",
-      "Module": r.module,
-      "Country": r.country_name || "Global",
-      "Branch": r.branch_name || "Main Branch",
-      "Bill / Ref No": r.reference_no || r.entity_id,
-      "Record / Party": r.party_name || "-",
-      "Deleted By": `${r.user_name} (${r.user_role})`,
-      "Reason": r.reason || "-",
-      "Risk Level": r.risk_level,
-      "Review Status": r.review_status
-    }));
-    downloadCsv(exportRows, `all_deleted_records_${new Date().toISOString().split("T")[0]}`);
+    const headers = ["#", "Deleted At", "Original Date", "Module", "Country", "Branch", "Bill / Ref No", "Record / Party", "Deleted By", "Reason", "Risk Level", "Review Status"];
+    const exportRows = records.map((r, i) => [
+      String(i + 1),
+      new Date(r.deleted_at).toLocaleString(),
+      r.original_date ? new Date(r.original_date).toLocaleString() : "-",
+      String(r.module || ""),
+      String(r.country_name || "Global"),
+      String(r.branch_name || "Main Branch"),
+      String(r.reference_no || r.entity_id || ""),
+      String(r.party_name || "-"),
+      `${r.user_name} (${r.user_role})`,
+      String(r.reason || "-"),
+      String(r.risk_level || ""),
+      String(r.review_status || "")
+    ]);
+    downloadCsv(`all_deleted_records_${new Date().toISOString().split("T")[0]}.csv`, [headers, ...exportRows]);
   }
 
   function handlePrint() {

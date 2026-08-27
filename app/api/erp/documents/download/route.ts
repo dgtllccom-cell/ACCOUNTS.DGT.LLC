@@ -31,10 +31,10 @@ export async function GET(request: NextRequest) {
     });
 
     if (!doc) {
-      return apiError("Document not found", 404);
+      return apiError("NOT_FOUND", "Document not found", 404);
     }
     if (!session.roles?.includes("super_admin") && sessionCompanyId && doc.companyId !== sessionCompanyId) {
-      return apiError("You do not have permission to read this document", 403);
+      return apiError("FORBIDDEN", "You do not have permission to read this document", 403);
     }
 
     let version;
@@ -53,12 +53,12 @@ export async function GET(request: NextRequest) {
     }
 
     if (!version) {
-      return apiError("Document version not found", 404);
+      return apiError("NOT_FOUND", "Document version not found", 404);
     }
 
     const resolvedUrl = await resolveDocumentFileUrl(version.path);
     if (!resolvedUrl) {
-      return apiError("Failed to generate download URL", 500);
+      return apiError("SERVER_ERROR", "Failed to generate download URL", 500);
     }
 
     return apiOk({ url: resolvedUrl });

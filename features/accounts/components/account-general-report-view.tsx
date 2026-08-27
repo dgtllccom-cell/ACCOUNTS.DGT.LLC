@@ -1584,7 +1584,7 @@ export function AccountGeneralReportView({
               <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">👤 USER & BRANCH</span>
               <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700">AED</span>
             </div>
-            <div className="text-[9px] text-slate-400 mt-0.5">Assigned: {session?.user?.fullName || (session as any)?.user?.name || "Super Admin"}</div>
+            <div className="text-[9px] text-slate-400 mt-0.5">Assigned: {(session as any)?.fullName || (session as any)?.email || "Super Admin"}</div>
             <div className="mt-2 space-y-0.5 font-mono text-[10px]">
               <div className="flex justify-between text-rose-600"><span>DR:</span> <span>{fmtNumber(filteredRows.reduce((s, r) => s + r.debitTotal, 0))}</span></div>
               <div className="flex justify-between text-emerald-600"><span>CR:</span> <span>{fmtNumber(filteredRows.reduce((s, r) => s + r.creditTotal, 0))}</span></div>

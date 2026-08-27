@@ -9,10 +9,16 @@ import { Loader2, Plus, Trash2, Printer, X, Check } from "lucide-react";
 import { Th } from "@/components/ui/translated-th";
 import { UniversalReportModal } from "@/components/ui/universal-report-modal";
 import { SearchSelect } from "@/components/ui/search-select";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 type PortRecord = { id: string; code: string; name: string; border_type: string; country_id: string; is_active: boolean; created_at: string; country?: { name: string } };
 
 export function PortRegistry() {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+
   const [ports, setPorts] = useState<PortRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -105,42 +111,42 @@ export function PortRegistry() {
 
   return (
     <>
-    <Card className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+    <Card className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm" dir={isRtl ? "rtl" : "ltr"}>
       <CardHeader className="flex flex-row items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
         <div>
-          <CardTitle className="text-xl font-bold text-slate-900 dark:text-slate-100">Ports & Boundaries</CardTitle>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage departure, arrival, and border crossing ports</p>
+          <CardTitle className="text-xl font-bold text-slate-900 dark:text-slate-100">{tt("port.title", "Ports & Boundaries")}</CardTitle>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{tt("port.subtitle", "Manage departure, arrival, and border crossing ports")}</p>
         </div>
         <div className="flex gap-2">
           <Button onClick={() => setShowReport(true)} size="sm" variant="outline">
-            <Printer className="w-4 h-4 mr-1" /> Print Preview
+            <Printer className="w-4 h-4 mr-1" /> {tt("port.print", "Print Preview")}
           </Button>
           <Button onClick={() => setIsModalOpen(true)} size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white">
-            <Plus className="w-4 h-4 mr-1" /> + New Port
+            <Plus className="w-4 h-4 mr-1" /> {tt("port.new", "New Port")}
           </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-4 pt-4">
         <div className="flex gap-2">
-          <Input placeholder="Search ports by code or name..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="max-w-md" />
+          <Input placeholder={tt("port.search", "Search ports by code or name...")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="max-w-md" />
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)} className="px-3 py-2 border rounded-md bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-sm">
-            <option value="all">All Status</option>
-            <option value="Active">Active Only</option>
-            <option value="Inactive">Inactive Only</option>
+            <option value="all">{tt("port.all_status", "All Status")}</option>
+            <option value="Active">{tt("port.active_only", "Active Only")}</option>
+            <option value="Inactive">{tt("port.inactive_only", "Inactive Only")}</option>
           </select>
         </div>
 
         <div className="grid grid-cols-3 gap-3 text-sm">
           <div className="bg-blue-50/70 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 p-3 rounded-lg">
-            <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">TOTAL</div>
+            <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">{tt("port.total", "Total")}</div>
             <div className="text-2xl font-bold text-blue-950 dark:text-blue-200 mt-1">{summary.total}</div>
           </div>
           <div className="bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50 p-3 rounded-lg">
-            <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">ACTIVE</div>
+            <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">{tt("common.active", "Active")}</div>
             <div className="text-2xl font-bold text-emerald-950 dark:text-emerald-200 mt-1">{summary.active}</div>
           </div>
           <div className="bg-rose-50/70 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/50 p-3 rounded-lg">
-            <div className="text-xs font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wider">INACTIVE</div>
+            <div className="text-xs font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wider">{tt("common.inactive", "Inactive")}</div>
             <div className="text-2xl font-bold text-rose-950 dark:text-rose-200 mt-1">{summary.inactive}</div>
           </div>
         </div>
@@ -166,7 +172,7 @@ export function PortRegistry() {
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-slate-500">No ports found</td>
+                    <td colSpan={7} className="p-8 text-center text-slate-500">{tt("port.empty", "No ports found")}</td>
                   </tr>
                 ) : (
                   filtered.map((port, idx) => (
@@ -178,7 +184,7 @@ export function PortRegistry() {
                       <td className="p-3 text-slate-600 dark:text-slate-400">{port.border_type || '-'}</td>
                       <td className="p-3 text-center">
                         <span className={cn("px-2.5 py-0.5 rounded-full text-xs font-semibold", port.is_active ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300" : "bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300")}>
-                          {port.is_active ? "Active" : "Inactive"}
+                          {port.is_active ? tt("common.active", "Active") : tt("common.inactive", "Inactive")}
                         </span>
                       </td>
                       <td className="p-3 text-center">
@@ -201,7 +207,7 @@ export function PortRegistry() {
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
         <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-lg overflow-hidden">
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Add New Port / Boundary</h3>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">{tt("port.modal_title", "Add New Port / Boundary")}</h3>
             <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg">
               <X className="w-5 h-5" />
             </button>
@@ -209,7 +215,7 @@ export function PortRegistry() {
           <form onSubmit={handleSave} className="p-6 space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Port Code *</label>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">{tt("port.code_label", "Port Code")} *</label>
                 <Input
                   placeholder="e.g. PK-KHI"
                   value={formData.code}
@@ -218,23 +224,23 @@ export function PortRegistry() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Border Type</label>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">{tt("port.border_type", "Border Type")}</label>
                 <select
                   value={formData.borderType}
                   onChange={(e) => setFormData({ ...formData, borderType: e.target.value })}
                   className="w-full px-3 py-2 border rounded-md bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-sm"
                 >
-                  <option value="Sea Port">Sea Port</option>
-                  <option value="Dry Port">Dry Port</option>
-                  <option value="Airport">Airport</option>
-                  <option value="Land Border / Checkpoint">Land Border / Checkpoint</option>
-                  <option value="Customs Terminal">Customs Terminal</option>
+                  <option value="Sea Port">{tt("port.sea_port", "Sea Port")}</option>
+                  <option value="Dry Port">{tt("port.dry_port", "Dry Port")}</option>
+                  <option value="Airport">{tt("port.airport", "Airport")}</option>
+                  <option value="Land Border / Checkpoint">{tt("port.land_border", "Land Border / Checkpoint")}</option>
+                  <option value="Customs Terminal">{tt("port.customs", "Customs Terminal")}</option>
                 </select>
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Port Name *</label>
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">{tt("port.name_label", "Port Name")} *</label>
               <Input
                 placeholder="e.g. Karachi Port Trust / Port Qasim"
                 value={formData.name}
@@ -244,7 +250,7 @@ export function PortRegistry() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Country *</label>
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">{tt("common.country", "Country")} *</label>
               <SearchSelect
                 label=""
                 value={formData.countryId}
@@ -262,15 +268,15 @@ export function PortRegistry() {
                 onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                 className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
               />
-              <label htmlFor="port_is_active" className="text-sm font-medium text-slate-700 dark:text-slate-300">Active Port</label>
+              <label htmlFor="port_is_active" className="text-sm font-medium text-slate-700 dark:text-slate-300">{tt("port.is_active", "Active Port")}</label>
             </div>
 
             <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
               <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
-                Cancel
+                {tt("common.cancel", "Cancel")}
               </Button>
               <Button type="submit" disabled={saving} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Check className="w-4 h-4 mr-1" />} Save Port
+                {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Check className="w-4 h-4 mr-1" />} {tt("port.save", "Save Port")}
               </Button>
             </div>
           </form>

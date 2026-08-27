@@ -56,9 +56,9 @@ export async function GET(request: NextRequest) {
     const toDate = query.toDate ?? todayIso();
 
     // Get ledger data
-    const ledgerData = await ledgerReportService.listLedgers({
+    const ledgerRows = await ledgerReportService.listLedgers({
       session,
-      q: null,
+      reportScope: "super_admin",
       countryId: query.countryId ?? null,
       countryBranchId: query.countryBranchId ?? null,
       cityBranchId: query.cityBranchId ?? null,
@@ -66,14 +66,14 @@ export async function GET(request: NextRequest) {
     });
 
     // Calculate summary
-    const summary = (ledgerData?.rows ?? []).reduce(
+    const summary = (ledgerRows ?? []).reduce(
       (acc: any, row: any) => {
         acc.totalLedgers += 1;
-        if (row.status === "active") acc.activeLedgers += 1;
+        if (row.isActive) acc.activeLedgers += 1;
         else acc.inactiveLedgers += 1;
-        acc.debit += parseFloat(row.debit ?? 0);
-        acc.credit += parseFloat(row.credit ?? 0);
-        acc.balance += parseFloat(row.balance ?? 0);
+        acc.debit += parseFloat(row.debitTotal ?? 0);
+        acc.credit += parseFloat(row.creditTotal ?? 0);
+        acc.balance += parseFloat(row.currentBalance ?? 0);
         return acc;
       },
       {
@@ -91,13 +91,13 @@ export async function GET(request: NextRequest) {
       "General Ledger Report",
       {
         headers: ["Ledger Code", "Ledger Name", "Status", "Debit", "Credit", "Balance"],
-        rows: (ledgerData?.rows ?? []).map((row: any) => [
-          row.code || "",
-          row.name || "",
-          row.status || "",
-          parseFloat(row.debit ?? 0).toFixed(2),
-          parseFloat(row.credit ?? 0).toFixed(2),
-          parseFloat(row.balance ?? 0).toFixed(2),
+        rows: (ledgerRows ?? []).map((row: any) => [
+          row.ledgerCode || "",
+          row.ledgerName || "",
+          row.isActive ? "active" : "inactive",
+          parseFloat(row.debitTotal ?? 0).toFixed(2),
+          parseFloat(row.creditTotal ?? 0).toFixed(2),
+          parseFloat(row.currentBalance ?? 0).toFixed(2),
         ]),
         summary: {
           "Total Ledgers": summary.totalLedgers,

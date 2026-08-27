@@ -5,7 +5,7 @@ import { withLocalPg } from "@/lib/db/local-postgres";
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await requireErpSession(request);
+    const session = await requireErpSession();
     const { searchParams } = new URL(request.url);
 
     let countryId = searchParams.get("countryId");
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const offset = Number(searchParams.get("offset") || 0);
 
     // Permission Scope
-    if (!session.isSuperAdmin && !session.roles.includes("super_admin_reports") && !session.roles.includes("audit_viewer")) {
+    if (!session.isSuperAdmin && !session.roles.includes("super_admin_reports") && !session.roles.includes("auditor_viewer")) {
       if (session.countryIds.length > 0) {
         countryId = session.countryIds[0];
       }
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireErpSession(request);
+    const session = await requireErpSession();
     const body = await request.json();
 
     const {
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: "Record successfully soft deleted and archived into audit history.",
-      auditEventId: event.id
+      auditEventId: event?.id ?? null
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || "Failed to soft delete record." }, { status: 500 });

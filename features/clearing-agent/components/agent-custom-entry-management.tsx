@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Plus, Pencil, Search, Loader2, RefreshCw, FileText, CheckCircle2, ShieldCheck, Landmark, Building2 } from "lucide-react";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
+import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { Th } from "@/components/ui/translated-th";
 import { ClearingAgentPicker } from "@/features/shipping/components/clearing-agent-picker";
 import { PersonPicker } from "@/components/erp/person-picker";
@@ -51,8 +53,11 @@ const EMPTY_ENTRY: any = {
   remarks: "",
 };
 
-export function AgentCustomEntryManagementView({ lang }: { lang: SupportedLanguage }) {
+export function AgentCustomEntryManagementView({ lang: langProp }: { lang: SupportedLanguage }) {
+  const activeLang = useActiveLanguage();
+  const lang = activeLang !== "en" ? activeLang : langProp;
   const dir = getLanguageDirection(lang);
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const [rows, setRows] = useState<AgentCustomEntryRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -150,9 +155,9 @@ export function AgentCustomEntryManagementView({ lang }: { lang: SupportedLangua
                   5-Language Translation Sync
                 </span>
               </div>
-              <h1 className="text-2xl font-bold tracking-tight">Agent Custom Declaration Form</h1>
+              <h1 className="text-2xl font-bold tracking-tight">{tt("ace.title", "Agent Custom Declaration Form")}</h1>
               <p className="text-slate-400 text-sm">
-                Record customs declarations (GD numbers, HS Codes, Duty payments & inspection clearance).
+                {tt("ace.subtitle", "Record customs declarations (GD numbers, HS Codes, Duty payments & inspection clearance).")}
               </p>
             </div>
             <button
@@ -160,7 +165,7 @@ export function AgentCustomEntryManagementView({ lang }: { lang: SupportedLangua
               className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm font-medium transition-colors border border-slate-700 text-slate-200"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-              Refresh Declarations
+              {tt("common.refresh", "Refresh")}
             </button>
           </div>
         </div>
@@ -183,13 +188,13 @@ export function AgentCustomEntryManagementView({ lang }: { lang: SupportedLangua
           <div className="flex items-center justify-between border-b border-slate-800 pb-4">
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
               <Landmark className="w-5 h-5 text-indigo-400" />
-              {isEditing ? "Edit Custom Declaration Entry" : "New Custom Declaration Entry"}
+              {isEditing ? tt("ace.edit_title", "Edit Custom Declaration Entry") : tt("ace.new_title", "New Custom Declaration Entry")}
             </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-2">Entry Ref / Serial No</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("ace.entry_ref", "Entry Ref / Serial No")}</label>
               <input
                 type="text"
                 placeholder="Auto-generated (or custom)"
@@ -200,7 +205,7 @@ export function AgentCustomEntryManagementView({ lang }: { lang: SupportedLangua
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-2">Customs GD Number *</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("ace.gd_number", "Customs GD Number")} *</label>
               <input
                 type="text"
                 placeholder="e.g. KADP-HC-89123"
@@ -212,20 +217,20 @@ export function AgentCustomEntryManagementView({ lang }: { lang: SupportedLangua
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-2">Declaration Type</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("ace.decl_type", "Declaration Type")}</label>
               <select
                 value={form.declaration_type}
                 onChange={(e) => setForm({ ...form, declaration_type: e.target.value })}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-indigo-500"
               >
-                <option value="import">Import Declaration</option>
-                <option value="export">Export Declaration</option>
-                <option value="transit">Transit Declaration</option>
+                <option value="import">{tt("ace.import", "Import Declaration")}</option>
+                <option value="export">{tt("ace.export", "Export Declaration")}</option>
+                <option value="transit">{tt("ace.transit", "Transit Declaration")}</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-2">Customs Station / Office *</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("ace.customs_station", "Customs Station / Office")} *</label>
               <input
                 type="text"
                 placeholder="e.g. Karachi Port Customs / Torkham Border"
@@ -239,7 +244,7 @@ export function AgentCustomEntryManagementView({ lang }: { lang: SupportedLangua
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-2">Clearing Agent Company *</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("ace.agent_company", "Clearing Agent Company")} *</label>
               <ClearingAgentPicker
                 label=""
                 value={form.agent_id || ""}
@@ -256,7 +261,7 @@ export function AgentCustomEntryManagementView({ lang }: { lang: SupportedLangua
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-2">Consignee Name (Importer)</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("ace.consignee", "Consignee Name (Importer)")}</label>
               <PersonPicker
                 label=""
                 value={form.consignee_person_id || ""}
@@ -273,7 +278,7 @@ export function AgentCustomEntryManagementView({ lang }: { lang: SupportedLangua
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-2">Consignor Name (Exporter)</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("ace.consignor", "Consignor Name (Exporter)")}</label>
               <PersonPicker
                 label=""
                 value={form.consignor_person_id || ""}
@@ -292,7 +297,7 @@ export function AgentCustomEntryManagementView({ lang }: { lang: SupportedLangua
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-2">HS Code</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("ace.hs_code", "HS Code")}</label>
               <input
                 type="text"
                 placeholder="e.g. 8704.2100"
@@ -303,7 +308,7 @@ export function AgentCustomEntryManagementView({ lang }: { lang: SupportedLangua
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-2">Assessed Value</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("ace.assessed_value", "Assessed Value")}</label>
               <input
                 type="number"
                 step="any"
@@ -314,7 +319,7 @@ export function AgentCustomEntryManagementView({ lang }: { lang: SupportedLangua
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-2">Customs Duty Paid</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("ace.duty_paid", "Customs Duty Paid")}</label>
               <input
                 type="number"
                 step="any"
@@ -325,22 +330,22 @@ export function AgentCustomEntryManagementView({ lang }: { lang: SupportedLangua
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-2">Clearance Status</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("ace.clearance_status", "Clearance Status")}</label>
               <select
                 value={form.clearance_status}
                 onChange={(e) => setForm({ ...form, clearance_status: e.target.value })}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-indigo-500"
               >
-                <option value="submitted">Submitted</option>
-                <option value="under_inspection">Under Inspection</option>
-                <option value="cleared">Cleared</option>
-                <option value="rejected">Rejected</option>
+                <option value="submitted">{tt("ace.submitted", "Submitted")}</option>
+                <option value="under_inspection">{tt("ace.under_inspection", "Under Inspection")}</option>
+                <option value="cleared">{tt("ace.cleared", "Cleared")}</option>
+                <option value="rejected">{tt("ace.rejected", "Rejected")}</option>
               </select>
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-2">Goods Description & Remarks</label>
+            <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("ace.goods_remarks", "Goods Description & Remarks")}</label>
             <textarea
               rows={2}
               placeholder="Detailed description of cargo items, tariff notes..."
@@ -357,7 +362,7 @@ export function AgentCustomEntryManagementView({ lang }: { lang: SupportedLangua
               className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-indigo-600/20 disabled:opacity-50"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-              Save Custom Declaration
+              {tt("ace.save", "Save Custom Declaration")}
             </button>
           </div>
         </form>
@@ -365,7 +370,7 @@ export function AgentCustomEntryManagementView({ lang }: { lang: SupportedLangua
         {/* Declarations Register Table */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg space-y-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
-            <h2 className="text-lg font-semibold text-white">Registered Custom Declarations ({filteredRows.length})</h2>
+            <h2 className="text-lg font-semibold text-white">{tt("ace.registered", "Registered Custom Declarations")} ({filteredRows.length})</h2>
             <div className="flex items-center gap-3">
               <div className="relative">
                 <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-500" />
@@ -383,22 +388,22 @@ export function AgentCustomEntryManagementView({ lang }: { lang: SupportedLangua
           {loading ? (
             <div className="py-12 text-center text-slate-500 text-sm flex items-center justify-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin" />
-              Loading custom declarations...
+              {tt("common.loading", "Loading...")}
             </div>
           ) : filteredRows.length === 0 ? (
-            <div className="py-12 text-center text-slate-500 text-sm">No custom declarations found.</div>
+            <div className="py-12 text-center text-slate-500 text-sm">{tt("ace.empty", "No custom declarations found.")}</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm text-slate-300">
                 <thead className="bg-slate-950 text-slate-400 text-xs uppercase font-semibold border-b border-slate-800">
                   <tr>
-                    <Th className="px-4 py-3">Entry No</Th>
-                    <Th className="px-4 py-3">GD Number</Th>
-                    <Th className="px-4 py-3">Agent / Station</Th>
-                    <Th className="px-4 py-3">Consignee</Th>
-                    <Th className="px-4 py-3">Duty Paid</Th>
-                    <Th className="px-4 py-3">Status</Th>
-                    <Th className="px-4 py-3 text-right">Actions</Th>
+                    <Th className="px-4 py-3">{tt("ace.entry_ref", "Entry No")}</Th>
+                    <Th className="px-4 py-3">{tt("ace.gd_number", "GD Number")}</Th>
+                    <Th className="px-4 py-3">{tt("ace.agent_station", "Agent / Station")}</Th>
+                    <Th className="px-4 py-3">{tt("ace.consignee", "Consignee")}</Th>
+                    <Th className="px-4 py-3">{tt("ace.duty_paid", "Duty Paid")}</Th>
+                    <Th className="px-4 py-3">{tt("common.status", "Status")}</Th>
+                    <Th className="px-4 py-3 text-right">{tt("common.actions", "Actions")}</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/50">
@@ -433,7 +438,7 @@ export function AgentCustomEntryManagementView({ lang }: { lang: SupportedLangua
                           className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium border border-slate-700"
                         >
                           <Pencil className="w-3.5 h-3.5" />
-                          Edit
+                          {tt("common.edit", "Edit")}
                         </button>
                       </td>
                     </tr>

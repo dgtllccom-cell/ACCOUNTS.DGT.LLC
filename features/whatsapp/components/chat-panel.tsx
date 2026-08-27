@@ -10,6 +10,8 @@ import { SendMessageForm } from "./send-message-form";
 import { MessageBubble } from "./message-bubble";
 import { StatusBadge } from "./status-badge";
 import { updateConversation } from "../api";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 type Props = {
   conversation: WhatsAppConversation | null;
@@ -24,15 +26,15 @@ type Props = {
   showContact: boolean;
 };
 
-function getContactLabel(detail: ConversationDetail): string {
+function getContactLabel(detail: ConversationDetail, unknown: string, unknownContact: string): string {
   const c = detail.conversation.contact;
-  if (!c) return "Unknown Contact";
+  if (!c) return unknownContact;
   return (
     c.displayName ??
     c.waProfileName ??
     detail.erpCustomer?.customerName ??
     c.phoneNumber ??
-    "Unknown"
+    unknown
   );
 }
 
@@ -52,8 +54,10 @@ export function ChatPanel({
   onToggleContact,
   showContact
 }: Props) {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const contactLabel = getContactLabel(detail);
+  const contactLabel = getContactLabel(detail, tt("wa.unknown", "Unknown"), tt("wa.unknown_contact", "Unknown Contact"));
   const conv = detail.conversation;
 
   useEffect(() => {
@@ -91,7 +95,7 @@ export function ChatPanel({
               onClick={() => handleStatusChange(conv.id, "resolved")}
               className="rounded-md border border-emerald-300 px-2.5 py-1 text-[10px] font-medium text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
             >
-              ✓ Resolve
+              ✓ {tt("wa.resolve_btn", "Resolve")}
             </button>
           )}
           {conv.status === "resolved" && (
@@ -99,7 +103,7 @@ export function ChatPanel({
               onClick={() => handleStatusChange(conv.id, "open")}
               className="rounded-md border border-sky-300 px-2.5 py-1 text-[10px] font-medium text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors"
             >
-              Reopen
+              {tt("wa.reopen_btn", "Reopen")}
             </button>
           )}
           <button
@@ -123,7 +127,7 @@ export function ChatPanel({
               onClick={onLoadMore}
               className="text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2"
             >
-              Load older messages
+              {tt("wa.load_older", "Load older messages")}
             </button>
           </div>
         )}

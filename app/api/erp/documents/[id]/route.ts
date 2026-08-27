@@ -26,13 +26,13 @@ export async function DELETE(
     });
 
     if (!doc) {
-      return apiError("Document not found", 404);
+      return apiError("NOT_FOUND", "Document not found", 404);
     }
 
     // Permission check: Must be super_admin OR the uploader
     const isSuperAdmin = session.roles?.includes("super_admin");
     if (!isSuperAdmin && doc.uploadedBy !== session.userId) {
-      return apiError("You do not have permission to delete this document", 403);
+      return apiError("FORBIDDEN", "You do not have permission to delete this document", 403);
     }
 
     const versions = await db.query.erpDocumentVersions.findMany({

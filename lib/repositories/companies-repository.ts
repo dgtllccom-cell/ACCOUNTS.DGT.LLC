@@ -1,6 +1,7 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import postgres from "postgres";
 import { searchRecordIdsByTranslation } from "@/lib/i18n/localize-records";
+import { allocateFormSerials } from "@/lib/services/form-serials";
 
 function getDbUrl(): string {
   if (process.env.DATABASE_URL) return process.env.DATABASE_URL;

@@ -84,7 +84,7 @@ async function buildAccountListViaLocalPg(
     `;
 
     return {
-      accounts: (rows as Array<{
+      accounts: (rows as unknown as Array<{
         id: string;
         code: string;
         name: string;

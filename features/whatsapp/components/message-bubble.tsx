@@ -4,6 +4,8 @@ import { formatDateTime } from "../utils/date";
 import { Check, CheckCheck, Clock, AlertCircle, FileText, Mic, Image, Video, MapPin, StickerIcon } from "lucide-react";
 import type { WhatsAppMessage } from "../types";
 import { cn } from "@/lib/utils";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 type Props = {
   message: WhatsAppMessage;
@@ -86,6 +88,8 @@ function shouldShowDate(message: WhatsAppMessage, prevMessage: WhatsAppMessage |
 }
 
 export function MessageBubble({ message: msg, prevMessage }: Props) {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const isOutbound = msg.direction === "outbound";
   const isNote = msg.direction === "internal_note";
   const showDate = shouldShowDate(msg, prevMessage);
@@ -109,7 +113,7 @@ export function MessageBubble({ message: msg, prevMessage }: Props) {
         {/* Internal note */}
         {isNote ? (
           <div className="max-w-[70%] rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 shadow-sm dark:border-amber-800/40 dark:bg-amber-900/20 dark:text-amber-200">
-            <p className="mb-0.5 text-[9px] font-semibold uppercase tracking-wide opacity-60">Internal Note</p>
+            <p className="mb-0.5 text-[9px] font-semibold uppercase tracking-wide opacity-60">{tt("wa.internal_note", "Internal Note")}</p>
             <p className="whitespace-pre-wrap">{msg.body}</p>
             <p className="mt-1 text-[9px] text-right opacity-50">
               {msg.senderProfile?.fullName ?? ""}
@@ -127,7 +131,7 @@ export function MessageBubble({ message: msg, prevMessage }: Props) {
             {/* Quoted/replied message context */}
             {msg.contextMessageId && (
               <div className="mb-1.5 rounded-md border-s-2 border-[#25D366] bg-black/5 ps-2 py-1 text-[10px] text-muted-foreground">
-                Replied to message
+                {tt("wa.replied_to", "Replied to message")}
               </div>
             )}
 

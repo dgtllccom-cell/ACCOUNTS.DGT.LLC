@@ -24,6 +24,11 @@ type CustomerRow = {
   notes: string | null;
   original_language_code: string;
   is_active: boolean;
+  country?: string | null;
+  state?: string | null;
+  city?: string | null;
+  father_name?: string | null;
+  business_type?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -240,7 +245,7 @@ export function CustomerPicker({
                         <div className="flex items-center gap-1.5 mt-0.5">
                           <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-xs" dir="ltr">{viewCustomer.whatsapp || viewCustomer.mobile || "—"}</span>
                           {(viewCustomer.whatsapp || viewCustomer.mobile) && (
-                            <a href={`https://wa.me/${(viewCustomer.whatsapp || viewCustomer.mobile).replace(/[^0-9]/g, "")}`} target="_blank" rel="noreferrer" className="text-[10px] text-emerald-600 hover:underline font-bold">Chat</a>
+                            <a href={`https://wa.me/${String(viewCustomer.whatsapp || viewCustomer.mobile).replace(/[^0-9]/g, "")}`} target="_blank" rel="noreferrer" className="text-[10px] text-emerald-600 hover:underline font-bold">Chat</a>
                           )}
                         </div>
                       </div>

@@ -7,10 +7,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 type EmployeeRecord = { id: string; employee_code: string; name: string; designation: string; department: string; country_id: string; branch_id: string; is_active: boolean; created_at: string; country?: { name: string } };
 
 export function EmployeeRegistry() {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+
   const [employees, setEmployees] = useState<EmployeeRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -53,37 +59,37 @@ export function EmployeeRegistry() {
   }
 
   return (
-    <Card>
+    <Card dir={isRtl ? "rtl" : "ltr"}>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Employees</CardTitle>
-          <p className="text-sm text-slate-500 mt-1">Manage employee records</p>
+          <CardTitle>{tt("emp.title", "Employees")}</CardTitle>
+          <p className="text-sm text-slate-500 mt-1">{tt("emp.subtitle", "Manage employee records")}</p>
         </div>
         <Button onClick={() => alert("Add form coming soon")} size="sm">
-          <Plus className="w-4 h-4 mr-1" /> New
+          <Plus className="w-4 h-4 mr-1" /> {tt("common.new", "New")}
         </Button>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex gap-2">
-          <Input placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+          <Input placeholder={tt("emp.search", "Search employees...")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)} className="px-3 py-2 border rounded-md">
-            <option value="all">All</option>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
+            <option value="all">{tt("common.all", "All")}</option>
+            <option value="Active">{tt("common.active", "Active")}</option>
+            <option value="Inactive">{tt("common.inactive", "Inactive")}</option>
           </select>
         </div>
 
         <div className="grid grid-cols-3 gap-2 text-sm">
           <div className="bg-blue-50 p-2 rounded">
-            <div className="text-xs font-semibold text-blue-600">TOTAL</div>
+            <div className="text-xs font-semibold text-blue-600">{tt("common.total", "TOTAL")}</div>
             <div className="text-lg font-bold text-blue-900">{summary.total}</div>
           </div>
           <div className="bg-green-50 p-2 rounded">
-            <div className="text-xs font-semibold text-green-600">ACTIVE</div>
+            <div className="text-xs font-semibold text-green-600">{tt("common.active", "ACTIVE")}</div>
             <div className="text-lg font-bold text-green-900">{summary.active}</div>
           </div>
           <div className="bg-red-50 p-2 rounded">
-            <div className="text-xs font-semibold text-red-600">INACTIVE</div>
+            <div className="text-xs font-semibold text-red-600">{tt("common.inactive", "INACTIVE")}</div>
             <div className="text-lg font-bold text-red-900">{summary.inactive}</div>
           </div>
         </div>
@@ -116,7 +122,7 @@ export function EmployeeRegistry() {
                     <td className="p-3 text-slate-600">{emp.country?.name || '-'}</td>
                     <td className="p-3 text-center">
                       <span className={cn("px-2 py-1 rounded text-xs font-semibold", emp.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800")}>
-                        {emp.is_active ? "Active" : "Inactive"}
+                        {emp.is_active ? tt("common.active", "Active") : tt("common.inactive", "Inactive")}
                       </span>
                     </td>
                     <td className="p-3 text-center">

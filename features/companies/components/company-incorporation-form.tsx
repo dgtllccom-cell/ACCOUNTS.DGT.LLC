@@ -43,6 +43,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
 import { PreferencesControls } from "@/components/layout/preferences-controls";
+import { openCompany360Report } from "@/lib/reports/open-company-360-report-window";
 
 export type CompanyIncorporationData = {
   id?: string;
@@ -102,6 +103,7 @@ export function CompanyIncorporationForm({
   const [ownerPersonId, setOwnerPersonId] = useState("");
   const [managerPersonId, setManagerPersonId] = useState("");
   const [ownerProfile, setOwnerProfile] = useState<any>(null);
+  const [managerProfile, setManagerProfile] = useState<any>(null);
   const [existingCompaniesForOwner, setExistingCompaniesForOwner] = useState<Array<any>>([]);
   const [ownerBanks, setOwnerBanks] = useState<Array<any>>([]);
   const [ownerName, setOwnerName] = useState("");
@@ -136,10 +138,11 @@ export function CompanyIncorporationForm({
   useEffect(() => {
     async function loadCountries() {
       try {
-        const res = await apiGet<{ countries: any[] }>("/api/erp/locations/countries");
-        setCountriesList(res.countries || []);
-        if (res.countries?.length && !selectedCountryId) {
-          setSelectedCountryId(res.countries[0].id);
+        const res: any = await apiGet("/api/erp/locations/countries");
+        const list = res?.countries || res?.data?.countries || (Array.isArray(res) ? res : []);
+        setCountriesList(list);
+        if (list.length && !selectedCountryId) {
+          setSelectedCountryId(list[0].id);
         }
       } catch {}
     }
@@ -155,19 +158,20 @@ export function CompanyIncorporationForm({
     }
     async function loadBranches() {
       try {
-        const res = await apiGet<{ ok: boolean; data: { branches: any[] } }>(`/api/erp/locations/branches/main?countryId=${selectedCountryId}`);
-        if (res.ok && res.data?.branches) {
-          setBranchesList(res.data.branches);
-          if (res.data.branches.length && !selectedCountryBranchId) {
-            setSelectedCountryBranchId(res.data.branches[0].id);
-          }
+        const res: any = await apiGet(`/api/erp/locations/branches/main?countryId=${encodeURIComponent(selectedCountryId)}`);
+        const branches = res?.branches || res?.data?.branches || (Array.isArray(res) ? res : []);
+        setBranchesList(branches);
+        if (branches.length) {
+          setSelectedCountryBranchId(branches[0].id);
+        } else {
+          setSelectedCountryBranchId("");
         }
       } catch {}
     }
     loadBranches();
   }, [selectedCountryId]);
 
-  // Load City Branches when Country changes
+  // Load City Branches when Country or Main Branch changes
   useEffect(() => {
     if (!selectedCountryId) {
       setCityBranchesList([]);
@@ -176,17 +180,20 @@ export function CompanyIncorporationForm({
     }
     async function loadCityBranches() {
       try {
-        const res = await apiGet<{ ok: boolean; data: { branches: any[] } }>(`/api/erp/locations/branches/city?countryId=${selectedCountryId}`);
-        if (res.ok && res.data?.branches) {
-          setCityBranchesList(res.data.branches);
-          if (res.data.branches.length && !selectedCityBranchId) {
-            setSelectedCityBranchId(res.data.branches[0].id);
-          }
+        let url = `/api/erp/locations/branches/city?countryId=${encodeURIComponent(selectedCountryId)}`;
+        if (selectedCountryBranchId) {
+          url += `&countryBranchId=${encodeURIComponent(selectedCountryBranchId)}`;
+        }
+        const res: any = await apiGet(url);
+        const cityBranches = res?.cityBranches || res?.branches || res?.data?.cityBranches || res?.data?.branches || (Array.isArray(res) ? res : []);
+        setCityBranchesList(cityBranches);
+        if (cityBranches.length && !selectedCityBranchId) {
+          setSelectedCityBranchId(cityBranches[0].id);
         }
       } catch {}
     }
     loadCityBranches();
-  }, [selectedCountryId]);
+  }, [selectedCountryId, selectedCountryBranchId]);
 
   // Load Branch Operative Companies
   useEffect(() => {
@@ -196,12 +203,54 @@ export function CompanyIncorporationForm({
         const qp = new URLSearchParams();
         if (selectedCountryId) qp.set("countryId", selectedCountryId);
         if (selectedCountryBranchId) qp.set("countryBranchId", selectedCountryBranchId);
-        const res = await apiGet<{ companies: any[] }>(`/api/erp/companies?${qp.toString()}`);
-        setBranchCompanies(res.companies || []);
+        const res: any = await apiGet(`/api/erp/companies?${qp.toString()}`);
+        const comps = res?.companies || res?.data?.companies || (Array.isArray(res) ? res : []);
+        setBranchCompanies(comps);
       } catch {}
     }
     loadBranchComps();
   }, [registrationMode, selectedCountryId, selectedCountryBranchId]);
+
+  // Load Manager Profile Details
+  useEffect(() => {
+    if (!managerPersonId) {
+      setManagerProfile(null);
+      return;
+    }
+    (async () => {
+      try {
+        const [pRes, summaryRes]: any[] = await Promise.allSettled([
+          apiGet(`/api/erp/customers/${encodeURIComponent(managerPersonId)}?lang=${encodeURIComponent(lang)}`),
+          apiGet(`/api/erp/parties/360-summary?customerId=${encodeURIComponent(managerPersonId)}&lang=${encodeURIComponent(lang)}`)
+        ]);
+
+        let pData: any = null;
+        if (pRes.status === "fulfilled" && pRes.value?.customer) {
+          pData = pRes.value.customer;
+        }
+
+        let summaryData: any = null;
+        if (summaryRes.status === "fulfilled" && summaryRes.value?.summary) {
+          summaryData = summaryRes.value.summary;
+        }
+
+        const mName = pData?.customer_name || [pData?.first_name, pData?.last_name].filter(Boolean).join(" ") || summaryData?.customerName || "";
+
+        setManagerProfile({
+          ...pData,
+          name: mName,
+          customerCode: pData?.customer_code || pData?.person_code || `CUST-${managerPersonId.slice(0, 6).toUpperCase()}`,
+          employeeCode: summaryData?.employees?.[0]?.employeeCode || pData?.employee_code || "MGR-001",
+          fatherName: pData?.father_name || pData?.contact_person || summaryData?.fatherName || "—",
+          mobile: pData?.mobile || summaryData?.mobile || summaryData?.phone || "—",
+          email: pData?.email || summaryData?.email || "—",
+          locationStr: [pData?.city_name || summaryData?.cityName, pData?.state_name || summaryData?.stateName, pData?.country_name || summaryData?.countryName].filter(Boolean).join(" / ") || "—"
+        });
+      } catch (e) {
+        console.error("Failed to load manager profile", e);
+      }
+    })();
+  }, [managerPersonId, lang]);
 
   // Load Owner Profile, Sister Companies, and Linked Banks
   useEffect(() => {
@@ -235,20 +284,39 @@ export function CompanyIncorporationForm({
 
         if (summaryRes.status === "fulfilled" && summaryRes.value?.summary) {
           summaryData = summaryRes.value.summary;
-          if (summaryData.companies?.length) sisterComps = summaryData.companies;
+          if (summaryData.companies?.length) sisterComps = [...summaryData.companies];
           if (summaryData.banks?.length) banks = summaryData.banks;
         }
 
-        if (cRes.status === "fulfilled" && cRes.value?.companies?.length) {
-          sisterComps = cRes.value.companies;
+        if (cRes.status === "fulfilled") {
+          const comps = (cRes.value as any)?.companies || (cRes.value as any)?.data?.companies || [];
+          if (comps.length > 0) {
+            const existingIds = new Set(sisterComps.map((s) => s.id));
+            for (const c of comps) {
+              if (!existingIds.has(c.id)) {
+                sisterComps.push(c);
+                existingIds.add(c.id);
+              }
+            }
+          }
+        }
+
+        if (sisterComps.length === 0 && pData?.customer_name) {
+          try {
+            const byNameRes: any = await apiGet(`/api/erp/companies?q=${encodeURIComponent(pData.customer_name)}&limit=50`);
+            const byNameComps = byNameRes?.companies || byNameRes?.data?.companies || [];
+            if (byNameComps.length > 0) {
+              sisterComps = byNameComps;
+            }
+          } catch {}
         }
 
         setOwnerProfile({
           ...pData,
           summary: summaryData,
-          customerCode: pData?.customer_code || `CUST-${ownerPersonId.slice(0, 6).toUpperCase()}`,
-          employeeCode: summaryData?.employees?.[0]?.employeeCode || "EMP-0010",
-          fatherName: pData?.father_name || pData?.contact_person || "عبداللہ",
+          customerCode: pData?.customer_code || pData?.person_code || `CUST-${ownerPersonId.slice(0, 6).toUpperCase()}`,
+          employeeCode: summaryData?.employees?.[0]?.employeeCode || pData?.employee_code || "EMP-0010",
+          fatherName: pData?.father_name || pData?.contact_person || summaryData?.fatherName || "عبداللہ",
           locationStr: [pData?.city_name || "Deira", pData?.state_name || "Dubai", pData?.country_name || "UAE"].filter(Boolean).join(" / ")
         });
 
@@ -633,7 +701,7 @@ export function CompanyIncorporationForm({
                         {lang === "ur" ? "موبائل / واٹس ایپ" : "Mobile / WhatsApp"}
                       </span>
                       <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono text-[11px]" dir="ltr">
-                        {phone || "+971 50 123 4567"}
+                        {phone || ownerProfile?.mobile || "+971 50 123 4567"}
                       </span>
                     </div>
 
@@ -642,7 +710,7 @@ export function CompanyIncorporationForm({
                         {lang === "ur" ? "ای میل" : "Email"}
                       </span>
                       <span className="font-bold text-blue-600 dark:text-blue-400 font-mono text-[11px] truncate block" dir="ltr">
-                        {email || "asmatullah@gmail.com"}
+                        {email || ownerProfile?.email || "owner@company.dgt.llc"}
                       </span>
                     </div>
 
@@ -657,6 +725,56 @@ export function CompanyIncorporationForm({
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Card 1B: Manager Profile Details (when manager selected) */}
+              {managerProfile && (
+                <Card className="border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl overflow-hidden bg-white dark:bg-slate-900 border-l-4 border-l-indigo-600">
+                  <CardHeader className="bg-indigo-50/50 dark:bg-indigo-950/30 border-b border-slate-100 dark:border-slate-800 pb-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                          <Users className="h-3.5 w-3.5" />
+                        </span>
+                        <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                          {lang === "ur" ? "کمپنی منیجر کے کوائف (Manager Details)" : "Selected Company Manager Details"}
+                        </CardTitle>
+                      </div>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">
+                        {lang === "ur" ? "مجاز ایڈمن" : "Authorized"}
+                      </span>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-3.5 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white font-black text-sm">
+                        {managerProfile?.name ? managerProfile.name.slice(0, 2) : "MG"}
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                          {transliterateProperNoun(managerProfile?.name || "Company Manager", lang)}
+                        </h3>
+                        <p className="text-[11px] text-slate-500 font-medium">
+                          {lang === "ur" ? "ولدیت:" : "S/O:"} {transliterateProperNoun(managerProfile?.fatherName || "—", lang)}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                        <span className="text-[9px] font-bold text-slate-400 block">{lang === "ur" ? "منیجر کوڈ" : "Manager Code"}</span>
+                        <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{managerProfile?.customerCode || managerProfile?.employeeCode || "MGR-001"}</span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                        <span className="text-[9px] font-bold text-slate-400 block">{lang === "ur" ? "رابطہ نمبر" : "Mobile"}</span>
+                        <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400" dir="ltr">{managerProfile?.mobile || "—"}</span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 col-span-2">
+                        <span className="text-[9px] font-bold text-slate-400 block">{lang === "ur" ? "ای میل" : "Email"}</span>
+                        <span className="font-mono font-bold text-blue-600 dark:text-blue-400 truncate block" dir="ltr">{managerProfile?.email || "manager@company.dgt.llc"}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Card 2: Registered Sister Companies Table */}
               <Card className="border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
@@ -1017,22 +1135,38 @@ export function CompanyIncorporationForm({
               {/* Step 2: تصدیق و کاروباری نام */}
               {currentStep === 2 && (
                 <div className="space-y-4 animate-in fade-in">
-                  <div className="p-4 rounded-xl border border-indigo-200 bg-indigo-50/70 dark:bg-indigo-950/40 space-y-2">
-                    <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300 block">
-                      {registrationMode === "owner_portfolio" 
-                        ? (lang === "ur" ? "منسلک مالک کی تصدیق:" : "Linked Owner Confirmation:")
-                        : (lang === "ur" ? "منسلک برانچ کی تصدیق:" : "Linked Branch Confirmation:")}
-                    </span>
-                    <p className="text-sm font-black text-indigo-950 dark:text-indigo-100">
-                      {registrationMode === "owner_portfolio"
-                        ? `${transliterateProperNoun(ownerName || "عصمت اللہ عبداللہ", lang)} (S/O: ${transliterateProperNoun(ownerProfile?.fatherName || "عبداللہ", lang)})`
-                        : `${selectedCountry?.name || "Country"} / ${selectedCountryBranch?.name || "Branch"}`}
-                    </p>
-                    <p className="text-xs text-slate-600 dark:text-slate-400">
-                      {registrationMode === "owner_portfolio"
-                        ? (lang === "ur" ? "ملکیت کی قسم: 100% پرسنل ہولڈنگ / سسٹر کمپنی" : "Ownership: 100% Personal Holding / Sister Entity")
-                        : (lang === "ur" ? "آپریشنل حیثیت: پورے ERP میں برانچ انوائسز اور لیٹر ہیڈ کے لیے مجاز" : "Status: Authorized for Branch Invoicing, POs & Vouchers")}
-                    </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="p-4 rounded-xl border border-indigo-200 bg-indigo-50/70 dark:bg-indigo-950/40 space-y-1.5">
+                      <span className="text-[10px] font-black uppercase text-indigo-700 dark:text-indigo-300 block">
+                        {registrationMode === "owner_portfolio" 
+                          ? (lang === "ur" ? "منسلک مالک کی تصدیق (Owner):" : "Linked Owner Confirmation:")
+                          : (lang === "ur" ? "منسلک برانچ کی تصدیق (Branch):" : "Linked Branch Confirmation:")}
+                      </span>
+                      <p className="text-sm font-black text-indigo-950 dark:text-indigo-100">
+                        {registrationMode === "owner_portfolio"
+                          ? `${transliterateProperNoun(ownerName || "عصمت اللہ عبداللہ", lang)} (S/O: ${transliterateProperNoun(ownerProfile?.fatherName || "عبداللہ", lang)})`
+                          : `${selectedCountry?.name || "Country"} / ${selectedCountryBranch?.name || "Branch"}`}
+                      </p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400">
+                        {registrationMode === "owner_portfolio"
+                          ? (lang === "ur" ? "ملکیت: 100% پرسنل ہولڈنگ / سسٹر کمپنی" : "Ownership: 100% Personal Holding / Sister Entity")
+                          : (lang === "ur" ? "حیثیت: پورے ERP میں برانچ انوائسز اور واؤچرز کے لیے مجاز" : "Status: Authorized for Branch Invoicing, POs & Vouchers")}
+                      </p>
+                    </div>
+
+                    {managerProfile && (
+                      <div className="p-4 rounded-xl border border-blue-200 bg-blue-50/70 dark:bg-blue-950/40 space-y-1.5">
+                        <span className="text-[10px] font-black uppercase text-blue-700 dark:text-blue-300 block">
+                          {lang === "ur" ? "کمپنی منیجر (Manager):" : "Company Manager Confirmation:"}
+                        </span>
+                        <p className="text-sm font-black text-blue-950 dark:text-blue-100">
+                          {transliterateProperNoun(managerProfile?.name || "Company Manager", lang)} (S/O: {transliterateProperNoun(managerProfile?.fatherName || "—", lang)})
+                        </p>
+                        <p className="text-xs text-slate-600 dark:text-slate-400">
+                          {lang === "ur" ? `کوڈ: ${managerProfile?.customerCode || "MGR-001"} • موبائل: ${managerProfile?.mobile || "—"}` : `Code: ${managerProfile?.customerCode || "MGR-001"} • Mobile: ${managerProfile?.mobile || "—"}`}
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1116,25 +1250,89 @@ export function CompanyIncorporationForm({
                           {companyName || "DAMAAN Trading Company LLC"}
                         </h3>
                         <p className="text-xs text-slate-500 font-bold">
-                          {legalStructure} · {natureOfBusiness} · {baseCurrency}
+                          {companyNameUrdu && `${companyNameUrdu} • `}{legalStructure} · {natureOfBusiness} · {baseCurrency}
                         </p>
                       </div>
-                      <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold">
-                        {lang === "ur" ? "تیار برائے رجسٹریشن" : "Ready to Register"}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            openCompany360Report({
+                              company: {
+                                name: companyName,
+                                legalName: businessName || companyName,
+                                nameUrdu: companyNameUrdu,
+                                businessType: legalStructure,
+                                natureOfBusiness,
+                                registrationType,
+                                licenseNumber,
+                                baseCurrency,
+                                countryName: selectedCountry?.name || "United Arab Emirates",
+                                mainBranchName: selectedCountryBranch?.name || "Main Headquarters",
+                                cityBranchName: selectedCityBranch?.name || "Dubai Hub",
+                                address,
+                                phone,
+                                email,
+                                isBranchOperative: registrationMode === "branch_operative"
+                              },
+                              owner: ownerProfile ? {
+                                name: ownerName,
+                                fatherName: ownerProfile.fatherName,
+                                customerCode: ownerProfile.customerCode,
+                                employeeCode: ownerProfile.employeeCode,
+                                phone: phone || ownerProfile.mobile,
+                                email: email || ownerProfile.email,
+                                country: ownerProfile.country_name,
+                                city: ownerProfile.city_name,
+                                address: ownerProfile.address
+                              } : { name: ownerName },
+                              manager: managerProfile ? {
+                                name: managerProfile.name,
+                                fatherName: managerProfile.fatherName,
+                                customerCode: managerProfile.customerCode,
+                                employeeCode: managerProfile.employeeCode,
+                                phone: managerProfile.mobile,
+                                email: managerProfile.email,
+                                country: managerProfile.country_name,
+                                city: managerProfile.city_name
+                              } : null,
+                              sisterCompanies: existingCompaniesForOwner,
+                              banks: ownerBanks,
+                              lang
+                            });
+                          }}
+                          className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200 text-xs font-bold gap-1.5 h-8 rounded-lg cursor-pointer"
+                        >
+                          <Printer className="h-3.5 w-3.5" />
+                          <span>{lang === "ur" ? "مکمل 360° پی ڈی ایف رپورٹ" : "Preview 360° PDF"}</span>
+                        </Button>
+                        <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold">
+                          {lang === "ur" ? "تیار برائے رجسٹریشن" : "Ready to Register"}
+                        </span>
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
                       <div>
                         <span className="text-[10px] text-slate-400 font-bold block">
-                          {registrationMode === "owner_portfolio" ? (lang === "ur" ? "مالک:" : "Owner:") : (lang === "ur" ? "برانچ:" : "Branch:")}
+                          {registrationMode === "owner_portfolio" ? (lang === "ur" ? "مالک / شخص:" : "Owner / Stakeholder:") : (lang === "ur" ? "برانچ:" : "Branch:")}
                         </span>
                         <span className="font-bold text-slate-800 dark:text-slate-200">
                           {registrationMode === "owner_portfolio" 
-                            ? transliterateProperNoun(ownerName, lang) 
+                            ? `${transliterateProperNoun(ownerName, lang)} (S/O: ${transliterateProperNoun(ownerProfile?.fatherName || "—", lang)})` 
                             : `${selectedCountry?.name || "Country"} / ${selectedCountryBranch?.name || "Branch"}`}
                         </span>
                       </div>
+                      {managerProfile && (
+                        <div>
+                          <span className="text-[10px] text-slate-400 font-bold block">{lang === "ur" ? "کمپنی منیجر:" : "Company Manager:"}</span>
+                          <span className="font-bold text-indigo-600 dark:text-indigo-400">
+                            {transliterateProperNoun(managerProfile?.name || "Manager", lang)}
+                          </span>
+                        </div>
+                      )}
                       <div>
                         <span className="text-[10px] text-slate-400 font-bold block">{lang === "ur" ? "رجسٹریشن قسم:" : "Reg Type:"}</span>
                         <span className="font-bold text-slate-800 dark:text-slate-200">{registrationType}</span>
@@ -1154,6 +1352,10 @@ export function CompanyIncorporationForm({
                       <div>
                         <span className="text-[10px] text-slate-400 font-bold block">{lang === "ur" ? "سیریل ایلوکیشن:" : "Serials:"}</span>
                         <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">4-Level Auto Allocated</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold block">{lang === "ur" ? "سسٹر کمپنیاں:" : "Sister Companies:"}</span>
+                        <span className="font-bold text-blue-600">{existingCompaniesForOwner.length} {lang === "ur" ? "کمپنیاں موجود" : "Companies on Record"}</span>
                       </div>
                     </div>
                   </div>

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Pencil, Trash2, Search, Loader2, RefreshCw, FileText, CheckCircle2, DollarSign, Receipt, CreditCard, Filter, ArrowUpRight } from "lucide-react";
 import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { ReportActions } from "@/components/ui/report-actions";
@@ -54,7 +55,10 @@ const EMPTY_BILL: any = {
   remarks: "",
 };
 
-export function PaymentBillManagementView({ lang }: { lang: SupportedLanguage }) {
+export function PaymentBillManagementView({ lang: langProp }: { lang: SupportedLanguage }) {
+  const activeLang = useActiveLanguage();
+  const lang = activeLang !== "en" ? activeLang : langProp;
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const dir = getLanguageDirection(lang);
   const [rows, setRows] = useState<PaymentBillRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -173,15 +177,12 @@ export function PaymentBillManagementView({ lang }: { lang: SupportedLanguage })
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <span className="bg-indigo-500/20 text-indigo-300 text-xs font-semibold px-2.5 py-1 rounded-md border border-indigo-500/30">
-                  Clearing Agent Module
-                </span>
-                <span className="bg-emerald-500/20 text-emerald-300 text-xs font-semibold px-2.5 py-1 rounded-md border border-emerald-500/30">
-                  5-Language Translation Sync
+                  {tt("clbill.module_badge", "Clearing Agent Module")}
                 </span>
               </div>
-              <h1 className="text-2xl font-bold tracking-tight">Payment Bill Entry Management</h1>
+              <h1 className="text-2xl font-bold tracking-tight">{tt("clbill.title", "Payment Bill Entry Management")}</h1>
               <p className="text-slate-400 text-sm">
-                Record customs duties, port handling, clearance fees, freight charges and generate settlement bills.
+                {tt("clbill.subtitle", "Record customs duties, port handling, clearance fees, freight charges and generate settlement bills.")}
               </p>
             </div>
             <button
@@ -189,7 +190,7 @@ export function PaymentBillManagementView({ lang }: { lang: SupportedLanguage })
               className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm font-medium transition-colors border border-slate-700 text-slate-200"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-              Refresh Bills
+              {tt("clbill.refresh", "Refresh Bills")}
             </button>
           </div>
         </div>
@@ -198,40 +199,40 @@ export function PaymentBillManagementView({ lang }: { lang: SupportedLanguage })
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm space-y-1">
             <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
-              <span>Total Payment Bills</span>
+              <span>{tt("clbill.total_bills", "Total Payment Bills")}</span>
               <Receipt className="w-4 h-4 text-indigo-400" />
             </div>
             <div className="text-2xl font-bold text-white">{stats.totalBills}</div>
-            <div className="text-xs text-slate-500">Registered clearing vouchers</div>
+            <div className="text-xs text-slate-500">{tt("clbill.registered_vouchers", "Registered clearing vouchers")}</div>
           </div>
 
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm space-y-1">
             <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
-              <span>Paid Settlement Bills</span>
+              <span>{tt("clbill.paid_bills", "Paid Settlement Bills")}</span>
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             </div>
             <div className="text-2xl font-bold text-emerald-400">{stats.paidCount}</div>
-            <div className="text-xs text-slate-500">Fully settled payments</div>
+            <div className="text-xs text-slate-500">{tt("clbill.fully_settled", "Fully settled payments")}</div>
           </div>
 
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm space-y-1">
             <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
-              <span>Pending / Unpaid Bills</span>
+              <span>{tt("clbill.pending_bills", "Pending / Unpaid Bills")}</span>
               <CreditCard className="w-4 h-4 text-amber-400" />
             </div>
             <div className="text-2xl font-bold text-amber-400">{stats.pendingCount}</div>
-            <div className="text-xs text-slate-500">Awaiting payment voucher</div>
+            <div className="text-xs text-slate-500">{tt("clbill.awaiting", "Awaiting payment voucher")}</div>
           </div>
 
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm space-y-1">
             <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
-              <span>Grand Total Amount</span>
+              <span>{tt("clbill.grand_total", "Grand Total Amount")}</span>
               <DollarSign className="w-4 h-4 text-blue-400" />
             </div>
             <div className="text-2xl font-bold text-blue-400 font-mono">
               ${stats.grandTotal.toLocaleString("en-US", { minimumFractionDigits: 2 })}
             </div>
-            <div className="text-xs text-slate-500">Combined charges & duties</div>
+            <div className="text-xs text-slate-500">{tt("clbill.combined_charges", "Combined charges & duties")}</div>
           </div>
         </div>
 
@@ -253,7 +254,7 @@ export function PaymentBillManagementView({ lang }: { lang: SupportedLanguage })
           <div className="flex items-center justify-between border-b border-slate-800 pb-4">
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
               <FileText className="w-5 h-5 text-indigo-400" />
-              {isEditing ? "Edit Payment Bill Entry" : "Create New Payment Bill Entry"}
+              {isEditing ? tt("clbill.edit_entry", "Edit Payment Bill Entry") : tt("clbill.new_entry", "Create New Payment Bill Entry")}
             </h2>
             {isEditing && (
               <button
@@ -264,14 +265,14 @@ export function PaymentBillManagementView({ lang }: { lang: SupportedLanguage })
                 }}
                 className="text-xs text-slate-400 hover:text-white border border-slate-700 px-3 py-1 rounded-lg"
               >
-                Cancel Edit
+                {tt("clbill.cancel_edit", "Cancel Edit")}
               </button>
             )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-2">Bill Reference No</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("clbill.bill_ref_no", "Bill Reference No")}</label>
               <input
                 type="text"
                 placeholder="Auto-generated (or custom)"
@@ -282,7 +283,7 @@ export function PaymentBillManagementView({ lang }: { lang: SupportedLanguage })
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-2">Order No / B/L Ref</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("clbill.order_no", "Order No / B/L Ref")}</label>
               <input
                 type="text"
                 placeholder="e.g. CL-ORD-2026-0001"
@@ -293,7 +294,7 @@ export function PaymentBillManagementView({ lang }: { lang: SupportedLanguage })
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-2">Bill of Lading (B/L) No</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("clbill.bl_no", "Bill of Lading (B/L) No")}</label>
               <input
                 type="text"
                 placeholder="e.g. BL-984712"
@@ -304,7 +305,7 @@ export function PaymentBillManagementView({ lang }: { lang: SupportedLanguage })
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-2">Customs GD Number</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("clbill.gd_no", "Customs GD Number")}</label>
               <input
                 type="text"
                 placeholder="e.g. KADP-HC-10492"
@@ -317,7 +318,7 @@ export function PaymentBillManagementView({ lang }: { lang: SupportedLanguage })
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-2">Clearing Agent / Company Name *</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("clbill.clearing_agent", "Clearing Agent / Company Name")} *</label>
               <ClearingAgentPicker
                 label=""
                 value={form.agent_id || ""}
@@ -334,7 +335,7 @@ export function PaymentBillManagementView({ lang }: { lang: SupportedLanguage })
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-2">Port / Border Station</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("clbill.port_station", "Port / Border Station")}</label>
               <input
                 type="text"
                 placeholder="e.g. Karachi Port / Torkham Border"
@@ -347,11 +348,11 @@ export function PaymentBillManagementView({ lang }: { lang: SupportedLanguage })
 
           {/* Charge Breakdown Grid */}
           <div className="bg-slate-950/60 border border-slate-800/80 rounded-xl p-5 space-y-4">
-            <h3 className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">Charges & Duty Breakdown</h3>
+            <h3 className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">{tt("clbill.charges_section", "Charges & Duty Breakdown")}</h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-6 gap-4">
               <div>
-                <label className="block text-[11px] font-medium text-slate-400 mb-1">Customs Duty</label>
+                <label className="block text-[11px] font-medium text-slate-400 mb-1">{tt("clbill.customs_duty", "Customs Duty")}</label>
                 <input
                   type="number"
                   step="any"
@@ -362,7 +363,7 @@ export function PaymentBillManagementView({ lang }: { lang: SupportedLanguage })
               </div>
 
               <div>
-                <label className="block text-[11px] font-medium text-slate-400 mb-1">Port Charges</label>
+                <label className="block text-[11px] font-medium text-slate-400 mb-1">{tt("clbill.port_charges", "Port Charges")}</label>
                 <input
                   type="number"
                   step="any"
@@ -373,7 +374,7 @@ export function PaymentBillManagementView({ lang }: { lang: SupportedLanguage })
               </div>
 
               <div>
-                <label className="block text-[11px] font-medium text-slate-400 mb-1">Demurrage</label>
+                <label className="block text-[11px] font-medium text-slate-400 mb-1">{tt("clbill.demurrage", "Demurrage")}</label>
                 <input
                   type="number"
                   step="any"
@@ -384,7 +385,7 @@ export function PaymentBillManagementView({ lang }: { lang: SupportedLanguage })
               </div>
 
               <div>
-                <label className="block text-[11px] font-medium text-slate-400 mb-1">Clearance Fee</label>
+                <label className="block text-[11px] font-medium text-slate-400 mb-1">{tt("clbill.clearance_fee", "Clearance Fee")}</label>
                 <input
                   type="number"
                   step="any"
@@ -395,7 +396,7 @@ export function PaymentBillManagementView({ lang }: { lang: SupportedLanguage })
               </div>
 
               <div>
-                <label className="block text-[11px] font-medium text-slate-400 mb-1">Freight Charges</label>
+                <label className="block text-[11px] font-medium text-slate-400 mb-1">{tt("clbill.freight_charges", "Freight Charges")}</label>
                 <input
                   type="number"
                   step="any"
@@ -406,7 +407,7 @@ export function PaymentBillManagementView({ lang }: { lang: SupportedLanguage })
               </div>
 
               <div>
-                <label className="block text-[11px] font-medium text-slate-400 mb-1">Other Expenses</label>
+                <label className="block text-[11px] font-medium text-slate-400 mb-1">{tt("clbill.other_expenses", "Other Expenses")}</label>
                 <input
                   type="number"
                   step="any"
@@ -420,7 +421,7 @@ export function PaymentBillManagementView({ lang }: { lang: SupportedLanguage })
             <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
               <div className="flex items-center gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Currency</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">{tt("clbill.currency", "Currency")}</label>
                   <select
                     value={form.currency_code}
                     onChange={(e) => setForm({ ...form, currency_code: e.target.value })}
@@ -434,34 +435,34 @@ export function PaymentBillManagementView({ lang }: { lang: SupportedLanguage })
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Payment Method</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">{tt("clbill.payment_method", "Payment Method")}</label>
                   <select
                     value={form.payment_method}
                     onChange={(e) => setForm({ ...form, payment_method: e.target.value })}
                     className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200"
                   >
-                    <option value="bank_transfer">Bank Transfer</option>
-                    <option value="cash">Cash Voucher</option>
-                    <option value="cheque">Cheque</option>
+                    <option value="bank_transfer">{tt("clbill.bank_transfer", "Bank Transfer")}</option>
+                    <option value="cash">{tt("clbill.cash", "Cash Voucher")}</option>
+                    <option value="cheque">{tt("clbill.cheque", "Cheque")}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Payment Status</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">{tt("clbill.payment_status", "Payment Status")}</label>
                   <select
                     value={form.payment_status}
                     onChange={(e) => setForm({ ...form, payment_status: e.target.value })}
                     className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 font-semibold"
                   >
-                    <option value="pending">Pending</option>
-                    <option value="partial">Partial</option>
-                    <option value="paid">Paid</option>
+                    <option value="pending">{tt("clbill.pending", "Pending")}</option>
+                    <option value="partial">{tt("clbill.partial", "Partial")}</option>
+                    <option value="paid">{tt("clbill.paid", "Paid")}</option>
                   </select>
                 </div>
               </div>
 
               <div className="text-right">
-                <span className="text-xs text-slate-400 block font-medium">Calculated Bill Total</span>
+                <span className="text-xs text-slate-400 block font-medium">{tt("clbill.bill_total", "Calculated Bill Total")}</span>
                 <span className="text-xl font-bold text-indigo-300 font-mono">
                   {form.currency_code} {calculatedTotal.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                 </span>
@@ -470,7 +471,7 @@ export function PaymentBillManagementView({ lang }: { lang: SupportedLanguage })
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-2">Remarks / Notes</label>
+            <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("clbill.remarks", "Remarks / Notes")}</label>
             <textarea
               rows={2}
               placeholder="Additional billing details, agent notes or reference details..."
@@ -487,7 +488,7 @@ export function PaymentBillManagementView({ lang }: { lang: SupportedLanguage })
               className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-blue-600/20 disabled:opacity-50"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-              {isEditing ? "Update Payment Bill Entry" : "Save Payment Bill Entry"}
+              {isEditing ? tt("clbill.update", "Update Payment Bill Entry") : tt("clbill.save", "Save Payment Bill Entry")}
             </button>
           </div>
         </form>
@@ -496,8 +497,8 @@ export function PaymentBillManagementView({ lang }: { lang: SupportedLanguage })
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg space-y-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
             <div>
-              <h2 className="text-lg font-semibold text-white">Payment Bill Register ({filteredRows.length})</h2>
-              <p className="text-xs text-slate-400">All registered clearing bills, duties and expenses</p>
+              <h2 className="text-lg font-semibold text-white">{tt("clbill.register", "Payment Bill Register")} ({filteredRows.length})</h2>
+              <p className="text-xs text-slate-400">{tt("clbill.register_sub", "All registered clearing bills, duties and expenses")}</p>
             </div>
 
             <div className="flex items-center gap-3">
@@ -505,7 +506,7 @@ export function PaymentBillManagementView({ lang }: { lang: SupportedLanguage })
                 <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-500" />
                 <input
                   type="text"
-                  placeholder="Search bill no, B/L, GD, agent..."
+                  placeholder={tt("clbill.search_ph", "Search bill no, B/L, GD, agent...")}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   className="bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 w-64 focus:outline-none focus:border-indigo-500"
@@ -517,10 +518,10 @@ export function PaymentBillManagementView({ lang }: { lang: SupportedLanguage })
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300"
               >
-                <option value="all">All Statuses</option>
-                <option value="paid">Paid</option>
-                <option value="pending">Pending</option>
-                <option value="partial">Partial</option>
+                <option value="all">{tt("clbill.all_statuses", "All Statuses")}</option>
+                <option value="paid">{tt("clbill.paid", "Paid")}</option>
+                <option value="pending">{tt("clbill.pending", "Pending")}</option>
+                <option value="partial">{tt("clbill.partial", "Partial")}</option>
               </select>
             </div>
           </div>
@@ -528,10 +529,10 @@ export function PaymentBillManagementView({ lang }: { lang: SupportedLanguage })
           {loading ? (
             <div className="py-12 text-center text-slate-500 text-sm flex items-center justify-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin" />
-              Loading payment bills...
+              {tt("clbill.loading", "Loading payment bills...")}
             </div>
           ) : filteredRows.length === 0 ? (
-            <div className="py-12 text-center text-slate-500 text-sm">No payment bills found.</div>
+            <div className="py-12 text-center text-slate-500 text-sm">{tt("clbill.empty", "No payment bills found.")}</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm text-slate-800 dark:text-slate-300">
@@ -591,7 +592,7 @@ export function PaymentBillManagementView({ lang }: { lang: SupportedLanguage })
                           className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition-colors border border-slate-700"
                         >
                           <Pencil className="w-3.5 h-3.5" />
-                          Edit
+                          {tt("clbill.edit", "Edit")}
                         </button>
                       </td>
                     </tr>

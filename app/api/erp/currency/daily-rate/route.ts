@@ -60,8 +60,8 @@ export async function GET(request: NextRequest) {
       }
     } catch {
       // Fallback: direct query on daily_usd_rates table
-      let rateQuery = supabase
-        .from("daily_usd_rates")
+      let rateQuery: any = supabase
+        .from("daily_usd_rates" as any)
         .select("rate_date, buying_rate, selling_rate, credit_rate, debit_rate, country_branch_id")
         .eq("country_id", countryId)
         .eq("rate_date", targetDate)

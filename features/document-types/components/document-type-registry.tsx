@@ -8,10 +8,16 @@ import { cn } from "@/lib/utils";
 import { Loader2, Plus, Trash2, Printer, X, Check, FileText } from "lucide-react";
 import { Th } from "@/components/ui/translated-th";
 import { UniversalReportModal } from "@/components/ui/universal-report-modal";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 type DocumentTypeRecord = { id: string; code: string; name: string; category?: string; description: string | null; is_active: boolean; created_at: string };
 
 export function DocumentTypeRegistry() {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+
   const [types, setTypes] = useState<DocumentTypeRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -90,28 +96,28 @@ export function DocumentTypeRegistry() {
 
   return (
     <>
-    <Card className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+    <Card className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm" dir={isRtl ? "rtl" : "ltr"}>
       <CardHeader className="flex flex-row items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
         <div>
-          <CardTitle className="text-xl font-bold text-slate-900 dark:text-slate-100">Document Types</CardTitle>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage official document categories, attachments and compliance types</p>
+          <CardTitle className="text-xl font-bold text-slate-900 dark:text-slate-100">{tt("doctype.title", "Document Types")}</CardTitle>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{tt("doctype.subtitle", "Manage official document categories, attachments and compliance types")}</p>
         </div>
         <div className="flex gap-2">
           <Button onClick={() => setShowReport(true)} size="sm" variant="outline">
-            <Printer className="w-4 h-4 mr-1" /> Print Preview
+            <Printer className="w-4 h-4 mr-1" /> {tt("common.print", "Print")}
           </Button>
           <Button onClick={() => setIsModalOpen(true)} size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white">
-            <Plus className="w-4 h-4 mr-1" /> + New Document Type
+            <Plus className="w-4 h-4 mr-1" /> {tt("doctype.new_btn", "New Document Type")}
           </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-4 pt-4">
         <div className="flex gap-2">
-          <Input placeholder="Search document types..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="max-w-md" />
+          <Input placeholder={tt("doctype.search", "Search document types...")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="max-w-md" />
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)} className="px-3 py-2 border rounded-md bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-sm">
-            <option value="all">All Status</option>
-            <option value="Active">Active Only</option>
-            <option value="Inactive">Inactive Only</option>
+            <option value="all">{tt("common.all_status", "All Status")}</option>
+            <option value="Active">{tt("doctype.active_only", "Active Only")}</option>
+            <option value="Inactive">{tt("doctype.inactive_only", "Inactive Only")}</option>
           </select>
         </div>
 
@@ -150,7 +156,7 @@ export function DocumentTypeRegistry() {
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-slate-500">No document types found</td>
+                    <td colSpan={6} className="p-8 text-center text-slate-500">{tt("doctype.empty", "No document types found")}</td>
                   </tr>
                 ) : (
                   filtered.map((type, idx) => (
@@ -161,7 +167,7 @@ export function DocumentTypeRegistry() {
                       <td className="p-3 text-slate-600 dark:text-slate-400">{type.description || '-'}</td>
                       <td className="p-3 text-center">
                         <span className={cn("px-2.5 py-0.5 rounded-full text-xs font-semibold", type.is_active ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300" : "bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300")}>
-                          {type.is_active ? "Active" : "Inactive"}
+                          {type.is_active ? tt("common.active", "Active") : tt("common.inactive", "Inactive")}
                         </span>
                       </td>
                       <td className="p-3 text-center">
@@ -185,7 +191,7 @@ export function DocumentTypeRegistry() {
         <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-lg overflow-hidden">
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
             <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <FileText className="w-5 h-5 text-emerald-600" /> Add New Document Type
+              <FileText className="w-5 h-5 text-emerald-600" /> {tt("doctype.modal_title", "Add New Document Type")}
             </h3>
             <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg">
               <X className="w-5 h-5" />
@@ -193,7 +199,7 @@ export function DocumentTypeRegistry() {
           </div>
           <form onSubmit={handleSave} className="p-6 space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Type Code *</label>
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">{tt("doctype.type_code", "Type Code")} *</label>
               <Input
                 placeholder="e.g. DOC-BOL / DOC-INV / DOC-BL"
                 value={formData.code}
@@ -203,7 +209,7 @@ export function DocumentTypeRegistry() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Document Type Name *</label>
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">{tt("doctype.type_name", "Document Type Name")} *</label>
               <Input
                 placeholder="e.g. Bill of Lading (B/L) / Commercial Invoice"
                 value={formData.name}
@@ -213,7 +219,7 @@ export function DocumentTypeRegistry() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Description</label>
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">{tt("common.description", "Description")}</label>
               <Input
                 placeholder="Optional description / document guidelines..."
                 value={formData.description}
@@ -229,15 +235,15 @@ export function DocumentTypeRegistry() {
                 onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                 className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
               />
-              <label htmlFor="doc_is_active" className="text-sm font-medium text-slate-700 dark:text-slate-300">Active Document Type</label>
+              <label htmlFor="doc_is_active" className="text-sm font-medium text-slate-700 dark:text-slate-300">{tt("doctype.is_active", "Active Document Type")}</label>
             </div>
 
             <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
               <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
-                Cancel
+                {tt("common.cancel", "Cancel")}
               </Button>
               <Button type="submit" disabled={saving} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Check className="w-4 h-4 mr-1" />} Save Type
+                {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Check className="w-4 h-4 mr-1" />} {tt("doctype.save_btn", "Save Type")}
               </Button>
             </div>
           </form>
@@ -248,13 +254,13 @@ export function DocumentTypeRegistry() {
     <UniversalReportModal
       isOpen={showReport}
       onClose={() => setShowReport(false)}
-      title="Document Types Registry"
+      title={tt("doctype.report_title", "Document Types Registry")}
       data={types}
       columns={[
-        { key: "code", label: "Code" },
-        { key: "name", label: "Type Name" },
-        { key: "description", label: "Description" },
-        { key: "is_active", label: "Status", format: (v) => (v ? "Active" : "Inactive") }
+        { key: "code", label: tt("common.code", "Code") },
+        { key: "name", label: tt("doctype.type_name", "Type Name") },
+        { key: "description", label: tt("common.description", "Description") },
+        { key: "is_active", label: tt("common.status", "Status"), format: (v) => (v ? tt("common.active", "Active") : tt("common.inactive", "Inactive")) }
       ]}
     />
     </>

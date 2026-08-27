@@ -101,9 +101,9 @@ export async function GET(_request: NextRequest) {
 
     const rows = (accounts || []).map((acc: any) => {
       const settings = acc.settings || {};
-      const country = acc.country_id ? countryMap.get(acc.country_id) : null;
-      const countryBranch = acc.country_branch_id ? countryBranchMap.get(acc.country_branch_id) : null;
-      const cityBranch = acc.city_branch_id ? cityBranchMap.get(acc.city_branch_id) : null;
+      const country: any = acc.country_id ? countryMap.get(acc.country_id) : null;
+      const countryBranch: any = acc.country_branch_id ? countryBranchMap.get(acc.country_branch_id) : null;
+      const cityBranch: any = acc.city_branch_id ? cityBranchMap.get(acc.city_branch_id) : null;
 
       const hasPassword = Boolean(settings.smtpPass || settings.password || settings.appPassword);
       const hasHost = Boolean(settings.smtpHost || settings.host);

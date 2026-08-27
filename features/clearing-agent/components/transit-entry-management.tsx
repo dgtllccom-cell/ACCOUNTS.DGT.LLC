@@ -846,7 +846,7 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                                 type="button"
                                 onClick={() => handleDeleteDocument(doc.id)}
                                 className="inline-flex h-6 w-6 items-center justify-center rounded bg-red-500 hover:bg-red-600 text-white transition-colors cursor-pointer"
-                                title="Delete document"
+                                title={tt("common.delete", "Delete document")}
                               >
                                 <Trash2 className="h-3 w-3" />
                               </button>
@@ -1153,7 +1153,7 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                   variant="outline"
                   onClick={loadRecords}
                   className="rounded-xl font-bold gap-1 cursor-pointer"
-                  title="Refresh from database"
+                  title={tt("common.refresh", "Refresh from database")}
                 >
                   <RefreshCw className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline">{tt("common.refresh", "Refresh")}</span>

@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       status: request.nextUrl.searchParams.get("status"),
     });
 
-    const db = createSupabaseAdminClient();
+    const db = createSupabaseAdminClient() as any;
     let qb = db.from("contact_types").select(`id, code, name, category, description, is_active, created_at`);
 
     if (query.status) {
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const db = createSupabaseAdminClient();
+    const db = createSupabaseAdminClient() as any;
     const { data, error } = await db
       .from("contact_types")
       .insert([

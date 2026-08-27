@@ -12,10 +12,10 @@ export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await requireErpSession(request);
+    const session = await requireErpSession();
     const { searchParams } = new URL(request.url);
 
-    const countryId = searchParams.get("countryId") || (session.role !== "super_admin" ? session.countryId : null);
+    const countryId = searchParams.get("countryId") || (!session.isSuperAdmin ? session.countryIds?.[0] : null);
     const status = searchParams.get("status");
     const direction = searchParams.get("direction") as "sent" | "received" | null;
     const limit = searchParams.get("limit") ? parseInt(searchParams.get("limit")!, 10) : 50;
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireErpSession(request);
+    const session = await requireErpSession();
     const body = await request.json();
 
     if (!body.sourceCountryId || !body.destCountryId || !body.amount || !body.originalCurrency || !body.finalCurrency) {

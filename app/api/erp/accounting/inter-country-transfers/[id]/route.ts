@@ -17,7 +17,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await requireErpSession(request);
+    const session = await requireErpSession();
     const { id } = await params;
 
     const transfer = await withLocalPg(async (sql) => {
@@ -69,7 +69,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await requireErpSession(request);
+    const session = await requireErpSession();
     const { id } = await params;
     const body = await request.json();
     const action = body.action as "accept" | "reject" | "edit_ledger";

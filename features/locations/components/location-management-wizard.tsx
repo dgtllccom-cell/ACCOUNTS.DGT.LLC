@@ -39,6 +39,8 @@ import { SimpleModal } from "@/components/ui/simple-modal";
 import { apiGet, apiPatch, apiPost, apiDelete } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 type CountryRow = {
   id: string;
@@ -215,6 +217,11 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
   const [formState, setFormState] = useState({ name: "", codeSuffix: "", isActive: true });
   const [formCity, setFormCity] = useState({ name: "", codeSuffix: "", isActive: true });
   const [formTehsil, setFormTehsil] = useState({ name: "", codeSuffix: "", zipCode: "", isActive: true });
+
+  // i18n
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
 
   // Initial tab sync
   useEffect(() => {
@@ -1119,14 +1126,14 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={isRtl ? "rtl" : "ltr"}>
       {/* Title Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-5">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">ERP Location Settings</p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight text-foreground">Location Management Workspace</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{tt("loc.subtitle", "ERP Location Settings")}</p>
+          <h1 className="mt-1 text-3xl font-bold tracking-tight text-foreground">{tt("loc.title", "Location Management Workspace")}</h1>
           <p className="text-sm text-muted-foreground">
-            Multi-level location hierarchy &amp; summary drill-down: Country &rarr; State &rarr; City &rarr; District/Tehsil.
+            {tt("loc.description", "Multi-level location hierarchy drill-down: Country → State → City → District/Tehsil.")}
           </p>
         </div>
 
@@ -1139,12 +1146,12 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
             className="bg-[#0F172A] hover:bg-slate-800 text-white dark:bg-sky-600 dark:hover:bg-sky-700 gap-2 font-semibold shadow-sm"
           >
             <FolderTree className="h-4 w-4" />
-            View Complete Location List
+            {tt("loc.view_complete_list", "View Complete Location List")}
           </Button>
 
           <div className="hidden sm:flex items-center gap-2 rounded-full border bg-muted/40 px-4 py-2 text-xs font-semibold text-muted-foreground shadow-sm">
             <Workflow className="h-4 w-4 text-primary" />
-            <span>Hierarchy Summary Active</span>
+            <span>{tt("loc.hierarchy_active", "Hierarchy Summary Active")}</span>
           </div>
         </div>
       </div>
@@ -1174,7 +1181,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
         >
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Countries</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{tt("loc.countries", "Countries")}</p>
               <p className="text-2xl font-bold text-sky-950 mt-1">{Number(stats.totalCountries || 0).toLocaleString()}</p>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-100 text-sky-700">
@@ -1192,7 +1199,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
         >
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">States / Provinces</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{tt("loc.states_provinces", "States / Provinces")}</p>
               <p className="text-2xl font-bold text-indigo-950 mt-1">{Number(stats.totalStates || 0).toLocaleString()}</p>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700">
@@ -1210,7 +1217,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
         >
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cities / Districts</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{tt("loc.cities_districts", "Cities / Districts")}</p>
               <p className="text-2xl font-bold text-teal-950 mt-1">{Number(stats.totalCities || 0).toLocaleString()}</p>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-100 text-teal-700">
@@ -1228,7 +1235,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
         >
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Districts / Tehsils</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{tt("loc.districts_tehsils", "Districts / Tehsils")}</p>
               <p className="text-2xl font-bold text-amber-950 mt-1">{Number(stats.totalDistricts || 0).toLocaleString()}</p>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
@@ -1242,13 +1249,13 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
       <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-card px-4 py-3 text-xs font-medium text-muted-foreground shadow-sm">
         <span className="font-semibold text-foreground flex items-center gap-1">
           <Layers className="h-3.5 w-3.5 text-primary" />
-          Location Drill-Down:
+          {tt("loc.drill_down", "Location Drill-Down:")}
         </span>
         <button
           onClick={resetDrillToCountry}
           className={cn("hover:text-primary transition-colors", activeTab === "country" && "font-bold text-primary underline")}
         >
-          Country List
+          {tt("loc.country_list", "Country List")}
         </button>
 
         {drillPath.countryName && (
@@ -1287,7 +1294,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
           <>
             <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
             <span className={cn(activeTab === "tehsil" && "font-bold text-primary underline")}>
-              {drillPath.cityName} (Tehsils)
+              {drillPath.cityName} {tt("loc.tehsils_suffix", "(Tehsils)")}
             </span>
           </>
         )}
@@ -1307,7 +1314,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
               activeTab === "country" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
             )}
           >
-            1. Country Summary
+            {tt("loc.tab_country", "1. Country Summary")}
           </button>
           <button
             onClick={() => {
@@ -1320,7 +1327,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
               activeTab === "state" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
             )}
           >
-            2. State Summary
+            {tt("loc.tab_state", "2. State Summary")}
           </button>
           <button
             onClick={() => {
@@ -1333,7 +1340,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
               activeTab === "city" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
             )}
           >
-            3. City Summary
+            {tt("loc.tab_city", "3. City Summary")}
           </button>
           <button
             onClick={() => {
@@ -1346,7 +1353,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
               activeTab === "tehsil" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
             )}
           >
-            4. Tehsil / District List
+            {tt("loc.tab_tehsil", "4. Tehsil / District List")}
           </button>
         </div>
 
@@ -1357,12 +1364,12 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
               <div className="flex flex-wrap items-center gap-3">
                 {activeTab !== "country" && (
                   <div className="w-56">
-                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Country Scope</Label>
+                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{tt("loc.country_scope", "Country Scope")}</Label>
                     <SearchSelect
                       label=""
                       value={selectedCountryId}
                       options={countryOptions}
-                      placeholder="Select Country"
+                      placeholder={tt("loc.select_country", "Select Country")}
                       onValueChange={(val) => {
                         setSelectedCountryId(val);
                         const found = countries.find((c) => c.id === val);
@@ -1375,12 +1382,12 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
 
                 {(activeTab === "city" || activeTab === "tehsil") && (
                   <div className="w-56">
-                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">State Scope</Label>
+                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{tt("loc.state_scope", "State Scope")}</Label>
                     <SearchSelect
                       label=""
                       value={selectedStateId}
                       options={stateOptions}
-                      placeholder={selectedCountryId ? "Select State" : "Select Country First"}
+                      placeholder={selectedCountryId ? tt("loc.select_state", "Select State") : tt("loc.select_country_first", "Select Country First")}
                       disabled={!selectedCountryId}
                       onValueChange={(val) => {
                         setSelectedStateId(val);
@@ -1394,12 +1401,12 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
 
                 {activeTab === "tehsil" && (
                   <div className="w-56">
-                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">City Scope</Label>
+                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{tt("loc.city_scope", "City Scope")}</Label>
                     <SearchSelect
                       label=""
                       value={selectedDistrictId}
                       options={districtOptions}
-                      placeholder={selectedStateId ? "Select City" : "Select State First"}
+                      placeholder={selectedStateId ? tt("loc.select_city", "Select City") : tt("loc.select_state_first", "Select State First")}
                       disabled={!selectedStateId}
                       onValueChange={(val) => {
                         setSelectedDistrictId(val);
@@ -1420,7 +1427,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                   onClick={() => setIsImportModalOpen(true)}
                   className="gap-1.5 font-semibold text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 shadow-xs"
                 >
-                  <Upload className="h-4 w-4" /> Import Excel/CSV
+                  <Upload className="h-4 w-4" /> {tt("loc.import_excel_csv", "Import Excel/CSV")}
                 </Button>
                 <Button 
                   type="button" 
@@ -1429,7 +1436,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                   onClick={handleExportCsv}
                   className="gap-1.5 font-semibold text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 shadow-xs"
                 >
-                  <Download className="h-4 w-4" /> Export CSV
+                  <Download className="h-4 w-4" /> {tt("common.export", "Export")} CSV
                 </Button>
                 <Button 
                   type="button" 
@@ -1437,7 +1444,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                   onClick={handleOpenAddModal}
                   className="bg-[#0F172A] hover:bg-slate-800 text-white dark:bg-sky-600 dark:hover:bg-sky-700 gap-1.5 font-bold shadow-sm"
                 >
-                  <Plus className="h-4 w-4" /> + Add New Location
+                  <Plus className="h-4 w-4" /> + {tt("loc.add_new_location", "Add New Location")}
                 </Button>
               </div>
             </div>
@@ -1447,7 +1454,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   className="pl-9"
-                  placeholder={`Search listings by code or name...`}
+                  placeholder={tt("loc.search_placeholder", "Search listings by code or name...")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -1459,9 +1466,9 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                   onChange={(e) => setStatusFilter(e.target.value as any)}
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 >
-                  <option value="all">Status: All Records</option>
-                  <option value="active">Status: Active Only</option>
-                  <option value="inactive">Status: Inactive Only</option>
+                  <option value="all">{tt("loc.status_all", "Status: All Records")}</option>
+                  <option value="active">{tt("loc.status_active_only", "Status: Active Only")}</option>
+                  <option value="inactive">{tt("loc.status_inactive_only", "Status: Inactive Only")}</option>
                 </select>
               </div>
             </div>
@@ -1492,10 +1499,10 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                         <td colSpan={7} className="py-8 text-center text-muted-foreground">
                           {loading.countries ? (
                             <div className="flex items-center justify-center gap-2">
-                              <Loader2 className="h-4 w-4 animate-spin text-primary" /> Loading Country Summaries...
+                              <Loader2 className="h-4 w-4 animate-spin text-primary" /> {tt("loc.loading_countries", "Loading Country Summaries...")}
                             </div>
                           ) : (
-                            "No Country records found."
+                            tt("loc.no_countries", "No Country records found.")
                           )}
                         </td>
                       </tr>
@@ -1520,7 +1527,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                                 c.is_active ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
                               )}
                             >
-                              {c.is_active ? "Active" : "Inactive"}
+                              {c.is_active ? tt("common.active", "Active") : tt("common.inactive", "Inactive")}
                             </span>
                           </td>
                           <td className="px-4 py-3 text-center">
@@ -1531,7 +1538,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                                 onClick={() => handleDrillToState(c)}
                                 className="bg-sky-600 hover:bg-sky-700 text-white h-8 text-xs font-medium gap-1"
                               >
-                                <Eye className="h-3.5 w-3.5" /> View Details / Hierarchy
+                                <Eye className="h-3.5 w-3.5" /> {tt("loc.view_hierarchy", "View Details / Hierarchy")}
                               </Button>
                               <Button variant="outline" size="sm" onClick={() => handleOpenEditModal(c, "country")} className="h-8">
                                 <Edit3 className="h-3.5 w-3.5" />
@@ -1553,11 +1560,11 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                   <div className="flex items-center gap-2 text-xs font-semibold text-indigo-900">
                     <Globe2 className="h-4 w-4 text-indigo-600" />
                     <span>
-                      Active Country:{" "}
-                      <span className="font-bold text-indigo-700">{drillPath.countryName || "Selected Country"}</span>
+                      {tt("loc.active_country", "Active Country:")} {" "}
+                      <span className="font-bold text-indigo-700">{drillPath.countryName || tt("loc.selected_country", "Selected Country")}</span>
                     </span>
                   </div>
-                  <span className="text-xs text-indigo-600 font-medium">Total States: {filteredStates.length}</span>
+                  <span className="text-xs text-indigo-600 font-medium">{tt("loc.total_states_count", "Total States:")} {filteredStates.length}</span>
                 </div>
 
                 <table className="w-full text-left text-sm">
@@ -1575,7 +1582,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                     {!selectedCountryId ? (
                       <tr>
                         <td colSpan={6} className="py-8 text-center text-muted-foreground">
-                          Please select a Country from the scope dropdown above to view states.
+                          {tt("loc.select_country_for_states", "Please select a Country from the scope dropdown above to view states.")}
                         </td>
                       </tr>
                     ) : filteredStates.length === 0 ? (
@@ -1583,10 +1590,10 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                         <td colSpan={6} className="py-8 text-center text-muted-foreground">
                           {loading.states ? (
                             <div className="flex items-center justify-center gap-2">
-                              <Loader2 className="h-4 w-4 animate-spin text-primary" /> Loading State Summaries...
+                              <Loader2 className="h-4 w-4 animate-spin text-primary" /> {tt("loc.loading_states", "Loading State Summaries...")}
                             </div>
                           ) : (
-                            "No State records found for the selected country."
+                            tt("loc.no_states", "No State records found for the selected country.")
                           )}
                         </td>
                       </tr>
@@ -1608,7 +1615,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                                 s.is_active ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
                               )}
                             >
-                              {s.is_active ? "Active" : "Inactive"}
+                              {s.is_active ? tt("common.active", "Active") : tt("common.inactive", "Inactive")}
                             </span>
                           </td>
                           <td className="px-4 py-3 text-center">
@@ -1619,7 +1626,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                                 onClick={() => handleDrillToCity(s)}
                                 className="bg-indigo-600 hover:bg-indigo-700 text-white h-8 text-xs font-medium gap-1"
                               >
-                                <Eye className="h-3.5 w-3.5" /> View Cities
+                                <Eye className="h-3.5 w-3.5" /> {tt("loc.view_cities", "View Cities")}
                               </Button>
                               <Button variant="outline" size="sm" onClick={() => handleOpenEditModal(s, "state")} className="h-8">
                                 <Edit3 className="h-3.5 w-3.5" />
@@ -1641,10 +1648,10 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                   <div className="flex items-center gap-2 text-xs font-semibold text-teal-900">
                     <Map className="h-4 w-4 text-teal-600" />
                     <span>
-                      Active State: <span className="font-bold text-teal-700">{drillPath.stateName || "Selected State"}</span>
+                      {tt("loc.active_state", "Active State:")} <span className="font-bold text-teal-700">{drillPath.stateName || tt("loc.selected_state", "Selected State")}</span>
                     </span>
                   </div>
-                  <span className="text-xs text-teal-600 font-medium">Total Cities: {filteredDistricts.length}</span>
+                  <span className="text-xs text-teal-600 font-medium">{tt("loc.total_cities_count", "Total Cities:")} {filteredDistricts.length}</span>
                 </div>
 
                 <table className="w-full text-left text-sm">
@@ -1661,7 +1668,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                     {!selectedStateId ? (
                       <tr>
                         <td colSpan={5} className="py-8 text-center text-muted-foreground">
-                          Please select a State from the scope dropdown above to view cities.
+                          {tt("loc.select_state_for_cities", "Please select a State from the scope dropdown above to view cities.")}
                         </td>
                       </tr>
                     ) : filteredDistricts.length === 0 ? (
@@ -1669,10 +1676,10 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                         <td colSpan={5} className="py-8 text-center text-muted-foreground">
                           {loading.districts ? (
                             <div className="flex items-center justify-center gap-2">
-                              <Loader2 className="h-4 w-4 animate-spin text-primary" /> Loading City Summaries...
+                              <Loader2 className="h-4 w-4 animate-spin text-primary" /> {tt("loc.loading_cities", "Loading City Summaries...")}
                             </div>
                           ) : (
-                            "No City records found for the selected state."
+                            tt("loc.no_cities", "No City records found for the selected state.")
                           )}
                         </td>
                       </tr>
@@ -1691,7 +1698,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                                 d.is_active ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
                               )}
                             >
-                              {d.is_active ? "Active" : "Inactive"}
+                              {d.is_active ? tt("common.active", "Active") : tt("common.inactive", "Inactive")}
                             </span>
                           </td>
                           <td className="px-4 py-3 text-center">
@@ -1702,7 +1709,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                                 onClick={() => handleDrillToTehsil(d)}
                                 className="bg-teal-600 hover:bg-teal-700 text-white h-8 text-xs font-medium gap-1"
                               >
-                                <Eye className="h-3.5 w-3.5" /> View Districts
+                                <Eye className="h-3.5 w-3.5" /> {tt("loc.view_districts", "View Districts")}
                               </Button>
                               <Button variant="outline" size="sm" onClick={() => handleOpenEditModal(d, "city")} className="h-8">
                                 <Edit3 className="h-3.5 w-3.5" />
@@ -1724,10 +1731,10 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                   <div className="flex items-center gap-2 text-xs font-semibold text-amber-900">
                     <Building2 className="h-4 w-4 text-amber-600" />
                     <span>
-                      Active City: <span className="font-bold text-amber-700">{drillPath.cityName || "Selected City"}</span>
+                      {tt("loc.active_city", "Active City:")} <span className="font-bold text-amber-700">{drillPath.cityName || tt("loc.selected_city", "Selected City")}</span>
                     </span>
                   </div>
-                  <span className="text-xs text-amber-600 font-medium">Total Tehsils: {filteredCities.length}</span>
+                  <span className="text-xs text-amber-600 font-medium">{tt("loc.total_tehsils_count", "Total Tehsils:")} {filteredCities.length}</span>
                 </div>
 
                 <table className="w-full text-left text-sm">
@@ -1744,7 +1751,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                     {!selectedDistrictId ? (
                       <tr>
                         <td colSpan={5} className="py-8 text-center text-muted-foreground">
-                          Please select a City from the scope dropdown above to view districts/tehsils.
+                          {tt("loc.select_city_for_tehsils", "Please select a City from the scope dropdown above to view districts/tehsils.")}
                         </td>
                       </tr>
                     ) : filteredCities.length === 0 ? (
@@ -1752,10 +1759,10 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                         <td colSpan={5} className="py-8 text-center text-muted-foreground">
                           {loading.cities ? (
                             <div className="flex items-center justify-center gap-2">
-                              <Loader2 className="h-4 w-4 animate-spin text-primary" /> Loading Tehsils...
+                              <Loader2 className="h-4 w-4 animate-spin text-primary" /> {tt("loc.loading_tehsils", "Loading Tehsils...")}
                             </div>
                           ) : (
-                            "No District/Tehsil records found for the selected city."
+                            tt("loc.no_tehsils", "No District/Tehsil records found for the selected city.")
                           )}
                         </td>
                       </tr>
@@ -1772,7 +1779,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                                 ct.is_active ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
                               )}
                             >
-                              {ct.is_active ? "Active" : "Inactive"}
+                              {ct.is_active ? tt("common.active", "Active") : tt("common.inactive", "Inactive")}
                             </span>
                           </td>
                           <td className="px-4 py-3 text-center">
@@ -1804,14 +1811,14 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
       {/* Add / Edit Modal */}
       {isAddEditModalOpen && (
         <SimpleModal
-          title={`${modalMode === "add" ? "Add New" : "Edit"} ${
+          title={`${modalMode === "add" ? tt("loc.add_new", "Add New") : tt("common.edit", "Edit")} ${
             activeTab === "country"
-              ? "Country"
+              ? tt("common.country", "Country")
               : activeTab === "state"
-              ? "State / Province"
+              ? tt("loc.state_province", "State / Province")
               : activeTab === "city"
-              ? "City"
-              : "District / Tehsil"
+              ? tt("common.city", "City")
+              : tt("loc.district_tehsil", "District / Tehsil")
           }`}
           onClose={() => setIsAddEditModalOpen(false)}
           className="max-w-lg"
@@ -1821,7 +1828,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
             {activeTab === "country" && (
               <>
                 <div className="space-y-1.5">
-                  <Label>Country Name *</Label>
+                  <Label>{tt("loc.country_name_label", "Country Name")} *</Label>
                   <Input
                     placeholder="e.g. Pakistan"
                     value={formCountry.name}
@@ -1829,7 +1836,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Country Code (ISO2) *</Label>
+                  <Label>{tt("loc.country_code_label", "Country Code (ISO2)")} *</Label>
                   <Input
                     placeholder="e.g. PK"
                     maxLength={2}
@@ -1847,7 +1854,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                       className="rounded border-slate-300"
                     />
                     <Label htmlFor="countryActive" className="text-xs font-semibold cursor-pointer">
-                      Active Status
+                      {tt("loc.active_status", "Active Status")}
                     </Label>
                   </div>
                 )}
@@ -1858,17 +1865,17 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
             {activeTab === "state" && (
               <>
                 <div className="space-y-1.5">
-                  <Label>Parent Country *</Label>
+                  <Label>{tt("loc.parent_country", "Parent Country")} *</Label>
                   <SearchSelect
                     label=""
                     value={modalCountryId}
                     options={countryOptions}
-                    placeholder="Select Country"
+                    placeholder={tt("loc.select_country", "Select Country")}
                     onValueChange={setModalCountryId}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>State / Province Name *</Label>
+                  <Label>{tt("loc.state_name_label", "State / Province Name")} *</Label>
                   <Input
                     placeholder="e.g. Balochistan"
                     value={formState.name}
@@ -1876,7 +1883,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>State Code Suffix *</Label>
+                  <Label>{tt("loc.state_code_suffix", "State Code Suffix")} *</Label>
                   <div className="flex items-center gap-1">
                     <span className="rounded-md border bg-muted px-3 py-2 font-mono text-xs font-bold">{modalStateCodePrefix || "XX-"}</span>
                     <Input
@@ -1896,7 +1903,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                       className="rounded border-slate-300"
                     />
                     <Label htmlFor="stateActive" className="text-xs font-semibold cursor-pointer">
-                      Active Status
+                      {tt("loc.active_status", "Active Status")}
                     </Label>
                   </div>
                 )}
@@ -1908,29 +1915,29 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
               <>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <Label>Parent Country *</Label>
+                    <Label>{tt("loc.parent_country", "Parent Country")} *</Label>
                     <SearchSelect
                       label=""
                       value={modalCountryId}
                       options={countryOptions}
-                      placeholder="Select Country"
+                      placeholder={tt("loc.select_country", "Select Country")}
                       onValueChange={setModalCountryId}
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Parent State *</Label>
+                    <Label>{tt("loc.parent_state", "Parent State")} *</Label>
                     <SearchSelect
                       label=""
                       value={modalStateId}
                       options={modalStates.map((s) => ({ value: s.id, label: s.name, keywords: s.name }))}
-                      placeholder="Select State"
+                      placeholder={tt("loc.select_state", "Select State")}
                       disabled={!modalCountryId}
                       onValueChange={setModalStateId}
                     />
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label>City Name *</Label>
+                  <Label>{tt("loc.city_name_label", "City Name")} *</Label>
                   <Input
                     placeholder="e.g. Quetta"
                     value={formCity.name}
@@ -1938,7 +1945,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>City Code Suffix *</Label>
+                  <Label>{tt("loc.city_code_suffix", "City Code Suffix")} *</Label>
                   <div className="flex items-center gap-1">
                     <span className="rounded-md border bg-muted px-3 py-2 font-mono text-xs font-bold">{modalDistrictCodePrefix || "XX-XX-"}</span>
                     <Input
@@ -1958,7 +1965,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                       className="rounded border-slate-300"
                     />
                     <Label htmlFor="cityActive" className="text-xs font-semibold cursor-pointer">
-                      Active Status
+                      {tt("loc.active_status", "Active Status")}
                     </Label>
                   </div>
                 )}
@@ -1970,40 +1977,40 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
               <>
                 <div className="grid gap-3 sm:grid-cols-3">
                   <div className="space-y-1.5">
-                    <Label>Country *</Label>
+                    <Label>{tt("common.country", "Country")} *</Label>
                     <SearchSelect
                       label=""
                       value={modalCountryId}
                       options={countryOptions}
-                      placeholder="Select Country"
+                      placeholder={tt("loc.select_country", "Select Country")}
                       onValueChange={setModalCountryId}
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>State *</Label>
+                    <Label>{tt("loc.state_province", "State")} *</Label>
                     <SearchSelect
                       label=""
                       value={modalStateId}
                       options={modalStates.map((s) => ({ value: s.id, label: s.name, keywords: s.name }))}
-                      placeholder="Select State"
+                      placeholder={tt("loc.select_state", "Select State")}
                       disabled={!modalCountryId}
                       onValueChange={setModalStateId}
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>City *</Label>
+                    <Label>{tt("common.city", "City")} *</Label>
                     <SearchSelect
                       label=""
                       value={modalDistrictId}
                       options={modalDistricts.map((d) => ({ value: d.id, label: d.name, keywords: d.name }))}
-                      placeholder="Select City"
+                      placeholder={tt("loc.select_city", "Select City")}
                       disabled={!modalStateId}
                       onValueChange={setModalDistrictId}
                     />
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label>District / Tehsil Name *</Label>
+                  <Label>{tt("loc.dist_name_label", "District / Tehsil Name")} *</Label>
                   <Input
                     placeholder="e.g. Quetta District"
                     value={formTehsil.name}
@@ -2012,7 +2019,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <Label>Code Suffix *</Label>
+                    <Label>{tt("loc.code_suffix", "Code Suffix")} *</Label>
                     <div className="flex items-center gap-1">
                       <span className="rounded-md border bg-muted px-2 py-2 font-mono text-[11px] font-bold">{modalTehsilCodePrefix || "XX-XX-XX-"}</span>
                       <Input
@@ -2023,7 +2030,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <Label>ZIP / Postal Code</Label>
+                    <Label>{tt("loc.zip_postal_code", "ZIP / Postal Code")}</Label>
                     <Input
                       placeholder="e.g. 87300"
                       value={formTehsil.zipCode}
@@ -2041,7 +2048,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                       className="rounded border-slate-300"
                     />
                     <Label htmlFor="tehsilActive" className="text-xs font-semibold cursor-pointer">
-                      Active Status
+                      {tt("loc.active_status", "Active Status")}
                     </Label>
                   </div>
                 )}
@@ -2050,11 +2057,11 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
 
             <div className="flex justify-end gap-2 pt-4 border-t">
               <Button type="button" variant="outline" onClick={() => setIsAddEditModalOpen(false)}>
-                Cancel
+                {tt("common.cancel", "Cancel")}
               </Button>
               <Button type="button" onClick={handleSubmitForm} disabled={loading.saving}>
                 {loading.saving ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Save className="mr-1.5 h-4 w-4" />}
-                {modalMode === "add" ? "Save Record" : "Update Record"}
+                {modalMode === "add" ? tt("loc.save_record", "Save Record") : tt("loc.update_record", "Update Record")}
               </Button>
             </div>
           </div>
@@ -2063,21 +2070,21 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
 
       {/* Delete Confirmation Modal */}
       {deleteConfirmTarget && (
-        <SimpleModal title="Confirm Delete" onClose={() => setDeleteConfirmTarget(null)} className="max-w-md">
+        <SimpleModal title={tt("loc.confirm_delete", "Confirm Delete")} onClose={() => setDeleteConfirmTarget(null)} className="max-w-md">
           <div className="space-y-4 pt-2">
             <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-900">
               <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
               <p className="text-xs font-medium">
-                Are you sure you want to delete <span className="font-bold">{deleteConfirmTarget.name}</span>? Child location records will also be soft-deleted.
+                <span className="font-bold">{deleteConfirmTarget.name}</span> — {tt("loc.delete_warning", "This location and all child records will be soft-deleted.")}
               </p>
             </div>
             <div className="flex justify-end gap-2 pt-2 border-t">
               <Button type="button" variant="outline" onClick={() => setDeleteConfirmTarget(null)} disabled={loading.deleting}>
-                Cancel
+                {tt("common.cancel", "Cancel")}
               </Button>
               <Button type="button" variant="destructive" onClick={confirmDelete} disabled={loading.deleting}>
                 {loading.deleting ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Trash2 className="mr-1.5 h-4 w-4" />}
-                Delete Record
+                {tt("loc.delete_record", "Delete Record")}
               </Button>
             </div>
           </div>
@@ -2087,7 +2094,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
       {/* Requirement 7: View Complete Location List (Full Tree Modal) */}
       {isFullTreeModalOpen && (
         <SimpleModal
-          title="Complete Location Hierarchy Directory"
+          title={tt("loc.full_tree_title", "Complete Location Hierarchy Directory")}
           onClose={() => setIsFullTreeModalOpen(false)}
           className="max-w-5xl"
         >
@@ -2098,7 +2105,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   className="pl-9 bg-white text-xs h-9"
-                  placeholder="Filter tree by country, state, city, or tehsil..."
+                  placeholder={tt("loc.tree_search_placeholder", "Filter tree by country, state, city, or tehsil...")}
                   value={treeSearchQuery}
                   onChange={(e) => setTreeSearchQuery(e.target.value)}
                 />
@@ -2106,16 +2113,16 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
 
               <div className="flex flex-wrap items-center gap-2">
                 <Button type="button" variant="outline" size="sm" onClick={expandAllNodes} className="h-8 text-xs gap-1">
-                  <Maximize2 className="h-3.5 w-3.5" /> Expand All
+                  <Maximize2 className="h-3.5 w-3.5" /> {tt("loc.expand_all", "Expand All")}
                 </Button>
                 <Button type="button" variant="outline" size="sm" onClick={collapseAllNodes} className="h-8 text-xs gap-1">
-                  <Minimize2 className="h-3.5 w-3.5" /> Collapse All
+                  <Minimize2 className="h-3.5 w-3.5" /> {tt("loc.collapse_all", "Collapse All")}
                 </Button>
                 <Button type="button" variant="outline" size="sm" onClick={exportFullTreeCsv} className="h-8 text-xs gap-1">
-                  <Download className="h-3.5 w-3.5" /> Export CSV
+                  <Download className="h-3.5 w-3.5" /> {tt("common.export", "Export")} CSV
                 </Button>
                 <Button type="button" variant="outline" size="sm" onClick={handlePrintTree} className="h-8 text-xs gap-1">
-                  <Printer className="h-3.5 w-3.5" /> Print
+                  <Printer className="h-3.5 w-3.5" /> {tt("common.print", "Print")}
                 </Button>
               </div>
             </div>
@@ -2124,11 +2131,11 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
             <div className="max-h-[60vh] overflow-y-auto rounded-lg border bg-white p-4">
               {loading.tree ? (
                 <div className="flex items-center justify-center py-12 text-sm text-muted-foreground gap-2">
-                  <Loader2 className="h-5 w-5 animate-spin text-primary" /> Loading Location Hierarchy Tree...
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" /> {tt("loc.loading_tree", "Loading Location Hierarchy Tree...")}
                 </div>
               ) : fullTreeData.length === 0 ? (
                 <div className="py-12 text-center text-sm text-muted-foreground">
-                  No location hierarchy records found in database.
+                  {tt("loc.no_tree_records", "No location hierarchy records found in database.")}
                 </div>
               ) : (
                 <div className="space-y-2 text-sm">
@@ -2148,7 +2155,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
 
             <div className="flex justify-end pt-2 border-t">
               <Button type="button" variant="outline" onClick={() => setIsFullTreeModalOpen(false)}>
-                Close
+                {tt("common.close", "Close")}
               </Button>
             </div>
           </div>
@@ -2157,11 +2164,11 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
 
       {/* Bulk Import Modal */}
       {isImportModalOpen && (
-        <SimpleModal title="Bulk Import Locations (CSV)" onClose={() => setIsImportModalOpen(false)} className="max-w-lg">
+        <SimpleModal title={tt("loc.import_title", "Bulk Import Locations (CSV)")} onClose={() => setIsImportModalOpen(false)} className="max-w-lg">
           <div className="space-y-4 pt-2">
             <div className="flex items-center justify-between">
               <p className="text-xs text-muted-foreground">
-                Upload a CSV file with: Country, State, City, Tehsil codes &amp; names.
+                {tt("loc.import_description", "Upload a CSV file with: Country, State, City, Tehsil codes & names.")}
               </p>
               <Button
                 type="button"
@@ -2174,7 +2181,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                 }}
                 className="text-xs text-sky-700 hover:text-sky-800 font-semibold p-0 h-auto underline"
               >
-                Download Sample Template
+                {tt("loc.download_template", "Download Sample Template")}
               </Button>
             </div>
 
@@ -2184,14 +2191,14 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
               className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/80 dark:bg-slate-900/50 p-6 text-center transition-all hover:bg-slate-100/80"
             >
               <Upload className="h-9 w-9 text-slate-400 mb-2" />
-              <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Drag &amp; Drop your CSV file here</p>
-              <p className="text-[11px] text-slate-500 mt-0.5">or click to browse your computer</p>
-              <label 
-                htmlFor="bulk-csv-upload-input" 
+              <p className="text-xs font-bold text-slate-800 dark:text-slate-200">{tt("loc.drag_drop_title", "Drag & Drop your CSV file here")}</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">{tt("loc.drag_drop_sub", "or click to browse your computer")}</p>
+              <label
+                htmlFor="bulk-csv-upload-input"
                 className="mt-3 cursor-pointer inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-100 shadow-xs hover:bg-slate-50 dark:hover:bg-slate-700"
               >
                 <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
-                Choose CSV File
+                {tt("loc.choose_csv_file", "Choose CSV File")}
               </label>
               <input id="bulk-csv-upload-input" type="file" accept=".csv" onChange={handleCsvSelect} className="hidden" />
             </div>
@@ -2206,11 +2213,11 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
 
             <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800">
               <span className="text-xs text-muted-foreground font-medium">
-                {importRows.length > 0 ? `${importRows.length} row(s) ready to import` : "No file loaded"}
+                {importRows.length > 0 ? `${importRows.length} ${tt("loc.rows_ready", "row(s) ready to import")}` : tt("loc.no_file_loaded", "No file loaded")}
               </span>
               <div className="flex gap-2">
                 <Button type="button" variant="outline" onClick={() => setIsImportModalOpen(false)}>
-                  Close
+                  {tt("common.close", "Close")}
                 </Button>
                 <Button
                   type="button"
@@ -2219,7 +2226,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                   className="bg-[#0F172A] hover:bg-slate-800 text-white dark:bg-sky-600 dark:hover:bg-sky-700 font-bold shadow-sm disabled:opacity-50"
                 >
                   {importProgress ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Upload className="mr-1.5 h-4 w-4" />}
-                  {importProgress ? "Importing Locations..." : `Import Locations (${importRows.length} Rows)`}
+                  {importProgress ? tt("loc.importing", "Importing Locations...") : tt("loc.import_btn", "Import Locations") + ` (${importRows.length})`}
                 </Button>
               </div>
             </div>
@@ -2244,6 +2251,9 @@ function LocationTreeNodeView({
   onToggle: (id: string) => void;
   onEdit: (record: any, type: TabType) => void;
 }) {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+
   const isExpanded = expandedIds.has(node.id);
   const hasChildren = node.children && node.children.length > 0;
 
@@ -2318,7 +2328,7 @@ function LocationTreeNodeView({
 
         <div className="flex items-center gap-2">
           <span className={cn("text-[10px] font-semibold rounded-full px-2 py-0.5", node.isActive ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700")}>
-            {node.isActive ? "Active" : "Inactive"}
+            {node.isActive ? tt("common.active", "Active") : tt("common.inactive", "Inactive")}
           </span>
           <Button variant="ghost" size="sm" onClick={() => onEdit(node.item, tabTypeMap[node.type])} className="h-7 w-7 p-0">
             <Edit3 className="h-3.5 w-3.5 text-slate-600" />

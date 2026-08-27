@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await requireErpSession(request);
+    const session = await requireErpSession();
     const { id } = await params;
 
     const detail = await getDeletedRecordDetail(id);

@@ -22,6 +22,8 @@ import {
   AlertCircle,
   FileText
 } from "lucide-react";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 interface VersionEvent {
   id: string;
@@ -60,11 +62,14 @@ export function EntityVersionTimelineDialog({
   referenceNo,
   language = "en"
 }: Props) {
+  const activeLang = useActiveLanguage();
+  const lang = activeLang !== "en" ? activeLang : language;
+  const tt = (key: string, fallback: string) => t(lang as never, key as never, fallback);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+
   const [timeline, setTimeline] = useState<VersionEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [expandedVersions, setExpandedVersions] = useState<Record<number, boolean>>({});
-
-  const isRtl = language === "ur" || language === "ar" || language === "fa" || language === "ps";
 
   useEffect(() => {
     if (isOpen && entityType && entityId) {
@@ -99,17 +104,17 @@ export function EntityVersionTimelineDialog({
   const getActionBadge = (action: string) => {
     switch (action) {
       case "CREATE":
-        return <Badge className="bg-emerald-600 text-white hover:bg-emerald-700">Original Created</Badge>;
+        return <Badge className="bg-emerald-600 text-white hover:bg-emerald-700">{tt("aud.action_created", "Original Created")}</Badge>;
       case "EDIT":
-        return <Badge className="bg-blue-600 text-white hover:bg-blue-700">Edited</Badge>;
+        return <Badge className="bg-blue-600 text-white hover:bg-blue-700">{tt("aud.action_edited", "Edited")}</Badge>;
       case "SOFT_DELETE":
-        return <Badge className="bg-rose-600 text-white hover:bg-rose-700">Soft Deleted</Badge>;
+        return <Badge className="bg-rose-600 text-white hover:bg-rose-700">{tt("aud.action_soft_deleted", "Soft Deleted")}</Badge>;
       case "RESTORE":
-        return <Badge className="bg-amber-600 text-white hover:bg-amber-700">Restored</Badge>;
+        return <Badge className="bg-amber-600 text-white hover:bg-amber-700">{tt("aud.action_restored", "Restored")}</Badge>;
       case "POST":
-        return <Badge className="bg-purple-600 text-white hover:bg-purple-700">Posted Voucher</Badge>;
+        return <Badge className="bg-purple-600 text-white hover:bg-purple-700">{tt("aud.action_posted", "Posted Voucher")}</Badge>;
       case "APPROVE":
-        return <Badge className="bg-indigo-600 text-white hover:bg-indigo-700">Approved</Badge>;
+        return <Badge className="bg-indigo-600 text-white hover:bg-indigo-700">{tt("aud.action_approved", "Approved")}</Badge>;
       default:
         return <Badge variant="outline">{action}</Badge>;
     }
@@ -123,7 +128,7 @@ export function EntityVersionTimelineDialog({
             <div className="flex items-center gap-2">
               <History className="h-5 w-5 text-sky-600" />
               <DialogTitle className="text-lg font-bold">
-                {isRtl ? "مکمل انٹری ورژن و ترمیم کی ٹائم لائن" : "Complete Entry Version & Edit Timeline"}
+                {tt("aud.version_timeline", "Complete Entry Version & Edit Timeline")}
               </DialogTitle>
             </div>
             {referenceNo && (
@@ -133,19 +138,17 @@ export function EntityVersionTimelineDialog({
             )}
           </div>
           <DialogDescription className="text-xs text-muted-foreground">
-            {isRtl
-              ? `ماڈیول: ${entityType} | شناختی نمبر: ${entityId}`
-              : `Entity: ${entityType} | ID: ${entityId}`}
+            {tt("aud.entity_type", "Entity")}: {entityType} | ID: {entityId}
           </DialogDescription>
         </DialogHeader>
 
         {loading ? (
           <div className="py-12 text-center text-sm text-muted-foreground animate-pulse">
-            {isRtl ? "تاریخچہ لوڈ ہو رہا ہے..." : "Loading version history..."}
+            {tt("aud.loading_history", "Loading version history...")}
           </div>
         ) : timeline.length === 0 ? (
           <div className="py-12 text-center text-sm text-muted-foreground">
-            {isRtl ? "کوئی پچھلی ترمیم ریکارڈ نہیں ہوئی۔" : "No previous edit history recorded for this entry."}
+            {tt("aud.no_history", "No previous edit history recorded for this entry.")}
           </div>
         ) : (
           <div className="relative border-l-2 border-sky-200 dark:border-sky-800 ml-4 space-y-6 my-4">
@@ -172,8 +175,8 @@ export function EntityVersionTimelineDialog({
                         {getActionBadge(event.action_type)}
                         <span className="font-semibold text-sm">
                           {event.version_number === 1
-                            ? isRtl ? "بنیادی انٹری تخلیق ہوئی" : "Original Entry Created"
-                            : isRtl ? `ورژن ${event.version_number} — ترمیم` : `Version ${event.version_number} — Edited`}
+                            ? tt("aud.original_entry", "Original Entry Created")
+                            : `${tt("aud.version_label", "Version")} ${event.version_number} — ${tt("aud.action_edited", "Edited")}`}
                         </span>
                       </div>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground">
@@ -200,7 +203,7 @@ export function EntityVersionTimelineDialog({
                       </div>
                       {event.reason && (
                         <div className="col-span-2 text-sky-700 dark:text-sky-400">
-                          <strong>{isRtl ? "وجہ:" : "Reason:"}</strong> {event.reason}
+                          <strong>{tt("aud.reason", "Reason:")}</strong> {event.reason}
                         </div>
                       )}
                     </div>
@@ -217,14 +220,12 @@ export function EntityVersionTimelineDialog({
                           {isExpanded ? (
                             <>
                               <ChevronDown className="h-3.5 w-3.5" />
-                              {isRtl ? "تبدیلیاں چھپائیں" : "Hide Field Changes"}
+                              {tt("aud.hide_changes", "Hide Field Changes")}
                             </>
                           ) : (
                             <>
                               <ChevronRight className="h-3.5 w-3.5" />
-                              {isRtl
-                                ? `+ تبدیل شدہ فیلڈز دیکھیں (${event.diff_changes.length})`
-                                : `+ View Changed Fields (${event.diff_changes.length})`}
+                              + {tt("aud.view_changes", "View Changed Fields")} ({event.diff_changes.length})
                             </>
                           )}
                         </Button>
@@ -235,9 +236,9 @@ export function EntityVersionTimelineDialog({
                             <table className="w-full text-left border-collapse">
                               <thead className="bg-muted text-muted-foreground font-semibold">
                                 <tr>
-                                  <th className="p-2 border-b">{isRtl ? "فیلڈ" : "Field Name"}</th>
-                                  <th className="p-2 border-b text-rose-600">{isRtl ? "پرانی قیمت (Previous)" : "Previous Value"}</th>
-                                  <th className="p-2 border-b text-emerald-600">{isRtl ? "نئی قیمت (New)" : "New Value"}</th>
+                                  <th className="p-2 border-b">{tt("aud.field_name", "Field Name")}</th>
+                                  <th className="p-2 border-b text-rose-600">{tt("aud.prev_value", "Previous Value")}</th>
+                                  <th className="p-2 border-b text-emerald-600">{tt("aud.new_value", "New Value")}</th>
                                 </tr>
                               </thead>
                               <tbody>

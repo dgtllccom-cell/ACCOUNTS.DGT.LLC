@@ -26,7 +26,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       });
     }
 
-    const db = createSupabaseAdminClient();
+    const db = createSupabaseAdminClient() as any;
 
     if (action === "add") {
       const tableMap: Record<string, string> = {

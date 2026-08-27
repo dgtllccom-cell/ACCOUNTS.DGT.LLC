@@ -157,22 +157,23 @@ export function SmartCrmControlCenter() {
 
   function handleExportExcel() {
     if (!dashboardData?.actionItems?.length) return;
-    const rows = dashboardData.actionItems.map((r: any, idx: number) => ({
-      "#": idx + 1,
-      "Type": r.item_type,
-      "Due Date": r.due_date,
-      "Party / Account": r.party_name,
-      "Source": r.module,
-      "Invoice / Bill No.": r.reference_no,
-      "Amount": r.amount,
-      "Paid": r.paid_amount,
-      "Remaining": r.remaining_amount,
-      "Currency": r.currency,
-      "Branch": r.branch_name || "Karachi City",
-      "Responsible": r.responsible_user_name || "Admin",
-      "Status": r.status
-    }));
-    downloadCsv(rows, `crm_action_list_${activeTab}_${targetDate}`);
+    const headers = ["#", "Type", "Due Date", "Party / Account", "Source", "Invoice / Bill No.", "Amount", "Paid", "Remaining", "Currency", "Branch", "Responsible", "Status"];
+    const rows = dashboardData.actionItems.map((r: any, idx: number) => [
+      String(idx + 1),
+      String(r.item_type || ""),
+      String(r.due_date || ""),
+      String(r.party_name || ""),
+      String(r.module || ""),
+      String(r.reference_no || ""),
+      String(r.amount || 0),
+      String(r.paid_amount || 0),
+      String(r.remaining_amount || 0),
+      String(r.currency || "USD"),
+      String(r.branch_name || "Karachi City"),
+      String(r.responsible_user_name || "Admin"),
+      String(r.status || "")
+    ]);
+    downloadCsv(`crm_action_list_${activeTab}_${targetDate}.csv`, [headers, ...rows]);
   }
 
   function handlePrint() {

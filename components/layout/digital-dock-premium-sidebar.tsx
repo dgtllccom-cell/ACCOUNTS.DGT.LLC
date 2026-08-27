@@ -535,10 +535,7 @@ export interface DigitalDockPremiumSidebarWithDrawerProps extends DigitalDockPre
   onOpenChange: (open: boolean) => void;
 }
 
-export function DigitalDockPremiumSidebarWithDrawer({ open, onOpenChange, ...sidebarProps }: DigitalDockPremiumSidebarProps = {
-  open: false,
-  onOpenChange: () => {}
-}) {
+export function DigitalDockPremiumSidebarWithDrawer({ open = false, onOpenChange = () => {}, ...sidebarProps }: DigitalDockPremiumSidebarWithDrawerProps) {
   return (
     <>
       <button onClick={() => onOpenChange(true)} className="rounded-md p-1.5 text-slate-600 hover:bg-slate-100" aria-label="Open navigation">

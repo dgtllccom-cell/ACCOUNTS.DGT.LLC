@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Plus, Pencil, Search, Loader2, RefreshCw, Ship, CheckCircle2, Building2, User, Phone, Mail, Globe } from "lucide-react";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
+import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { Th } from "@/components/ui/translated-th";
 import { ClearingAgentPicker, type ClearingAgentRow as ClearingAgentPickerRow } from "@/features/shipping/components/clearing-agent-picker";
 import { ShippingLinePicker, type ShippingLineRow as ShippingLinePickerRow } from "@/features/shipping/components/shipping-line-picker";
@@ -42,8 +44,11 @@ const EMPTY_AGENT: any = {
   remarks: "",
 };
 
-export function ShippingAgentEntryView({ lang }: { lang: SupportedLanguage }) {
+export function ShippingAgentEntryView({ lang: langProp }: { lang: SupportedLanguage }) {
+  const activeLang = useActiveLanguage();
+  const lang = activeLang !== "en" ? activeLang : langProp;
   const dir = getLanguageDirection(lang);
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const [rows, setRows] = useState<ShippingAgentRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -135,9 +140,9 @@ export function ShippingAgentEntryView({ lang }: { lang: SupportedLanguage }) {
                   5-Language Translation Sync
                 </span>
               </div>
-              <h1 className="text-2xl font-bold tracking-tight">Shipping Agent Master Entry</h1>
+              <h1 className="text-2xl font-bold tracking-tight">{tt("sag.title", "Shipping Agent Master Entry")}</h1>
               <p className="text-slate-400 text-sm">
-                Register authorized shipping line agents, port representatives, and booking partners.
+                {tt("sag.subtitle", "Register authorized shipping line agents, port representatives, and booking partners.")}
               </p>
             </div>
             <button
@@ -145,7 +150,7 @@ export function ShippingAgentEntryView({ lang }: { lang: SupportedLanguage }) {
               className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm font-medium transition-colors border border-slate-700 text-slate-200"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-              Refresh Agents
+              {tt("common.refresh", "Refresh")}
             </button>
           </div>
         </div>
@@ -168,13 +173,13 @@ export function ShippingAgentEntryView({ lang }: { lang: SupportedLanguage }) {
           <div className="flex items-center justify-between border-b border-border/60 pb-4">
             <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
               <Ship className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-              {isEditing ? "Edit Shipping Agent Registration" : "New Shipping Agent Registration"}
+              {isEditing ? tt("sag.edit_title", "Edit Shipping Agent Registration") : tt("sag.new_title", "New Shipping Agent Registration")}
             </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <label className="block text-xs font-semibold text-foreground/80 mb-2">Agent Code</label>
+              <label className="block text-xs font-semibold text-foreground/80 mb-2">{tt("sag.agent_code", "Agent Code")}</label>
               <input
                 type="text"
                 placeholder="Auto-generated (e.g. SHIP-AGT-001)"
@@ -185,7 +190,7 @@ export function ShippingAgentEntryView({ lang }: { lang: SupportedLanguage }) {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-foreground/80 mb-2">Agent / Agency Name *</label>
+              <label className="block text-xs font-semibold text-foreground/80 mb-2">{tt("sag.agent_name", "Agent / Agency Name")} *</label>
               <ClearingAgentPicker
                 value={form.clearing_agent_id || ""}
                 onValueChange={async (clearingAgentId) => {
@@ -209,7 +214,7 @@ export function ShippingAgentEntryView({ lang }: { lang: SupportedLanguage }) {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-foreground/80 mb-2">Associated Shipping Line</label>
+              <label className="block text-xs font-semibold text-foreground/80 mb-2">{tt("sag.shipping_line", "Associated Shipping Line")}</label>
               <ShippingLinePicker
                 value={form.shipping_line_id || ""}
                 onValueChange={async (shippingLineId) => {
@@ -229,7 +234,7 @@ export function ShippingAgentEntryView({ lang }: { lang: SupportedLanguage }) {
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div>
-              <label className="block text-xs font-semibold text-foreground/80 mb-2">Contact Person</label>
+              <label className="block text-xs font-semibold text-foreground/80 mb-2">{tt("sag.contact_person", "Contact Person")}</label>
               <input
                 type="text"
                 placeholder="e.g. Tariq Khan"
@@ -240,7 +245,7 @@ export function ShippingAgentEntryView({ lang }: { lang: SupportedLanguage }) {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-foreground/80 mb-2">Email Address</label>
+              <label className="block text-xs font-semibold text-foreground/80 mb-2">{tt("sag.email", "Email Address")}</label>
               <input
                 type="email"
                 placeholder="agent@shipping.com"
@@ -251,7 +256,7 @@ export function ShippingAgentEntryView({ lang }: { lang: SupportedLanguage }) {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-foreground/80 mb-2">Phone Number</label>
+              <label className="block text-xs font-semibold text-foreground/80 mb-2">{tt("sag.phone", "Phone Number")}</label>
               <input
                 type="text"
                 placeholder="+92 300 1234567"
@@ -262,21 +267,21 @@ export function ShippingAgentEntryView({ lang }: { lang: SupportedLanguage }) {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-foreground/80 mb-2">Status</label>
+              <label className="block text-xs font-semibold text-foreground/80 mb-2">{tt("common.status", "Status")}</label>
               <select
                 value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value })}
                 className="w-full bg-background border border-border/80 rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
               >
-                <option value="active font-semibold">Active Agent</option>
-                <option value="inactive font-semibold">Inactive</option>
+                <option value="active font-semibold">{tt("common.active", "Active")}</option>
+                <option value="inactive font-semibold">{tt("common.inactive", "Inactive")}</option>
               </select>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-xs font-semibold text-foreground/80 mb-2">City Name</label>
+              <label className="block text-xs font-semibold text-foreground/80 mb-2">{tt("common.city", "City")}</label>
               <input
                 type="text"
                 placeholder="e.g. Karachi / Dubai"
@@ -287,7 +292,7 @@ export function ShippingAgentEntryView({ lang }: { lang: SupportedLanguage }) {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-foreground/80 mb-2">Country Name</label>
+              <label className="block text-xs font-semibold text-foreground/80 mb-2">{tt("common.country", "Country")}</label>
               <input
                 type="text"
                 placeholder="e.g. Pakistan / United Arab Emirates"
@@ -299,7 +304,7 @@ export function ShippingAgentEntryView({ lang }: { lang: SupportedLanguage }) {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-foreground/80 mb-2">Remarks / Office Notes</label>
+            <label className="block text-xs font-semibold text-foreground/80 mb-2">{tt("common.remarks", "Remarks")}</label>
             <textarea
               rows={2}
               placeholder="Additional contact details, agency terms..."
@@ -316,7 +321,7 @@ export function ShippingAgentEntryView({ lang }: { lang: SupportedLanguage }) {
               className="inline-flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-xl transition-all shadow-md shadow-indigo-600/20 disabled:opacity-50"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-              Save Shipping Agent
+              {tt("sag.save", "Save Shipping Agent")}
             </button>
           </div>
         </form>
@@ -324,7 +329,7 @@ export function ShippingAgentEntryView({ lang }: { lang: SupportedLanguage }) {
         {/* Shipping Agents Table */}
         <div className="bg-card border border-border/80 rounded-2xl p-6 shadow-sm space-y-4 text-card-foreground">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/60 pb-4">
-            <h2 className="text-lg font-bold text-foreground">Registered Shipping Agents ({filteredRows.length})</h2>
+            <h2 className="text-lg font-bold text-foreground">{tt("sag.registered", "Registered Shipping Agents")} ({filteredRows.length})</h2>
             <div className="relative">
               <Search className="w-4 h-4 absolute left-3 top-2.5 text-muted-foreground" />
               <input
@@ -340,22 +345,22 @@ export function ShippingAgentEntryView({ lang }: { lang: SupportedLanguage }) {
           {loading ? (
             <div className="py-12 text-center text-muted-foreground text-sm flex items-center justify-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin" />
-              Loading shipping agents...
+              {tt("common.loading", "Loading...")}
             </div>
           ) : filteredRows.length === 0 ? (
-            <div className="py-12 text-center text-muted-foreground text-sm">No shipping agents registered yet.</div>
+            <div className="py-12 text-center text-muted-foreground text-sm">{tt("sag.empty", "No shipping agents registered yet.")}</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm text-foreground">
                 <thead className="bg-muted/40 text-muted-foreground text-xs uppercase font-bold border-b border-border/60">
                   <tr>
-                    <Th className="px-4 py-3">Agent Code</Th>
-                    <Th className="px-4 py-3">Agent Name</Th>
-                    <Th className="px-4 py-3">Shipping Line</Th>
-                    <Th className="px-4 py-3">Contact Person</Th>
-                    <Th className="px-4 py-3">Location</Th>
-                    <Th className="px-4 py-3">Status</Th>
-                    <Th className="px-4 py-3 text-right">Actions</Th>
+                    <Th className="px-4 py-3">{tt("sag.agent_code", "Agent Code")}</Th>
+                    <Th className="px-4 py-3">{tt("sag.agent_name", "Agent Name")}</Th>
+                    <Th className="px-4 py-3">{tt("sag.shipping_line", "Shipping Line")}</Th>
+                    <Th className="px-4 py-3">{tt("sag.contact_person", "Contact Person")}</Th>
+                    <Th className="px-4 py-3">{tt("sag.location", "Location")}</Th>
+                    <Th className="px-4 py-3">{tt("common.status", "Status")}</Th>
+                    <Th className="px-4 py-3 text-right">{tt("common.actions", "Actions")}</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/40">
@@ -388,7 +393,7 @@ export function ShippingAgentEntryView({ lang }: { lang: SupportedLanguage }) {
                           className="inline-flex items-center gap-1 px-2.5 py-1 bg-card hover:bg-muted text-foreground rounded-lg text-xs font-medium border border-border/80 transition-colors"
                         >
                           <Pencil className="w-3.5 h-3.5" />
-                          Edit
+                          {tt("common.edit", "Edit")}
                         </button>
                       </td>
                     </tr>

@@ -2,6 +2,8 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { Image as ImageIcon, Plus, RefreshCw } from "lucide-react";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
@@ -77,6 +79,10 @@ export function GoodsEntryCard({
   onChange: (next: GoodsEntryValue) => void;
   goodsManagementHref?: string;
 }) {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+
   const [countries, setCountries] = useState<Array<{ id: string; name: string; currency_code: string }>>([]);
   const [goodsRows, setGoodsRows] = useState<GoodsListRow[]>([]);
   const [loadingGoods, setLoadingGoods] = useState(false);
@@ -278,12 +284,12 @@ export function GoodsEntryCard({
   );
 
   return (
-    <Card className="border-border bg-card">
+    <Card className="border-border bg-card" dir={isRtl ? "rtl" : "ltr"}>
       <CardContent className="p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <div className="text-sm font-semibold text-foreground">Goods Entry</div>
-            <div className="text-xs text-muted-foreground">Search goods, preview details, and calculate weights/totals.</div>
+            <div className="text-sm font-semibold text-foreground">{tt("gec.title", "Goods Entry")}</div>
+            <div className="text-xs text-muted-foreground">{tt("gec.subtitle", "Search goods, preview details, and calculate weights/totals.")}</div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -301,7 +307,7 @@ export function GoodsEntryCard({
             <Button asChild type="button" className="h-9 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90">
               <a href={goodsManagementHref}>
                 <Plus className="h-4 w-4" aria-hidden />
-                Add New Goods
+                {tt("gec.add_goods", "Add New Goods")}
               </a>
             </Button>
           </div>
@@ -312,13 +318,13 @@ export function GoodsEntryCard({
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               <div className="rounded-lg border border-border bg-background p-2">
                 <SearchSelect
-                  label="Select Goods"
+                  label={tt("gec.select_goods", "Select Goods")}
                   value={selectedMasterGoods?.id ?? value.goodsId}
                   options={uniqueGoodsOptions}
-                  placeholder={value.countryId ? "Search goods / code" : "Select country first"}
+                  placeholder={value.countryId ? tt("gec.search_placeholder", "Search goods / code") : tt("gec.country_first", "Select country first")}
                   disabled={!value.countryId}
                   onValueChange={handleGoodsChange}
-                  createLabel="Add New Goods"
+                  createLabel={tt("gec.add_goods", "Add New Goods")}
                   onCreateNew={() => {
                     window.location.href = goodsManagementHref;
                   }}
@@ -327,14 +333,14 @@ export function GoodsEntryCard({
               </div>
 
               <label className="grid gap-1">
-                <span className="text-xs text-muted-foreground font-semibold">Select Brand</span>
+                <span className="text-xs text-muted-foreground font-semibold">{tt("gec.select_brand", "Select Brand")}</span>
                 <select
                   value={value.brand}
                   onChange={(e) => handleBrandChange(e.target.value)}
                   disabled={!selectedMasterGoods}
                   className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground outline-none focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:opacity-50"
                 >
-                  <option value="">Select Brand</option>
+                  <option value="">{tt("gec.select_brand", "Select Brand")}</option>
                   {filteredBrands.map((b) => (
                     <option key={b} value={b}>
                       {b}
@@ -345,14 +351,14 @@ export function GoodsEntryCard({
               </label>
 
               <label className="grid gap-1">
-                <span className="text-xs text-muted-foreground font-semibold">Select Size</span>
+                <span className="text-xs text-muted-foreground font-semibold">{tt("gec.select_size", "Select Size")}</span>
                 <select
                   value={value.size}
                   onChange={(e) => handleSizeChange(e.target.value)}
                   disabled={!value.brand}
                   className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground outline-none focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:opacity-50"
                 >
-                  <option value="">Select Size</option>
+                  <option value="">{tt("gec.select_size", "Select Size")}</option>
                   {filteredSizes.map((s) => (
                     <option key={s} value={s}>
                       {s}
@@ -363,7 +369,7 @@ export function GoodsEntryCard({
               </label>
 
               <label className="grid gap-1">
-                <span className="text-xs text-muted-foreground font-semibold">Divide Type</span>
+                <span className="text-xs text-muted-foreground font-semibold">{tt("gec.divide_type", "Divide Type")}</span>
                 <select
                   value={value.divideType}
                   onChange={(e) => onChange({ ...value, divideType: e.target.value as DivideType })}
@@ -380,7 +386,7 @@ export function GoodsEntryCard({
 
             <div className="grid gap-3 md:grid-cols-3">
               <label className="grid gap-1">
-                <span className="text-xs text-muted-foreground">Quantity Number</span>
+                <span className="text-xs text-muted-foreground">{tt("gec.qty_no", "Quantity Number")}</span>
                 <input
                   value={String(value.qtyNo)}
                   onChange={(e) => onChange({ ...value, qtyNo: toNumber(e.target.value) })}
@@ -389,7 +395,7 @@ export function GoodsEntryCard({
                 />
               </label>
               <label className="grid gap-1">
-                <span className="text-xs text-muted-foreground">Per Quantity Weight (KG)</span>
+                <span className="text-xs text-muted-foreground">{tt("gec.per_qty_weight", "Per Quantity Weight (KG)")}</span>
                 <input
                   value={String(value.perQtyWeightKgs)}
                   onChange={(e) => onChange({ ...value, perQtyWeightKgs: toNumber(e.target.value) })}
@@ -398,7 +404,7 @@ export function GoodsEntryCard({
                 />
               </label>
               <label className="grid gap-1">
-                <span className="text-xs text-muted-foreground">Empty Quantity Weight (KG)</span>
+                <span className="text-xs text-muted-foreground">{tt("gec.empty_qty_weight", "Empty Quantity Weight (KG)")}</span>
                 <input
                   value={String(value.emptyQtyWeightKgs)}
                   onChange={(e) => onChange({ ...value, emptyQtyWeightKgs: toNumber(e.target.value) })}
@@ -410,7 +416,7 @@ export function GoodsEntryCard({
 
             <div className="grid gap-3 md:grid-cols-3">
               <label className="grid gap-1">
-                <span className="text-xs text-muted-foreground">Divide Value</span>
+                <span className="text-xs text-muted-foreground">{tt("gec.divide_value", "Divide Value")}</span>
                 <input
                   value={String(value.divideValue)}
                   onChange={(e) => onChange({ ...value, divideValue: toNumber(e.target.value) })}
@@ -420,7 +426,7 @@ export function GoodsEntryCard({
               </label>
 
               <label className="grid gap-1">
-                <span className="text-xs text-muted-foreground">Price Per Divide</span>
+                <span className="text-xs text-muted-foreground">{tt("gec.price_per_divide", "Price Per Divide")}</span>
                 <input
                   value={String(value.pricePerDivide)}
                   onChange={(e) => onChange({ ...value, pricePerDivide: toNumber(e.target.value) })}
@@ -430,7 +436,7 @@ export function GoodsEntryCard({
               </label>
 
               <label className="grid gap-1">
-                <span className="text-xs text-muted-foreground">Exchange Rate</span>
+                <span className="text-xs text-muted-foreground">{tt("gec.exchange_rate", "Exchange Rate")}</span>
                 <input
                   value={String(value.exchangeRate)}
                   onChange={(e) => onChange({ ...value, exchangeRate: toNumber(e.target.value) })}
@@ -443,30 +449,30 @@ export function GoodsEntryCard({
             {goodsError ? <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">{goodsError}</div> : null}
 
             <div className="rounded-lg border border-border bg-card p-3">
-              <div className="text-xs font-semibold text-muted-foreground">Auto Totals</div>
+              <div className="text-xs font-semibold text-muted-foreground">{tt("gec.auto_totals", "Auto Totals")}</div>
               <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
                 <div className="rounded-lg border border-border bg-background px-3 py-2">
-                  <div className="text-[11px] text-muted-foreground">Total Gross</div>
+                  <div className="text-[11px] text-muted-foreground">{tt("gec.total_gross", "Total Gross")}</div>
                   <div className="text-sm font-semibold text-foreground">{formatNumber(totals.grossKgs)}</div>
                 </div>
                 <div className="rounded-lg border border-border bg-background px-3 py-2">
-                  <div className="text-[11px] text-muted-foreground">Total Empty</div>
+                  <div className="text-[11px] text-muted-foreground">{tt("gec.total_empty", "Total Empty")}</div>
                   <div className="text-sm font-semibold text-foreground">{formatNumber(totals.totalEmptyKgs)}</div>
                 </div>
                 <div className="rounded-lg border border-border bg-background px-3 py-2">
-                  <div className="text-[11px] text-muted-foreground">Net Weight</div>
+                  <div className="text-[11px] text-muted-foreground">{tt("gec.net_weight", "Net Weight")}</div>
                   <div className="text-sm font-semibold text-foreground">{formatNumber(totals.netKgs)}</div>
                 </div>
                 <div className="rounded-lg border border-border bg-background px-3 py-2">
-                  <div className="text-[11px] text-muted-foreground">Total Divide</div>
+                  <div className="text-[11px] text-muted-foreground">{tt("gec.total_divide", "Total Divide")}</div>
                   <div className="text-sm font-semibold text-foreground">{formatNumber(totals.totalDivide)}</div>
                 </div>
                 <div className="rounded-lg border border-border bg-background px-3 py-2">
-                  <div className="text-[11px] text-muted-foreground">Amount</div>
+                  <div className="text-[11px] text-muted-foreground">{tt("common.amount", "Amount")}</div>
                   <div className="text-sm font-semibold text-foreground">{formatNumber(totals.amount)}</div>
                 </div>
                 <div className="rounded-lg border border-border bg-background px-3 py-2">
-                  <div className="text-[11px] text-muted-foreground">Final Amount</div>
+                  <div className="text-[11px] text-muted-foreground">{tt("gec.final_amount", "Final Amount")}</div>
                   <div className="text-sm font-semibold text-foreground">{formatNumber(totals.finalAmount)}</div>
                 </div>
               </div>
@@ -474,7 +480,7 @@ export function GoodsEntryCard({
           </div>
 
           <div className="rounded-xl border border-border bg-card p-4">
-            <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Goods Preview</div>
+            <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{tt("gec.preview", "Goods Preview")}</div>
 
             <div className="mt-3 flex items-start gap-3">
               <div className="grid h-16 w-16 place-items-center overflow-hidden rounded-xl border border-border bg-background">
@@ -485,19 +491,19 @@ export function GoodsEntryCard({
                 <div className="truncate text-sm font-semibold text-foreground">{value.goodsName || selectedGoods?.goodsName || "-"}</div>
                 <div className="mt-1 grid grid-cols-2 gap-2 text-xs">
                   <div>
-                    <div className="text-muted-foreground">Goods Code</div>
+                    <div className="text-muted-foreground">{tt("gec.goods_code", "Goods Code")}</div>
                     <div className="font-semibold text-foreground">{value.productCode || "-"}</div>
                   </div>
                   <div>
-                    <div className="text-muted-foreground">Size</div>
+                    <div className="text-muted-foreground">{tt("gec.size", "Size")}</div>
                     <div className="font-semibold text-foreground">{value.size || "-"}</div>
                   </div>
                   <div>
-                    <div className="text-muted-foreground">Brand</div>
+                    <div className="text-muted-foreground">{tt("gec.brand", "Brand")}</div>
                     <div className="font-semibold text-foreground">{value.brand || "-"}</div>
                   </div>
                   <div className="col-span-2">
-                    <div className="text-muted-foreground">Origin</div>
+                    <div className="text-muted-foreground">{tt("gec.origin", "Origin")}</div>
                     <div className="font-semibold text-foreground">{originName}</div>
                   </div>
                 </div>
@@ -505,7 +511,7 @@ export function GoodsEntryCard({
             </div>
 
             <div className="mt-4 rounded-lg border border-border bg-background p-3 text-xs text-muted-foreground">
-              Goods data is loaded from Settings / Management / Goods Master.
+              {tt("gec.data_note", "Goods data is loaded from Settings / Management / Goods Master.")}
             </div>
           </div>
         </div>

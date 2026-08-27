@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { 
-  Users, UserCheck, Shield, KeyRound, Building2, Globe, MapPin, 
-  Sparkles, CheckCircle2, AlertCircle, RefreshCw, Eye, EyeOff, 
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
+import {
+  Users, UserCheck, Shield, KeyRound, Building2, Globe, MapPin,
+  Sparkles, CheckCircle2, AlertCircle, RefreshCw, Eye, EyeOff,
   Copy, Check, UserPlus, ArrowRight, Layers, FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -58,6 +60,9 @@ function generateSecurePassword() {
 }
 
 export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const roleOptions = roleOptionsByKind[kind];
 
   // Employee Dropdown Data
@@ -253,20 +258,20 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={isRtl ? "rtl" : "ltr"}>
       {/* 2-Column Split: Left = Compact Form, Right = Live Report & Profile Card */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
+
         {/* LEFT COLUMN: User Setup Form */}
         <div className="lg:col-span-7 bg-card rounded-2xl border border-border p-5 sm:p-6 shadow-sm space-y-5">
           <div className="flex items-center justify-between border-b border-border pb-3">
             <div>
               <h2 className="text-base font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <UserPlus className="h-4 w-4 text-emerald-600" />
-                User Setup & Credential Form
+                {tt("uf.form_title", "User Setup & Credential Form")}
               </h2>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Select from Employee Master or register a new administrative account.
+                {tt("uf.form_sub", "Select from Employee Master or register a new administrative account.")}
               </p>
             </div>
             <Badge variant="outline" className="font-bold text-xs uppercase text-emerald-700 bg-emerald-50 border-emerald-300">
@@ -281,7 +286,7 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
               <div className="flex items-center justify-between">
                 <Label className="text-xs font-bold text-sky-900 dark:text-sky-300 flex items-center gap-1.5">
                   <Users className="h-3.5 w-3.5 text-sky-600" />
-                  Select Registered Employee (ملازم کا انتخاب کریں):
+                  {tt("uf.select_employee", "Select Registered Employee")}:
                 </Label>
                 <Button
                   type="button"
@@ -291,7 +296,7 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
                   className="h-6.5 text-[11px] font-bold text-sky-700 border-sky-300 hover:bg-sky-100 gap-1"
                 >
                   <UserPlus className="h-3 w-3" />
-                  + New Employee
+                  {tt("uf.new_employee", "+ New Employee")}
                 </Button>
               </div>
 
@@ -300,7 +305,7 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
                 onChange={(e) => handleSelectEmployee(e.target.value)}
                 className="h-9 w-full rounded-lg border border-sky-300 bg-white px-3 text-xs font-semibold text-slate-800 shadow-xs dark:bg-slate-950 dark:text-slate-200"
               >
-                <option value="">-- Choose Employee (or type manually below) --</option>
+                <option value="">{tt("uf.choose_employee", "-- Choose Employee (or type manually below) --")}</option>
                 {employees.map((emp) => {
                   const empName = personFullName(emp.person || {}) || emp.name || emp.employee_code;
                   return (
@@ -315,7 +320,7 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
             {/* Basic Info Inputs */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Full Name (پورا نام) *</Label>
+                <Label className="text-xs font-semibold">{tt("uf.full_name", "Full Name")} *</Label>
                 <Input
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
@@ -326,7 +331,7 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Login Email (ای میل) *</Label>
+                <Label className="text-xs font-semibold">{tt("uf.login_email", "Login Email")} *</Label>
                 <Input
                   type="email"
                   value={email}
@@ -341,7 +346,7 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
             {/* Phone & Language */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Contact Mobile / Phone</Label>
+                <Label className="text-xs font-semibold">{tt("uf.phone", "Contact Mobile / Phone")}</Label>
                 <Input
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
@@ -351,7 +356,7 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Preferred Language</Label>
+                <Label className="text-xs font-semibold">{tt("uf.preferred_lang", "Preferred Language")}</Label>
                 <select
                   value={preferredLanguage}
                   onChange={(e) => setPreferredLanguage(e.target.value)}
@@ -369,7 +374,7 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
             {/* Role & Password */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Assigned Role (اختیارات کا درجہ)</Label>
+                <Label className="text-xs font-semibold">{tt("uf.assigned_role", "Assigned Role")}</Label>
                 <select
                   value={role}
                   onChange={(e) => setRole(e.target.value as EnterpriseRole)}
@@ -386,14 +391,14 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs font-semibold">Password / Key</Label>
+                  <Label className="text-xs font-semibold">{tt("uf.password_key", "Password / Key")}</Label>
                   <button
                     type="button"
                     onClick={() => setPassword(generateSecurePassword())}
                     className="text-[10px] font-bold text-sky-600 hover:underline flex items-center gap-1"
                   >
                     <RefreshCw className="h-2.5 w-2.5" />
-                    Auto-Generate
+                    {tt("uf.auto_generate", "Auto-Generate")}
                   </button>
                 </div>
                 <div className="relative">
@@ -421,17 +426,17 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
                 <div className="flex items-center justify-between">
                   <Label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                     <MapPin className="h-3.5 w-3.5 text-emerald-600" />
-                    Operational Location Scope (برانچ کا انتخاب)
+                    {tt("uf.scope_title", "Operational Location Scope")}
                   </Label>
-                  <span className="text-[10px] text-muted-foreground">Centralized Branch Hierarchy</span>
+                  <span className="text-[10px] text-muted-foreground">{tt("uf.central_branch", "Centralized Branch Hierarchy")}</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   <div>
                     <SearchSelect
-                      label={loadingCountries ? "Country (Loading...)" : "Country"}
+                      label={loadingCountries ? tt("common.loading", "Loading...") : tt("common.country", "Country")}
                       value={countryId}
-                      placeholder="Select Country"
+                      placeholder={tt("common.country", "Country")}
                       options={countries.map((c) => ({ value: c.id, label: `${c.name} (${c.currency_code})` }))}
                       disabled={loadingCountries}
                       onValueChange={(value) => setCountryId(value)}
@@ -439,9 +444,9 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
                   </div>
                   <div>
                     <SearchSelect
-                      label="Main Branch"
+                      label={tt("uf.main_branch", "Main Branch")}
                       value={countryBranchId}
-                      placeholder={countryId ? "Select Main Branch" : "Country first"}
+                      placeholder={countryId ? tt("uf.main_branch", "Main Branch") : tt("common.country", "Country") + " first"}
                       options={mainBranches.map((b) => ({ value: b.id, label: `${b.name} (${b.code})` }))}
                       disabled={!countryId}
                       onValueChange={(value) => setCountryBranchId(value)}
@@ -449,9 +454,9 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
                   </div>
                   <div>
                     <SearchSelect
-                      label="City Branch"
+                      label={tt("uf.city_branch", "City Branch")}
                       value={cityBranchId}
-                      placeholder={countryBranchId ? "Select City Branch" : "Main Branch first"}
+                      placeholder={countryBranchId ? tt("uf.city_branch", "City Branch") : tt("uf.main_branch", "Main Branch") + " first"}
                       options={cityBranches.map((b) => ({ value: b.id, label: `${b.city_name} - ${b.name}` }))}
                       disabled={!countryId || !countryBranchId}
                       onValueChange={(value) => setCityBranchId(value)}
@@ -498,7 +503,7 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
                 }}
                 className="text-xs"
               >
-                Clear Form
+                {tt("uf.clear_form", "Clear Form")}
               </Button>
 
               <Button
@@ -507,7 +512,7 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
                 className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 h-9 rounded-xl gap-1.5 shadow-sm"
               >
                 <UserCheck className="h-4 w-4" />
-                {submitting ? "Creating & Encrypting..." : "Create User & Sync Vault"}
+                {submitting ? tt("uf.creating", "Creating & Encrypting...") : tt("uf.create_user", "Create User & Sync Vault")}
               </Button>
             </div>
           </form>
@@ -522,8 +527,8 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
                   {fullName ? fullName.slice(0, 2).toUpperCase() : "USR"}
                 </div>
                 <div>
-                  <h3 className="font-black text-sm text-white">Live User Profile Preview</h3>
-                  <p className="text-[10px] text-slate-300">Real-time credentials & scope summary</p>
+                  <h3 className="font-black text-sm text-white">{tt("uf.preview_title", "Live User Profile Preview")}</h3>
+                  <p className="text-[10px] text-slate-300">{tt("uf.preview_sub", "Real-time credentials & scope summary")}</p>
                 </div>
               </div>
               <Badge className="bg-emerald-600 text-white font-bold text-[10px] uppercase">
@@ -534,31 +539,31 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
             {/* Profile Data List */}
             <div className="space-y-2 text-xs">
               <div className="flex justify-between p-2 rounded-lg bg-slate-800/60 border border-slate-700/50">
-                <span className="text-slate-400 font-medium">Full Name:</span>
+                <span className="text-slate-400 font-medium">{tt("uf.full_name_label", "Full Name:")}</span>
                 <span className="font-bold text-white">{fullName || "—"}</span>
               </div>
 
               <div className="flex justify-between p-2 rounded-lg bg-slate-800/60 border border-slate-700/50">
-                <span className="text-slate-400 font-medium">Login Email:</span>
+                <span className="text-slate-400 font-medium">{tt("uf.email_label", "Login Email:")}</span>
                 <span className="font-mono text-emerald-400 font-bold">{email || "—"}</span>
               </div>
 
               <div className="flex justify-between p-2 rounded-lg bg-slate-800/60 border border-slate-700/50">
-                <span className="text-slate-400 font-medium">Phone:</span>
+                <span className="text-slate-400 font-medium">{tt("uf.phone_label", "Phone:")}</span>
                 <span className="font-mono text-slate-200">{phone || "—"}</span>
               </div>
 
               <div className="flex justify-between p-2 rounded-lg bg-slate-800/60 border border-slate-700/50">
-                <span className="text-slate-400 font-medium">Assigned Scope:</span>
+                <span className="text-slate-400 font-medium">{tt("uf.scope_label", "Assigned Scope:")}</span>
                 <span className="font-bold text-sky-400 text-right truncate max-w-[180px]">
                   {kind === "super_admin"
-                    ? "Global (All Countries)"
+                    ? tt("uf.global_scope", "Global (All Countries)")
                     : `${selectedCountry?.name || "Any Country"} / ${selectedCityBranch?.name || selectedMainBranch?.name || "Main Branch"}`}
                 </span>
               </div>
 
               <div className="flex justify-between p-2 rounded-lg bg-slate-800/60 border border-slate-700/50">
-                <span className="text-slate-400 font-medium">Password Key:</span>
+                <span className="text-slate-400 font-medium">{tt("uf.password_label", "Password Key:")}</span>
                 <div className="flex items-center gap-1.5 font-mono text-amber-400 font-bold">
                   <span>{password ? "••••••••" : "—"}</span>
                   <button
@@ -569,7 +574,7 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
                       setTimeout(() => setCopiedKey(false), 2000);
                     }}
                     className="text-[10px] text-slate-400 hover:text-white"
-                    title="Copy Password"
+                    title={tt("uf.copy_password", "Copy Password")}
                   >
                     {copiedKey ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
                   </button>
@@ -582,12 +587,12 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
               <div className="flex items-center justify-between text-[11px]">
                 <span className="font-bold text-slate-300 flex items-center gap-1">
                   <Shield className="h-3.5 w-3.5 text-indigo-400" />
-                  Security Tier & Vault:
+                  {tt("uf.security_tier", "Security Tier & Vault:")}
                 </span>
-                <span className="text-emerald-400 font-mono font-bold text-[10px]">ENCRYPTED / SYNCED</span>
+                <span className="text-emerald-400 font-mono font-bold text-[10px]">{tt("uf.encrypted", "ENCRYPTED / SYNCED")}</span>
               </div>
               <p className="text-[10px] text-slate-400 leading-relaxed">
-                Upon creation, credentials are automatically synchronized with the Super Admin Credential Vault and an immutable audit event is recorded.
+                {tt("uf.vault_desc", "Upon creation, credentials are automatically synchronized with the Super Admin Credential Vault and an immutable audit event is recorded.")}
               </p>
             </div>
           </div>
@@ -598,7 +603,7 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
       <SimpleModal
         isOpen={showNewEmployeeModal}
         onClose={() => setShowNewEmployeeModal(false)}
-        title="Register New Employee in HR Master"
+        title={tt("uf.modal_title", "Register New Employee in HR Master")}
       >
         <div className="p-4 max-h-[80vh] overflow-y-auto">
           <EmployeeForm

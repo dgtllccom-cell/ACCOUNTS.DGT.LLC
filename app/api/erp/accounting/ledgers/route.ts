@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
       data = viaPg;
     } else {
       const supabase = await createApiSupabaseClient();
-      let query = supabase
+      let query: any = supabase
         .from("ledgers")
         .select(
           "id, scope, country_id, country_branch_id, city_branch_id, enterprise_account_id, parent_ledger_id, code, name, currency, opening_balance, current_balance, debit_total, credit_total, normal_balance, is_active, created_at, updated_at"

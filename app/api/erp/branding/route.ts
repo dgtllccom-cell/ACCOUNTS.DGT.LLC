@@ -79,8 +79,8 @@ export async function GET(req: Request) {
     const brandingAny = branding as Record<string, any>;
     const overlayBranch = async (table: string, id: string | null) => {
       if (!id) return;
-      const { data: br } = await supabase
-        .from(table)
+      const { data: br } = await (supabase
+        .from(table as any) as any)
         .select("branding_company_name, branding_logo_url, branding_stamp_url, branding_letterhead_url, branding_report_header, branding_report_footer, branding_address, branding_phone, branding_email")
         .eq("id", id)
         .maybeSingle();

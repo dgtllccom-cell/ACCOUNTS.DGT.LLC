@@ -9,7 +9,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "accounts", action: "read" });
 
-    const db = createSupabaseAdminClient();
+    const db = createSupabaseAdminClient() as any;
     const { data: account, error } = await db
       .from("accounts")
       .select(`
@@ -67,7 +67,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const body = await request.json();
     const { code, name, accountTypeId, isActive } = body;
 
-    const db = createSupabaseAdminClient();
+    const db = createSupabaseAdminClient() as any;
     const { data, error } = await db
       .from("accounts")
       .update({
@@ -93,7 +93,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "accounts", action: "delete" });
 
-    const db = createSupabaseAdminClient();
+    const db = createSupabaseAdminClient() as any;
 
     // Delete all associations first
     await Promise.all([

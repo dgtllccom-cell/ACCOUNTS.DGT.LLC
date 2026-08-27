@@ -25,6 +25,8 @@ import { Th } from "@/components/ui/translated-th";
 import { Party360Modal } from "@/features/customers/components/party-360-modal";
 import { EmployeeProfileDrawer } from "./employee-profile-drawer";
 import { Eye } from "lucide-react";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 export function EmployeeManagementView() {
   const lang = useActiveLanguage();

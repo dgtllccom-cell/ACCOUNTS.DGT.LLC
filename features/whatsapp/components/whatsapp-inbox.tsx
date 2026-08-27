@@ -12,12 +12,16 @@ import { useWhatsAppRealtime } from "../hooks/use-realtime";
 import { fetchWhatsAppAccounts, startNewConversation } from "../api";
 import type { WhatsAppAccount, WhatsAppConversation } from "../types";
 import type { ErpSession } from "@/lib/auth/session";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 type Props = {
   session: ErpSession;
 };
 
 export function WhatsAppInbox({ session }: Props) {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [showContact, setShowContact] = useState(true);
   const [accounts, setAccounts] = useState<WhatsAppAccount[]>([]);
@@ -100,9 +104,9 @@ export function WhatsAppInbox({ session }: Props) {
               <MessageSquare className="h-4 w-4 text-[#25D366]" />
             </div>
             <div>
-              <h1 className="text-sm font-semibold text-foreground">WhatsApp Inbox</h1>
+              <h1 className="text-sm font-semibold text-foreground">{tt("wa.inbox_title", "WhatsApp Inbox")}</h1>
               <p className="text-[10px] text-muted-foreground">
-                {conversations.filter((c) => c.status === "open").length} open
+                {conversations.filter((c) => c.status === "open").length} {tt("wa.open", "open")}
               </p>
             </div>
           </div>
@@ -164,9 +168,9 @@ export function WhatsAppInbox({ session }: Props) {
               <MessageSquare className="h-10 w-10 text-[#25D366]/60" />
             </div>
             <div className="text-center">
-              <p className="text-sm font-medium text-foreground">Select a conversation</p>
+              <p className="text-sm font-medium text-foreground">{tt("wa.select_conv", "Select a conversation")}</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Choose a conversation from the left panel to start messaging
+                {tt("wa.select_conv_desc", "Choose a conversation from the left panel to start messaging")}
               </p>
             </div>
           </div>

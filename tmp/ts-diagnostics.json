@@ -1,0 +1,1624 @@
+{
+  "app/api/branch-management/city-branches/route.ts": [
+    {
+      "line": 268,
+      "col": 76,
+      "code": 18048,
+      "message": "'session' is possibly 'undefined'."
+    }
+  ],
+  "app/api/erp/account-types/route.ts": [
+    {
+      "line": 47,
+      "col": 30,
+      "code": 2353,
+      "message": "Object literal may only specify known properties, and 'ledger_group' does not exist in type 'RejectExcessProperties<{ account_group_id?: string | null | undefined; account_kind: \"liability\" | \"asset\" | \"equity\" | \"income\" | \"expense\"; code: string; created_at?: string | undefined; deleted_at?: string | ... 1 more ... | undefined; id?: string | undefined; is_system?: boolean | undefined; name: string; update...'."
+    }
+  ],
+  "app/api/erp/accounting/accounts/[id]/route.ts": [
+    {
+      "line": 258,
+      "col": 25,
+      "code": 2339,
+      "message": "Property 'id' does not exist on type '{}'."
+    },
+    {
+      "line": 262,
+      "col": 36,
+      "code": 2339,
+      "message": "Property 'id' does not exist on type '{}'."
+    }
+  ],
+  "app/api/erp/accounting/accounts/route.ts": [
+    {
+      "line": 87,
+      "col": 18,
+      "code": 2352,
+      "message": "Conversion of type 'RowList<Row[]>' to type '{ id: string; code: string; name: string; kind: string | null; currency: string | null; status: string | null; }[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.\n  The types returned by 'concat(...)' are incompatible between these types.\n    Type 'Row[]' is not comparable to type '{ id: string; code: string; name: string; kind: string | null; currency: string | null; status: string | null; }[]'.\n      Type 'Row' is missing the following properties from type '{ id: string; code: string; name: string; kind: string | null; currency: string | null; status: string | null; }': id, code, name, kind, and 2 more."
+    }
+  ],
+  "app/api/erp/accounting/inter-country-transfers/[id]/route.ts": [
+    {
+      "line": 20,
+      "col": 45,
+      "code": 2554,
+      "message": "Expected 0 arguments, but got 1."
+    },
+    {
+      "line": 72,
+      "col": 45,
+      "code": 2554,
+      "message": "Expected 0 arguments, but got 1."
+    }
+  ],
+  "app/api/erp/accounting/inter-country-transfers/route.ts": [
+    {
+      "line": 15,
+      "col": 45,
+      "code": 2554,
+      "message": "Expected 0 arguments, but got 1."
+    },
+    {
+      "line": 18,
+      "col": 65,
+      "code": 2551,
+      "message": "Property 'role' does not exist on type 'ErpSession'. Did you mean 'roles'?"
+    },
+    {
+      "line": 18,
+      "col": 98,
+      "code": 2551,
+      "message": "Property 'countryId' does not exist on type 'ErpSession'. Did you mean 'countryIds'?"
+    },
+    {
+      "line": 40,
+      "col": 45,
+      "code": 2554,
+      "message": "Expected 0 arguments, but got 1."
+    }
+  ],
+  "app/api/erp/accounting/ledgers/route.ts": [
+    {
+      "line": 90,
+      "col": 25,
+      "code": 2339,
+      "message": "Property 'or' does not exist on type 'LooseQueryBuilder'."
+    }
+  ],
+  "app/api/erp/accounting/reports/accounts/general/route.ts": [
+    {
+      "line": 785,
+      "col": 17,
+      "code": 2551,
+      "message": "Property 'customer_name' does not exist on type 'EnterpriseAccountRow'. Did you mean 'customer_number'?"
+    },
+    {
+      "line": 787,
+      "col": 17,
+      "code": 2339,
+      "message": "Property 'owner_name' does not exist on type 'EnterpriseAccountRow'."
+    },
+    {
+      "line": 788,
+      "col": 17,
+      "code": 2339,
+      "message": "Property 'contact_name' does not exist on type 'EnterpriseAccountRow'."
+    },
+    {
+      "line": 789,
+      "col": 17,
+      "code": 2339,
+      "message": "Property 'company_owner_name' does not exist on type 'EnterpriseAccountRow'."
+    }
+  ],
+  "app/api/erp/accounting/reports/ledger/export/route.ts": [
+    {
+      "line": 61,
+      "col": 7,
+      "code": 2353,
+      "message": "Object literal may only specify known properties, and 'q' does not exist in type 'ListLedgersInput'."
+    },
+    {
+      "line": 69,
+      "col": 34,
+      "code": 2339,
+      "message": "Property 'rows' does not exist on type 'LedgerLookupRow[]'."
+    },
+    {
+      "line": 94,
+      "col": 28,
+      "code": 2339,
+      "message": "Property 'rows' does not exist on type 'LedgerLookupRow[]'."
+    }
+  ],
+  "app/api/erp/accounts/[id]/links/route.ts": [
+    {
+      "line": 50,
+      "col": 15,
+      "code": 2769,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(relation: \"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type 'string' is not assignable to parameter of type '\"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"'.\n  Overload 2 of 2, '(relation: \"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type 'string' is not assignable to parameter of type '\"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"'."
+    },
+    {
+      "line": 52,
+      "col": 13,
+      "code": 2345,
+      "message": "Argument of type '\"account_id\"' is not assignable to parameter of type 'never'."
+    },
+    {
+      "line": 70,
+      "col": 15,
+      "code": 2769,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(relation: \"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type 'string' is not assignable to parameter of type '\"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"'.\n  Overload 2 of 2, '(relation: \"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type 'string' is not assignable to parameter of type '\"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"'."
+    },
+    {
+      "line": 71,
+      "col": 18,
+      "code": 2322,
+      "message": "Type 'Record<string, any>' is not assignable to type 'RejectExcessProperties<{ applied_at?: string | null | undefined; filename: string; id?: number | undefined; } | { account_kind: \"liability\" | \"asset\" | \"equity\" | \"income\" | \"expense\"; code: string; created_at?: string | undefined; ... 5 more ...; updated_at?: string | undefined; } | ... 166 more ... | { ...; }, Rec...'.\n  Type 'Record<string, any>' is not assignable to type '{ [x: string]: never; }'.\n    'string' index signatures are incompatible.\n      Type 'any' is not assignable to type 'never'."
+    },
+    {
+      "line": 94,
+      "col": 15,
+      "code": 2769,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(relation: \"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type 'string' is not assignable to parameter of type '\"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"'.\n  Overload 2 of 2, '(relation: \"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type 'string' is not assignable to parameter of type '\"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"'."
+    },
+    {
+      "line": 96,
+      "col": 13,
+      "code": 2345,
+      "message": "Argument of type '\"account_id\"' is not assignable to parameter of type 'never'."
+    }
+  ],
+  "app/api/erp/accounts/[id]/route.ts": [
+    {
+      "line": 34,
+      "col": 7,
+      "code": 2589,
+      "message": "Type instantiation is excessively deep and possibly infinite."
+    },
+    {
+      "line": 34,
+      "col": 15,
+      "code": 2769,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(relation: \"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"account_companies\"' is not assignable to parameter of type '\"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"'.\n  Overload 2 of 2, '(relation: \"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"account_companies\"' is not assignable to parameter of type '\"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"'."
+    },
+    {
+      "line": 36,
+      "col": 13,
+      "code": 2345,
+      "message": "Argument of type '\"account_id\"' is not assignable to parameter of type 'never'."
+    },
+    {
+      "line": 37,
+      "col": 7,
+      "code": 2589,
+      "message": "Type instantiation is excessively deep and possibly infinite."
+    },
+    {
+      "line": 37,
+      "col": 15,
+      "code": 2769,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(relation: \"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"account_banks\"' is not assignable to parameter of type '\"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"'.\n  Overload 2 of 2, '(relation: \"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"account_banks\"' is not assignable to parameter of type '\"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"'."
+    },
+    {
+      "line": 39,
+      "col": 13,
+      "code": 2345,
+      "message": "Argument of type '\"account_id\"' is not assignable to parameter of type 'never'."
+    },
+    {
+      "line": 40,
+      "col": 7,
+      "code": 2589,
+      "message": "Type instantiation is excessively deep and possibly infinite."
+    },
+    {
+      "line": 40,
+      "col": 15,
+      "code": 2769,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(relation: \"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"account_warehouses\"' is not assignable to parameter of type '\"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"'.\n  Overload 2 of 2, '(relation: \"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"account_warehouses\"' is not assignable to parameter of type '\"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"'."
+    },
+    {
+      "line": 42,
+      "col": 13,
+      "code": 2345,
+      "message": "Argument of type '\"account_id\"' is not assignable to parameter of type 'never'."
+    },
+    {
+      "line": 43,
+      "col": 7,
+      "code": 2589,
+      "message": "Type instantiation is excessively deep and possibly infinite."
+    },
+    {
+      "line": 43,
+      "col": 15,
+      "code": 2769,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(relation: \"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"account_customer_owners\"' is not assignable to parameter of type '\"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"'.\n  Overload 2 of 2, '(relation: \"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"account_customer_owners\"' is not assignable to parameter of type '\"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"'."
+    },
+    {
+      "line": 45,
+      "col": 13,
+      "code": 2345,
+      "message": "Argument of type '\"account_id\"' is not assignable to parameter of type 'never'."
+    },
+    {
+      "line": 49,
+      "col": 7,
+      "code": 2698,
+      "message": "Spread types may only be created from object types."
+    },
+    {
+      "line": 76,
+      "col": 9,
+      "code": 2322,
+      "message": "Type 'any' is not assignable to type 'never'."
+    },
+    {
+      "line": 77,
+      "col": 9,
+      "code": 2322,
+      "message": "Type 'any' is not assignable to type 'never'."
+    },
+    {
+      "line": 100,
+      "col": 15,
+      "code": 2769,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(relation: \"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"account_companies\"' is not assignable to parameter of type '\"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"'.\n  Overload 2 of 2, '(relation: \"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"account_companies\"' is not assignable to parameter of type '\"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"'."
+    },
+    {
+      "line": 100,
+      "col": 48,
+      "code": 2345,
+      "message": "Argument of type '\"account_id\"' is not assignable to parameter of type 'never'."
+    },
+    {
+      "line": 101,
+      "col": 15,
+      "code": 2769,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(relation: \"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"account_banks\"' is not assignable to parameter of type '\"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"'.\n  Overload 2 of 2, '(relation: \"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"account_banks\"' is not assignable to parameter of type '\"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"'."
+    },
+    {
+      "line": 101,
+      "col": 44,
+      "code": 2345,
+      "message": "Argument of type '\"account_id\"' is not assignable to parameter of type 'never'."
+    },
+    {
+      "line": 102,
+      "col": 15,
+      "code": 2769,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(relation: \"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"account_warehouses\"' is not assignable to parameter of type '\"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"'.\n  Overload 2 of 2, '(relation: \"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"account_warehouses\"' is not assignable to parameter of type '\"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"'."
+    },
+    {
+      "line": 102,
+      "col": 49,
+      "code": 2345,
+      "message": "Argument of type '\"account_id\"' is not assignable to parameter of type 'never'."
+    },
+    {
+      "line": 103,
+      "col": 15,
+      "code": 2769,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(relation: \"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"account_customer_owners\"' is not assignable to parameter of type '\"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"'.\n  Overload 2 of 2, '(relation: \"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"account_customer_owners\"' is not assignable to parameter of type '\"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"'."
+    },
+    {
+      "line": 103,
+      "col": 54,
+      "code": 2345,
+      "message": "Argument of type '\"account_id\"' is not assignable to parameter of type 'never'."
+    }
+  ],
+  "app/api/erp/accounts/route.ts": [
+    {
+      "line": 42,
+      "col": 15,
+      "code": 2769,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(relation: \"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"account_companies\"' is not assignable to parameter of type '\"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"'.\n  Overload 2 of 2, '(relation: \"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"account_companies\"' is not assignable to parameter of type '\"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"'."
+    },
+    {
+      "line": 43,
+      "col": 15,
+      "code": 2769,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(relation: \"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"account_banks\"' is not assignable to parameter of type '\"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"'.\n  Overload 2 of 2, '(relation: \"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"account_banks\"' is not assignable to parameter of type '\"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"'."
+    },
+    {
+      "line": 44,
+      "col": 15,
+      "code": 2769,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(relation: \"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"account_warehouses\"' is not assignable to parameter of type '\"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"'.\n  Overload 2 of 2, '(relation: \"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"account_warehouses\"' is not assignable to parameter of type '\"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"'."
+    },
+    {
+      "line": 112,
+      "col": 9,
+      "code": 2353,
+      "message": "Object literal may only specify known properties, and 'account_type_id' does not exist in type 'RejectExcessProperties<{ branch_id?: string | null | undefined; code: string; company_id: string; created_at?: string | undefined; currency: string; deleted_at?: string | null | undefined; id?: string | undefined; ... 5 more ...; updated_at?: string | undefined; }, { ...; }>'."
+    },
+    {
+      "line": 124,
+      "col": 52,
+      "code": 2322,
+      "message": "Type '{ record_table: string; record_id: string; field_name: string; original_text: any; original_language_code: any; english_text: any; urdu_text: any; arabic_text: any; persian_text: any; pashto_text: any; source: string; }' is not assignable to type 'never'."
+    }
+  ],
+  "app/api/erp/admin/dashboard-settings/route.ts": [
+    {
+      "line": 57,
+      "col": 35,
+      "code": 2589,
+      "message": "Type instantiation is excessively deep and possibly infinite."
+    },
+    {
+      "line": 58,
+      "col": 13,
+      "code": 2769,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(relation: \"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"app_settings\"' is not assignable to parameter of type '\"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"'.\n  Overload 2 of 2, '(relation: \"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"app_settings\"' is not assignable to parameter of type '\"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"'."
+    },
+    {
+      "line": 60,
+      "col": 11,
+      "code": 2345,
+      "message": "Argument of type '\"setting_key\"' is not assignable to parameter of type 'never'."
+    },
+    {
+      "line": 67,
+      "col": 35,
+      "code": 2339,
+      "message": "Property 'setting_value' does not exist on type 'NonNullable<ResultOne>'."
+    },
+    {
+      "line": 67,
+      "col": 67,
+      "code": 2339,
+      "message": "Property 'setting_value' does not exist on type 'NonNullable<ResultOne>'."
+    },
+    {
+      "line": 97,
+      "col": 13,
+      "code": 2769,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(relation: \"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"app_settings\"' is not assignable to parameter of type '\"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"'.\n  Overload 2 of 2, '(relation: \"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"app_settings\"' is not assignable to parameter of type '\"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"'."
+    },
+    {
+      "line": 99,
+      "col": 9,
+      "code": 2322,
+      "message": "Type 'string' is not assignable to type 'never'."
+    },
+    {
+      "line": 100,
+      "col": 9,
+      "code": 2322,
+      "message": "Type 'string' is not assignable to type 'never'."
+    },
+    {
+      "line": 101,
+      "col": 9,
+      "code": 2322,
+      "message": "Type 'string' is not assignable to type 'never'."
+    }
+  ],
+  "app/api/erp/admin/i18n-database-audit/route.ts": [
+    {
+      "line": 158,
+      "col": 5,
+      "code": 2345,
+      "message": "Argument of type 'unknown[]' is not assignable to parameter of type 'ParameterOrJSON<never>[]'.\n  Type 'unknown' is not assignable to type 'ParameterOrJSON<never>'."
+    }
+  ],
+  "app/api/erp/approvals/[id]/route.ts": [
+    {
+      "line": 98,
+      "col": 27,
+      "code": 2339,
+      "message": "Property 'id' does not exist on type '{}'."
+    }
+  ],
+  "app/api/erp/audit/daily-branch-activity/route.ts": [
+    {
+      "line": 7,
+      "col": 45,
+      "code": 2554,
+      "message": "Expected 0 arguments, but got 1."
+    }
+  ],
+  "app/api/erp/audit/deleted-records/[id]/route.ts": [
+    {
+      "line": 10,
+      "col": 45,
+      "code": 2554,
+      "message": "Expected 0 arguments, but got 1."
+    }
+  ],
+  "app/api/erp/audit/deleted-records/permanent/route.ts": [
+    {
+      "line": 38,
+      "col": 45,
+      "code": 2554,
+      "message": "Expected 0 arguments, but got 1."
+    },
+    {
+      "line": 117,
+      "col": 21,
+      "code": 18047,
+      "message": "'event' is possibly 'null'."
+    }
+  ],
+  "app/api/erp/audit/deleted-records/restore/route.ts": [
+    {
+      "line": 7,
+      "col": 45,
+      "code": 2554,
+      "message": "Expected 0 arguments, but got 1."
+    }
+  ],
+  "app/api/erp/audit/deleted-records/route.ts": [
+    {
+      "line": 8,
+      "col": 45,
+      "code": 2554,
+      "message": "Expected 0 arguments, but got 1."
+    },
+    {
+      "line": 24,
+      "col": 108,
+      "code": 2345,
+      "message": "Argument of type '\"audit_viewer\"' is not assignable to parameter of type '\"super_admin\" | \"super_admin_reports\" | \"country_admin\" | \"country_user\" | \"main_branch_admin\" | \"city_branch_admin\" | \"accountant\" | \"cashier\" | \"agent_user\" | \"staff_user\" | \"auditor_viewer\"'."
+    },
+    {
+      "line": 58,
+      "col": 45,
+      "code": 2554,
+      "message": "Expected 0 arguments, but got 1."
+    },
+    {
+      "line": 124,
+      "col": 21,
+      "code": 18047,
+      "message": "'event' is possibly 'null'."
+    }
+  ],
+  "app/api/erp/audit/edit-history/route.ts": [
+    {
+      "line": 7,
+      "col": 45,
+      "code": 2554,
+      "message": "Expected 0 arguments, but got 1."
+    },
+    {
+      "line": 23,
+      "col": 108,
+      "code": 2345,
+      "message": "Argument of type '\"audit_viewer\"' is not assignable to parameter of type '\"super_admin\" | \"super_admin_reports\" | \"country_admin\" | \"country_user\" | \"main_branch_admin\" | \"city_branch_admin\" | \"accountant\" | \"cashier\" | \"agent_user\" | \"staff_user\" | \"auditor_viewer\"'."
+    }
+  ],
+  "app/api/erp/audit/monthly-edits/route.ts": [
+    {
+      "line": 8,
+      "col": 45,
+      "code": 2554,
+      "message": "Expected 0 arguments, but got 1."
+    }
+  ],
+  "app/api/erp/audit/user-activity/route.ts": [
+    {
+      "line": 7,
+      "col": 45,
+      "code": 2554,
+      "message": "Expected 0 arguments, but got 1."
+    }
+  ],
+  "app/api/erp/audit/version-timeline/route.ts": [
+    {
+      "line": 8,
+      "col": 45,
+      "code": 2554,
+      "message": "Expected 0 arguments, but got 1."
+    },
+    {
+      "line": 25,
+      "col": 26,
+      "code": 18047,
+      "message": "'timeline' is possibly 'null'."
+    },
+    {
+      "line": 35,
+      "col": 22,
+      "code": 18047,
+      "message": "'timeline' is possibly 'null'."
+    }
+  ],
+  "app/api/erp/branding/route.ts": [
+    {
+      "line": 82,
+      "col": 34,
+      "code": 2589,
+      "message": "Type instantiation is excessively deep and possibly infinite."
+    },
+    {
+      "line": 83,
+      "col": 15,
+      "code": 2769,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(relation: \"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type 'string' is not assignable to parameter of type '\"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"'.\n  Overload 2 of 2, '(relation: \"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type 'string' is not assignable to parameter of type '\"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"'."
+    },
+    {
+      "line": 85,
+      "col": 13,
+      "code": 2345,
+      "message": "Argument of type '\"id\"' is not assignable to parameter of type 'never'."
+    }
+  ],
+  "app/api/erp/clearing-agent/transit-entry/route.ts": [
+    {
+      "line": 62,
+      "col": 19,
+      "code": 2589,
+      "message": "Type instantiation is excessively deep and possibly infinite."
+    },
+    {
+      "line": 63,
+      "col": 15,
+      "code": 2769,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(relation: \"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"transit_entries\"' is not assignable to parameter of type '\"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"'.\n  Overload 2 of 2, '(relation: \"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"transit_entries\"' is not assignable to parameter of type '\"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"'."
+    },
+    {
+      "line": 69,
+      "col": 26,
+      "code": 2345,
+      "message": "Argument of type '\"entry_serial\"' is not assignable to parameter of type 'never'."
+    },
+    {
+      "line": 170,
+      "col": 37,
+      "code": 2589,
+      "message": "Type instantiation is excessively deep and possibly infinite."
+    },
+    {
+      "line": 171,
+      "col": 15,
+      "code": 2769,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(relation: \"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"transit_entries\"' is not assignable to parameter of type '\"purchase_order_expenses\" | \"purchase_order_items\" | \"purchase_order_payments\" | \"purchase_orders\" | \"roznamcha_lines\" | \"roznamcha_entries\" | \"ledger_balances\" | \"ledgers\" | ... 160 more ... | \"zz_bak2_20260801_customers\"'.\n  Overload 2 of 2, '(relation: \"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"transit_entries\"' is not assignable to parameter of type '\"global_transaction_report_usd\" | \"ledger_outstanding_v\" | \"branch_ledger_transaction_report\" | \"loading_ports\" | \"received_ports\" | \"record_translations\" | \"super_admin_urdu_notifications\"'."
+    },
+    {
+      "line": 172,
+      "col": 17,
+      "code": 2345,
+      "message": "Argument of type '{ super_agent: any; super_agent_name: any; country: any; country_name: any; branch: any; branch_name: any; entry_serial: any; invoice_no: any; invoice_date: any; supplier_no: any; supplier_date: any; ... 20 more ...; updated_at: string; }' is not assignable to parameter of type 'RejectExcessProperties<{ applied_at?: string | null | undefined; filename: string; id?: number | undefined; } | { account_kind: \"liability\" | \"asset\" | \"equity\" | \"income\" | \"expense\"; code: string; created_at?: string | undefined; ... 5 more ...; updated_at?: string | undefined; } | ... 166 more ... | { ...; }, { ....'.\n  Type '{ super_agent: any; super_agent_name: any; country: any; country_name: any; branch: any; branch_name: any; entry_serial: any; invoice_no: any; invoice_date: any; supplier_no: any; supplier_date: any; ... 20 more ...; updated_at: string; }' is not assignable to type 'RejectExcessProperties<{ applied_at?: string | null | undefined; filename: string; id?: number | undefined; } | { account_kind: \"liability\" | \"asset\" | \"equity\" | \"income\" | \"expense\"; code: string; created_at?: string | undefined; ... 5 more ...; updated_at?: string | undefined; } | ... 166 more ... | { ...; }, { ....'.\n    Type '{ super_agent: any; super_agent_name: any; country: any; country_name: any; branch: any; branch_name: any; entry_serial: any; invoice_no: any; invoice_date: any; supplier_no: any; supplier_date: any; ... 20 more ...; updated_at: string; }' is not assignable to type '{ status: never; created_by: never; country: never; branch: never; notes: never; created_at: never; updated_at: never; branch_name: never; entry_serial: never; documents: never; country_name: never; ... 20 more ...; import_company: never; }'.\n      Types of property 'status' are incompatible.\n        Type 'string' is not assignable to type 'never'."
+    },
+    {
+      "line": 188,
+      "col": 20,
+      "code": 2322,
+      "message": "Type 'NonNullable<NewResultOne> | { super_agent: any; super_agent_name: any; country: any; country_name: any; branch: any; branch_name: any; entry_serial: any; invoice_no: any; ... 24 more ...; id: string; }' is not assignable to type '{ id: string; super_agent: string; super_agent_name: string; country: string; country_name: string; branch: string; branch_name: string; entry_serial: string; invoice_no: string; invoice_date: string; ... 21 more ...; created_at: string; }'.\n  Type '{}' is missing the following properties from type '{ id: string; super_agent: string; super_agent_name: string; country: string; country_name: string; branch: string; branch_name: string; entry_serial: string; invoice_no: string; invoice_date: string; ... 21 more ...; created_at: string; }': id, super_agent, super_agent_name, country, and 28 more."
+    }
+  ],
+  "app/api/erp/clearing-agent/truck-loading/[id]/route.ts": [
+    {
+      "line": 32,
+      "col": 74,
+      "code": 2345,
+      "message": "Argument of type 'Record<string, unknown>' is not assignable to parameter of type 'RejectExcessProperties<{ branch_serial?: string | null | undefined; city_branch_id?: string | null | undefined; cnic_passport?: string | null | undefined; country_branch_id?: string | null | undefined; ... 32 more ...; vehicle_type?: string | ... 1 more ... | undefined; }, Record<...>>'.\n  Type 'Record<string, unknown>' is not assignable to type '{ [x: string]: never; }'.\n    'string' index signatures are incompatible.\n      Type 'unknown' is not assignable to type 'never'."
+    }
+  ],
+  "app/api/erp/contact-types/[id]/route.ts": [
+    {
+      "line": 39,
+      "col": 9,
+      "code": 2322,
+      "message": "Type 'any' is not assignable to type 'never'."
+    },
+    {
+      "line": 40,
+      "col": 9,
+      "code": 2322,
+      "message": "Type 'any' is not assignable to type 'never'."
+    },
+    {
+      "line": 41,
+      "col": 9,
+      "code": 2322,
+      "message": "Type 'any' is not assignable to type 'never'."
+    }
+  ],
+  "app/api/erp/contact-types/route.ts": [
+    {
+      "line": 76,
+      "col": 11,
+      "code": 2353,
+      "message": "Object literal may only specify known properties, and 'code' does not exist in type 'RejectExcessProperties<{ created_at?: string | undefined; deleted_at?: string | null | undefined; id?: string | undefined; is_active?: boolean | undefined; key: \"phone\" | \"mobile\" | \"whatsapp\" | \"fax\" | \"extension\"; name: string; sort_order?: number | undefined; updated_at?: string | undefined; }, { ...; }>'."
+    }
+  ],
+  "app/api/erp/crm/complete/route.ts": [
+    {
+      "line": 7,
+      "col": 45,
+      "code": 2554,
+      "message": "Expected 0 arguments, but got 1."
+    }
+  ],
+  "app/api/erp/crm/dashboard/route.ts": [
+    {
+      "line": 10,
+      "col": 45,
+      "code": 2554,
+      "message": "Expected 0 arguments, but got 1."
+    }
+  ],
+  "app/api/erp/crm/followup/route.ts": [
+    {
+      "line": 7,
+      "col": 45,
+      "code": 2554,
+      "message": "Expected 0 arguments, but got 1."
+    }
+  ],
+  "app/api/erp/crm/reports/route.ts": [
+    {
+      "line": 10,
+      "col": 45,
+      "code": 2554,
+      "message": "Expected 0 arguments, but got 1."
+    }
+  ],
+  "app/api/erp/currency/daily-rate/route.ts": [
+    {
+      "line": 71,
+      "col": 31,
+      "code": 2339,
+      "message": "Property 'or' does not exist on type 'LooseQueryBuilder'."
+    },
+    {
+      "line": 76,
+      "col": 15,
+      "code": 2339,
+      "message": "Property 'data' does not exist on type 'LooseQueryBuilder'."
+    }
+  ],
+  "app/api/erp/customers/route.ts": [
+    {
+      "line": 74,
+      "col": 9,
+      "code": 2322,
+      "message": "Type 'string | null | undefined' is not assignable to type 'string'.\n  Type 'undefined' is not assignable to type 'string'."
+    }
+  ],
+  "app/api/erp/documents/[id]/route.ts": [
+    {
+      "line": 29,
+      "col": 45,
+      "code": 2345,
+      "message": "Argument of type 'number' is not assignable to parameter of type 'string'."
+    },
+    {
+      "line": 35,
+      "col": 77,
+      "code": 2345,
+      "message": "Argument of type 'number' is not assignable to parameter of type 'string'."
+    }
+  ],
+  "app/api/erp/documents/[id]/version/route.ts": [
+    {
+      "line": 31,
+      "col": 45,
+      "code": 2345,
+      "message": "Argument of type 'number' is not assignable to parameter of type 'string'."
+    },
+    {
+      "line": 35,
+      "col": 77,
+      "code": 2345,
+      "message": "Argument of type 'number' is not assignable to parameter of type 'string'."
+    },
+    {
+      "line": 42,
+      "col": 56,
+      "code": 2345,
+      "message": "Argument of type 'number' is not assignable to parameter of type 'string'."
+    },
+    {
+      "line": 46,
+      "col": 55,
+      "code": 2345,
+      "message": "Argument of type 'number' is not assignable to parameter of type 'string'."
+    }
+  ],
+  "app/api/erp/documents/download/route.ts": [
+    {
+      "line": 34,
+      "col": 45,
+      "code": 2345,
+      "message": "Argument of type 'number' is not assignable to parameter of type 'string'."
+    },
+    {
+      "line": 37,
+      "col": 75,
+      "code": 2345,
+      "message": "Argument of type 'number' is not assignable to parameter of type 'string'."
+    },
+    {
+      "line": 56,
+      "col": 53,
+      "code": 2345,
+      "message": "Argument of type 'number' is not assignable to parameter of type 'string'."
+    },
+    {
+      "line": 61,
+      "col": 58,
+      "code": 2345,
+      "message": "Argument of type 'number' is not assignable to parameter of type 'string'."
+    }
+  ],
+  "app/api/erp/documents/route.ts": [
+    {
+      "line": 88,
+      "col": 79,
+      "code": 2345,
+      "message": "Argument of type 'number' is not assignable to parameter of type 'string'."
+    },
+    {
+      "line": 92,
+      "col": 75,
+      "code": 2345,
+      "message": "Argument of type 'number' is not assignable to parameter of type 'string'."
+    },
+    {
+      "line": 96,
+      "col": 55,
+      "code": 2345,
+      "message": "Argument of type 'number' is not assignable to parameter of type 'string'."
+    },
+    {
+      "line": 110,
+      "col": 44,
+      "code": 2345,
+      "message": "Argument of type 'number' is not assignable to parameter of type 'string'."
+    }
+  ],
+  "app/api/erp/email/accounts/route.ts": [
+    {
+      "line": 139,
+      "col": 31,
+      "code": 2339,
+      "message": "Property 'name' does not exist on type '{}'."
+    },
+    {
+      "line": 140,
+      "col": 31,
+      "code": 2339,
+      "message": "Property 'iso2' does not exist on type '{}'."
+    },
+    {
+      "line": 142,
+      "col": 43,
+      "code": 2339,
+      "message": "Property 'name' does not exist on type '{}'."
+    },
+    {
+      "line": 144,
+      "col": 37,
+      "code": 2339,
+      "message": "Property 'name' does not exist on type '{}'."
+    },
+    {
+      "line": 145,
+      "col": 50,
+      "code": 2339,
+      "message": "Property 'name' does not exist on type '{}'."
+    }
+  ],
+  "app/api/erp/email/config/route.ts": [
+    {
+      "line": 55,
+      "col": 46,
+      "code": 2339,
+      "message": "Property 'email' does not exist on type 'string | number | boolean | { [key: string]: Json | undefined; } | Json[]'.\n  Property 'email' does not exist on type 'string'."
+    },
+    {
+      "line": 55,
+      "col": 69,
+      "code": 2339,
+      "message": "Property 'emailAddress' does not exist on type 'string | number | boolean | { [key: string]: Json | undefined; } | Json[]'.\n  Property 'emailAddress' does not exist on type 'string'."
+    }
+  ],
+  "app/api/erp/super-admin/accounting/route.ts": [
+    {
+      "line": 15,
+      "col": 45,
+      "code": 2554,
+      "message": "Expected 0 arguments, but got 1."
+    },
+    {
+      "line": 16,
+      "col": 17,
+      "code": 2551,
+      "message": "Property 'role' does not exist on type 'ErpSession'. Did you mean 'roles'?"
+    },
+    {
+      "line": 29,
+      "col": 45,
+      "code": 2554,
+      "message": "Expected 0 arguments, but got 1."
+    },
+    {
+      "line": 30,
+      "col": 17,
+      "code": 2551,
+      "message": "Property 'role' does not exist on type 'ErpSession'. Did you mean 'roles'?"
+    }
+  ],
+  "app/api/erp/super-admin/investments/route.ts": [
+    {
+      "line": 12,
+      "col": 45,
+      "code": 2554,
+      "message": "Expected 0 arguments, but got 1."
+    },
+    {
+      "line": 13,
+      "col": 17,
+      "code": 2551,
+      "message": "Property 'role' does not exist on type 'ErpSession'. Did you mean 'roles'?"
+    }
+  ],
+  "app/ui-preview/sidebar/page.tsx": [
+    {
+      "line": 27,
+      "col": 50,
+      "code": 2322,
+      "message": "Type '{ open: boolean; onOpenChange: Dispatch<SetStateAction<boolean>>; }' is not assignable to type 'IntrinsicAttributes & DigitalDockPremiumSidebarProps'.\n  Property 'open' does not exist on type 'IntrinsicAttributes & DigitalDockPremiumSidebarProps'."
+    }
+  ],
+  "components/layout/digital-dock-premium-sidebar.tsx": [
+    {
+      "line": 538,
+      "col": 55,
+      "code": 2339,
+      "message": "Property 'open' does not exist on type 'DigitalDockPremiumSidebarProps'."
+    },
+    {
+      "line": 538,
+      "col": 61,
+      "code": 2339,
+      "message": "Property 'onOpenChange' does not exist on type 'DigitalDockPremiumSidebarProps'."
+    },
+    {
+      "line": 539,
+      "col": 3,
+      "code": 2353,
+      "message": "Object literal may only specify known properties, and 'open' does not exist in type 'DigitalDockPremiumSidebarProps'."
+    }
+  ],
+  "components/layout/quick-preferences-popover.tsx": [
+    {
+      "line": 56,
+      "col": 34,
+      "code": 2339,
+      "message": "Property 'label' does not exist on type '{ readonly id: \"night\"; readonly accentClass: \"theme-night\"; readonly legacyClass: \"dark\"; readonly labelKey: \"nav.theme_night\"; } | { readonly id: \"day\"; readonly accentClass: \"theme-day\"; readonly legacyClass: \"\"; readonly labelKey: \"nav.theme_day\"; } | { ...; } | { ...; }'.\n  Property 'label' does not exist on type '{ readonly id: \"night\"; readonly accentClass: \"theme-night\"; readonly legacyClass: \"dark\"; readonly labelKey: \"nav.theme_night\"; }'."
+    }
+  ],
+  "features/accounts/components/account-general-report-view.tsx": [
+    {
+      "line": 1587,
+      "col": 83,
+      "code": 2339,
+      "message": "Property 'user' does not exist on type 'SessionInfo'."
+    }
+  ],
+  "features/accounts/components/translations.ts": [
+    {
+      "line": 837,
+      "col": 3,
+      "code": 1117,
+      "message": "An object literal cannot have multiple properties with the same name."
+    },
+    {
+      "line": 844,
+      "col": 3,
+      "code": 1117,
+      "message": "An object literal cannot have multiple properties with the same name."
+    },
+    {
+      "line": 851,
+      "col": 3,
+      "code": 1117,
+      "message": "An object literal cannot have multiple properties with the same name."
+    }
+  ],
+  "features/audit/components/all-deleted-records-view.tsx": [
+    {
+      "line": 182,
+      "col": 17,
+      "code": 2345,
+      "message": "Argument of type '{ \"#\": number; \"Deleted At\": string; \"Original Date\": string; Module: string; Country: string; Branch: string; \"Bill / Ref No\": string; \"Record / Party\": string; \"Deleted By\": string; Reason: string; \"Risk Level\": \"High\" | ... 1 more ... | \"Low\"; \"Review Status\": \"Pending\" | ... 1 more ... | \"Investigating\"; }[]' is not assignable to parameter of type 'string'."
+    }
+  ],
+  "features/audit/components/all-edit-version-history-view.tsx": [
+    {
+      "line": 207,
+      "col": 17,
+      "code": 2345,
+      "message": "Argument of type '{ \"#\": number; \"Bill / Ref No\": string; Module: string; Country: string; Branch: string; Party: string; \"Total Edits\": number; \"Original Date\": string; \"Last Edited At\": string; \"Last Edited By\": string; \"Risk Level\": \"High\" | ... 1 more ... | \"Low\"; \"Approval Status\": \"Pending\" | ... 1 more ... | \"Rejected\"; }[]' is not assignable to parameter of type 'string'."
+    }
+  ],
+  "features/crm/components/crm-reports-view.tsx": [
+    {
+      "line": 138,
+      "col": 93,
+      "code": 2339,
+      "message": "Property 'user' does not exist on type 'ErpSession'."
+    }
+  ],
+  "features/crm/components/smart-crm-control-center.tsx": [
+    {
+      "line": 175,
+      "col": 23,
+      "code": 2345,
+      "message": "Argument of type 'string' is not assignable to parameter of type 'string[][]'."
+    }
+  ],
+  "features/customers/components/customer-picker.tsx": [
+    {
+      "line": 184,
+      "col": 105,
+      "code": 2339,
+      "message": "Property 'business_type' does not exist on type 'CustomerRow'."
+    },
+    {
+      "line": 185,
+      "col": 71,
+      "code": 2339,
+      "message": "Property 'father_name' does not exist on type 'CustomerRow'."
+    },
+    {
+      "line": 186,
+      "col": 73,
+      "code": 2339,
+      "message": "Property 'state' does not exist on type 'CustomerRow'."
+    },
+    {
+      "line": 187,
+      "col": 63,
+      "code": 2339,
+      "message": "Property 'city' does not exist on type 'CustomerRow'."
+    },
+    {
+      "line": 243,
+      "col": 55,
+      "code": 2531,
+      "message": "Object is possibly 'null'."
+    },
+    {
+      "line": 263,
+      "col": 41,
+      "code": 2339,
+      "message": "Property 'country' does not exist on type 'CustomerRow'."
+    },
+    {
+      "line": 263,
+      "col": 77,
+      "code": 2339,
+      "message": "Property 'country' does not exist on type 'CustomerRow'."
+    }
+  ],
+  "features/general-office/components/general-office-dashboard-view-clean.tsx": [
+    {
+      "line": 551,
+      "col": 28,
+      "code": 2304,
+      "message": "Cannot find name 'transliterateProperNoun'."
+    },
+    {
+      "line": 608,
+      "col": 34,
+      "code": 2304,
+      "message": "Cannot find name 'transliterateProperNoun'."
+    },
+    {
+      "line": 1844,
+      "col": 11,
+      "code": 2322,
+      "message": "Type '{ isOpen: boolean; onClose: () => void; personId: string; personName: string; lang: \"en\" | \"ar\" | \"ur\" | \"fa\" | \"ps\"; }' is not assignable to type 'IntrinsicAttributes & Party360ModalProps'.\n  Property 'isOpen' does not exist on type 'IntrinsicAttributes & Party360ModalProps'."
+    }
+  ],
+  "features/hr-payroll/components/employee-management-view.tsx": [
+    {
+      "line": 30,
+      "col": 16,
+      "code": 2304,
+      "message": "Cannot find name 'useActiveLanguage'."
+    },
+    {
+      "line": 48,
+      "col": 36,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 49,
+      "col": 34,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 50,
+      "col": 29,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 51,
+      "col": 35,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 52,
+      "col": 34,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 53,
+      "col": 31,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 54,
+      "col": 34,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 55,
+      "col": 33,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 56,
+      "col": 35,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 57,
+      "col": 39,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 58,
+      "col": 29,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 136,
+      "col": 18,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 141,
+      "col": 13,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 152,
+      "col": 106,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 154,
+      "col": 16,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 160,
+      "col": 24,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 161,
+      "col": 27,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 191,
+      "col": 64,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 209,
+      "col": 12,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 219,
+      "col": 12,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 233,
+      "col": 30,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 244,
+      "col": 35,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 257,
+      "col": 35,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 258,
+      "col": 42,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 267,
+      "col": 47,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 268,
+      "col": 43,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 269,
+      "col": 41,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 280,
+      "col": 37,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 294,
+      "col": 35,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 295,
+      "col": 41,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 296,
+      "col": 43,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 297,
+      "col": 43,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 298,
+      "col": 44,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 304,
+      "col": 24,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 305,
+      "col": 27,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 337,
+      "col": 46,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 338,
+      "col": 46,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 339,
+      "col": 46,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 340,
+      "col": 46,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 341,
+      "col": 46,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 342,
+      "col": 46,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 343,
+      "col": 46,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 344,
+      "col": 46,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 345,
+      "col": 46,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 346,
+      "col": 58,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 352,
+      "col": 101,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 356,
+      "col": 101,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 447,
+      "col": 38,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 476,
+      "col": 42,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 488,
+      "col": 40,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 500,
+      "col": 40,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 536,
+      "col": 40,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 545,
+      "col": 40,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 559,
+      "col": 40,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 580,
+      "col": 39,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 580,
+      "col": 105,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 598,
+      "col": 18,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 616,
+      "col": 21,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 636,
+      "col": 16,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 637,
+      "col": 19,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 640,
+      "col": 20,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 640,
+      "col": 73,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 641,
+      "col": 20,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 641,
+      "col": 79,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 642,
+      "col": 20,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 642,
+      "col": 73,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 645,
+      "col": 42,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 646,
+      "col": 40,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 647,
+      "col": 37,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 648,
+      "col": 40,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 649,
+      "col": 35,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 650,
+      "col": 35,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    },
+    {
+      "line": 651,
+      "col": 38,
+      "code": 2304,
+      "message": "Cannot find name 't'."
+    }
+  ],
+  "lib/audit/enterprise-audit-service.ts": [
+    {
+      "line": 640,
+      "col": 21,
+      "code": 18047,
+      "message": "'event' is possibly 'null'."
+    }
+  ],
+  "lib/crm/smart-crm-service.ts": [
+    {
+      "line": 132,
+      "col": 3,
+      "code": 2322,
+      "message": "Type '{ kpis: CrmKpiStats; financialSummary: { totalReceivable: number; totalPayable: number; cashInHand: number; bankBalance: number; netPosition: number; currency: string; }; actionItems: CrmActionItem[]; ... 4 more ...; pagination: { ...; }; } | null' is not assignable to type 'CrmDashboardPayload'.\n  Type 'null' is not assignable to type 'CrmDashboardPayload'."
+    },
+    {
+      "line": 379,
+      "col": 34,
+      "code": 2339,
+      "message": "Property 'user' does not exist on type 'ErpSession'."
+    },
+    {
+      "line": 402,
+      "col": 3,
+      "code": 2322,
+      "message": "Type '{ success: true; noteId: any; } | null' is not assignable to type '{ success: boolean; noteId: string; }'.\n  Type 'null' is not assignable to type '{ success: boolean; noteId: string; }'."
+    },
+    {
+      "line": 416,
+      "col": 26,
+      "code": 2339,
+      "message": "Property 'user' does not exist on type 'ErpSession'."
+    },
+    {
+      "line": 417,
+      "col": 26,
+      "code": 2339,
+      "message": "Property 'user' does not exist on type 'ErpSession'."
+    },
+    {
+      "line": 458,
+      "col": 3,
+      "code": 2322,
+      "message": "Type '{ success: true; } | null' is not assignable to type '{ success: boolean; }'.\n  Type 'null' is not assignable to type '{ success: boolean; }'."
+    },
+    {
+      "line": 459,
+      "col": 11,
+      "code": 2769,
+      "message": "No overload matches this call.\n  Argument of type '[any, string | undefined, string]' is not assignable to parameter of type 'never'.\n  Overload 2 of 2, '(template: TemplateStringsArray, ...parameters: readonly ParameterOrFragment<never>[]): PendingQuery<Row[]>', gave the following error.\n    Argument of type 'string | undefined' is not assignable to parameter of type 'ParameterOrFragment<never>'.\n      Type 'undefined' is not assignable to type 'ParameterOrFragment<never>'."
+    },
+    {
+      "line": 466,
+      "col": 41,
+      "code": 2339,
+      "message": "Property 'user' does not exist on type 'ErpSession'."
+    },
+    {
+      "line": 535,
+      "col": 35,
+      "code": 2339,
+      "message": "Property 'user' does not exist on type 'ErpSession'."
+    }
+  ],
+  "lib/i18n/table-headers.ts": [
+    {
+      "line": 1522,
+      "col": 3,
+      "code": 1117,
+      "message": "An object literal cannot have multiple properties with the same name."
+    },
+    {
+      "line": 1524,
+      "col": 3,
+      "code": 1117,
+      "message": "An object literal cannot have multiple properties with the same name."
+    }
+  ],
+  "lib/navigation/sidebar.ts": [
+    {
+      "line": 948,
+      "col": 140,
+      "code": 2322,
+      "message": "Type '\"shipping_line\"' is not assignable to type '\"super_admin\" | \"super_admin_reports\" | \"country_admin\" | \"country_user\" | \"main_branch_admin\" | \"city_branch_admin\" | \"accountant\" | \"cashier\" | \"agent_user\" | \"staff_user\" | \"auditor_viewer\"'."
+    },
+    {
+      "line": 948,
+      "col": 157,
+      "code": 2322,
+      "message": "Type '\"clearing_agent\"' is not assignable to type '\"super_admin\" | \"super_admin_reports\" | \"country_admin\" | \"country_user\" | \"main_branch_admin\" | \"city_branch_admin\" | \"accountant\" | \"cashier\" | \"agent_user\" | \"staff_user\" | \"auditor_viewer\"'."
+    },
+    {
+      "line": 979,
+      "col": 72,
+      "code": 2322,
+      "message": "Type '\"shipping_line\"' is not assignable to type '\"super_admin\" | \"super_admin_reports\" | \"country_admin\" | \"country_user\" | \"main_branch_admin\" | \"city_branch_admin\" | \"accountant\" | \"cashier\" | \"agent_user\" | \"staff_user\" | \"auditor_viewer\"'."
+    },
+    {
+      "line": 979,
+      "col": 89,
+      "code": 2322,
+      "message": "Type '\"clearing_agent\"' is not assignable to type '\"super_admin\" | \"super_admin_reports\" | \"country_admin\" | \"country_user\" | \"main_branch_admin\" | \"city_branch_admin\" | \"accountant\" | \"cashier\" | \"agent_user\" | \"staff_user\" | \"auditor_viewer\"'."
+    },
+    {
+      "line": 979,
+      "col": 107,
+      "code": 2322,
+      "message": "Type '\"customs_agent\"' is not assignable to type '\"super_admin\" | \"super_admin_reports\" | \"country_admin\" | \"country_user\" | \"main_branch_admin\" | \"city_branch_admin\" | \"accountant\" | \"cashier\" | \"agent_user\" | \"staff_user\" | \"auditor_viewer\"'."
+    }
+  ],
+  "lib/repositories/companies-repository.ts": [
+    {
+      "line": 377,
+      "col": 35,
+      "code": 2304,
+      "message": "Cannot find name 'allocateFormSerials'."
+    },
+    {
+      "line": 410,
+      "col": 29,
+      "code": 2304,
+      "message": "Cannot find name 'allocateFormSerials'."
+    }
+  ],
+  "lib/services/super-admin-capital-service.ts": [
+    {
+      "line": 34,
+      "col": 21,
+      "code": 2551,
+      "message": "Property 'role' does not exist on type 'ErpSession'. Did you mean 'roles'?"
+    },
+    {
+      "line": 98,
+      "col": 32,
+      "code": 18047,
+      "message": "'row' is possibly 'null'."
+    },
+    {
+      "line": 109,
+      "col": 26,
+      "code": 18047,
+      "message": "'row' is possibly 'null'."
+    },
+    {
+      "line": 123,
+      "col": 16,
+      "code": 18047,
+      "message": "'row' is possibly 'null'."
+    },
+    {
+      "line": 123,
+      "col": 43,
+      "code": 18047,
+      "message": "'row' is possibly 'null'."
+    }
+  ]
+}

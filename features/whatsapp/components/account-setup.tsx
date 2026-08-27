@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Plus, Trash2, Edit2, Wifi, WifiOff, Shield } from "lucide-react";
 import type { WhatsAppAccount } from "../types";
 import { deleteWhatsAppAccount } from "../api";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 type Props = {
   accounts: WhatsAppAccount[];
@@ -12,14 +14,20 @@ type Props = {
   onEdit: (account: WhatsAppAccount) => void;
 };
 
-const SCOPE_LABEL: Record<string, string> = {
+const SCOPE_KEY: Record<string, string> = {
+  super_admin: "wa.scope_super_admin",
+  country: "wa.scope_country",
+  country_branch: "wa.scope_country_branch",
+  city_branch: "wa.scope_city_branch"
+};
+const SCOPE_FALLBACK: Record<string, string> = {
   super_admin: "Global (Super Admin)",
   country: "Country Level",
   country_branch: "Country Branch",
   city_branch: "City Branch"
 };
 
-function ScopeTag({ scope }: { scope: string }) {
+function ScopeTag({ scope, tt }: { scope: string; tt: (k: string, f: string) => string }) {
   const colors: Record<string, string> = {
     super_admin: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
     country: "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400",
@@ -28,12 +36,14 @@ function ScopeTag({ scope }: { scope: string }) {
   };
   return (
     <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${colors[scope] ?? ""}`}>
-      {SCOPE_LABEL[scope] ?? scope}
+      {tt(SCOPE_KEY[scope] ?? scope, SCOPE_FALLBACK[scope] ?? scope)}
     </span>
   );
 }
 
 export function AccountSetup({ accounts, onRefresh, onAdd, onEdit }: Props) {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function handleDelete(id: string) {
@@ -54,15 +64,15 @@ export function AccountSetup({ accounts, onRefresh, onAdd, onEdit }: Props) {
       {/* Add button */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-sm font-semibold text-foreground">Connected WhatsApp Accounts</h2>
-          <p className="text-xs text-muted-foreground">Manage WhatsApp Business numbers linked to this ERP</p>
+          <h2 className="text-sm font-semibold text-foreground">{tt("wa.acct_title", "Connected WhatsApp Accounts")}</h2>
+          <p className="text-xs text-muted-foreground">{tt("wa.acct_subtitle", "Manage WhatsApp Business numbers linked to this ERP")}</p>
         </div>
         <button
           onClick={onAdd}
           className="inline-flex items-center gap-1.5 rounded-lg bg-[#25D366] px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-[#20ba59] transition-colors"
         >
           <Plus className="h-3.5 w-3.5" />
-          Connect Account
+          {tt("wa.connect_account", "Connect Account")}
         </button>
       </div>
 
@@ -70,9 +80,9 @@ export function AccountSetup({ accounts, onRefresh, onAdd, onEdit }: Props) {
       <div className="flex items-start gap-2.5 rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800/40 dark:bg-blue-900/20">
         <Shield className="h-4 w-4 flex-shrink-0 text-blue-600 mt-0.5 dark:text-blue-400" />
         <div className="text-xs">
-          <p className="font-semibold text-blue-800 dark:text-blue-300">Official WhatsApp Business Platform</p>
+          <p className="font-semibold text-blue-800 dark:text-blue-300">{tt("wa.biz_platform", "Official WhatsApp Business Platform")}</p>
           <p className="mt-0.5 text-blue-700 dark:text-blue-400">
-            This ERP uses the official Meta WhatsApp Cloud API. Numbers are verified through Meta's Business Manager and will never be blocked.
+            {tt("wa.biz_platform_desc", "This ERP uses the official Meta WhatsApp Cloud API. Numbers are verified through Meta's Business Manager and will never be blocked.")}
           </p>
         </div>
       </div>
@@ -84,15 +94,15 @@ export function AccountSetup({ accounts, onRefresh, onAdd, onEdit }: Props) {
             <Wifi className="h-6 w-6 text-muted-foreground" />
           </div>
           <div>
-            <p className="text-sm font-medium text-foreground">No WhatsApp accounts connected</p>
-            <p className="mt-1 text-xs text-muted-foreground">Connect your first WhatsApp Business number to start messaging</p>
+            <p className="text-sm font-medium text-foreground">{tt("wa.no_accounts", "No WhatsApp accounts connected")}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{tt("wa.no_accounts_desc", "Connect your first WhatsApp Business number to start messaging")}</p>
           </div>
           <button
             onClick={onAdd}
             className="mt-1 inline-flex items-center gap-1.5 rounded-lg bg-[#25D366] px-4 py-2 text-xs font-medium text-white shadow-sm hover:bg-[#20ba59] transition-colors"
           >
             <Plus className="h-3.5 w-3.5" />
-            Connect WhatsApp Account
+            {tt("wa.connect_account", "Connect Account")}
           </button>
         </div>
       ) : (
@@ -114,15 +124,15 @@ export function AccountSetup({ accounts, onRefresh, onAdd, onEdit }: Props) {
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-semibold text-foreground">{account.displayName}</p>
                     {account.isDefault && (
-                      <span className="rounded-full bg-[#25D366]/10 px-1.5 py-px text-[9px] font-medium text-[#25D366]">Default</span>
+                      <span className="rounded-full bg-[#25D366]/10 px-1.5 py-px text-[9px] font-medium text-[#25D366]">{tt("wa.default_badge", "Default")}</span>
                     )}
                     {!account.isActive && (
-                      <span className="rounded-full bg-muted px-1.5 py-px text-[9px] font-medium text-muted-foreground">Inactive</span>
+                      <span className="rounded-full bg-muted px-1.5 py-px text-[9px] font-medium text-muted-foreground">{tt("common.inactive", "Inactive")}</span>
                     )}
                   </div>
                   <p className="mt-0.5 text-xs text-muted-foreground">{account.phoneNumber}</p>
                   <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                    <ScopeTag scope={account.scope} />
+                    <ScopeTag scope={account.scope} tt={tt} />
                     {account.country && (
                       <span className="text-[10px] text-muted-foreground">{account.country.name}</span>
                     )}

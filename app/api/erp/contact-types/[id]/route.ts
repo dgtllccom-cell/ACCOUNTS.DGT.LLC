@@ -10,7 +10,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const { id } = await params;
     authorizeApiScope(session, { resource: "contact_types", action: "read" });
 
-    const db = createSupabaseAdminClient();
+    const db = createSupabaseAdminClient() as any;
     const { data, error } = await db
       .from("contact_types")
       .select("*")
@@ -31,7 +31,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const body = await request.json();
     authorizeApiScope(session, { resource: "contact_types", action: "update" });
 
-    const db = createSupabaseAdminClient();
+    const db = createSupabaseAdminClient() as any;
     const { data, error } = await db
       .from("contact_types")
       .update({
@@ -59,7 +59,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     const { id } = await params;
     authorizeApiScope(session, { resource: "contact_types", action: "delete" });
 
-    const db = createSupabaseAdminClient();
+    const db = createSupabaseAdminClient() as any;
     await db.from("contact_types").delete().eq("id", id);
     return apiOk({ message: "Deleted" });
   } catch (error) {

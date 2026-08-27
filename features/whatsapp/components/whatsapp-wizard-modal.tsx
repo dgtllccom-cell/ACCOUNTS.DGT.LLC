@@ -17,6 +17,8 @@ import {
   RefreshCw
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 type Props = {
   isOpen: boolean;
@@ -33,6 +35,8 @@ export function WhatsAppWizardModal({
   defaultScope = "super_admin",
   onConnected
 }: Props) {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const [step, setStep] = useState<1 | 2>(1);
   const [scope, setScope] = useState(defaultScope);
   const [displayName, setDisplayName] = useState("Super Admin Dubai WhatsApp Business");
@@ -217,10 +221,10 @@ export function WhatsAppWizardModal({
             </div>
             <div>
               <h2 className="font-black text-slate-900 dark:text-white text-base flex items-center gap-2">
-                Connect Official Meta WhatsApp
+                {tt("wiz.title", "Connect Official Meta WhatsApp")}
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Direct Cloud API Integration — Multi-Branch Enterprise Connection
+                {tt("wiz.subtitle", "Direct Cloud API Integration — Multi-Branch Enterprise Connection")}
               </p>
             </div>
           </div>
@@ -235,8 +239,8 @@ export function WhatsAppWizardModal({
         {/* Step Indicator */}
         <div className="flex items-center gap-2 text-xs font-bold">
           {[
-            { n: 1, label: "Select Branch Line & Verify" },
-            { n: 2, label: "Live Connection & Send Test Message" }
+            { n: 1, label: tt("wiz.step1", "Select Branch Line & Verify") },
+            { n: 2, label: tt("wiz.step2", "Live Connection & Send Test Message") }
           ].map((s) => (
             <div key={s.n} className="flex items-center gap-1.5">
               <div className={cn(
@@ -266,7 +270,7 @@ export function WhatsAppWizardModal({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="font-bold text-slate-700 dark:text-slate-300">Select Branch / Country Line</label>
+                <label className="font-bold text-slate-700 dark:text-slate-300">{tt("wiz.select_branch", "Select Branch / Country Line")}</label>
                 <select
                   value={scope}
                   onChange={(e) => handleScopeChange(e.target.value)}
@@ -281,7 +285,7 @@ export function WhatsAppWizardModal({
               </div>
 
               <div className="space-y-1">
-                <label className="font-bold text-slate-700 dark:text-slate-300">Display Line Name</label>
+                <label className="font-bold text-slate-700 dark:text-slate-300">{tt("wiz.display_name", "Display Line Name")}</label>
                 <input
                   type="text"
                   value={displayName}
@@ -292,7 +296,7 @@ export function WhatsAppWizardModal({
             </div>
 
             <div className="space-y-1">
-              <label className="font-bold text-slate-700 dark:text-slate-300">WhatsApp Phone Number</label>
+              <label className="font-bold text-slate-700 dark:text-slate-300">{tt("wiz.phone_number", "WhatsApp Phone Number")}</label>
               <input
                 type="text"
                 value={phoneNumber}
@@ -307,7 +311,7 @@ export function WhatsAppWizardModal({
               <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 font-mono text-[11px] space-y-2">
                 <p className="font-bold flex items-center gap-1.5 text-xs text-rose-700 dark:text-rose-300">
                   <AlertTriangle className="h-4 w-4 shrink-0 text-rose-500" />
-                  Meta Connection Error:
+                  {tt("wiz.meta_error", "Meta Connection Error:")}
                 </p>
                 <p>{typeof verifyError === "string" ? verifyError : JSON.stringify(verifyError)}</p>
 
@@ -330,7 +334,7 @@ export function WhatsAppWizardModal({
                         disabled={verifyingMeta || !(accessToken || "").trim()}
                         className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all flex items-center gap-1 shrink-0 cursor-pointer disabled:opacity-50"
                       >
-                        {verifyingMeta ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Save & Connect"}
+                        {verifyingMeta ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : tt("wiz.save_connect", "Save & Connect")}
                       </button>
                     </div>
                   </div>
@@ -340,7 +344,7 @@ export function WhatsAppWizardModal({
 
             <div className="flex items-center justify-between pt-2 border-t dark:border-slate-800">
               <p className="text-[10.5px] text-slate-400 flex items-center gap-1">
-                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" /> Server Meta Credentials Protected
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" /> {tt("wiz.credentials_protected", "Server Meta Credentials Protected")}
               </p>
               <button
                 onClick={handleVerifyAndConnect}
@@ -348,9 +352,9 @@ export function WhatsAppWizardModal({
                 className="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black shadow-md cursor-pointer transition-all flex items-center gap-2 disabled:opacity-50"
               >
                 {verifying ? (
-                  <><Loader2 className="h-4 w-4 animate-spin" /> Verifying Meta Credentials...</>
+                  <><Loader2 className="h-4 w-4 animate-spin" /> {tt("wiz.verifying", "Verifying Meta Credentials...")}</>
                 ) : (
-                  <><CheckCircle2 className="h-4 w-4" /> Connect & Verify WhatsApp Line</>
+                  <><CheckCircle2 className="h-4 w-4" /> {tt("wiz.verify_btn", "Connect & Verify WhatsApp Line")}</>
                 )}
               </button>
             </div>
@@ -362,7 +366,7 @@ export function WhatsAppWizardModal({
           <div className="space-y-4 text-xs">
             <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-1">
               <p className="font-black text-emerald-700 dark:text-emerald-300 flex items-center gap-2 text-sm">
-                <CheckCircle2 className="h-5 w-5" /> Official Meta WhatsApp Line Connected & Active!
+                <CheckCircle2 className="h-5 w-5" /> {tt("wiz.connected_active", "Official Meta WhatsApp Line Connected & Active!")}
               </p>
               <p className="text-slate-600 dark:text-slate-400 text-[11.5px]">
                 Your branch line (<strong className="text-emerald-600 font-bold">{phoneNumber}</strong>) is verified and linked. The ERP can now automatically process messages, AI auto-replies, payment reminders, and PDF reports.
@@ -373,30 +377,30 @@ export function WhatsAppWizardModal({
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-[10.5px] font-bold">
               <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex flex-col items-center gap-1">
                 <Bot className="h-4 w-4 text-emerald-500" />
-                AI Auto-Replies
+                {tt("wiz.ai_replies", "AI Auto-Replies")}
               </div>
               <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex flex-col items-center gap-1">
                 <FileText className="h-4 w-4 text-emerald-500" />
-                Invoices & PDFs
+                {tt("wiz.invoices_pdfs", "Invoices & PDFs")}
               </div>
               <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex flex-col items-center gap-1">
                 <Building2 className="h-4 w-4 text-emerald-500" />
-                Branch Isolation
+                {tt("wiz.branch_isolation", "Branch Isolation")}
               </div>
               <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex flex-col items-center gap-1">
                 <MessageSquare className="h-4 w-4 text-emerald-500" />
-                Unified Inbox
+                {tt("wiz.unified_inbox", "Unified Inbox")}
               </div>
             </div>
 
             {/* Send Live Test Message Panel */}
             <div className="space-y-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
               <h4 className="font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
-                <Send className="h-4 w-4 text-emerald-600" /> Send Live Test WhatsApp Message
+                <Send className="h-4 w-4 text-emerald-600" /> {tt("wiz.send_test_panel", "Send Live Test WhatsApp Message")}
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-600 dark:text-slate-400">Sender Line</label>
+                  <label className="font-bold text-slate-600 dark:text-slate-400">{tt("wiz.sender_line", "Sender Line")}</label>
                   <input
                     type="text"
                     value={phoneNumber}
@@ -405,7 +409,7 @@ export function WhatsAppWizardModal({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-600 dark:text-slate-400">Recipient Phone Number</label>
+                  <label className="font-bold text-slate-600 dark:text-slate-400">{tt("wiz.recipient_phone", "Recipient Phone Number")}</label>
                   <input
                     type="text"
                     value={testRecipient}
@@ -417,7 +421,7 @@ export function WhatsAppWizardModal({
               </div>
 
               <div className="space-y-1">
-                <label className="font-bold text-slate-600 dark:text-slate-400">Message Content</label>
+                <label className="font-bold text-slate-600 dark:text-slate-400">{tt("wiz.msg_content", "Message Content")}</label>
                 <input
                   type="text"
                   value={testMessage}
@@ -432,9 +436,9 @@ export function WhatsAppWizardModal({
                 className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
               >
                 {sendingTest ? (
-                  <><Loader2 className="h-4 w-4 animate-spin" /> Sending via Meta Cloud API...</>
+                  <><Loader2 className="h-4 w-4 animate-spin" /> {tt("wiz.sending_meta", "Sending via Meta Cloud API...")}</>
                 ) : (
-                  <><Send className="h-4 w-4" /> Send Test Message Now</>
+                  <><Send className="h-4 w-4" /> {tt("wiz.send_test_btn", "Send Test Message Now")}</>
                 )}
               </button>
 
@@ -446,7 +450,7 @@ export function WhatsAppWizardModal({
                     : "bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-200"
                 )}>
                   <p className="font-black text-sm">
-                    {testResult.metaSuccess ? "✓ Message Delivered to WhatsApp Network" : `Result: ${testResult.status || "SENT"}`}
+                    {testResult.metaSuccess ? `✓ ${tt("wiz.delivered", "Message Delivered to WhatsApp Network")}` : `Result: ${testResult.status || "SENT"}`}
                   </p>
                   {testResult.wamid && (
                     <p>WAMID: <span className="font-bold text-emerald-600">{testResult.wamid}</span></p>
@@ -465,13 +469,13 @@ export function WhatsAppWizardModal({
                 onClick={() => setStep(1)}
                 className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 font-bold text-xs"
               >
-                ← Change Line / Branch
+                ← {tt("wiz.change_line", "Change Line / Branch")}
               </button>
               <button
                 onClick={onClose}
                 className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md cursor-pointer"
               >
-                Done — Close Setup
+                {tt("wiz.done", "Done — Close Setup")}
               </button>
             </div>
           </div>

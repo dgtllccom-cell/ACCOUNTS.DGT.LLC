@@ -85,15 +85,15 @@ export async function POST(request: NextRequest) {
     const sessionCityBranchId = (session as { cityBranchId?: string; cityBranchIds?: string[] }).cityBranchId ?? session.cityBranchIds?.[0] ?? null;
 
     if (!file || !entityType || !entityId) {
-      return apiError("Missing required fields (file, entityType, entityId)", 400);
+      return apiError("BAD_REQUEST", "Missing required fields (file, entityType, entityId)", 400);
     }
 
     if (!companyId) {
-      return apiError("Missing required field (companyId or company_id)", 400);
+      return apiError("BAD_REQUEST", "Missing required field (companyId or company_id)", 400);
     }
 
     if (file.size > 20 * 1024 * 1024) { // 20MB limit
-      return apiError("File size exceeds 20MB limit", 400);
+      return apiError("BAD_REQUEST", "File size exceeds 20MB limit", 400);
     }
 
     const allowedTypes = [
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
     ];
 
     if (!allowedTypes.includes(file.type)) {
-      return apiError("Invalid file type", 400);
+      return apiError("BAD_REQUEST", "Invalid file type", 400);
     }
 
     // Create random filename

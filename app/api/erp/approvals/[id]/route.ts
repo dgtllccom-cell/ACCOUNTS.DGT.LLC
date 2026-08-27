@@ -28,7 +28,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     const approvalRequestId = uuidSchema.parse(id);
     const body = approvalDecisionSchema.parse(await request.json());
 
-    const supabase = await createApiSupabaseClient();
+    const supabase = (await createApiSupabaseClient()) as any;
     const currentResult = await supabase
       .from("approval_requests")
       .select("id, request_no, status, target_table, target_id, country_id, city_branch_id, after_data, before_data, action, requested_by")
