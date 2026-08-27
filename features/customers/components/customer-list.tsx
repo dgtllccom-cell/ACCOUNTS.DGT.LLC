@@ -189,6 +189,17 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
         ];
       }
 
+      // Clean customerType: ensure it only holds customer types (Male, Female, Corporate, Individual)
+      // and remove any internal role strings (Branch Owner, Country Owner, Employee, etc.)
+      const rawType = String((meta as any).personType || meta.customerType || c.gender || (c.company_name ? "Corporate" : "Male")).toLowerCase();
+      let cleanCustomerType = "Male";
+      if (rawType.includes("female") || rawType === "woman") cleanCustomerType = "Female";
+      else if (rawType.includes("corp") || rawType.includes("business") || c.company_name) cleanCustomerType = "Corporate";
+      else if (rawType.includes("male") || rawType === "man") cleanCustomerType = "Male";
+      else cleanCustomerType = "Male";
+
+      meta.customerType = cleanCustomerType;
+
       // Use the real person_code (PER-XXXXXX) when available; fall back to UUID-derived code
       // for legacy rows that predate the person-master migration and have not been backfilled.
       meta.customerAccountNumber = c.person_code || ("CUST-" + c.id.slice(0, 6).toUpperCase());
@@ -635,18 +646,18 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
             <table className="w-full text-xs text-left">
               <thead className="bg-slate-50 text-slate-700 uppercase font-bold border-b border-slate-200">
                 <tr>
-                  <Th className="px-5 py-3.5">#</Th>
-                  <Th className="px-5 py-3.5">{getLabel("customerCode", lang)}</Th>
+                  <Th className="px-4 py-3.5">#</Th>
+                  <Th className="px-4 py-3.5">{getLabel("customerCode", lang)}</Th>
+                  <Th className="px-4 py-3.5">{getLabel("customerType", lang)}</Th>
                   <Th className="px-5 py-3.5">{getLabel("customerName", lang)}</Th>
-                  <Th className="px-5 py-3.5">{getLabel("customerType", lang)}</Th>
-                  <Th className="px-5 py-3.5">{getLabel("country", lang)}</Th>
-                  <Th className="px-5 py-3.5">{getLabel("stateProvince", lang)}</Th>
-                  <Th className="px-5 py-3.5">{getLabel("city", lang)}</Th>
-                  <Th className="px-5 py-3.5">{getLabel("contacts", lang)}</Th>
-                  <Th className="px-5 py-3.5">{getLabel("documents", lang)}</Th>
-                  <Th className="px-5 py-3.5">{getLabel("status", lang)}</Th>
-                  <Th className="px-5 py-3.5">{getLabel("createdDate", lang)}</Th>
-                  <Th className="px-5 py-3.5 text-center">{getLabel("actions", lang)}</Th>
+                  <Th className="px-4 py-3.5">{getLabel("country", lang)}</Th>
+                  <Th className="px-4 py-3.5">{getLabel("stateProvince", lang)}</Th>
+                  <Th className="px-4 py-3.5">{getLabel("city", lang)}</Th>
+                  <Th className="px-4 py-3.5">{getLabel("contacts", lang)}</Th>
+                  <Th className="px-4 py-3.5">{getLabel("documents", lang)}</Th>
+                  <Th className="px-4 py-3.5">{getLabel("status", lang)}</Th>
+                  <Th className="px-4 py-3.5">{getLabel("createdDate", lang)}</Th>
+                  <Th className="px-4 py-3.5 text-center">{getLabel("actions", lang)}</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -657,36 +668,55 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                     </td>
                   </tr>
                 ) : filteredCustomers.length > 0 ? (
-                  filteredCustomers.map((c, i) => (
+                  filteredCustomers.map((c, i) => {
+                    const cType = c.meta.customerType || "Male";
+                    return (
                     <tr
                       key={c.id}
                       onClick={() => setSelectedCustomerId(c.id)}
                       className="cursor-pointer hover:bg-slate-50/70 transition-colors"
                     >
-                      <td className="px-5 py-3.5 font-semibold text-slate-500">{i + 1}</td>
-                      <td className="px-5 py-3.5 font-bold text-slate-900 font-mono">
+                      <td className="px-4 py-3.5 font-semibold text-slate-500">{i + 1}</td>
+                      <td className="px-4 py-3.5 font-bold text-slate-900 font-mono">
                         {c.meta.customerAccountNumber}
                       </td>
+                      <td className="px-4 py-3.5">
+                        <span
+                          className={cn(
+                            "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider border",
+                            cType === "Female"
+                              ? "bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-950/40 dark:text-pink-300 dark:border-pink-800"
+                              : cType === "Corporate"
+                                ? "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800"
+                                : "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800"
+                          )}
+                        >
+                          {cType === "Female" ? "👩 " : cType === "Corporate" ? "🏢 " : "👨 "}
+                          {translateCustomerText(cType, lang)}
+                        </span>
+                      </td>
                       <td className="px-5 py-3.5">
-                        <div className="flex flex-col">
-                          <span className="font-extrabold text-slate-900 dark:text-slate-100 text-[13px]">
+                        <div className="flex flex-col gap-1">
+                          <span className="font-black text-slate-900 dark:text-slate-100 text-[13px]">
                             {translateCustomerText(c.customer_name, lang)}
                           </span>
-                          {c.father_name && (
-                            <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500">
-                              S/O {translateCustomerText(c.father_name, lang)}
+                          {c.father_name ? (
+                            <span className="inline-flex items-center gap-1 text-[10.5px] font-bold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.5 rounded w-fit border border-blue-100 dark:border-blue-900/50">
+                              <span className="text-[9px] uppercase tracking-wider font-black text-blue-500">S/O:</span>
+                              <span>{translateCustomerText(c.father_name, lang)}</span>
                             </span>
+                          ) : (
+                            <span className="text-[10px] text-slate-400 italic">—</span>
                           )}
                         </div>
                       </td>
-                      <td className="px-5 py-3.5 font-medium text-slate-800">{translateCustomerText(c.meta.customerType, lang)}</td>
-                      <td className="px-5 py-3.5 text-slate-600 font-medium">
+                      <td className="px-4 py-3.5 text-slate-600 font-medium">
                         {translateCustomerText(c.meta.country, lang)}
                       </td>
-                      <td className="px-5 py-3.5 text-slate-600 font-medium">
+                      <td className="px-4 py-3.5 text-slate-600 font-medium">
                         {translateCustomerText(c.meta.stateProvince, lang)}
                       </td>
-                      <td className="px-5 py-3.5 text-slate-600 font-medium">
+                      <td className="px-4 py-3.5 text-slate-600 font-medium">
                         {translateCustomerText(c.meta.city, lang)}
                       </td>
                       <td className="px-5 py-3.5 text-slate-700">
@@ -776,7 +806,8 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                         </div>
                       </td>
                     </tr>
-                  ))
+                    );
+                  })
                 ) : (
                   <tr>
                     <td colSpan={12} className="px-5 py-10 text-center text-slate-500 font-medium italic">

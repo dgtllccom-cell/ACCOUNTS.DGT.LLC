@@ -1282,11 +1282,11 @@ export function CashEntryForm({
       setLoadingLedgers(true);
       try {
         const res = await listLedgerReportLedgers({
-          reportScope: (countryId && countryBranchId) ? (cityBranchId ? "branch" : "country") : "super_admin",
+          reportScope: countryId ? "country" : "super_admin",
           countryId: countryId || null,
-          countryBranchId: countryBranchId || null,
-          cityBranchId: cityBranchId || null,
-          limit: 2000,
+          countryBranchId: null,
+          cityBranchId: null,
+          limit: 3000,
           language: lang
         });
         if (!cancelled) {
@@ -2157,13 +2157,27 @@ export function CashEntryForm({
         : "City-level cash entry access filtered to assigned city branch operations and transactions.";
 
   const accountOptions = useMemo(() => {
-    return ledgers.map((row) => {
+    // Sort A to Z by account code and name
+    const sorted = [...ledgers].sort((a, b) => {
+      const codeA = (a.accountCode || a.ledgerCode || "").toLowerCase();
+      const codeB = (b.accountCode || b.ledgerCode || "").toLowerCase();
+      if (codeA && codeB) return codeA.localeCompare(codeB, undefined, { numeric: true, sensitivity: "base" });
+      const nameA = (a.accountName || a.ledgerName || "").toLowerCase();
+      const nameB = (b.accountName || b.ledgerName || "").toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+
+    return sorted.map((row) => {
       const code = row.accountCode || row.ledgerCode || "";
       const name = row.accountName || row.ledgerName || "";
+      const manualRef = row.manualReferenceNumber ? ` [Ref: ${row.manualReferenceNumber}]` : "";
       const branchName = row.cityBranchName || row.countryBranchName || "";
-      const suffix = branchName ? ` (${branchName})` : "";
-      const label = (code ? `${code} — ${name}` : name) + suffix;
-      const keywords = `${row.accountCode} ${row.ledgerCode} ${row.accountName} ${row.ledgerName} ${row.manualReferenceNumber} ${row.customerNumber} ${branchName}`;
+      const country = row.countryName || "";
+      const locPart = branchName ? ` (${branchName})` : country ? ` (${country})` : "";
+      const currency = row.ledgerCurrency ? ` • ${row.ledgerCurrency}` : "";
+      const kind = row.accountKind ? ` [${row.accountKind.toUpperCase()}]` : "";
+      const label = `${code ? `${code} — ` : ""}${name}${manualRef}${locPart}${currency}${kind}`;
+      const keywords = `${code} ${row.rawAccountCode || ""} ${row.manualReferenceNumber || ""} ${row.customerNumber || ""} ${name} ${row.companyName || ""} ${branchName} ${country} ${row.ledgerCurrency || ""} ${row.accountKind || ""}`;
       return { value: row.ledgerId, label, keywords };
     });
   }, [ledgers]);
@@ -2564,12 +2578,69 @@ export function CashEntryForm({
 
                 {/* Payment Entry Card */}
                 <Card className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                  <div className="border-b border-slate-200 bg-gradient-to-r from-blue-50 to-white px-4 py-2 dark:border-slate-800 dark:from-slate-900 dark:to-slate-950">
-                    <h3 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-300">
-                      📋 {t(lang, "roz.payment_work_entry", "Payment Work Entry")}
+                  <div className="border-b border-slate-200 bg-gradient-to-r from-blue-50 to-white px-4 py-2 dark:border-slate-800 dark:from-slate-900 dark:to-slate-950 flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-300 flex items-center gap-2">
+                      <span>📋 {t(lang, "roz.payment_work_entry", "Payment Work Entry")}</span>
+                      {selectedCountry && (
+                        <span className="font-semibold text-[10px] text-blue-600 bg-blue-100/70 dark:bg-blue-900/40 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800 flex items-center gap-1">
+                          <span>{getCountryFlag(selectedCountry.name)}</span>
+                          <span>{selectedCountry.name}</span>
+                        </span>
+                      )}
                     </h3>
                   </div>
               <CardContent className="p-4 space-y-4">
+                {/* Super Admin / Country Switcher Bar inside Modal */}
+                {isSuperAdmin && (
+                  <div className="flex flex-wrap items-center gap-1 p-1.5 rounded-lg bg-slate-100/80 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                    <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-500 px-1">
+                      {t(lang, "roz.scope_selector", "WORKING SCOPE:")}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCountryId("");
+                        setCountryBranchId("");
+                        setCityBranchId("");
+                        setCounterLedgerId("");
+                        setSelectedLookupLedger(null);
+                      }}
+                      className={cn(
+                        "px-2.5 py-1 rounded text-[10px] font-bold transition cursor-pointer flex items-center gap-1",
+                        !countryId
+                          ? "bg-blue-600 text-white shadow-xs"
+                          : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+                      )}
+                    >
+                      <Globe className="h-3 w-3" />
+                      <span>{t(lang, "roz.super_admin_global", "Super Admin / All")}</span>
+                    </button>
+                    {countries.map((c) => {
+                      const isSelected = countryId === c.id;
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => {
+                            setCountryId(c.id);
+                            setCounterLedgerId("");
+                            setSelectedLookupLedger(null);
+                          }}
+                          className={cn(
+                            "px-2.5 py-1 rounded text-[10px] font-bold transition cursor-pointer flex items-center gap-1",
+                            isSelected
+                              ? "bg-blue-600 text-white shadow-xs"
+                              : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+                          )}
+                        >
+                          <span>{getCountryFlag(c.name)}</span>
+                          <span>{c.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
                 {/* Row 1: Search Account & Daily Payment Date */}
                 <div className="grid gap-4 grid-cols-2">
                   <FieldBlock label={t(lang, "form.search_account")} required>
@@ -2581,8 +2652,6 @@ export function CashEntryForm({
                       disabled={loadingLedgers}
                       onValueChange={handleCounterLedgerChange}
                       onSearchValueChange={setAccountNoInput}
-                      createLabel={t(lang, "roz.search_on_server", "Search on Server")}
-                      onCreateNew={lookupAccountNo}
                     />
                   </FieldBlock>
 
@@ -2595,6 +2664,53 @@ export function CashEntryForm({
                     />
                   </FieldBlock>
                 </div>
+
+                {/* Live Account Verification Card */}
+                {selectedCounterLedger && (
+                  <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-3.5 dark:border-blue-900/50 dark:bg-blue-950/30 text-xs shadow-xs animate-in fade-in duration-150">
+                    <div className="flex items-center justify-between border-b border-blue-200/60 pb-2 mb-2 dark:border-blue-900/60">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                        <span className="font-black text-blue-950 dark:text-blue-200 uppercase tracking-wider text-[11px]">
+                          {t(lang, "roz.verified_account_details", "Verified Account Confirmation")}
+                        </span>
+                      </div>
+                      <span className="font-mono font-black text-xs px-2.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/60 text-blue-900 dark:text-blue-200 border border-blue-200 dark:border-blue-800">
+                        {selectedCounterLedger.accountCode || selectedCounterLedger.ledgerCode || "-"}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-[11px]">
+                      <div className="space-y-0.5">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase block">{t(lang, "acct.agrv_title_party", "Account Title")}</span>
+                        <span className="font-bold text-slate-900 dark:text-slate-100 truncate block text-xs" title={selectedCounterLedger.accountName || selectedCounterLedger.ledgerName || "-"}>
+                          {selectedCounterLedger.accountName || selectedCounterLedger.ledgerName || "-"}
+                        </span>
+                      </div>
+
+                      <div className="space-y-0.5">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase block">{t(lang, "hr.pp_company", "Company / Entity")}</span>
+                        <span className="font-bold text-slate-900 dark:text-slate-100 truncate block text-xs" title={selectedCounterLedger.companyName || "-"}>
+                          {selectedCounterLedger.companyName || "-"}
+                        </span>
+                      </div>
+
+                      <div className="space-y-0.5">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase block">{t(lang, "company_form.section_location", "Branch / Location")}</span>
+                        <span className="font-bold text-slate-900 dark:text-slate-100 truncate block text-xs">
+                          {selectedCounterLedger.countryName || selectedCountry?.name || "-"} • {selectedCounterLedger.cityBranchName || selectedCounterLedger.countryBranchName || "-"}
+                        </span>
+                      </div>
+
+                      <div className="space-y-0.5">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase block">{t(lang, "cdash.col_balance", "Current Balance")}</span>
+                        <span className={cn("font-black font-mono text-xs", (selectedCounterLedger.currentBalance || 0) < 0 ? "text-rose-600" : "text-emerald-600")}>
+                          {fmtAmount(selectedCounterLedger.currentBalance || 0)} {selectedCounterLedger.ledgerCurrency || branchCurrency}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {accountLookupError && (
                   <p className="text-xs text-red-600 font-semibold">{accountLookupError}</p>

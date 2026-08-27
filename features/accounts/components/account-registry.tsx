@@ -63,7 +63,7 @@ export function AccountRegistry() {
     setLoading(true);
     try {
       const res = await apiGet<{ accounts: AccountRecord[]; summary: typeof summary }>(
-        `/api/erp/accounting/accounts?limit=500`
+        `/api/erp/accounting/accounts?limit=2000`
       );
       const list = res.accounts || [];
       const active = list.filter((a: any) => a.status === "active" || a.is_active).length;

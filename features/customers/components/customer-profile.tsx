@@ -121,6 +121,18 @@ export function CustomerProfile({
       }
     }
 
+    if (!meta.fatherName && customer.father_name) meta.fatherName = customer.father_name;
+
+    // Clean customerType: ensure it only holds customer types (Male, Female, Corporate, Individual)
+    const rawType = String((meta as any).personType || meta.customerType || (customer.company_name ? "Corporate" : "Male")).toLowerCase();
+    let cleanCustomerType = "Male";
+    if (rawType.includes("female") || rawType === "woman") cleanCustomerType = "Female";
+    else if (rawType.includes("corp") || rawType.includes("business") || customer.company_name) cleanCustomerType = "Corporate";
+    else if (rawType.includes("male") || rawType === "man") cleanCustomerType = "Male";
+    else cleanCustomerType = "Male";
+
+    meta.customerType = cleanCustomerType;
+
     // Backwards compatibility fallbacks
     if (!meta.contacts || !meta.contacts.length) {
       const fallback = [];

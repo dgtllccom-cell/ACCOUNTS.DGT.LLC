@@ -53,6 +53,7 @@ import {
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { downloadCsv } from "@/features/branches/components/branch-report-export";
+import { cn } from "@/lib/utils";
 
 export function SmartCrmControlCenter() {
   const lang = useActiveLanguage();
@@ -64,7 +65,7 @@ export function SmartCrmControlCenter() {
   const [selectedCountry, setSelectedCountry] = useState("pk");
   const [selectedMainBranch, setSelectedMainBranch] = useState("khi_main");
   const [selectedCityBranch, setSelectedCityBranch] = useState("khi_city");
-  const [targetDate, setTargetDate] = useState("2025-05-21");
+  const [targetDate, setTargetDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [activeTab, setActiveTab] = useState<"today" | "overdue" | "tomorrow" | "upcoming" | "completed">("today");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -80,6 +81,23 @@ export function SmartCrmControlCenter() {
   const [promiseDate, setPromiseDate] = useState("");
   const [promiseAmount, setPromiseAmount] = useState("");
   const [savingNote, setSavingNote] = useState(false);
+
+  const calendarInfo = React.useMemo(() => {
+    const d = new Date(targetDate);
+    const validDate = isNaN(d.getTime()) ? new Date() : d;
+    const year = validDate.getFullYear();
+    const month = validDate.getMonth();
+    const selectedDay = validDate.getDate();
+    
+    // First day of the month (0 = Sun, 1 = Mon, ...)
+    const firstDay = new Date(year, month, 1).getDay();
+    // Monday = 0, Sunday = 6
+    const startOffset = (firstDay + 6) % 7;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const monthName = validDate.toLocaleString(lang === "ur" ? "ur-PK" : "en-US", { month: "long", year: "numeric" });
+    
+    return { year, month, selectedDay, startOffset, daysInMonth, monthName };
+  }, [targetDate, lang]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -222,20 +240,25 @@ export function SmartCrmControlCenter() {
       <div className="flex-1 flex flex-row w-full overflow-hidden">
 
         {/* ── LEFT CRM SUB-NAVIGATION SIDEBAR ── */}
-        <aside className="w-56 bg-[#0F1E36] text-slate-300 shrink-0 hidden xl:flex flex-col justify-between p-3.5 border-r border-slate-800">
+        <aside className="w-56 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 shrink-0 hidden xl:flex flex-col justify-between p-3.5 border-r border-slate-200 dark:border-slate-800 shadow-xs">
           <div className="space-y-4">
             {/* DEG Brand Header */}
-            <div className="flex flex-col items-center justify-center p-3 border-b border-slate-800 text-center">
-              <span className="text-2xl font-black tracking-widest text-white">DEG</span>
-              <span className="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Damaan Enterprise Group</span>
+            <div className="flex flex-col items-center justify-center p-2.5 border-b border-slate-100 dark:border-slate-800 text-center">
+              <span className="text-xl font-black tracking-widest text-slate-900 dark:text-white">DEG CRM</span>
+              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">Damaan Enterprise Group</span>
             </div>
 
             {/* Sub-Nav Menu Items */}
             <nav className="space-y-1 text-xs">
               <button
                 type="button"
-                onClick={() => router.push("/dashboard/crm")}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-blue-600 font-bold text-white shadow-xs"
+                onClick={() => { setActiveTab("today"); }}
+                className={cn(
+                  "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg font-bold transition",
+                  activeTab === "today"
+                    ? "bg-blue-600 text-white shadow-xs"
+                    : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                )}
               >
                 <LayoutDashboard className="h-4 w-4" />
                 <span>CRM Dashboard</span>
@@ -244,133 +267,143 @@ export function SmartCrmControlCenter() {
               <button
                 type="button"
                 onClick={() => setActiveTab("today")}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-800/80 font-medium text-slate-300 transition"
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-slate-700 dark:text-slate-300 transition"
               >
-                <CalendarCheck className="h-4 w-4 text-slate-400" />
+                <CalendarCheck className="h-4 w-4 text-blue-600" />
                 <span>Today's Action Center</span>
               </button>
 
               <button
                 type="button"
-                onClick={() => router.push("/dashboard/roznamcha/bank-cheques")}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-800/80 font-medium text-slate-300 transition"
+                onClick={() => router.push("/dashboard/roznamcha/cash-entry")}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-slate-700 dark:text-slate-300 transition"
               >
-                <CreditCard className="h-4 w-4 text-slate-400" />
-                <span>Cheques Management</span>
+                <CreditCard className="h-4 w-4 text-emerald-600" />
+                <span>Cheques & Cash</span>
               </button>
 
               <button
                 type="button"
-                onClick={() => router.push("/dashboard/purchase")}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-800/80 font-medium text-slate-300 transition"
+                onClick={() => router.push("/dashboard/journal/purchase-order-payment")}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-slate-700 dark:text-slate-300 transition"
               >
-                <ShoppingCart className="h-4 w-4 text-slate-400" />
+                <ShoppingCart className="h-4 w-4 text-amber-600" />
                 <span>Purchase Due</span>
               </button>
 
               <button
                 type="button"
-                onClick={() => router.push("/dashboard/sales")}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-800/80 font-medium text-slate-300 transition"
+                onClick={() => router.push("/dashboard/journal/sales-order-payment")}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-slate-700 dark:text-slate-300 transition"
               >
-                <TrendingUp className="h-4 w-4 text-slate-400" />
+                <TrendingUp className="h-4 w-4 text-purple-600" />
                 <span>Sales Recovery</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => router.push("/dashboard/shipping-line")}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-800/80 font-medium text-slate-300 transition"
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-slate-700 dark:text-slate-300 transition"
               >
-                <Ship className="h-4 w-4 text-slate-400" />
+                <Ship className="h-4 w-4 text-indigo-600" />
                 <span>Shipping / Clearing</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setActiveTab("overdue")}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-800/80 font-medium text-slate-300 transition"
+                className={cn(
+                  "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition",
+                  activeTab === "overdue"
+                    ? "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 font-bold"
+                    : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                )}
               >
-                <Clock className="h-4 w-4 text-slate-400" />
+                <Clock className="h-4 w-4 text-rose-600" />
                 <span>Follow-Ups</span>
               </button>
 
               <button
                 type="button"
-                onClick={() => router.push("/dashboard/customers")}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-800/80 font-medium text-slate-300 transition"
+                onClick={() => router.push("/dashboard/settings/customers")}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-slate-700 dark:text-slate-300 transition"
               >
-                <Users className="h-4 w-4 text-slate-400" />
+                <Users className="h-4 w-4 text-blue-600" />
                 <span>Customers</span>
               </button>
 
               <button
                 type="button"
-                onClick={() => router.push("/dashboard/companies")}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-800/80 font-medium text-slate-300 transition"
+                onClick={() => router.push("/dashboard/settings/companies")}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-slate-700 dark:text-slate-300 transition"
               >
-                <Building2 className="h-4 w-4 text-slate-400" />
-                <span>Suppliers</span>
+                <Building2 className="h-4 w-4 text-slate-600" />
+                <span>Companies / Suppliers</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => router.push("/dashboard/reports")}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-800/80 font-medium text-slate-300 transition"
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-slate-700 dark:text-slate-300 transition"
               >
-                <FileText className="h-4 w-4 text-slate-400" />
+                <FileText className="h-4 w-4 text-indigo-600" />
                 <span>Reports</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setActiveTab("upcoming")}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-800/80 font-medium text-slate-300 transition"
+                className={cn(
+                  "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition",
+                  activeTab === "upcoming"
+                    ? "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 font-bold"
+                    : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                )}
               >
-                <CalendarIcon className="h-4 w-4 text-slate-400" />
+                <CalendarIcon className="h-4 w-4 text-amber-600" />
                 <span>Calendar</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setActiveTab("tomorrow")}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-800/80 font-medium text-slate-300 transition"
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-slate-700 dark:text-slate-300 transition"
               >
-                <Bell className="h-4 w-4 text-slate-400" />
+                <Bell className="h-4 w-4 text-slate-500" />
                 <span>Reminders</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setNoteModalOpen(true)}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-800/80 font-medium text-slate-300 transition"
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-slate-700 dark:text-slate-300 transition"
               >
-                <StickyNote className="h-4 w-4 text-slate-400" />
+                <StickyNote className="h-4 w-4 text-teal-600" />
                 <span>Notes</span>
               </button>
 
               <button
                 type="button"
-                onClick={() => router.push("/dashboard/settings")}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-800/80 font-medium text-slate-300 transition"
+                onClick={() => router.push("/dashboard/settings/dashboard-settings")}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-slate-700 dark:text-slate-300 transition"
               >
-                <Settings className="h-4 w-4 text-slate-400" />
+                <Settings className="h-4 w-4 text-slate-500" />
                 <span>Settings</span>
               </button>
             </nav>
           </div>
 
           {/* Quick Search Box in Sidebar */}
-          <div className="pt-3 border-t border-slate-800 space-y-1.5">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Quick Search</span>
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-1.5">
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Quick Search</span>
             <div className="relative">
               <Input
                 type="text"
-                placeholder="Search anything..."
+                placeholder="Search CRM..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && fetchDashboardData()}
-                className="h-8 bg-slate-900/90 border-slate-700 text-xs text-slate-200 pr-7 rounded-lg"
+                className="h-8 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 pr-7 rounded-lg"
               />
               <Search className="absolute right-2 top-2 h-4 w-4 text-slate-400 cursor-pointer" onClick={fetchDashboardData} />
             </div>
@@ -380,49 +413,50 @@ export function SmartCrmControlCenter() {
         {/* ── RIGHT MAIN DASHBOARD CONTENT AREA ── */}
         <main className="flex-1 p-4 lg:p-5 space-y-4 overflow-y-auto max-w-[1680px] mx-auto w-full">
           
-          {/* ── TOP NAV STRIP (Title, Language, User) ── */}
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
-            <h1 className="text-lg lg:text-xl font-black text-slate-950 dark:text-white tracking-tight uppercase">
-              {t(lang, "crm.title", "SMART CRM / DUE & FOLLOW-UP CONTROL CENTER")}
-            </h1>
-
-            <div className="flex items-center gap-3">
-              {/* Language Selector */}
-              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700">
-                <span>{lang === "ur" ? "Urdu" : lang === "ar" ? "العربية" : lang === "fa" ? "فارسی" : lang === "ps" ? "پښتو" : "English"}</span>
-                <Globe className="h-3.5 w-3.5 text-blue-600" />
+          {/* ── TOP NAV STRIP ── */}
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900 px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+            <div className="flex items-center gap-2.5">
+              <div className="h-8 w-8 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center font-black">
+                <LayoutDashboard className="h-4.5 w-4.5" />
               </div>
+              <h1 className="text-base lg:text-lg font-black text-slate-950 dark:text-white tracking-tight uppercase">
+                {t(lang, "crm.title", "SMART CRM / DUE & FOLLOW-UP CONTROL CENTER")}
+              </h1>
+            </div>
 
-              {/* Country Flag */}
-              <div className="text-base" title="Operating Country: Pakistan">
-                🇵🇰
-              </div>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={fetchDashboardData}
+                className="h-8 text-xs font-bold gap-1.5"
+              >
+                <RefreshCw className={cn("h-3.5 w-3.5", loading ? "animate-spin" : "")} />
+                <span>{t(lang, "crm.refresh", "Refresh")}</span>
+              </Button>
 
-              {/* Notification Badges */}
-              <div className="relative cursor-pointer">
-                <Bell className="h-4.5 w-4.5 text-slate-600" />
-                <span className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-rose-600 text-white text-[9px] font-black flex items-center justify-center">
-                  12
-                </span>
-              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handlePrint}
+                className="h-8 text-xs font-bold gap-1.5"
+              >
+                <Printer className="h-3.5 w-3.5" />
+                <span>{t(lang, "common.print", "Print")}</span>
+              </Button>
 
-              <div className="relative cursor-pointer">
-                <MessageCircle className="h-4.5 w-4.5 text-slate-600" />
-                <span className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-rose-600 text-white text-[9px] font-black flex items-center justify-center">
-                  8
-                </span>
-              </div>
-
-              {/* User Profile */}
-              <div className="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-700 text-xs">
-                <div className="h-8 w-8 rounded-full bg-blue-600 text-white font-black flex items-center justify-center shadow-xs">
-                  MU
-                </div>
-                <div className="leading-tight">
-                  <span className="block font-black text-slate-900 dark:text-white text-[11.5px]">Muhammad Usman</span>
-                  <span className="block text-[10px] text-slate-400 font-medium">Country Admin - Pakistan</span>
-                </div>
-              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleExportExcel}
+                className="h-8 text-xs font-bold gap-1.5"
+              >
+                <Download className="h-3.5 w-3.5" />
+                <span>{t(lang, "crm.btn_export_excel", "Export Excel")}</span>
+              </Button>
             </div>
           </div>
 
@@ -453,11 +487,13 @@ export function SmartCrmControlCenter() {
                 onChange={(e) => setSelectedCountry(e.target.value)}
                 className="w-full h-8.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800 px-2 text-xs font-semibold"
               >
-                <option value="pk">Pakistan</option>
-                <option value="ae">UAE</option>
-                <option value="af">Afghanistan</option>
-                <option value="ir">Iran</option>
-                <option value="in">India</option>
+                <option value="all">{t(lang, "common.all_countries", "All Countries")}</option>
+                <option value="pk">Pakistan 🇵🇰</option>
+                <option value="ae">UAE 🇦🇪</option>
+                <option value="af">Afghanistan 🇦🇫</option>
+                <option value="in">India 🇮🇳</option>
+                <option value="cn">China 🇨🇳</option>
+                <option value="ir">Iran 🇮🇷</option>
               </select>
             </div>
 
@@ -1024,25 +1060,61 @@ export function SmartCrmControlCenter() {
                   </button>
                 </div>
 
-                {/* Mini Month Grid (May 2025) */}
+                {/* Dynamic Month Grid */}
                 <div className="mt-2 text-center">
                   <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    <ChevronLeft className="h-3 w-3 cursor-pointer" />
-                    <span>May 2025</span>
-                    <ChevronRight className="h-3 w-3 cursor-pointer" />
+                    <ChevronLeft
+                      className="h-3.5 w-3.5 cursor-pointer hover:text-blue-600"
+                      onClick={() => {
+                        const d = new Date(targetDate);
+                        d.setMonth(d.getMonth() - 1);
+                        setTargetDate(d.toISOString().split("T")[0]);
+                      }}
+                    />
+                    <span className="capitalize">{calendarInfo.monthName}</span>
+                    <ChevronRight
+                      className="h-3.5 w-3.5 cursor-pointer hover:text-blue-600"
+                      onClick={() => {
+                        const d = new Date(targetDate);
+                        d.setMonth(d.getMonth() + 1);
+                        setTargetDate(d.toISOString().split("T")[0]);
+                      }}
+                    />
                   </div>
                   <div className="grid grid-cols-7 gap-1 text-[9.5px] font-bold text-slate-400 mb-1">
-                    <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                    <span>{lang === "ur" ? "پیر" : "Mon"}</span>
+                    <span>{lang === "ur" ? "منگل" : "Tue"}</span>
+                    <span>{lang === "ur" ? "بدھ" : "Wed"}</span>
+                    <span>{lang === "ur" ? "جمعرات" : "Thu"}</span>
+                    <span>{lang === "ur" ? "جمعہ" : "Fri"}</span>
+                    <span>{lang === "ur" ? "ہفتہ" : "Sat"}</span>
+                    <span>{lang === "ur" ? "اتوار" : "Sun"}</span>
                   </div>
                   <div className="grid grid-cols-7 gap-1 text-[10px]">
-                    <span className="p-0.5 text-slate-300"></span><span className="p-0.5 text-slate-300"></span><span className="p-0.5 text-slate-300"></span>
-                    <span className="p-0.5">1</span><span className="p-0.5">2</span><span className="p-0.5">3</span><span className="p-0.5">4</span>
-                    <span className="p-0.5">5</span><span className="p-0.5">6</span><span className="p-0.5">7</span><span className="p-0.5">8</span><span className="p-0.5">9</span><span className="p-0.5">10</span><span className="p-0.5">11</span>
-                    <span className="p-0.5">12</span><span className="p-0.5">13</span><span className="p-0.5">14</span><span className="p-0.5">15</span><span className="p-0.5">16</span><span className="p-0.5">17</span><span className="p-0.5">18</span>
-                    <span className="p-0.5">19</span><span className="p-0.5">20</span>
-                    <span className="p-0.5 rounded-full bg-blue-600 text-white font-black">21</span>
-                    <span className="p-0.5">22</span><span className="p-0.5">23</span><span className="p-0.5">24</span><span className="p-0.5">25</span>
-                    <span className="p-0.5">26</span><span className="p-0.5">27</span><span className="p-0.5">28</span><span className="p-0.5">29</span><span className="p-0.5">30</span><span className="p-0.5">31</span>
+                    {Array.from({ length: calendarInfo.startOffset }).map((_, idx) => (
+                      <span key={`empty-${idx}`} className="p-0.5 text-slate-300"></span>
+                    ))}
+                    {Array.from({ length: calendarInfo.daysInMonth }).map((_, idx) => {
+                      const day = idx + 1;
+                      const isSelected = day === calendarInfo.selectedDay;
+                      return (
+                        <span
+                          key={day}
+                          onClick={() => {
+                            const d = new Date(calendarInfo.year, calendarInfo.month, day);
+                            setTargetDate(d.toISOString().split("T")[0]);
+                          }}
+                          className={cn(
+                            "p-0.5 rounded-full cursor-pointer transition text-xs font-semibold",
+                            isSelected
+                              ? "bg-blue-600 text-white font-black shadow-xs"
+                              : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                          )}
+                        >
+                          {day}
+                        </span>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -1217,11 +1289,23 @@ export function SmartCrmControlCenter() {
               {/* Important Notes */}
               <div className="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 text-[10.5px] text-slate-500 space-y-1">
                 <span className="font-bold text-slate-700 dark:text-slate-300 block">{t(lang, "crm.important_notes", "Important Notes")}</span>
-                <p>• تمام اعداد و شمار حقیقی ڈیٹا سے ملائے جاتے ہیں۔</p>
-                <p>• ہر ٹرانزیکشن اپنے ماخذ ریکارڈ سے منسلک ہے۔</p>
-                <p>• صرف مجاز صارفین کو اپنے دائرہ کار کا ڈیٹا نظر آئے گا۔</p>
-                <p>• تمام رپورٹس اور پرنٹ ERP کی منتخب زبان میں ہوں گی۔</p>
-                <p className="font-bold text-slate-700 dark:text-slate-300">• DR = بنام ، CR = جمع</p>
+                {lang === "ur" ? (
+                  <>
+                    <p>• تمام اعداد و شمار حقیقی ڈیٹا سے ملائے جاتے ہیں۔</p>
+                    <p>• ہر ٹرانزیکشن اپنے ماخذ ریکارڈ سے منسلک ہے۔</p>
+                    <p>• صرف مجاز صارفین کو اپنے دائرہ کار کا ڈیٹا نظر آئے گا۔</p>
+                    <p>• تمام رپورٹس اور پرنٹ ERP کی منتخب زبان میں ہوں گی۔</p>
+                    <p className="font-bold text-slate-700 dark:text-slate-300">• DR = بنام ، CR = جمع</p>
+                  </>
+                ) : (
+                  <>
+                    <p>• All figures and balances are synchronized with live accounting records.</p>
+                    <p>• Each transaction is directly linked to its primary source voucher.</p>
+                    <p>• Authorized users only see records within their assigned branch scope.</p>
+                    <p>• All reports and prints are generated in the active system language.</p>
+                    <p className="font-bold text-slate-700 dark:text-slate-300">• DR = Debit (Receivable) , CR = Credit (Payable)</p>
+                  </>
+                )}
               </div>
             </div>
 
@@ -1231,62 +1315,44 @@ export function SmartCrmControlCenter() {
       </div>
 
       {/* ── BOTTOM STICKY ACTION FOOTER ── */}
-      <footer className="bg-[#0F1E36] text-slate-300 border-t border-slate-800 py-2.5 px-6 flex flex-wrap items-center justify-between text-xs font-semibold shrink-0">
+      <footer className="bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-t border-slate-200 dark:border-slate-800 py-2 px-6 flex flex-wrap items-center justify-between text-xs font-semibold shrink-0 shadow-xs">
         <div className="flex items-center gap-4">
           <button
             type="button"
-            onClick={() => {}}
-            className="flex items-center gap-1 hover:text-white transition"
-          >
-            <Globe className="h-3.5 w-3.5 text-blue-400" />
-            <span>زبان تبدیل کریں</span>
-          </button>
-
-          <button
-            type="button"
             onClick={handlePrint}
-            className="flex items-center gap-1 hover:text-white transition"
+            className="flex items-center gap-1 hover:text-blue-600 dark:hover:text-blue-400 transition cursor-pointer"
           >
-            <Printer className="h-3.5 w-3.5 text-blue-400" />
-            <span>پرنٹ</span>
+            <Printer className="h-3.5 w-3.5 text-blue-600" />
+            <span>{t(lang, "common.print", "Print")}</span>
           </button>
 
           <button
             type="button"
             onClick={handleExportExcel}
-            className="flex items-center gap-1 hover:text-white transition"
+            className="flex items-center gap-1 hover:text-blue-600 dark:hover:text-blue-400 transition cursor-pointer"
           >
-            <Download className="h-3.5 w-3.5 text-blue-400" />
-            <span>ایکسپورٹ</span>
+            <Download className="h-3.5 w-3.5 text-emerald-600" />
+            <span>{t(lang, "crm.btn_export_excel", "Export Excel")}</span>
           </button>
 
           <button
             type="button"
             onClick={() => router.push("/dashboard/reports")}
-            className="flex items-center gap-1 hover:text-white transition"
+            className="flex items-center gap-1 hover:text-blue-600 dark:hover:text-blue-400 transition cursor-pointer"
           >
-            <FileText className="h-3.5 w-3.5 text-blue-400" />
-            <span>Report</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handlePrint}
-            className="flex items-center gap-1 hover:text-white transition"
-          >
-            <FileText className="h-3.5 w-3.5 text-rose-400" />
-            <span>PDF</span>
+            <FileText className="h-3.5 w-3.5 text-indigo-600" />
+            <span>{t(lang, "nav.reports", "Reports")}</span>
           </button>
         </div>
 
         <div>
-          <span>© 2025 Damaan Enterprise Group - All Rights Reserved</span>
+          <span>© {new Date().getFullYear()} Damaan Enterprise Group - All Rights Reserved</span>
         </div>
 
         <div className="flex items-center gap-2">
           <span>Powered by <strong>Damaan ERP</strong></span>
-          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-black">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 text-[10px] font-black">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
             <span>Live</span>
           </span>
         </div>

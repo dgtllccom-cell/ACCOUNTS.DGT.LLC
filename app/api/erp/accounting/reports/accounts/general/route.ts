@@ -185,8 +185,326 @@ function isMissingPrivilegedSupabaseKey(error: unknown) {
   return message.includes("SUPABASE_SECRET_KEY") || message.includes("SUPABASE_SERVICE_ROLE_KEY");
 }
 
+async function ensureCoreMasterAccounts(sql: any) {
+  try {
+    const countries = await sql`SELECT id, name, code FROM public.countries;`;
+    let uae = countries.find((c: any) => (c.name || "").toLowerCase().includes("emirates") || c.code === "AE" || c.code === "UAE");
+    let pak = countries.find((c: any) => (c.name || "").toLowerCase().includes("pakistan") || c.code === "PK" || c.code === "PAK");
+    let afg = countries.find((c: any) => (c.name || "").toLowerCase().includes("afghanistan") || c.code === "AF" || c.code === "AFG");
+    let chn = countries.find((c: any) => (c.name || "").toLowerCase().includes("china") || c.code === "CN" || c.code === "CHN");
+    let ind = countries.find((c: any) => (c.name || "").toLowerCase().includes("india") || c.code === "IN" || c.code === "IND");
+
+    if (!ind) {
+      const [insertedInd] = await sql`
+        INSERT INTO public.countries (name, code, is_active)
+        VALUES ('India', 'IN', true)
+        ON CONFLICT DO NOTHING
+        RETURNING id, name, code;
+      `;
+      ind = insertedInd || (await sql`SELECT id, name, code FROM public.countries WHERE code = 'IN' OR name ILIKE '%India%' LIMIT 1;`)[0];
+    }
+
+    if (!chn) {
+      const [insertedChn] = await sql`
+        INSERT INTO public.countries (name, code, is_active)
+        VALUES ('China', 'CN', true)
+        ON CONFLICT DO NOTHING
+        RETURNING id, name, code;
+      `;
+      chn = insertedChn || (await sql`SELECT id, name, code FROM public.countries WHERE code = 'CN' OR name ILIKE '%China%' LIMIT 1;`)[0];
+    }
+
+    // 1. Ensure China Location Hierarchy (Liaoning Province -> Dalian City -> Ganjingzi District)
+    let liaoningState: any = null;
+    let dalianCity: any = null;
+    if (chn?.id) {
+      const [existingState] = await sql`
+        SELECT id, name FROM public.states_provinces 
+        WHERE country_id = ${chn.id} AND (name ILIKE '%Liaoning%' OR code = 'LN') 
+        LIMIT 1;
+      `;
+      if (existingState) {
+        liaoningState = existingState;
+      } else {
+        const [newState] = await sql`
+          INSERT INTO public.states_provinces (country_id, name, code, is_active)
+          VALUES (${chn.id}, 'Liaoning', 'LN', true)
+          RETURNING id, name;
+        `;
+        liaoningState = newState;
+      }
+
+      const [existingCity] = await sql`
+        SELECT id, name FROM public.cities 
+        WHERE country_id = ${chn.id} AND (name ILIKE '%Dalian%' OR code = 'DLN') 
+        LIMIT 1;
+      `;
+      if (existingCity) {
+        dalianCity = existingCity;
+      } else {
+        const [newCity] = await sql`
+          INSERT INTO public.cities (country_id, state_province_id, name, code, is_active)
+          VALUES (${chn.id}, ${liaoningState?.id || null}, 'Dalian', 'DLN', true)
+          RETURNING id, name;
+        `;
+        dalianCity = newCity;
+      }
+
+      if (dalianCity?.id) {
+        await sql`
+          INSERT INTO public.areas_locations (city_id, name, is_active)
+          VALUES (${dalianCity.id}, 'Ganjingzi District', true)
+          ON CONFLICT DO NOTHING;
+        `;
+      }
+    }
+
+    // 2. Ensure Company: DALIAN SUNSHINE IMP. & EXP. (Owner: Lily)
+    let dalianCompany: any = null;
+    const [existingCompany] = await sql`
+      SELECT id, name FROM public.companies 
+      WHERE name ILIKE '%DALIAN SUNSHINE%' OR legal_name ILIKE '%DALIAN SUNSHINE%' 
+      LIMIT 1;
+    `;
+    if (existingCompany) {
+      dalianCompany = existingCompany;
+    } else {
+      const [newCompany] = await sql`
+        INSERT INTO public.companies (
+          name, legal_name, owner_name, business_type, base_currency,
+          address, country_id, state_province_id, city_id, is_active
+        ) VALUES (
+          'DALIAN SUNSHINE IMP. & EXP.',
+          'DALIAN SUNSHINE IMP. & EXP.',
+          'Lily',
+          'Supplier / Trading Company',
+          'USD',
+          '12-4 23# RONGTIANXIYUAN GANJINGZI DIS. DALIAN LIAONING CHINA',
+          ${chn?.id || null},
+          ${liaoningState?.id || null},
+          ${dalianCity?.id || null},
+          true
+        ) RETURNING id, name;
+      `;
+      dalianCompany = newCompany;
+    }
+
+    // 3. Ensure Bank: CHINA CONSTRUCTION BANK DALIAN BRANCH (SWIFT: PCBCCNBJDLX)
+    let dalianBank: any = null;
+    const [existingBank] = await sql`
+      SELECT id, bank_name, branch_name FROM public.banks 
+      WHERE (swift_bic = 'PCBCCNBJDLX') OR (bank_name ILIKE '%CHINA CONSTRUCTION BANK%' AND branch_name ILIKE '%DALIAN%')
+      LIMIT 1;
+    `;
+    if (existingBank) {
+      dalianBank = existingBank;
+    } else {
+      const [newBank] = await sql`
+        INSERT INTO public.banks (
+          bank_name, branch_name, branch_code, short_name, account_title,
+          swift_bic, currency, full_address, country_id, state_province_id, city_id,
+          owner_company_id, is_active
+        ) VALUES (
+          'CHINA CONSTRUCTION BANK',
+          'DALIAN BRANCH',
+          'CCB-DLN',
+          'CCB Dalian',
+          'DALIAN SUNSHINE IMP. & EXP.',
+          'PCBCCNBJDLX',
+          'USD',
+          'NO. 30, WUWU ROAD, ZHONGSHAN DISTRICT, DALIAN, CHINA',
+          ${chn?.id || null},
+          ${liaoningState?.id || null},
+          ${dalianCity?.id || null},
+          ${dalianCompany?.id || null},
+          true
+        ) RETURNING id, bank_name, branch_name;
+      `;
+      dalianBank = newBank;
+    }
+
+    // Ensure India Main Branch
+    if (ind?.id) {
+      const [existingBranch] = await sql`SELECT id FROM public.country_branches WHERE country_id = ${ind.id} LIMIT 1;`;
+      if (!existingBranch) {
+        await sql`
+          INSERT INTO public.country_branches (country_id, name, code, is_main, is_active)
+          VALUES (${ind.id}, 'India Main Branch', 'BR-DEL-001', true, true)
+          ON CONFLICT DO NOTHING;
+        `;
+      }
+    }
+
+    const masterAccounts = [
+      {
+        code: "SA-CAP-0001",
+        account_number: "0000001",
+        customer_number: "CUST-SA-0001",
+        account_serial_number: 1,
+        country_serial_number: 1,
+        branch_serial_number: 1,
+        branch_code: "BR-GLOBAL-001",
+        branch_account_sequence: 1,
+        manual_ref: "0000-SA-CAP",
+        name: "Haji Abdullah Jan Accounts",
+        currency: "USD",
+        country_id: uae?.id || null,
+        company_id: null,
+        bank_id: null,
+        scope: "super_admin",
+        kind: "equity"
+      },
+      {
+        code: "UAE-CORP-GEN-001",
+        account_number: "1000001",
+        customer_number: "CUST-UAE-0001",
+        account_serial_number: 1000001,
+        country_serial_number: 1000001,
+        branch_serial_number: 1,
+        branch_code: "BR-DXB-001",
+        branch_account_sequence: 1,
+        manual_ref: "0001-UAE-HUB",
+        name: "United Arab Emirates Main Country Clearing Ledger",
+        currency: "AED",
+        country_id: uae?.id || null,
+        company_id: null,
+        bank_id: null,
+        scope: "country",
+        kind: "asset"
+      },
+      {
+        code: "UAE-DUB-AC-0003",
+        account_number: "1000003",
+        customer_number: "CUST-DUB-0003",
+        account_serial_number: 1000003,
+        country_serial_number: 1000003,
+        branch_serial_number: 3,
+        branch_code: "BR-DXB-001",
+        branch_account_sequence: 3,
+        manual_ref: "UAE-DUB-AC-0003",
+        name: "DALIAN SUNSHINE IMP. & EXP.",
+        currency: "USD",
+        country_id: uae?.id || chn?.id || null,
+        company_id: dalianCompany?.id || null,
+        bank_id: dalianBank?.id || null,
+        scope: "country",
+        kind: "liability"
+      },
+      {
+        code: "PAK-CORP-GEN-001",
+        account_number: "2000001",
+        customer_number: "CUST-PAK-0001",
+        account_serial_number: 2000001,
+        country_serial_number: 2000001,
+        branch_serial_number: 1,
+        branch_code: "BR-KHI-001",
+        branch_account_sequence: 1,
+        manual_ref: "0002-PAK-HUB",
+        name: "Pakistan National Central Clearing Ledger",
+        currency: "PKR",
+        country_id: pak?.id || null,
+        company_id: null,
+        bank_id: null,
+        scope: "country",
+        kind: "asset"
+      },
+      {
+        code: "AFG-CORP-GEN-001",
+        account_number: "3000001",
+        customer_number: "CUST-AFG-0001",
+        account_serial_number: 3000001,
+        country_serial_number: 3000001,
+        branch_serial_number: 1,
+        branch_code: "BR-KBL-001",
+        branch_account_sequence: 1,
+        manual_ref: "0003-AFG-HUB",
+        name: "Afghanistan National Central Clearing Ledger",
+        currency: "AFN",
+        country_id: afg?.id || null,
+        company_id: null,
+        bank_id: null,
+        scope: "country",
+        kind: "asset"
+      },
+      {
+        code: "CHN-CORP-GEN-001",
+        account_number: "4000001",
+        customer_number: "CUST-CHN-0001",
+        account_serial_number: 4000001,
+        country_serial_number: 4000001,
+        branch_serial_number: 1,
+        branch_code: "BR-BJS-001",
+        branch_account_sequence: 1,
+        manual_ref: "0004-CHN-HUB",
+        name: "China & International Trade Clearing Ledger",
+        currency: "USD",
+        country_id: chn?.id || null,
+        company_id: null,
+        bank_id: null,
+        scope: "country",
+        kind: "asset"
+      },
+      {
+        code: "IND-CORP-GEN-001",
+        account_number: "5000001",
+        customer_number: "CUST-IND-0001",
+        account_serial_number: 5000001,
+        country_serial_number: 5000001,
+        branch_serial_number: 1,
+        branch_code: "BR-DEL-001",
+        branch_account_sequence: 1,
+        manual_ref: "0005-IND-HUB",
+        name: "India National Central Clearing Ledger",
+        currency: "INR",
+        country_id: ind?.id || null,
+        company_id: null,
+        bank_id: null,
+        scope: "country",
+        kind: "asset"
+      }
+    ];
+
+    for (const acc of masterAccounts) {
+      const [existing] = await sql`
+        SELECT id FROM public.enterprise_accounts 
+        WHERE code = ${acc.code} OR manual_reference_number = ${acc.manual_ref}
+        LIMIT 1;
+      `;
+      if (!existing) {
+        const [inserted] = await sql`
+          INSERT INTO public.enterprise_accounts (
+            code, name, account_number, customer_number,
+            account_serial_number, country_serial_number, branch_serial_number,
+            branch_code, branch_account_sequence, creation_date,
+            manual_reference_number, currency, country_id, company_id, bank_id,
+            scope, kind, status, is_control_account, opening_balance, current_balance
+          ) VALUES (
+            ${acc.code}, ${acc.name}, ${acc.account_number}, ${acc.customer_number},
+            ${acc.account_serial_number}, ${acc.country_serial_number}, ${acc.branch_serial_number},
+            ${acc.branch_code}, ${acc.branch_account_sequence}, NOW(),
+            ${acc.manual_ref}, ${acc.currency}, ${acc.country_id}, ${acc.company_id}, ${acc.bank_id},
+            ${acc.scope}, ${acc.kind}, 'active', true, 0, 0
+          ) RETURNING id;
+        `;
+        if (inserted?.id) {
+          await sql`
+            INSERT INTO public.ledgers (
+              enterprise_account_id, code, name, currency, scope, country_id, is_active
+            ) VALUES (
+              ${inserted.id}, ${acc.code}, ${acc.name}, ${acc.currency}, ${acc.scope}, ${acc.country_id}, true
+            ) ON CONFLICT DO NOTHING;
+          `;
+        }
+      }
+    }
+  } catch (e) {
+    console.error("Auto-ensuring master accounts error:", e);
+  }
+}
+
 async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof requireErpSession>>, effectiveQuery: z.infer<typeof querySchema>) {
   const viaPg = await withLocalPg(async (sql) => {
+    await ensureCoreMasterAccounts(sql);
     const limit = Math.max(1, Math.min(effectiveQuery.limit ?? 1000, 2000));
     const scopeWhere = effectiveQuery.scope ? sql`and ea.scope = ${effectiveQuery.scope}` : sql``;
     const countryWhere = effectiveQuery.countryId ? sql`and ea.country_id = ${effectiveQuery.countryId}` : sql``;
@@ -487,6 +805,8 @@ export async function GET(request: NextRequest) {
       countryBranchId: effectiveQuery.countryBranchId ?? null,
       cityBranchId: effectiveQuery.cityBranchId ?? null
     });
+
+    await withLocalPg((sql) => ensureCoreMasterAccounts(sql)).catch(() => null);
 
     let supabase: any;
     try {

@@ -575,7 +575,7 @@ export function AccountGeneralReportView({
       try {
         setLoading(true);
         setError(null);
-        const res = await apiGet<AccountGeneralReportResponse>("/api/erp/accounting/reports/accounts/general?limit=500");
+        const res = await apiGet<AccountGeneralReportResponse>("/api/erp/accounting/reports/accounts/general?limit=2000");
         if (!cancelled) {
           setData(res);
           if (initialAccountId) setSelectedAccountId(initialAccountId);
@@ -746,6 +746,7 @@ export function AccountGeneralReportView({
       { name: "United Arab Emirates", code: "AE", currency: "AED" },
       { name: "Pakistan", code: "PK", currency: "PKR" },
       { name: "Afghanistan", code: "AF", currency: "AFN" },
+      { name: "India", code: "IN", currency: "INR" },
       { name: "China", code: "CN", currency: "USD" },
     ];
 
@@ -811,7 +812,7 @@ export function AccountGeneralReportView({
       ...g,
       branches: Object.values(g.branches).sort((a, b) => a.branchName.localeCompare(b.branchName))
     })).sort((a, b) => {
-      const order = ["United Arab Emirates", "Pakistan", "Afghanistan", "China"];
+      const order = ["United Arab Emirates", "Pakistan", "Afghanistan", "India", "China"];
       const idxA = order.indexOf(a.countryName);
       const idxB = order.indexOf(b.countryName);
       if (idxA !== -1 && idxB !== -1) return idxA - idxB;
@@ -1039,11 +1040,12 @@ export function AccountGeneralReportView({
         "Country Serial Number",
         "Branch Serial Number",
         "Account Name",
+        "Company / Owner Name",
         "Journal Code",
         "Branch",
         "Country",
         "City",
-        "Branch Type",
+        "Branch Type / Scope",
         "Currency",
         "Category",
         "Sub Type",
@@ -1063,6 +1065,7 @@ export function AccountGeneralReportView({
         row.countrySerialNumber ?? "",
         row.branchSerialNumber ?? "",
         row.accountName,
+        row.companyName || row.ownerName || "-",
         row.journalCode,
         row.branchName,
         row.countryName,
@@ -1081,7 +1084,7 @@ export function AccountGeneralReportView({
     }
 
     const csv = csvRows.map((row) => row.map((cell) => csvEscape(cell)).join(",")).join("\r\n");
-    downloadTextFile(`new-account-general-report_${new Date().toISOString().slice(0, 10)}.csv`, csv, "text/csv");
+    downloadTextFile(`accounts-general-register-export_${new Date().toISOString().slice(0, 10)}.csv`, csv, "text/csv");
   }
 
   async function deleteAccount(row: AccountGeneralReportRow) {
@@ -1354,6 +1357,16 @@ export function AccountGeneralReportView({
         type="button"
         size="sm"
         variant="outline"
+        onClick={() => exportCsv("filtered")}
+        className="h-9 rounded-xl border-slate-200 font-bold text-xs shadow-sm gap-1.5 cursor-pointer text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+      >
+        <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" /> {tr("EXPORT EXCEL / CSV")}
+      </Button>
+
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
         onClick={() => openPrint(true)}
         className="h-9 rounded-xl border-slate-200 font-bold text-xs shadow-sm gap-1.5 cursor-pointer"
       >
@@ -1540,96 +1553,31 @@ export function AccountGeneralReportView({
       </div>
 
       {/* Scope Subtitle Bar */}
-      <div className="flex items-center gap-6 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 px-1 pt-1">
-        <span>BRANCH SCOPE: <strong className="text-blue-600 dark:text-blue-400">{isSuperAdmin ? "GLOBAL ADMIN" : "BRANCH"}</strong></span>
-        <span>SESSION ROLE: <strong className="text-emerald-600 dark:text-emerald-400">{session?.roles?.[0]?.replace(/_/g, " ") || "SUPER ADMIN"}</strong></span>
-        <span>TOTAL LEDGERS: <strong className="text-slate-800 dark:text-slate-200">{filteredRows.length}</strong></span>
+      <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400 px-1 pt-1 pb-1">
+        <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest">
+          <span>BRANCH SCOPE: <strong className="text-blue-600 dark:text-blue-400">{isSuperAdmin ? "GLOBAL ADMIN" : "BRANCH"}</strong></span>
+          <span>SESSION ROLE: <strong className="text-emerald-600 dark:text-emerald-400">{session?.roles?.[0]?.replace(/_/g, " ") || "SUPER ADMIN"}</strong></span>
+          <span>TOTAL LEDGERS: <strong className="text-slate-800 dark:text-slate-200">{filteredRows.length}</strong></span>
+        </div>
+        {selectedCountryForSummary && (
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedCountryForSummary(null);
+              setCountryName("all");
+            }}
+            className="text-[10px] font-bold text-rose-600 hover:underline uppercase cursor-pointer"
+          >
+            Clear Filter ({selectedCountryForSummary})
+          </button>
+        )}
       </div>
 
-      {/* Country-Wise Financial Breakdown Cards */}
-      <div className="space-y-2">
-        <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 px-1">
-          {tr("COUNTRY-WISE FINANCIAL BREAKDOWN & HUBS")}
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
-          {/* General Report (Consolidated) */}
-          <div
-            onClick={() => { setSelectedCountryForSummary(null); setCountryName("all"); }}
-            className={cn(
-              "p-3.5 rounded-xl border bg-white dark:bg-slate-900 cursor-pointer transition shadow-xs",
-              !selectedCountryForSummary && countryName === "all" ? "border-blue-500 ring-1 ring-blue-500" : "border-slate-200 dark:border-slate-800 hover:border-slate-300"
-            )}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">📊 GENERAL REPORT</span>
-              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600">SYSTEM</span>
-            </div>
-            <div className="text-[9px] text-slate-400 mt-0.5">{filteredRows.length} Total Accounts</div>
-            <div className="mt-2 space-y-0.5 font-mono text-[10px]">
-              <div className="flex justify-between text-rose-600"><span>DR:</span> <span>{fmtNumber(filteredRows.reduce((s, r) => s + r.debitTotal, 0))}</span></div>
-              <div className="flex justify-between text-emerald-600"><span>CR:</span> <span>{fmtNumber(filteredRows.reduce((s, r) => s + r.creditTotal, 0))}</span></div>
-              <div className="flex justify-between font-bold border-t border-slate-100 dark:border-slate-800 pt-0.5 text-slate-800 dark:text-slate-200"><span>NET:</span> <span>AED {fmtNumber(filteredRows.reduce((s, r) => s + r.currentBalance, 0))}</span></div>
-            </div>
-          </div>
-
-          {/* User & Branch Card */}
-          <div
-            onClick={() => { setDashboardScope("branch"); setSelectedUserBranchOnly(true); }}
-            className={cn(
-              "p-3.5 rounded-xl border bg-white dark:bg-slate-900 cursor-pointer transition shadow-xs",
-              selectedUserBranchOnly ? "border-blue-500 ring-1 ring-blue-500" : "border-slate-200 dark:border-slate-800 hover:border-slate-300"
-            )}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">👤 USER & BRANCH</span>
-              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700">AED</span>
-            </div>
-            <div className="text-[9px] text-slate-400 mt-0.5">Assigned: {(session as any)?.fullName || (session as any)?.email || "Super Admin"}</div>
-            <div className="mt-2 space-y-0.5 font-mono text-[10px]">
-              <div className="flex justify-between text-rose-600"><span>DR:</span> <span>{fmtNumber(filteredRows.reduce((s, r) => s + r.debitTotal, 0))}</span></div>
-              <div className="flex justify-between text-emerald-600"><span>CR:</span> <span>{fmtNumber(filteredRows.reduce((s, r) => s + r.creditTotal, 0))}</span></div>
-              <div className="flex justify-between font-bold border-t border-slate-100 dark:border-slate-800 pt-0.5 text-slate-800 dark:text-slate-200"><span>NET:</span> <span>AED {fmtNumber(filteredRows.reduce((s, r) => s + r.currentBalance, 0))}</span></div>
-            </div>
-          </div>
-
-          {/* 4 Country Hub Cards */}
-          {countrySummaries.slice(0, 4).map(c => {
-            const isSelected = selectedCountryForSummary === c.countryName;
-            return (
-              <div
-                key={c.countryName}
-                onClick={() => {
-                  setSelectedCountryForSummary(isSelected ? null : c.countryName);
-                  setCountryName(isSelected ? "all" : c.countryName);
-                }}
-                className={cn(
-                  "p-3.5 rounded-xl border bg-white dark:bg-slate-900 cursor-pointer transition shadow-xs",
-                  isSelected ? "border-emerald-500 ring-1 ring-emerald-500" : "border-slate-200 dark:border-slate-800 hover:border-slate-300"
-                )}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate flex items-center gap-1">
-                    <span>{getFlag(c.countryName)}</span> <span className="truncate">{c.countryName}</span>
-                  </span>
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700">{c.currency}</span>
-                </div>
-                <div className="text-[9px] text-slate-400 mt-0.5">{c.totalAccounts} Accounts</div>
-                <div className="mt-2 space-y-0.5 font-mono text-[10px]">
-                  <div className="flex justify-between text-rose-600"><span>DR:</span> <span>{fmtNumber(c.debitTotal)}</span></div>
-                  <div className="flex justify-between text-emerald-600"><span>CR:</span> <span>{fmtNumber(c.creditTotal)}</span></div>
-                  <div className="flex justify-between font-bold border-t border-slate-100 dark:border-slate-800 pt-0.5 text-slate-800 dark:text-slate-200"><span>NET:</span> <span>{c.currency} {fmtNumber(c.netBalance)}</span></div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 4 Primary Summary Panels Grid (Matching Outstanding & Recovery Ledger) */}
+      {/* 4 Unified Executive Summary Panels */}
       <div className="summary-cards-container grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         {/* Panel 1: Branch & User Details */}
-        <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-          <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-blue-50/50 dark:bg-blue-900/10">
+        <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-blue-50/50 dark:bg-blue-900/10">
             <div className="bg-blue-600 p-1 rounded-full text-white">
               <User className="h-3.5 w-3.5" />
             </div>
@@ -1637,7 +1585,7 @@ export function AccountGeneralReportView({
               {tr("1. BRANCH & USER DETAILS")}
             </h4>
           </div>
-          <div className="p-4 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+          <div className="p-3.5 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
               <span>{tr("COUNTRY:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">
@@ -1653,7 +1601,7 @@ export function AccountGeneralReportView({
             <div className="flex justify-between items-center">
               <span>{tr("USER ID:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase text-[9px] font-mono">
-                {(session as any)?.userId || (session as any)?.user?.id || (session as any)?.id || "-"}
+                {(session as any)?.userId || (session as any)?.user?.id || (session as any)?.id || "SUPER-ADMIN-001"}
               </span>
             </div>
             <div className="flex justify-between items-center">
@@ -1665,7 +1613,7 @@ export function AccountGeneralReportView({
             <div className="flex justify-between items-center">
               <span>{tr("ROLE:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">
-                {isSuperAdmin ? "Super Admin" : ((session as any)?.roles?.[0]?.replace(/_/g, " ") || "Branch Admin")}
+                {isSuperAdmin ? "SUPER ADMIN" : ((session as any)?.roles?.[0]?.replace(/_/g, " ") || "BRANCH ADMIN")}
               </span>
             </div>
             <div className="flex justify-between items-center">
@@ -1674,7 +1622,7 @@ export function AccountGeneralReportView({
                 {new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}, {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}
               </span>
             </div>
-            <div className="flex justify-between items-center mt-auto pt-1">
+            <div className="flex justify-between items-center mt-auto pt-1 border-t border-slate-100 dark:border-slate-800">
               <span>{tr("STATUS:")}</span>
               <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">
                 ACTIVE
@@ -1684,8 +1632,8 @@ export function AccountGeneralReportView({
         </div>
 
         {/* Panel 2: Global Financial Summary */}
-        <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-          <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-emerald-50/50 dark:bg-emerald-900/10">
+        <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-emerald-50/50 dark:bg-emerald-900/10">
             <div className="bg-emerald-600 p-1 rounded-full text-white">
               <Coins className="h-3.5 w-3.5" />
             </div>
@@ -1693,7 +1641,7 @@ export function AccountGeneralReportView({
               {tr("2. GLOBAL FINANCIAL SUMMARY")}
             </h4>
           </div>
-          <div className="p-4 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+          <div className="p-3.5 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
               <span>{tr("TOTAL ACCOUNTS:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">
@@ -1733,8 +1681,8 @@ export function AccountGeneralReportView({
         </div>
 
         {/* Panel 3: Account Categories & Status Summary */}
-        <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-          <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-purple-50/50 dark:bg-purple-900/10">
+        <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-purple-50/50 dark:bg-purple-900/10">
             <div className="bg-purple-600 p-1 rounded-full text-white">
               <FileText className="h-3.5 w-3.5" />
             </div>
@@ -1742,7 +1690,7 @@ export function AccountGeneralReportView({
               {tr("3. CATEGORIES & LEDGERS")}
             </h4>
           </div>
-          <div className="p-4 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+          <div className="p-3.5 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
               <span>{tr("TOTAL LEDGERS:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{filteredRows.reduce((sum, r) => sum + r.linkedLedgerCount, 0)}</span>
@@ -1768,9 +1716,9 @@ export function AccountGeneralReportView({
           </div>
         </div>
 
-        {/* Panel 4: All Countries Report with View List Toggle */}
-        <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-amber-50/50 dark:bg-amber-900/10">
+        {/* Panel 4: All Countries Report & Regional Hubs */}
+        <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-amber-50/50 dark:bg-amber-900/10">
             <div className="flex items-center gap-2">
               <div className="bg-amber-600 p-1 rounded-full text-white">
                 <Globe className="h-3.5 w-3.5" />
@@ -1787,7 +1735,7 @@ export function AccountGeneralReportView({
               <ChevronDown className={cn("h-3 w-3 transition-transform", showAllCountries ? "rotate-180" : "")} />
             </button>
           </div>
-          <div className="p-4 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+          <div className="p-3.5 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
               <span>{tr("TOTAL COUNTRIES:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{countrySummaries.length || 1}</span>
@@ -1796,10 +1744,33 @@ export function AccountGeneralReportView({
               <span>{tr("TOTAL BRANCHES:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{countrySummaries.reduce((sum, c) => sum + c.branches.length, 0) || 1}</span>
             </div>
-            <div className="flex justify-between items-center">
-              <span>{tr("ACTIVE CURRENCY:")}</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200">{filteredRows[0]?.currency || "AED"}</span>
+            
+            {/* Quick Country Pill Selector */}
+            <div className="flex flex-wrap gap-1 py-1">
+              {countrySummaries.slice(0, 5).map((c) => {
+                const isSelected = selectedCountryForSummary === c.countryName;
+                return (
+                  <button
+                    key={c.countryName}
+                    type="button"
+                    onClick={() => {
+                      setSelectedCountryForSummary(isSelected ? null : c.countryName);
+                      setCountryName(isSelected ? "all" : c.countryName);
+                    }}
+                    className={cn(
+                      "px-2 py-0.5 rounded-md text-[10px] font-bold transition flex items-center gap-1 cursor-pointer",
+                      isSelected
+                        ? "bg-amber-600 text-white shadow-xs"
+                        : "bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200"
+                    )}
+                  >
+                    <span>{getFlag(c.countryName)}</span>
+                    <span>{c.countryName}</span>
+                  </button>
+                );
+              })}
             </div>
+
             <div className="flex justify-between items-center mt-auto border-t border-slate-100 dark:border-slate-800 pt-2">
               <span className="font-bold text-slate-700 dark:text-slate-300">{tr("COVERAGE:")}</span>
               <span className="font-bold text-blue-600 dark:text-blue-400">{isSuperAdmin ? "GLOBAL NETWORK" : (selectedCountryForSummary || "COUNTRY NETWORK")}</span>
