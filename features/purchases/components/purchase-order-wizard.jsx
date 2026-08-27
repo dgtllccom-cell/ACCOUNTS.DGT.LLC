@@ -527,6 +527,9 @@ export function PurchaseOrderWizard({ session }) {
   const [showTransferScreen, setShowTransferScreen] = useState(false);
   const [isVerificationSidebarOpen, setIsVerificationSidebarOpen] = useState(false);
   const [previewType, setPreviewType] = useState("booking_report"); // "booking_report" | "contract" | "invoice"
+  const [editingGoodsIndex, setEditingGoodsIndex] = useState(null);
+  const [bookingSearchInput, setBookingSearchInput] = useState("");
+  const [bookingSearchLoading, setBookingSearchLoading] = useState(false);
   const [form, setForm] = useState(() => {
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     return {
@@ -1524,6 +1527,142 @@ export function PurchaseOrderWizard({ session }) {
     return brands;
   }, [selectedDbGood, form.origin, form.size, transitCountryOptions]);
 
+  const handleSearchBookingOrder = async (searchNeedle) => {
+    const needle = String(searchNeedle || "").trim();
+    if (!needle) return;
+    setBookingSearchLoading(true);
+    setSaveMessage(`Searching Booking Order "${needle}"...`);
+    try {
+      let poData = null;
+      // 1. Try by direct ID if UUID
+      if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(needle)) {
+        const res = await fetch(`/api/erp/purchases/orders/${encodeURIComponent(needle)}?lang=${encodeURIComponent(lang)}`, {
+          credentials: "same-origin"
+        });
+        const payload = await res.json().catch(() => ({}));
+        if (res.ok && payload.ok) {
+          poData = payload.data?.order ?? payload.order ?? null;
+        }
+      }
+
+      // 2. Try by PO number or query lookup
+      if (!poData) {
+        poData = await lookupPurchaseBookingReport(
+          needle,
+          activeSession?.countryIds?.[0] || activeSession?.scopes?.countryIds?.[0] || null,
+          activeSession?.countryBranchIds?.[0] || activeSession?.scopes?.countryBranchIds?.[0] || null,
+          activeSession?.cityBranchIds?.[0] || activeSession?.scopes?.cityBranchIds?.[0] || null,
+          isSuperAdmin
+        );
+      }
+
+      // 3. Fallback search via general booking report endpoint
+      if (!poData) {
+        const generalRes = await fetch(`/api/erp/purchases/booking-journal-report?q=${encodeURIComponent(needle)}&limit=1`, {
+          credentials: "same-origin"
+        });
+        const generalPayload = await generalRes.json().catch(() => ({}));
+        if (generalRes.ok && generalPayload.data?.reports?.[0]) {
+          poData = generalPayload.data.reports[0];
+        }
+      }
+
+      if (poData) {
+        let rawFormData = poData.form_data || {};
+        if (typeof rawFormData === "string") {
+          try { rawFormData = JSON.parse(rawFormData); } catch (_) {}
+        }
+        const loadedForm = (rawFormData && typeof rawFormData === "object" && rawFormData.form) ? rawFormData.form : {};
+        let loadedGoods = (rawFormData && typeof rawFormData === "object" && Array.isArray(rawFormData.goodsEntries) && rawFormData.goodsEntries.length)
+          ? rawFormData.goodsEntries
+          : (Array.isArray(poData.items) ? poData.items.map((item, idx) => ({
+              allotName: item.allotName || `ALT-${Math.floor(1000 + Math.random() * 9000)}`,
+              goodsId: item.productId || item.goodsId || null,
+              goodsName: item.goodsName || item.productName || item.name || "Cargo Item",
+              size: item.size || "-",
+              brand: item.brand || "-",
+              origin: item.origin || "-",
+              hsCode: item.hsCode || "-",
+              qtyName: item.unitName || item.qtyName || "BAGS",
+              qtyNo: Number(item.quantity || item.qtyNo || 0),
+              qtyKgs: Number(item.qtyKgs || item.unitWeight || 0),
+              grossWeight: Number(item.grossWeight || 0),
+              emptyKgs: Number(item.emptyKgs || 0),
+              netWeight: Number(item.netWeight || 0),
+              priceType: item.priceType || "P/KGs",
+              divideType: item.divideType || "D/KGs",
+              divideWeight: Number(item.divideWeight || item.unitWeight || 1),
+              coursePrice: Number(item.rateOriginal || item.rateUsd || item.coursePrice || 0),
+              currencyType: poData.currency_code || item.currencyType || "USD",
+              purchaseCurrency: poData.currency_code || item.currencyType || "USD",
+              secondaryCurrency: poData.payment_currency || "AED",
+              exchangeRate: Number(poData.exchange_rate || item.exchangeRate || 1),
+              totalAmount: Number(item.totalOriginal || item.totalUsd || item.totalAmount || 0),
+              op: item.op || "*",
+              finalAmount: Number(item.totalLocal || item.finalAmount || 0)
+            })) : []);
+
+        const poNumber = poData.purchase_order_no || poData.purchaseBookingOrderNumber || loadedForm.purchaseOrderNo || needle;
+        const contractNumber = poData.purchase_contract_no || poData.purchaseContractNo || loadedForm.purchaseContractNo || "";
+
+        setSavedOrderId(poData.id || "");
+        setSavedOrderNo(poNumber);
+
+        const mergedCountryId = loadedForm.countryId || poData.country_id || poData.countryId || "";
+        const mergedCountryBranchId = loadedForm.countryBranchId || poData.country_branch_id || poData.countryBranchId || poData.branch_id || poData.branchId || "";
+        const mergedCityBranchId = loadedForm.cityBranchId || poData.city_branch_id || poData.cityBranchId || "";
+
+        setForm((prev) => ({
+          ...prev,
+          ...loadedForm,
+          countryId: mergedCountryId,
+          countryBranchId: mergedCountryBranchId,
+          cityBranchId: mergedCityBranchId,
+          purchaseOrderNo: poNumber,
+          purchaseContractNo: contractNumber,
+          currencyType: loadedForm.currencyType || poData.currency_code || prev.currencyType || "USD",
+          purchaseCurrency: loadedForm.purchaseCurrency || poData.purchase_currency || poData.currency_code || "USD",
+          secondaryCurrency: loadedForm.secondaryCurrency || poData.payment_currency || "AED",
+          paymentCurrency: loadedForm.paymentCurrency || poData.payment_currency || "AED",
+          exchangeRate: loadedForm.exchangeRate !== undefined ? loadedForm.exchangeRate : (Number(poData.exchange_rate) || prev.exchangeRate || 1),
+          translations: rawFormData.translations || poData.translations || prev.translations || null,
+        }));
+        setScopeConfirmed(true);
+
+        if (loadedForm.purchaseAccountName || loadedForm.purchaseAccountNo) {
+          setPurchaseSearch(loadedForm.purchaseAccountName || loadedForm.purchaseAccountNo || "");
+        }
+        if (loadedForm.salesAccountName || loadedForm.salesAccountNo) {
+          setSalesSearch(loadedForm.salesAccountName || loadedForm.salesAccountNo || "");
+        }
+
+        if (Array.isArray(loadedGoods) && loadedGoods.length) {
+          setGoodsEntries(loadedGoods);
+        }
+
+        if (rawFormData.reports && Array.isArray(rawFormData.reports)) {
+          setReportsList(rawFormData.reports);
+        }
+
+        setIsTransferred(false);
+        setTransferredData(null);
+        setIsFormOpen(true);
+        setEditingGoodsIndex(null);
+        setActiveTab("booking");
+        setSaveMessage(`Purchase Booking "${poNumber}" loaded successfully for editing.`);
+      } else {
+        alert(`Purchase Booking "${needle}" not found. Please verify the booking number.`);
+        setSaveMessage(`Booking "${needle}" not found.`);
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Error searching booking order.";
+      alert(msg);
+      setSaveMessage(msg);
+    } finally {
+      setBookingSearchLoading(false);
+    }
+  };
+
   // Load existing purchase order if purchaseOrderNo or id is in URL query parameters
   useEffect(() => {
     // activeSession is defined at the component level now
@@ -1531,131 +1670,13 @@ export function PurchaseOrderWizard({ session }) {
     const poNo = searchParams.get("purchaseOrderNo");
     const orderId = searchParams.get("id") || searchParams.get("purchaseOrderId");
     if (!poNo && !orderId) return;
-    setIsFormOpen(true);
 
-    let cancelled = false;
-
-    async function loadPO() {
-      setSavingOrder(true);
-      setSaveMessage("Loading purchase order details...");
-      try {
-        let poData = null;
-        if (orderId) {
-          const res = await fetch(`/api/erp/purchases/orders/${encodeURIComponent(orderId)}?lang=${encodeURIComponent(lang)}`, {
-            credentials: "same-origin"
-          });
-          const payload = await res.json().catch(() => ({}));
-          if (res.ok && payload.ok) {
-            poData = payload.data?.order ?? payload.order ?? null;
-          } else {
-            throw new Error(payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_load_order_by_id", "Failed to load purchase order by ID."));
-          }
-        } else if (poNo) {
-          poData = await lookupPurchaseBookingReport(
-            poNo,
-            activeSession.countryIds?.[0] || activeSession.scopes?.countryIds?.[0] || null,
-            activeSession.countryBranchIds?.[0] || activeSession.scopes?.countryBranchIds?.[0] || null,
-            activeSession.cityBranchIds?.[0] || activeSession.scopes?.cityBranchIds?.[0] || null,
-            isSuperAdmin
-          );
-        }
-
-        if (cancelled) return;
-
-        if (poData?.form_data?.totals) {
-          // You might set reportTotals here if there's a state for it, but usually it's derived.
-        }
-        if (poData?.form_data?.reports) {
-          setReportsList(Array.isArray(poData.form_data.reports) ? poData.form_data.reports : []);
-        }
-
-        if (poData) {
-          const roles = activeSession?.roles || activeSession?.scopes?.roles || [];
-          const canEditTransferred = Boolean(
-            isSuperAdmin
-            || roles.includes("super_admin")
-            || roles.includes("admin")
-            || roles.includes("country_admin")
-          );
-          const isPostedBooking = ["posted", "transferred"].includes(String(poData.ledger_posting_status || poData.ledgerPostingStatus || "").toLowerCase());
-          if (isPostedBooking && !canEditTransferred) {
-            setIsFormOpen(false);
-            throw new Error(trUi("Transferred bookings can only be edited by an Admin or Country Admin."));
-          }
-          const rawFormData = poData.form_data || {};
-          const loadedForm = rawFormData.form || {};
-          const loadedGoods = rawFormData.goodsEntries || [];
-
-          const poNumber = poData.purchase_order_no || poData.purchaseBookingOrderNumber || loadedForm.purchaseOrderNo || poNo || "";
-          const contractNumber = poData.purchase_contract_no || poData.purchaseContractNo || loadedForm.purchaseContractNo || "";
-
-          setSavedOrderId(poData.id || orderId || "");
-          setSavedOrderNo(poNumber);
-
-          const mergedCountryId = loadedForm.countryId || poData.country_id || poData.countryId || "";
-          const mergedCountryBranchId = loadedForm.countryBranchId || poData.country_branch_id || poData.countryBranchId || poData.branch_id || poData.branchId || "";
-          const mergedCityBranchId = loadedForm.cityBranchId || poData.city_branch_id || poData.cityBranchId || "";
-
-          setForm((prev) => ({
-            ...prev,
-            ...loadedForm,
-            countryId: mergedCountryId,
-            countryBranchId: mergedCountryBranchId,
-            cityBranchId: mergedCityBranchId,
-            // Retain PO/Contract identification numbers
-            purchaseOrderNo: poNumber,
-            purchaseContractNo: contractNumber,
-            // 5-language business-data record computed server-side on save (see
-            // saveEnterpriseRecordTranslations calls in the orders API routes) — a sibling of
-            // `form` inside form_data, not part of the saved form itself. Read by localizeBiz()
-            // so Complete Summary / Voucher / Print show the stored translation for the active
-            // language instead of always the raw English/entry-language text.
-            translations: rawFormData.translations || poData.translations || prev.translations || null,
-          }));
-          setScopeConfirmed(true);
-
-          // Sync search display labels from the loaded account names
-          if (loadedForm.purchaseAccountName || loadedForm.purchaseAccountNo) {
-            setPurchaseSearch(loadedForm.purchaseAccountName || loadedForm.purchaseAccountNo || "");
-          }
-          if (loadedForm.salesAccountName || loadedForm.salesAccountNo) {
-            setSalesSearch(loadedForm.salesAccountName || loadedForm.salesAccountNo || "");
-          }
-
-          if (Array.isArray(loadedGoods) && loadedGoods.length) {
-            setGoodsEntries(loadedGoods);
-          }
-
-          // When loading for edit, always show the editable form (not the transfer success screen)
-          setIsTransferred(false);
-          setTransferredData(null);
-
-          // Render the editing wizard directly at Step 1 (booking) for editing
-          setActiveTab("booking");
-          setSaveMessage("Purchase order loaded successfully.");
-        } else {
-          setSaveMessage(`Purchase order not found.`);
-        }
-      } catch (err) {
-        if (cancelled) return;
-        setSaveMessage(err instanceof Error ? err.message : "Error loading purchase order.");
-      } finally {
-        if (!cancelled) setSavingOrder(false);
-      }
-    }
-
-    loadPO();
-    return () => {
-      cancelled = true;
-    };
+    handleSearchBookingOrder(orderId || poNo);
   }, [
     searchParams.get("purchaseOrderNo"),
     searchParams.get("id"),
     searchParams.get("purchaseOrderId"),
     !!activeSession,
-    // Re-fetch on language switch so goods_name/brand/unit translations resolve for the
-    // newly-selected language without requiring a page reload (see resolveGoodsEntriesLanguage
-    // in app/api/erp/purchases/orders/[id]/route.ts).
     lang
   ]);
 
@@ -2305,33 +2326,126 @@ export function PurchaseOrderWizard({ session }) {
 
   const handleEditGoodsEntry = (index) => {
     const row = goodsEntries[index];
+    if (!row) return;
+    setEditingGoodsIndex(index);
     setForm((prev) => ({
       ...prev,
-      goodsName: row.goodsName,
-      size: row.size,
-      brand: row.brand,
-      origin: row.origin,
-      hsCode: row.hsCode,
-      qtyName: row.qtyName,
-      qtyNo: row.qtyNo,
-      qtyKgs: row.qtyKgs,
-      emptyKgs: row.emptyKgs,
-      netWeight: row.netWeight,
-      priceType: row.priceType,
-      divideType: row.divideType,
-      divideWeight: row.divideWeight,
-      coursePrice: row.coursePrice,
-      currencyType: row.currencyType,
-      purchaseCurrency: row.purchaseCurrency,
-      exchangeRate: row.exchangeRate,
-      operator: row.op,
-      allotName: row.allotName,
-      manualTotalAmount: row.totalAmount,
-      manualFinalAmount: row.finalAmount
+      goodsName: row.goodsName || "",
+      size: row.size || "",
+      brand: row.brand || "",
+      origin: row.origin || "",
+      hsCode: row.hsCode || "",
+      qtyName: row.qtyName || "BAGS",
+      qtyNo: Number(row.qtyNo || 0),
+      qtyKgs: Number(row.qtyKgs || 0),
+      emptyKgs: Number(row.emptyKgs || 0),
+      netWeight: row.netWeight !== undefined ? row.netWeight : "",
+      priceType: row.priceType || "P/KGs",
+      divideType: row.divideType || "D/KGs",
+      divideWeight: Number(row.divideWeight || 1),
+      coursePrice: Number(row.coursePrice || 0),
+      currencyType: row.currencyType || prev.currencyType || "USD",
+      purchaseCurrency: row.purchaseCurrency || prev.purchaseCurrency || "USD",
+      secondaryCurrency: row.secondaryCurrency || prev.secondaryCurrency || "AED",
+      exchangeRate: Number(row.exchangeRate || prev.exchangeRate || 1),
+      operator: row.op || prev.operator || "*",
+      allotName: row.allotName || "",
+      manualTotalAmount: row.totalAmount !== undefined ? row.totalAmount : "",
+      manualFinalAmount: row.finalAmount !== undefined ? row.finalAmount : ""
     }));
-    setGoodsEntries((prev) => prev.filter((_, idx) => idx !== index));
     setActiveTab("goods");
-    setSaveMessage("Item moved to form for editing.");
+    setSaveMessage(`Editing Item #${index + 1} (${row.goodsName || "Item"}). Modify values below and click "Update Item".`);
+  };
+
+  const handleUpdateGoodsEntry = async () => {
+    if (editingGoodsIndex === null || editingGoodsIndex === undefined) {
+      handleAddGoodsEntry();
+      return;
+    }
+    const searchName = (form.goodsName || "").trim().toUpperCase();
+    if (!searchName) {
+      alert(t(lang, "purchase.please_select_goods_name", "Please select or enter Goods Name before updating."));
+      return;
+    }
+    const selectedGood = dbGoods.find(g =>
+      (g.goods_name || g.goodsName || "").trim().toUpperCase() === searchName
+    );
+    const calculated = calculateItemTotals(form);
+    const updatedItem = {
+      ...goodsEntries[editingGoodsIndex],
+      allotName: form.allotName || goodsEntries[editingGoodsIndex]?.allotName || `ALT-${Math.floor(1000 + Math.random() * 9000)}`,
+      goodsId: selectedGood?.id || goodsEntries[editingGoodsIndex]?.goodsId || null,
+      goodsName: form.goodsName,
+      size: form.size || "-",
+      brand: form.brand || "-",
+      origin: form.origin || "-",
+      hsCode: form.hsCode || "-",
+      qtyName: form.qtyName || "BAGS",
+      qtyNo: Number(form.qtyNo || 0),
+      qtyKgs: Number(form.qtyKgs || 0),
+      grossWeight: calculated.grossWeight,
+      emptyKgs: Number(form.emptyKgs || 0),
+      netWeight: calculated.netWeight,
+      priceType: form.priceType || "P/KGs",
+      divideType: form.divideType || "D/KGs",
+      divideWeight: Number(form.divideWeight || 1),
+      coursePrice: Number(form.coursePrice || 0),
+      currencyType: form.currencyType || "USD",
+      purchaseCurrency: form.purchaseCurrency || form.currencyType || "USD",
+      secondaryCurrency: form.secondaryCurrency || "AED",
+      exchangeRate: Number(form.exchangeRate || 1),
+      totalAmount: form.manualTotalAmount !== undefined && form.manualTotalAmount !== "" ? Number(form.manualTotalAmount) : calculated.totalAmount,
+      op: form.operator || "*",
+      finalAmount: form.manualFinalAmount !== undefined && form.manualFinalAmount !== "" ? Number(form.manualFinalAmount) : calculated.finalAmount
+    };
+
+    setGoodsEntries((prev) => {
+      const next = [...prev];
+      next[editingGoodsIndex] = updatedItem;
+      return next;
+    });
+
+    const savedIdx = editingGoodsIndex;
+    setEditingGoodsIndex(null);
+    setSaveMessage(`Item #${savedIdx + 1} updated successfully.`);
+    // Reset form inputs for next item
+    setForm((prev) => ({
+      ...prev,
+      goodsName: "",
+      size: "",
+      brand: "",
+      origin: "",
+      hsCode: "",
+      qtyNo: 0,
+      qtyKgs: 0,
+      emptyKgs: 0,
+      netWeight: "",
+      coursePrice: 0,
+      allotName: `ALT-${Math.floor(4424 + Math.random() * 1000)}`,
+      manualTotalAmount: "",
+      manualFinalAmount: ""
+    }));
+  };
+
+  const handleCancelEditGoodsEntry = () => {
+    setEditingGoodsIndex(null);
+    setForm((prev) => ({
+      ...prev,
+      goodsName: "",
+      size: "",
+      brand: "",
+      origin: "",
+      hsCode: "",
+      qtyNo: 0,
+      qtyKgs: 0,
+      emptyKgs: 0,
+      netWeight: "",
+      coursePrice: 0,
+      allotName: `ALT-${Math.floor(4424 + Math.random() * 1000)}`,
+      manualTotalAmount: "",
+      manualFinalAmount: ""
+    }));
+    setSaveMessage("Item editing cancelled.");
   };
 
   const handleViewGoodsEntry = (index) => {
@@ -2581,10 +2695,6 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
         if (searchParams.get("id") || searchParams.get("purchaseOrderNo")) {
           router.push("/dashboard/purchase/purchase-booking-journal-report");
         }
-      } else if (savedOrderId) {
-        // Editing an existing order — close form and show the list
-        setIsFormOpen(false);
-        router.push("/dashboard/purchase/purchase-booking-journal-report");
       } else {
         setActiveTab("report");
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -3429,6 +3539,30 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </span>
           <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider pr-1">{t(lang, "purchase.live_badge", "Live")}</span>
+        </div>
+        <div className="hidden sm:flex items-center gap-1 bg-background border border-input rounded-md px-2 py-0.5 shadow-xs">
+          <Search className="h-3 w-3 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder={t(lang, "purchase.search_booking_placeholder", "Load Booking No...")}
+            value={bookingSearchInput}
+            onChange={(e) => setBookingSearchInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleSearchBookingOrder(bookingSearchInput);
+              }
+            }}
+            className="w-28 sm:w-36 bg-transparent text-[10px] font-bold outline-none text-foreground placeholder:text-muted-foreground/70"
+          />
+          <button
+            type="button"
+            disabled={bookingSearchLoading || !bookingSearchInput.trim()}
+            onClick={() => handleSearchBookingOrder(bookingSearchInput)}
+            className="text-[9px] font-black uppercase text-primary hover:text-primary/80 disabled:opacity-40"
+          >
+            {bookingSearchLoading ? "..." : t(lang, "common.load", "Load")}
+          </button>
         </div>
         <Button
           type="button"
@@ -4651,7 +4785,14 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                             </tr>
                           ) : (
                             goodsEntries.map((row, index) => (
-                              <tr key={index} className="border-t border-border hover:bg-muted/50 transition">
+                              <tr
+                                key={index}
+                                className={`border-t border-border transition ${
+                                  editingGoodsIndex === index
+                                    ? "bg-amber-500/15 border-l-4 border-l-amber-500 font-bold"
+                                    : "hover:bg-muted/50"
+                                }`}
+                              >
                                 <td className="px-3 py-2 text-center font-mono text-muted-foreground">{index + 1}</td>
                                 <td className="px-3 py-2 font-black text-primary">{row.goodsName}</td>
                                 <td className="px-3 py-2 text-center font-semibold">{row.size}</td>
@@ -4941,6 +5082,87 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                         placeholder={t(lang, "purchase.booking_remarks_placeholder", "Write booking terms, payment notes, invoice note, or shipping instruction...")}
                         className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] resize-none"
                       />
+                    </div>
+
+                    {/* Currency & Conversion Configuration */}
+                    <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3 mt-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[10px] font-black uppercase text-emerald-700 dark:text-emerald-400 tracking-wider">
+                          {t(lang, "purchase.booking_currency_title", "Booking Currency & Conversion (USD → AED / Dirham)")}
+                        </span>
+                        <span className="text-[9px] font-mono font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                          {form.currencyType || "USD"} → {form.secondaryCurrency || "AED"}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-[10px]">
+                        <div>
+                          <label className="block text-[9.5px] font-bold text-foreground mb-1">
+                            {t(lang, "purchase.purchase_currency", "Purchase Currency (Invoice)")}
+                          </label>
+                          <select
+                            value={form.currencyType || "USD"}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setForm(prev => ({
+                                ...prev,
+                                currencyType: val,
+                                purchaseCurrency: val
+                              }));
+                            }}
+                            className="w-full bg-background border border-input rounded px-2 py-1 text-foreground font-bold h-8 text-xs outline-none focus:border-primary"
+                          >
+                            {CURRENCY_OPTIONS.map(c => (
+                              <option key={c} value={c}>{c} {c === "USD" ? "($ Dollar)" : c === "AED" ? "(Dirham)" : ""}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-[9.5px] font-bold text-foreground mb-1">
+                            {t(lang, "purchase.final_currency", "Final / Settlement Currency")}
+                          </label>
+                          <select
+                            value={form.secondaryCurrency || "AED"}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setForm(prev => ({
+                                ...prev,
+                                secondaryCurrency: val,
+                                paymentCurrency: val
+                              }));
+                            }}
+                            className="w-full bg-background border border-input rounded px-2 py-1 text-foreground font-bold h-8 text-xs outline-none focus:border-primary"
+                          >
+                            {CURRENCY_OPTIONS.map(c => (
+                              <option key={c} value={c}>{c} {c === "AED" ? "(Dirham / DH)" : c === "USD" ? "($ Dollar)" : ""}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-[9.5px] font-bold text-foreground mb-1">
+                            {t(lang, "purchase.exchange_rate", "Exchange Rate")} ({form.currencyType || "USD"} → {form.secondaryCurrency || "AED"})
+                          </label>
+                          <div className="flex gap-1">
+                            <input
+                              type="number"
+                              step="any"
+                              value={form.exchangeRate !== undefined ? form.exchangeRate : 1}
+                              onChange={(e) => setValue("exchangeRate", Number(e.target.value))}
+                              placeholder="3.6725"
+                              className="w-full bg-background border border-input rounded px-2 py-1 text-foreground font-mono font-bold h-8 text-xs outline-none focus:border-primary"
+                            />
+                            <select
+                              value={form.operator || "*"}
+                              onChange={(e) => setValue("operator", e.target.value)}
+                              className="w-10 bg-background border border-input rounded text-center text-xs font-black h-8 outline-none"
+                            >
+                              <option value="*">*</option>
+                              <option value="/">/</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <div className="flex justify-end gap-2 pt-2 border-t border-border mt-2">
@@ -5290,6 +5512,17 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                       />
                     </div>
 
+                    {editingGoodsIndex !== null && (
+                      <div className="bg-amber-500/10 border border-amber-500/30 p-2.5 rounded-lg flex items-center justify-between text-xs text-amber-700 dark:text-amber-300">
+                        <span className="font-bold flex items-center gap-1.5">
+                          <Edit3 className="h-3.5 w-3.5 text-amber-600" /> Editing Item #{editingGoodsIndex + 1}: {goodsEntries[editingGoodsIndex]?.goodsName || "Cargo Item"}
+                        </span>
+                        <button type="button" onClick={handleCancelEditGoodsEntry} className="text-[10px] font-bold text-amber-700 hover:text-amber-900 underline">
+                          ✕ Cancel Edit
+                        </button>
+                      </div>
+                    )}
+
                     <div className="bg-emerald-50/50 dark:bg-emerald-950/20 p-3 rounded-lg border border-emerald-100 dark:border-emerald-900 mt-2">
                       <h4 className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400 mb-2">{t(lang, "purchase.purchase_currency_conversion", "Purchase Currency & Conversion")}</h4>
                       <div className="grid grid-cols-2 gap-3 mb-2">
@@ -5303,15 +5536,16 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                             }}
                             className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
                           >
-                            {CURRENCY_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                            {CURRENCY_OPTIONS.map(c => <option key={c} value={c}>{c} {c === "USD" ? "($)" : c === "AED" ? "(Dirham)" : ""}</option>)}
                           </select>
                         </div>
                         <div>
-                          <label className="block text-[9px] text-emerald-700 dark:text-emerald-500 mb-1 font-bold">{t(lang, "purchase.exchange_rate_to", "Exchange Rate to")} {form.secondaryCurrency || "PKR"}</label>
+                          <label className="block text-[9px] text-emerald-700 dark:text-emerald-500 mb-1 font-bold">{t(lang, "purchase.exchange_rate_to", "Exchange Rate to")} {form.secondaryCurrency || "AED"}</label>
                           <div className="flex gap-1.5">
                             <input
                               type="number"
-                              value={form.exchangeRate || 1}
+                              step="any"
+                              value={form.exchangeRate !== undefined ? form.exchangeRate : 1}
                               onChange={(e) => {
                                 setValue("exchangeRate", Number(e.target.value));
                                 setValue("manualFinalAmount", "");
@@ -5340,17 +5574,17 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                             value={form.manualTotalAmount !== undefined && form.manualTotalAmount !== "" ? form.manualTotalAmount : currentItemTotals.totalAmount}
                             onChange={(e) => setValue("manualTotalAmount", e.target.value === "" ? "" : Number(e.target.value))}
                             placeholder={(Number(currentItemTotals?.totalAmount) || 0).toFixed(2)}
-                            className="w-full bg-background border border-emerald-200 dark:border-emerald-800 rounded px-2.5 py-1.5 text-foreground outline-none focus:border-emerald-500 text-[10px] font-mono"
+                            className="w-full bg-background border border-emerald-200 dark:border-emerald-800 rounded px-2.5 py-1.5 text-foreground outline-none focus:border-emerald-500 text-[10px] font-mono font-bold"
                           />
                         </div>
                         <div>
-                          <label className="block text-[9px] text-emerald-700 dark:text-emerald-500 mb-1 font-bold">{t(lang, "purchase.th_final", "Final")} ({form.secondaryCurrency || "PKR"})</label>
+                          <label className="block text-[9px] text-emerald-700 dark:text-emerald-500 mb-1 font-bold">{t(lang, "purchase.th_final", "Final")} ({form.secondaryCurrency || "AED"})</label>
                           <input
                             type="number"
                             value={form.manualFinalAmount !== undefined && form.manualFinalAmount !== "" ? form.manualFinalAmount : currentItemTotals.finalAmount}
                             onChange={(e) => setValue("manualFinalAmount", e.target.value === "" ? "" : Number(e.target.value))}
                             placeholder={(Number(currentItemTotals?.finalAmount) || 0).toFixed(2)}
-                            className="w-full bg-background border border-emerald-200 dark:border-emerald-800 rounded px-2.5 py-1.5 text-foreground outline-none focus:border-emerald-500 text-[10px] font-mono"
+                            className="w-full bg-background border border-emerald-200 dark:border-emerald-800 rounded px-2.5 py-1.5 text-foreground outline-none focus:border-emerald-500 text-[10px] font-mono font-black text-emerald-600 dark:text-emerald-400"
                           />
                         </div>
                       </div>
@@ -5360,7 +5594,20 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                   <div className="flex justify-between gap-2 pt-4 border-t border-border mt-4">
                     <Button type="button" variant="outline" onClick={() => setActiveTab("booking")} className="font-bold text-[10px] h-8 px-6 text-slate-600">{t(lang, "common.back", "Back")}</Button>
                     <div className="flex gap-2">
-                      <Button type="button" onClick={handleAddGoodsEntry} className="font-bold text-[10px] h-8 px-6 bg-emerald-600 hover:bg-emerald-700 text-white">{t(lang, "purchase.add_item_to_list", "+ Add Item to List")}</Button>
+                      {editingGoodsIndex !== null ? (
+                        <>
+                          <Button type="button" onClick={handleCancelEditGoodsEntry} variant="outline" className="font-bold text-[10px] h-8 px-4 text-rose-600 border-rose-200 hover:bg-rose-50">
+                            ✕ Cancel
+                          </Button>
+                          <Button type="button" onClick={handleUpdateGoodsEntry} className="font-bold text-[10px] h-8 px-6 bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
+                            ✓ Update Item (Save Changes)
+                          </Button>
+                        </>
+                      ) : (
+                        <Button type="button" onClick={handleAddGoodsEntry} className="font-bold text-[10px] h-8 px-6 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm">
+                          {t(lang, "purchase.add_item_to_list", "+ Add Item to List")}
+                        </Button>
+                      )}
                       <Button type="button" onClick={() => setActiveTab("others")} className="font-bold text-[10px] h-8 px-6 bg-primary text-primary-foreground">{t(lang, "purchase.next_other_details", "Next: Other Details")}</Button>
                     </div>
                   </div>
@@ -5411,21 +5658,25 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
               >
                 <Printer className="h-4 w-4 mr-1.5 text-blue-600" /> {t(lang, "purchase.print_a4_voucher", "Print A4 Voucher")}
               </Button>
-              {!savedOrderId && (
+              <Button
+                type="button"
+                onClick={() => handleSavePurchaseOrder(false)}
+                disabled={savingOrder}
+                className="font-bold text-xs h-9 px-5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all flex items-center gap-1.5"
+              >
+                {savingOrder ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                {savingOrder ? t(lang, "common.saving", "Saving...") : (savedOrderId ? t(lang, "purchase.update_purchase_order", "Update Purchase Order") : t(lang, "purchase.save_purchase_order", "Save Purchase Order"))}
+              </Button>
+              {!isTransferred && (
                 <Button
                   type="button"
-                  onClick={() => handleSavePurchaseOrder(false)}
-                  disabled={savingOrder}
-                  className="font-bold text-xs h-9 px-5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all flex items-center gap-1.5"
-                >
-                  {savingOrder ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                  {savingOrder ? t(lang, "common.saving", "Saving...") : t(lang, "purchase.save_purchase_order", "Save Purchase Order")}
-                </Button>
-              )}
-              {savedOrderId && !isTransferred && (
-                <Button
-                  type="button"
-                  onClick={() => setTransferConfirmModal(true)}
+                  onClick={() => {
+                    if (!savedOrderId) {
+                      handleSavePurchaseOrder(false).then(() => setTransferConfirmModal(true));
+                    } else {
+                      setTransferConfirmModal(true);
+                    }
+                  }}
                   disabled={savingOrder}
                   className="font-bold text-xs h-9 px-5 bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all flex items-center gap-1.5"
                 >

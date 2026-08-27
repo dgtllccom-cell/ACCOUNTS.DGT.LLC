@@ -7,8 +7,15 @@ import {
   Calendar, Info, Wallet, Users, Clock
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { ReportStatusLegend, StatusBadge, ERP_STATUS_COLORS } from "./report-status-legend";
 import { ReportPagination } from "./report-pagination";
+
+function useTt() {
+  const lang = useActiveLanguage() || "en";
+  return (key: string, fallback: string) => t(lang, key, fallback);
+}
 
 // ─────────────────────────────────────────────────────────────
 // KPI Card Types & Component
@@ -97,38 +104,40 @@ export type QuickInfoKpi = {
 // ─────────────────────────────────────────────────────────────
 // Bill Summary KPI Group — matches reference design card 1
 // ─────────────────────────────────────────────────────────────
-function BillSummaryCard({ data, title = "BILL SUMMARY" }: { data: BillSummaryKpi; title?: string }) {
+function BillSummaryCard({ data, title }: { data: BillSummaryKpi; title?: string }) {
+  const tt = useTt();
+  const heading = title ?? tt("ers.bill_summary", "BILL SUMMARY");
   return (
     <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-sm flex flex-col gap-1.5">
       <div className="flex items-center gap-2 mb-1">
         <div className="rounded-lg p-1.5 bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-100 dark:border-indigo-900">
           <ClipboardList className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
         </div>
-        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">{title}</span>
+        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">{heading}</span>
       </div>
       <div className="flex items-center justify-between text-xs">
-        <span className="text-slate-600 dark:text-slate-400 font-medium">Total Bills</span>
+        <span className="text-slate-600 dark:text-slate-400 font-medium">{tt("ers.total_bills", "Total Bills")}</span>
         <span className="font-black text-slate-900 dark:text-slate-100 tabular-nums">{data.total.toLocaleString()}</span>
       </div>
       <div className="flex items-center justify-between text-xs">
-        <span className="text-slate-500 dark:text-slate-400 font-medium">Draft</span>
+        <span className="text-slate-500 dark:text-slate-400 font-medium">{tt("ers.draft", "Draft")}</span>
         <span className="font-bold text-slate-600 dark:text-slate-300 tabular-nums">{data.draft.toLocaleString()}</span>
       </div>
       <div className="flex items-center justify-between text-xs">
-        <span className="text-slate-500 dark:text-slate-400 font-medium">Accepted (Not Transferred)</span>
+        <span className="text-slate-500 dark:text-slate-400 font-medium">{tt("ers.accepted_not_transferred", "Accepted (Not Transferred)")}</span>
         <span className="font-black text-amber-600 dark:text-amber-400 tabular-nums">{data.accepted.toLocaleString()}</span>
       </div>
       <div className="flex items-center justify-between text-xs">
-        <span className="text-slate-500 dark:text-slate-400 font-medium">Transferred</span>
+        <span className="text-slate-500 dark:text-slate-400 font-medium">{tt("ers.transferred", "Transferred")}</span>
         <span className="font-bold text-slate-900 dark:text-slate-100 tabular-nums">{data.transferred.toLocaleString()}</span>
       </div>
       <div className="flex items-center justify-between text-xs">
-        <span className="text-slate-500 dark:text-slate-400 font-medium">Completed</span>
+        <span className="text-slate-500 dark:text-slate-400 font-medium">{tt("ers.completed", "Completed")}</span>
         <span className="font-black text-emerald-600 dark:text-emerald-400 tabular-nums">{data.completed.toLocaleString()}</span>
       </div>
       {(data.cancelled ?? 0) > 0 && (
         <div className="flex items-center justify-between text-xs">
-          <span className="text-slate-500 dark:text-slate-400 font-medium">Cancelled</span>
+          <span className="text-slate-500 dark:text-slate-400 font-medium">{tt("ers.cancelled", "Cancelled")}</span>
           <span className="font-bold text-red-600 dark:text-red-400 tabular-nums">{(data.cancelled ?? 0).toLocaleString()}</span>
         </div>
       )}
@@ -140,6 +149,7 @@ function BillSummaryCard({ data, title = "BILL SUMMARY" }: { data: BillSummaryKp
 // Amount Summary KPI Group — card 2
 // ─────────────────────────────────────────────────────────────
 function AmountSummaryCard({ data }: { data: AmountSummaryKpi }) {
+  const tt = useTt();
   const fmt = (v: number) => v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   return (
     <div className="rounded-2xl border border-blue-200 dark:border-blue-900 bg-white dark:bg-slate-900 p-4 shadow-sm flex flex-col gap-1.5">
@@ -148,28 +158,28 @@ function AmountSummaryCard({ data }: { data: AmountSummaryKpi }) {
           <Wallet className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
         </div>
         <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-          TOTAL AMOUNTS ({data.currency})
+          {tt("ers.total_amounts", "Total Amounts")} ({data.currency})
         </span>
       </div>
       <div className="flex items-center justify-between text-xs">
-        <span className="text-slate-600 dark:text-slate-400 font-medium">{data.label ?? "Total Purchase Amount"}</span>
+        <span className="text-slate-600 dark:text-slate-400 font-medium">{data.label ?? tt("ers.total_purchase_amount", "Total Purchase Amount")}</span>
         <span className="font-black text-blue-700 dark:text-blue-300 tabular-nums">{fmt(data.totalAmount)}</span>
       </div>
       {data.acceptedAmount !== undefined && (
         <div className="flex items-center justify-between text-xs">
-          <span className="text-slate-500 dark:text-slate-400 font-medium">Accepted (Not Transferred)</span>
+          <span className="text-slate-500 dark:text-slate-400 font-medium">{tt("ers.accepted_not_transferred", "Accepted (Not Transferred)")}</span>
           <span className="font-black text-amber-600 dark:text-amber-400 tabular-nums">{fmt(data.acceptedAmount)}</span>
         </div>
       )}
       {data.transferredAmount !== undefined && (
         <div className="flex items-center justify-between text-xs">
-          <span className="text-slate-500 dark:text-slate-400 font-medium">Transferred</span>
+          <span className="text-slate-500 dark:text-slate-400 font-medium">{tt("ers.transferred", "Transferred")}</span>
           <span className="font-bold text-slate-700 dark:text-slate-200 tabular-nums">{fmt(data.transferredAmount)}</span>
         </div>
       )}
       {data.completedAmount !== undefined && (
         <div className="flex items-center justify-between text-xs">
-          <span className="text-slate-500 dark:text-slate-400 font-medium">Completed</span>
+          <span className="text-slate-500 dark:text-slate-400 font-medium">{tt("ers.completed", "Completed")}</span>
           <span className="font-black text-emerald-600 dark:text-emerald-400 tabular-nums">{fmt(data.completedAmount)}</span>
         </div>
       )}
@@ -181,6 +191,7 @@ function AmountSummaryCard({ data }: { data: AmountSummaryKpi }) {
 // Branches KPI Group — card 3
 // ─────────────────────────────────────────────────────────────
 function BranchesCard({ data }: { data: BranchSummaryKpi }) {
+  const tt = useTt();
   return (
     <div className="rounded-2xl border border-violet-200 dark:border-violet-900 bg-white dark:bg-slate-900 p-4 shadow-sm flex flex-col gap-1.5">
       <div className="flex items-center gap-2 mb-1">
