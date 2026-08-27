@@ -177,7 +177,6 @@ const PARALLEL_ALLOW = new Set([
 // ones; these are tracked tech-debt to migrate into lib/i18n/ui.ts (see docs/i18n-audit-inventory.txt).
 const KNOWN_PARALLEL = new Set([
   "app/dashboard/kyc-reports/page.tsx",
-  "components/ui/party-person-select.tsx",
 ]);
 const parallelNew = [];
 const parallelKnown = [];

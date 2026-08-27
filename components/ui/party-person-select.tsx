@@ -43,17 +43,6 @@ interface PartyPersonSelectProps {
   allowChangePartyType?: boolean;
 }
 
-const PARTY_TYPE_LABELS: Record<string, Record<SupportedLang, string>> = {
-  all: { en: "All Parties", ur: "تمام فریقین", ar: "جميع الأطراف", fa: "همه اشخاص", ps: "ټول اړخونه" },
-  customer: { en: "Customer / Client", ur: "گاہک / خریدار", ar: "العميل", fa: "مشتری", ps: "پیرودونکی" },
-  employee: { en: "Employee / Staff", ur: "ملازم / عملہ", ar: "الموظف", fa: "کارمند", ps: "کارکوونکی" },
-  driver: { en: "Truck Driver", ur: "ٹرک ڈرائیور", ar: "سائق الشاحنة", fa: "راننده لاری", ps: "موټر چلوونکی" },
-  truck_owner: { en: "Truck Owner", ur: "ٹرک مالک", ar: "مالك الشاحنة", fa: "مالک موتر", ps: "موټر خاوند" },
-  clearing_agent: { en: "Clearing / Custom Agent", ur: "کلیرنگ ایجنٹ", ar: "مخلص جمركي", fa: "مامور گمرک", ps: "ګمرکي استازی" },
-  vendor: { en: "Supplier / Vendor", ur: "سپلائر / وینڈر", ar: "المورد", fa: "تامین کننده", ps: "عرضه کونکی" },
-  business: { en: "Corporate / Business", ur: "کاروباری ادارہ", ar: "الشركة / المؤسسة", fa: "شرکت تجاری", ps: "سوداګریزه اداره" },
-};
-
 type SupportedLang = "en" | "ur" | "ar" | "fa" | "ps";
 
 export function PartyPersonSelect({
@@ -198,14 +187,14 @@ export function PartyPersonSelect({
               onChange={(e) => setSelectedPartyType(e.target.value as PartyType)}
               className="bg-transparent text-xs font-medium text-slate-700 dark:text-slate-200 border-none outline-none cursor-pointer pr-1"
             >
-              <option value="all">{PARTY_TYPE_LABELS.all[language] || "All Parties"}</option>
-              <option value="customer">{PARTY_TYPE_LABELS.customer[language] || "Customer"}</option>
-              <option value="employee">{PARTY_TYPE_LABELS.employee[language] || "Employee"}</option>
-              <option value="driver">{PARTY_TYPE_LABELS.driver[language] || "Driver"}</option>
-              <option value="truck_owner">{PARTY_TYPE_LABELS.truck_owner[language] || "Truck Owner"}</option>
-              <option value="clearing_agent">{PARTY_TYPE_LABELS.clearing_agent[language] || "Clearing Agent"}</option>
-              <option value="vendor">{PARTY_TYPE_LABELS.vendor[language] || "Vendor / Supplier"}</option>
-              <option value="business">{PARTY_TYPE_LABELS.business[language] || "Business"}</option>
+              <option value="all">{uiText(language, "pps.all", "All Parties")}</option>
+              <option value="customer">{uiText(language, "pps.customer", "Customer / Client")}</option>
+              <option value="employee">{uiText(language, "pps.employee", "Employee / Staff")}</option>
+              <option value="driver">{uiText(language, "pps.driver", "Truck Driver")}</option>
+              <option value="truck_owner">{uiText(language, "pps.truck_owner", "Truck Owner")}</option>
+              <option value="clearing_agent">{uiText(language, "pps.clearing_agent", "Clearing / Custom Agent")}</option>
+              <option value="vendor">{uiText(language, "pps.vendor", "Supplier / Vendor")}</option>
+              <option value="business">{uiText(language, "pps.business", "Corporate / Business")}</option>
             </select>
           </div>
         )}
