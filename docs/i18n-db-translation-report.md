@@ -136,6 +136,37 @@ record_translations … the actual saved rows must be tested."*
 rows were removed after the test (`deleted_at` set, then hard-deleted; verified 0
 rows remain for the marker).
 
+## Sentence-level test — after phrase-dictionary expansion (2026-08-27, commit e2e3ac3)
+
+Requested: *"Test real complete sentences… Provide database evidence showing all five
+language values and the review status."*
+
+Inserted 4 real `roznamcha_entries` (marker `I18N-SENT-*`), ran the app write-path
+`syncRecordTranslations()`, read back `record_translations`, then cleaned up
+(soft-delete + hard delete; verified 0 rows remain).
+
+| EN narration | UR (record_translations.urdu_text) | DB status / engine | coverage |
+|---|---|---|---|
+| Cash paid for office rent this month | دفتر کے کرایے کے لیے نقد ادائیگی اس ماہ | `needs_review` / `auto_unverified` | fully_translated · needsReview |
+| Freight charges and loading charges paid to transport company | فریٹ چارجز اور لوڈنگ چارجز کو ادا کیا ٹرانسپورٹ کمپنی | `needs_review` / `auto_unverified` | fully_translated · needsReview |
+| Advance payment for goods purchase and freight | مال کی خریداری کے لیے پیشگی ادائیگی اور بار برداری | `needs_review` / `auto_unverified` | fully_translated · needsReview |
+| Bank transfer received from customer against invoice | بینک ٹرانسفر انوائس کے عوض گاہک سے موصول | `needs_review` / `auto_unverified` | fully_translated · needsReview |
+
+All four rows now carry a **distinct value in every one of `urdu_text / arabic_text /
+persian_text / pashto_text`** (verified against `english_text`). Before the dictionary
+expansion the same first sentence produced `کیش paid for office` — word-level only.
+
+**Review status:** the DB stores `translation_status = needs_review`,
+`translated_by_engine = auto_unverified`. `classifyTranslationCoverage()`
+(lib/i18n/verified-record-translations.ts) returns `status = fully_translated`,
+`needsReview = true`. Machine output — full or partial — is never surfaced as
+"completed"; only a human-verified row (`engine = manual`) returns
+`status = human_verified`, `needsReview = false`. The human review/correction UI
+already exists: `RecordTranslationCorrectionDialog`
+(`features/translations/components/record-translation-correction-dialog.tsx`).
+
+Automated regression test: `tests/i18n/sentence-translation-coverage.test.ts` (13 assertions).
+
 ## `i18n-scan.mjs` note
 
 The raw scan reports "625 unregistered eligible fields", but manual inspection shows
