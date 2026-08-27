@@ -982,6 +982,7 @@ function TopToolbar({
   fromDate,
   toDate
 }: TopToolbarProps) {
+  const lang = useActiveLanguage();
   function toggle(menu: ToolbarMenuKey) {
     setOpenMenu(openMenu === menu ? null : menu);
   }
@@ -1016,10 +1017,10 @@ function TopToolbar({
             : "text-[var(--ujr-title)]"
         )}
         onClick={handleTotalUsersClick}
-        title="Show all users"
+        title={t(lang, "ujr.kpi_total_title", "Show all users")}
       >
         <Users className="h-3.5 w-3.5" />
-        <span>Total</span>
+        <span>{t(lang, "ujr.kpi_total", "Total")}</span>
         <span className={cn(
           "ujr-metric-badge leading-none",
           isTotalUsersActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-700 dark:bg-slate-950 dark:text-slate-300"
@@ -1040,10 +1041,10 @@ function TopToolbar({
           setStatus(status === "active" ? "all" : "active");
           setDraftStatus(status === "active" ? "all" : "active");
         }}
-        title="Filter active users"
+        title={t(lang, "ujr.kpi_active_title", "Filter active users")}
       >
         <ShieldCheck className="h-3.5 w-3.5" />
-        <span>Active</span>
+        <span>{t(lang, "common.active", "Active")}</span>
         <span className={cn(
           "ujr-metric-badge leading-none",
           status === "active" ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
@@ -1064,10 +1065,10 @@ function TopToolbar({
           setShareBy(shareBy === "country" ? "all" : "country");
           setDraftShareBy(shareBy === "country" ? "all" : "country");
         }}
-        title="Filter country scope users"
+        title={t(lang, "ujr.kpi_country_title", "Filter country scope users")}
       >
         <Globe2 className="h-3.5 w-3.5" />
-        <span>Country Users</span>
+        <span>{t(lang, "ujr.kpi_country_users", "Country Users")}</span>
         <span className={cn(
           "ujr-metric-badge leading-none",
           shareBy === "country" ? "bg-white/20 text-white" : "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
@@ -1088,10 +1089,10 @@ function TopToolbar({
           setShareBy(shareBy === "branch" ? "all" : "branch");
           setDraftShareBy(shareBy === "branch" ? "all" : "branch");
         }}
-        title="Filter branch scope users"
+        title={t(lang, "ujr.kpi_branch_title", "Filter branch scope users")}
       >
         <Building2 className="h-3.5 w-3.5" />
-        <span>Branch Users</span>
+        <span>{t(lang, "ujr.kpi_branch_users", "Branch Users")}</span>
         <span className={cn(
           "ujr-metric-badge leading-none",
           shareBy === "branch" ? "bg-white/20 text-white" : "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300"
@@ -1109,10 +1110,10 @@ function TopToolbar({
             : "text-[var(--ujr-title)]"
         )}
         onClick={() => setAdminOnly(!adminOnly)}
-        title="Filter administrator users"
+        title={t(lang, "ujr.kpi_admin_title", "Filter administrator users")}
       >
         <UserCog className="h-3.5 w-3.5" />
-        <span>Admins</span>
+        <span>{t(lang, "ujr.kpi_admins", "Admins")}</span>
         <span className={cn(
           "ujr-metric-badge leading-none",
           adminOnly ? "bg-white/20 text-white" : "bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300"
@@ -1130,10 +1131,10 @@ function TopToolbar({
             : "text-[var(--ujr-title)]"
         )}
         onClick={() => setRecentLoginsOnly(!recentLoginsOnly)}
-        title="Filter users with recent logins"
+        title={t(lang, "ujr.kpi_recent_title", "Filter users with recent logins")}
       >
         <DownloadActionIcon className="h-3.5 w-3.5" />
-        <span>Recent Logins</span>
+        <span>{t(lang, "ujr.kpi_recent_logins", "Recent Logins")}</span>
         <span className={cn(
           "ujr-metric-badge leading-none",
           recentLoginsOnly ? "bg-white/20 text-white" : "bg-cyan-100 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-300"
@@ -1145,91 +1146,91 @@ function TopToolbar({
       <div className="border-l border-[var(--ujr-line)] h-6 mx-1 my-auto hidden lg:block"></div>
 
       <button className="ujr-primary-btn h-9 px-3 text-xs shadow-none border border-transparent" type="button" onClick={openNewUser}>
-        <UserPlus className="h-4 w-4" /> New User
+        <UserPlus className="h-4 w-4" /> {t(lang, "ujr.new_user", "New User")}
       </button>
 
       <div className="ujr-menu-wrap">
-        <ToolbarButton active={openMenu === "filters"} icon={Filter} label="Filters" onClick={() => toggle("filters")} />
+        <ToolbarButton active={openMenu === "filters"} icon={Filter} label={t(lang, "ujr.filters", "Filters")} onClick={() => toggle("filters")} />
         {openMenu === "filters" ? (
           <DropdownPanel widthClass="w-[min(700px,calc(100vw-2rem))]">
             <div className="grid gap-3 lg:grid-cols-2">
               <label className="lg:col-span-2">
-                <FieldLabel icon={Search} label="Search" />
+                <FieldLabel icon={Search} label={t(lang, "common.search", "Search")} />
                 <div className="relative mt-1.5">
                   <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ujr-muted)]" />
                   <input
                     className="ujr-input pr-9"
                     value={draftQuery}
                     onChange={(event) => setDraftQuery(event.target.value)}
-                    placeholder="Search user, ID, country, branch, role, permission..."
+                    placeholder={t(lang, "ujr.search_ph", "Search user, ID, country, branch, role, permission...")}
                   />
                 </div>
               </label>
 
               <div>
-                <FieldLabel icon={Calendar} label="Date Range" />
+                <FieldLabel icon={Calendar} label={t(lang, "ujr.date_range", "Date Range")} />
                 <div className="mt-1.5 grid gap-2 sm:grid-cols-2">
-                  <DateBox label="From Date" value={draftFromDate} onChange={setDraftFromDate} />
-                  <DateBox label="To Date" value={draftToDate} onChange={setDraftToDate} />
+                  <DateBox label={t(lang, "ujr.from_date", "From Date")} value={draftFromDate} onChange={setDraftFromDate} />
+                  <DateBox label={t(lang, "ujr.to_date", "To Date")} value={draftToDate} onChange={setDraftToDate} />
                 </div>
               </div>
 
               <SelectField
                 icon={SlidersHorizontal}
-                label="Share By"
+                label={t(lang, "ujr.share_by", "Share By")}
                 value={draftShareBy}
                 onChange={setDraftShareBy}
                 options={[
-                  { value: "all", label: "All Share By" },
-                  { value: "global", label: "Global" },
-                  { value: "country", label: "Country" },
-                  { value: "branch", label: "Branch" }
+                  { value: "all", label: t(lang, "ujr.all_share_by", "All Share By") },
+                  { value: "global", label: t(lang, "ujr.global", "Global") },
+                  { value: "country", label: t(lang, "common.country", "Country") },
+                  { value: "branch", label: t(lang, "common.branch", "Branch") }
                 ]}
               />
 
               <SelectField
                 icon={ShieldCheck}
-                label="Status"
+                label={t(lang, "common.status", "Status")}
                 value={draftStatus}
                 onChange={setDraftStatus}
                 options={[
-                  { value: "all", label: "All Status" },
-                  { value: "active", label: "Active" },
-                  { value: "inactive", label: "Inactive" }
+                  { value: "all", label: t(lang, "ujr.all_status", "All Status") },
+                  { value: "active", label: t(lang, "common.active", "Active") },
+                  { value: "inactive", label: t(lang, "ujr.inactive", "Inactive") }
                 ]}
               />
 
               <SelectField
                 icon={Shield}
-                label="Role"
+                label={t(lang, "ujr.role", "Role")}
                 value={draftRole}
                 onChange={setDraftRole}
-                options={[{ value: "all", label: "All Roles" }, ...(data?.filters.roles ?? [])]}
+                options={[{ value: "all", label: t(lang, "ujr.all_roles", "All Roles") }, ...(data?.filters.roles ?? [])]}
               />
 
               <SelectField
                 icon={Globe2}
-                label="Country"
+                label={t(lang, "common.country", "Country")}
                 value={draftCountryId}
                 onChange={setDraftCountryId}
-                options={[{ value: "all", label: "All Countries" }, ...(data?.filters.countries ?? [])]}
+                options={[{ value: "all", label: t(lang, "ujr.all_countries", "All Countries") }, ...(data?.filters.countries ?? [])]}
               />
 
               <SelectField
                 icon={Building2}
-                label="Branch"
+                label={t(lang, "common.branch", "Branch")}
                 value={draftBranchId}
                 onChange={setDraftBranchId}
-                options={[{ value: "all", label: "All Branches" }, ...(data?.filters.branches ?? [])]}
+                options={[{ value: "all", label: t(lang, "ujr.all_branches", "All Branches") }, ...(data?.filters.branches ?? [])]}
               />
             </div>
 
             <div className="mt-3 flex flex-wrap justify-end gap-2 border-t border-[var(--ujr-line)] pt-3">
               <button className="ujr-secondary-btn px-5" type="button" onClick={resetFilters}>
-                <RefreshCw className="h-4 w-4" /> Reset
+                <RefreshCw className="h-4 w-4" /> {t(lang, "common.reset", "Reset")}
               </button>
               <button className="ujr-primary-btn px-5" type="button" onClick={applyFilters}>
-                <Filter className="h-4 w-4" /> Apply Filters
+                <Filter className="h-4 w-4" /> {t(lang, "ujr.apply_filters", "Apply Filters")}
               </button>
             </div>
           </DropdownPanel>
@@ -1237,54 +1238,54 @@ function TopToolbar({
       </div>
 
       <div className="ujr-menu-wrap">
-        <ToolbarButton active={openMenu === "actions"} icon={Settings} label="Actions" onClick={() => toggle("actions")} />
+        <ToolbarButton active={openMenu === "actions"} icon={Settings} label={t(lang, "ujr.actions", "Actions")} onClick={() => toggle("actions")} />
         {openMenu === "actions" ? (
           <DropdownPanel widthClass="w-56">
-            <MenuActionButton icon={UserPlus} label="New User" onClick={openNewUser} />
-            <MenuActionButton icon={Filter} label="Apply Filters" onClick={applyFilters} />
-            <MenuActionButton icon={RefreshCw} label="Reset Filters" onClick={resetFilters} />
-            <MenuActionButton icon={Eye} label="Focus Table" onClick={() => document.querySelector(".ujr-table-card")?.scrollIntoView({ behavior: "smooth" })} />
+            <MenuActionButton icon={UserPlus} label={t(lang, "ujr.new_user", "New User")} onClick={openNewUser} />
+            <MenuActionButton icon={Filter} label={t(lang, "ujr.apply_filters", "Apply Filters")} onClick={applyFilters} />
+            <MenuActionButton icon={RefreshCw} label={t(lang, "ujr.reset_filters", "Reset Filters")} onClick={resetFilters} />
+            <MenuActionButton icon={Eye} label={t(lang, "ujr.focus_table", "Focus Table")} onClick={() => document.querySelector(".ujr-table-card")?.scrollIntoView({ behavior: "smooth" })} />
           </DropdownPanel>
         ) : null}
       </div>
 
       <div className="ujr-menu-wrap">
-        <ToolbarButton active={openMenu === "fields"} icon={Grid2X2} label="Fields" onClick={() => toggle("fields")} />
+        <ToolbarButton active={openMenu === "fields"} icon={Grid2X2} label={t(lang, "ujr.fields", "Fields")} onClick={() => toggle("fields")} />
         {openMenu === "fields" ? (
           <DropdownPanel widthClass="w-[min(360px,calc(100vw-2rem))]">
             <div className="grid gap-2 sm:grid-cols-2">
-              <CheckOption checked icon={Users} label="User ID / Name" />
-              <CheckOption checked icon={Shield} label="Role" />
-              <CheckOption checked icon={Globe2} label="Country / Branch" />
-              <CheckOption checked icon={ShieldCheck} label="Status" />
-              <CheckOption checked icon={Building2} label="Branch Type" />
-              <CheckOption checked icon={SlidersHorizontal} label="Share By" />
+              <CheckOption checked icon={Users} label={t(lang, "ujr.col_user_id_name", "User ID / Name")} />
+              <CheckOption checked icon={Shield} label={t(lang, "ujr.role", "Role")} />
+              <CheckOption checked icon={Globe2} label={t(lang, "ujr.col_country_branch", "Country / Branch")} />
+              <CheckOption checked icon={ShieldCheck} label={t(lang, "common.status", "Status")} />
+              <CheckOption checked icon={Building2} label={t(lang, "ujr.col_branch_type", "Branch Type")} />
+              <CheckOption checked icon={SlidersHorizontal} label={t(lang, "ujr.share_by", "Share By")} />
             </div>
           </DropdownPanel>
         ) : null}
       </div>
 
       <div className="ujr-menu-wrap">
-        <ToolbarButton active={openMenu === "more"} icon={MoreVertical} label="More" onClick={() => toggle("more")} />
+        <ToolbarButton active={openMenu === "more"} icon={MoreVertical} label={t(lang, "ujr.more", "More")} onClick={() => toggle("more")} />
         {openMenu === "more" ? (
           <DropdownPanel widthClass="w-60" alignRight>
-            <MenuActionButton icon={Edit3} label="Edit" onClick={editReport} />
-            <MenuActionButton icon={Printer} label="Print" onClick={printReport} />
-            <MenuActionButton icon={Printer} label="Export PDF" onClick={exportPdf} />
-            <MenuActionButton icon={DownloadActionIcon} label="Export CSV" onClick={exportExcel} />
-            <MenuActionButton icon={Mail} label="Email" onClick={emailReport} />
-            <MenuActionButton icon={MessageCircle} label="WhatsApp" onClick={whatsappReport} />
-            <MenuActionButton icon={Share2} label="Share" onClick={shareReport} />
+            <MenuActionButton icon={Edit3} label={t(lang, "common.edit", "Edit")} onClick={editReport} />
+            <MenuActionButton icon={Printer} label={t(lang, "common.print", "Print")} onClick={printReport} />
+            <MenuActionButton icon={Printer} label={t(lang, "ujr.export_pdf", "Export PDF")} onClick={exportPdf} />
+            <MenuActionButton icon={DownloadActionIcon} label={t(lang, "ujr.export_csv", "Export CSV")} onClick={exportExcel} />
+            <MenuActionButton icon={Mail} label={t(lang, "ujr.email", "Email")} onClick={emailReport} />
+            <MenuActionButton icon={MessageCircle} label={t(lang, "ujr.whatsapp", "WhatsApp")} onClick={whatsappReport} />
+            <MenuActionButton icon={Share2} label={t(lang, "ujr.share", "Share")} onClick={shareReport} />
 
             <div className="mt-2 border-t border-[var(--ujr-line)] pt-2">
               <div className="mb-1.5 flex items-center gap-2 text-[10px] font-black uppercase tracking-wide text-[var(--ujr-muted)]">
-                <Bookmark className="h-4 w-4" /> Saved Filters
+                <Bookmark className="h-4 w-4" /> {t(lang, "ujr.saved_filters", "Saved Filters")}
               </div>
               <button className="ujr-saved-filter" type="button" onClick={applyFilters}>
-                Current draft filters
+                {t(lang, "ujr.current_draft_filters", "Current draft filters")}
               </button>
               <button className="ujr-saved-filter" type="button" onClick={resetFilters}>
-                Clear all filters
+                {t(lang, "ujr.clear_all_filters", "Clear all filters")}
               </button>
             </div>
           </DropdownPanel>

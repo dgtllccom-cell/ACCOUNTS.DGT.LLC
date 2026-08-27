@@ -261,7 +261,7 @@ export function SmartCrmControlCenter() {
                 )}
               >
                 <LayoutDashboard className="h-4 w-4" />
-                <span>CRM Dashboard</span>
+                <span>{t(lang, "crm.nav_dashboard", "CRM Dashboard")}</span>
               </button>
 
               <button
@@ -270,7 +270,7 @@ export function SmartCrmControlCenter() {
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-slate-700 dark:text-slate-300 transition"
               >
                 <CalendarCheck className="h-4 w-4 text-blue-600" />
-                <span>Today's Action Center</span>
+                <span>{t(lang, "crm.nav_action_center", "Today's Action Center")}</span>
               </button>
 
               <button
@@ -279,7 +279,7 @@ export function SmartCrmControlCenter() {
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-slate-700 dark:text-slate-300 transition"
               >
                 <CreditCard className="h-4 w-4 text-emerald-600" />
-                <span>Cheques & Cash</span>
+                <span>{t(lang, "crm.nav_cheques_cash", "Cheques & Cash")}</span>
               </button>
 
               <button
@@ -288,7 +288,7 @@ export function SmartCrmControlCenter() {
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-slate-700 dark:text-slate-300 transition"
               >
                 <ShoppingCart className="h-4 w-4 text-amber-600" />
-                <span>Purchase Due</span>
+                <span>{t(lang, "crm.nav_purchase_due", "Purchase Due")}</span>
               </button>
 
               <button
@@ -297,7 +297,7 @@ export function SmartCrmControlCenter() {
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-slate-700 dark:text-slate-300 transition"
               >
                 <TrendingUp className="h-4 w-4 text-purple-600" />
-                <span>Sales Recovery</span>
+                <span>{t(lang, "crm.nav_sales_recovery", "Sales Recovery")}</span>
               </button>
 
               <button
@@ -306,7 +306,7 @@ export function SmartCrmControlCenter() {
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-slate-700 dark:text-slate-300 transition"
               >
                 <Ship className="h-4 w-4 text-indigo-600" />
-                <span>Shipping / Clearing</span>
+                <span>{t(lang, "crm.nav_shipping_clearing", "Shipping / Clearing")}</span>
               </button>
 
               <button
@@ -320,7 +320,7 @@ export function SmartCrmControlCenter() {
                 )}
               >
                 <Clock className="h-4 w-4 text-rose-600" />
-                <span>Follow-Ups</span>
+                <span>{t(lang, "crm.nav_followups", "Follow-Ups")}</span>
               </button>
 
               <button
@@ -329,7 +329,7 @@ export function SmartCrmControlCenter() {
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-slate-700 dark:text-slate-300 transition"
               >
                 <Users className="h-4 w-4 text-blue-600" />
-                <span>Customers</span>
+                <span>{t(lang, "crm.nav_customers", "Customers")}</span>
               </button>
 
               <button
@@ -338,7 +338,7 @@ export function SmartCrmControlCenter() {
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-slate-700 dark:text-slate-300 transition"
               >
                 <Building2 className="h-4 w-4 text-slate-600" />
-                <span>Companies / Suppliers</span>
+                <span>{t(lang, "crm.nav_companies_suppliers", "Companies / Suppliers")}</span>
               </button>
 
               <button
@@ -347,7 +347,7 @@ export function SmartCrmControlCenter() {
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-slate-700 dark:text-slate-300 transition"
               >
                 <FileText className="h-4 w-4 text-indigo-600" />
-                <span>Reports</span>
+                <span>{t(lang, "crm.nav_reports", "Reports")}</span>
               </button>
 
               <button
@@ -361,7 +361,7 @@ export function SmartCrmControlCenter() {
                 )}
               >
                 <CalendarIcon className="h-4 w-4 text-amber-600" />
-                <span>Calendar</span>
+                <span>{t(lang, "crm.nav_calendar", "Calendar")}</span>
               </button>
 
               <button
@@ -370,7 +370,7 @@ export function SmartCrmControlCenter() {
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-slate-700 dark:text-slate-300 transition"
               >
                 <Bell className="h-4 w-4 text-slate-500" />
-                <span>Reminders</span>
+                <span>{t(lang, "crm.nav_reminders", "Reminders")}</span>
               </button>
 
               <button
@@ -379,7 +379,7 @@ export function SmartCrmControlCenter() {
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-slate-700 dark:text-slate-300 transition"
               >
                 <StickyNote className="h-4 w-4 text-teal-600" />
-                <span>Notes</span>
+                <span>{t(lang, "crm.nav_notes", "Notes")}</span>
               </button>
 
               <button
@@ -388,18 +388,18 @@ export function SmartCrmControlCenter() {
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-slate-700 dark:text-slate-300 transition"
               >
                 <Settings className="h-4 w-4 text-slate-500" />
-                <span>Settings</span>
+                <span>{t(lang, "crm.nav_settings", "Settings")}</span>
               </button>
             </nav>
           </div>
 
           {/* Quick Search Box in Sidebar */}
           <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-1.5">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Quick Search</span>
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t(lang, "crm.quick_search", "Quick Search")}</span>
             <div className="relative">
               <Input
                 type="text"
-                placeholder="Search CRM..."
+                placeholder={t(lang, "crm.search_ph", "Search CRM...")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && fetchDashboardData()}
@@ -879,7 +879,7 @@ export function SmartCrmControlCenter() {
                               {/* View */}
                               <button
                                 type="button"
-                                title="View Source Transaction"
+                                title={t(lang, "crm.title_view_source", "View Source Transaction")}
                                 onClick={() => router.push(item.source_type.includes("pur") ? "/dashboard/purchase" : item.source_type.includes("sales") ? "/dashboard/sales" : "/dashboard/roznamcha/bank-cheques")}
                                 className="h-6 w-6 rounded-md text-blue-600 hover:bg-blue-50 flex items-center justify-center transition"
                               >
@@ -889,7 +889,7 @@ export function SmartCrmControlCenter() {
                               {/* Follow Up Note */}
                               <button
                                 type="button"
-                                title="Follow-up Note"
+                                title={t(lang, "crm.title_followup_note", "Follow-up Note")}
                                 onClick={() => {
                                   setSelectedItemForNote(item);
                                   setNoteModalOpen(true);
@@ -902,7 +902,7 @@ export function SmartCrmControlCenter() {
                               {/* Complete */}
                               <button
                                 type="button"
-                                title="Mark Completed"
+                                title={t(lang, "crm.title_mark_completed", "Mark Completed")}
                                 onClick={() => handleCompleteItem(item.id)}
                                 className="h-6 w-6 rounded-md text-emerald-600 hover:bg-emerald-50 flex items-center justify-center transition"
                               >
@@ -1350,10 +1350,10 @@ export function SmartCrmControlCenter() {
         </div>
 
         <div className="flex items-center gap-2">
-          <span>Powered by <strong>Damaan ERP</strong></span>
+          <span>{t(lang, "crm.powered_by", "Powered by")} <strong>Damaan ERP</strong></span>
           <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 text-[10px] font-black">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>Live</span>
+            <span>{t(lang, "crm.live", "Live")}</span>
           </span>
         </div>
       </footer>
@@ -1376,10 +1376,10 @@ export function SmartCrmControlCenter() {
                   onChange={(e) => setNoteType(e.target.value)}
                   className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-2.5 font-semibold"
                 >
-                  <option value="Call Follow-Up">Phone Call Follow-Up</option>
-                  <option value="WhatsApp Message">WhatsApp Follow-Up</option>
-                  <option value="In-Person Meeting">In-Person Meeting</option>
-                  <option value="Promise to Pay">Promise to Pay</option>
+                  <option value="Call Follow-Up">{t(lang, "crm.ftype_call", "Phone Call Follow-Up")}</option>
+                  <option value="WhatsApp Message">{t(lang, "crm.ftype_whatsapp", "WhatsApp Follow-Up")}</option>
+                  <option value="In-Person Meeting">{t(lang, "crm.ftype_meeting", "In-Person Meeting")}</option>
+                  <option value="Promise to Pay">{t(lang, "crm.ftype_promise", "Promise to Pay")}</option>
                 </select>
               </div>
 
@@ -1389,7 +1389,7 @@ export function SmartCrmControlCenter() {
                   rows={3}
                   value={noteText}
                   onChange={(e) => setNoteText(e.target.value)}
-                  placeholder="Enter client response, payment commitment or notes..."
+                  placeholder={t(lang, "crm.note_ph", "Enter client response, payment commitment or notes...")}
                   className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-2.5 font-sans text-xs"
                 />
               </div>
