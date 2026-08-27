@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
+import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
 import {
   getLedgerStatement,
   listLedgerReportLedgers,
@@ -281,6 +282,57 @@ export function UnifiedDetailedLedgerView() {
     };
   }, [lines, filterType, filterValue, header]);
 
+  function printDetailedStatement() {
+    openUniversalPrintReport({
+      title: `Detailed Ledger Statement - ${header?.accountName || "Account"}`,
+      subtitle: `${header?.accountCode || ""} • ${header?.countryName || ""} • ${(header as any)?.branchName || (header as any)?.cityBranchName || ""}`,
+      lang,
+      moduleType: "ledger",
+      orientation: "landscape",
+      scope: {
+        scopeLevel: isSuperAdmin ? "Super Admin Detailed Statement" : "Authorized Ledger Statement",
+        company: header?.accountName || "Damaan General Trading LLC",
+        country: header?.countryName || "",
+        branch: (header as any)?.branchName || (header as any)?.cityBranchName || "",
+        currency: header?.ledgerCurrency || "AED",
+      },
+
+      partyDetails: {
+        type: "customer",
+        name: header?.accountName || "Account Holder",
+        code: header?.accountCode || "",
+      },
+      columns: [
+        { key: "index", label: tr("S.No"), width: "5%", align: "center" },
+        { key: "entryDate", label: tr("Date"), format: "date", width: "9%" },
+        { key: "serialNo", label: tr("Serial #"), width: "9%" },
+        { key: "voucherNo", label: tr("Voucher #"), width: "9%" },
+        { key: "narration", label: tr("Description / Narration"), width: "24%" },
+        { key: "debit", label: tr("Debit"), align: "right", format: "currency", width: "11%" },
+        { key: "credit", label: tr("Credit"), align: "right", format: "currency", width: "11%" },
+        { key: "runningBalance", label: tr("Balance"), align: "right", format: "currency", width: "11%" },
+        { key: "branchName", label: tr("Branch"), width: "11%" },
+      ],
+      rows: calculatedTotals.lines.map((l, i) => ({
+        index: i + 1,
+        entryDate: l.entryDate,
+        serialNo: l.branchSerialNo || l.countrySerialNo || l.superAdminSerialNo || "-",
+        voucherNo: l.referenceNo || "-",
+        narration: l.description || "-",
+        debit: l.debit || 0,
+        credit: l.credit || 0,
+        runningBalance: l.runningBalance || 0,
+        branchName: l.branchName || "-",
+      })),
+      totals: {
+        debit: calculatedTotals.sumDr,
+        credit: calculatedTotals.sumCr,
+        runningBalance: calculatedTotals.running,
+      },
+      autoPrint: false,
+    });
+  }
+
   return (
     <div className="w-full space-y-4 p-3 sm:p-5 lg:p-6" dir={isRtl ? "rtl" : "ltr"}>
       {/* ── Top Navigation & Page Actions Strip ── */}
@@ -320,7 +372,7 @@ export function UnifiedDetailedLedgerView() {
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => window.print()}
+              onClick={printDetailedStatement}
               className="h-8 gap-1.5 rounded-lg px-2.5 text-xs font-bold shadow-xs"
             >
               <Printer className="h-3.5 w-3.5" />

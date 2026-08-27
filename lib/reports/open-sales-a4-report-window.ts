@@ -1,5 +1,6 @@
 import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { printStore } from "@/lib/store/print-store";
 
 export type SalesReportData = {
   [key: string]: any;
@@ -345,19 +346,23 @@ export function openSalesA4ReportWindow(input: {
     </html>
   `;
 
-  const printWindow = window.open("", "_blank", "width=800,height=1000");
-  if (!printWindow) {
-    alert("Popup blocked! Please allow popups for printing reports.");
+  try {
+    printStore.openPrint(htmlContent, input.title || "Sales Order Report");
     return;
+  } catch (e) {
+    console.warn("Could not open in printStore, falling back to window.open", e);
   }
 
-  printWindow.document.write(htmlContent);
-  printWindow.document.close();
-
-  if (input.autoPrint) {
-    printWindow.onload = () => {
-      printWindow.focus();
-      printWindow.print();
-    };
+  const printWindow = window.open("", "_blank", "width=800,height=1000");
+  if (printWindow) {
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    if (input.autoPrint) {
+      printWindow.onload = () => {
+        printWindow.focus();
+        printWindow.print();
+      };
+    }
   }
 }
+

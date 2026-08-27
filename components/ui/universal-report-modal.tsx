@@ -22,6 +22,7 @@ import { t as uiText } from "@/lib/i18n/ui";
 import { rtlLanguages } from "@/lib/i18n/languages";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { translateValue } from "@/lib/i18n/table-values";
+import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
 
 export interface ReportColumn<T = any> {
   key: string;
@@ -169,9 +170,16 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
   };
 
   const handleExportPDF = () => {
-    // Triggers standard print view styled specifically as clean PDF document
-    window.print();
+    openUniversalPrintReport({
+      title,
+      subtitle,
+      lang: currentLanguage,
+      columns: columns.map(c => ({ key: c.key, label: c.label })),
+      rows: data,
+      autoPrint: true,
+    });
   };
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 overflow-y-auto print:p-0 print:bg-white print:static">

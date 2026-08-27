@@ -235,11 +235,29 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <ReportActions title={t(lang, "tl.report_title")} rows={filtered} columns={[{ key: "loading_serial", label: translateHeader(lang, "Serial #") }, { key: "loading_date", label: translateHeader(lang, "Loading Date") }, { key: "truck_number", label: translateHeader(lang, "Truck #") }, { key: "driver_name", label: translateHeader(lang, "Driver") }, { key: "goods_name", label: translateHeader(lang, "Goods") }, { key: "quantity", label: translateHeader(lang, "Qty") }, { key: "destination", label: translateHeader(lang, "Destination") }]} lang={lang} />
+          <ReportActions
+            title={t(lang, "tl.report_title", "Truck Loading & Clearing Booking Register")}
+            rows={filtered}
+            columns={[
+              { key: "loading_serial", label: translateHeader(lang, "Serial #") },
+              { key: "loading_date", label: translateHeader(lang, "Loading Date") },
+              { key: "truck_number", label: translateHeader(lang, "Truck #") },
+              { key: "driver_name", label: translateHeader(lang, "Driver") },
+              { key: "driver_mobile_1", label: translateHeader(lang, "Driver Contact") },
+              { key: "goods_name", label: translateHeader(lang, "Goods") },
+              { key: "quantity", label: translateHeader(lang, "Qty") },
+              { key: "net_weight", label: translateHeader(lang, "Net Weight (KG)") },
+              { key: "gross_weight", label: translateHeader(lang, "Gross Weight (KG)") },
+              { key: "destination", label: translateHeader(lang, "Destination") },
+              { key: "remarks", label: translateHeader(lang, "Remarks") },
+            ]}
+            lang={lang}
+          />
           <button onClick={startAdd} className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-2 text-sm font-bold text-white hover:bg-blue-800 shadow-md transition">
             <Plus className="h-4 w-4" /> {t(lang, "tl.new_entry")}
           </button>
         </div>
+
       </div>
 
       {/* Workflow Selection: Transport Mode & Movement Type */}
@@ -347,7 +365,8 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
         <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search loading serial, truck number, driver name, goods..." className="w-full rounded-xl border border-slate-200 bg-white py-2.5 ps-9 pe-3 text-sm dark:border-slate-800 dark:bg-slate-950 shadow-sm" />
       </div>
 
-      {error ? <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">{error}</div> : null}
+      {error ? <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">{typeof error === "string" ? error : (error as any)?.message || JSON.stringify(error)}</div> : null}
+
 
       {/* List Table */}
       <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 shadow-sm">

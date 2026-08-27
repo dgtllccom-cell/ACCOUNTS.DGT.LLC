@@ -55,44 +55,44 @@ const ACCESS_PROFILES: Record<
     subtitle: "Full system visibility for configuration, audit, reporting, and cross-country administration.",
     note: "Use this entry point for global ERP operations and security oversight.",
     scopeLabel: "All countries, all branches",
-    formatPlaceholder: "SUPERADMIN@DGT.LLC",
-    quickExamples: ["SUPERADMIN@DGT.LLC", "asmatdgtllc@users.damaan.local"]
+    formatPlaceholder: "superadmin@dgt.llc or admin@dgt.llc",
+    quickExamples: ["superadmin@dgt.llc", "admin@dgt.llc"]
   },
   country: {
     eyebrow: "Country Workspace",
     title: "Country Admin Access",
     subtitle: "Scoped access for country-level operations, master data, and business oversight.",
-    note: "Choose the exact country before signing in to keep branch scope consistent.",
+    note: "Format: {countryCode}.{countryName}@dgt.llc (e.g. pk.pakistan@dgt.llc, ae.uae@dgt.llc).",
     scopeLabel: "Country-level access",
-    formatPlaceholder: "PAKISTAN@DGT.LLC, AFGHANISTAN@DGT.LLC, UAE@DGT.DALNC",
-    quickExamples: ["PAKISTAN@DGT.LLC", "AFGHANISTAN@DGT.LLC", "UAE@DGT.DALNC", "INDIA@DGT.LLC", "CHINA@DGT.LLC"]
+    formatPlaceholder: "pk.pakistan@dgt.llc, ae.uae@dgt.llc, af.afghanistan@dgt.llc",
+    quickExamples: ["pk.pakistan@dgt.llc", "ae.uae@dgt.llc", "af.afghanistan@dgt.llc", "in.india@dgt.llc", "cn.china@dgt.llc"]
   },
   city: {
     eyebrow: "City Branch Workspace",
     title: "City Branch Access",
     subtitle: "Operational entry for city-specific teams with branch-aware ERP workflows.",
-    note: "Format: CountryCode/CityCode@DGT.LLC (e.g. PK/CHAMAN@DGT.LLC).",
+    note: "Format: {cityName}.branch.b@dgt.llc (e.g. chaman.branch.b@dgt.llc, dubai.branch.b@dgt.llc).",
     scopeLabel: "City branch access",
-    formatPlaceholder: "PK/CHAMAN@DGT.LLC, PK/QUETTA@DGT.LLC, AF/KABUL@DGT.DALNC",
-    quickExamples: ["PK/CHAMAN@DGT.LLC", "PK/QUETTA@DGT.LLC", "AF/KABUL@DGT.DALNC", "AE/DUBAI@DGT.LLC", "IN/DELHI@DGT.LLC"]
+    formatPlaceholder: "chaman.branch.b@dgt.llc, dubai.branch.b@dgt.llc",
+    quickExamples: ["chaman.branch.b@dgt.llc", "dubai.branch.b@dgt.llc", "quetta.branch.b@dgt.llc", "kabul.branch.b@dgt.llc"]
   },
   branch: {
     eyebrow: "Branch Operations",
     title: "Branch User Access",
     subtitle: "Focused access for branch users handling local transactions, reports, and approvals.",
-    note: "Branch users see the same ERP, but only within their assigned scope.",
+    note: "Format: {cityName}.branch.b@dgt.llc",
     scopeLabel: "Branch-level access",
-    formatPlaceholder: "PK/CHAMAN@DGT.LLC, AE/DUBAI@DGT.LLC",
-    quickExamples: ["PK/CHAMAN@DGT.LLC", "PK/QUETTA@DGT.LLC", "AE/DUBAI@DGT.LLC", "AF/KABUL@DGT.DALNC"]
+    formatPlaceholder: "chaman.branch.b@dgt.llc, dubai.branch.b@dgt.llc",
+    quickExamples: ["chaman.branch.b@dgt.llc", "dubai.branch.b@dgt.llc", "quetta.branch.b@dgt.llc"]
   },
   agent: {
     eyebrow: "Shipping & Clearing",
     title: "Clearing Agent Access",
     subtitle: "Workflow access for shipping line and clearing operations with linked order visibility.",
-    note: "Format: CountryCode/CLEARINGAGENT@DGT.LLC or CountryCode/CityCode/CLEARINGAGENT@DGT.DALNC.",
+    note: "Format: {countryCode}.clearingagent@dgt.llc or {cityName}.clearingagent.c@dgt.llc",
     scopeLabel: "Agent workflow access",
-    formatPlaceholder: "PK/CLEARINGAGENT@DGT.LLC or PK/CH/CLEARINGAGENT@DGT.DALNC",
-    quickExamples: ["PK/CLEARINGAGENT@DGT.LLC", "PK/CH/CLEARINGAGENT@DGT.DALNC", "PK/QTA/CLEARINGAGENT@DGT.DALNC", "AE/DXB/CLEARINGAGENT@DGT.LLC"]
+    formatPlaceholder: "pk.clearingagent@dgt.llc, chaman.clearingagent.c@dgt.llc",
+    quickExamples: ["pk.clearingagent@dgt.llc", "ae.clearingagent@dgt.llc", "chaman.clearingagent.c@dgt.llc", "dubai.clearingagent.c@dgt.llc"]
   },
 };
 
@@ -189,6 +189,13 @@ export function LoginForm({
 
   useEffect(() => {
     setActiveTab(initialTab);
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const emailParam = params.get("email");
+      if (emailParam) {
+        setIdentifier(emailParam);
+      }
+    }
   }, [initialTab]);
 
   useEffect(() => {

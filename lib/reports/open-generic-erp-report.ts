@@ -1,4 +1,5 @@
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { printStore } from "@/lib/store/print-store";
 import {
   escapeHtml,
   formatDate,
@@ -210,9 +211,18 @@ export function openGenericErpReport(input: {
     csvData: buildCsv(columns, rows, lang),
   });
 
+  try {
+    printStore.openPrint(html, translatedTitle || "ERP Report");
+    return;
+  } catch (e) {
+    console.warn("Could not open in printStore, falling back to window.open", e);
+  }
+
   const preview = window.open("", "_blank", "noopener,noreferrer");
-  if (!preview) return;
-  preview.document.open();
-  preview.document.write(html);
-  preview.document.close();
+  if (preview) {
+    preview.document.open();
+    preview.document.write(html);
+    preview.document.close();
+  }
 }
+

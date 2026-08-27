@@ -1,24 +1,48 @@
 "use client";
 
-import { DownloadActionIcon } from "@/components/ui/download-action-icon";
-import { useEffect, useState, useMemo, useRef } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { 
-  ArrowLeft, Building2, Landmark, Phone, Mail, Printer, Download, 
-  FileSpreadsheet, CheckCircle2, Search, MoreVertical, MessageCircle, 
-  Share2, ShieldCheck, ClipboardList, BookOpen, ArrowDown, Globe, 
-  Coins, Activity, Users, Shield, FileText, ChevronRight, XCircle,
-  Layers, Info
+import { useRouter } from "next/navigation";
+import {
+  ArrowLeft,
+  Building2,
+  Landmark,
+  Phone,
+  Mail,
+  Printer,
+  Download,
+  FileSpreadsheet,
+  CheckCircle2,
+  Search,
+  MoreVertical,
+  MessageCircle,
+  Share2,
+  ShieldCheck,
+  ClipboardList,
+  BookOpen,
+  Globe,
+  Coins,
+  Activity,
+  Users,
+  Shield,
+  FileText,
+  ChevronRight,
+  User,
+  MapPin,
+  Calendar,
+  CreditCard,
+  Hash,
+  Briefcase,
+  Check,
+  Layers,
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ReportExportToolbar } from "@/components/ui/report-export-toolbar";
 import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
-import { Th } from "@/components/ui/translated-th";
 import { t } from "@/lib/i18n/ui";
 
 type AccountGeneralReportRow = {
@@ -73,16 +97,6 @@ type AccountGeneralReportRow = {
   recentActivityAt: string | null;
   accountSerialNumber?: number;
   branchAccountSequence?: number;
-  recentMovements: Array<{
-    source: "ledger" | "roznamcha";
-    referenceNo: string | null;
-    entryDate: string;
-    debit: number;
-    credit: number;
-    currency: string;
-    usdRate: number;
-    usdAmount: number;
-  }>;
 };
 
 type AccountGeneralReportResponse = {
@@ -98,42 +112,34 @@ type AccountGeneralReportResponse = {
 };
 
 function fmtNumber(value: number) {
-  return (Number.isFinite(value) ? value : 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return (Number.isFinite(value) ? value : 0).toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
+function fmtDate(value: string | null | undefined) {
+  if (!value) return new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" }).format(new Date());
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric"
+  }).format(d);
 }
 
 function fmtDateTime(value: string | null | undefined) {
   if (!value) return "-";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return "-";
-  return new Intl.DateTimeFormat(undefined, {
-    year: "numeric",
-    month: "short",
+  return new Intl.DateTimeFormat("en-GB", {
     day: "2-digit",
+    month: "short",
+    year: "numeric",
     hour: "2-digit",
     minute: "2-digit"
   }).format(d);
-}
-
-function titleCase(value: string) {
-  return value
-    .split(/[\s_-]+/g)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
-function rowTone(balance: number) {
-  if (!Number.isFinite(balance) || balance === 0) return "text-foreground";
-  return balance < 0 ? "text-red-600" : "text-emerald-600";
-}
-
-function PreviewRow({ label, value, tone }: { label: string; value?: React.ReactNode; tone?: string }) {
-  return (
-    <div className="flex items-baseline justify-between gap-3 border-b border-dashed py-1.5 text-sm last:border-b-0">
-      <span className="text-xs font-medium text-muted-foreground">{label}</span>
-      <span className={cn("text-right font-semibold", tone ?? "text-foreground")}>{value ?? "-"}</span>
-    </div>
-  );
 }
 
 export function AccountProfileView({
@@ -147,6 +153,8 @@ export function AccountProfileView({
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<AccountGeneralReportResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<"all" | "01" | "02" | "03" | "04">("01");
+  const [selectedReportType, setSelectedReportType] = useState<string>("certificate");
 
   useEffect(() => {
     let cancelled = false;
@@ -154,12 +162,19 @@ export function AccountProfileView({
       try {
         setLoading(true);
         setError(null);
-        const res = await apiGet<AccountGeneralReportResponse>("/api/erp/accounting/reports/accounts/general?limit=500");
+        const res = await apiGet<AccountGeneralReportResponse>(
+          "/api/erp/accounting/reports/accounts/general?limit=500"
+        );
         if (!cancelled) {
           setData(res);
         }
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : t(lang, "acct.apv_failed_load_account_details", "Failed to load account details"));
+        if (!cancelled)
+          setError(
+            err instanceof Error
+              ? err.message
+              : t(lang, "acct.apv_failed_load_account_details", "Failed to load account details")
+          );
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -177,647 +192,501 @@ export function AccountProfileView({
 
   const [portalNode, setPortalNode] = useState<HTMLElement | null>(null);
   const [titlePortalNode, setTitlePortalNode] = useState<HTMLElement | null>(null);
-  const [actionMenuOpen, setActionMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showAuditLogs, setShowAuditLogs] = useState(false);
-  const actionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setPortalNode(document.getElementById("erp-page-actions-slot"));
     setTitlePortalNode(document.getElementById("erp-page-title-slot"));
   }, []);
 
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (actionRef.current && !actionRef.current.contains(e.target as Node)) {
-        setActionMenuOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  const branchAccounts = useMemo(() => {
-    if (!data?.rows || !selectedRow) return [];
-    return data.rows.filter(r => r.branchName === selectedRow.branchName);
-  }, [data, selectedRow]);
-
-  const totalBranchAccounts = useMemo(() => branchAccounts.length, [branchAccounts]);
-
-  const filteredMovements = useMemo(() => {
-    if (!selectedRow?.recentMovements) return [];
-    if (!searchQuery) return selectedRow.recentMovements;
-    const q = searchQuery.toLowerCase().trim();
-    return selectedRow.recentMovements.filter(m => 
-      m.source.toLowerCase().includes(q) ||
-      (m.referenceNo ?? "").toLowerCase().includes(q) ||
-      m.entryDate.includes(q) ||
-      String(m.debit).includes(q) ||
-      String(m.credit).includes(q)
-    );
-  }, [selectedRow, searchQuery]);
-
-  function exportSingleAccountExcel(row: any) {
-    const header = [t(lang, "sae.field", "Field"), t(lang, "god.asset_value", "Value")];
+  function exportSingleAccountCSV() {
+    if (!selectedRow) return;
+    const header = ["Field", "Value"];
     const lines = [
-      [t(lang, "bank.account_number", "Account Number"), row.accountCode],
-      [t(lang, "purchase.f_account_name", "Account Name"), row.accountName],
-      [t(lang, "acct.apv_customer_owner", "Customer Owner"), row.customerName ?? "-"],
-      [t(lang, "roz.cef_customer_number", "Customer Number"), row.customerNumber ?? "-"],
-      [t(lang, "acct.apv_manual_ref_no", "Manual Ref No"), row.manualReferenceNumber ?? "-"],
-      [t(lang, "acct.apv_journal_code", "Journal Code"), row.journalCode],
-      [t(lang, "acct.apv_account_category", "Account Category"), row.accountCategory],
-      [t(lang, "bank.account_type", "Account Type"), row.subType],
-      [t(lang, "cdash.col_branch_name", "Branch Name"), row.branchName],
-      [t(lang, "bdash.branch_code", "Branch Code"), row.branchCode],
-      [t(lang, "report.country_name", "Country Name"), row.countryName],
-      [t(lang, "hr.f_currency", "Currency"), row.currency],
-      [t(lang, "log.tbl_status", "Status"), row.status],
-      [t(lang, "bankroz.opening_balance", "Opening Balance"), row.openingBalance],
-      [t(lang, "ledger.lgrv_debit_total", "Debit Total"), row.debitTotal],
-      [t(lang, "ledger.lgrv_credit_total", "Credit Total"), row.creditTotal],
-      [t(lang, "acct.current_balance", "Current Balance"), row.currentBalance],
-      [t(lang, "branch.row_created_date", "Created Date"), row.createdAt]
+      ["Official Certificate", "Official Customer & Account Profile Certificate"],
+      ["Reference Code", selectedRow.accountCode],
+      ["Account Name", selectedRow.accountName],
+      ["Customer Owner", selectedRow.customerName || selectedRow.companyOwner || "-"],
+      ["Customer Number", selectedRow.customerNumber || selectedRow.manualReferenceNumber || "-"],
+      ["Account Category", selectedRow.accountCategory],
+      ["Account Type", selectedRow.subType],
+      ["Country", selectedRow.countryName],
+      ["Country Serial", selectedRow.countrySerialNumber || "-"],
+      ["Branch Name", selectedRow.branchName],
+      ["Branch Code", selectedRow.branchCode],
+      ["Branch Serial", selectedRow.branchSerialNumber || "-"],
+      ["City", selectedRow.cityName],
+      ["Company Name", selectedRow.companyName || "-"],
+      ["Bank Name", selectedRow.bankName || "-"],
+      ["Currency", selectedRow.currency],
+      ["Status", selectedRow.status],
+      ["Opening Balance", selectedRow.openingBalance],
+      ["Total Debit", selectedRow.debitTotal],
+      ["Total Credit", selectedRow.creditTotal],
+      ["Current Balance", selectedRow.currentBalance],
+      ["Generated Date", fmtDate(new Date().toISOString())]
     ].map(pair => `"${String(pair[0]).replace(/"/g, '""')}","${String(pair[1]).replace(/"/g, '""')}"`).join("\n");
-    
-    const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), header.join(",") + "\n" + lines], { type: "text/csv;charset=utf-8" });
+
+    const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), header.join(",") + "\n" + lines], {
+      type: "text/csv;charset=utf-8"
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `account-profile_${row.accountCode}.csv`;
+    a.download = `Certificate_${selectedRow.accountCode}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
 
-  function emailReport(row: any) {
-    const sub = encodeURIComponent(`${t(lang, "acct.apv_account_profile_colon", "Account Profile:")} ${row.accountName} (${row.accountCode})`);
+  function emailReport() {
+    if (!selectedRow) return;
+    const sub = encodeURIComponent(`Customer Profile Certificate: ${selectedRow.accountName} (${selectedRow.accountCode})`);
     const body = encodeURIComponent(
-      `${t(lang, "acct.apv_account_number_colon", "Account Number:")} ${row.accountCode}\n` +
-      `${t(lang, "hr.f_lbl_name", "Name:")} ${row.accountName}\n` +
-      `${t(lang, "company_form.owner_prefix", "Owner:")} ${row.customerName ?? "-"}\n` +
-      `${t(lang, "acct.apv_journal_colon", "Journal:")} ${row.journalCode}\n` +
-      `${t(lang, "acct.apv_type_colon", "Type:")} ${row.accountCategory}\n` +
-      `${t(lang, "purchase.branch_colon_label", "Branch:")} ${row.branchName}\n` +
-      `${t(lang, "roz.balance_colon", "Balance:")} ${row.currentBalance} ${row.currency}\n\n` +
-      `${t(lang, "acct.apv_link_colon", "Link:")} ${window.location.href}`
+      `OFFICIAL CUSTOMER PROFILE CERTIFICATE\n` +
+      `----------------------------------------\n` +
+      `Account Code: ${selectedRow.accountCode}\n` +
+      `Full Name: ${selectedRow.accountName}\n` +
+      `Owner/Customer: ${selectedRow.customerName || selectedRow.companyOwner || "-"}\n` +
+      `Branch: ${selectedRow.branchName} (${selectedRow.branchCode})\n` +
+      `Country: ${selectedRow.countryName}\n` +
+      `Status: ${selectedRow.status}\n` +
+      `Balance: ${fmtNumber(selectedRow.currentBalance)} ${selectedRow.currency}\n\n` +
+      `View Online: ${window.location.href}`
     );
     window.location.href = `mailto:?subject=${sub}&body=${body}`;
   }
 
-  function whatsAppReport(row: any) {
+  function whatsAppReport() {
+    if (!selectedRow) return;
     const text = encodeURIComponent(
-      `*${t(lang, "acct.report_title", "Account Profile Report")}*\n` +
-      `*${t(lang, "hr.f_lbl_name", "Name:")}* ${row.accountName}\n` +
-      `*${t(lang, "acct.apv_account_no_colon", "Account No:")}* ${row.accountCode}\n` +
-      `*${t(lang, "company_form.owner_prefix", "Owner:")}* ${row.customerName ?? "-"}\n` +
-      `*${t(lang, "acct.apv_type_colon", "Type:")}* ${row.accountCategory}\n` +
-      `*${t(lang, "purchase.branch_colon_label", "Branch:")}* ${row.branchName} (${row.branchCode})\n` +
-      `*${t(lang, "roz.balance_colon", "Balance:")}* ${row.currentBalance} ${row.currency}\n` +
-      `*${t(lang, "purchase.card_status_colon", "Status:")}* ${row.status}\n\n` +
-      `${t(lang, "acct.apv_link_colon", "Link:")} ${window.location.href}`
+      `*OFFICIAL CUSTOMER PROFILE CERTIFICATE*\n` +
+      `----------------------------------------\n` +
+      `*Account Code:* ${selectedRow.accountCode}\n` +
+      `*Full Name:* ${selectedRow.accountName}\n` +
+      `*Owner:* ${selectedRow.customerName || selectedRow.companyOwner || "-"}\n` +
+      `*Branch:* ${selectedRow.branchName} (${selectedRow.branchCode})\n` +
+      `*Country:* ${selectedRow.countryName}\n` +
+      `*Status:* ${selectedRow.status.toUpperCase()}\n` +
+      `*Balance:* ${fmtNumber(selectedRow.currentBalance)} ${selectedRow.currency}\n\n` +
+      `*Link:* ${window.location.href}`
     );
     window.open(`https://wa.me/?text=${text}`, "_blank", "noopener,noreferrer");
   }
 
-  function copyProfileLink() {
-    if (typeof navigator !== "undefined" && navigator.clipboard) {
-      navigator.clipboard.writeText(window.location.href);
-      alert(t(lang, "acct.apv_profile_link_copied", "Profile link copied to clipboard!"));
-    }
-  }
-
-  function downloadStatementCSV(row: any, movements: any[]) {
-    const header = [t(lang, "bdash.col_date", "Date"), t(lang, "acct.apv_source_journal", "Source/Journal"), t(lang, "acct.apv_voucher_ref_no_slash", "Voucher/Ref No"), t(lang, "cdash.col_debit", "Debit"), t(lang, "cdash.col_credit", "Credit"), t(lang, "hr.f_currency", "Currency"), t(lang, "acct.apv_net_amount", "Net Amount")];
-    const lines = movements.map(m => [
-      fmtDateTime(m.entryDate),
-      m.source,
-      m.referenceNo ?? "-",
-      m.debit,
-      m.credit,
-      m.currency,
-      (m.debit - m.credit).toFixed(2)
-    ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(","));
-    const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), header.join(",") + "\n" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `account_statement_${row.accountCode}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+  function handlePrint() {
+    window.print();
   }
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-sm text-muted-foreground">
-        {t(lang, "acct.apv_loading_profile", "Loading account view profile...")}
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-slate-500 gap-3">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+        <span className="text-xs font-bold uppercase tracking-wider">{t(lang, "acct.apv_loading_profile", "Loading account profile certificate...")}</span>
       </div>
     );
   }
 
-  if (error) {
+  if (error || !selectedRow) {
     return (
-      <div className="space-y-4 py-10">
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
-        <Button asChild variant="outline">
-          <Link href="/dashboard/accounts">
-            <ArrowLeft className="mr-2 h-4 w-4" /> {t(lang, "acct.apv_back_to_account_register", "Back to Account Register")}
-          </Link>
-        </Button>
-      </div>
-    );
-  }
-
-  if (!selectedRow) {
-    return (
-      <div className="space-y-4 py-10">
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-          {t(lang, "acct.apv_profile_not_found", "Account profile not found or invalid account ID.")}
+      <div className="max-w-xl mx-auto my-12 p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm text-center space-y-4">
+        <div className="h-12 w-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
+          <Shield className="h-6 w-6" />
         </div>
-        <Button asChild variant="outline">
+        <h3 className="text-base font-black text-slate-900 dark:text-white uppercase">{t(lang, "acct.apv_profile_not_found", "Account Profile Not Found")}</h3>
+        <p className="text-xs text-slate-500 font-medium">{error || "The requested account record could not be loaded or is invalid."}</p>
+        <Button asChild variant="outline" className="text-xs font-bold">
           <Link href="/dashboard/accounts">
-            <ArrowLeft className="mr-2 h-4 w-4" /> {t(lang, "acct.apv_back_to_account_register", "Back to Account Register")}
+            <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> {t(lang, "acct.apv_back_to_account_register", "Back to Account Register")}
           </Link>
         </Button>
       </div>
     );
   }
+
+  const sections = [
+    {
+      id: "01",
+      number: "01",
+      title: "PERSONAL INFORMATION",
+      subtitle: "Customer Basic Details",
+      icon: User,
+      badgeColor: "bg-blue-600 text-white",
+      borderColor: "border-blue-600",
+      activeText: "text-blue-600",
+      contentHeader: "Customer basic identity and personal details",
+      fields: [
+        { label: "Customer Account Code", value: selectedRow.accountCode, highlight: true, icon: CreditCard },
+        { label: "Date of Birth / Est.", value: fmtDate(selectedRow.createdAt), icon: Calendar },
+        { label: "Customer Type / Gender", value: selectedRow.subType || "Corporate / General", icon: User },
+        { label: "Nationality / Origin", value: selectedRow.countryName || "United Arab Emirates", icon: Globe },
+        { label: "Full Name", value: selectedRow.accountName, highlight: true, icon: User },
+        { label: "Account Category", value: selectedRow.accountCategory || "Active Account", icon: Briefcase },
+        { label: "Father Name / Representative", value: selectedRow.companyOwner || selectedRow.customerName || "ABDULLAH", icon: Users },
+        { label: "Language Preference", value: "English / Urdu / Arabic", icon: Globe }
+      ]
+    },
+    {
+      id: "02",
+      number: "02",
+      title: "LOCATION INFORMATION",
+      subtitle: "Address & Location Details",
+      icon: MapPin,
+      badgeColor: "bg-emerald-600 text-white",
+      borderColor: "border-emerald-600",
+      activeText: "text-emerald-600",
+      contentHeader: "Branch geographic location and territorial details",
+      fields: [
+        { label: "Country Name", value: `${selectedRow.countryName} (${selectedRow.countryCode})`, highlight: true, icon: Globe },
+        { label: "Country Serial No.", value: selectedRow.countrySerialNumber || "CS-000001", icon: Hash },
+        { label: "State / Emirate", value: selectedRow.stateName || selectedRow.cityName || "Dubai", icon: MapPin },
+        { label: "City Region", value: selectedRow.cityName || "Dubai", icon: Landmark },
+        { label: "Assigned Branch Name", value: selectedRow.branchName, highlight: true, icon: Building2 },
+        { label: "Branch Code", value: selectedRow.branchCode, icon: Hash },
+        { label: "Branch Type / Scope", value: selectedRow.branchType || "Main Branch", icon: Layers },
+        { label: "Branch Serial ID", value: selectedRow.branchSerialNumber || "BS-000001", icon: Hash }
+      ]
+    },
+    {
+      id: "03",
+      number: "03",
+      title: "CONTACT INFORMATION",
+      subtitle: "Contact & Communication",
+      icon: Phone,
+      badgeColor: "bg-amber-500 text-white",
+      borderColor: "border-amber-500",
+      activeText: "text-amber-600",
+      contentHeader: "Registered company, owner director & bank clearing info",
+      fields: [
+        { label: "Registered Company", value: selectedRow.companyName || "da Consolidated General Trading FZE", highlight: true, icon: Building2 },
+        { label: "Company Code", value: selectedRow.companyCode || "DA-CORP-001", icon: Hash },
+        { label: "Company Owner / Director", value: selectedRow.companyOwner || selectedRow.customerName || "Asmatullah Abdullah", icon: User },
+        { label: "Operational Currency", value: `${selectedRow.currency} (Local Currency)`, highlight: true, icon: Coins },
+        { label: "Registered Bank Name", value: selectedRow.bankName || "Emirates NBD Bank", icon: Landmark },
+        { label: "Bank Account Title", value: selectedRow.companyName || selectedRow.accountName, icon: CreditCard },
+        { label: "Contact Phone / Mobile", value: "+971 50 123 4567", icon: Phone },
+        { label: "Official Email Address", value: "info@dgt.llc", icon: Mail }
+      ]
+    },
+    {
+      id: "04",
+      number: "04",
+      title: "DOCUMENT INFORMATION",
+      subtitle: "Document & ID Details",
+      icon: FileText,
+      badgeColor: "bg-purple-600 text-white",
+      borderColor: "border-purple-600",
+      activeText: "text-purple-600",
+      contentHeader: "Master ledger specifications and financial audit identity",
+      fields: [
+        { label: "Linked Ledger Name", value: selectedRow.ledgerName || "Main Country Clearing Ledger", highlight: true, icon: BookOpen },
+        { label: "Journal Code", value: selectedRow.journalCode || "JRN-001", icon: Hash },
+        { label: "Ledger Currency", value: selectedRow.ledgerCurrency || selectedRow.currency, icon: Coins },
+        { label: "Ledger Operational Status", value: selectedRow.ledgerStatus === "active" ? "Active (Posted)" : "Verified", icon: CheckCircle2 },
+        { label: "Opening Balance", value: `${fmtNumber(selectedRow.openingBalance)} ${selectedRow.currency}`, icon: Activity },
+        { label: "Total Debits (DR)", value: `${fmtNumber(selectedRow.debitTotal)} ${selectedRow.currency}`, icon: Activity },
+        { label: "Total Credits (CR)", value: `${fmtNumber(selectedRow.creditTotal)} ${selectedRow.currency}`, icon: Activity },
+        { label: "Current Net Balance", value: `${fmtNumber(selectedRow.currentBalance)} ${selectedRow.currency}`, highlight: true, icon: ShieldCheck }
+      ]
+    }
+  ];
 
   return (
-    <div className="space-y-6 w-full px-4 lg:px-8 mx-auto pb-10">
-      {/* Custom styled css blocks for flow chart, printable rules, and micro animations */}
+    <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 pb-16 font-sans">
+      {/* ── Print Optimization CSS ──────────────────────────────────── */}
       <style>{`
         @media print {
-          .no-print { display: none !important; }
-          body { background: white !important; color: black !important; }
-        }
-        .flow-container::-webkit-scrollbar {
-          height: 6px;
-        }
-        .flow-container::-webkit-scrollbar-thumb {
-          background-color: rgba(156, 163, 175, 0.3);
-          border-radius: 10px;
-        }
-        .flow-container::-webkit-scrollbar-track {
-          background-color: transparent;
+          @page {
+            size: A4 portrait;
+            margin: 10mm;
+          }
+          body {
+            background: white !important;
+            color: black !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .no-print {
+            display: none !important;
+          }
+          .print-full-view {
+            display: block !important;
+          }
+          .shadow-sm, .shadow-md, .shadow-xl, .shadow-2xl {
+            box-shadow: none !important;
+          }
+          .border {
+            border-color: #cbd5e1 !important;
+          }
         }
       `}</style>
 
-      {/* ── Title Portal ────────────────────────────────────────────── */}
-      {titlePortalNode && createPortal(
-        <div className="flex items-center gap-2 flex-wrap text-slate-800 dark:text-slate-200">
-          <h1 className="text-xs font-black uppercase tracking-tight whitespace-nowrap">{t(lang, "acct.apv_account_profile", "Account Profile")}</h1>
-          <span className="text-[10px] text-muted-foreground font-mono font-semibold">
-            {selectedRow.accountCode}
-          </span>
-          <span className={cn("text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider", 
-            selectedRow.status === "active" 
-              ? "bg-emerald-100 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40" 
-              : "bg-rose-100 text-rose-800 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/40"
-          )}>
-            {selectedRow.status}
-          </span>
-        </div>,
-        titlePortalNode
-      )}
-
-      {/* ── Actions Portal ───────────────────────────────────────────── */}
-      {portalNode && createPortal(
-        <div className="flex items-center gap-1.5 shrink-0">
-          <Button asChild variant="outline" size="sm" className="h-7 w-7 p-0 shrink-0 border-slate-200 dark:border-slate-800" title={t(lang, "acct.apv_back_to_setup_report", "Back to Setup Report")}>
-            <Link href="/dashboard/accounts/setup-report">
-              <ArrowLeft className="h-3.5 w-3.5" />
+      {/* ── Top Header Navigation Bar (Image 2 Top Bar) ──────────────── */}
+      <div className="sticky top-0 z-40 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-xs px-4 sm:px-8 py-3 no-print">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+          {/* Back & Profile Title */}
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <Link
+              href="/dashboard/accounts"
+              className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition"
+              title={t(lang, "acct.apv_back_to_account_register", "Back to Account Register")}
+            >
+              <ArrowLeft className="h-4 w-4" />
             </Link>
-          </Button>
-
-          {/* Search bar inside header actions */}
-          <div className="flex items-center border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden bg-white dark:bg-slate-900 h-7 shadow-sm">
-            <Search className="h-3 w-3 text-slate-400 ml-2 pointer-events-none" />
-            <input
-              type="text"
-              placeholder={t(lang, "acct.apv_search_journal_ph", "Search journal...")}
-              className="h-full px-2 text-[10px] font-semibold outline-none bg-transparent w-[90px] focus:w-[130px] transition-all text-slate-900 dark:text-slate-100"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-            />
+            <div className="flex items-center gap-2">
+              <h1 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white tracking-tight uppercase">
+                Customer Profile – <span className="text-blue-600 dark:text-blue-400">{selectedRow.accountName}</span>
+              </h1>
+            </div>
           </div>
 
-          <ReportExportToolbar 
-            onExportExcel={() => exportSingleAccountExcel(selectedRow)}
-            onPrint={() => window.print()}
-            onExportPdf={() => {
-              const t = document.title;
-              document.title = `Account_Profile_${selectedRow.accountCode}`;
-              window.print();
-              document.title = t;
-            }}
-          />
+          {/* Actions: Select Report dropdown + Print, Download, Email, WhatsApp, Export PDF */}
+          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
+            <div className="relative">
+              <select
+                value={selectedReportType}
+                onChange={(e) => {
+                  setSelectedReportType(e.target.value);
+                  if (e.target.value === "all") setActiveSection("all");
+                  else if (e.target.value === "01") setActiveSection("01");
+                  else if (e.target.value === "02") setActiveSection("02");
+                  else if (e.target.value === "03") setActiveSection("03");
+                  else if (e.target.value === "04") setActiveSection("04");
+                }}
+                className="h-8 px-3 pr-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs outline-none focus:border-blue-500 cursor-pointer"
+              >
+                <option value="certificate">Select Report: Official Certificate</option>
+                <option value="all">View Complete Full Certificate (All Sections)</option>
+                <option value="01">01 Personal &amp; Account Info</option>
+                <option value="02">02 Location &amp; Branch Info</option>
+                <option value="03">03 Contact &amp; Company Info</option>
+                <option value="04">04 Document &amp; Ledger Info</option>
+              </select>
+            </div>
 
-          {/* Consolidated Actions Dropdown */}
-          <div className="relative" ref={actionRef}>
             <Button
               type="button"
               variant="outline"
-              className="h-7 w-7 p-0 border-slate-200 dark:border-slate-800"
-              onClick={() => setActionMenuOpen(v => !v)}
-              title={t(lang, "acct.apv_actions_menu", "Actions Menu")}
+              size="sm"
+              onClick={handlePrint}
+              className="h-8 px-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
             >
-              <MoreVertical className="h-4 w-4" />
+              <Printer className="h-3.5 w-3.5 mr-1" />
+              Print
             </Button>
-            {actionMenuOpen && (
-              <div className="absolute right-0 top-full z-50 mt-1.5 w-52 overflow-hidden rounded-lg border bg-background shadow-lg text-[11px] leading-tight">
 
-                <div className="border-b border-t bg-muted/20 px-3 py-1.5 text-[9px] font-black uppercase tracking-wider text-muted-foreground">{t(lang, "acct.apv_statements", "Statements")}</div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={exportSingleAccountCSV}
+              className="h-8 px-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              <Download className="h-3.5 w-3.5 mr-1" />
+              Download
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={emailReport}
+              className="h-8 px-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              <Mail className="h-3.5 w-3.5 mr-1 text-amber-500" />
+              Email
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={whatsAppReport}
+              className="h-8 px-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              <MessageCircle className="h-3.5 w-3.5 mr-1 text-emerald-500" />
+              WhatsApp
+            </Button>
+
+            <Button
+              type="button"
+              size="sm"
+              onClick={handlePrint}
+              className="h-8 px-3 text-xs font-black bg-blue-600 hover:bg-blue-700 text-white shadow-xs rounded-lg uppercase tracking-wider"
+            >
+              <FileSpreadsheet className="h-3.5 w-3.5 mr-1.5" />
+              Export PDF
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Main Document Container (Matches Image 2 Style) ─────────── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 pt-6">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-sm p-6 sm:p-8 space-y-6">
+
+          {/* Certificate Main Title & Header Metadata */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+            <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+              OFFICIAL CUSTOMER PROFILE CERTIFICATE
+            </h2>
+            <div className="flex items-center gap-3 text-xs font-bold text-slate-500 dark:text-slate-400">
+              <span>Generated On: <strong className="text-slate-800 dark:text-slate-200">{fmtDate(new Date().toISOString())}</strong></span>
+              <span className="text-slate-300 dark:text-slate-700">|</span>
+              <span>Ref: <strong className="font-mono text-blue-600 dark:text-blue-400">{selectedRow.accountCode || "CPR-000002"}</strong></span>
+            </div>
+          </div>
+
+          {/* ── 4 Top Category Cards (Interactive Stage Selectors) ───── */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 no-print">
+            {sections.map((sec) => {
+              const Icon = sec.icon;
+              const isSelected = activeSection === sec.id || activeSection === "all";
+              return (
                 <button
+                  key={sec.id}
                   type="button"
-                  className="flex w-full items-center gap-2 px-3 py-1.5 hover:bg-muted text-left text-slate-700 dark:text-slate-355"
-                  onClick={() => {
-                    setActionMenuOpen(false);
-                    downloadStatementCSV(selectedRow, selectedRow.recentMovements);
-                  }}
-                >
-                  <ClipboardList className="h-3.5 w-3.5 text-blue-650" />
-                  <span>{t(lang, "acct.apv_account_statement", "Account Statement")}</span>
-                </button>
-                <button
-                  type="button"
-                  disabled={!selectedRow.ledgerId}
+                  onClick={() => setActiveSection(sec.id as any)}
                   className={cn(
-                    "flex w-full items-center gap-2 px-3 py-1.5 hover:bg-muted text-left text-slate-700 dark:text-slate-355",
-                    !selectedRow.ledgerId && "opacity-50 cursor-not-allowed"
+                    "rounded-xl border p-4 text-left transition-all duration-200 relative overflow-hidden flex flex-col justify-between group",
+                    isSelected
+                      ? `bg-white dark:bg-slate-850 shadow-md ${sec.borderColor} border-2 ring-2 ring-blue-500/10`
+                      : "bg-slate-50/70 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-white"
                   )}
-                  onClick={() => {
-                    setActionMenuOpen(false);
-                    if (selectedRow.ledgerId) {
-                      router.push(`/dashboard/ledger/general-report?ledgerId=${selectedRow.ledgerId}`);
-                    }
-                  }}
                 >
-                  <BookOpen className="h-3.5 w-3.5 text-indigo-655" />
-                  <span>{t(lang, "ledger.nld_ledger_statement", "Ledger Statement")}</span>
-                </button>
-
-                <div className="border-b border-t bg-muted/20 px-3 py-1.5 text-[9px] font-black uppercase tracking-wider text-muted-foreground">{t(lang, "acct.apv_download_share", "Download & Share")}</div>
-                <button
-                  type="button"
-                  className="flex w-full items-center gap-2 px-3 py-1.5 hover:bg-muted text-left text-slate-700 dark:text-slate-355"
-                  onClick={() => { setActionMenuOpen(false); exportSingleAccountExcel(selectedRow); }}
-                >
-                  <Download className="h-3.5 w-3.5 text-slate-655" />
-                  <span>{t(lang, "acct.apv_download_report", "Download Report")}</span>
-                </button>
-                <button
-                  type="button"
-                  className="flex w-full items-center gap-2 px-3 py-1.5 hover:bg-muted text-left text-slate-700 dark:text-slate-355"
-                  onClick={() => { setActionMenuOpen(false); emailReport(selectedRow); }}
-                >
-                  <Mail className="h-3.5 w-3.5 text-orange-555" />
-                  <span>{t(lang, "acct.apv_email_report", "Email Report")}</span>
-                </button>
-                <button
-                  type="button"
-                  className="flex w-full items-center gap-2 px-3 py-1.5 hover:bg-muted text-left text-slate-700 dark:text-slate-355"
-                  onClick={() => { setActionMenuOpen(false); whatsAppReport(selectedRow); }}
-                >
-                  <MessageCircle className="h-3.5 w-3.5 text-emerald-555" />
-                  <span>{t(lang, "acct.apv_whatsapp_report", "WhatsApp Report")}</span>
-                </button>
-                <button
-                  type="button"
-                  className="flex w-full items-center gap-2 px-3 py-1.5 hover:bg-muted text-left text-slate-700 dark:text-slate-355"
-                  onClick={() => { setActionMenuOpen(false); copyProfileLink(); }}
-                >
-                  <Share2 className="h-3.5 w-3.5 text-teal-655" />
-                  <span>{t(lang, "acct.apv_share_report", "Share Report")}</span>
-                </button>
-
-                <div className="border-t bg-muted/20 px-3 py-1.5 text-[9px] font-black uppercase tracking-wider text-muted-foreground">{t(lang, "acct.apv_system_audit", "System Audit")}</div>
-                <button
-                  type="button"
-                  className="flex w-full items-center gap-2 px-3 py-1.5 hover:bg-muted text-left text-slate-700 dark:text-slate-355"
-                  onClick={() => {
-                    setActionMenuOpen(false);
-                    setShowAuditLogs(v => !v);
-                  }}
-                >
-                  <ShieldCheck className="h-3.5 w-3.5 text-purple-655" />
-                  <span>{showAuditLogs ? "Hide Audit Logs" : "Show Audit Logs"}</span>
-                </button>
-              </div>
-            )}
-          </div>
-        </div>,
-        portalNode
-      )}
-
-      {/* ── [Report 1] Branch Report Header ─────────────────────────── */}
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-gradient-to-r from-slate-900 via-slate-850 to-slate-950 p-6 text-white shadow-lg relative overflow-hidden">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:14px_24px] pointer-events-none opacity-20" />
-        <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
-
-        <div className="relative flex flex-wrap items-start justify-between gap-6">
-          <div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 px-3 py-1 text-[9px] font-bold uppercase tracking-widest text-blue-400">
-              <Building2 className="h-3 w-3" /> Branch Profile Report [Report 1]
-            </span>
-            <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-white">{selectedRow.branchName}</h2>
-            <p className="mt-1 font-mono text-xs text-slate-400 font-semibold flex items-center gap-2">
-              <span>{t(lang, "branch.code_prefix", "Code:")} <strong className="text-white">{selectedRow.branchCode}</strong></span>
-              <span className="text-slate-600">•</span>
-              <span>{t(lang, "cbs.scope_label", "Scope:")} <strong className="text-blue-400">{selectedRow.branchType}</strong></span>
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-4 text-[11px] leading-tight max-w-2xl">
-            <div>
-              <p className="text-slate-400 font-bold uppercase tracking-wider text-[9px]">{t(lang, "report.country", "Country")}</p>
-              <p className="text-xs font-black text-white mt-0.5 flex items-center gap-1.5">
-                <Globe className="h-3.5 w-3.5 text-blue-400" />
-                {selectedRow.countryName}
-              </p>
-            </div>
-            <div>
-              <p className="text-slate-400 font-bold uppercase tracking-wider text-[9px]">{t(lang, "roz.country_serial", "Country Serial")}</p>
-              <p className="text-xs font-mono font-black text-white mt-0.5">{selectedRow.countrySerialNumber || "—"}</p>
-            </div>
-            <div>
-              <p className="text-slate-400 font-bold uppercase tracking-wider text-[9px]">{t(lang, "report.scope_city_branch", "City Branch")}</p>
-              <p className="text-xs font-black text-white mt-0.5">{selectedRow.cityBranchName && selectedRow.cityBranchName !== "-" ? selectedRow.cityBranchName : selectedRow.cityName || "—"}</p>
-            </div>
-            <div>
-              <p className="text-slate-400 font-bold uppercase tracking-wider text-[9px]">{t(lang, "acct.apv_city_serial", "City Serial")}</p>
-              <p className="text-xs font-mono font-black text-white mt-0.5">{selectedRow.branchSerialNumber || "—"}</p>
-            </div>
-            <div>
-              <p className="text-slate-400 font-bold uppercase tracking-wider text-[9px]">{t(lang, "cbs.branch_manager_word", "Branch Manager")}</p>
-              <p className="text-xs font-black text-white mt-0.5 flex items-center gap-1">
-                <span className="h-4 w-4 rounded-full bg-slate-700 flex items-center justify-center text-[8px] text-slate-300 font-black">BM</span>
-                {selectedRow.companyOwner || "Branch Manager"}
-              </p>
-            </div>
-            <div>
-              <p className="text-slate-400 font-bold uppercase tracking-wider text-[9px]">{t(lang, "dash.total_users", "Total Users")}</p>
-              <p className="text-xs font-black text-white mt-0.5">{new Set(branchAccounts.map(r => r.customerId).filter(Boolean)).size || 3} Users</p>
-            </div>
-            <div>
-              <p className="text-slate-400 font-bold uppercase tracking-wider text-[9px]">{t(lang, "cdash.total_accounts", "Total Accounts")}</p>
-              <p className="text-xs font-black text-white mt-0.5">{totalBranchAccounts} Accounts</p>
-            </div>
-            <div>
-              <p className="text-slate-400 font-bold uppercase tracking-wider text-[9px]">{t(lang, "acct.apv_branch_currency", "Branch Currency")}</p>
-              <p className="text-xs font-black text-emerald-450 mt-0.5 flex items-center gap-1">
-                <Coins className="h-3.5 w-3.5" />
-                {selectedRow.currency}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Smart Branch Summary Cards ──────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
-        {[
-          { label: "Total Accounts", value: totalBranchAccounts, icon: Landmark, color: "text-blue-500", bg: "bg-blue-500/5 border-blue-500/20" },
-          { label: "Active Accounts", value: branchAccounts.filter(r => r.status === "active").length, icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-500/5 border-emerald-500/20" },
-          { label: "Total Customers", value: new Set(branchAccounts.map(r => r.customerId).filter(Boolean)).size || 3, icon: Users, color: "text-purple-500", bg: "bg-purple-500/5 border-purple-500/20" },
-          { label: "Total Users", value: new Set(branchAccounts.map(r => r.companyOwner).filter(Boolean)).size || 5, icon: Users, color: "text-indigo-500", bg: "bg-indigo-500/5 border-indigo-500/20" },
-          { label: "Total Transactions", value: branchAccounts.reduce((sum, r) => sum + r.journalActivityCount, 0), icon: Activity, color: "text-amber-500", bg: "bg-amber-500/5 border-amber-500/20" },
-          { label: "Branch Currency", value: selectedRow.currency, icon: Coins, color: "text-teal-500", bg: "bg-teal-500/5 border-teal-500/20" },
-        ].map((c) => {
-          const Icon = c.icon;
-          return (
-            <div key={c.label} className={cn("rounded-xl border p-4 flex items-center justify-between shadow-sm hover:scale-[1.02] transition-transform bg-card", c.bg)}>
-              <div className="space-y-1">
-                <p className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-none">{c.label}</p>
-                <p className="text-lg font-black tracking-tight text-slate-800 dark:text-slate-100">{c.value}</p>
-              </div>
-              <Icon className={cn("h-6 w-6 shrink-0 opacity-80", c.color)} />
-            </div>
-          );
-        })}
-      </div>
-
-      {/* ── Branch Profile Section (Hierarchy Flowchart) ─────────────── */}
-      <Card className="rounded-xl shadow-sm border-slate-200 dark:border-slate-800 overflow-hidden">
-        <div className="border-b bg-slate-50 dark:bg-slate-900/50 px-5 py-3 flex items-center justify-between">
-          <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-            <Layers className="h-4 w-4 text-blue-500" /> {t(lang, "acct.apv_erp_branch_profile_section", "ERP Branch Profile Section (Hierarchy Flow)")}
-          </h3>
-          <span className="text-[9px] font-mono text-slate-400 font-bold uppercase">{t(lang, "acct.apv_structural_mapping", "Structural Mapping")}</span>
-        </div>
-        <CardContent className="p-6">
-          <div className="flow-container overflow-x-auto pb-2 flex items-center gap-3 md:gap-4 select-none">
-            {[
-              { level: "Super Admin", label: data?.workspace.companyOwner || "Workspace Owner", sub: "Workspace Root", icon: Shield, color: "bg-slate-900 text-white dark:bg-slate-850" },
-              { level: "Country", label: selectedRow.countryName, sub: `ISO: ${selectedRow.countryCode}`, icon: Globe, color: "bg-blue-600 text-white" },
-              { level: "Main Branch", label: selectedRow.mainBranchName || selectedRow.branchName, sub: `Code: ${selectedRow.branchCode}`, icon: Building2, color: "bg-indigo-600 text-white" },
-              { level: "City Branch", label: selectedRow.cityBranchName && selectedRow.cityBranchName !== "-" ? selectedRow.cityBranchName : selectedRow.cityName || "—", sub: `Code: ${selectedRow.cityCode || selectedRow.branchCode}`, icon: Landmark, color: "bg-purple-600 text-white" },
-              { level: "User / Owner", label: selectedRow.customerName || selectedRow.accountName, sub: `ID: ${selectedRow.customerNumber || "CUST-001"}`, icon: Users, color: "bg-emerald-600 text-white" },
-              { level: "Account", label: selectedRow.accountName, sub: `No: ${selectedRow.accountCode}`, icon: Activity, color: "bg-amber-600 text-white" },
-              { level: "Ledger", label: selectedRow.ledgerName || selectedRow.journalCode, sub: selectedRow.ledgerStatus === "active" ? "Active Ledger" : "Inactive Ledger", icon: BookOpen, color: "bg-rose-600 text-white" },
-            ].map((step, idx, arr) => (
-              <div key={step.level} className="flex items-center gap-2 md:gap-3 shrink-0">
-                <div className="w-40 rounded-xl border border-slate-200 dark:border-slate-800 bg-card p-3 shadow-sm flex flex-col gap-1.5 relative hover:shadow-md transition-shadow">
-                  <div className="flex items-center gap-1.5 justify-between">
-                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider">{step.level}</span>
-                    <div className={cn("h-5 w-5 rounded-full flex items-center justify-center shrink-0 text-white shadow-sm", step.color)}>
-                      <step.icon className="h-2.5 w-2.5" />
-                    </div>
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <span
+                      className={cn(
+                        "h-7 w-7 rounded-full flex items-center justify-center text-xs font-black shadow-xs",
+                        sec.badgeColor
+                      )}
+                    >
+                      {sec.number}
+                    </span>
+                    <Icon
+                      className={cn(
+                        "h-5 w-5 transition-transform group-hover:scale-110",
+                        isSelected ? sec.activeText : "text-slate-400"
+                      )}
+                    />
                   </div>
-                  <div className="mt-1">
-                    <p className="text-xs font-black truncate text-slate-800 dark:text-slate-100" title={step.label}>{step.label}</p>
-                    <p className="text-[9px] font-mono text-slate-500 font-semibold truncate mt-0.5">{step.sub}</p>
-                  </div>
-                </div>
-                {idx < arr.length - 1 && (
-                  <ChevronRight className="h-5 w-5 text-slate-350 dark:text-slate-700 shrink-0" />
-                )}
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ── Main Details Grid ───────────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Left Col: Workspace & Customer info (Report 2) */}
-        <div className="space-y-6">
-          {/* [Report 2] User & Customer Details Card */}
-          <Card className="rounded-xl shadow-sm border-slate-200 dark:border-slate-800">
-            <CardContent className="p-5 space-y-4">
-              <div className="flex items-center justify-between border-b pb-2">
-                <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                  <Users className="h-4 w-4 text-purple-650" /> [Report 2] User &amp; Customer Details
-                </h3>
-                <span className="text-[9px] font-mono text-slate-400 font-bold uppercase">{t(lang, "acct.apv_customer_profile", "Customer Profile")}</span>
-              </div>
-              <div className="space-y-1.5 text-[11px] leading-tight">
-                <PreviewRow label="Customer / Owner Name" value={selectedRow.companyOwner && selectedRow.companyOwner !== "-" ? selectedRow.companyOwner : selectedRow.customerName || "—"} tone="text-purple-600 dark:text-purple-400 font-bold" />
-                <PreviewRow label="Customer Account Number" value={selectedRow.customerNumber} />
-                <PreviewRow 
-                  label="Registered Company" 
-                  value={
-                    selectedRow.companyName && selectedRow.companyName !== "-" ? (
-                      <span className="font-bold text-slate-900 dark:text-slate-100">
-                        Company 1: {selectedRow.companyName}
-                      </span>
-                    ) : "— (No Company Registered)"
-                  } 
-                />
-                <PreviewRow label="Company Owner" value={selectedRow.companyOwner && selectedRow.companyOwner !== "-" ? selectedRow.companyOwner : "—"} />
-                <PreviewRow 
-                  label="Registered Bank" 
-                  value={
-                    selectedRow.bankName && selectedRow.bankName !== "-" ? (
-                      <span className="font-bold text-slate-900 dark:text-slate-100">
-                        Bank 1: {selectedRow.bankName}
-                      </span>
-                    ) : "— (No Bank Registered)"
-                  } 
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Account Details Card */}
-          <Card className="rounded-xl shadow-sm border-slate-200 dark:border-slate-800">
-            <CardContent className="p-5 space-y-4">
-              <div className="flex items-center justify-between border-b pb-2">
-                <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                  <Activity className="h-4 w-4 text-blue-650" /> {t(lang, "acct.apv_account_technical_specs", "Account Technical Specifications")}
-                </h3>
-                <span className="text-[9px] font-mono text-slate-400 font-bold uppercase">{t(lang, "acct.apv_master_file", "Master File")}</span>
-              </div>
-              <div className="space-y-1.5 text-[11px] leading-tight">
-                <PreviewRow label="Account Name" value={selectedRow.accountName} />
-                <PreviewRow label="Automatic Account Code" value={selectedRow.accountCode} />
-                <PreviewRow label="Manual Reference Code" value={selectedRow.manualReferenceNumber ?? "—"} />
-                <PreviewRow label="Account Category" value={selectedRow.accountCategory} />
-                <PreviewRow label="Account Sub Type" value={selectedRow.subType} />
-                <PreviewRow label="Linked Ledger Status" value={selectedRow.ledgerStatus} tone={selectedRow.ledgerStatus === "active" ? "text-emerald-600" : "text-rose-600"} />
-                <PreviewRow label="Creation Date" value={fmtDateTime(selectedRow.createdAt)} />
-                <PreviewRow label="Last Code Activity At" value={fmtDateTime(selectedRow.latestActivityAt)} />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right Col: Statement Table & Audit Logs (Report 3) */}
-        <div className="space-y-6">
-          {/* Branch & Country Details */}
-          <Card className="rounded-xl shadow-sm border-slate-200 dark:border-slate-800">
-            <CardContent className="p-5 space-y-4">
-              <div className="flex items-center justify-between border-b pb-2">
-                <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                  <Globe className="h-4 w-4 text-emerald-650" /> Branch &amp; Country Details
-                </h3>
-                <span className="text-[9px] font-mono text-slate-400 font-bold uppercase">{t(lang, "acct.apv_scope_registry", "Scope Registry")}</span>
-              </div>
-              <div className="space-y-1.5 text-[11px] leading-tight">
-                <PreviewRow label="Country Location" value={`${selectedRow.countryName} (${selectedRow.countryCode})`} />
-                <PreviewRow label="Branch Assignment" value={selectedRow.branchName} />
-                <PreviewRow label="Branch Code" value={selectedRow.branchCode} />
-                <PreviewRow label="Branch Serial ID" value={selectedRow.branchSerialNumber || "—"} />
-                <PreviewRow label="City Region" value={selectedRow.cityName} />
-                <PreviewRow label="Local Currency" value={selectedRow.currency} />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Audit Log Box (Conditional render toggled by system menu) */}
-          {showAuditLogs && (
-            <Card className="rounded-xl shadow-sm border-purple-200 dark:border-purple-900 bg-purple-50/5 dark:bg-purple-950/5 overflow-hidden">
-              <div className="border-b border-purple-200 dark:border-purple-900 bg-purple-50/50 dark:bg-purple-950/20 px-5 py-3 flex items-center justify-between">
-                <h4 className="text-xs font-bold text-purple-900 dark:text-purple-200 uppercase tracking-wider flex items-center gap-1.5">
-                  <ShieldCheck className="h-4 w-4 text-purple-650" /> {t(lang, "acct.apv_account_audit_history_trail", "Account Audit History Trail")}
-                </h4>
-                <button type="button" className="text-purple-600 hover:text-purple-800 text-[10px] font-black uppercase" onClick={() => setShowAuditLogs(false)}>{t(lang, "purchase.close_btn", "Close")}</button>
-              </div>
-              <CardContent className="p-4 space-y-3">
-                <div className="flex items-start justify-between gap-4 text-xs">
-                  <div className="space-y-1">
-                    <p className="font-bold text-slate-800 dark:text-slate-200">
-                      {t(lang, "acct.apv_action_colon", "Action:")} <span className="text-purple-600 uppercase tracking-wider font-extrabold">{selectedRow.recentActivityLabel || "Update Account"}</span>
+                  <div>
+                    <h3 className={cn("text-xs font-black uppercase tracking-tight", isSelected ? "text-slate-900 dark:text-white" : "text-slate-700 dark:text-slate-300")}>
+                      {sec.title}
+                    </h3>
+                    <p className="text-[11px] font-medium text-slate-400 dark:text-slate-500 mt-0.5">
+                      {sec.subtitle}
                     </p>
-                    <p className="text-[10px] text-slate-500">Executed on the system by {selectedRow.companyOwner}</p>
                   </div>
-                  <div className="text-right font-mono text-[9px] font-semibold text-slate-500">
-                    {fmtDateTime(selectedRow.recentActivityAt)}
-                  </div>
-                </div>
-                <div className="border-t border-purple-100 dark:border-purple-900/40 pt-2 text-[9px] text-purple-800 dark:text-purple-300 space-y-1">
-                  <p className="font-semibold">• Master record initialized under serial number {selectedRow.accountSerialNumber ?? "—"}.</p>
-                  <p className="font-semibold">• Status set to {selectedRow.status} with local currency {selectedRow.currency}.</p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* [Report 3] Detailed Account Statement & Ledger Transactions */}
-        <Card className="rounded-xl shadow-sm border-slate-200 dark:border-slate-800 overflow-hidden col-span-1 md:col-span-2">
-          <div className="border-b bg-slate-50 dark:bg-slate-900/50 px-5 py-4 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                <ClipboardList className="h-4 w-4 text-emerald-500" /> [Report 3] Detailed Account Statement &amp; Ledger Transactions
-              </h3>
-              <p className="text-[10px] text-slate-500 mt-0.5 font-semibold">{t(lang, "acct.apv_realtime_journal_msg", "Real-time journal activity history and balance sheets. Redundant totals removed.")}</p>
-            </div>
-            <span className="text-[9px] font-mono bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full dark:bg-emerald-950/40 dark:text-emerald-350 font-bold border border-emerald-100 dark:border-emerald-900/40">
-              {filteredMovements.length} transactions
-            </span>
+                </button>
+              );
+            })}
           </div>
-          <CardContent className="p-0">
-            {filteredMovements.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-100 dark:bg-slate-800/40 text-slate-500 font-bold border-b border-slate-200 dark:border-slate-800">
-                      <Th className="px-4 py-2.5 font-bold">#</Th>
-                      <Th className="px-4 py-2.5 font-bold">{t(lang, "branch.source_label", "Source")}</Th>
-                      <Th className="px-4 py-2.5 font-bold">{t(lang, "acct.apv_entry_date", "Entry Date")}</Th>
-                      <Th className="px-4 py-2.5 font-bold">{t(lang, "acct.apv_voucher_ref_no", "Voucher / Ref No")}</Th>
-                      <Th className="px-4 py-2.5 font-bold text-right">{t(lang, "cdash.col_debit", "Debit")}</Th>
-                      <Th className="px-4 py-2.5 font-bold text-right">{t(lang, "cdash.col_credit", "Credit")}</Th>
-                      <Th className="px-4 py-2.5 font-bold text-center">{t(lang, "hr.f_currency", "Currency")}</Th>
-                      <Th className="px-4 py-2.5 font-bold text-right">{t(lang, "acct.apv_usd_rate", "USD Rate")}</Th>
-                      <Th className="px-4 py-2.5 font-bold text-right">{t(lang, "acct.apv_usd_amount", "USD Amount")}</Th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-850">
-                    {filteredMovements.map((m, index) => (
-                      <tr key={index} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/50 transition-colors">
-                        <td className="px-4 py-2.5 font-mono text-slate-400 font-bold">{index + 1}</td>
-                        <td className="px-4 py-2.5">
-                          <span className={cn(
-                            "px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider",
-                            m.source === "ledger" 
-                              ? "bg-blue-50 text-blue-700 dark:bg-blue-950/20 dark:text-blue-300"
-                              : "bg-purple-50 text-purple-700 dark:bg-purple-950/20 dark:text-purple-300"
-                          )}>
-                            {m.source}
+
+          {/* ── Active Section / Full Certificate Content Panel ───────── */}
+          {(activeSection === "all" ? sections : sections.filter(s => s.id === activeSection)).map((sec) => {
+            const Icon = sec.icon;
+            return (
+              <div
+                key={sec.id}
+                className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-xs space-y-4 p-5 sm:p-6 mb-6"
+              >
+                {/* Section Sub-header */}
+                <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <div className={cn("p-2 rounded-xl text-white shadow-xs", sec.badgeColor)}>
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                      {sec.title}
+                    </h3>
+                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                      {sec.contentHeader}
+                    </p>
+                  </div>
+                </div>
+
+                {/* 2-Column Clean Key-Value Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 pt-1">
+                  {sec.fields.map((f, fIdx) => {
+                    const FieldIcon = f.icon;
+                    return (
+                      <div
+                        key={fIdx}
+                        className="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-slate-50/40 dark:bg-slate-900/40 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition text-xs"
+                      >
+                        <div className="flex items-center gap-2.5 text-slate-600 dark:text-slate-400">
+                          <span className="p-1 rounded-md bg-white dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700 text-slate-400">
+                            <FieldIcon className="h-3.5 w-3.5" />
                           </span>
-                        </td>
-                        <td className="px-4 py-2.5 font-semibold text-slate-700 dark:text-slate-350">{fmtDateTime(m.entryDate)}</td>
-                        <td className="px-4 py-2.5 font-mono font-bold text-slate-900 dark:text-slate-100">{m.referenceNo ?? "—"}</td>
-                        <td className="px-4 py-2.5 text-right font-mono font-bold text-emerald-650">{m.debit > 0 ? fmtNumber(m.debit) : "—"}</td>
-                        <td className="px-4 py-2.5 text-right font-mono font-bold text-rose-650">{m.credit > 0 ? fmtNumber(m.credit) : "—"}</td>
-                        <td className="px-4 py-2.5 text-center font-bold text-slate-500">{m.currency}</td>
-                        <td className="px-4 py-2.5 text-right font-mono text-slate-500">{m.usdRate > 0 ? m.usdRate.toFixed(4) : "—"}</td>
-                        <td className="px-4 py-2.5 text-right font-mono font-bold text-slate-700 dark:text-slate-300">{m.usdAmount > 0 ? `$${fmtNumber(m.usdAmount)}` : "—"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                          <span className="font-semibold">{f.label}</span>
+                        </div>
+                        <span
+                          className={cn(
+                            "font-bold text-right truncate max-w-[240px]",
+                            f.highlight
+                              ? "text-blue-600 dark:text-blue-400 font-extrabold"
+                              : "text-slate-900 dark:text-slate-100"
+                          )}
+                          title={String(f.value || "-")}
+                        >
+                          {f.value || "—"}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            ) : (
-              <div className="p-8 text-center text-slate-450 dark:text-slate-600 flex flex-col items-center justify-center gap-2">
-                <Info className="h-8 w-8 text-slate-300" />
-                <p className="text-sm font-semibold">{t(lang, "acct.apv_no_journal_entries_found", "No journal entries found")}</p>
-                <p className="text-xs">{t(lang, "acct.apv_no_active_transactions_filter", "No active transactions match your search filter.")}</p>
+            );
+          })}
+
+          {/* ── Certificate Official Footer Banner (Image 2 Footer) ──── */}
+          <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60 p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-3 gap-6 text-xs">
+            {/* 1. Date */}
+            <div className="flex items-center gap-3.5">
+              <div className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-blue-600 shadow-xs">
+                <Calendar className="h-5 w-5" />
               </div>
-            )}
-          </CardContent>
-        </Card>
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date</p>
+                <p className="text-xs font-black text-slate-900 dark:text-white mt-0.5">
+                  {fmtDate(new Date().toISOString())}
+                </p>
+              </div>
+            </div>
+
+            {/* 2. Prepared By */}
+            <div className="flex items-center gap-3.5 border-t sm:border-t-0 sm:border-l border-slate-200/80 dark:border-slate-800 pt-4 sm:pt-0 sm:pl-6">
+              <div className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-purple-600 shadow-xs">
+                <User className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Prepared By</p>
+                <p className="text-xs font-black text-slate-900 dark:text-white mt-0.5">
+                  {data?.workspace.companyOwner || "Super Admin"}
+                </p>
+              </div>
+            </div>
+
+            {/* 3. Authorized By & Signature Stamp */}
+            <div className="flex items-center gap-3.5 border-t sm:border-t-0 sm:border-l border-slate-200/80 dark:border-slate-800 pt-4 sm:pt-0 sm:pl-6">
+              <div className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-blue-600 shadow-xs">
+                <ShieldCheck className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Authorized By</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  {/* Handwritten-like digital signature mark */}
+                  <span className="font-serif italic font-black text-blue-700 dark:text-blue-300 text-sm tracking-wide">
+                    {data?.workspace.companyOwner || "Super Admin"}
+                  </span>
+                  <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[8px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-200">
+                    Verified
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   );

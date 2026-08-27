@@ -88,7 +88,8 @@ export function JournalPrintButton({
       ) : (
         <Printer className="h-4 w-4 text-blue-600" />
       )}
-      <span>{loading ? "Preparing Report..." : t("print", lang) || "Journal Print"}</span>
+      <span>{loading ? "Preparing Report..." : t(lang, "report.print", "Print Report")}</span>
     </Button>
   );
 }
+

@@ -43,6 +43,7 @@ import { Button } from "@/components/ui/button";
 import { ViewportActionMenu } from "@/components/ui/viewport-action-menu";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
 import { openPurchaseA4ReportWindow } from "@/lib/reports/open-purchase-a4-report-window";
 import { openProformaInvoiceWindow } from "@/lib/reports/open-proforma-invoice-window";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
@@ -970,6 +971,52 @@ function SelectFilter({ lang, label, value, options, onChange }: { lang: Support
   );
 }
 
+function printPurchaseRegister(rows: PurchaseReport[], lang: SupportedLanguage) {
+  const tr = (label: string) => translateHeader(lang, label);
+  openUniversalPrintReport({
+    title: "Purchase Order Tracking Register",
+    subtitle: `Total ${rows.length} purchase orders`,
+    lang,
+    moduleType: "purchase_procurement",
+    orientation: "landscape",
+    scope: {
+      scopeLevel: "Purchase Management Tracking",
+      userName: "ERP User",
+    },
+    columns: [
+      { key: "purchaseBookingOrderNumber", label: tr("PO Number"), width: "12%" },
+      { key: "bookingDate", label: tr("Date"), format: "date", width: "9%" },
+      { key: "countryName", label: tr("Country"), width: "9%" },
+      { key: "branchName", label: tr("Branch"), width: "10%" },
+      { key: "supplierName", label: tr("Supplier"), width: "14%" },
+      { key: "productName", label: tr("Goods / Description"), width: "15%" },
+      { key: "quantity", label: tr("Quantity"), align: "right", format: "number", width: "7%" },
+      { key: "unit", label: tr("Unit"), align: "center", width: "6%" },
+      { key: "currency", label: tr("Currency"), align: "center", width: "6%" },
+      { key: "totalPurchaseAmount", label: tr("Total Amount"), align: "right", format: "currency", width: "12%" },
+      { key: "status", label: tr("Status"), align: "center", format: "badge", width: "8%" },
+    ],
+    rows: rows.map(r => ({
+      purchaseBookingOrderNumber: r.purchaseBookingOrderNumber || "-",
+      bookingDate: r.bookingDate || r.purchaseDate || r.createdAt,
+      countryName: r.countryName || "-",
+      branchName: r.branchName || "-",
+      supplierName: r.supplierName || "-",
+      productName: r.productName || r.goodsDescription || "-",
+      quantity: r.quantity || 0,
+      unit: r.unit || "BAGS",
+      currency: r.currency || "USD",
+      totalPurchaseAmount: r.totalPurchaseAmount || r.purchaseAmount || 0,
+      status: r.status || "PENDING",
+    })),
+    totals: {
+      totalPurchaseAmount: rows.reduce((sum, r) => sum + Number(r.totalPurchaseAmount || r.purchaseAmount || 0), 0),
+      quantity: rows.reduce((sum, r) => sum + Number(r.quantity || 0), 0),
+    },
+    autoPrint: false,
+  });
+}
+
 function PurchaseReportActionsMenu({ lang, rows, onExport }: { lang: SupportedLanguage; rows: PurchaseReport[]; onExport: () => void }) {
   const tr = (label: string) => translateHeader(lang, label);
   return (
@@ -984,14 +1031,15 @@ function PurchaseReportActionsMenu({ lang, rows, onExport }: { lang: SupportedLa
           <ActionItem icon={<Eye />} label={tr("Plate View")} onClick={() => close()} />
           <ActionItem icon={<DownloadActionIcon />} label={tr("Download")} onClick={() => { close(); onExport(); }} />
           <ActionItem icon={<FileSpreadsheet />} label={tr("Export Excel")} onClick={() => { close(); onExport(); }} />
-          <ActionItem icon={<DownloadActionIcon />} label={tr("Export PDF")} onClick={() => { close(); window.print(); }} />
-          <ActionItem icon={<Printer />} label={tr("Print")} onClick={() => { close(); window.print(); }} />
+          <ActionItem icon={<DownloadActionIcon />} label={tr("Export PDF")} onClick={() => { close(); printPurchaseRegister(rows, lang); }} />
+          <ActionItem icon={<Printer />} label={tr("Print")} onClick={() => { close(); printPurchaseRegister(rows, lang); }} />
           <div className="border-t border-slate-200 px-3 py-2 text-[11px] text-slate-500 dark:border-slate-800">{rows.length} {tr("Records")}</div>
         </>
       )}
     </ViewportActionMenu>
   );
 }
+
 
 function PurchaseRowActionsMenu({ lang, onSelect, onEdit, onPrint, onExportPdf }: { lang: SupportedLanguage; onSelect: () => void; onEdit: () => void; onPrint: () => void; onExportPdf: () => void }) {
   const tr = (label: string) => translateHeader(lang, label);
@@ -3094,13 +3142,14 @@ export function PurchaseOrderManagementDashboard() {
                         type="button"
                         onClick={() => {
                           setMoreActionsDropdownOpen(false);
-                          window.print();
+                          if (selected) openReportWindow(selected, true);
                         }}
                         className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-900"
                       >
                         <Printer className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
                         {tr("Print")}
                       </button>
+
                       <button
                         type="button"
                         onClick={() => {

@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
 import {
   Bookmark,
   Building2,
@@ -452,16 +453,51 @@ export function UserJournalReport() {
   }
 
   function printReport() {
-    window.print();
+    openUniversalPrintReport({
+      title: "User Management & Access Journal Report",
+      subtitle: `Total ${filteredRows.length} user records`,
+      lang: lang as any,
+      moduleType: "register",
+      orientation: "landscape",
+      scope: {
+        scopeLevel: "System User Directory",
+        userName: "SUPER ADMIN",
+      },
+      columns: [
+        { key: "index", label: "SR.", width: "5%", align: "center" },
+        { key: "countryName", label: "Country", width: "10%" },
+        { key: "branchName", label: "Branch", width: "12%" },
+        { key: "branchCode", label: "Branch Code", width: "8%" },
+        { key: "userName", label: "User Name", width: "15%" },
+        { key: "email", label: "Email", width: "18%" },
+        { key: "role", label: "Role", width: "10%", format: "badge" },
+        { key: "status", label: "Status", width: "8%", format: "badge", align: "center" },
+        { key: "createdAt", label: "Registered Date", width: "10%", format: "date" },
+      ],
+      rows: filteredRows.map((r, i) => ({
+        index: i + 1,
+        countryName: r.countryName || "Global",
+        branchName: r.branchName || "-",
+        branchCode: r.branchCode || "-",
+        userName: r.fullName || r.userCode || "-",
+        email: r.email || "-",
+        role: r.role || "-",
+        status: r.status || "ACTIVE",
+        createdAt: r.registrationDate || "-",
+      })),
+      autoPrint: false,
+    });
   }
+
 
   function openNewUser() {
     router.push("/dashboard/users/new");
   }
 
   function exportPdf() {
-    window.print();
+    printReport();
   }
+
 
   function exportExcel() {
     const rows: string[][] = [

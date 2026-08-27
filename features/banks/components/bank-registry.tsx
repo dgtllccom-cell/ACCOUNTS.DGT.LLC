@@ -138,10 +138,12 @@ export function BankRegistry() {
               <option value="Active">{t(lang, "acct.active_only", "Active Only")}</option>
               <option value="Inactive">{t(lang, "acct.inactive_only", "Inactive Only")}</option>
             </select>
-            <Button variant="outline" onClick={handlePrint}>
-              <Printer className="w-4 h-4" />
+            <Button variant="outline" onClick={handlePrint} className="gap-1.5 font-bold">
+              <Printer className="w-4 h-4 text-blue-600" />
+              <span>{t(lang, "common.print", "Print Report")}</span>
             </Button>
           </div>
+
 
           <div className="grid grid-cols-4 gap-2 text-sm">
             <div className="bg-blue-50 p-3 rounded">

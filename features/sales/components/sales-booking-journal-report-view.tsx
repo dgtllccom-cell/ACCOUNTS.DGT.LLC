@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import { Download, Mail, MoreVertical, Printer, RefreshCcw, Search, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
 import { openSalesA4ReportWindow } from "@/lib/reports/open-sales-a4-report-window";
 import { apiGet } from "@/lib/api/client";
 import { ReportKpiCards } from "@/features/reports/components/report-kpi-cards";
@@ -157,6 +158,51 @@ export function SalesBookingJournalReportView() {
     document.body.removeChild(link);
   }
 
+  function printSalesRegister() {
+
+    openUniversalPrintReport({
+      title: "Sales Booking Confirmation Register",
+      subtitle: `Total ${reports.length} booking records`,
+      lang: activeLang,
+      moduleType: "sales_invoice",
+      orientation: "landscape",
+      scope: {
+        scopeLevel: "Sales Booking Register",
+        userName: "ERP User",
+      },
+      columns: [
+        { key: "salesBookingOrderNumber", label: "SO Number", width: "12%" },
+        { key: "salesDate", label: "Date", format: "date", width: "9%" },
+        { key: "customerName", label: "Customer", width: "15%" },
+        { key: "goodsDescription", label: "Goods / Description", width: "18%" },
+        { key: "quantity", label: "Quantity", align: "right", format: "number", width: "7%" },
+        { key: "unit", label: "Unit", align: "center", width: "5%" },
+        { key: "currency", label: "Currency", align: "center", width: "6%" },
+        { key: "totalSalesAmount", label: "Total Amount", align: "right", format: "currency", width: "13%" },
+        { key: "status", label: "Status", align: "center", format: "badge", width: "8%" },
+        { key: "paymentStatus", label: "Payment", align: "center", format: "badge", width: "7%" },
+      ],
+      rows: reports.map(r => ({
+        salesBookingOrderNumber: r.salesBookingOrderNumber || "-",
+        salesDate: r.salesDate || r.bookingDate || r.createdAt,
+        customerName: r.customerName || "-",
+        goodsDescription: r.goodsDescription || r.productName || "-",
+        quantity: r.quantity || 0,
+        unit: r.unit || "BAGS",
+        currency: r.currency || "USD",
+        totalSalesAmount: r.totalSalesAmount || r.salesAmount || 0,
+        status: r.status || "CONFIRMED",
+        paymentStatus: r.paymentStatus || "PENDING",
+      })),
+      totals: {
+        totalSalesAmount: summary.amount,
+        quantity: summary.qty,
+      },
+      autoPrint: false,
+    });
+  }
+
+
   return (
     <div className="space-y-6 text-foreground">
       
@@ -218,6 +264,15 @@ export function SalesBookingJournalReportView() {
           </Button>
 
           <Button
+            onClick={printSalesRegister}
+            disabled={reports.length === 0}
+            variant="outline"
+            className="border-input bg-background text-foreground font-bold h-10 text-xs px-4 shadow-sm gap-1.5"
+          >
+            <Printer className="h-4 w-4 text-blue-600" /> {t(activeLang, "common.print", "Print Report")}
+          </Button>
+
+          <Button
             onClick={exportCsv}
             disabled={reports.length === 0}
             className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-10 text-xs px-4 shadow-sm"
@@ -226,6 +281,7 @@ export function SalesBookingJournalReportView() {
           </Button>
         </div>
       </div>
+
 
       {/* Top 5 KPI Summary Cards Grid */}
       <ReportKpiCards

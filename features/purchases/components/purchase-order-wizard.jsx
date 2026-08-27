@@ -1625,65 +1625,6 @@ export function PurchaseOrderWizard({ session }) {
     });
   }, [activeSession?.id, activeSession?.userId, activeSession?.countryIds?.[0], activeSession?.countryBranchIds?.[0], activeSession?.cityBranchIds?.[0], activeSession?.scopes?.countryIds?.[0], activeSession?.scopes?.countryBranchIds?.[0], activeSession?.scopes?.cityBranchIds?.[0], activeSession?.isSuperAdmin, activeSession?.scopes?.isSuperAdmin]);
 
-  // Load Main Branches (Country Branches) when countryId changes
-  useEffect(() => {
-    let cancelled = false;
-    const countryId = form.countryId;
-    if (!countryId) {
-      setMainBranches([]);
-      return;
-    }
-    async function loadCountryBranches() {
-      try {
-        const res = await fetch(`/api/branch-management/country-branches?countryId=${encodeURIComponent(countryId)}`).then(r => r.json());
-        const list = Array.isArray(res?.countryBranches) ? res.countryBranches : [];
-        if (!cancelled) {
-          setMainBranches(list);
-          if (list.length === 1 && !form.countryBranchId) {
-            setForm(prev => ({ ...prev, countryBranchId: list[0].id }));
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load country branches:", err);
-      }
-    }
-    loadCountryBranches();
-    return () => {
-      cancelled = true;
-    };
-  }, [form.countryId]);
-
-  // Load City Branches when countryId or countryBranchId changes
-  useEffect(() => {
-    let cancelled = false;
-    const countryId = form.countryId;
-    const countryBranchId = form.countryBranchId;
-    if (!countryId) {
-      setCityBranches([]);
-      return;
-    }
-    async function loadCityBranches() {
-      try {
-        const queryParams = new URLSearchParams({ countryId });
-        if (countryBranchId) queryParams.append("countryBranchId", countryBranchId);
-        const res = await fetch(`/api/branch-management/city-branches?${queryParams.toString()}`).then(r => r.json());
-        const list = Array.isArray(res?.cityBranches) ? res.cityBranches : [];
-        if (!cancelled) {
-          setCityBranches(list);
-          if (list.length === 1 && !form.cityBranchId) {
-            setForm(prev => ({ ...prev, cityBranchId: list[0].id }));
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load city branches:", err);
-      }
-    }
-    loadCityBranches();
-    return () => {
-      cancelled = true;
-    };
-  }, [form.countryId, form.countryBranchId]);
-
   // Country-to-Country Purchase: load destination Main Branches when destCountryId changes.
   useEffect(() => {
     let cancelled = false;
@@ -1694,8 +1635,8 @@ export function PurchaseOrderWizard({ session }) {
     }
     async function loadDestCountryBranches() {
       try {
-        const res = await fetch(`/api/branch-management/country-branches?countryId=${encodeURIComponent(destCountryId)}`).then(r => r.json());
-        const list = Array.isArray(res?.countryBranches) ? res.countryBranches : [];
+        const res = await fetch(`/api/erp/locations/branches/main?countryId=${encodeURIComponent(destCountryId)}`).then(r => r.json());
+        const list = res?.data?.branches || res?.branches || [];
         if (!cancelled) setDestMainBranches(list);
       } catch (err) {
         console.error("Failed to load destination country branches:", err);
@@ -1717,8 +1658,8 @@ export function PurchaseOrderWizard({ session }) {
       try {
         const queryParams = new URLSearchParams({ countryId: destCountryId });
         if (form.destCountryBranchId) queryParams.append("countryBranchId", form.destCountryBranchId);
-        const res = await fetch(`/api/branch-management/city-branches?${queryParams.toString()}`).then(r => r.json());
-        const list = Array.isArray(res?.cityBranches) ? res.cityBranches : [];
+        const res = await fetch(`/api/erp/locations/branches/city?${queryParams.toString()}`).then(r => r.json());
+        const list = res?.data?.cityBranches || res?.data?.branches || res?.cityBranches || [];
         if (!cancelled) setDestCityBranches(list);
       } catch (err) {
         console.error("Failed to load destination city branches:", err);
@@ -3860,21 +3801,22 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
               <div>
                 <label className="text-xs font-black">{t(lang, "purchase.f_country", "Country")}</label>
                 <select
-                  value={form.countryId}
+                  value={form.countryId || ""}
                   onChange={(e) => {
-                    const country = (countries || []).find(c => c.id === e.target.value);
+                    const cId = e.target.value;
+                    const country = (countries || []).find(c => c.id === cId);
                     setForm(p => ({
                       ...p,
-                      countryId: e.target.value,
+                      countryId: cId,
                       countryBranchId: "",
                       cityBranchId: "",
-                      currencyType: "USD",
-                      purchaseCurrency: country ? (country.currency_code || country.currencyCode) : p.purchaseCurrency,
-                      secondaryCurrency: country ? (country.currency_code || country.currencyCode) : p.secondaryCurrency,
-                      paymentCurrency: country ? (country.currency_code || country.currencyCode) : p.paymentCurrency
+                      branchCountry: country?.name || p.branchCountry,
+                      purchaseCurrency: country ? (country.currency_code || country.currencyCode || "USD") : p.purchaseCurrency,
+                      secondaryCurrency: country ? (country.currency_code || country.currencyCode || "USD") : p.secondaryCurrency,
+                      paymentCurrency: country ? (country.currency_code || country.currencyCode || "USD") : p.paymentCurrency
                     }));
                   }}
-                  className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-xs font-semibold outline-none"
+                  className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-xs font-semibold outline-none focus:border-primary"
                 >
                   <option value="">{t(lang, "purchase.select_country_ellipsis", "Select Country...")}</option>
                   {(countries || []).map((c) => (
@@ -3885,10 +3827,21 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
               <div>
                 <label className="text-xs font-black">{t(lang, "purchase.f_branch", "Branch")}</label>
                 <select
-                  value={form.countryBranchId}
-                  onChange={(e) => setForm(p => ({ ...p, countryBranchId: e.target.value, cityBranchId: "" }))}
+                  value={form.countryBranchId || ""}
+                  onChange={(e) => {
+                    const bId = e.target.value;
+                    const branch = (mainBranches || []).find(b => b.id === bId);
+                    setForm(p => ({
+                      ...p,
+                      countryBranchId: bId,
+                      cityBranchId: "",
+                      branchName: branch?.name || p.branchName,
+                      branchCode: branch?.code || p.branchCode,
+                      branchCity: branch?.cityName || branch?.city_name || p.branchCity
+                    }));
+                  }}
                   disabled={!form.countryId}
-                  className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-xs font-semibold outline-none"
+                  className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-xs font-semibold outline-none focus:border-primary disabled:opacity-50"
                 >
                   <option value="">{t(lang, "purchase.select_branch_ellipsis", "Select Branch...")}</option>
                   {(mainBranches || []).map((b) => (
@@ -3900,9 +3853,19 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                 <label className="text-xs font-black">{t(lang, "branch.city_label", "City Branch")}</label>
                 <select
                   value={form.cityBranchId || ""}
-                  onChange={(e) => setForm(p => ({ ...p, cityBranchId: e.target.value }))}
+                  onChange={(e) => {
+                    const cbId = e.target.value;
+                    const cb = (cityBranches || []).find(b => b.id === cbId);
+                    setForm(p => ({
+                      ...p,
+                      cityBranchId: cbId,
+                      branchName: cb ? (cb.city_name || cb.name) : p.branchName,
+                      branchCode: cb ? (cb.code || cb.branch_code) : p.branchCode,
+                      branchCity: cb ? (cb.city_name || cb.name) : p.branchCity
+                    }));
+                  }}
                   disabled={!form.countryBranchId}
-                  className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-xs font-semibold outline-none"
+                  className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-xs font-semibold outline-none focus:border-primary disabled:opacity-50"
                 >
                   <option value="">{t(lang, "purchase.select_city_branch_ellipsis", "Select City Branch...")}</option>
                   {(cityBranches || []).map((b) => (
@@ -3914,9 +3877,10 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
 
             <div className="pt-4 flex justify-end">
               <Button
+                type="button"
                 onClick={() => setScopeConfirmed(true)}
                 disabled={!form.countryId || !form.countryBranchId}
-                className="bg-[#0F172A] hover:bg-slate-800 text-white font-bold h-9 text-xs px-6 rounded-lg shadow-sm disabled:opacity-50 disabled:bg-slate-300 disabled:text-slate-500"
+                className="bg-[#0F172A] hover:bg-slate-800 text-white font-bold h-9 text-xs px-6 rounded-lg shadow-sm disabled:opacity-50 disabled:bg-slate-300 disabled:text-slate-500 cursor-pointer"
               >
                 {t(lang, "purchase.confirm_scope", "Confirm Scope")} &rarr;
               </Button>

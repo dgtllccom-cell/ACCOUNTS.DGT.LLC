@@ -1,4 +1,5 @@
 import { generateReportHtml, escapeHtml, formatMoney, formatNumber, formatDate, type ERPCompanyInfo, type ERPFilterPill, type ERPKpiCard } from "./erp-report-template-builder";
+import { printStore } from "@/lib/store/print-store";
 
 export type PurchaseLoadingReportRow = {
   id: string;
@@ -194,6 +195,13 @@ export function openLoadingRecordsPrintReport(input: {
     lang
   });
 
+  try {
+    printStore.openPrint(html, "Purchase Loading Records Report");
+    return;
+  } catch (e) {
+    console.warn("Could not open in printStore, falling back to window.open", e);
+  }
+
   const printWindow = window.open("", "_blank");
   if (printWindow) {
     printWindow.document.open();
@@ -201,3 +209,4 @@ export function openLoadingRecordsPrintReport(input: {
     printWindow.document.close();
   }
 }
+

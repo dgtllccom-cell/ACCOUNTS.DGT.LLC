@@ -7,6 +7,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { translateValue } from "@/lib/i18n/table-values";
 import { t } from "@/lib/i18n/ui";
+import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
 import {
   Package, Building2, Download, Printer, Coins,
   Globe, Loader2, X, Eye, CheckCircle, Clock, Plane, Truck, Calendar, User, ChevronDown, ChevronUp, MapPin, Filter
@@ -362,8 +363,45 @@ export default function JournalReport({
 
   // Print function
   const handlePrint = () => {
-    window.print();
+    openUniversalPrintReport({
+      title: tr(currentLevel === "country" ? "Country Journal Report" : currentLevel === "branch" ? "Branch Journal Report" : "Salesman Journal Report"),
+      subtitle: `Total ${records.length} journal records`,
+      lang: lang as any,
+      moduleType: "journal",
+      orientation: "landscape",
+      scope: {
+        scopeLevel: tr(currentLevel === "country" ? "Country Summary" : currentLevel === "branch" ? "Branch Summary" : "Salesman Summary"),
+        userName: session?.fullName || "SUPER ADMIN",
+        branch: session?.branchName || "MAIN BRANCH",
+      },
+      columns: [
+        { key: "journal_no", label: tr("Journal / Bill #"), width: "12%" },
+        { key: "date", label: tr("Date"), format: "date", width: "9%" },
+        { key: "party", label: tr("Party / Account"), width: "18%" },
+        { key: "goodsDescription", label: tr("Goods / Cargo"), width: "18%" },
+        { key: "quantity", label: tr("Quantity"), align: "right", format: "number", width: "7%" },
+        { key: "amount", label: tr("Total Amount (PKR)"), align: "right", format: "currency", width: "13%" },
+        { key: "paidAmount", label: tr("Transferred (PKR)"), align: "right", format: "currency", width: "13%" },
+        { key: "currentStatus", label: tr("Status"), align: "center", format: "badge", width: "10%" },
+      ],
+      rows: records.map(r => ({
+        journal_no: r.journal_no || "-",
+        date: r.date,
+        party: r.party || "-",
+        goodsDescription: r.goods?.[0]?.name || "-",
+        quantity: r.totalQuantity || r.goods?.[0]?.quantity || 0,
+        amount: r.amount || 0,
+        paidAmount: r.paidAmount || 0,
+        currentStatus: r.currentStatus || "ACTIVE",
+      })),
+      totals: {
+        amount: records.reduce((acc, r) => acc + (r.amount || 0), 0),
+        paidAmount: records.reduce((acc, r) => acc + (r.paidAmount || 0), 0),
+      },
+      autoPrint: false,
+    });
   };
+
 
   const [titleSlot, setTitleSlot] = useState<HTMLElement | null>(null);
   const [actionsSlot, setActionsSlot] = useState<HTMLElement | null>(null);

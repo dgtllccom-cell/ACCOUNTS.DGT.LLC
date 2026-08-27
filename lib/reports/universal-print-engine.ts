@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { escapeHtml, formatMoney, formatNumber, formatDate, type ERPCompanyInfo } from "./erp-report-template-builder";
 import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
+import { printStore } from "@/lib/store/print-store";
 
 export type PrintModuleType = 
   | "ledger" 
@@ -669,12 +670,19 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
 </body>
 </html>`;
 
-  const printWindow = window.open("", "_blank");
-  if (!printWindow) {
-    alert("Please allow popups to open the print preview.");
+  // Prefer in-app PDF Preview Modal for seamless UX with zero popup blocker issues
+  try {
+    printStore.openPrint(html, title || "ERP Report");
     return;
+  } catch (e) {
+    console.warn("Could not open in printStore, falling back to window.open", e);
   }
-  printWindow.document.open();
-  printWindow.document.write(html);
-  printWindow.document.close();
+
+  const printWindow = window.open("", "_blank");
+  if (printWindow) {
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+  }
 }
+

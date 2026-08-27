@@ -170,7 +170,6 @@ export default function SuperAdminAllUsersDirectoryPage() {
               : [];
         const mapped: UserDirectoryItem[] = rawList.map((u: any, idx: number) => {
           const userCode = u.userCode || `USR-${String(idx + 1).padStart(4, "0")}`;
-          // Set password to standardized Admin@123 as requested by the user
           const passwordKey = "Admin@123";
           
           let loginUrl = "/auth/login";
@@ -185,11 +184,35 @@ export default function SuperAdminAllUsersDirectoryPage() {
             loginUrl = "/auth/login/city";
           }
 
+          // Format structured enterprise login email
+          let email = (u.email || "").toLowerCase().trim();
+          if (!email || email.startsWith("user") || email.startsWith("usr-") || !email.includes("@dgt.llc")) {
+            const cName = (u.countryName || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+            const cCode = cName.includes("pakistan") ? "pk" : cName.includes("emirates") || cName.includes("uae") ? "ae" : cName.includes("afghanistan") ? "af" : cName.includes("india") ? "in" : cName.includes("china") ? "cn" : "pk";
+            const bName = (u.branchName || u.cityName || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+
+            if (role.includes("super_admin") || role.includes("superadmin")) {
+              email = "superadmin@dgt.llc";
+            } else if (role.includes("country_admin") || role.includes("country")) {
+              email = `${cCode}.${cName || "pakistan"}@dgt.llc`;
+            } else if (role.includes("clearing") || role.includes("agent") || role.includes("shipping")) {
+              if (bName && bName !== "mainheadquarters" && bName !== "global") {
+                email = `${bName}.clearingagent.c@dgt.llc`;
+              } else {
+                email = `${cCode}.clearingagent@dgt.llc`;
+              }
+            } else if (bName && bName !== "mainheadquarters" && bName !== "global") {
+              email = `${bName}.branch.b@dgt.llc`;
+            } else {
+              email = `${cCode}.${(u.userCode || `user${idx + 1}`).toLowerCase()}@dgt.llc`;
+            }
+          }
+
           return {
             userId: u.userId || u.id || `u-${idx}`,
             userCode,
             fullName: u.fullName || u.name || "System User",
-            email: u.email || `${(u.userCode || `user${idx}`).toLowerCase()}@dgt.llc`,
+            email,
             phone: u.phone || "—",
             countryId: u.countryId || null,
             countryName: u.countryName || "Global / All",
@@ -584,6 +607,147 @@ export default function SuperAdminAllUsersDirectoryPage() {
         </div>
       </div>
 
+      {/* ─── ERP LOGIN PORTALS DIRECT ACCESS GATEWAYS ─── */}
+      <div className="rounded-2xl border border-indigo-500/30 bg-gradient-to-r from-indigo-950/10 via-slate-900/5 to-purple-950/10 p-4 sm:p-5 shadow-xs print:hidden space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/60 pb-2.5">
+          <div className="flex items-center gap-2">
+            <span className="p-1.5 rounded-lg bg-indigo-600 text-white shadow-xs">
+              <Laptop className="h-4 w-4" />
+            </span>
+            <div>
+              <h3 className="text-xs font-black uppercase text-foreground tracking-tight">
+                ERP Login Portals &amp; Direct Access Gateways
+              </h3>
+              <p className="text-[10px] text-muted-foreground font-medium">
+                Share these dedicated login links and official @dgt.llc credentials with respective country and branch teams.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link href="/auth/login" target="_blank">
+              <Button size="sm" className="h-7 px-3 text-[10px] font-black bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-xs">
+                <ExternalLink className="h-3 w-3 mr-1" />
+                Universal Login Page
+              </Button>
+            </Link>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {/* Portal 1: Super Admin */}
+          <div className="rounded-xl border border-red-200 dark:border-red-900/60 bg-red-50/40 dark:bg-red-950/20 p-3 flex flex-col justify-between space-y-2">
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300">
+                  Super Admin
+                </span>
+                <ShieldCheck className="h-4 w-4 text-red-600" />
+              </div>
+              <h4 className="text-xs font-bold text-foreground mt-1.5">Admin Login Portal</h4>
+              <p className="text-[10px] font-mono text-muted-foreground mt-0.5 truncate">/auth/login/admin</p>
+              <div className="mt-2 bg-background/80 p-1.5 rounded border border-border/60 text-[10px] space-y-0.5">
+                <div className="flex justify-between font-mono"><span className="text-muted-foreground">User:</span> <strong className="text-foreground">superadmin@dgt.llc</strong></div>
+                <div className="flex justify-between font-mono"><span className="text-muted-foreground">Pass:</span> <strong className="text-foreground">Admin@123</strong></div>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 pt-1">
+              <a href="/auth/login/admin?email=superadmin@dgt.llc" target="_blank" rel="noreferrer" className="flex-1">
+                <Button size="sm" variant="outline" className="w-full h-7 text-[10px] font-bold border-red-300 text-red-700 hover:bg-red-100 dark:border-red-800 dark:text-red-300">
+                  <ExternalLink className="h-3 w-3 mr-1" /> Open Login
+                </Button>
+              </a>
+              <Button size="sm" variant="ghost" onClick={() => copyToClipboard(`${typeof window !== "undefined" ? window.location.origin : ""}/auth/login/admin`, "portal-admin")} className="h-7 px-2 text-muted-foreground hover:text-foreground">
+                {copiedKey === "portal-admin" ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
+              </Button>
+            </div>
+          </div>
+
+          {/* Portal 2: Country Admin */}
+          <div className="rounded-xl border border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/40 dark:bg-indigo-950/20 p-3 flex flex-col justify-between space-y-2">
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300">
+                  Country Admin
+                </span>
+                <Globe className="h-4 w-4 text-indigo-600" />
+              </div>
+              <h4 className="text-xs font-bold text-foreground mt-1.5">Country Login Portal</h4>
+              <p className="text-[10px] font-mono text-muted-foreground mt-0.5 truncate">/auth/login/country</p>
+              <div className="mt-2 bg-background/80 p-1.5 rounded border border-border/60 text-[10px] space-y-0.5">
+                <div className="flex justify-between font-mono"><span className="text-muted-foreground">Format:</span> <strong className="text-foreground">pk.pakistan@dgt.llc</strong></div>
+                <div className="flex justify-between font-mono"><span className="text-muted-foreground">Pass:</span> <strong className="text-foreground">Admin@123</strong></div>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 pt-1">
+              <a href="/auth/login/country?email=pk.pakistan@dgt.llc" target="_blank" rel="noreferrer" className="flex-1">
+                <Button size="sm" variant="outline" className="w-full h-7 text-[10px] font-bold border-indigo-300 text-indigo-700 hover:bg-indigo-100 dark:border-indigo-800 dark:text-indigo-300">
+                  <ExternalLink className="h-3 w-3 mr-1" /> Open Login
+                </Button>
+              </a>
+              <Button size="sm" variant="ghost" onClick={() => copyToClipboard(`${typeof window !== "undefined" ? window.location.origin : ""}/auth/login/country`, "portal-country")} className="h-7 px-2 text-muted-foreground hover:text-foreground">
+                {copiedKey === "portal-country" ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
+              </Button>
+            </div>
+          </div>
+
+          {/* Portal 3: City Branch */}
+          <div className="rounded-xl border border-blue-200 dark:border-blue-900/60 bg-blue-50/40 dark:bg-blue-950/20 p-3 flex flex-col justify-between space-y-2">
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">
+                  City Branch
+                </span>
+                <Building2 className="h-4 w-4 text-blue-600" />
+              </div>
+              <h4 className="text-xs font-bold text-foreground mt-1.5">City Branch Portal</h4>
+              <p className="text-[10px] font-mono text-muted-foreground mt-0.5 truncate">/auth/login/city</p>
+              <div className="mt-2 bg-background/80 p-1.5 rounded border border-border/60 text-[10px] space-y-0.5">
+                <div className="flex justify-between font-mono"><span className="text-muted-foreground">Format:</span> <strong className="text-foreground">chaman.branch.b@dgt.llc</strong></div>
+                <div className="flex justify-between font-mono"><span className="text-muted-foreground">Pass:</span> <strong className="text-foreground">Admin@123</strong></div>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 pt-1">
+              <a href="/auth/login/city?email=chaman.branch.b@dgt.llc" target="_blank" rel="noreferrer" className="flex-1">
+                <Button size="sm" variant="outline" className="w-full h-7 text-[10px] font-bold border-blue-300 text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:text-blue-300">
+                  <ExternalLink className="h-3 w-3 mr-1" /> Open Login
+                </Button>
+              </a>
+              <Button size="sm" variant="ghost" onClick={() => copyToClipboard(`${typeof window !== "undefined" ? window.location.origin : ""}/auth/login/city`, "portal-city")} className="h-7 px-2 text-muted-foreground hover:text-foreground">
+                {copiedKey === "portal-city" ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
+              </Button>
+            </div>
+          </div>
+
+          {/* Portal 4: Clearing Agent */}
+          <div className="rounded-xl border border-amber-200 dark:border-amber-900/60 bg-amber-50/40 dark:bg-amber-950/20 p-3 flex flex-col justify-between space-y-2">
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300">
+                  Clearing Agent
+                </span>
+                <Layers className="h-4 w-4 text-amber-600" />
+              </div>
+              <h4 className="text-xs font-bold text-foreground mt-1.5">Agent Login Portal</h4>
+              <p className="text-[10px] font-mono text-muted-foreground mt-0.5 truncate">/auth/login/clearing-agent</p>
+              <div className="mt-2 bg-background/80 p-1.5 rounded border border-border/60 text-[10px] space-y-0.5">
+                <div className="flex justify-between font-mono"><span className="text-muted-foreground">Format:</span> <strong className="text-foreground">pk.clearingagent@dgt.llc</strong></div>
+                <div className="flex justify-between font-mono"><span className="text-muted-foreground">Pass:</span> <strong className="text-foreground">Admin@123</strong></div>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 pt-1">
+              <a href="/auth/login/clearing-agent?email=pk.clearingagent@dgt.llc" target="_blank" rel="noreferrer" className="flex-1">
+                <Button size="sm" variant="outline" className="w-full h-7 text-[10px] font-bold border-amber-300 text-amber-700 hover:bg-amber-100 dark:border-amber-800 dark:text-amber-300">
+                  <ExternalLink className="h-3 w-3 mr-1" /> Open Login
+                </Button>
+              </a>
+              <Button size="sm" variant="ghost" onClick={() => copyToClipboard(`${typeof window !== "undefined" ? window.location.origin : ""}/auth/login/clearing-agent`, "portal-agent")} className="h-7 px-2 text-muted-foreground hover:text-foreground">
+                {copiedKey === "portal-agent" ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* ─── SEARCH & MULTI-FILTER BAR ─── */}
       <div className="bg-card p-3 sm:p-4 rounded-2xl border border-border shadow-xs flex flex-col md:flex-row gap-3 items-center justify-between print:hidden">
         <div className="relative w-full md:w-96">
@@ -840,6 +1004,20 @@ export default function SuperAdminAllUsersDirectoryPage() {
                       {/* Actions (Screen only) */}
                       <td className="p-3.5 text-center print:hidden" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-center gap-1">
+                          <a
+                            href={`${u.loginUrl}?email=${encodeURIComponent(u.email)}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            title={`Open Login Portal for ${u.fullName}`}
+                          >
+                            <Button
+                              size="sm"
+                              className="h-7 px-2.5 text-[11px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-xs cursor-pointer"
+                            >
+                              <ExternalLink className="w-3 h-3 mr-1" />
+                              Login ↗
+                            </Button>
+                          </a>
                           <Button
                             size="sm"
                             onClick={() => openUserInspector(u)}
