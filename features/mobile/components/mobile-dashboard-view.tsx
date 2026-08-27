@@ -17,6 +17,7 @@ import {
   Globe
 } from "lucide-react";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { t } from "@/lib/i18n/ui";
 import { cn } from "@/lib/utils";
 import type { MobileSyncPayload } from "@/lib/services/mobile-sync-service";
 
@@ -28,6 +29,7 @@ type Props = {
 
 export function MobileDashboardView({ lang, syncData, onNavigateTab }: Props) {
   const isRTL = ["ar", "ur", "fa", "ps"].includes(lang);
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
 
   const stats = syncData?.stats || {
     newMessages: 8,
@@ -78,14 +80,14 @@ export function MobileDashboardView({ lang, syncData, onNavigateTab }: Props) {
           className="rounded-2xl border border-slate-200 bg-white p-4 dark:bg-slate-900 dark:border-slate-800 shadow-sm cursor-pointer hover:border-emerald-500 transition-all"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase text-slate-500">New Messages</span>
+            <span className="text-[10px] font-black uppercase text-slate-500">{tt("mbl.new_messages", "New Messages")}</span>
             <div className="rounded-xl bg-emerald-50 p-2 text-emerald-600 dark:bg-emerald-950/40">
               <MessageSquare className="h-4 w-4" />
             </div>
           </div>
           <p className="text-2xl font-black text-slate-900 dark:text-white mt-2">{stats.newMessages}</p>
           <p className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1">
-            Tap to open inbox <ChevronRight className="h-3 w-3" />
+            {tt("mbl.tap_inbox", "Tap to open inbox")} <ChevronRight className="h-3 w-3" />
           </p>
         </div>
 
@@ -95,7 +97,7 @@ export function MobileDashboardView({ lang, syncData, onNavigateTab }: Props) {
           className="rounded-2xl border border-slate-200 bg-white p-4 dark:bg-slate-900 dark:border-slate-800 shadow-sm cursor-pointer hover:border-amber-500 transition-all"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase text-slate-500">AI Drafts Ready</span>
+            <span className="text-[10px] font-black uppercase text-slate-500">{tt("mbl.ai_drafts", "AI Drafts Ready")}</span>
             <div className="rounded-xl bg-amber-50 p-2 text-amber-600 dark:bg-amber-950/40">
               <Sparkles className="h-4 w-4" />
             </div>
@@ -110,7 +112,7 @@ export function MobileDashboardView({ lang, syncData, onNavigateTab }: Props) {
           className="rounded-2xl border border-slate-200 bg-white p-4 dark:bg-slate-900 dark:border-slate-800 shadow-sm cursor-pointer hover:border-purple-500 transition-all"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase text-slate-500">Reminders Today</span>
+            <span className="text-[10px] font-black uppercase text-slate-500">{tt("mbl.reminders_today", "Reminders Today")}</span>
             <div className="rounded-xl bg-purple-50 p-2 text-purple-600 dark:bg-purple-950/40">
               <Clock className="h-4 w-4" />
             </div>
@@ -125,13 +127,13 @@ export function MobileDashboardView({ lang, syncData, onNavigateTab }: Props) {
           className="rounded-2xl border border-slate-200 bg-white p-4 dark:bg-slate-900 dark:border-slate-800 shadow-sm cursor-pointer hover:border-blue-500 transition-all"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase text-slate-500">ERP Contacts</span>
+            <span className="text-[10px] font-black uppercase text-slate-500">{tt("mbl.erp_contacts", "ERP Contacts")}</span>
             <div className="rounded-xl bg-blue-50 p-2 text-blue-600 dark:bg-blue-950/40">
               <Users className="h-4 w-4" />
             </div>
           </div>
           <p className="text-2xl font-black text-blue-600 dark:text-blue-400 mt-2">{stats.activeCustomers}</p>
-          <p className="text-[10px] text-slate-400 mt-0.5">Customers & Suppliers</p>
+          <p className="text-[10px] text-slate-400 mt-0.5">{tt("mbl.cust_suppliers", "Customers & Suppliers")}</p>
         </div>
       </div>
 

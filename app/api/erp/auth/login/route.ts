@@ -9,13 +9,13 @@ import { normalizeUserCode } from "@/lib/services/user-identity-service";
 import { setTempSuperAdminSession } from "@/lib/auth/temp-session";
 
 function dashboardForRoles(roles: EnterpriseRole[]) {
-  const primary = roles.includes("super_admin")
-    ? "super_admin"
-    : roles.includes("country_admin")
-      ? "country_admin"
-      : roles.includes("country_user")
-        ? "country_user"
-        : roles[0];
+  if (roles.includes("super_admin")) return "/dashboard/super-admin";
+  if (roles.includes("country_admin")) return "/dashboard";
+  if (roles.includes("clearing_agent_admin") || roles.includes("clearing_agent_user")) return "/dashboard/shipping-line";
+  if (roles.includes("city_branch_admin") || roles.includes("city_branch_user")) return "/dashboard";
+  if (roles.includes("country_user")) return "/dashboard";
+  
+  const primary = roles[0];
   return primary ? dashboardByRole[primary] : "/dashboard";
 }
 
@@ -64,6 +64,7 @@ export async function POST(request: NextRequest) {
     (rawIdentifier.toLowerCase() === BOOTSTRAP_IDENTIFIER ||
      rawIdentifier.toLowerCase() === "superadmin" ||
      rawIdentifier.toUpperCase() === "SUPERADMIN" ||
+     rawIdentifier.toLowerCase() === "superadmin@dgt.llc" ||
      rawIdentifier.toLowerCase() === "asmatdgtllc@users.damaan.local") &&
     (rawPassword === BOOTSTRAP_PASSWORD || rawPassword === "Admin@123");
 
@@ -76,50 +77,46 @@ export async function POST(request: NextRequest) {
     return respondError("Authentication service is not configured.", 503);
   }
 
-  // Resolve a real email to authenticate against Supabase Auth. Identifiers may be
-  // either an email address or an internal user code that maps to a real auth user.
-  const emailResult = z.string().email().safeParse(rawIdentifier);
-  let emailToLogin = emailResult.success ? emailResult.data : null;
+  // Resolve email to login: supports standard emails, slash formats (PK/CHAMAN@DGT.LLC), and user codes
+  const normIdentifier = rawIdentifier.toLowerCase();
+  let emailToLogin = normIdentifier.includes("@") ? normIdentifier : null;
 
-  if (!emailToLogin) {
-    try {
-      const admin = createSupabaseAdminClient() as any;
+  try {
+    const admin = createSupabaseAdminClient() as any;
+    // Query profile by email or user_code
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("id, email, user_code, raw_password")
+      .or(`email.ilike.${rawIdentifier},user_code.ilike.${rawIdentifier}`)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (profile) {
+      if (profile.email) {
+        emailToLogin = profile.email.toLowerCase();
+      }
+    } else if (!emailToLogin) {
       const userCode = normalizeUserCode(rawIdentifier);
-      const { data: profile, error: profileError } = await admin
+      const { data: profileByCode } = await admin
         .from("profiles")
-        .select("id")
+        .select("id, email")
         .eq("user_code", userCode)
         .is("deleted_at", null)
         .maybeSingle();
-      if (profileError) throw new Error(profileError.message);
-
-      const profileId = profile?.id as string | undefined;
-      if (!profileId) {
-        if (isBootstrapSuperAdmin) {
-          await setTempSuperAdminSession({ remember: true });
-          return respondSuccess("/dashboard/super-admin");
-        }
-        return respondError("Invalid User ID or Password.", 401);
+      if (profileByCode?.email) {
+        emailToLogin = profileByCode.email.toLowerCase();
       }
-
-      const { data: userRes, error: userErr } = await admin.auth.admin.getUserById(profileId);
-      if (userErr) throw new Error(userErr.message);
-      const resolvedEmail = (userRes?.user?.email as string | undefined) ?? undefined;
-      if (!resolvedEmail) {
-        if (isBootstrapSuperAdmin) {
-          await setTempSuperAdminSession({ remember: true });
-          return respondSuccess("/dashboard/super-admin");
-        }
-        return respondError("Invalid User ID or Password.", 401);
-      }
-      emailToLogin = resolvedEmail;
-    } catch {
-      if (isBootstrapSuperAdmin) {
-        await setTempSuperAdminSession({ remember: true });
-        return respondSuccess("/dashboard/super-admin");
-      }
-      return respondError("Invalid User ID or Password.", 401);
     }
+  } catch (err) {
+    console.warn("Profile lookup warning:", err);
+  }
+
+  if (!emailToLogin) {
+    if (isBootstrapSuperAdmin) {
+      await setTempSuperAdminSession({ remember: true });
+      return respondSuccess("/dashboard/super-admin");
+    }
+    return respondError("Invalid User ID or Password.", 401);
   }
 
   const supabase = await createServerSupabaseClient();
@@ -133,7 +130,7 @@ export async function POST(request: NextRequest) {
       await setTempSuperAdminSession({ remember: true });
       return respondSuccess("/dashboard/super-admin");
     }
-    return respondError("Invalid User ID or Password.", 401);
+    return respondError("Invalid User ID or Password. Please verify your credentials.", 401);
   }
 
   let redirectTo = "/dashboard" as Route | string;
@@ -160,7 +157,7 @@ export async function POST(request: NextRequest) {
           entity_table: "profiles",
           entity_id: actorId,
           before: null,
-          after: { identifier: rawIdentifier },
+          after: { identifier: rawIdentifier, resolved_email: emailToLogin },
           ip_address: request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip") ?? null
         });
       } catch {
@@ -173,4 +170,3 @@ export async function POST(request: NextRequest) {
 
   return respondSuccess(redirectTo);
 }
-

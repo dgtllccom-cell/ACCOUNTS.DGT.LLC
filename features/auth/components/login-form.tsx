@@ -17,7 +17,8 @@ import {
   Loader2,
   Server,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  Sparkles
 } from "lucide-react";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
@@ -44,6 +45,8 @@ const ACCESS_PROFILES: Record<
     subtitle: string;
     note: string;
     scopeLabel: string;
+    formatPlaceholder: string;
+    quickExamples: string[];
   }
 > = {
   super_admin: {
@@ -52,6 +55,8 @@ const ACCESS_PROFILES: Record<
     subtitle: "Full system visibility for configuration, audit, reporting, and cross-country administration.",
     note: "Use this entry point for global ERP operations and security oversight.",
     scopeLabel: "All countries, all branches",
+    formatPlaceholder: "SUPERADMIN@DGT.LLC",
+    quickExamples: ["SUPERADMIN@DGT.LLC", "asmatdgtllc@users.damaan.local"]
   },
   country: {
     eyebrow: "Country Workspace",
@@ -59,13 +64,17 @@ const ACCESS_PROFILES: Record<
     subtitle: "Scoped access for country-level operations, master data, and business oversight.",
     note: "Choose the exact country before signing in to keep branch scope consistent.",
     scopeLabel: "Country-level access",
+    formatPlaceholder: "PAKISTAN@DGT.LLC, AFGHANISTAN@DGT.LLC, UAE@DGT.DALNC",
+    quickExamples: ["PAKISTAN@DGT.LLC", "AFGHANISTAN@DGT.LLC", "UAE@DGT.DALNC", "INDIA@DGT.LLC", "CHINA@DGT.LLC"]
   },
   city: {
     eyebrow: "City Branch Workspace",
     title: "City Branch Access",
     subtitle: "Operational entry for city-specific teams with branch-aware ERP workflows.",
-    note: "Use this path when your work belongs to a specific city branch.",
+    note: "Format: CountryCode/CityCode@DGT.LLC (e.g. PK/CHAMAN@DGT.LLC).",
     scopeLabel: "City branch access",
+    formatPlaceholder: "PK/CHAMAN@DGT.LLC, PK/QUETTA@DGT.LLC, AF/KABUL@DGT.DALNC",
+    quickExamples: ["PK/CHAMAN@DGT.LLC", "PK/QUETTA@DGT.LLC", "AF/KABUL@DGT.DALNC", "AE/DUBAI@DGT.LLC", "IN/DELHI@DGT.LLC"]
   },
   branch: {
     eyebrow: "Branch Operations",
@@ -73,13 +82,17 @@ const ACCESS_PROFILES: Record<
     subtitle: "Focused access for branch users handling local transactions, reports, and approvals.",
     note: "Branch users see the same ERP, but only within their assigned scope.",
     scopeLabel: "Branch-level access",
+    formatPlaceholder: "PK/CHAMAN@DGT.LLC, AE/DUBAI@DGT.LLC",
+    quickExamples: ["PK/CHAMAN@DGT.LLC", "PK/QUETTA@DGT.LLC", "AE/DUBAI@DGT.LLC", "AF/KABUL@DGT.DALNC"]
   },
   agent: {
     eyebrow: "Shipping & Clearing",
     title: "Clearing Agent Access",
     subtitle: "Workflow access for shipping line and clearing operations with linked order visibility.",
-    note: "Designed for operational agents who work on the logistics side of the ERP.",
+    note: "Format: CountryCode/CLEARINGAGENT@DGT.LLC or CountryCode/CityCode/CLEARINGAGENT@DGT.DALNC.",
     scopeLabel: "Agent workflow access",
+    formatPlaceholder: "PK/CLEARINGAGENT@DGT.LLC or PK/CH/CLEARINGAGENT@DGT.DALNC",
+    quickExamples: ["PK/CLEARINGAGENT@DGT.LLC", "PK/CH/CLEARINGAGENT@DGT.DALNC", "PK/QTA/CLEARINGAGENT@DGT.DALNC", "AE/DXB/CLEARINGAGENT@DGT.LLC"]
   },
 };
 
@@ -91,13 +104,14 @@ const LANGUAGES = [
   { code: "fa", name: "فارسی", flag: "🇮🇷" },
 ];
 
-const DEFAULT_COUNTRIES = ["Pakistan", "Afghanistan", "United Arab Emirates", "Saudi Arabia", "India"];
+const DEFAULT_COUNTRIES = ["Pakistan", "Afghanistan", "United Arab Emirates", "Saudi Arabia", "India", "China"];
 const DEFAULT_CITIES: Record<string, string[]> = {
-  Pakistan: ["Quetta", "Karachi", "Lahore", "Islamabad", "Peshawar"],
-  Afghanistan: ["Kabul", "Kandahar", "Herat", "Mazar-i-Sharif"],
-  "United Arab Emirates": ["Dubai", "Abu Dhabi", "Sharjah", "Ajman"],
+  Pakistan: ["Chaman", "Quetta", "Karachi", "Lahore", "Islamabad", "Peshawar", "Gwadar", "Torkham"],
+  Afghanistan: ["Kabul", "Kandahar", "Herat", "Spin Boldak", "Mazar-i-Sharif"],
+  "United Arab Emirates": ["Dubai", "Abu Dhabi", "Sharjah", "Jebel Ali"],
   "Saudi Arabia": ["Riyadh", "Jeddah", "Dammam", "Mecca"],
-  India: ["Mumbai", "Delhi", "Bangalore", "Hyderabad"],
+  India: ["Delhi", "Mumbai", "Attari", "Bangalore"],
+  China: ["Shenzhen", "Dalian", "Guangzhou", "Shanghai"]
 };
 const BRANCHES = ["Main Branch", "North Branch", "South Branch", "East Branch", "West Branch"];
 
@@ -226,7 +240,7 @@ export function LoginForm({
 
   const needsCountry = ["country", "city", "branch", "agent"].includes(activeTab);
   const needsCity = ["city", "branch", "agent"].includes(activeTab);
-  const needsBranch = ["branch", "agent"].includes(activeTab);
+  const needsBranch = ["branch"].includes(activeTab);
 
   function handleTabChange(tab: LoginTab) {
     setActiveTab(tab);
@@ -235,6 +249,35 @@ export function LoginForm({
     setSelectedBranch("");
     setErrorState(null);
   }
+
+  // Smart Username Generator based on selected country & city
+  function generateSuggestedUsername() {
+    const cCode = selectedCountry === "Pakistan" ? "PK" :
+                  selectedCountry === "Afghanistan" ? "AF" :
+                  selectedCountry === "United Arab Emirates" ? "AE" :
+                  selectedCountry === "India" ? "IN" :
+                  selectedCountry === "China" ? "CN" : "";
+    
+    if (activeTab === "country" && selectedCountry) {
+      if (selectedCountry === "United Arab Emirates") return "UAE@DGT.DALNC";
+      return `${selectedCountry.toUpperCase()}@DGT.LLC`;
+    }
+    if (activeTab === "city" && cCode && selectedCity) {
+      const cityCode = selectedCity.toUpperCase().replace(/\s+/g, "");
+      if (cCode === "AF" && cityCode === "KABUL") return "AF/KABUL@DGT.DALNC";
+      return `${cCode}/${cityCode}@DGT.LLC`;
+    }
+    if (activeTab === "agent" && cCode) {
+      if (selectedCity) {
+        const shortCity = selectedCity.substring(0, 3).toUpperCase();
+        return `${cCode}/${shortCity}/CLEARINGAGENT@DGT.DALNC`;
+      }
+      return `${cCode}/CLEARINGAGENT@DGT.LLC`;
+    }
+    return "";
+  }
+
+  const suggestedUser = generateSuggestedUsername();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -292,11 +335,11 @@ export function LoginForm({
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
           </span>
-          <span className="font-mono text-[10.5px]">Server Connected (72.60.209.121)</span>
+          <span className="font-mono text-[10.5px]">Production Cloud Server (72.60.209.121)</span>
         </div>
         <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 text-[10px] font-extrabold">
           <ShieldCheck className="h-3.5 w-3.5" />
-          <span>{tt("login.secure_access", "Secure ERP Access")}</span>
+          <span>{tt("login.secure_access", "Secure Upcountry ERP Access")}</span>
         </div>
       </div>
 
@@ -315,7 +358,7 @@ export function LoginForm({
         <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1">
           <Globe className="h-3 w-3 text-blue-600" /> {tt("login.select_lang", "Select System Language")}
         </div>
-        <div className="flex flex-wrap gap-1.5" style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+        <div className="flex flex-wrap gap-1.5">
           {LANGUAGES.map((l) => (
             <button
               key={l.code}
@@ -337,21 +380,8 @@ export function LoginForm({
                   } catch (e) {}
                 }
               }}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "6px 12px",
-                borderRadius: "8px",
-                fontSize: "12px",
-                fontWeight: 700,
-                border: "1px solid " + (selectedLang === l.code ? "#2563eb" : "#cbd5e1"),
-                backgroundColor: selectedLang === l.code ? "#2563eb" : "#f8fafc",
-                color: selectedLang === l.code ? "#ffffff" : "#334155",
-                cursor: "pointer",
-              }}
               className={cn(
-                "flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all border cursor-pointer",
+                "flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer",
                 selectedLang === l.code
                   ? "bg-blue-600 text-white border-blue-600 shadow-sm"
                   : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-800"
@@ -387,6 +417,7 @@ export function LoginForm({
         </div>
       )}
 
+      {/* ── Role Header Banner ── */}
       <div className="mb-4 rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 p-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] dark:border-slate-800 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -467,9 +498,20 @@ export function LoginForm({
 
         {/* Email / User ID */}
         <div className="space-y-1.5">
-          <label htmlFor="identifier" className="block text-[10px] font-black uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-            {tt("login.email_label", "Email Address / User ID")}
-          </label>
+          <div className="flex items-center justify-between">
+            <label htmlFor="identifier" className="block text-[10px] font-black uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+              {tt("login.email_label", "Username / User ID (e.g. CountryCode/CityCode@DGT.LLC)")}
+            </label>
+            {suggestedUser && (
+              <button
+                type="button"
+                onClick={() => setIdentifier(suggestedUser)}
+                className="text-[10.5px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <Sparkles className="h-3 w-3" /> Auto-fill: <span className="font-mono font-black">{suggestedUser}</span>
+              </button>
+            )}
+          </div>
           <div className="relative">
             <Mail
               className={cn(
@@ -486,11 +528,26 @@ export function LoginForm({
               onChange={(e) => setIdentifier(e.target.value)}
               onFocus={() => setIdFocused(true)}
               onBlur={() => setIdFocused(false)}
-              className="h-12 rounded-xl border border-slate-200 bg-white pl-10 text-xs sm:text-sm font-semibold shadow-xs placeholder:font-normal placeholder:text-slate-400 transition-all focus-visible:border-blue-600 focus-visible:ring-4 focus-visible:ring-blue-100 dark:border-slate-700 dark:bg-slate-900 dark:focus-visible:border-blue-400 dark:focus-visible:ring-blue-950"
-              placeholder="Enter User ID or email@damaan.com"
+              className="h-12 rounded-xl border border-slate-200 bg-white pl-10 font-mono text-xs sm:text-sm font-bold shadow-xs placeholder:font-sans placeholder:font-normal placeholder:text-slate-400 transition-all focus-visible:border-blue-600 focus-visible:ring-4 focus-visible:ring-blue-100 dark:border-slate-700 dark:bg-slate-900 dark:focus-visible:border-blue-400 dark:focus-visible:ring-blue-950"
+              placeholder={ACCESS_PROFILES[activeTab].formatPlaceholder}
               autoComplete="username"
               required
             />
+          </div>
+
+          {/* Quick Format Picker Badges */}
+          <div className="flex flex-wrap items-center gap-1.5 pt-1">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Quick Pick:</span>
+            {ACCESS_PROFILES[activeTab].quickExamples.map((ex) => (
+              <button
+                key={ex}
+                type="button"
+                onClick={() => setIdentifier(ex)}
+                className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10.5px] font-bold font-mono text-slate-700 dark:text-slate-300 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-950 dark:hover:text-blue-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+              >
+                {ex}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -557,7 +614,7 @@ export function LoginForm({
         <Button
           type="submit"
           disabled={loading}
-          className="h-12 w-full rounded-2xl bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 px-4 text-xs font-black tracking-[0.08em] text-white shadow-[0_12px_30px_rgba(30,64,175,0.24)] transition-all duration-200 hover:-translate-y-0.5 hover:from-blue-800 hover:via-indigo-800 hover:to-blue-900 hover:shadow-[0_16px_36px_rgba(30,64,175,0.28)] sm:text-sm"
+          className="h-12 w-full rounded-2xl bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 px-4 text-xs font-black tracking-[0.08em] text-white shadow-[0_12px_30px_rgba(30,64,175,0.24)] transition-all duration-200 hover:-translate-y-0.5 hover:from-blue-800 hover:via-indigo-800 hover:to-blue-900 hover:shadow-[0_16px_36px_rgba(30,64,175,0.28)] sm:text-sm cursor-pointer"
         >
           {loading ? (
             <>

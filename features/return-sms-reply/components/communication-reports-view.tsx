@@ -30,12 +30,12 @@ export function CommunicationReportsView({ lang }: Props) {
   const isRTL = ["ar", "ur", "fa", "ps"].includes(lang);
 
   const kpis = [
-    { label: "Total Messages", value: "1,420", icon: <MessageSquare className="h-4 w-4" />, color: "text-indigo-600 bg-indigo-50 border-indigo-200" },
-    { label: "WhatsApp Delivered", value: "982", icon: <MessageSquare className="h-4 w-4" />, color: "text-emerald-600 bg-emerald-50 border-emerald-200" },
-    { label: "Emails Delivered", value: "438", icon: <Mail className="h-4 w-4" />, color: "text-blue-600 bg-blue-50 border-blue-200" },
-    { label: "AI Replies Drafted", value: "1,105", icon: <Sparkles className="h-4 w-4" />, color: "text-amber-600 bg-amber-50 border-amber-200" },
-    { label: "Reminders Sent", value: "312", icon: <Clock className="h-4 w-4" />, color: "text-purple-600 bg-purple-50 border-purple-200" },
-    { label: "Avg Response Time", value: "1.4 min", icon: <CheckCircle2 className="h-4 w-4" />, color: "text-teal-600 bg-teal-50 border-teal-200" }
+    { label: _("crv.total_msgs", "Total Messages"), value: "1,420", icon: <MessageSquare className="h-4 w-4" />, color: "text-indigo-600 bg-indigo-50 border-indigo-200" },
+    { label: _("crv.wa_delivered", "WhatsApp Delivered"), value: "982", icon: <MessageSquare className="h-4 w-4" />, color: "text-emerald-600 bg-emerald-50 border-emerald-200" },
+    { label: _("crv.email_delivered", "Emails Delivered"), value: "438", icon: <Mail className="h-4 w-4" />, color: "text-blue-600 bg-blue-50 border-blue-200" },
+    { label: _("crv.ai_drafted", "AI Replies Drafted"), value: "1,105", icon: <Sparkles className="h-4 w-4" />, color: "text-amber-600 bg-amber-50 border-amber-200" },
+    { label: _("crv.reminders_sent", "Reminders Sent"), value: "312", icon: <Clock className="h-4 w-4" />, color: "text-purple-600 bg-purple-50 border-purple-200" },
+    { label: _("crv.avg_response", "Avg Response Time"), value: "1.4 min", icon: <CheckCircle2 className="h-4 w-4" />, color: "text-teal-600 bg-teal-50 border-teal-200" }
   ];
 
   const mockAuditLogs = [
@@ -80,7 +80,7 @@ export function CommunicationReportsView({ lang }: Props) {
       <div className="flex items-center justify-between gap-2 border-b pb-3 dark:border-slate-800">
         <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
           <BarChart3 className="h-4 w-4 text-emerald-500" />
-          Communication Audit Trail & Delivery History
+          {_("crv.audit_trail", "Communication Audit Trail & Delivery History")}
         </h3>
 
         <div className="flex items-center gap-2">
@@ -88,14 +88,14 @@ export function CommunicationReportsView({ lang }: Props) {
             onClick={handleExportCsv}
             className="flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:border-emerald-900 dark:text-emerald-400 shadow-sm"
           >
-            <Table2 className="h-3.5 w-3.5" /> Export CSV
+            <Table2 className="h-3.5 w-3.5" /> {_("crv.export_csv", "Export CSV")}
           </button>
 
           <button
             onClick={handlePrint}
             className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300 shadow-sm"
           >
-            <Printer className="h-3.5 w-3.5" /> Print Audit Report
+            <Printer className="h-3.5 w-3.5" /> {_("crv.print_audit", "Print Audit Report")}
           </button>
         </div>
       </div>

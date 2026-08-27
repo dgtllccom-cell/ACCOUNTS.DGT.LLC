@@ -3839,6 +3839,9 @@ export type UiKey =
   | "mbl.ai_draft" | "mbl.querying_erp" | "mbl.reply_ph" | "mbl.sync_now"
   | "mbl.new_messages" | "mbl.tap_inbox" | "mbl.ai_drafts" | "mbl.reminders_today"
   | "mbl.erp_contacts" | "mbl.cust_suppliers" | "mbl.privacy_policy" | "mbl.security"
+  | "crv.total_msgs" | "crv.wa_delivered" | "crv.email_delivered" | "crv.ai_drafted"
+  | "crv.reminders_sent" | "crv.avg_response" | "crv.audit_trail" | "crv.export_csv" | "crv.print_audit"
+  | "roz.remarks_ph"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -10608,6 +10611,17 @@ const en: Dict = {
   "mbl.cust_suppliers": "Customers & Suppliers",
   "mbl.privacy_policy": "Privacy Policy",
   "mbl.security": "Security",
+
+  "crv.total_msgs": "Total Messages",
+  "crv.wa_delivered": "WhatsApp Delivered",
+  "crv.email_delivered": "Emails Delivered",
+  "crv.ai_drafted": "AI Replies Drafted",
+  "crv.reminders_sent": "Reminders Sent",
+  "crv.avg_response": "Avg Response Time",
+  "crv.audit_trail": "Communication Audit Trail & Delivery History",
+  "crv.export_csv": "Export CSV",
+  "crv.print_audit": "Print Audit Report",
+  "roz.remarks_ph": "Manually add descriptions, comments, explanations, or transaction notes...",
 
   "ta.save_first": "Save the record first to add documents & attachments.",
   "ta.documents": "Documents",
@@ -17533,6 +17547,17 @@ const ur: Dict = {
   "mbl.privacy_policy": "رازداری کی پالیسی",
   "mbl.security": "سیکیورٹی",
 
+  "crv.total_msgs": "کل پیغامات",
+  "crv.wa_delivered": "واٹس ایپ ڈیلیور شدہ",
+  "crv.email_delivered": "ای میل ڈیلیور شدہ",
+  "crv.ai_drafted": "اے آئی جوابات تیار",
+  "crv.reminders_sent": "یاد دہانیاں بھیجی گئیں",
+  "crv.avg_response": "اوسط جوابی وقت",
+  "crv.audit_trail": "مواصلاتی آڈٹ ٹریل اور ڈیلیوری ہسٹری",
+  "crv.export_csv": "CSV برآمد کریں",
+  "crv.print_audit": "آڈٹ رپورٹ پرنٹ کریں",
+  "roz.remarks_ph": "اضافی تفصیلات، تبصرے، وضاحت یا لین دین کے نوٹس یہاں لکھیں...",
+
   "ta.save_first": "دستاویزات شامل کرنے کے لیے پہلے ریکارڈ محفوظ کریں۔",
   "ta.documents": "دستاویزات",
   "ta.upload": "اپ لوڈ",
@@ -24456,6 +24481,17 @@ const ar: Dict = {
   "mbl.privacy_policy": "سياسة الخصوصية",
   "mbl.security": "الأمان",
 
+  "crv.total_msgs": "إجمالي الرسائل",
+  "crv.wa_delivered": "واتساب المُسلَّم",
+  "crv.email_delivered": "البريد المُسلَّم",
+  "crv.ai_drafted": "ردود الذكاء الاصطناعي المُعدَّة",
+  "crv.reminders_sent": "التذكيرات المُرسَلة",
+  "crv.avg_response": "متوسط وقت الاستجابة",
+  "crv.audit_trail": "مسار التدقيق في الاتصالات وسجل التسليم",
+  "crv.export_csv": "تصدير CSV",
+  "crv.print_audit": "طباعة تقرير التدقيق",
+  "roz.remarks_ph": "أضف وصفاً أو تعليقاً أو شرحاً أو ملاحظات المعاملة...",
+
   "ta.save_first": "احفظ السجل أولاً لإضافة المستندات والمرفقات.",
   "ta.documents": "المستندات",
   "ta.upload": "رفع",
@@ -31377,6 +31413,17 @@ const fa: Dict = {
   "mbl.cust_suppliers": "مشتریان و تامین‌کنندگان",
   "mbl.privacy_policy": "سیاست حریم خصوصی",
   "mbl.security": "امنیت",
+
+  "crv.total_msgs": "مجموع پیام‌ها",
+  "crv.wa_delivered": "واتس‌اپ تحویل‌داده‌شده",
+  "crv.email_delivered": "ایمیل تحویل‌داده‌شده",
+  "crv.ai_drafted": "پاسخ‌های پیش‌نویس هوش مصنوعی",
+  "crv.reminders_sent": "یادآوری‌های ارسال‌شده",
+  "crv.avg_response": "میانگین زمان پاسخ",
+  "crv.audit_trail": "مسیر ممیزی ارتباطات و تاریخچه تحویل",
+  "crv.export_csv": "خروجی CSV",
+  "crv.print_audit": "چاپ گزارش ممیزی",
+  "roz.remarks_ph": "توضیحات، نظرات، تفسیر یا یادداشت‌های تراکنش را اضافه کنید...",
 
   "ta.save_first": "ابتدا رکورد را ذخیره کنید تا بتوانید اسناد و پیوست‌ها اضافه کنید.",
   "ta.documents": "اسناد",
@@ -38306,6 +38353,16 @@ const ps: Dict = {
   "mbl.cust_suppliers": "پیرودونکي او عرضه‌کوونکي",
   "mbl.privacy_policy": "د محرمیت پالیسي",
   "mbl.security": "امنیت",
+
+  "crv.total_msgs": "ټول پیغامونه",
+  "crv.wa_delivered": "واټساپ سپارل شوي",
+  "crv.email_delivered": "بریښنالیک سپارل شوي",
+  "crv.ai_drafted": "د AI ځوابونه چمتو شوي",
+  "crv.reminders_sent": "یادونې لیږل شوې",
+  "crv.avg_response": "د ځواب اوسط وخت",
+  "crv.audit_trail": "د اړیکو آډیټ لار او د سپارنې تاریخچه",
+  "crv.export_csv": "CSV صادر کړئ",
+  "crv.print_audit": "د آډیټ راپور چاپ کړئ",
 
   "ta.save_first": "دستاویزات اضافه کولو لپاره لومړی ریکارډ خوندي کړئ.",
   "ta.documents": "دستاویزات",

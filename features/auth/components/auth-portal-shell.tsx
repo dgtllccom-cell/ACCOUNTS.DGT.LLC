@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { AuthTopControls } from "@/components/layout/auth-top-controls";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { t } from "@/lib/i18n/ui";
 
 export function AuthPortalShell({
   lang,
@@ -13,6 +14,7 @@ export function AuthPortalShell({
   rightPanel: ReactNode;
   className?: string;
 }) {
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   return (
     <div className={`min-h-screen bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-slate-50 ${className ?? ""}`.trim()}>
       <main className="flex min-h-screen flex-col justify-center">
@@ -53,10 +55,10 @@ export function AuthPortalShell({
               <span>© 2026 DAMAAN BUSINESS GROUP</span>
               <div className="flex gap-4">
                 <a href="#" className="transition-colors hover:text-slate-600 dark:hover:text-slate-300">
-                  Privacy Policy
+                  {tt("mbl.privacy_policy", "Privacy Policy")}
                 </a>
                 <a href="#" className="transition-colors hover:text-slate-600 dark:hover:text-slate-300">
-                  Security
+                  {tt("mbl.security", "Security")}
                 </a>
               </div>
             </div>

@@ -50,6 +50,7 @@ type Props = {
 
 export function MobileInboxView({ lang }: Props) {
   const isRTL = ["ar", "ur", "fa", "ps"].includes(lang);
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
 
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -152,7 +153,7 @@ export function MobileInboxView({ lang }: Props) {
           <Search className={cn("absolute top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400", isRTL ? "right-3" : "left-3")} />
           <input
             type="text"
-            placeholder="Search contact, number, or message..."
+            placeholder={tt("bgr.search_ph", "Search contact, number, or message...")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className={cn(
@@ -167,10 +168,10 @@ export function MobileInboxView({ lang }: Props) {
       {!selectedConv ? (
         <div className="rounded-3xl border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 overflow-hidden shadow-sm divide-y divide-slate-100 dark:divide-slate-800">
           {loading ? (
-            <div className="py-16 text-center text-xs text-slate-400">Loading messages...</div>
+            <div className="py-16 text-center text-xs text-slate-400">{tt("mbl.loading_msgs", "Loading messages...")}</div>
           ) : conversations.length === 0 ? (
             <div className="py-16 text-center text-xs text-slate-400">
-              <Bot className="h-8 w-8 text-slate-300 mx-auto mb-2" /> No messages found
+              <Bot className="h-8 w-8 text-slate-300 mx-auto mb-2" /> {tt("mbl.no_msgs", "No messages found")}
             </div>
           ) : (
             conversations.map((c) => (
@@ -185,7 +186,7 @@ export function MobileInboxView({ lang }: Props) {
                   </div>
                   <div className="min-w-0">
                     <h4 className="text-xs font-black text-slate-900 dark:text-white truncate">{c.senderName}</h4>
-                    <p className="text-[11px] text-slate-500 truncate">{c.lastMessageText || "No history"}</p>
+                    <p className="text-[11px] text-slate-500 truncate">{c.lastMessageText || tt("mbl.no_history", "No history")}</p>
                   </div>
                 </div>
                 <ChevronRight className="h-4 w-4 text-slate-400 flex-shrink-0" />
@@ -215,7 +216,7 @@ export function MobileInboxView({ lang }: Props) {
                 rel="noreferrer"
                 className="flex items-center gap-1 text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg border border-indigo-200"
               >
-                <ExternalLink className="h-3 w-3" /> ERP Record
+                <ExternalLink className="h-3 w-3" /> {tt("mbl.erp_record", "ERP Record")}
               </a>
             )}
           </div>
@@ -244,7 +245,7 @@ export function MobileInboxView({ lang }: Props) {
                 className="flex items-center gap-1 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white px-2.5 py-1 text-[10px] font-bold disabled:opacity-50"
               >
                 <Sparkles className="h-3 w-3" />
-                {isGeneratingAi ? "Querying ERP..." : "AI Draft"}
+                {isGeneratingAi ? tt("mbl.querying_erp", "Querying ERP...") : tt("mbl.ai_draft", "AI Draft")}
               </button>
 
               <div className="flex items-center gap-1 text-[10px] font-bold">
@@ -263,7 +264,7 @@ export function MobileInboxView({ lang }: Props) {
             <div className="flex items-center gap-2">
               <input
                 type="text"
-                placeholder="Reply message..."
+                placeholder={tt("mbl.reply_ph", "Reply message...")}
                 value={replyInput}
                 onChange={(e) => setReplyInput(e.target.value)}
                 className="flex-1 text-xs rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-950 dark:border-slate-800 px-3 py-2 outline-none"
