@@ -78,3 +78,79 @@ export function resolveVerifiedTranslation(translations: VerifiedTranslationMap 
 export function translationPendingLabel(language: SupportedLanguage) {
   return ({ en: "Translation pending", ur: "ترجمہ زیرِ التوا ہے", ar: "الترجمة معلّقة", fa: "ترجمه در انتظار است", ps: "ژباړه پاتې ده" } as const)[language];
 }
+
+/**
+ * The five distinct states the product owner requires for user-entered
+ * transactional text (remarks / narration / notes / descriptions):
+ *
+ *   human_verified        a human confirmed/authored every target language
+ *   fully_translated      all target languages present & differ from source, machine-produced
+ *   partially_translated  some but not all target languages translated
+ *   untranslated          no target language differs from the source text
+ *   needs_review          orthogonal flag — true whenever the current values are
+ *                         machine-produced (fully OR partially) and not yet human-verified
+ *
+ * Callers MUST NOT show fully_translated / partially_translated as "completed":
+ * only `human_verified` counts as done. Use `needsReview` to drive the review queue.
+ */
+export type TranslationCoverageStatus =
+  | "human_verified"
+  | "fully_translated"
+  | "partially_translated"
+  | "untranslated"
+  | "needs_review";
+
+export interface TranslationCoverageReport {
+  status: TranslationCoverageStatus;
+  needsReview: boolean;
+  translatedLanguages: SupportedLanguage[];
+  untranslatedLanguages: SupportedLanguage[];
+  /** 0..1 — fraction of the 4 non-source languages that carry a distinct translation */
+  ratio: number;
+}
+
+export function classifyTranslationCoverage(input: {
+  originalText: string;
+  originalLanguage: SupportedLanguage;
+  translations: VerifiedTranslationMap | null | undefined;
+  /** true when a human authored/approved the values (engine === "manual" or a stored verified flag) */
+  humanVerified?: boolean;
+}): TranslationCoverageReport {
+  const source = clean(input.originalText);
+  const targets = languageCodes.filter((l) => l !== input.originalLanguage);
+  const translated: SupportedLanguage[] = [];
+  const untranslated: SupportedLanguage[] = [];
+  for (const l of targets) {
+    const v = clean(input.translations?.[l]);
+    if (v && !sameText(v, source)) translated.push(l);
+    else untranslated.push(l);
+  }
+  const ratio = targets.length ? translated.length / targets.length : 1;
+  const full = translated.length === targets.length && targets.length > 0;
+  const none = translated.length === 0;
+
+  let status: TranslationCoverageStatus;
+  if (input.humanVerified && full) status = "human_verified";
+  else if (none) status = "untranslated";
+  else if (full) status = "fully_translated";
+  else status = "partially_translated";
+
+  return {
+    status,
+    needsReview: !input.humanVerified && !none,
+    translatedLanguages: translated,
+    untranslatedLanguages: untranslated,
+    ratio,
+  };
+}
+
+export function translationCoverageLabel(status: TranslationCoverageStatus, language: SupportedLanguage): string {
+  const L: Record<TranslationCoverageStatus, Record<SupportedLanguage, string>> = {
+    human_verified: { en: "Human verified", ur: "انسانی تصدیق شدہ", ar: "مُتحقَّق بشريًا", fa: "تأیید انسانی", ps: "انساني تصدیق شوی" },
+    fully_translated: { en: "Fully translated", ur: "مکمل ترجمہ شدہ", ar: "مُترجَم بالكامل", fa: "کاملاً ترجمه‌شده", ps: "بشپړ ژباړل شوی" },
+    partially_translated: { en: "Partially translated", ur: "جزوی ترجمہ شدہ", ar: "مُترجَم جزئيًا", fa: "ترجمه جزئی", ps: "جزوي ژباړل شوی" },
+    untranslated: { en: "Untranslated", ur: "غیر ترجمہ شدہ", ar: "غير مُترجَم", fa: "ترجمه‌نشده", ps: "نه ژباړل شوی" },
+    needs_review: { en: "Needs review", ur: "جائزہ درکار", ar: "يحتاج مراجعة", fa: "نیازمند بازبینی", ps: "بیاکتنې ته اړتیا" },
+  };
+  return L[status]?.[language] ?? L[status]?.en ?? status;
+}
