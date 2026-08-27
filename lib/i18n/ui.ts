@@ -4183,6 +4183,27 @@ export type UiKey =
   | "pjt.cash_book_no"
   | "pjt.bank_book_no"
   | "pjt.roznamcha_book_no"
+  | "pjt.sales_order_payment_journal"
+  | "pjt.col_po_booking"
+  | "pjt.col_party_name"
+  | "pjt.col_mode"
+  | "pjt.col_bank_account"
+  | "pjt.col_amount"
+  | "pjt.purchase_account_dr"
+  | "pjt.sales_supplier_account_cr"
+  | "pjt.remaining_bal_short"
+  | "pjt.created_by_label"
+  | "pjt.created_on_label"
+  | "pjt.plate_view"
+  | "pjt.download"
+  | "pjt.export_excel"
+  | "pjt.export_pdf"
+  | "pjt.print_btn"
+  | "pjt.row_actions"
+  | "pjt.payment_history"
+  | "pjt.journal_entry"
+  | "pjt.bank_branch_address_ph"
+  | "pjt.filter_all"
   | "pjt.journal_voucher_no"
   | "pjt.roznamcha_voucher_no"
   | "pjt.payment_condition"
@@ -12190,6 +12211,27 @@ const en: Dict = {
   "pjt.cash_book_no": "Cash Book No.",
   "pjt.bank_book_no": "Bank Book No.",
   "pjt.roznamcha_book_no": "Roznamcha Book No.",
+  "pjt.sales_order_payment_journal": "Sales Order Payment Journal",
+  "pjt.col_po_booking": "PO Booking #",
+  "pjt.col_party_name": "Party Name",
+  "pjt.col_mode": "Mode",
+  "pjt.col_bank_account": "Bank Account",
+  "pjt.col_amount": "Amount",
+  "pjt.purchase_account_dr": "Purchase Account (DR)",
+  "pjt.sales_supplier_account_cr": "Sales / Supplier Account (CR)",
+  "pjt.remaining_bal_short": "Remaining Bal:",
+  "pjt.created_by_label": "Created By:",
+  "pjt.created_on_label": "Created On:",
+  "pjt.plate_view": "Plate View",
+  "pjt.download": "Download",
+  "pjt.export_excel": "Export Excel",
+  "pjt.export_pdf": "Export PDF",
+  "pjt.print_btn": "Print",
+  "pjt.row_actions": "Row actions",
+  "pjt.payment_history": "Payment History",
+  "pjt.journal_entry": "Journal Entry",
+  "pjt.bank_branch_address_ph": "Enter bank physical branch address...",
+  "pjt.filter_all": "All",
   "pjt.journal_voucher_no": "Journal Voucher No.",
   "pjt.roznamcha_voucher_no": "Roznamcha / Voucher No.",
   "pjt.payment_condition": "Payment Condition",
@@ -20174,6 +20216,27 @@ const ur: Dict = {
   "pjt.cash_book_no": "کیش بک نمبر",
   "pjt.bank_book_no": "بینک بک نمبر",
   "pjt.roznamcha_book_no": "روزنامچہ بک نمبر",
+  "pjt.sales_order_payment_journal": "سیلز آرڈر پیمنٹ جرنل",
+  "pjt.col_po_booking": "پی او بکنگ نمبر",
+  "pjt.col_party_name": "فریق کا نام",
+  "pjt.col_mode": "طریقہ",
+  "pjt.col_bank_account": "بینک اکاؤنٹ",
+  "pjt.col_amount": "رقم",
+  "pjt.purchase_account_dr": "پرچیز اکاؤنٹ (ڈیبٹ)",
+  "pjt.sales_supplier_account_cr": "سیلز / سپلائر اکاؤنٹ (کریڈٹ)",
+  "pjt.remaining_bal_short": "بقایا بیلنس:",
+  "pjt.created_by_label": "بنانے والا:",
+  "pjt.created_on_label": "بنانے کی تاریخ:",
+  "pjt.plate_view": "پلیٹ ویو",
+  "pjt.download": "ڈاؤن لوڈ",
+  "pjt.export_excel": "ایکسل ایکسپورٹ",
+  "pjt.export_pdf": "PDF ایکسپورٹ",
+  "pjt.print_btn": "پرنٹ",
+  "pjt.row_actions": "قطار کے اعمال",
+  "pjt.payment_history": "ادائیگی کی تاریخ",
+  "pjt.journal_entry": "جرنل اندراج",
+  "pjt.bank_branch_address_ph": "بینک برانچ کا پتہ درج کریں...",
+  "pjt.filter_all": "تمام",
   "pjt.journal_voucher_no": "جرنل واؤچر نمبر",
   "pjt.roznamcha_voucher_no": "روزنامچہ / واؤچر نمبر",
   "pjt.payment_condition": "ادائیگی کی شرط",
@@ -28160,6 +28223,27 @@ const ar: Dict = {
   "pjt.cash_book_no": "رقم دفتر النقدية",
   "pjt.bank_book_no": "رقم دفتر البنك",
   "pjt.roznamcha_book_no": "رقم دفتر الروزنامچه",
+  "pjt.sales_order_payment_journal": "دفتر يوميات مدفوعات طلب البيع",
+  "pjt.col_po_booking": "رقم حجز طلب الشراء",
+  "pjt.col_party_name": "اسم الطرف",
+  "pjt.col_mode": "الوضع",
+  "pjt.col_bank_account": "الحساب البنكي",
+  "pjt.col_amount": "المبلغ",
+  "pjt.purchase_account_dr": "حساب المشتريات (مدين)",
+  "pjt.sales_supplier_account_cr": "حساب البيع / المورد (دائن)",
+  "pjt.remaining_bal_short": "الرصيد المتبقي:",
+  "pjt.created_by_label": "أنشئ بواسطة:",
+  "pjt.created_on_label": "أنشئ في:",
+  "pjt.plate_view": "عرض اللوحة",
+  "pjt.download": "تنزيل",
+  "pjt.export_excel": "تصدير Excel",
+  "pjt.export_pdf": "تصدير PDF",
+  "pjt.print_btn": "طباعة",
+  "pjt.row_actions": "إجراءات الصف",
+  "pjt.payment_history": "سجل الدفعات",
+  "pjt.journal_entry": "قيد اليومية",
+  "pjt.bank_branch_address_ph": "أدخل عنوان الفرع الفعلي للبنك...",
+  "pjt.filter_all": "الكل",
   "pjt.journal_voucher_no": "رقم سند اليومية",
   "pjt.roznamcha_voucher_no": "الروزنامچه / رقم السند",
   "pjt.payment_condition": "شرط الدفع",
@@ -36145,6 +36229,27 @@ const fa: Dict = {
   "pjt.cash_book_no": "شماره دفتر نقد",
   "pjt.bank_book_no": "شماره دفتر بانک",
   "pjt.roznamcha_book_no": "شماره دفتر روزنامچه",
+  "pjt.sales_order_payment_journal": "دفتر روزنامه پرداخت سفارش فروش",
+  "pjt.col_po_booking": "شماره رزرو سفارش خرید",
+  "pjt.col_party_name": "نام طرف",
+  "pjt.col_mode": "حالت",
+  "pjt.col_bank_account": "حساب بانکی",
+  "pjt.col_amount": "مبلغ",
+  "pjt.purchase_account_dr": "حساب خرید (بدهکار)",
+  "pjt.sales_supplier_account_cr": "حساب فروش / تأمین‌کننده (بستانکار)",
+  "pjt.remaining_bal_short": "مانده باقی:",
+  "pjt.created_by_label": "ایجادشده توسط:",
+  "pjt.created_on_label": "ایجادشده در:",
+  "pjt.plate_view": "نمای صفحه",
+  "pjt.download": "دانلود",
+  "pjt.export_excel": "خروجی Excel",
+  "pjt.export_pdf": "خروجی PDF",
+  "pjt.print_btn": "چاپ",
+  "pjt.row_actions": "عملیات ردیف",
+  "pjt.payment_history": "تاریخچه پرداخت",
+  "pjt.journal_entry": "ثبت ژورنال",
+  "pjt.bank_branch_address_ph": "آدرس فیزیکی شعبه بانک را وارد کنید...",
+  "pjt.filter_all": "همه",
   "pjt.journal_voucher_no": "شماره سند ژورنال",
   "pjt.roznamcha_voucher_no": "روزنامچه / شماره سند",
   "pjt.payment_condition": "شرط پرداخت",
@@ -44136,6 +44241,27 @@ const ps: Dict = {
   "pjt.cash_book_no": "د نغدو کتاب ګڼه",
   "pjt.bank_book_no": "د بانک کتاب ګڼه",
   "pjt.roznamcha_book_no": "د روزنامچې کتاب ګڼه",
+  "pjt.sales_order_payment_journal": "د پلور امر تادیې ژورنال",
+  "pjt.col_po_booking": "د پیرود امر بکنګ #",
+  "pjt.col_party_name": "د اړخ نوم",
+  "pjt.col_mode": "طریقه",
+  "pjt.col_bank_account": "بانکي حساب",
+  "pjt.col_amount": "اندازه",
+  "pjt.purchase_account_dr": "د پیرود حساب (ډیبټ)",
+  "pjt.sales_supplier_account_cr": "د پلور / عرضه کوونکي حساب (کریډیټ)",
+  "pjt.remaining_bal_short": "پاتې بیلانس:",
+  "pjt.created_by_label": "جوړ کړی د:",
+  "pjt.created_on_label": "جوړ شوی په:",
+  "pjt.plate_view": "پلیټ کتنه",
+  "pjt.download": "ډاونلوډ",
+  "pjt.export_excel": "Excel صادرول",
+  "pjt.export_pdf": "PDF صادرول",
+  "pjt.print_btn": "چاپ",
+  "pjt.row_actions": "د کرښې کړنې",
+  "pjt.payment_history": "د تادیاتو تاریخچه",
+  "pjt.journal_entry": "د ژورنال ننوت",
+  "pjt.bank_branch_address_ph": "د بانک د څانګې فزیکي پته دننه کړئ...",
+  "pjt.filter_all": "ټول",
   "pjt.journal_voucher_no": "د ژورنال واؤچر ګڼه",
   "pjt.roznamcha_voucher_no": "روزنامچه / د واؤچر ګڼه",
   "pjt.payment_condition": "د تادیې شرط",

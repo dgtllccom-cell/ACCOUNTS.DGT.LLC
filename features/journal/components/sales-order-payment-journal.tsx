@@ -780,7 +780,7 @@ function calcLoadingFinance(loadingRecord: any, poRow: any, form: any) {
     grossWeight: Number(payload.grossWeight || payload.grossWt || loadingRecord?.gross_weight || firstGood.grossWeight || firstGood.grossWt || 0)
   };
 }
-function kpis(rows: PurchaseOrderRow[], baseCurrency: string): KpiCard[] {
+function kpis(rows: PurchaseOrderRow[], baseCurrency: string, lang: LanguageCode): KpiCard[] {
   let totalPurchaseUSD = 0;
   let totalInvoiceValueLC = 0;
   let totalAdvancePaidLC = 0;
@@ -813,35 +813,35 @@ function kpis(rows: PurchaseOrderRow[], baseCurrency: string): KpiCard[] {
 
   return [
     {
-      label: "Total Purchase",
+      label: t("total_purchase_lc", lang),
       value: money(totalPurchaseUSD, purchCur),
       sublabel: "Original Currency Total",
       icon: <FileText className="h-5 w-5" />,
       tone: "blue"
     },
     {
-      label: "Total Invoice Value",
+      label: t("kpi_total_invoice_value", lang),
       value: money(totalInvoiceValueLC, localCur),
       sublabel: "Local Currency Total",
       icon: <Banknote className="h-5 w-5" />,
       tone: "green"
     },
     {
-      label: "Total Advance Paid",
+      label: t("kpi_total_advance_paid", lang),
       value: money(totalAdvancePaidLC, localCur),
       sublabel: "Advance Paid to Date",
       icon: <CheckCircle className="h-5 w-5" />,
       tone: "amber"
     },
     {
-      label: "Total Outstanding Balance",
+      label: t("kpi_total_outstanding_balance", lang),
       value: money(totalOutstandingBalanceLC, localCur),
       sublabel: "Remaining Due to Clear",
       icon: <XCircle className="h-5 w-5" />,
       tone: "red"
     },
     {
-      label: "Average Exchange Rate",
+      label: t("kpi_average_exchange_rate", lang),
       value: avgExchangeRate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }),
       sublabel: `1 ${purchCur} to ${localCur}`,
       icon: <RefreshCw className="h-5 w-5" />,
@@ -1870,27 +1870,27 @@ function DashboardSummaryHeader({
     const body = (
       <div className="flex flex-col gap-3.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
         <div className="flex justify-between items-center">
-          <span>Total Transactions:</span>
+          <span>{t("info_total_transactions", lang)}</span>
           <span className="font-bold text-slate-800 dark:text-slate-200">{summary.totalTransactions}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span>Purchase Currencies:</span>
+          <span>{t("info_purchase_currencies", lang)}</span>
           <span className="font-bold text-slate-800 dark:text-slate-200">{numCurrencies}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span>Final Currency:</span>
+          <span>{t("info_final_currency", lang)}</span>
           <span className="font-bold text-slate-800 dark:text-slate-200">{summary.localCurrency}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span>Exchange Rate Type:</span>
+          <span>{t("info_exchange_rate_type", lang)}</span>
           <span className="font-bold text-slate-800 dark:text-slate-200">{translateHeader(lang, "Live")}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span>Last Updated:</span>
+          <span>{t("info_last_updated", lang)}</span>
           <span className="font-bold text-slate-800 dark:text-slate-200">{dateStr}, {timeStr}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span>Report Type:</span>
+          <span>{t("info_report_type", lang)}</span>
           <span className="font-bold text-slate-800 dark:text-slate-200">{reportType}</span>
         </div>
       </div>
@@ -2696,7 +2696,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
     };
 
     openPurchaseA4ReportWindow({
-      title: "Purchase Master Verification Report",
+      title: t("verification_report_title", currentLanguage),
       purchaseData,
       autoPrint,
       lang: "en"
@@ -3463,7 +3463,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
     }
   }, [selectedId, selected, baseCurrency, currency, getEffectiveRate, isSuperAdmin]);
 
-  const cards = useMemo(() => kpis(filtered, baseCurrency), [filtered, baseCurrency]);
+  const cards = useMemo(() => kpis(filtered, baseCurrency, currentLanguage), [filtered, baseCurrency, currentLanguage]);
   const countryOptions = useMemo(() => Array.from(new Set(orders.map(rowCountryName))).filter(Boolean).sort(), [orders]);
   const branchOptions = useMemo(() => Array.from(new Set(orders.filter((row) => !countryFilter || rowCountryName(row) === countryFilter).map(rowBranchName))).filter(Boolean).sort(), [orders, countryFilter]);
   const currencyOptions = useMemo(() => Array.from(new Set(orders.filter((row) => !countryFilter || rowCountryName(row) === countryFilter).map(rowCurrency))).filter(Boolean).sort(), [orders, countryFilter]);
@@ -5110,7 +5110,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                             <div>Net Wt: <span className="font-semibold text-slate-700 dark:text-slate-300">{finance.netWeight.toLocaleString()} KGs</span></div>
                             <div>Gross Wt: <span className="font-semibold text-slate-700 dark:text-slate-300">{finance.grossWeight.toLocaleString()} KGs</span></div>
                             <div className="col-span-2 border-t border-slate-100 dark:border-slate-800/85 pt-1.5 mt-1 flex justify-between items-center w-full">
-                              <span>Remaining Bal:</span>
+                              <span>{t("remaining_bal_short", currentLanguage)}</span>
                               <span className="font-black text-xs text-emerald-600">{money(loadedRemainingUSD, lr.currency || "USD")}</span>
                             </div>
                           </div>
@@ -5278,7 +5278,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                   const goodsNames = goods.map((item: any) => item.goodsName || item.productName || item.name).filter(Boolean).join(", ") || firstGood.goodsName || firstGood.productName || "-";
                   const selectedPaymentSource = selectedSourceLedger;
                   const purchaseAccountPanel = {
-                    title: "Purchase Account (DR)",
+                    title: t("purchase_account_dr", currentLanguage),
                     code: selectedForm.purchaseAccountNo || form.purchaseAccountNo || "-",
                     manual: selectedForm.purchaseManualRef || selectedForm.purchaseManualReference || form.purchaseManualRef || form.purchaseManualReference || "-",
                     name: selectedForm.purchaseAccountName || form.purchaseAccountName || "Purchase Account",
@@ -5287,7 +5287,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                     currency: selectedForm.purchaseAccountCurrency || form.purchaseAccountCurrency || poCurrency
                   };
                   const salesAccountPanel = {
-                    title: "Sales / Supplier Account (CR)",
+                    title: t("sales_supplier_account_cr", currentLanguage),
                     code: selectedForm.salesAccountNo || form.salesAccountNo || "-",
                     manual: selectedForm.salesManualRef || selectedForm.salesManualReference || form.salesManualRef || form.salesManualReference || "-",
                     name: selectedForm.salesAccountName || form.salesAccountName || "Sales Account",
@@ -6027,11 +6027,11 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                 {/* Bottom Audit Metadata (matches Purchase Payment Entry modal) */}
                 <div className="flex justify-between items-center text-[10px] font-semibold text-slate-400 px-1 pt-1 border-t border-slate-100 dark:border-slate-800">
                   <div>
-                    <span>Created By: </span>
+                    <span>{t("created_by_label", currentLanguage)} </span>
                     <strong className="text-slate-700 dark:text-slate-300 font-bold">{selected.audit?.userName || "ERP USER"}</strong>
                   </div>
                   <div>
-                    <span>Created On: </span>
+                    <span>{t("created_on_label", currentLanguage)} </span>
                     <strong className="text-slate-700 dark:text-slate-300 font-bold">{date(selected.created_at)} {selected.created_at ? new Date(selected.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : ""}</strong>
                   </div>
                 </div>
@@ -6370,7 +6370,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                   className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-xs font-semibold focus-visible:outline-none"
                   value={addOptionAddress}
                   onChange={(e) => setAddOptionAddress(e.target.value)}
-                  placeholder="Enter bank physical branch address..."
+                  placeholder={t("bank_branch_address_ph", currentLanguage)}
                 />
               </div>
               <div className="flex justify-end gap-2 pt-2 border-t">
@@ -6532,6 +6532,7 @@ function MiniFilter({ label, value, options, onChange }: { label: string; value:
 }
 
 function ReportActions({ rows, mode }: { rows: PurchaseOrderRow[]; mode: PaymentMode }) {
+  const currentLanguage = useActiveLanguage() as LanguageCode;
   function handleReportAction(fn: () => void) {
     fn();
     const details = document.activeElement?.closest("details");
@@ -6543,39 +6544,39 @@ function ReportActions({ rows, mode }: { rows: PurchaseOrderRow[]; mode: Payment
         <MoreVertical className="h-4 w-4" />
       </summary>
       <div className="absolute right-0 z-30 mt-2 w-52 rounded-xl border border-border bg-popover p-1 text-sm text-popover-foreground shadow-xl">
-        <MenuAction icon={<Eye />} label="Plate View" onClick={() => handleReportAction(() => undefined)} />
-        <MenuAction icon={<DownloadActionIcon />} label="Download" onClick={() => handleReportAction(() => exportRows(rows, mode))} />
-        <MenuAction icon={<FileSpreadsheet />} label="Export Excel" onClick={() => handleReportAction(() => exportRows(rows, mode))} />
-        <MenuAction icon={<DownloadActionIcon />} label="Export PDF" onClick={() => handleReportAction(() => {
+        <MenuAction icon={<Eye />} label={t("plate_view", currentLanguage)} onClick={() => handleReportAction(() => undefined)} />
+        <MenuAction icon={<DownloadActionIcon />} label={t("download", currentLanguage)} onClick={() => handleReportAction(() => exportRows(rows, mode))} />
+        <MenuAction icon={<FileSpreadsheet />} label={t("export_excel", currentLanguage)} onClick={() => handleReportAction(() => exportRows(rows, mode))} />
+        <MenuAction icon={<DownloadActionIcon />} label={t("export_pdf", currentLanguage)} onClick={() => handleReportAction(() => {
           import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => {
             openGenericErpReport({
-              title: "Sales Order Payment Journal",
+              title: t("sales_order_payment_journal", currentLanguage),
               subtitle: `Mode: ${mode.toUpperCase()} | Total ${rows.length} Records`,
               columns: [
-                { key: "po_no", label: "PO Booking #" },
-                { key: "branch", label: "Branch" },
-                { key: "supplier_customer", label: "Party Name" },
-                { key: "mode", label: "Mode" },
-                { key: "bank_name", label: "Bank Account" },
-                { key: "amount", label: "Amount", format: "currency" },
+                { key: "po_no", label: t("col_po_booking", currentLanguage) },
+                { key: "branch", label: t("branch", currentLanguage) },
+                { key: "supplier_customer", label: t("col_party_name", currentLanguage) },
+                { key: "mode", label: t("col_mode", currentLanguage) },
+                { key: "bank_name", label: t("col_bank_account", currentLanguage) },
+                { key: "amount", label: t("col_amount", currentLanguage), format: "currency" },
                 { key: "status", label: "Status", format: "status" }
               ],
               rows: rows as Record<string, unknown>[]
             });
           });
         })} />
-        <MenuAction icon={<Printer />} label="Print" onClick={() => handleReportAction(() => {
+        <MenuAction icon={<Printer />} label={t("print_btn", currentLanguage)} onClick={() => handleReportAction(() => {
           import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => {
             openGenericErpReport({
-              title: "Sales Order Payment Journal",
+              title: t("sales_order_payment_journal", currentLanguage),
               subtitle: `Mode: ${mode.toUpperCase()} | Total ${rows.length} Records`,
               columns: [
-                { key: "po_no", label: "PO Booking #" },
-                { key: "branch", label: "Branch" },
-                { key: "supplier_customer", label: "Party Name" },
-                { key: "mode", label: "Mode" },
-                { key: "bank_name", label: "Bank Account" },
-                { key: "amount", label: "Amount", format: "currency" },
+                { key: "po_no", label: t("col_po_booking", currentLanguage) },
+                { key: "branch", label: t("branch", currentLanguage) },
+                { key: "supplier_customer", label: t("col_party_name", currentLanguage) },
+                { key: "mode", label: t("col_mode", currentLanguage) },
+                { key: "bank_name", label: t("col_bank_account", currentLanguage) },
+                { key: "amount", label: t("col_amount", currentLanguage), format: "currency" },
                 { key: "status", label: "Status", format: "status" }
               ],
               rows: rows as Record<string, unknown>[]
@@ -6588,6 +6589,7 @@ function ReportActions({ rows, mode }: { rows: PurchaseOrderRow[]; mode: Payment
 }
 
 function RowActions({ onSelect, rowId }: { onSelect: () => void; rowId: string }) {
+  const currentLanguage = useActiveLanguage() as LanguageCode;
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: 0, left: 0 });
   const btnRef = React.useRef<HTMLButtonElement>(null);
@@ -6628,7 +6630,7 @@ function RowActions({ onSelect, rowId }: { onSelect: () => void; rowId: string }
         }}
         onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#f1f5f9"; }}
         onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#fff"; }}
-        aria-label="Row actions"
+        aria-label={t("row_actions", currentLanguage)}
       >
         <MoreVertical style={{ width: 15, height: 15 }} />
       </button>
@@ -6650,11 +6652,11 @@ function RowActions({ onSelect, rowId }: { onSelect: () => void; rowId: string }
           onMouseDown={(e) => e.stopPropagation()}
         >
           {[
-            { icon: <Eye style={{ width: 14, height: 14 }} />, label: "View Details", color: "#2563eb", fn: () => handleItem(onSelect) },
-            { icon: <WalletCards style={{ width: 14, height: 14 }} />, label: "Payment History", color: "#7c3aed", fn: () => handleItem(onSelect) },
-            { icon: <Banknote style={{ width: 14, height: 14 }} />, label: "Journal Entry", color: "#059669", fn: () => handleItem(onSelect) },
-            { icon: <Printer style={{ width: 14, height: 14 }} />, label: "Print", color: "#475569", fn: () => handleItem(() => window.print()) },
-            { icon: <DownloadActionIcon />, label: "Export PDF", color: "#dc2626", fn: () => handleItem(() => window.print()) },
+            { icon: <Eye style={{ width: 14, height: 14 }} />, label: t("row_view_details", currentLanguage), color: "#2563eb", fn: () => handleItem(onSelect) },
+            { icon: <WalletCards style={{ width: 14, height: 14 }} />, label: t("payment_history", currentLanguage), color: "#7c3aed", fn: () => handleItem(onSelect) },
+            { icon: <Banknote style={{ width: 14, height: 14 }} />, label: t("journal_entry", currentLanguage), color: "#059669", fn: () => handleItem(onSelect) },
+            { icon: <Printer style={{ width: 14, height: 14 }} />, label: t("print_btn", currentLanguage), color: "#475569", fn: () => handleItem(() => window.print()) },
+            { icon: <DownloadActionIcon />, label: t("export_pdf", currentLanguage), color: "#dc2626", fn: () => handleItem(() => window.print()) },
           ].map(({ icon, label, color, fn }) => (
             <button
               key={label}
