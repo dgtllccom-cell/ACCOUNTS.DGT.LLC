@@ -1,0 +1,37 @@
+
+PASS  features/users/components/user-journal-report.tsx
+  i18n keys referenced: 58
+  missing dict entries: 0
+  English fallthrough (untranslated in UR/AR/FA/PS): 0
+
+PASS  features/settings/components/email-accounts-management.tsx
+  i18n keys referenced: 32
+  missing dict entries: 0
+  English fallthrough (untranslated in UR/AR/FA/PS): 0
+
+PASS  features/roznamcha/components/money-exchange-form.tsx
+  i18n keys referenced: 88
+  missing dict entries: 0
+  English fallthrough (untranslated in UR/AR/FA/PS): 0
+
+PASS  features/roznamcha/components/super-admin-roznamcha-report-view.tsx
+  i18n keys referenced: 0
+  missing dict entries: 0
+  English fallthrough (untranslated in UR/AR/FA/PS): 0
+
+PASS  features/roznamcha/components/cash-entry-form.tsx
+  i18n keys referenced: 155
+  missing dict entries: 0
+  English fallthrough (untranslated in UR/AR/FA/PS): 0
+
+PASS  features/roznamcha/components/roznamcha-type-report-view.tsx
+  i18n keys referenced: 97
+  missing dict entries: 0
+  English fallthrough (untranslated in UR/AR/FA/PS): 0
+
+PASS  features/roznamcha/components/bank-roznamcha-report-view.tsx
+  i18n keys referenced: 104
+  missing dict entries: 0
+  English fallthrough (untranslated in UR/AR/FA/PS): 0
+
+ALL FILES PASS
