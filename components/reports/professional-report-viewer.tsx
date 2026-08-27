@@ -75,7 +75,7 @@ export function ProfessionalReportViewer<T>({
 
   const handleExportCSV = () => {
     try {
-      const headers = columns.map(c => `"${c.header.replace(/"/g, '""')}"`);
+      const headers = columns.map(c => `"${translateHeader(lang, c.header).replace(/"/g, '""')}"`);
       const csvRows = data.map((row: any, i) => {
         return columns.map(c => {
           let val = c.render ? c.render(row, i) : row[c.key];
@@ -253,7 +253,7 @@ export function ProfessionalReportViewer<T>({
                           <tr className="border-y-2 border-gray-800 bg-gray-50">
                             {columns.map((c) => (
                               <Th key={c.key} className={cn("py-2 px-1.5 font-bold text-gray-800", c.align === 'right' && 'text-right', c.align === 'center' && 'text-center')} style={{ width: c.width }}>
-                                {c.header}
+                                {translateHeader(lang, c.header)}
                               </Th>
                             ))}
                           </tr>

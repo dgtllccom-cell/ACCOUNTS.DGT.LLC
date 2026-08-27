@@ -1309,7 +1309,6 @@ export type UiKey =
   | "report.to"
   | "report.as_of"
   | "report.current_period"
-  | "report.all_countries_report"
   | "report.country_branch_breakdown_directory"
   | "report.click_a_country_to_filter_instantly"
   | "report.active_countries"
@@ -8674,7 +8673,6 @@ const en: Dict = {
   "report.compact_mode": "Compact",
   "report.visible_columns": "Visible Columns",
   "report.actions": "Actions",
-  "report.all_countries_report": "ALL COUNTRIES REPORT",
   "report.print_pdf_document": "Print / PDF Document",
   "report.density_comfortable": "Comfortable",
   // ERP Reports System — table
@@ -16370,7 +16368,6 @@ const ur: Dict = {
   "report.compact_mode": "مختصر",
   "report.visible_columns": "نمایاں کالم",
   "report.actions": "کارروائیاں",
-  "report.all_countries_report": "تمام ممالک کی رپورٹ",
   "report.print_pdf_document": "پرنٹ / پی ڈی ایف دستاویز",
   "report.density_comfortable": "آرام دہ",
   "report.no_data": "کوئی ڈیٹا نہیں",
@@ -24090,7 +24087,6 @@ const ar: Dict = {
   "report.compact_mode": "مضغوط",
   "report.visible_columns": "الأعمدة الظاهرة",
   "report.actions": "الإجراءات",
-  "report.all_countries_report": "تقرير جميع الدول",
   "report.print_pdf_document": "طباعة / مستند PDF",
   "report.density_comfortable": "مريح",
   "report.no_data": "لا توجد بيانات",
@@ -31775,7 +31771,6 @@ const fa: Dict = {
   "report.compact_mode": "فشرده",
   "report.visible_columns": "ستون‌های قابل مشاهده",
   "report.actions": "عملیات",
-  "report.all_countries_report": "گزارش همه کشورها",
   "report.print_pdf_document": "چاپ / سند PDF",
   "report.density_comfortable": "راحت",
   "report.no_data": "داده‌ای یافت نشد",
@@ -39489,7 +39484,6 @@ const ps: Dict = {
   "report.compact_mode": "لنډ",
   "report.visible_columns": "ښکاره کالمونه",
   "report.actions": "کړنې",
-  "report.all_countries_report": "د ټولو هېوادونو راپور",
   "report.print_pdf_document": "چاپ / PDF سند",
   "report.density_comfortable": "ارام",
   // ERP Reports — table

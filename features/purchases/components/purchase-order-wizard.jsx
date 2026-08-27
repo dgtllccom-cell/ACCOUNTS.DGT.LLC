@@ -551,6 +551,7 @@ export function PurchaseOrderWizard({ session }) {
   const [reportsList, setReportsList] = useState([]);
   const [selectedReportId, setSelectedReportId] = useState("");
   const [isNewReportModalOpen, setIsNewReportModalOpen] = useState(false);
+  const [selectedReportTemplate, setSelectedReportTemplate] = useState("payment");
   const [newReportForm, setNewReportForm] = useState({ name: "", description: "", notes: "" });
 
   const previewItems = useMemo(() => {
@@ -3716,6 +3717,75 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
     );
   }
 
+  const handleSelectReportTemplate = (type) => {
+    setSelectedReportTemplate(type);
+    let name = "";
+    let description = "";
+    let notes = "";
+
+    if (type === "payment") {
+      name = t(lang, "purchase.rpt_payment_title", "Payment & Settlement Terms Report");
+      description = t(lang, "purchase.rpt_payment_desc", "Payment terms, advance conditions & currency breakdown");
+      const advPct = Number(form.advancePercent || 0);
+      const remPct = Math.max(0, 100 - advPct);
+      notes = `=== ${t(lang, "purchase.rpt_payment_header", "PAYMENT & SETTLEMENT TERMS")} ===\n` +
+        `• ${t(lang, "purchase.rpt_payment_type", "Payment Type / Mode")}: ${form.paymentType || "N/A"}\n` +
+        `• ${t(lang, "purchase.rpt_advance_pct", "Advance Percentage")}: ${advPct}%\n` +
+        `• ${t(lang, "purchase.rpt_advance_date", "Advance Payment Date")}: ${form.advancePaymentDate || "N/A"}\n` +
+        `• ${t(lang, "purchase.rpt_remaining_pct", "Remaining Percentage")}: ${remPct}%\n` +
+        `• ${t(lang, "purchase.rpt_final_date", "Final Payment Date")}: ${form.paymentDate || form.dueDate || "N/A"}\n` +
+        `• ${t(lang, "purchase.rpt_primary_total", "Order Total (Primary)")}: ${form.currencyType || "USD"} ${Number(reportTotals.grandPrimaryFinal || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}\n` +
+        `• ${t(lang, "purchase.rpt_secondary_total", "Order Total (Secondary)")}: ${form.secondaryCurrency || "AED"} ${Number(reportTotals.grandFinal || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}\n\n` +
+        `=== ${t(lang, "purchase.rpt_additional_remarks", "ADDITIONAL REMARKS & INSTRUCTIONS")} ===\n`;
+    } else if (type === "shipping") {
+      name = t(lang, "purchase.rpt_shipping_title", "Loading, Shipping & Route Report");
+      description = t(lang, "purchase.rpt_shipping_desc", "Shipping mode, loading/received ports, borders & transit dates");
+      notes = `=== ${t(lang, "purchase.rpt_shipping_header", "LOADING, SHIPPING & TRANSIT DETAILS")} ===\n` +
+        `• ${t(lang, "purchase.rpt_ship_mode", "Shipping Mode")}: ${form.shippingMode || "By Sea"}\n` +
+        `• ${t(lang, "purchase.rpt_ship_line", "Shipping Line / Agent")}: ${form.shippingLine || form.shippingCompany || "N/A"}\n` +
+        `• ${t(lang, "purchase.rpt_loading_port", "Loading Port / Terminal")}: ${form.loadingPort || form.loadingBorder || form.airportName || "N/A"} (${form.loadingCountry || form.origin || "N/A"})\n` +
+        `• ${t(lang, "purchase.rpt_loading_date", "Loading Date")}: ${form.loadingDate || "N/A"}\n` +
+        `• ${t(lang, "purchase.rpt_transit_country", "Transit Country")}: ${form.transitCountry || "N/A"}\n` +
+        `• ${t(lang, "purchase.rpt_receiving_port", "Destination / Receiving Port")}: ${form.receivingPort || form.receivedPort || form.receivedBorder || form.destinationAirportName || "N/A"} (${form.receivingCountry || form.receivedCountry || "N/A"})\n` +
+        `• ${t(lang, "purchase.rpt_receiving_date", "Expected Receiving Date / ETA")}: ${form.receivingDate || form.receivedDate || form.eta || "N/A"}\n` +
+        `• ${t(lang, "purchase.rpt_container_info", "Container / Vessel / BL")}: Container: ${form.containerNumbers || "N/A"} (${form.containerSize || "N/A"}) | Vessel: ${form.vesselName || "N/A"} | BL No: ${form.blNo || form.billOfLadingNo || "N/A"}\n\n` +
+        `=== ${t(lang, "purchase.rpt_additional_remarks", "ADDITIONAL REMARKS & INSTRUCTIONS")} ===\n`;
+    } else if (type === "goods") {
+      name = t(lang, "purchase.rpt_goods_title", "Goods Specification & Cargo Weight Report");
+      description = t(lang, "purchase.rpt_goods_desc", "Summary of items, quantities, gross weight, net weight & total value");
+      
+      const itemsList = goodsEntries.map((g, idx) => {
+        const qtyNo = Number(g.qtyNo || 0);
+        const qtyKgs = Number(g.qtyKgs || 0);
+        const emptyKgs = Number(g.emptyKgs || 0);
+        const gross = qtyNo * qtyKgs;
+        const net = qtyNo * (qtyKgs - emptyKgs);
+        return `  ${idx + 1}. ${g.goodsName || "N/A"} | Grade: ${g.size || "N/A"} | Brand: ${g.brand || g.allotName || "N/A"} | Qty: ${qtyNo.toLocaleString()} ${g.qtyName || "Bags"} | Gross: ${gross.toLocaleString()} KG | Net: ${net.toLocaleString()} KG | Rate: ${g.coursePrice || 0} | Amount: ${Number(g.totalAmount || 0).toLocaleString()}`;
+      }).join("\n");
+
+      notes = `=== ${t(lang, "purchase.rpt_goods_header", "GOODS & CARGO WEIGHT SPECIFICATION")} ===\n` +
+        `• ${t(lang, "purchase.rpt_total_items", "Total Goods Lots")}: ${goodsEntries.length} Item(s)\n` +
+        `• ${t(lang, "purchase.rpt_total_qty", "Total Quantity")}: ${Number(reportTotals.totalQty || 0).toLocaleString()} ${goodsEntries[0]?.qtyName || "Units"}\n` +
+        `• ${t(lang, "purchase.rpt_total_gross", "Total Gross Weight")}: ${Number(reportTotals.totalGross || 0).toLocaleString()} KGS\n` +
+        `• ${t(lang, "purchase.rpt_total_net", "Total Net Weight")}: ${Number(reportTotals.totalNet || 0).toLocaleString()} KGS\n` +
+        `• ${t(lang, "purchase.rpt_total_empty", "Total Deductions (Empty)")}: ${Number(reportTotals.totalDeductions || 0).toLocaleString()} KGS\n` +
+        `• ${t(lang, "purchase.rpt_grand_total", "Grand Total Value")}: ${form.currencyType || "USD"} ${Number(reportTotals.grandPrimaryFinal || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })} (${form.secondaryCurrency || "AED"} ${Number(reportTotals.grandFinal || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })})\n\n` +
+        `--- ${t(lang, "purchase.rpt_items_breakdown", "Items Breakdown")} ---\n${itemsList || "  No items entered yet."}\n\n` +
+        `=== ${t(lang, "purchase.rpt_additional_remarks", "ADDITIONAL REMARKS & INSTRUCTIONS")} ===\n`;
+    } else {
+      name = "";
+      description = "";
+      notes = "";
+    }
+
+    setNewReportForm({ name, description, notes });
+  };
+
+  const handleOpenNewReportModal = () => {
+    setIsNewReportModalOpen(true);
+    handleSelectReportTemplate("payment");
+  };
+
   const handleNewReportSubmit = (e) => {
     e.preventDefault();
     if (!newReportForm.name.trim()) {
@@ -3727,6 +3797,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
       name: newReportForm.name,
       description: newReportForm.description,
       notes: newReportForm.notes,
+      templateType: selectedReportTemplate,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -4283,10 +4354,10 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                           </h3>
                           <Button
                             type="button"
-                            onClick={() => setIsNewReportModalOpen(true)}
-                            className="h-8 text-xs font-bold uppercase bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 rounded-lg shadow-sm"
+                            onClick={handleOpenNewReportModal}
+                            className="h-8 text-xs font-bold uppercase bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 rounded-lg shadow-sm flex items-center gap-1.5"
                           >
-                            + Add New Report
+                            <FileText className="h-3.5 w-3.5" /> + {t(lang, "purchase.add_new_report_btn", "Add New Report")}
                           </Button>
                         </div>
 
@@ -6587,69 +6658,270 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
 
       {/* New Report Modal */}
       {isNewReportModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-background rounded-xl border border-border shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-4 border-b border-border/60 bg-muted/30">
-              <h3 className="font-bold text-base text-foreground flex items-center gap-2">
-                {t(lang, "purchase.wiz_create_new_report", "Create New Report")}
-              </h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 px-6 border-b border-slate-100 bg-slate-50/80">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-emerald-100 text-emerald-700">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-black text-sm uppercase tracking-wider text-slate-900">
+                    {t(lang, "purchase.wiz_create_new_report", "Create Dynamic Report")}
+                  </h3>
+                  <p className="text-[11px] text-slate-500 font-medium">
+                    {t(lang, "purchase.wiz_report_modal_sub", "Select an auto-populated template or write custom booking notes")}
+                  </p>
+                </div>
+              </div>
               <button
                 type="button"
                 onClick={() => setIsNewReportModalOpen(false)}
-                className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-muted"
+                className="text-slate-400 hover:text-slate-700 transition-colors p-1.5 rounded-lg hover:bg-slate-200/60"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <form onSubmit={handleNewReportSubmit} className="p-5 space-y-4">
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-4 flex-1">
+              {/* Template Selector Grid */}
               <div>
-                <label className="text-xs font-bold text-foreground mb-1.5 block">{trUi("Report Name")} <span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  required
-                  value={newReportForm.name}
-                  onChange={(e) => setNewReportForm({ ...newReportForm, name: e.target.value })}
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  placeholder={t(lang, "purchase.wiz_ph_report_name_example", "e.g. Loading Report, Shipping Report")}
-                />
+                <label className="text-[11px] font-black uppercase tracking-wider text-slate-700 mb-2 block flex items-center justify-between">
+                  <span>{t(lang, "purchase.select_report_preset", "Choose Report Preset / Template")}</span>
+                  <span className="text-[10px] font-semibold text-blue-600 lowercase">{t(lang, "purchase.auto_fills_data", "Auto-fills current booking data")}</span>
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleSelectReportTemplate("payment")}
+                    className={`flex flex-col items-start p-2.5 rounded-xl border text-left transition-all ${
+                      selectedReportTemplate === "payment"
+                        ? "bg-blue-50 border-blue-500 shadow-xs ring-1 ring-blue-400"
+                        : "bg-slate-50/70 border-slate-200 hover:bg-slate-100 hover:border-slate-300"
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <CreditCard className={`h-4 w-4 ${selectedReportTemplate === "payment" ? "text-blue-600" : "text-slate-500"}`} />
+                      <span className={`text-[11px] font-black ${selectedReportTemplate === "payment" ? "text-blue-900" : "text-slate-800"}`}>
+                        {t(lang, "purchase.tpl_payment", "Payment Terms")}
+                      </span>
+                    </div>
+                    <span className="text-[9px] text-slate-500 leading-tight">
+                      {t(lang, "purchase.tpl_payment_sub", "Advance, dates & total")}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleSelectReportTemplate("shipping")}
+                    className={`flex flex-col items-start p-2.5 rounded-xl border text-left transition-all ${
+                      selectedReportTemplate === "shipping"
+                        ? "bg-emerald-50 border-emerald-500 shadow-xs ring-1 ring-emerald-400"
+                        : "bg-slate-50/70 border-slate-200 hover:bg-slate-100 hover:border-slate-300"
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <Truck className={`h-4 w-4 ${selectedReportTemplate === "shipping" ? "text-emerald-600" : "text-slate-500"}`} />
+                      <span className={`text-[11px] font-black ${selectedReportTemplate === "shipping" ? "text-emerald-900" : "text-slate-800"}`}>
+                        {t(lang, "purchase.tpl_shipping", "Loading & Route")}
+                      </span>
+                    </div>
+                    <span className="text-[9px] text-slate-500 leading-tight">
+                      {t(lang, "purchase.tpl_shipping_sub", "Ports, borders & ETA")}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleSelectReportTemplate("goods")}
+                    className={`flex flex-col items-start p-2.5 rounded-xl border text-left transition-all ${
+                      selectedReportTemplate === "goods"
+                        ? "bg-amber-50 border-amber-500 shadow-xs ring-1 ring-amber-400"
+                        : "bg-slate-50/70 border-slate-200 hover:bg-slate-100 hover:border-slate-300"
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <Package className={`h-4 w-4 ${selectedReportTemplate === "goods" ? "text-amber-600" : "text-slate-500"}`} />
+                      <span className={`text-[11px] font-black ${selectedReportTemplate === "goods" ? "text-amber-900" : "text-slate-800"}`}>
+                        {t(lang, "purchase.tpl_goods", "Goods & Weight")}
+                      </span>
+                    </div>
+                    <span className="text-[9px] text-slate-500 leading-tight">
+                      {t(lang, "purchase.tpl_goods_sub", "Gross/Net wt & items")}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleSelectReportTemplate("custom")}
+                    className={`flex flex-col items-start p-2.5 rounded-xl border text-left transition-all ${
+                      selectedReportTemplate === "custom"
+                        ? "bg-purple-50 border-purple-500 shadow-xs ring-1 ring-purple-400"
+                        : "bg-slate-50/70 border-slate-200 hover:bg-slate-100 hover:border-slate-300"
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <FileText className={`h-4 w-4 ${selectedReportTemplate === "custom" ? "text-purple-600" : "text-slate-500"}`} />
+                      <span className={`text-[11px] font-black ${selectedReportTemplate === "custom" ? "text-purple-900" : "text-slate-800"}`}>
+                        {t(lang, "purchase.tpl_custom", "Custom Blank")}
+                      </span>
+                    </div>
+                    <span className="text-[9px] text-slate-500 leading-tight">
+                      {t(lang, "purchase.tpl_custom_sub", "Blank report format")}
+                    </span>
+                  </button>
+                </div>
               </div>
-              <div>
-                <label className="text-xs font-bold text-foreground mb-1.5 block">{trUi("Description")}</label>
-                <input
-                  type="text"
-                  value={newReportForm.description}
-                  onChange={(e) => setNewReportForm({ ...newReportForm, description: e.target.value })}
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  placeholder={t(lang, "purchase.wiz_ph_optional_description", "Optional description")}
-                />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-foreground mb-1.5 block">{trUi("Notes")}</label>
-                <textarea
-                  rows={3}
-                  value={newReportForm.notes}
-                  onChange={(e) => setNewReportForm({ ...newReportForm, notes: e.target.value })}
-                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  placeholder={t(lang, "purchase.wiz_ph_additional_notes", "Additional notes for this report")}
-                />
-              </div>
-              <div className="flex justify-end gap-2 pt-2 border-t border-border/60">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsNewReportModalOpen(false)}
-                  className="h-9"
-                >
-                  {t(lang, "common.cancel", "Cancel")}
-                </Button>
-                <Button
-                  type="submit"
-                  className="h-9 bg-primary hover:bg-primary/90 font-bold"
-                >
-                  {t(lang, "purchase.wiz_create_and_save", "Create & Save")}
-                </Button>
-              </div>
-            </form>
+
+              {/* Live Preview Card */}
+              {selectedReportTemplate === "payment" && (
+                <div className="bg-blue-50/70 border border-blue-200 rounded-xl p-3 text-[11px] space-y-1.5 text-blue-950">
+                  <div className="font-black uppercase tracking-wider text-[10px] text-blue-700 flex items-center gap-1.5">
+                    <CreditCard className="h-3.5 w-3.5" /> {t(lang, "purchase.live_payment_snapshot", "Live Payment Snapshot")}
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                    <div className="bg-white/80 p-2 rounded-lg border border-blue-100">
+                      <span className="text-[9px] text-slate-500 font-bold block">{t(lang, "purchase.f_payment_type", "Payment Type")}</span>
+                      <span className="font-black text-slate-800">{form.paymentType || "N/A"}</span>
+                    </div>
+                    <div className="bg-white/80 p-2 rounded-lg border border-blue-100">
+                      <span className="text-[9px] text-slate-500 font-bold block">{t(lang, "purchase.f_advance_percentage", "Advance %")}</span>
+                      <span className="font-black text-blue-700">{form.advancePercent || 0}% ({form.advancePaymentDate || "N/A"})</span>
+                    </div>
+                    <div className="bg-white/80 p-2 rounded-lg border border-blue-100">
+                      <span className="text-[9px] text-slate-500 font-bold block">{t(lang, "purchase.f_remaining_percentage", "Remaining %")}</span>
+                      <span className="font-black text-amber-700">{Math.max(0, 100 - Number(form.advancePercent || 0))}% ({form.paymentDate || "N/A"})</span>
+                    </div>
+                    <div className="bg-white/80 p-2 rounded-lg border border-blue-100">
+                      <span className="text-[9px] text-slate-500 font-bold block">{t(lang, "purchase.f_total_amount", "Order Total")}</span>
+                      <span className="font-black text-emerald-700 font-mono">{form.currencyType || "USD"} {Number(reportTotals.grandPrimaryFinal || 0).toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {selectedReportTemplate === "shipping" && (
+                <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-3 text-[11px] space-y-1.5 text-emerald-950">
+                  <div className="font-black uppercase tracking-wider text-[10px] text-emerald-700 flex items-center gap-1.5">
+                    <Truck className="h-3.5 w-3.5" /> {t(lang, "purchase.live_shipping_snapshot", "Live Route & Shipping Snapshot")}
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                    <div className="bg-white/80 p-2 rounded-lg border border-emerald-100">
+                      <span className="text-[9px] text-slate-500 font-bold block">{t(lang, "purchase.f_shipping_mode", "Mode")}</span>
+                      <span className="font-black text-slate-800">{form.shippingMode || "By Sea"}</span>
+                    </div>
+                    <div className="bg-white/80 p-2 rounded-lg border border-emerald-100">
+                      <span className="text-[9px] text-slate-500 font-bold block">{t(lang, "purchase.f_loading_port", "Loading Port")}</span>
+                      <span className="font-black text-slate-800 truncate block">{form.loadingPort || form.loadingBorder || "N/A"}</span>
+                    </div>
+                    <div className="bg-white/80 p-2 rounded-lg border border-emerald-100">
+                      <span className="text-[9px] text-slate-500 font-bold block">{t(lang, "purchase.f_destination_port", "Destination Port")}</span>
+                      <span className="font-black text-slate-800 truncate block">{form.receivingPort || form.receivedPort || "N/A"}</span>
+                    </div>
+                    <div className="bg-white/80 p-2 rounded-lg border border-emerald-100">
+                      <span className="text-[9px] text-slate-500 font-bold block">{t(lang, "purchase.f_eta", "Expected ETA")}</span>
+                      <span className="font-black text-emerald-700">{form.receivingDate || form.receivedDate || "N/A"}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {selectedReportTemplate === "goods" && (
+                <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-3 text-[11px] space-y-1.5 text-amber-950">
+                  <div className="font-black uppercase tracking-wider text-[10px] text-amber-700 flex items-center gap-1.5">
+                    <Package className="h-3.5 w-3.5" /> {t(lang, "purchase.live_goods_snapshot", "Live Goods & Cargo Weight Snapshot")}
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                    <div className="bg-white/80 p-2 rounded-lg border border-amber-100">
+                      <span className="text-[9px] text-slate-500 font-bold block">{t(lang, "purchase.f_total_items", "Total Lots")}</span>
+                      <span className="font-black text-slate-800">{goodsEntries.length} Item(s)</span>
+                    </div>
+                    <div className="bg-white/80 p-2 rounded-lg border border-amber-100">
+                      <span className="text-[9px] text-slate-500 font-bold block">{t(lang, "purchase.f_total_quantity", "Total Quantity")}</span>
+                      <span className="font-black text-slate-800">{Number(reportTotals.totalQty || 0).toLocaleString()} {goodsEntries[0]?.qtyName || "Bags"}</span>
+                    </div>
+                    <div className="bg-white/80 p-2 rounded-lg border border-amber-100">
+                      <span className="text-[9px] text-slate-500 font-bold block">{t(lang, "purchase.f_total_gross_wt", "Gross Weight")}</span>
+                      <span className="font-black text-amber-800">{Number(reportTotals.totalGross || 0).toLocaleString()} KG</span>
+                    </div>
+                    <div className="bg-white/80 p-2 rounded-lg border border-amber-100">
+                      <span className="text-[9px] text-slate-500 font-bold block">{t(lang, "purchase.f_total_net_wt", "Net Weight")}</span>
+                      <span className="font-black text-emerald-700">{Number(reportTotals.totalNet || 0).toLocaleString()} KG</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Form Inputs */}
+              <form id="newReportModalForm" onSubmit={handleNewReportSubmit} className="space-y-3.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[11px] font-black text-slate-700 mb-1 block uppercase tracking-wider">
+                      {trUi("Report Name")} <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newReportForm.name}
+                      onChange={(e) => setNewReportForm({ ...newReportForm, name: e.target.value })}
+                      className="flex h-9 w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-1 text-xs font-bold text-slate-900 shadow-2xs transition-colors focus:border-blue-500 focus:bg-white focus:outline-none"
+                      placeholder={t(lang, "purchase.wiz_ph_report_name_example", "e.g. Loading Report, Shipping Report")}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-black text-slate-700 mb-1 block uppercase tracking-wider">
+                      {trUi("Description")}
+                    </label>
+                    <input
+                      type="text"
+                      value={newReportForm.description}
+                      onChange={(e) => setNewReportForm({ ...newReportForm, description: e.target.value })}
+                      className="flex h-9 w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-1 text-xs text-slate-800 shadow-2xs transition-colors focus:border-blue-500 focus:bg-white focus:outline-none"
+                      placeholder={t(lang, "purchase.wiz_ph_optional_description", "Optional summary description")}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[11px] font-black text-slate-700 block uppercase tracking-wider">
+                      {trUi("Report Content & Notes")}
+                    </label>
+                    <span className="text-[10px] text-slate-400 font-medium">
+                      {t(lang, "purchase.editable_report_hint", "Structured details above are loaded. Add remarks or edit freely.")}
+                    </span>
+                  </div>
+                  <textarea
+                    rows={8}
+                    value={newReportForm.notes}
+                    onChange={(e) => setNewReportForm({ ...newReportForm, notes: e.target.value })}
+                    className="flex w-full rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-xs font-mono leading-relaxed text-slate-900 shadow-2xs transition-colors focus:border-blue-500 focus:bg-white focus:outline-none"
+                    placeholder={t(lang, "purchase.wiz_ph_additional_notes", "Write or edit report details, payment conditions, goods specifications, and remarks...")}
+                  />
+                </div>
+              </form>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex justify-end gap-2.5 p-4 px-6 border-t border-slate-100 bg-slate-50/80">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsNewReportModalOpen(false)}
+                className="h-9 px-4 text-xs font-bold text-slate-600 border-slate-200 hover:bg-slate-100"
+              >
+                {t(lang, "common.cancel", "Cancel")}
+              </Button>
+              <Button
+                type="submit"
+                form="newReportModalForm"
+                className="h-9 px-5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider shadow-sm flex items-center gap-1.5"
+              >
+                <CheckCircle2 className="h-4 w-4" /> {t(lang, "purchase.wiz_create_and_save", "Create & Save Report")}
+              </Button>
+            </div>
           </div>
         </div>
       )}

@@ -1196,6 +1196,8 @@ function SuperAdminRoznamchaReportViewContent({
   // see CLAUDE.md multilingual-architecture reconciliation rule.
   const activeLang = useActiveLanguage();
   const effectiveLang = activeLang !== "en" ? activeLang : lang;
+  const th = (label: string) => translateHeader(effectiveLang, label);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(effectiveLang);
 
   const [draftFilters, setDraftFilters] = useState<FilterState>({
     fromDate: "",
@@ -1585,23 +1587,23 @@ function SuperAdminRoznamchaReportViewContent({
     if (!targetRow) return [];
     const rowRate = getRowRate(targetRow.currency);
     const rowsForPrint: { label: string; value: string }[] = [
-      { label: "Voucher Type", value: targetRow.typeLabel },
-      { label: "Date", value: targetRow.entryDate },
-      { label: "Country", value: targetRow.countryName },
-      { label: "Branch", value: targetRow.cityBranchId ? targetRow.cityBranchName : targetRow.countryBranchName },
-      { label: "Voucher No", value: targetRow.voucherNo },
-      { label: "Journal No", value: targetRow.journalNo },
-      { label: "Account / Party", value: targetRow.accountParty },
-      { label: "Narration", value: targetRow.narration },
-      { label: "Currency", value: targetRow.currency },
-      { label: "Debit", value: fmtNumber(targetRow.debit) },
-      { label: "Credit", value: fmtNumber(targetRow.credit) },
-      { label: "Remaining Balance", value: fmtNumber(targetRow.remainingBalance ?? 0) },
-      { label: "USD Rate", value: fmtRate(rowRate) },
-      { label: "Debit USD", value: fmtNumber(targetRow.debit / rowRate) },
-      { label: "Credit USD", value: fmtNumber(targetRow.credit / rowRate) },
-      { label: "Balance USD", value: fmtNumber((targetRow.remainingBalance ?? 0) / rowRate) },
-      { label: "Status", value: targetRow.status }
+      { label: th("Voucher Type"), value: targetRow.typeLabel },
+      { label: th("Date"), value: targetRow.entryDate },
+      { label: th("Country"), value: targetRow.countryName },
+      { label: th("Branch"), value: targetRow.cityBranchId ? targetRow.cityBranchName : targetRow.countryBranchName },
+      { label: th("Voucher No"), value: targetRow.voucherNo },
+      { label: th("Journal No"), value: targetRow.journalNo },
+      { label: th("Account / Party"), value: targetRow.accountParty },
+      { label: th("Narration"), value: targetRow.narration },
+      { label: th("Currency"), value: targetRow.currency },
+      { label: th("Debit"), value: fmtNumber(targetRow.debit) },
+      { label: th("Credit"), value: fmtNumber(targetRow.credit) },
+      { label: th("Remaining Balance"), value: fmtNumber(targetRow.remainingBalance ?? 0) },
+      { label: th("USD Rate"), value: fmtRate(rowRate) },
+      { label: th("Debit USD"), value: fmtNumber(targetRow.debit / rowRate) },
+      { label: th("Credit USD"), value: fmtNumber(targetRow.credit / rowRate) },
+      { label: th("Balance USD"), value: fmtNumber((targetRow.remainingBalance ?? 0) / rowRate) },
+      { label: th("Status"), value: targetRow.status }
     ];
 
     const maxLines = mode === "journal" ? 12 : 6;
@@ -1866,7 +1868,7 @@ function SuperAdminRoznamchaReportViewContent({
               className="h-7 rounded-md border border-slate-200 bg-white px-3 text-[10px] font-bold text-slate-700 shadow-sm flex items-center gap-2 hover:bg-slate-50 outline-none"
             >
               <Filter className="h-3 w-3" />
-              <span>Filters</span>
+              <span>{th("Filters")}</span>
             </button>
             {filtersOpen && (
               <div className="absolute right-0 mt-1 w-64 rounded-xl bg-white border border-slate-200 shadow-2xl z-[80] p-4 space-y-3 text-left">
@@ -1875,8 +1877,8 @@ function SuperAdminRoznamchaReportViewContent({
                   <SearchSelect
                     label=""
                     value={draftFilters.countryId}
-                    placeholder="All Countries"
-                    options={[{ value: "all", label: "All Countries" }, ...countryOptions]}
+                    placeholder={th("All Countries")}
+                    options={[{ value: "all", label: th("All Countries") }, ...countryOptions]}
                     disabled={loading || !sessionInfo?.scopes.isSuperAdmin}
                     onValueChange={(val) => {
                       setDraftFilters((cur) => ({ ...cur, countryId: val, branchId: "all" }));
@@ -1890,8 +1892,8 @@ function SuperAdminRoznamchaReportViewContent({
                   <SearchSelect
                     label=""
                     value={draftFilters.branchId}
-                    placeholder="All Branches"
-                    options={[{ value: "all", label: "All Branches" }, ...filteredBranchOptions]}
+                    placeholder={th("All Branches")}
+                    options={[{ value: "all", label: th("All Branches") }, ...filteredBranchOptions]}
                     disabled={loading}
                     onValueChange={(val) => {
                       setDraftFilters((cur) => ({ ...cur, branchId: val }));
@@ -1905,8 +1907,8 @@ function SuperAdminRoznamchaReportViewContent({
                   <SearchSelect
                     label=""
                     value={draftFilters.voucherType}
-                    placeholder="All Vouchers"
-                    options={[{ value: "all", label: "All Vouchers" }, ...voucherTypeOptions]}
+                    placeholder={th("All Vouchers")}
+                    options={[{ value: "all", label: th("All Vouchers") }, ...voucherTypeOptions]}
                     disabled={loading}
                     onValueChange={(val) => {
                       setDraftFilters((cur) => ({ ...cur, voucherType: val }));
@@ -1927,7 +1929,7 @@ function SuperAdminRoznamchaReportViewContent({
                         setDraftFilters((cur) => ({ ...cur, partySearch: val }));
                         setAppliedFilters((cur) => ({ ...cur, partySearch: val }));
                       }}
-                      placeholder="Search name / A/C"
+                      placeholder={th("Search name / A/C")}
                     />
                   </div>
                 </div>
@@ -1956,7 +1958,7 @@ function SuperAdminRoznamchaReportViewContent({
               onClick={() => setExchangeOpen(!exchangeOpen)}
               className="h-7 rounded-md border border-slate-200 bg-white px-2 text-[10px] font-bold text-blue-600 shadow-sm flex items-center gap-1 hover:bg-slate-50 outline-none"
             >
-              <span>Rates</span>
+              <span>{th("Rates")}</span>
             </button>
             {exchangeOpen && (
               <div className="absolute right-0 mt-1 w-64 rounded-xl bg-white border border-slate-200 shadow-2xl z-[80] p-3 space-y-3 text-left">
@@ -2051,7 +2053,7 @@ function SuperAdminRoznamchaReportViewContent({
               variant="outline"
               size="icon"
               className="h-7 w-7 rounded-md bg-white border-slate-200 hover:bg-slate-50 shadow-sm flex items-center justify-center p-0"
-              aria-label="Report actions"
+              aria-label={th("Report actions")}
               onClick={() => setMenuOpen((v) => !v)}
             >
               <MoreVertical className="h-3 w-3" aria-hidden />
@@ -2201,11 +2203,11 @@ function SuperAdminRoznamchaReportViewContent({
                 <h3 className="text-sm font-black text-slate-950 dark:text-slate-100">
                   {reportDisplayTitle}
                 </h3>
-                <p className="text-[11px] font-semibold text-slate-500">Detailed roznamcha transactions matching your filters</p>
+                <p className="text-[11px] font-semibold text-slate-500">{th("Detailed roznamcha transactions matching your filters")}</p>
               </div>
               <div className="flex items-center gap-4">
                 <div className="text-xs text-muted-foreground dark:text-slate-500">
-                  Rows: <b className="text-foreground dark:text-slate-200">{visibleRows.length}</b>
+                  {th("Rows")}: <b className="text-foreground dark:text-slate-200">{visibleRows.length}</b>
                 </div>
                 <Button
                   type="button"
@@ -2215,7 +2217,7 @@ function SuperAdminRoznamchaReportViewContent({
                   onClick={() => setPrintMode(true)}
                 >
                   <Printer className="h-4 w-4" />
-                  Print Preview
+                  {th("Print Preview")}
                 </Button>
               </div>
             </div>
@@ -2225,7 +2227,7 @@ function SuperAdminRoznamchaReportViewContent({
                   <tr className="whitespace-nowrap text-left">
                     {columns.map((c) => (
                       <th key={c.key} className={cn("border border-slate-200 px-3 py-2.5 font-black dark:border-slate-800", c.align === "right" ? "text-right" : c.align === "center" ? "text-center" : "")} style={{ width: c.width }}>
-                        {c.header}
+                        {th(c.header)}
                       </th>
                     ))}
                   </tr>
@@ -2490,20 +2492,20 @@ function BranchJournalGeneralStyleSummary({
   const generated = new Date(generatedAt).toLocaleString();
 
   const statCards = [
-    { title: "Countries", value: uniqueCountries.size || (selectedCountryLabel === "All" ? 0 : 1), subtitle: "Scoped countries", icon: <Globe className="h-5 w-5" /> },
-    { title: "Main Branches", value: uniqueMainBranches.size || (selectedBranchLabel === "All" ? 0 : 1), subtitle: "Country branches", icon: <Building2 className="h-5 w-5" /> },
-    { title: "City Branches", value: uniqueCityBranches.size, subtitle: "City branch journals", icon: <ChevronDown className="h-5 w-5" /> },
-    { title: "Transactions", value: rows.length, subtitle: "Journal rows", icon: <BookOpen className="h-5 w-5" /> },
-    { title: "Active Branches", value: activeBranches.size, subtitle: "Branches with activity", icon: <FileText className="h-5 w-5" /> }
+    { title: th("Countries"), value: uniqueCountries.size || (selectedCountryLabel === "All" ? 0 : 1), subtitle: th("Scoped countries"), icon: <Globe className="h-5 w-5" /> },
+    { title: th("Main Branches"), value: uniqueMainBranches.size || (selectedBranchLabel === "All" ? 0 : 1), subtitle: th("Country branches"), icon: <Building2 className="h-5 w-5" /> },
+    { title: th("City Branches"), value: uniqueCityBranches.size, subtitle: th("City branch journals"), icon: <ChevronDown className="h-5 w-5" /> },
+    { title: th("Transactions"), value: rows.length, subtitle: th("Journal rows"), icon: <BookOpen className="h-5 w-5" /> },
+    { title: th("Active Branches"), value: activeBranches.size, subtitle: th("Branches with activity"), icon: <FileText className="h-5 w-5" /> }
   ];
 
   const infoCards = [
-    { label: "Report Viewer", value: viewerName || "Branch Admin" },
-    { label: "Access Scope", value: "City Branch - journal report" },
-    { label: "Country", value: selectedCountryLabel },
-    { label: "Branch", value: selectedBranchLabel },
-    { label: "Currency", value: currency },
-    { label: "Generated", value: generated }
+    { label: th("Report Viewer"), value: viewerName || "Branch Admin" },
+    { label: th("Access Scope"), value: "City Branch - journal report" },
+    { label: th("Country"), value: selectedCountryLabel },
+    { label: th("Branch"), value: selectedBranchLabel },
+    { label: th("Currency"), value: currency },
+    { label: th("Generated"), value: generated }
   ];
 
   return (
@@ -2655,7 +2657,7 @@ function RoznamchaPrintPreview({
     <ProfessionalReportViewer
       lang={lang}
       title={title}
-      subtitle="Roznamcha journal report"
+      subtitle={translateHeader(lang, "Roznamcha journal report")}
       data={rows}
       columns={columns}
       summary={summary}
