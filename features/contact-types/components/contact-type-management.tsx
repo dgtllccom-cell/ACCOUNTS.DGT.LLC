@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 import { Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +26,9 @@ function toCountryOption(c: LocationCountry): SearchSelectOption {
 }
 
 export function ContactTypeManagement() {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const [banner, setBanner] = useState<{ tone: "ok" | "err"; text: string } | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -129,12 +134,12 @@ export function ContactTypeManagement() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" dir={isRtl ? "rtl" : "ltr"}>
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">Settings / Management</p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight">Contact Type</h1>
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">{tt("ct.breadcrumb", "Settings / Management")}</p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight">{tt("ct.title", "Contact Type")}</h1>
         <p className="text-sm text-muted-foreground">
-          Centralized country calling codes for Mobile/Phone/WhatsApp/Fax. These codes are reused across ERP forms.
+          {tt("ct.description", "Centralized country calling codes for Mobile/Phone/WhatsApp/Fax. These codes are reused across ERP forms.")}
         </p>
       </div>
 
@@ -152,20 +157,20 @@ export function ContactTypeManagement() {
 
       <Card className="border-slate-200/80 shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle>Country Calling Codes</CardTitle>
+          <CardTitle>{tt("ct.calling_codes", "Country Calling Codes")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <SearchSelect
-            label="Country"
+            label={tt("common.country", "Country")}
             value={countryId}
-            placeholder={loadingCountries ? "Loading..." : "Select country"}
+            placeholder={loadingCountries ? tt("common.loading", "Loading...") : tt("ct.select_country", "Select country")}
             options={countryOptions}
             disabled={loadingCountries}
             onValueChange={setCountryId}
           />
 
           {loadingRules ? (
-            <p className="text-sm text-muted-foreground">Loading rules...</p>
+            <p className="text-sm text-muted-foreground">{tt("common.loading", "Loading...")}</p>
           ) : countryId ? (
             <div className="space-y-3">
               {rows
@@ -173,11 +178,11 @@ export function ContactTypeManagement() {
                 .map((row) => (
                   <div key={row.key} className="grid gap-3 rounded-lg border bg-muted/10 p-3 md:grid-cols-4 md:items-end">
                     <div className="space-y-2">
-                      <Label>Type</Label>
+                      <Label>{tt("ct.type", "Type")}</Label>
                       <Input value={row.key} readOnly />
                     </div>
                     <div className="space-y-2">
-                      <Label>Calling Code</Label>
+                      <Label>{tt("ct.calling_code", "Calling Code")}</Label>
                       <Input
                         value={row.callingCode}
                         onChange={(e) =>
@@ -187,7 +192,7 @@ export function ContactTypeManagement() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Format Mask (optional)</Label>
+                      <Label>{tt("ct.format_mask", "Format Mask (optional)")}</Label>
                       <Input
                         value={row.formatMask}
                         onChange={(e) =>
@@ -197,7 +202,7 @@ export function ContactTypeManagement() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Example (optional)</Label>
+                      <Label>{tt("ct.example", "Example (optional)")}</Label>
                       <Input
                         value={row.example}
                         onChange={(e) =>
@@ -212,12 +217,12 @@ export function ContactTypeManagement() {
               <div className="flex justify-end">
                 <Button type="button" onClick={save} disabled={saving}>
                   <Save className="h-4 w-4" aria-hidden />
-                  {saving ? "Saving..." : "Save"}
+                  {saving ? tt("cur.saving", "Saving...") : tt("common.save", "Save")}
                 </Button>
               </div>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">Select a country to edit calling codes.</p>
+            <p className="text-sm text-muted-foreground">{tt("ct.select_country_prompt", "Select a country to edit calling codes.")}</p>
           )}
         </CardContent>
       </Card>

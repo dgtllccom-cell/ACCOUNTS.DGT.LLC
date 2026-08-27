@@ -882,21 +882,21 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
               {/* SECTION 7: NOTES (Optional) */}
               <div>
                 <h3 className="text-xs font-black uppercase tracking-wider text-[#1e40af] dark:text-blue-400 mb-2 pb-1 border-b border-border/80">
-                  NOTES <span className="text-[10px] lowercase text-muted-foreground font-normal">(Optional)</span>
+                  {tt("transit.sec_notes", "NOTES")} <span className="text-[10px] lowercase text-muted-foreground font-normal">{tt("transit.notes_optional", "(Optional)")}</span>
                 </h3>
                 <textarea
                   rows={2}
                   value={formData.notes}
                   onChange={(e) => handleInputChange("notes", e.target.value)}
                   className="w-full rounded-xl border border-border bg-background p-3 text-xs outline-none focus:ring-1 focus:ring-blue-500"
-                  placeholder="Enter notes here..."
+                  placeholder={tt("transit.notes_ph", "Enter notes here...")}
                 />
               </div>
             </div>
 
             {/* Footer */}
             <div className="border-t border-border bg-muted/20 px-6 py-3 text-center text-[11px] text-muted-foreground font-medium">
-              © 2025 Transit Management System. All Rights Reserved.
+              {tt("transit.footer_copy", "© 2025 Transit Management System. All Rights Reserved.")}
             </div>
           </div>
         )}
@@ -917,10 +917,10 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                 </div>
                 <div>
                   <h2 className="text-lg sm:text-xl font-black tracking-tight text-slate-900 leading-tight">
-                    TRANSIT ENTRY REPORT
+                    {tt("transit.report_title", "TRANSIT ENTRY REPORT")}
                   </h2>
                   <p className="text-xs font-black uppercase tracking-widest text-slate-600 mt-0.5">
-                    PUBLIC CHECK
+                    {tt("transit.public_check_report", "PUBLIC CHECK")}
                   </p>
                 </div>
               </div>
@@ -934,26 +934,26 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                     className="h-16 w-16 sm:h-20 sm:w-20 object-contain"
                   />
                 </div>
-                <p className="text-[8px] font-bold text-slate-500 uppercase tracking-wider mt-1">Scan to Verify</p>
+                <p className="text-[8px] font-bold text-slate-500 uppercase tracking-wider mt-1">{tt("transit.scan_to_verify", "Scan to Verify")}</p>
               </div>
             </div>
 
             {/* Serial Metadata Summary Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-4 border-b border-slate-200 text-xs">
               <div>
-                <span className="text-[10px] font-bold uppercase text-slate-500 block">Super Agent</span>
+                <span className="text-[10px] font-bold uppercase text-slate-500 block">{tt("transit.lbl_super_agent", "Super Agent")}</span>
                 <span className="font-extrabold text-slate-900 text-xs sm:text-sm">{formData.super_agent}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold uppercase text-slate-500 block">Country</span>
+                <span className="text-[10px] font-bold uppercase text-slate-500 block">{tt("common.country", "Country")}</span>
                 <span className="font-extrabold text-slate-900 text-xs sm:text-sm">{formData.country.split("-")[1]?.trim() || formData.country}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold uppercase text-slate-500 block">Branch</span>
+                <span className="text-[10px] font-bold uppercase text-slate-500 block">{tt("common.branch", "Branch")}</span>
                 <span className="font-extrabold text-slate-900 text-xs sm:text-sm">{formData.branch.split("-")[1]?.trim() || formData.branch}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold uppercase text-slate-500 block">Entry Serial</span>
+                <span className="text-[10px] font-bold uppercase text-slate-500 block">{tt("transit.lbl_entry_serial", "Entry Serial")}</span>
                 <span className="font-black text-red-600 text-xs sm:text-sm">{formData.entry_serial}</span>
               </div>
             </div>
@@ -961,39 +961,39 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
             {/* BASIC INFORMATION SECTION */}
             <div className="py-4 border-b border-slate-200 text-xs space-y-2">
               <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-800">
-                BASIC INFORMATION
+                {tt("transit.sec_basic_info", "BASIC INFORMATION")}
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1.5 text-xs">
                 <div className="flex justify-between sm:justify-start gap-4">
-                  <span className="w-32 text-slate-600 font-semibold">Invoice Number</span>
+                  <span className="w-32 text-slate-600 font-semibold">{tt("transit.lbl_invoice_number", "Invoice Number")}</span>
                   <span className="font-bold text-slate-900">: {formData.invoice_no}</span>
                 </div>
                 <div className="flex justify-between sm:justify-start gap-4">
-                  <span className="w-32 text-slate-600 font-semibold">Invoice Date</span>
+                  <span className="w-32 text-slate-600 font-semibold">{tt("transit.lbl_invoice_date", "Invoice Date")}</span>
                   <span className="font-bold text-slate-900">: {formData.invoice_date}</span>
                 </div>
                 <div className="flex justify-between sm:justify-start gap-4">
-                  <span className="w-32 text-slate-600 font-semibold">Supplier Number</span>
+                  <span className="w-32 text-slate-600 font-semibold">{tt("transit.lbl_supplier_number", "Supplier Number")}</span>
                   <span className="font-bold text-slate-900">: {formData.supplier_no}</span>
                 </div>
                 <div className="flex justify-between sm:justify-start gap-4">
-                  <span className="w-32 text-slate-600 font-semibold">Supplier Date</span>
+                  <span className="w-32 text-slate-600 font-semibold">{tt("transit.lbl_supplier_date", "Supplier Date")}</span>
                   <span className="font-bold text-slate-900">: {formData.supplier_date}</span>
                 </div>
                 <div className="flex justify-between sm:justify-start gap-4">
-                  <span className="w-32 text-slate-600 font-semibold">Python Number</span>
+                  <span className="w-32 text-slate-600 font-semibold">{tt("transit.lbl_python_number", "Python Number")}</span>
                   <span className="font-bold text-slate-900">: {formData.python_no}</span>
                 </div>
                 <div className="flex justify-between sm:justify-start gap-4">
-                  <span className="w-32 text-slate-600 font-semibold">Python Date</span>
+                  <span className="w-32 text-slate-600 font-semibold">{tt("transit.lbl_python_date", "Python Date")}</span>
                   <span className="font-bold text-slate-900">: {formData.python_date}</span>
                 </div>
                 <div className="flex justify-between sm:justify-start gap-4">
-                  <span className="w-32 text-slate-600 font-semibold">Transit Number</span>
+                  <span className="w-32 text-slate-600 font-semibold">{tt("transit.lbl_transit_number", "Transit Number")}</span>
                   <span className="font-bold text-slate-900">: {formData.transit_no}</span>
                 </div>
                 <div className="flex justify-between sm:justify-start gap-4">
-                  <span className="w-32 text-slate-600 font-semibold">Transit Date</span>
+                  <span className="w-32 text-slate-600 font-semibold">{tt("transit.lbl_transit_date", "Transit Date")}</span>
                   <span className="font-bold text-slate-900">: {formData.transit_date}</span>
                 </div>
               </div>
@@ -1002,31 +1002,31 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
             {/* GOODS INFORMATION SECTION */}
             <div className="py-4 border-b border-slate-200 text-xs space-y-2">
               <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-800">
-                GOODS INFORMATION
+                {tt("transit.sec_goods_info", "GOODS INFORMATION")}
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1.5 text-xs">
                 <div className="flex justify-between sm:justify-start gap-4">
-                  <span className="w-32 text-slate-600 font-semibold">Goods Name</span>
+                  <span className="w-32 text-slate-600 font-semibold">{tt("transit.lbl_goods_name", "Goods Name")}</span>
                   <span className="font-bold text-slate-900">: {formData.goods_name}</span>
                 </div>
                 <div className="flex justify-between sm:justify-start gap-4">
-                  <span className="w-32 text-slate-600 font-semibold">Total Quantity</span>
+                  <span className="w-32 text-slate-600 font-semibold">{tt("transit.lbl_total_quantity", "Total Quantity")}</span>
                   <span className="font-bold text-slate-900">: {formData.quantity} {formData.unit}</span>
                 </div>
                 <div className="flex justify-between sm:justify-start gap-4">
-                  <span className="w-32 text-slate-600 font-semibold">Gross Weight (KG)</span>
+                  <span className="w-32 text-slate-600 font-semibold">{tt("tl.gross_weight_kg", "Gross Weight (KG)")}</span>
                   <span className="font-bold text-slate-900">: {formData.gross_weight}</span>
                 </div>
                 <div className="flex justify-between sm:justify-start gap-4">
-                  <span className="w-32 text-slate-600 font-semibold">Net Weight (KG)</span>
+                  <span className="w-32 text-slate-600 font-semibold">{tt("transit.lbl_net_weight_kg", "Net Weight (KG)")}</span>
                   <span className="font-bold text-slate-900">: {formData.net_weight}</span>
                 </div>
                 <div className="flex justify-between sm:justify-start gap-4">
-                  <span className="w-32 text-slate-600 font-semibold">Price (Per Unit)</span>
+                  <span className="w-32 text-slate-600 font-semibold">{tt("transit.lbl_price_per_unit", "Price (Per Unit)")}</span>
                   <span className="font-bold text-slate-900">: {formData.price_per_unit}</span>
                 </div>
                 <div className="flex justify-between sm:justify-start gap-4">
-                  <span className="w-32 text-slate-600 font-semibold">Total Amount</span>
+                  <span className="w-32 text-slate-600 font-semibold">{tt("transit.col_total_amount", "Total Amount")}</span>
                   <span className="font-black text-blue-700">: {formData.total_amount}</span>
                 </div>
               </div>
@@ -1035,15 +1035,15 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
             {/* PARTIES / PEOPLE SECTION */}
             <div className="py-4 border-b border-slate-200 text-xs space-y-2">
               <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-800">
-                PARTIES / PEOPLE
+                {tt("transit.sec_parties", "PARTIES / PEOPLE")}
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1.5 text-xs">
                 <div className="flex justify-between sm:justify-start gap-4">
-                  <span className="w-36 text-slate-600 font-semibold">Created By (Maker Name)</span>
+                  <span className="w-36 text-slate-600 font-semibold">{tt("transit.lbl_created_by", "Created By (Maker Name)")}</span>
                   <span className="font-bold text-slate-900">: {formData.created_by}</span>
                 </div>
                 <div className="flex justify-between sm:justify-start gap-4">
-                  <span className="w-36 text-slate-600 font-semibold">Delivered To (Handed By)</span>
+                  <span className="w-36 text-slate-600 font-semibold">{tt("transit.lbl_delivered_to", "Delivered To (Handed By)")}</span>
                   <span className="font-bold text-slate-900">: {formData.delivered_to}</span>
                 </div>
               </div>
@@ -1052,19 +1052,19 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
             {/* COMPANIES & NOTIFY PARTY SECTION */}
             <div className="py-4 border-b border-slate-200 text-xs space-y-2">
               <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-800">
-                COMPANIES & NOTIFY PARTY
+                {tt("transit.sec_companies", "COMPANIES & NOTIFY PARTY")}
               </h4>
               <div className="space-y-1.5 text-xs">
                 <div className="flex justify-between sm:justify-start gap-4">
-                  <span className="w-36 text-slate-600 font-semibold">Export Company Name</span>
+                  <span className="w-36 text-slate-600 font-semibold">{tt("transit.lbl_export_company", "Export Company Name")}</span>
                   <span className="font-bold text-slate-900">: {formData.export_company}</span>
                 </div>
                 <div className="flex justify-between sm:justify-start gap-4">
-                  <span className="w-36 text-slate-600 font-semibold">Import Company Name</span>
+                  <span className="w-36 text-slate-600 font-semibold">{tt("transit.lbl_import_company", "Import Company Name")}</span>
                   <span className="font-bold text-slate-900">: {formData.import_company}</span>
                 </div>
                 <div className="flex justify-between sm:justify-start gap-4">
-                  <span className="w-36 text-slate-600 font-semibold">Notify Party</span>
+                  <span className="w-36 text-slate-600 font-semibold">{tt("transit.lbl_notify_party", "Notify Party")}</span>
                   <span className="font-bold text-slate-900">: {formData.notify_party}</span>
                 </div>
               </div>
@@ -1073,7 +1073,7 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
             {/* DOCUMENTS ATTACHED SECTION */}
             <div className="py-4 border-b border-slate-200 text-xs space-y-2">
               <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-800">
-                DOCUMENTS ATTACHED
+                {tt("transit.sec_documents", "DOCUMENTS ATTACHED")}
               </h4>
               {formData.documents.length > 0 ? (
                 <div className="space-y-1 text-xs">
@@ -1085,7 +1085,7 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-slate-400 italic">No documents attached.</p>
+                <p className="text-xs text-slate-400 italic">{tt("transit.no_docs_attached", "No documents attached.")}</p>
               )}
             </div>
 
@@ -1095,21 +1095,21 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                 <div>
                   <p className="font-black text-slate-900 mb-8">{formData.created_by || "Maker"}</p>
                   <div className="border-t border-slate-400 pt-1 font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-                    Prepared By
+                    {tt("vch.prepared_by", "Prepared By")}
                   </div>
                 </div>
 
                 <div>
                   <div className="h-10 mb-2" />
                   <div className="border-t border-slate-400 pt-1 font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-                    Checked By
+                    {tt("vch.checked_by", "Checked By")}
                   </div>
                 </div>
 
                 <div>
                   <div className="h-10 mb-2" />
                   <div className="border-t border-slate-400 pt-1 font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-                    Approved By
+                    {tt("vch.approved_by", "Approved By")}
                   </div>
                 </div>
               </div>
@@ -1117,8 +1117,8 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
 
             {/* Document Generation Footer */}
             <div className="mt-auto pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-[10px] text-slate-500">
-              <p>Report Generated On: {new Date().toLocaleDateString("en-GB")} {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-              <p className="font-semibold italic">This is a system generated report.</p>
+              <p>{tt("transit.report_generated", "Report Generated On:")} {new Date().toLocaleDateString("en-GB")} {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+              <p className="font-semibold italic">{tt("transit.sys_generated", "This is a system generated report.")}</p>
             </div>
           </div>
         )}
@@ -1131,10 +1131,10 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
               <div>
                 <h3 className="text-base font-black text-foreground flex items-center gap-2">
-                  <span>Registered Transit Entries</span>
+                  <span>{tt("transit.registered_entries", "Registered Transit Entries")}</span>
                   {loading && <RefreshCw className="h-4 w-4 animate-spin text-blue-600" />}
                 </h3>
-                <p className="text-xs text-muted-foreground">Search, edit and manage all recorded transit entries and database records</p>
+                <p className="text-xs text-muted-foreground">{tt("transit.list_subtitle", "Search, edit and manage all recorded transit entries and database records")}</p>
               </div>
 
               <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -1144,7 +1144,7 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search serial, invoice, goods, company..."
+                    placeholder={tt("transit.search_ph", "Search serial, invoice, goods, company...")}
                     className="w-full rounded-xl border border-border bg-background ps-9 pe-3 py-2 text-xs outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
@@ -1156,7 +1156,7 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                   title="Refresh from database"
                 >
                   <RefreshCw className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Refresh</span>
+                  <span className="hidden sm:inline">{tt("common.refresh", "Refresh")}</span>
                 </Button>
               </div>
             </div>
@@ -1165,13 +1165,13 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
               <table className="w-full text-xs text-left">
                 <thead className="bg-muted/60 text-[10px] font-black uppercase tracking-wider text-muted-foreground border-b border-border">
                   <tr>
-                    <th className="px-3 py-2.5">Entry Serial</th>
-                    <th className="px-3 py-2.5">Invoice / Transit No</th>
-                    <th className="px-3 py-2.5">Goods Description</th>
-                    <th className="px-3 py-2.5">Quantity</th>
-                    <th className="px-3 py-2.5">Total Amount</th>
-                    <th className="px-3 py-2.5">Export / Import Company</th>
-                    <th className="px-3 py-2.5 text-center">Actions</th>
+                    <th className="px-3 py-2.5">{tt("transit.col_entry_serial", "Entry Serial")}</th>
+                    <th className="px-3 py-2.5">{tt("transit.col_invoice_transit", "Invoice / Transit No")}</th>
+                    <th className="px-3 py-2.5">{tt("transit.col_goods_desc", "Goods Description")}</th>
+                    <th className="px-3 py-2.5">{tt("common.quantity", "Quantity")}</th>
+                    <th className="px-3 py-2.5">{tt("transit.col_total_amount", "Total Amount")}</th>
+                    <th className="px-3 py-2.5">{tt("transit.col_export_import", "Export / Import Company")}</th>
+                    <th className="px-3 py-2.5 text-center">{tt("common.actions", "Actions")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -1205,12 +1205,12 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                             onClick={() => {
                               setFormData(row);
                               setActiveTab("split");
-                              showNotification(`Loaded entry: ${row.entry_serial}`, "info");
+                              showNotification(`${tt("transit.loaded_entry", "Loaded entry:")} ${row.entry_serial}`, "info");
                             }}
                             className="h-7 text-xs font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/40"
                           >
                             <Eye className="h-3.5 w-3.5 mr-1" />
-                            View
+                            {tt("common.view", "View")}
                           </Button>
                           <Button
                             size="sm"
@@ -1218,18 +1218,18 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                             onClick={() => {
                               setFormData(row);
                               setActiveTab("form");
-                              showNotification(`Editing entry: ${row.entry_serial}`, "info");
+                              showNotification(`${tt("transit.editing_entry", "Editing entry:")} ${row.entry_serial}`, "info");
                             }}
                             className="h-7 text-xs font-bold text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/40"
                           >
                             <Pencil className="h-3.5 w-3.5 mr-1" />
-                            Edit
+                            {tt("common.edit", "Edit")}
                           </Button>
                           <button
                             type="button"
                             onClick={() => handleDeleteEntry(row.entry_serial, row.id)}
                             className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 hover:text-red-600 transition-colors cursor-pointer"
-                            title="Delete entry"
+                            title={tt("common.delete", "Delete entry")}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
@@ -1240,7 +1240,7 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                   {filteredEntries.length === 0 && (
                     <tr>
                       <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground italic">
-                        {loading ? "Loading entries from database..." : "No matching transit entries found."}
+                        {loading ? tt("transit.loading_entries", "Loading entries from database...") : tt("transit.no_entries_found", "No matching transit entries found.")}
                       </td>
                     </tr>
                   )}

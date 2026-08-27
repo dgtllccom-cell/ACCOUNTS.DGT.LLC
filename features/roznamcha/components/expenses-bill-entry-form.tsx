@@ -1076,7 +1076,7 @@ export function ExpensesBillEntryForm({
             <Card className={`shadow-sm border-t-4 transition-colors duration-300 opacity-90 hover:opacity-100 flex flex-col ${headerLocked ? "border-t-emerald-500 bg-emerald-50/10" : "border-t-blue-500"}`}>
               <CardHeader className="py-2 px-3 bg-slate-50 border-b border-slate-100">
                 <CardTitle className="text-xs uppercase font-bold text-blue-600 flex justify-between items-center">
-                  <span className="flex items-center gap-1.5"><ArrowRightLeft className="w-3.5 h-3.5" /> 3. Debit Account</span>
+                  <span className="flex items-center gap-1.5"><ArrowRightLeft className="w-3.5 h-3.5" /> {tt("exp.debit_account", "3. Debit Account")}</span>
                   <Button variant="ghost" size="sm" className="h-5 w-5 p-0 text-blue-600 hover:bg-blue-100" onClick={() => setIsDebitSearchOpen(!isDebitSearchOpen)} disabled={headerLocked}>
                     <Search className="h-3 w-3" />
                   </Button>
@@ -1086,13 +1086,13 @@ export function ExpensesBillEntryForm({
                 <div className="space-y-2 flex-1 flex flex-col">
                   {isDebitSearchOpen ? (
                     <div className="w-full rounded border border-blue-200 bg-blue-50/50 p-1 mb-2">
-                       <SearchableSelect 
-                         value={formDebitLedgerId} 
-                         onChange={(val) => { setFormDebitLedgerId(val); setIsDebitSearchOpen(false); }} 
-                         options={formFilteredLedgers} 
-                         placeholder="Search debit ledger..." 
-                         className="text-xs" 
-                         disabled={headerLocked} 
+                       <SearchableSelect
+                         value={formDebitLedgerId}
+                         onChange={(val) => { setFormDebitLedgerId(val); setIsDebitSearchOpen(false); }}
+                         options={formFilteredLedgers}
+                         placeholder={tt("exp.search_debit_ledger", "Search debit ledger...")}
+                         className="text-xs"
+                         disabled={headerLocked}
                        />
                     </div>
                   ) : formDebitLedgerId ? (
@@ -1109,12 +1109,12 @@ export function ExpensesBillEntryForm({
                       onClick={() => !headerLocked && setIsDebitSearchOpen(true)} 
                       disabled={headerLocked}
                     >
-                      <Search className="h-3.5 w-3.5 mr-1.5" /> Select Account
+                      <Search className="h-3.5 w-3.5 mr-1.5" /> {tt("exp.select_account", "Select Account")}
                     </Button>
                   )}
 
                   <div className="text-[10px] text-slate-500 bg-blue-50 p-1.5 rounded border border-blue-100 mt-auto">
-                    This account will be debited for the expense amount.
+                    {tt("exp.debit_account_hint", "This account will be debited for the expense amount.")}
                   </div>
                 </div>
               </CardContent>
@@ -1124,7 +1124,7 @@ export function ExpensesBillEntryForm({
             <Card className={`shadow-sm border-t-4 transition-colors duration-300 opacity-90 hover:opacity-100 flex flex-col ${headerLocked ? "border-t-emerald-500 bg-emerald-50/10" : "border-t-emerald-500"}`}>
               <CardHeader className="py-2 px-3 bg-slate-50 border-b border-slate-100">
                 <CardTitle className="text-xs uppercase font-bold text-emerald-600 flex justify-between items-center">
-                  <span className="flex items-center gap-1.5"><ArrowRightLeft className="w-3.5 h-3.5" /> 4. Credit Account</span>
+                  <span className="flex items-center gap-1.5"><ArrowRightLeft className="w-3.5 h-3.5" /> {tt("exp.credit_account", "4. Credit Account")}</span>
                   <Button variant="ghost" size="sm" className="h-5 w-5 p-0 text-emerald-600 hover:bg-emerald-100" onClick={() => setIsCreditSearchOpen(!isCreditSearchOpen)} disabled={headerLocked}>
                     <Search className="h-3 w-3" />
                   </Button>
@@ -1134,13 +1134,13 @@ export function ExpensesBillEntryForm({
                 <div className="space-y-2 flex-1 flex flex-col">
                   {isCreditSearchOpen ? (
                     <div className="w-full rounded border border-emerald-200 bg-emerald-50/50 p-1 mb-2">
-                       <SearchableSelect 
-                         value={formCreditLedgerId} 
-                         onChange={(val) => { setFormCreditLedgerId(val); setIsCreditSearchOpen(false); }} 
-                         options={formFilteredLedgers} 
-                         placeholder="Search credit ledger..." 
-                         className="text-xs" 
-                         disabled={headerLocked} 
+                       <SearchableSelect
+                         value={formCreditLedgerId}
+                         onChange={(val) => { setFormCreditLedgerId(val); setIsCreditSearchOpen(false); }}
+                         options={formFilteredLedgers}
+                         placeholder={tt("exp.search_credit_ledger", "Search credit ledger...")}
+                         className="text-xs"
+                         disabled={headerLocked}
                        />
                     </div>
                   ) : formCreditLedgerId ? (
@@ -1157,12 +1157,12 @@ export function ExpensesBillEntryForm({
                       onClick={() => !headerLocked && setIsCreditSearchOpen(true)} 
                       disabled={headerLocked}
                     >
-                      <Search className="h-3.5 w-3.5 mr-1.5" /> Select Account
+                      <Search className="h-3.5 w-3.5 mr-1.5" /> {tt("exp.select_account", "Select Account")}
                     </Button>
                   )}
 
                   <div className="text-[10px] text-slate-500 bg-emerald-50 p-1.5 rounded border border-emerald-100 mt-auto">
-                    This account will be credited (e.g. Cash or Bank).
+                    {tt("exp.credit_account_hint", "This account will be credited (e.g. Cash or Bank).")}
                   </div>
                 </div>
               </CardContent>
@@ -1172,20 +1172,20 @@ export function ExpensesBillEntryForm({
             <Card className={`shadow-sm border-t-4 transition-colors duration-300 opacity-90 hover:opacity-100 ${headerLocked ? "border-t-emerald-500 bg-emerald-50/10" : "border-t-amber-400"}`}>
               <CardHeader className="py-2 px-3 bg-slate-50 border-b border-slate-100">
                 <CardTitle className="text-xs uppercase font-bold text-slate-600 flex justify-between items-center">
-                  <span className="flex items-center gap-1.5"><Settings2 className="w-3.5 h-3.5" /> 5. Summary</span>
+                  <span className="flex items-center gap-1.5"><Settings2 className="w-3.5 h-3.5" /> {tt("exp.summary_card", "5. Summary")}</span>
                   <span className="text-[10px] font-mono text-amber-600 bg-amber-50 px-1 rounded border border-amber-200">{billSerial.split("-")[2] || billSerial}</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-3 flex flex-col h-full">
                 {billMode === "attached" ? (
                   <div className="space-y-1 mb-2">
-                    <Label className="text-[11px] font-bold text-slate-600">Reference No</Label>
-                    <Input placeholder="e.g. P-2025-0078" className="h-7 text-xs border-primary/30" disabled={headerLocked} value={referenceNo} onChange={e=>setReferenceNo(e.target.value)}/>
+                    <Label className="text-[11px] font-bold text-slate-600">{tt("exp.reference_no", "Reference No")}</Label>
+                    <Input placeholder={tt("exp.ref_placeholder", "e.g. P-2025-0078")} className="h-7 text-xs border-primary/30" disabled={headerLocked} value={referenceNo} onChange={e=>setReferenceNo(e.target.value)}/>
                   </div>
                 ) : (
                   <div className="space-y-1 mb-2">
-                    <Label className="text-[11px] font-bold text-slate-600">Reference No</Label>
-                    <Input placeholder="Optional reference..." className="h-7 text-xs border-primary/30" disabled={headerLocked} value={referenceNo} onChange={e=>setReferenceNo(e.target.value)}/>
+                    <Label className="text-[11px] font-bold text-slate-600">{tt("exp.reference_no", "Reference No")}</Label>
+                    <Input placeholder={tt("exp.ref_optional", "Optional reference...")} className="h-7 text-xs border-primary/30" disabled={headerLocked} value={referenceNo} onChange={e=>setReferenceNo(e.target.value)}/>
                   </div>
                 )}
                 
@@ -1196,7 +1196,7 @@ export function ExpensesBillEntryForm({
                     size="sm"
                     className={`w-full h-7 text-xs shadow-sm ${headerLocked ? "border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100" : "bg-amber-500 hover:bg-amber-600 text-white"}`}
                   >
-                    {headerLocked ? <><Unlock className="h-3.5 w-3.5 mr-1" /> Unlock Header</> : <><Lock className="h-3.5 w-3.5 mr-1" /> Lock Header</>}
+                    {headerLocked ? <><Unlock className="h-3.5 w-3.5 mr-1" /> {tt("exp.unlock_header", "Unlock Header")}</> : <><Lock className="h-3.5 w-3.5 mr-1" /> {tt("exp.lock_header", "Lock Header")}</>}
                   </Button>
                 </div>
               </CardContent>
@@ -1209,7 +1209,7 @@ export function ExpensesBillEntryForm({
         <CardHeader className="pb-3 bg-slate-50 border-b border-slate-100">
           <CardTitle className="text-base flex items-center gap-2">
             <LayoutDashboard className="h-4 w-4" />
-            Add New Entry
+            {tt("exp.add_new_entry", "Add New Entry")}
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-4">
@@ -1217,27 +1217,27 @@ export function ExpensesBillEntryForm({
             
             {/* Details */}
             <div className="flex-1 min-w-[200px] space-y-1">
-              <Label className="text-xs">Details</Label>
-              <Input ref={detailsRef} value={details} onChange={e => setDetails(e.target.value)} onKeyDown={handleKeyDown} placeholder="Item or expense details..." />
+              <Label className="text-xs">{tt("exp.details_label", "Details")}</Label>
+              <Input ref={detailsRef} value={details} onChange={e => setDetails(e.target.value)} onKeyDown={handleKeyDown} placeholder={tt("exp.details_placeholder", "Item or expense details...")} />
             </div>
 
             {/* Qty & Unit Price */}
             <div className="w-20 space-y-1">
-              <Label className="text-xs">Qty</Label>
+              <Label className="text-xs">{tt("exp.qty", "Qty")}</Label>
               <Input type="number" value={qty} onChange={e => setQty(e.target.value ? Number(e.target.value) : "")} onKeyDown={handleKeyDown} />
             </div>
             <div className="w-24 space-y-1">
-              <Label className="text-xs">Unit Price</Label>
+              <Label className="text-xs">{tt("exp.unit_price", "Unit Price")}</Label>
               <Input type="number" step="0.01" value={unitPrice} onChange={e => setUnitPrice(e.target.value ? Number(e.target.value) : "")} onKeyDown={handleKeyDown} />
             </div>
             <div className="w-28 space-y-1">
-              <Label className="text-xs text-slate-600 font-semibold">Amount</Label>
+              <Label className="text-xs text-slate-600 font-semibold">{tt("common.amount", "Amount")}</Label>
               <Input type="number" step="0.01" value={amount || ""} onChange={e => setAmount(Number(e.target.value) || 0)} onKeyDown={handleKeyDown} className="bg-white text-right font-mono" placeholder="0.00" />
             </div>
 
             {/* Currency & FX */}
             <div className="w-24 space-y-1">
-              <Label className="text-xs">Currency</Label>
+              <Label className="text-xs">{tt("exp.currency_label", "Currency")}</Label>
               <select 
                 value={currency} 
                 onChange={e => setCurrency(e.target.value)}
@@ -1253,9 +1253,9 @@ export function ExpensesBillEntryForm({
             {showFx && (
               <>
                 <div className="w-16 space-y-1">
-                  <Label className="text-xs">Op</Label>
-                  <select 
-                    value={operation} 
+                  <Label className="text-xs">{tt("exp.op_label", "Op")}</Label>
+                  <select
+                    value={operation}
                     onChange={e => setOperation(e.target.value)}
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
                   >
@@ -1264,34 +1264,34 @@ export function ExpensesBillEntryForm({
                   </select>
                 </div>
                 <div className="w-24 space-y-1">
-                  <Label className="text-xs">Ex. Rate</Label>
+                  <Label className="text-xs">{tt("exp.ex_rate", "Ex. Rate")}</Label>
                   <Input type="number" step="0.0001" value={exchangeRate} onChange={e => setExchangeRate(e.target.value ? Number(e.target.value) : "")} onKeyDown={handleKeyDown} />
                 </div>
               </>
             )}
 
             <div className="w-32 space-y-1">
-              <Label className="text-xs font-semibold text-slate-600">Final Amount</Label>
+              <Label className="text-xs font-semibold text-slate-600">{tt("exp.final_amount", "Final Amount")}</Label>
               <Input readOnly value={finalAmount.toFixed(2)} className="bg-slate-100 text-right font-mono font-semibold" />
             </div>
 
             {/* TAX */}
             <div className="w-24 space-y-1">
-              <Label className="text-xs">Apply Tax?</Label>
+              <Label className="text-xs">{tt("exp.apply_tax", "Apply Tax?")}</Label>
               <div className="flex bg-slate-100 p-0.5 rounded-md border">
                 <button 
                   type="button"
                   className={`flex-1 text-xs py-1.5 rounded-sm transition-colors ${!taxOn ? "bg-white shadow-sm font-medium" : "text-slate-500 hover:text-slate-700"}`}
                   onClick={() => setTaxOn(false)}
                 >
-                  No
+                  {tt("exp.tax_no", "No")}
                 </button>
-                <button 
+                <button
                   type="button"
                   className={`flex-1 text-xs py-1.5 rounded-sm transition-colors ${taxOn ? "bg-amber-100 text-amber-700 font-bold shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
                   onClick={() => setTaxOn(true)}
                 >
-                  Yes
+                  {tt("exp.tax_yes", "Yes")}
                 </button>
               </div>
             </div>
@@ -1299,9 +1299,9 @@ export function ExpensesBillEntryForm({
             {taxOn && (
               <>
                 <div className="w-48 space-y-1 animate-in fade-in zoom-in duration-200">
-                  <Label className="text-xs text-amber-600 font-bold">Tax Code</Label>
+                  <Label className="text-xs text-amber-600 font-bold">{tt("exp.tax_code", "Tax Code")}</Label>
                   <div className="flex flex-col gap-1">
-                    <select 
+                    <select
                       value={taxPct ? String(taxPct) : ""}
                       onChange={e => {
                         const selectedVal = e.target.value;
@@ -1318,23 +1318,23 @@ export function ExpensesBillEntryForm({
                       }}
                       className="flex h-9 w-full rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-900 font-semibold cursor-pointer"
                     >
-                      <option value="">Select...</option>
+                      <option value="">{tt("exp.select_placeholder", "Select...")}</option>
                       {taxes.filter(t => selectedCountry === "UAE" ? t.country === "United Arab Emirates" : t.country === selectedCountry).map(t => (
                         <option key={t.id} value={t.tax_pct}>{t.tax_code} ({t.tax_pct}%)</option>
                       ))}
-                      <option value="NEW_TAX_CODE" className="font-bold text-primary">+ Add New Tax</option>
+                      <option value="NEW_TAX_CODE" className="font-bold text-primary">{tt("exp.add_new_tax", "+ Add New Tax")}</option>
                     </select>
                   </div>
                 </div>
                 <div className="w-28 space-y-1 animate-in fade-in zoom-in duration-200">
-                  <Label className="text-xs text-slate-500">Tax Amt</Label>
+                  <Label className="text-xs text-slate-500">{tt("exp.tax_amt", "Tax Amt")}</Label>
                   <Input readOnly value={taxAmt.toFixed(2)} className="bg-slate-50 text-right font-mono" />
                 </div>
               </>
             )}
 
             <div className="w-32 space-y-1">
-              <Label className="text-xs font-black text-slate-800">Total (Incl. Tax)</Label>
+              <Label className="text-xs font-black text-slate-800">{tt("exp.total_incl_tax", "Total (Incl. Tax)")}</Label>
               <Input readOnly value={grandAmount.toFixed(2)} onKeyDown={handleKeyDown} className="bg-primary/5 border-primary/20 text-right font-mono font-bold text-primary cursor-pointer focus:ring-2 focus:ring-primary" title="Press Enter to Add Row" />
             </div>
 
@@ -1342,7 +1342,7 @@ export function ExpensesBillEntryForm({
             <div className="ml-auto flex items-end pb-1">
               <Button type="button" onClick={addRow} className="bg-slate-800 hover:bg-slate-900 text-white shadow-md">
                 <Plus className="h-4 w-4 mr-2" />
-                Add Row
+                {tt("exp.add_row", "Add Row")}
               </Button>
             </div>
 
@@ -1376,7 +1376,7 @@ export function ExpensesBillEntryForm({
                 <tr>
                   <td colSpan={12} className="px-4 py-12 text-center text-slate-400">
                     <Calculator className="h-8 w-8 mx-auto mb-3 opacity-20" />
-                    No entries added yet. Lock the header and add rows.
+                    {tt("exp.no_entries", "No entries added yet. Lock the header and add rows.")}
                   </td>
                 </tr>
               ) : (
@@ -1408,7 +1408,7 @@ export function ExpensesBillEntryForm({
             <tfoot className="bg-slate-100 border-t-2 border-slate-200">
               <tr>
                 <td colSpan={11} className="px-4 py-3 text-right font-black text-slate-600">
-                  GRAND TOTAL (Incl. Tax)
+                  {tt("exp.grand_total", "GRAND TOTAL (Incl. Tax)")}
                 </td>
                 <td className="px-4 py-3 text-right font-mono font-black text-lg text-primary">
                   {totalFinal.toFixed(2)}
@@ -1422,7 +1422,7 @@ export function ExpensesBillEntryForm({
         {rows.length > 0 && (
           <div className="p-4 bg-slate-50 border-t flex justify-end gap-2">
             <Button onClick={handleSaveToDatabase} disabled={saving} className="px-8 font-bold shadow-md shadow-primary/20 ml-2">
-              {saving ? "Saving Bill..." : "Save Expenses Bill"}
+              {saving ? tt("exp.saving", "Saving Bill...") : tt("exp.save_bill", "Save Expenses Bill")}
               {!saving && <Save className="w-4 h-4 ml-2" />}
             </Button>
           </div>
@@ -1434,7 +1434,7 @@ export function ExpensesBillEntryForm({
       <div className="mt-8">
         <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
           <FileText className="w-4 h-4 text-primary" />
-          Recent Expenses Bills
+          {tt("exp.recent_bills", "Recent Expenses Bills")}
         </h3>
         <Card className="shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
@@ -1455,13 +1455,13 @@ export function ExpensesBillEntryForm({
               <tbody className="divide-y divide-slate-100">
                 {loadingBills ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-slate-500">Loading bills...</td>
+                    <td colSpan={6} className="px-4 py-8 text-center text-slate-500">{tt("exp.loading_bills", "Loading bills...")}</td>
                   </tr>
                 ) : recentBills.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-4 py-12 text-center text-slate-500">
                       <FileText className="h-8 w-8 mx-auto mb-3 opacity-20" />
-                      No recent bills found. Click "New Bill" to create one.
+                      {tt("exp.no_recent_bills", "No recent bills found. Click \"New Bill\" to create one.")}
                     </td>
                   </tr>
                 ) : (
@@ -1496,32 +1496,32 @@ export function ExpensesBillEntryForm({
       
       {/* New Tax Modal */}
       {newTaxOpen && (
-      <SimpleModal onClose={() => setNewTaxOpen(false)} title="Add New Tax Code">
+      <SimpleModal onClose={() => setNewTaxOpen(false)} title={tt("exp.add_tax_modal", "Add New Tax Code")}>
         <div className="space-y-4 pt-4">
           <div className="space-y-1.5">
-            <Label className="text-xs text-slate-500 font-bold">Country</Label>
-            <select 
+            <Label className="text-xs text-slate-500 font-bold">{tt("common.country", "Country")}</Label>
+            <select
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
               value={newTaxForm.countryName}
               onChange={e => setNewTaxForm({...newTaxForm, countryName: e.target.value})}
             >
-              <option value="">Select Country...</option>
+              <option value="">{tt("exp.select_placeholder", "Select...")}...</option>
               <option value="United Arab Emirates">United Arab Emirates</option>
               <option value="Pakistan">Pakistan</option>
               <option value="Afghanistan">Afghanistan</option>
             </select>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs text-slate-500 font-bold">Tax Name</Label>
+            <Label className="text-xs text-slate-500 font-bold">{tt("exp.tax_name", "Tax Name")}</Label>
             <Input placeholder="e.g. VAT, GST" value={newTaxForm.taxName} onChange={e => setNewTaxForm({...newTaxForm, taxName: e.target.value})} />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs text-slate-500 font-bold">Percentage (%)</Label>
+            <Label className="text-xs text-slate-500 font-bold">{tt("exp.tax_pct_label", "Percentage (%)")}</Label>
             <Input type="number" step="0.01" placeholder="e.g. 5.0" value={newTaxForm.taxPct} onChange={e => setNewTaxForm({...newTaxForm, taxPct: e.target.value})} />
           </div>
           <div className="pt-4 flex justify-end gap-2 border-t mt-6">
-            <Button variant="outline" onClick={() => setNewTaxOpen(false)}>Cancel</Button>
-            <Button onClick={saveNewTax} className="font-bold">Save Tax Code</Button>
+            <Button variant="outline" onClick={() => setNewTaxOpen(false)}>{tt("common.cancel", "Cancel")}</Button>
+            <Button onClick={saveNewTax} className="font-bold">{tt("exp.save_tax_code", "Save Tax Code")}</Button>
           </div>
         </div>
       </SimpleModal>
@@ -1529,7 +1529,7 @@ export function ExpensesBillEntryForm({
 
       {/* View/Print Bill Modal */}
       {viewBill && (
-        <SimpleModal onClose={() => setViewBill(null)} title="View Expenses Bill" className="max-w-[1200px] w-[95vw] print:w-full print:max-w-none print:m-0 print:p-0">
+        <SimpleModal onClose={() => setViewBill(null)} title={tt("exp.view_bill_modal", "View Expenses Bill")} className="max-w-[1200px] w-[95vw] print:w-full print:max-w-none print:m-0 print:p-0">
           <div className="bg-slate-600 p-6 md:p-12 rounded-md overflow-y-auto max-h-[80vh] flex justify-center print:hidden shadow-inner overflow-x-auto">
             <div 
               className="bg-white shadow-2xl w-[210mm] min-h-[297mm] flex-shrink-0 origin-top"
@@ -1554,12 +1554,12 @@ export function ExpensesBillEntryForm({
           </div>
 
           <div className="flex justify-end gap-2 pt-4 border-t mt-4 print:hidden">
-            <Button variant="outline" onClick={() => setViewBill(null)}>Close</Button>
+            <Button variant="outline" onClick={() => setViewBill(null)}>{tt("common.close", "Close")}</Button>
             <Button onClick={() => handleGeneratePdfModal(1)} className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
-              <Printer className="w-4 h-4 mr-2" /> PDF (Style 1)
+              <Printer className="w-4 h-4 mr-2" /> {tt("exp.pdf_style1_btn", "PDF (Style 1)")}
             </Button>
             <Button onClick={() => handleGeneratePdfModal(2)} className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm">
-              <Printer className="w-4 h-4 mr-2" /> PDF (Style 2)
+              <Printer className="w-4 h-4 mr-2" /> {tt("exp.pdf_style2_btn", "PDF (Style 2)")}
             </Button>
           </div>
         </SimpleModal>
@@ -1567,7 +1567,7 @@ export function ExpensesBillEntryForm({
 
       {/* Transfer Bill Modal */}
       {transferBill && (
-        <SimpleModal onClose={() => setTransferBill(null)} title="Transfer to Roznamcha" className="max-w-[1400px] w-[98vw] h-[95vh] print:w-full print:max-w-none print:m-0 print:p-0">
+        <SimpleModal onClose={() => setTransferBill(null)} title={tt("exp.transfer_to_roz", "Transfer to Roznamcha")} className="max-w-[1400px] w-[98vw] h-[95vh] print:w-full print:max-w-none print:m-0 print:p-0">
           <div className="flex flex-col lg:flex-row gap-6 h-full">
             
             {/* Left Side: A4 Preview */}
@@ -1607,66 +1607,66 @@ export function ExpensesBillEntryForm({
                 <div className="space-y-2 p-4 border border-blue-100 bg-blue-50/50 rounded-lg relative shadow-sm">
                   <div className="absolute -top-3 left-4 bg-blue-100 text-blue-700 font-black text-xs px-2 py-0.5 rounded shadow-sm border border-blue-200">DR</div>
                   <Label className="text-sm font-bold text-slate-700 flex items-center justify-between">
-                    <span>Debit Account (Expense)</span>
+                    <span>{tt("exp.debit_acct_expense", "Debit Account (Expense)")}</span>
                   </Label>
                   <SearchableSelect
                     value={debitLedgerId}
                     onChange={setDebitLedgerId}
                     options={filteredLedgers}
-                    placeholder="Search & Select Debit Ledger..."
+                    placeholder={tt("exp.search_debit_ph", "Search & Select Debit Ledger...")}
                     className="w-full"
                   />
-                  <p className="text-[10px] text-blue-600/80 font-medium">This account will be debited (DR) for the expense.</p>
+                  <p className="text-[10px] text-blue-600/80 font-medium">{tt("exp.debit_dr_hint", "This account will be debited (DR) for the expense.")}</p>
                 </div>
 
                 <div className="space-y-2 p-4 border border-emerald-100 bg-emerald-50/50 rounded-lg relative shadow-sm">
                   <div className="absolute -top-3 left-4 bg-emerald-100 text-emerald-700 font-black text-xs px-2 py-0.5 rounded shadow-sm border border-emerald-200">CR</div>
                   <Label className="text-sm font-bold text-slate-700 flex items-center justify-between">
-                    <span>Credit Account (Payment Source)</span>
+                    <span>{tt("exp.credit_acct_payment", "Credit Account (Payment Source)")}</span>
                   </Label>
                   <SearchableSelect
                     value={creditLedgerId}
                     onChange={setCreditLedgerId}
                     options={filteredLedgers}
-                    placeholder="Search & Select Credit Ledger..."
+                    placeholder={tt("exp.search_credit_ph", "Search & Select Credit Ledger...")}
                     className="w-full"
                   />
-                  <p className="text-[10px] text-emerald-600/80 font-medium">This account will be credited (CR) (e.g. Cash, Bank).</p>
+                  <p className="text-[10px] text-emerald-600/80 font-medium">{tt("exp.credit_cr_hint", "This account will be credited (CR) (e.g. Cash, Bank).")}</p>
                 </div>
 
                 <div className="mt-4 p-4 border border-slate-200 bg-white rounded-lg shadow-sm text-[11px] leading-relaxed relative overflow-hidden">
                   <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
                   
                   <p className="text-slate-700 font-medium mb-3 pb-2 border-b border-slate-100">
-                    This case entry will go to the business Roznamcha.<br />
+                    {tt("exp.roz_note", "This case entry will go to the business Roznamcha.")}<br />
                   </p>
-                  
+
                   <div className="grid grid-cols-2 gap-x-4 gap-y-3 mb-3">
                     <div>
-                      <span className="text-slate-500">Journal Serial:</span><br/>
+                      <span className="text-slate-500">{tt("exp.journal_serial", "Journal Serial:")}</span><br/>
                       <span className="font-mono font-bold text-slate-800 bg-slate-100 px-1 rounded mt-0.5 inline-block">AUTO</span>
                     </div>
                     <div>
-                      <span className="text-slate-500">Transfer Serial:</span><br/>
+                      <span className="text-slate-500">{tt("exp.transfer_serial", "Transfer Serial:")}</span><br/>
                       <span className="font-mono font-bold text-slate-800 bg-slate-100 px-1 rounded mt-0.5 inline-block">TR-{Math.floor(Math.random() * 90000) + 10000}</span>
                     </div>
                     <div>
-                      <span className="text-slate-500">Country Serial:</span><br/>
+                      <span className="text-slate-500">{tt("exp.country_serial", "Country Serial:")}</span><br/>
                       <span className="font-mono font-bold text-slate-800 bg-slate-100 px-1 rounded mt-0.5 inline-block">CT-{(transferBill.city_branches?.country_id || "CT0001").substring(0,6).toUpperCase()}</span>
                     </div>
                     <div>
-                      <span className="text-slate-500">Branch Serial:</span><br/>
+                      <span className="text-slate-500">{tt("exp.branch_serial_label", "Branch Serial:")}</span><br/>
                       <span className="font-mono font-bold text-slate-800 bg-slate-100 px-1 rounded mt-0.5 inline-block">BR-{(transferBill.branch_id || "BR0001").substring(0,6).toUpperCase()}</span>
                     </div>
                   </div>
 
                   <div className="pt-2 border-t border-slate-100 mt-2 bg-slate-50 p-2 rounded">
                     <p className="flex justify-between items-center">
-                      <span className="font-semibold text-slate-700">Transferred On:</span> 
+                      <span className="font-semibold text-slate-700">{tt("exp.transferred_on", "Transferred On:")}</span>
                       <span>{new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}</span>
                     </p>
                     <p className="flex justify-between items-center mt-1.5">
-                      <span className="font-semibold text-slate-700">Action By User / یوزر کا نام:</span> 
+                      <span className="font-semibold text-slate-700">{tt("exp.action_by_user", "Action By User:")}</span>
                       <span className="font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">{sessionInfo?.user?.fullName || "System Admin"}</span>
                     </p>
                   </div>

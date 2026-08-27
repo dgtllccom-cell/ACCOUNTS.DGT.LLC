@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +35,8 @@ export function SecurityPinAuthDialog({
   referenceNo,
   onConfirm
 }: Props) {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const [pinCode, setPinCode] = useState("");
   const [reason, setReason] = useState("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -134,7 +138,7 @@ export function SecurityPinAuthDialog({
 
         <DialogFooter className="gap-2">
           <Button variant="outline" size="sm" onClick={onClose} disabled={isSubmitting} className="text-xs">
-            Cancel
+            {tt("common.cancel", "Cancel")}
           </Button>
           <Button
             size="sm"
@@ -145,7 +149,7 @@ export function SecurityPinAuthDialog({
             }`}
           >
             {isDelete ? <Trash2 className="h-3.5 w-3.5" /> : <RotateCcw className="h-3.5 w-3.5" />}
-            {isSubmitting ? "Processing..." : isDelete ? "Confirm Permanent Delete (3636)" : "Confirm Restore (9999)"}
+            {isSubmitting ? tt("common.loading", "Processing...") : isDelete ? "Confirm Permanent Delete (3636)" : "Confirm Restore (9999)"}
           </Button>
         </DialogFooter>
       </DialogContent>
