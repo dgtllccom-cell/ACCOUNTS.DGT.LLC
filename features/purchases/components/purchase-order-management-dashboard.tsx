@@ -757,15 +757,66 @@ function date(value: string | null | undefined) {
   return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString("en-GB");
 }
 
-function openReportWindow(report: PurchaseReport, autoPrint: boolean) {
-  openPurchaseA4ReportWindow({
-    title: "Purchase Booking Order",
-    subtitle: "DGT Accounts Purchase Registry",
-    purchaseData: {
-      ...report,
-      audit: report.audit || { userName: "Admin User", userId: "USR-001", branchCode: "QTA-001" }
+function openReportWindow(report: PurchaseReport, autoPrint: boolean, lang: SupportedLanguage = "en") {
+  const tr = (label: string) => translateHeader(lang, label);
+  const totalAmt = Number(report.totalPurchaseAmount || report.purchaseAmount || report.finalAmount || 0);
+  const qty = Number(report.quantity || 0);
+
+  openUniversalPrintReport({
+    title: tr("Purchase Booking Order"),
+    subtitle: `${tr("Booking Ref")}: ${report.purchaseBookingOrderNumber || "-"}`,
+    documentNo: report.purchaseBookingOrderNumber || report.purchaseContractNo || "PO-DOC",
+    reportType: "single_document",
+    moduleType: "purchase_procurement",
+    orientation: "portrait",
+    lang,
+    autoPrint,
+    scope: {
+      scopeLevel: "Purchase Order Document",
+      country: report.countryName || "All Countries",
+      branch: report.branchName || "Main Branch",
+      currency: report.currency || "USD",
+      userName: report.audit?.userName || "Admin User",
     },
-    autoPrint
+    partyDetails: {
+      type: "supplier",
+      name: report.supplierName || "-",
+      address: report.form_data?.form?.supplierAddress || report.countryName || "-",
+      trn: report.form_data?.form?.supplierTrn || "-",
+      phone: report.form_data?.form?.supplierPhone || "-",
+      departmentOrBranch: report.branchName || "-",
+    },
+    kpis: [
+      { label: tr("Total Amount"), value: totalAmt, color: "blue" },
+      { label: tr("Quantity"), value: `${qty.toLocaleString()} ${report.unit || "BAGS"}`, color: "emerald" },
+      { label: tr("Containers"), value: report.containerCount || 0, color: "purple" },
+      { label: tr("Status"), value: report.status || "PENDING", color: "amber" },
+    ],
+    columns: [
+      { key: "item", label: tr("Goods / Description"), width: "35%" },
+      { key: "quantity", label: tr("Quantity"), align: "right", format: "number", width: "15%" },
+      { key: "rate", label: tr("Unit Rate"), align: "right", format: "currency", width: "20%" },
+      { key: "total", label: tr("Total Amount"), align: "right", format: "currency", width: "30%" },
+    ],
+    rows: [
+      {
+        item: report.productName || report.goodsDescription || "Standard Goods",
+        quantity: qty,
+        rate: Number(report.purchaseRate || (qty > 0 ? totalAmt / qty : 0)),
+        total: totalAmt,
+      }
+    ],
+    totals: {
+      total: totalAmt,
+      quantity: qty,
+    },
+    paymentTerms: report.paymentStatus ? `${tr("Payment Status")}: ${report.paymentStatus}` : undefined,
+    showSignatures: true,
+    signatureBlocks: [
+      { title: tr("Prepared By"), subtitle: report.audit?.userName || "Procurement Officer" },
+      { title: tr("Verified & Audited"), subtitle: "Accounts Department" },
+      { title: tr("Authorized Signature"), subtitle: "Managing Director" },
+    ]
   });
 }
 
@@ -3120,7 +3171,7 @@ export function PurchaseOrderManagementDashboard() {
                         type="button"
                         onClick={() => {
                           setMoreActionsDropdownOpen(false);
-                          openReportWindow(selected, false);
+                          openReportWindow(selected, false, activeLang);
                         }}
                         className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-900"
                       >
@@ -3142,7 +3193,7 @@ export function PurchaseOrderManagementDashboard() {
                         type="button"
                         onClick={() => {
                           setMoreActionsDropdownOpen(false);
-                          if (selected) openReportWindow(selected, true);
+                          if (selected) openReportWindow(selected, true, activeLang);
                         }}
                         className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-900"
                       >
@@ -3154,7 +3205,7 @@ export function PurchaseOrderManagementDashboard() {
                         type="button"
                         onClick={() => {
                           setMoreActionsDropdownOpen(false);
-                          openReportWindow(selected, false);
+                          openReportWindow(selected, false, activeLang);
                         }}
                         className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-900"
                       >

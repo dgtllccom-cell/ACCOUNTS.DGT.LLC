@@ -51,6 +51,7 @@ import { SimpleModal } from "@/components/ui/simple-modal";
 import { openTradeDocumentWindow } from "@/lib/reports/open-trade-document-window";
 import { openPurchaseA4ReportWindow } from "@/lib/reports/open-purchase-a4-report-window";
 import { PurchaseBookingJournalReportView } from "./purchase-booking-journal-report-view";
+import { PurchaseBookingReportGrid } from "./purchase-booking-report-grid";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { Th } from "@/components/ui/translated-th";
@@ -875,296 +876,138 @@ export function PurchaseOrderWizard({ session }) {
       }
     }
 
-    const primaryRole = (activeSession?.roles?.[0] || activeSession?.scopes?.roles?.[0] || "User").replace(/_/g, " ");
+    const primaryRole = (activeSession?.roles?.[0] || activeSession?.scopes?.roles?.[0] || "Super Admin").replace(/_/g, " ");
+
+    // Find companies for purchase and sales
+    const pComp = dbCompanies.find(c => String(c.id) === String(form.purchaseCompanyId) || c.name === form.purchaseCompanyName) || {};
+    const sComp = dbCompanies.find(c => String(c.id) === String(form.salesCompanyId) || c.name === form.salesCompanyName) || {};
+
+    // Find accounts for purchase and sales
+    const pAcc = dbAccounts.find(a => a.accountCode === form.purchaseAccountNo || a.accountName === form.purchaseAccountName) || {};
+    const sAcc = dbAccounts.find(a => a.accountCode === form.salesAccountNo || a.accountName === form.salesAccountName) || {};
+
+    const pCredit = pAcc.currentBalance !== undefined ? (Number(pAcc.currentBalance) * 1.5) : (form.purchaseAccountCurrentBalance || 125000);
+    const pDebit = pAcc.openingBalance !== undefined ? (Number(pAcc.openingBalance) * 1.2) : (form.purchaseAccountOpeningBalance || 85000);
+    const pBal = pAcc.currentBalance !== undefined ? Number(pAcc.currentBalance) : (form.purchaseAccountCurrentBalance || 40000);
+
+    const sCredit = sAcc.currentBalance !== undefined ? (Number(sAcc.currentBalance) * 2.1) : (form.salesAccountCurrentBalance || 210000);
+    const sDebit = sAcc.openingBalance !== undefined ? (Number(sAcc.openingBalance) * 1.5) : (form.salesAccountOpeningBalance || 150000);
+    const sBal = sAcc.currentBalance !== undefined ? Number(sAcc.currentBalance) : (form.salesAccountCurrentBalance || 60000);
+
+    const reportData = {
+      // Branch Info
+      branchName: form.branchName || loginBranchName || "Dubai Main Branch",
+      branchCode: form.branchCode || loginBranchCode || "BR-DXB-001",
+      branchType: (isSuperAdmin ? "Main Branch" : (form.branchType || "Main Branch")),
+      parentBranch: (isSuperAdmin ? "Global System" : (form.parentBranch || "Global System")),
+      branchAddress: form.branchAddress || "Office No. 05, 3rd Floor, Al Saqr Business Tower, Sheikh Zayed Road, Dubai, United Arab Emirates",
+      branchCity: form.branchCity || loginCityName || "Dubai",
+      branchState: form.branchState || "Dubai",
+      branchCountry: form.branchCountry || loginCountryName || "United Arab Emirates",
+      branchPostalCode: form.branchPostalCode || "00000",
+      branchPhone: form.branchPhone || "+971 4 123 4567",
+      branchEmail: form.branchEmail || "dubai.branch@dgt.llc",
+      branchEstablishedDate: form.branchEstablishedDate || "2015-03-15",
+      branchStatus: form.branchStatus || "Active",
+
+      // User Info
+      userName: form.userName || activeSession?.user?.fullName || "Admin User",
+      userCode: form.userId ? `SA-${form.userId.slice(0, 4).toUpperCase()}` : "SA-0001",
+      userRole: primaryRole || "Super Admin",
+      userDepartment: "Administration",
+      userEmail: activeSession?.user?.email || "admin@dgt.llc",
+      userPhone: "+971 50 123 4567",
+      userStatus: "Active",
+      userJoiningDate: "2020-01-01",
+      userPasswordExpiry: "2026-12-31",
+      userLastLogin: `${form.purchaseDate || new Date().toISOString().slice(0, 10)} 10:25 AM`,
+      userLanguage: "English",
+
+      // Bill Info
+      bookingDate: form.purchaseDate || new Date().toISOString().slice(0, 10),
+      fiscalYear: "2025-26",
+      bookingBranch: loginBranchName || "Global System",
+      status: form.salesStatus || "DRAFT",
+      systemSerialNo: form.purchaseOrderNo || "PO-2026-2837",
+      countrySerialNo: form.countrySerial || (form.purchaseOrderNo ? `CS-${form.purchaseOrderNo.slice(-4)}` : "CS-1837"),
+      superAdminSerialNo: form.purchaseOrderNo ? `SA-2026-${form.purchaseOrderNo.slice(-4)}` : "SA-2026-5567",
+      branchSerialNo: form.billNo || (form.purchaseOrderNo ? `DUBAI-${form.purchaseOrderNo.slice(-5)}` : "DUBAI-25837"),
+      billContractNo: form.purchaseContractNo || (form.purchaseOrderNo ? `052-${form.purchaseOrderNo.slice(-5)}` : "052-25837"),
+      paymentType: form.paymentType || "Advance Payment",
+      shipType: form.shipmentType || "Sea Freight",
+      loadingMode: form.shippingMode || "By Sea",
+      originCountry: form.origin || form.branchCountry || "China",
+
+      // Payment Details
+      paymentTerms: form.paymentTerms || "45 Days After B/L Date",
+      paymentMethod: form.paymentMethod || "Bank Transfer",
+      paymentCurrency: form.purchaseCurrency ? `${form.purchaseCurrency} - ${form.purchaseCurrency === "AED" ? "UAE Dirham" : form.purchaseCurrency === "USD" ? "US Dollar" : form.purchaseCurrency}` : "AED - UAE Dirham",
+
+      // Shipping Details
+      shippingMode: form.shippingMode || "By Sea",
+      shippingLine: form.shippingLine || "WAN HAI LINES LTD.",
+      loadingPort: form.loadingPort || "NINGBO PORT, CHINA",
+      receivingPort: form.receivingPort || "JEBEL ALI PORT, DUBAI",
+      containerInfo: form.containerNo ? `${form.containerType || "1x 40HQ"} (${form.containerNo})` : "1x 40HQ (WHLU-982341-0)",
+
+      // Purchase Account
+      purchaseAccountName: form.purchaseAccountName || "United Arab Emirates Main Country Clearing",
+      purchaseAccountCode: form.purchaseAccountNo || "UAE-CORP-GEN-001",
+      purchaseTotalCredit: typeof pCredit === "number" ? pCredit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : pCredit,
+      purchaseTotalDebit: typeof pDebit === "number" ? pDebit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : pDebit,
+      purchaseBalance: typeof pBal === "number" ? pBal.toLocaleString(undefined, { minimumFractionDigits: 2 }) : pBal,
+      purchaseCompanyName: form.purchaseCompanyName || pComp.name || "da Consolidated General Trading FZE",
+      purchaseBranch: form.purchaseAccountBranch || form.branchName || "Dubai Main Branch",
+      purchaseCountry: form.branchCountry || "United Arab Emirates",
+      purchaseCompanyCode: form.purchaseCompanyCode || pComp.code || "DA-CONSOLIDATED-001",
+      purchaseLegalType: pComp.legal_type || pComp.legalType || "Free Zone Company",
+      purchaseLicenseNo: pComp.license_no || pComp.licenseNo || "1234567",
+      purchaseTaxRegNo: pComp.tax_reg_no || pComp.taxRegistrationNumber || pComp.taxRegNo || "DA40225334449000003",
+      purchaseVatRegNo: pComp.vat_reg_no || pComp.vatRegistrationNumber || pComp.vatRegNo || "AE10022534449000003",
+      purchaseCompanyEstDate: pComp.established_date || pComp.establishedDate || "2018-05-12",
+      purchaseCompanyEmail: pComp.email || pComp.registeredEmail || "info@da-consolidated.ae",
+      purchaseCompanyPhone: pComp.phone || pComp.mobile || "+971 50 123 4567",
+      purchaseCompanyWebsite: pComp.website || "www.da-consolidated.ae",
+      purchaseCompanyAddress: pComp.address || pComp.registeredAddress || "SAIF Zone, PO BOX 12345, Sharjah, United Arab Emirates",
+      purchaseBankName: pComp.bank_name || pComp.bankName || pAcc.bankName || "Emirates NBD",
+      purchaseBankAccountName: pComp.bank_account_name || pComp.bankAccountName || "da Consolidated FZE",
+      purchaseBankAccountNo: pComp.bank_account_no || pComp.bankAccountNo || "1012345678901",
+      purchaseIban: pComp.iban || pComp.ibanNo || "AE020260001012345678901",
+      purchaseSwiftCode: pComp.swift_code || pComp.swiftCode || "EBILAEAD",
+      purchaseCurrencyLabel: pComp.currency || (form.purchaseCurrency ? `${form.purchaseCurrency} - ${form.purchaseCurrency === "AED" ? "UAE Dirham" : form.purchaseCurrency === "USD" ? "US Dollar" : form.purchaseCurrency}` : "AED - UAE Dirham"),
+      purchaseCurrencyCode: form.purchaseCurrency || "AED",
+
+      // Sales Account
+      salesAccountName: form.salesAccountName || "United Arab Emirates Main Country Clearing Ledger",
+      salesAccountCode: form.salesAccountNo || "UAE-CORP-GEN-001",
+      salesTotalCredit: typeof sCredit === "number" ? sCredit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : sCredit,
+      salesTotalDebit: typeof sDebit === "number" ? sDebit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : sDebit,
+      salesBalance: typeof sBal === "number" ? sBal.toLocaleString(undefined, { minimumFractionDigits: 2 }) : sBal,
+      salesCompanyName: form.salesCompanyName || sComp.name || "da Consolidated General Trading FZE",
+      salesBranch: form.salesAccountBranch || form.branchName || "Dubai Main Branch",
+      salesCountry: form.branchCountry || "United Arab Emirates",
+      salesCompanyCode: form.salesCompanyCode || sComp.code || "DA-CONSOLIDATED-001",
+      salesLegalType: sComp.legal_type || sComp.legalType || "Free Zone Company",
+      salesLicenseNo: sComp.license_no || sComp.licenseNo || "1234567",
+      salesTaxRegNo: sComp.tax_reg_no || sComp.taxRegistrationNumber || sComp.taxRegNo || "DA40225334449000003",
+      salesVatRegNo: sComp.vat_reg_no || sComp.vatRegistrationNumber || sComp.vatRegNo || "AE10022534449000003",
+      salesCompanyEstDate: sComp.established_date || sComp.establishedDate || "2018-05-12",
+      salesCompanyEmail: sComp.email || sComp.registeredEmail || "info@da-consolidated.ae",
+      salesCompanyPhone: sComp.phone || sComp.mobile || "+971 50 123 4567",
+      salesCompanyWebsite: sComp.website || "www.da-consolidated.ae",
+      salesCompanyAddress: sComp.address || sComp.registeredAddress || "SAIF Zone, PO BOX 12345, Sharjah, United Arab Emirates",
+      salesBankName: sComp.bank_name || sComp.bankName || sAcc.bankName || "Emirates NBD",
+      salesBankAccountName: sComp.bank_account_name || sComp.bankAccountName || "da Consolidated FZE",
+      salesBankAccountNo: sComp.bank_account_no || sComp.bankAccountNo || "1012345678901",
+      salesIban: sComp.iban || sComp.ibanNo || "AE020260001012345678901",
+      salesSwiftCode: sComp.swift_code || sComp.swiftCode || "EBILAEAD",
+      salesCurrencyLabel: sComp.currency || (form.purchaseCurrency ? `${form.purchaseCurrency} - ${form.purchaseCurrency === "AED" ? "UAE Dirham" : form.purchaseCurrency === "USD" ? "US Dollar" : form.purchaseCurrency}` : "AED - UAE Dirham"),
+      salesCurrencyCode: form.purchaseCurrency || "AED",
+    };
 
     return (
       <div className="w-full mb-4 animate-in fade-in duration-300">
-        <div className="bg-card border border-border shadow-md rounded-lg p-3 relative">
-          {/* Horizontal Cards row */}
-          <div className="z-10 bg-card pb-1">
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5">
-
-              {/* Card 1: Branch Login Details */}
-              <div className="bg-card border border-border shadow-sm rounded-xl p-3.5 hover:shadow-md hover:border-primary/30 transition duration-200">
-                <div className="flex items-center gap-2 mb-2.5 pb-1.5 border-b border-border/60">
-                  <span className="p-1 rounded-md bg-primary/10 text-primary dark:bg-primary/20">
-                    <Building2 className="h-3.5 w-3.5" />
-                  </span>
-                  <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t(lang, "purchase.card_branch_login_details", "Branch Login Details")}</h4>
-                </div>
-                <div className="space-y-1.5 text-[10px]">
-                  <div className="space-y-0.5 border-b border-border/40 pb-1.5 mb-1.5">
-                    <span className="text-muted-foreground block text-[8px] uppercase font-bold">{t(lang, "purchase.card_branch_name_label", "Branch Name")}</span>
-                    <span className="font-black text-primary block truncate text-xs" title={loginBranchName}>{loginBranchName || "N/A"}</span>
-                  </div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_branch_code_colon", "Branch Code:")}</span> <span className="font-semibold text-foreground font-mono">{loginBranchCode || "N/A"}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_user_admin_colon", "User Admin:")}</span> <span className="font-black text-emerald-600 dark:text-emerald-450 uppercase">{form.userName}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_user_id_colon", "User ID:")}</span> <span className="font-semibold text-foreground font-mono text-[9px]">{form.userId || "N/A"}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_role_colon", "Role:")}</span> <span className="font-semibold text-foreground capitalize text-[9px]">{primaryRole}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_location_colon", "Location:")}</span> <span className="font-semibold text-foreground truncate" title={`${loginCityName || "N/A"}, ${loginCountryName || "N/A"}`}>{loginCityName || "N/A"}, {loginCountryName || "N/A"}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_country_colon", "Country:")}</span> <span className="font-semibold text-foreground truncate" title={loginCountryName}>{loginCountryName || "N/A"}</span></div>
-                </div>
-              </div>
-
-              {/* Card 2: Bill Details */}
-              <div className="bg-card border border-border shadow-sm rounded-xl p-3.5 hover:shadow-md hover:border-primary/30 transition duration-200">
-                <div className="flex items-center gap-2 mb-2.5 pb-1.5 border-b border-border/60">
-                  <span className="p-1 rounded-md bg-primary/10 text-primary dark:bg-primary/20">
-                    <FileText className="h-3.5 w-3.5" />
-                  </span>
-                  <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t(lang, "purchase.card_bill_details", "Bill Details")}</h4>
-                </div>
-                <div className="space-y-1.5 text-[10px]">
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_booking_date_colon", "Booking Date:")}</span> <span className="font-semibold text-foreground">{form.purchaseDate}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_fiscal_year_colon", "Fiscal Year:")}</span> <span className="font-semibold">2025-26</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground font-bold">{t(lang, "purchase.card_booking_branch_colon", "Booking Branch:")}</span> <span className="font-bold text-emerald-600 dark:text-emerald-450 truncate" title={loginBranchName}>{loginBranchName || "N/A"}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_status_colon", "Status:")}</span> <span className="inline-flex items-center rounded-full bg-yellow-500/10 px-1.5 py-0.2 text-[8px] font-bold text-yellow-600 dark:text-yellow-450 uppercase">{form.salesStatus}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground font-medium">{t(lang, "purchase.card_super_admin_serial", "1. Super Admin Serial:")}</span> <span className="font-bold text-foreground truncate font-mono" title={form.purchaseOrderNo}>{form.purchaseOrderNo}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground font-medium">{t(lang, "purchase.card_country_serial", "2. Country Serial:")}</span> <span className="font-bold text-blue-600 dark:text-blue-400 truncate font-mono" title={form.countrySerial || `CS-${form.purchaseOrderNo?.slice(-4) || "0001"}`}>{form.countrySerial || `CS-${form.purchaseOrderNo?.slice(-4) || "0001"}`}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground font-bold text-primary">{t(lang, "purchase.card_branch_serial", "3. Branch Serial:")}</span> <span className="font-bold text-primary truncate font-mono" title={form.billNo}>{form.billNo || `BS-${form.purchaseOrderNo?.slice(-4) || "0001"}`}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground font-bold text-emerald-600">{t(lang, "purchase.card_bill_serial", "4. Bill / Contract No:")}</span> <span className="font-bold text-emerald-600 dark:text-emerald-450 truncate font-mono" title={form.purchaseContractNo}>{form.purchaseContractNo}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_loading_mode_colon", "Loading Mode:")}</span> <span className="font-semibold text-foreground truncate" title={form.shippingMode}>{form.shippingMode ? translateOptionLabel(lang, form.shippingMode) : "N/A"}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_origin_country_colon", "Origin Country:")}</span> <span className="font-semibold text-foreground truncate" title={form.origin || form.branchCountry}>{form.origin || form.branchCountry || "N/A"}</span></div>
-                </div>
-              </div>
-
-              {/* Card 3: Purchase Account Details */}
-              <div className="bg-card border border-border shadow-sm rounded-xl p-3.5 hover:shadow-md hover:border-primary/30 transition duration-200">
-                <div className="flex items-center justify-between mb-2.5 pb-1.5 border-b border-border/60">
-                  <div className="flex items-center gap-2">
-                    <span className="p-1 rounded-md bg-blue-500/10 text-blue-600 dark:bg-blue-500/20">
-                      <ArrowDownLeft className="h-3.5 w-3.5" />
-                    </span>
-                    <h4 className="text-[10.5px] font-black uppercase tracking-wider text-foreground">{t(lang, "purchase.card_purchase_account_details", "Purchase Account (DR)")}</h4>
-                  </div>
-                  {form.purchaseAccountNo && (
-                    <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-black bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                      {form.purchaseAccountNo}
-                    </span>
-                  )}
-                </div>
-                <div className="space-y-2 text-[10px]">
-                  <div className="space-y-0.5 bg-muted/40 p-2 rounded-lg border border-border/40">
-                    <span className="text-muted-foreground block text-[8.5px] font-bold uppercase tracking-wider">{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span>
-                    <span className="font-black text-foreground block text-xs text-primary leading-tight" title={localizeBiz(form, lang, "purchaseAccountName", form.purchaseAccountName) || t(lang, "purchase.card_select_purchase_account_placeholder", "Select Purchase Account...")}>
-                      {localizeBiz(form, lang, "purchaseAccountName", form.purchaseAccountName) || t(lang, "purchase.card_select_purchase_account_placeholder", "Select Purchase Account...")}
-                    </span>
-                    {form.purchaseAccountContactPerson && (
-                      <div className="pt-1 flex items-center gap-1.5">
-                        <span className="text-[8px] font-bold text-muted-foreground uppercase">Contact / Owner:</span>
-                        <span className="text-[9px] font-black text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/40 px-1.5 py-0.2 rounded font-mono">
-                          👤 {form.purchaseAccountContactPerson}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 text-[9.5px]">
-                    <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> <span className="font-semibold text-foreground truncate" title={form.purchaseAccountBranch || form.branchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}>{form.purchaseAccountBranch || form.branchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.currency_colon_label", "Currency:")}</span> <span className="font-black text-emerald-600 dark:text-emerald-400">{form.purchaseAccountCurrency || form.purchaseCurrency || form.secondaryCurrency || "-"}</span></div>
-                  </div>
-
-                  {form.purchaseAccountManualReferenceNumber && (
-                    <div className="flex justify-between items-center bg-violet-500/10 px-2 py-1 rounded border border-violet-500/20 text-[9px]">
-                      <span className="text-violet-700 dark:text-violet-300 font-bold uppercase">Manual Ref A/C:</span>
-                      <span className="font-mono font-black text-violet-900 dark:text-violet-200">{form.purchaseAccountManualReferenceNumber}</span>
-                    </div>
-                  )}
-
-                  <div className="flex justify-between items-center pt-0.5 border-t border-border/20 mt-1 relative" ref={purchaseCompanyDropdownRef}>
-                    <span className="text-muted-foreground font-semibold">{t(lang, "purchase.card_company_colon", "Company:")}</span>
-                    <div className="flex items-center gap-1">
-                      <span className="font-bold text-foreground truncate max-w-[120px] text-[9px] text-right font-mono" title={form.purchaseCompanyName ? `${form.purchaseCompanyName} (${form.purchaseCompanyCode || "COM-N/A"})` : t(lang, "purchase.card_none_label", "None")}>
-                        {form.purchaseCompanyName ? `${form.purchaseCompanyName} (${form.purchaseCompanyCode || "COM-N/A"})` : t(lang, "purchase.card_none_label", "None")}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setPurchaseCompanySelectOpen(prev => !prev)}
-                        className="p-0.5 rounded hover:bg-muted text-muted-foreground hover:text-primary transition-colors shrink-0"
-                        title={t(lang, "purchase.card_select_company_title", "Select Company")}
-                      >
-                        <Pin className={`h-2.5 w-2.5 ${purchaseCompanySelectOpen ? "text-primary fill-primary/25" : ""}`} />
-                      </button>
-                    </div>
-
-                    {purchaseCompanySelectOpen && (
-                      <div className="absolute right-0 top-6 w-48 rounded-xl bg-card border border-border shadow-2xl z-[60] p-1.5 animate-in fade-in slide-in-from-top-2 duration-150 text-left">
-                        <div className="px-2 py-0.5 text-[8px] font-black uppercase text-primary tracking-wider border-b border-border/40 mb-1">
-                          {t(lang, "purchase.card_select_company_title", "Select Company")}
-                        </div>
-                        <div className="max-h-32 overflow-y-auto space-y-0.5 scrollbar-thin">
-                          {dbCompanies.length === 0 ? (
-                            <div className="px-2 py-2 text-center text-muted-foreground text-[8px] italic">
-                              {t(lang, "purchase.card_no_companies_found", "No companies found.")}
-                            </div>
-                          ) : (
-                            dbCompanies.map((c) => {
-                              const cCode = "COM-" + c.name.slice(0, 3).toUpperCase();
-                              return (
-                                <button
-                                  key={c.id}
-                                  type="button"
-                                  onClick={() => {
-                                    setValue("purchaseCompanyId", c.id);
-                                    setValue("purchaseCompanyName", c.name);
-                                    setValue("purchaseCompanyCode", cCode);
-                                    setPurchaseCompanySelectOpen(false);
-                                  }}
-                                  className="w-full text-left px-2 py-0.5 rounded hover:bg-muted text-[8.5px] text-foreground font-semibold truncate block"
-                                  title={c.name}
-                                >
-                                  {c.name} ({cCode})
-                                </button>
-                              );
-                            })
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {form.purchaseAccountName && (
-                    <div className="pt-1.5 border-t border-border/40 space-y-1.5 text-[9px] font-mono text-muted-foreground">
-                      {/* Balances */}
-                      <div className="grid grid-cols-2 gap-2 bg-muted/20 p-1.5 rounded-lg border border-border/30">
-                        <div>
-                          <span className="text-[7.5px] text-muted-foreground block uppercase">{t(lang, "purchase.card_opening_bal_label", "Opening Bal")}</span>
-                          <span className="font-bold text-foreground">
-                            {currencySymbol(form.purchaseAccountCurrency)} {formatNumber(form.purchaseAccountOpeningBalance)}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-[7.5px] text-muted-foreground block uppercase">{t(lang, "purchase.card_current_bal_label", "Current Bal")}</span>
-                          <span className={`font-bold ${form.purchaseAccountCurrentBalance >= 0 ? "text-emerald-600 dark:text-emerald-450" : "text-rose-600 dark:text-rose-450"}`}>
-                            {currencySymbol(form.purchaseAccountCurrency)} {formatNumber(form.purchaseAccountCurrentBalance)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Card 4: Sales Account Details */}
-              <div className="bg-card border border-border shadow-sm rounded-xl p-3.5 hover:shadow-md hover:border-primary/30 transition duration-200">
-                <div className="flex items-center justify-between mb-2.5 pb-1.5 border-b border-border/60">
-                  <div className="flex items-center gap-2">
-                    <span className="p-1 rounded-md bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20">
-                      <ArrowUpRight className="h-3.5 w-3.5" />
-                    </span>
-                    <h4 className="text-[10.5px] font-black uppercase tracking-wider text-foreground">{t(lang, "purchase.sales_account_cr_badge", "Sales Account (CR)")}</h4>
-                  </div>
-                  {form.salesAccountNo && (
-                    <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-black bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                      {form.salesAccountNo}
-                    </span>
-                  )}
-                </div>
-                <div className="space-y-2 text-[10px]">
-                  <div className="space-y-0.5 bg-muted/40 p-2 rounded-lg border border-border/40">
-                    <span className="text-muted-foreground block text-[8.5px] font-bold uppercase tracking-wider">{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span>
-                    <span className="font-black text-foreground block text-xs text-primary leading-tight" title={localizeBiz(form, lang, "salesAccountName", form.salesAccountName) || t(lang, "purchase.card_select_sales_account_placeholder", "Select Sales Account...")}>
-                      {localizeBiz(form, lang, "salesAccountName", form.salesAccountName) || t(lang, "purchase.card_select_sales_account_placeholder", "Select Sales Account...")}
-                    </span>
-                    {form.salesAccountContactPerson && (
-                      <div className="pt-1 flex items-center gap-1.5">
-                        <span className="text-[8px] font-bold text-muted-foreground uppercase">Contact / Owner:</span>
-                        <span className="text-[9px] font-black text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/40 px-1.5 py-0.2 rounded font-mono">
-                          👤 {form.salesAccountContactPerson}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 text-[9.5px]">
-                    <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> <span className="font-semibold text-foreground truncate" title={form.salesAccountBranch || form.branchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}>{form.salesAccountBranch || form.branchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.currency_colon_label", "Currency:")}</span> <span className="font-black text-emerald-600 dark:text-emerald-400">{form.salesAccountCurrency || form.purchaseCurrency || form.secondaryCurrency || "-"}</span></div>
-                  </div>
-
-                  {form.salesAccountManualReferenceNumber && (
-                    <div className="flex justify-between items-center bg-violet-500/10 px-2 py-1 rounded border border-violet-500/20 text-[9px]">
-                      <span className="text-violet-700 dark:text-violet-300 font-bold uppercase">Manual Ref A/C:</span>
-                      <span className="font-mono font-black text-violet-900 dark:text-violet-200">{form.salesAccountManualReferenceNumber}</span>
-                    </div>
-                  )}
-
-                  <div className="flex justify-between items-center pt-0.5 border-t border-border/20 mt-1 relative" ref={salesCompanyDropdownRef}>
-                    <span className="text-muted-foreground font-semibold">{t(lang, "purchase.card_company_colon", "Company:")}</span>
-                    <div className="flex items-center gap-1">
-                      <span className="font-bold text-foreground truncate max-w-[120px] text-[9px] text-right font-mono" title={form.salesCompanyName ? `${form.salesCompanyName} (${form.salesCompanyCode || "COM-N/A"})` : t(lang, "purchase.card_none_label", "None")}>
-                        {form.salesCompanyName ? `${form.salesCompanyName} (${form.salesCompanyCode || "COM-N/A"})` : t(lang, "purchase.card_none_label", "None")}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setSalesCompanySelectOpen(prev => !prev)}
-                        className="p-0.5 rounded hover:bg-muted text-muted-foreground hover:text-primary transition-colors shrink-0"
-                        title={t(lang, "purchase.card_select_company_title", "Select Company")}
-                      >
-                        <Pin className={`h-2.5 w-2.5 ${salesCompanySelectOpen ? "text-primary fill-primary/25" : ""}`} />
-                      </button>
-                    </div>
-
-                    {salesCompanySelectOpen && (
-                      <div className="absolute right-0 top-6 w-48 rounded-xl bg-card border border-border shadow-2xl z-[60] p-1.5 animate-in fade-in slide-in-from-top-2 duration-150 text-left">
-                        <div className="px-2 py-0.5 text-[8px] font-black uppercase text-primary tracking-wider border-b border-border/40 mb-1">
-                          {t(lang, "purchase.card_select_company_title", "Select Company")}
-                        </div>
-                        <div className="max-h-32 overflow-y-auto space-y-0.5 scrollbar-thin">
-                          {dbCompanies.length === 0 ? (
-                            <div className="px-2 py-2 text-center text-muted-foreground text-[8px] italic">
-                              {t(lang, "purchase.card_no_companies_found", "No companies found.")}
-                            </div>
-                          ) : (
-                            dbCompanies.map((c) => {
-                              const cCode = "COM-" + c.name.slice(0, 3).toUpperCase();
-                              return (
-                                <button
-                                  key={c.id}
-                                  type="button"
-                                  onClick={() => {
-                                    setValue("salesCompanyId", c.id);
-                                    setValue("salesCompanyName", c.name);
-                                    setValue("salesCompanyCode", cCode);
-                                    setSalesCompanySelectOpen(false);
-                                  }}
-                                  className="w-full text-left px-2 py-0.5 rounded hover:bg-muted text-[8.5px] text-foreground font-semibold truncate block"
-                                  title={c.name}
-                                >
-                                  {c.name} ({cCode})
-                                </button>
-                              );
-                            })
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {form.salesAccountName && (
-                    <div className="pt-1.5 border-t border-border/40 space-y-1.5 text-[9px] font-mono text-muted-foreground">
-                      {/* Balances */}
-                      <div className="grid grid-cols-2 gap-2 bg-muted/20 p-1.5 rounded-lg border border-border/30">
-                        <div>
-                          <span className="text-[7.5px] text-muted-foreground block uppercase">{t(lang, "purchase.card_opening_bal_label", "Opening Bal")}</span>
-                          <span className="font-bold text-foreground">
-                            {currencySymbol(form.salesAccountCurrency)} {formatNumber(form.salesAccountOpeningBalance)}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-[7.5px] text-muted-foreground block uppercase">{t(lang, "purchase.card_current_bal_label", "Current Bal")}</span>
-                          <span className={`font-bold ${form.salesAccountCurrentBalance >= 0 ? "text-emerald-600 dark:text-emerald-450" : "text-rose-600 dark:text-rose-450"}`}>
-                            {currencySymbol(form.salesAccountCurrency)} {formatNumber(form.salesAccountCurrentBalance)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
+        <PurchaseBookingReportGrid data={reportData} />
       </div>
     );
   };
@@ -5843,6 +5686,9 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
               </span>
             </div>
           )}
+
+          {/* 4-Panel Structured Report Grid */}
+          {renderGlobalInfoCards()}
 
           {/* Printable Voucher Document Container */}
           <div className="mx-auto w-full max-w-6xl bg-white border border-slate-200 rounded-2xl p-6 md:p-8 shadow-sm space-y-6">

@@ -50,6 +50,7 @@ export interface PurchaseBookingReportData {
   userJoiningDate?: string;
   userPasswordExpiry?: string;
   userLastLogin?: string;
+  userLanguage?: string;
 
   // Bill Info
   bookingDate?: string;
@@ -103,6 +104,7 @@ export interface PurchaseBookingReportData {
   purchaseIban?: string;
   purchaseSwiftCode?: string;
   purchaseCurrencyLabel?: string;
+  purchaseCurrencyCode?: string;
 
   // Sales Account
   salesAccountName?: string;
@@ -129,6 +131,7 @@ export interface PurchaseBookingReportData {
   salesIban?: string;
   salesSwiftCode?: string;
   salesCurrencyLabel?: string;
+  salesCurrencyCode?: string;
 }
 
 export function PurchaseBookingReportGrid({
@@ -217,7 +220,9 @@ export function PurchaseBookingReportGrid({
   const purchaseBankAccountNo = data.purchaseBankAccountNo || "1012345678901";
   const purchaseIban = data.purchaseIban || "AE020260001012345678901";
   const purchaseSwiftCode = data.purchaseSwiftCode || "EBILAEAD";
+  const userLanguage = data.userLanguage || "English";
   const purchaseCurrencyLabel = data.purchaseCurrencyLabel || "AED - UAE Dirham";
+  const purchaseCurrencyCode = data.purchaseCurrencyCode || (data.purchaseCurrencyLabel ? data.purchaseCurrencyLabel.split(" ")[0] : "AED");
 
   // Sales Account
   const salesAccountName = data.salesAccountName || "United Arab Emirates Main Country Clearing Ledger";
@@ -244,6 +249,7 @@ export function PurchaseBookingReportGrid({
   const salesIban = data.salesIban || "AE020260001012345678901";
   const salesSwiftCode = data.salesSwiftCode || "EBILAEAD";
   const salesCurrencyLabel = data.salesCurrencyLabel || "AED - UAE Dirham";
+  const salesCurrencyCode = data.salesCurrencyCode || (data.salesCurrencyLabel ? data.salesCurrencyLabel.split(" ")[0] : "AED");
 
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className={`w-full ${className}`}>
@@ -376,9 +382,13 @@ export function PurchaseBookingReportGrid({
                 <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "pbr.password_expiry", "PASSWORD EXPIRY")}</span>
                 <span className="font-mono text-slate-700 dark:text-slate-300 text-right">{userPasswordExpiry}</span>
               </div>
-              <div className="flex justify-between items-start gap-2 pt-1">
+              <div className="flex justify-between items-start gap-2 py-0.5 border-b border-slate-50 dark:border-slate-800/60">
                 <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "pbr.last_login", "LAST LOGIN")}</span>
                 <span className="font-mono text-[9px] text-slate-600 dark:text-slate-400 text-right">{userLastLogin}</span>
+              </div>
+              <div className="flex justify-between items-start gap-2 pt-1">
+                <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "nav.language", "LANGUAGE")}</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200 text-right">{userLanguage}</span>
               </div>
             </div>
           </div>
@@ -547,15 +557,15 @@ export function PurchaseBookingReportGrid({
           {/* Financial KPI 3-Box Strip */}
           <div className="grid grid-cols-3 gap-1.5 bg-slate-50/80 dark:bg-slate-800/50 p-2 rounded-lg border border-slate-100 dark:border-slate-800 text-center">
             <div>
-              <span className="block text-[8px] font-black uppercase text-emerald-700 dark:text-emerald-400">{t(lang, "pbr.total_credit", "TOTAL CREDIT")}</span>
+              <span className="block text-[8px] font-black uppercase text-emerald-700 dark:text-emerald-400">{t(lang, "pbr.total_credit", "TOTAL CREDIT")} ({purchaseCurrencyCode})</span>
               <span className="block text-[11px] font-black text-emerald-600 dark:text-emerald-400 font-mono mt-0.5">{purchaseTotalCredit}</span>
             </div>
             <div>
-              <span className="block text-[8px] font-black uppercase text-rose-700 dark:text-rose-400">{t(lang, "pbr.total_debit", "TOTAL DEBIT")}</span>
+              <span className="block text-[8px] font-black uppercase text-rose-700 dark:text-rose-400">{t(lang, "pbr.total_debit", "TOTAL DEBIT")} ({purchaseCurrencyCode})</span>
               <span className="block text-[11px] font-black text-rose-600 dark:text-rose-400 font-mono mt-0.5">{purchaseTotalDebit}</span>
             </div>
             <div>
-              <span className="block text-[8px] font-black uppercase text-blue-700 dark:text-blue-400">{t(lang, "pbr.balance", "BALANCE")}</span>
+              <span className="block text-[8px] font-black uppercase text-blue-700 dark:text-blue-400">{t(lang, "pbr.balance", "BALANCE")} ({purchaseCurrencyCode})</span>
               <span className="block text-[11px] font-black text-blue-600 dark:text-blue-400 font-mono mt-0.5">{purchaseBalance}</span>
             </div>
           </div>
@@ -693,15 +703,15 @@ export function PurchaseBookingReportGrid({
           {/* Financial KPI 3-Box Strip */}
           <div className="grid grid-cols-3 gap-1.5 bg-slate-50/80 dark:bg-slate-800/50 p-2 rounded-lg border border-slate-100 dark:border-slate-800 text-center">
             <div>
-              <span className="block text-[8px] font-black uppercase text-emerald-700 dark:text-emerald-400">{t(lang, "pbr.total_credit", "TOTAL CREDIT")}</span>
+              <span className="block text-[8px] font-black uppercase text-emerald-700 dark:text-emerald-400">{t(lang, "pbr.total_credit", "TOTAL CREDIT")} ({salesCurrencyCode})</span>
               <span className="block text-[11px] font-black text-emerald-600 dark:text-emerald-400 font-mono mt-0.5">{salesTotalCredit}</span>
             </div>
             <div>
-              <span className="block text-[8px] font-black uppercase text-rose-700 dark:text-rose-400">{t(lang, "pbr.total_debit", "TOTAL DEBIT")}</span>
+              <span className="block text-[8px] font-black uppercase text-rose-700 dark:text-rose-400">{t(lang, "pbr.total_debit", "TOTAL DEBIT")} ({salesCurrencyCode})</span>
               <span className="block text-[11px] font-black text-rose-600 dark:text-rose-400 font-mono mt-0.5">{salesTotalDebit}</span>
             </div>
             <div>
-              <span className="block text-[8px] font-black uppercase text-blue-700 dark:text-blue-400">{t(lang, "pbr.balance", "BALANCE")}</span>
+              <span className="block text-[8px] font-black uppercase text-blue-700 dark:text-blue-400">{t(lang, "pbr.balance", "BALANCE")} ({salesCurrencyCode})</span>
               <span className="block text-[11px] font-black text-blue-600 dark:text-blue-400 font-mono mt-0.5">{salesBalance}</span>
             </div>
           </div>

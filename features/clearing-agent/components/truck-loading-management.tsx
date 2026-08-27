@@ -105,6 +105,33 @@ const EMPTY: any = {
   dest_city_id: null
 };
 
+function formatError(err: unknown): string {
+  if (!err) return "";
+  if (typeof err === "string") return err;
+  if (err instanceof Error) return err.message;
+  if (typeof err === "object") {
+    const obj = err as Record<string, any>;
+    // Extract meaningful message first
+    if (typeof obj.message === "string" && obj.message) return obj.message;
+    if (typeof obj.error === "string" && obj.error) return obj.error;
+    if (obj.error && typeof obj.error === "object") {
+      if (typeof obj.error.message === "string") return obj.error.message;
+      try { return JSON.stringify(obj.error); } catch { /* fall through */ }
+    }
+    if (typeof obj.statusText === "string" && obj.statusText) return obj.statusText;
+    if (typeof obj.detail === "string" && obj.detail) return obj.detail;
+    try {
+      const serialized = JSON.stringify(obj);
+      // Avoid displaying raw JSON like "{}" — give a human-readable message instead
+      if (serialized === "{}" || serialized === "[]") return "An unexpected error occurred. Please try again.";
+      return serialized;
+    } catch {
+      return "An unexpected error occurred. Please try again.";
+    }
+  }
+  return String(err);
+}
+
 export function TruckLoadingManagementView({ lang: langProp }: { lang: SupportedLanguage }) {
   const activeLang = useActiveLanguage();
   const lang = activeLang !== "en" ? activeLang : langProp;
@@ -131,11 +158,11 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
         fetch("/api/erp/clearing-agent/customer-order?status=pending"),
       ]);
       const j1 = await r1.json(); const j2 = await r2.json(); const j3 = await r3.json();
-      if (!r1.ok) throw new Error(j1.error || "Failed to load");
+      if (!r1.ok) throw new Error(formatError(j1.error) || "Failed to load");
       setRows(j1.records || []);
       setTrucks(r2.ok ? (j2.trucks || []) : []);
       if (j3.success) setPendingOrders(j3.data || []);
-    } catch (e: any) { setError(e.message); } finally { setLoading(false); }
+    } catch (e: any) { setError(formatError(e)); } finally { setLoading(false); }
   }
   useEffect(() => { load(); }, []);
 
@@ -198,19 +225,19 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
         ? await fetch(`/api/erp/clearing-agent/truck-loading/${form.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
         : await fetch("/api/erp/clearing-agent/truck-loading", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Failed to save");
+      if (!res.ok) throw new Error(formatError(json.error) || "Failed to save");
       setEditing(false); setForm(EMPTY); await load();
-    } catch (e: any) { setError(e.message); } finally { setSaving(false); }
+    } catch (e: any) { setError(formatError(e)); } finally { setSaving(false); }
   }
 
   async function remove(id: string) {
     if (!confirm(t(lang, "tl.delete") + "?")) return;
     try {
-      const res = await fetch(`/api/erp/clearing-agent/truck-loading/${id}`, { method: "DELETE" });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Failed to delete");
+      const res = fetch(`/api/erp/clearing-agent/truck-loading/${id}`, { method: "DELETE" });
+      const json = await (await res).json();
+      if (!(await res).ok) throw new Error(formatError(json.error) || "Failed to delete");
       await load();
-    } catch (e: any) { setError(e.message); }
+    } catch (e: any) { setError(formatError(e)); }
   }
 
   // Calculated weights & divide
@@ -365,7 +392,7 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
         <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search loading serial, truck number, driver name, goods..." className="w-full rounded-xl border border-slate-200 bg-white py-2.5 ps-9 pe-3 text-sm dark:border-slate-800 dark:bg-slate-950 shadow-sm" />
       </div>
 
-      {error ? <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">{typeof error === "string" ? error : (error as any)?.message || JSON.stringify(error)}</div> : null}
+      {error ? <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">{formatError(error)}</div> : null}
 
 
       {/* List Table */}

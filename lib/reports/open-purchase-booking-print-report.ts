@@ -1,5 +1,6 @@
 import { generateReportHtml, escapeHtml, formatMoney, formatNumber, formatDate, type ERPCompanyInfo } from "./erp-report-template-builder";
 import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
+import { printStore } from "@/lib/store/print-store";
 
 export type PurchaseBookingGoodsItem = {
   srNo: number;
@@ -261,6 +262,13 @@ export function openPurchaseBookingOrderPrintReport(input: {
     `,
     lang: targetLang
   });
+
+  try {
+    printStore.openPrint(html, `Purchase Booking Order - ${o.systemBillNo}`);
+    return;
+  } catch (e) {
+    console.warn("Could not open in printStore, falling back to window.open", e);
+  }
 
   const printWindow = window.open("", "_blank");
   if (printWindow) {

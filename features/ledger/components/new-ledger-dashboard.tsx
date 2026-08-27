@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { openGenericErpReport } from "@/lib/reports/open-generic-erp-report";
+import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
 import {
   getLedgerStatement,
   listLedgerReportLedgers,
@@ -336,22 +337,54 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
 
   function printLedger() {
     if (!account) return;
+    const tr = (label: string) => translateHeader(activeLang, label);
+    const curr = account.ledgerCurrency || "USD";
 
-    openGenericErpReport({
-      title: "LEDGER REPORT",
+    openUniversalPrintReport({
+      title: tr("Account Ledger Statement"),
       subtitle: `${account.accountCode || account.ledgerCode || "Ledger"} · ${account.accountName || account.ledgerName || "Account Statement"}`,
-      lang: "en",
+      lang: activeLang,
+      moduleType: "ledger",
+      orientation: "landscape",
+      documentNo: account.accountCode || account.ledgerCode || "LEDGER-STMT",
+      scope: {
+        scopeLevel: "Account Ledger Statement",
+        userName: session?.user?.fullName || session?.user?.email || "ERP User",
+        country: account.countryName || selectedCountry || "All Countries",
+        branch: account.cityBranchName || account.countryBranchName || selectedBranch || "All Branches",
+        currency: curr,
+        dateRange: `${fromDate || "Start"} → ${toDate || "Today"}`
+      },
+      partyDetails: {
+        type: "entity",
+        name: account.accountName || account.ledgerName || "Account",
+        code: account.accountCode || account.ledgerCode || undefined,
+        departmentOrBranch: account.cityBranchName || account.countryBranchName || account.countryName || undefined,
+      },
+      kpis: [
+        { label: tr("Opening Balance"), value: fmtNumber(openingBalance), color: "blue" },
+        { label: tr("Total Debit"), value: fmtNumber(totals.debit), color: "emerald" },
+        { label: tr("Total Credit"), value: fmtNumber(totals.credit), color: "red" },
+        { label: tr("Closing Balance"), value: fmtNumber(totals.balance), color: "purple" },
+      ],
+      filters: [
+        { label: tr("Account"), value: `${account.accountCode || account.ledgerCode || "-"} · ${account.accountName || account.ledgerName || "-"}` },
+        { label: tr("Country"), value: account.countryName || selectedCountry || "All Countries" },
+        { label: tr("Branch"), value: account.cityBranchName || account.countryBranchName || selectedBranch || "All Branches" },
+        { label: tr("From Date"), value: fromDate || "Start" },
+        { label: tr("To Date"), value: toDate || "Today" },
+      ],
       columns: [
-        { key: "entryDate", label: "Date", format: "date" },
-        { key: "superAdminSerialNo", label: "SA Serial", align: "center" },
-        { key: "countrySerialNo", label: "Country Serial", align: "center" },
-        { key: "branchSerialNo", label: "Branch Serial", align: "center" },
-        { key: "createdByName", label: "User" },
-        { key: "referenceNo", label: "Reference No" },
-        { key: "description", label: "Narration" },
-        { key: "debit", label: "Debit", format: "currency", align: "right", currency: account.ledgerCurrency || "USD" },
-        { key: "credit", label: "Credit", format: "currency", align: "right", currency: account.ledgerCurrency || "USD" },
-        { key: "runningBalance", label: "Balance", format: "currency", align: "right", currency: account.ledgerCurrency || "USD" },
+        { key: "entryDate", label: tr("Date"), format: "date", width: "9%" },
+        { key: "superAdminSerialNo", label: tr("SA Serial"), align: "center", width: "8%" },
+        { key: "countrySerialNo", label: tr("Country Serial"), align: "center", width: "8%" },
+        { key: "branchSerialNo", label: tr("Branch Serial"), align: "center", width: "8%" },
+        { key: "createdByName", label: tr("User"), width: "10%" },
+        { key: "referenceNo", label: tr("Reference No"), width: "11%" },
+        { key: "description", label: tr("Narration"), width: "20%" },
+        { key: "debit", label: tr("Debit"), format: "currency", align: "right", width: "8%" },
+        { key: "credit", label: tr("Credit"), format: "currency", align: "right", width: "8%" },
+        { key: "runningBalance", label: tr("Balance"), format: "currency", align: "right", width: "10%" },
       ],
       rows: lines.map((line) => ({
         entryDate: line.entryDate,
@@ -365,28 +398,18 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
         credit: line.credit || 0,
         runningBalance: line.runningBalance || 0,
       })),
-      summary: {
-        totalEntries: totals.entries,
-        openingBalance,
-        totalDebit: totals.debit,
-        totalCredit: totals.credit,
-        closingBalance: totals.balance,
+      totals: {
+        debit: totals.debit,
+        credit: totals.credit,
+        runningBalance: totals.balance,
       },
-      filters: [
-        { label: "Account", value: `${account.accountCode || account.ledgerCode || "-"} · ${account.accountName || account.ledgerName || "-"}` },
-        { label: "Country", value: account.countryName || selectedCountry || "All Countries" },
-        { label: "Branch", value: account.cityBranchName || account.countryBranchName || selectedBranch || "All Branches" },
-        { label: "From Date", value: fromDate || "Start" },
-        { label: "To Date", value: toDate || "Today" },
+      showSignatures: true,
+      signatureBlocks: [
+        { title: tr("Prepared By"), subtitle: session?.user?.fullName || "Accounts Officer" },
+        { title: tr("Verified & Audited"), subtitle: "Internal Audit" },
+        { title: tr("Authorized Signature"), subtitle: "Finance Director" },
       ],
-      companyInfo: {
-        name: "DIGITAL DOCK ERP",
-        printedBy: session?.user?.fullName || session?.user?.email || "ERP User",
-        country: account.countryName || selectedCountry || "All Countries",
-        branch: account.cityBranchName || account.countryBranchName || selectedBranch || "All Branches",
-        currency: account.ledgerCurrency || "USD",
-        reportPeriod: `${fromDate || "Start"} To ${toDate || "Today"}`,
-      },
+      autoPrint: false,
     });
   }
 

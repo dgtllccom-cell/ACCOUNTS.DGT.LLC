@@ -5,7 +5,7 @@ import { Download, Mail, MoreVertical, Printer, RefreshCcw, Search, SlidersHoriz
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
-import { openSalesA4ReportWindow } from "@/lib/reports/open-sales-a4-report-window";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { apiGet } from "@/lib/api/client";
 import { ReportKpiCards } from "@/features/reports/components/report-kpi-cards";
 import { ReportPagination } from "@/features/reports/components/report-pagination";
@@ -15,7 +15,6 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { resolveVerifiedTranslation, translationPendingLabel } from "@/lib/i18n/verified-record-translations";
 import { t } from "@/lib/i18n/ui";
 import { RecordTranslationCorrectionDialog } from "@/features/translations/components/record-translation-correction-dialog";
-
 type SalesReport = {
   [key: string]: any;
   id: string;
@@ -148,7 +147,7 @@ export function SalesBookingJournalReportView() {
     ]);
 
     const csvContent = [headers.join(","), ...rows.map((row) => row.map(c => `"${String(c).replace(/"/g, '""')}"`).join(","))].join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
@@ -159,10 +158,11 @@ export function SalesBookingJournalReportView() {
   }
 
   function printSalesRegister() {
+    const tr = (label: string) => translateHeader(activeLang, label);
 
     openUniversalPrintReport({
-      title: "Sales Booking Confirmation Register",
-      subtitle: `Total ${reports.length} booking records`,
+      title: tr("Sales Booking Confirmation Register"),
+      subtitle: `${tr("Total Records")}: ${reports.length}`,
       lang: activeLang,
       moduleType: "sales_invoice",
       orientation: "landscape",
@@ -170,17 +170,29 @@ export function SalesBookingJournalReportView() {
         scopeLevel: "Sales Booking Register",
         userName: "ERP User",
       },
+      kpis: [
+        { label: tr("Total Sales Amount"), value: summary.amount, color: "blue" },
+        { label: tr("Total Quantity"), value: summary.qty, color: "emerald" },
+        { label: tr("Total Containers"), value: summary.containers, color: "purple" },
+        { label: tr("Total Orders"), value: summary.total, color: "amber" },
+      ],
+      filters: [
+        ...(query ? [{ label: tr("Search Query"), value: query }] : []),
+        ...(countryId ? [{ label: tr("Country"), value: countries.find(c => c.id === countryId)?.name || countryId }] : []),
+        ...(branchId ? [{ label: tr("Branch"), value: branches.find(b => b.id === branchId)?.name || branchId }] : []),
+        ...(status ? [{ label: tr("Status"), value: status }] : []),
+      ],
       columns: [
-        { key: "salesBookingOrderNumber", label: "SO Number", width: "12%" },
-        { key: "salesDate", label: "Date", format: "date", width: "9%" },
-        { key: "customerName", label: "Customer", width: "15%" },
-        { key: "goodsDescription", label: "Goods / Description", width: "18%" },
-        { key: "quantity", label: "Quantity", align: "right", format: "number", width: "7%" },
-        { key: "unit", label: "Unit", align: "center", width: "5%" },
-        { key: "currency", label: "Currency", align: "center", width: "6%" },
-        { key: "totalSalesAmount", label: "Total Amount", align: "right", format: "currency", width: "13%" },
-        { key: "status", label: "Status", align: "center", format: "badge", width: "8%" },
-        { key: "paymentStatus", label: "Payment", align: "center", format: "badge", width: "7%" },
+        { key: "salesBookingOrderNumber", label: tr("SO Number"), width: "12%" },
+        { key: "salesDate", label: tr("Date"), format: "date", width: "9%" },
+        { key: "customerName", label: tr("Customer"), width: "15%" },
+        { key: "goodsDescription", label: tr("Goods / Description"), width: "18%" },
+        { key: "quantity", label: tr("Quantity"), align: "right", format: "number", width: "7%" },
+        { key: "unit", label: tr("Unit"), align: "center", width: "5%" },
+        { key: "currency", label: tr("Currency"), align: "center", width: "6%" },
+        { key: "totalSalesAmount", label: tr("Total Amount"), align: "right", format: "currency", width: "13%" },
+        { key: "status", label: tr("Status"), align: "center", format: "badge", width: "8%" },
+        { key: "paymentStatus", label: tr("Payment"), align: "center", format: "badge", width: "7%" },
       ],
       rows: reports.map(r => ({
         salesBookingOrderNumber: r.salesBookingOrderNumber || "-",
@@ -335,7 +347,58 @@ export function SalesBookingJournalReportView() {
                   <td className="px-6 py-4 font-mono">
                     <button
                       type="button"
-                      onClick={() => openSalesA4ReportWindow({ title: "Sales Booking Invoice", salesData: r })}
+                      onClick={() => {
+                        const totalAmt = Number(r.totalSalesAmount || r.salesAmount || 0);
+                        const qty = Number(r.quantity || 0);
+                        openUniversalPrintReport({
+                          title: translateHeader(activeLang, "Sales Booking Invoice"),
+                          subtitle: `${translateHeader(activeLang, "SO Ref")}: ${r.salesBookingOrderNumber || "-"}`,
+                          documentNo: r.salesBookingOrderNumber || "SO-DOC",
+                          reportType: "single_document",
+                          moduleType: "sales_invoice",
+                          orientation: "portrait",
+                          lang: activeLang,
+                          scope: {
+                            scopeLevel: "Sales Booking Invoice",
+                            country: r.countryName || "All Countries",
+                            branch: r.branchName || "Main Branch",
+                            currency: r.currency || "USD",
+                            userName: r.audit?.userName || "ERP User",
+                          },
+                          partyDetails: {
+                            type: "customer",
+                            name: r.customerName || "-",
+                            address: r.countryName || "-",
+                            departmentOrBranch: r.branchName || "-",
+                          },
+                          kpis: [
+                            { label: translateHeader(activeLang, "Total Amount"), value: totalAmt, color: "blue" },
+                            { label: translateHeader(activeLang, "Quantity"), value: `${qty.toLocaleString()} ${r.unit || "BAGS"}`, color: "emerald" },
+                            { label: translateHeader(activeLang, "Containers"), value: r.containerCount || 0, color: "purple" },
+                            { label: translateHeader(activeLang, "Status"), value: r.status || "PENDING", color: "amber" },
+                          ],
+                          columns: [
+                            { key: "item", label: translateHeader(activeLang, "Goods / Description"), width: "35%" },
+                            { key: "quantity", label: translateHeader(activeLang, "Quantity"), align: "right", format: "number", width: "15%" },
+                            { key: "rate", label: translateHeader(activeLang, "Unit Rate"), align: "right", format: "currency", width: "20%" },
+                            { key: "total", label: translateHeader(activeLang, "Total Amount"), align: "right", format: "currency", width: "30%" },
+                          ],
+                          rows: [{
+                            item: r.productName || r.goodsDescription || "Standard Goods",
+                            quantity: qty,
+                            rate: Number(r.salesRate || (qty > 0 ? totalAmt / qty : 0)),
+                            total: totalAmt,
+                          }],
+                          totals: { total: totalAmt, quantity: qty },
+                          showSignatures: true,
+                          signatureBlocks: [
+                            { title: translateHeader(activeLang, "Prepared By"), subtitle: r.audit?.userName || "Sales Officer" },
+                            { title: translateHeader(activeLang, "Verified & Audited"), subtitle: "Accounts Department" },
+                            { title: translateHeader(activeLang, "Authorized Signature"), subtitle: "Managing Director" },
+                          ],
+                          autoPrint: false,
+                        });
+                      }}
                       className="text-primary hover:underline font-bold text-left"
                     >
                       {r.salesBookingOrderNumber}
@@ -366,7 +429,58 @@ export function SalesBookingJournalReportView() {
                   <td className="px-6 py-4 text-center">
                     <RecordTranslationCorrectionDialog recordTable="sales_orders" recordId={r.id} onSaved={() => loadReports(query)} />
                     <Button
-                      onClick={() => openSalesA4ReportWindow({ title: "Sales Booking Invoice", salesData: r })}
+                      onClick={() => {
+                      const totalAmt = Number(r.totalSalesAmount || r.salesAmount || 0);
+                      const qty = Number(r.quantity || 0);
+                      openUniversalPrintReport({
+                        title: translateHeader(activeLang, "Sales Booking Invoice"),
+                        subtitle: `${translateHeader(activeLang, "SO Ref")}: ${r.salesBookingOrderNumber || "-"}`,
+                        documentNo: r.salesBookingOrderNumber || "SO-DOC",
+                        reportType: "single_document",
+                        moduleType: "sales_invoice",
+                        orientation: "portrait",
+                        lang: activeLang,
+                        scope: {
+                          scopeLevel: "Sales Booking Invoice",
+                          country: r.countryName || "All Countries",
+                          branch: r.branchName || "Main Branch",
+                          currency: r.currency || "USD",
+                          userName: r.audit?.userName || "ERP User",
+                        },
+                        partyDetails: {
+                          type: "customer",
+                          name: r.customerName || "-",
+                          address: r.countryName || "-",
+                          departmentOrBranch: r.branchName || "-",
+                        },
+                        kpis: [
+                          { label: translateHeader(activeLang, "Total Amount"), value: totalAmt, color: "blue" },
+                          { label: translateHeader(activeLang, "Quantity"), value: `${qty.toLocaleString()} ${r.unit || "BAGS"}`, color: "emerald" },
+                          { label: translateHeader(activeLang, "Containers"), value: r.containerCount || 0, color: "purple" },
+                          { label: translateHeader(activeLang, "Status"), value: r.status || "PENDING", color: "amber" },
+                        ],
+                        columns: [
+                          { key: "item", label: translateHeader(activeLang, "Goods / Description"), width: "35%" },
+                          { key: "quantity", label: translateHeader(activeLang, "Quantity"), align: "right", format: "number", width: "15%" },
+                          { key: "rate", label: translateHeader(activeLang, "Unit Rate"), align: "right", format: "currency", width: "20%" },
+                          { key: "total", label: translateHeader(activeLang, "Total Amount"), align: "right", format: "currency", width: "30%" },
+                        ],
+                        rows: [{
+                          item: r.productName || r.goodsDescription || "Standard Goods",
+                          quantity: qty,
+                          rate: Number(r.salesRate || (qty > 0 ? totalAmt / qty : 0)),
+                          total: totalAmt,
+                        }],
+                        totals: { total: totalAmt, quantity: qty },
+                        showSignatures: true,
+                        signatureBlocks: [
+                          { title: translateHeader(activeLang, "Prepared By"), subtitle: r.audit?.userName || "Sales Officer" },
+                          { title: translateHeader(activeLang, "Verified & Audited"), subtitle: "Accounts Department" },
+                          { title: translateHeader(activeLang, "Authorized Signature"), subtitle: "Managing Director" },
+                        ],
+                        autoPrint: false,
+                      });
+                    }}
                       variant="outline"
                       size="sm"
                       className="border-input bg-background hover:bg-accent text-foreground text-xs px-2.5 py-1 h-auto shadow-sm"

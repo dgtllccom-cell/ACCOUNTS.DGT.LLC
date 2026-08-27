@@ -20,12 +20,15 @@ import {
   Users,
   Wallet,
   ArrowRight,
-  Lock
+  Lock,
+  Printer
 } from "lucide-react";
 import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 export interface ReportItem {
   id: string;
@@ -221,6 +224,41 @@ export function AllReportsView() {
     return matchesSearch && matchesCat;
   });
 
+  const handlePrintCatalog = () => {
+    const tr = (label: string) => translateHeader(lang, label);
+    openUniversalPrintReport({
+      title: tr("ERP Reports & Analytics Catalog Directory"),
+      subtitle: `${tr("Total Reports")}: ${filteredReports.length}`,
+      lang,
+      orientation: "portrait",
+      moduleType: "register",
+      scope: {
+        scopeLevel: "Super Admin Reports Directory",
+        userName: userRole.replace("_", " ").toUpperCase(),
+      },
+      kpis: [
+        { label: tr("Total Reports"), value: ALL_REPORTS_CATALOG.length, color: "blue" },
+        { label: tr("Filtered Count"), value: filteredReports.length, color: "emerald" },
+        { label: tr("Category Filter"), value: selectedCategory === "all" ? "All Categories" : selectedCategory, color: "purple" },
+      ],
+      filters: [
+        ...(searchQuery ? [{ label: tr("Search Query"), value: searchQuery }] : []),
+        ...(selectedCategory !== "all" ? [{ label: tr("Category"), value: selectedCategory }] : []),
+      ],
+      columns: [
+        { key: "category", label: tr("Category"), width: "20%" },
+        { key: "title", label: tr("Report Title"), width: "35%" },
+        { key: "description", label: tr("Description & Scope"), width: "45%" },
+      ],
+      rows: filteredReports.map((r) => ({
+        category: r.category,
+        title: r.title,
+        description: r.description,
+      })),
+      autoPrint: false,
+    });
+  };
+
   return (
     <div className="space-y-6 font-sans">
       {/* Header */}
@@ -233,11 +271,23 @@ export function AllReportsView() {
           </p>
         </div>
 
-        {/* Active Role Scope Badge */}
-        <div className="flex items-center gap-2 rounded-xl bg-slate-900 px-3 py-1.5 text-xs text-white font-bold">
-          <Shield className="h-4 w-4 text-emerald-400" />
-          <span>{t(lang, "arv.arv_active_role_scope_colon", "Active Role Scope:")}</span>
-          <span className="text-emerald-400 capitalize">{userRole.replace("_", " ")}</span>
+        <div className="flex items-center gap-3">
+          {/* Print Catalog Button */}
+          <button
+            onClick={handlePrintCatalog}
+            type="button"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition"
+          >
+            <Printer className="h-4 w-4 text-blue-600" />
+            <span>{t(lang, "common.print", "Print Directory")}</span>
+          </button>
+
+          {/* Active Role Scope Badge */}
+          <div className="flex items-center gap-2 rounded-xl bg-slate-900 px-3 py-2 text-xs text-white font-bold">
+            <Shield className="h-4 w-4 text-emerald-400" />
+            <span>{t(lang, "arv.arv_active_role_scope_colon", "Active Role Scope:")}</span>
+            <span className="text-emerald-400 capitalize">{userRole.replace("_", " ")}</span>
+          </div>
         </div>
       </div>
 

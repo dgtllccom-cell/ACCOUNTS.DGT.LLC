@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, PencilLine, Trash2, Plus, Search, Loader2, Printer } from "lucide-react";
+import { Eye, PencilLine, Trash2, Plus, Search, Loader2, Printer, FileDown } from "lucide-react";
 import { apiGet, apiDelete } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,8 @@ import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { t } from "@/lib/i18n/ui";
-import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
+
+import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
 import { UniversalReportModal } from "@/components/ui/universal-report-modal";
 
 type BankRecord = {
@@ -98,7 +99,53 @@ export function BankRegistry() {
   }
 
   function handlePrint() {
-    setShowReport(true);
+    const tr = (label: string) => translateHeader(lang, label);
+    openUniversalPrintReport({
+      title: t(lang, "bankreg.bankreg_report_title", "Bank Registry Report"),
+      subtitle: t(lang, "bankreg.bankreg_report_subtitle", "Master Financial Institution Accounts and Banking Details"),
+      lang,
+      orientation: "landscape",
+      moduleType: "register",
+      scope: {
+        scopeLevel: "Bank Management Registry",
+        userName: "ERP User",
+      },
+      kpis: [
+        { label: tr("Total Banks"), value: summary.total, color: "blue" },
+        { label: tr("Active Accounts"), value: summary.active, color: "emerald" },
+        { label: tr("Inactive Accounts"), value: summary.inactive, color: "amber" },
+        { label: tr("Filtered Count"), value: filtered.length, color: "purple" },
+      ],
+      filters: [
+        ...(searchQuery ? [{ label: tr("Search Query"), value: searchQuery }] : []),
+        ...(statusFilter !== "all" ? [{ label: tr("Status Filter"), value: statusFilter }] : []),
+      ],
+      columns: [
+        { key: "bank_name", label: t(lang, "bank.bank_name", "Bank Name"), width: "16%" },
+        { key: "bank_code", label: t(lang, "common.code", "Code"), width: "9%" },
+        { key: "branch_name", label: t(lang, "report.branch", "Branch"), width: "12%" },
+        { key: "country_name", label: t(lang, "report.country", "Country"), width: "11%" },
+        { key: "account_title", label: t(lang, "bank.account_title_label", "Account Title"), width: "14%" },
+        { key: "account_number", label: t(lang, "bank.account_number", "Account Number"), width: "14%" },
+        { key: "iban", label: t(lang, "bank.iban_label", "IBAN"), width: "13%" },
+        { key: "swift_code", label: t(lang, "acct.swift", "SWIFT"), width: "8%" },
+        { key: "currency_code", label: t(lang, "hr.f_currency", "Currency"), align: "center", width: "5%" },
+        { key: "status", label: t(lang, "log.tbl_status", "Status"), align: "center", format: "badge", width: "5%" }
+      ],
+      rows: filtered.map(b => ({
+        bank_name: b.bank_name,
+        bank_code: b.bank_code || "-",
+        branch_name: b.branch_name || "-",
+        country_name: b.country?.name || "-",
+        account_title: b.account_title || "-",
+        account_number: b.account_number || "-",
+        iban: b.iban || "-",
+        swift_code: b.swift_code || "-",
+        currency_code: b.currency_code,
+        status: b.is_active ? t(lang, "god.active", "Active") : t(lang, "god.inactive", "Inactive")
+      })),
+      autoPrint: false,
+    });
   }
 
   const totalPages = Math.ceil(filtered.length / pageSize);
@@ -141,6 +188,10 @@ export function BankRegistry() {
             <Button variant="outline" onClick={handlePrint} className="gap-1.5 font-bold">
               <Printer className="w-4 h-4 text-blue-600" />
               <span>{t(lang, "common.print", "Print Report")}</span>
+            </Button>
+            <Button variant="outline" onClick={() => { handlePrint(); }} className="gap-1.5 font-bold">
+              <FileDown className="w-4 h-4 text-emerald-600" />
+              <span>{t(lang, "report.export_pdf", "PDF Export")}</span>
             </Button>
           </div>
 

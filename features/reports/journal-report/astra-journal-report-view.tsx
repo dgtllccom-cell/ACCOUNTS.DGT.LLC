@@ -27,8 +27,8 @@ import { CashEntryForm } from "@/features/roznamcha/components/cash-entry-form";
 import { cn } from "@/lib/utils";
 import type { RoznamchaType } from "@/lib/accounting/roznamcha-flow";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
-import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
-import { openJournalReportWindow } from "@/lib/reports/open-journal-report-window";
+import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
+
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -427,48 +427,61 @@ function AstraJournalReportViewContent({ lang: langProp, scope }: { lang: Suppor
 
   function openPrint(autoPrint: boolean) {
     const tt = _;
-    openJournalReportWindow({
-      lang,
-      autoPrint,
+    openUniversalPrintReport({
       title: titleFor(scope, _),
       subtitle: tt("jrn.roznamcha_journal", "Journal Report"),
-      overviewLabel: tt("jrn.overview", "Journal Overview"),
-      scopeName: titleFor(scope, _),
-      reportIdPrefix: "JRN",
-      reportIdValue: String(scope),
-      chips: [
-        { label: tt("jrn.date_range", "Date Range"), value: `${formatDateDisplay(minDate)} → ${formatDateDisplay(maxDate)}` },
-        { label: tt("acct.report_type", "Report Type"), value: titleFor(scope, _) }
-      ],
+      lang,
+      moduleType: "journal",
+      orientation: "landscape",
+      autoPrint,
+      scope: {
+        scopeLevel: titleFor(scope, _),
+        dateRange: `${formatDateDisplay(minDate)} → ${formatDateDisplay(maxDate)}`,
+        userName: "ERP User",
+      },
       kpis: [
-        { label: tt("bankroz.total_debit", "Total Debit"), value: fmt(summary.debit), tone: "debit" },
-        { label: tt("bankroz.total_credit", "Total Credit"), value: fmt(summary.credit), tone: "credit" },
-        { label: tt("jrn.net_balance", "Final Balance"), value: fmt(summary.balance), tone: "current" },
-        { label: tt("jrn.entry_count", "Total Transactions"), value: String(filtered.length), tone: "open" }
+        { label: tt("bankroz.total_debit", "Total Debit"), value: summary.debit, color: "amber" },
+        { label: tt("bankroz.total_credit", "Total Credit"), value: summary.credit, color: "emerald" },
+        { label: tt("jrn.net_balance", "Final Balance"), value: summary.balance, color: "blue" },
+        { label: tt("jrn.entry_count", "Total Transactions"), value: filtered.length, color: "purple" },
+      ],
+      filters: [
+        { label: tt("jrn.date_range", "Date Range"), value: `${formatDateDisplay(minDate)} → ${formatDateDisplay(maxDate)}` },
+        { label: tt("acct.report_type", "Report Type"), value: titleFor(scope, _) },
       ],
       columns: [
-        { key: "sno", label: tt("rozrep.sno", "S.No") },
-        { key: "date", label: tt("rozrep.date", "Date") },
-        { key: "voucher", label: tt("bankroz.entry_no", "Voucher No") },
-        { key: "branch", label: tt("rozrep.branch", "Branch") },
-        { key: "account", label: tt("rozrep.account_name", "Account") },
-        { key: "narration", label: tt("rozrep.narration", "Narration / Remarks") },
-        { key: "debit", label: tt("rozrep.debit", "Debit"), num: true },
-        { key: "credit", label: tt("rozrep.credit", "Credit"), num: true },
-        { key: "balance", label: tt("rozrep.balance", "Balance"), num: true }
+        { key: "sno", label: tt("rozrep.sno", "S.No"), width: "4%" },
+        { key: "date", label: tt("rozrep.date", "Date"), format: "date", width: "9%" },
+        { key: "voucher", label: tt("bankroz.entry_no", "Voucher No"), width: "10%" },
+        { key: "branch", label: tt("rozrep.branch", "Branch"), width: "10%" },
+        { key: "account", label: tt("rozrep.account_name", "Account"), width: "16%" },
+        { key: "narration", label: tt("rozrep.narration", "Narration / Remarks"), width: "21%" },
+        { key: "debit", label: tt("rozrep.debit", "Debit"), align: "right", format: "currency", width: "10%" },
+        { key: "credit", label: tt("rozrep.credit", "Credit"), align: "right", format: "currency", width: "10%" },
+        { key: "balance", label: tt("rozrep.balance", "Balance"), align: "right", format: "currency", width: "10%" },
       ],
       rows: filtered.map((r: any, idx: number) => ({
-        sno: String(idx + 1),
-        date: formatDateDisplay(r.date),
-        voucher: r.voucherNo,
-        branch: r.branch || r.branchCode,
-        account: r.accountName || r.accountNumber,
-        narration: r.narration,
-        debit: r.debit ? fmt(r.debit) : "-",
-        credit: r.credit ? fmt(r.credit) : "-",
-        balance: fmt(r.balance)
+        sno: idx + 1,
+        date: r.date,
+        voucher: r.voucherNo || "-",
+        branch: r.branch || r.branchCode || "-",
+        account: r.accountName || r.accountNumber || "-",
+        narration: r.narration || "-",
+        debit: r.debit || 0,
+        credit: r.credit || 0,
+        balance: r.balance || 0,
       })),
-      totals: { debit: fmt(summary.debit), credit: fmt(summary.credit) }
+      totals: {
+        debit: summary.debit,
+        credit: summary.credit,
+        balance: summary.balance,
+      },
+      showSignatures: true,
+      signatureBlocks: [
+        { title: tt("bankroz.prepared_by", "Prepared By"), subtitle: "Accounts Officer" },
+        { title: tt("bankroz.verified_by", "Verified & Audited"), subtitle: "Accounts Department" },
+        { title: tt("bankroz.authorized_signatory", "Authorized Signature"), subtitle: "Chief Executive" },
+      ],
     });
   }
 

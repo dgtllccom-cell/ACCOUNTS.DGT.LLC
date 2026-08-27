@@ -55,6 +55,7 @@ import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
 import { ReportPagination } from "@/features/reports/components/report-pagination";
 import { ReportStatusLegend } from "@/features/reports/components/report-status-legend";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
 import { translationPendingLabel } from "@/lib/i18n/purchase-order-translations";
 import { RecordTranslationCorrectionDialog } from "@/features/translations/components/record-translation-correction-dialog";
@@ -559,23 +560,91 @@ function printPurchaseBookingRegister(rows: PurchaseReport[], lang: string = "en
 }
 
 function printReport(rows?: PurchaseReport[], lang?: string) {
+  const effectiveLang = lang || "en";
   if (rows && rows.length > 0) {
-    printPurchaseBookingRegister(rows, lang || "en");
-  } else if (typeof window !== "undefined") {
-    window.print();
+    printPurchaseBookingRegister(rows, effectiveLang);
+  } else {
+    // Show a proper "no records" report instead of window.print() which prints the dashboard shell
+    openUniversalPrintReport({
+      title: "Purchase Booking Confirmation Register",
+      subtitle: "No records matched the current filters",
+      lang: effectiveLang,
+      moduleType: "purchase_procurement",
+      orientation: "portrait",
+      scope: { scopeLevel: "Purchase Booking Register", userName: "ERP User" },
+      columns: [
+        { key: "purchaseBookingOrderNumber", label: "PO Number" },
+        { key: "bookingDate", label: "Date", format: "date" },
+        { key: "supplierName", label: "Supplier" },
+        { key: "totalPurchaseAmount", label: "Total Amount", format: "currency" },
+      ],
+      rows: [],
+      autoPrint: false,
+    });
   }
 }
 
 
-function openReportWindow(report: PurchaseReport, autoPrint: boolean) {
-  openPurchaseA4ReportWindow({
-    title: "Purchase Booking Order",
-    subtitle: "DGT Accounts Purchase Registry",
-    purchaseData: {
-      ...report,
-      audit: report.audit || { userName: "Admin User", userId: "USR-001", branchCode: "QTA-001" }
+function openReportWindow(report: PurchaseReport, autoPrint: boolean, lang: SupportedLanguage = "en") {
+  const tr = (label: string) => translateHeader(lang, label);
+  const totalAmt = Number(report.totalPurchaseAmount || report.purchaseAmount || report.finalAmount || 0);
+  const qty = Number(report.quantity || 0);
+
+  openUniversalPrintReport({
+    title: tr("Purchase Booking Order"),
+    subtitle: `${tr("Booking Ref")}: ${report.purchaseBookingOrderNumber || "-"}`,
+    documentNo: report.purchaseBookingOrderNumber || report.purchaseContractNo || "PO-DOC",
+    reportType: "single_document",
+    moduleType: "purchase_procurement",
+    orientation: "portrait",
+    lang,
+    autoPrint,
+    scope: {
+      scopeLevel: "Purchase Booking Journal",
+      country: report.countryName || "All Countries",
+      branch: report.branchName || "Main Branch",
+      currency: report.currency || "USD",
+      userName: report.audit?.userName || "Admin User",
     },
-    autoPrint
+    partyDetails: {
+      type: "supplier",
+      name: report.supplierName || "-",
+      address: report.form_data?.form?.supplierAddress || report.countryName || "-",
+      trn: report.form_data?.form?.supplierTrn || "-",
+      phone: report.form_data?.form?.supplierPhone || "-",
+      departmentOrBranch: report.branchName || "-",
+    },
+    kpis: [
+      { label: tr("Total Amount"), value: totalAmt, color: "blue" },
+      { label: tr("Quantity"), value: `${qty.toLocaleString()} ${report.unit || "BAGS"}`, color: "emerald" },
+      { label: tr("Containers"), value: report.containerCount || 0, color: "purple" },
+      { label: tr("Status"), value: report.status || "CONFIRMED", color: "amber" },
+    ],
+    columns: [
+      { key: "item", label: tr("Goods / Description"), width: "35%" },
+      { key: "quantity", label: tr("Quantity"), align: "right", format: "number", width: "15%" },
+      { key: "rate", label: tr("Unit Rate"), align: "right", format: "currency", width: "20%" },
+      { key: "total", label: tr("Total Amount"), align: "right", format: "currency", width: "30%" },
+    ],
+    rows: [
+      {
+        item: report.productName || report.goodsDescription || "Standard Goods",
+        quantity: qty,
+        rate: Number(report.purchaseRate || (qty > 0 ? totalAmt / qty : 0)),
+        total: totalAmt,
+      }
+    ],
+    totals: {
+      total: totalAmt,
+      quantity: qty,
+    },
+    paymentTerms: report.paymentStatus ? `${tr("Payment Status")}: ${report.paymentStatus}` : undefined,
+    showSignatures: true,
+    signatureBlocks: [
+      { title: tr("Prepared By"), subtitle: report.audit?.userName || "Procurement Officer" },
+      { title: tr("Verified & Audited"), subtitle: "Accounts Department" },
+      { title: tr("Authorized Signature"), subtitle: "Managing Director" },
+    ]
   });
 }
 

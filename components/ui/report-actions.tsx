@@ -62,21 +62,33 @@ function watermarkOf(b: Branding | null, lang: string) {
   return esc(b?.watermarkText || brandingName(b, lang) || "REPORT");
 }
 
-function openWindow(html: string) {
+function openWindow(html: string, title?: string) {
+  try {
+    const { printStore } = require("@/lib/store/print-store");
+    printStore.openPrint(html, title || "ERP Document");
+    return;
+  } catch (e) {
+    console.warn("Could not open in printStore, falling back to window.open", e);
+  }
+
   const w = window.open("", "_blank", "width=1000,height=700");
-  if (!w) return;
-  w.document.open(); w.document.write(html); w.document.close();
+  if (w) {
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+  }
 }
 
 function openPrint(title: string, inner: string, b: Branding | null, lang: string, subtitle?: string) {
   const footer = brandingFooter(b, lang) || watermarkOf(b, lang);
-  const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>${PRINT_STYLE}</style></head><body>
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+  const html = `<!doctype html><html lang="${esc(lang)}" dir="${isRtl ? "rtl" : "ltr"}"><head><meta charset="utf-8"><title>${esc(title)}</title><style>${PRINT_STYLE}</style></head><body>
     <div class="watermark">${watermarkOf(b, lang)}</div>
     ${brandHeader(b, title, lang, subtitle)}
     ${inner}
     <div class="ftr">${esc(footer)} — ${esc(title)}</div>
     <script>window.onload=function(){window.print();}</script></body></html>`;
-  openWindow(html);
+  openWindow(html, title);
 }
 
 /**
@@ -92,7 +104,7 @@ export async function printRecord(
 ) {
   const b = await fetchBranding(opts?.countryId);
   const lang = opts?.lang || "en";
-  const rows = columns.map((c) => `<tr><Th>${esc(c.label)}</Th><td>${esc(cell(record[c.key]))}</td></tr>`).join("");
+  const rows = columns.map((c) => `<tr><th>${esc(c.label)}</th><td>${esc(cell(record[c.key]))}</td></tr>`).join("");
   openPrint(title, `<table class="kv"><tbody>${rows}</tbody></table>`, b, lang, subtitle);
 }
 

@@ -46,6 +46,7 @@ import type { SearchSelectOption } from "@/components/ui/search-select";
 import { cn } from "@/lib/utils";
 import { UserLiveReportPanel } from "./user-live-report-panel";
 import { Th } from "@/components/ui/translated-th";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 type UserJournalRow = {
   userId: string;
@@ -453,9 +454,10 @@ export function UserJournalReport() {
   }
 
   function printReport() {
+    const tr = (label: string) => translateHeader(lang, label);
     openUniversalPrintReport({
-      title: "User Management & Access Journal Report",
-      subtitle: `Total ${filteredRows.length} user records`,
+      title: tr("User Management & Access Journal Report"),
+      subtitle: `${tr("Total Records")}: ${filteredRows.length}`,
       lang: lang as any,
       moduleType: "register",
       orientation: "landscape",
@@ -463,16 +465,29 @@ export function UserJournalReport() {
         scopeLevel: "System User Directory",
         userName: "SUPER ADMIN",
       },
+      kpis: [
+        { label: tr("Total Users"), value: summary.totalUsers, color: "blue" },
+        { label: tr("Active Accounts"), value: summary.activeUsers, color: "emerald" },
+        { label: tr("Inactive Accounts"), value: Math.max(0, summary.totalUsers - summary.activeUsers), color: "amber" },
+        { label: tr("Admin Users"), value: summary.adminUsers, color: "purple" },
+      ],
+      filters: [
+        ...(query ? [{ label: tr("Search Query"), value: query }] : []),
+        ...(countryId !== "all" ? [{ label: tr("Country"), value: countryId }] : []),
+        ...(branchId !== "all" ? [{ label: tr("Branch"), value: branchId }] : []),
+        ...(role !== "all" ? [{ label: tr("Role"), value: role }] : []),
+        ...(status !== "all" ? [{ label: tr("Status"), value: status }] : []),
+      ],
       columns: [
-        { key: "index", label: "SR.", width: "5%", align: "center" },
-        { key: "countryName", label: "Country", width: "10%" },
-        { key: "branchName", label: "Branch", width: "12%" },
-        { key: "branchCode", label: "Branch Code", width: "8%" },
-        { key: "userName", label: "User Name", width: "15%" },
-        { key: "email", label: "Email", width: "18%" },
-        { key: "role", label: "Role", width: "10%", format: "badge" },
-        { key: "status", label: "Status", width: "8%", format: "badge", align: "center" },
-        { key: "createdAt", label: "Registered Date", width: "10%", format: "date" },
+        { key: "index", label: tr("SR."), width: "5%", align: "center" },
+        { key: "countryName", label: tr("Country"), width: "10%" },
+        { key: "branchName", label: tr("Branch"), width: "12%" },
+        { key: "branchCode", label: tr("Branch Code"), width: "8%" },
+        { key: "userName", label: tr("User Name"), width: "15%" },
+        { key: "email", label: tr("Email"), width: "18%" },
+        { key: "role", label: tr("Role"), width: "10%", format: "badge" },
+        { key: "status", label: tr("Status"), width: "8%", format: "badge", align: "center" },
+        { key: "createdAt", label: tr("Registered Date"), width: "10%", format: "date" },
       ],
       rows: filteredRows.map((r, i) => ({
         index: i + 1,
