@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState, type FormEvent } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import { Pencil, Eye, ArrowLeft, ArrowRight, Printer, Download, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -206,7 +206,7 @@ function normalizeSearch(value: string) {
 
 function CityBranchSetupContent() {
   const lang = useActiveLanguage();
-  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+  const tt = useCallback((key: string, fallback: string) => t(lang, key as never, fallback), [lang]);
   const searchParams = useSearchParams();
   const editId = searchParams.get("editId") ?? "";
   const [drawerBranchData, setDrawerBranchData] = useState<any>(null);
@@ -516,30 +516,31 @@ function CityBranchSetupContent() {
 
   const reportRows = useMemo(
     () => [
-      { label: "Country", value: previewCountry },
-      { label: "Country Code", value: locationMeta.country?.iso2 || locationMeta.country?.iso3 || "-" },
-      { label: "Country Main Branch", value: previewMainBranch },
-      { label: "City Branch", value: activeExistingCityBranch?.name || branchName || "-" },
-      { label: "Branch Code", value: activeExistingCityBranch?.code || branchCode || "-" },
-      { label: "Currency", value: activeExistingCityBranch?.local_currency || currency || "-" },
-      { label: "Location", value: previewLocation },
-      { label: "Address", value: activeExistingCityBranch?.address || fullAddress || "-" },
-      { label: "Company Name", value: previewCompany },
-      { label: "Company Code", value: companyCode },
-      { label: "Company Owner", value: ownerPreview?.name || activeExistingCityBranch?.owner_name || ownerName || "-" },
-      { label: "Owner Details", value: ownerPreview ? `${ownerPreview.source.toUpperCase()} · ${ownerPreview.code}` : activeExistingCityBranch?.owner_name || ownerName || "-" },
-      { label: "Permission Template", value: activeExistingCityBranch?.permission_template || permissionTemplate || "-" },
+      { label: tt("cbs.country", "Country"), value: previewCountry },
+      { label: tt("cbs.country_code", "Country Code"), value: locationMeta.country?.iso2 || locationMeta.country?.iso3 || "-" },
+      { label: tt("cbs.country_main_branch", "Country Main Branch"), value: previewMainBranch },
+      { label: tt("cbs.city_branch_lbl", "City Branch"), value: activeExistingCityBranch?.name || branchName || "-" },
+      { label: tt("cbs.branch_code", "Branch Code"), value: activeExistingCityBranch?.code || branchCode || "-" },
+      { label: tt("cbs.currency", "Currency"), value: activeExistingCityBranch?.local_currency || currency || "-" },
+      { label: tt("cbs.location", "Location"), value: previewLocation },
+      { label: tt("cbs.address", "Address"), value: activeExistingCityBranch?.address || fullAddress || "-" },
+      { label: tt("cbs.company_name", "Company Name"), value: previewCompany },
+      { label: tt("cbs.company_code", "Company Code"), value: companyCode },
+      { label: tt("cbs.company_owner", "Company Owner"), value: ownerPreview?.name || activeExistingCityBranch?.owner_name || ownerName || "-" },
+      { label: tt("cbs.owner_details", "Owner Details"), value: ownerPreview ? `${ownerPreview.source.toUpperCase()} · ${ownerPreview.code}` : activeExistingCityBranch?.owner_name || ownerName || "-" },
+      { label: tt("cbs.permission_template", "Permission Template"), value: activeExistingCityBranch?.permission_template || permissionTemplate || "-" },
       {
-        label: "Permission Grants",
+        label: tt("cbs.permission_grants", "Permission Grants"),
         value: activeExistingCityBranch?.permission_grants?.length
           ? activeExistingCityBranch.permission_grants.join(", ")
           : permissionGrants.length
             ? permissionGrants.join(", ")
             : "-"
       },
-      { label: "Contacts", value: contactItems.length ? contactItems.join(", ") : "-" }
+      { label: tt("cbs.contacts", "Contacts"), value: contactItems.length ? contactItems.join(", ") : "-" }
     ],
     [
+      tt,
       activeExistingCityBranch?.address,
       activeExistingCityBranch?.code,
       activeExistingCityBranch?.local_currency,
@@ -564,71 +565,71 @@ function CityBranchSetupContent() {
 
   const editIdentityRows = useMemo(
     () => [
-      { label: "Country", value: previewCountry },
-      { label: "Main Branch", value: previewMainBranch },
-      { label: "City Branch", value: activeExistingCityBranch?.name || branchName },
-      { label: "Branch Code", value: activeExistingCityBranch?.code || branchCode },
-      { label: "Record ID", value: editingCityBranchId },
-      { label: "Status", value: activeExistingCityBranch?.status || "active" },
-      { label: "Created Date", value: activeExistingCityBranch?.created_at ? new Date(activeExistingCityBranch.created_at).toLocaleString() : "" },
-      { label: "Last Updated", value: activeExistingCityBranch?.updated_at ? new Date(activeExistingCityBranch.updated_at).toLocaleString() : "" }
+      { label: tt("cbs.country", "Country"), value: previewCountry },
+      { label: tt("cbs.main_branch", "Main Branch"), value: previewMainBranch },
+      { label: tt("cbs.city_branch_lbl", "City Branch"), value: activeExistingCityBranch?.name || branchName },
+      { label: tt("cbs.branch_code", "Branch Code"), value: activeExistingCityBranch?.code || branchCode },
+      { label: tt("cbs.record_id", "Record ID"), value: editingCityBranchId },
+      { label: tt("cbs.status", "Status"), value: activeExistingCityBranch?.status || "active" },
+      { label: tt("cbs.created_date", "Created Date"), value: activeExistingCityBranch?.created_at ? new Date(activeExistingCityBranch.created_at).toLocaleString() : "" },
+      { label: tt("cbs.last_updated", "Last Updated"), value: activeExistingCityBranch?.updated_at ? new Date(activeExistingCityBranch.updated_at).toLocaleString() : "" }
     ],
-    [activeExistingCityBranch, branchCode, branchName, editingCityBranchId, previewCountry, previewMainBranch]
+    [tt, activeExistingCityBranch, branchCode, branchName, editingCityBranchId, previewCountry, previewMainBranch]
   );
 
   const editProfileSections: BranchProfileSection[] = useMemo(
     () => [
       {
-        title: "Branch Information",
+        title: tt("cbs.sec_branch_info", "Branch Information"),
         items: [
-          { label: "Branch Name", value: activeExistingCityBranch?.name || branchName },
-          { label: "Branch Code", value: activeExistingCityBranch?.code || branchCode },
-          { label: "Currency", value: activeExistingCityBranch?.local_currency || currency },
-          { label: "Status", value: activeExistingCityBranch?.status || "active" }
+          { label: tt("cbs.branch_name", "Branch Name"), value: activeExistingCityBranch?.name || branchName },
+          { label: tt("cbs.branch_code", "Branch Code"), value: activeExistingCityBranch?.code || branchCode },
+          { label: tt("cbs.currency", "Currency"), value: activeExistingCityBranch?.local_currency || currency },
+          { label: tt("cbs.status", "Status"), value: activeExistingCityBranch?.status || "active" }
         ]
       },
       {
-        title: "Location Information",
+        title: tt("cbs.sec_location_info", "Location Information"),
         items: [
-          { label: "Country", value: previewCountry },
-          { label: "Main Branch", value: previewMainBranch },
-          { label: "Location", value: previewLocation },
-          { label: "Address", value: activeExistingCityBranch?.address || fullAddress }
+          { label: tt("cbs.country", "Country"), value: previewCountry },
+          { label: tt("cbs.main_branch", "Main Branch"), value: previewMainBranch },
+          { label: tt("cbs.location", "Location"), value: previewLocation },
+          { label: tt("cbs.address", "Address"), value: activeExistingCityBranch?.address || fullAddress }
         ]
       },
       {
-        title: "Company Information",
+        title: tt("cbs.sec_company_info", "Company Information"),
         items: [
-          { label: "Company Name", value: company?.name },
-          { label: "Company Code", value: company?.id ? compactCode(company.id, "CMP") : "" },
-          { label: "Legal Name", value: company?.legal_name },
-          { label: "Base Currency", value: company?.base_currency }
+          { label: tt("cbs.company_name", "Company Name"), value: company?.name },
+          { label: tt("cbs.company_code", "Company Code"), value: company?.id ? compactCode(company.id, "CMP") : "" },
+          { label: tt("cbs.legal_name", "Legal Name"), value: company?.legal_name },
+          { label: tt("cbs.base_currency", "Base Currency"), value: company?.base_currency }
         ]
       },
       {
-        title: "Owner Information",
+        title: tt("cbs.sec_owner_info", "Owner Information"),
         items: [
-          { label: "Owner Name", value: ownerPreview?.name || activeExistingCityBranch?.owner_name || ownerName },
-          { label: "Owner Code", value: ownerPreview?.code || "N/A" },
-          { label: "Owner Source", value: ownerPreview?.source || "custom" },
-          { label: "Owner Role", value: ownerPreview?.role || "Owner" }
+          { label: tt("cbs.owner_name", "Owner Name"), value: ownerPreview?.name || activeExistingCityBranch?.owner_name || ownerName },
+          { label: tt("cbs.owner_code", "Owner Code"), value: ownerPreview?.code || "N/A" },
+          { label: tt("cbs.owner_source", "Owner Source"), value: ownerPreview?.source || "custom" },
+          { label: tt("cbs.owner_role", "Owner Role"), value: ownerPreview?.role || "Owner" }
         ]
       },
       {
-        title: "Contact Information",
+        title: tt("cbs.sec_contact_info", "Contact Information"),
         items: [
-          { label: "Contacts", value: contactItems.length ? contactItems.join(", ") : "" },
-          { label: "Phone", value: contacts.find((row) => row.type.toLowerCase().includes("phone"))?.value },
-          { label: "WhatsApp", value: contacts.find((row) => row.type.toLowerCase().includes("whatsapp"))?.value },
-          { label: "Email", value: contacts.find((row) => row.type.toLowerCase().includes("email"))?.value || activeExistingCityBranch?.email }
+          { label: tt("cbs.contacts", "Contacts"), value: contactItems.length ? contactItems.join(", ") : "" },
+          { label: tt("cbs.phone", "Phone"), value: contacts.find((row) => row.type.toLowerCase().includes("phone"))?.value },
+          { label: tt("cbs.whatsapp", "WhatsApp"), value: contacts.find((row) => row.type.toLowerCase().includes("whatsapp"))?.value },
+          { label: tt("cbs.email", "Email"), value: contacts.find((row) => row.type.toLowerCase().includes("email"))?.value || activeExistingCityBranch?.email }
         ]
       },
       {
-        title: "Permissions",
+        title: tt("cbs.sec_permissions", "Permissions"),
         items: [
-          { label: "Template", value: activeExistingCityBranch?.permission_template || permissionTemplate },
+          { label: tt("cbs.template", "Template"), value: activeExistingCityBranch?.permission_template || permissionTemplate },
           {
-            label: "Granted Permissions",
+            label: tt("cbs.granted_permissions", "Granted Permissions"),
             value: activeExistingCityBranch?.permission_grants?.length
               ? activeExistingCityBranch.permission_grants.join(", ")
               : permissionGrants.length
@@ -639,6 +640,7 @@ function CityBranchSetupContent() {
       }
     ],
     [
+      tt,
       activeExistingCityBranch,
       branchCode,
       branchName,
@@ -1479,7 +1481,7 @@ function CityBranchSetupContent() {
         {/* Right Section: Actions Dropdown, Next/Save button, and Scope badge */}
         <div className="flex items-center gap-2">
           <BranchReportActionsMenu
-            ariaLabel="City branch actions"
+            ariaLabel={tt("cbs.actions_aria", "City branch actions")}
             disabled={!hasAny}
             onView={viewReport}
             onEdit={editReport}
@@ -2431,7 +2433,7 @@ function CityBranchSetupContent() {
                   {hasAny ? t(lang, "status.draft") : t(lang, "branch.status_empty")}
                 </span>
                 <BranchReportActionsMenu
-                  ariaLabel="City branch actions"
+                  ariaLabel={tt("cbs.actions_aria", "City branch actions")}
                   disabled={!hasAny}
                   onView={viewReport}
                   onEdit={editReport}
