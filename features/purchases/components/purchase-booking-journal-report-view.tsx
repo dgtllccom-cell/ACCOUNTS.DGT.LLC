@@ -44,6 +44,7 @@ import { ViewportActionMenu } from "@/components/ui/viewport-action-menu";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
+import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
 import { openPurchaseA4ReportWindow } from "@/lib/reports/open-purchase-a4-report-window";
 import { openProformaInvoiceWindow } from "@/lib/reports/open-proforma-invoice-window";
 import { openTradeDocumentWindow } from "@/lib/reports/open-trade-document-window";
@@ -512,9 +513,59 @@ function exportCsv(rows: PurchaseReport[], fileName: string) {
   }
 }
 
-function printReport() {
-  if (typeof window !== "undefined") window.print();
+function printPurchaseBookingRegister(rows: PurchaseReport[], lang: string = "en") {
+  openUniversalPrintReport({
+    title: "Purchase Booking Confirmation Register",
+    subtitle: `Total ${rows.length} booking records`,
+    lang,
+    moduleType: "purchase_procurement",
+    orientation: "landscape",
+    scope: {
+      scopeLevel: "Purchase Booking Confirmation",
+      userName: "ERP User",
+    },
+    columns: [
+      { key: "purchaseBookingOrderNumber", label: "PO Number", width: "12%" },
+      { key: "bookingDate", label: "Date", format: "date", width: "9%" },
+      { key: "countryName", label: "Country", width: "9%" },
+      { key: "branchName", label: "Branch", width: "10%" },
+      { key: "supplierName", label: "Supplier", width: "14%" },
+      { key: "productName", label: "Goods / Description", width: "15%" },
+      { key: "quantity", label: "Quantity", align: "right", format: "number", width: "7%" },
+      { key: "unit", label: "Unit", align: "center", width: "6%" },
+      { key: "currency", label: "Currency", align: "center", width: "6%" },
+      { key: "totalPurchaseAmount", label: "Total Amount", align: "right", format: "currency", width: "12%" },
+      { key: "status", label: "Status", align: "center", format: "badge", width: "8%" },
+    ],
+    rows: rows.map(r => ({
+      purchaseBookingOrderNumber: r.purchaseBookingOrderNumber || "-",
+      bookingDate: r.bookingDate || r.purchaseDate || r.createdAt,
+      countryName: r.countryName || "-",
+      branchName: r.branchName || "-",
+      supplierName: r.supplierName || "-",
+      productName: r.productName || r.goodsDescription || "-",
+      quantity: r.quantity || 0,
+      unit: r.unit || "BAGS",
+      currency: r.currency || "USD",
+      totalPurchaseAmount: r.totalPurchaseAmount || r.purchaseAmount || 0,
+      status: r.status || "CONFIRMED",
+    })),
+    totals: {
+      totalPurchaseAmount: rows.reduce((sum, r) => sum + Number(r.totalPurchaseAmount || r.purchaseAmount || 0), 0),
+      quantity: rows.reduce((sum, r) => sum + Number(r.quantity || 0), 0),
+    },
+    autoPrint: false,
+  });
 }
+
+function printReport(rows?: PurchaseReport[], lang?: string) {
+  if (rows && rows.length > 0) {
+    printPurchaseBookingRegister(rows, lang || "en");
+  } else if (typeof window !== "undefined") {
+    window.print();
+  }
+}
+
 
 function openReportWindow(report: PurchaseReport, autoPrint: boolean) {
   openPurchaseA4ReportWindow({
@@ -551,11 +602,13 @@ function ReportToolbar({
   onReset: () => void;
   onExport?: () => void;
 }) {
+  const lang = useActiveLanguage();
+  const tt = (k: string, f: string) => t(lang, ("pbjr." + k) as never, f);
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm">
       <div className="flex flex-col gap-3 p-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">Purchase Management</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">{tt("purchase_management", "Purchase Management")}</p>
           <h2 className="text-base font-black text-foreground">{title}</h2>
         </div>
         <div className="flex flex-1 flex-col gap-2 lg:max-w-5xl lg:flex-row lg:items-center lg:justify-end">
@@ -563,50 +616,50 @@ function ReportToolbar({
              value={draftStatus}
             onChange={(event) => onDraftChange(event.target.value)}
             className="h-9 min-w-[150px] rounded-lg border border-input bg-background px-3 text-xs font-semibold text-foreground outline-none focus:border-primary"
-            aria-label="Draft status"
+            aria-label={tt("draft_status", "Draft status")}
           >
-            <option value="">Draft Dropdown</option>
-            <option value="open">Open</option>
-            <option value="partial">Partial Confirmed</option>
-            <option value="fully">Fully Confirmed</option>
-            <option value="cancelled">Cancelled</option>
+            <option value="">{tt("draft_all", "All Drafts")}</option>
+            <option value="open">{tt("st_open", "Open")}</option>
+            <option value="partial">{tt("st_partial", "Partial Confirmed")}</option>
+            <option value="fully">{tt("st_fully", "Fully Confirmed")}</option>
+            <option value="cancelled">{tt("st_cancelled", "Cancelled")}</option>
           </select>
           <div className="relative min-w-[220px] flex-1 lg:max-w-sm">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
               value={searchText}
               onChange={(event) => onSearchChange(event.target.value)}
-              placeholder="Search booking, account, supplier, branch"
+              placeholder={tt("search_ph", "Search booking, account, supplier, branch")}
               className="h-9 w-full rounded-lg border border-input bg-background pl-9 pr-3 text-xs text-foreground outline-none focus:border-primary"
             />
           </div>
           <Button type="button" size="sm" variant="outline" onClick={onToggleFilters} className="h-9">
             <Filter className="mr-2 h-4 w-4" />
-            Filter
+            {tt("filter", "Filter")}
           </Button>
           <Button type="button" size="sm" variant="outline" onClick={onReset} className="h-9">
             <RefreshCcw className="mr-2 h-4 w-4" />
-            Reset
+            {tt("reset", "Reset")}
           </Button>
           <JournalPrintButton
-            title="Purchase Booking Journal Register"
-            subtitle="Complete Purchase Booking & Order Registry"
+            title={tt("register_title", "Purchase Booking Journal Register")}
+            subtitle={tt("register_subtitle", "Complete Purchase Booking & Order Registry")}
             columns={[
-              { key: "computedCountrySerial", label: "CTY S/N", align: "center" },
-              { key: "computedBranchSerial", label: "BR S/N", align: "center" },
-              { key: "purchaseBookingOrderNumber", label: "Booking No", align: "center" },
-              { key: "purchaseDate", label: "Date", align: "center", format: "date" },
-              { key: "countryName", label: "Country", align: "left" },
-              { key: "branchName", label: "Branch", align: "left" },
-              { key: "purchaseAccountName", label: "Purchase Account", align: "left" },
-              { key: "supplierName", label: "Supplier", align: "left" },
-              { key: "productName", label: "Product", align: "left" },
-              { key: "quantity", label: "Qty", align: "right", format: "number" },
-              { key: "totalWeight", label: "Net Wt", align: "right", format: "number" },
-              { key: "currency", label: "Cur", align: "center" },
-              { key: "purchaseRate", label: "Rate", align: "right", format: "number" },
-              { key: "totalPurchaseAmount", label: "Total Amount", align: "right", format: "currency" },
-              { key: "status", label: "Status", align: "center", format: "status" }
+              { key: "computedCountrySerial", label: tt("col_cty_sn", "CTY S/N"), align: "center" },
+              { key: "computedBranchSerial", label: tt("col_br_sn", "BR S/N"), align: "center" },
+              { key: "purchaseBookingOrderNumber", label: tt("col_booking_no", "Booking No"), align: "center" },
+              { key: "purchaseDate", label: tt("col_date", "Date"), align: "center", format: "date" },
+              { key: "countryName", label: tt("col_country", "Country"), align: "left" },
+              { key: "branchName", label: tt("col_branch", "Branch"), align: "left" },
+              { key: "purchaseAccountName", label: tt("col_purchase_account", "Purchase Account"), align: "left" },
+              { key: "supplierName", label: tt("col_supplier", "Supplier"), align: "left" },
+              { key: "productName", label: tt("col_product", "Product"), align: "left" },
+              { key: "quantity", label: tt("col_qty", "Qty"), align: "right", format: "number" },
+              { key: "totalWeight", label: tt("col_net_wt", "Net Wt"), align: "right", format: "number" },
+              { key: "currency", label: tt("col_cur", "Cur"), align: "center" },
+              { key: "purchaseRate", label: tt("col_rate", "Rate"), align: "right", format: "number" },
+              { key: "totalPurchaseAmount", label: tt("col_total_amount", "Total Amount"), align: "right", format: "currency" },
+              { key: "status", label: tt("col_status", "Status"), align: "center", format: "status" }
             ]}
             rows={rows as unknown as Record<string, unknown>[]}
             orientation="landscape"
@@ -615,8 +668,8 @@ function ReportToolbar({
         </div>
       </div>
       <div className="flex items-center justify-between border-t border-border px-3 py-2 text-xs text-muted-foreground">
-        <span>Scope filters {filtersOpen ? "ready" : "collapsed"}</span>
-        <span className="font-semibold">Rows: {rows.length}</span>
+        <span>{tt("scope_filters_label", "Scope filters")} {filtersOpen ? tt("scope_ready", "ready") : tt("scope_collapsed", "collapsed")}</span>
+        <span className="font-semibold">{tt("rows", "Rows:")} {rows.length}</span>
       </div>
     </div>
   );
@@ -631,25 +684,27 @@ function ScopeRegisterPanel({
   rows: number;
   totals: { totalAmount: number; totalContainers: number; outstanding: number };
 }) {
+  const lang = useActiveLanguage();
+  const tt = (k: string, f: string) => t(lang, ("pbjr." + k) as never, f);
   const label =
     scope?.type === "super_admin"
-      ? "Super Admin Register"
+      ? tt("scope_super_admin", "Super Admin Register")
       : scope?.type === "country"
-        ? "Country Purchase Register"
+        ? tt("scope_country", "Country Purchase Register")
         : scope?.type === "main_branch"
-          ? "Main Branch Purchase Register"
+          ? tt("scope_main_branch", "Main Branch Purchase Register")
           : scope?.type === "city_branch"
-            ? "City Branch Purchase Register"
-            : "Purchase Register Scope";
+            ? tt("scope_city_branch", "City Branch Purchase Register")
+            : tt("scope_default", "Purchase Register Scope");
   const detail = scope?.isGlobal
-    ? "Global access: all countries, branches, and city branches."
+    ? tt("scope_global", "Global access: all countries, branches, and city branches.")
     : scope
       ? [
-          scope.countryIds.length ? `${scope.countryIds.length} country scope` : "",
-          scope.countryBranchIds.length ? `${scope.countryBranchIds.length} main branch scope` : "",
-          scope.cityBranchIds.length ? `${scope.cityBranchIds.length} city branch scope` : ""
-        ].filter(Boolean).join(" / ") || "Session scoped records only"
-      : "Scope will appear after the register API loads.";
+          scope.countryIds.length ? `${scope.countryIds.length} ${tt("scope_n_country", "country scope")}` : "",
+          scope.countryBranchIds.length ? `${scope.countryBranchIds.length} ${tt("scope_n_main", "main branch scope")}` : "",
+          scope.cityBranchIds.length ? `${scope.cityBranchIds.length} ${tt("scope_n_city", "city branch scope")}` : ""
+        ].filter(Boolean).join(" / ") || tt("scope_session_only", "Session scoped records only")
+      : tt("scope_pending", "Scope will appear after the register API loads.");
 
   return (
     <div className="my-3 grid gap-2 rounded-xl border border-blue-400/25 bg-blue-500/10 p-3 text-xs text-blue-50 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
@@ -658,10 +713,10 @@ function ScopeRegisterPanel({
         <div className="mt-1 text-blue-100/80">{detail}</div>
       </div>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <ScopePill label="Records" value={rows} />
-        <ScopePill label="Containers" value={totals.totalContainers} />
-        <ScopePill label="Amount" value={formatMoney(totals.totalAmount)} />
-        <ScopePill label="Outstanding" value={formatMoney(totals.outstanding)} />
+        <ScopePill label={tt("pill_records", "Records")} value={rows} />
+        <ScopePill label={tt("pill_containers", "Containers")} value={totals.totalContainers} />
+        <ScopePill label={tt("pill_amount", "Amount")} value={formatMoney(totals.totalAmount)} />
+        <ScopePill label={tt("pill_outstanding", "Outstanding")} value={formatMoney(totals.outstanding)} />
       </div>
     </div>
   );
@@ -699,20 +754,22 @@ function getCountryFlag(countryName: string | undefined | null) {
 }
 
 function ReportActionsMenu({ rows, onExport }: { rows: PurchaseReport[]; onExport: () => void }) {
+  const lang = useActiveLanguage();
+  const tt = (k: string, f: string) => t(lang, ("pbjr." + k) as never, f);
   return (
     <ViewportActionMenu
-      ariaLabel="Report actions"
+      ariaLabel={tt("sec_actions", "Report actions")}
       buttonClassName="flex h-9 w-10 items-center justify-center rounded-lg border border-input bg-background text-foreground transition hover:bg-muted"
       trigger={<MoreVertical className="h-4 w-4" />}
     >
       {(close) => (
         <>
-          <MenuAction icon={<Eye />} label="Plate View" onClick={() => close()} />
-          <MenuAction icon={<DownloadActionIcon />} label="Download" onClick={() => { close(); onExport ? onExport() : exportCsv(rows, "purchase-booking-register.csv"); }} />
-          <MenuAction icon={<FileSpreadsheet />} label="Export Excel" onClick={() => { close(); onExport ? onExport() : exportCsv(rows, "purchase-booking-register.csv"); }} />
-          <MenuAction icon={<DownloadActionIcon />} label="Export PDF" onClick={() => { close(); printReport(); }} />
-          <MenuAction icon={<Printer />} label="Print" onClick={() => { close(); printReport(); }} />
-          <div className="border-t border-border px-3 py-2 text-[11px] text-muted-foreground">{rows.length} report rows selected</div>
+          <MenuAction icon={<Eye />} label={tt("plate_view", "Plate View")} onClick={() => close()} />
+          <MenuAction icon={<DownloadActionIcon />} label={tt("download", "Download")} onClick={() => { close(); onExport ? onExport() : exportCsv(rows, "purchase-booking-register.csv"); }} />
+          <MenuAction icon={<FileSpreadsheet />} label={tt("export_excel", "Export Excel")} onClick={() => { close(); onExport ? onExport() : exportCsv(rows, "purchase-booking-register.csv"); }} />
+          <MenuAction icon={<DownloadActionIcon />} label={tt("export_pdf", "Export PDF")} onClick={() => { close(); printReport(); }} />
+          <MenuAction icon={<Printer />} label={tt("print", "Print")} onClick={() => { close(); printReport(); }} />
+          <div className="border-t border-border px-3 py-2 text-[11px] text-muted-foreground">{rows.length} {tt("rows_selected", "report rows selected")}</div>
         </>
       )}
     </ViewportActionMenu>
@@ -740,6 +797,8 @@ function RowActionsMenu({
   isBranchAdmin?: boolean;
 }) {
   const router = useRouter();
+  const lang = useActiveLanguage();
+  const tt = (k: string, f: string) => t(lang, ("pbjr." + k) as never, f);
 
   return (
     <UnifiedActionMenu
@@ -753,9 +812,9 @@ function RowActionsMenu({
       onEmail={() => alert(`Email initiated for Booking: ${report.purchaseBookingOrderNumber}`)}
       onWhatsApp={() => alert(`WhatsApp initiated for Booking: ${report.purchaseBookingOrderNumber}`)}
       customItems={[
-        { label: "Accept Bill", icon: <CheckCircle className="h-4 w-4 text-rose-500" />, onClick: () => { if (onAccept) onAccept(); else onSelect(); } },
-        { label: "Transfer Bill", icon: <ArrowRight className="h-4 w-4 text-emerald-500" />, onClick: () => { if (onTransfer) onTransfer(); else onSelect(); } },
-        { label: "History Timeline", icon: <Clock className="h-4 w-4 text-purple-500" />, onClick: onSelect }
+        { label: tt("accept_bill", "Accept Bill"), icon: <CheckCircle className="h-4 w-4 text-rose-500" />, onClick: () => { if (onAccept) onAccept(); else onSelect(); } },
+        { label: tt("transfer_bill", "Transfer Bill"), icon: <ArrowRight className="h-4 w-4 text-emerald-500" />, onClick: () => { if (onTransfer) onTransfer(); else onSelect(); } },
+        { label: tt("history_timeline", "History Timeline"), icon: <Clock className="h-4 w-4 text-purple-500" />, onClick: onSelect }
       ]}
     />
   );
@@ -771,12 +830,14 @@ function MenuAction({ icon, label, onClick }: { icon: React.ReactNode; label: st
 }
 
 function TabNavigation({ activeTab, onChange, isBranchAdmin }: { activeTab: DashboardTab; onChange: (tab: DashboardTab) => void; isBranchAdmin?: boolean }) {
+  const lang = useActiveLanguage();
+  const tt = (k: string, f: string) => t(lang, ("pbjr." + k) as never, f);
   const tabs = [
-    { key: "overview", label: "Dashboard Overview", icon: <BarChart3 className="h-4 w-4" /> },
-    { key: "daily", label: "Daily Reports", icon: <ClipboardList className="h-4 w-4" /> },
-    { key: "general", label: "General Reports", icon: <Landmark className="h-4 w-4" /> },
-    { key: "purchase", label: "Purchase Booking Reports", icon: <PackageCheck className="h-4 w-4" /> },
-    ...(!isBranchAdmin ? [{ key: "branch", label: "Branch Summary", icon: <TrendingUp className="h-4 w-4" /> }] : [])
+    { key: "overview", label: tt("tab_overview", "Dashboard Overview"), icon: <BarChart3 className="h-4 w-4" /> },
+    { key: "daily", label: tt("tab_daily", "Daily Reports"), icon: <ClipboardList className="h-4 w-4" /> },
+    { key: "general", label: tt("tab_general", "General Reports"), icon: <Landmark className="h-4 w-4" /> },
+    { key: "purchase", label: tt("tab_purchase", "Purchase Booking Reports"), icon: <PackageCheck className="h-4 w-4" /> },
+    ...(!isBranchAdmin ? [{ key: "branch", label: tt("tab_branch", "Branch Summary"), icon: <TrendingUp className="h-4 w-4" /> }] : [])
   ] as Array<{ key: DashboardTab; label: string; icon: React.ReactNode }>;
 
   return (
@@ -813,12 +874,14 @@ function DailyFilterRow({
   suppliers: string[];
   currencies: string[];
 }) {
+  const lang = useActiveLanguage();
+  const tt = (k: string, f: string) => t(lang, ("pbjr." + k) as never, f);
   return (
     <>
-      <DarkInput label="From Date" type="date" value={filters.fromDate} onChange={(value) => setFilters((previous: any) => ({ ...previous, fromDate: value }))} />
-      <DarkInput label="To Date" type="date" value={filters.toDate} onChange={(value) => setFilters((previous: any) => ({ ...previous, toDate: value }))} />
-      <DarkSelect label="Supplier" value={filters.financialSupplier} options={suppliers} placeholder="All Suppliers" onChange={(value) => setFilters((previous: any) => ({ ...previous, financialSupplier: value }))} />
-      <DarkSelect label="Currency" value={filters.financialCurrency} options={currencies} placeholder="All" onChange={(value) => setFilters((previous: any) => ({ ...previous, financialCurrency: value }))} />
+      <DarkInput label={tt("from_date", "From Date")} type="date" value={filters.fromDate} onChange={(value) => setFilters((previous: any) => ({ ...previous, fromDate: value }))} />
+      <DarkInput label={tt("to_date", "To Date")} type="date" value={filters.toDate} onChange={(value) => setFilters((previous: any) => ({ ...previous, toDate: value }))} />
+      <DarkSelect label={tt("supplier", "Supplier")} value={filters.financialSupplier} options={suppliers} placeholder={tt("all_suppliers", "All Suppliers")} onChange={(value) => setFilters((previous: any) => ({ ...previous, financialSupplier: value }))} />
+      <DarkSelect label={tt("currency", "Currency")} value={filters.financialCurrency} options={currencies} placeholder={tt("all", "All")} onChange={(value) => setFilters((previous: any) => ({ ...previous, financialCurrency: value }))} />
     </>
   );
 }
@@ -838,11 +901,13 @@ function GeneralFilterRow({
   disabledCountry?: boolean;
   disabledBranch?: boolean;
 }) {
+  const lang = useActiveLanguage();
+  const tt = (k: string, f: string) => t(lang, ("pbjr." + k) as never, f);
   return (
     <>
-      <DarkSelect disabled={disabledCountry} label="Country" value={filters.country} options={countries} placeholder="All Countries" onChange={(value) => setFilters((previous: any) => ({ ...previous, country: value }))} />
-      <DarkSelect disabled={disabledBranch} label="Branch" value={filters.branch} options={branches} placeholder="All Branches" onChange={(value) => setFilters((previous: any) => ({ ...previous, branch: value }))} />
-      <DarkSelect label="Status" value={filters.status} options={["Open", "Partial Confirmed", "Fully Confirmed", "Cancelled"]} placeholder="All Status" onChange={(value) => setFilters((previous: any) => ({ ...previous, status: value }))} />
+      <DarkSelect disabled={disabledCountry} label={tt("country", "Country")} value={filters.country} options={countries} placeholder={tt("all_countries", "All Countries")} onChange={(value) => setFilters((previous: any) => ({ ...previous, country: value }))} />
+      <DarkSelect disabled={disabledBranch} label={tt("branch", "Branch")} value={filters.branch} options={branches} placeholder={tt("all_branches", "All Branches")} onChange={(value) => setFilters((previous: any) => ({ ...previous, branch: value }))} />
+      <DarkSelect label={tt("status", "Status")} value={filters.status} options={["Open", "Partial Confirmed", "Fully Confirmed", "Cancelled"]} placeholder={tt("all_status", "All Status")} onChange={(value) => setFilters((previous: any) => ({ ...previous, status: value }))} />
     </>
   );
 }
@@ -862,18 +927,22 @@ function BranchFilterRow({
   disabledCountry?: boolean;
   disabledBranch?: boolean;
 }) {
+  const lang = useActiveLanguage();
+  const tt = (k: string, f: string) => t(lang, ("pbjr." + k) as never, f);
   return (
     <>
-      <DarkSelect disabled={disabledCountry} label="Country" value={filters.country} options={countries} placeholder="All Countries" onChange={(value) => setFilters((previous: any) => ({ ...previous, country: value }))} />
-      <DarkSelect disabled={disabledBranch} label="Branch" value={filters.branch} options={branches} placeholder="All Branches" onChange={(value) => setFilters((previous: any) => ({ ...previous, branch: value }))} />
+      <DarkSelect disabled={disabledCountry} label={tt("country", "Country")} value={filters.country} options={countries} placeholder={tt("all_countries", "All Countries")} onChange={(value) => setFilters((previous: any) => ({ ...previous, country: value }))} />
+      <DarkSelect disabled={disabledBranch} label={tt("branch", "Branch")} value={filters.branch} options={branches} placeholder={tt("all_branches", "All Branches")} onChange={(value) => setFilters((previous: any) => ({ ...previous, branch: value }))} />
     </>
   );
 }
 
 function ReportActions({ rows }: { rows: PurchaseReport[] }) {
+  const lang = useActiveLanguage();
+  const tt = (k: string, f: string) => t(lang, ("pbjr." + k) as never, f);
   return (
     <details className="relative">
-      <summary className="flex h-9 w-10 cursor-pointer list-none items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:hover:bg-slate-900 [&::-webkit-details-marker]:hidden" aria-label="Report actions" title="Report actions">
+      <summary className="flex h-9 w-10 cursor-pointer list-none items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:hover:bg-slate-900 [&::-webkit-details-marker]:hidden" aria-label={tt("sec_actions", "Report actions")} title={tt("sec_actions", "Report actions")}>
         <MoreVertical className="h-4 w-4" />
       </summary>
       <div className="absolute right-0 z-30 mt-2 w-52 rounded-xl border border-slate-200 bg-white p-1 text-sm text-slate-900 shadow-xl dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100">
@@ -883,7 +952,7 @@ function ReportActions({ rows }: { rows: PurchaseReport[] }) {
           className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-900"
         >
           <Download className="h-4 w-4 text-blue-600 dark:text-blue-450" />
-          Download CSV
+          {tt("download_csv", "Download CSV")}
         </button>
         <button
           type="button"
@@ -891,16 +960,17 @@ function ReportActions({ rows }: { rows: PurchaseReport[] }) {
           className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-900"
         >
           <FileSpreadsheet className="h-4 w-4 text-emerald-600 dark:text-emerald-450" />
-          Export Excel
+          {tt("export_excel", "Export Excel")}
         </button>
         <button
           type="button"
-          onClick={() => window.print()}
+          onClick={() => printPurchaseBookingRegister(rows, lang)}
           className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-900"
         >
           <Printer className="h-4 w-4 text-slate-650" />
-          Print
+          {tt("print", "Print")}
         </button>
+
       </div>
     </details>
   );
@@ -938,6 +1008,8 @@ function SuperAdminPurchaseSummary({
   lastExchangeRateUpdate: string | null,
   session: any
 }) {
+  const lang = useActiveLanguage();
+  const tt = (k: string, f: string) => t(lang, ("pbjr." + k) as never, f);
   if (!rows || rows.length === 0) return null;
 
   const now = new Date();
@@ -1056,36 +1128,36 @@ function SuperAdminPurchaseSummary({
             <div className="bg-blue-600 p-1 rounded-full text-white">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </div>
-            <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">1. BRANCH & USER DETAILS</h4>
+            <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">{tt("p1_title", "1. BRANCH & USER DETAILS")}</h4>
           </div>
           <div className="p-4 flex flex-col gap-2.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
-              <span>Country:</span>
+              <span>{tt("f_country", "Country:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">{getFlag(country)} {country}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Branch Name:</span>
+              <span>{tt("f_branch_name", "Branch Name:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{branchName}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>User ID:</span>
+              <span>{tt("f_user_id", "User ID:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{userId}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>User Name:</span>
+              <span>{tt("f_user_name", "User Name:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{userName}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Role:</span>
+              <span>{tt("f_role", "Role:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{role}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Date & Time:</span>
+              <span>{tt("f_datetime", "Date & Time:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{dateStr}, {timeStr}</span>
             </div>
             <div className="flex justify-between items-center mt-auto">
-              <span>Status:</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">Active</span>
+              <span>{tt("f_status", "Status:")}</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">{tt("badge_active", "Active")}</span>
             </div>
           </div>
         </div>
@@ -1096,35 +1168,35 @@ function SuperAdminPurchaseSummary({
             <div className="bg-purple-600 p-1 rounded-full text-white">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
             </div>
-            <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400">2. PURCHASE SUMMARY</h4>
+            <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400">{tt("p2_title_short", "2. PURCHASE SUMMARY")}</h4>
           </div>
           <div className="p-4 flex flex-col gap-3 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
-              <span>Total Countries Purchase Booking:</span>
+              <span>{tt("m_total_countries_booking", "Total Countries Purchase Booking:")}</span>
               <span className="font-black text-slate-800 dark:text-slate-200">{totalCountriesPurchaseBookingCount}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Total Countries Purchase (LC):</span>
+              <span>{tt("m_total_countries_lc", "Total Countries Purchase (LC):")}</span>
               <span className="font-black text-slate-800 dark:text-slate-200 font-mono">{formatMoney(totalCountriesPurchaseLC)}</span>
             </div>
             <div className="flex justify-between items-center mt-1 pt-1 border-t border-slate-100 dark:border-slate-800">
-              <span className="text-amber-600 dark:text-amber-500">Total Purchase Loading:</span>
+              <span className="text-amber-600 dark:text-amber-500">{tt("m_total_purchase_loading", "Total Purchase Loading:")}</span>
               <span className="font-black text-amber-700 dark:text-amber-400 font-mono">{formatMoney(totalPurchaseLoading)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-amber-600 dark:text-amber-500">Total Purchase Loading (LC):</span>
+              <span className="text-amber-600 dark:text-amber-500">{tt("m_total_purchase_loading_lc", "Total Purchase Loading (LC):")}</span>
               <span className="font-black text-amber-700 dark:text-amber-400 font-mono">{formatMoney(totalPurchaseLoadingLC)}</span>
             </div>
             <div className="flex justify-between items-center mt-1 pt-1 border-t border-slate-100 dark:border-slate-800">
-              <span className="text-emerald-600 dark:text-emerald-500">Total Purchase Warehouse:</span>
+              <span className="text-emerald-600 dark:text-emerald-500">{tt("m_total_purchase_warehouse", "Total Purchase Warehouse:")}</span>
               <span className="font-black text-emerald-700 dark:text-emerald-400 font-mono">{formatMoney(totalPurchaseWarehouse)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-emerald-600 dark:text-emerald-500">Total Purchase Warehouse (LC):</span>
+              <span className="text-emerald-600 dark:text-emerald-500">{tt("m_total_purchase_warehouse_lc", "Total Purchase Warehouse (LC):")}</span>
               <span className="font-black text-emerald-700 dark:text-emerald-400 font-mono">{formatMoney(totalPurchaseWarehouseLC)}</span>
             </div>
             <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800">
-              <span>Total Active Countries:</span>
+              <span>{tt("m_total_active_countries", "Total Active Countries:")}</span>
               <span className="font-black text-slate-800 dark:text-slate-200">{activeCountriesCount}</span>
             </div>
           </div>
@@ -1136,32 +1208,32 @@ function SuperAdminPurchaseSummary({
             <div className="bg-emerald-600 p-1 rounded-full text-white">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
             </div>
-            <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400 truncate" title="3. TOTAL COUNTRIES SPREAD MAIN SUMMARY (USD)">3. TOTAL COUNTRIES SPREAD MAIN SUMMARY (USD)</h4>
+            <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400 truncate" title={tt("p3_title_long", "3. TOTAL COUNTRIES SPREAD MAIN SUMMARY (USD)")}>{tt("p3_title_long", "3. TOTAL COUNTRIES SPREAD MAIN SUMMARY (USD)")}</h4>
           </div>
           <div className="p-4 flex flex-col gap-3 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
-              <span>Total Purchase (USD):</span>
+              <span>{tt("m_total_purchase_usd", "Total Purchase (USD):")}</span>
               <span className="font-black text-emerald-700 dark:text-emerald-400 font-mono">{formatMoney(totalPurchaseUSD)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Total Invoice Amount (USD):</span>
+              <span>{tt("m_total_invoice_usd", "Total Invoice Amount (USD):")}</span>
               <span className="font-black text-emerald-700 dark:text-emerald-400 font-mono">{formatMoney(totalInvoiceUSD)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-blue-600 dark:text-blue-500">Total Paid Amount (USD):</span>
+              <span className="text-blue-600 dark:text-blue-500">{tt("m_total_paid_usd", "Total Paid Amount (USD):")}</span>
               <span className="font-black text-blue-700 dark:text-blue-400 font-mono">{formatMoney(totalPaidUSD)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-rose-600 dark:text-rose-500">Total Remaining Balance (USD):</span>
+              <span className="text-rose-600 dark:text-rose-500">{tt("m_total_remaining_usd", "Total Remaining Balance (USD):")}</span>
               <span className="font-black text-rose-700 dark:text-rose-400 font-mono">{formatMoney(totalRemainingUSD)}</span>
             </div>
-            
+
             <div className="flex justify-between items-center mt-auto pt-2 border-t border-dashed border-slate-200 dark:border-slate-700">
-              <span>Total Active Countries:</span>
+              <span>{tt("m_total_active_countries", "Total Active Countries:")}</span>
               <span className="font-black text-slate-800 dark:text-slate-200">{activeCountriesCount}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Latest Exchange Rate Update:</span>
+              <span>{tt("m_latest_rate_update", "Latest Exchange Rate Update:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{formatDate(lastExchangeRateUpdate) || "N/A"}</span>
             </div>
           </div>
@@ -1173,47 +1245,47 @@ function SuperAdminPurchaseSummary({
             <div className="bg-orange-600 p-1 rounded-full text-white">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
             </div>
-            <h4 className="text-xs font-black uppercase tracking-wider text-orange-800 dark:text-orange-400">4. TRANSACTION SUMMARY</h4>
+            <h4 className="text-xs font-black uppercase tracking-wider text-orange-800 dark:text-orange-400">{tt("p4_title", "4. TRANSACTION SUMMARY")}</h4>
           </div>
           <div className="p-4 flex flex-col gap-2.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
-              <span>Total Transactions:</span>
+              <span>{tt("m_total_transactions", "Total Transactions:")}</span>
               <span className="font-black text-slate-800 dark:text-slate-200">{rows.length}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Purchase Booking Transactions:</span>
+              <span>{tt("m_booking_transactions", "Purchase Booking Transactions:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{totalCountriesPurchaseBookingCount}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Invoice Transactions:</span>
+              <span>{tt("m_invoice_transactions", "Invoice Transactions:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{invoiceTransactions}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Paid Transactions:</span>
+              <span>{tt("m_paid_transactions", "Paid Transactions:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{paidTransactions}</span>
             </div>
-            
+
             <div className="grid grid-cols-3 gap-1 mt-1 pb-1 border-b border-slate-100 dark:border-slate-800">
               <div className="flex flex-col">
-                 <span className="text-[9px] text-slate-400">Pending</span>
+                 <span className="text-[9px] text-slate-400">{tt("st_pending", "Pending")}</span>
                  <span className="font-black text-amber-600">{pendingTransactions}</span>
               </div>
               <div className="flex flex-col border-l border-slate-100 dark:border-slate-800 pl-2">
-                 <span className="text-[9px] text-slate-400">Completed</span>
+                 <span className="text-[9px] text-slate-400">{tt("st_completed", "Completed")}</span>
                  <span className="font-black text-emerald-600">{completedTransactions}</span>
               </div>
               <div className="flex flex-col border-l border-slate-100 dark:border-slate-800 pl-2">
-                 <span className="text-[9px] text-slate-400">Cancelled</span>
+                 <span className="text-[9px] text-slate-400">{tt("st_cancelled", "Cancelled")}</span>
                  <span className="font-black text-red-600">{cancelledTransactions}</span>
               </div>
             </div>
 
             <div className="flex justify-between items-center mt-auto">
-              <span>Total Active Countries:</span>
+              <span>{tt("m_total_active_countries", "Total Active Countries:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{activeCountriesCount}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Last Transaction Date:</span>
+              <span>{tt("m_last_transaction_date", "Last Transaction Date:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{date(lastTransactionDateStr) || "N/A"}</span>
             </div>
           </div>
