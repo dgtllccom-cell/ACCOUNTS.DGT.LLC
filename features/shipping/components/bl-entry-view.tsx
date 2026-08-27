@@ -466,7 +466,7 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
   }
 
   return (
-    <div className="mx-auto max-w-[1680px] space-y-3 bg-background p-3 text-foreground print:bg-white print:text-slate-950">
+    <div className="mx-auto max-w-[1680px] space-y-3 bg-background p-3 text-foreground print:bg-white print:text-slate-950" dir={isRtl ? "rtl" : "ltr"}>
       <div className="flex flex-col gap-3 border-b pb-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.35em] text-cyan-600 dark:text-cyan-300">{moduleEyebrow}</p>
@@ -669,23 +669,23 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
                       />
                     </div>
                   </div>
-                  <Field label="Loading Type" value={form.shippingType} onChange={(v) => updateField("shippingType", v)} asSelect options={[{ value: "By Sea", label: "By Sea" }, { value: "By Road", label: "By Road" }, { value: "By Air", label: "By Air" }]} />
-                  <Field label="Container Type" value={form.containerType} onChange={(v) => updateField("containerType", v)} asSelect options={[{ value: "Dry Container 20FT", label: "Dry Container 20FT" }, { value: "Dry Container 40FT", label: "Dry Container 40FT" }, { value: "Reefer Container 40FT", label: "Reefer Container 40FT" }]} />
-                  <Field label="Container Name" value={form.containerName} onChange={(v) => updateField("containerName", v)} />
+                  <Field label={_("ble.lbl_loading_type", "Loading Type")} value={form.shippingType} onChange={(v) => updateField("shippingType", v)} asSelect options={[{ value: "By Sea", label: "By Sea" }, { value: "By Road", label: "By Road" }, { value: "By Air", label: "By Air" }]} />
+                  <Field label={_("ble.lbl_container_type", "Container Type")} value={form.containerType} onChange={(v) => updateField("containerType", v)} asSelect options={[{ value: "Dry Container 20FT", label: "Dry Container 20FT" }, { value: "Dry Container 40FT", label: "Dry Container 40FT" }, { value: "Reefer Container 40FT", label: "Reefer Container 40FT" }]} />
+                  <Field label={_("ble.lbl_container_name", "Container Name")} value={form.containerName} onChange={(v) => updateField("containerName", v)} />
                   <div className="grid grid-cols-2 gap-2">
-                    <Field label="Container Numbers *" value={form.containerNumber} onChange={(v) => updateField("containerNumber", v)} />
-                    <Field label="Seal Number" value={form.sealNumber} onChange={(v) => updateField("sealNumber", v)} />
-                    <Field label="Vessel Name *" value={form.vesselName} onChange={(v) => updateField("vesselName", v)} />
-                    <Field label="Discharge Date" type="date" value={form.dischargeDate} onChange={(v) => updateField("dischargeDate", v)} />
+                    <Field label={_("ble.lbl_container_numbers", "Container Numbers *")} value={form.containerNumber} onChange={(v) => updateField("containerNumber", v)} />
+                    <Field label={_("ble.lbl_seal_number", "Seal Number")} value={form.sealNumber} onChange={(v) => updateField("sealNumber", v)} />
+                    <Field label={_("ble.lbl_vessel_name", "Vessel Name *")} value={form.vesselName} onChange={(v) => updateField("vesselName", v)} />
+                    <Field label={_("ble.lbl_discharge_date", "Discharge Date")} type="date" value={form.dischargeDate} onChange={(v) => updateField("dischargeDate", v)} />
                   </div>
                   {!canGenerateBl ? (
                     <div className="rounded-md border border-amber-300 bg-amber-50 p-2 text-[11px] font-semibold text-amber-800 dark:border-amber-700/60 dark:bg-amber-950/30 dark:text-amber-100">
-                      Complete Purchase Confirmation, Loading, and Shipment Details before generating Bill of Lading.
+                      {_("ble.warn_complete_gate", "Complete Purchase Confirmation, Loading, and Shipment Details before generating Bill of Lading.")}
                     </div>
                   ) : null}
-                  <Field label="Remarks" value={form.carrierRemarks} onChange={(v) => updateField("carrierRemarks", v)} />
+                  <Field label={_("ble.lbl_remarks", "Remarks")} value={form.carrierRemarks} onChange={(v) => updateField("carrierRemarks", v)} />
                   <Button type="button" className="h-9 w-full bg-cyan-600 text-white hover:bg-cyan-500" onClick={saveRecord} disabled={saving || !canGenerateBl}>
-                    <Save className="mr-2 h-4 w-4" /> {saving ? "Generating..." : "Generate Bill of Lading"}
+                    <Save className="mr-2 h-4 w-4" /> {saving ? _("ble.btn_generating", "Generating...") : _("ble.btn_generate_bl", "Generate Bill of Lading")}
                   </Button>
                 </div>
               ) : null}
@@ -695,7 +695,7 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
               <div className="flex items-center justify-between gap-2 rounded border border-amber-300 bg-amber-50 p-2 text-xs text-amber-800 dark:border-amber-700/60 dark:bg-amber-950/30 dark:text-amber-100">
                 <span>{message}</span>
                 <button type="button" className="rounded border border-amber-600 px-2 py-1 font-bold" onClick={() => void loadRecords(query, { force: true })}>
-                  Retry
+                  {_("ble.btn_retry", "Retry")}
                 </button>
               </div>
             ) : null}
@@ -706,50 +706,50 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
           <Card>
             <CardHeader className="border-b py-3">
               <CardTitle className="flex items-center justify-between text-sm font-black uppercase tracking-wide text-cyan-700 dark:text-cyan-300">
-                <span>Board / BL / Loading Report</span>
-                <Button type="button" size="sm" className="h-7 bg-blue-600 text-[10px] text-white">Clear BL</Button>
+                <span>{_("ble.report_title", "Board / BL / Loading Report")}</span>
+                <Button type="button" size="sm" className="h-7 bg-blue-600 text-[10px] text-white">{_("ble.btn_clear_bl", "Clear BL")}</Button>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 p-3">
               <div className="grid gap-x-5 gap-y-1 rounded-lg border bg-background p-3 text-[10px] md:grid-cols-2">
-                <MiniSection title="BL Basic / Board / BL Details" />
-                <MiniLine label="Mode" value={form.blType} />
-                <MiniLine label="B/L Date" value={form.issueDate} />
-                <MiniLine label="Issue Serial" value={form.issueSerial} />
-                <MiniLine label="BL No" value={form.blNumber} />
-                <MiniLine label="Route" value={`${form.shippingType} | ${form.routeCountry} | L: ${form.loadingCountry} / ${form.loadingPort} -> R: ${form.receivingCountry} / ${form.dischargePort}`} full />
-                <MiniLine label="Shipping Line" value={form.shippingLineName} />
-                <MiniLine label="Vessel / Voyage" value={`${form.vesselName || "-"} / ${form.voyageNumber || "-"}`} />
-                <MiniLine label="Containers" value={form.containerNumber || "-"} />
-                <MiniLine label="ETA / ETD" value={`${form.eta || "-"} / ${form.etd || "-"}`} />
-                <MiniSection title="Booking Details" />
-                <MiniLine label="Shipping" value={form.shippingType} />
-                <MiniLine label="Shipment" value={form.shipmentType} />
-                <MiniLine label="Booking No" value={form.bookingNo} />
-                <MiniLine label="Company" value={`${form.bookingCompanyType} / ${form.bookingCompanyName}`} />
-                <MiniLine label="Date" value={form.bookingDate} />
-                <MiniLine label="Vessel" value={form.vesselName} />
-                <MiniSection title="System / User Report" />
-                <MiniLine label="Country Serial" value={selectedCountry?.iso2 ? `${selectedCountry.iso2}-202602-001` : "PK-202602-001"} />
-                <MiniLine label="Branch Serial" value={selectedCityBranch?.code ?? selectedMainBranch?.code ?? "KHI-202602-001"} />
-                <MiniLine label="Team / User" value={data?.session.fullName ?? "Admin User"} />
-                <MiniLine label="User ID" value={data?.session.roles?.[0] ?? "USR-001"} />
-                <MiniSection title="Vessel Discharge Report" />
-                <MiniLine label="Discharge Vessel / Date" value={`${form.dischargeVessel} / ${form.dischargeDate}`} full />
+                <MiniSection title={_("ble.ms_bl_basic", "BL Basic / Board / BL Details")} />
+                <MiniLine label={_("ble.ml_mode", "Mode")} value={form.blType} />
+                <MiniLine label={_("ble.ml_bl_date", "B/L Date")} value={form.issueDate} />
+                <MiniLine label={_("ble.ml_issue_serial", "Issue Serial")} value={form.issueSerial} />
+                <MiniLine label={_("ble.ml_bl_no", "BL No")} value={form.blNumber} />
+                <MiniLine label={_("ble.ml_route", "Route")} value={`${form.shippingType} | ${form.routeCountry} | L: ${form.loadingCountry} / ${form.loadingPort} -> R: ${form.receivingCountry} / ${form.dischargePort}`} full />
+                <MiniLine label={_("ble.ml_shipping_line", "Shipping Line")} value={form.shippingLineName} />
+                <MiniLine label={_("ble.ml_vessel_voyage", "Vessel / Voyage")} value={`${form.vesselName || "-"} / ${form.voyageNumber || "-"}`} />
+                <MiniLine label={_("ble.ml_containers", "Containers")} value={form.containerNumber || "-"} />
+                <MiniLine label={_("ble.ml_eta_etd", "ETA / ETD")} value={`${form.eta || "-"} / ${form.etd || "-"}`} />
+                <MiniSection title={_("ble.ms_booking", "Booking Details")} />
+                <MiniLine label={_("ble.ml_shipping", "Shipping")} value={form.shippingType} />
+                <MiniLine label={_("ble.ml_shipment", "Shipment")} value={form.shipmentType} />
+                <MiniLine label={_("ble.ml_booking_no", "Booking No")} value={form.bookingNo} />
+                <MiniLine label={_("ble.ml_company", "Company")} value={`${form.bookingCompanyType} / ${form.bookingCompanyName}`} />
+                <MiniLine label={_("ble.ml_date", "Date")} value={form.bookingDate} />
+                <MiniLine label={_("ble.ml_vessel", "Vessel")} value={form.vesselName} />
+                <MiniSection title={_("ble.ms_system_user", "System / User Report")} />
+                <MiniLine label={_("ble.ml_country_serial", "Country Serial")} value={selectedCountry?.iso2 ? `${selectedCountry.iso2}-202602-001` : "PK-202602-001"} />
+                <MiniLine label={_("ble.ml_branch_serial", "Branch Serial")} value={selectedCityBranch?.code ?? selectedMainBranch?.code ?? "KHI-202602-001"} />
+                <MiniLine label={_("ble.ml_team_user", "Team / User")} value={data?.session.fullName ?? "Admin User"} />
+                <MiniLine label={_("ble.ml_user_id", "User ID")} value={data?.session.roles?.[0] ?? "USR-001"} />
+                <MiniSection title={_("ble.ms_vessel_discharge", "Vessel Discharge Report")} />
+                <MiniLine label={_("ble.ml_discharge_vessel_date", "Discharge Vessel / Date")} value={`${form.dischargeVessel} / ${form.dischargeDate}`} full />
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-black uppercase tracking-wide text-cyan-700 dark:text-cyan-300">Goods Loading Report</span>
-                  <span className="ml-2 rounded border px-2 py-1 text-[9px] font-black text-muted-foreground">Live Inventory</span>
+                  <span className="text-xs font-black uppercase tracking-wide text-cyan-700 dark:text-cyan-300">{_("ble.goods_loading_report", "Goods Loading Report")}</span>
+                  <span className="ml-2 rounded border px-2 py-1 text-[9px] font-black text-muted-foreground">{_("ble.live_inventory", "Live Inventory")}</span>
                 </div>
-                <Button type="button" size="sm" className="h-7 bg-rose-600 text-[10px] text-white">Clear All Data</Button>
+                <Button type="button" size="sm" className="h-7 bg-rose-600 text-[10px] text-white">{_("ble.btn_clear_all", "Clear All Data")}</Button>
               </div>
               <div className="overflow-x-auto rounded-lg border">
                 <table className="w-full min-w-[1180px] border-separate border-spacing-0 text-xs">
                   <thead className="bg-slate-100/90 dark:bg-slate-800/90 text-slate-700 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
                     <tr>
-                      {["SR#", "Good Name", "Size", "Brand", "Origin", "HS Code", "Allot Name", "Warehouse", "Qty Name", "Qty No", "Total Gross KG", "Empty/Bag KG", "Total Empty KG", "Net Weight KG", "Container Type", "Container Name", "Container No", "Seal No"].map((head) => (
+                      {[_("ble.gt_sr", "SR#"), _("ble.gt_good_name", "Good Name"), _("ble.lbl_size", "Size"), _("ble.lbl_brand", "Brand"), _("ble.lbl_origin", "Origin"), _("ble.lbl_hs_code", "HS Code"), _("ble.lbl_allot_name", "Allot Name"), _("ble.lbl_warehouse", "Warehouse"), _("ble.lbl_qty_name", "Qty Name"), _("ble.gt_qty_no", "Qty No"), _("ble.gt_total_gross_kg", "Total Gross KG"), _("ble.gt_empty_bag_kg", "Empty/Bag KG"), _("ble.gt_total_empty_kg", "Total Empty KG"), _("ble.gt_net_weight_kg", "Net Weight KG"), _("ble.lbl_container_type", "Container Type"), _("ble.lbl_container_name", "Container Name"), _("ble.gt_container_no", "Container No"), _("ble.gt_seal_no", "Seal No")].map((head) => (
                         <Th key={head} className="px-3 py-2 text-left text-[10px] font-black uppercase tracking-wide">{head}</Th>
                       ))}
                     </tr>
@@ -779,8 +779,8 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
                 </table>
               </div>
               <div className="flex justify-end gap-8 rounded-lg border bg-background p-3 text-right">
-                <div><span className="block text-[9px] font-black uppercase text-muted-foreground">Total KGS</span><b>{money(form.totalGrossWeight)}</b></div>
-                <div><span className="block text-[9px] font-black uppercase text-muted-foreground">Net Weight</span><b className="text-amber-600 dark:text-amber-300">{money(form.netWeight)}</b></div>
+                <div><span className="block text-[9px] font-black uppercase text-muted-foreground">{_("ble.total_kgs", "Total KGS")}</span><b>{money(form.totalGrossWeight)}</b></div>
+                <div><span className="block text-[9px] font-black uppercase text-muted-foreground">{_("ble.net_weight", "Net Weight")}</span><b className="text-amber-600 dark:text-amber-300">{money(form.netWeight)}</b></div>
               </div>
             </CardContent>
           </Card>

@@ -39,6 +39,7 @@ type CustomerRow = {
   father_name: string | null;
   person_code: string | null;
   company_name: string | null;
+  gender: string | null;
   contact_person: string | null;
   mobile: string | null;
   whatsapp: string | null;

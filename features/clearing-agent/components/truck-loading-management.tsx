@@ -5,6 +5,7 @@ import { Plus, Pencil, Trash2, Search, Loader2, X, Ship, Truck, FileText, CheckC
 import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { LocationHierarchySelect } from "@/features/locations/components/location-hierarchy-select";
 import { ReportActions } from "@/components/ui/report-actions";
 import { TruckAttachments } from "@/features/clearing-agent/components/truck-attachments";
@@ -104,7 +105,9 @@ const EMPTY: any = {
   dest_city_id: null
 };
 
-export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }) {
+export function TruckLoadingManagementView({ lang: langProp }: { lang: SupportedLanguage }) {
+  const activeLang = useActiveLanguage();
+  const lang = activeLang !== "en" ? activeLang : langProp;
   const dir = getLanguageDirection(lang);
   const [rows, setRows] = useState<Loading[]>([]);
   const [trucks, setTrucks] = useState<TruckOpt[]>([]);

@@ -438,7 +438,7 @@ function AstraJournalReportViewContent({ lang: langProp, scope }: { lang: Suppor
       reportIdValue: String(scope),
       chips: [
         { label: tt("jrn.date_range", "Date Range"), value: `${formatDateDisplay(minDate)} → ${formatDateDisplay(maxDate)}` },
-        { label: tt("acct.report_type", "Report Type"), value: titleFor(scope) }
+        { label: tt("acct.report_type", "Report Type"), value: titleFor(scope, _) }
       ],
       kpis: [
         { label: tt("bankroz.total_debit", "Total Debit"), value: fmt(summary.debit), tone: "debit" },

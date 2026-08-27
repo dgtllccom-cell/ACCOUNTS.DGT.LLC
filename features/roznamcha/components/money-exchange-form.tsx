@@ -70,6 +70,7 @@ type SessionInfo = {
 export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLanguage }) {
   const lang = useActiveLanguage();
   const tr = (key: Parameters<typeof t>[1], fallback: string) => t(lang, key, fallback);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const [portalNode, setPortalNode] = useState<HTMLElement | null>(null);
   
   const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
@@ -234,9 +235,9 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
   // Save Entry
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedBranch) return alert("Please select a valid Branch.");
-    if (!entrySerial) return alert("Serial number not generated.");
-    if (!qtyCurrency || !exCurrency || finalAmount <= 0) return alert("Please complete formula fields properly.");
+    if (!selectedBranch) return alert(tr("money_exchange.err_select_branch", "Please select a valid Branch."));
+    if (!entrySerial) return alert(tr("money_exchange.err_no_serial", "Serial number not generated."));
+    if (!qtyCurrency || !exCurrency || finalAmount <= 0) return alert(tr("money_exchange.err_formula", "Please complete formula fields properly."));
     
     setSaving(true);
     try {
@@ -275,13 +276,13 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
       setIsModalOpen(false);
       resetForm();
       
-      setSuccessMessage("Money exchange entry saved successfully!");
+      setSuccessMessage(tr("money_exchange.save_success", "Money exchange entry saved successfully!"));
       setTimeout(() => setSuccessMessage(null), 4000);
-      
+
       // refresh table immediately
       fetchRecentBills();
     } catch (err: any) {
-      alert(err.message || "Failed to save entry.");
+      alert(err.message || tr("money_exchange.err_save", "Failed to save entry."));
     } finally {
       setSaving(false);
     }
@@ -322,7 +323,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
   }, [recentBills]);
 
   return (
-    <div className="mx-auto w-full max-w-[1700px] p-4 space-y-4">
+    <div className="mx-auto w-full max-w-[1700px] p-4 space-y-4" dir={isRtl ? "rtl" : "ltr"}>
       {/* Top Header Action Strip Portal */}
       {portalNode && createPortal(
         <div className="flex items-center gap-2">
@@ -439,9 +440,9 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                 onChange={e => setFilterType(e.target.value)}
                 className="bg-transparent text-[11px] font-bold text-slate-700 dark:text-slate-300 outline-none cursor-pointer"
               >
-                <option value="ALL">All Types</option>
-                <option value="Purchase">Purchase Only</option>
-                <option value="Sale">Sale Only</option>
+                <option value="ALL">{tr("money_exchange.all_types", "All Types")}</option>
+                <option value="Purchase">{tr("money_exchange.purchase_only", "Purchase Only")}</option>
+                <option value="Sale">{tr("money_exchange.sale_only", "Sale Only")}</option>
               </select>
             </div>
 
@@ -544,7 +545,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                               ? "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300"
                               : "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:border-rose-800 dark:text-rose-300"
                           )}>
-                            {isPurchase ? "PURCHASE" : "SALE"}
+                            {isPurchase ? tr("money_exchange.badge_purchase", "PURCHASE") : tr("money_exchange.badge_sale", "SALE")}
                           </span>
                         </td>
 
@@ -556,11 +557,11 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                             <span className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[11px] dark:bg-slate-800">{b.ex_currency}</span>
                           </div>
                           <div className="mt-1 text-[10.5px] text-slate-600 dark:text-slate-400">
-                            <span className="font-medium">Qty:</span> <span className="font-bold">{b.quantity}</span>
+                            <span className="font-medium">{tr("money_exchange.qty_label_short", "Qty")}:</span> <span className="font-bold">{b.quantity}</span>
                             <span className="mx-1 text-slate-300">|</span>
-                            <span className="font-medium">Op:</span> <span className="font-bold">{b.operation === "divide" ? "÷" : "×"}</span>
+                            <span className="font-medium">{tr("money_exchange.op_short", "Op")}:</span> <span className="font-bold">{b.operation === "divide" ? "÷" : "×"}</span>
                             <span className="mx-1 text-slate-300">|</span>
-                            <span className="font-medium">Rate:</span> <span className="font-bold">{b.rate}</span>
+                            <span className="font-medium">{tr("money_exchange.rate_label_short", "Rate")}:</span> <span className="font-bold">{b.rate}</span>
                           </div>
                         </td>
 
@@ -581,7 +582,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                           </div>
                           {b.received_type && (
                             <span className="inline-block text-[9.5px] font-semibold text-purple-700 dark:text-purple-300 mt-0.5">
-                              Type: {b.received_type}
+                              {tr("money_exchange.type_prefix", "Type:")} {b.received_type}
                             </span>
                           )}
                           {b.mobile && (
@@ -600,17 +601,17 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                         <td className="p-3 border border-slate-200 dark:border-slate-800 align-top">
                           {(b.purchase_country || b.purchase_city) && (
                             <div className="text-[10px] text-slate-600 dark:text-slate-400">
-                              <span className="font-bold text-slate-400">Purchased:</span> {b.purchase_city || ""}{b.purchase_city && b.purchase_country ? ", " : ""}{b.purchase_country || ""}
+                              <span className="font-bold text-slate-400">{tr("money_exchange.purchased_prefix", "Purchased:")}</span> {b.purchase_city || ""}{b.purchase_city && b.purchase_country ? ", " : ""}{b.purchase_country || ""}
                             </div>
                           )}
                           {(b.received_country || b.received_city) && (
                             <div className="text-[10px] text-slate-600 dark:text-slate-400">
-                              <span className="font-bold text-slate-400">Recv:</span> {b.received_city || ""}{b.received_city && b.received_country ? ", " : ""}{b.received_country || ""}
+                              <span className="font-bold text-slate-400">{tr("money_exchange.recv_prefix", "Recv:")}</span> {b.received_city || ""}{b.received_city && b.received_country ? ", " : ""}{b.received_country || ""}
                             </div>
                           )}
                           {b.received_office_name && (
                             <div className="text-[10px] text-slate-600 dark:text-slate-400">
-                              <span className="font-bold text-slate-400">Office:</span> {b.received_office_name}
+                              <span className="font-bold text-slate-400">{tr("money_exchange.office_prefix", "Office:")}</span> {b.received_office_name}
                             </div>
                           )}
                           {b.received_office_numbers && (
@@ -630,7 +631,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                             onClick={() => setViewEntry(b)}
                           >
                             <Eye className="h-3.5 w-3.5 mr-1" />
-                            <span>View</span>
+                            <span>{tr("money_exchange.view_btn", "View")}</span>
                           </Button>
                         </td>
                       </tr>
@@ -660,7 +661,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                     {tr("money_exchange.section1_title", "1. Branch & Session Details")}
                   </span>
                   <span className="bg-white dark:bg-slate-950 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-800 text-[10px] font-mono font-bold text-indigo-700 dark:text-indigo-300">
-                    {entrySerial || "Pending..."}
+                    {entrySerial || tr("money_exchange.pending", "Pending...")}
                   </span>
                 </CardTitle>
               </CardHeader>
@@ -717,8 +718,8 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                     value={transactionType} 
                     onChange={e => setTransactionType(e.target.value as any)}
                   >
-                    <option value="Purchase">Purchase</option>
-                    <option value="Sale">Sale</option>
+                    <option value="Purchase">{tr("money_exchange.opt_purchase", "Purchase")}</option>
+                    <option value="Sale">{tr("money_exchange.opt_sale", "Sale")}</option>
                   </select>
                 </div>
 
@@ -813,10 +814,10 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                           setReceiptName("");
                         }}
                       >
-                        <option value="Name">Name</option>
-                        <option value="Agent">Agent</option>
-                        <option value="Bank">Bank</option>
-                        <option value="Other">Other</option>
+                        <option value="Name">{tr("money_exchange.opt_name", "Name")}</option>
+                        <option value="Agent">{tr("money_exchange.opt_agent", "Agent")}</option>
+                        <option value="Bank">{tr("money_exchange.opt_bank", "Bank")}</option>
+                        <option value="Other">{tr("money_exchange.opt_other", "Other")}</option>
                       </select>
                     </div>
                     <div className="space-y-1">
@@ -939,10 +940,10 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                       <Label className="text-[9.5px] uppercase font-bold text-slate-500">{tr("money_exchange.office_number_label", "Office Number")}</Label>
                       <div className="flex gap-1">
                         <select className="w-2/5 h-8 text-[10px] font-bold rounded-md border bg-background px-1" value={receivedOfficeNumberType} onChange={e => setReceivedOfficeNumberType(e.target.value)}>
-                          <option value="Mobile">Mobile</option>
-                          <option value="WhatsApp">WhatsApp</option>
-                          <option value="Office 1">Office 1</option>
-                          <option value="Office 2">Office 2</option>
+                          <option value="Mobile">{tr("money_exchange.opt_mobile", "Mobile")}</option>
+                          <option value="WhatsApp">{tr("money_exchange.opt_whatsapp", "WhatsApp")}</option>
+                          <option value="Office 1">{tr("money_exchange.opt_office1", "Office 1")}</option>
+                          <option value="Office 2">{tr("money_exchange.opt_office2", "Office 2")}</option>
                         </select>
                         <Input className="flex-1 h-8 text-xs px-1.5" placeholder={tr("money_exchange.number_placeholder", "Number...")} value={receivedOfficeNumberValue} onChange={e => setReceivedOfficeNumberValue(e.target.value)} />
                       </div>
@@ -989,29 +990,29 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
       {/* View Detail Modal */}
       {viewEntry && (
         <SimpleModal
-          title={`Exchange Entry Details: ${viewEntry.serial_no}`}
+          title={`${tr("money_exchange.detail_title", "Exchange Entry Details")}: ${viewEntry.serial_no}`}
           onClose={() => setViewEntry(null)}
           className="max-w-md"
         >
           <div className="space-y-3 p-1 text-xs">
             <div className="grid grid-cols-2 gap-2 border-b pb-2">
               <div>
-                <span className="text-slate-400 font-medium">Serial:</span>
+                <span className="text-slate-400 font-medium">{tr("money_exchange.detail_serial", "Serial:")}</span>
                 <div className="font-mono font-bold text-blue-700 dark:text-blue-400">{viewEntry.serial_no}</div>
               </div>
               <div>
-                <span className="text-slate-400 font-medium">Date:</span>
+                <span className="text-slate-400 font-medium">{tr("money_exchange.detail_date", "Date:")}</span>
                 <div className="font-bold text-slate-800 dark:text-slate-200">{viewEntry.entry_date}</div>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2 border-b pb-2">
               <div>
-                <span className="text-slate-400 font-medium">Transaction Type:</span>
+                <span className="text-slate-400 font-medium">{tr("money_exchange.detail_txn_type", "Transaction Type:")}</span>
                 <div className="font-black text-slate-900 dark:text-slate-100">{viewEntry.transaction_type}</div>
               </div>
               <div>
-                <span className="text-slate-400 font-medium">Final Amount:</span>
+                <span className="text-slate-400 font-medium">{tr("money_exchange.detail_final", "Final Amount:")}</span>
                 <div className="font-mono font-black text-sm text-emerald-600">
                   {Number(viewEntry.final_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })} {viewEntry.ex_currency}
                 </div>
@@ -1019,7 +1020,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
             </div>
 
             <div className="border-b pb-2">
-              <span className="text-slate-400 font-medium">Formula:</span>
+              <span className="text-slate-400 font-medium">{tr("money_exchange.detail_formula", "Formula:")}</span>
               <div className="font-bold text-slate-800 dark:text-slate-200">
                 {viewEntry.quantity} {viewEntry.qty_currency} {viewEntry.operation === "divide" ? "÷" : "×"} {viewEntry.rate} = {viewEntry.final_amount} {viewEntry.ex_currency}
               </div>
@@ -1027,15 +1028,15 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
 
             {(viewEntry.receipt_name || viewEntry.received_from || viewEntry.mobile) && (
               <div className="border-b pb-2">
-                <span className="text-slate-400 font-medium">Party / Recv Info:</span>
+                <span className="text-slate-400 font-medium">{tr("money_exchange.detail_party", "Party / Recv Info:")}</span>
                 <div className="font-bold text-slate-800 dark:text-slate-200">{viewEntry.receipt_name || viewEntry.received_from || "-"}</div>
-                {viewEntry.mobile && <div className="text-slate-500 font-mono">Phone: {viewEntry.mobile}</div>}
+                {viewEntry.mobile && <div className="text-slate-500 font-mono">{tr("money_exchange.detail_phone", "Phone:")} {viewEntry.mobile}</div>}
               </div>
             )}
 
             {viewEntry.details && (
               <div>
-                <span className="text-slate-400 font-medium">Details / Notes:</span>
+                <span className="text-slate-400 font-medium">{tr("money_exchange.detail_notes", "Details / Notes:")}</span>
                 <div className="text-slate-700 dark:text-slate-300 italic">{viewEntry.details}</div>
               </div>
             )}

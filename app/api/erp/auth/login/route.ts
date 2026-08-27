@@ -11,8 +11,8 @@ import { setTempSuperAdminSession, setDirectUserSession } from "@/lib/auth/temp-
 function dashboardForRoles(roles: EnterpriseRole[]) {
   if (roles.includes("super_admin")) return "/dashboard/super-admin";
   if (roles.includes("country_admin")) return "/dashboard";
-  if (roles.includes("clearing_agent_admin") || roles.includes("clearing_agent_user") || roles.includes("agent_user" as any)) return "/dashboard/shipping-line";
-  if (roles.includes("city_branch_admin") || roles.includes("city_branch_user")) return "/dashboard";
+  if (roles.includes("clearing_agent_admin" as EnterpriseRole) || roles.includes("clearing_agent_user" as EnterpriseRole) || roles.includes("agent_user")) return "/dashboard/shipping-line";
+  if (roles.includes("city_branch_admin") || roles.includes("city_branch_user" as EnterpriseRole)) return "/dashboard";
   if (roles.includes("country_user")) return "/dashboard";
   
   const primary = roles[0];

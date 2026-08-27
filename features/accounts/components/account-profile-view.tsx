@@ -68,6 +68,7 @@ type AccountGeneralReportRow = {
   companyName: string;
   companyCode: string;
   companyOwner: string;
+  bankName?: string;
   recentActivityLabel: string | null;
   recentActivityAt: string | null;
   accountSerialNumber?: number;
