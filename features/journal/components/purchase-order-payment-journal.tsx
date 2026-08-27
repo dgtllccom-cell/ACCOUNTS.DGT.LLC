@@ -816,7 +816,7 @@ function allocateAdvanceForLoadedBill(rawAdvance: number, loadingFinance: Return
     : 1;
   return Math.min(loadingFinance.amountUSD, normalized * ratio);
 }
-function kpis(rows: PurchaseOrderRow[], baseCurrency: string): KpiCard[] {
+function kpis(rows: PurchaseOrderRow[], baseCurrency: string, lang: LanguageCode): KpiCard[] {
   let totalPurchaseUSD = 0;
   let totalInvoiceValueLC = 0;
   let totalAdvancePaidLC = 0;
@@ -849,35 +849,35 @@ function kpis(rows: PurchaseOrderRow[], baseCurrency: string): KpiCard[] {
 
   return [
     {
-      label: "Total Purchase",
+      label: t("total_purchase_lc", lang),
       value: money(totalPurchaseUSD, purchCur),
       sublabel: "Original Currency Total",
       icon: <FileText className="h-5 w-5" />,
       tone: "blue"
     },
     {
-      label: "Total Invoice Value",
+      label: t("kpi_total_invoice_value", lang),
       value: money(totalInvoiceValueLC, localCur),
       sublabel: "Local Currency Total",
       icon: <Banknote className="h-5 w-5" />,
       tone: "green"
     },
     {
-      label: "Total Advance Paid",
+      label: t("kpi_total_advance_paid", lang),
       value: money(totalAdvancePaidLC, localCur),
       sublabel: "Advance Paid to Date",
       icon: <CheckCircle className="h-5 w-5" />,
       tone: "amber"
     },
     {
-      label: "Total Outstanding Balance",
+      label: t("kpi_total_outstanding_balance", lang),
       value: money(totalOutstandingBalanceLC, localCur),
       sublabel: "Remaining Due to Clear",
       icon: <XCircle className="h-5 w-5" />,
       tone: "red"
     },
     {
-      label: "Average Exchange Rate",
+      label: t("kpi_average_exchange_rate", lang),
       value: avgExchangeRate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }),
       sublabel: `1 ${purchCur} to ${localCur}`,
       icon: <RefreshCw className="h-5 w-5" />,
@@ -1027,9 +1027,9 @@ function NestedRowActions({ payment, row, ledgers, localCurrency }: any) {
         <MoreVertical className="h-4 w-4" />
       </summary>
       <div className="absolute right-0 z-30 mt-1 w-40 rounded-xl border border-border bg-popover p-1 text-sm text-popover-foreground shadow-xl">
-        <MenuAction icon={<Eye />} label="View Details" onClick={() => handleAction(() => handlePrintReceipt(payment, row, ledgers, localCurrency, false, currentLanguage))} />
-        <MenuAction icon={<Edit3 />} label="Edit Line" onClick={() => handleAction(() => window.dispatchEvent(new CustomEvent("open-edit-payment", { detail: { payment, row } })))} />
-        <MenuAction icon={<Printer />} label="Print Receipt" onClick={() => handleAction(() => handlePrintReceipt(payment, row, ledgers, localCurrency, true, currentLanguage))} />
+        <MenuAction icon={<Eye />} label={t("row_view_details", currentLanguage)} onClick={() => handleAction(() => handlePrintReceipt(payment, row, ledgers, localCurrency, false, currentLanguage))} />
+        <MenuAction icon={<Edit3 />} label={t("row_edit_line", currentLanguage)} onClick={() => handleAction(() => window.dispatchEvent(new CustomEvent("open-edit-payment", { detail: { payment, row } })))} />
+        <MenuAction icon={<Printer />} label={t("row_print_receipt", currentLanguage)} onClick={() => handleAction(() => handlePrintReceipt(payment, row, ledgers, localCurrency, true, currentLanguage))} />
       </div>
     </details>
   );
@@ -1908,27 +1908,27 @@ function DashboardSummaryHeader({
     const body = (
       <div className="flex flex-col gap-3.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
         <div className="flex justify-between items-center">
-          <span>Total Transactions:</span>
+          <span>{t("info_total_transactions", lang)}</span>
           <span className="font-bold text-slate-800 dark:text-slate-200">{summary.totalTransactions}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span>Purchase Currencies:</span>
+          <span>{t("info_purchase_currencies", lang)}</span>
           <span className="font-bold text-slate-800 dark:text-slate-200">{numCurrencies}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span>Final Currency:</span>
+          <span>{t("info_final_currency", lang)}</span>
           <span className="font-bold text-slate-800 dark:text-slate-200">{summary.localCurrency}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span>Exchange Rate Type:</span>
+          <span>{t("info_exchange_rate_type", lang)}</span>
           <span className="font-bold text-slate-800 dark:text-slate-200">{translateHeader(lang, "Live")}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span>Last Updated:</span>
+          <span>{t("info_last_updated", lang)}</span>
           <span className="font-bold text-slate-800 dark:text-slate-200">{dateStr}, {timeStr}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span>Report Type:</span>
+          <span>{t("info_report_type", lang)}</span>
           <span className="font-bold text-slate-800 dark:text-slate-200">{reportType}</span>
         </div>
       </div>
@@ -2758,10 +2758,10 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
     };
 
     openPurchaseA4ReportWindow({
-      title: "Purchase Master Verification Report",
+      title: t("verification_report_title", currentLanguage),
       purchaseData,
       autoPrint,
-      lang: "en"
+      lang: currentLanguage
     });
   };
 
@@ -3695,7 +3695,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
     }
   }, [selectedId, selected, baseCurrency, currency, getEffectiveRate, isSuperAdmin, ledgers]);
 
-  const cards = useMemo(() => kpis(filtered, baseCurrency), [filtered, baseCurrency]);
+  const cards = useMemo(() => kpis(filtered, baseCurrency, currentLanguage), [filtered, baseCurrency, currentLanguage]);
   const countryOptions = useMemo(() => Array.from(new Set(orders.map(rowCountryName))).filter(Boolean).sort(), [orders]);
   const branchOptions = useMemo(() => Array.from(new Set(orders.filter((row) => !countryFilter || rowCountryName(row) === countryFilter).map(rowBranchName))).filter(Boolean).sort(), [orders, countryFilter]);
   const currencyOptions = useMemo(() => Array.from(new Set(orders.filter((row) => !countryFilter || rowCountryName(row) === countryFilter).map(rowCurrency))).filter(Boolean).sort(), [orders, countryFilter]);
@@ -4853,7 +4853,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                   <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] p-3 shadow-sm flex flex-col justify-between">
                     <div className="text-[11px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 pb-1.5 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5">
                       <span>1</span>
-                      <span>Branch & User Details</span>
+                      <span>{t("sec_branch_user_details", currentLanguage)}</span>
                     </div>
                     <div className="space-y-1 mt-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
                       <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Country")}</span><span className="text-right font-bold">{countryName}</span></div>
@@ -4911,7 +4911,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                   <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] p-3 shadow-sm flex flex-col justify-between">
                     <div className="text-[11px] font-black uppercase tracking-wider text-cyan-600 dark:text-cyan-400 pb-1.5 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5">
                       <span>17</span>
-                      <span>Transport & Logistics</span>
+                      <span>{t("sec_transport_logistics", currentLanguage)}</span>
                     </div>
                     <div className="space-y-1 mt-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
                       <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Loading Country")}</span><span className="text-right font-bold">{loadingCountry}</span></div>
@@ -4929,7 +4929,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                   <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] p-3 shadow-sm flex flex-col justify-between">
                     <div className="text-[11px] font-black uppercase tracking-wider text-pink-600 dark:text-pink-400 pb-1.5 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5">
                       <span>5</span>
-                      <span>Purchase, Sales & Payment Summary</span>
+                      <span>{t("sec_purchase_sales_payment_summary", currentLanguage)}</span>
                     </div>
                     <div className="space-y-2 mt-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
                       <div>
@@ -4951,7 +4951,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                   <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] p-3 shadow-sm flex flex-col justify-between">
                     <div className="text-[11px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 pb-1.5 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5">
                       <span>6</span>
-                      <span>Currency & Conversion Payment Summary</span>
+                      <span>{t("sec_currency_conversion_payment_summary", currentLanguage)}</span>
                     </div>
                     <div className="space-y-1.5 mt-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
                       <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">Purchase Payment Currency :</span><span className="font-mono font-bold">USD {statementPurchaseForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
@@ -4966,7 +4966,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                   <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] p-3 shadow-sm flex flex-col justify-between">
                     <div className="text-[11px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 pb-1.5 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5">
                       <span>7</span>
-                      <span>Advance Payment & Financial Summary</span>
+                      <span>{t("sec_advance_payment_financial_summary", currentLanguage)}</span>
                     </div>
                     <div className="space-y-2 mt-2 text-[11px]">
                       <div>
@@ -5018,7 +5018,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                   <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] p-3 shadow-sm flex flex-col justify-between">
                     <div className="text-[11px] font-black uppercase tracking-wider text-sky-600 dark:text-sky-400 pb-1.5 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5">
                       <span>8</span>
-                      <span>Total Payment & Balance Summary</span>
+                      <span>{t("sec_total_payment_balance_summary", currentLanguage)}</span>
                     </div>
                     <div className="space-y-2 mt-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
                       <div>
@@ -5175,7 +5175,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                                   setEditingPayment({ payment: tx, row: selected });
                                 }}
                                 className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 text-[10px] font-bold shadow-xs transition cursor-pointer"
-                                title="Edit this payment entry"
+                                title={t("edit_payment_entry_tt", currentLanguage)}
                               >
                                 <Edit3 className="h-3 w-3" />
                                 <span>{translateHeader(currentLanguage, "Edit")}</span>
@@ -5230,7 +5230,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                                   setEditingPayment({ payment: tx, row: selected });
                                 }}
                                 className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 text-[10px] font-bold shadow-xs transition cursor-pointer"
-                                title="Edit this payment entry"
+                                title={t("edit_payment_entry_tt", currentLanguage)}
                               >
                                 <Edit3 className="h-3 w-3" />
                                 <span>{translateHeader(currentLanguage, "Edit")}</span>
@@ -5268,7 +5268,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                     <div className="space-y-4 animate-in fade-in duration-200">
                       {/* 1. ACCOUNTS DISPLAY & SELECTION: DR (AUTO-ASSIGNED) & CR (USER-SELECTED) */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-blue-50/40 dark:bg-blue-950/20 p-3.5 rounded-xl border border-blue-200 dark:border-blue-900/50">
-                        <FieldBlock label="Dr. Account (Party / Supplier Account - Auto Assigned)" required>
+                        <FieldBlock label={t("dr_account_label", currentLanguage)} required>
                           <div className="relative">
                             <Input
                               disabled
@@ -5281,7 +5281,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                           </div>
                         </FieldBlock>
 
-                        <FieldBlock label="Cr. Account (Payment Source: Cash / Bank Account)" required>
+                        <FieldBlock label={t("cr_account_label", currentLanguage)} required>
                           <SearchSelect
                             label=""
                             value={paymentSourceLedgerId}
@@ -5315,14 +5315,14 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                             value={roznamchaType}
                             onChange={(e) => setRoznamchaType(e.target.value)}
                           >
-                            <option value="Cash Book No.">Cash Book No.</option>
-                            <option value="Roznamcha Book No.">Roznamcha Book No.</option>
-                            <option value="Bank Book No.">Bank Book No.</option>
-                            <option value="Journal Voucher No.">Journal Voucher No.</option>
+                            <option value="Cash Book No.">{t("cash_book_no", currentLanguage)}</option>
+                            <option value="Roznamcha Book No.">{t("roznamcha_book_no", currentLanguage)}</option>
+                            <option value="Bank Book No.">{t("bank_book_no", currentLanguage)}</option>
+                            <option value="Journal Voucher No.">{t("journal_voucher_no", currentLanguage)}</option>
                           </select>
                         </FieldBlock>
 
-                        <FieldBlock label="Roznamcha / Voucher No." required>
+                        <FieldBlock label={t("roznamcha_voucher_no", currentLanguage)} required>
                           <Input
                             className="h-8 font-mono text-xs font-bold bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100"
                             value={roznamchaNumber}
@@ -5331,21 +5331,21 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                           />
                         </FieldBlock>
 
-                        <FieldBlock label="Payment Condition" required>
+                        <FieldBlock label={t("payment_condition", currentLanguage)} required>
                           <select
                             className="flex h-8 w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 text-xs font-semibold text-slate-900 dark:text-slate-100 focus-visible:outline-none"
                             value={typeDetails.condition || (activeMode === "advance" ? "Advance Payment" : "Remaining Payment")}
                             onChange={(e) => setTypeDetails((prev) => ({ ...prev, condition: e.target.value }))}
                           >
-                            <option value="Advance Payment">Advance Payment</option>
-                            <option value="Remaining Payment">Remaining Balance Payment</option>
-                            <option value="Full Payment">Full Clearance Payment</option>
-                            <option value="Part Payment">Part / Installment Payment</option>
-                            <option value="Credit Payment">Credit Payment</option>
+                            <option value="Advance Payment">{t("pc_advance", currentLanguage)}</option>
+                            <option value="Remaining Payment">{t("pc_remaining_balance", currentLanguage)}</option>
+                            <option value="Full Payment">{t("pc_full_clearance", currentLanguage)}</option>
+                            <option value="Part Payment">{t("pc_part_installment", currentLanguage)}</option>
+                            <option value="Credit Payment">{t("pc_credit", currentLanguage)}</option>
                           </select>
                         </FieldBlock>
 
-                        <FieldBlock label="Payment Type / Channel" required>
+                        <FieldBlock label={t("payment_type_channel", currentLanguage)} required>
                           <select
                             className="flex h-8 w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 text-xs font-semibold text-slate-900 dark:text-slate-100 focus-visible:outline-none"
                             value={paymentType}
