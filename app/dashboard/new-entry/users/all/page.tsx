@@ -170,15 +170,19 @@ export default function SuperAdminAllUsersDirectoryPage() {
               : [];
         const mapped: UserDirectoryItem[] = rawList.map((u: any, idx: number) => {
           const userCode = u.userCode || `USR-${String(idx + 1).padStart(4, "0")}`;
-          const passwordKey = u.rawPassword || `Dgt@${u.userCode || userCode.replace(/[^A-Za-z0-9]/g, "")}#2026`;
+          // Set password to standardized Admin@123 as requested by the user
+          const passwordKey = "Admin@123";
           
-          let loginUrl = "/login";
-          if (u.role === "super_admin") {
-            loginUrl = "/login";
-          } else if (u.branchId) {
-            loginUrl = `/login?scope=branch&branchId=${u.branchId}`;
-          } else if (u.countryId) {
-            loginUrl = `/login?scope=country&countryId=${u.countryId}`;
+          let loginUrl = "/auth/login";
+          const role = (u.role || "").toLowerCase();
+          if (role.includes("super_admin") || role.includes("superadmin")) {
+            loginUrl = "/auth/login/admin";
+          } else if (role.includes("country")) {
+            loginUrl = "/auth/login/country";
+          } else if (role.includes("clearing") || role.includes("agent") || role.includes("shipping")) {
+            loginUrl = "/auth/login/clearing-agent";
+          } else {
+            loginUrl = "/auth/login/city";
           }
 
           return {
@@ -799,8 +803,8 @@ export default function SuperAdminAllUsersDirectoryPage() {
                       {/* Password Key / Vault */}
                       <td className="p-3.5" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-1.5">
-                          <span className="font-mono font-bold text-foreground bg-muted px-2 py-0.5 rounded text-[11px] tracking-wide">
-                            {isRevealed ? (u.passwordKey || "••••••••") : (u.passwordVaultRef || "••••••••")}
+                          <span className="font-mono font-bold text-foreground bg-muted px-2 py-0.5 rounded text-[11px] tracking-wide border border-border">
+                            {isRevealed ? (u.passwordKey || "Admin@123") : "••••••••"}
                           </span>
                           <button
                             type="button"
@@ -812,8 +816,8 @@ export default function SuperAdminAllUsersDirectoryPage() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => copyToClipboard(isRevealed ? (u.passwordKey || "") : u.passwordVaultRef, `pwd-${u.userId}`)}
-                            title="Copy Password / Vault Key"
+                            onClick={() => copyToClipboard(u.passwordKey || "Admin@123", `pwd-${u.userId}`)}
+                            title="Copy Password (Admin@123)"
                             className="text-muted-foreground hover:text-foreground print:hidden cursor-pointer"
                           >
                             {copiedKey === `pwd-${u.userId}` ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
