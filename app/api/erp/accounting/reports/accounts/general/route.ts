@@ -591,9 +591,82 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
       limit ${limit}
     `;
 
+    const accountIds = (rows as Array<any>).map((r) => r.id);
+    const ledgerIds = (rows as Array<any>).map((r) => r.ledger_id).filter(Boolean);
+
+    const [rozLines, postingLines] = await Promise.all([
+      accountIds.length > 0
+        ? sql`
+            select rl.enterprise_account_id, rl.ledger_id, rl.debit, rl.credit, rl.currency, rl.usd_rate, rl.usd_amount,
+                   re.voucher_no as reference_no, re.entry_date, re.created_at
+            from public.roznamcha_lines rl
+            join public.roznamcha_entries re on re.id = rl.roznamcha_entry_id and re.deleted_at is null
+            where (rl.enterprise_account_id = any(${accountIds}) or (rl.ledger_id is not null and rl.ledger_id = any(${ledgerIds})))
+            order by re.entry_date desc, re.created_at desc
+            limit 1000;
+          `
+        : [],
+      ledgerIds.length > 0
+        ? sql`
+            select pl.enterprise_account_id, pl.ledger_id, pl.debit, pl.credit, pl.currency, pl.usd_rate, pl.usd_amount,
+                   pb.reference_no, pb.entry_date, pb.created_at
+            from public.posting_lines pl
+            join public.ledger_posting_batches pb on pb.id = pl.batch_id and pb.deleted_at is null
+            where (pl.enterprise_account_id = any(${accountIds}) or pl.ledger_id = any(${ledgerIds}))
+            order by pb.entry_date desc, pb.created_at desc
+            limit 1000;
+          `
+        : []
+    ]);
+
+    const movementsByAccount = new Map<string, Array<any>>();
+    const movementsByLedger = new Map<string, Array<any>>();
+
+    for (const line of rozLines) {
+      const item = {
+        source: "roznamcha" as const,
+        referenceNo: line.reference_no,
+        entryDate: line.entry_date ? String(line.entry_date).slice(0, 10) : line.created_at,
+        debit: toNumber(line.debit),
+        credit: toNumber(line.credit),
+        currency: line.currency || "USD",
+        usdRate: toNumber(line.usd_rate) || 1,
+        usdAmount: toNumber(line.usd_amount) || (toNumber(line.debit) + toNumber(line.credit))
+      };
+      if (line.enterprise_account_id) {
+        if (!movementsByAccount.has(line.enterprise_account_id)) movementsByAccount.set(line.enterprise_account_id, []);
+        movementsByAccount.get(line.enterprise_account_id)!.push(item);
+      }
+      if (line.ledger_id) {
+        if (!movementsByLedger.has(line.ledger_id)) movementsByLedger.set(line.ledger_id, []);
+        movementsByLedger.get(line.ledger_id)!.push(item);
+      }
+    }
+
+    for (const line of postingLines) {
+      const item = {
+        source: "ledger" as const,
+        referenceNo: line.reference_no,
+        entryDate: line.entry_date ? String(line.entry_date).slice(0, 10) : line.created_at,
+        debit: toNumber(line.debit),
+        credit: toNumber(line.credit),
+        currency: line.currency || "USD",
+        usdRate: toNumber(line.usd_rate) || 1,
+        usdAmount: toNumber(line.usd_amount) || (toNumber(line.debit) + toNumber(line.credit))
+      };
+      if (line.enterprise_account_id) {
+        if (!movementsByAccount.has(line.enterprise_account_id)) movementsByAccount.set(line.enterprise_account_id, []);
+        movementsByAccount.get(line.enterprise_account_id)!.push(item);
+      }
+      if (line.ledger_id) {
+        if (!movementsByLedger.has(line.ledger_id)) movementsByLedger.set(line.ledger_id, []);
+        movementsByLedger.get(line.ledger_id)!.push(item);
+      }
+    }
+
     const filtered = (rows as Array<any>).map((account) => {
       const contactsList = Array.isArray(account.contacts) ? account.contacts : [];
-      const companyName = account.company_legal_name || account.company_name || account.customer_name || "-";
+      const companyName = account.company_legal_name || account.company_name || "-";
       const branchType = scopeLabel(account.scope);
       const branchName =
         account.scope === "city_branch"
@@ -603,6 +676,24 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
             : account.scope === "country"
               ? `${account.country_name ?? "-"} (${account.country_code ?? "-"})`
               : "Super Admin";
+
+      const rawMovements = [
+        ...(movementsByAccount.get(account.id) || []),
+        ...(account.ledger_id ? movementsByLedger.get(account.ledger_id) || [] : [])
+      ];
+      // Deduplicate movements by source and referenceNo
+      const seenMov = new Set<string>();
+      const movements = rawMovements.filter((m) => {
+        const k = `${m.source}-${m.referenceNo}-${m.debit}-${m.credit}-${m.entryDate}`;
+        if (seenMov.has(k)) return false;
+        seenMov.add(k);
+        return true;
+      });
+
+      const calcDebit = movements.reduce((s, m) => s + m.debit, 0);
+      const calcCredit = movements.reduce((s, m) => s + m.credit, 0);
+      const openBal = toNumber(account.opening_balance);
+      const currBal = calcDebit > 0 || calcCredit > 0 ? openBal + calcDebit - calcCredit : toNumber(account.current_balance);
 
       return {
         accountId: account.id,
@@ -636,28 +727,28 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
         subType: account.is_control_account ? "Control Account" : "Normal Account",
         status: account.status ?? "active",
         createdAt: account.creation_date || account.created_at,
-        openingBalance: toNumber(account.opening_balance),
-        debitTotal: 0,
-        creditTotal: 0,
-        currentBalance: toNumber(account.current_balance),
+        openingBalance: openBal,
+        debitTotal: calcDebit,
+        creditTotal: calcCredit,
+        currentBalance: currBal,
         linkedLedgerCount: account.ledger_id ? 1 : 0,
-        journalActivityCount: 0,
-        latestJournalNo: account.ledger_code ?? account.code ?? null,
-        latestActivityAt: account.updated_at ?? account.created_at,
+        journalActivityCount: movements.length,
+        latestJournalNo: movements[0]?.referenceNo ?? account.ledger_code ?? account.code ?? null,
+        latestActivityAt: movements[0]?.entryDate ?? account.updated_at ?? account.created_at,
         companyName,
         companyCode: account.company_id ? parseIdPrefix(account.company_id) : "-",
         companyOwner: account.company_owner_name ?? "-",
-        bankName: account.bank_name ?? "-",
+        bankName: account.bank_name ? `${account.bank_name}${account.bank_branch_name ? ` (${account.bank_branch_name})` : ""}` : "-",
         warehouseName: "-",
         ownerName: account.company_owner_name ?? account.customer_name ?? "-",
         mobile: contactsList.find((item: any) => String(item?.type ?? "").toLowerCase().includes("mobile"))?.value ?? account.bank_phone ?? null,
         whatsapp: contactsList.find((item: any) => String(item?.type ?? "").toLowerCase().includes("whatsapp"))?.value ?? null,
         email: contactsList.find((item: any) => String(item?.type ?? "").toLowerCase().includes("email"))?.value ?? account.bank_email ?? null,
-        recentActivityLabel: null,
-        recentActivityAt: account.updated_at ?? account.created_at,
+        recentActivityLabel: movements.length > 0 ? `Transaction: ${movements[0].referenceNo}` : null,
+        recentActivityAt: movements[0]?.entryDate ?? account.updated_at ?? account.created_at,
         accountSerialNumber: Number(account.account_serial_number ?? 0),
         branchAccountSequence: Number(account.branch_account_sequence ?? 0),
-        recentMovements: [],
+        recentMovements: movements,
         contacts: contactsList
       };
     });

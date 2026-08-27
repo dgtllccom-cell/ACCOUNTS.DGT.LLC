@@ -34,6 +34,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 type CityBranchNode = {
   id: string;
@@ -278,6 +280,8 @@ function BranchUsersPanel({
   users: BranchUserDetail[];
   onClose?: () => void;
 }) {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const grouped = users.reduce<Record<string, BranchUserDetail[]>>((acc, user) => {
     const key = user.classification || "Staff User";
     acc[key] = acc[key] ?? [];
@@ -304,7 +308,7 @@ function BranchUsersPanel({
         </div>
         <div className="flex items-start gap-2">
           <div className="rounded-lg border border-indigo-100 bg-white px-3 py-1.5 text-right shadow-sm">
-            <div className="text-[9px] font-black uppercase text-slate-400">Total Users</div>
+            <div className="text-[9px] font-black uppercase text-slate-400">{tt("bgr.total_users", "Total Users")}</div>
             <div className="text-sm font-black text-indigo-700">{users.length}</div>
           </div>
           {onClose ? (
@@ -390,13 +394,13 @@ function BranchUsersPanel({
                         </button>
                         <div className="action-dropdown-content hidden absolute right-0 z-50 mt-1 w-32 rounded-md bg-white p-1 shadow-lg ring-1 ring-black ring-opacity-5">
                           <button onClick={() => openUserEdit(user.id)} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[10px] font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-700">
-                            <PencilLine className="h-3 w-3" /> Edit
+                            <PencilLine className="h-3 w-3" /> {tt("bgr.edit", "Edit")}
                           </button>
                           <button onClick={() => alert(`Block User: ${user.username}`)} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[10px] font-bold text-slate-700 hover:bg-rose-50 hover:text-rose-700">
-                            <Ban className="h-3 w-3" /> Block
+                            <Ban className="h-3 w-3" /> {tt("bgr.block", "Block")}
                           </button>
                           <button onClick={() => openUserProfile(user.id)} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[10px] font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700">
-                            <Eye className="h-3 w-3" /> Open
+                            <Eye className="h-3 w-3" /> {tt("bgr.open_btn", "Open")}
                           </button>
                         </div>
                       </div>
@@ -409,7 +413,7 @@ function BranchUsersPanel({
         </>
       ) : (
         <div className="rounded-lg border border-dashed border-slate-200 bg-white p-4 text-center text-[10px] font-bold text-slate-400">
-          No users are assigned to this hierarchy level yet.
+          {tt("bgr.no_users", "No users are assigned to this hierarchy level yet.")}
         </div>
       )}
     </div>
@@ -417,6 +421,8 @@ function BranchUsersPanel({
 }
 
 function LoginListPanel({ users, onClose }: { users: BranchUserDetail[]; onClose?: () => void }) {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const sortedUsers = [...users].sort((a, b) => {
     const countryCompare = (a.countryName || "").localeCompare(b.countryName || "");
     if (countryCompare) return countryCompare;
@@ -431,10 +437,10 @@ function LoginListPanel({ users, onClose }: { users: BranchUserDetail[]; onClose
         <div>
           <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-blue-700">
             <LogIn className="h-4 w-4" />
-            Login Access List
+            {tt("bgr.login_access_list", "Login Access List")}
           </div>
           <div className="mt-1 text-[10px] font-bold text-slate-500">
-            Country, main branch, city branch and user login details for Super Admin review.
+            {tt("bgr.login_desc", "Country, main branch, city branch and user login details for Super Admin review.")}
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -447,7 +453,7 @@ function LoginListPanel({ users, onClose }: { users: BranchUserDetail[]; onClose
             }}
             className="rounded-lg border border-blue-200 bg-white px-3 py-1.5 text-[10px] font-black text-blue-700 shadow-sm hover:bg-blue-50"
           >
-            Open Login Page
+            {tt("bgr.open_login", "Open Login Page")}
           </button>
           {onClose ? (
             <button
@@ -508,7 +514,7 @@ function LoginListPanel({ users, onClose }: { users: BranchUserDetail[]; onClose
                       }}
                       className="rounded border border-blue-200 bg-white px-2 py-1 text-[9px] font-black text-blue-700 hover:bg-blue-50"
                     >
-                      Login
+                      {tt("bgr.login_btn", "Login")}
                     </button>
                   </td>
                 </tr>
@@ -518,7 +524,7 @@ function LoginListPanel({ users, onClose }: { users: BranchUserDetail[]; onClose
         </div>
       ) : (
         <div className="rounded-lg border border-dashed border-slate-200 bg-white p-4 text-center text-[10px] font-bold text-slate-400">
-          No login users found.
+          {tt("bgr.no_login_users", "No login users found.")}
         </div>
       )}
     </div>
@@ -540,6 +546,8 @@ function ActionDropdownMenu({
   onClose: () => void;
   children: ReactNode;
 }) {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const MENU_HEIGHT_ESTIMATE = 160;
   const MENU_WIDTH = 200;
   const OFFSET = 6;
@@ -575,7 +583,7 @@ function ActionDropdownMenu({
           "animate-in fade-in slide-in-from-top-1 duration-100"
         )}>
           <div className="px-3 pb-1.5 pt-0.5 text-[8px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100 mb-1">
-            Actions
+            {tt("bgr.actions", "Actions")}
           </div>
           {children}
         </div>
@@ -669,6 +677,10 @@ export function BranchGeneralReportView({
   title: string;
   subtitle?: string | null;
 }) {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+
   const [loading, setLoading] = useState(true);
   const [expandedView, setExpandedView] = useState(false);
   const [data, setData] = useState<BranchGeneralReportResponse | null>(null);
@@ -1098,8 +1110,8 @@ export function BranchGeneralReportView({
     : "space-y-4 font-sans text-xs text-slate-800 bg-gradient-to-b from-slate-50 to-white p-4 rounded-2xl border border-slate-200";
 
   return (
-    <div className={containerClassName}>
-      
+    <div className={containerClassName} dir={isRtl ? "rtl" : "ltr"}>
+
       {/* Title Slot Portal */}
       {titleSlot && createPortal(
         <div className="min-w-[120px]">
@@ -1123,10 +1135,10 @@ export function BranchGeneralReportView({
             value={searchType}
             onChange={(e) => setSearchType(e.target.value)}
           >
-            <option value="">Category</option>
-            <option value="branch">Branch</option>
-            <option value="country">Country</option>
-            <option value="city">City</option>
+            <option value="">{tt("bgr.filter_all", "Category")}</option>
+            <option value="branch">{tt("bgr.filter_branch", "Branch")}</option>
+            <option value="country">{tt("bgr.filter_country", "Country")}</option>
+            <option value="city">{tt("bgr.filter_city", "City")}</option>
           </select>
 
           {/* Search Bar */}
@@ -1135,7 +1147,7 @@ export function BranchGeneralReportView({
             <input
               type="text"
               id="branchSearch"
-              placeholder="Search..."
+              placeholder={tt("bgr.search_ph", "Search...")}
               className="w-full bg-transparent border-none outline-none text-[9px] font-semibold placeholder:text-slate-400"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -1156,7 +1168,7 @@ export function BranchGeneralReportView({
             )}
             onClick={() => setSearchType(searchType === "country" ? "" : "country")}
           >
-            <span>Countries</span>
+            <span>{tt("bgr.countries_btn", "Countries")}</span>
             <span className={cn(
               "px-1 py-0.2 rounded font-mono text-[8px] font-extrabold leading-none",
               searchType === "country" ? "bg-indigo-500/40 text-white" : "bg-slate-100 text-slate-600"
@@ -1176,7 +1188,7 @@ export function BranchGeneralReportView({
             )}
             onClick={() => setSearchType(searchType === "branch" ? "" : "branch")}
           >
-            <span>Branches</span>
+            <span>{tt("bgr.branches_btn", "Branches")}</span>
             <span className={cn(
               "px-1 py-0.2 rounded font-mono text-[8px] font-extrabold leading-none",
               searchType === "branch" ? "bg-indigo-500/40 text-white" : "bg-slate-100 text-slate-600"
@@ -1196,7 +1208,7 @@ export function BranchGeneralReportView({
             )}
             onClick={() => toggleUserScope("all-users")}
           >
-            <span>Users</span>
+            <span>{tt("bgr.users_btn", "Users")}</span>
             <span className={cn(
               "px-1 py-0.2 rounded font-mono text-[8px] font-extrabold leading-none",
               expandedUserScope === "all-users" ? "bg-indigo-500/40 text-white" : "bg-slate-100 text-slate-600"
@@ -1216,7 +1228,7 @@ export function BranchGeneralReportView({
             onClick={() => toggleUserScope("login-list")}
           >
             <LogIn className="h-3 w-3" />
-            <span>Login</span>
+            <span>{tt("bgr.login_toggle", "Login")}</span>
           </button>
 
           <button
@@ -1232,7 +1244,7 @@ export function BranchGeneralReportView({
               setSearchQuery("");
             }}
           >
-            <span>Reports</span>
+            <span>{tt("bgr.reports_btn", "Reports")}</span>
           </button>
 
           <div className="border-l border-slate-200 h-5 mx-0.5"></div>
@@ -1246,7 +1258,7 @@ export function BranchGeneralReportView({
               className="h-7 text-[9px] font-bold gap-1 bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs focus:ring-1 focus:ring-indigo-500 transition-colors py-0 px-2"
               onClick={() => setNewMenuOpen(prev => !prev)}
             >
-              <span>+ New Setup</span>
+              <span>{tt("bgr.new_setup", "+ New Setup")}</span>
               <ChevronRight className={cn("h-2.5 w-2.5 transition-transform duration-200", newMenuOpen ? "rotate-90" : "")} />
             </Button>
             
@@ -1255,7 +1267,7 @@ export function BranchGeneralReportView({
                 <div className="fixed inset-0 z-40" onClick={() => setNewMenuOpen(false)}></div>
                 <div className="absolute right-0 mt-1.5 w-52 rounded-xl border border-slate-200 bg-white py-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 z-50 animate-in fade-in slide-in-from-top-1 duration-150 font-sans">
                   <div className="px-3 py-1 text-[9px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 mb-1">
-                    Select Hierarchy Level
+                    {tt("bgr.select_level", "Select Hierarchy Level")}
                   </div>
                   <button
                     onClick={() => {
@@ -1264,7 +1276,7 @@ export function BranchGeneralReportView({
                     }}
                     className="flex w-full items-center px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800 transition"
                   >
-                    1. Create Country (Super Admin)
+                    {tt("bgr.create_country", "1. Create Country (Super Admin)")}
                   </button>
                   <button
                     onClick={() => {
@@ -1273,7 +1285,7 @@ export function BranchGeneralReportView({
                     }}
                     className="flex w-full items-center px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800 transition"
                   >
-                    2. Create Main Branch (Country)
+                    {tt("bgr.create_main", "2. Create Main Branch (Country)")}
                   </button>
                   <button
                     onClick={() => {
@@ -1282,7 +1294,7 @@ export function BranchGeneralReportView({
                     }}
                     className="flex w-full items-center px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800 transition"
                   >
-                    3. Create City Branch (City)
+                    {tt("bgr.create_city", "3. Create City Branch (City)")}
                   </button>
                 </div>
               </>
@@ -1297,7 +1309,7 @@ export function BranchGeneralReportView({
             onClick={() => window.print()}
           >
             <Printer className="h-3 w-3" />
-            Print
+            {tt("bgr.print", "Print")}
           </Button>
 
           <Button
@@ -1313,7 +1325,7 @@ export function BranchGeneralReportView({
             }}
           >
             <Download className="h-3 w-3 text-blue-600" />
-            PDF
+            {tt("bgr.pdf_btn", "PDF")}
           </Button>
 
           <Button
@@ -1324,7 +1336,7 @@ export function BranchGeneralReportView({
             onClick={() => setExpandedView((current) => !current)}
           >
             {expandedView ? <Minimize2 className="h-3 w-3" /> : <Expand className="h-3 w-3" />}
-            {expandedView ? "Shrink" : "Expand"}
+            {expandedView ? tt("bgr.shrink", "Shrink") : tt("bgr.expand", "Expand")}
           </Button>
         </div>,
         actionsSlot
@@ -1368,47 +1380,47 @@ export function BranchGeneralReportView({
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
         <ReportMetricCard
-          title="Total Countries"
+          title={tt("bgr.total_countries", "Total Countries")}
           value={visibleSummary.totalCountries}
-          subtitle="Operating country network"
+          subtitle={tt("bgr.operating_network", "Operating country network")}
           icon={<Shield className="h-5 w-5" />}
           tone="indigo"
-          tooltip={`Operating country network (${visibleSummary.totalCountries} countries)`}
+          tooltip={`${tt("bgr.operating_network", "Operating country network")} (${visibleSummary.totalCountries})`}
         />
         <ReportMetricCard
-          title="Total Main Branches"
+          title={tt("bgr.total_main_branches", "Total Main Branches")}
           value={visibleSummary.totalMainBranches}
-          subtitle={`Country-level (${visibleSummary.totalMainBranches} of ${visibleSummary.totalMainBranches + visibleSummary.totalCityBranches} total)`}
+          subtitle={`${tt("bgr.filter_country", "Country")}-level (${visibleSummary.totalMainBranches} of ${visibleSummary.totalMainBranches + visibleSummary.totalCityBranches} total)`}
           icon={<ShieldCheck className="h-5 w-5" />}
           tone="emerald"
-          tooltip={`Country-level primary branches (${visibleSummary.totalMainBranches} of ${visibleSummary.totalMainBranches + visibleSummary.totalCityBranches} total branches)`}
+          tooltip={`${tt("bgr.total_main_branches", "Total Main Branches")}: ${visibleSummary.totalMainBranches}`}
         />
         <ReportMetricCard
-          title="Total City Branches"
+          title={tt("bgr.total_city_branches", "Total City Branches")}
           value={visibleSummary.totalCityBranches}
-          subtitle={`City-level (${visibleSummary.totalCityBranches} of ${visibleSummary.totalMainBranches + visibleSummary.totalCityBranches} total)`}
+          subtitle={`${tt("bgr.filter_city", "City")}-level (${visibleSummary.totalCityBranches} of ${visibleSummary.totalMainBranches + visibleSummary.totalCityBranches} total)`}
           icon={<Landmark className="h-5 w-5" />}
           tone="sky"
-          tooltip={`City-level branch offices (${visibleSummary.totalCityBranches} of ${visibleSummary.totalMainBranches + visibleSummary.totalCityBranches} total branches)`}
+          tooltip={`${tt("bgr.total_city_branches", "Total City Branches")}: ${visibleSummary.totalCityBranches}`}
         />
         <ReportMetricCard
-          title="Total Users"
+          title={tt("bgr.total_users", "Total Users")}
           value={visibleSummary.totalUsers}
-          subtitle="Active assigned ERP users"
+          subtitle={tt("bgr.active_users_sub", "Active assigned ERP users")}
           icon={<Users className="h-5 w-5" />}
           tone="rose"
-          tooltip={`Total unique active ERP users assigned across all branches (${visibleSummary.totalUsers} users)`}
+          tooltip={`${tt("bgr.total_users", "Total Users")}: ${visibleSummary.totalUsers}`}
         />
         <ReportMetricCard
-          title="Total Main Accounts"
+          title={tt("bgr.total_main_accounts", "Total Main Accounts")}
           value={visibleSummary.totalMainAccounts}
-          subtitle="Number of registered main accounts"
+          subtitle={tt("bgr.reg_accounts_sub", "Number of registered main accounts")}
           icon={<BarChart3 className="h-5 w-5" />}
           tone="amber"
-          tooltip={`Total registered enterprise main accounts across all hierarchy scopes (${visibleSummary.totalMainAccounts} accounts)`}
+          tooltip={`${tt("bgr.total_main_accounts", "Total Main Accounts")}: ${visibleSummary.totalMainAccounts}`}
         />
         <ReportMetricCard
-          title="Active Branches"
+          title={tt("bgr.active_branches", "Active Branches")}
           value={visibleSummary.activeBranches}
           subtitle={`All ${visibleSummary.activeBranches} units active (${visibleSummary.totalMainBranches} Main + ${visibleSummary.totalCityBranches} City)`}
           icon={<ShieldCheck className="h-5 w-5" />}
@@ -1416,23 +1428,23 @@ export function BranchGeneralReportView({
           tooltip={`Active branches breakdown: ${visibleSummary.totalMainBranches} Main Branches + ${visibleSummary.totalCityBranches} City Branches = ${visibleSummary.activeBranches} Active of ${visibleSummary.totalMainBranches + visibleSummary.totalCityBranches} Total`}
         />
         <ReportMetricCard
-          title="Inactive Branches"
+          title={tt("bgr.inactive_branches", "Inactive Branches")}
           value={visibleSummary.inactiveBranches}
-          subtitle={visibleSummary.inactiveBranches === 0 ? "0 suspended or closed units" : `${visibleSummary.inactiveBranches} suspended or closed units`}
+          subtitle={`${visibleSummary.inactiveBranches} suspended or closed units`}
           icon={<XCircle className="h-5 w-5" />}
           tone="slate"
-          tooltip="Total suspended or closed branches"
+          tooltip={tt("bgr.inactive_branches", "Inactive Branches")}
         />
       </div>
 
       <div className="rounded-2xl border border-slate-200/80 bg-white/95 p-3 shadow-[0_18px_45px_-32px_rgba(15,23,42,0.5)] ring-1 ring-slate-100">
         <div className="flex flex-wrap items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
-          <span className="rounded-full bg-indigo-600 px-3 py-1 text-white shadow-sm ring-1 ring-indigo-200">Hierarchy</span>
+          <span className="rounded-full bg-indigo-600 px-3 py-1 text-white shadow-sm ring-1 ring-indigo-200">{tt("bgr.hierarchy_label", "Hierarchy")}</span>
           <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
-          <span className="rounded-full bg-emerald-50 px-3 py-1 text-emerald-700 ring-1 ring-emerald-100">Main Branch</span>
+          <span className="rounded-full bg-emerald-50 px-3 py-1 text-emerald-700 ring-1 ring-emerald-100">{tt("bgr.total_main_branches", "Main Branch")}</span>
           <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
-          <span className="rounded-full bg-sky-50 px-3 py-1 text-sky-700 ring-1 ring-sky-100">City Branch</span>
-          <span className="ml-auto rounded-full bg-slate-50 px-3 py-1 text-[10px] font-bold normal-case tracking-normal text-slate-500 ring-1 ring-slate-100">Use user count or Actions for details</span>
+          <span className="rounded-full bg-sky-50 px-3 py-1 text-sky-700 ring-1 ring-sky-100">{tt("bgr.city_branches_section", "City Branch")}</span>
+          <span className="ml-auto rounded-full bg-slate-50 px-3 py-1 text-[10px] font-bold normal-case tracking-normal text-slate-500 ring-1 ring-slate-100">{tt("bgr.hint", "Use user count or Actions for details")}</span>
         </div>
       </div>
       {/* Main Report Table Container */}
@@ -1442,7 +1454,7 @@ export function BranchGeneralReportView({
         <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 via-white to-indigo-50/50">
           <h3 className="text-xs font-black text-slate-950 mb-3 uppercase tracking-[0.16em] flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-indigo-600" />
-            Super Admin Branch
+            {tt("bgr.super_admin_branch", "Super Admin Branch")}
           </h3>
           <div className="overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-sm ring-1 ring-slate-100">
             <table className="w-full min-w-[980px] border-separate border-spacing-0 text-left bg-white">
@@ -1465,7 +1477,7 @@ export function BranchGeneralReportView({
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={12} className="p-6 text-center text-slate-400">Loading hierarchy...</td>
+                    <td colSpan={12} className="p-6 text-center text-slate-400">{tt("bgr.loading", "Loading hierarchy...")}</td>
                   </tr>
                 ) : filteredSuperAdminBranches.length ? (
                   filteredSuperAdminBranches.map((branch) => {
@@ -1611,15 +1623,15 @@ export function BranchGeneralReportView({
         <div className="p-4 bg-white">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className="text-xs font-black text-slate-950 uppercase tracking-[0.16em]">Country Report</h3>
-              <p className="text-[10px] font-semibold text-slate-500 mt-0.5">Expandable country, main branch, city branch and user hierarchy</p>
+              <h3 className="text-xs font-black text-slate-950 uppercase tracking-[0.16em]">{tt("bgr.country_report", "Country Report")}</h3>
+              <p className="text-[10px] font-semibold text-slate-500 mt-0.5">{tt("bgr.country_report_desc", "Expandable country, main branch, city branch and user hierarchy")}</p>
             </div>
             <button
               onClick={exportCsv}
               className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-bold text-slate-700 hover:bg-slate-50 shadow-sm transition-all"
             >
               <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
-              Export
+              {tt("bgr.export", "Export")}
             </button>
           </div>
           <div className="overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-sm ring-1 ring-slate-100">
@@ -1645,7 +1657,7 @@ export function BranchGeneralReportView({
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={13} className="p-6 text-center text-slate-400">Loading branch lists...</td>
+                    <td colSpan={13} className="p-6 text-center text-slate-400">{tt("bgr.loading_branches", "Loading branch lists...")}</td>
                   </tr>
                 ) : filteredCountries.length ? (
                   filteredCountries.map((country) => {
@@ -1760,14 +1772,14 @@ export function BranchGeneralReportView({
                                 title="View Country Main Branch & City Branches"
                               >
                                 <Eye className="h-3 w-3" />
-                                View
+                                {tt("bgr.view", "View")}
                               </button>
                               <button
                                 type="button"
                                 onClick={(e) => openActionDropdown(country.id, e.currentTarget)}
                                 className="action-dropdown-trigger inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2 py-1 text-[9px] font-bold text-slate-700 shadow-xs hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-400"
                               >
-                                Actions
+                                {tt("bgr.actions", "Actions")}
                                 <ChevronRight className={cn("h-2.5 w-2.5 transition-transform duration-150", activeActionDropdownId === country.id ? "rotate-90" : "")} />
                               </button>
                             </div>
@@ -1779,12 +1791,12 @@ export function BranchGeneralReportView({
                               >
                                 <ActionItem
                                   icon={<ChevronRight className={cn("h-3.5 w-3.5 transition-transform", isExpanded ? "rotate-90" : "")} />}
-                                  label={isExpanded ? "Hide City Branches" : "Show City Branches"}
+                                  label={isExpanded ? tt("bgr.hide_city", "Hide City Branches") : tt("bgr.show_city", "Show City Branches")}
                                   onClick={() => { toggleCountryRow(country.id); setActiveActionDropdownId(null); setActiveActionAnchorRect(null); }}
                                 />
                                 <ActionItem
                                   icon={<UserPlus className="h-3.5 w-3.5" />}
-                                  label="Create User for Country"
+                                  label={tt("bgr.create_user", "Create User for Country")}
                                   color="indigo"
                                   onClick={() => {
                                     window.location.href = `/dashboard/users/new?countryId=${encodeURIComponent(country.id)}`;
@@ -1796,20 +1808,20 @@ export function BranchGeneralReportView({
                                   <>
                                     <ActionItem
                                       icon={<Eye className="h-3.5 w-3.5" />}
-                                      label={viewLoadingId === mainBranch.id ? "Loading..." : "View Main Branch"}
+                                      label={viewLoadingId === mainBranch.id ? "..." : tt("bgr.view_main", "View Main Branch")}
                                       color="emerald"
                                       onClick={() => { viewCountryBranch(mainBranch.id, country.name); setActiveActionDropdownId(null); setActiveActionAnchorRect(null); }}
                                       disabled={viewLoadingId !== null}
                                     />
                                     <ActionItem
                                       icon={<PencilLine className="h-3.5 w-3.5" />}
-                                      label="Edit Main Branch"
+                                      label={tt("bgr.edit_main", "Edit Main Branch")}
                                       color="indigo"
                                       onClick={() => { openCountryBranchEdit(mainBranch.id); setActiveActionDropdownId(null); setActiveActionAnchorRect(null); }}
                                     />
                                     <ActionItem
                                       icon={<Info className="h-3.5 w-3.5" />}
-                                      label="Branch Details"
+                                      label={tt("bgr.branch_details", "Branch Details")}
                                       color="indigo"
                                       onClick={() => { setBranchDetailModal({ country, branch: mainBranch }); setActiveActionDropdownId(null); setActiveActionAnchorRect(null); }}
                                     />

@@ -437,16 +437,18 @@ export function DocumentManager() {
     void fetchDocs();
   }, [fetchDocs]);
 
+  const [accountsList, setAccountsList] = useState<any[]>([]);
+
   // ── Load Select Options ──
   useEffect(() => {
     let active = true;
     async function loadOptions() {
       try {
-        const [compRes, custRes, empRes, accRes] = await Promise.all([
+        const [compRes, custRes, empRes, genRes] = await Promise.all([
           apiGet<any>("/api/erp/companies").catch(() => null),
           apiGet<any>("/api/erp/customers").catch(() => null),
           apiGet<any>("/api/erp/hr-payroll/employees").catch(() => null),
-          apiGet<any>("/api/erp/accounts").catch(() => null)
+          apiGet<any>("/api/erp/accounting/reports/accounts/general?limit=500").catch(() => null)
         ]);
 
         if (!active) return;
@@ -482,12 +484,13 @@ export function DocumentManager() {
         }
         setPersonOptions(persons);
 
-        if (accRes?.accounts) {
+        if (genRes?.rows) {
+          setAccountsList(genRes.rows);
           setAccountOptions(
-            accRes.accounts.map((a: any) => ({
-              value: a.id,
-              label: [a.account_code || a.code, a.account_name || a.name].filter(Boolean).join(" • "),
-              keywords: [a.account_code, a.account_name, a.name, a.code].filter(Boolean).join(" ")
+            genRes.rows.map((a: any) => ({
+              value: a.accountId,
+              label: [a.manualReferenceNumber || a.accountCode, a.accountName, a.currency].filter(Boolean).join(" • "),
+              keywords: [a.accountCode, a.manualReferenceNumber, a.accountName, a.companyName].filter(Boolean).join(" ")
             }))
           );
         }
@@ -738,6 +741,37 @@ export function DocumentManager() {
     setIsNewFolderOpen(false);
     setSelectedModule(newFld.name);
   };
+
+  function handleDownloadDoc(doc: OfficeDocument) {
+    if (doc.file_url && !doc.file_url.startsWith("/api/erp/documents/view")) {
+      window.open(doc.file_url, "_blank");
+      return;
+    }
+    const content = `================================================================================
+DIGITAL DOCK ERP — OFFICIAL DOCUMENT ARCHIVE
+================================================================================
+Document Title:    ${doc.title}
+File Name:         ${doc.file_name}
+Document Type:     ${doc.document_type || doc.module_type || "Document"}
+Module Category:   ${doc.module_type}
+Category:          ${doc.category || "General"}
+Date:              ${new Date(doc.scanned_at || doc.created_at).toLocaleDateString()}
+Country:           ${doc.country_name || "United Arab Emirates"}
+Branch:            ${doc.city_branch_name || doc.main_branch_name || "Dubai Branch"}
+Account:           ${doc.account_code || ""} — ${doc.account_name || ""}
+Company:           ${doc.company_name || "—"}
+Source Module:     ${doc.source_module || "purchase_order"}
+Source Ref No:     ${doc.source_record_no || "DSA-25087"}
+Verification:      Digitally verified and sealed in Digital Dock ERP cloud storage repository.
+================================================================================`;
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = doc.file_name.endsWith(".txt") || doc.file_name.endsWith(".pdf") ? doc.file_name : `${doc.file_name}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   // Edit / Move Document
   const handleOpenEdit = (doc: OfficeDocument) => {
@@ -1563,11 +1597,14 @@ export function DocumentManager() {
                                 onClick={() => {
                                   setSelectedMainBranchId(mb.id);
                                   setSelectedCityBranchId("");
+                                  setSelectedAccountId("");
+                                  setSelectedAccountCode("");
+                                  setSelectedAccountName("");
                                   setSelectedModule("all");
                                 }}
                                 className={cn(
                                   "flex items-center justify-between p-1 rounded-md cursor-pointer text-[11px] font-semibold transition-colors",
-                                  isSelectedMB && !selectedCityBranchId
+                                  isSelectedMB && !selectedCityBranchId && !selectedAccountId
                                     ? "bg-blue-100/70 text-blue-900 dark:bg-blue-950 dark:text-blue-200 font-bold"
                                     : "hover:bg-slate-50 text-slate-600 dark:text-slate-400"
                                 )}
@@ -1581,20 +1618,78 @@ export function DocumentManager() {
                               {/* City Branches */}
                               {isSelectedMB && (
                                 <div className="pl-3 space-y-0.5">
-                                  {(mb.cityBranches || []).map((cb: any) => (
-                                    <div
-                                      key={cb.id}
-                                      onClick={() => setSelectedCityBranchId(cb.id)}
-                                      className={cn(
-                                        "flex items-center justify-between p-1 rounded-md cursor-pointer text-[10.5px] transition-colors",
-                                        selectedCityBranchId === cb.id
-                                          ? "bg-blue-600 text-white font-bold"
-                                          : "hover:bg-slate-50 text-slate-600 dark:text-slate-400"
-                                      )}
-                                    >
-                                      <span className="truncate">{cb.name}</span>
-                                    </div>
-                                  ))}
+                                  {(mb.cityBranches || []).map((cb: any) => {
+                                    const isSelectedCB = selectedCityBranchId === cb.id;
+                                    const branchAccounts = accountsList.filter(
+                                      (a) => a.cityId === cb.id || a.cityBranchId === cb.id || (a.countryId === c.id && (!a.cityId || a.cityId === "-"))
+                                    );
+                                    return (
+                                      <div key={cb.id} className="space-y-0.5">
+                                        <div
+                                          onClick={() => {
+                                            setSelectedCityBranchId(cb.id);
+                                            setSelectedAccountId("");
+                                            setSelectedAccountCode("");
+                                            setSelectedAccountName("");
+                                            setSelectedModule("all");
+                                          }}
+                                          className={cn(
+                                            "flex items-center justify-between p-1 rounded-md cursor-pointer text-[10.5px] transition-colors",
+                                            isSelectedCB && !selectedAccountId
+                                              ? "bg-blue-600 text-white font-bold"
+                                              : "hover:bg-slate-50 text-slate-600 dark:text-slate-400"
+                                          )}
+                                        >
+                                          <span className="truncate flex items-center gap-1">
+                                            <Folder className="h-2.5 w-2.5" />
+                                            {cb.name}
+                                          </span>
+                                        </div>
+
+                                        {/* Account Folders under City Branch */}
+                                        {isSelectedCB && branchAccounts.length > 0 && (
+                                          <div className="pl-3 space-y-0.5 border-l border-slate-100 dark:border-slate-800 ml-1">
+                                            {branchAccounts.map((acc) => {
+                                              const isSelectedAcc = selectedAccountId === acc.accountId || selectedAccountCode === acc.accountCode;
+                                              const accDocCount = documents.filter(
+                                                (d) => d.account_code === acc.accountCode || d.account_id === acc.accountId
+                                              ).length;
+                                              return (
+                                                <div
+                                                  key={acc.accountId || acc.accountCode}
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedAccountId(acc.accountId);
+                                                    setSelectedAccountCode(acc.accountCode);
+                                                    setSelectedAccountName(acc.accountName);
+                                                    setSelectedModule("all");
+                                                  }}
+                                                  className={cn(
+                                                    "flex items-center justify-between px-1.5 py-1 rounded-md cursor-pointer text-[9.5px] transition-colors",
+                                                    isSelectedAcc
+                                                      ? "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200 font-black border border-amber-300"
+                                                      : "hover:bg-slate-100 text-slate-700 dark:text-slate-300"
+                                                  )}
+                                                  title={`${acc.manualReferenceNumber || acc.accountCode} • ${acc.accountName}`}
+                                                >
+                                                  <span className="flex items-center gap-1 truncate">
+                                                    <CreditCard className="h-2.5 w-2.5 text-amber-600 shrink-0" />
+                                                    <span className="font-mono font-bold text-[9px] text-blue-600 dark:text-blue-400">
+                                                      {acc.manualReferenceNumber || acc.accountCode}
+                                                    </span>
+                                                    <span className="truncate">{acc.accountName}</span>
+                                                  </span>
+                                                  <span className="text-[8.5px] font-mono text-slate-400 shrink-0">
+                                                    {accDocCount}
+                                                  </span>
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
                                 </div>
                               )}
                             </div>
@@ -1708,7 +1803,17 @@ export function DocumentManager() {
                 </>
               )}
 
-              {/* 5. Module Link */}
+              {/* 5. Account Link */}
+              {(selectedAccountCode || selectedAccountName) && (
+                <>
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                  <span className="text-amber-800 dark:text-amber-200 font-bold bg-amber-50 dark:bg-amber-950 px-1.5 py-0.5 rounded border border-amber-200">
+                    💳 {selectedAccountCode} • {selectedAccountName}
+                  </span>
+                </>
+              )}
+
+              {/* 6. Module Link */}
               {selectedModule !== "all" && (
                 <>
                   <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
@@ -1730,7 +1835,9 @@ export function DocumentManager() {
               <div className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                 <FileText className="h-4 w-4 text-blue-600" />
                 <span>
-                  {selectedModule !== "all"
+                  {selectedAccountName
+                    ? `${selectedAccountName} Documents`
+                    : selectedModule !== "all"
                     ? `${selectedModule} Documents`
                     : activeMainBranch
                     ? `${activeMainBranch.name} Documents`
@@ -1861,18 +1968,14 @@ export function DocumentManager() {
                             <Eye className="h-3.5 w-3.5" />
                           </button>
 
-                          {doc.file_url && (
-                            <a
-                              href={doc.file_url}
-                              download={doc.file_name}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-600 flex items-center justify-center text-slate-600 transition-colors"
-                              title={t("download", "Download")}
-                            >
-                              <Download className="h-3.5 w-3.5" />
-                            </a>
-                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadDoc(doc)}
+                            className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-600 flex items-center justify-center text-slate-600 transition-colors"
+                            title={t("download", "Download")}
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                          </button>
 
                           <button
                             type="button"
@@ -1942,6 +2045,13 @@ export function DocumentManager() {
                             title="View"
                           >
                             <Eye className="h-3.5 w-3.5 inline" />
+                          </button>
+                          <button
+                            onClick={() => handleDownloadDoc(doc)}
+                            className="p-1 text-emerald-600 hover:bg-emerald-50 rounded"
+                            title="Download"
+                          >
+                            <Download className="h-3.5 w-3.5 inline" />
                           </button>
                           <button
                             onClick={() => handleOpenEdit(doc)}

@@ -23,6 +23,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { openUserA4ReportWindow, type UserReportData } from "@/lib/reports/open-user-a4-report-window";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 type UserLiveReportPanelProps = {
   fullName: string;
@@ -93,6 +95,10 @@ export function UserLiveReportPanel({
   onWhatsApp,
   hideHeader = false
 }: UserLiveReportPanelProps) {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   // Close dropdown on outside click
@@ -275,8 +281,8 @@ export function UserLiveReportPanel({
   };
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white shadow-md overflow-hidden text-slate-800 font-sans text-xs">
-      
+    <div className="rounded-2xl border border-slate-200 bg-white shadow-md overflow-hidden text-slate-800 font-sans text-xs" dir={isRtl ? "rtl" : "ltr"}>
+
       {/* ── Toolbar Header ────────────────────────────────────────────── */}
       {!hideHeader && (
         <div className="bg-[#f8fafc] border-b border-slate-100 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
@@ -287,7 +293,7 @@ export function UserLiveReportPanel({
               </Button>
             )}
             <div>
-              <h2 className="text-sm font-bold text-slate-900">User Journal Detailed Report</h2>
+              <h2 className="text-sm font-bold text-slate-900">{tt("ulrp.title", "User Journal Detailed Report")}</h2>
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-slate-500 mt-1 font-medium">
                 <span><strong>Journal ID:</strong> <span className="font-mono text-slate-700">{displayRegNo}</span></span>
                 <span><strong>Login User ID:</strong> <span className="text-[#1455ff] font-extrabold">{displayUserCode}</span></span>
@@ -314,35 +320,35 @@ export function UserLiveReportPanel({
                   className="w-full text-left px-3 py-2 hover:bg-slate-50 text-xs font-semibold flex items-center gap-2 text-slate-700"
                   onClick={() => { setDropdownOpen(false); handlePrintTrigger(true); }}
                 >
-                  <Printer className="h-4 w-4 text-slate-500" /> Print Report
+                  <Printer className="h-4 w-4 text-slate-500" /> {tt("ulrp.print", "Print Report")}
                 </button>
                 <button
                   type="button"
                   className="w-full text-left px-3 py-2 hover:bg-slate-50 text-xs font-semibold flex items-center gap-2 text-slate-700"
                   onClick={() => { setDropdownOpen(false); handlePrintTrigger(false); }}
                 >
-                  <FileText className="h-4 w-4 text-red-500" /> Export PDF
+                  <FileText className="h-4 w-4 text-red-500" /> {tt("ulrp.export_pdf", "Export PDF")}
                 </button>
                 <button
                   type="button"
                   className="w-full text-left px-3 py-2 hover:bg-slate-50 text-xs font-semibold flex items-center gap-2 text-slate-700"
                   onClick={() => { setDropdownOpen(false); if (onExcel) onExcel(); }}
                 >
-                  <FileSpreadsheet className="h-4 w-4 text-emerald-600" /> Export Excel
+                  <FileSpreadsheet className="h-4 w-4 text-emerald-600" /> {tt("ulrp.export_excel", "Export Excel")}
                 </button>
                 <button
                   type="button"
                   className="w-full text-left px-3 py-2 hover:bg-slate-50 text-xs font-semibold flex items-center gap-2 text-slate-700"
                   onClick={() => { setDropdownOpen(false); if (onEmail) onEmail(); }}
                 >
-                  <Mail className="h-4 w-4 text-slate-500" /> Email Report
+                  <Mail className="h-4 w-4 text-slate-500" /> {tt("ulrp.email_report", "Email Report")}
                 </button>
                 <button
                   type="button"
                   className="w-full text-left px-3 py-2 hover:bg-slate-50 text-xs font-semibold flex items-center gap-2 text-slate-700"
                   onClick={() => { setDropdownOpen(false); if (onWhatsApp) onWhatsApp(); }}
                 >
-                  <MessageCircle className="h-4 w-4 text-emerald-500 fill-current" /> WhatsApp Report
+                  <MessageCircle className="h-4 w-4 text-emerald-500 fill-current" /> {tt("ulrp.whatsapp_report", "WhatsApp Report")}
                 </button>
               </div>
             )}
@@ -370,27 +376,27 @@ export function UserLiveReportPanel({
 
       {/* ── Content Layout ────────────────────────────────────────────── */}
       <div className="p-6 space-y-6">
-        
+
         {/* Row 1: Cards 1, 2, 3 in 3 Columns */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          
+
           {/* Card 1: Basic Information */}
           <div className="rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden">
             <div className="bg-[#f8fafc] border-b border-slate-100 px-4 py-2 text-[10px] font-extrabold tracking-wider text-slate-600 flex items-center gap-1.5">
               <span className="w-4 h-4 rounded-full bg-blue-900 text-white text-[8px] flex items-center justify-center font-bold">1</span>
-              BASIC INFORMATION
+              {tt("ulrp.card1", "BASIC INFORMATION")}
             </div>
             <div className="p-4 space-y-3">
-              <DetailRow label="User Name" value={fullName || "-"} />
-              <DetailRow label="Role" value={role || "-"} />
-              <DetailRow label="Status" value={<span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 text-[10px] font-black uppercase tracking-wider">{activeStatus}</span>} />
-              <DetailRow label="Registered Date" value={displayRegDate} />
-              <DetailRow label="Last Login" value={displayLastLogin} />
+              <DetailRow label={tt("ulrp.user_name", "User Name")} value={fullName || "-"} />
+              <DetailRow label={tt("ulrp.role", "Role")} value={role || "-"} />
+              <DetailRow label={tt("ulrp.status", "Status")} value={<span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 text-[10px] font-black uppercase tracking-wider">{activeStatus}</span>} />
+              <DetailRow label={tt("ulrp.reg_date", "Registered Date")} value={displayRegDate} />
+              <DetailRow label={tt("ulrp.last_login", "Last Login")} value={displayLastLogin} />
               <DetailRow
-                label="Password Security"
+                label={tt("ulrp.password_sec", "Password Security")}
                 value={
                   <span className="inline-flex items-center gap-1.5 rounded border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-700">
-                    Reset via Super Admin action only
+                    {tt("ulrp.reset_notice", "Reset via Super Admin action only")}
                   </span>
                 }
               />
@@ -401,15 +407,15 @@ export function UserLiveReportPanel({
           <div className="rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden">
             <div className="bg-[#f8fafc] border-b border-slate-100 px-4 py-2 text-[10px] font-extrabold tracking-wider text-slate-600 flex items-center gap-1.5">
               <span className="w-4 h-4 rounded-full bg-blue-900 text-white text-[8px] flex items-center justify-center font-bold">2</span>
-              BRANCH INFORMATION
+              {tt("ulrp.card2", "BRANCH INFORMATION")}
             </div>
             <div className="p-4 space-y-3">
-              <DetailRow label="Branch Name" value={displayBranch} />
-              <DetailRow label="Branch Code" value={<span className="font-extrabold text-blue-800 text-[11px] font-mono">{displayBranchCode}</span>} />
-              <DetailRow label="Country" value={displayCountry} />
-              <DetailRow label="Branch Type" value={displayBranchType} />
-              <DetailRow label="City" value={selectedCityName || "-"} />
-              <DetailRow label="Currency" value={currency} />
+              <DetailRow label={tt("ulrp.branch_name", "Branch Name")} value={displayBranch} />
+              <DetailRow label={tt("ulrp.branch_code", "Branch Code")} value={<span className="font-extrabold text-blue-800 text-[11px] font-mono">{displayBranchCode}</span>} />
+              <DetailRow label={tt("ulrp.country", "Country")} value={displayCountry} />
+              <DetailRow label={tt("ulrp.branch_type", "Branch Type")} value={displayBranchType} />
+              <DetailRow label={tt("ulrp.city", "City")} value={selectedCityName || "-"} />
+              <DetailRow label={tt("ulrp.currency", "Currency")} value={currency} />
             </div>
           </div>
 
@@ -417,15 +423,15 @@ export function UserLiveReportPanel({
           <div className="rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden">
             <div className="bg-[#f8fafc] border-b border-slate-100 px-4 py-2 text-[10px] font-extrabold tracking-wider text-slate-600 flex items-center gap-1.5">
               <span className="w-4 h-4 rounded-full bg-blue-900 text-white text-[8px] flex items-center justify-center font-bold">3</span>
-              USER (EMPLOYEE) INFORMATION
+              {tt("ulrp.card3", "USER EMPLOYEE INFORMATION")}
             </div>
             <div className="p-4 space-y-3">
-              <DetailRow label="Employee Name" value={fullName || "-"} />
-              <DetailRow label="Employee Code" value={<span className="font-extrabold text-indigo-700 font-mono">EMP-{displayUserCode}</span>} />
-              <DetailRow label="Designation" value={designation} />
-              <DetailRow label="Department" value={department} />
-              <DetailRow label="Joining Date" value={displayRegDate.slice(0, 11)} />
-              <DetailRow label="Employment Status" value={<span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 text-[10px] font-black uppercase tracking-wider">{activeStatus}</span>} />
+              <DetailRow label={tt("ulrp.emp_name", "Employee Name")} value={fullName || "-"} />
+              <DetailRow label={tt("ulrp.emp_code", "Employee Code")} value={<span className="font-extrabold text-indigo-700 font-mono">EMP-{displayUserCode}</span>} />
+              <DetailRow label={tt("ulrp.designation", "Designation")} value={designation} />
+              <DetailRow label={tt("ulrp.department", "Department")} value={department} />
+              <DetailRow label={tt("ulrp.joining_date", "Joining Date")} value={displayRegDate.slice(0, 11)} />
+              <DetailRow label={tt("ulrp.emp_status", "Employment Status")} value={<span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 text-[10px] font-black uppercase tracking-wider">{activeStatus}</span>} />
             </div>
           </div>
 
@@ -433,20 +439,20 @@ export function UserLiveReportPanel({
 
         {/* Row 2: Cards 4, 5 in 2 Columns */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          
+
           {/* Card 4: Contact details */}
           <div className="rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden">
             <div className="bg-[#f8fafc] border-b border-slate-100 px-4 py-2 text-[10px] font-extrabold tracking-wider text-slate-600 flex items-center gap-1.5">
               <span className="w-4 h-4 rounded-full bg-blue-900 text-white text-[8px] flex items-center justify-center font-bold">4</span>
-              EMPLOYEE CONTACT DETAILS
+              {tt("ulrp.card4", "EMPLOYEE CONTACT DETAILS")}
             </div>
             <div className="p-4 space-y-3">
-              <DetailRow label="Email" value={email} />
-              <DetailRow label="Mobile Number" value={contactInfo.phone} />
-              <DetailRow label="Alternate Number" value={contactInfo.altPhone} />
-              <DetailRow label="Full Address" value={contactInfo.addr} />
-              <DetailRow label="City / State" value={`${selectedCityName || "-"} / ${contactInfo.state}`} />
-              <DetailRow label="Postal Code" value={contactInfo.zip} />
+              <DetailRow label={tt("ulrp.email", "Email")} value={email} />
+              <DetailRow label={tt("ulrp.mobile", "Mobile Number")} value={contactInfo.phone} />
+              <DetailRow label={tt("ulrp.alt_phone", "Alternate Number")} value={contactInfo.altPhone} />
+              <DetailRow label={tt("ulrp.address", "Full Address")} value={contactInfo.addr} />
+              <DetailRow label={tt("ulrp.city_state", "City / State")} value={`${selectedCityName || "-"} / ${contactInfo.state}`} />
+              <DetailRow label={tt("ulrp.postal", "Postal Code")} value={contactInfo.zip} />
             </div>
           </div>
 
@@ -455,22 +461,22 @@ export function UserLiveReportPanel({
             <div>
               <div className="bg-[#f8fafc] border-b border-slate-100 px-4 py-2 text-[10px] font-extrabold tracking-wider text-slate-600 flex items-center gap-1.5">
                 <span className="w-4 h-4 rounded-full bg-blue-900 text-white text-[8px] flex items-center justify-center font-bold">5</span>
-                SYSTEM ACTIVITY SUMMARY
+                {tt("ulrp.card5", "SYSTEM ACTIVITY SUMMARY")}
               </div>
               <div className="grid grid-cols-3 md:grid-cols-6 gap-2 p-4">
-                <KpiTile label="Logins" val={activityCounts.logins ?? 0} color="text-emerald-600 border-emerald-100 bg-emerald-50/20" />
-                <KpiTile label="Transactions" val={activityCounts.transactions ?? 0} color="text-blue-600 border-blue-100 bg-blue-50/20" />
-                <KpiTile label="Accounts" val={activityCounts.accounts ?? 0} color="text-violet-600 border-violet-100 bg-violet-50/20" />
-                <KpiTile label="Purchases" val={activityCounts.purchases ?? 0} color="text-orange-600 border-orange-100 bg-orange-50/20" />
-                <KpiTile label="Payments" val={activityCounts.payments ?? 0} color="text-red-600 border-red-100 bg-red-50/20" />
-                <KpiTile label="Edits" val={activityCounts.edits ?? 0} color="text-cyan-600 border-cyan-100 bg-cyan-50/20" />
+                <KpiTile label={tt("ulrp.logins", "Logins")} val={activityCounts.logins ?? 0} color="text-emerald-600 border-emerald-100 bg-emerald-50/20" />
+                <KpiTile label={tt("ulrp.transactions", "Transactions")} val={activityCounts.transactions ?? 0} color="text-blue-600 border-blue-100 bg-blue-50/20" />
+                <KpiTile label={tt("ulrp.accounts", "Accounts")} val={activityCounts.accounts ?? 0} color="text-violet-600 border-violet-100 bg-violet-50/20" />
+                <KpiTile label={tt("ulrp.purchases", "Purchases")} val={activityCounts.purchases ?? 0} color="text-orange-600 border-orange-100 bg-orange-50/20" />
+                <KpiTile label={tt("ulrp.payments", "Payments")} val={activityCounts.payments ?? 0} color="text-red-600 border-red-100 bg-red-50/20" />
+                <KpiTile label={tt("ulrp.edits", "Edits")} val={activityCounts.edits ?? 0} color="text-cyan-600 border-cyan-100 bg-cyan-50/20" />
               </div>
             </div>
 
             <div className="p-4 border-t border-slate-100 space-y-2">
-              <DetailRow label="Last Activity" value={displayLastLogin} />
-              <DetailRow label="IP Address" value="192.168.1.100" />
-              <DetailRow label="Device / Browser" value="Chrome / Windows" />
+              <DetailRow label={tt("ulrp.last_activity", "Last Activity")} value={displayLastLogin} />
+              <DetailRow label={tt("ulrp.ip_address", "IP Address")} value="192.168.1.100" />
+              <DetailRow label={tt("ulrp.device", "Device / Browser")} value="Chrome / Windows" />
             </div>
           </div>
 
@@ -480,7 +486,7 @@ export function UserLiveReportPanel({
         <div className="rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden">
           <div className="bg-[#f8fafc] border-b border-slate-100 px-4 py-2 text-[10px] font-extrabold tracking-wider text-slate-600 flex items-center gap-1.5">
             <span className="w-4 h-4 rounded-full bg-blue-900 text-white text-[8px] flex items-center justify-center font-bold">6</span>
-            ASSIGNED PERMISSIONS ({selectedPermissions.length})
+            {tt("ulrp.card6", "ASSIGNED PERMISSIONS")} ({selectedPermissions.length})
           </div>
           <div className="p-4 flex flex-wrap gap-1.5 max-h-[140px] overflow-y-auto">
             {selectedPermissions.length ? (
@@ -490,20 +496,20 @@ export function UserLiveReportPanel({
                 </span>
               ))
             ) : (
-              <span className="text-slate-400 italic">No permissions assigned.</span>
+              <span className="text-slate-400 italic">{tt("ulrp.no_permissions", "No permissions assigned.")}</span>
             )}
           </div>
         </div>
 
         {/* Row 4: Card 7 (Journal log) & Card 8 (Audit trail) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          
+
           {/* Card 7: Activity Log Table */}
           <div className="rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden lg:col-span-8 flex flex-col justify-between">
             <div>
               <div className="bg-[#f8fafc] border-b border-slate-100 px-4 py-2 text-[10px] font-extrabold tracking-wider text-slate-600 flex items-center gap-1.5">
                 <span className="w-4 h-4 rounded-full bg-blue-900 text-white text-[8px] flex items-center justify-center font-bold">7</span>
-                JOURNAL ACTIVITY LOG (LAST 5 ENTRIES)
+                {tt("ulrp.card7", "JOURNAL ACTIVITY LOG")}
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-left text-[10px] min-w-[500px]">
@@ -579,15 +585,15 @@ export function UserLiveReportPanel({
             <div>
               <div className="bg-[#f8fafc] border-b border-slate-100 px-4 py-2 text-[10px] font-extrabold tracking-wider text-slate-600 flex items-center gap-1.5">
                 <span className="w-4 h-4 rounded-full bg-blue-900 text-white text-[8px] flex items-center justify-center font-bold">8</span>
-                AUDIT TRAIL
+                {tt("ulrp.card8", "AUDIT TRAIL")}
               </div>
               <div className="p-4 space-y-3">
-                <DetailRow label="Created By" value="Super Admin (superadmin@dgtllc.com)" />
-                <DetailRow label="Created On" value={displayRegDate} />
-                <DetailRow label="Last Updated By" value="Super Admin (superadmin@dgtllc.com)" />
-                <DetailRow label="Last Updated On" value={displayLastLogin} />
-                <DetailRow label="Total Updates" value={activityCounts.edits.toString()} />
-                <DetailRow label="Record Status" value={<span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 text-[10px] font-black uppercase tracking-wider">{activeStatus}</span>} />
+                <DetailRow label={tt("ulrp.created_by", "Created By")} value="Super Admin (superadmin@dgtllc.com)" />
+                <DetailRow label={tt("ulrp.created_on", "Created On")} value={displayRegDate} />
+                <DetailRow label={tt("ulrp.updated_by", "Last Updated By")} value="Super Admin (superadmin@dgtllc.com)" />
+                <DetailRow label={tt("ulrp.updated_on", "Last Updated On")} value={displayLastLogin} />
+                <DetailRow label={tt("ulrp.total_updates", "Total Updates")} value={activityCounts.edits.toString()} />
+                <DetailRow label={tt("ulrp.record_status", "Record Status")} value={<span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 text-[10px] font-black uppercase tracking-wider">{activeStatus}</span>} />
               </div>
             </div>
           </div>

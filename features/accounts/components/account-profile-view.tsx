@@ -650,36 +650,27 @@ export function AccountProfileView({
                 <span className="text-[9px] font-mono text-slate-400 font-bold uppercase">{t(lang, "acct.apv_customer_profile", "Customer Profile")}</span>
               </div>
               <div className="space-y-1.5 text-[11px] leading-tight">
-                <PreviewRow label="Customer Owner Name" value={selectedRow.customerName || "—"} tone="text-purple-600 dark:text-purple-400" />
+                <PreviewRow label="Customer / Owner Name" value={selectedRow.companyOwner && selectedRow.companyOwner !== "-" ? selectedRow.companyOwner : selectedRow.customerName || "—"} tone="text-purple-600 dark:text-purple-400 font-bold" />
                 <PreviewRow label="Customer Account Number" value={selectedRow.customerNumber} />
-                <PreviewRow label="Company Workspace Owner" value={selectedRow.companyOwner || "—"} />
-                <PreviewRow label="Company Workspace Code" value={selectedRow.companyCode || "—"} />
                 <PreviewRow 
-                  label="Linked Workspace Name" 
+                  label="Registered Company" 
                   value={
-                    selectedRow.companyId ? (
-                      <Button
-                        variant="ghost"
-                        className="p-0 h-auto font-black text-blue-600 dark:text-blue-400 text-xs text-left hover:underline"
-                        onClick={() => router.push(`/dashboard/settings/company-setup?companyId=${selectedRow.companyId}`)}
-                      >
-                        {selectedRow.companyName || "Linked Company Profile"}
-                      </Button>
-                    ) : "—"
+                    selectedRow.companyName && selectedRow.companyName !== "-" ? (
+                      <span className="font-bold text-slate-900 dark:text-slate-100">
+                        Company 1: {selectedRow.companyName}
+                      </span>
+                    ) : "— (No Company Registered)"
                   } 
                 />
+                <PreviewRow label="Company Owner" value={selectedRow.companyOwner && selectedRow.companyOwner !== "-" ? selectedRow.companyOwner : "—"} />
                 <PreviewRow 
-                  label="Linked Bank Profile" 
+                  label="Registered Bank" 
                   value={
-                    selectedRow.bankId ? (
-                      <Button
-                        variant="ghost"
-                        className="p-0 h-auto font-black text-blue-600 dark:text-blue-400 text-xs text-left hover:underline"
-                        onClick={() => router.push(`/dashboard/settings/company-setup?companyId=${selectedRow.bankId}`)}
-                      >
-                        {t(lang, "acct.apv_linked_bank_profile", "Linked Bank Profile")}
-                      </Button>
-                    ) : "—"
+                    selectedRow.bankName && selectedRow.bankName !== "-" ? (
+                      <span className="font-bold text-slate-900 dark:text-slate-100">
+                        Bank 1: {selectedRow.bankName}
+                      </span>
+                    ) : "— (No Bank Registered)"
                   } 
                 />
               </div>
