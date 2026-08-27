@@ -175,9 +175,7 @@ const PARALLEL_ALLOW = new Set([
 ]);
 // Genuine pre-existing parallel UI dictionaries — GRANDFATHERED. The gate blocks NEW
 // ones; these are tracked tech-debt to migrate into lib/i18n/ui.ts (see docs/i18n-audit-inventory.txt).
-const KNOWN_PARALLEL = new Set([
-  "app/dashboard/kyc-reports/page.tsx",
-]);
+const KNOWN_PARALLEL = new Set([]);
 const parallelNew = [];
 const parallelKnown = [];
 let searchFiles = [];

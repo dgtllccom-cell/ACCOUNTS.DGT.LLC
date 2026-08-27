@@ -80,490 +80,92 @@ type KycMetrics = {
   compliant: number;
 };
 
-const KYC_UI: Record<string, Record<SupportedLanguage, string>> = {
-  reportBrand: {
-    en: "Regulatory Compliance & Verification Center",
-    ur: "ریگولیٹری کمپلائنس و توثیق سینٹر",
-    ar: "مركز الامتثال والتحقق التنظيمي",
-    fa: "مرکز انطباق و تأیید مقرراتی",
-    ps: "د مقرراتي اطاعت او تایید مرکز"
-  },
-  title: {
-    en: "KYC Reports & Master Record Audit Center",
-    ur: "کے وائی سی رپورٹ اور ماسٹر ریکارڈ آڈٹ سینٹر",
-    ar: "تقرير KYC ومركز تدقيق السجلات الرئيسية",
-    fa: "گزارش KYC و مرکز حسابرسی پرونده‌های اصلی",
-    ps: "د KYC راپور او د ماسټر ریکارډ د پلټنې مرکز"
-  },
-  subtitle: {
-    en: "Live audit monitoring of missing profile fields, documents, and compliance grace period for Countries, Branches, Users & Fleet",
-    ur: "ممالک، برانچز، صارفین اور گاڑیوں کے لیے ادھورے پروفائلز اور دستاویزات کا لائیو جائزہ",
-    ar: "مراقبة التدقيق المباشر للحقول والمستندات المفقودة وفترة التوفيق للمؤسسات",
-    fa: "پایش زنده مدارک و پرونده‌های ناقص برای کشورها، شعب، کاربران و ناوگان",
-    ps: "د هیوادونو، څانګو، کاروونکو او موټرو لپاره د نیمګړو ریکارډونو ژوندۍ ارزونه"
-  },
-  totalTracked: {
-    en: "Total Audited Entities",
-    ur: "کل آڈٹ شدہ ریکارڈز",
-    ar: "إجمالي السجلات المدققة",
-    fa: "کل پرونده‌های آڈیت شده",
-    ps: "ټول ارزیابي شوي ریکارډونه"
-  },
-  actionRequired: {
-    en: "Incomplete (Red Alert)",
-    ur: "غیر مکمل (سرخ الرٹ)",
-    ar: "غير مكتمل (تنبيه أحمر)",
-    fa: "ناقص (هشدار قرمز)",
-    ps: "نیمګړی (سور خبرداری)"
-  },
-  nearExpiry: {
-    en: "Near Expiry / Overdue",
-    ur: "مہلت ختم ہونے کے قریب",
-    ar: "قريب من الانتهاء",
-    fa: "نزدیک به انقضا",
-    ps: "د مودي پای ته نږدې"
-  },
-  compliant: {
-    en: "Compliant & Verified",
-    ur: "مکمل اور تصدیق شدہ",
-    ar: "متوافق وموثق",
-    fa: "کامل و تایید شده",
-    ps: "بشپړ او تایید شوی"
-  },
-  completeNow: {
-    en: "+ Upload / Complete Profile",
-    ur: "+ پروفائل مکمل کریں",
-    ar: "+ إكمال الملف",
-    fa: "+ تکمیل پرونده",
-    ps: "+ پروفایل بشپړ کړئ"
-  },
-  printPdf: {
-    en: "Print / PDF",
-    ur: "پرنٹ / پی ڈی ایف",
-    ar: "طباعة / PDF",
-    fa: "چاپ / PDF",
-    ps: "چاپ / PDF"
-  },
-  refreshMatrix: {
-    en: "Refresh KYC Matrix",
-    ur: "KYC میٹرکس ریفریش کریں",
-    ar: "تحديث مصفوفة KYC",
-    fa: "بازآوری ماتریس KYC",
-    ps: "د KYC میټریکس تازه کړئ"
-  },
-  searchPlaceholder: {
-    en: "Search entity name, code, email, or country…",
-    ur: "ریکارڈ نام، کوڈ، ای میل، یا ملک تلاش کریں…",
-    ar: "ابحث عن الاسم أو الكود أو البريد أو الدولة…",
-    fa: "جستجوی نام، کد، ایمیل یا کشور…",
-    ps: "د ریکارډ نوم، کوډ، ایمیل یا هېواد ولټوئ…"
-  },
-  allEntities: {
-    en: "All Entities",
-    ur: "تمام ریکارڈز",
-    ar: "جميع السجلات",
-    fa: "همه پرونده‌ها",
-    ps: "ټول ریکارډونه"
-  },
-  allStatuses: {
-    en: "All Statuses",
-    ur: "تمام اسٹیٹس",
-    ar: "جميع الحالات",
-    fa: "همه وضعیت‌ها",
-    ps: "ټول حالتونه"
-  },
-  countryBranches: {
-    en: "Countries & Main Branches",
-    ur: "ممالک اور مین برانچز",
-    ar: "الدول والفروع الرئيسية",
-    fa: "کشورها و شعب اصلی",
-    ps: "هیوادونه او اصلي څانګې"
-  },
-  cityBranches: {
-    en: "City Branch Nodes",
-    ur: "سٹی برانچ نوڈز",
-    ar: "فروع المدن",
-    fa: "شعب شهری",
-    ps: "ښاري څانګې"
-  },
-  usersStaff: {
-    en: "Users & Staff",
-    ur: "صارفین و عملہ",
-    ar: "المستخدمون والموظفون",
-    fa: "کاربران و کارمندان",
-    ps: "کاروونکي او کارکوونکي"
-  },
-  commercialAccounts: {
-    en: "Commercial Accounts",
-    ur: "تجارتی اکاؤنٹس",
-    ar: "الحسابات التجارية",
-    fa: "حساب‌های تجاری",
-    ps: "تجارتي حسابونه"
-  },
-  filterStatus: {
-    en: "Filter Status:",
-    ur: "اسٹیٹس فلٹر:",
-    ar: "تصفية الحالة:",
-    fa: "فیلتر وضعیت:",
-    ps: "د حالت فلټر:"
-  },
-  incompleteStatus: {
-    en: "Incomplete (Red Alert)",
-    ur: "نامکمل (سرخ الرٹ)",
-    ar: "غير مكتمل (تنبيه أحمر)",
-    fa: "ناقص (هشدار قرمز)",
-    ps: "نیمګړی (سور خبرداری)"
-  },
-  nearExpiryStatus: {
-    en: "Near Expiry (< 5 Days)",
-    ur: "ختم ہونے کے قریب (< 5 دن)",
-    ar: "قريب من الانتهاء (< 5 أيام)",
-    fa: "نزدیک انقضا (< 5 روز)",
-    ps: "د پای نېټې ته نږدې (< 5 ورځې)"
-  },
-  suspendedStatus: {
-    en: "Suspended / Overdue",
-    ur: "معطل / تاخیر شدہ",
-    ar: "موقوف / متأخر",
-    fa: "معلق / معوق",
-    ps: "ځنډول شوی / پاتې"
-  },
-  compliantStatus: {
-    en: "Compliant & Verified",
-    ur: "مطابق اور تصدیق شدہ",
-    ar: "متوافق ومتحقق منه",
-    fa: "منطبق و تأیید شده",
-    ps: "مطابقت لرونکی او تایید شوی"
-  },
-  scopeGlobal: {
-    en: "ERP-wide review set",
-    ur: "ERP-وائڈ جائزہ سیٹ",
-    ar: "نطاق مراجعة على مستوى النظام",
-    fa: "مجموعه بررسی کل ERP",
-    ps: "د ERP پراخه بیاکتنې مجموعه"
-  },
-  scopeCountry: {
-    en: "Country-wide review set",
-    ur: "ملکی جائزہ سیٹ",
-    ar: "نطاق مراجعة على مستوى الدولة",
-    fa: "مجموعه بررسی کشوری",
-    ps: "د هېواد په کچه بیاکتنه"
-  },
-  scopeBranch: {
-    en: "Branch-restricted review set",
-    ur: "برانچ محدود جائزہ سیٹ",
-    ar: "نطاق مراجعة خاص بالفرع",
-    fa: "مجموعه بررسی محدود به شعبه",
-    ps: "د څانګې پورې محدوده بیاکتنه"
-  },
-  countryBranchCount: {
-    en: "Country Branches",
-    ur: "ملکی برانچز",
-    ar: "فروع الدولة",
-    fa: "شعب کشوری",
-    ps: "د هېواد څانګې"
-  },
-  cityBranchCount: {
-    en: "City Branches",
-    ur: "سٹی برانچز",
-    ar: "فروع المدن",
-    fa: "شعب شهری",
-    ps: "ښاري څانګې"
-  },
-  userCount: {
-    en: "Users / Accounts",
-    ur: "صارفین / اکاؤنٹس",
-    ar: "المستخدمون / الحسابات",
-    fa: "کاربران / حساب‌ها",
-    ps: "کاروونکي / حسابونه"
-  },
-  loadingText: {
-    en: "Loading live KYC reports and compliance audit timers...",
-    ur: "لائیو KYC رپورٹس اور کمپلائنس آڈٹ ٹائمرز لوڈ ہو رہے ہیں...",
-    ar: "جارٍ تحميل تقارير KYC المباشرة ومؤقتات التدقيق...",
-    fa: "در حال بارگذاری گزارش‌های زنده KYC و زمان‌سنج‌های انطباق...",
-    ps: "د KYC ژوندۍ راپورونه او د اطاعت د پلټنې ټایمرونه لوډ کېږي..."
-  },
-  noRecords: {
-    en: "No KYC compliance records match your search criteria.",
-    ur: "آپ کی تلاش کے مطابق کوئی KYC ریکارڈ نہیں ملا۔",
-    ar: "لا توجد سجلات KYC مطابقة لبحثك.",
-    fa: "هیچ رکورد KYC مطابق جستجوی شما یافت نشد.",
-    ps: "ستاسو له لټون سره سم د KYC کوم ریکارډ ونه موندل شو."
-  },
-  scopeLabel: {
-    en: "Active reporting scope",
-    ur: "فعال رپورٹنگ اسکوپ",
-    ar: "نطاق التقارير النشط",
-    fa: "دامنه فعال گزارش",
-    ps: "د راپور فعال ساحه"
-  },
-  typeLabel: {
-    en: "Entity type",
-    ur: "ریکارڈ کی قسم",
-    ar: "نوع السجل",
-    fa: "نوع پرونده",
-    ps: "د ریکارډ ډول"
-  },
-  codeLabel: {
-    en: "Code",
-    ur: "کوڈ",
-    ar: "الرمز",
-    fa: "کد",
-    ps: "کوډ"
-  },
-  entityRecordTitle: {
-    en: "Entity & Record Title",
-    ur: "ریکارڈ اور عنوان",
-    ar: "الكيان وعنوان السجل",
-    fa: "عنوان موجودیت و رکورد",
-    ps: "د ریکارډ او عنوان"
-  },
-  entityTypeLocation: {
-    en: "Type & Location",
-    ur: "قسمت اور مقام",
-    ar: "النوع والموقع",
-    fa: "نوع و موقعیت",
-    ps: "ډول او ځای"
-  },
-  missingRequirementsHeader: {
-    en: "Missing Profile Requirements",
-    ur: "نامکمل پروفائل تقاضے",
-    ar: "متطلبات الملف المفقودة",
-    fa: "نیازمندی‌های ناقص پرونده",
-    ps: "ورکې شوې د پروفایل اړتیاوې"
-  },
-  gracePeriodHeader: {
-    en: "Grace Period (15 Days)",
-    ur: "مہلت مدت (15 دن)",
-    ar: "فترة السماح (15 يومًا)",
-    fa: "مهلت (15 روز)",
-    ps: "د مهلت موده (۱۵ ورځې)"
-  },
-  statusHeader: {
-    en: "Status",
-    ur: "اسٹیٹس",
-    ar: "الحالة",
-    fa: "وضعیت",
-    ps: "حالت"
-  },
-  actionsHeader: {
-    en: "Actions",
-    ur: "کارروائیاں",
-    ar: "الإجراءات",
-    fa: "اقدامات",
-    ps: "کړنې"
-  },
-  allRequirementsVerified: {
-    en: "All requirements verified",
-    ur: "تمام تقاضے تصدیق شدہ",
-    ar: "تم التحقق من جميع المتطلبات",
-    fa: "همه نیازمندی‌ها تأیید شده‌اند",
-    ps: "ټولې اړتیاوې تایید شوې"
-  },
-  verifiedLabel: {
-    en: "Verified",
-    ur: "تصدیق شدہ",
-    ar: "موثّق",
-    fa: "تأیید شدہ",
-    ps: "تایید شوی"
-  },
-  daysRemainingLabel: {
-    en: "Days Remaining",
-    ur: "دن باقی",
-    ar: "الأيام المتبقية",
-    fa: "روز باقی",
-    ps: "پاتې ورځې"
-  },
-  directEdit: {
-    en: "Direct Edit",
-    ur: "براہِ راست ترمیم",
-    ar: "تعديل مباشر",
-    fa: "ویرایش مستقیم",
-    ps: "مستقیم سمون"
-  },
-  kycVerificationPortal: {
-    en: "KYC Verification Portal",
-    ur: "KYC تصدیقی پورٹل",
-    ar: "بوابة التحقق من KYC",
-    fa: "درگاه تأیید KYC",
-    ps: "د KYC د تایید دروازه"
-  },
-  registeredNameTitle: {
-    en: "Registered Name / Title",
-    ur: "رجسٹرڈ نام / عنوان",
-    ar: "الاسم / العنوان المسجل",
-    fa: "نام / عنوان ثبت‌شده",
-    ps: "ثبت شوی نوم / عنوان"
-  },
-  ownerOrEntityTitle: {
-    en: "Owner or Entity Title",
-    ur: "مالک یا ادارہ عنوان",
-    ar: "اسم المالك أو الكيان",
-    fa: "نام مالک یا موجودیت",
-    ps: "د مالک یا ادارې عنوان"
-  },
-  officialPhoneTitle: {
-    en: "Official Phone / WhatsApp",
-    ur: "سرکاری فون / واٹس ایپ",
-    ar: "الهاتف الرسمي / واتساب",
-    fa: "تلفن رسمی / واتساپ",
-    ps: "رسمي ټیلیفون / واټساپ"
-  },
-  officialEmailTitle: {
-    en: "Official Email Address",
-    ur: "سرکاری ای میل ایڈریس",
-    ar: "البريد الإلكتروني الرسمي",
-    fa: "ایمیل رسمی",
-    ps: "رسمي برېښنالیک"
-  },
-  physicalAddressTitle: {
-    en: "Physical Address",
-    ur: "جسمانی پتہ",
-    ar: "العنوان الفعلي",
-    fa: "نشانی فیزیکی",
-    ps: "فزیکي پته"
-  },
-  attachedComplianceDocuments: {
-    en: "Attached Compliance Documents",
-    ur: "منسلک کمپلائنس دستاویزات",
-    ar: "مستندات الامتثال المرفقة",
-    fa: "اسناد انطباق پیوست‌شده",
-    ps: "نښلول شوي د اطاعت اسناد"
-  },
-  docNamePlaceholder: {
-    en: "Doc name (e.g. Pakistan_NTN_Registration.pdf)",
-    ur: "دستاویز نام (مثلاً Pakistan_NTN_Registration.pdf)",
-    ar: "اسم المستند (مثال: Pakistan_NTN_Registration.pdf)",
-    fa: "نام سند (مثلاً Pakistan_NTN_Registration.pdf)",
-    ps: "د سند نوم (لکه Pakistan_NTN_Registration.pdf)"
-  },
-  addDoc: {
-    en: "Add Doc",
-    ur: "دستاویز شامل کریں",
-    ar: "إضافة مستند",
-    fa: "افزودن سند",
-    ps: "سند اضافه کړئ"
-  },
-  remove: {
-    en: "Remove",
-    ur: "ہٹائیں",
-    ar: "إزالة",
-    fa: "حذف",
-    ps: "لرې کړئ"
-  },
-  cancel: {
-    en: "Cancel",
-    ur: "منسوخ",
-    ar: "إلغاء",
-    fa: "لغو",
-    ps: "لغوه"
-  },
-  saveAndComplete: {
-    en: "Save & Complete Verification",
-    ur: "محفوظ کریں اور تصدیق مکمل کریں",
-    ar: "حفظ وإكمال التحقق",
-    fa: "ذخیره و تکمیل تأیید",
-    ps: "ساتنه او تایید بشپړول"
-  },
-  savingKycDocuments: {
-    en: "Saving KYC Documents...",
-    ur: "KYC دستاویزات محفوظ ہو رہی ہیں...",
-    ar: "جارٍ حفظ مستندات KYC...",
-    fa: "در حال ذخیره اسناد KYC...",
-    ps: "د KYC اسناد خوندي کېږي..."
-  },
-  kycUpdatedSuccess: {
-    en: "KYC records updated successfully.",
-    ur: "KYC ریکارڈز کامیابی سے اپ ڈیٹ ہو گئے۔",
-    ar: "تم تحديث سجلات KYC بنجاح.",
-    fa: "رکوردهای KYC با موفقیت به‌روزرسانی شد.",
-    ps: "د KYC ریکارډونه په بریالیتوب سره تازه شول."
-  },
-  kycUpdatedEntity: {
-    en: "Updated for",
-    ur: "کے لیے اپ ڈیٹ ہوا",
-    ar: "تم التحديث لـ",
-    fa: "به‌روزرسانی شد برای",
-    ps: "تازه شو د"
-  },
-  kycUpdateFailed: {
-    en: "Failed to update KYC record.",
-    ur: "KYC ریکارڈ اپ ڈیٹ نہ ہو سکا۔",
-    ar: "فشل تحديث سجل KYC.",
-    fa: "به‌روزرسانی رکورد KYC ناموفق بود.",
-    ps: "د KYC ریکارډ تازه کول ناکام شول."
-  },
-  showingRecordsOf: {
-    en: "Showing",
-    ur: "دکھا رہے ہیں",
-    ar: "عرض",
-    fa: "نمایش",
-    ps: "ښودل کېږي"
-  },
-  ofRecords: {
-    en: "of",
-    ur: "میں سے",
-    ar: "من",
-    fa: "از",
-    ps: "له"
-  },
-  complianceAuditRecords: {
-    en: "compliance audit records",
-    ur: "کمپلائنس آڈٹ ریکارڈز",
-    ar: "سجلات تدقيق الامتثال",
-    fa: "رکوردهای حسابرسی انطباق",
-    ps: "د اطاعت د پلټنې ریکارډونه"
-  },
-  missingRequiredFields: {
-    en: "Missing required profile fields",
-    ur: "ضروری پروفائل فیلڈز غائب ہیں",
-    ar: "حقول الملف المطلوبة مفقودة",
-    fa: "فیلدهای ضروری پرونده ناقص هستند",
-    ps: "اړین د پروفایل ساحې ورکې دي"
-  }
+// English fallback strings. The authoritative 5-language values live in
+// lib/i18n/ui.ts under the `kyc.*` namespace; t() resolves those and only falls
+// back to this map (then the key) if a key is ever missing.
+const KYC_EN: Record<string, string> = {
+  reportBrand: "Regulatory Compliance & Verification Center",
+  title: "KYC Reports & Master Record Audit Center",
+  subtitle: "Live audit monitoring of missing profile fields, documents, and compliance grace period for Countries, Branches, Users & Fleet",
+  totalTracked: "Total Audited Entities",
+  actionRequired: "Incomplete (Red Alert)",
+  nearExpiry: "Near Expiry / Overdue",
+  compliant: "Compliant & Verified",
+  completeNow: "+ Upload / Complete Profile",
+  printPdf: "Print / PDF",
+  refreshMatrix: "Refresh KYC Matrix",
+  searchPlaceholder: "Search entity name, code, email, or country…",
+  allEntities: "All Entities",
+  allStatuses: "All Statuses",
+  countryBranches: "Countries & Main Branches",
+  cityBranches: "City Branch Nodes",
+  usersStaff: "Users & Staff",
+  commercialAccounts: "Commercial Accounts",
+  filterStatus: "Filter Status:",
+  incompleteStatus: "Incomplete (Red Alert)",
+  nearExpiryStatus: "Near Expiry (< 5 Days)",
+  suspendedStatus: "Suspended / Overdue",
+  compliantStatus: "Compliant & Verified",
+  scopeGlobal: "ERP-wide review set",
+  scopeCountry: "Country-wide review set",
+  scopeBranch: "Branch-restricted review set",
+  countryBranchCount: "Country Branches",
+  cityBranchCount: "City Branches",
+  userCount: "Users / Accounts",
+  loadingText: "Loading live KYC reports and compliance audit timers...",
+  noRecords: "No KYC compliance records match your search criteria.",
+  scopeLabel: "Active reporting scope",
+  typeLabel: "Entity type",
+  codeLabel: "Code",
+  entityRecordTitle: "Entity & Record Title",
+  entityTypeLocation: "Type & Location",
+  missingRequirementsHeader: "Missing Profile Requirements",
+  gracePeriodHeader: "Grace Period (15 Days)",
+  statusHeader: "Status",
+  actionsHeader: "Actions",
+  allRequirementsVerified: "All requirements verified",
+  verifiedLabel: "Verified",
+  daysRemainingLabel: "Days Remaining",
+  directEdit: "Direct Edit",
+  kycVerificationPortal: "KYC Verification Portal",
+  registeredNameTitle: "Registered Name / Title",
+  ownerOrEntityTitle: "Owner or Entity Title",
+  officialPhoneTitle: "Official Phone / WhatsApp",
+  officialEmailTitle: "Official Email Address",
+  physicalAddressTitle: "Physical Address",
+  attachedComplianceDocuments: "Attached Compliance Documents",
+  docNamePlaceholder: "Doc name (e.g. Pakistan_NTN_Registration.pdf)",
+  addDoc: "Add Doc",
+  remove: "Remove",
+  cancel: "Cancel",
+  saveAndComplete: "Save & Complete Verification",
+  savingKycDocuments: "Saving KYC Documents...",
+  kycUpdatedSuccess: "KYC records updated successfully.",
+  kycUpdatedEntity: "Updated for",
+  kycUpdateFailed: "Failed to update KYC record.",
+  showingRecordsOf: "Showing",
+  ofRecords: "of",
+  complianceAuditRecords: "compliance audit records",
+  missingRequiredFields: "Missing required profile fields",
+  "country_branch": "Country Main Branch",
+  "city_branch": "City Branch Node",
+  "user_account": "Employee / User Account",
+  "new_account": "New Ledger Account",
 };
 
-const KYC_ENTITY_LABELS: Record<KycEntityType, Record<SupportedLanguage, string>> = {
-  country_branch: {
-    en: "Country Main Branch",
-    ur: "ملکی مرکزی برانچ",
-    ar: "الفرع الرئيسي للدولة",
-    fa: "شعبه اصلی کشور",
-    ps: "د هېواد اصلي څانګه"
-  },
-  city_branch: {
-    en: "City Branch Node",
-    ur: "سٹی برانچ نوڈ",
-    ar: "فرع مدينة",
-    fa: "گره شعبه شهری",
-    ps: "ښاري څانګه"
-  },
-  user_account: {
-    en: "Employee / User Account",
-    ur: "ملازم / صارف اکاؤنٹ",
-    ar: "حساب موظف / مستخدم",
-    fa: "حساب کارمند / کاربر",
-    ps: "کارکوونکی / کارن حساب"
-  },
-  new_account: {
-    en: "New Ledger Account",
-    ur: "نیا لیجر اکاؤنٹ",
-    ar: "حساب دفتر أستاذ جديد",
-    fa: "حساب کل جدید",
-    ps: "نوی لېجر حساب"
-  }
-};
+function kycT(lang: SupportedLanguage, key: string) {
+  return t(lang, `kyc.${key}`, KYC_EN[key] ?? key);
+}
 
 function getKycEntityLabel(type: KycEntityType, lang: SupportedLanguage) {
-  return KYC_ENTITY_LABELS[type]?.[lang] ?? KYC_ENTITY_LABELS[type]?.en ?? type;
+  return kycT(lang, type);
 }
 
 function formatKycStatusLabel(lang: SupportedLanguage, status: KycItem["status"], daysRemaining: number) {
-  if (status === "compliant") return KYC_UI.verifiedLabel[lang];
-  if (status === "suspended") return KYC_UI.suspendedStatus[lang];
-  const daysText = `${daysRemaining} ${KYC_UI.daysRemainingLabel[lang]}`;
-  return status === "near_expiry" ? `${KYC_UI.nearExpiryStatus[lang]} — ${daysText}` : `${KYC_UI.incompleteStatus[lang]} — ${daysText}`;
+  if (status === "compliant") return kycT(lang, "verifiedLabel");
+  if (status === "suspended") return kycT(lang, "suspendedStatus");
+  const daysText = `${daysRemaining} ${kycT(lang, "daysRemainingLabel")}`;
+  return status === "near_expiry" ? `${kycT(lang, "nearExpiryStatus")} — ${daysText}` : `${kycT(lang, "incompleteStatus")} — ${daysText}`;
 }
 
 export default function KycReportsPage() {
@@ -619,7 +221,7 @@ export default function KycReportsPage() {
   const [docList, setDocList] = useState<string[]>([]);
   const [savingKyc, setSavingKyc] = useState(false);
 
-  const tUI = (key: string) => KYC_UI[key]?.[activeLang] || KYC_UI[key]?.en || key;
+  const tUI = (key: string) => kycT(activeLang, key);
 
   async function fetchKycData() {
     setLoading(true);
