@@ -60,13 +60,21 @@ async function main() {
     console.log("2. Executing Operator Profile:", uaeUser?.full_name, `(${uaeUser?.id})`);
 
     // 3. Resolve / Ensure China Location Hierarchy
-    const [chinaCountry] = await sql`
+    let [chinaCountry] = await sql`
       SELECT id, name, iso2 FROM public.countries WHERE iso2 = 'CN' OR name ILIKE '%China%' LIMIT 1;
     `;
+    if (!chinaCountry) {
+      [chinaCountry] = await sql`
+        INSERT INTO public.countries (name, iso2, is_active)
+        VALUES ('China', 'CN', true)
+        RETURNING id, name, iso2;
+      `;
+    }
+
     let [liaoningState] = await sql`
-      SELECT id, name FROM public.states_provinces WHERE country_id = ${chinaCountry?.id} AND name ILIKE '%Liaoning%' LIMIT 1;
+      SELECT id, name FROM public.states_provinces WHERE country_id = ${chinaCountry.id} AND name ILIKE '%Liaoning%' LIMIT 1;
     `;
-    if (!liaoningState && chinaCountry?.id) {
+    if (!liaoningState) {
       [liaoningState] = await sql`
         INSERT INTO public.states_provinces (country_id, name, code, is_active)
         VALUES (${chinaCountry.id}, 'Liaoning', 'LN', true)
@@ -75,9 +83,9 @@ async function main() {
     }
 
     let [dalianCity] = await sql`
-      SELECT id, name FROM public.cities WHERE country_id = ${chinaCountry?.id} AND name ILIKE '%Dalian%' LIMIT 1;
+      SELECT id, name FROM public.cities WHERE country_id = ${chinaCountry.id} AND name ILIKE '%Dalian%' LIMIT 1;
     `;
-    if (!dalianCity && chinaCountry?.id) {
+    if (!dalianCity) {
       [dalianCity] = await sql`
         INSERT INTO public.cities (country_id, state_province_id, name, code, is_active)
         VALUES (${chinaCountry.id}, ${liaoningState?.id || null}, 'Dalian', 'DLN', true)

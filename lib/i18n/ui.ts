@@ -3826,6 +3826,7 @@ export type UiKey =
   | "bgr.users_btn" | "bgr.login_toggle" | "bgr.reports_btn" | "bgr.branch_details_report"
   | "bgr.main_branch_info" | "bgr.city_branches_section" | "bgr.no_city_in_branch" | "bgr.hierarchy_label"
   | "bgr.operating_network" | "bgr.active_users_sub" | "bgr.reg_accounts_sub" | "bgr.countries_btn" | "bgr.branches_btn" | "bgr.pdf_btn"
+  | "bgr.lbl_owner" | "bgr.lbl_company" | "bgr.lbl_accode" | "bgr.lbl_status" | "bgr.lbl_phone" | "bgr.lbl_whatsapp" | "bgr.lbl_created"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -10536,6 +10537,13 @@ const en: Dict = {
   "bgr.countries_btn": "Countries",
   "bgr.branches_btn": "Branches",
   "bgr.pdf_btn": "PDF",
+  "bgr.lbl_owner": "Owner Name",
+  "bgr.lbl_company": "Company Name",
+  "bgr.lbl_accode": "Account Code",
+  "bgr.lbl_status": "Status",
+  "bgr.lbl_phone": "Phone",
+  "bgr.lbl_whatsapp": "WhatsApp",
+  "bgr.lbl_created": "Created",
 
   "ta.save_first": "Save the record first to add documents & attachments.",
   "ta.documents": "Documents",
@@ -17401,6 +17409,13 @@ const ur: Dict = {
   "bgr.countries_btn": "ممالک",
   "bgr.branches_btn": "برانچیں",
   "bgr.pdf_btn": "PDF",
+  "bgr.lbl_owner": "مالک کا نام",
+  "bgr.lbl_company": "کمپنی کا نام",
+  "bgr.lbl_accode": "اکاؤنٹ کوڈ",
+  "bgr.lbl_status": "حیثیت",
+  "bgr.lbl_phone": "فون",
+  "bgr.lbl_whatsapp": "واٹس ایپ",
+  "bgr.lbl_created": "تخلیق کردہ",
 
   "ta.save_first": "دستاویزات شامل کرنے کے لیے پہلے ریکارڈ محفوظ کریں۔",
   "ta.documents": "دستاویزات",
@@ -24265,6 +24280,13 @@ const ar: Dict = {
   "bgr.countries_btn": "الدول",
   "bgr.branches_btn": "الفروع",
   "bgr.pdf_btn": "PDF",
+  "bgr.lbl_owner": "اسم المالك",
+  "bgr.lbl_company": "اسم الشركة",
+  "bgr.lbl_accode": "رمز الحساب",
+  "bgr.lbl_status": "الحالة",
+  "bgr.lbl_phone": "الهاتف",
+  "bgr.lbl_whatsapp": "واتساب",
+  "bgr.lbl_created": "تاريخ الإنشاء",
 
   "ta.save_first": "احفظ السجل أولاً لإضافة المستندات والمرفقات.",
   "ta.documents": "المستندات",
@@ -31128,6 +31150,13 @@ const fa: Dict = {
   "bgr.countries_btn": "کشورها",
   "bgr.branches_btn": "شعب",
   "bgr.pdf_btn": "PDF",
+  "bgr.lbl_owner": "نام مالک",
+  "bgr.lbl_company": "نام شرکت",
+  "bgr.lbl_accode": "کد حساب",
+  "bgr.lbl_status": "وضعیت",
+  "bgr.lbl_phone": "تلفن",
+  "bgr.lbl_whatsapp": "واتساپ",
+  "bgr.lbl_created": "تاریخ ایجاد",
 
   "ta.save_first": "ابتدا رکورد را ذخیره کنید تا بتوانید اسناد و پیوست‌ها اضافه کنید.",
   "ta.documents": "اسناد",

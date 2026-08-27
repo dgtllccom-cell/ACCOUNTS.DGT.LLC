@@ -1829,7 +1829,7 @@ export function BranchGeneralReportView({
                                 ) : (
                                   <ActionItem
                                     icon={<PencilLine className="h-3.5 w-3.5" />}
-                                    label="Edit"
+                                    label={tt("bgr.edit", "Edit")}
                                     color="indigo"
                                     onClick={() => { setActiveActionDropdownId(null); setActiveActionAnchorRect(null); }}
                                   />
