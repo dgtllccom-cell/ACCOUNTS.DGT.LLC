@@ -49,16 +49,40 @@ describe("buildGenericErpReportHtml — standalone HTML export", () => {
     expect(bodyOnly).not.toContain("<script>alert(1)</script>");
   });
 
-  // KNOWN ISSUE (pre-existing, lib/reports/erp-report-template-builder.ts:695): the
-  // downloadCsv() helper interpolates csvData into a <script> template literal and
-  // escapes backticks + ${ but NOT </script>. A cell value containing "</script>…"
-  // can close the helper block early → HTML injection in the saved/previewed file.
-  // A 4-line defang (add .replace(/<\/(script)/gi, "<\\/$1")) is prepared in
-  // scratchpad/csv-xss-fix.patch — awaiting approval to touch that file (outside the
-  // approved 5). Un-skip once applied.
-  it.skip("neutralises </script> from row data in the CSV-download helper", () => {
-    const { html } = buildGenericErpReportHtml({ title: "X", lang: "en", columns: COLUMNS, rows: ROWS });
-    expect(html).toMatch(/<\\\/script/);
+  // FIXED (lib/reports/erp-report-template-builder.ts, downloadCsv helper): csvData is
+  // interpolated into a <script> template literal. The helper now escapes, in order,
+  // backslash → backtick → ${ → </script, so no row value can break out of the string
+  // literal or close the <script> block early in the saved/previewed HTML file.
+  it("neutralises </script>, backslash, backtick and ${...} from row data in the CSV-download helper", () => {
+    const HOSTILE_ROWS = [
+      {
+        date: "2026-08-02",
+        // eslint-disable-next-line no-template-curly-in-string
+        party: 'Evil </script><img src=x onerror=alert(1)> `tick` ${bad} C:\\path\\end',
+        debit: 0,
+        credit: 0,
+      },
+    ];
+    const { html } = buildGenericErpReportHtml({ title: "X", lang: "en", columns: COLUMNS, rows: HOSTILE_ROWS });
+
+    // isolate the single helper <script> block that carries csvData
+    const start = html.indexOf("function downloadCsv()");
+    expect(start).toBeGreaterThan(-1);
+    const helperEnd = html.indexOf("</script>", start); // the *real* block terminator
+    const helper = html.slice(start, helperEnd);
+
+    // 1. no intact </script (case-insensitive) survives inside the helper string
+    expect(helper).not.toMatch(/<\/script/i);
+    // 2. the payload's closer is present only in defanged form
+    expect(helper).toContain("<\\/script");
+    // 3. no unescaped backtick from the row can close the csvRaw template literal
+    expect(helper).not.toContain("`tick`");
+    expect(helper).toContain("\\`tick\\`");
+    // 4. no unescaped ${ from the row can open an interpolation
+    expect(helper).not.toMatch(/(?<!\\)\$\{bad\}/);
+    expect(helper).toContain("\\${bad}");
+    // 5. a lone backslash from the row is doubled so it can't escape our escaping
+    expect(helper).toContain("C:\\\\path\\\\end");
   });
 
   it("contains no session / cookie / token / password material", () => {

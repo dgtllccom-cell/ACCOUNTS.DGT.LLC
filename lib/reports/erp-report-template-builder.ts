@@ -692,7 +692,11 @@ export function generateReportHtml(input: {
     function resetZoom() { setZoom(1.0); }
 
     function downloadCsv() {
-      const csvRaw = \`${csvData.replace(/`/g, "\\`").replace(/\${/g, "\\${")}\`;
+      const csvRaw = \`${csvData
+        .replace(/\\/g, "\\\\")
+        .replace(/`/g, "\\`")
+        .replace(/\${/g, "\\${")
+        .replace(/<\/(script)/gi, "<\\/$1")}\`;
       if (!csvRaw) return alert('No CSV data available');
       // Prepend UTF-8 BOM byte order mark (\uFEFF) so Excel opens multilingual text (Urdu, Arabic, Pashto, Farsi) correctly!
       const blob = new Blob(["\\uFEFF" + csvRaw], { type: 'text/csv;charset=utf-8;' });
