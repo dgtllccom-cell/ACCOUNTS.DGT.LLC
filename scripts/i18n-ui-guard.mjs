@@ -122,7 +122,9 @@ Object.entries(missingRefs).slice(0, 25).forEach(([k, files]) => log(`      ${k}
 // 4. FALLBACK (non-en value identical to en)
 // ---------------------------------------------------------------------------
 const NEUTRAL = /^(PDF|CSV|XLSX|JSON|HTML|SMTP|IMAP|WhatsApp|Excel|B\/L|BL|QR|ETA|ETD|HS Code|WABA ID|WABA|ID|ISO|ISO2|ISO3|DR|CR|DR \/ CR|USD|AED|PKR|EUR|AFN|INR|CRM|API|SMS|Email|OK|N\/A|#|R#|IBAN|SWIFT|IFSC|TRN|VAT|VAT %|CC|BCC|TRN \/ VAT|IFSC:|HS:|TRN 100293848)$/i;
-const isNeutral = (v) => !v || NEUTRAL.test(v) || /DAMAAN|BUSINESS GROUP/i.test(v) || /^[\d\s.,:%/+()–-]+$/.test(v) || /^\W+$/.test(v);
+// Brand / product names are legitimately identical across languages.
+const BRAND = /DAMAAN|BUSINESS GROUP|DIGITAL DOCK|DGT ERP|DGT LLC|ACCOUNTS\.DGT/i;
+const isNeutral = (v) => !v || NEUTRAL.test(v) || BRAND.test(v) || /^[\d\s.,:%/+()–-]+$/.test(v) || /^\W+$/.test(v);
 const fallbacks = [];
 for (const key of Object.keys(dict.en)) {
   const en = dict.en[key];
@@ -154,7 +156,6 @@ const PARALLEL_ALLOW = new Set([
 // Genuine pre-existing parallel UI dictionaries — GRANDFATHERED. The gate blocks NEW
 // ones; these are tracked tech-debt to migrate into lib/i18n/ui.ts (see docs/i18n-audit-inventory.txt).
 const KNOWN_PARALLEL = new Set([
-  "features/users/components/user-registration-wizard.tsx",
   "app/dashboard/kyc-reports/page.tsx",
   "components/ui/party-person-select.tsx",
   // liveReportLabels — ~50 entries, most only en+ur; needs ar/fa/ps filled during migration.

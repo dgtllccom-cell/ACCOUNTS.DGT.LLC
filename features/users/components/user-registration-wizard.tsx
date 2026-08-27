@@ -62,8 +62,9 @@ import {
   ModulePermissionCapability,
   ERP_MODULE_DEFINITIONS 
 } from "@/lib/permissions/rbac-matrix-builder";
-import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t as centralT } from "@/lib/i18n/ui";
+import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { apiPost } from "@/lib/api/client";
 import { normalizeUserCode } from "@/lib/services/user-identity-service";
 import { openUserA4ReportWindow } from "@/lib/reports/open-user-a4-report-window";
@@ -94,69 +95,53 @@ const roleOptions: Array<{ value: EnterpriseRole; label: string; help: string }>
   { value: "auditor_viewer", label: "Auditor / Read-Only Viewer (آڈیٹر / نگران)", help: "Audit Scope — Read-only access to statements, audit trails and journals." }
 ];
 
-const userWizardTranslations: Record<string, Record<SupportedLanguage, string>> = {
-  headerTitleNew: {
-    en: "User Registration & Setup Wizard",
-    ur: "صارف رجسٹریشن فارم و ویژرڈ",
-    ar: "معالج تسجيل وإعداد المستخدم",
-    fa: "ویزارد ثبت نام و تنظیمات کاربر",
-    ps: "د کارونکي راجستر کولو فورمه"
-  },
-  headerTitleEdit: {
-    en: "Edit System User Record",
-    ur: "سسٹم صارف ریکارڈ ایڈٹ کریں",
-    ar: "تعديل سجل مستخدم النظام",
-    fa: "ویرایش حساب کاربر سیستم",
-    ps: "د سیسټم د کارونکي اډیټ فورمه"
-  },
-  headerDesc: {
-    en: "Link Employee master records, assign Country & Branch scopes, customize form permissions, verify KYC identity, and issue System Login Credentials.",
-    ur: "ملازمین کے ماسٹر ریکارڈز، ملک اور برانچ کے اختیارات، فارم پرمیشنز، KYC تصدیق اور لاگ ان کی تفصیلات مرتب کریں۔",
-    ar: "ربط سجلات الموظفين، وتعيين نطاقات الدولة والفرع، وتخصيص صلاحيات النماذج، والتحقق من KYC وإصدار بيانات الدخول.",
-    fa: "اتصال به پرسنل، تعیین دسترسی‌های کشور و شعبه، تنظیم مجوزهای فرم‌ها، احراز هویت KYC و صدور اطلاعات ورود.",
-    ps: "د کارمندانو اسناد، د هیواد او څانګې واکونه، د فورمو واکونه، د KYC تصدیق او ننوتلو سوابق برابرول."
-  },
-  step1Label: { en: "1. Employee Information", ur: "1. ملازم کی معلومات", ar: "1. معلومات الموظف", fa: "1. مشخصات پرسنل", ps: "1. د کارمند معلومات" },
-  step2Label: { en: "2. Employee & Branch Access", ur: "2. ایمپلائی و برانچ رسائی", ar: "2. صلاحيات الموظف والفرع", fa: "2. دسترسی پرسنل و شعبه", ps: "2. د کارمند او څانګې لاسرسی" },
-  step3Label: { en: "3. KYC & Document Verification", ur: "3. کے وائی سی و دستاویزات", ar: "3. التحقق من الهوية (KYC)", fa: "3. احراز هویت (KYC)", ps: "3. د پیژندګلوۍ تصدیق (KYC)" },
-  step4Label: { en: "4. Review & Permissions", ur: "4. ریویو و پرمیشنز", ar: "4. المراجعة والصلاحيات", fa: "4. مرور و مجوزها", ps: "4. کتنه او واکونه" },
-  next: { en: "Next Step", ur: "اگلا قدم", ar: "الخطوة التالية", fa: "مرحله بعد", ps: "بل ګام" },
-  previous: { en: "Previous", ur: "پچھلا", ar: "السابق", fa: "قبلی", ps: "پخوانی" },
-  saveUser: { en: "Save & Complete Registration", ur: "محفوظ کریں اور مکمل کریں", ar: "حفظ وإكمال التسجيل", fa: "ذخیره و تکمیل ثبت نام", ps: "خوندي او ثبت بشپړول" },
-  savingText: { en: "Saving User Record...", ur: "صارف محفوظ ہو رہا ہے...", ar: "جاري حفظ بيانات المستخدم...", fa: "در حال ذخیره...", ps: "د کارونکي معلومات خوندي کیږي..." },
-  printCard: { en: "Print A4 User Card", ur: "A4 یوزر کارڈ پرنٹ کریں", ar: "طباعة بطاقة المستخدم A4", fa: "چاپ کارت کاربر A4", ps: "د A4 د کارونکي کارت چاپول" },
-  addNewUser: { en: "New User Registration", ur: "نیا صارف رجسٹر کریں", ar: "تسجيل مستخدم جديد", fa: "ثبت کاربر جدید", ps: "نوی کارونکی ثبت کړئ" },
-  selectEmployee: { en: "Select Registered Employee (Master Profile)", ur: "رجسٹرڈ ایمپلائی منتخب کریں (ماسٹر پروفائل)", ar: "اختر الموظف المسجل (الملف التعريفي الرئيسي)", fa: "انتخاب پرسنل ثبت شده (پروفایل اصلی)", ps: "ثبت شوی کارمند وټاکئ (اصلي پروفایل)" },
-  fullName: { en: "User Full Name *", ur: "صارف کا مکمل نام *", ar: "الاسم الكامل للمستخدم *", fa: "نام کامل کاربر *", ps: "د کارونکي بشپړ نوم *" },
-  username: { en: "Login Username / Identifier *", ur: "لاگ ان یوزر نام *", ar: "اسم المستخدم للدخول *", fa: "نام کاربری ورود *", ps: "د ننوتلو کارن نوم *" },
-  designation: { en: "Designation / Role Title", ur: "عہدہ / ڈیزگنیشن", ar: "المسمى الوظيفي", fa: "عنوان شغلی", ps: "دندې سرلیک" },
-  department: { en: "Department", ur: "شعبہ / ڈیپارٹمنٹ", ar: "القسم", fa: "بخش / دپارتمان", ps: "څانګه / دیپارتمنت" },
-  phone: { en: "Contact Phone / WhatsApp", ur: "رابطہ فون / واٹس ایپ", ar: "رقم الهاتف / الواتساب", fa: "تلفن تماس / واتساپ", ps: "د اړیکې تلیفون / واټساپ" },
-  email: { en: "Personal Email / Identifier", ur: "ای میل ایڈریس", ar: "البريد الإلكتروني", fa: "ایمیل شخصی", ps: "برېښنالیک پته" },
-  role: { en: "System Role Privilege Assignment *", ur: "سسٹم رول اور اختیارات *", ar: "تعيين صلاحيات الدور *", fa: "تعیین نقش و دسترسی‌ها *", ps: "د کارونکي رول او واکونه *" },
-  country: { en: "Assigned Country Scope *", ur: "مقررہ ملک *", ar: "الدولة المعينة *", fa: "کشور مربوطه *", ps: "ټاکل شوی هیواد *" },
-  branchType: { en: "Branch Access Scope *", ur: "برانچ کی قسم *", ar: "نوع الفرع *", fa: "نوع دسترسی شعبه *", ps: "د څانګې ډول *" },
-  assignedBranch: { en: "Assigned Primary Branch *", ur: "مقررہ بنیادی برانچ *", ar: "الفرع الرئيسي المعين *", fa: "شعبه اصلی مربوطه *", ps: "ټاکل شوې اصلي څانګه *" },
-  cnicPassport: { en: "National ID / CNIC / Passport Number", ur: "شناختی کارڈ / پاسپورٹ نمبر", ar: "رقم الهوية الوطنية / الجواز", fa: "شماره ملی / پاسپورت", ps: "د تذکرې / پاسپورټ شمیره" },
-  expiryDate: { en: "Document Expiry Date", ur: "دستاویز کی تاریخ تنسیخ", ar: "تاريخ انتهاء الوثيقة", fa: "تاریخ انقضای مدرک", ps: "د سند د پای نیټه" },
-  kycStatus: { en: "KYC Verification Status", ur: "تصدیقی حیثیت (KYC Status)", ar: "حالة التحقق (KYC)", fa: "وضعیت تایید هویت", ps: "د پیژندګلوۍ حالت" },
-  address: { en: "Permanent Residential Address", ur: "مستقل رہائشی پتہ", ar: "العنوان السكني الدائم", fa: "آدرس کامل سکونت", ps: "د استوګنې بشپړ پته" },
-  verifiedCompliant: { en: "Verified & Compliant", ur: "تصدیق شدہ و مکمل", ar: "متحقق ومطابق", fa: "تایید شده و معتبر", ps: "تصدیق شوی او بشپړ" },
-  pendingVerification: { en: "Pending Document Verification", ur: "تصدیق زیر التوا", ar: "قيد التحقق من المستندات", fa: "در انتظار تایید مدارک", ps: "د اسنادو تصدیق پاتې" },
-  optionalHint: { en: "(Auto-filled from Employee Master)", ur: "(ملازم کے ماسٹر ریکارڈ سے خودکار بھرا گیا)", ar: "(تم التعبئة تلقائياً من سجل الموظف)", fa: "(تکمیل خودکار از پرونده پرسنل)", ps: "(د کارمند له ماسټر ریکارډ څخه اتومات ډک شوی)" },
-  addNewEmployee: { en: "Add New Employee", ur: "نیا ملازم شامل کریں", ar: "إضافة موظف جديد", fa: "افزودن پرسنل جدید", ps: "نوی کارمند اضافه کړئ" },
-  newEmployeeModalTitle: { en: "New Employee Registration", ur: "نیا ملازم رجسٹریشن", ar: "تسجيل موظف جديد", fa: "ثبت پرسنل جدید", ps: "د نوي کارمند ثبت" },
-  employeeSearchPlaceholder: { en: "Search employee by code, name, designation...", ur: "کوڈ، نام یا عہدہ سے ملازم تلاش کریں...", ar: "ابحث عن الموظف بالرمز أو الاسم أو المسمى الوظيفي...", fa: "جستجوی پرسنل با کد، نام یا عنوان شغلی...", ps: "کارمند د کوډ، نوم یا دندې له مخې پلټئ..." },
-  noEmployeesFound: { en: "No matching employees found.", ur: "کوئی مماثل ملازم نہیں ملا۔", ar: "لم يتم العثور على موظفين مطابقين.", fa: "هیچ پرسنلی مطابقت پیدا نشد.", ps: "هیڅ ورته کارمند ونه موندل شو." },
-  genderFilterLabel: { en: "Gender / Staff Filter", ur: "جنس / عملہ فلٹر", ar: "تصفية الجنس / الموظفين", fa: "فیلتر جنسیت / پرسنل", ps: "د جنسیت / کارکوونکو فلټر" },
-  genderAll: { en: "All Staff", ur: "تمام عملہ", ar: "جميع الموظفين", fa: "همه پرسنل", ps: "ټول کارکوونکي" },
-  genderMale: { en: "Male", ur: "مرد", ar: "ذكر", fa: "مرد", ps: "نارینه" },
-  genderFemale: { en: "Female", ur: "خاتون", ar: "أنثى", fa: "زن", ps: "ښځینه" },
-  firstNameLabel: { en: "First Name *", ur: "پہلا نام *", ar: "الاسم الأول *", fa: "نام کوچک *", ps: "لومړی نوم *" },
-  lastNameLabel: { en: "Surname / Last Name *", ur: "خاندانی / آخری نام *", ar: "اسم العائلة / اللقب *", fa: "نام خانوادگی *", ps: "تخلص / وروستی نوم *" },
-  selectedEmployeeBanner: { en: "Selected Employee Master Profile", ur: "منتخب کردہ ملازم کا ماسٹر پروفائل", ar: "الملف التعريفي للموظف المختار", fa: "پروفایل پرسنل انتخاب شده", ps: "ټاکل شوی کارمند پروفایل" },
-  changeSelection: { en: "Change / Clear", ur: "تبدیل / صاف کریں", ar: "تغيير / مسح", fa: "تغییر / حذف", ps: "بدلول / پاکول" },
-  viewMasterRecord: { en: "View Full Master Record", ur: "مکمل ماسٹر ریکارڈ دیکھیں", ar: "عرض السجل الرئيسي الكامل", fa: "مشاهده کامل پرونده", ps: "بشپړ ریکارډ کتل" }
+// Wizard labels resolve through the central five-language dictionary
+// (lib/i18n/ui.ts → "urw.*"). The strings below are only the t() fallback argument.
+const userWizardFallback: Record<string, string> = {
+  headerTitleNew: "User Registration & Setup Wizard",
+  headerTitleEdit: "Edit System User Record",
+  headerDesc: "Link Employee master records, assign Country & Branch scopes, customize form permissions, verify KYC identity, and issue System Login Credentials.",
+  step1Label: "1. Employee Information",
+  step2Label: "2. Employee & Branch Access",
+  step3Label: "3. KYC & Document Verification",
+  step4Label: "4. Review & Permissions",
+  next: "Next Step",
+  previous: "Previous",
+  saveUser: "Save & Complete Registration",
+  savingText: "Saving User Record...",
+  printCard: "Print A4 User Card",
+  addNewUser: "New User Registration",
+  selectEmployee: "Select Registered Employee (Master Profile)",
+  fullName: "User Full Name *",
+  username: "Login Username / Identifier *",
+  designation: "Designation / Role Title",
+  department: "Department",
+  phone: "Contact Phone / WhatsApp",
+  email: "Personal Email / Identifier",
+  role: "System Role Privilege Assignment *",
+  country: "Assigned Country Scope *",
+  branchType: "Branch Access Scope *",
+  assignedBranch: "Assigned Primary Branch *",
+  cnicPassport: "National ID / CNIC / Passport Number",
+  expiryDate: "Document Expiry Date",
+  kycStatus: "KYC Verification Status",
+  address: "Permanent Residential Address",
+  verifiedCompliant: "Verified & Compliant",
+  pendingVerification: "Pending Document Verification",
+  optionalHint: "(Auto-filled from Employee Master)",
+  addNewEmployee: "Add New Employee",
+  newEmployeeModalTitle: "New Employee Registration",
+  employeeSearchPlaceholder: "Search employee by code, name, designation...",
+  noEmployeesFound: "No matching employees found.",
+  genderFilterLabel: "Gender / Staff Filter",
+  genderAll: "All Staff",
+  genderMale: "Male",
+  genderFemale: "Female",
+  firstNameLabel: "First Name *",
+  lastNameLabel: "Surname / Last Name *",
+  selectedEmployeeBanner: "Selected Employee Master Profile",
+  changeSelection: "Change / Clear",
+  viewMasterRecord: "View Full Master Record"
 };
 
 function makeAutoUserCode() {
@@ -180,7 +165,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   const activeLang = useActiveLanguage();
   const isRtl = ["ur", "ar", "fa", "ps"].includes(activeLang);
 
-  const tr = (key: string) => userWizardTranslations[key]?.[activeLang] || userWizardTranslations[key]?.["en"] || key;
+  const tr = (key: string) => centralT(activeLang, ("urw." + key) as never, userWizardFallback[key] ?? key);
 
   const [banner, setBanner] = useState<Banner>(null);
   const [saving, setSaving] = useState(false);
@@ -1610,7 +1595,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                           type={showPassword ? "text" : "password"}
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          placeholder="At least 8 characters"
+                          placeholder={centralT(activeLang, "edm.pw_hint" as never, "At least 8 characters")}
                           className="h-9 text-xs pr-8"
                         />
                         <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-2 text-slate-400">
@@ -1625,7 +1610,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         type="password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="Re-enter password"
+                        placeholder={centralT(activeLang, "edm.pw_reenter" as never, "Re-enter password")}
                         className="h-9 text-xs"
                       />
                     </div>
@@ -1668,7 +1653,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         className="gap-1.5 text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-sm"
                       >
                         <Eye className="h-3.5 w-3.5" />
-                        <span>View Profile Report</span>
+                        <span>{centralT(activeLang, "edm.view_profile_report" as never, "View Profile Report")}</span>
                       </Button>
                     )}
                     <Button
@@ -1805,7 +1790,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                   className="w-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold gap-1.5 shadow-sm"
                 >
                   <Eye className="h-3.5 w-3.5" />
-                  <span>Open Full User Profile Report</span>
+                  <span>{centralT(activeLang, "edm.open_full_profile" as never, "Open Full User Profile Report")}</span>
                 </Button>
               </div>
             )}
@@ -1845,6 +1830,7 @@ function EmployeeDetailModal({
   onClose: () => void;
   onEdit: (empId: string) => void;
 }) {
+  const s = useErpScreen("edm");
   const emp = employees.find((e) => e.id === employeeId);
 
   if (!emp) return null;
@@ -1866,9 +1852,9 @@ function EmployeeDetailModal({
     if (!printWin) return;
     printWin.document.write(`
       <!DOCTYPE html>
-      <html>
+      <html lang="${s.lang}" dir="${s.dir}">
         <head>
-          <title>Employee Record Sheet - ${code}</title>
+          <title>${s.t("report_sheet_title", "Employee Record Sheet")} - ${code}</title>
           <style>
             body { font-family: system-ui, sans-serif; padding: 40px; color: #1e293b; max-width: 800px; margin: 0 auto; }
             .header { border-bottom: 3px solid #0284c7; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
@@ -1886,37 +1872,37 @@ function EmployeeDetailModal({
         <body>
           <div class="header">
             <div>
-              <div class="company">DGT ERP SYSTEM</div>
-              <div class="title">OFFICIAL EMPLOYEE MASTER PROFILE</div>
+              <div class="company">${s.t("company_name", "DGT ERP SYSTEM")}</div>
+              <div class="title">${s.t("official_profile", "OFFICIAL EMPLOYEE MASTER PROFILE")}</div>
             </div>
-            <div style="text-align: right;">
+            <div style="text-align: ${s.isRtl ? "left" : "right"};">
               <div style="font-size: 18px; font-weight: 800; color: #0284c7;">${code}</div>
-              <div style="font-size: 12px; color: #64748b;">Status: <strong>${status}</strong></div>
+              <div style="font-size: 12px; color: #64748b;">${s.t("status", "Status")}: <strong>${status}</strong></div>
             </div>
           </div>
 
           <div class="grid">
             <div class="card">
-              <div class="card-title">Employee Details</div>
-              <div class="row"><span class="label">Full Name:</span><span class="val">${empName}</span></div>
-              <div class="row"><span class="label">Designation:</span><span class="val">${designation}</span></div>
-              <div class="row"><span class="label">Department:</span><span class="val">${department}</span></div>
-              <div class="row"><span class="label">Joining Date:</span><span class="val">${joiningDate}</span></div>
-              <div class="row"><span class="label">Basic Salary:</span><span class="val">${currency} ${Number(basicSalary).toLocaleString()}</span></div>
+              <div class="card-title">${s.t("employee_details", "Employee Details")}</div>
+              <div class="row"><span class="label">${s.t("full_name", "Full Name")}:</span><span class="val">${empName}</span></div>
+              <div class="row"><span class="label">${s.t("designation", "Designation")}:</span><span class="val">${designation}</span></div>
+              <div class="row"><span class="label">${s.t("department", "Department")}:</span><span class="val">${department}</span></div>
+              <div class="row"><span class="label">${s.t("joining_date", "Joining Date")}:</span><span class="val">${joiningDate}</span></div>
+              <div class="row"><span class="label">${s.t("basic_salary", "Basic Salary")}:</span><span class="val">${currency} ${Number(basicSalary).toLocaleString()}</span></div>
             </div>
 
             <div class="card">
-              <div class="card-title">Contact & Branch Info</div>
-              <div class="row"><span class="label">Mobile Phone:</span><span class="val">${phone}</span></div>
-              <div class="row"><span class="label">Email Address:</span><span class="val">${email}</span></div>
-              <div class="row"><span class="label">Branch:</span><span class="val">${emp.country_branch?.name || emp.city_branch?.name || "Main Office"}</span></div>
-              <div class="row"><span class="label">Country:</span><span class="val">${emp.country?.name || "Global"}</span></div>
-              <div class="row"><span class="label">Address:</span><span class="val">${address}</span></div>
+              <div class="card-title">${s.t("contact_branch_info", "Contact & Branch Info")}</div>
+              <div class="row"><span class="label">${s.t("mobile_phone", "Mobile Phone")}:</span><span class="val">${phone}</span></div>
+              <div class="row"><span class="label">${s.t("email_address", "Email Address")}:</span><span class="val">${email}</span></div>
+              <div class="row"><span class="label">${s.t("branch", "Branch")}:</span><span class="val">${emp.country_branch?.name || emp.city_branch?.name || "Main Office"}</span></div>
+              <div class="row"><span class="label">${s.t("country", "Country")}:</span><span class="val">${emp.country?.name || "Global"}</span></div>
+              <div class="row"><span class="label">${s.t("address", "Address")}:</span><span class="val">${address}</span></div>
             </div>
           </div>
 
           <div class="footer">
-            Generated on ${new Date().toLocaleString()} | DGT ERP Enterprise Control System
+            ${s.t("generated_on", "Generated on")} ${new Date().toLocaleString()} | ${s.t("company_name", "DGT ERP SYSTEM")}
           </div>
           <script>window.onload = () => { window.print(); };</script>
         </body>
@@ -1927,7 +1913,7 @@ function EmployeeDetailModal({
 
   return (
     <SimpleModal
-      title={`Employee Master Report - ${code}`}
+      title={`${s.t("master_report_title", "Employee Master Report")} - ${code}`}
       onClose={onClose}
       className="max-w-3xl w-[95vw] overflow-hidden"
     >
@@ -1946,7 +1932,7 @@ function EmployeeDetailModal({
                 </span>
               </div>
               <p className="text-xs text-blue-200/90 font-mono mt-0.5">
-                Code: <strong className="text-white">{code}</strong> | Designation: <strong className="text-white">{designation}</strong>
+                {s.t("code", "Code")}: <strong className="text-white">{code}</strong> | {s.t("designation", "Designation")}: <strong className="text-white">{designation}</strong>
               </p>
             </div>
           </div>
@@ -1958,7 +1944,7 @@ function EmployeeDetailModal({
               className="bg-white/10 hover:bg-white/20 border-white/20 text-white text-xs font-semibold gap-1.5"
             >
               <Pencil className="h-3.5 w-3.5" />
-              <span>Edit Form</span>
+              <span>{s.t("edit_form", "Edit Form")}</span>
             </Button>
             <Button
               size="sm"
@@ -1966,7 +1952,7 @@ function EmployeeDetailModal({
               className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold gap-1.5 shadow-md"
             >
               <Printer className="h-3.5 w-3.5" />
-              <span>Print Record</span>
+              <span>{s.t("print_record", "Print Record")}</span>
             </Button>
           </div>
         </div>
@@ -1976,23 +1962,23 @@ function EmployeeDetailModal({
           <div className="space-y-3 p-4 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
             <h4 className="font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
               <UserCheck className="h-3.5 w-3.5 text-blue-600" />
-              <span>Employment Information</span>
+              <span>{s.t("employment_information", "Employment Information")}</span>
             </h4>
             <div className="space-y-2 text-slate-700 dark:text-slate-300">
               <div className="flex justify-between border-b pb-1">
-                <span className="text-slate-500">Department:</span>
+                <span className="text-slate-500">{s.t("department", "Department")}:</span>
                 <span className="font-semibold">{department}</span>
               </div>
               <div className="flex justify-between border-b pb-1">
-                <span className="text-slate-500">Joining Date:</span>
+                <span className="text-slate-500">{s.t("joining_date", "Joining Date")}:</span>
                 <span className="font-semibold">{joiningDate}</span>
               </div>
               <div className="flex justify-between border-b pb-1">
-                <span className="text-slate-500">Employment Status:</span>
+                <span className="text-slate-500">{s.t("employment_status", "Employment Status")}:</span>
                 <span className="font-semibold text-emerald-600 dark:text-emerald-400">{status}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Net Basic Salary:</span>
+                <span className="text-slate-500">{s.t("net_basic_salary", "Net Basic Salary")}:</span>
                 <span className="font-bold text-blue-600 dark:text-blue-400">
                   {currency} {Number(basicSalary).toLocaleString()}
                 </span>
@@ -2003,23 +1989,23 @@ function EmployeeDetailModal({
           <div className="space-y-3 p-4 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
             <h4 className="font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
               <Building2 className="h-3.5 w-3.5 text-blue-600" />
-              <span>Contact & Branch Details</span>
+              <span>{s.t("contact_branch_details", "Contact & Branch Details")}</span>
             </h4>
             <div className="space-y-2 text-slate-700 dark:text-slate-300">
               <div className="flex justify-between border-b pb-1">
-                <span className="text-slate-500">Mobile Phone:</span>
+                <span className="text-slate-500">{s.t("mobile_phone", "Mobile Phone")}:</span>
                 <span className="font-mono font-semibold">{phone}</span>
               </div>
               <div className="flex justify-between border-b pb-1">
-                <span className="text-slate-500">Email Address:</span>
+                <span className="text-slate-500">{s.t("email_address", "Email Address")}:</span>
                 <span className="font-semibold text-slate-900 dark:text-slate-100">{email}</span>
               </div>
               <div className="flex justify-between border-b pb-1">
-                <span className="text-slate-500">Assigned Branch:</span>
+                <span className="text-slate-500">{s.t("assigned_branch", "Assigned Branch")}:</span>
                 <span className="font-semibold">{emp.country_branch?.name || emp.city_branch?.name || "Main Office"}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Address:</span>
+                <span className="text-slate-500">{s.t("address", "Address")}:</span>
                 <span className="font-medium truncate max-w-[180px]">{address}</span>
               </div>
             </div>
