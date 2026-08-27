@@ -78,21 +78,21 @@ type WizardStep = 1 | 2 | 3 | 4;
 type Banner = { tone: "ok" | "err"; text: string } | null;
 
 const branchTypeOptions = [
-  { value: "main", label: "Main Branch" },
-  { value: "city", label: "City Branch" }
+  { value: "main", label: "Main Branch", labelKey: "urw2.bt_main" },
+  { value: "city", label: "City Branch", labelKey: "urw2.bt_city" }
 ] as const;
 
-const roleOptions: Array<{ value: EnterpriseRole; label: string; help: string }> = [
-  { value: "super_admin", label: "Super Admin (سپر ایڈمن - مکمل کنٹرول)", help: "Global Scope — Full root control across all countries and branches." },
-  { value: "country_admin", label: "Country Admin (ملکی ایڈمن)", help: "Country Scope — Full country ledger, branches and management." },
-  { value: "country_user", label: "Country Normal User (ملکی عام صارف)", help: "Country Scope — Standard operational and transactions access for the country." },
-  { value: "main_branch_admin", label: "Main Branch Admin (مین برانچ ایڈمن)", help: "Main Branch Scope — Main branch Roznamcha, daily book closing and approvals." },
-  { value: "city_branch_admin", label: "City Branch Admin (سٹی برانچ ایڈمن)", help: "City Branch Scope — City branch management and full branch approvals." },
-  { value: "staff_user", label: "City Normal User / Staff (سٹی عام صارف و عملہ)", help: "City Branch Scope — Standard city branch entry and transactions." },
-  { value: "agent_user", label: "Clearing Agent Admin / Agent User (کسٹم و کلیرنگ ایجنٹ)", help: "Port & Customs Scope — Port clearance, container tracking and customs documentation." },
-  { value: "accountant", label: "Accountant (اکاؤنٹنٹ)", help: "Financial Scope — Direct journal posting, ledger auditing and bank reconciliation." },
-  { value: "cashier", label: "Cashier (کیشیئر)", help: "Cash Counter Scope — Daily cash receipts, counter payments and cash safe." },
-  { value: "auditor_viewer", label: "Auditor / Read-Only Viewer (آڈیٹر / نگران)", help: "Audit Scope — Read-only access to statements, audit trails and journals." }
+const roleOptions: Array<{ value: EnterpriseRole; label: string; help: string; labelKey: string; helpKey: string }> = [
+  { value: "super_admin", label: "Super Admin", labelKey: "urw2.role_super_admin", help: "Global Scope — Full root control across all countries and branches.", helpKey: "urw2.help_super_admin" },
+  { value: "country_admin", label: "Country Admin", labelKey: "urw2.role_country_admin", help: "Country Scope — Full country ledger, branches and management.", helpKey: "urw2.help_country_admin" },
+  { value: "country_user", label: "Country Normal User", labelKey: "urw2.role_country_user", help: "Country Scope — Standard operational and transactions access for the country.", helpKey: "urw2.help_country_user" },
+  { value: "main_branch_admin", label: "Main Branch Admin", labelKey: "urw2.role_main_branch_admin", help: "Main Branch Scope — Main branch Roznamcha, daily book closing and approvals.", helpKey: "urw2.help_main_branch_admin" },
+  { value: "city_branch_admin", label: "City Branch Admin", labelKey: "urw2.role_city_branch_admin", help: "City Branch Scope — City branch management and full branch approvals.", helpKey: "urw2.help_city_branch_admin" },
+  { value: "staff_user", label: "City Normal User / Staff", labelKey: "urw2.role_staff_user", help: "City Branch Scope — Standard city branch entry and transactions.", helpKey: "urw2.help_staff_user" },
+  { value: "agent_user", label: "Clearing Agent Admin / Agent User", labelKey: "urw2.role_agent_user", help: "Port & Customs Scope — Port clearance, container tracking and customs documentation.", helpKey: "urw2.help_agent_user" },
+  { value: "accountant", label: "Accountant", labelKey: "urw2.role_accountant", help: "Financial Scope — Direct journal posting, ledger auditing and bank reconciliation.", helpKey: "urw2.help_accountant" },
+  { value: "cashier", label: "Cashier", labelKey: "urw2.role_cashier", help: "Cash Counter Scope — Daily cash receipts, counter payments and cash safe.", helpKey: "urw2.help_cashier" },
+  { value: "auditor_viewer", label: "Auditor / Read-Only Viewer", labelKey: "urw2.role_auditor_viewer", help: "Audit Scope — Read-only access to statements, audit trails and journals.", helpKey: "urw2.help_auditor_viewer" }
 ];
 
 // Wizard labels resolve through the central five-language dictionary
@@ -567,8 +567,8 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   const countryOptions = useMemo(() => countries.map(toCountryOption), [countries]);
 
   const branchTypeSelectOptions = useMemo(
-    () => branchTypeOptions.map((o) => ({ value: o.value, label: o.label })),
-    []
+    () => branchTypeOptions.map((o) => ({ value: o.value, label: centralT(activeLang, o.labelKey as never, o.label) })),
+    [activeLang]
   );
 
   const filteredHrEmployees = useMemo(() => {
@@ -655,30 +655,30 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     setBanner(null);
 
     if (!fullName || fullName.trim().length < 2) {
-      setBanner({ tone: "err", text: "User Full Name / Employee selection is required." });
+      setBanner({ tone: "err", text: centralT(activeLang, "urw2.err_full_name" as never, "User Full Name / Employee selection is required.") });
       return;
     }
 
     const issuedCode = normalizeUserCode(userCode || "");
     if (!issuedCode) {
-      setBanner({ tone: "err", text: "User ID / Code is required." });
+      setBanner({ tone: "err", text: centralT(activeLang, "urw2.err_user_code" as never, "User ID / Code is required.") });
       return;
     }
 
     const isEdit = Boolean(editUserId);
 
     if (!isEdit && (!password || password.length < 8)) {
-      setBanner({ tone: "err", text: "Password must be at least 8 characters for login access." });
+      setBanner({ tone: "err", text: centralT(activeLang, "urw2.err_pw_login" as never, "Password must be at least 8 characters for login access.") });
       return;
     }
 
     if (password && password.length < 8) {
-      setBanner({ tone: "err", text: "Password must be at least 8 characters." });
+      setBanner({ tone: "err", text: centralT(activeLang, "urw2.err_pw_len" as never, "Password must be at least 8 characters.") });
       return;
     }
 
     if (password && password !== confirmPassword) {
-      setBanner({ tone: "err", text: "Confirm Password does not match." });
+      setBanner({ tone: "err", text: centralT(activeLang, "urw2.err_pw_match" as never, "Confirm Password does not match.") });
       return;
     }
 
@@ -820,8 +820,8 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
   const handlePrintCard = () => {
     openUserA4ReportWindow({
-      title: "Comprehensive User Profile & Authorization Report",
-      subtitle: "Official Centralized ERP User Registry Record",
+      title: centralT(activeLang, "urw2.report_title" as never, "Comprehensive User Profile & Authorization Report"),
+      subtitle: centralT(activeLang, "urw2.report_subtitle" as never, "Official Centralized ERP User Registry Record"),
       userData: {
         userId: editUserId || "USR-PREVIEW",
         userCode: userCode,
@@ -900,7 +900,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               className="gap-1.5 text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-sm"
             >
               <Eye className="h-3.5 w-3.5" />
-              <span>View User Profile Report</span>
+              <span>{centralT(activeLang, "urw2.view_user_report" as never, "View User Profile Report")}</span>
             </Button>
           )}
 
@@ -1167,7 +1167,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
                   {editEmployeeId ? (
                     <SimpleModal
-                      title="Edit Employee Master Record"
+                      title={centralT(activeLang, "urw2.edit_employee_record" as never, "Edit Employee Master Record")}
                       onClose={() => setEditEmployeeId(null)}
                       className="max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto"
                     >
@@ -1287,7 +1287,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     <div className="rounded-xl border border-slate-200 bg-slate-50/70 dark:bg-slate-900/50 p-3.5 space-y-2 text-xs">
                       <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 border-b pb-1.5">
                         <Briefcase className="h-3.5 w-3.5 text-blue-600" />
-                        <span>Linked Employment Contract & Schedule Data</span>
+                        <span>{centralT(activeLang, "urw2.linked_contract_data" as never, "Linked Employment Contract & Schedule Data")}</span>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-[11px]">
                         <div><span className="text-slate-500">Employment Type:</span> <strong>{employeeProfile.employmentType || "Full-Time"}</strong></div>
@@ -1314,7 +1314,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     >
                       {roleOptions.map((r) => (
                         <option key={r.value} value={r.value}>
-                          {r.label} — {r.help}
+                          {centralT(activeLang, r.labelKey as never, r.label)} — {centralT(activeLang, r.helpKey as never, r.help)}
                         </option>
                       ))}
                     </select>
@@ -1324,7 +1324,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     <SearchSelect
                       label={loadingCountries ? `${tr("country")} (...)` : tr("country")}
                       value={countryId}
-                      placeholder="Select country"
+                      placeholder={centralT(activeLang, "urw2.select_country" as never, "Select country")}
                       disabled={loadingCountries || role === "super_admin"}
                       options={countryOptions}
                       onValueChange={setCountryId}
@@ -1333,7 +1333,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     <SearchSelect
                       label={tr("branchType")}
                       value={branchType}
-                      placeholder="Select branch type"
+                      placeholder={centralT(activeLang, "urw2.select_branch_type" as never, "Select branch type")}
                       disabled={role === "super_admin"}
                       options={branchTypeSelectOptions}
                       onValueChange={(v) => {
@@ -1347,7 +1347,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                       <SearchSelect
                         label={tr("assignedBranch")}
                         value={countryBranchId}
-                        placeholder="Select main branch"
+                        placeholder={centralT(activeLang, "urw2.select_main_branch" as never, "Select main branch")}
                         options={mainBranches.map((b) => ({ value: b.id, label: `${b.name} (${b.code})`, keywords: b.name }))}
                         disabled={!countryId || role === "super_admin"}
                         onValueChange={setCountryBranchId}
@@ -1356,7 +1356,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                       <SearchSelect
                         label={tr("assignedBranch")}
                         value={cityBranchId}
-                        placeholder="Select city branch"
+                        placeholder={centralT(activeLang, "urw2.select_city_branch" as never, "Select city branch")}
                         options={cityBranches.map((b) => ({ value: b.id, label: `${b.city_name || (b as any).cityName || ""} - ${b.name} (${b.code})`, keywords: `${b.name} ${b.city_name || (b as any).cityName || ""}` }))}
                         disabled={!countryId || role === "super_admin"}
                         onValueChange={setCityBranchId}
@@ -1416,7 +1416,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                   {/* Summary of Steps 1-3 */}
                   <div className="rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-900/60 p-3.5 space-y-2 text-xs">
                     <div className="font-bold text-slate-900 dark:text-slate-100 border-b pb-1 flex items-center justify-between">
-                      <span>User & Master Profile Summary</span>
+                      <span>{centralT(activeLang, "urw2.summary_title" as never, "User & Master Profile Summary")}</span>
                       <span className="text-[10px] font-mono text-emerald-600 font-bold">{userCode}</span>
                     </div>
                     <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
@@ -1436,7 +1436,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <Label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                         <ShieldCheck className="h-4 w-4 text-blue-600" />
-                        <span>Interactive Form / Module Permission Matrix</span>
+                        <span>{centralT(activeLang, "urw2.perm_matrix_title" as never, "Interactive Form / Module Permission Matrix")}</span>
                       </Label>
                       <div className="flex items-center gap-1.5">
                         <span className="text-[10px] font-mono text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded font-bold border border-emerald-200 dark:border-emerald-800">
@@ -1574,7 +1574,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                                   type="button"
                                   onClick={() => handleToggleAllForModule(mod.moduleKey)}
                                   className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300"
-                                  title="Toggle all permissions for this module"
+                                  title={centralT(activeLang, "urw2.toggle_module_perms" as never, "Toggle all permissions for this module")}
                                 >
                                   {mod.canView && mod.canCreate && mod.canEdit && mod.canDelete && mod.canPostApprove && mod.canPrintExport ? "None" : "All"}
                                 </button>
