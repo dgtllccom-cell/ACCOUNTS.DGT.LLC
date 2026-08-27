@@ -1546,7 +1546,7 @@ export function BranchGeneralReportView({
                             onClick={() => openSuperAdminBranchEdit(branch.id)}
                             className="rounded border border-indigo-200 bg-white px-2 py-0.5 text-[9px] font-bold text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 shadow-sm transition-all"
                           >
-                            Edit
+                            {tt("bgr.edit", "Edit")}
                           </button>
                         </td>
                       </tr>
@@ -1946,13 +1946,13 @@ export function BranchGeneralReportView({
                                                     disabled={viewLoadingId !== null}
                                                     className="rounded border border-emerald-200 bg-white px-2 py-0.5 text-[8px] font-bold text-emerald-600 hover:bg-emerald-50 hover:border-emerald-300 shadow-sm transition-all"
                                                   >
-                                                    {viewLoadingId === cityBranch.id ? "..." : "View"}
+                                                    {viewLoadingId === cityBranch.id ? "..." : tt("bgr.view", "View")}
                                                   </button>
                                                   <button
                                                     onClick={() => openCityBranchEdit(cityBranch.id)}
                                                     className="rounded border border-indigo-200 bg-white px-2 py-0.5 text-[8px] font-bold text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 shadow-sm transition-all"
                                                   >
-                                                    Edit
+                                                    {tt("bgr.edit", "Edit")}
                                                   </button>
                                                   <button
                                                     onClick={() => {
@@ -1962,7 +1962,7 @@ export function BranchGeneralReportView({
                                                     title={`Create new user for ${cityBranch.name}`}
                                                   >
                                                     <UserPlus className="h-2.5 w-2.5" />
-                                                    + User
+                                                    {tt("bgr.create_user", "Create User")}
                                                   </button>
                                                 </div>
                                               </td>
@@ -1985,7 +1985,7 @@ export function BranchGeneralReportView({
                                     ) : (
                                       <tr>
                                         <td colSpan={8} className="p-3 text-center text-slate-400">
-                                          No city branches configured under this main branch.
+                                          {tt("bgr.no_city_in_branch", "No city branches configured under this main branch.")}
                                         </td>
                                       </tr>
                                     )}
@@ -2001,7 +2001,7 @@ export function BranchGeneralReportView({
                   })
                 ) : (
                   <tr>
-                    <td colSpan={14} className="p-6 text-center text-slate-400">No country records matched search query.</td>
+                    <td colSpan={14} className="p-6 text-center text-slate-400">{tt("bgr.no_country_match", "No country records matched search query.")}</td>
                   </tr>
                 )}
               </tbody>
@@ -2018,7 +2018,7 @@ export function BranchGeneralReportView({
             <div className="sticky top-0 z-20 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 px-6 py-4 shadow-lg">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-[9px] font-black uppercase tracking-[0.24em] text-indigo-300">Branch Details Report</div>
+                  <div className="text-[9px] font-black uppercase tracking-[0.24em] text-indigo-300">{tt("bgr.branch_details_report", "Branch Details Report")}</div>
                   <h2 className="mt-1 text-lg font-black text-white tracking-tight">{branchDetailModal.branch.name}</h2>
                   <p className="mt-0.5 text-[11px] font-semibold text-slate-400">{branchDetailModal.country.name} &bull; {branchDetailModal.branch.code}</p>
                 </div>
@@ -2031,27 +2031,27 @@ export function BranchGeneralReportView({
               {/* Main Branch Summary */}
               <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-5 shadow-sm ring-1 ring-slate-100">
                 <h3 className="text-[10px] font-black uppercase tracking-[0.18em] text-indigo-700 mb-4 flex items-center gap-2">
-                  <ShieldCheck className="h-4 w-4" /> Main Branch Information
+                  <ShieldCheck className="h-4 w-4" /> {tt("bgr.main_branch_info", "Main Branch Information")}
                 </h3>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {[
-                    { label: "Branch Name", value: branchDetailModal.branch.name },
-                    { label: "Branch Code", value: branchDetailModal.branch.code },
-                    { label: "Country", value: branchDetailModal.country.name },
-                    { label: "Currency", value: branchDetailModal.country.currency || branchDetailModal.branch.localCurrency },
-                    { label: "Owner Name", value: branchDetailModal.branch.ownerName || "-" },
-                    { label: "Company Name", value: branchDetailModal.branch.companyName || "Global Group" },
-                    { label: "Account Code", value: branchDetailModal.branch.accountCode || "-" },
-                    { label: "Status", value: branchDetailModal.branch.status || "Active" },
-                    { label: "Address", value: branchDetailModal.branch.address || "-" },
-                    { label: "Email", value: branchDetailModal.branch.email || findContactValue(branchDetailModal.branch.contacts, "email") || "-" },
-                    { label: "Phone", value: findContactValue(branchDetailModal.branch.contacts, "phone") || findContactValue(branchDetailModal.branch.contacts, "mobile") || "-" },
-                    { label: "WhatsApp", value: findContactValue(branchDetailModal.branch.contacts, "whatsapp") || "-" },
-                    { label: "Total City Branches", value: String(branchDetailModal.branch.cityBranches?.length ?? 0) },
-                    { label: "Total Users", value: String(branchDetailModal.branch.users?.length ?? branchDetailModal.branch.userCount ?? 0) },
-                    { label: "Created", value: branchDetailModal.branch.createdAt ? new Date(branchDetailModal.branch.createdAt).toLocaleDateString() : "-" },
-                  ].map(({ label, value }) => (
-                    <div key={label} className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+                    { label: tt("ulrp.branch_name", "Branch Name"), value: branchDetailModal.branch.name },
+                    { label: tt("ulrp.branch_code", "Branch Code"), value: branchDetailModal.branch.code },
+                    { label: tt("ulrp.country", "Country"), value: branchDetailModal.country.name },
+                    { label: tt("ulrp.currency", "Currency"), value: branchDetailModal.country.currency || branchDetailModal.branch.localCurrency },
+                    { label: tt("bgr.lbl_owner", "Owner Name"), value: branchDetailModal.branch.ownerName || "-" },
+                    { label: tt("bgr.lbl_company", "Company Name"), value: branchDetailModal.branch.companyName || "Global Group" },
+                    { label: tt("bgr.lbl_accode", "Account Code"), value: branchDetailModal.branch.accountCode || "-" },
+                    { label: tt("bgr.lbl_status", "Status"), value: branchDetailModal.branch.status || "Active" },
+                    { label: tt("ulrp.address", "Address"), value: branchDetailModal.branch.address || "-" },
+                    { label: tt("ulrp.email", "Email"), value: branchDetailModal.branch.email || findContactValue(branchDetailModal.branch.contacts, "email") || "-" },
+                    { label: tt("bgr.lbl_phone", "Phone"), value: findContactValue(branchDetailModal.branch.contacts, "phone") || findContactValue(branchDetailModal.branch.contacts, "mobile") || "-" },
+                    { label: tt("bgr.lbl_whatsapp", "WhatsApp"), value: findContactValue(branchDetailModal.branch.contacts, "whatsapp") || "-" },
+                    { label: tt("bgr.total_city_branches", "Total City Branches"), value: String(branchDetailModal.branch.cityBranches?.length ?? 0) },
+                    { label: tt("bgr.total_users", "Total Users"), value: String(branchDetailModal.branch.users?.length ?? branchDetailModal.branch.userCount ?? 0) },
+                    { label: tt("bgr.lbl_created", "Created"), value: branchDetailModal.branch.createdAt ? new Date(branchDetailModal.branch.createdAt).toLocaleDateString() : "-" },
+                  ].map(({ label, value }, idx) => (
+                    <div key={idx} className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
                       <div className="text-[8px] font-black uppercase tracking-wider text-slate-400">{label}</div>
                       <div className="mt-1 text-[11px] font-bold text-slate-900 break-all">
                         {label === "Status" ? (
@@ -2070,7 +2070,7 @@ export function BranchGeneralReportView({
               {/* City Branches Table */}
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-100">
                 <h3 className="text-[10px] font-black uppercase tracking-[0.18em] text-sky-700 mb-4 flex items-center gap-2">
-                  <Landmark className="h-4 w-4" /> City Branches ({branchDetailModal.branch.cityBranches?.length ?? 0})
+                  <Landmark className="h-4 w-4" /> {tt("bgr.city_branches_section", "City Branches")} ({branchDetailModal.branch.cityBranches?.length ?? 0})
                 </h3>
                 {branchDetailModal.branch.cityBranches?.length ? (
                   <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -2131,7 +2131,7 @@ export function BranchGeneralReportView({
                 ) : (
                   <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
                     <Landmark className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-                    <p className="text-[11px] font-bold text-slate-400">No city branches configured under this main branch.</p>
+                    <p className="text-[11px] font-bold text-slate-400">{tt("bgr.no_city_in_branch", "No city branches configured under this main branch.")}</p>
                   </div>
                 )}
               </div>

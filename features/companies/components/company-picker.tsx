@@ -306,10 +306,11 @@ export function CompanyPicker({
         <SimpleModal
           title={t(lang, "creg.cp_edit_company_dash_master", "Edit Company - Company Master")}
           onClose={() => setEditCompanyId(null)}
-          className="w-[96vw] max-w-[1100px] h-[90vh] max-h-[90vh] rounded-2xl font-sans"
+          className="w-[98vw] max-w-[1450px] h-[92vh] max-h-[92vh] rounded-2xl font-sans"
         >
           <CompanyIncorporationForm
             mode="embedded"
+            initialCompanyId={editCompanyId}
             onSave={(updatedCompany) => {
               loadList().catch(() => null);
               if (updatedCompany.id) {
@@ -326,7 +327,7 @@ export function CompanyPicker({
         <SimpleModal
           title={t(lang, "creg.cp_new_company_dash_master", "New Company - Company Master")}
           onClose={() => setOpenCreate(false)}
-          className="w-[96vw] max-w-[1100px] h-[90vh] max-h-[90vh] rounded-2xl font-sans"
+          className="w-[98vw] max-w-[1450px] h-[92vh] max-h-[92vh] rounded-2xl font-sans"
         >
           <CompanyIncorporationForm
             mode="embedded"

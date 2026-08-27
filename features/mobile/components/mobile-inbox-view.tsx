@@ -17,6 +17,7 @@ import {
   ChevronRight
 } from "lucide-react";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { t } from "@/lib/i18n/ui";
 import { cn } from "@/lib/utils";
 
 type ConversationItem = {

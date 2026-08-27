@@ -32,6 +32,8 @@ import {
 import { apiGet } from "@/lib/api/client";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
 import { cn } from "@/lib/utils";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -263,6 +265,9 @@ function ChipList({
 }
 
 function SuperAdminBranchSetupContent() {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const searchParams = useSearchParams();
   const editId = searchParams.get("editId") ?? "";
   const [drawerBranchData, setDrawerBranchData] = useState<any>(null);
@@ -926,18 +931,18 @@ function SuperAdminBranchSetupContent() {
   }, [editId, savedBranchRows, editingBranchId]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={isRtl ? "rtl" : "ltr"}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">New Entry</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">Super Admin Branch</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">{tt("nav.new_entry", "New Entry")}</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight">{tt("sab.title", "Super Admin Branch")}</h1>
           <p className="text-sm text-muted-foreground">
-            Create the root (Head Office) branch. Country Main Branch and City Branch records will be created under this hierarchy.
+            {tt("sab.desc", "Create the root (Head Office) branch. Country Main Branch and City Branch records will be created under this hierarchy.")}
           </p>
         </div>
         <span className={pillClassName()}>
           <CheckCircle2 className="h-4 w-4 text-primary" aria-hidden />
-          <b>Status:</b> <span>{readyToSave ? "Ready" : "Draft"}</span>
+          <b>{tt("sab.status_lbl", "Status")}:</b> <span>{readyToSave ? tt("sab.status_ready", "Ready") : tt("sab.status_draft", "Draft")}</span>
         </span>
       </div>
 
@@ -946,23 +951,23 @@ function SuperAdminBranchSetupContent() {
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
               <Building2 className="h-5 w-5 text-primary" aria-hidden />
-              <CardTitle>Super Admin Branch Setup</CardTitle>
+              <CardTitle>{tt("sab.setup_title", "Super Admin Branch Setup")}</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="space-y-6 bg-slate-50/30 dark:bg-slate-900/5 p-6">
             <section className="rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">
               <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">1</span>
-                <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Step 1 - Branch Info & Currency</h2>
+                <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{tt("sab.step1", "Step 1 - Branch Info & Currency")}</h2>
               </div>
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
-                  <Label>Branch Type</Label>
-                  <Input value="Super Admin Branch" readOnly className="bg-muted/50 font-semibold" />
+                  <Label>{tt("sab.branch_type", "Branch Type")}</Label>
+                  <Input value={tt("sab.title", "Super Admin Branch")} readOnly className="bg-muted/50 font-semibold" />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="currencySelect">Currency</Label>
+                  <Label htmlFor="currencySelect">{tt("ulrp.currency", "Currency")}</Label>
                   <select id="currencySelect" value={currency} onChange={(event) => setCurrency(event.target.value)} className={selectClass()}>
                     {currencies.map(([value, label]) => (
                       <option key={value} value={value}>
@@ -973,7 +978,7 @@ function SuperAdminBranchSetupContent() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Branch Code</Label>
+                  <Label>{tt("ulrp.branch_code", "Branch Code")}</Label>
                   <Input value={branchCode} readOnly placeholder="Auto" className="bg-muted/50 font-mono font-semibold" />
                 </div>
               </div>
@@ -982,7 +987,7 @@ function SuperAdminBranchSetupContent() {
             <section className="rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">
               <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">2</span>
-                <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Step 2 - Location Settings</h2>
+                <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{tt("sab.step2", "Step 2 - Location Settings")}</h2>
               </div>
               <div className="space-y-4">
                 <LocationHierarchySelect
@@ -998,14 +1003,14 @@ function SuperAdminBranchSetupContent() {
 
                 <div className="grid gap-4 md:grid-cols-3">
                   <div className="space-y-2">
-                    <Label>ZIP / Postal Code</Label>
-                    <Input value={zip} readOnly placeholder="Auto from selected Area or City" className="bg-muted/50 font-semibold" />
+                    <Label>{tt("sab.zip", "ZIP / Postal Code")}</Label>
+                    <Input value={zip} readOnly placeholder={tt("sab.zip_ph", "Auto from selected Area or City")} className="bg-muted/50 font-semibold" />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Full Address</Label>
-                  <TextArea value={address} onChange={setAddress} placeholder="Area / Road, Building, Street, Landmark, etc." />
+                  <Label>{tt("ulrp.address", "Full Address")}</Label>
+                  <TextArea value={address} onChange={setAddress} placeholder={tt("sab.address_ph", "Area / Road, Building, Street, Landmark, etc.")} />
                 </div>
               </div>
             </section>
@@ -1013,7 +1018,7 @@ function SuperAdminBranchSetupContent() {
             <section className="rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">
               <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">3</span>
-                <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Step 3 - Company & Owner Settings</h2>
+                <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{tt("sab.step3", "Step 3 - Company & Owner Settings")}</h2>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
@@ -1045,12 +1050,12 @@ function SuperAdminBranchSetupContent() {
             <section className="rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">
               <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">4</span>
-                <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Step 4 - Contact Details</h2>
+                <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{tt("sab.step4", "Step 4 - Contact Details")}</h2>
               </div>
               <div className="space-y-4">
                 <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto] md:items-end">
                   <div className="space-y-2">
-                    <Label>Contact Type</Label>
+                    <Label>{tt("sab.contact_type", "Contact Type")}</Label>
                     <select
                       value={contactType}
                       onChange={(event) => (event.target.value === "__new__" ? setModal("contactType") : setContactType(event.target.value))}
@@ -1061,24 +1066,24 @@ function SuperAdminBranchSetupContent() {
                           {item}
                         </option>
                       ))}
-                      <option value="__new__">+ New</option>
+                      <option value="__new__">{tt("sab.new_option", "+ New")}</option>
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Value</Label>
-                    <Input value={contactValue} onChange={(event) => setContactValue(event.target.value)} placeholder="Enter value" />
+                    <Label>{tt("sab.value_lbl", "Value")}</Label>
+                    <Input value={contactValue} onChange={(event) => setContactValue(event.target.value)} placeholder={tt("sab.value_ph", "Enter value")} />
                   </div>
                   <Button
                     type="button"
                     onClick={addContact}
                     className="h-9 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold shadow-md hover:shadow-lg transition flex items-center justify-center gap-1.5"
-                    title="Add Contact"
+                    title={tt("sab.add_contact", "Add Contact")}
                   >
                     <Plus className="h-4 w-4 stroke-[2.5]" aria-hidden />
-                    <span>Add</span>
+                    <span>{tt("sab.add", "Add")}</span>
                   </Button>
                 </div>
-                <ChipList empty="No contacts added yet." rows={contacts} onRemove={(id) => setContacts((rows) => rows.filter((row) => row.id !== id))} />
+                <ChipList empty={tt("sab.no_contacts", "No contacts added yet.")} rows={contacts} onRemove={(id) => setContacts((rows) => rows.filter((row) => row.id !== id))} />
               </div>
             </section>
 
@@ -1091,7 +1096,7 @@ function SuperAdminBranchSetupContent() {
                 }}
                 className="h-10 px-5 rounded-lg border-slate-300 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 font-semibold"
               >
-                Reset
+                {tt("sab.reset", "Reset")}
               </Button>
               <Button
                 type="button"
@@ -1104,7 +1109,7 @@ function SuperAdminBranchSetupContent() {
                 )}
               >
                 <Save className="h-4 w-4 stroke-[2.5]" aria-hidden />
-                <span>{editingBranchId ? "Update Branch" : "Save Branch"}</span>
+                <span>{editingBranchId ? tt("sab.update_btn", "Update Branch") : tt("sab.save_btn", "Save Branch")}</span>
               </Button>
             </div>
 
@@ -1195,16 +1200,16 @@ function SuperAdminBranchSetupContent() {
                 ) : null}
 
                 <details className="rounded-lg border bg-background p-3">
-                  <summary className="cursor-pointer text-sm font-semibold text-foreground">Saved Super Admin Branches</summary>
+                  <summary className="cursor-pointer text-sm font-semibold text-foreground">{tt("sab.saved_title", "Saved Super Admin Branches")}</summary>
                   <div className="mt-3 space-y-2">
                     <Input
                       value={savedSearch}
                       onChange={(event) => setSavedSearch(event.target.value)}
-                      placeholder="Search saved branch"
+                      placeholder={tt("sab.search_ph", "Search saved branch")}
                       className="h-9"
                     />
                     {loadingSaved ? (
-                      <p className="text-sm text-muted-foreground">Loading saved branches...</p>
+                      <p className="text-sm text-muted-foreground">{tt("sab.loading_saved", "Loading saved branches...")}</p>
                     ) : filteredSavedBranches.length ? (
                       filteredSavedBranches.map((entry) => {
                         const row = savedBranchRows.find((item) => item.id === entry.id);
@@ -1219,18 +1224,18 @@ function SuperAdminBranchSetupContent() {
                             <div className="flex items-center gap-2">
                               <Button type="button" size="sm" variant="outline" disabled={!row} onClick={() => row && viewSavedBranch(row)}>
                                 <Eye className="h-3.5 w-3.5" aria-hidden />
-                                View
+                                {tt("bgr.view", "View")}
                               </Button>
                               <Button type="button" size="sm" variant="outline" disabled={!row} onClick={() => row && beginEditBranch(row)}>
                                 <Pencil className="h-3.5 w-3.5" aria-hidden />
-                                Edit
+                                {tt("bgr.edit", "Edit")}
                               </Button>
                             </div>
                           </div>
                         );
                       })
                     ) : (
-                      <p className="text-sm text-muted-foreground">No saved branches found.</p>
+                      <p className="text-sm text-muted-foreground">{tt("sab.no_saved", "No saved branches found.")}</p>
                     )}
                   </div>
                 </details>
@@ -1241,10 +1246,10 @@ function SuperAdminBranchSetupContent() {
       </div>
 
       {modal === "contactType" ? (
-        <Modal title="Add Contact Type" onClose={() => setModal(null)}>
+        <Modal title={tt("sab.add_type_title", "Add Contact Type")} onClose={() => setModal(null)}>
           <div className="space-y-4">
-            <Input value={newType} onChange={(event) => setNewType(event.target.value)} placeholder="Type name" />
-            <Button type="button" onClick={() => addType("contact")}>Save Type</Button>
+            <Input value={newType} onChange={(event) => setNewType(event.target.value)} placeholder={tt("sab.value_ph", "Enter value")} />
+            <Button type="button" onClick={() => addType("contact")}>{tt("sab.save_type", "Save Type")}</Button>
           </div>
         </Modal>
       ) : null}
@@ -1279,7 +1284,7 @@ function SuperAdminBranchSetupContent() {
 
 export function SuperAdminBranchSetup() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">Loading Branch Setup...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">Loading...</div>}>
       <SuperAdminBranchSetupContent />
     </Suspense>
   );

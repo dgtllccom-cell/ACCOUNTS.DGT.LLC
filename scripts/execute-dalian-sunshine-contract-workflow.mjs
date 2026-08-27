@@ -65,8 +65,8 @@ async function main() {
     `;
     if (!chinaCountry) {
       [chinaCountry] = await sql`
-        INSERT INTO public.countries (name, iso2, is_active)
-        VALUES ('China', 'CN', true)
+        INSERT INTO public.countries (name, iso2, iso3, currency_code, is_active, official_email, admin_email)
+        VALUES ('China', 'CN', 'CHN', 'CNY', true, 'info@china.dgt.llc', 'admin@china.dgt.llc')
         RETURNING id, name, iso2;
       `;
     }
@@ -138,7 +138,7 @@ async function main() {
           bank_name, branch_name, branch_code, branch_code_type, short_name, account_title, account_number,
           bank_type, account_type,
           swift_bic, currency, full_address, country_id, state_province_id, city_id,
-          owner_company_id, is_active
+          is_active
         ) VALUES (
           'CHINA CONSTRUCTION BANK',
           'DALIAN BRANCH',
@@ -155,7 +155,6 @@ async function main() {
           ${chinaCountry?.id || null},
           ${liaoningState?.id || null},
           ${dalianCity?.id || null},
-          ${dalianCompany?.id || null},
           true
         ) RETURNING id, bank_name, branch_name, swift_bic;
       `;

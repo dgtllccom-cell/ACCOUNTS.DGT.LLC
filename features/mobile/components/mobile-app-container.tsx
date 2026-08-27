@@ -14,6 +14,7 @@ import {
   LogOut
 } from "lucide-react";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { t } from "@/lib/i18n/ui";
 import { cn } from "@/lib/utils";
 import { MobileDashboardView } from "./mobile-dashboard-view";
 import { MobileInboxView } from "./mobile-inbox-view";
@@ -27,6 +28,7 @@ type Props = {
 
 export function MobileAppContainer({ lang }: Props) {
   const isRTL = ["ar", "ur", "fa", "ps"].includes(lang);
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
 
   const [activeTab, setActiveTab] = useState<"dashboard" | "inbox" | "reminders" | "contacts" | "settings">("dashboard");
   const [syncData, setSyncData] = useState<MobileSyncPayload | null>(null);
@@ -75,7 +77,7 @@ export function MobileAppContainer({ lang }: Props) {
             onClick={handleAutoSync}
             disabled={loading}
             className="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white"
-            title="Auto-Sync Now"
+            title={tt("mbl.sync_now", "Auto-Sync Now")}
           >
             <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
           </button>
@@ -113,7 +115,7 @@ export function MobileAppContainer({ lang }: Props) {
           )}
         >
           <LayoutDashboard className="h-5 w-5" />
-          Dashboard
+          {tt("mbl.nav_dashboard", "Dashboard")}
         </button>
 
         <button
@@ -124,7 +126,7 @@ export function MobileAppContainer({ lang }: Props) {
           )}
         >
           <MessageSquare className="h-5 w-5" />
-          Inbox
+          {tt("mbl.nav_inbox", "Inbox")}
           {(syncData?.stats.newMessages || 0) > 0 && (
             <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-[9px] font-black text-white">
               {syncData?.stats.newMessages}
@@ -140,7 +142,7 @@ export function MobileAppContainer({ lang }: Props) {
           )}
         >
           <Bell className="h-5 w-5" />
-          Reminders
+          {tt("mbl.nav_reminders", "Reminders")}
         </button>
 
         <button
@@ -151,7 +153,7 @@ export function MobileAppContainer({ lang }: Props) {
           )}
         >
           <Users className="h-5 w-5" />
-          Templates
+          {tt("mbl.nav_templates", "Templates")}
         </button>
 
         <button
@@ -162,7 +164,7 @@ export function MobileAppContainer({ lang }: Props) {
           )}
         >
           <Settings className="h-5 w-5" />
-          Settings
+          {tt("mbl.nav_settings", "Settings")}
         </button>
       </nav>
 

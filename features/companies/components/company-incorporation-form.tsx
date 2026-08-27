@@ -31,7 +31,10 @@ import {
   Check,
   Sparkles,
   Printer,
-  Compass
+  Compass,
+  Hash,
+  Award,
+  FileSpreadsheet
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +47,24 @@ import { t } from "@/lib/i18n/ui";
 import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
 import { PreferencesControls } from "@/components/layout/preferences-controls";
 import { openCompany360Report } from "@/lib/reports/open-company-360-report-window";
+
+export type CompanyRegistrationEntry = {
+  type: string;
+  value: string;
+};
+
+export const REGISTRATION_TYPES_LIST = [
+  { value: "Trade License Number", labelEn: "Trade License / Commercial License", labelUr: "Trade License (تجارتی لائسنس)" },
+  { value: "VAT/TRN", labelEn: "VAT / Tax Registration Number (TRN)", labelUr: "VAT / TRN (ٹیکس رجسٹریشن نمبر)" },
+  { value: "Commercial Registration", labelEn: "Commercial Registration (CR No)", labelUr: "Commercial Registration (CR - کمرشل رجسٹریشن)" },
+  { value: "NTN No", labelEn: "NTN (National Tax Number)", labelUr: "NTN No (قومی ٹیکس نمبر)" },
+  { value: "Import/Export Code (IEC)", labelEn: "Import / Export Code (IEC)", labelUr: "Import / Export Code (IEC - برآمد/درآمد کوڈ)" },
+  { value: "Chamber of Commerce No", labelEn: "Chamber of Commerce Registration", labelUr: "Chamber of Commerce (چیمبر آف کامرس)" },
+  { value: "Customs Registration Code", labelEn: "Customs Registration Code", labelUr: "Customs Code (کسٹمز رجسٹریشن کوڈ)" },
+  { value: "Freezone License Number", labelEn: "Freezone Business License", labelUr: "Freezone License (فری زون لائسنس)" },
+  { value: "Corporate Tax ID", labelEn: "Corporate Tax ID / TIN", labelUr: "Corporate Tax ID (کارپوریٹ ٹیکس نمبر)" },
+  { value: "Industrial License Number", labelEn: "Industrial License", labelUr: "Industrial License (صنعتی لائسنس)" }
+];
 
 export type CompanyIncorporationData = {
   id?: string;
@@ -122,17 +143,40 @@ export function CompanyIncorporationForm({
   const [companyNameUrdu, setCompanyNameUrdu] = useState("");
   const [businessName, setBusinessName] = useState("");
   const [legalStructure, setLegalStructure] = useState("LLC");
-  const [registrationType, setRegistrationType] = useState("Trade License Number");
-  const [licenseNumber, setLicenseNumber] = useState("");
   const [natureOfBusiness, setNatureOfBusiness] = useState("Trading & General Order Supplier");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
   const [baseCurrency, setBaseCurrency] = useState("USD");
 
+  // --- Dynamic Multi-Registrations State (Trade License, VAT, CR, IEC, etc.) ---
+  const [registrations, setRegistrations] = useState<CompanyRegistrationEntry[]>([
+    { type: "Trade License Number", value: "" },
+    { type: "VAT/TRN", value: "" }
+  ]);
+
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+
+  function handleAddRegistration(defaultType = "Commercial Registration") {
+    setRegistrations((prev) => [...prev, { type: defaultType, value: "" }]);
+  }
+
+  function handleRemoveRegistration(index: number) {
+    setRegistrations((prev) => {
+      if (prev.length <= 1) return prev;
+      return prev.filter((_, i) => i !== index);
+    });
+  }
+
+  function handleRegistrationChange(index: number, field: "type" | "value", val: string) {
+    setRegistrations((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: val };
+      return updated;
+    });
+  }
 
   // Load Countries
   useEffect(() => {
@@ -234,14 +278,15 @@ export function CompanyIncorporationForm({
           summaryData = summaryRes.value.summary;
         }
 
-        const mName = pData?.customer_name || [pData?.first_name, pData?.last_name].filter(Boolean).join(" ") || summaryData?.customerName || "";
+        const rawMName = pData?.customer_name || [pData?.first_name, pData?.last_name].filter(Boolean).join(" ") || summaryData?.customerName || "";
+        const mName = lang === "ur" ? transliterateProperNoun(rawMName, "ur") : rawMName;
 
         setManagerProfile({
           ...pData,
           name: mName,
-          customerCode: pData?.customer_code || pData?.person_code || `CUST-${managerPersonId.slice(0, 6).toUpperCase()}`,
-          employeeCode: summaryData?.employees?.[0]?.employeeCode || pData?.employee_code || "MGR-001",
-          fatherName: pData?.father_name || pData?.contact_person || summaryData?.fatherName || "—",
+          customerCode: pData?.customer_code || pData?.person_code || `PER-${managerPersonId.slice(0, 8).toUpperCase()}`,
+          employeeCode: summaryData?.employees?.[0]?.employeeCode || pData?.employee_code || "EMP-0012",
+          fatherName: pData?.father_name || pData?.contact_person || summaryData?.fatherName || "",
           mobile: pData?.mobile || summaryData?.mobile || summaryData?.phone || "—",
           email: pData?.email || summaryData?.email || "—",
           locationStr: [pData?.city_name || summaryData?.cityName, pData?.state_name || summaryData?.stateName, pData?.country_name || summaryData?.countryName].filter(Boolean).join(" / ") || "—"
@@ -314,9 +359,9 @@ export function CompanyIncorporationForm({
         setOwnerProfile({
           ...pData,
           summary: summaryData,
-          customerCode: pData?.customer_code || pData?.person_code || `CUST-${ownerPersonId.slice(0, 6).toUpperCase()}`,
+          customerCode: pData?.customer_code || pData?.person_code || `PER-${ownerPersonId.slice(0, 8).toUpperCase()}`,
           employeeCode: summaryData?.employees?.[0]?.employeeCode || pData?.employee_code || "EMP-0010",
-          fatherName: pData?.father_name || pData?.contact_person || summaryData?.fatherName || "عبداللہ",
+          fatherName: pData?.father_name || pData?.contact_person || summaryData?.fatherName || "",
           locationStr: [pData?.city_name || "Deira", pData?.state_name || "Dubai", pData?.country_name || "UAE"].filter(Boolean).join(" / ")
         });
 
@@ -347,6 +392,19 @@ export function CompanyIncorporationForm({
             if (comp.is_branch_operative) setRegistrationMode("branch_operative");
             if (comp.owner_person_id) setOwnerPersonId(comp.owner_person_id);
             if (comp.manager_person_id) setManagerPersonId(comp.manager_person_id);
+
+            // Load multi registrations
+            if (comp.registrations && Array.isArray(comp.registrations) && comp.registrations.length > 0) {
+              setRegistrations(comp.registrations.map((r: any) => ({
+                type: r.type || "Trade License Number",
+                value: r.value || ""
+              })));
+            } else if (comp.license_number) {
+              setRegistrations([{
+                type: comp.registration_type || "Trade License Number",
+                value: comp.license_number
+              }]);
+            }
           }
         })
         .catch(() => null);
@@ -361,7 +419,11 @@ export function CompanyIncorporationForm({
   }, [companyName]);
 
   // Validation
-  const isStep1Valid = Boolean(companyName.trim() && legalStructure && registrationType);
+  const isStep1Valid = Boolean(
+    companyName.trim() &&
+    legalStructure &&
+    registrations.some((r) => r.value.trim().length > 0 || r.type)
+  );
   const isStep2Valid = Boolean(ownerName.trim() || ownerPersonId || selectedCountryBranchId);
   const ready = isStep1Valid && isStep2Valid;
 
@@ -378,6 +440,17 @@ export function CompanyIncorporationForm({
 
     try {
       const isOperative = registrationMode === "branch_operative";
+      
+      const validRegistrations = registrations
+        .filter((r) => r.value && r.value.trim().length > 0)
+        .map((r) => ({ type: r.type, value: r.value.trim() }));
+
+      const finalRegistrations = validRegistrations.length > 0
+        ? validRegistrations
+        : [{ type: registrations[0]?.type || "Trade License Number", value: "" }];
+
+      const primaryReg = finalRegistrations[0];
+
       const payload = {
         name: companyName.trim(),
         legalName: businessName.trim() || companyName.trim(),
@@ -385,6 +458,8 @@ export function CompanyIncorporationForm({
         ownerPersonId: ownerPersonId || undefined,
         managerPersonId: managerPersonId || undefined,
         businessType: legalStructure,
+        registrationType: primaryReg.type,
+        licenseNumber: primaryReg.value,
         countryId: selectedCountryId || undefined,
         countryBranchId: selectedCountryBranchId || undefined,
         cityBranchId: selectedCityBranchId || undefined,
@@ -392,7 +467,7 @@ export function CompanyIncorporationForm({
         baseCurrency: baseCurrency || "USD",
         address: address.trim(),
         contacts: [{ type: "Mobile Number", value: phone }, { type: "Email Address", value: email }].filter(c => c.value),
-        registrations: [{ type: registrationType, value: licenseNumber }].filter(r => r.value)
+        registrations: finalRegistrations
       };
 
       let savedCompanyId = initialCompanyId;
@@ -430,7 +505,10 @@ export function CompanyIncorporationForm({
     setCompanyName("");
     setCompanyNameUrdu("");
     setBusinessName("");
-    setLicenseNumber("");
+    setRegistrations([
+      { type: "Trade License Number", value: "" },
+      { type: "VAT/TRN", value: "" }
+    ]);
     setCurrentStep(1);
     setMessage(lang === "ur" ? "اسی مالک کے لیے نئی سسٹر کمپنی کا فارم تیار ہے۔" : "Ready to enter new sister company for same owner.");
   }
@@ -440,7 +518,7 @@ export function CompanyIncorporationForm({
   const selectedCityBranch = cityBranchesList.find((b) => b.id === selectedCityBranchId);
 
   return (
-    <div className="mx-auto w-full max-w-[1680px] p-4 lg:p-6 space-y-6 font-sans" dir={isRtl ? "rtl" : "ltr"}>
+    <div className="mx-auto w-full max-w-[1750px] p-4 lg:p-6 space-y-6 font-sans" dir={isRtl ? "rtl" : "ltr"}>
       
       {/* ── TOP BAR: Header, Mode Toggle, Step Tracker, Close ── */}
       <header className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 lg:p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
@@ -664,15 +742,17 @@ export function CompanyIncorporationForm({
                   {/* Avatar + Main Names */}
                   <div className="flex items-center gap-3.5 pb-3 border-b border-slate-100 dark:border-slate-800">
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white font-black text-lg shadow-xs">
-                      {ownerName ? ownerName.slice(0, 2) : "عا"}
+                      {ownerName ? ownerName.slice(0, 2).toUpperCase() : "OW"}
                     </div>
                     <div>
                       <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
-                        {transliterateProperNoun(ownerName || "عصمت اللہ عبداللہ", lang)}
+                        {ownerName || (lang === "ur" ? "منتخب مالک" : "Selected Owner / Investor")}
                       </h2>
-                      <p className="text-xs text-slate-500 font-medium">
-                        {lang === "ur" ? "ولدیت:" : "S/O:"} {transliterateProperNoun(ownerProfile?.fatherName || "عبداللہ", lang)}
-                      </p>
+                      {ownerProfile?.fatherName && ownerProfile.fatherName !== "—" && !ownerProfile.fatherName.includes("عبداللہ") && (
+                        <p className="text-xs text-slate-500 font-medium">
+                          {lang === "ur" ? "ولدیت:" : "S/O:"} {ownerProfile.fatherName}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -683,7 +763,7 @@ export function CompanyIncorporationForm({
                         {lang === "ur" ? "کسٹمر کوڈ" : "Customer Code"}
                       </span>
                       <span className="font-bold text-slate-900 dark:text-white font-mono">
-                        {ownerProfile?.customerCode || "CUST-807580"}
+                        {ownerProfile?.customerCode || (ownerPersonId ? `PER-${ownerPersonId.slice(0, 8).toUpperCase()}` : "—")}
                       </span>
                     </div>
 
@@ -747,15 +827,17 @@ export function CompanyIncorporationForm({
                   <CardContent className="p-3.5 space-y-3">
                     <div className="flex items-center gap-3">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white font-black text-sm">
-                        {managerProfile?.name ? managerProfile.name.slice(0, 2) : "MG"}
+                        {managerProfile?.name ? managerProfile.name.slice(0, 2).toUpperCase() : "MG"}
                       </div>
                       <div>
                         <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                          {transliterateProperNoun(managerProfile?.name || "Company Manager", lang)}
+                          {managerProfile?.name || "Company Manager"}
                         </h3>
-                        <p className="text-[11px] text-slate-500 font-medium">
-                          {lang === "ur" ? "ولدیت:" : "S/O:"} {transliterateProperNoun(managerProfile?.fatherName || "—", lang)}
-                        </p>
+                        {managerProfile?.fatherName && managerProfile.fatherName !== "—" && (
+                          <p className="text-[11px] text-slate-500 font-medium">
+                            {lang === "ur" ? "ولدیت:" : "S/O:"} {managerProfile.fatherName}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-xs">
@@ -798,35 +880,27 @@ export function CompanyIncorporationForm({
                     <table className="w-full text-[11px] text-left rtl:text-right">
                       <thead className="bg-slate-50/60 dark:bg-slate-800/30 text-slate-500 border-b border-slate-100 dark:border-slate-800 font-bold uppercase sticky top-0 bg-white dark:bg-slate-900">
                         <tr>
-                          <th className="px-3 py-2.5 text-center w-8">#</th>
-                          <th className="px-3 py-2.5">{lang === "ur" ? "کمپنی کا نام" : "Company Name"}</th>
-                          <th className="px-3 py-2.5">{lang === "ur" ? "ساخت" : "Structure"}</th>
-                          <th className="px-3 py-2.5">{lang === "ur" ? "مقام" : "Location"}</th>
-                          <th className="px-3 py-2.5 text-center">{lang === "ur" ? "حالت" : "Status"}</th>
+                          <th className="px-3 py-2">#</th>
+                          <th className="px-3 py-2">{lang === "ur" ? "کمپنی کا نام" : "Company Name"}</th>
+                          <th className="px-3 py-2">{lang === "ur" ? "ساخت" : "Structure"}</th>
+                          <th className="px-3 py-2 text-center">{lang === "ur" ? "حالت" : "Status"}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                         {existingCompaniesForOwner.length === 0 ? (
                           <tr>
-                            <td colSpan={5} className="px-4 py-8 text-center text-slate-400 font-medium">
-                              {lang === "ur" ? "کوئی سسٹر کمپنی رجسٹر نہیں ہے۔ نئی کمپنی درج کریں۔" : "No sister companies registered yet."}
+                            <td colSpan={4} className="px-4 py-8 text-center text-slate-400 font-medium">
+                              {lang === "ur" ? "اس شخص کے نام ابھی کوئی سسٹر کمپنی رجسٹرڈ نہیں ہے۔" : "No existing sister companies found under this owner."}
                             </td>
                           </tr>
                         ) : (
-                          existingCompaniesForOwner.map((co, idx) => (
-                            <tr key={co.id || idx} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition">
-                              <td className="px-3 py-2.5 text-center font-bold text-slate-400">{idx + 1}</td>
-                              <td className="px-3 py-2.5 font-bold text-slate-900 dark:text-slate-100">
-                                {localizeTerm(co.name || co.company_name, lang)}
-                              </td>
-                              <td className="px-3 py-2.5 text-slate-600 dark:text-slate-400 font-mono text-[10px]">
-                                {co.businessType || co.business_type || "LLC"}
-                              </td>
-                              <td className="px-3 py-2.5 text-slate-600 dark:text-slate-400">
-                                {[co.countryName || co.country_name || "UAE", co.cityName || co.city_name || "Dubai"].filter(Boolean).join(" / ")}
-                              </td>
-                              <td className="px-3 py-2.5 text-center">
-                                <span className="inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          existingCompaniesForOwner.map((c: any, idx: number) => (
+                            <tr key={c.id || idx} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50">
+                              <td className="px-3 py-2 text-slate-400 font-bold">{idx + 1}</td>
+                              <td className="px-3 py-2 font-bold text-slate-800 dark:text-slate-200">{c.name}</td>
+                              <td className="px-3 py-2 font-mono text-[10px] text-slate-500">{c.business_type || "LLC"}</td>
+                              <td className="px-3 py-2 text-center">
+                                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
                                   {lang === "ur" ? "فعال" : "Active"}
                                 </span>
                               </td>
@@ -837,16 +911,10 @@ export function CompanyIncorporationForm({
                     </table>
                   </div>
 
-                  {/* Informational Banner */}
-                  <div className="p-3 bg-blue-50/60 dark:bg-blue-950/30 border-t border-blue-100 dark:border-blue-900/40 text-xs text-blue-900 dark:text-blue-200 flex items-start gap-2.5">
-                    <span className="text-blue-600 text-sm mt-0.5">ℹ️</span>
-                    <div>
-                      <p className="font-bold">
-                        {lang === "ur"
-                          ? `اس شخص کے نام پہلے سے ${existingCompaniesForOwner.length} کمپنیاں رجسٹرڈ ہیں۔`
-                          : `This owner already has ${existingCompaniesForOwner.length} registered companies.`}
-                      </p>
-                      <p className="text-[11px] text-blue-700 dark:text-blue-300 mt-0.5">
+                  <div className="p-3 bg-slate-50/60 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+                      <p className="font-bold text-blue-700 dark:text-blue-300">
                         {lang === "ur"
                           ? `آپ اس شخص کے نام نئی کمپنی رجسٹر کر رہے ہیں (کمپنی نمبر: ${existingCompaniesForOwner.length + 1})`
                           : `You are registering a new sister company under this owner (Company #${existingCompaniesForOwner.length + 1})`}
@@ -1032,12 +1100,12 @@ export function CompanyIncorporationForm({
             </CardHeader>
 
             <CardContent className="p-5 lg:p-6 space-y-6">
-              {/* Step 1: کمپنی کی بنیادی معلومات */}
+              {/* Step 1: کمپنی کی بنیادی معلومات و لائسنسز */}
               {currentStep === 1 && (
-                <div className="space-y-4 animate-in fade-in">
+                <div className="space-y-5 animate-in fade-in">
                   <div className="p-3 bg-blue-50/60 dark:bg-blue-950/30 rounded-xl border border-blue-100 dark:border-blue-900/40 text-xs font-semibold text-blue-900 dark:text-blue-200 flex items-center gap-2">
                     <span>ℹ️</span>
-                    <span>{lang === "ur" ? "برائے کرم کمپنی کا نام اور بنیادی قانونی ساخت درج کریں۔" : "Please enter company name and corporate structure."}</span>
+                    <span>{lang === "ur" ? "برائے کرم کمپنی کا نام، قانونی ساخت اور تمام لائسنس/ٹیکس رجسٹریشن نمبرز درج کریں۔" : "Please enter company name, corporate structure, and all applicable license/tax numbers."}</span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1056,7 +1124,7 @@ export function CompanyIncorporationForm({
 
                     <div className="space-y-1.5">
                       <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {lang === "ur" ? "کمپنی کا نام (اردو) *" : "Company Name (Urdu / Localized) *"}
+                        {lang === "ur" ? "کمپنی کا نام (اردو / مقامی نام)" : "Company Name (Urdu / Localized)"}
                       </Label>
                       <Input
                         value={companyNameUrdu}
@@ -1085,35 +1153,6 @@ export function CompanyIncorporationForm({
 
                     <div className="space-y-1.5">
                       <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {lang === "ur" ? "رجسٹریشن کی قسم *" : "Registration Type *"}
-                      </Label>
-                      <select
-                        value={registrationType}
-                        onChange={(e) => setRegistrationType(e.target.value)}
-                        className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-semibold text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="Trade License Number">Trade License (تجارتی لائسنس)</option>
-                        <option value="VAT/TRN">VAT / TRN Number</option>
-                        <option value="NTN No">NTN (National Tax Number)</option>
-                        <option value="Commercial Registration">Commercial Registration (CR)</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        {lang === "ur" ? "لائسنس / دستاویز نمبر" : "License / Document Number"}
-                      </Label>
-                      <Input
-                        value={licenseNumber}
-                        onChange={(e) => setLicenseNumber(e.target.value)}
-                        placeholder="e.g. TL-998822-DXB"
-                        className="bg-white dark:bg-slate-950 border-slate-200 text-xs h-10 font-mono"
-                        dir="ltr"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                         {lang === "ur" ? "بنیادی کرنسی (Base Currency)" : "Base Currency"}
                       </Label>
                       <select
@@ -1128,15 +1167,97 @@ export function CompanyIncorporationForm({
                         <option value="INR">INR (₹) - Indian Rupee</option>
                       </select>
                     </div>
+
+                    {/* Dynamic Multi-Registration Section with + and Delete buttons */}
+                    <div className="sm:col-span-2 space-y-3 p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wide flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-blue-600" />
+                          <span>{lang === "ur" ? "لائسنس و رجسٹریشن نمبرز (License & Registration IDs) *" : "License, Tax & Registration IDs *"}</span>
+                        </Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleAddRegistration()}
+                          className="h-8 px-3 rounded-xl border-blue-200 bg-blue-50/80 hover:bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          <span>{lang === "ur" ? "+ مزید نمبر شامل کریں" : "+ Add Registration ID"}</span>
+                        </Button>
+                      </div>
+
+                      <div className="space-y-2.5">
+                        {registrations.map((reg, idx) => (
+                          <div key={idx} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xs">
+                            <div className="sm:w-1/2">
+                              <select
+                                value={reg.type}
+                                onChange={(e) => handleRegistrationChange(idx, "type", e.target.value)}
+                                className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 px-3 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500"
+                              >
+                                {REGISTRATION_TYPES_LIST.map((opt) => (
+                                  <option key={opt.value} value={opt.value}>
+                                    {lang === "ur" ? opt.labelUr : opt.labelEn}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div className="sm:w-1/2 flex items-center gap-1.5">
+                              <Input
+                                value={reg.value}
+                                onChange={(e) => handleRegistrationChange(idx, "value", e.target.value)}
+                                placeholder={
+                                  reg.type.toLowerCase().includes("vat") || reg.type.toLowerCase().includes("trn")
+                                    ? "e.g. TRN-100482938100003"
+                                    : reg.type.toLowerCase().includes("ntn")
+                                    ? "e.g. NTN-9821430-8"
+                                    : reg.type.toLowerCase().includes("commercial") || reg.type.toLowerCase().includes("cr")
+                                    ? "e.g. CR-89402"
+                                    : "e.g. 15252 / TL-998822"
+                                }
+                                className="bg-white dark:bg-slate-950 border-slate-200 text-xs h-10 font-mono font-bold flex-1"
+                                dir="ltr"
+                              />
+
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleAddRegistration()}
+                                className="h-9 w-9 shrink-0 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 rounded-xl"
+                                title={lang === "ur" ? "ایک اور نمبر شامل کریں" : "Add another registration"}
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+
+                              {registrations.length > 1 && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleRemoveRegistration(idx)}
+                                  className="h-9 w-9 shrink-0 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950 rounded-xl"
+                                  title={lang === "ur" ? "حذف کریں" : "Delete"}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
 
-              {/* Step 2: تصدیق و کاروباری نام */}
+              {/* Step 2: تصدیق و کاروباری تفصیلات */}
               {currentStep === 2 && (
-                <div className="space-y-4 animate-in fade-in">
+                <div className="space-y-5 animate-in fade-in">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="p-4 rounded-xl border border-indigo-200 bg-indigo-50/70 dark:bg-indigo-950/40 space-y-1.5">
+                    <div className="p-4 rounded-2xl border border-indigo-200 bg-indigo-50/70 dark:bg-indigo-950/40 space-y-1.5">
                       <span className="text-[10px] font-black uppercase text-indigo-700 dark:text-indigo-300 block">
                         {registrationMode === "owner_portfolio" 
                           ? (lang === "ur" ? "منسلک مالک کی تصدیق (Owner):" : "Linked Owner Confirmation:")
@@ -1144,7 +1265,7 @@ export function CompanyIncorporationForm({
                       </span>
                       <p className="text-sm font-black text-indigo-950 dark:text-indigo-100">
                         {registrationMode === "owner_portfolio"
-                          ? `${transliterateProperNoun(ownerName || "عصمت اللہ عبداللہ", lang)} (S/O: ${transliterateProperNoun(ownerProfile?.fatherName || "عبداللہ", lang)})`
+                          ? ownerName || "Selected Owner"
                           : `${selectedCountry?.name || "Country"} / ${selectedCountryBranch?.name || "Branch"}`}
                       </p>
                       <p className="text-xs text-slate-600 dark:text-slate-400">
@@ -1155,12 +1276,12 @@ export function CompanyIncorporationForm({
                     </div>
 
                     {managerProfile && (
-                      <div className="p-4 rounded-xl border border-blue-200 bg-blue-50/70 dark:bg-blue-950/40 space-y-1.5">
+                      <div className="p-4 rounded-2xl border border-blue-200 bg-blue-50/70 dark:bg-blue-950/40 space-y-1.5">
                         <span className="text-[10px] font-black uppercase text-blue-700 dark:text-blue-300 block">
                           {lang === "ur" ? "کمپنی منیجر (Manager):" : "Company Manager Confirmation:"}
                         </span>
                         <p className="text-sm font-black text-blue-950 dark:text-blue-100">
-                          {transliterateProperNoun(managerProfile?.name || "Company Manager", lang)} (S/O: {transliterateProperNoun(managerProfile?.fatherName || "—", lang)})
+                          {managerProfile?.name || "Company Manager"}
                         </p>
                         <p className="text-xs text-slate-600 dark:text-slate-400">
                           {lang === "ur" ? `کوڈ: ${managerProfile?.customerCode || "MGR-001"} • موبائل: ${managerProfile?.mobile || "—"}` : `Code: ${managerProfile?.customerCode || "MGR-001"} • Mobile: ${managerProfile?.mobile || "—"}`}
@@ -1199,7 +1320,7 @@ export function CompanyIncorporationForm({
 
               {/* Step 3: پتہ و رابطہ */}
               {currentStep === 3 && (
-                <div className="space-y-4 animate-in fade-in">
+                <div className="space-y-5 animate-in fade-in">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
@@ -1242,9 +1363,9 @@ export function CompanyIncorporationForm({
 
               {/* Step 4: جائزہ اور محفوظ کریں */}
               {currentStep === 4 && (
-                <div className="space-y-4 animate-in fade-in">
+                <div className="space-y-5 animate-in fade-in">
                   <div className="border border-slate-200 dark:border-slate-800 rounded-2xl p-5 bg-slate-50/50 dark:bg-slate-900/60 space-y-4">
-                    <div className="flex items-center justify-between border-b pb-3">
+                    <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
                       <div>
                         <h3 className="text-base font-black text-blue-700 dark:text-blue-400">
                           {companyName || "DAMAAN Trading Company LLC"}
@@ -1259,6 +1380,7 @@ export function CompanyIncorporationForm({
                           variant="outline"
                           size="sm"
                           onClick={() => {
+                            const validRegs = registrations.filter(r => r.value);
                             openCompany360Report({
                               company: {
                                 name: companyName,
@@ -1266,8 +1388,8 @@ export function CompanyIncorporationForm({
                                 nameUrdu: companyNameUrdu,
                                 businessType: legalStructure,
                                 natureOfBusiness,
-                                registrationType,
-                                licenseNumber,
+                                registrationType: validRegs[0]?.type || "Trade License Number",
+                                licenseNumber: validRegs[0]?.value || "",
                                 baseCurrency,
                                 countryName: selectedCountry?.name || "United Arab Emirates",
                                 mainBranchName: selectedCountryBranch?.name || "Main Headquarters",
@@ -1321,41 +1443,53 @@ export function CompanyIncorporationForm({
                         </span>
                         <span className="font-bold text-slate-800 dark:text-slate-200">
                           {registrationMode === "owner_portfolio" 
-                            ? `${transliterateProperNoun(ownerName, lang)} (S/O: ${transliterateProperNoun(ownerProfile?.fatherName || "—", lang)})` 
+                            ? ownerName 
                             : `${selectedCountry?.name || "Country"} / ${selectedCountryBranch?.name || "Branch"}`}
                         </span>
                       </div>
+
                       {managerProfile && (
                         <div>
                           <span className="text-[10px] text-slate-400 font-bold block">{lang === "ur" ? "کمپنی منیجر:" : "Company Manager:"}</span>
                           <span className="font-bold text-indigo-600 dark:text-indigo-400">
-                            {transliterateProperNoun(managerProfile?.name || "Manager", lang)}
+                            {managerProfile?.name || "Manager"}
                           </span>
                         </div>
                       )}
-                      <div>
-                        <span className="text-[10px] text-slate-400 font-bold block">{lang === "ur" ? "رجسٹریشن قسم:" : "Reg Type:"}</span>
-                        <span className="font-bold text-slate-800 dark:text-slate-200">{registrationType}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-slate-400 font-bold block">{lang === "ur" ? "لائسنس نمبر:" : "License #:"}</span>
-                        <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{licenseNumber || "TL-882233"}</span>
-                      </div>
+
                       <div>
                         <span className="text-[10px] text-slate-400 font-bold block">{lang === "ur" ? "فون نمبر:" : "Phone:"}</span>
                         <span className="font-mono font-bold text-slate-800 dark:text-slate-200" dir="ltr">{phone || "—"}</span>
                       </div>
+
                       <div>
                         <span className="text-[10px] text-slate-400 font-bold block">{lang === "ur" ? "ای میل:" : "Email:"}</span>
                         <span className="font-mono font-bold text-slate-800 dark:text-slate-200" dir="ltr">{email || "—"}</span>
                       </div>
+
                       <div>
                         <span className="text-[10px] text-slate-400 font-bold block">{lang === "ur" ? "سیریل ایلوکیشن:" : "Serials:"}</span>
                         <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">4-Level Auto Allocated</span>
                       </div>
+
                       <div>
                         <span className="text-[10px] text-slate-400 font-bold block">{lang === "ur" ? "سسٹر کمپنیاں:" : "Sister Companies:"}</span>
                         <span className="font-bold text-blue-600">{existingCompaniesForOwner.length} {lang === "ur" ? "کمپنیاں موجود" : "Companies on Record"}</span>
+                      </div>
+                    </div>
+
+                    {/* Registrations List Summary */}
+                    <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-1.5">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 block">
+                        {lang === "ur" ? "رجسٹرڈ لائسنسز و شناختی نمبرز:" : "Registered Licenses & Regulatory Identifiers:"}
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {registrations.filter(r => r.value).map((reg, i) => (
+                          <div key={i} className="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs">
+                            <span className="font-bold text-slate-600 dark:text-slate-400 text-[11px]">{reg.type}</span>
+                            <span className="font-mono font-black text-blue-600 dark:text-blue-400">{reg.value}</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
