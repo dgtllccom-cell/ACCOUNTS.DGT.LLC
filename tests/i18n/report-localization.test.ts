@@ -54,6 +54,28 @@ describe("report localization coverage", () => {
     }
   });
 
+  it("translates journal Bill Number / narration column headers in every RTL language", () => {
+    // These render in the Print / PDF / HTML / Excel output of the Purchase Booking
+    // Journal Report and every ledger report. They must never appear as English in
+    // ur/ar/fa/ps (regression: previously missing from HEADER_TRANSLATIONS).
+    const journalHeaders = [
+      "Bill Number",
+      "Manual Bill Number",
+      "System Bill Number",
+      "Bill / Ref No",
+      "Description / Narration",
+      "Goods / Description",
+    ];
+    for (const label of journalHeaders) {
+      expect(hasHeaderTranslation(label)).toBe(true);
+      for (const lang of nonEnglishLanguages) {
+        const translated = translateHeader(lang, label);
+        expect(translated).not.toBe(label);
+        expect(translated).not.toMatch(/[A-Za-z]{3,}/); // no Latin words left in the header
+      }
+    }
+  });
+
   it("uses stored record translations and safely falls back to English", () => {
     const values = { en: "English value", ur: "اردو قدر" };
     expect(resolveActiveText(values, "ur", "Fallback")).toBe("اردو قدر");
