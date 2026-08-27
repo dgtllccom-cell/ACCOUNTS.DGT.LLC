@@ -122,6 +122,7 @@ export function ReportDataTable({
   const [page, setPage] = useState(1);
   const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
   const search = searchQuery ?? internalSearch;
+  const columnsSignature = useMemo(() => columns.map((column) => column.key).join("|"), [columns]);
 
   const handleSort = (colKey: string) => {
     if (sortKey !== colKey) {
@@ -161,7 +162,9 @@ export function ReportDataTable({
   const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
   const paged = sorted.slice((page - 1) * pageSize, page * pageSize);
 
-  useEffect(() => setPage(1), [rows, columns, columnFilters]);
+  useEffect(() => {
+    if (page !== 1) setPage(1);
+  }, [rows, columnsSignature, columnFilters, page]);
 
   if (isLoading) {
     return (

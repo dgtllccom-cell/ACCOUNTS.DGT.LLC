@@ -760,7 +760,7 @@ export async function GET(request: NextRequest) {
       const profiles = actorIds.length
         ? requireQuery(await db.from("profiles").select("id, full_name, user_code").in("id", actorIds).is("deleted_at", null).order("full_name"), "Edit history profiles query") ?? []
         : [];
-      return buildEditHistoryReport({
+      return apiOk(buildEditHistoryReport({
         session,
         scopeLevel: scope.level,
         scopeLabel: scope.scopeLabel,
@@ -770,7 +770,7 @@ export async function GET(request: NextRequest) {
         profiles: profiles as Array<{ id: string; full_name?: string | null; user_code?: string | null }>,
         assignments: requireQuery(assignmentsResult, "Edit history assignments query") as Array<{ user_id: string; role: string; country_id?: string | null; country_branch_id?: string | null; city_branch_id?: string | null }>,
         rows: filteredHistoryRows
-      });
+      }));
     }
 
     if (params.reportType === "purchase" || params.reportType === "bills" || params.reportType === "project") {

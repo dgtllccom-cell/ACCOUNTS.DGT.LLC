@@ -100,6 +100,10 @@ const DEFAULT_FILTERS: ReportFilterValues = {
   reportType: "roznamcha"
 };
 
+function sameStringArray(a: string[], b: string[]) {
+  return a.length === b.length && a.every((value, index) => value === b[index]);
+}
+
 function fmtNum(val: number | string | null | undefined): string {
   const n = Number(val);
   if (!Number.isFinite(n)) return "0.00";
@@ -200,10 +204,14 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
     ? ((selectedRow.historyEntries ?? reportResult.history?.[selectedHistoryKey] ?? []) as any[])
     : [];
   const renderAuditValue = (value: unknown) => (value === null || value === undefined || value === "" ? "—" : typeof value === "object" ? JSON.stringify(value) : String(value));
-  const baseColumns = getColumnsForReportType(
-    appliedReportType,
-    lang,
-    appliedCurrency !== "all" ? appliedCurrency : "USD"
+  const baseColumns = useMemo(
+    () =>
+      getColumnsForReportType(
+        appliedReportType,
+        lang,
+        appliedCurrency !== "all" ? appliedCurrency : "USD"
+      ),
+    [appliedReportType, lang, appliedCurrency]
   );
 
   const fetchReport = useCallback(async (currentFilters: ReportFilterValues) => {
@@ -355,19 +363,22 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
       : _("report.all_global_branches", "ALL GLOBAL BRANCHES"));
 
   useEffect(() => {
+    const allowed = baseColumns.map((column) => column.key);
     setVisibleColumnKeys((current) => {
-      if (current.length === 0) {
-        return baseColumns.map((column) => column.key);
-      }
-      const allowedKeys = new Set(baseColumns.map((column) => column.key));
-      const next = current.filter((key) => allowedKeys.has(key));
-      const missing = baseColumns.map((column) => column.key).filter((key) => !next.includes(key));
-      return next.length ? [...next, ...missing] : baseColumns.map((column) => column.key);
+      const next = current.length === 0
+        ? allowed
+        : (() => {
+            const allowedKeys = new Set(allowed);
+            const kept = current.filter((key) => allowedKeys.has(key));
+            const missing = allowed.filter((key) => !kept.includes(key));
+            return kept.length ? [...kept, ...missing] : allowed;
+          })();
+      return sameStringArray(current, next) ? current : next;
     });
     setColumnOrder((current) => {
-      const allowed = baseColumns.map((column) => column.key);
       const kept = current.filter((key) => allowed.includes(key));
-      return [...kept, ...allowed.filter((key) => !kept.includes(key))];
+      const next = [...kept, ...allowed.filter((key) => !kept.includes(key))];
+      return sameStringArray(current, next) ? current : next;
     });
   }, [appliedReportType, lang, baseColumns]);
 
@@ -380,8 +391,11 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
         const allowed = new Set(baseColumns.map((column) => column.key));
         const visible = saved.visible.filter((key: string) => allowed.has(key));
         const order = saved.order.filter((key: string) => allowed.has(key));
-        setVisibleColumnKeys(visible.length ? visible : baseColumns.map((column) => column.key));
-        setColumnOrder([...order, ...baseColumns.map((column) => column.key).filter((key) => !order.includes(key))]);
+        const fallbackVisible = baseColumns.map((column) => column.key);
+        const nextVisible = visible.length ? visible : fallbackVisible;
+        const nextOrder = [...order, ...fallbackVisible.filter((key) => !order.includes(key))];
+        setVisibleColumnKeys((current) => (sameStringArray(current, nextVisible) ? current : nextVisible));
+        setColumnOrder((current) => (sameStringArray(current, nextOrder) ? current : nextOrder));
       }
     } catch {
       // Ignore
