@@ -1,7 +1,5 @@
 FILE	HARDCODED_HITS	HAS_I18N
-features/journal/components/purchase-order-payment-journal.tsx	59	yes
-features/users/components/user-journal-report.tsx	43	yes
-features/crm/components/smart-crm-control-center.tsx	33	yes
+features/journal/components/purchase-order-payment-journal.tsx	35	yes
 features/clearing-agent/components/transit-entry-management.tsx	28	yes
 features/clearing-agent/components/customer-order-management-view.tsx	26	yes
 features/audit/components/all-deleted-records-view.tsx	25	yes
@@ -21,29 +19,28 @@ app/dashboard/settings/profile/page.tsx	15	NO
 features/roznamcha/components/bank-roznamcha-report-view.tsx	15	yes
 app/dashboard/page.tsx	14	yes
 app/dashboard/settings/management/chs-products/ui-client.tsx	14	NO
-features/journal/components/sales-order-payment-journal.tsx	13	yes
 features/messages/components/email-management.tsx	13	yes
 features/purchases/components/purchase-loading-records-view.tsx	13	yes
 features/branch-management/components/branch-general-report-view.tsx	12	yes
 features/branches/components/super-admin-branch-setup.tsx	11	yes
 features/hr-payroll/components/employee-management-view.tsx	11	yes
 features/inventory/components/inventory-workspace-client.tsx	11	yes
-features/settings/components/email-accounts-management.tsx	11	yes
 app/dashboard/settings/management/page.tsx	10	NO
 features/purchases/components/local-purchase-view.tsx	10	yes
 features/roznamcha/components/money-exchange-form.tsx	10	yes
-features/roznamcha/components/super-admin-roznamcha-report-view.tsx	10	yes
 app/dashboard/settings/translations/page.tsx	9	NO
 features/general-office/components/general-office-dashboard-view-clean.tsx	9	yes
 features/locations/components/location-setup.tsx	9	yes
 features/purchases/components/completed-purchase-bills-view.tsx	9	yes
 features/audit/components/deleted-record-detail-view.tsx	8	yes
+features/crm/components/smart-crm-control-center.tsx	8	yes
 features/branches/components/country-branch-setup.tsx	7	yes
 features/roznamcha/components/expenses-bill-entry-form.tsx	7	yes
 app/dashboard/settings/management/taxes/ui-client.tsx	6	NO
 app/dashboard/settings/page.tsx	6	NO
 app/onboarding/page.tsx	6	NO
 features/journal/components/journal-booking-stock-dashboard.tsx	6	yes
+features/journal/components/sales-order-payment-journal.tsx	6	yes
 features/users/components/user-profile-report-modal.tsx	6	yes
 app/dashboard/kyc-reports/page.tsx	5	yes
 app/dashboard/messages/whatsapp/setup/page.tsx	5	NO
@@ -70,9 +67,9 @@ app/dashboard/super-admin/investments/page.tsx	2	yes
 components/layout/digital-dock-premium-sidebar.tsx	2	yes
 components/reports/builder/auto-email-manager.tsx	2	yes
 components/ui/pdf-preview-modal.tsx	2	NO
-features/contact-types/components/contact-type-registry.tsx	2	yes
 features/crm/components/crm-reports-view.tsx	2	yes
 features/roznamcha/components/roznamcha-report-view.tsx	2	yes
+features/roznamcha/components/super-admin-roznamcha-report-view.tsx	2	yes
 features/settings/components/product-brands-management.tsx	2	yes
 features/settings/components/product-categories-management.tsx	2	yes
 features/settings/components/product-units-management.tsx	2	yes
@@ -118,6 +115,7 @@ features/mobile/components/mobile-dashboard-view.tsx	1	yes
 features/purchases/components/purchase-loading-form-view.tsx	1	yes
 features/purchases/components/purchase-transfer-erp-report-view.tsx	1	yes
 features/return-sms-reply/components/unified-inbox-view.tsx	1	yes
+features/settings/components/email-accounts-management.tsx	1	yes
 features/users/components/admin-user-management-panel.tsx	1	yes
 features/whatsapp/components/contact-panel.tsx	1	yes
 features/whatsapp/components/conversation-list.tsx	1	yes
@@ -125,4 +123,4 @@ features/whatsapp/components/filters-bar.tsx	1	yes
 features/whatsapp/components/message-bubble.tsx	1	yes
 features/whatsapp/components/whatsapp-wizard-modal.tsx	1	yes
 
-=== 125 files with hardcoded UI text, ~882 candidate lines ===
+=== 123 files with hardcoded UI text, ~763 candidate lines ===
