@@ -78,12 +78,12 @@ type PartySelection = {
   addressSource: string;
 };
 
-const PARTY_ROLES: Array<{ key: PartyRoleKey; label: string; required?: boolean }> = [
-  { key: "supplier", label: "Supplier / Order Party", required: true },
-  { key: "importer", label: "Importer", required: true },
-  { key: "exporter", label: "Exporter", required: true },
-  { key: "notify_party", label: "Notify Party" },
-  { key: "buyer", label: "Buyer" }
+const PARTY_ROLES: Array<{ key: PartyRoleKey; label: string; labelKey: string; required?: boolean }> = [
+  { key: "supplier", label: "Supplier / Order Party", labelKey: "role_supplier", required: true },
+  { key: "importer", label: "Importer", labelKey: "role_importer", required: true },
+  { key: "exporter", label: "Exporter", labelKey: "role_exporter", required: true },
+  { key: "notify_party", label: "Notify Party", labelKey: "role_notify_party" },
+  { key: "buyer", label: "Buyer", labelKey: "role_buyer" }
 ];
 
 const EMPTY_FORM = {
@@ -285,6 +285,7 @@ function PartyRolePanel({
   disabled?: boolean;
   lang: string;
 }) {
+  const tt = (k: string, f: string) => t(lang, ("com." + k) as never, f);
   const [companyPickerOpen, setCompanyPickerOpen] = useState(false);
   const [customerSearch, setCustomerSearch] = useState("");
   const [companySearch, setCompanySearch] = useState("");
@@ -326,14 +327,14 @@ function PartyRolePanel({
           className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[10px] font-bold text-blue-700 hover:bg-blue-100 transition dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 cursor-pointer"
         >
           <Building2 className="h-3 w-3" />
-          {effectiveCompanyName ? "Company Linked" : "Pick Company"}
+          {effectiveCompanyName ? tt("company_linked", "Company Linked") : tt("pick_company", "Pick Company")}
         </button>
       </div>
 
       <SearchSelect
-        label={`Search ${label}`}
+        label={`${tt("search_party", "Search party")} — ${label}`}
         value={selection.customerId}
-        placeholder={disabled ? "Loading..." : `Search ${label.toLowerCase()} by name / code / phone`}
+        placeholder={disabled ? t(lang, "common.loading" as never, "Loading...") : `${tt("search_party", "Search party")} — ${label}`}
         options={customerOptions}
         onValueChange={(customerId) => {
           const customer = customers.find((item) => item.id === customerId);
@@ -362,8 +363,8 @@ function PartyRolePanel({
         }}
         onSearchValueChange={setCustomerSearch}
         disabled={disabled}
-        searchPlaceholder="Search party"
-        emptyLabel="No matching parties"
+        searchPlaceholder={tt("search_party", "Search party")}
+        emptyLabel={tt("no_parties", "No matching parties")}
       />
 
       <div className="flex flex-wrap items-center gap-2">
@@ -374,17 +375,17 @@ function PartyRolePanel({
           className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-bold text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
         >
           <Building2 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-          {linkedCompanies.length > 0 ? `${linkedCompanies.length} Linked Companies` : "Pick Company"}
+          {linkedCompanies.length > 0 ? `${linkedCompanies.length} ${tt("linked_companies", "Linked Companies")}` : tt("pick_company", "Pick Company")}
         </button>
         <div className="text-[11px] text-slate-600 dark:text-slate-400 truncate max-w-[280px]">
-          <span className="font-semibold text-slate-800 dark:text-slate-200">Company:</span> {effectiveCompanyName || "-"}
+          <span className="font-semibold text-slate-800 dark:text-slate-200">{tt("company", "Company")}:</span> {effectiveCompanyName || "-"}
         </div>
       </div>
 
       <div>
         <div className="mb-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
           <MapPin className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-          Address / Billing / Shipping
+          {tt("address_billing_shipping", "Address / Billing / Shipping")}
         </div>
         {addressOptions.length > 0 ? (
           <SearchSelect
@@ -398,49 +399,49 @@ function PartyRolePanel({
                 addressSource: chosen?.label || "selected"
               });
             }}
-            placeholder="Search address"
-            searchPlaceholder="Search address"
-            emptyLabel="No matching addresses"
+            placeholder={tt("search_address", "Search address")}
+            searchPlaceholder={tt("search_address", "Search address")}
+            emptyLabel={tt("no_addresses", "No matching addresses")}
           />
         ) : (
           <input
             value={selection.addressText}
             onChange={(e) => onChange({ ...selection, addressText: e.target.value, addressSource: "manual" })}
-            placeholder="Enter address"
+            placeholder={tt("enter_address", "Enter address")}
             className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
           />
         )}
-        <div className="mt-1 text-[10.5px] text-slate-500 truncate">Selected Address: {summaryValue(effectiveAddress)}</div>
+        <div className="mt-1 text-[10.5px] text-slate-500 truncate">{tt("selected_address", "Selected Address")}: {summaryValue(effectiveAddress)}</div>
       </div>
 
       <div className="grid grid-cols-1 gap-1.5 rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 text-xs dark:border-slate-800 dark:bg-slate-800/50">
         <div className="flex items-start justify-between gap-2">
-          <span className="text-slate-500 text-[11px]">Party</span>
+          <span className="text-slate-500 text-[11px]">{tt("party", "Party")}</span>
           <span className="text-right font-semibold text-slate-800 dark:text-slate-200">{summaryValue(selection.customerName)}</span>
         </div>
         <div className="flex items-start justify-between gap-2">
-          <span className="text-slate-500 text-[11px]">Company</span>
+          <span className="text-slate-500 text-[11px]">{tt("company", "Company")}</span>
           <span className="text-right font-semibold text-slate-800 dark:text-slate-200">{summaryValue(effectiveCompanyName)}</span>
         </div>
         <div className="flex items-start justify-between gap-2">
-          <span className="text-slate-500 text-[11px]">Address</span>
+          <span className="text-slate-500 text-[11px]">{tt("address", "Address")}</span>
           <span className="max-w-[70%] text-right font-medium text-slate-700 dark:text-slate-300 truncate">{summaryValue(effectiveAddress)}</span>
         </div>
       </div>
 
       {companyPickerOpen ? (
         <SimpleModal
-          title={`${label} - Linked Companies`}
+          title={`${label} — ${tt("linked_companies_modal", "Linked Companies")}`}
           onClose={() => setCompanyPickerOpen(false)}
           className="w-[96vw] max-w-[800px] max-h-[90vh] overflow-y-auto rounded-2xl font-sans"
         >
           <div className="space-y-4 p-4">
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5 dark:border-slate-800 dark:bg-slate-900">
               <div className="text-xs font-bold text-slate-800 dark:text-slate-100">
-                Search and select the company/business linked to this party.
+                {tt("company_picker_hint", "Search and select the company/business linked to this party.")}
               </div>
               <div className="mt-0.5 text-[11px] text-slate-500">
-                If previous orders already linked this party to companies, they appear first.
+                {tt("company_picker_note", "If previous orders already linked this party to companies, they appear first.")}
               </div>
             </div>
             <SearchSelect
@@ -462,10 +463,10 @@ function PartyRolePanel({
                 setCompanyPickerOpen(false);
               }}
               onSearchValueChange={setCompanySearch}
-              placeholder="Search company / business"
-              searchPlaceholder="Search company by name, code or owner"
-              emptyLabel="No matching companies"
-              label="Linked Company"
+              placeholder={tt("search_company_biz", "Search company / business")}
+              searchPlaceholder={tt("search_company_full", "Search company by name, code or owner")}
+              emptyLabel={tt("no_companies", "No matching companies")}
+              label={tt("linked_company", "Linked Company")}
             />
             <div className="flex justify-end">
               <button
@@ -473,7 +474,7 @@ function PartyRolePanel({
                 onClick={() => setCompanyPickerOpen(false)}
                 className="rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
               >
-                Close
+                {tt("close", "Close")}
               </button>
             </div>
           </div>
@@ -500,9 +501,10 @@ export function CustomerOrderManagementView() {
   const [partySelections, setPartySelections] = useState<Record<PartyRoleKey, PartySelection>>(emptyPartyState());
   const [formData, setFormData] = useState({ ...EMPTY_FORM });
 
+  const tt = (k: string, f: string) => t(lang, ("com." + k) as never, f);
   const title = t(lang, "nav.customer_order", "Customer Order");
   const refreshLabel = t(lang, "common.refresh", "Refresh");
-  const saveLabel = editingOrderId ? "Update Customer Order" : "Save Customer Order";
+  const saveLabel = editingOrderId ? tt("update_order", "Update Customer Order") : tt("save_order", "Save Customer Order");
 
   useEffect(() => {
     void fetchInitialData();
@@ -707,13 +709,13 @@ export function CustomerOrderManagementView() {
   const isSeaMode = formData.transport_mode === "by_sea";
   const isRoadMode = formData.transport_mode === "by_road" || formData.transport_mode === "by_truck";
   const shouldShowBuyer = isSeaMode || formData.notify_party_required;
-  const nextActionLabel = isSeaMode || formData.notify_party_required ? "Bill Entry" : isRoadMode ? "Truck Entry" : "Review";
+  const nextActionLabel = isSeaMode || formData.notify_party_required ? tt("step_bill_entry", "Bill Entry") : isRoadMode ? tt("step_truck_entry", "Truck Entry") : tt("step_review", "Review");
   const loadingSourceLabel =
     formData.loading_source === "warehouse"
-      ? "Warehouse"
+      ? tt("ls_warehouse", "Warehouse")
       : formData.loading_source === "truck_transfer"
-        ? "Transfer from Truck"
-        : "Transfer from Container";
+        ? tt("transfer_from_truck", "Transfer from Truck")
+        : tt("transfer_from_container", "Transfer from Container");
 
   const resetForm = () => {
     setFormData({ ...EMPTY_FORM });
@@ -789,22 +791,24 @@ export function CustomerOrderManagementView() {
   };
 
   const handlePrintOrder = (order: ClearingCustomerOrderRow) => {
+    const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+    const align = isRtl ? "right" : "left";
     const html = `
-      <html><head><title>${order.order_no || "Customer Order"}</title>
+      <html lang="${lang}" dir="${isRtl ? "rtl" : "ltr"}"><head><title>${order.order_no || tt("title", "Customer Order")}</title>
       <style>
         body{font-family:Arial,sans-serif;padding:24px;color:#0f172a;}
         h1{margin:0 0 10px 0;}
         table{width:100%;border-collapse:collapse;margin-top:16px;}
-        th,td{border:1px solid #cbd5e1;padding:8px;text-align:left;font-size:12px;}
+        th,td{border:1px solid #cbd5e1;padding:8px;text-align:${align};font-size:12px;}
         th{background:#f1f5f9;}
       </style></head><body>
-      <h1>${order.order_no || "Customer Order"}</h1>
-      <p><strong>Party:</strong> ${order.customer_name || "-"}</p>
-      <p><strong>Goods:</strong> ${[order.goods_name, order.goods_chs_code ? `CHS ${order.goods_chs_code}` : "", order.goods_variation_label, order.goods_origin_country_name].filter(Boolean).join(" • ") || "-"}</p>
-      <p><strong>Route:</strong> ${order.route_name || "-"}</p>
-      <p><strong>Movement:</strong> ${order.movement_type || "-"}</p>
+      <h1>${order.order_no || tt("title", "Customer Order")}</h1>
+      <p><strong>${tt("party", "Party")}:</strong> ${order.customer_name || "-"}</p>
+      <p><strong>${tt("print_goods", "Goods")}:</strong> ${[order.goods_name, order.goods_chs_code ? `CHS ${order.goods_chs_code}` : "", order.goods_variation_label, order.goods_origin_country_name].filter(Boolean).join(" • ") || "-"}</p>
+      <p><strong>${tt("print_route", "Route")}:</strong> ${order.route_name || "-"}</p>
+      <p><strong>${tt("print_movement", "Movement")}:</strong> ${order.movement_type || "-"}</p>
       <table>
-        <thead><tr><th>Role</th><th>Party</th><th>Company</th><th>Address</th></tr></thead>
+        <thead><tr><th>${tt("print_role", "Role")}</th><th>${tt("party", "Party")}</th><th>${tt("print_company", "Company")}</th><th>${tt("print_address", "Address")}</th></tr></thead>
         <tbody>
           ${(order.party_links || []).map((link) => `
             <tr>
@@ -829,15 +833,15 @@ export function CustomerOrderManagementView() {
     e.preventDefault();
     const supplier = partySelections.supplier;
     if (!supplier.customerName) {
-      alert("Please select the Supplier / Order Party.");
+      alert(tt("err_supplier", "Please select the Supplier / Order Party."));
       return;
     }
     if (!partySelections.importer.customerName) {
-      alert("Please select an Importer.");
+      alert(tt("err_importer", "Please select an Importer."));
       return;
     }
     if (!partySelections.exporter.customerName) {
-      alert("Please select an Exporter.");
+      alert(tt("err_exporter", "Please select an Exporter."));
       return;
     }
 
@@ -877,13 +881,13 @@ export function CustomerOrderManagementView() {
       );
 
       const result = await response.json();
-      if (!result.success) throw new Error(result.error || "Failed to save order");
+      if (!result.success) throw new Error(result.error || tt("save_failed", "Failed to save order"));
 
       setSuccessMessage(`Order ${result.data.order_no || ""} ${editingOrderId ? "updated" : "created"} successfully.`);
       resetForm();
       await fetchInitialData();
     } catch (error: any) {
-      alert(`Save failed: ${error?.message || error}`);
+      alert(`${tt("err_save_failed", "Save failed")}: ${error?.message || error}`);
     } finally {
       setSaving(false);
     }
@@ -897,19 +901,18 @@ export function CustomerOrderManagementView() {
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-300">
-                Customer Order Entry
+                {tt("header_entry", "Customer Order Entry")}
               </span>
               <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
-                Left Entry / Right Register
+                {tt("header_left_right", "Left Entry / Right Register")}
               </span>
               <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sky-700 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-300">
-                Next: {nextActionLabel}
+                {tt("header_next", "Next")}: {nextActionLabel}
               </span>
             </div>
-            <h1 className="text-xl font-black text-slate-900 dark:text-white">Customer Order</h1>
+            <h1 className="text-xl font-black text-slate-900 dark:text-white">{tt("title", "Customer Order")}</h1>
             <p className="max-w-4xl text-xs text-slate-500 dark:text-slate-400">
-              Search Supplier, Importer, Exporter and Notify Party masters, pick the linked company/business and
-              address, then save a database-backed shipping order with the same row refreshed in the live register.
+              {tt("subtitle", "Search Supplier, Importer, Exporter and Notify Party masters, pick the linked company/business and address, then save a database-backed shipping order with the same row refreshed in the live register.")}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -927,7 +930,7 @@ export function CustomerOrderManagementView() {
               className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs transition hover:bg-blue-700"
             >
               <Plus className="h-3.5 w-3.5" />
-              New
+              {tt("new", "New")}
             </button>
           </div>
         </div>
@@ -949,15 +952,15 @@ export function CustomerOrderManagementView() {
           <div className="space-y-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
             <h2 className="flex items-center gap-2 text-base font-bold text-slate-900 dark:text-slate-100">
               <FileText className="h-4 w-4 text-blue-600" />
-              Order Entry
+              {tt("order_entry", "Order Entry")}
             </h2>
             <div className="grid grid-cols-2 gap-2.5 text-xs">
               <div className="rounded-lg border border-slate-100 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-800/60">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Movement</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("movement", "Movement")}</div>
                 <div className="mt-0.5 font-bold text-slate-800 dark:text-slate-200 capitalize">{formData.movement_type.replace("_", " ")}</div>
               </div>
               <div className="rounded-lg border border-slate-100 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-800/60">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Transport</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("transport", "Transport")}</div>
                 <div className="mt-0.5 font-bold text-slate-800 dark:text-slate-200 capitalize">{formData.transport_mode.replace("_", " ")}</div>
               </div>
             </div>
@@ -966,41 +969,41 @@ export function CustomerOrderManagementView() {
           <div className="grid grid-cols-1 gap-3.5">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">Movement Type *</label>
+                <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("movement_type", "Movement Type")} *</label>
                 <select
                   value={formData.movement_type}
                   onChange={(e) => setFormData((current) => ({ ...current, movement_type: e.target.value as MovementType }))}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 >
-                  <option value="import">Import</option>
-                  <option value="export">Export</option>
-                  <option value="domestic">Domestic</option>
-                  <option value="up_transit">Up Transit</option>
+                  <option value="import">{tt("mv_import", "Import")}</option>
+                  <option value="export">{tt("mv_export", "Export")}</option>
+                  <option value="domestic">{tt("mv_domestic", "Domestic")}</option>
+                  <option value="up_transit">{tt("mv_up_transit", "Up Transit")}</option>
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">Shipment Type</label>
+                <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("shipment_type", "Shipment Type")}</label>
                 <select
                   value={formData.shipment_type}
                   onChange={(e) => setFormData((current) => ({ ...current, shipment_type: e.target.value }))}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 >
-                  <option value="FCL">FCL (Full Container Load)</option>
-                  <option value="LCL">LCL (Less than Container)</option>
-                  <option value="Loose Cargo">Loose Cargo</option>
-                  <option value="Bulk Cargo">Bulk Cargo</option>
+                  <option value="FCL">{tt("ship_fcl", "FCL (Full Container Load)")}</option>
+                  <option value="LCL">{tt("ship_lcl", "LCL (Less than Container)")}</option>
+                  <option value="Loose Cargo">{tt("ship_loose", "Loose Cargo")}</option>
+                  <option value="Bulk Cargo">{tt("ship_bulk", "Bulk Cargo")}</option>
                 </select>
               </div>
             </div>
 
             <div>
-              <label className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300">Transport Mode *</label>
+              <label className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("transport_mode", "Transport Mode")} *</label>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { key: "by_sea", label: "By Sea", icon: Anchor },
-                  { key: "by_road", label: "By Road", icon: MapPin },
-                  { key: "by_truck", label: "By Truck", icon: Truck },
-                  { key: "by_air", label: "By Air", icon: Plane }
+                  { key: "by_sea", label: tt("tm_by_sea", "By Sea"), icon: Anchor },
+                  { key: "by_road", label: tt("tm_by_road", "By Road"), icon: MapPin },
+                  { key: "by_truck", label: tt("tm_by_truck", "By Truck"), icon: Truck },
+                  { key: "by_air", label: tt("tm_by_air", "By Air"), icon: Plane }
                 ].map(({ key, label, icon: Icon }) => (
                   <button
                     key={key}
@@ -1020,12 +1023,12 @@ export function CustomerOrderManagementView() {
             </div>
 
             <div>
-              <label className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300">Loading Source</label>
+              <label className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("loading_source", "Loading Source")}</label>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 {[
-                  { key: "warehouse", label: "Warehouse", icon: Warehouse },
-                  { key: "truck_transfer", label: "Truck Transfer", icon: Repeat2 },
-                  { key: "container_transfer", label: "Container Transfer", icon: Container }
+                  { key: "warehouse", label: tt("ls_warehouse", "Warehouse"), icon: Warehouse },
+                  { key: "truck_transfer", label: tt("ls_truck_transfer", "Truck Transfer"), icon: Repeat2 },
+                  { key: "container_transfer", label: tt("ls_container_transfer", "Container Transfer"), icon: Container }
                 ].map(({ key, label, icon: Icon }) => (
                   <button
                     key={key}
@@ -1050,7 +1053,7 @@ export function CustomerOrderManagementView() {
               </div>
               <input
                 type="text"
-                placeholder="Source name / truck number / container reference"
+                placeholder={tt("ls_name_ph", "Source name / truck number / container reference")}
                 value={formData.loading_source_name}
                 onChange={(e) => setFormData((current) => ({ ...current, loading_source_name: e.target.value }))}
                 className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-sm text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
@@ -1061,51 +1064,51 @@ export function CustomerOrderManagementView() {
             <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3.5 space-y-3 dark:border-slate-800 dark:bg-slate-800/40">
               <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                 <Boxes className="h-4 w-4 text-emerald-600" />
-                Goods / Item Master
+                {tt("goods_master_card", "Goods / Item Master")}
               </div>
               <SearchSelect
-                label="Goods Master"
+                label={tt("goods_master", "Goods Master")}
                 value={formData.goods_id}
-                placeholder="Search existing Goods Master by name / CHS code"
+                placeholder={tt("goods_master_ph", "Search existing Goods Master by name / CHS code")}
                 options={goodsOptions}
                 onValueChange={handleGoodsChange}
                 disabled={loading}
-                searchPlaceholder="Search goods / CHS code / variation"
-                emptyLabel="No matching goods found"
+                searchPlaceholder={tt("goods_search_ph", "Search goods / CHS code / variation")}
+                emptyLabel={tt("no_goods", "No matching goods found")}
               />
               <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                 <div className="rounded-xl border border-slate-200 bg-white p-2.5 text-xs dark:border-slate-700 dark:bg-slate-800">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Selected Goods</div>
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("selected_goods", "Selected Goods")}</div>
                   <div className="mt-0.5 font-bold text-slate-800 dark:text-slate-200">
                     {formData.goods_name ? `${formData.goods_name}${formData.goods_chs_code ? ` • ${formData.goods_chs_code}` : ""}` : "-"}
                   </div>
                   <div className="mt-0.5 text-[10.5px] text-slate-500">
                     {selectedGoods
-                      ? `Canonical ID: ${selectedGoods.id}${selectedGoods.variations?.length ? ` • ${selectedGoods.variations.length} variation(s)` : ""}`
-                      : "Select an existing Goods Master record."}
+                      ? `${tt("goods_id", "Goods ID")}: ${selectedGoods.id}${selectedGoods.variations?.length ? ` • ${selectedGoods.variations.length}` : ""}`
+                      : tt("select_goods_hint", "Select an existing Goods Master record.")}
                   </div>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-white p-2.5 text-xs dark:border-slate-700 dark:bg-slate-800">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Origin / Variation</div>
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("origin_variation", "Origin / Variation")}</div>
                   <div className="mt-0.5 font-bold text-slate-800 dark:text-slate-200">
                     {formData.goods_origin_country_name || "-"}
                     {selectedGoodsVariation ? ` • ${selectedGoodsVariation.size} / ${selectedGoodsVariation.brand}` : ""}
                   </div>
                   <div className="mt-0.5 text-[10.5px] text-slate-500">
-                    {formData.goods_variation_label || "Choose a variation if goods master has multiple sizes/brands."}
+                    {formData.goods_variation_label || tt("choose_variation_hint", "Choose a variation if goods master has multiple sizes/brands.")}
                   </div>
                 </div>
               </div>
               {variationOptions.length > 0 ? (
                 <SearchSelect
-                  label="Goods Variation"
+                  label={tt("goods_variation", "Goods Variation")}
                   value={formData.goods_variation_id}
-                  placeholder="Search variation size / brand"
+                  placeholder={tt("variation_ph", "Search variation size / brand")}
                   options={variationOptions}
                   onValueChange={handleGoodsVariationChange}
                   disabled={loading}
-                  searchPlaceholder="Search size / brand"
-                  emptyLabel="No matching variations found"
+                  searchPlaceholder={tt("variation_search_ph", "Search size / brand")}
+                  emptyLabel={tt("no_variations", "No matching variations found")}
                 />
               ) : null}
             </div>
@@ -1116,7 +1119,7 @@ export function CustomerOrderManagementView() {
                 <PartyRolePanel
                   key={role.key}
                   roleKey={role.key}
-                  label={role.label}
+                  label={tt(role.labelKey, role.label)}
                   required={role.required}
                   selection={partySelections[role.key]}
                   customers={customers}
@@ -1131,7 +1134,7 @@ export function CustomerOrderManagementView() {
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">Expected Loading Date</label>
+                <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("expected_loading_date", "Expected Loading Date")}</label>
                 <input
                   type="date"
                   value={formData.expected_loading_date}
@@ -1140,7 +1143,7 @@ export function CustomerOrderManagementView() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">Notify Party Required</label>
+                <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("notify_party_required", "Notify Party Required")}</label>
                 <select
                   value={formData.notify_party_required ? "yes" : "no"}
                   onChange={(e) =>
@@ -1148,21 +1151,21 @@ export function CustomerOrderManagementView() {
                   }
                   className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-sm text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 >
-                  <option value="no">No</option>
-                  <option value="yes">Yes</option>
+                  <option value="no">{tt("no_opt", "No")}</option>
+                  <option value="yes">{tt("yes", "Yes")}</option>
                 </select>
               </div>
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">Loading Country</label>
+                <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("loading_country", "Loading Country")}</label>
                 <select
                   value={formData.loading_country_id}
                   onChange={(e) => handleLoadingCountryChange(e.target.value)}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-sm text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 >
-                  <option value="">Select Loading Country</option>
+                  <option value="">{tt("select_loading_country", "Select Loading Country")}</option>
                   {countries.map((country) => (
                     <option key={country.id} value={country.id}>
                       {country.name}
@@ -1171,13 +1174,13 @@ export function CustomerOrderManagementView() {
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">Receiving Country</label>
+                <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("receiving_country", "Receiving Country")}</label>
                 <select
                   value={formData.receiving_country_id}
                   onChange={(e) => handleReceivingCountryChange(e.target.value)}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-sm text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 >
-                  <option value="">Select Receiving Country</option>
+                  <option value="">{tt("select_receiving_country", "Select Receiving Country")}</option>
                   {countries.map((country) => (
                     <option key={country.id} value={country.id}>
                       {country.name}
@@ -1189,13 +1192,13 @@ export function CustomerOrderManagementView() {
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">Loading Port</label>
+                <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("loading_port", "Loading Port")}</label>
                 <select
                   value={formData.loading_port_id}
                   onChange={(e) => handleLoadingPortChange(e.target.value)}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-sm text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 >
-                  <option value="">Select Loading Port</option>
+                  <option value="">{tt("select_loading_port", "Select Loading Port")}</option>
                   {ports.map((port) => (
                     <option key={port.id} value={port.id}>
                       {port.port_name}
@@ -1204,13 +1207,13 @@ export function CustomerOrderManagementView() {
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">Destination Port</label>
+                <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("destination_port", "Destination Port")}</label>
                 <select
                   value={formData.destination_port_id}
                   onChange={(e) => handleDestinationPortChange(e.target.value)}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-sm text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 >
-                  <option value="">Select Destination Port</option>
+                  <option value="">{tt("select_destination_port", "Select Destination Port")}</option>
                   {ports.map((port) => (
                     <option key={port.id} value={port.id}>
                       {port.port_name}
@@ -1222,20 +1225,20 @@ export function CustomerOrderManagementView() {
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">Route / Reference</label>
+                <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("route_reference", "Route / Reference")}</label>
                 <input
                   type="text"
-                  placeholder="e.g. Karachi to Kabul via Torkham"
+                  placeholder={tt("route_ph", "e.g. Karachi to Kabul via Torkham")}
                   value={formData.route_name}
                   onChange={(e) => setFormData((current) => ({ ...current, route_name: e.target.value }))}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-sm text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">Cargo / Container Details</label>
+                <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("cargo_container_details", "Cargo / Container Details")}</label>
                 <input
                   type="text"
-                  placeholder="e.g. 40ft High Cube Container"
+                  placeholder={tt("cargo_ph", "e.g. 40ft High Cube Container")}
                   value={formData.cargo_details}
                   onChange={(e) => setFormData((current) => ({ ...current, cargo_details: e.target.value }))}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-sm text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
@@ -1245,10 +1248,10 @@ export function CustomerOrderManagementView() {
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">Remarks</label>
+                <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("remarks", "Remarks")}</label>
                 <textarea
                   rows={4}
-                  placeholder="Additional instructions or notes..."
+                  placeholder={tt("remarks_ph", "Additional instructions or notes...")}
                   value={formData.remarks}
                   onChange={(e) => setFormData((current) => ({ ...current, remarks: e.target.value }))}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-sm text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
@@ -1257,24 +1260,24 @@ export function CustomerOrderManagementView() {
               <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3.5 space-y-2 dark:border-slate-800 dark:bg-slate-800/40">
                 <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                   <BadgeInfo className="h-4 w-4 text-blue-600" />
-                  Flow Hints
+                  {tt("flow_hints", "Flow Hints")}
                 </div>
                 <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
                   <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Next Action</div>
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("next_action", "Next Action")}</div>
                     <div className="mt-0.5 font-bold text-slate-800 dark:text-slate-200">{nextActionLabel}</div>
                   </div>
                   <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Loading Source</div>
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("loading_source", "Loading Source")}</div>
                     <div className="mt-0.5 font-bold text-slate-800 dark:text-slate-200">{loadingSourceLabel}</div>
                   </div>
                   <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Buyer Section</div>
-                    <div className="mt-0.5 font-bold text-slate-800 dark:text-slate-200">{shouldShowBuyer ? "Visible" : "Optional"}</div>
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("buyer_section", "Buyer Section")}</div>
+                    <div className="mt-0.5 font-bold text-slate-800 dark:text-slate-200">{shouldShowBuyer ? tt("visible", "Visible") : tt("optional", "Optional")}</div>
                   </div>
                   <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Transport Gate</div>
-                    <div className="mt-0.5 font-bold text-slate-800 dark:text-slate-200">{isRoadMode ? "Truck Entry" : isSeaMode ? "Bill Entry" : "Review"}</div>
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("transport_gate", "Transport Gate")}</div>
+                    <div className="mt-0.5 font-bold text-slate-800 dark:text-slate-200">{isRoadMode ? tt("step_truck_entry", "Truck Entry") : isSeaMode ? tt("step_bill_entry", "Bill Entry") : tt("step_review", "Review")}</div>
                   </div>
                 </div>
               </div>
@@ -1287,7 +1290,7 @@ export function CustomerOrderManagementView() {
                   onClick={resetForm}
                   className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                 >
-                  Cancel Edit
+                  {tt("cancel_edit", "Cancel Edit")}
                 </button>
               ) : null}
               <button
@@ -1308,10 +1311,10 @@ export function CustomerOrderManagementView() {
           <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900">
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
               {[
-                { label: "Total Orders", value: orderCounts.total, icon: FileText, color: "text-blue-600 dark:text-blue-400" },
-                { label: "Import", value: orderCounts.import, icon: ArrowRight, color: "text-emerald-600 dark:text-emerald-400" },
-                { label: "Export", value: orderCounts.export, icon: Route, color: "text-purple-600 dark:text-purple-400" },
-                { label: "Domestic / Transit", value: `${orderCounts.domestic} / ${orderCounts.transit}`, icon: Boxes, color: "text-amber-600 dark:text-amber-400" }
+                { label: tt("kpi_total_orders", "Total Orders"), value: orderCounts.total, icon: FileText, color: "text-blue-600 dark:text-blue-400" },
+                { label: tt("mv_import", "Import"), value: orderCounts.import, icon: ArrowRight, color: "text-emerald-600 dark:text-emerald-400" },
+                { label: tt("mv_export", "Export"), value: orderCounts.export, icon: Route, color: "text-purple-600 dark:text-purple-400" },
+                { label: tt("kpi_domestic_transit", "Domestic / Transit"), value: `${orderCounts.domestic} / ${orderCounts.transit}`, icon: Boxes, color: "text-amber-600 dark:text-amber-400" }
               ].map((item) => (
                 <div key={item.label} className="rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/60">
                   <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
@@ -1324,9 +1327,9 @@ export function CustomerOrderManagementView() {
             </div>
             <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between pt-1">
               <div>
-                <h2 className="text-sm font-bold text-slate-900 dark:text-white">Registered Customer Orders ({orders.length})</h2>
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white">{tt("registered_orders", "Registered Customer Orders")} ({orders.length})</h2>
                 <p className="text-[11px] text-slate-500">
-                  Live report driven from canonical shipping orders and linked parties.
+                  {tt("live_report_hint", "Live report driven from canonical shipping orders and linked parties.")}
                 </p>
               </div>
               <div className="relative sm:w-72">
@@ -1334,7 +1337,7 @@ export function CustomerOrderManagementView() {
                 <input
                   value={reportQuery}
                   onChange={(e) => setReportQuery(e.target.value)}
-                  placeholder="Search order, party, route..."
+                  placeholder={tt("search_order_ph", "Search order, party, route...")}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 py-1.5 ps-8 pe-3 text-xs text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 />
               </div>
@@ -1344,25 +1347,25 @@ export function CustomerOrderManagementView() {
           {/* Orders Data Table */}
           <div className="rounded-xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
             {loading ? (
-              <div className="py-12 text-center text-xs font-semibold text-slate-400">Loading customer orders…</div>
+              <div className="py-12 text-center text-xs font-semibold text-slate-400">{tt("loading_orders", "Loading customer orders…")}</div>
             ) : visibleOrders.length === 0 ? (
               <div className="py-12 text-center text-xs text-slate-500">
-                No customer orders found. Fill out the form on the left to create one.
+                {tt("empty_orders", "No customer orders found. Fill out the form on the left to create one.")}
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[950px] text-left text-xs text-slate-800 dark:text-slate-200">
                   <thead className="bg-slate-900 text-white dark:bg-slate-800 text-[11px] font-bold">
                     <tr>
-                      <Th className="px-3 py-2.5">Order No</Th>
-                      <Th className="px-3 py-2.5">Party</Th>
-                      <Th className="px-3 py-2.5">Movement / Mode</Th>
-                      <Th className="px-3 py-2.5">Company / Address</Th>
-                      <Th className="px-3 py-2.5">Goods / Variation</Th>
-                      <Th className="px-3 py-2.5">Route / Port</Th>
-                      <Th className="px-3 py-2.5">Next Step</Th>
-                      <Th className="px-3 py-2.5">Status</Th>
-                      <Th className="px-3 py-2.5 text-right">Actions</Th>
+                      <Th className="px-3 py-2.5">{tt("col_order_no", "Order No")}</Th>
+                      <Th className="px-3 py-2.5">{tt("party", "Party")}</Th>
+                      <Th className="px-3 py-2.5">{tt("col_movement_mode", "Movement / Mode")}</Th>
+                      <Th className="px-3 py-2.5">{tt("col_company_address", "Company / Address")}</Th>
+                      <Th className="px-3 py-2.5">{tt("col_goods_variation", "Goods / Variation")}</Th>
+                      <Th className="px-3 py-2.5">{tt("col_route_port", "Route / Port")}</Th>
+                      <Th className="px-3 py-2.5">{tt("col_next_step", "Next Step")}</Th>
+                      <Th className="px-3 py-2.5">{tt("col_status", "Status")}</Th>
+                      <Th className="px-3 py-2.5 text-right">{tt("col_actions", "Actions")}</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -1382,10 +1385,10 @@ export function CustomerOrderManagementView() {
                         .join(" • ") || "-";
                       const nextStep =
                         String(order.transport_mode || "").toLowerCase().includes("sea") || Boolean(order.notify_party_required)
-                          ? "Bill Entry"
+                          ? tt("step_bill_entry", "Bill Entry")
                           : String(order.transport_mode || "").toLowerCase().includes("road") || String(order.transport_mode || "").toLowerCase().includes("truck")
-                            ? "Truck Entry"
-                            : "Review";
+                            ? tt("step_truck_entry", "Truck Entry")
+                            : tt("step_review", "Review");
                       const supplierLink = (order.party_links || []).find((link) => link.role_key === "supplier");
                       const importLink = (order.party_links || []).find((link) => link.role_key === "importer");
                       const exportLink = (order.party_links || []).find((link) => link.role_key === "exporter");
@@ -1401,7 +1404,7 @@ export function CustomerOrderManagementView() {
                               <div className="text-[10.5px] text-slate-500">
                                 {[supplierLink?.party_customer_name, importLink?.party_customer_name, exportLink?.party_customer_name, notifyLink?.party_customer_name, buyerLink?.party_customer_name]
                                   .filter(Boolean)
-                                  .join(" • ") || "Customer order party"}
+                                  .join(" • ") || tt("default_party", "Customer order party")}
                               </div>
                             </div>
                           </td>
@@ -1435,14 +1438,14 @@ export function CustomerOrderManagementView() {
                                   buyerLink?.selected_address_text
                                 ]
                                   .filter(Boolean)
-                                  .join(" • ") || "Selected addresses"}
+                                  .join(" • ") || tt("selected_addresses", "Selected addresses")}
                               </div>
                             </div>
                           </td>
                           <td className="px-3 py-2.5 text-xs">
                             <div className="font-semibold text-slate-800 dark:text-slate-200">{goodsSummary}</div>
                             <div className="mt-0.5 text-[10px] text-slate-500">
-                              {order.goods_id ? `Goods ID: ${order.goods_id}` : "Uses Goods Master"}
+                              {order.goods_id ? `${tt("goods_id", "Goods ID")}: ${order.goods_id}` : tt("uses_goods_master", "Uses Goods Master")}
                             </div>
                           </td>
                           <td className="px-3 py-2.5 text-xs text-slate-600 dark:text-slate-400">
@@ -1469,7 +1472,7 @@ export function CustomerOrderManagementView() {
                                 className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[10.5px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                               >
                                 <Eye className="h-3 w-3" />
-                                View
+                                {tt("view", "View")}
                               </button>
                               <button
                                 type="button"
@@ -1477,7 +1480,7 @@ export function CustomerOrderManagementView() {
                                 className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[10.5px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                               >
                                 <Pencil className="h-3 w-3" />
-                                Edit
+                                {tt("edit", "Edit")}
                               </button>
                               <button
                                 type="button"
@@ -1485,7 +1488,7 @@ export function CustomerOrderManagementView() {
                                 className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[10.5px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                               >
                                 <Printer className="h-3 w-3" />
-                                Print
+                                {tt("print", "Print")}
                               </button>
                               <button
                                 type="button"
@@ -1493,7 +1496,7 @@ export function CustomerOrderManagementView() {
                                 className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[10.5px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                               >
                                 <Download className="h-3 w-3" />
-                                Export
+                                {tt("export", "Export")}
                               </button>
                             </div>
                           </td>
@@ -1511,7 +1514,7 @@ export function CustomerOrderManagementView() {
       {/* View Customer Order Modal */}
       {viewOrder ? (
         <SimpleModal
-          title={`View Customer Order — ${viewOrder.order_no}`}
+          title={`${tt("view_order_title", "View Customer Order")} — ${viewOrder.order_no}`}
           onClose={() => setViewOrder(null)}
           className="w-[96vw] max-w-[1000px] max-h-[90vh] overflow-y-auto rounded-2xl font-sans"
         >
@@ -1524,12 +1527,12 @@ export function CustomerOrderManagementView() {
                 </span>
               </div>
               <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                <div><span className="text-slate-500 font-medium">Party:</span> <span className="font-bold">{viewOrder.customer_name}</span></div>
-                <div><span className="text-slate-500 font-medium">Goods:</span> <span className="font-bold">{[viewOrder.goods_name, viewOrder.goods_chs_code ? `CHS ${viewOrder.goods_chs_code}` : "", viewOrder.goods_variation_label, viewOrder.goods_origin_country_name].filter(Boolean).join(" • ") || "-"}</span></div>
-                <div><span className="text-slate-500 font-medium">Route:</span> <span className="font-bold">{viewOrder.route_name || "-"}</span></div>
-                <div><span className="text-slate-500 font-medium">Movement:</span> <span className="font-bold capitalize">{viewOrder.movement_type}</span></div>
-                <div><span className="text-slate-500 font-medium">Transport:</span> <span className="font-bold capitalize">{viewOrder.transport_mode}</span></div>
-                <div><span className="text-slate-500 font-medium">Goods ID:</span> <span className="font-mono">{viewOrder.goods_id || "-"}</span></div>
+                <div><span className="text-slate-500 font-medium">{tt("party", "Party")}:</span> <span className="font-bold">{viewOrder.customer_name}</span></div>
+                <div><span className="text-slate-500 font-medium">{tt("print_goods", "Goods")}:</span> <span className="font-bold">{[viewOrder.goods_name, viewOrder.goods_chs_code ? `CHS ${viewOrder.goods_chs_code}` : "", viewOrder.goods_variation_label, viewOrder.goods_origin_country_name].filter(Boolean).join(" • ") || "-"}</span></div>
+                <div><span className="text-slate-500 font-medium">{tt("print_route", "Route")}:</span> <span className="font-bold">{viewOrder.route_name || "-"}</span></div>
+                <div><span className="text-slate-500 font-medium">{tt("print_movement", "Movement")}:</span> <span className="font-bold capitalize">{viewOrder.movement_type}</span></div>
+                <div><span className="text-slate-500 font-medium">{tt("transport_lbl", "Transport")}:</span> <span className="font-bold capitalize">{viewOrder.transport_mode}</span></div>
+                <div><span className="text-slate-500 font-medium">{tt("goods_id", "Goods ID")}:</span> <span className="font-mono">{viewOrder.goods_id || "-"}</span></div>
               </div>
             </div>
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
