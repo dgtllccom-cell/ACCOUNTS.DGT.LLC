@@ -192,26 +192,26 @@ export function ContactTypeRegistry() {
     <UniversalReportModal
       isOpen={showReport}
       onClose={() => setShowReport(false)}
-      title="Contact Type Report"
-      subtitle="Master Contact Type Classification Registry"
+      title={tt("ct.report_title", "Contact Type Report")}
+      subtitle={tt("ct.report_subtitle", "Master Contact Type Classification Registry")}
       exportFileName="contact_types_report"
       filters={[
-        { label: "Search", value: searchQuery || "All" },
-        { label: "Status", value: statusFilter === "all" ? "All" : statusFilter }
+        { label: tt("common.search", "Search"), value: searchQuery || tt("common.all", "All") },
+        { label: tt("common.status", "Status"), value: statusFilter === "all" ? tt("common.all", "All") : statusFilter }
       ]}
       columns={[
-        { key: "code", label: "Code" },
-        { key: "name", label: "Contact Type Name" },
-        { key: "category", label: "Category" },
-        { key: "description", label: "Description" },
-        { key: "status", label: "Status", align: "center" }
+        { key: "code", label: tt("common.code", "Code") },
+        { key: "name", label: tt("ct.col_name", "Contact Type Name") },
+        { key: "category", label: tt("common.category", "Category") },
+        { key: "description", label: tt("common.description", "Description") },
+        { key: "status", label: tt("common.status", "Status"), align: "center" }
       ]}
       data={filtered.map(t => ({
         code: t.code || "-",
         name: t.name,
         category: t.category || "-",
         description: t.description || "-",
-        status: t.is_active ? "Active" : "Inactive"
+        status: t.is_active ? tt("common.active", "Active") : tt("common.inactive", "Inactive")
       }))}
     />
     </>
