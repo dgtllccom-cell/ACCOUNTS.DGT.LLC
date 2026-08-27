@@ -118,6 +118,26 @@ if (missingCount) fail.push(`MISSING: ${missingCount} dictionary key(s) referenc
 log(`  missing keys ... ${missingCount === 0 ? "OK" : missingCount + " MISSING"}`);
 Object.entries(missingRefs).slice(0, 25).forEach(([k, files]) => log(`      ${k}   ← ${[...files][0]}`));
 
+// 3b. MISUSE (warning) — t(<lang>, "English prose") with no namespaced key / no fallback arg.
+// e.g. t(lang, "S.No")  /  t(lang, "Transferring...")  — the key IS the English text,
+// so it renders identically in every language. Should be t(lang, "ns.key", "English").
+const misuse = [];
+const MISUSE_RE = /\bt\(\s*[a-zA-Z_][a-zA-Z0-9_.]*\s*,\s*"([A-Z][^"]{1,60})"\s*\)/g;
+for (const f of codeFiles) {
+  const s = fs.readFileSync(f, "utf8");
+  let m;
+  const r = new RegExp(MISUSE_RE.source, "g");
+  while ((m = r.exec(s))) {
+    const txt = m[1];
+    if (/^[A-Z][a-zA-Z0-9 .!?/&()'-]*$/.test(txt) && /[a-z ]/.test(txt) && !/\.[a-z]/.test(txt)) {
+      misuse.push(`${f}  t(lang, "${txt}")`);
+    }
+  }
+}
+if (misuse.length) warn.push(`MISUSE: ${misuse.length} t(lang, "English") call(s) with no key/fallback (renders same in every language)`);
+log(`  t() misuse ..... ${misuse.length === 0 ? "OK" : misuse.length + " (warning)"}`);
+misuse.slice(0, 15).forEach((x) => log(`      ${x}`));
+
 // ---------------------------------------------------------------------------
 // 4. FALLBACK (non-en value identical to en)
 // ---------------------------------------------------------------------------
@@ -238,10 +258,12 @@ const summary = {
   parallelDictsNew: parallelNew.length,
   parallelDictsGrandfathered: parallelKnown.length,
   hardcodedCandidates: CHANGED_ARG ? hardcoded.length : null,
+  warnings: warn.length,
   pass: fail.length === 0,
 };
 if (JSON_OUT) console.log(JSON.stringify(summary, null, 2));
 
+if (warn.length) console.log(`\n⚠ i18n-ui-guard warnings (non-blocking):\n${warn.map((w) => "  - " + w).join("\n")}`);
 if (fail.length) {
   console.log(`\n✗ i18n-ui-guard FAILED:\n${fail.map((f) => "  - " + f).join("\n")}`);
   process.exit(1);

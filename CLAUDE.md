@@ -71,4 +71,4 @@ correct RTL — no half-English screen.
 
 ## Reference docs
 `docs/multilingual-architecture.md`, `docs/LOCALIZATION_5_LANGUAGE_SPEC.md`,
-`docs/universal-print-pdf-requirements.md`.
+`docs/universal-print-pdf-requirements.md`, `docs/i18n-guard.md`.
