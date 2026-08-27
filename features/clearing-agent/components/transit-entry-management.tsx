@@ -692,11 +692,11 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                     >
                       <option value="PCS">PCS</option>
                       <option value="BOX">BOX</option>
-                      <option value="CTN">CTN (Cartons)</option>
+                      <option value="CTN">{tt("transit.unit_cartons", "CTN (Cartons)")}</option>
                       <option value="KG">KG</option>
                       <option value="TONS">TONS</option>
                       <option value="SETS">SETS</option>
-                      <option value="CONTAINERS">CONTAINERS</option>
+                      <option value="CONTAINERS">{tt("transit.unit_containers", "CONTAINERS")}</option>
                     </select>
                   </div>
 
@@ -930,7 +930,7 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                 <div className="p-1 border border-slate-200 rounded-lg bg-white inline-block shadow-xs">
                   <img
                     src={qrUrl}
-                    alt="Transit QR Code"
+                    alt={tt("transit.qr_alt", "Transit QR Code")}
                     className="h-16 w-16 sm:h-20 sm:w-20 object-contain"
                   />
                 </div>

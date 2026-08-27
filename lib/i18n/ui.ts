@@ -12861,6 +12861,9 @@ const en: Dict = {
   "com.err_importer": "Please select an Importer.",
   "com.err_exporter": "Please select an Exporter.",
   "com.err_save_failed": "Save failed",
+  "transit.unit_cartons": "CTN (Cartons)",
+  "transit.unit_containers": "CONTAINERS",
+  "transit.qr_alt": "Transit QR Code",
 };
 
 const ur: Dict = {
@@ -21374,6 +21377,9 @@ const ur: Dict = {
   "com.err_importer": "براہ کرم درآمد کنندہ منتخب کریں۔",
   "com.err_exporter": "براہ کرم برآمد کنندہ منتخب کریں۔",
   "com.err_save_failed": "محفوظ کرنے میں ناکام",
+  "transit.unit_cartons": "CTN (کارٹن)",
+  "transit.unit_containers": "کنٹینرز",
+  "transit.qr_alt": "ٹرانزٹ کیو آر کوڈ",
 };
 
 const ar: Dict = {
@@ -29889,6 +29895,9 @@ const ar: Dict = {
   "com.err_importer": "يرجى اختيار مستورد.",
   "com.err_exporter": "يرجى اختيار مصدّر.",
   "com.err_save_failed": "فشل الحفظ",
+  "transit.unit_cartons": "CTN (كراتين)",
+  "transit.unit_containers": "حاويات",
+  "transit.qr_alt": "رمز QR للعبور",
 };
 
 const fa: Dict = {
@@ -38403,6 +38412,9 @@ const fa: Dict = {
   "com.err_importer": "لطفاً یک واردکننده انتخاب کنید.",
   "com.err_exporter": "لطفاً یک صادرکننده انتخاب کنید.",
   "com.err_save_failed": "ذخیره ناموفق بود",
+  "transit.unit_cartons": "CTN (کارتن)",
+  "transit.unit_containers": "کانتینرها",
+  "transit.qr_alt": "کد QR ترانزیت",
 };
 
 const ps: Dict = {
@@ -46923,6 +46935,9 @@ const ps: Dict = {
   "com.err_importer": "مهرباني وکړئ یو واردوونکی وټاکئ.",
   "com.err_exporter": "مهرباني وکړئ یو صادروونکی وټاکئ.",
   "com.err_save_failed": "خوندي کول ناکام شول",
+  "transit.unit_cartons": "CTN (کارتنونه)",
+  "transit.unit_containers": "کانټینرونه",
+  "transit.qr_alt": "د ترانزیت QR کوډ",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
