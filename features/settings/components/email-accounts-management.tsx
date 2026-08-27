@@ -437,14 +437,14 @@ export function EmailAccountsManagement() {
                       <td className="px-4 py-3 whitespace-nowrap">
                         <div className="flex items-center justify-center gap-1">
                           <button
-                            title="Edit"
+                            title={tt("common.edit", "Edit")}
                             onClick={() => openEdit(acc)}
                             className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                           >
                             <Pencil className="h-3.5 w-3.5" />
                           </button>
                           <button
-                            title="Test SMTP"
+                            title={tt("email_acct.test_smtp", "Test SMTP")}
                             onClick={() => handleTest(acc.id)}
                             disabled={testingId === acc.id}
                             className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-950/30 transition-colors disabled:opacity-50"
@@ -456,7 +456,7 @@ export function EmailAccountsManagement() {
                             )}
                           </button>
                           <button
-                            title="Change Password"
+                            title={tt("email_acct.change_password", "Change Password")}
                             onClick={() => {
                               setPasswordAccountId(acc.id);
                               setNewPassword("");
@@ -480,7 +480,7 @@ export function EmailAccountsManagement() {
                             {acc.isActive ? <Power className="h-3.5 w-3.5" /> : <PowerOff className="h-3.5 w-3.5" />}
                           </button>
                           <button
-                            title="Delete"
+                            title={tt("common.delete", "Delete")}
                             onClick={() => setDeleteConfirmId(acc.id)}
                             className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 transition-colors"
                           >
@@ -568,10 +568,10 @@ export function EmailAccountsManagement() {
                 onChange={(e) => setFormScope(e.target.value)}
                 className="h-10 w-full rounded-lg border bg-background px-3 text-sm shadow-sm outline-none focus:border-primary"
               >
-                <option value="city_branch">City Branch</option>
-                <option value="country_branch">Country Branch</option>
-                <option value="country">Country</option>
-                <option value="super_admin">Super Admin (Global)</option>
+                <option value="city_branch">{tt("email_acct.scope_city_branch", "City Branch")}</option>
+                <option value="country_branch">{tt("email_acct.scope_country_branch", "Country Branch")}</option>
+                <option value="country">{tt("email_acct.scope_country", "Country")}</option>
+                <option value="super_admin">{tt("email_acct.scope_super_admin", "Super Admin (Global)")}</option>
               </select>
             </div>
 
@@ -672,7 +672,7 @@ export function EmailAccountsManagement() {
                   type={showPassword ? "text" : "password"}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Enter new password"
+                  placeholder={tt("email_acct.new_password_ph", "Enter new password")}
                   className="pr-10"
                   autoFocus
                 />
@@ -689,7 +689,7 @@ export function EmailAccountsManagement() {
               <Button onClick={handleChangePassword} disabled={saving || !newPassword} className="flex-1">
                 {saving ? tt("email_acct.saving", "Encrypting...") : tt("email_acct.change_password", "Update Password")}
               </Button>
-              <Button variant="outline" onClick={() => setPasswordModalOpen(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setPasswordModalOpen(false)}>{tt("common.cancel", "Cancel")}</Button>
             </div>
           </div>
         </SimpleModal>

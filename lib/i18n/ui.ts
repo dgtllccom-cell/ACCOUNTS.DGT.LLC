@@ -3491,6 +3491,7 @@ export type UiKey =
   | "email_acct.email_status" | "email_acct.last_sent" | "email_acct.last_tested"
   | "email_acct.scope" | "email_acct.super_admin_global" | "email_acct.security_notice"
   | "email_acct.new_password" | "email_acct.change_password" | "email_acct.reset_password"
+  | "email_acct.test_smtp" | "email_acct.scope_city_branch" | "email_acct.scope_country_branch" | "email_acct.scope_country" | "email_acct.scope_super_admin" | "email_acct.new_password_ph"
   | "email_mgmt.channel_email_title" | "email_mgmt.channel_email_subtitle"
   | "email_mgmt.channel_whatsapp_title" | "email_mgmt.channel_whatsapp_subtitle"
   | "email_mgmt.channel_internal_title" | "email_mgmt.channel_internal_subtitle"
@@ -9944,6 +9945,8 @@ const en: Dict = {
   "email_acct.security_notice": "Security Notice",
   "email_acct.new_password": "New Password / App Password",
   "email_acct.change_password": "Change Password",
+  "email_acct.t": "e",
+  "email_acct.T": "e",
   "email_acct.reset_password": "Reset Password",
   "email_mgmt.channel_email_title": "Email Management",
   "email_mgmt.channel_email_subtitle": "Global ERP email dashboard with company, country, and branch communication.",
@@ -17550,6 +17553,8 @@ const ur: Dict = {
   "email_acct.security_notice": "سیکیورٹی نوٹس",
   "email_acct.new_password": "نیا پاس ورڈ / ایپ پاس ورڈ",
   "email_acct.change_password": "پاس ورڈ تبدیل کریں",
+  "email_acct.t": "e",
+  "email_acct.S": "M",
   "email_acct.reset_password": "پاس ورڈ ری سیٹ کریں",
   "email_mgmt.channel_email_title": "ای میل مینجمنٹ",
   "email_mgmt.channel_email_subtitle": "کمپنی، ملک اور برانچ مواصلات کے ساتھ عالمی ERP ای میل ڈیش بورڈ۔",
@@ -25169,6 +25174,8 @@ const ar: Dict = {
   "email_acct.security_notice": "ملاحظة أمنية",
   "email_acct.new_password": "كلمة مرور جديدة / كلمة مرور التطبيق",
   "email_acct.change_password": "تغيير كلمة المرور",
+  "email_acct.t": "e",
+  "email_acct.ا": "خ",
   "email_acct.reset_password": "إعادة تعيين كلمة المرور",
   "email_mgmt.channel_email_title": "إدارة البريد الإلكتروني",
   "email_mgmt.channel_email_subtitle": "لوحة تحكم ERP العالمية للبريد الإلكتروني مع اتصالات الشركة والدولة والفرع.",
@@ -32775,6 +32782,8 @@ const fa: Dict = {
   "email_acct.security_notice": "اطلاعیه امنیتی",
   "email_acct.new_password": "رمز عبور جدید / رمز برنامه",
   "email_acct.change_password": "تغییر رمز عبور",
+  "email_acct.t": "e",
+  "email_acct.آ": "ز",
   "email_acct.reset_password": "بازنشانی رمز عبور",
   "email_mgmt.channel_email_title": "مدیریت ایمیل",
   "email_mgmt.channel_email_subtitle": "داشبورد ایمیل ERP جهانی با ارتباطات شرکت، کشور و شعبه.",
@@ -40388,6 +40397,8 @@ const ps: Dict = {
   "email_acct.security_notice": "د امنیت خبرتیا",
   "email_acct.new_password": "نوی پاس ورډ / د اپ پاس ورډ",
   "email_acct.change_password": "پاس ورډ بدل کړئ",
+  "email_acct.t": "e",
+  "email_acct.S": "M",
   "email_acct.reset_password": "پاس ورډ بیا تنظیم کړئ",
   "email_mgmt.channel_email_title": "د ای میل مدیریت",
   "email_mgmt.channel_email_subtitle": "د کمپنۍ، هیواد او څانګې اړیکو سره نړیوال ERP ای میل ډیش بورډ۔",
