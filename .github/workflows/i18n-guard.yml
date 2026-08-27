@@ -1,0 +1,40 @@
+name: i18n Five-Language Guard
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  i18n:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [22.x]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # need history for the --changed hard-coded-string diff
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      # Dictionary integrity: parity, duplicates, missing refs, silent English,
+      # no NEW parallel per-module dictionaries.
+      - name: i18n UI guard (full)
+        run: npm run i18n:guard
+
+      # Regression gate: no NEW hard-coded English in files changed on this branch.
+      - name: i18n UI guard (changed files)
+        if: github.event_name == 'pull_request'
+        run: node scripts/i18n-ui-guard.mjs --changed=origin/${{ github.base_ref }}
+
+      - name: TypeScript
+        run: npx tsc --noEmit

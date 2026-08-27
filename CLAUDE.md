@@ -18,17 +18,43 @@ central i18n dictionary in all five languages **from the start**. Do not ship En
   server-threaded `lang` prop.** If a component receives a `lang` prop, reconcile:
   `const lang = activeLang !== "en" ? activeLang : langProp;` (see `components/layout/dashboard-frame.tsx`).
 
-### Component pattern (copy this)
+### Component pattern — use `useErpScreen()` (copy this)
 ```tsx
-const activeLang = useActiveLanguage() || lang;
-const isRtl = ["ur", "ar", "fa", "ps"].includes(activeLang);
-const tt = (key: string, fallback: string) => t(activeLang, key as never, fallback);
+import { useErpScreen } from "@/lib/i18n/use-erp-screen";
+
+const s = useErpScreen("module", lang);   // namespace + optional server lang prop
 // ...
-<h1>{tt("module.title", "My Screen")}</h1>
-<th>{tt("module.col_amount", "Amount")}</th>
+<section dir={s.dir}>
+  <h1>{s.t("title", "My Screen")}</h1>
+  <th className={s.textStart}>{s.t("col_amount", "Amount")}</th>
+  {rows.length === 0 && <p>{s.t("empty", "No records found.")}</p>}
+</section>
 ```
+`useErpScreen` packages the active language (cookie / `localStorage erp_lang` / `<html lang>`),
+the `lang`-prop reconciliation, `dir`, `isRtl`, `textStart`/`textEnd`, and a namespaced `t()`.
+The raw pattern (`useActiveLanguage()` + hand-rolled `tt`) still works and is equivalent —
+`useErpScreen` is just the shorthand. Full reference component:
+**`components/i18n/five-language-reference-card.tsx`**.
+
 Reuse existing keys where one already fits; otherwise add a new canonical key (namespaced by module,
-e.g. `bankroz.*`, `nav.*`) to `lib/i18n/ui.ts` in all five languages.
+e.g. `bankroz.*`, `nav.*`) to `lib/i18n/ui.ts` in all five language blocks.
+
+### Automatic guard — runs on every commit, build and CI
+`scripts/i18n-ui-guard.mjs` (`npm run i18n:guard`) fails the build/commit on: parity gap,
+duplicate key, referenced-but-missing key, silent English (non-en value === en), or a **new**
+per-module `{en,ur,ar,fa,ps}` dictionary. It is wired as `prebuild`, a `.githooks/pre-commit`
+hook (`npm install` / `npm run prepare` enables it), and `.github/workflows/i18n-guard.yml`.
+`npm run i18n:guard:changed` additionally flags new hard-coded English in changed files.
+DB side: `npm run i18n:scan` guards `translation_field_registry` (new translatable columns).
+
+### Checklist — every new page / form / module / report / modal / export
+1. Central keys added in `lib/i18n/ui.ts` — **all five** blocks (`npm run i18n:guard` green).
+2. No visible hard-coded English (`npm run i18n:guard:changed` green).
+3. RTL/LTR verified — whole screen flips EN↔UR/AR/FA/PS.
+4. Language persists across refresh + navigation.
+5. Print / PDF / Excel / CSV output in the selected language (see `docs/universal-print-pdf-requirements.md`).
+6. New translatable DB free-text fields registered (`npm run i18n:scan` green).
+7. `npx tsc --noEmit` and `npm run build` both exit 0.
 
 ### RTL
 UR/AR/FA/PS are RTL. Use logical CSS (`ms-*`/`me-*`, `ps-*`/`pe-*`, `text-start`/`text-end`), and set
@@ -44,4 +70,5 @@ Build green is necessary but NOT sufficient. Switch EN→UR→PS→FA→AR and c
 correct RTL — no half-English screen.
 
 ## Reference docs
-`docs/multilingual-architecture.md`, `docs/LOCALIZATION_5_LANGUAGE_SPEC.md`.
+`docs/multilingual-architecture.md`, `docs/LOCALIZATION_5_LANGUAGE_SPEC.md`,
+`docs/universal-print-pdf-requirements.md`.

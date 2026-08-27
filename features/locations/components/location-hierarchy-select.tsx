@@ -62,28 +62,30 @@ function toOptions<T extends { id: string; name: string }>(rows: T[]): SearchSel
   });
 }
 
-const locationLabels: Record<string, Record<SupportedLanguage, string>> = {
-  country: { en: "Country", ur: "ملک", ar: "الدولة", fa: "کشور", ps: "هیواد" },
-  state: { en: "State / Province", ur: "ریاست / صوبہ", ar: "الولاية / المقاطعة", fa: "استان / ایالت", ps: "ولایت / صوبه" },
-  district: { en: "District", ur: "ضلع", ar: "المديرية", fa: "شهرستان", ps: "ولسوالي" },
-  city: { en: "City / Town", ur: "شہر", ar: "المدينة", fa: "شهر", ps: "ښار" },
-  area: { en: "Area / Locality / Road", ur: "مقام / علاقہ / سڑک", ar: "المنطقة / الحي", fa: "منطقه / محله", ps: "سیمه / لاره" },
-  selectCountry: { en: "Select country", ur: "ملک منتخب کریں", ar: "اختر الدولة", fa: "انتخاب کشور", ps: "هیواد وټاکئ" },
-  selectState: { en: "Select state", ur: "صوبہ منتخب کریں", ar: "اختر الولاية", fa: "انتخاب استان", ps: "صوبه وټاکئ" },
-  selectCountryFirst: { en: "Select country first", ur: "پہلے ملک منتخب کریں", ar: "اختر الدولة أولاً", fa: "ابتدا کشور را انتخاب کنید", ps: "لومړی هیواد وټاکئ" },
-  selectStateFirst: { en: "Select state first", ur: "پہلے صوبہ منتخب کریں", ar: "اختر الولاية أولاً", fa: "ابتدا استان را انتخاب کنید", ps: "لومړی صوبه وټاکئ" },
-  selectCity: { en: "Select city", ur: "شہر منتخب کریں", ar: "اختر المدينة", fa: "انتخاب شهر", ps: "ښار وټاکئ" },
-  selectArea: { en: "Select area / locality", ur: "علاقہ منتخب کریں", ar: "اختر المنطقة", fa: "انتخاب منطقه", ps: "سیمه وټاکئ" },
-  newCountry: { en: "New Country", ur: "نیا ملک", ar: "دولة جديدة", fa: "کشور جدید", ps: "نوی هیواد" },
-  newState: { en: "New State", ur: "نیا صوبہ", ar: "ولاية جديدة", fa: "استان جدید", ps: "نوې صوبه" },
-  newCity: { en: "New City", ur: "نیا شہر", ar: "مدينة جديدة", fa: "شهر جدید", ps: "نوی ښار" },
-  newArea: { en: "New Area", ur: "نیا علاقہ", ar: "منطقة جديدة", fa: "منطقه جدید", ps: "نوې سیمه" },
-  manageLocations: { en: "Manage Locations", ur: "مقامات کا انتظام", ar: "إدارة المواقع", fa: "مدیریت موقعیت‌ها", ps: "د ځایونو مدیریت" },
-  selectCityFirst: { en: "Select city first", ur: "پہلے شہر منتخب کریں", ar: "اختر المدينة أولاً", fa: "ابتدا شهر را انتخاب کنید", ps: "لومړی ښار وټاکئ" },
-  loadingStates: { en: "Loading states...", ur: "صوبے لوڈ ہو رہے ہیں...", ar: "جارٍ تحميل الولايات...", fa: "در حال بارگذاری استان‌ها...", ps: "صوبې بارېږي..." },
-  loadingDistricts: { en: "Loading districts...", ur: "اضلاع لوڈ ہو رہے ہیں...", ar: "جارٍ تحميل المديريات...", fa: "در حال بارگذاری شهرستان‌ها...", ps: "ولسوالۍ بارېږي..." },
-  loadingCities: { en: "Loading cities...", ur: "شہر لوڈ ہو رہے ہیں...", ar: "جارٍ تحميل المدن...", fa: "در حال بارگذاری شهرها...", ps: "ښارونه بارېږي..." },
-  loadingAreas: { en: "Loading areas...", ur: "علاقے لوڈ ہو رہے ہیں...", ar: "جارٍ تحميل المناطق...", fa: "در حال بارگذاری مناطق...", ps: "سیمې بارېږي..." }
+// Labels resolve through the central five-language dictionary (lib/i18n/ui.ts → "lochier.*").
+// The English strings below are only the t() fallback argument.
+const locationLabelFallback: Record<string, string> = {
+  country: "Country",
+  state: "State / Province",
+  district: "District",
+  city: "City / Town",
+  area: "Area / Locality / Road",
+  selectCountry: "Select country",
+  selectState: "Select state",
+  selectCountryFirst: "Select country first",
+  selectStateFirst: "Select state first",
+  selectCity: "Select city",
+  selectArea: "Select area / locality",
+  newCountry: "New Country",
+  newState: "New State",
+  newCity: "New City",
+  newArea: "New Area",
+  manageLocations: "Manage Locations",
+  selectCityFirst: "Select city first",
+  loadingStates: "Loading states...",
+  loadingDistricts: "Loading districts...",
+  loadingCities: "Loading cities...",
+  loadingAreas: "Loading areas..."
 };
 
 export function LocationHierarchySelect({
@@ -118,7 +120,7 @@ export function LocationHierarchySelect({
     return "en";
   }, [lang]);
 
-  const loc = (key: string) => locationLabels[key]?.[activeLang] || locationLabels[key]?.["en"] || key;
+  const loc = (key: string) => t(activeLang, ("lochier." + key) as never, locationLabelFallback[key] ?? key);
 
   const [countries, setCountries] = useState<LocationCountry[]>([]);
   const [states, setStates] = useState<LocationState[]>([]);

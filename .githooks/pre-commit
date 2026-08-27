@@ -1,0 +1,17 @@
+#!/bin/sh
+# Digital Dock ERP — five-language guard (see docs/multilingual-architecture.md).
+# Enable once with:  git config core.hooksPath .githooks   (or run `npm install`)
+#
+# Blocks a commit that breaks dictionary parity, references a missing key,
+# ships silent English, adds a NEW parallel per-module dictionary, or introduces
+# NEW hard-coded English strings in the staged files.
+
+echo "• i18n five-language guard…"
+node scripts/i18n-ui-guard.mjs --changed || {
+  echo ""
+  echo "✗ commit blocked by the i18n guard."
+  echo "  Fix: add the key to lib/i18n/ui.ts in ALL FIVE blocks (en/ur/ar/fa/ps),"
+  echo "  or wrap the string with useErpScreen().t(\"key\", \"English fallback\")."
+  echo "  Bypass only if you are certain:  git commit --no-verify"
+  exit 1
+}
