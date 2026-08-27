@@ -22,6 +22,7 @@ import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { Th } from "@/components/ui/translated-th";
 import { UniversalReportModal } from "@/components/ui/universal-report-modal";
+import { cn } from "@/lib/utils";
 
 type CustomerRow = {
   id: string;
