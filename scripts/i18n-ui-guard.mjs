@@ -178,8 +178,6 @@ const PARALLEL_ALLOW = new Set([
 const KNOWN_PARALLEL = new Set([
   "app/dashboard/kyc-reports/page.tsx",
   "components/ui/party-person-select.tsx",
-  // liveReportLabels — ~50 entries, most only en+ur; needs ar/fa/ps filled during migration.
-  "features/accounts/components/account-live-report-panel.tsx",
 ]);
 const parallelNew = [];
 const parallelKnown = [];

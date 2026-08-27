@@ -23,6 +23,8 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t as centralT } from "@/lib/i18n/ui";
 
 export type AccountLiveReportProps = {
   // Wizard States
@@ -58,58 +60,6 @@ export type AccountLiveReportProps = {
   onWhatsApp?: () => void;
 };
 
-const liveReportLabels: Record<string, Partial<Record<SupportedLanguage, string>>> = {
-  active: { en: "Active", ur: "فعال", ar: "نشط", fa: "فعال", ps: "فعال" },
-  inProgress: { en: "In Progress", ur: "جاری ہے", ar: "قيد التنفيذ", fa: "در حال اجرا", ps: "په جریان کې" },
-  accountTitle: { en: "Account Title", ur: "اکاؤنٹ عنوان" },
-  accountCodeAuto: { en: "Account Code (Auto)", ur: "اکاؤنٹ کوڈ (خودکار)" },
-  accountGroup: { en: "Account Group", ur: "اکاؤنٹ گروپ" },
-  currency: { en: "Currency", ur: "کرنسی" },
-  date: { en: "Date", ur: "تاریخ" },
-  openingBalance: { en: "Opening Balance", ur: "اوپننگ بیلنس" },
-  debitAmount: { en: "Debit Amount", ur: "ڈیبٹ رقم" },
-  creditAmount: { en: "Credit Amount", ur: "کریڈٹ رقم" },
-  netBalance: { en: "Net Balance", ur: "نیٹ بیلنس" },
-  accountInformation: { en: "ACCOUNT INFORMATION", ur: "اکاؤنٹ معلومات" },
-  customerInformation: { en: "CUSTOMER INFORMATION", ur: "کسٹمر معلومات" },
-  customerName: { en: "Customer Name", ur: "کسٹمر نام" },
-  customerCode: { en: "Customer Code", ur: "کسٹمر کوڈ" },
-  customerType: { en: "Customer Type", ur: "کسٹمر قسم" },
-  phone: { en: "Phone", ur: "فون" },
-  email: { en: "Email", ur: "ای میل" },
-  address: { en: "Address", ur: "پتہ" },
-  lastUpdated: { en: "Last Updated", ur: "آخری اپڈیٹ" },
-  companyDetails: { en: "COMPANY DETAILS", ur: "کمپنی تفصیلات" },
-  companyName: { en: "Company Name", ur: "کمپنی نام" },
-  companyCode: { en: "Company Code", ur: "کمپنی کوڈ" },
-  registrationNo: { en: "Registration No.", ur: "رجسٹریشن نمبر" },
-  bankDetails: { en: "BANK DETAILS", ur: "بینک تفصیلات" },
-  bankName: { en: "Bank Name", ur: "بینک نام" },
-  accountNumber: { en: "Account Number", ur: "اکاؤنٹ نمبر" },
-  bankBranch: { en: "Bank Branch", ur: "بینک برانچ" },
-  swiftCode: { en: "Swift Code", ur: "سوفٹ کوڈ" },
-  warehouseDetails: { en: "WAREHOUSE DETAILS", ur: "گودام تفصیلات" },
-  warehouseName: { en: "Warehouse Name", ur: "گودام نام" },
-  warehouseCode: { en: "Warehouse Code", ur: "گودام کوڈ" },
-  location: { en: "Location", ur: "مقام" },
-  auditInformation: { en: "AUDIT INFORMATION", ur: "آڈٹ معلومات" },
-  accountName: { en: "Account Name", ur: "اکاؤنٹ نام" },
-  accountCode: { en: "Account Code", ur: "اکاؤنٹ کوڈ" },
-  subType: { en: "Sub Type", ur: "ذیلی قسم" },
-  category: { en: "Category", ur: "کیٹیگری" },
-  manualRef: { en: "Manual Ref", ur: "دستی حوالہ" },
-  country: { en: "Country", ur: "ملک" },
-  branch: { en: "Branch", ur: "برانچ" },
-  createdBy: { en: "Created By", ur: "بنایا گیا بذریعہ" },
-  createdAt: { en: "Created At", ur: "بنانے کا وقت" },
-  updatedBy: { en: "Updated By", ur: "اپڈیٹ بذریعہ" },
-  updatedAt: { en: "Updated At", ur: "اپڈیٹ وقت" },
-  ipAddress: { en: "IP Address", ur: "آئی پی ایڈریس" },
-  browserPlatform: { en: "Browser / Platform", ur: "براؤزر / پلیٹ فارم" },
-  mobileNumber: { en: "Mobile Number", ur: "موبائل نمبر", ar: "رقم الهاتف المحمول", fa: "شماره موبایل", ps: "د موبایل شمیره" },
-  contactsList: { en: "Contacts", ur: "رابطہ نمبرز", ar: "جهات الاتصال", fa: "مخاطبین", ps: "اړیکې" }
-};
-
 export function AccountLiveReportPanel({
   accountName,
   accountCode,
@@ -119,7 +69,7 @@ export function AccountLiveReportPanel({
   manualReferenceNumber,
   currency,
   status = "Active",
-  lang = "en",
+  lang: langProp = "en",
   contacts,
   customerDetail,
   companyDetail,
@@ -142,7 +92,13 @@ export function AccountLiveReportPanel({
   const stampTime = useMemo(() => now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true }), [now]);
 
   const formattedDateTime = `${stampDate} ${stampTime}`;
-  const t = (key: string, fallback: string) => liveReportLabels[key]?.[lang] || liveReportLabels[key]?.en || fallback;
+
+  // Central i18n dictionary is the single source of truth. Reconcile the reactive
+  // active language with any server-threaded `lang` prop (see CLAUDE.md).
+  const activeLang = useActiveLanguage();
+  const lang: SupportedLanguage = activeLang !== "en" ? activeLang : langProp;
+  const t = (key: string, fallback: string) =>
+    centralT(lang, `alr.${key.replace(/([A-Z])/g, "_$1").toLowerCase()}`, fallback);
 
   const trName = (val: string | null | undefined) => {
     if (!val || val === "-") return "-";
