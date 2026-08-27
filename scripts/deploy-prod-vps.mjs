@@ -24,15 +24,48 @@ console.log(`  OPTION 3: PROMOTE DEV TO [MAIN] & DEPLOY TO PRODUCTION VPS`);
 console.log("  Target Servers:", SERVERS.join(", "));
 console.log("===============================================================\n");
 
+// ---------------------------------------------------------------------------
+// SAFETY GUARDS (added 2026-08-27)
+//   The previous version ran `git add -A` + auto-committed the ENTIRE working
+//   tree as "DeployBot" and then `git push -f`. That silently swept unrelated
+//   / unfinished files into production commits and could clobber commits made
+//   elsewhere. New behaviour:
+//     * refuses to run with a dirty working tree (commit intentionally first)
+//       -> override for legacy automation with  DEPLOY_ALLOW_DIRTY=1
+//     * when overridden, commits ONLY already-staged changes (never `git add -A`)
+//     * uses `--force-with-lease` instead of `-f` so it never overwrites
+//       commits it has not seen.
+// ---------------------------------------------------------------------------
+function sh(cmd) { return execSync(cmd, { encoding: 'utf8' }).trim(); }
+
 try {
   if (fs.existsSync('.git/index.lock')) {
     try { fs.unlinkSync('.git/index.lock'); } catch {}
   }
-  execSync('git add -A', { stdio: 'inherit' });
-  try {
-    execSync('git -c user.name="DeployBot" -c user.email="deploy@damaan.local" commit -m "fix: include populate-vps-locations and unauthenticated location routes"', { stdio: 'inherit' });
-  } catch (e) {
-    console.log("Commit skipped or already clean");
+
+  const dirty = sh('git status --porcelain');
+  const allowDirty = process.env.DEPLOY_ALLOW_DIRTY === '1';
+
+  if (dirty && !allowDirty) {
+    console.error("\n✗ DEPLOY ABORTED — working tree is not clean.\n");
+    console.error("The following files are uncommitted:\n");
+    console.error(dirty + "\n");
+    console.error("Commit (or stash) your intended changes yourself, then re-run the deploy.");
+    console.error("To bypass for CI/automation (NOT recommended): DEPLOY_ALLOW_DIRTY=1 npm run deploy:prod\n");
+    process.exit(1);
+  }
+
+  if (dirty && allowDirty) {
+    // Only commit what has been *explicitly staged* — never `git add -A`.
+    const staged = sh('git diff --cached --name-only');
+    if (staged) {
+      console.log("DEPLOY_ALLOW_DIRTY=1 — committing already-staged files only:\n" + staged + "\n");
+      try {
+        execSync('git -c user.name="DeployBot" -c user.email="deploy@damaan.local" commit -m "chore(deploy): staged changes bundled by deploy script"', { stdio: 'inherit' });
+      } catch { console.log("Commit skipped or already clean"); }
+    } else {
+      console.log("DEPLOY_ALLOW_DIRTY=1 set but nothing staged — unstaged changes will NOT be deployed.");
+    }
   }
 
   console.log("Syncing with GitHub remote main...");
@@ -48,7 +81,7 @@ try {
     console.log("Remote sync notice:", err.message);
   }
 
-  execSync('git push -f origin HEAD:main', { stdio: 'inherit' });
+  execSync('git push --force-with-lease origin HEAD:main', { stdio: 'inherit' });
   console.log("✅ GitHub main branch updated successfully from HEAD!\n");
 } catch (err) {
   console.error("Git merge/push error:", err.message);

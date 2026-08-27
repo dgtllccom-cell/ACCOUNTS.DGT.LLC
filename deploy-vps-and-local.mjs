@@ -46,11 +46,28 @@ try {
     }
   }
 
-  execSync('git add -A', { stdio: 'inherit' });
-  try {
-    execSync('git commit -m "feat(bank-roznamcha): deploy complete Bank Roznamcha / Cheque Management Report system to local and VPS"', { stdio: 'inherit' });
-  } catch (e) {
-    console.log("No new changes to commit or commit already up to date.");
+  // SAFETY GUARD (added 2026-08-27): never blanket `git add -A` + auto-commit
+  // the whole working tree onto production main. Require a clean tree; the
+  // developer commits their intended changes themselves. Legacy automation can
+  // opt back in with DEPLOY_ALLOW_DIRTY=1 (commits ONLY already-staged files).
+  {
+    const dirty = execSync('git status --porcelain', { encoding: 'utf8' }).trim();
+    const allowDirty = process.env.DEPLOY_ALLOW_DIRTY === '1';
+    if (dirty && !allowDirty) {
+      console.error("\n✗ DEPLOY ABORTED — working tree is not clean:\n\n" + dirty + "\n");
+      console.error("Commit or stash your intended changes yourself, then re-run.");
+      console.error("Bypass (NOT recommended): DEPLOY_ALLOW_DIRTY=1 <command>\n");
+      process.exit(1);
+    }
+    if (dirty && allowDirty) {
+      const staged = execSync('git diff --cached --name-only', { encoding: 'utf8' }).trim();
+      if (staged) {
+        console.log("DEPLOY_ALLOW_DIRTY=1 — committing already-staged files only:\n" + staged);
+        try {
+          execSync('git commit -m "chore(deploy): staged changes bundled by deploy script"', { stdio: 'inherit' });
+        } catch (e) { console.log("Commit skipped or already clean."); }
+      }
+    }
   }
 
   console.log("\n[3/4] Syncing & pushing latest code to GitHub (origin main)...");
@@ -64,12 +81,7 @@ try {
   } catch (e) {
     console.log("Remote sync notice:", e.message);
   }
-  try {
-    execSync('git push origin HEAD:main --force', { stdio: 'inherit' });
-  } catch (pushErr) {
-    console.warn("Attempting direct branch push...");
-    execSync('git push origin HEAD:refs/heads/main -f', { stdio: 'inherit' });
-  }
+  execSync('git push --force-with-lease origin HEAD:main', { stdio: 'inherit' });
   console.log("✅ Git push completed successfully!");
 } catch (err) {
   console.error("Git sync warning/error:", err.message);
