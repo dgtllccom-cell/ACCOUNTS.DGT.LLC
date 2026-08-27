@@ -46,7 +46,9 @@ export default function NewEntryError({
         } catch {}
         sessionStorage.setItem(countKey, String(currentCount + 1));
         sessionStorage.setItem(tsKey, String(now));
-        window.location.reload();
+        const url = new URL(window.location.href);
+        url.searchParams.set("_v", String(now));
+        window.location.replace(url.toString());
         return;
       }
     }
@@ -68,7 +70,9 @@ export default function NewEntryError({
       }
     } catch {}
     reset();
-    window.location.reload();
+    const url = new URL(window.location.href);
+    url.searchParams.set("_v", String(Date.now()));
+    window.location.replace(url.toString());
   };
 
   return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import {
   Truck as TruckIcon,
   User,
@@ -11,20 +11,10 @@ import {
   Trash2,
   Eye,
   Download,
-  Calendar,
-  ChevronRight,
-  ChevronLeft,
   Save,
   X,
   FileCheck,
-  AlertCircle,
-  Globe,
   Loader2,
-  Building2,
-  ShieldCheck,
-  Fuel,
-  Hash,
-  Scale
 } from "lucide-react";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
@@ -132,7 +122,6 @@ const INITIAL_FORM: TruckFormData = {
 
   contracts: []
 };
-
 
 export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: SupportedLanguage }) {
   const globalLang = useActiveLanguage();
@@ -541,14 +530,14 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                   {/* Truck Type Dropdown */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      {tUI("truckType")}
+                      {tt("trk.truck_type", "Truck Type *")}
                     </label>
                     <select
                       value={formData.truckType}
                       onChange={(e) => setFormData({ ...formData, truckType: e.target.value })}
                       className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm font-medium dark:border-slate-800 dark:bg-slate-950"
                     >
-                      <option value="">Select truck type</option>
+                      <option value="">{tt("trk.ph_select_type", "Select truck type")}</option>
                       {(optionsMap["truck_type"] || []).map((o) => (
                         <option key={o.code} value={o.code}>
                           {resolveActiveText(o as any, activeLang, o.name_en)}
@@ -560,13 +549,13 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                   {/* Registration No */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      {tUI("regNo")}
+                      {tt("trk.reg_no", "Registration No *")}
                     </label>
                     <input
                       type="text"
                       value={formData.registrationNo}
                       onChange={(e) => setFormData({ ...formData, registrationNo: e.target.value })}
-                      placeholder="Enter registration no"
+                      placeholder={tt("trk.ph_reg_no", "Enter registration no")}
                       className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm font-medium dark:border-slate-800 dark:bg-slate-950"
                     />
                   </div>
@@ -574,13 +563,13 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                   {/* Truck Number */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      {tUI("truckNo")}
+                      {tt("trk.truck_no", "Truck Number *")}
                     </label>
                     <input
                       type="text"
                       value={formData.truckNumber}
                       onChange={(e) => setFormData({ ...formData, truckNumber: e.target.value })}
-                      placeholder="Enter truck number"
+                      placeholder={tt("trk.ph_truck_no", "Enter truck number")}
                       className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm font-medium dark:border-slate-800 dark:bg-slate-950"
                     />
                   </div>
@@ -588,14 +577,14 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                   {/* Make */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      {tUI("make")}
+                      {tt("trk.make", "Make *")}
                     </label>
                     <select
                       value={formData.make}
                       onChange={(e) => setFormData({ ...formData, make: e.target.value })}
                       className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm font-medium dark:border-slate-800 dark:bg-slate-950"
                     >
-                      <option value="">Select make</option>
+                      <option value="">{tt("trk.ph_make", "Select make")}</option>
                       {(optionsMap["make"] || []).map((m) => (
                         <option key={m.code} value={m.code}>
                           {resolveActiveText(m as any, activeLang, m.name_en)}
@@ -607,13 +596,13 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                   {/* Model */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      {tUI("model")}
+                      {tt("trk.model", "Model *")}
                     </label>
                     <input
                       type="text"
                       value={formData.model}
                       onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-                      placeholder="Enter model"
+                      placeholder={tt("trk.ph_model", "Enter model")}
                       className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm font-medium dark:border-slate-800 dark:bg-slate-950"
                     />
                   </div>
@@ -621,7 +610,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                   {/* Year */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      {tUI("year")}
+                      {tt("trk.year", "Year *")}
                     </label>
                     <select
                       value={formData.year}
@@ -637,13 +626,13 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                   {/* Capacity */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      {tUI("capacity")}
+                      {tt("trk.capacity", "Capacity (Tons) *")}
                     </label>
                     <input
                       type="text"
                       value={formData.capacityTons}
                       onChange={(e) => setFormData({ ...formData, capacityTons: e.target.value })}
-                      placeholder="Enter capacity"
+                      placeholder={tt("trk.ph_capacity", "Enter capacity")}
                       className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm font-medium dark:border-slate-800 dark:bg-slate-950"
                     />
                   </div>
@@ -651,13 +640,13 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                   {/* Chassis No */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      {tUI("chassisNo")}
+                      {tt("trk.chassis_no", "Chassis No *")}
                     </label>
                     <input
                       type="text"
                       value={formData.chassisNo}
                       onChange={(e) => setFormData({ ...formData, chassisNo: e.target.value })}
-                      placeholder="Enter chassis number"
+                      placeholder={tt("trk.ph_chassis_no", "Enter chassis number")}
                       className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm font-medium dark:border-slate-800 dark:bg-slate-950"
                     />
                   </div>
@@ -665,13 +654,13 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                   {/* Engine No */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      {tUI("engineNo")}
+                      {tt("trk.engine_no", "Engine No")}
                     </label>
                     <input
                       type="text"
                       value={formData.engineNo}
                       onChange={(e) => setFormData({ ...formData, engineNo: e.target.value })}
-                      placeholder="Enter engine number"
+                      placeholder={tt("trk.ph_engine_no", "Enter engine number")}
                       className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm font-medium dark:border-slate-800 dark:bg-slate-950"
                     />
                   </div>
@@ -679,14 +668,14 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                   {/* Color */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      {tUI("color")}
+                      {tt("trk.color", "Color")}
                     </label>
                     <select
                       value={formData.color}
                       onChange={(e) => setFormData({ ...formData, color: e.target.value })}
                       className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm font-medium dark:border-slate-800 dark:bg-slate-950"
                     >
-                      <option value="">Select color</option>
+                      <option value="">—</option>
                       <option value="White">White / سفید</option>
                       <option value="Black">Black / سیاہ</option>
                       <option value="Blue">Blue / نیلا</option>
@@ -699,14 +688,14 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                   {/* Fuel Type */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      {tUI("fuelType")}
+                      {tt("trk.fuel_type", "Fuel Type")}
                     </label>
                     <select
                       value={formData.fuelType}
                       onChange={(e) => setFormData({ ...formData, fuelType: e.target.value })}
                       className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm font-medium dark:border-slate-800 dark:bg-slate-950"
                     >
-                      <option value="">Select fuel type</option>
+                      <option value="">—</option>
                       {(optionsMap["fuel_type"] || []).map((f) => (
                         <option key={f.code} value={f.code}>
                           {resolveActiveText(f as any, activeLang, f.name_en)}
@@ -718,7 +707,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                   {/* Purchase Date */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      {tUI("purchaseDate")}
+                      {tt("trk.purchase_date", "Purchase Date")}
                     </label>
                     <input
                       type="date"
@@ -734,7 +723,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
               <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
                   <h3 className="flex items-center gap-2 text-base font-black text-slate-900 dark:text-white">
-                    <FileText className="h-5 w-5 text-blue-600" /> Truck Documents
+                    <FileText className="h-5 w-5 text-blue-600" /> {tt("trk.truck_docs", "Truck Documents")}
                   </h3>
 
                   <div className="flex flex-wrap items-center gap-2">
@@ -751,7 +740,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                     </select>
                     <input
                       type="text"
-                      placeholder="Doc No."
+                      placeholder={tt("trk.ph_doc_no", "Doc No.")}
                       value={newDocNum}
                       onChange={(e) => setNewDocNum(e.target.value)}
                       className="w-32 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs dark:border-slate-800 dark:bg-slate-950"
@@ -761,7 +750,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                       onClick={() => handleAddDocument("truckDocuments")}
                       className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-2 text-xs font-bold text-white hover:bg-blue-700"
                     >
-                      <Plus className="h-3.5 w-3.5" /> Add Document
+                      <Plus className="h-3.5 w-3.5" /> {tt("trk.btn_add_doc", "Add Document")}
                     </button>
                   </div>
                 </div>
@@ -821,13 +810,13 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
               {/* Additional Information */}
               <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <h3 className="mb-2 text-sm font-black text-slate-900 dark:text-white">
-                  {tUI("remarks")}
+                  {tt("trk.remarks", "Remarks (Optional)")}
                 </h3>
                 <textarea
                   rows={3}
                   value={formData.remarks}
                   onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
-                  placeholder="Enter any additional notes or remarks in any language..."
+                  placeholder={tt("trk.ph_remarks", "Enter any additional notes or remarks in any language...")}
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 p-3 text-sm dark:border-slate-800 dark:bg-slate-950"
                 />
               </div>
@@ -841,8 +830,8 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                 <div className="flex items-center gap-3">
                   <User className="h-6 w-6" />
                   <div>
-                    <h2 className="text-lg font-black uppercase tracking-wide">{tUI("step2")}</h2>
-                    <p className="text-xs font-medium text-blue-100">{tUI("step2Sub")}</p>
+                    <h2 className="text-lg font-black uppercase tracking-wide">{tt("trk.step2", "Owner Information")}</h2>
+                    <p className="text-xs font-medium text-blue-100">{tt("trk.step2_sub", "Enter owner details")}</p>
                   </div>
                 </div>
               </div>
@@ -850,43 +839,43 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
               <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-4">
                 <div className="flex items-center justify-between border-b pb-3 border-slate-100 dark:border-slate-800">
                   <h3 className="text-base font-black text-slate-900 dark:text-white">
-                    Owner Details (Auto 5-Language Translation Active)
+                    {tt("trk.owner_details_heading", "Owner Details")}
                   </h3>
                   <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full dark:bg-blue-950/60 dark:text-blue-300">
-                    Active Input: {activeLang.toUpperCase()}
+                    {tt("trk.active_input", "Active Input:")} {activeLang.toUpperCase()}
                   </span>
                 </div>
 
                 {/* Person / Owner Database Selector */}
                 <div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-4 dark:border-blue-900/40 dark:bg-slate-950 space-y-2">
                   <PersonPicker
-                    label="Search & Select Owner / Customer Record from Database (or + Add New Owner)"
+                    label={tt("trk.search_owner_label", "Search & Select Owner from Database")}
                     value={selectedOwnerId}
                     onValueChange={(id) => setSelectedOwnerId(id)}
-                    placeholder="Search by owner name, mobile, company, CNIC..."
+                    placeholder={tt("common.search", "Search...")}
                   />
                   <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                    Selecting an owner auto-fills their Name, CNIC, Mobile, Transport Company, and Address. Click &quot;+ Add New Person Master&quot; to register a new owner in the database.
+                    {tt("trk.owner_autofill_hint", "Selecting an owner auto-fills their Name, CNIC, Mobile, and Address.")}
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Owner Name ({activeLang.toUpperCase()}) *
+                      {tt("tr.owner", "Owner Name")} ({activeLang.toUpperCase()}) *
                     </label>
                     <input
                       type="text"
                       value={formData.ownerName[activeLang] || ""}
                       onChange={(e) => handleAutoTranslateField("ownerName", e.target.value)}
-                      placeholder="Enter owner name..."
+                      placeholder={tt("trk.ph_owner_name", "Enter owner name...")}
                       className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm font-medium dark:border-slate-800 dark:bg-slate-950"
                     />
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      CNIC / Passport Number
+                      {tt("trk.cnic_passport", "CNIC / Passport Number")}
                     </label>
                     <input
                       type="text"
@@ -899,7 +888,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Owner Mobile Number
+                      {tt("trk.owner_mobile_label", "Owner Mobile Number")}
                     </label>
                     <input
                       type="text"
@@ -912,7 +901,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Transport Company Name ({activeLang.toUpperCase()})
+                      {tt("trk.transport_company_label", "Transport Company Name")} ({activeLang.toUpperCase()})
                     </label>
                     <input
                       type="text"
@@ -925,13 +914,13 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
 
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Owner Address
+                      {tt("trk.owner_address", "Owner Address")}
                     </label>
                     <input
                       type="text"
                       value={formData.ownerAddress}
                       onChange={(e) => setFormData({ ...formData, ownerAddress: e.target.value })}
-                      placeholder="Enter owner address..."
+                      placeholder={tt("trk.ph_owner_address", "Enter owner address...")}
                       className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm font-medium dark:border-slate-800 dark:bg-slate-950"
                     />
                   </div>
@@ -940,29 +929,15 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                 {/* 5-Language Translation Preview Box */}
                 <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950">
                   <p className="text-xs font-black uppercase text-slate-500 mb-2">
-                    ✓ Automatic 5-Language DB Transliteration Preview:
+                    ✓ {tt("trk.auto_5lang_preview", "Automatic 5-Language Preview:")}
                   </p>
                   <div className="grid grid-cols-2 gap-2 text-xs font-medium sm:grid-cols-5">
-                    <div className="rounded-xl border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-900">
-                      <span className="text-[10px] text-slate-400 font-bold block">ENGLISH</span>
-                      <span className="font-bold text-slate-900 dark:text-white">{formData.ownerName.en || "—"}</span>
-                    </div>
-                    <div className="rounded-xl border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-900">
-                      <span className="text-[10px] text-slate-400 font-bold block">URDU</span>
-                      <span className="font-bold text-slate-900 dark:text-white">{formData.ownerName.ur || "—"}</span>
-                    </div>
-                    <div className="rounded-xl border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-900">
-                      <span className="text-[10px] text-slate-400 font-bold block">ARABIC</span>
-                      <span className="font-bold text-slate-900 dark:text-white">{formData.ownerName.ar || "—"}</span>
-                    </div>
-                    <div className="rounded-xl border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-900">
-                      <span className="text-[10px] text-slate-400 font-bold block">PERSIAN</span>
-                      <span className="font-bold text-slate-900 dark:text-white">{formData.ownerName.fa || "—"}</span>
-                    </div>
-                    <div className="rounded-xl border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-900">
-                      <span className="text-[10px] text-slate-400 font-bold block">PASHTO</span>
-                      <span className="font-bold text-slate-900 dark:text-white">{formData.ownerName.ps || "—"}</span>
-                    </div>
+                    {(["en", "ur", "ar", "fa", "ps"] as const).map((lng) => (
+                      <div key={lng} className="rounded-xl border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-900">
+                        <span className="text-[10px] text-slate-400 font-bold block">{lng.toUpperCase()}</span>
+                        <span className="font-bold text-slate-900 dark:text-white">{formData.ownerName[lng] || "—"}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -976,47 +951,47 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                 <div className="flex items-center gap-3">
                   <UserCheck className="h-6 w-6" />
                   <div>
-                    <h2 className="text-lg font-black uppercase tracking-wide">{tUI("step3")}</h2>
-                    <p className="text-xs font-medium text-blue-100">{tUI("step3Sub")}</p>
+                    <h2 className="text-lg font-black uppercase tracking-wide">{tt("trk.step3", "Driver Information")}</h2>
+                    <p className="text-xs font-medium text-blue-100">{tt("trk.step3_sub", "Enter driver details")}</p>
                   </div>
                 </div>
               </div>
 
               <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-4">
                 <h3 className="text-base font-black text-slate-900 dark:text-white border-b pb-3 border-slate-100 dark:border-slate-800">
-                  Driver Personal & License Details
+                  {tt("trk.driver_details_heading", "Driver Details")}
                 </h3>
 
                 {/* Person / Driver Database Selector */}
                 <div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-4 dark:border-blue-900/40 dark:bg-slate-950 space-y-2">
                   <PersonPicker
-                    label="Search & Select Driver / Person Record from Database (or + Add New Driver)"
+                    label={tt("trk.search_driver_label", "Search & Select Driver from Database")}
                     value={selectedDriverId}
                     onValueChange={(id) => setSelectedDriverId(id)}
-                    placeholder="Search by driver name, license, mobile..."
+                    placeholder={tt("common.search", "Search...")}
                   />
                   <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                    Selecting a driver auto-fills their Name, License Number, Mobile, and Address. Click &quot;+ Add New Person Master&quot; to register a new driver in the database.
+                    {tt("trk.driver_autofill_hint", "Selecting a driver auto-fills their Name, License No, Mobile, and Address.")}
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Driver Name ({activeLang.toUpperCase()}) *
+                      {tt("tr.driver", "Driver Name")} ({activeLang.toUpperCase()}) *
                     </label>
                     <input
                       type="text"
                       value={formData.driverName[activeLang] || ""}
                       onChange={(e) => handleAutoTranslateField("driverName", e.target.value)}
-                      placeholder="Enter driver name..."
+                      placeholder={tt("trk.ph_driver_name", "Enter driver name...")}
                       className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm font-medium dark:border-slate-800 dark:bg-slate-950"
                     />
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Driving License Number *
+                      {tt("trk.license_no", "Driving License Number")} *
                     </label>
                     <input
                       type="text"
@@ -1029,7 +1004,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Driver Mobile Number
+                      {tt("trk.driver_mobile_label", "Driver Mobile Number")}
                     </label>
                     <input
                       type="text"
@@ -1042,13 +1017,13 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Driver Address
+                      {tt("trk.driver_address", "Driver Address")}
                     </label>
                     <input
                       type="text"
                       value={formData.driverAddress}
                       onChange={(e) => setFormData({ ...formData, driverAddress: e.target.value })}
-                      placeholder="Enter driver residential address..."
+                      placeholder={tt("trk.ph_driver_address", "Enter driver address...")}
                       className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm font-medium dark:border-slate-800 dark:bg-slate-950"
                     />
                   </div>
@@ -1057,29 +1032,15 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                 {/* Driver Name 5-Lang Preview */}
                 <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950">
                   <p className="text-xs font-black uppercase text-slate-500 mb-2">
-                    ✓ Automatic 5-Language Driver Name Saved in DB:
+                    ✓ {tt("trk.auto_5lang_preview", "Automatic 5-Language Preview:")}
                   </p>
                   <div className="grid grid-cols-2 gap-2 text-xs font-medium sm:grid-cols-5">
-                    <div className="rounded-xl border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-900">
-                      <span className="text-[10px] text-slate-400 font-bold block">ENGLISH</span>
-                      <span className="font-bold text-slate-900 dark:text-white">{formData.driverName.en || "—"}</span>
-                    </div>
-                    <div className="rounded-xl border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-900">
-                      <span className="text-[10px] text-slate-400 font-bold block">URDU</span>
-                      <span className="font-bold text-slate-900 dark:text-white">{formData.driverName.ur || "—"}</span>
-                    </div>
-                    <div className="rounded-xl border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-900">
-                      <span className="text-[10px] text-slate-400 font-bold block">ARABIC</span>
-                      <span className="font-bold text-slate-900 dark:text-white">{formData.driverName.ar || "—"}</span>
-                    </div>
-                    <div className="rounded-xl border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-900">
-                      <span className="text-[10px] text-slate-400 font-bold block">PERSIAN</span>
-                      <span className="font-bold text-slate-900 dark:text-white">{formData.driverName.fa || "—"}</span>
-                    </div>
-                    <div className="rounded-xl border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-900">
-                      <span className="text-[10px] text-slate-400 font-bold block">PASHTO</span>
-                      <span className="font-bold text-slate-900 dark:text-white">{formData.driverName.ps || "—"}</span>
-                    </div>
+                    {(["en", "ur", "ar", "fa", "ps"] as const).map((lng) => (
+                      <div key={lng} className="rounded-xl border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-900">
+                        <span className="text-[10px] text-slate-400 font-bold block">{lng.toUpperCase()}</span>
+                        <span className="font-bold text-slate-900 dark:text-white">{formData.driverName[lng] || "—"}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -1093,21 +1054,21 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                 <div className="flex items-center gap-3">
                   <FileText className="h-6 w-6" />
                   <div>
-                    <h2 className="text-lg font-black uppercase tracking-wide">{tUI("step4")}</h2>
-                    <p className="text-xs font-medium text-blue-100">{tUI("step4Sub")}</p>
+                    <h2 className="text-lg font-black uppercase tracking-wide">{tt("trk.step4", "Contract & Documents")}</h2>
+                    <p className="text-xs font-medium text-blue-100">{tt("trk.step4_sub", "Contracts and attachments")}</p>
                   </div>
                 </div>
               </div>
 
               <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-4">
                 <h3 className="text-base font-black text-slate-900 dark:text-white border-b pb-3 border-slate-100 dark:border-slate-800">
-                  Add Transport Contract / Agreement
+                  {tt("trk.add_contract_heading", "Add Transport Contract")}
                 </h3>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Contract Type
+                      {tt("ledger.contract_type", "Contract Type")}
                     </label>
                     <select
                       value={newContractType}
@@ -1124,7 +1085,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Contract Number
+                      {tt("ledger.contract_no", "Contract No")}
                     </label>
                     <input
                       type="text"
@@ -1137,7 +1098,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Start & End Date
+                      {tt("trk.start_end_date", "Start & End Date")}
                     </label>
                     <div className="flex gap-1">
                       <input
@@ -1160,7 +1121,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                       type="text"
                       value={newContractTerms}
                       onChange={(e) => setNewContractTerms(e.target.value)}
-                      placeholder="Enter contract terms or notes..."
+                      placeholder={tt("trk.ph_contract_terms", "Enter contract terms or notes...")}
                       className="flex-1 rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm font-medium dark:border-slate-800 dark:bg-slate-950"
                     />
                     <button
@@ -1168,7 +1129,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                       onClick={handleAddContract}
                       className="rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-blue-700"
                     >
-                      + Add Contract
+                      {tt("trk.btn_add_contract", "+ Add Contract")}
                     </button>
                   </div>
                 </div>
@@ -1188,7 +1149,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                       {formData.contracts.length === 0 ? (
                         <tr>
                           <td colSpan={4} className="p-6 text-center text-slate-400">
-                            No active contracts added yet. Click "+ Add Contract" above to record contracts.
+                            {tt("trk.no_contracts", "No contracts added yet. Click above to record a contract.")}
                           </td>
                         </tr>
                       ) : (
@@ -1196,7 +1157,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                           <tr key={c.id}>
                             <td className="p-3 font-bold text-slate-900 dark:text-white">{c.type}</td>
                             <td className="p-3 font-medium text-slate-600 dark:text-slate-300">{c.number}</td>
-                            <td className="p-3 text-slate-500">{c.startDate} to {c.endDate}</td>
+                            <td className="p-3 text-slate-500">{c.startDate} — {c.endDate}</td>
                             <td className="p-3 text-slate-600 dark:text-slate-300">{c.terms}</td>
                           </tr>
                         ))
@@ -1215,8 +1176,8 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                 <div className="flex items-center gap-3">
                   <CheckCircle2 className="h-6 w-6" />
                   <div>
-                    <h2 className="text-lg font-black uppercase tracking-wide">{tUI("step5")}</h2>
-                    <p className="text-xs font-medium text-emerald-100">{tUI("step5Sub")}</p>
+                    <h2 className="text-lg font-black uppercase tracking-wide">{tt("trk.step5", "Review & Confirm")}</h2>
+                    <p className="text-xs font-medium text-emerald-100">{tt("trk.step5_sub", "Verify and submit")}</p>
                   </div>
                 </div>
               </div>
@@ -1225,50 +1186,50 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                   <h4 className="font-black text-sm text-slate-900 dark:text-white mb-2 flex items-center justify-between">
-                    <span>1. Truck Details</span>
-                    <span className="text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full dark:bg-emerald-950">Verified</span>
+                    <span>1. {tt("trk.truck_details", "Truck Details")}</span>
+                    <span className="text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full dark:bg-emerald-950">{tt("trk.badge_verified", "Verified")}</span>
                   </h4>
                   <div className="space-y-1 text-xs text-slate-600 dark:text-slate-300">
-                    <p><strong className="text-slate-900 dark:text-white">Truck No:</strong> {formData.truckNumber || "—"}</p>
-                    <p><strong className="text-slate-900 dark:text-white">Reg No:</strong> {formData.registrationNo || "—"}</p>
-                    <p><strong className="text-slate-900 dark:text-white">Type:</strong> {formData.truckType || "—"}</p>
-                    <p><strong className="text-slate-900 dark:text-white">Make / Model:</strong> {`${formData.make || ""} ${formData.model || ""}`.trim() || "—"}</p>
+                    <p><strong className="text-slate-900 dark:text-white">{tt("tr.number", "Truck Number")}:</strong> {formData.truckNumber || "—"}</p>
+                    <p><strong className="text-slate-900 dark:text-white">{tt("tr.reg_no", "Registration No")}:</strong> {formData.registrationNo || "—"}</p>
+                    <p><strong className="text-slate-900 dark:text-white">{tt("tr.type", "Truck Type")}:</strong> {formData.truckType || "—"}</p>
+                    <p><strong className="text-slate-900 dark:text-white">{tt("trk.make_model", "Make / Model")}:</strong> {`${formData.make || ""} ${formData.model || ""}`.trim() || "—"}</p>
                   </div>
                 </div>
 
                 <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                   <h4 className="font-black text-sm text-slate-900 dark:text-white mb-2 flex items-center justify-between">
-                    <span>2. Owner Details (5-Lang)</span>
-                    <span className="text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full dark:bg-emerald-950">Verified</span>
+                    <span>2. {tt("trk.review_owner", "Owner Details (5-Lang)")}</span>
+                    <span className="text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full dark:bg-emerald-950">{tt("trk.badge_verified", "Verified")}</span>
                   </h4>
                   <div className="space-y-1 text-xs text-slate-600 dark:text-slate-300">
-                    <p><strong className="text-slate-900 dark:text-white">Owner Name:</strong> {resolveActiveText(formData.ownerName, activeLang, "—")}</p>
-                    <p><strong className="text-slate-900 dark:text-white">CNIC/Passport:</strong> {formData.ownerCnicPassport || "—"}</p>
-                    <p><strong className="text-slate-900 dark:text-white">Mobile:</strong> {formData.ownerMobile || "—"}</p>
-                    <p><strong className="text-slate-900 dark:text-white">Company:</strong> {resolveActiveText(formData.transportCompany, activeLang, "—")}</p>
+                    <p><strong className="text-slate-900 dark:text-white">{tt("tr.owner", "Owner Name")}:</strong> {resolveActiveText(formData.ownerName, activeLang, "—")}</p>
+                    <p><strong className="text-slate-900 dark:text-white">{tt("trk.lbl_cnic", "CNIC / Passport")}:</strong> {formData.ownerCnicPassport || "—"}</p>
+                    <p><strong className="text-slate-900 dark:text-white">{tt("trk.lbl_mobile", "Mobile")}:</strong> {formData.ownerMobile || "—"}</p>
+                    <p><strong className="text-slate-900 dark:text-white">{tt("tr.company", "Transport Company")}:</strong> {resolveActiveText(formData.transportCompany, activeLang, "—")}</p>
                   </div>
                 </div>
 
                 <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                   <h4 className="font-black text-sm text-slate-900 dark:text-white mb-2 flex items-center justify-between">
-                    <span>3. Driver Details (5-Lang)</span>
-                    <span className="text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full dark:bg-emerald-950">Verified</span>
+                    <span>3. {tt("trk.review_driver", "Driver Details (5-Lang)")}</span>
+                    <span className="text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full dark:bg-emerald-950">{tt("trk.badge_verified", "Verified")}</span>
                   </h4>
                   <div className="space-y-1 text-xs text-slate-600 dark:text-slate-300">
-                    <p><strong className="text-slate-900 dark:text-white">Driver Name:</strong> {resolveActiveText(formData.driverName, activeLang, "—")}</p>
-                    <p><strong className="text-slate-900 dark:text-white">License No:</strong> {formData.licenseNo || "—"}</p>
-                    <p><strong className="text-slate-900 dark:text-white">Mobile:</strong> {formData.driverMobile || "—"}</p>
+                    <p><strong className="text-slate-900 dark:text-white">{tt("tr.driver", "Driver Name")}:</strong> {resolveActiveText(formData.driverName, activeLang, "—")}</p>
+                    <p><strong className="text-slate-900 dark:text-white">{tt("trk.lbl_license", "License No")}:</strong> {formData.licenseNo || "—"}</p>
+                    <p><strong className="text-slate-900 dark:text-white">{tt("trk.lbl_mobile", "Mobile")}:</strong> {formData.driverMobile || "—"}</p>
                   </div>
                 </div>
 
                 <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                   <h4 className="font-black text-sm text-slate-900 dark:text-white mb-2 flex items-center justify-between">
-                    <span>4. Attachments & Contracts</span>
-                    <span className="text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full dark:bg-emerald-950">Verified</span>
+                    <span>4. {tt("trk.review_attachments", "Attachments & Contracts")}</span>
+                    <span className="text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full dark:bg-emerald-950">{tt("trk.badge_verified", "Verified")}</span>
                   </h4>
                   <div className="space-y-1 text-xs text-slate-600 dark:text-slate-300">
-                    <p><strong className="text-slate-900 dark:text-white">Documents Uploaded:</strong> {formData.truckDocuments.length + formData.ownerDocuments.length + formData.driverDocuments.length}</p>
-                    <p><strong className="text-slate-900 dark:text-white">Contracts Attached:</strong> {formData.contracts.length}</p>
+                    <p><strong className="text-slate-900 dark:text-white">{tt("trk.lbl_docs_uploaded", "Documents Uploaded")}:</strong> {formData.truckDocuments.length + formData.ownerDocuments.length + formData.driverDocuments.length}</p>
+                    <p><strong className="text-slate-900 dark:text-white">{tt("trk.lbl_contracts", "Contracts Attached")}:</strong> {formData.contracts.length}</p>
                   </div>
                 </div>
               </div>
@@ -1283,7 +1244,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
               onClick={() => setActiveStep((prev) => Math.max(1, prev - 1))}
               className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
             >
-              {tUI("prevStep")}
+              {tt("trk.prev_step", "← Previous")}
             </button>
 
             {activeStep < 5 ? (
@@ -1292,7 +1253,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                 onClick={() => setActiveStep((prev) => Math.min(5, prev + 1))}
                 className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-600/25 hover:bg-blue-700 active:scale-95"
               >
-                {tUI("nextStep")}
+                {tt("trk.next_step", "Next Step →")}
               </button>
             ) : (
               <button
@@ -1302,13 +1263,13 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                 className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-7 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-600/25 hover:bg-emerald-700 active:scale-95 disabled:opacity-50"
               >
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                {tUI("submit")}
+                {tt("trk.submit", "Submit Truck Record")}
               </button>
             )}
           </div>
         </div>
 
-        {/* Right Column: Live Summary Report Panel (Matching Mockup Screenshot) */}
+        {/* Right Column: Live Summary Report Panel */}
         <div className="lg:col-span-4">
           <div className="sticky top-6 space-y-4 rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div className="flex items-center gap-3 border-b border-slate-100 pb-4 dark:border-slate-800">
@@ -1317,10 +1278,10 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
               </div>
               <div>
                 <h3 className="text-sm font-black tracking-tight text-slate-900 dark:text-white">
-                  {tUI("liveReportTitle")}
+                  {tt("trk.live_title", "LIVE SUMMARY REPORT")}
                 </h3>
                 <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                  {tUI("liveReportSub")}
+                  {tt("trk.live_sub", "Real-time summary of entered information")}
                 </p>
               </div>
             </div>
@@ -1333,31 +1294,31 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                     {isStep1Done ? "✓" : "1"}
                   </div>
                   <span className="text-xs font-black text-slate-900 dark:text-white">
-                    Step 1 - Truck Information
+                    {tt("trk.live_step1", "Step 1 - Truck Information")}
                   </span>
                 </div>
                 <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${isStep1Done ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300" : "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300"}`}>
-                  {isStep1Done ? "Completed" : "Pending"}
+                  {isStep1Done ? tt("trk.badge_completed", "Completed") : tt("trk.badge_pending", "Pending")}
                 </span>
               </div>
 
               <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] pt-1 text-slate-600 dark:text-slate-400">
-                <span className="text-slate-400 font-medium">Truck Number</span>
+                <span className="text-slate-400 font-medium">{tt("tr.number", "Truck Number")}</span>
                 <span className="font-bold text-slate-900 dark:text-white text-end">{formData.truckNumber || "—"}</span>
 
-                <span className="text-slate-400 font-medium">Registration No</span>
+                <span className="text-slate-400 font-medium">{tt("tr.reg_no", "Registration No")}</span>
                 <span className="font-bold text-slate-900 dark:text-white text-end">{formData.registrationNo || "—"}</span>
 
-                <span className="text-slate-400 font-medium">Truck Type</span>
+                <span className="text-slate-400 font-medium">{tt("tr.type", "Truck Type")}</span>
                 <span className="font-bold text-slate-900 dark:text-white text-end">{formData.truckType || "—"}</span>
 
-                <span className="text-slate-400 font-medium">Capacity (Tons)</span>
+                <span className="text-slate-400 font-medium">{tt("trk.capacity_tons", "Capacity (Tons)")}</span>
                 <span className="font-bold text-slate-900 dark:text-white text-end">{formData.capacityTons || "—"}</span>
 
-                <span className="text-slate-400 font-medium">Make / Model</span>
+                <span className="text-slate-400 font-medium">{tt("trk.make_model", "Make / Model")}</span>
                 <span className="font-bold text-slate-900 dark:text-white text-end">{`${formData.make || ""} ${formData.model || ""}`.trim() || "—"}</span>
 
-                <span className="text-slate-400 font-medium">Year</span>
+                <span className="text-slate-400 font-medium">{tt("trk.year", "Year *")}</span>
                 <span className="font-bold text-slate-900 dark:text-white text-end">{formData.year || "—"}</span>
               </div>
             </div>
@@ -1370,24 +1331,24 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                     {isStep2Done ? "✓" : "2"}
                   </div>
                   <span className="text-xs font-black text-slate-900 dark:text-white">
-                    Step 2 - Owner Information
+                    {tt("trk.live_step2", "Step 2 - Owner Information")}
                   </span>
                 </div>
                 <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${isStep2Done ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300" : "bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300"}`}>
-                  {isStep2Done ? "Completed" : "Pending"}
+                  {isStep2Done ? tt("trk.badge_completed", "Completed") : tt("trk.badge_pending", "Pending")}
                 </span>
               </div>
 
               <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] pt-1 text-slate-600 dark:text-slate-400">
-                <span className="text-slate-400 font-medium">Owner Name</span>
+                <span className="text-slate-400 font-medium">{tt("tr.owner", "Owner Name")}</span>
                 <span className="font-bold text-slate-900 dark:text-white text-end truncate">
                   {resolveActiveText(formData.ownerName, activeLang, "—")}
                 </span>
 
-                <span className="text-slate-400 font-medium">CNIC / Passport</span>
+                <span className="text-slate-400 font-medium">{tt("trk.lbl_cnic", "CNIC / Passport")}</span>
                 <span className="font-bold text-slate-900 dark:text-white text-end">{formData.ownerCnicPassport || "—"}</span>
 
-                <span className="text-slate-400 font-medium">Mobile</span>
+                <span className="text-slate-400 font-medium">{tt("trk.lbl_mobile", "Mobile")}</span>
                 <span className="font-bold text-slate-900 dark:text-white text-end">{formData.ownerMobile || "—"}</span>
               </div>
             </div>
@@ -1400,24 +1361,24 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                     {isStep3Done ? "✓" : "3"}
                   </div>
                   <span className="text-xs font-black text-slate-900 dark:text-white">
-                    Step 3 - Driver Information
+                    {tt("trk.live_step3", "Step 3 - Driver Information")}
                   </span>
                 </div>
                 <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${isStep3Done ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300" : "bg-orange-50 text-orange-700 dark:bg-orange-950/60 dark:text-orange-300"}`}>
-                  {isStep3Done ? "Completed" : "Pending"}
+                  {isStep3Done ? tt("trk.badge_completed", "Completed") : tt("trk.badge_pending", "Pending")}
                 </span>
               </div>
 
               <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] pt-1 text-slate-600 dark:text-slate-400">
-                <span className="text-slate-400 font-medium">Driver Name</span>
+                <span className="text-slate-400 font-medium">{tt("tr.driver", "Driver Name")}</span>
                 <span className="font-bold text-slate-900 dark:text-white text-end truncate">
                   {resolveActiveText(formData.driverName, activeLang, "—")}
                 </span>
 
-                <span className="text-slate-400 font-medium">License No</span>
+                <span className="text-slate-400 font-medium">{tt("trk.lbl_license", "License No")}</span>
                 <span className="font-bold text-slate-900 dark:text-white text-end">{formData.licenseNo || "—"}</span>
 
-                <span className="text-slate-400 font-medium">Mobile</span>
+                <span className="text-slate-400 font-medium">{tt("trk.lbl_mobile", "Mobile")}</span>
                 <span className="font-bold text-slate-900 dark:text-white text-end">{formData.driverMobile || "—"}</span>
               </div>
             </div>
@@ -1430,19 +1391,19 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                     {isStep4Done ? "✓" : "4"}
                   </div>
                   <span className="text-xs font-black text-slate-900 dark:text-white">
-                    Step 4 - Contracts & Documents
+                    {tt("trk.live_step4", "Step 4 - Contracts & Documents")}
                   </span>
                 </div>
                 <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${isStep4Done ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300" : "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300"}`}>
-                  {isStep4Done ? "Completed" : "Pending"}
+                  {isStep4Done ? tt("trk.badge_completed", "Completed") : tt("trk.badge_pending", "Pending")}
                 </span>
               </div>
 
               <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] pt-1 text-slate-600 dark:text-slate-400">
-                <span className="text-slate-400 font-medium">Contracts Added</span>
+                <span className="text-slate-400 font-medium">{tt("trk.contracts_added", "Contracts Added")}</span>
                 <span className="font-bold text-slate-900 dark:text-white text-end">{formData.contracts.length}</span>
 
-                <span className="text-slate-400 font-medium">Total Documents</span>
+                <span className="text-slate-400 font-medium">{tt("trk.total_docs", "Total Documents")}</span>
                 <span className="font-bold text-slate-900 dark:text-white text-end">
                   {formData.truckDocuments.length + formData.ownerDocuments.length + formData.driverDocuments.length}
                 </span>
@@ -1452,7 +1413,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
             {/* Overall Progress */}
             <div className="pt-2">
               <div className="flex items-center justify-between text-xs font-black text-slate-900 dark:text-white mb-1.5">
-                <span>Overall Progress</span>
+                <span>{tt("trk.overall_progress", "Overall Progress")}</span>
                 <span className="text-blue-600 dark:text-blue-400">{progressPercent}%</span>
               </div>
               <div className="h-2.5 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
@@ -1462,7 +1423,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                 />
               </div>
               <p className="mt-2 text-[11px] font-medium text-slate-400">
-                Please complete all steps to submit the truck record.
+                {tt("trk.complete_all_steps", "Please complete all steps to submit the truck record.")}
               </p>
             </div>
           </div>

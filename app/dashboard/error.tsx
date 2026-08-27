@@ -88,7 +88,9 @@ export default function DashboardError({
         clearChunkReloadCache();
         sessionStorage.setItem(countKey, String(currentCount + 1));
         sessionStorage.setItem(tsKey, String(now));
-        window.location.reload();
+        const url = new URL(window.location.href);
+        url.searchParams.set("_v", String(now));
+        window.location.replace(url.toString());
         return;
       }
     }
@@ -98,9 +100,9 @@ export default function DashboardError({
 
   const handleTryAgain = () => {
     clearChunkReloadCache();
-    const targetRoute = extractTargetRouteFromChunkError(msg) || window.location.pathname;
-    const cleanRoute = targetRoute.replace(/\/page$/, "");
-    window.location.href = cleanRoute + (cleanRoute.includes("?") ? "&" : "?") + "_t=" + Date.now();
+    const url = new URL(window.location.href);
+    url.searchParams.set("_v", String(Date.now()));
+    window.location.replace(url.toString());
   };
 
   return (

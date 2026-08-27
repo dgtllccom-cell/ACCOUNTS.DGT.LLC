@@ -1674,9 +1674,9 @@ export function ExpensesBillEntryForm({
               </div>
 
               <div className="flex justify-end gap-3 pt-6 mt-auto">
-                <Button variant="outline" onClick={() => setTransferBill(null)} disabled={transferring} className="px-6 shadow-sm">Cancel</Button>
+                <Button variant="outline" onClick={() => setTransferBill(null)} disabled={transferring} className="px-6 shadow-sm">{tt("common.cancel", "Cancel")}</Button>
                 <Button onClick={handleTransfer} disabled={transferring || !debitLedgerId || !creditLedgerId} className="bg-primary hover:bg-primary/90 text-white font-bold px-8 shadow-md">
-                  {transferring ? "Transferring..." : "Confirm Transfer"}
+                  {transferring ? tt("exp.transferring", "Transferring...") : tt("exp.confirm_transfer", "Confirm Transfer")}
                 </Button>
               </div>
             </div>
