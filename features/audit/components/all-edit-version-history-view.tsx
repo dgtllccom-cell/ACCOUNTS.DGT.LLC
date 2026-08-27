@@ -299,7 +299,7 @@ export function AllEditVersionHistoryView() {
               </div>
               <div className="flex items-center gap-1 text-[10.5px] font-semibold text-amber-600 mt-1">
                 <Clock className="h-3 w-3" />
-                <span>Requires Review</span>
+                <span>{t(lang, "audit.requires_review", "Requires Review")}</span>
               </div>
             </div>
             <div className="h-11 w-11 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 flex items-center justify-center shadow-xs">
@@ -320,7 +320,7 @@ export function AllEditVersionHistoryView() {
               </div>
               <div className="flex items-center gap-1 text-[10.5px] font-semibold text-rose-600 mt-1">
                 <ShieldAlert className="h-3 w-3" />
-                <span>Financial / Account diffs</span>
+                <span>{t(lang, "audit.financial_account_diffs", "Financial / Account diffs")}</span>
               </div>
             </div>
             <div className="h-11 w-11 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-700 flex items-center justify-center shadow-xs">
@@ -456,15 +456,15 @@ export function AllEditVersionHistoryView() {
               className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 px-2.5 text-xs font-semibold outline-none focus:border-blue-600"
             >
               <option value="all">{t(lang, "audit.filter_all_modules", "All Modules")}</option>
-              <option value="Purchase">Purchase</option>
-              <option value="Local Purchase">Local Purchase</option>
-              <option value="Sales">Sales</option>
-              <option value="Local Sales">Local Sales</option>
-              <option value="Cash Entry">Cash Entry / Roznamcha</option>
-              <option value="Ledger">Ledger</option>
-              <option value="Payment">Payment & Transfers</option>
-              <option value="Shipping">Shipping & Clearing</option>
-              <option value="Invoices">Invoices & Endorsements</option>
+              <option value="Purchase">{t(lang, "audit.mod_purchase", "Purchase")}</option>
+              <option value="Local Purchase">{t(lang, "audit.mod_local_purchase", "Local Purchase")}</option>
+              <option value="Sales">{t(lang, "audit.mod_sales", "Sales")}</option>
+              <option value="Local Sales">{t(lang, "audit.mod_local_sales", "Local Sales")}</option>
+              <option value="Cash Entry">{t(lang, "audit.mod_cash_roznamcha", "Cash Entry / Roznamcha")}</option>
+              <option value="Ledger">{t(lang, "audit.mod_ledger", "Ledger")}</option>
+              <option value="Payment">{t(lang, "audit.mod_payment_transfers", "Payment & Transfers")}</option>
+              <option value="Shipping">{t(lang, "audit.mod_shipping_clearing", "Shipping & Clearing")}</option>
+              <option value="Invoices">{t(lang, "audit.mod_invoices_endorsements", "Invoices & Endorsements")}</option>
             </select>
           </div>
 

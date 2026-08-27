@@ -85,8 +85,8 @@ type KycMetrics = {
 // back to this map (then the key) if a key is ever missing.
 const KYC_EN: Record<string, string> = {
   reportBrand: "Regulatory Compliance & Verification Center",
-  title: "KYC Reports & Master Record Audit Center",
-  subtitle: "Live audit monitoring of missing profile fields, documents, and compliance grace period for Countries, Branches, Users & Fleet",
+  "title": "KYC Reports & Master Record Audit Center",
+  "subtitle": "Live audit monitoring of missing profile fields, documents, and compliance grace period for Countries, Branches, Users & Fleet",
   totalTracked: "Total Audited Entities",
   actionRequired: "Incomplete (Red Alert)",
   nearExpiry: "Near Expiry / Overdue",
@@ -440,10 +440,10 @@ export default function KycReportsPage() {
             size="sm"
             onClick={() => router.push("/dashboard" as Route)}
             className="h-8.5 px-2.5 rounded-xl border-border/80 bg-muted/40 hover:bg-muted text-foreground text-xs font-bold gap-1 shadow-xs"
-            title="Back to Dashboard"
+            title={tUI("back_to_dashboard")}
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Back</span>
+            <span className="hidden sm:inline">{tUI("back")}</span>
           </Button>
 
           <div className="h-9 w-9 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center border border-rose-200/60 dark:border-rose-900 shrink-0 shadow-xs">
@@ -651,14 +651,14 @@ export default function KycReportsPage() {
             {isDateMenuOpen && (
               <div className="absolute left-0 mt-1.5 w-72 rounded-2xl bg-card border border-border/80 shadow-2xl p-3 z-50 text-xs space-y-3 font-sans">
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Quick Presets</span>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{tUI("quick_presets")}</span>
                   <div className="grid grid-cols-2 gap-1 mt-1.5">
                     {[
-                      { key: "all", label: "All Dates" },
-                      { key: "today", label: "Today" },
-                      { key: "this_week", label: "This Week" },
-                      { key: "this_month", label: "This Month" },
-                      { key: "last_30_days", label: "Last 30 Days" }
+                      { key: "all", label: tUI("date_all") },
+                      { key: "today", label: tUI("date_today") },
+                      { key: "this_week", label: tUI("date_this_week") },
+                      { key: "this_month", label: tUI("date_this_month") },
+                      { key: "last_30_days", label: tUI("date_last_30_days") }
                     ].map((item) => (
                       <button
                         key={item.key}
@@ -774,26 +774,26 @@ export default function KycReportsPage() {
         <div className="rounded-2xl border border-border/80 bg-card p-3.5 shadow-xs">
           <div className="flex items-center gap-2 pb-2 border-b border-border/60">
             <Globe className="h-4 w-4 text-blue-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">1. BRANCH & USER DETAILS</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">1. {tUI("card_branch_user_details")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-muted-foreground">
             <div className="flex justify-between">
-              <span>Country:</span>
+              <span>{tUI("lbl_country")}</span>
               <span className="font-bold text-foreground">{sessionCtx?.countryName || "United Arab Emirates"}</span>
             </div>
             <div className="flex justify-between">
-              <span>Branch Name:</span>
+              <span>{tUI("lbl_branch_name")}</span>
               <span className="font-bold text-foreground uppercase truncate max-w-[130px]">{sessionCtx?.branchName || "DUBAI HEAD OFFICE"}</span>
             </div>
             <div className="flex justify-between">
-              <span>User ID / Name:</span>
+              <span>{tUI("lbl_user_id_name")}</span>
               <span className="font-bold text-foreground truncate max-w-[120px]">{sessionCtx?.userName || "Super Admin"}</span>
             </div>
             <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
-              <span>Status:</span>
+              <span>{tUI("lbl_status")}</span>
               <span className="bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded text-[10px] flex items-center gap-1">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                Active Session
+                {tUI("active_session")}
               </span>
             </div>
           </div>
@@ -803,19 +803,19 @@ export default function KycReportsPage() {
         <div className="rounded-2xl border border-border/80 bg-card p-3.5 shadow-xs">
           <div className="flex items-center gap-2 pb-2 border-b border-border/60">
             <ShieldCheck className="h-4 w-4 text-emerald-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">2. KYC & COMPLIANCE</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">2. {tUI("card_kyc_compliance")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-muted-foreground">
-              <span>Total Audited:</span>
+              <span>{tUI("lbl_total_audited")}</span>
               <span className="font-bold text-foreground">{metrics.total}</span>
             </div>
             <div className="flex justify-between text-emerald-600 font-bold">
-              <span>Compliant & Verified:</span>
+              <span>{tUI("lbl_compliant_verified")}</span>
               <span>{metrics.compliant}</span>
             </div>
             <div className="flex justify-between text-rose-600 font-bold">
-              <span>Action Required:</span>
+              <span>{tUI("lbl_action_required")}</span>
               <span>{metrics.incomplete}</span>
             </div>
           </div>
@@ -825,20 +825,20 @@ export default function KycReportsPage() {
         <div className="rounded-2xl border border-border/80 bg-card p-3.5 shadow-xs">
           <div className="flex items-center gap-2 pb-2 border-b border-border/60">
             <Clock className="h-4 w-4 text-amber-500" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">3. AUDIT & GRACE PERIOD</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">3. {tUI("card_audit_grace")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-amber-600 font-bold">
-              <span>Near Expiry:</span>
+              <span>{tUI("lbl_near_expiry")}</span>
               <span>{metrics.nearExpiry + metrics.suspended}</span>
             </div>
             <div className="flex justify-between text-muted-foreground">
-              <span>Grace Allowed:</span>
-              <span className="font-bold text-foreground">15 Days</span>
+              <span>{tUI("lbl_grace_allowed")}</span>
+              <span className="font-bold text-foreground">{tUI("grace_15_days")}</span>
             </div>
             <div className="flex justify-between text-indigo-600 font-bold">
-              <span>Audit Policy:</span>
-              <span className="text-[10px] bg-indigo-50 dark:bg-indigo-950/40 px-1.5 py-0.5 rounded">Live Monitored</span>
+              <span>{tUI("lbl_audit_policy")}</span>
+              <span className="text-[10px] bg-indigo-50 dark:bg-indigo-950/40 px-1.5 py-0.5 rounded">{tUI("live_monitored")}</span>
             </div>
           </div>
         </div>
@@ -847,19 +847,19 @@ export default function KycReportsPage() {
         <div className="rounded-2xl border border-border/80 bg-card p-3.5 shadow-xs">
           <div className="flex items-center gap-2 pb-2 border-b border-border/60">
             <Building2 className="h-4 w-4 text-indigo-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">4. ENTITIES AUDITED</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">4. {tUI("card_entities_audited")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-muted-foreground">
-              <span>Total Entities:</span>
+              <span>{tUI("lbl_total_entities")}</span>
               <span className="font-bold text-foreground">{items.length}</span>
             </div>
             <div className="flex justify-between text-indigo-600 font-bold">
-              <span>Country Branches:</span>
+              <span>{tUI("lbl_country_branches")}</span>
               <span>{scopeTotals.countryBranches ?? items.filter((i) => i.type === "country_branch").length}</span>
             </div>
             <div className="flex justify-between text-emerald-600 font-bold">
-              <span>City Branches & Users:</span>
+              <span>{tUI("lbl_city_branches_users")}</span>
               <span>{(scopeTotals.cityBranches ?? 0) + (scopeTotals.users ?? 0)}</span>
             </div>
           </div>
@@ -869,7 +869,7 @@ export default function KycReportsPage() {
         <div className="rounded-2xl border border-border/80 bg-card p-3.5 shadow-xs">
           <div className="flex items-center gap-2 pb-2 border-b border-border/60">
             <Activity className="h-4 w-4 text-rose-500" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">5. QUICK ACTIONS</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">5. {tUI("card_quick_actions")}</span>
           </div>
           <div className="mt-2 space-y-1 text-[10px] font-semibold">
             <div
@@ -879,29 +879,29 @@ export default function KycReportsPage() {
               }}
               className="flex justify-between items-center text-muted-foreground hover:text-blue-600 cursor-pointer"
             >
-              <span>All Entities</span>
-              <span className="text-blue-600 font-bold">📊 View All</span>
+              <span>{tUI("qa_all_entities")}</span>
+              <span className="text-blue-600 font-bold">📊 {tUI("qa_view_all")}</span>
             </div>
             <div
               onClick={() => setSelectedStatus("incomplete")}
               className="flex justify-between items-center text-muted-foreground hover:text-rose-600 cursor-pointer"
             >
-              <span>Incomplete (Alert)</span>
-              <span className="text-rose-600 font-bold">⚠️ Filter</span>
+              <span>{tUI("qa_incomplete_alert")}</span>
+              <span className="text-rose-600 font-bold">⚠️ {tUI("qa_filter")}</span>
             </div>
             <div
               onClick={() => setSelectedStatus("near_expiry")}
               className="flex justify-between items-center text-muted-foreground hover:text-amber-600 cursor-pointer"
             >
-              <span>Near Expiry (&lt; 5d)</span>
-              <span className="text-amber-600 font-bold">⏰ Review</span>
+              <span>{tUI("qa_near_expiry_5d")}</span>
+              <span className="text-amber-600 font-bold">⏰ {tUI("qa_review")}</span>
             </div>
             <div
               onClick={handleKycPrint}
               className="flex justify-between items-center text-muted-foreground hover:text-indigo-600 cursor-pointer"
             >
-              <span>Print Audit PDF</span>
-              <span className="text-indigo-600 font-bold">🖨️ Print</span>
+              <span>{tUI("qa_print_audit_pdf")}</span>
+              <span className="text-indigo-600 font-bold">🖨️ {tUI("qa_print")}</span>
             </div>
           </div>
         </div>
@@ -1121,7 +1121,7 @@ export default function KycReportsPage() {
                 <Input
                   value={editAddress}
                   onChange={(e) => setEditAddress(e.target.value)}
-                  placeholder="Official office street address, city, country"
+                  placeholder={tUI("address_placeholder")}
                   className="bg-background text-xs h-9 rounded-lg mt-1"
                 />
               </div>

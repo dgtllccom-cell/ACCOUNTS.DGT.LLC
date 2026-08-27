@@ -436,17 +436,17 @@ export function AllDeletedRecordsView() {
               className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 px-2.5 text-xs font-semibold outline-none focus:border-blue-600"
             >
               <option value="all">{t(lang, "audit.filter_all_modules", "All Modules")}</option>
-              <option value="Purchase">Purchase</option>
-              <option value="Local Purchase">Local Purchase</option>
-              <option value="Sales">Sales</option>
-              <option value="Local Sales">Local Sales</option>
-              <option value="Cash Entry">Cash Entry / Roznamcha</option>
-              <option value="Ledger">Ledger</option>
-              <option value="Payment">Payment & Transfers</option>
-              <option value="Shipping">Shipping & Clearing</option>
-              <option value="Invoices">Invoices & Endorsements</option>
-              <option value="Customers">Customers & Parties</option>
-              <option value="Employees">Employees</option>
+              <option value="Purchase">{t(lang, "audit.mod_purchase", "Purchase")}</option>
+              <option value="Local Purchase">{t(lang, "audit.mod_local_purchase", "Local Purchase")}</option>
+              <option value="Sales">{t(lang, "audit.mod_sales", "Sales")}</option>
+              <option value="Local Sales">{t(lang, "audit.mod_local_sales", "Local Sales")}</option>
+              <option value="Cash Entry">{t(lang, "audit.mod_cash_roznamcha", "Cash Entry / Roznamcha")}</option>
+              <option value="Ledger">{t(lang, "audit.mod_ledger", "Ledger")}</option>
+              <option value="Payment">{t(lang, "audit.mod_payment_transfers", "Payment & Transfers")}</option>
+              <option value="Shipping">{t(lang, "audit.mod_shipping_clearing", "Shipping & Clearing")}</option>
+              <option value="Invoices">{t(lang, "audit.mod_invoices_endorsements", "Invoices & Endorsements")}</option>
+              <option value="Customers">{t(lang, "audit.mod_customers_parties", "Customers & Parties")}</option>
+              <option value="Employees">{t(lang, "audit.mod_employees", "Employees")}</option>
             </select>
           </div>
 
