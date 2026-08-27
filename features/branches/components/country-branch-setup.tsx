@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState, type FormEvent } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import { Pencil, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -166,6 +166,7 @@ function asIso3(country: LocationCountry | null) {
 
 function CountryBranchSetupContent() {
   const lang = useActiveLanguage();
+  const tt = useCallback((key: string, fallback: string) => t(lang as never, key as never, fallback), [lang]);
   const searchParams = useSearchParams();
   const editId = searchParams.get("editId") ?? "";
   const [drawerBranchData, setDrawerBranchData] = useState<any>(null);
@@ -354,22 +355,23 @@ function CountryBranchSetupContent() {
 
   const reportRows = useMemo(
     () => [
-      { label: "Country", value: previewCountry },
-      { label: "Country Code", value: locationMeta.country?.iso2 || locationMeta.country?.iso3 || "-" },
-      { label: "Branch Type", value: branchType || "-" },
-      { label: "Branch Code", value: branchCode || "-" },
-      { label: "Currency", value: currency || "-" },
-      { label: "Location", value: previewLocation },
-      { label: "Address", value: fullAddress || "-" },
-      { label: "Company Name", value: previewCompany },
-      { label: "Company Code", value: companyCode },
-      { label: "Company Owner", value: ownerPreview?.name || ownerName || "-" },
-      { label: "Owner Details", value: ownerPreview ? `${ownerPreview.source.toUpperCase()} · ${ownerPreview.code}` : ownerName || "-" },
-      { label: "Permission Template", value: permissionTemplate || "-" },
-      { label: "Permission Grants", value: permissionGrants.length ? permissionGrants.join(", ") : "-" },
-      { label: "Contacts", value: contactItems.length ? contactItems.join(", ") : "-" }
+      { label: tt("cnbs.country", "Country"), value: previewCountry },
+      { label: tt("cnbs.country_code", "Country Code"), value: locationMeta.country?.iso2 || locationMeta.country?.iso3 || "-" },
+      { label: tt("cnbs.branch_type", "Branch Type"), value: branchType || "-" },
+      { label: tt("cnbs.branch_code", "Branch Code"), value: branchCode || "-" },
+      { label: tt("cnbs.currency", "Currency"), value: currency || "-" },
+      { label: tt("cnbs.location", "Location"), value: previewLocation },
+      { label: tt("cnbs.address", "Address"), value: fullAddress || "-" },
+      { label: tt("cnbs.company_name", "Company Name"), value: previewCompany },
+      { label: tt("cnbs.company_code", "Company Code"), value: companyCode },
+      { label: tt("cnbs.company_owner", "Company Owner"), value: ownerPreview?.name || ownerName || "-" },
+      { label: tt("cnbs.owner_details", "Owner Details"), value: ownerPreview ? `${ownerPreview.source.toUpperCase()} · ${ownerPreview.code}` : ownerName || "-" },
+      { label: tt("cnbs.permission_template", "Permission Template"), value: permissionTemplate || "-" },
+      { label: tt("cnbs.permission_grants", "Permission Grants"), value: permissionGrants.length ? permissionGrants.join(", ") : "-" },
+      { label: tt("cnbs.contacts", "Contacts"), value: contactItems.length ? contactItems.join(", ") : "-" }
     ],
     [
+      tt,
       branchCode,
       branchType,
       contactItems,
@@ -390,74 +392,75 @@ function CountryBranchSetupContent() {
 
   const editIdentityRows = useMemo(
     () => [
-      { label: "Country", value: previewCountry },
-      { label: "Main Branch", value: existingMainBranch?.name || (previewCountry && previewCountry !== "-" ? `${previewCountry} Main Branch` : "") },
-      { label: "Branch Code", value: existingMainBranch?.code || branchCode },
-      { label: "Record ID", value: editingCountryBranchId },
-      { label: "Status", value: existingMainBranch?.status || "active" },
-      { label: "Created Date", value: existingMainBranch?.created_at ? new Date(existingMainBranch.created_at).toLocaleString() : "" },
-      { label: "Last Updated", value: existingMainBranch?.updated_at ? new Date(existingMainBranch.updated_at).toLocaleString() : "" },
-      { label: "Currency", value: currency }
+      { label: tt("cnbs.country", "Country"), value: previewCountry },
+      { label: tt("cnbs.main_branch", "Main Branch"), value: existingMainBranch?.name || (previewCountry && previewCountry !== "-" ? `${previewCountry} Main Branch` : "") },
+      { label: tt("cnbs.branch_code", "Branch Code"), value: existingMainBranch?.code || branchCode },
+      { label: tt("cnbs.record_id", "Record ID"), value: editingCountryBranchId },
+      { label: tt("cnbs.status", "Status"), value: existingMainBranch?.status || "active" },
+      { label: tt("cnbs.created_date", "Created Date"), value: existingMainBranch?.created_at ? new Date(existingMainBranch.created_at).toLocaleString() : "" },
+      { label: tt("cnbs.last_updated", "Last Updated"), value: existingMainBranch?.updated_at ? new Date(existingMainBranch.updated_at).toLocaleString() : "" },
+      { label: tt("cnbs.currency", "Currency"), value: currency }
     ],
-    [branchCode, currency, editingCountryBranchId, existingMainBranch, previewCountry]
+    [tt, branchCode, currency, editingCountryBranchId, existingMainBranch, previewCountry]
   );
 
   const editProfileSections: BranchProfileSection[] = useMemo(
     () => [
       {
-        title: "Branch Information",
+        title: tt("cnbs.sec_branch_info", "Branch Information"),
         items: [
-          { label: "Branch Type", value: branchType },
-          { label: "Branch Code", value: existingMainBranch?.code || branchCode },
-          { label: "Currency", value: currency },
-          { label: "Status", value: existingMainBranch?.status || "active" }
+          { label: tt("cnbs.branch_type", "Branch Type"), value: branchType },
+          { label: tt("cnbs.branch_code", "Branch Code"), value: existingMainBranch?.code || branchCode },
+          { label: tt("cnbs.currency", "Currency"), value: currency },
+          { label: tt("cnbs.status", "Status"), value: existingMainBranch?.status || "active" }
         ]
       },
       {
-        title: "Location Information",
+        title: tt("cnbs.sec_location_info", "Location Information"),
         items: [
-          { label: "Country", value: previewCountry },
-          { label: "Country Code", value: locationMeta.country?.iso2 || locationMeta.country?.iso3 },
-          { label: "Location", value: previewLocation },
-          { label: "Address", value: fullAddress }
+          { label: tt("cnbs.country", "Country"), value: previewCountry },
+          { label: tt("cnbs.country_code", "Country Code"), value: locationMeta.country?.iso2 || locationMeta.country?.iso3 },
+          { label: tt("cnbs.location", "Location"), value: previewLocation },
+          { label: tt("cnbs.address", "Address"), value: fullAddress }
         ]
       },
       {
-        title: "Company Information",
+        title: tt("cnbs.sec_company_info", "Company Information"),
         items: [
-          { label: "Company Name", value: company?.name },
-          { label: "Company Code", value: company?.id ? compactCode(company.id, "CMP") : "" },
-          { label: "Legal Name", value: company?.legal_name },
-          { label: "Base Currency", value: company?.base_currency }
+          { label: tt("cnbs.company_name", "Company Name"), value: company?.name },
+          { label: tt("cnbs.company_code", "Company Code"), value: company?.id ? compactCode(company.id, "CMP") : "" },
+          { label: tt("cnbs.legal_name", "Legal Name"), value: company?.legal_name },
+          { label: tt("cnbs.base_currency", "Base Currency"), value: company?.base_currency }
         ]
       },
       {
-        title: "Owner Information",
+        title: tt("cnbs.sec_owner_info", "Owner Information"),
         items: [
-          { label: "Owner Name", value: ownerPreview?.name || ownerName },
-          { label: "Owner Code", value: ownerPreview?.code || "N/A" },
-          { label: "Owner Source", value: ownerPreview?.source || "custom" },
-          { label: "Owner Role", value: ownerPreview?.role || "Owner" }
+          { label: tt("cnbs.owner_name", "Owner Name"), value: ownerPreview?.name || ownerName },
+          { label: tt("cnbs.owner_code", "Owner Code"), value: ownerPreview?.code || "N/A" },
+          { label: tt("cnbs.owner_source", "Owner Source"), value: ownerPreview?.source || "custom" },
+          { label: tt("cnbs.owner_role", "Owner Role"), value: ownerPreview?.role || "Owner" }
         ]
       },
       {
-        title: "Contact Information",
+        title: tt("cnbs.sec_contact_info", "Contact Information"),
         items: [
-          { label: "Contacts", value: contactItems.length ? contactItems.join(", ") : "" },
-          { label: "Phone", value: contacts.find((row) => row.type.toLowerCase().includes("phone"))?.value },
-          { label: "WhatsApp", value: contacts.find((row) => row.type.toLowerCase().includes("whatsapp"))?.value },
-          { label: "Email", value: contacts.find((row) => row.type.toLowerCase().includes("email"))?.value }
+          { label: tt("cnbs.contacts", "Contacts"), value: contactItems.length ? contactItems.join(", ") : "" },
+          { label: tt("cnbs.phone", "Phone"), value: contacts.find((row) => row.type.toLowerCase().includes("phone"))?.value },
+          { label: tt("cnbs.whatsapp", "WhatsApp"), value: contacts.find((row) => row.type.toLowerCase().includes("whatsapp"))?.value },
+          { label: tt("cnbs.email", "Email"), value: contacts.find((row) => row.type.toLowerCase().includes("email"))?.value }
         ]
       },
       {
-        title: "Permissions",
+        title: tt("cnbs.permissions", "Permissions"),
         items: [
-          { label: "Template", value: permissionTemplate },
-          { label: "Granted Permissions", value: permissionGrants.length ? permissionGrants.join(", ") : "" }
+          { label: tt("cnbs.template", "Template"), value: permissionTemplate },
+          { label: tt("cnbs.granted_permissions", "Granted Permissions"), value: permissionGrants.length ? permissionGrants.join(", ") : "" }
         ]
       }
     ],
     [
+      tt,
       branchCode,
       branchType,
       company,
@@ -1234,7 +1237,7 @@ function CountryBranchSetupContent() {
                     <textarea
                       value={fullAddress}
                       onChange={(event) => setFullAddress(event.target.value)}
-                      placeholder="Area / Road, Building, Street, Landmark, etc."
+                      placeholder={tt("cnbs.address_ph", "Area / Road, Building, Street, Landmark, etc.")}
                       className="min-h-20 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     />
                   </div>
@@ -1417,17 +1420,17 @@ function CountryBranchSetupContent() {
 
       <div className="lg:col-span-5 xl:col-span-5 w-full space-y-4 lg:sticky lg:top-4">
           <BranchLiveReportPanel
-            title="Store Entry (Live Preview)"
+            title={tt("cnbs.live_preview_title", "Store Entry (Live Preview)")}
             status={hasAny ? "Draft" : "Empty"}
             branchData={liveBranchData}
             summary={[
-              { label: "Branch", value: branchType || "-" },
-              { label: "Country", value: previewCountry || "-" },
-              { label: "Currency", value: currency || "USD" }
+              { label: tt("cnbs.branch", "Branch"), value: branchType || "-" },
+              { label: tt("cnbs.country", "Country"), value: previewCountry || "-" },
+              { label: tt("cnbs.currency", "Currency"), value: currency || "USD" }
             ]}
             actions={
               <BranchReportActionsMenu
-                ariaLabel="Country branch actions"
+                ariaLabel={tt("cnbs.actions_aria", "Country branch actions")}
                 disabled={!hasAny}
                 onView={viewReport}
                 onEdit={editReport}
@@ -1439,47 +1442,47 @@ function CountryBranchSetupContent() {
             }
             steps={[
               {
-                title: "Step 1 - Company & Owner",
+                title: tt("cnbs.step1_company_owner", "Step 1 - Company & Owner"),
                 rows: [
-                  { label: "Company Name", value: company?.name || "-" },
-                  { label: "Company Code", value: company?.id ? compactCode(company.id, "CMP") : "-" },
-                  { label: "Legal Name", value: company?.legal_name || "-" },
-                  { label: "Base Currency", value: company?.base_currency || currency || "USD" },
-                  { label: "Owner", value: ownerPreview?.name || ownerName || "-" },
-                  { label: "Owner Code", value: ownerPreview?.code || "-" },
-                  { label: "Source", value: ownerPreview ? ownerPreview.source : "-" },
-                  { label: "Role / Branch", value: ownerPreview ? [ownerPreview.role, ownerPreview.branch].filter(Boolean).join(" · ") : "-" }
+                  { label: tt("cnbs.company_name", "Company Name"), value: company?.name || "-" },
+                  { label: tt("cnbs.company_code", "Company Code"), value: company?.id ? compactCode(company.id, "CMP") : "-" },
+                  { label: tt("cnbs.legal_name", "Legal Name"), value: company?.legal_name || "-" },
+                  { label: tt("cnbs.base_currency", "Base Currency"), value: company?.base_currency || currency || "USD" },
+                  { label: tt("cnbs.owner", "Owner"), value: ownerPreview?.name || ownerName || "-" },
+                  { label: tt("cnbs.owner_code", "Owner Code"), value: ownerPreview?.code || "-" },
+                  { label: tt("cnbs.source", "Source"), value: ownerPreview ? ownerPreview.source : "-" },
+                  { label: tt("cnbs.role_branch", "Role / Branch"), value: ownerPreview ? [ownerPreview.role, ownerPreview.branch].filter(Boolean).join(" · ") : "-" }
                 ]
               },
               {
-                title: "Step 2 - Location",
+                title: tt("cnbs.step2_location", "Step 2 - Location"),
                 rows: [
-                  { label: "Country", value: previewCountry || "-" },
-                  { label: "Country Code", value: locationMeta.country?.iso2 || locationMeta.country?.iso3 || "-" },
-                  { label: "State", value: locationMeta.state?.name || "-" },
-                  { label: "State Code", value: locationMeta.state?.code || "-" },
-                  { label: "District", value: locationMeta.district?.name || "-" },
-                  { label: "City", value: locationMeta.city?.name || "-" },
-                  { label: "City Code", value: locationMeta.city?.code || "-" },
-                  { label: "Branch Name", value: locationMeta.country?.name ? `${locationMeta.country.name} Main Branch` : "-" },
-                  { label: "Branch Code", value: branchCode || "-" },
-                  { label: "Zip / Postal Code", value: zip || "-" }
+                  { label: tt("cnbs.country", "Country"), value: previewCountry || "-" },
+                  { label: tt("cnbs.country_code", "Country Code"), value: locationMeta.country?.iso2 || locationMeta.country?.iso3 || "-" },
+                  { label: tt("cnbs.state", "State"), value: locationMeta.state?.name || "-" },
+                  { label: tt("cnbs.state_code", "State Code"), value: locationMeta.state?.code || "-" },
+                  { label: tt("cnbs.district", "District"), value: locationMeta.district?.name || "-" },
+                  { label: tt("cnbs.city", "City"), value: locationMeta.city?.name || "-" },
+                  { label: tt("cnbs.city_code", "City Code"), value: locationMeta.city?.code || "-" },
+                  { label: tt("cnbs.branch_name", "Branch Name"), value: locationMeta.country?.name ? `${locationMeta.country.name} Main Branch` : "-" },
+                  { label: tt("cnbs.branch_code", "Branch Code"), value: branchCode || "-" },
+                  { label: tt("cnbs.zip_postal", "Zip / Postal Code"), value: zip || "-" }
                 ]
               },
               {
-                title: "Step 3 - Contact & Address",
+                title: tt("cnbs.step3_contact_address", "Step 3 - Contact & Address"),
                 rows: [
-                  { label: "Currency", value: currency || "USD" },
-                  { label: "Address", value: fullAddress || "-" },
-                  { label: "Contacts", value: contactItems.length ? contactItems.join(", ") : "-" }
+                  { label: tt("cnbs.currency", "Currency"), value: currency || "USD" },
+                  { label: tt("cnbs.address", "Address"), value: fullAddress || "-" },
+                  { label: tt("cnbs.contacts", "Contacts"), value: contactItems.length ? contactItems.join(", ") : "-" }
                 ]
               },
               {
-                title: "Step 4 - Roles & Permissions",
+                title: tt("cnbs.step4_roles_perms", "Step 4 - Roles & Permissions"),
                 rows: [
-                  { label: "Role Template", value: permissionTemplate || "-" },
-                  { label: "Permission Count", value: String(permissionGrants.length) },
-                  { label: "Permissions", value: permissionGrants.length ? permissionGrants.join(", ") : "-" }
+                  { label: tt("cnbs.role_template", "Role Template"), value: permissionTemplate || "-" },
+                  { label: tt("cnbs.permission_count", "Permission Count"), value: String(permissionGrants.length) },
+                  { label: tt("cnbs.permissions", "Permissions"), value: permissionGrants.length ? permissionGrants.join(", ") : "-" }
                 ]
               }
             ]}
@@ -1487,8 +1490,8 @@ function CountryBranchSetupContent() {
               <div className="space-y-3">
                 {editingCountryBranchId ? (
                   <BranchRecordProfile
-                    title="Editing Existing Branch"
-                    subtitle="Saved data, completed fields, and missing information."
+                    title={tt("cnbs.editing_title", "Editing Existing Branch")}
+                    subtitle={tt("cnbs.editing_subtitle", "Saved data, completed fields, and missing information.")}
                     identity={editIdentityRows}
                     sections={editProfileSections}
                   />
@@ -1562,12 +1565,12 @@ function CountryBranchSetupContent() {
       <DetailDrawer
         isOpen={drawerBranchData !== null}
         onClose={() => setDrawerBranchData(null)}
-        title="Country Branch Details"
-        subtitle="Verification certificate and branch permissions"
+        title={tt("cnbs.details_title", "Country Branch Details")}
+        subtitle={tt("cnbs.details_subtitle", "Verification certificate and branch permissions")}
       >
         {drawerBranchData && (
           <BranchLiveReportPanel
-            title="Saved Country Branch"
+            title={tt("cnbs.saved_branch_title", "Saved Country Branch")}
             status={drawerBranchData.branchStatus}
             branchData={drawerBranchData}
           />
