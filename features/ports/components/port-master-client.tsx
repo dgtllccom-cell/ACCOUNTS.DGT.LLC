@@ -25,6 +25,8 @@ import { SearchSelect } from "@/components/ui/search-select";
 import { LocationQuickCreateModal } from "@/features/master-forms";
 import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api/client";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 export type PortRecord = {
   id: string;
@@ -57,6 +59,10 @@ export function PortMasterClient({
   description,
   apiEndpoint
 }: PortMasterClientProps) {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+
   // Data States
   const [ports, setPorts] = useState<PortRecord[]>([]);
   const [countries, setCountries] = useState<CountryRecord[]>([]);
@@ -236,16 +242,16 @@ export function PortMasterClient({
   function getTransportLabel(mode: "sea" | "road" | "air") {
     switch (mode) {
       case "sea":
-        return "Sea Port";
+        return tt("port.sea_port", "Sea Port");
       case "road":
-        return "Road Border";
+        return tt("pmc.road_border", "Road Border");
       case "air":
-        return "Airport";
+        return tt("port.airport", "Airport");
     }
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={isRtl ? "rtl" : "ltr"}>
       {/* Header section */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -257,7 +263,7 @@ export function PortMasterClient({
         </div>
         <Button onClick={handleOpenCreate} className="gap-2">
           <Plus className="h-4 w-4" />
-          Add Port / Boundary
+          {tt("pmc.add_port", "Add Port / Boundary")}
         </Button>
       </div>
 
@@ -278,7 +284,7 @@ export function PortMasterClient({
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name, code, country..."
+              placeholder={tt("pmc.search_ph", "Search by name, code, country...")}
               className="pl-9"
             />
           </div>
@@ -290,7 +296,7 @@ export function PortMasterClient({
                 filterType === "all" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              All Modes
+              {tt("pmc.all_modes", "All Modes")}
             </button>
             <button
               onClick={() => setFilterType("sea")}
@@ -299,7 +305,7 @@ export function PortMasterClient({
               }`}
             >
               <Anchor className="h-3.5 w-3.5" />
-              Sea Port
+              {tt("port.sea_port", "Sea Port")}
             </button>
             <button
               onClick={() => setFilterType("road")}
@@ -308,7 +314,7 @@ export function PortMasterClient({
               }`}
             >
               <Truck className="h-3.5 w-3.5" />
-              Road Border
+              {tt("pmc.road_border", "Road Border")}
             </button>
             <button
               onClick={() => setFilterType("air")}
@@ -317,7 +323,7 @@ export function PortMasterClient({
               }`}
             >
               <Plane className="h-3.5 w-3.5" />
-              Airport
+              {tt("port.airport", "Airport")}
             </button>
           </div>
         </div>
@@ -326,15 +332,15 @@ export function PortMasterClient({
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 text-center text-muted-foreground">
             <Loader2 className="h-8 w-8 animate-spin text-primary/70 mb-3" />
-            <p className="text-sm font-semibold">Loading ports master records...</p>
+            <p className="text-sm font-semibold">{tt("pmc.loading", "Loading ports master records...")}</p>
           </div>
         ) : filteredPorts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
             <div className="mb-3 rounded-lg border-2 border-dashed p-6">
               <Anchor className="h-8 w-8 mx-auto text-muted-foreground/30" />
             </div>
-            <p className="text-sm font-semibold">No records found</p>
-            <p className="text-xs mt-1">Try resetting filters or add a new record to get started.</p>
+            <p className="text-sm font-semibold">{tt("pmc.no_records", "No records found")}</p>
+            <p className="text-xs mt-1">{tt("pmc.reset_hint", "Try resetting filters or add a new record to get started.")}</p>
           </div>
         ) : (
           /* Responsive Table */
@@ -383,7 +389,7 @@ export function PortMasterClient({
                             : "bg-amber-50 text-amber-700 border border-amber-200"
                         }`}
                       >
-                        {port.is_active ? "Active" : "Inactive"}
+                        {port.is_active ? tt("common.active", "Active") : tt("common.inactive", "Inactive")}
                       </span>
                     </td>
                     <td className="px-5 py-4 text-right">
@@ -419,7 +425,7 @@ export function PortMasterClient({
       {/* Create / Edit Modal */}
       {modalOpen && (
         <SimpleModal
-          title={editingPort ? `Edit ${getTransportLabel(formTransportType)}` : `Create New Port/Bound`}
+          title={editingPort ? `${tt("common.edit", "Edit")} ${getTransportLabel(formTransportType)}` : tt("pmc.create_title", "Create New Port / Boundary")}
           onClose={() => setModalOpen(false)}
         >
           <form onSubmit={handleSave} className="space-y-4">
@@ -427,7 +433,7 @@ export function PortMasterClient({
             {/* Port/Bound Name */}
             <div className="space-y-1.5">
               <Label htmlFor="portName" className="text-xs font-bold uppercase tracking-wider">
-                Name / Label *
+                {tt("pmc.name_label", "Name / Label")} *
               </Label>
               <Input
                 id="portName"
@@ -441,7 +447,7 @@ export function PortMasterClient({
             {/* Transport Mode */}
             <div className="space-y-1.5">
               <Label htmlFor="transportType" className="text-xs font-bold uppercase tracking-wider">
-                Transport Mode / Type
+                {tt("pmc.transport_mode", "Transport Mode / Type")}
               </Label>
               <select
                 id="transportType"
@@ -449,9 +455,9 @@ export function PortMasterClient({
                 onChange={(e) => setFormTransportType(e.target.value as any)}
                 className={selectClass}
               >
-                <option value="sea">Sea (Sea Port)</option>
-                <option value="road">Road (Border Crossing / Checkpoint)</option>
-                <option value="air">Air (Airport)</option>
+                <option value="sea">{tt("port.sea_port", "Sea Port")}</option>
+                <option value="road">{tt("pmc.road_border", "Road Border")}</option>
+                <option value="air">{tt("port.airport", "Airport")}</option>
               </select>
             </div>
 
@@ -473,7 +479,7 @@ export function PortMasterClient({
               {/* Port Code */}
               <div className="space-y-1.5">
                 <Label htmlFor="portCode" className="text-xs font-bold uppercase tracking-wider">
-                  Port Code / Abbreviation
+                  {tt("pmc.port_code", "Port Code / Abbreviation")}
                 </Label>
                 <Input
                   id="portCode"
@@ -494,7 +500,7 @@ export function PortMasterClient({
                 className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
               />
               <Label htmlFor="isActive" className="text-xs font-semibold select-none cursor-pointer">
-                This record is Active and available for selection
+                {tt("pmc.is_active_label", "This record is Active and available for selection")}
               </Label>
             </div>
 
@@ -513,10 +519,10 @@ export function PortMasterClient({
                 onClick={() => setModalOpen(false)}
                 disabled={saving}
               >
-                Cancel
+                {tt("pmc.cancel", "Cancel")}
               </Button>
               <Button type="submit" disabled={saving || !formName.trim()}>
-                {saving ? "Saving..." : editingPort ? "Save Changes" : "Create Record"}
+                {saving ? tt("pmc.saving", "Saving...") : editingPort ? tt("pmc.save_changes", "Save Changes") : tt("pmc.create_record", "Create Record")}
               </Button>
             </div>
           </form>

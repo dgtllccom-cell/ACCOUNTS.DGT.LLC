@@ -3801,7 +3801,7 @@ export type UiKey =
   | "pmc.add_port" | "pmc.all_modes" | "pmc.road_border"
   | "pmc.loading" | "pmc.no_records" | "pmc.reset_hint"
   | "pmc.name_label" | "pmc.transport_mode" | "pmc.port_code" | "pmc.is_active_label"
-  | "pmc.saving" | "pmc.save_changes" | "pmc.create_record" | "pmc.create_title" | "pmc.cancel"
+  | "pmc.saving" | "pmc.save_changes" | "pmc.create_record" | "pmc.create_title" | "pmc.cancel" | "pmc.search_ph"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -10378,6 +10378,7 @@ const en: Dict = {
   "pmc.create_record": "Create Record",
   "pmc.create_title": "Create New Port / Boundary",
   "pmc.cancel": "Cancel",
+  "pmc.search_ph": "Search by name, code, country...",
 
   "ta.save_first": "Save the record first to add documents & attachments.",
   "ta.documents": "Documents",
@@ -17109,6 +17110,7 @@ const ur: Dict = {
   "pmc.create_record": "ریکارڈ بنائیں",
   "pmc.create_title": "نیا پورٹ / باؤنڈری بنائیں",
   "pmc.cancel": "منسوخ کریں",
+  "pmc.search_ph": "نام، کوڈ، ملک سے تلاش کریں...",
 
   "ta.save_first": "دستاویزات شامل کرنے کے لیے پہلے ریکارڈ محفوظ کریں۔",
   "ta.documents": "دستاویزات",
@@ -23839,6 +23841,7 @@ const ar: Dict = {
   "pmc.create_record": "إنشاء سجل",
   "pmc.create_title": "إنشاء ميناء / حدود جديد",
   "pmc.cancel": "إلغاء",
+  "pmc.search_ph": "ابحث بالاسم أو الرمز أو الدولة...",
 
   "ta.save_first": "احفظ السجل أولاً لإضافة المستندات والمرفقات.",
   "ta.documents": "المستندات",
@@ -30568,6 +30571,7 @@ const fa: Dict = {
   "pmc.create_record": "ایجاد سابقه",
   "pmc.create_title": "ایجاد بندر / مرز جدید",
   "pmc.cancel": "لغو",
+  "pmc.search_ph": "جستجو بر اساس نام، کد، کشور...",
 
   "ta.save_first": "ابتدا رکورد را ذخیره کنید تا بتوانید اسناد و پیوست‌ها اضافه کنید.",
   "ta.documents": "اسناد",
@@ -37304,6 +37308,7 @@ const ps: Dict = {
   "pmc.create_record": "ریکارډ جوړ کړئ",
   "pmc.create_title": "نوی بندر / پوله جوړ کړئ",
   "pmc.cancel": "لغو کړئ",
+  "pmc.search_ph": "د نوم، کوډ، هیواد له مخې لټون کړئ...",
 
   "ta.save_first": "دستاویزات اضافه کولو لپاره لومړی ریکارډ خوندي کړئ.",
   "ta.documents": "دستاویزات",

@@ -299,24 +299,24 @@ export function CommunicationCenterDashboard({ session }: Props) {
                 <input
                   value={messageForm.to}
                   onChange={(event) => setMessageForm((prev) => ({ ...prev, to: event.target.value }))}
-                  placeholder="To / WhatsApp number"
+                  placeholder={tt("cc.ph_to", "To / WhatsApp number")}
                   className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
                 />
                 <input
                   value={messageForm.subject}
                   onChange={(event) => setMessageForm((prev) => ({ ...prev, subject: event.target.value }))}
-                  placeholder="Subject"
+                  placeholder={tt("cc.ph_subject", "Subject")}
                   className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
                 />
                 <textarea
                   value={messageForm.body}
                   onChange={(event) => setMessageForm((prev) => ({ ...prev, body: event.target.value }))}
-                  placeholder="Message body"
+                  placeholder={tt("cc.ph_body", "Message body")}
                   rows={5}
                   className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
                 />
                 <button type="button" onClick={submitMessage} className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-blue-700">
-                  Save Communication
+                  {tt("cc.save_comm", "Save Communication")}
                 </button>
               </div>
             </div>
@@ -324,16 +324,16 @@ export function CommunicationCenterDashboard({ session }: Props) {
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               <div className="mb-4 flex items-center gap-2">
                 <Users className="h-5 w-5 text-violet-600" />
-                <h2 className="text-base font-bold text-slate-950">Quick CRM Lead</h2>
+                <h2 className="text-base font-bold text-slate-950">{tt("cc.quick_crm", "Quick CRM Lead")}</h2>
               </div>
               <div className="grid gap-3">
-                <input value={leadForm.leadName} onChange={(event) => setLeadForm((prev) => ({ ...prev, leadName: event.target.value }))} placeholder="Lead name" className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-500" />
-                <input value={leadForm.companyName} onChange={(event) => setLeadForm((prev) => ({ ...prev, companyName: event.target.value }))} placeholder="Company name" className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-500" />
-                <input value={leadForm.email} onChange={(event) => setLeadForm((prev) => ({ ...prev, email: event.target.value }))} placeholder="Email" className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-500" />
-                <input value={leadForm.whatsapp} onChange={(event) => setLeadForm((prev) => ({ ...prev, whatsapp: event.target.value }))} placeholder="WhatsApp" className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-500" />
-                <textarea value={leadForm.notes} onChange={(event) => setLeadForm((prev) => ({ ...prev, notes: event.target.value }))} placeholder="Lead notes" rows={3} className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-500" />
+                <input value={leadForm.leadName} onChange={(event) => setLeadForm((prev) => ({ ...prev, leadName: event.target.value }))} placeholder={tt("cc.ph_lead_name", "Lead name")} className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-500" />
+                <input value={leadForm.companyName} onChange={(event) => setLeadForm((prev) => ({ ...prev, companyName: event.target.value }))} placeholder={tt("cc.ph_company", "Company name")} className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-500" />
+                <input value={leadForm.email} onChange={(event) => setLeadForm((prev) => ({ ...prev, email: event.target.value }))} placeholder={tt("cc.opt_email", "Email")} className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-500" />
+                <input value={leadForm.whatsapp} onChange={(event) => setLeadForm((prev) => ({ ...prev, whatsapp: event.target.value }))} placeholder={tt("cc.opt_whatsapp", "WhatsApp")} className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-500" />
+                <textarea value={leadForm.notes} onChange={(event) => setLeadForm((prev) => ({ ...prev, notes: event.target.value }))} placeholder={tt("cc.ph_lead_notes", "Lead notes")} rows={3} className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-500" />
                 <button type="button" onClick={submitLead} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-violet-700">
-                  Save Lead
+                  {tt("cc.save_lead", "Save Lead")}
                 </button>
               </div>
             </div>
@@ -341,10 +341,10 @@ export function CommunicationCenterDashboard({ session }: Props) {
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               <div className="mb-3 flex items-center gap-2">
                 <Building2 className="h-5 w-5 text-slate-600" />
-                <h2 className="text-base font-bold text-slate-950">Sender Rules</h2>
+                <h2 className="text-base font-bold text-slate-950">{tt("cc.sender_rules", "Sender Rules")}</h2>
               </div>
               <p className="text-sm leading-6 text-slate-600">
-                Future ERP documents can call the Communication Service to auto-select the official country and branch sender without duplicating logic.
+                {tt("cc.sender_rules_desc", "Future ERP documents can call the Communication Service to auto-select the official country and branch sender without duplicating logic.")}
               </p>
               <div className="mt-3 rounded-xl bg-slate-50 p-3 text-xs leading-5 text-slate-600">
                 User: <span className="font-semibold text-slate-950">{session?.fullName ?? session?.email ?? "Current user"}</span>
