@@ -19,8 +19,17 @@ const sql = postgres(dbUrl, { max: 5 });
 
 async function main() {
   try {
-    const r = await sql`SELECT * FROM enterprise_accounts WHERE code = 'UAE-DUB-AC-0003' OR code ILIKE '%0003%'`;
-    console.log("Local 0003 Account:", r);
+    const portCols = await sql`
+      SELECT column_name, data_type 
+      FROM information_schema.columns 
+      WHERE table_name = 'ports'
+    `;
+    console.log("Columns for ports table:", portCols);
+    const existingPorts = await sql`SELECT * FROM ports LIMIT 10`;
+    console.log("Sample existing ports:", existingPorts);
+
+    const countries = await sql`SELECT id, name, iso2, iso3 FROM countries ORDER BY name ASC`;
+    console.log("Countries count:", countries.length, countries.slice(0, 10));
   } catch (e) {
     console.error("Err:", e.message);
   } finally {

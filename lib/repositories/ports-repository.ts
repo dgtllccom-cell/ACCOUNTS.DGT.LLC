@@ -39,7 +39,7 @@ export class LoadingPortsRepository {
     all?: boolean;
   }) {
     const supabase = (await createApiSupabaseClient()) as any;
-    const limit = Math.min(Math.max(input.limit ?? 50, 1), 250);
+    const limit = Math.min(Math.max(input.limit ?? 50, 1), 1000);
 
     let query = supabase
       .from("ports")
@@ -168,7 +168,7 @@ export class ReceivedPortsRepository {
     all?: boolean;
   }) {
     const supabase = (await createApiSupabaseClient()) as any;
-    const limit = Math.min(Math.max(input.limit ?? 50, 1), 250);
+    const limit = Math.min(Math.max(input.limit ?? 50, 1), 1000);
 
     let query = supabase
       .from("ports")

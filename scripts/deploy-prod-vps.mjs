@@ -107,6 +107,9 @@ git reset --hard origin/${BRANCH}
 echo "[VPS 3/5] Installing dependencies..."
 npm install --include=dev
 
+echo "[VPS 3.5/5] Running Database Migration & Multilingual Ports Seeder..."
+node scripts/populate-ports-multilingual.mjs || true
+
 echo "[VPS 4/5] Building Next.js application..."
 rm -rf .next
 NODE_OPTIONS='--max-old-space-size=4096' npm run build
