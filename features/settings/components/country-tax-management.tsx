@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { t, type UiKey } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
 import { UniversalReportModal } from "@/components/ui/universal-report-modal";
@@ -53,7 +54,9 @@ type Props = {
   initialCountryId?: string;
 };
 
-export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
+export function CountryTaxManagementView({ lang: langProp, initialCountryId }: Props) {
+  const activeLang = useActiveLanguage();
+  const lang = activeLang !== "en" ? activeLang : langProp;
   const _ = (key: UiKey, fallback?: string) => t(lang, key, fallback);
   const isRTL = ["ar", "ur", "fa", "ps"].includes(lang);
 
@@ -123,10 +126,10 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
       if (json.ok && json.data) {
         setTaxes(json.data.taxes || []);
       } else {
-        setError(json.error?.message || "Failed to load tax settings");
+        setError(json.error?.message || _("ctm.err_load_failed", "Failed to load tax settings"));
       }
     } catch (err: any) {
-      setError(err.message || "Network error");
+      setError(err.message || _("ctm.err_network", "Network error"));
     } finally {
       setLoading(false);
     }
@@ -170,15 +173,15 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
   const handleSaveTax = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formCountryId) {
-      setModalError("Please select a country");
+      setModalError(_("ctm.err_select_country", "Please select a country"));
       return;
     }
     if (!formTaxName.trim()) {
-      setModalError("Tax Name is required");
+      setModalError(_("ctm.err_tax_name_req", "Tax Name is required"));
       return;
     }
     if (!formTaxCode.trim()) {
-      setModalError("Tax Code is required");
+      setModalError(_("ctm.err_tax_code_req", "Tax Code is required"));
       return;
     }
 
@@ -209,10 +212,10 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
         setIsModalOpen(false);
         fetchTaxes();
       } else {
-        setModalError(json.error?.message || "Failed to save tax setting");
+        setModalError(json.error?.message || _("ctm.err_save_failed", "Failed to save tax setting"));
       }
     } catch (err: any) {
-      setModalError(err.message || "Failed to save tax setting");
+      setModalError(err.message || _("ctm.err_save_failed", "Failed to save tax setting"));
     } finally {
       setSaving(false);
     }
@@ -220,7 +223,7 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
 
   // Delete Tax
   const handleDeleteTax = async (id: string) => {
-    if (!confirm("Are you sure you want to delete or deactivate this tax setting?")) return;
+    if (!confirm(_("ctm.confirm_delete", "Are you sure you want to delete or deactivate this tax setting?"))) return;
     try {
       const res = await fetch(`/api/erp/tax?id=${id}`, { method: "DELETE" });
       const json = await res.json();
@@ -246,8 +249,8 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
   const defaultTax = useMemo(() => taxes.find((t) => t.isDefault && t.isActive) || taxes[0], [taxes]);
   const activeCount = useMemo(() => taxes.filter((t) => t.isActive).length, [taxes]);
   const currentCountryName = useMemo(() => {
-    if (selectedCountryId === "all") return "All Countries";
-    return countries.find((c) => c.id === selectedCountryId)?.name || "Country";
+    if (selectedCountryId === "all") return _("common.all_countries", "All Countries");
+    return countries.find((c) => c.id === selectedCountryId)?.name || _("common.country", "Country");
   }, [countries, selectedCountryId]);
 
   return (
@@ -284,19 +287,19 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
         {/* Active Tax Rates */}
         <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:bg-slate-900 dark:border-slate-800 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase text-slate-500">Configured Rates</span>
+            <span className="text-xs font-bold uppercase text-slate-500">{_("ctm.configured_rates", "Configured Rates")}</span>
             <div className="rounded-xl bg-emerald-50 p-2 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
               <Tag className="h-4 w-4" />
             </div>
           </div>
           <p className="text-2xl font-black text-slate-900 dark:text-white mt-2">{activeCount}</p>
-          <p className="text-[10px] text-slate-400 mt-0.5">Active tax configurations</p>
+          <p className="text-[10px] text-slate-400 mt-0.5">{_("ctm.active_configs", "Active tax configurations")}</p>
         </div>
 
         {/* Default Country Tax Rate */}
         <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:bg-slate-900 dark:border-slate-800 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase text-slate-500">Default Rate</span>
+            <span className="text-xs font-bold uppercase text-slate-500">{_("ctm.default_rate", "Default Rate")}</span>
             <div className="rounded-xl bg-blue-50 p-2 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
               <Percent className="h-4 w-4" />
             </div>
@@ -304,36 +307,36 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
           <p className="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-2">
             {defaultTax ? `${defaultTax.taxRate}%` : "0%"}
           </p>
-          <p className="text-[10px] text-slate-400 mt-0.5">{defaultTax ? defaultTax.taxName : "None set"}</p>
+          <p className="text-[10px] text-slate-400 mt-0.5">{defaultTax ? defaultTax.taxName : _("ctm.none_set", "None set")}</p>
         </div>
 
         {/* Primary TRN Number */}
         <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:bg-slate-900 dark:border-slate-800 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase text-slate-500">TRN / Tax Reg #</span>
+            <span className="text-xs font-bold uppercase text-slate-500">{_("ctm.trn_reg_label", "TRN / Tax Reg #")}</span>
             <div className="rounded-xl bg-violet-50 p-2 text-violet-600 dark:bg-violet-950/40 dark:text-violet-400">
               <Receipt className="h-4 w-4" />
             </div>
           </div>
           <p className="text-sm font-black text-slate-800 dark:text-slate-200 mt-2 truncate">
-            {defaultTax?.trnNumber || "Not Registered"}
+            {defaultTax?.trnNumber || _("ctm.not_registered", "Not Registered")}
           </p>
-          <p className="text-[10px] text-slate-400 mt-0.5">VAT / GST Registration No</p>
+          <p className="text-[10px] text-slate-400 mt-0.5">{_("ctm.vat_gst_reg", "VAT / GST Registration No")}</p>
         </div>
 
         {/* Country Status */}
         <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:bg-slate-900 dark:border-slate-800 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase text-slate-500">Status</span>
+            <span className="text-xs font-bold uppercase text-slate-500">{_("common.status", "Status")}</span>
             <div className="rounded-xl bg-teal-50 p-2 text-teal-600 dark:bg-teal-950/40 dark:text-teal-400">
               <ShieldCheck className="h-4 w-4" />
             </div>
           </div>
           <div className="flex items-center gap-1.5 mt-2">
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-            <span className="text-sm font-black text-emerald-700 dark:text-emerald-400">Active</span>
+            <span className="text-sm font-black text-emerald-700 dark:text-emerald-400">{_("common.active", "Active")}</span>
           </div>
-          <p className="text-[10px] text-slate-400 mt-0.5">Multi-country Tax Engine Ready</p>
+          <p className="text-[10px] text-slate-400 mt-0.5">{_("ctm.engine_ready", "Multi-country Tax Engine Ready")}</p>
         </div>
       </div>
 
@@ -351,9 +354,9 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
               <SearchSelect
                 label=""
                 value={selectedCountryId}
-                placeholder="Select Country..."
+                placeholder={_("ctm.select_country_ph", "Select Country...")}
                 options={[
-                  { value: "all", label: "All Countries" },
+                  { value: "all", label: _("common.all_countries", "All Countries") },
                   ...countries.map((c) => ({
                     value: c.id,
                     label: `${c.name} ${c.currency_code ? `(${c.currency_code})` : ""}`
@@ -364,7 +367,7 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
             </div>
           ) : (
             <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-1.5 text-xs font-bold text-emerald-700 dark:bg-emerald-950/40 dark:border-emerald-900 dark:text-emerald-400">
-              {currentCountryName} (Locked)
+              {currentCountryName} ({_("ctm.locked", "Locked")})
             </div>
           )}
         </div>
@@ -375,7 +378,7 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
             <input
               type="text"
-              placeholder="Search tax name, code..."
+              placeholder={_("ctm.search_ph", "Search tax name, code...")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 outline-none dark:bg-slate-950 dark:border-slate-800 focus:ring-2 focus:ring-emerald-500 font-medium"
@@ -385,7 +388,7 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
           <button
             onClick={fetchTaxes}
             className="rounded-xl border border-slate-200 bg-slate-50 p-2 text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
-            title="Reload"
+            title={_("common.refresh", "Reload")}
           >
             <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
           </button>
@@ -395,7 +398,7 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
             className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white hover:bg-emerald-700 shadow-sm transition-all whitespace-nowrap"
           >
             <Plus className="h-4 w-4" />
-            {_("tax.add_new_tax", "Add Tax Rate")}
+            {_("tax.add_new_tax", "Add New Tax Rate")}
           </button>
         </div>
       </div>
@@ -405,7 +408,7 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
         {loading ? (
           <div className="py-20 text-center">
             <Loader2 className="h-8 w-8 animate-spin text-emerald-500 mx-auto mb-2" />
-            <p className="text-xs text-slate-400">Loading tax configurations...</p>
+            <p className="text-xs text-slate-400">{_("ctm.loading_configs", "Loading tax configurations...")}</p>
           </div>
         ) : error ? (
           <div className="p-8 text-center bg-rose-50 dark:bg-rose-950/20 text-rose-600">
@@ -422,22 +425,22 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
               onClick={handleOpenNew}
               className="mt-3 text-xs font-bold text-emerald-600 hover:underline"
             >
-              + Add first tax rate
+              {_("ctm.add_first_rate", "+ Add first tax rate")}
             </button>
           </div>
         ) : (
           <table className="w-full text-xs border-collapse">
             <thead>
               <tr className="bg-slate-900 text-slate-100 dark:bg-slate-950">
-                <Th className="px-4 py-3 text-left font-black uppercase tracking-wider">Country</Th>
-                <Th className="px-4 py-3 text-left font-black uppercase tracking-wider">{_("tax.tax_name")}</Th>
-                <Th className="px-4 py-3 text-center font-black uppercase tracking-wider">{_("tax.tax_code")}</Th>
-                <Th className="px-4 py-3 text-right font-black uppercase tracking-wider">{_("tax.tax_rate")}</Th>
-                <Th className="px-4 py-3 text-left font-black uppercase tracking-wider">{_("tax.trn_number")}</Th>
-                <Th className="px-4 py-3 text-center font-black uppercase tracking-wider">{_("tax.applies_to")}</Th>
-                <Th className="px-4 py-3 text-center font-black uppercase tracking-wider">Default</Th>
-                <Th className="px-4 py-3 text-center font-black uppercase tracking-wider">Status</Th>
-                <Th className="px-4 py-3 text-right font-black uppercase tracking-wider">{_("tax.actions")}</Th>
+                <Th className="px-4 py-3 text-left font-black uppercase tracking-wider">{_("common.country", "Country")}</Th>
+                <Th className="px-4 py-3 text-left font-black uppercase tracking-wider">{_("tax.tax_name", "Tax Name")}</Th>
+                <Th className="px-4 py-3 text-center font-black uppercase tracking-wider">{_("tax.tax_code", "Tax Code")}</Th>
+                <Th className="px-4 py-3 text-right font-black uppercase tracking-wider">{_("tax.tax_rate", "Tax Rate (%)")}</Th>
+                <Th className="px-4 py-3 text-left font-black uppercase tracking-wider">{_("tax.trn_number", "TRN / Tax Reg Number")}</Th>
+                <Th className="px-4 py-3 text-center font-black uppercase tracking-wider">{_("tax.applies_to", "Applies To")}</Th>
+                <Th className="px-4 py-3 text-center font-black uppercase tracking-wider">{_("ctm.default_col", "Default")}</Th>
+                <Th className="px-4 py-3 text-center font-black uppercase tracking-wider">{_("common.status", "Status")}</Th>
+                <Th className="px-4 py-3 text-right font-black uppercase tracking-wider">{_("tax.actions", "Actions")}</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -462,13 +465,13 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
                   </td>
                   <td className="px-4 py-3 text-center">
                     <span className="text-[10px] font-bold uppercase rounded-full px-2 py-0.5 bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400">
-                      {tax.appliesTo}
+                      {tax.appliesTo === "both" ? _("tax.both", "Both") : tax.appliesTo === "purchase" ? _("tax.purchase", "Purchase") : tax.appliesTo === "sales" ? _("tax.sales", "Sales") : _("tax.expense", "Expense")}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-center">
                     {tax.isDefault ? (
                       <span className="text-[10px] font-black rounded-full px-2 py-0.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
-                        DEFAULT
+                        {_("ctm.default_col", "Default")}
                       </span>
                     ) : (
                       <span className="text-slate-300">—</span>
@@ -483,7 +486,7 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
                           : "bg-slate-100 text-slate-500 dark:bg-slate-800"
                       )}
                     >
-                      {tax.isActive ? "Active" : "Inactive"}
+                      {tax.isActive ? _("common.active", "Active") : _("common.inactive", "Inactive")}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">
@@ -491,14 +494,14 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
                       <button
                         onClick={() => handleOpenEdit(tax)}
                         className="rounded-lg p-1 text-slate-500 hover:bg-slate-100 hover:text-blue-600 dark:hover:bg-slate-800"
-                        title="Edit"
+                        title={_("common.edit", "Edit")}
                       >
                         <Edit2 className="h-3.5 w-3.5" />
                       </button>
                       <button
                         onClick={() => handleDeleteTax(tax.id)}
                         className="rounded-lg p-1 text-slate-500 hover:bg-slate-100 hover:text-rose-600 dark:hover:bg-slate-800"
-                        title="Delete"
+                        title={_("common.delete", "Delete")}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -546,12 +549,12 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
               {/* Country Selection */}
               <div className="space-y-1">
                 <label className="font-bold text-slate-600 dark:text-slate-400">
-                  Country <span className="text-rose-500">*</span>
+                  {_("common.country", "Country")} <span className="text-rose-500">*</span>
                 </label>
                 <SearchSelect
                   label=""
                   value={formCountryId}
-                  placeholder="Select Country..."
+                  placeholder={_("ctm.select_country_ph", "Select Country...")}
                   options={countries.map((c) => ({
                     value: c.id,
                     label: `${c.name} ${c.currency_code ? `(${c.currency_code})` : ""}`
@@ -565,11 +568,11 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="font-bold text-slate-600 dark:text-slate-400">
-                    Tax Name <span className="text-rose-500">*</span>
+                    {_("tax.tax_name", "Tax Name")} <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Value Added Tax (VAT)"
+                    placeholder={_("ctm.tax_name_ph", "e.g. Value Added Tax (VAT)")}
                     value={formTaxName}
                     onChange={(e) => setFormTaxName(e.target.value)}
                     className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 outline-none dark:bg-slate-950 dark:border-slate-800 focus:ring-2 focus:ring-emerald-500 font-bold text-slate-900 dark:text-white"
@@ -577,11 +580,11 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
                 </div>
                 <div className="space-y-1">
                   <label className="font-bold text-slate-600 dark:text-slate-400">
-                    Tax Code <span className="text-rose-500">*</span>
+                    {_("tax.tax_code", "Tax Code")} <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. VAT5 or GST18"
+                    placeholder={_("ctm.tax_code_ph", "e.g. VAT5 or GST18")}
                     value={formTaxCode}
                     onChange={(e) => setFormTaxCode(e.target.value.toUpperCase())}
                     className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 outline-none dark:bg-slate-950 dark:border-slate-800 focus:ring-2 focus:ring-emerald-500 font-mono font-black uppercase text-slate-900 dark:text-white"
@@ -593,7 +596,7 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="font-bold text-slate-600 dark:text-slate-400">
-                    Tax Rate (%) <span className="text-rose-500">*</span>
+                    {_("tax.tax_rate", "Tax Rate (%)")} <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -608,11 +611,11 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
                 </div>
                 <div className="space-y-1">
                   <label className="font-bold text-slate-600 dark:text-slate-400">
-                    TRN / Registration No
+                    {_("ctm.trn_reg_no", "TRN / Registration No")}
                   </label>
                   <input
                     type="text"
-                    placeholder="TRN 100293848"
+                    placeholder={_("ctm.trn_ph", "TRN 100293848")}
                     value={formTrnNumber}
                     onChange={(e) => setFormTrnNumber(e.target.value)}
                     className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 outline-none dark:bg-slate-950 dark:border-slate-800 focus:ring-2 focus:ring-emerald-500 font-mono font-bold"
@@ -623,17 +626,17 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
               {/* Applies To */}
               <div className="space-y-1">
                 <label className="font-bold text-slate-600 dark:text-slate-400">
-                  Applies To
+                  {_("tax.applies_to", "Applies To")}
                 </label>
                 <SearchSelect
                   label=""
                   value={formAppliesTo}
-                  placeholder="Select applicability..."
+                  placeholder={_("ctm.select_applicability", "Select applicability...")}
                   options={[
-                    { value: "both", label: "Both Purchase & Sales" },
-                    { value: "purchase", label: "Purchase Orders Only" },
-                    { value: "sales", label: "Sales Orders Only" },
-                    { value: "expense", label: "Expenses / Roznamcha Only" }
+                    { value: "both", label: _("ctm.both_purchase_sales", "Both Purchase & Sales") },
+                    { value: "purchase", label: _("ctm.purchase_only", "Purchase Orders Only") },
+                    { value: "sales", label: _("ctm.sales_only", "Sales Orders Only") },
+                    { value: "expense", label: _("ctm.expense_only", "Expenses / Roznamcha Only") }
                   ]}
                   onValueChange={(val) => setFormAppliesTo(val as any)}
                 />
@@ -648,7 +651,7 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
                     onChange={(e) => setFormIsDefault(e.target.checked)}
                     className="h-4 w-4 rounded text-emerald-600 focus:ring-emerald-500"
                   />
-                  <span className="font-bold text-slate-700 dark:text-slate-300">Set as Country Default</span>
+                  <span className="font-bold text-slate-700 dark:text-slate-300">{_("ctm.set_as_default", "Set as Country Default")}</span>
                 </label>
 
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -658,7 +661,7 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
                     onChange={(e) => setFormIsActive(e.target.checked)}
                     className="h-4 w-4 rounded text-emerald-600 focus:ring-emerald-500"
                   />
-                  <span className="font-bold text-slate-700 dark:text-slate-300">Active</span>
+                  <span className="font-bold text-slate-700 dark:text-slate-300">{_("common.active", "Active")}</span>
                 </label>
               </div>
 
@@ -669,7 +672,7 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
                   onClick={() => setIsModalOpen(false)}
                   className="rounded-xl border border-slate-200 px-4 py-2 font-bold text-slate-600 hover:bg-slate-100 dark:border-slate-800 dark:text-slate-400"
                 >
-                  Cancel
+                  {_("common.cancel", "Cancel")}
                 </button>
                 <button
                   type="submit"
@@ -677,7 +680,7 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
                   className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-5 py-2 font-black text-white hover:bg-emerald-700 shadow-sm disabled:opacity-50"
                 >
                   <Save className="h-4 w-4" />
-                  {saving ? "Saving..." : "Save Tax Setting"}
+                  {saving ? _("common.saving", "Saving...") : _("ctm.save_tax_setting", "Save Tax Setting")}
                 </button>
               </div>
             </form>
@@ -688,22 +691,22 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
       <UniversalReportModal
         isOpen={showReport}
         onClose={() => setShowReport(false)}
-        title="Tax Code / VAT Registry Report"
-        subtitle="Country-Specific Tax Rates, TRN Numbers, and Application Scope"
+        title={_("ctm.report_title", "Tax Code / VAT Registry Report")}
+        subtitle={_("ctm.report_subtitle", "Country-Specific Tax Rates, TRN Numbers, and Application Scope")}
         exportFileName="tax_codes_report"
         filters={[
-          { label: "Country", value: selectedCountryId ? countries.find(c => c.id === selectedCountryId)?.name || selectedCountryId : "All" },
-          { label: "Search", value: search || "All" }
+          { label: _("common.country", "Country"), value: selectedCountryId ? countries.find(c => c.id === selectedCountryId)?.name || selectedCountryId : _("common.all", "All") },
+          { label: _("common.search", "Search"), value: search || _("common.all", "All") }
         ]}
         columns={[
-          { key: "tax_code", label: "Tax Code" },
-          { key: "tax_name", label: "Tax Name" },
-          { key: "rate", label: "Rate %", align: "right", isNumeric: true },
-          { key: "trn_number", label: "TRN Number" },
-          { key: "country_name", label: "Country" },
-          { key: "applies_to", label: "Applies To" },
-          { key: "is_default", label: "Default", align: "center" },
-          { key: "status", label: "Status", align: "center" }
+          { key: "tax_code", label: _("tax.tax_code", "Tax Code") },
+          { key: "tax_name", label: _("tax.tax_name", "Tax Name") },
+          { key: "rate", label: _("ctm.rate_pct_col", "Rate %"), align: "right", isNumeric: true },
+          { key: "trn_number", label: _("ctm.trn_number_col", "TRN Number") },
+          { key: "country_name", label: _("common.country", "Country") },
+          { key: "applies_to", label: _("tax.applies_to", "Applies To") },
+          { key: "is_default", label: _("ctm.default_col", "Default"), align: "center" },
+          { key: "status", label: _("common.status", "Status"), align: "center" }
         ]}
         data={filteredTaxes.map(tx => ({
           tax_code: tx.taxCode || "-",
@@ -712,8 +715,8 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
           trn_number: tx.trnNumber || "-",
           country_name: tx.countryName || "-",
           applies_to: tx.appliesTo || "-",
-          is_default: tx.isDefault ? "Yes" : "No",
-          status: tx.isActive ? "Active" : "Inactive"
+          is_default: tx.isDefault ? _("common.yes", "Yes") : _("common.no", "No"),
+          status: tx.isActive ? _("common.active", "Active") : _("common.inactive", "Inactive")
         }))}
       />
     </div>

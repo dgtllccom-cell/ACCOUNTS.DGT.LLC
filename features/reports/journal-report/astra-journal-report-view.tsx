@@ -30,6 +30,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
 import { openJournalReportWindow } from "@/lib/reports/open-journal-report-window";
 import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Th } from "@/components/ui/translated-th";
 
@@ -177,8 +178,7 @@ function csvEscape(value: string) {
   return /[",\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
 }
 
-function exportCsv(rows: JournalRow[], scope: JournalScope) {
-  const headers = ["Serial No", "Account Number", "Account Name", "Branch Name", "Start Date", "Last Entry Date", "Entries Today", "Total Debit", "Total Credit", "Balance"];
+function exportCsv(rows: JournalRow[], scope: JournalScope, headers: string[]) {
   const body = rows.map((row, index) =>
     [
       index + 1,
@@ -244,10 +244,11 @@ function mapApiRows(rows: ApiRow[], scope: JournalScope): JournalRow[] {
   });
 }
 
-function titleFor(scope: JournalScope) {
-  if (scope === "country") return "Country Admin Report";
-  if (scope === "city") return "City Journal Report";
-  return "Construction Journal Report";
+function titleFor(scope: JournalScope, tt?: (key: string, fallback: string) => string) {
+  const tr = tt ?? ((_k: string, f: string) => f);
+  if (scope === "country") return tr("ajr.country_admin_report", "Country Admin Report");
+  if (scope === "city") return tr("ajr.city_journal_report", "City Journal Report");
+  return tr("ajr.construction_journal_report", "Construction Journal Report");
 }
 
 function paymentConfigFor(scope: JournalScope): { postingType: RoznamchaType; scopeMode: "super_admin" | "country" | "branch" } {
@@ -256,7 +257,11 @@ function paymentConfigFor(scope: JournalScope): { postingType: RoznamchaType; sc
   return { postingType: "super_admin", scopeMode: "super_admin" };
 }
 
-function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguage; scope: JournalScope }) {
+function AstraJournalReportViewContent({ lang: langProp, scope }: { lang: SupportedLanguage; scope: JournalScope }) {
+  const activeLang = useActiveLanguage();
+  const lang = activeLang !== "en" ? activeLang : langProp;
+  const _ = (key: string, fallback: string) => t(lang as never, key as never, fallback);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlCountry = searchParams?.get("country") || "";
@@ -421,14 +426,14 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
   }
 
   function openPrint(autoPrint: boolean) {
-    const tt = (key: string, fallback: string) => t(lang as never, key as never, fallback);
+    const tt = _;
     openJournalReportWindow({
       lang,
       autoPrint,
-      title: titleFor(scope),
+      title: titleFor(scope, _),
       subtitle: tt("jrn.roznamcha_journal", "Journal Report"),
       overviewLabel: tt("jrn.overview", "Journal Overview"),
-      scopeName: titleFor(scope),
+      scopeName: titleFor(scope, _),
       reportIdPrefix: "JRN",
       reportIdValue: String(scope),
       chips: [
@@ -468,8 +473,8 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
   }
 
   return (
-    <div className="w-full space-y-3 font-sans text-foreground animate-in fade-in duration-200">
-      
+    <div className="w-full space-y-3 font-sans text-foreground animate-in fade-in duration-200" dir={isRtl ? "rtl" : "ltr"}>
+
       {/* Top Standard ERP Report Toolbar Strip */}
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200/80 bg-white/95 px-3 py-1.5 shadow-xs transition-all dark:border-slate-800 dark:bg-slate-900/90">
         <div className="flex flex-wrap items-center gap-2">
@@ -482,7 +487,7 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
             className="h-7 gap-1 rounded-lg border-slate-200 bg-slate-50 px-2.5 text-[10px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
           >
             <ChevronLeft className="h-3 w-3" />
-            Back
+            {_("common.back", "Back")}
           </Button>
 
           {/* Filter Drawer Toggle */}
@@ -494,7 +499,7 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
             onClick={() => setFiltersOpen((v) => !v)}
           >
             <SlidersHorizontal className="h-3 w-3" aria-hidden />
-            {filtersOpen ? "Hide Filters" : "Search / Filters"}
+            {filtersOpen ? _("ajr.hide_filters", "Hide Filters") : _("ajr.show_filters", "Search / Filters")}
           </Button>
 
           {/* Live Search Input */}
@@ -507,7 +512,7 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              placeholder="Filter report..."
+              placeholder={_("ajr.filter_ph", "Filter report...")}
               className="h-7 pl-7 pr-2 text-[11px] rounded-lg"
             />
             {search && (
@@ -532,10 +537,10 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
             className="h-7 gap-1 rounded-lg px-2 text-[10px] font-bold"
             onClick={() => void loadReport(fromDate, toDate, search)}
             disabled={loading}
-            title="Reload data"
+            title={_("ajr.reload_data", "Reload data")}
           >
             <RefreshCw className={cn("h-3 w-3", loading && "animate-spin")} />
-            <span className="hidden md:inline">Reload</span>
+            <span className="hidden md:inline">{_("common.refresh", "Reload")}</span>
           </Button>
         </div>
 
@@ -550,7 +555,7 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
               onClick={() => setActionsMenuOpen((v) => !v)}
             >
               <MoreVertical className="h-3 w-3" />
-              Actions
+              {_("ajr.actions", "Actions")}
             </Button>
             {actionsMenuOpen ? (
               <div
@@ -566,7 +571,7 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
                   }}
                 >
                   <RefreshCw className="h-3.5 w-3.5 text-blue-600" />
-                  Reload Report
+                  {_("ajr.reload_report", "Reload Report")}
                 </button>
                 <button
                   type="button"
@@ -577,18 +582,29 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
                   }}
                 >
                   <Printer className="h-3.5 w-3.5 text-blue-600" />
-                  Print / PDF
+                  {_("ajr.print_pdf", "Print / PDF")}
                 </button>
                 <button
                   type="button"
                   className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-left"
                   onClick={() => {
                     setActionsMenuOpen(false);
-                    exportCsv(filtered, scope);
+                    exportCsv(filtered, scope, [
+                      _("ajr.sr_no", "Serial No"),
+                      _("ajr.account_number_col", "Account Number"),
+                      _("ajr.account_name_col", "Account Name"),
+                      _("ajr.branch_name", "Branch Name"),
+                      _("ajr.start_date", "Start Date"),
+                      _("ajr.last_entry_date", "Last Entry Date"),
+                      _("ajr.entries_today", "Entries Today"),
+                      _("ajr.total_debit", "Total Debit"),
+                      _("ajr.total_credit", "Total Credit"),
+                      _("ajr.balance_col", "Balance"),
+                    ]);
                   }}
                 >
                   <DownloadActionIcon className="h-3.5 w-3.5 text-teal-600" />
-                  Excel / CSV Export
+                  {_("ajr.csv_export", "Excel / CSV Export")}
                 </button>
               </div>
             ) : null}
@@ -612,19 +628,19 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
 
         <div className="flex-1 text-center">
           <h1 className="text-lg font-black tracking-tight text-[#0f2942] dark:text-slate-100 uppercase sm:text-xl">
-            {scope === "country" ? "COUNTRY ADMIN REPORT" : "General Ledger Report"}
+            {scope === "country" ? _("ajr.country_admin_report", "Country Admin Report") : _("ajr.general_ledger_report", "General Ledger Report")}
           </h1>
           <div className="flex items-center justify-center gap-2 mt-0.5">
             <div className="h-px w-10 bg-slate-300 dark:bg-slate-700"></div>
             <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-              {scope === "country" ? "Complete Financial Summary by Branches" : "Country & City Branch Consolidated"}
+              {scope === "country" ? _("ajr.country_summary_sub", "Complete Financial Summary by Branches") : _("ajr.city_summary_sub", "Country & City Branch Consolidated")}
             </p>
             <div className="h-px w-10 bg-slate-300 dark:bg-slate-700"></div>
           </div>
         </div>
 
         <div className="text-right">
-          <p className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Report Date & Time</p>
+          <p className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">{_("ajr.report_date_time", "Report Date & Time")}</p>
           <p className="text-[11px] font-black text-slate-800 dark:text-slate-200 uppercase">
             {generatedAt ? new Date(generatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
           </p>
@@ -634,88 +650,88 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
       {/* Filter Drawer */}
       {filtersOpen ? (
         <div className="grid gap-2.5 rounded-xl border border-border bg-white dark:bg-slate-900 p-4 shadow-sm md:grid-cols-3 xl:grid-cols-6 animate-in fade-in">
-          <Select label="Country" value={country} options={options.countries} onChange={setCountry} />
-          {scope !== "country" ? <Select label="City" value={city} options={options.cities} onChange={setCity} /> : null}
-          <Select label="Branch" value={branch} options={options.branches} onChange={setBranch} />
-          {scope === "construction" ? <Select label="Project" value={project} options={options.projects} onChange={setProject} /> : null}
-          {scope === "construction" ? <Select label="Site" value={site} options={options.sites} onChange={setSite} /> : null}
-          {scope === "construction" ? <Select label="Contractor" value={contractor} options={options.contractors} onChange={setContractor} /> : null}
-          <DateInput label="From Date" value={fromDate} onChange={setFromDate} />
-          <DateInput label="To Date" value={toDate} onChange={setToDate} />
+          <Select label={_("common.country", "Country")} value={country} options={options.countries} onChange={setCountry} />
+          {scope !== "country" ? <Select label={_("common.city", "City")} value={city} options={options.cities} onChange={setCity} /> : null}
+          <Select label={_("common.branch", "Branch")} value={branch} options={options.branches} onChange={setBranch} />
+          {scope === "construction" ? <Select label={_("ajr.project", "Project")} value={project} options={options.projects} onChange={setProject} /> : null}
+          {scope === "construction" ? <Select label={_("ajr.site", "Site")} value={site} options={options.sites} onChange={setSite} /> : null}
+          {scope === "construction" ? <Select label={_("ajr.contractor", "Contractor")} value={contractor} options={options.contractors} onChange={setContractor} /> : null}
+          <DateInput label={_("ajr.from_date", "From Date")} value={fromDate} onChange={setFromDate} />
+          <DateInput label={_("ajr.to_date", "To Date")} value={toDate} onChange={setToDate} />
         </div>
       ) : null}
 
       {/* 4 Executive Summary Details Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
-        <DetailBox 
-          title="COUNTRY DETAILS" 
+        <DetailBox
+          title={_("ajr.country_details", "Country Details")}
           icon={<div className="h-4 w-4 rounded-full border-2 border-blue-600/50 flex items-center justify-center"><div className="h-1.5 w-1.5 rounded-full bg-blue-600"></div></div>}
           items={[
-            { label: "Country Name", value: country || "Pakistan", hasFlag: true },
-            { label: "Country Code", value: "PK" },
-            { label: "Currency", value: "PKR - Pakistan Rupee" }
+            { label: _("ajr.country_name", "Country Name"), value: country || "Pakistan", hasFlag: true },
+            { label: _("ajr.country_code", "Country Code"), value: "PK" },
+            { label: _("ajr.currency", "Currency"), value: "PKR - Pakistan Rupee" }
           ]}
         />
         {scope === "country" ? (
-          <DetailBox 
-            title="ADMIN DETAILS" 
+          <DetailBox
+            title={_("ajr.admin_details", "Admin Details")}
             icon={<span className="text-blue-600 text-sm">👤</span>}
             items={[
-              { label: "Admin Name", value: "Admin Chaman" },
-              { label: "User Role", value: "Country Admin" },
-              { label: "User ID", value: "CHAMAN@DGT.LLC" }
+              { label: _("ajr.admin_name", "Admin Name"), value: "Admin Chaman" },
+              { label: _("ajr.user_role", "User Role"), value: "Country Admin" },
+              { label: _("ajr.user_id", "User ID"), value: "CHAMAN@DGT.LLC" }
             ]}
           />
         ) : (
-          <DetailBox 
-            title="BRANCH DETAILS" 
+          <DetailBox
+            title={_("ajr.branch_details", "Branch Details")}
             icon={<Building2 className="h-4 w-4 text-blue-600" />}
             items={[
-              { label: "Branch (City)", value: "CHAMAN BRANCH" },
-              { label: "Branch Code", value: "CHM-001" },
-              { label: "Branch Type", value: "CITY BRANCH" }
+              { label: _("ajr.branch_city", "Branch (City)"), value: "CHAMAN BRANCH" },
+              { label: _("ajr.branch_code", "Branch Code"), value: "CHM-001" },
+              { label: _("ajr.branch_type", "Branch Type"), value: "CITY BRANCH" }
             ]}
           />
         )}
         {scope === "country" ? (
-          <DetailBox 
-            title="REPORT DETAILS" 
+          <DetailBox
+            title={_("ajr.report_details", "Report Details")}
             icon={<CalendarDays className="h-4 w-4 text-blue-600" />}
             items={[
-              { label: "From Date", value: formatDateDisplay(minDate) },
-              { label: "To Date", value: formatDateDisplay(maxDate) },
-              { label: "Report Type", value: "COUNTRY ADMIN REPORT" }
+              { label: _("ajr.from_date", "From Date"), value: formatDateDisplay(minDate) },
+              { label: _("ajr.to_date", "To Date"), value: formatDateDisplay(maxDate) },
+              { label: _("ajr.report_type", "Report Type"), value: _("ajr.country_admin_report", "Country Admin Report") }
             ]}
           />
         ) : (
-          <DetailBox 
-            title="USER DETAILS" 
+          <DetailBox
+            title={_("ajr.user_details", "User Details")}
             icon={<span className="text-blue-600 text-sm">👤</span>}
             items={[
-              { label: "User Name", value: "ADMIN CHAMAN" },
-              { label: "User Role", value: "City Branch Admin" },
-              { label: "User ID", value: "CHAMAN@DGT.LLC" }
+              { label: _("ajr.user_name", "User Name"), value: "ADMIN CHAMAN" },
+              { label: _("ajr.user_role", "User Role"), value: "City Branch Admin" },
+              { label: _("ajr.user_id", "User ID"), value: "CHAMAN@DGT.LLC" }
             ]}
           />
         )}
         {scope === "country" ? (
-          <DetailBox 
-            title="SUMMARY OVERVIEW" 
+          <DetailBox
+            title={_("ajr.summary_overview", "Summary Overview")}
             icon={<ClipboardList className="h-4 w-4 text-blue-600" />}
             items={[
-              { label: "Total Branches", value: String(Array.from(new Set(filtered.map(r => r.branchCode || r.branch))).length || 2) },
-              { label: "Total Transactions", value: String(filtered.length) },
-              { label: "Exchange Rate", value: "1 Base Currency = 1 Base Currency" }
+              { label: _("ajr.total_branches", "Total Branches"), value: String(Array.from(new Set(filtered.map(r => r.branchCode || r.branch))).length || 2) },
+              { label: _("ajr.total_transactions", "Total Transactions"), value: String(filtered.length) },
+              { label: _("ajr.exchange_rate", "Exchange Rate"), value: "1 Base Currency = 1 Base Currency" }
             ]}
           />
         ) : (
-          <DetailBox 
-            title="REPORT DETAILS" 
+          <DetailBox
+            title={_("ajr.report_details", "Report Details")}
             icon={<CalendarDays className="h-4 w-4 text-blue-600" />}
             items={[
-              { label: "From Date", value: formatDateDisplay(minDate) },
-              { label: "To Date", value: formatDateDisplay(maxDate) },
-              { label: "Report Type", value: "GENERAL LEDGER" }
+              { label: _("ajr.from_date", "From Date"), value: formatDateDisplay(minDate) },
+              { label: _("ajr.to_date", "To Date"), value: formatDateDisplay(maxDate) },
+              { label: _("ajr.report_type", "Report Type"), value: _("ajr.general_ledger_report", "General Ledger Report") }
             ]}
           />
         )}
@@ -728,7 +744,7 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
             <ClipboardList className="h-4.5 w-4.5 text-rose-600 dark:text-rose-400" />
           </div>
           <div>
-            <p className="text-[9px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0.5">TOTAL DEBIT (BASE CURR)</p>
+            <p className="text-[9px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0.5">{_("ajr.total_debit", "Total Debit (Base Curr)")}</p>
             <p className="text-base font-black text-rose-600 dark:text-rose-400 tracking-tight">{fmt(summary.debit)}</p>
           </div>
         </div>
@@ -737,7 +753,7 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
             <ClipboardList className="h-4.5 w-4.5 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
-            <p className="text-[9px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0.5">TOTAL CREDIT (BASE CURR)</p>
+            <p className="text-[9px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0.5">{_("ajr.total_credit", "Total Credit (Base Curr)")}</p>
             <p className="text-base font-black text-emerald-600 dark:text-emerald-400 tracking-tight">{fmt(summary.credit)}</p>
           </div>
         </div>
@@ -746,7 +762,7 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
             <span className="text-blue-600 dark:text-blue-400 font-bold text-base">⚖</span>
           </div>
           <div>
-            <p className="text-[9px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0.5">TOTAL BALANCE (BASE CURR)</p>
+            <p className="text-[9px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0.5">{_("ajr.total_balance", "Total Balance (Base Curr)")}</p>
             <p className="text-base font-black text-blue-600 dark:text-blue-400 tracking-tight">{fmt(summary.balance)}</p>
           </div>
         </div>
@@ -755,7 +771,7 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
             <span className="text-amber-600 dark:text-amber-400 font-bold text-base">≡</span>
           </div>
           <div>
-            <p className="text-[9px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0.5">TOTAL TRANSACTIONS</p>
+            <p className="text-[9px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0.5">{_("ajr.total_transactions", "Total Transactions")}</p>
             <p className="text-base font-black text-amber-600 dark:text-amber-400 tracking-tight">{filtered.length}</p>
           </div>
         </div>
@@ -764,7 +780,7 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
             <span className="text-purple-600 dark:text-purple-400 font-bold text-base">🪙</span>
           </div>
           <div>
-            <p className="text-[9px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0.5">EXCHANGE RATE</p>
+            <p className="text-[9px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0.5">{_("ajr.exchange_rate", "Exchange Rate")}</p>
             <p className="text-xs font-black text-purple-700 dark:text-purple-400 tracking-tight">1 Base = 1 Base Currency</p>
           </div>
         </div>
@@ -776,11 +792,11 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
           <div className="flex items-center gap-2">
             <Building2 className="h-4 w-4 text-[#0f2942] dark:text-slate-300" />
             <h2 className="text-xs font-black tracking-wider text-[#0f2942] dark:text-slate-200 uppercase">
-              {scope === "country" ? "BRANCH WISE SUMMARY" : "LEDGER TRANSACTIONS"}
+              {scope === "country" ? _("ajr.branch_wise_summary", "Branch Wise Summary") : _("ajr.ledger_transactions", "Ledger Transactions")}
             </h2>
           </div>
           {scope === "country" && (
-            <p className="text-[10px] font-bold text-slate-500">All amounts are in Base Currency</p>
+            <p className="text-[10px] font-bold text-slate-500">{_("ajr.all_amounts_base", "All amounts are in Base Currency")}</p>
           )}
         </div>
         <div className="overflow-x-auto">
@@ -788,31 +804,31 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
             <thead className="bg-[#0f2942] text-white">
               {scope === "country" ? (
                 <tr>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center w-12 border-r border-white/10">SR. NO.</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">BRANCH NAME</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">BRANCH CODE</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">BRANCH TYPE</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">START DATE (FIRST ENTRY)</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">LAST ENTRY DATE</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">TOTAL TRANSACTIONS</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">TOTAL DEBIT (BASE CURR)</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">TOTAL CREDIT (BASE CURR)</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">BALANCE (BASE CURR)</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center">STATUS</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center w-12 border-r border-white/10">{_("ajr.sr_no", "Sr. No.")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.branch_name", "Branch Name")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.branch_code", "Branch Code")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.branch_type", "Branch Type")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.start_date", "Start Date (First Entry)")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.last_entry_date", "Last Entry Date")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.total_transactions", "Total Transactions")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.total_debit", "Total Debit (Base Curr)")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.total_credit", "Total Credit (Base Curr)")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.balance_col", "Balance (Base Curr)")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center">{_("common.status", "Status")}</Th>
                 </tr>
               ) : (
                 <tr>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center w-12 border-r border-white/10">SR. NO.</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">DATE</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">VOUCHER NO.</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">VOUCHER TYPE</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider border-r border-white/10">ACCOUNT / PARTY</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider border-r border-white/10">DETAILS / NARRATION</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">CURR.</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">DEBIT (BASE CURR)</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">CREDIT (BASE CURR)</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">BALANCE (BASE CURR)</Th>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center">DR / CR</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center w-12 border-r border-white/10">{_("ajr.sr_no", "Sr. No.")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.date", "Date")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.voucher_no", "Voucher No.")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.voucher_type", "Voucher Type")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider border-r border-white/10">{_("ajr.account_party", "Account / Party")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider border-r border-white/10">{_("ajr.details_narration", "Details / Narration")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.curr_col", "Curr.")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.debit_col", "Debit (Base Curr)")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.credit_col", "Credit (Base Curr)")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">{_("ajr.balance_col", "Balance (Base Curr)")}</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center">{_("ajr.dr_cr", "DR / CR")}</Th>
                 </tr>
               )}
             </thead>
@@ -821,7 +837,7 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
                 <tr>
                   <td colSpan={scope === "country" ? 11 : 11} className="px-3 py-8 text-center font-bold text-slate-400">
                     <RefreshCw className="h-5 w-5 animate-spin mx-auto mb-2 text-primary" />
-                    Loading report...
+                    {_("ajr.loading_report", "Loading report...")}
                   </td>
                 </tr>
               ) : scope === "country" ? (
@@ -833,7 +849,7 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
                       map.set(key, {
                         branchName: row.branch,
                         branchCode: row.branchCode && row.branchCode !== "-" ? row.branchCode : key,
-                        branchType: "City Branch",
+                        branchType: _("ajr.city_branch_type", "City Branch"),
                         startDate: entryDate,
                         lastEntryDate: row.endDate || entryDate,
                         transactions: row.entries || 1,
@@ -891,7 +907,7 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
                     </td>
                     <td className="px-3 py-3.5 text-center">
                       <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold border", normalize(branch.status) === "active" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-slate-100 text-slate-700 border-slate-200")}>
-                        {branch.status || "Active"}
+                        {branch.status || _("common.active", "Active")}
                       </span>
                     </td>
                   </tr>
@@ -915,7 +931,7 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
                         {row.voucherNo}
                       </td>
                       <td className="px-3 py-3 text-center text-slate-600 dark:text-slate-400 border-r border-slate-100 dark:border-slate-800">
-                        {(scope as string) === "country" ? "Country" : (scope as string) === "city" ? "Branch" : "Project"}
+                        {(scope as string) === "country" ? _("common.country", "Country") : (scope as string) === "city" ? _("common.branch", "Branch") : _("ajr.project", "Project")}
                       </td>
                       <td className="px-3 py-3 font-bold text-blue-700 dark:text-blue-400 border-r border-slate-100 dark:border-slate-800">
                         {row.accountNumber ? `${row.accountNumber} - ` : ""}{row.accountName}
@@ -924,7 +940,7 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
                         <span className="truncate max-w-[250px] inline-block align-bottom" title={row.narration}>{row.narration}</span>
                       </td>
                       <td className="px-3 py-3 text-center font-bold text-slate-700 dark:text-slate-300 border-r border-slate-100 dark:border-slate-800">
-                        BASE CURR
+                        {_("ajr.base_curr", "BASE CURR")}
                       </td>
                       <td className="px-3 py-3 text-right font-black text-rose-600 dark:text-rose-400 border-r border-slate-100 dark:border-slate-800">
                         {row.debit > 0 ? fmt(row.debit) : "0.00"}
@@ -944,7 +960,7 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
               ) : (
                 <tr>
                   <td colSpan={11} className="px-3 py-8 text-center font-medium text-slate-400">
-                    No transactions found.
+                    {_("ajr.no_transactions", "No transactions found.")}
                   </td>
                 </tr>
               )}
@@ -952,7 +968,7 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
             {scope === "country" && filtered.length > 0 && !loading && (
               <tfoot className="bg-[#f8fafc] text-[#0f2942] font-black border-t-2 border-slate-300 dark:border-slate-700">
                 <tr>
-                  <td colSpan={6} className="px-3 py-3.5 uppercase border-r border-slate-200 tracking-wider">TOTAL</td>
+                  <td colSpan={6} className="px-3 py-3.5 uppercase border-r border-slate-200 tracking-wider">{_("ajr.total_label", "Total")}</td>
                   <td className="px-3 py-3.5 text-center border-r border-slate-200">
                     {Array.from(filtered.reduce((map, row) => {
                       const key = row.branchCode && row.branchCode !== "-" ? row.branchCode : row.branch || "unknown";
@@ -975,13 +991,13 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2 text-xs font-semibold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-md">
             <div className="h-4 w-4 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-[9px]">i</div>
-            NOTE: All amounts are in Base Currency. This report is system generated and does not require any signature.
+            {_("ajr.base_curr_note", "All amounts are in Base Currency. This report is system generated and does not require any signature.")}
           </div>
           {scope !== "country" && (
             <div className="flex items-center gap-2">
-              <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage((value) => Math.max(1, value - 1))} className="h-8 text-xs font-bold px-3">Prev</Button>
-              <span className="text-xs font-black text-slate-700 dark:text-slate-300">Page {page} of {pages}</span>
-              <Button size="sm" variant="outline" disabled={page >= pages} onClick={() => setPage((value) => Math.min(pages, value + 1))} className="h-8 text-xs font-bold px-3">Next</Button>
+              <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage((value) => Math.max(1, value - 1))} className="h-8 text-xs font-bold px-3">{_("ajr.prev", "Prev")}</Button>
+              <span className="text-xs font-black text-slate-700 dark:text-slate-300">{_("ajr.page", "Page")} {page} {_("ajr.of", "of")} {pages}</span>
+              <Button size="sm" variant="outline" disabled={page >= pages} onClick={() => setPage((value) => Math.min(pages, value + 1))} className="h-8 text-xs font-bold px-3">{_("ajr.next", "Next")}</Button>
             </div>
           )}
         </div>
@@ -1017,11 +1033,12 @@ function DetailBox({ title, icon, items }: { title: string, icon: React.ReactNod
 }
 
 function Select({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (value: string) => void }) {
+  const lang = useActiveLanguage() || "en";
   return (
     <label className="block">
       <span className="mb-1 block text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground">{label}</span>
       <select value={value} onChange={(event) => onChange(event.target.value)} className="h-9 w-full rounded-md border border-input bg-background px-3 text-xs font-bold text-foreground outline-none transition focus:border-primary">
-        <option value="">All</option>
+        <option value="">{t(lang, "common.all", "All")}</option>
         {options.map((option) => <option key={option} value={option}>{option}</option>)}
       </select>
     </label>
@@ -1042,7 +1059,7 @@ function DateInput({ label, value, onChange }: { label: string; value: string; o
 
 export function AstraJournalReportView(props: { lang: SupportedLanguage; scope: JournalScope }) {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">Loading Journal Report...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">{t(props.lang, "ajr.loading", "Loading Journal Report...")}</div>}>
       <AstraJournalReportViewContent {...props} />
     </Suspense>
   );

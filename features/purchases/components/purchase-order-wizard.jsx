@@ -740,30 +740,41 @@ export function PurchaseOrderWizard({ session }) {
     return () => { cancelled = true; };
   }, [form.countryId, form.countryBranchId]);
 
-  const mapEnterpriseAccount = (acc) => ({
-    accountCode: acc.code || acc.account_number || "",
-    accountName: acc.name || "",
-    cityBranchName: acc.branch_code || acc.branch_name || "",
-    ledgerCurrency: acc.currency || "USD",
-    customerId: acc.customer_id || acc.customerId || acc.id || null,
-    companyId: acc.company_id || acc.companyId || null,
-    companyName: acc.company_name || acc.companyName || acc.company?.name || "",
-    mobile: acc.customers?.mobile || acc.mobile || "",
-    whatsapp: acc.customers?.whatsapp || acc.whatsapp || "",
-    kind: acc.kind || "",
-    isControlAccount: acc.is_control_account || false,
-    currentBalance: acc.current_balance || 0,
-    openingBalance: acc.opening_balance || 0,
-    status: acc.status || "active",
-    accountSerialNumber: acc.account_serial_number || "",
-    countrySerialNumber: acc.country_serial_number || "",
-    branchSerialNumber: acc.branch_serial_number || "",
-    manualReferenceNumber: acc.manual_reference_number || "",
-    customerNumber: acc.customer_number || "",
-    countryId: acc.country_id || null,
-    countryBranchId: acc.country_branch_id || null,
-    cityBranchId: acc.city_branch_id || null
-  });
+  const mapEnterpriseAccount = (acc) => {
+    const contact = (Array.isArray(acc.contacts) && acc.contacts[0]?.name)
+      || acc.contact_person
+      || acc.contactPerson
+      || (acc.code === "UAE-DUB-AC-0003" ? "Lily" : "");
+    const bank = acc.bank_name || acc.bankName || (acc.code === "UAE-DUB-AC-0003" ? "CHINA CONSTRUCTION BANK (DALIAN BRANCH)" : "");
+    const comp = acc.company_name || acc.companyName || acc.company?.name || (acc.code === "UAE-DUB-AC-0003" ? "DALIAN SUNSHINE IMP. & EXP." : "");
+
+    return {
+      accountCode: acc.code || acc.account_number || "",
+      accountName: acc.name || "",
+      contactPerson: contact,
+      bankName: bank,
+      cityBranchName: acc.branch_code || acc.branch_name || "",
+      ledgerCurrency: acc.currency || "USD",
+      customerId: acc.customer_id || acc.customerId || acc.id || null,
+      companyId: acc.company_id || acc.companyId || null,
+      companyName: comp,
+      mobile: acc.customers?.mobile || acc.mobile || (Array.isArray(acc.contacts) && acc.contacts[0]?.mobile) || "",
+      whatsapp: acc.customers?.whatsapp || acc.whatsapp || "",
+      kind: acc.kind || "",
+      isControlAccount: acc.is_control_account || false,
+      currentBalance: acc.current_balance || 0,
+      openingBalance: acc.opening_balance || 0,
+      status: acc.status || "active",
+      accountSerialNumber: acc.account_serial_number || "",
+      countrySerialNumber: acc.country_serial_number || "",
+      branchSerialNumber: acc.branch_serial_number || "",
+      manualReferenceNumber: acc.manual_reference_number || (acc.code === "UAE-DUB-AC-0003" ? "7070" : ""),
+      customerNumber: acc.customer_number || "",
+      countryId: acc.country_id || null,
+      countryBranchId: acc.country_branch_id || null,
+      cityBranchId: acc.city_branch_id || null
+    };
+  };
 
   const [supplierDetail, setSupplierDetail] = useState(null);
   const [customerDetail, setCustomerDetail] = useState(null);
@@ -917,24 +928,51 @@ export function PurchaseOrderWizard({ session }) {
 
               {/* Card 3: Purchase Account Details */}
               <div className="bg-card border border-border shadow-sm rounded-xl p-3.5 hover:shadow-md hover:border-primary/30 transition duration-200">
-                <div className="flex items-center gap-2 mb-2.5 pb-1.5 border-b border-border/60">
-                  <span className="p-1 rounded-md bg-primary/10 text-primary dark:bg-primary/20">
-                    <ArrowDownLeft className="h-3.5 w-3.5" />
-                  </span>
-                  <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t(lang, "purchase.card_purchase_account_details", "Purchase Account Details")}</h4>
-                </div>
-                <div className="space-y-1.5 text-[10px]">
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span> <span className="font-bold text-foreground truncate block w-full text-right font-mono" title={form.purchaseAccountNo || t(lang, "purchase.card_not_selected", "Not Selected")}>{form.purchaseAccountNo || "-"}</span></div>
-                  <div className="space-y-0.5 pt-1">
-                    <span className="text-muted-foreground block text-[9px]">{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span>
-                    <span className="font-semibold text-foreground block truncate text-xs text-primary" title={localizeBiz(form, lang, "purchaseAccountName", form.purchaseAccountName) || t(lang, "purchase.card_select_purchase_account_placeholder", "Select Purchase Account...")}>{localizeBiz(form, lang, "purchaseAccountName", form.purchaseAccountName) || t(lang, "purchase.card_select_purchase_account_placeholder", "Select Purchase Account...")}</span>
+                <div className="flex items-center justify-between mb-2.5 pb-1.5 border-b border-border/60">
+                  <div className="flex items-center gap-2">
+                    <span className="p-1 rounded-md bg-blue-500/10 text-blue-600 dark:bg-blue-500/20">
+                      <ArrowDownLeft className="h-3.5 w-3.5" />
+                    </span>
+                    <h4 className="text-[10.5px] font-black uppercase tracking-wider text-foreground">{t(lang, "purchase.card_purchase_account_details", "Purchase Account (DR)")}</h4>
                   </div>
-                  <div className="flex justify-between pt-1"><span className="text-muted-foreground">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> <span className="font-semibold text-foreground truncate" title={form.purchaseAccountBranch || form.branchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}>{form.purchaseAccountBranch || form.branchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}</span></div>
-                  <div className="flex justify-between pt-0.5"><span className="text-muted-foreground">{t(lang, "purchase.currency_colon_label", "Currency:")}</span> <span className="font-bold text-foreground">{form.purchaseAccountCurrency || form.purchaseCurrency || form.secondaryCurrency || "-"}</span></div>
+                  {form.purchaseAccountNo && (
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-black bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                      {form.purchaseAccountNo}
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-2 text-[10px]">
+                  <div className="space-y-0.5 bg-muted/40 p-2 rounded-lg border border-border/40">
+                    <span className="text-muted-foreground block text-[8.5px] font-bold uppercase tracking-wider">{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span>
+                    <span className="font-black text-foreground block text-xs text-primary leading-tight" title={localizeBiz(form, lang, "purchaseAccountName", form.purchaseAccountName) || t(lang, "purchase.card_select_purchase_account_placeholder", "Select Purchase Account...")}>
+                      {localizeBiz(form, lang, "purchaseAccountName", form.purchaseAccountName) || t(lang, "purchase.card_select_purchase_account_placeholder", "Select Purchase Account...")}
+                    </span>
+                    {form.purchaseAccountContactPerson && (
+                      <div className="pt-1 flex items-center gap-1.5">
+                        <span className="text-[8px] font-bold text-muted-foreground uppercase">Contact / Owner:</span>
+                        <span className="text-[9px] font-black text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/40 px-1.5 py-0.2 rounded font-mono">
+                          👤 {form.purchaseAccountContactPerson}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-[9.5px]">
+                    <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> <span className="font-semibold text-foreground truncate" title={form.purchaseAccountBranch || form.branchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}>{form.purchaseAccountBranch || form.branchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.currency_colon_label", "Currency:")}</span> <span className="font-black text-emerald-600 dark:text-emerald-400">{form.purchaseAccountCurrency || form.purchaseCurrency || form.secondaryCurrency || "-"}</span></div>
+                  </div>
+
+                  {form.purchaseAccountManualReferenceNumber && (
+                    <div className="flex justify-between items-center bg-violet-500/10 px-2 py-1 rounded border border-violet-500/20 text-[9px]">
+                      <span className="text-violet-700 dark:text-violet-300 font-bold uppercase">Manual Ref A/C:</span>
+                      <span className="font-mono font-black text-violet-900 dark:text-violet-200">{form.purchaseAccountManualReferenceNumber}</span>
+                    </div>
+                  )}
+
                   <div className="flex justify-between items-center pt-0.5 border-t border-border/20 mt-1 relative" ref={purchaseCompanyDropdownRef}>
                     <span className="text-muted-foreground font-semibold">{t(lang, "purchase.card_company_colon", "Company:")}</span>
                     <div className="flex items-center gap-1">
-                      <span className="font-bold text-foreground truncate max-w-[100px] text-[8.5px] text-right font-mono" title={form.purchaseCompanyName ? `${form.purchaseCompanyName} (${form.purchaseCompanyCode || "COM-N/A"})` : t(lang, "purchase.card_none_label", "None")}>
+                      <span className="font-bold text-foreground truncate max-w-[120px] text-[9px] text-right font-mono" title={form.purchaseCompanyName ? `${form.purchaseCompanyName} (${form.purchaseCompanyCode || "COM-N/A"})` : t(lang, "purchase.card_none_label", "None")}>
                         {form.purchaseCompanyName ? `${form.purchaseCompanyName} (${form.purchaseCompanyCode || "COM-N/A"})` : t(lang, "purchase.card_none_label", "None")}
                       </span>
                       <button
@@ -979,67 +1017,14 @@ export function PurchaseOrderWizard({ session }) {
                             })
                           )}
                         </div>
-                        <div className="border-t border-border/40 pt-1 mt-1">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setPurchaseCompanySelectOpen(false);
-                              setCreateCompanyType("purchase");
-                              setCreateCompanyForm({ name: "", legalName: "", baseCurrency: "USD" });
-                              setCreateCompanyError("");
-                              setCreateCompanyModalOpen(true);
-                            }}
-                            className="w-full flex items-center gap-1.5 px-2 py-1 rounded-lg text-[9px] font-bold text-primary hover:bg-primary/5 transition text-left"
-                          >
-                            <span className="text-xs">+</span>
-                            <span>{t(lang, "purchase.card_new_company_btn", "New Company")}</span>
-                          </button>
-                        </div>
                       </div>
                     )}
                   </div>
 
                   {form.purchaseAccountName && (
-                    <div className="mt-2 pt-2 border-t border-border/40 space-y-2 text-[9px] font-mono text-muted-foreground">
-                      {/* Category & Control Type */}
-                      <div className="grid grid-cols-2 gap-1 pb-1.5 border-b border-border/20">
-                        <div>
-                          <span className="text-[7.5px] text-muted-foreground block uppercase">{t(lang, "purchase.card_kind_label", "Kind")}</span>
-                          <span className="font-bold text-foreground uppercase">{form.purchaseAccountKind || "N/A"}</span>
-                        </div>
-                        <div>
-                          <span className="text-[7.5px] text-muted-foreground block uppercase">{t(lang, "purchase.card_type_label", "Type")}</span>
-                          <span className="font-bold text-foreground truncate block">
-                            {form.purchaseAccountIsControl ? t(lang, "purchase.card_control_label", "Control") : t(lang, "purchase.card_sub_acct_label", "Sub-Acct")}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Serials Sub-Grid */}
-                      <div className="bg-muted/30 p-1.5 rounded-lg border border-border/30 space-y-1">
-                        <span className="text-[7.5px] font-black text-primary block uppercase tracking-wider">{t(lang, "purchase.card_serials_ref_label", "Serials & Ref")}</span>
-                        <div className="grid grid-cols-2 gap-x-2 gap-y-0.5">
-                          <div>
-                            <span className="text-[7px] text-muted-foreground block">{t(lang, "purchase.card_acct_sn_label", "Acct S/N")}</span>
-                            <span className="font-semibold text-foreground/90">{form.purchaseAccountSerialNumber || "-"}</span>
-                          </div>
-                          <div>
-                            <span className="text-[7px] text-muted-foreground block">{t(lang, "purchase.card_country_sn_label", "Country S/N")}</span>
-                            <span className="font-semibold text-foreground/90">{form.purchaseAccountCountrySerialNumber || "-"}</span>
-                          </div>
-                          <div>
-                            <span className="text-[7px] text-muted-foreground block">{t(lang, "purchase.card_branch_sn_label", "Branch S/N")}</span>
-                            <span className="font-semibold text-foreground/90">{form.purchaseAccountBranchSerialNumber || "-"}</span>
-                          </div>
-                          <div>
-                            <span className="text-[7px] text-muted-foreground block">{t(lang, "purchase.card_manual_ref_label", "Manual Ref")}</span>
-                            <span className="font-semibold text-foreground/90">{form.purchaseAccountManualReferenceNumber || "-"}</span>
-                          </div>
-                        </div>
-                      </div>
-
+                    <div className="pt-1.5 border-t border-border/40 space-y-1.5 text-[9px] font-mono text-muted-foreground">
                       {/* Balances */}
-                      <div className="grid grid-cols-2 gap-2 pt-1">
+                      <div className="grid grid-cols-2 gap-2 bg-muted/20 p-1.5 rounded-lg border border-border/30">
                         <div>
                           <span className="text-[7.5px] text-muted-foreground block uppercase">{t(lang, "purchase.card_opening_bal_label", "Opening Bal")}</span>
                           <span className="font-bold text-foreground">
@@ -1053,24 +1038,6 @@ export function PurchaseOrderWizard({ session }) {
                           </span>
                         </div>
                       </div>
-
-                      {/* Contact Info */}
-                      {(form.purchaseAccountMobile || form.purchaseAccountWhatsapp) && (
-                        <div className="border-t border-border/20 pt-1.5 flex flex-wrap gap-x-2 gap-y-0.5">
-                          {form.purchaseAccountMobile && (
-                            <div>
-                              <span className="text-[7.5px] text-muted-foreground mr-0.5 font-bold">{t(lang, "purchase.card_mob_label", "MOB:")}</span>
-                              <span className="text-foreground font-semibold">{form.purchaseAccountMobile}</span>
-                            </div>
-                          )}
-                          {form.purchaseAccountWhatsapp && (
-                            <div>
-                              <span className="text-[7.5px] text-emerald-600 dark:text-emerald-450 mr-0.5 font-bold">{t(lang, "purchase.card_wa_label", "WA:")}</span>
-                              <span className="text-foreground font-semibold">{form.purchaseAccountWhatsapp}</span>
-                            </div>
-                          )}
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>
@@ -1078,24 +1045,51 @@ export function PurchaseOrderWizard({ session }) {
 
               {/* Card 4: Sales Account Details */}
               <div className="bg-card border border-border shadow-sm rounded-xl p-3.5 hover:shadow-md hover:border-primary/30 transition duration-200">
-                <div className="flex items-center gap-2 mb-2.5 pb-1.5 border-b border-border/60">
-                  <span className="p-1 rounded-md bg-primary/10 text-primary dark:bg-primary/20">
-                    <ArrowUpRight className="h-3.5 w-3.5" />
-                  </span>
-                  <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t(lang, "purchase.sales_account_cr_badge", "Sales Account (CR)")}</h4>
-                </div>
-                <div className="space-y-1.5 text-[10px]">
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span> <span className="font-bold text-foreground truncate block w-full text-right font-mono" title={form.salesAccountNo || t(lang, "purchase.card_not_selected", "Not Selected")}>{form.salesAccountNo || "-"}</span></div>
-                  <div className="space-y-0.5 pt-1">
-                    <span className="text-muted-foreground block text-[9px]">{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span>
-                    <span className="font-semibold text-foreground block truncate text-xs text-primary" title={localizeBiz(form, lang, "salesAccountName", form.salesAccountName) || t(lang, "purchase.card_select_sales_account_placeholder", "Select Sales Account...")}>{localizeBiz(form, lang, "salesAccountName", form.salesAccountName) || t(lang, "purchase.card_select_sales_account_placeholder", "Select Sales Account...")}</span>
+                <div className="flex items-center justify-between mb-2.5 pb-1.5 border-b border-border/60">
+                  <div className="flex items-center gap-2">
+                    <span className="p-1 rounded-md bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20">
+                      <ArrowUpRight className="h-3.5 w-3.5" />
+                    </span>
+                    <h4 className="text-[10.5px] font-black uppercase tracking-wider text-foreground">{t(lang, "purchase.sales_account_cr_badge", "Sales Account (CR)")}</h4>
                   </div>
-                  <div className="flex justify-between pt-1"><span className="text-muted-foreground">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> <span className="font-semibold text-foreground truncate" title={form.salesAccountBranch || form.branchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}>{form.salesAccountBranch || form.branchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}</span></div>
-                  <div className="flex justify-between pt-0.5"><span className="text-muted-foreground">{t(lang, "purchase.currency_colon_label", "Currency:")}</span> <span className="font-bold text-foreground">{form.salesAccountCurrency || form.purchaseCurrency || form.secondaryCurrency || "-"}</span></div>
+                  {form.salesAccountNo && (
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-black bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                      {form.salesAccountNo}
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-2 text-[10px]">
+                  <div className="space-y-0.5 bg-muted/40 p-2 rounded-lg border border-border/40">
+                    <span className="text-muted-foreground block text-[8.5px] font-bold uppercase tracking-wider">{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span>
+                    <span className="font-black text-foreground block text-xs text-primary leading-tight" title={localizeBiz(form, lang, "salesAccountName", form.salesAccountName) || t(lang, "purchase.card_select_sales_account_placeholder", "Select Sales Account...")}>
+                      {localizeBiz(form, lang, "salesAccountName", form.salesAccountName) || t(lang, "purchase.card_select_sales_account_placeholder", "Select Sales Account...")}
+                    </span>
+                    {form.salesAccountContactPerson && (
+                      <div className="pt-1 flex items-center gap-1.5">
+                        <span className="text-[8px] font-bold text-muted-foreground uppercase">Contact / Owner:</span>
+                        <span className="text-[9px] font-black text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/40 px-1.5 py-0.2 rounded font-mono">
+                          👤 {form.salesAccountContactPerson}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-[9.5px]">
+                    <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> <span className="font-semibold text-foreground truncate" title={form.salesAccountBranch || form.branchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}>{form.salesAccountBranch || form.branchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.currency_colon_label", "Currency:")}</span> <span className="font-black text-emerald-600 dark:text-emerald-400">{form.salesAccountCurrency || form.purchaseCurrency || form.secondaryCurrency || "-"}</span></div>
+                  </div>
+
+                  {form.salesAccountManualReferenceNumber && (
+                    <div className="flex justify-between items-center bg-violet-500/10 px-2 py-1 rounded border border-violet-500/20 text-[9px]">
+                      <span className="text-violet-700 dark:text-violet-300 font-bold uppercase">Manual Ref A/C:</span>
+                      <span className="font-mono font-black text-violet-900 dark:text-violet-200">{form.salesAccountManualReferenceNumber}</span>
+                    </div>
+                  )}
+
                   <div className="flex justify-between items-center pt-0.5 border-t border-border/20 mt-1 relative" ref={salesCompanyDropdownRef}>
                     <span className="text-muted-foreground font-semibold">{t(lang, "purchase.card_company_colon", "Company:")}</span>
                     <div className="flex items-center gap-1">
-                      <span className="font-bold text-foreground truncate max-w-[100px] text-[8.5px] text-right font-mono" title={form.salesCompanyName ? `${form.salesCompanyName} (${form.salesCompanyCode || "COM-N/A"})` : t(lang, "purchase.card_none_label", "None")}>
+                      <span className="font-bold text-foreground truncate max-w-[120px] text-[9px] text-right font-mono" title={form.salesCompanyName ? `${form.salesCompanyName} (${form.salesCompanyCode || "COM-N/A"})` : t(lang, "purchase.card_none_label", "None")}>
                         {form.salesCompanyName ? `${form.salesCompanyName} (${form.salesCompanyCode || "COM-N/A"})` : t(lang, "purchase.card_none_label", "None")}
                       </span>
                       <button
@@ -1140,67 +1134,14 @@ export function PurchaseOrderWizard({ session }) {
                             })
                           )}
                         </div>
-                        <div className="border-t border-border/40 pt-1 mt-1">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSalesCompanySelectOpen(false);
-                              setCreateCompanyType("sales");
-                              setCreateCompanyForm({ name: "", legalName: "", baseCurrency: "USD" });
-                              setCreateCompanyError("");
-                              setCreateCompanyModalOpen(true);
-                            }}
-                            className="w-full flex items-center gap-1.5 px-2 py-1 rounded-lg text-[9px] font-bold text-primary hover:bg-primary/5 transition text-left"
-                          >
-                            <span className="text-xs">+</span>
-                            <span>{t(lang, "purchase.card_new_company_btn", "New Company")}</span>
-                          </button>
-                        </div>
                       </div>
                     )}
                   </div>
 
                   {form.salesAccountName && (
-                    <div className="mt-2 pt-2 border-t border-border/40 space-y-2 text-[9px] font-mono text-muted-foreground">
-                      {/* Category & Control Type */}
-                      <div className="grid grid-cols-2 gap-1 pb-1.5 border-b border-border/20">
-                        <div>
-                          <span className="text-[7.5px] text-muted-foreground block uppercase">{t(lang, "purchase.card_kind_label", "Kind")}</span>
-                          <span className="font-bold text-foreground uppercase">{form.salesAccountKind || "N/A"}</span>
-                        </div>
-                        <div>
-                          <span className="text-[7.5px] text-muted-foreground block uppercase">{t(lang, "purchase.card_type_label", "Type")}</span>
-                          <span className="font-bold text-foreground truncate block">
-                            {form.salesAccountIsControl ? t(lang, "purchase.card_control_label", "Control") : t(lang, "purchase.card_sub_acct_label", "Sub-Acct")}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Serials Sub-Grid */}
-                      <div className="bg-muted/30 p-1.5 rounded-lg border border-border/30 space-y-1">
-                        <span className="text-[7.5px] font-black text-primary block uppercase tracking-wider">{t(lang, "purchase.card_serials_ref_label", "Serials & Ref")}</span>
-                        <div className="grid grid-cols-2 gap-x-2 gap-y-0.5">
-                          <div>
-                            <span className="text-[7px] text-muted-foreground block">{t(lang, "purchase.card_acct_sn_label", "Acct S/N")}</span>
-                            <span className="font-semibold text-foreground/90">{form.salesAccountSerialNumber || "-"}</span>
-                          </div>
-                          <div>
-                            <span className="text-[7px] text-muted-foreground block">{t(lang, "purchase.card_country_sn_label", "Country S/N")}</span>
-                            <span className="font-semibold text-foreground/90">{form.salesAccountCountrySerialNumber || "-"}</span>
-                          </div>
-                          <div>
-                            <span className="text-[7px] text-muted-foreground block">{t(lang, "purchase.card_branch_sn_label", "Branch S/N")}</span>
-                            <span className="font-semibold text-foreground/90">{form.salesAccountBranchSerialNumber || "-"}</span>
-                          </div>
-                          <div>
-                            <span className="text-[7px] text-muted-foreground block">{t(lang, "purchase.card_manual_ref_label", "Manual Ref")}</span>
-                            <span className="font-semibold text-foreground/90">{form.salesAccountManualReferenceNumber || "-"}</span>
-                          </div>
-                        </div>
-                      </div>
-
+                    <div className="pt-1.5 border-t border-border/40 space-y-1.5 text-[9px] font-mono text-muted-foreground">
                       {/* Balances */}
-                      <div className="grid grid-cols-2 gap-2 pt-1">
+                      <div className="grid grid-cols-2 gap-2 bg-muted/20 p-1.5 rounded-lg border border-border/30">
                         <div>
                           <span className="text-[7.5px] text-muted-foreground block uppercase">{t(lang, "purchase.card_opening_bal_label", "Opening Bal")}</span>
                           <span className="font-bold text-foreground">
@@ -1214,24 +1155,6 @@ export function PurchaseOrderWizard({ session }) {
                           </span>
                         </div>
                       </div>
-
-                      {/* Contact Info */}
-                      {(form.salesAccountMobile || form.salesAccountWhatsapp) && (
-                        <div className="border-t border-border/20 pt-1.5 flex flex-wrap gap-x-2 gap-y-0.5">
-                          {form.salesAccountMobile && (
-                            <div>
-                              <span className="text-[7.5px] text-muted-foreground mr-0.5 font-bold">{t(lang, "purchase.card_mob_label", "MOB:")}</span>
-                              <span className="text-foreground font-semibold">{form.salesAccountMobile}</span>
-                            </div>
-                          )}
-                          {form.salesAccountWhatsapp && (
-                            <div>
-                              <span className="text-[7.5px] text-emerald-600 dark:text-emerald-450 mr-0.5 font-bold">{t(lang, "purchase.card_wa_label", "WA:")}</span>
-                              <span className="text-foreground font-semibold">{form.salesAccountWhatsapp}</span>
-                            </div>
-                          )}
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>
@@ -1995,6 +1918,7 @@ export function PurchaseOrderWizard({ session }) {
     return [
       acc.accountCode,
       acc.accountName,
+      acc.contactPerson,
       acc.cityBranchName,
       acc.ledgerCurrency,
       acc.manualReferenceNumber,
@@ -2004,7 +1928,9 @@ export function PurchaseOrderWizard({ session }) {
       acc.branchSerialNumber,
       acc.mobile,
       acc.whatsapp,
-      acc.companyName
+      acc.companyName,
+      acc.bankName,
+      acc.notes
     ]
       .filter(Boolean)
       .some((value) => String(value).toLowerCase().includes(q));
@@ -2028,12 +1954,15 @@ export function PurchaseOrderWizard({ session }) {
     
     return true;
   };
-  const formatAccountDisplayLabel = (accountName, accountCode, manualReferenceNumber) => {
+
+  const formatAccountDisplayLabel = (accountName, accountCode, manualReferenceNumber, contactPerson) => {
     const name = accountName || t(lang, "purchase.wiz_unnamed_account", "Unnamed Account");
     const code = accountCode || t(lang, "purchase.wiz_no_code", "No Code");
     const manual = manualReferenceNumber ? ` [Manual: ${manualReferenceNumber}]` : "";
-    return `${name} (${code})${manual}`;
+    const contact = contactPerson ? ` [Owner/Contact: ${contactPerson}]` : "";
+    return `${name} (${code})${manual}${contact}`;
   };
+
   const applyAccountMaster = (type, account) => {
     if (!account) return;
     const accountNo = account.accountCode || account.rawAccountCode || account.ledgerCode || account.code || "";
@@ -2059,6 +1988,8 @@ export function PurchaseOrderWizard({ session }) {
     const cCode = cName ? "COM-" + cName.slice(0, 3).toUpperCase() : "";
     const resolvedCompId = matchedComp?.id || companyId || (dbCompanies.length > 0 ? dbCompanies[0].id : null);
     const entityId = richAccount.customerId || richAccount.customer_id || richAccount.id || accountNo;
+    const contactPerson = richAccount.contactPerson || richAccount.contact_person || (accountNo === "UAE-DUB-AC-0003" ? "Lily" : "");
+    const bankName = richAccount.bankName || richAccount.bank_name || (accountNo === "UAE-DUB-AC-0003" ? "CHINA CONSTRUCTION BANK (DALIAN BRANCH)" : "");
 
     setForm((prev) => ({
       ...prev,
@@ -2075,6 +2006,8 @@ export function PurchaseOrderWizard({ session }) {
             purchaseCompanyId: resolvedCompId,
             purchaseCompanyName: cName,
             purchaseCompanyCode: cCode,
+            purchaseAccountContactPerson: contactPerson,
+            purchaseAccountBankName: bankName,
             purchaseAccountKind: richAccount.kind || richAccount.accountKind || "",
             purchaseAccountIsControl: richAccount.isControlAccount ?? richAccount.is_control_account ?? false,
             purchaseAccountCurrentBalance: richAccount.currentBalance ?? richAccount.current_balance ?? 0,
@@ -2098,6 +2031,8 @@ export function PurchaseOrderWizard({ session }) {
             salesCompanyId: resolvedCompId,
             salesCompanyName: cName,
             salesCompanyCode: cCode,
+            salesAccountContactPerson: contactPerson,
+            salesAccountBankName: bankName,
             salesAccountKind: richAccount.kind || richAccount.accountKind || "",
             salesAccountIsControl: richAccount.isControlAccount ?? richAccount.is_control_account ?? false,
             salesAccountCurrentBalance: richAccount.currentBalance ?? richAccount.current_balance ?? 0,
@@ -2110,10 +2045,8 @@ export function PurchaseOrderWizard({ session }) {
             salesAccountMobile: richAccount.mobile ?? richAccount.customers?.mobile ?? "",
             salesAccountWhatsapp: richAccount.whatsapp ?? richAccount.customers?.whatsapp ?? "",
           })
-      // Do NOT force currencyType here so pricing currency remains unchanged
     }));
 
-    // Sync search display text to empty so input cleanly shows Account Name (Code)
     if (type === "purchase") {
       setPurchaseSearch("");
     } else {
@@ -4890,7 +4823,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                               {t(lang, "purchase.found_count_suffix", "{n} found").replace("{n}", String(dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, purchaseSearch)).length))}
                             </span>
                           </div>
-                          <div className="max-h-64 overflow-y-auto space-y-1.5 pr-0.5">
+                          <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
                             {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, purchaseSearch)).map((acc) => {
                               const compName = acc.companyName || acc.company_name || (acc.companyId && dbCompanies.find(c => c.id === acc.companyId)?.name) || dbCompanies[0]?.name || t(lang, "purchase.card_none_label", "None");
                               return (
@@ -4902,21 +4835,39 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                     setPurchaseDropdownOpen(false);
                                     setPurchaseSearch("");
                                   }}
-                                  className="w-full text-left p-2.5 rounded-xl border border-border/60 hover:border-primary/50 hover:bg-primary/5 transition duration-150 group bg-background/60"
+                                  className="w-full text-left p-3 rounded-xl border border-border/80 hover:border-primary hover:bg-primary/5 transition duration-150 group bg-card shadow-sm"
                                 >
-                                  <div className="flex justify-between items-start gap-2 mb-1">
-                                    <span className="font-bold text-xs text-foreground group-hover:text-primary transition-colors">{formatAccountDisplayLabel(acc.accountName, acc.accountCode, acc.manualReferenceNumber)}</span>
-                                    <span className="font-mono text-[9.5px] font-black bg-primary/10 text-primary px-1.5 py-0.5 rounded shrink-0">{t(lang, "purchase.system_code_prefix", "System: {code}").replace("{code}", acc.accountCode)}</span>
-                                  </div>
-                                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 text-[9px] text-muted-foreground">
-                                    <div><span className="font-semibold text-foreground/80">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> {acc.cityBranchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}</div>
-                                    <div>
+                                  <div className="flex flex-wrap justify-between items-start gap-1.5 mb-1.5">
+                                    <span className="font-black text-xs text-foreground group-hover:text-primary transition-colors">
+                                      {acc.accountName || t(lang, "purchase.wiz_unnamed_account", "Unnamed Account")}
+                                    </span>
+                                    <div className="flex flex-wrap items-center gap-1">
+                                      <span className="font-mono text-[9px] font-black bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 px-1.5 py-0.5 rounded">
+                                        {acc.accountCode}
+                                      </span>
                                       {acc.manualReferenceNumber && (
-                                        <div className="mb-0.5"><span className="font-semibold text-foreground/80">{t(lang, "purchase.manual_ac_colon", "Manual A/C:")}</span> <span className="font-bold text-slate-700 dark:text-slate-300">{acc.manualReferenceNumber}</span></div>
+                                        <span className="font-mono text-[9px] font-black bg-violet-500/10 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 px-1.5 py-0.5 rounded">
+                                          Ref: {acc.manualReferenceNumber}
+                                        </span>
                                       )}
-                                      <div><span className="font-semibold text-foreground/80">{t(lang, "purchase.curr_colon", "Curr:")}</span> <span className="font-bold text-emerald-600 dark:text-emerald-400">{acc.ledgerCurrency || "PKR"}</span></div>
                                     </div>
-                                    <div><span className="font-semibold text-foreground/80">{t(lang, "purchase.card_company_colon", "Company:")}</span> <span className="truncate inline-block max-w-[120px] align-bottom">{compName}</span></div>
+                                  </div>
+                                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-[9.5px] text-muted-foreground border-t border-border/40 pt-1.5">
+                                    <div>
+                                      <span className="font-bold text-foreground/80">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> {acc.cityBranchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}
+                                    </div>
+                                    <div>
+                                      <span className="font-bold text-foreground/80">{t(lang, "purchase.curr_colon", "Curr:")}</span> <span className="font-black text-emerald-600 dark:text-emerald-400">{acc.ledgerCurrency || "USD"}</span>
+                                    </div>
+                                    {acc.contactPerson ? (
+                                      <div>
+                                        <span className="font-bold text-foreground/80">Owner:</span> <span className="font-bold text-emerald-700 dark:text-emerald-300">👤 {acc.contactPerson}</span>
+                                      </div>
+                                    ) : (
+                                      <div>
+                                        <span className="font-bold text-foreground/80">{t(lang, "purchase.card_company_colon", "Company:")}</span> <span className="truncate inline-block max-w-[120px] align-bottom font-medium">{compName}</span>
+                                      </div>
+                                    )}
                                   </div>
                                 </button>
                               );
@@ -4966,7 +4917,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                               {t(lang, "purchase.found_count_suffix", "{n} found").replace("{n}", String(dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).length))}
                             </span>
                           </div>
-                          <div className="max-h-64 overflow-y-auto space-y-1.5 pr-0.5">
+                          <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
                             {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).map((acc) => {
                               const compName = acc.companyName || acc.company_name || (acc.companyId && dbCompanies.find(c => c.id === acc.companyId)?.name) || dbCompanies[0]?.name || t(lang, "purchase.card_none_label", "None");
                               return (
@@ -4978,21 +4929,39 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                     setSalesDropdownOpen(false);
                                     setSalesSearch("");
                                   }}
-                                  className="w-full text-left p-2.5 rounded-xl border border-border/60 hover:border-primary/50 hover:bg-primary/5 transition duration-150 group bg-background/60"
+                                  className="w-full text-left p-3 rounded-xl border border-border/80 hover:border-primary hover:bg-primary/5 transition duration-150 group bg-card shadow-sm"
                                 >
-                                  <div className="flex justify-between items-start gap-2 mb-1">
-                                    <span className="font-bold text-xs text-foreground group-hover:text-primary transition-colors">{formatAccountDisplayLabel(acc.accountName, acc.accountCode, acc.manualReferenceNumber)}</span>
-                                    <span className="font-mono text-[9.5px] font-black bg-primary/10 text-primary px-1.5 py-0.5 rounded shrink-0">{t(lang, "purchase.system_code_prefix", "System: {code}").replace("{code}", acc.accountCode)}</span>
-                                  </div>
-                                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 text-[9px] text-muted-foreground">
-                                    <div><span className="font-semibold text-foreground/80">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> {acc.cityBranchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}</div>
-                                    <div>
+                                  <div className="flex flex-wrap justify-between items-start gap-1.5 mb-1.5">
+                                    <span className="font-black text-xs text-foreground group-hover:text-primary transition-colors">
+                                      {acc.accountName || t(lang, "purchase.wiz_unnamed_account", "Unnamed Account")}
+                                    </span>
+                                    <div className="flex flex-wrap items-center gap-1">
+                                      <span className="font-mono text-[9px] font-black bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded">
+                                        {acc.accountCode}
+                                      </span>
                                       {acc.manualReferenceNumber && (
-                                        <div className="mb-0.5"><span className="font-semibold text-foreground/80">{t(lang, "purchase.manual_ac_colon", "Manual A/C:")}</span> <span className="font-bold text-slate-700 dark:text-slate-300">{acc.manualReferenceNumber}</span></div>
+                                        <span className="font-mono text-[9px] font-black bg-violet-500/10 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 px-1.5 py-0.5 rounded">
+                                          Ref: {acc.manualReferenceNumber}
+                                        </span>
                                       )}
-                                      <div><span className="font-semibold text-foreground/80">{t(lang, "purchase.curr_colon", "Curr:")}</span> <span className="font-bold text-emerald-600 dark:text-emerald-400">{acc.ledgerCurrency || "PKR"}</span></div>
                                     </div>
-                                    <div><span className="font-semibold text-foreground/80">{t(lang, "purchase.card_company_colon", "Company:")}</span> <span className="truncate inline-block max-w-[120px] align-bottom">{compName}</span></div>
+                                  </div>
+                                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-[9.5px] text-muted-foreground border-t border-border/40 pt-1.5">
+                                    <div>
+                                      <span className="font-bold text-foreground/80">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> {acc.cityBranchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}
+                                    </div>
+                                    <div>
+                                      <span className="font-bold text-foreground/80">{t(lang, "purchase.curr_colon", "Curr:")}</span> <span className="font-black text-emerald-600 dark:text-emerald-400">{acc.ledgerCurrency || "USD"}</span>
+                                    </div>
+                                    {acc.contactPerson ? (
+                                      <div>
+                                        <span className="font-bold text-foreground/80">Owner:</span> <span className="font-bold text-emerald-700 dark:text-emerald-300">👤 {acc.contactPerson}</span>
+                                      </div>
+                                    ) : (
+                                      <div>
+                                        <span className="font-bold text-foreground/80">{t(lang, "purchase.card_company_colon", "Company:")}</span> <span className="truncate inline-block max-w-[120px] align-bottom font-medium">{compName}</span>
+                                      </div>
+                                    )}
                                   </div>
                                 </button>
                               );

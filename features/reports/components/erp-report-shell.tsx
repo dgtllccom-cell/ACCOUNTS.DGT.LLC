@@ -198,18 +198,18 @@ function BranchesCard({ data }: { data: BranchSummaryKpi }) {
         <div className="rounded-lg p-1.5 bg-violet-50 dark:bg-violet-950/50 border border-violet-100 dark:border-violet-900">
           <Building2 className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400" />
         </div>
-        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">BRANCHES</span>
+        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">{tt("ers.branches", "Branches")}</span>
       </div>
       <div className="flex items-center justify-between text-xs">
-        <span className="text-slate-600 dark:text-slate-400 font-medium">Total Branches</span>
+        <span className="text-slate-600 dark:text-slate-400 font-medium">{tt("ers.total_branches", "Total Branches")}</span>
         <span className="font-black text-violet-700 dark:text-violet-300 tabular-nums">{data.total}</span>
       </div>
       <div className="flex items-center justify-between text-xs">
-        <span className="text-slate-500 dark:text-slate-400 font-medium">Active Branches</span>
+        <span className="text-slate-500 dark:text-slate-400 font-medium">{tt("ers.active_branches", "Active Branches")}</span>
         <span className="font-black text-emerald-600 dark:text-emerald-400 tabular-nums">{data.active}</span>
       </div>
       <div className="flex items-center justify-between text-xs">
-        <span className="text-slate-500 dark:text-slate-400 font-medium">Inactive Branches</span>
+        <span className="text-slate-500 dark:text-slate-400 font-medium">{tt("ers.inactive_branches", "Inactive Branches")}</span>
         <span className="font-bold text-red-500 dark:text-red-400 tabular-nums">{data.inactive}</span>
       </div>
     </div>
@@ -220,33 +220,34 @@ function BranchesCard({ data }: { data: BranchSummaryKpi }) {
 // This Month KPI Group — card 4
 // ─────────────────────────────────────────────────────────────
 function ThisMonthCard({ data }: { data: ThisMonthKpi }) {
+  const tt = useTt();
   return (
     <div className="rounded-2xl border border-orange-200 dark:border-orange-900 bg-white dark:bg-slate-900 p-4 shadow-sm flex flex-col gap-1.5">
       <div className="flex items-center gap-2 mb-1">
         <div className="rounded-lg p-1.5 bg-orange-50 dark:bg-orange-950/50 border border-orange-100 dark:border-orange-900">
           <Calendar className="h-3.5 w-3.5 text-orange-600 dark:text-orange-400" />
         </div>
-        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">THIS MONTH</span>
+        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">{tt("ers.this_month", "This Month")}</span>
       </div>
       <div className="flex items-center justify-between text-xs">
-        <span className="text-slate-600 dark:text-slate-400 font-medium">Bills Created</span>
+        <span className="text-slate-600 dark:text-slate-400 font-medium">{tt("ers.bills_created", "Bills Created")}</span>
         <span className="font-black text-orange-700 dark:text-orange-300 tabular-nums">{data.created.toLocaleString()}</span>
       </div>
       {data.amount !== undefined && (
         <div className="flex items-center justify-between text-xs">
-          <span className="text-slate-500 dark:text-slate-400 font-medium">Amount</span>
+          <span className="text-slate-500 dark:text-slate-400 font-medium">{tt("ers.amount", "Amount")}</span>
           <span className="font-bold text-slate-700 dark:text-slate-200 tabular-nums">{data.amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
         </div>
       )}
       {data.transferred !== undefined && (
         <div className="flex items-center justify-between text-xs">
-          <span className="text-slate-500 dark:text-slate-400 font-medium">Transferred</span>
+          <span className="text-slate-500 dark:text-slate-400 font-medium">{tt("ers.transferred", "Transferred")}</span>
           <span className="font-bold text-slate-700 dark:text-slate-200 tabular-nums">{data.transferred.toLocaleString()}</span>
         </div>
       )}
       {data.completed !== undefined && (
         <div className="flex items-center justify-between text-xs">
-          <span className="text-slate-500 dark:text-slate-400 font-medium">Completed</span>
+          <span className="text-slate-500 dark:text-slate-400 font-medium">{tt("ers.completed", "Completed")}</span>
           <span className="font-black text-emerald-600 dark:text-emerald-400 tabular-nums">{data.completed.toLocaleString()}</span>
         </div>
       )}
@@ -258,35 +259,36 @@ function ThisMonthCard({ data }: { data: ThisMonthKpi }) {
 // Quick Info KPI Group — card 5
 // ─────────────────────────────────────────────────────────────
 function QuickInfoCard({ data }: { data: QuickInfoKpi }) {
+  const tt = useTt();
   return (
     <div className="rounded-2xl border border-teal-200 dark:border-teal-900 bg-white dark:bg-slate-900 p-4 shadow-sm flex flex-col gap-1.5">
       <div className="flex items-center gap-2 mb-1">
         <div className="rounded-lg p-1.5 bg-teal-50 dark:bg-teal-950/50 border border-teal-100 dark:border-teal-900">
           <Info className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
         </div>
-        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">QUICK INFO</span>
+        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">{tt("ers.quick_info", "Quick Info")}</span>
       </div>
       {data.currency && (
         <div className="flex items-center justify-between text-xs">
-          <span className="text-slate-500 dark:text-slate-400 font-medium">Currency</span>
+          <span className="text-slate-500 dark:text-slate-400 font-medium">{tt("ers.currency", "Currency")}</span>
           <span className="font-black text-teal-700 dark:text-teal-300">{data.currency}</span>
         </div>
       )}
       {data.exchangeRate && (
         <div className="flex items-center justify-between text-xs">
-          <span className="text-slate-500 dark:text-slate-400 font-medium">Exchange Rate (Avg.)</span>
+          <span className="text-slate-500 dark:text-slate-400 font-medium">{tt("ers.exchange_rate_avg", "Exchange Rate (Avg.)")}</span>
           <span className="font-bold text-slate-700 dark:text-slate-200">{data.exchangeRate}</span>
         </div>
       )}
       {data.company && (
         <div className="flex items-center justify-between text-xs">
-          <span className="text-slate-500 dark:text-slate-400 font-medium">Company</span>
+          <span className="text-slate-500 dark:text-slate-400 font-medium">{tt("ers.company", "Company")}</span>
           <span className="font-bold text-slate-700 dark:text-slate-200 truncate max-w-[120px] text-right" title={data.company}>{data.company}</span>
         </div>
       )}
       {data.financialYear && (
         <div className="flex items-center justify-between text-xs">
-          <span className="text-slate-500 dark:text-slate-400 font-medium">Financial Year</span>
+          <span className="text-slate-500 dark:text-slate-400 font-medium">{tt("ers.financial_year", "Financial Year")}</span>
           <span className="font-black text-teal-700 dark:text-teal-300">{data.financialYear}</span>
         </div>
       )}
@@ -382,6 +384,7 @@ export function ErpReportShell({
   isLoading,
   className
 }: ErpReportShellProps) {
+  const tt = useTt();
   const [showMoreActions, setShowMoreActions] = React.useState(false);
 
   // Count how many KPI group cards will show
@@ -426,7 +429,7 @@ export function ErpReportShell({
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-xs font-bold shadow-sm hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all"
             >
               <Download className="h-3.5 w-3.5" />
-              Export
+              {tt("ers.export", "Export")}
             </button>
           )}
 
@@ -437,7 +440,7 @@ export function ErpReportShell({
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400 text-xs font-bold shadow-sm hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all"
             >
               <FileSpreadsheet className="h-3.5 w-3.5" />
-              Report
+              {tt("ers.report", "Report")}
             </button>
           )}
 
@@ -448,7 +451,7 @@ export function ErpReportShell({
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
             >
               <Printer className="h-3.5 w-3.5" />
-              Print
+              {tt("ers.print", "Print")}
             </button>
           )}
 
@@ -460,7 +463,7 @@ export function ErpReportShell({
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
               >
                 <MoreHorizontal className="h-3.5 w-3.5" />
-                More
+                {tt("ers.more", "More")}
               </button>
               {showMoreActions && (
                 <div className="absolute right-0 top-full mt-1 z-50 w-44 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl py-1.5">

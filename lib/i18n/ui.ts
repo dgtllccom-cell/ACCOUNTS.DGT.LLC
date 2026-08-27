@@ -3750,6 +3750,9 @@ export type UiKey =
   | "ctm.expense_only" | "ctm.set_as_default" | "ctm.save_tax_setting"
   | "ctm.err_select_country" | "ctm.err_tax_name_req" | "ctm.err_tax_code_req"
   | "ctm.err_load_failed" | "ctm.err_save_failed" | "ctm.confirm_delete"
+  | "ctm.err_network" | "ctm.not_registered" | "ctm.default_col" | "ctm.tax_name_ph"
+  | "ctm.tax_code_ph" | "ctm.trn_ph" | "ctm.select_applicability" | "ctm.report_title"
+  | "ctm.report_subtitle" | "ctm.rate_pct_col" | "ctm.trn_number_col"
   | "ajr.hide_filters" | "ajr.show_filters" | "ajr.filter_ph" | "ajr.actions"
   | "ajr.reload_report" | "ajr.print_pdf" | "ajr.csv_export"
   | "ajr.country_admin_report" | "ajr.general_ledger_report"
@@ -3767,6 +3770,9 @@ export type UiKey =
   | "ajr.curr_col" | "ajr.debit_col" | "ajr.credit_col" | "ajr.balance_col" | "ajr.dr_cr"
   | "ajr.loading_report" | "ajr.no_transactions" | "ajr.base_curr_note" | "ajr.total_label"
   | "ajr.prev" | "ajr.next" | "ajr.loading" | "ajr.all_amounts_base"
+  | "ajr.city_journal_report" | "ajr.construction_journal_report" | "ajr.account_number_col"
+  | "ajr.account_name_col" | "ajr.entries_today" | "ajr.reload_data" | "ajr.user_name"
+  | "ajr.city_branch_type" | "ajr.base_curr" | "ajr.page" | "ajr.of"
   | "rsv.title" | "rsv.subtitle" | "rsv.evaluating" | "rsv.run_now" | "rsv.add_rule"
   | "rsv.loading" | "rsv.no_rules" | "rsv.rule_name" | "rsv.trigger_event"
   | "rsv.offset" | "rsv.channel" | "rsv.language_col" | "rsv.approval"
@@ -3774,8 +3780,9 @@ export type UiKey =
   | "rsv.before_due" | "rsv.on_due" | "rsv.overdue" | "rsv.payment_approved" | "rsv.payment_completed"
   | "rsv.both_channels" | "rsv.whatsapp_only" | "rsv.email_only"
   | "rsv.lang_en" | "rsv.lang_ur" | "rsv.lang_ps" | "rsv.lang_fa" | "rsv.save_rule"
+  | "rsv.process_result" | "rsv.process_result_suffix" | "rsv.days" | "rsv.default_rule_name"
   | "ers.bill_summary" | "ers.total_bills" | "ers.draft" | "ers.accepted_not_transferred"
-  | "ers.transferred" | "ers.completed" | "ers.cancelled"
+  | "ers.transferred" | "ers.completed" | "ers.cancelled" | "ers.total_purchase_amount"
   | "ers.total_amounts" | "ers.branches" | "ers.total_branches"
   | "ers.active_branches" | "ers.inactive_branches"
   | "ers.this_month" | "ers.bills_created" | "ers.amount" | "ers.quick_info"
@@ -10809,6 +10816,17 @@ const en: Dict = {
   "ctm.err_load_failed": "Failed to load tax settings",
   "ctm.err_save_failed": "Failed to save tax setting",
   "ctm.confirm_delete": "Are you sure you want to delete or deactivate this tax setting?",
+  "ctm.err_network": "Network error",
+  "ctm.not_registered": "Not Registered",
+  "ctm.default_col": "Default",
+  "ctm.tax_name_ph": "e.g. Value Added Tax (VAT)",
+  "ctm.tax_code_ph": "e.g. VAT5 or GST18",
+  "ctm.trn_ph": "TRN 100293848",
+  "ctm.select_applicability": "Select applicability...",
+  "ctm.report_title": "Tax Code / VAT Registry Report",
+  "ctm.report_subtitle": "Country-Specific Tax Rates, TRN Numbers, and Application Scope",
+  "ctm.rate_pct_col": "Rate %",
+  "ctm.trn_number_col": "TRN Number",
 
   "ajr.hide_filters": "Hide Filters",
   "ajr.show_filters": "Search / Filters",
@@ -10873,6 +10891,17 @@ const en: Dict = {
   "ajr.next": "Next",
   "ajr.loading": "Loading Journal Report...",
   "ajr.all_amounts_base": "All amounts are in Base Currency",
+  "ajr.city_journal_report": "City Journal Report",
+  "ajr.construction_journal_report": "Construction Journal Report",
+  "ajr.account_number_col": "Account Number",
+  "ajr.account_name_col": "Account Name",
+  "ajr.entries_today": "Entries Today",
+  "ajr.reload_data": "Reload data",
+  "ajr.user_name": "User Name",
+  "ajr.city_branch_type": "City Branch",
+  "ajr.base_curr": "BASE CURR",
+  "ajr.page": "Page",
+  "ajr.of": "of",
 
   "rsv.title": "Automated Payment Reminders Scheduler",
   "rsv.subtitle": "Automatically schedule and dispatch WhatsApp & Email payment reminders before, on, and after due dates. Completed payment reminders auto-halt automatically.",
@@ -10905,8 +10934,13 @@ const en: Dict = {
   "rsv.lang_ps": "Pashto (PS)",
   "rsv.lang_fa": "Farsi (FA)",
   "rsv.save_rule": "Save Rule",
+  "rsv.process_result": "Payment Reminder Engine Processed:",
+  "rsv.process_result_suffix": "reminders evaluated. Completed payment reminders auto-halted.",
+  "rsv.days": "days",
+  "rsv.default_rule_name": "Payment Due Reminder",
 
   "ers.bill_summary": "Bill Summary",
+  "ers.total_purchase_amount": "Total Purchase Amount",
   "ers.total_bills": "Total Bills",
   "ers.draft": "Draft",
   "ers.accepted_not_transferred": "Accepted (Not Transferred)",
@@ -18163,6 +18197,17 @@ const ur: Dict = {
   "ctm.err_load_failed": "ٹیکس سیٹنگز لوڈ کرنے میں ناکام",
   "ctm.err_save_failed": "ٹیکس سیٹنگ محفوظ کرنے میں ناکام",
   "ctm.confirm_delete": "کیا آپ واقعی اس ٹیکس سیٹنگ کو حذف یا غیر فعال کرنا چاہتے ہیں؟",
+  "ctm.err_network": "نیٹ ورک کی خرابی",
+  "ctm.not_registered": "رجسٹرڈ نہیں",
+  "ctm.default_col": "ڈیفالٹ",
+  "ctm.tax_name_ph": "مثلاً ویلیو ایڈڈ ٹیکس (VAT)",
+  "ctm.tax_code_ph": "مثلاً VAT5 یا GST18",
+  "ctm.trn_ph": "TRN 100293848",
+  "ctm.select_applicability": "اطلاق منتخب کریں...",
+  "ctm.report_title": "ٹیکس کوڈ / VAT رجسٹری رپورٹ",
+  "ctm.report_subtitle": "ملک کے لحاظ سے ٹیکس شرحیں، TRN نمبرز، اور اطلاق کا دائرہ",
+  "ctm.rate_pct_col": "شرح %",
+  "ctm.trn_number_col": "TRN نمبر",
 
   "ajr.hide_filters": "فلٹر چھپائیں",
   "ajr.show_filters": "تلاش / فلٹر",
@@ -18227,6 +18272,17 @@ const ur: Dict = {
   "ajr.next": "اگلا",
   "ajr.loading": "جرنل رپورٹ لوڈ ہو رہی ہے...",
   "ajr.all_amounts_base": "تمام رقوم بنیادی کرنسی میں ہیں",
+  "ajr.city_journal_report": "سٹی جرنل رپورٹ",
+  "ajr.construction_journal_report": "تعمیرات جرنل رپورٹ",
+  "ajr.account_number_col": "اکاؤنٹ نمبر",
+  "ajr.account_name_col": "اکاؤنٹ کا نام",
+  "ajr.entries_today": "آج کے اندراجات",
+  "ajr.reload_data": "ڈیٹا دوبارہ لوڈ کریں",
+  "ajr.user_name": "صارف کا نام",
+  "ajr.city_branch_type": "سٹی برانچ",
+  "ajr.base_curr": "بنیادی کرنسی",
+  "ajr.page": "صفحہ",
+  "ajr.of": "از",
 
   "rsv.title": "خودکار ادائیگی یادہانی شیڈیولر",
   "rsv.subtitle": "واٹس ایپ اور ای میل ادائیگی یادہانیاں واجب الادا تاریخوں سے پہلے، پر اور بعد میں خودکار طریقے سے شیڈول اور بھیجیں۔",
@@ -18259,8 +18315,13 @@ const ur: Dict = {
   "rsv.lang_ps": "پشتو (PS)",
   "rsv.lang_fa": "فارسی (FA)",
   "rsv.save_rule": "اصول محفوظ کریں",
+  "rsv.process_result": "ادائیگی یاد دہانی انجن نے کارروائی کی:",
+  "rsv.process_result_suffix": "یاد دہانیوں کا جائزہ لیا گیا۔ مکمل ادائیگی کی یاد دہانیاں خودکار طور پر رک گئیں۔",
+  "rsv.days": "دن",
+  "rsv.default_rule_name": "ادائیگی کی مقررہ تاریخ یاد دہانی",
 
   "ers.bill_summary": "بل خلاصہ",
+  "ers.total_purchase_amount": "کل خریداری رقم",
   "ers.total_bills": "کل بل",
   "ers.draft": "مسودہ",
   "ers.accepted_not_transferred": "قبول شدہ (منتقل نہیں)",
@@ -25530,6 +25591,17 @@ const ar: Dict = {
   "ctm.err_load_failed": "فشل تحميل إعدادات الضريبة",
   "ctm.err_save_failed": "فشل حفظ إعداد الضريبة",
   "ctm.confirm_delete": "هل أنت متأكد من رغبتك في حذف أو تعطيل هذا الإعداد الضريبي؟",
+  "ctm.err_network": "خطأ في الشبكة",
+  "ctm.not_registered": "غير مسجّل",
+  "ctm.default_col": "افتراضي",
+  "ctm.tax_name_ph": "مثال: ضريبة القيمة المضافة (VAT)",
+  "ctm.tax_code_ph": "مثال: VAT5 أو GST18",
+  "ctm.trn_ph": "TRN 100293848",
+  "ctm.select_applicability": "اختر نطاق التطبيق...",
+  "ctm.report_title": "تقرير سجل رموز الضرائب / ضريبة القيمة المضافة",
+  "ctm.report_subtitle": "معدلات الضرائب حسب الدولة وأرقام TRN ونطاق التطبيق",
+  "ctm.rate_pct_col": "النسبة %",
+  "ctm.trn_number_col": "رقم TRN",
 
   "ajr.hide_filters": "إخفاء الفلاتر",
   "ajr.show_filters": "بحث / فلاتر",
@@ -25594,6 +25666,17 @@ const ar: Dict = {
   "ajr.next": "التالي",
   "ajr.loading": "جارٍ تحميل تقرير اليومية...",
   "ajr.all_amounts_base": "جميع المبالغ بالعملة الأساسية",
+  "ajr.city_journal_report": "تقرير يومية المدينة",
+  "ajr.construction_journal_report": "تقرير يومية الإنشاءات",
+  "ajr.account_number_col": "رقم الحساب",
+  "ajr.account_name_col": "اسم الحساب",
+  "ajr.entries_today": "قيود اليوم",
+  "ajr.reload_data": "إعادة تحميل البيانات",
+  "ajr.user_name": "اسم المستخدم",
+  "ajr.city_branch_type": "فرع المدينة",
+  "ajr.base_curr": "العملة الأساسية",
+  "ajr.page": "صفحة",
+  "ajr.of": "من",
 
   "rsv.title": "جدولة التذكيرات التلقائية للمدفوعات",
   "rsv.subtitle": "جدولة وإرسال تذكيرات دفع واتساب والبريد الإلكتروني تلقائياً قبل وعند وبعد تواريخ الاستحقاق.",
@@ -25626,8 +25709,13 @@ const ar: Dict = {
   "rsv.lang_ps": "الباشتوية (PS)",
   "rsv.lang_fa": "الفارسية (FA)",
   "rsv.save_rule": "حفظ القاعدة",
+  "rsv.process_result": "قام محرك تذكيرات الدفع بالمعالجة:",
+  "rsv.process_result_suffix": "تذكيرًا تمت مراجعتها. توقفت تذكيرات الدفع المكتملة تلقائيًا.",
+  "rsv.days": "أيام",
+  "rsv.default_rule_name": "تذكير باستحقاق الدفع",
 
   "ers.bill_summary": "ملخص الفواتير",
+  "ers.total_purchase_amount": "إجمالي مبلغ المشتريات",
   "ers.total_bills": "إجمالي الفواتير",
   "ers.draft": "مسودة",
   "ers.accepted_not_transferred": "مقبول (غير محول)",
@@ -32884,6 +32972,17 @@ const fa: Dict = {
   "ctm.err_load_failed": "بارگذاری تنظیمات مالیات ناموفق بود",
   "ctm.err_save_failed": "ذخیره تنظیم مالیات ناموفق بود",
   "ctm.confirm_delete": "آیا مطمئن هستید که می‌خواهید این تنظیم مالیات را حذف یا غیرفعال کنید؟",
+  "ctm.err_network": "خطای شبکه",
+  "ctm.not_registered": "ثبت‌نشده",
+  "ctm.default_col": "پیش‌فرض",
+  "ctm.tax_name_ph": "مثال: مالیات بر ارزش افزوده (VAT)",
+  "ctm.tax_code_ph": "مثال: VAT5 یا GST18",
+  "ctm.trn_ph": "TRN 100293848",
+  "ctm.select_applicability": "دامنه اعمال را انتخاب کنید...",
+  "ctm.report_title": "گزارش دفتر کدهای مالیاتی / VAT",
+  "ctm.report_subtitle": "نرخ‌های مالیاتی بر اساس کشور، شماره‌های TRN و دامنه اعمال",
+  "ctm.rate_pct_col": "نرخ %",
+  "ctm.trn_number_col": "شماره TRN",
 
   "ajr.hide_filters": "پنهان کردن فیلترها",
   "ajr.show_filters": "جستجو / فیلترها",
@@ -32948,6 +33047,17 @@ const fa: Dict = {
   "ajr.next": "بعدی",
   "ajr.loading": "در حال بارگذاری گزارش ژورنال...",
   "ajr.all_amounts_base": "تمام مبالغ به ارز پایه است",
+  "ajr.city_journal_report": "گزارش روزنامه شهر",
+  "ajr.construction_journal_report": "گزارش روزنامه ساخت‌وساز",
+  "ajr.account_number_col": "شماره حساب",
+  "ajr.account_name_col": "نام حساب",
+  "ajr.entries_today": "ثبت‌های امروز",
+  "ajr.reload_data": "بارگذاری مجدد داده‌ها",
+  "ajr.user_name": "نام کاربر",
+  "ajr.city_branch_type": "شعبه شهر",
+  "ajr.base_curr": "ارز پایه",
+  "ajr.page": "صفحه",
+  "ajr.of": "از",
 
   "rsv.title": "زمان‌بند خودکار یادآوری‌های پرداخت",
   "rsv.subtitle": "یادآوری‌های پرداخت واتساپ و ایمیل را قبل، در روز و بعد از سررسید به‌طور خودکار زمان‌بندی و ارسال کنید. یادآوری‌های پرداخت تکمیل‌شده به‌طور خودکار متوقف می‌شوند.",
@@ -32980,8 +33090,13 @@ const fa: Dict = {
   "rsv.lang_ps": "پشتو (PS)",
   "rsv.lang_fa": "دری (FA)",
   "rsv.save_rule": "ذخیره قانون",
+  "rsv.process_result": "موتور یادآوری پرداخت پردازش شد:",
+  "rsv.process_result_suffix": "یادآوری ارزیابی شد. یادآوری‌های پرداخت تکمیل‌شده به‌طور خودکار متوقف شدند.",
+  "rsv.days": "روز",
+  "rsv.default_rule_name": "یادآوری سررسید پرداخت",
 
   "ers.bill_summary": "خلاصه صورتحساب",
+  "ers.total_purchase_amount": "مبلغ کل خرید",
   "ers.total_bills": "کل صورتحساب‌ها",
   "ers.draft": "پیش‌نویس",
   "ers.accepted_not_transferred": "پذیرفته‌شده (منتقل‌نشده)",
@@ -40245,6 +40360,17 @@ const ps: Dict = {
   "ctm.err_load_failed": "د مالیاتي تنظیماتو بارول ناکام شول",
   "ctm.err_save_failed": "د مالیاتي تنظیم خوندي کول ناکام شول",
   "ctm.confirm_delete": "ایا تاسو ډاډه یاست چې دا مالیاتي تنظیم ړنګ یا غیرفعال کړئ؟",
+  "ctm.err_network": "د شبکې تېروتنه",
+  "ctm.not_registered": "نه دی ثبت شوی",
+  "ctm.default_col": "اصلي",
+  "ctm.tax_name_ph": "لکه: د ارزښت اضافه مالیه (VAT)",
+  "ctm.tax_code_ph": "لکه: VAT5 یا GST18",
+  "ctm.trn_ph": "TRN 100293848",
+  "ctm.select_applicability": "د پلي کیدو ساحه وټاکئ...",
+  "ctm.report_title": "د مالیې کوډ / VAT راجستر راپور",
+  "ctm.report_subtitle": "د هېواد له مخې مالیاتي نرخونه، د TRN نمبرونه، او د پلي کیدو ساحه",
+  "ctm.rate_pct_col": "نرخ %",
+  "ctm.trn_number_col": "د TRN نمبر",
 
   "ajr.hide_filters": "فلټرونه پټ کړئ",
   "ajr.show_filters": "لټون / فلټرونه",
@@ -40309,6 +40435,17 @@ const ps: Dict = {
   "ajr.next": "راتلونکی",
   "ajr.loading": "د ژورنال راپور بارول...",
   "ajr.all_amounts_base": "ټول مقدارونه په اصلي اسعارو کې دي",
+  "ajr.city_journal_report": "د ښار د ژورنال راپور",
+  "ajr.construction_journal_report": "د ودانۍ د ژورنال راپور",
+  "ajr.account_number_col": "د حساب نمبر",
+  "ajr.account_name_col": "د حساب نوم",
+  "ajr.entries_today": "د نن ننوتونه",
+  "ajr.reload_data": "معلومات بیا بار کړئ",
+  "ajr.user_name": "د کارن نوم",
+  "ajr.city_branch_type": "د ښار څانګه",
+  "ajr.base_curr": "اصلي اسعارو",
+  "ajr.page": "مخ",
+  "ajr.of": "له",
 
   "rsv.title": "د اتوماتیک تادیاتو یادونو مهالویش",
   "rsv.subtitle": "د پورونو د نېټو څخه مخکې، پر نېټه او وروسته د WhatsApp او بریښنالیک تادیاتو یادونې په اتوماتيک ډول مهالویش او واستوئ. بشپړ شوي تادیاتي یادونې په اتوماتيک ډول ودریږي.",
@@ -40341,8 +40478,13 @@ const ps: Dict = {
   "rsv.lang_ps": "پښتو (PS)",
   "rsv.lang_fa": "دري (FA)",
   "rsv.save_rule": "قاعده خوندي کړئ",
+  "rsv.process_result": "د تادیې د یادونې انجن پروسس شو:",
+  "rsv.process_result_suffix": "یادونې وارزول شوې. بشپړ شوي تادیاتي یادونې په اتوماتيک ډول ودرېدې.",
+  "rsv.days": "ورځې",
+  "rsv.default_rule_name": "د تادیې د نېټې یادونه",
 
   "ers.bill_summary": "د بل لنډیز",
+  "ers.total_purchase_amount": "د پیرود ټوله اندازه",
   "ers.total_bills": "ټول بلونه",
   "ers.draft": "مسوده",
   "ers.accepted_not_transferred": "منل شوی (نه لیږدول شوی)",

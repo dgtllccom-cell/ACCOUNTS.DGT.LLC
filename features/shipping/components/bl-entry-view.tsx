@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { cn } from "@/lib/utils";
+import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { Th } from "@/components/ui/translated-th";
 import { ClearingAgentPicker } from "@/features/shipping/components/clearing-agent-picker";
 import { ShippingLinePicker } from "@/features/shipping/components/shipping-line-picker";
@@ -179,7 +181,10 @@ function todayIso() {
 }
 
 export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "purchase" }) {
-  const moduleEyebrow = context === "shipping" ? "Shipping Line / B/L Entry" : "Purchase Workflow / B/L";
+  const lang = useActiveLanguage() || "en";
+  const _ = (key: string, fallback: string) => t(lang, key, fallback);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+  const moduleEyebrow = context === "shipping" ? _("ble.eyebrow_shipping", "Shipping Line / B/L Entry") : _("ble.eyebrow_purchase", "Purchase Workflow / B/L");
   const [data, setData] = useState<ShippingData | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [query, setQuery] = useState("");
@@ -208,12 +213,12 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
 
       const res = await fetch(`/api/erp/shipping/bl-records?${params.toString()}`, { cache: "force-cache" });
       const json = await res.json();
-      if (!res.ok || !json.ok) throw new Error(json?.error?.message ?? "Unable to load B/L records");
+      if (!res.ok || !json.ok) throw new Error(json?.error?.message ?? _("ble.err_load", "Unable to load B/L records"));
       blDataCache.set(cacheKey, { data: json.data, cachedAt: Date.now() });
       setData(json.data);
       setMessage("");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to load B/L records");
+      setMessage(error instanceof Error ? error.message : _("ble.err_load", "Unable to load B/L records"));
     } finally {
       setLoading(false);
     }
@@ -370,15 +375,15 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
 
   async function saveRecord() {
     if (form.eta && form.etd && new Date(form.eta).getTime() < new Date(form.etd).getTime()) {
-      setMessage("ETA (Arrival Date) must be on or after ETD (Departure Date)");
+      setMessage(_("ble.err_eta_etd", "ETA (Arrival Date) must be on or after ETD (Departure Date)"));
       return;
     }
     if (!form.importer.trim()) {
-      setMessage("Please enter or select a valid Importer.");
+      setMessage(_("ble.err_importer", "Please enter or select a valid Importer."));
       return;
     }
     if (!form.exporter.trim()) {
-      setMessage("Please enter or select a valid Exporter.");
+      setMessage(_("ble.err_exporter", "Please enter or select a valid Exporter."));
       return;
     }
 
@@ -417,12 +422,12 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
         })
       });
       const json = await res.json();
-      if (!res.ok || !json.ok) throw new Error(json?.error?.message ?? "Unable to save B/L record");
-      setMessage(`Generated B/L: ${json.data.blNumber}`);
+      if (!res.ok || !json.ok) throw new Error(json?.error?.message ?? _("ble.err_save", "Unable to save B/L record"));
+      setMessage(`${_("ble.generated_bl_msg", "Generated B/L:")} ${json.data.blNumber}`);
       setForm((current) => ({ ...emptyForm, countryId: current.countryId, countryBranchId: current.countryBranchId, cityBranchId: current.cityBranchId, currencyCode: current.currencyCode }));
       await loadRecords();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to save B/L record");
+      setMessage(error instanceof Error ? error.message : _("ble.err_save", "Unable to save B/L record"));
     } finally {
       setSaving(false);
     }
@@ -435,7 +440,7 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
 
   function exportCsv() {
     const rows = [
-      ["Country", "Branch", "City Branch", "Shipping Line", "B/L Number", "User", "Account Number", "Debit", "Credit", "Shipment Status"],
+      [_("common.country", "Country"), _("common.branch", "Branch"), _("ble.csv_city_branch", "City Branch"), _("ble.ml_shipping_line", "Shipping Line"), _("ble.csv_bl_number", "B/L Number"), _("common.user", "User"), _("ajr.account_number_col", "Account Number"), _("ble.csv_debit", "Debit"), _("ble.csv_credit", "Credit"), _("ble.csv_shipment_status", "Shipment Status")],
       ...records.map((row) => [
         row.countries?.name ?? "-",
         row.country_branches?.name ?? "-",
@@ -465,11 +470,11 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
       <div className="flex flex-col gap-3 border-b pb-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.35em] text-cyan-600 dark:text-cyan-300">{moduleEyebrow}</p>
-          <h1 className="text-2xl font-black tracking-tight">Bill of Lading (B/L)</h1>
+          <h1 className="text-2xl font-black tracking-tight">{_("ble.title", "Bill of Lading (B/L)")}</h1>
           <p className="text-xs text-muted-foreground">
             {context === "shipping"
-              ? "Shipping Line -> Vessel / Container Loading -> B/L Entry -> Shipment Tracking."
-              : "Purchase Order -> Invoice -> Payment -> Confirmation -> Loading Entry -> B/L -> Shipment."}
+              ? _("ble.subtitle_shipping", "Shipping Line -> Vessel / Container Loading -> B/L Entry -> Shipment Tracking.")
+              : _("ble.subtitle_purchase", "Purchase Order -> Invoice -> Payment -> Confirmation -> Loading Entry -> B/L -> Shipment.")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -481,7 +486,7 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
               onKeyDown={(event) => {
                 if (event.key === "Enter") void loadRecords(query, { force: true });
               }}
-              placeholder="Search B/L, container, vessel..."
+              placeholder={_("ble.search_ph", "Search B/L, container, vessel...")}
               className="h-9 bg-background pl-9 text-xs"
             />
           </div>
@@ -494,12 +499,12 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
             </Button>
             {menuOpen ? (
               <div className="absolute right-0 top-full z-20 mt-2 w-48 overflow-hidden rounded-lg border bg-popover py-1 text-popover-foreground shadow-2xl">
-                <MenuAction icon={<SquareArrowOutUpRight className="h-4 w-4" />} label="View B/L Report" onClick={() => setMenuOpen(false)} />
-                <MenuAction icon={<Printer className="h-4 w-4" />} label="Print B/L" onClick={printReport} />
-                <MenuAction icon={<DownloadActionIcon className="h-4 w-4" />} label="PDF Download" onClick={printReport} />
-                <MenuAction icon={<Mail className="h-4 w-4" />} label="Email B/L" onClick={() => setMenuOpen(false)} />
-                <MenuAction icon={<DownloadActionIcon className="h-4 w-4" />} label="Export CSV" onClick={exportCsv} />
-                <MenuAction icon={<SquareArrowOutUpRight className="h-4 w-4" />} label="Full Screen View" onClick={() => document.documentElement.requestFullscreen?.()} />
+                <MenuAction icon={<SquareArrowOutUpRight className="h-4 w-4" />} label={_("ble.menu_view_report", "View B/L Report")} onClick={() => setMenuOpen(false)} />
+                <MenuAction icon={<Printer className="h-4 w-4" />} label={_("ble.menu_print", "Print B/L")} onClick={printReport} />
+                <MenuAction icon={<DownloadActionIcon className="h-4 w-4" />} label={_("ble.menu_pdf", "PDF Download")} onClick={printReport} />
+                <MenuAction icon={<Mail className="h-4 w-4" />} label={_("ble.menu_email", "Email B/L")} onClick={() => setMenuOpen(false)} />
+                <MenuAction icon={<DownloadActionIcon className="h-4 w-4" />} label={_("ble.menu_csv", "Export CSV")} onClick={exportCsv} />
+                <MenuAction icon={<SquareArrowOutUpRight className="h-4 w-4" />} label={_("ble.menu_fullscreen", "Full Screen View")} onClick={() => document.documentElement.requestFullscreen?.()} />
               </div>
             ) : null}
           </div>
@@ -510,24 +515,24 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
         <Card>
           <CardHeader className="border-b py-3">
             <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-wide text-cyan-700 dark:text-cyan-300">
-              <Ship className="h-4 w-4" /> BL Entry
+              <Ship className="h-4 w-4" /> {_("ble.card_entry_title", "BL Entry")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 p-3">
             <div className="rounded-lg border bg-background p-2">
-              <div className="mb-2 text-[10px] font-black uppercase tracking-wide text-muted-foreground">B/L Generation Gate</div>
+              <div className="mb-2 text-[10px] font-black uppercase tracking-wide text-muted-foreground">{_("ble.gate_title", "B/L Generation Gate")}</div>
               <div className="grid gap-2 text-[10px] sm:grid-cols-3">
-                <GateBadge label="Purchase Confirmed" ok={purchaseConfirmed} />
-                <GateBadge label="Loading Completed" ok={loadingCompleted} />
-                <GateBadge label="Shipment Details Entered" ok={shipmentDetailsReady} />
+                <GateBadge label={_("ble.gate_purchase", "Purchase Confirmed")} ok={purchaseConfirmed} />
+                <GateBadge label={_("ble.gate_loading", "Loading Completed")} ok={loadingCompleted} />
+                <GateBadge label={_("ble.gate_details", "Shipment Details Entered")} ok={shipmentDetailsReady} />
               </div>
             </div>
             <div className="grid grid-cols-4 gap-1">
               {[
-                [1, "1) Parties"],
-                [2, "2) BL Entry"],
-                [3, "3) Goods Entry"],
-                [4, "4) Container"]
+                [1, _("ble.step1_label", "1) Parties")],
+                [2, _("ble.step2_label", "2) BL Entry")],
+                [3, _("ble.step3_label", "3) Goods Entry")],
+                [4, _("ble.step4_label", "4) Container")]
               ].map(([step, label]) => (
                 <button
                   key={step}
@@ -546,102 +551,102 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
             <div className="rounded-lg border bg-muted/20 p-3">
               {activeStep === 1 ? (
                 <div className="space-y-3">
-                  <div className="text-[10px] font-black uppercase tracking-wide text-amber-600 dark:text-amber-300">SR#: 1 - Parties & Booking</div>
-                  <Field label="Customer Account No *" value={form.customerAccountNo} onChange={(v) => updateField("customerAccountNo", v)} />
+                  <div className="text-[10px] font-black uppercase tracking-wide text-amber-600 dark:text-amber-300">{_("ble.step1_heading", "SR#: 1 - Parties & Booking")}</div>
+                  <Field label={_("ble.lbl_customer_account", "Customer Account No *")} value={form.customerAccountNo} onChange={(v) => updateField("customerAccountNo", v)} />
                   <div className="grid grid-cols-2 gap-2">
-                    <Field label="Shipping Type *" value={form.shippingType} onChange={(v) => updateField("shippingType", v)} asSelect options={[{ value: "By Sea", label: "By Sea" }, { value: "By Road", label: "By Road" }, { value: "By Air", label: "By Air" }]} />
-                    <Field label="Shipment Type *" value={form.shipmentType} onChange={(v) => updateField("shipmentType", v)} asSelect options={[{ value: "Import", label: "Import" }, { value: "Export", label: "Export" }, { value: "Transit", label: "Transit" }]} />
+                    <Field label={_("ble.lbl_shipping_type", "Shipping Type *")} value={form.shippingType} onChange={(v) => updateField("shippingType", v)} asSelect options={[{ value: "By Sea", label: "By Sea" }, { value: "By Road", label: "By Road" }, { value: "By Air", label: "By Air" }]} />
+                    <Field label={_("ble.lbl_shipment_type", "Shipment Type *")} value={form.shipmentType} onChange={(v) => updateField("shipmentType", v)} asSelect options={[{ value: "Import", label: "Import" }, { value: "Export", label: "Export" }, { value: "Transit", label: "Transit" }]} />
                   </div>
-                  <Field label="Importer *" value={form.importer} onChange={(v) => updateField("importer", v)} placeholder="Select / enter importer..." />
-                  <Field label="Exporter *" value={form.exporter} onChange={(v) => updateField("exporter", v)} placeholder="Select / enter exporter..." />
-                  <Field label="Notify Party" value={form.notifyParty} onChange={(v) => updateField("notifyParty", v)} placeholder="Enter notify party (optional)..." />
+                  <Field label={_("ble.lbl_importer", "Importer *")} value={form.importer} onChange={(v) => updateField("importer", v)} placeholder={_("ble.ph_importer", "Select / enter importer...")} />
+                  <Field label={_("ble.lbl_exporter", "Exporter *")} value={form.exporter} onChange={(v) => updateField("exporter", v)} placeholder={_("ble.ph_exporter", "Select / enter exporter...")} />
+                  <Field label={_("ble.lbl_notify_party", "Notify Party")} value={form.notifyParty} onChange={(v) => updateField("notifyParty", v)} placeholder={_("ble.ph_notify_party", "Enter notify party (optional)...")} />
                   <div className="grid grid-cols-2 gap-2">
-                    <Field label="Booking No *" value={form.bookingNo} onChange={(v) => updateField("bookingNo", v)} />
-                    <Field label="Booking Company Type *" value={form.bookingCompanyType} onChange={(v) => updateField("bookingCompanyType", v)} asSelect options={[{ value: "Shipping Line", label: "Shipping Line" }, { value: "Transport Company", label: "Transport Company" }, { value: "Airline", label: "Airline" }]} />
-                    <Field label="Booking Company Name *" value={form.bookingCompanyName} onChange={(v) => updateField("bookingCompanyName", v)} />
-                    <Field label="Booking Date *" type="date" value={form.bookingDate} onChange={(v) => updateField("bookingDate", v)} />
-                    <Field label="Vessel Name *" value={form.vesselName} onChange={(v) => updateField("vesselName", v)} placeholder="e.g. MSC ATHENS" />
-                    <Field label="Vessel Recharge Date *" type="date" value={form.eta} onChange={(v) => updateField("eta", v)} />
+                    <Field label={_("ble.lbl_booking_no", "Booking No *")} value={form.bookingNo} onChange={(v) => updateField("bookingNo", v)} />
+                    <Field label={_("ble.lbl_booking_company_type", "Booking Company Type *")} value={form.bookingCompanyType} onChange={(v) => updateField("bookingCompanyType", v)} asSelect options={[{ value: "Shipping Line", label: "Shipping Line" }, { value: "Transport Company", label: "Transport Company" }, { value: "Airline", label: "Airline" }]} />
+                    <Field label={_("ble.lbl_booking_company_name", "Booking Company Name *")} value={form.bookingCompanyName} onChange={(v) => updateField("bookingCompanyName", v)} />
+                    <Field label={_("ble.lbl_booking_date", "Booking Date *")} type="date" value={form.bookingDate} onChange={(v) => updateField("bookingDate", v)} />
+                    <Field label={_("ble.lbl_vessel_name", "Vessel Name *")} value={form.vesselName} onChange={(v) => updateField("vesselName", v)} placeholder="e.g. MSC ATHENS" />
+                    <Field label={_("ble.lbl_vessel_recharge_date", "Vessel Recharge Date *")} type="date" value={form.eta} onChange={(v) => updateField("eta", v)} />
                   </div>
-                  <div className="grid grid-cols-2 gap-2"><button className="h-8 rounded-md bg-slate-700 text-xs font-black text-slate-100" type="button">Reset</button><button className="h-8 rounded-md bg-blue-600 text-xs font-black text-white" type="button" onClick={() => setActiveStep(2)}>Next</button></div>
+                  <div className="grid grid-cols-2 gap-2"><button className="h-8 rounded-md bg-slate-700 text-xs font-black text-slate-100" type="button">{_("ble.btn_reset", "Reset")}</button><button className="h-8 rounded-md bg-blue-600 text-xs font-black text-white" type="button" onClick={() => setActiveStep(2)}>{_("ble.btn_next", "Next")}</button></div>
                 </div>
               ) : null}
 
               {activeStep === 2 ? (
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-2">
-                    <Field label="Issue Date *" type="date" value={form.issueDate} onChange={(v) => updateField("issueDate", v)} />
-                    <Field label="Issue Serial No *" value={form.issueSerial} onChange={(v) => updateField("issueSerial", v)} />
+                    <Field label={_("ble.lbl_issue_date", "Issue Date *")} type="date" value={form.issueDate} onChange={(v) => updateField("issueDate", v)} />
+                    <Field label={_("ble.lbl_issue_serial", "Issue Serial No *")} value={form.issueSerial} onChange={(v) => updateField("issueSerial", v)} />
                   </div>
                   <div className="grid grid-cols-[1fr_1fr_72px] gap-2">
-                    <Field label="BL Type" value={form.blType} onChange={(v) => updateField("blType", v)} asSelect options={[{ value: "New BL", label: "New BL" }, { value: "Old BL", label: "Old BL" }]} />
-                    <Field label="BL No" value={form.blNumber} onChange={(v) => updateField("blNumber", v)} />
-                    <button className="mt-5 h-8 rounded bg-blue-600 text-[10px] font-black text-white" type="button">Search</button>
+                    <Field label={_("ble.lbl_bl_type", "BL Type")} value={form.blType} onChange={(v) => updateField("blType", v)} asSelect options={[{ value: "New BL", label: "New BL" }, { value: "Old BL", label: "Old BL" }]} />
+                    <Field label={_("ble.lbl_bl_no", "BL No")} value={form.blNumber} onChange={(v) => updateField("blNumber", v)} />
+                    <button className="mt-5 h-8 rounded bg-blue-600 text-[10px] font-black text-white" type="button">{_("ble.btn_search", "Search")}</button>
                   </div>
-                  <div className="text-[10px] font-black uppercase tracking-wide text-amber-600 dark:text-amber-300">Transport / Route Details</div>
+                  <div className="text-[10px] font-black uppercase tracking-wide text-amber-600 dark:text-amber-300">{_("ble.section_route", "Transport / Route Details")}</div>
                   <div className="grid grid-cols-2 gap-2">
-                    <Field label="1) Route Type" value={form.shippingType} onChange={(v) => updateField("shippingType", v)} asSelect options={[{ value: "By Sea", label: "By Sea" }, { value: "By Road", label: "By Road" }, { value: "By Air", label: "By Air" }]} />
-                    <Field label="2) Route Country" value={form.routeCountry} onChange={(v) => updateField("routeCountry", v)} asSelect options={[{ value: "PK / UAE", label: "PK / UAE" }, { value: "AF / PK", label: "AF / PK" }, { value: "IR / UAE", label: "IR / UAE" }]} />
+                    <Field label={_("ble.lbl_route_type", "1) Route Type")} value={form.shippingType} onChange={(v) => updateField("shippingType", v)} asSelect options={[{ value: "By Sea", label: "By Sea" }, { value: "By Road", label: "By Road" }, { value: "By Air", label: "By Air" }]} />
+                    <Field label={_("ble.lbl_route_country", "2) Route Country")} value={form.routeCountry} onChange={(v) => updateField("routeCountry", v)} asSelect options={[{ value: "PK / UAE", label: "PK / UAE" }, { value: "AF / PK", label: "AF / PK" }, { value: "IR / UAE", label: "IR / UAE" }]} />
                   </div>
                   <div className="rounded-lg border border-cyan-400/30 bg-cyan-400/5 p-2">
-                    <div className="mb-2 text-[10px] font-black uppercase text-cyan-700 dark:text-cyan-300">3) Loading Details</div>
+                    <div className="mb-2 text-[10px] font-black uppercase text-cyan-700 dark:text-cyan-300">{_("ble.section_loading", "3) Loading Details")}</div>
                     <div className="grid grid-cols-2 gap-2">
-                      <Field label="Loading Country" value={form.loadingCountry} onChange={(v) => updateField("loadingCountry", v)} />
-                      <Field label="Port of Loading *" value={form.loadingPort} onChange={(v) => updateField("loadingPort", v)} />
-                      <Field label="Loading Date" type="date" value={form.loadDate} onChange={(v) => updateField("loadDate", v)} />
-                      <Field label="ETD *" type="date" value={form.etd} onChange={(v) => updateField("etd", v)} />
+                      <Field label={_("ble.lbl_loading_country", "Loading Country")} value={form.loadingCountry} onChange={(v) => updateField("loadingCountry", v)} />
+                      <Field label={_("ble.lbl_port_of_loading", "Port of Loading *")} value={form.loadingPort} onChange={(v) => updateField("loadingPort", v)} />
+                      <Field label={_("ble.lbl_loading_date", "Loading Date")} type="date" value={form.loadDate} onChange={(v) => updateField("loadDate", v)} />
+                      <Field label={_("ble.lbl_etd", "ETD *")} type="date" value={form.etd} onChange={(v) => updateField("etd", v)} />
                     </div>
                   </div>
                   <div className="rounded-lg border border-rose-400/30 bg-rose-400/5 p-2">
-                    <div className="mb-2 text-[10px] font-black uppercase text-rose-300">4) Receiving Details</div>
+                    <div className="mb-2 text-[10px] font-black uppercase text-rose-300">{_("ble.section_receiving", "4) Receiving Details")}</div>
                     <div className="grid grid-cols-2 gap-2">
-                      <Field label="Receiving Country" value={form.receivingCountry} onChange={(v) => updateField("receivingCountry", v)} />
-                      <Field label="Port of Discharge *" value={form.dischargePort} onChange={(v) => updateField("dischargePort", v)} />
-                      <Field label="Receiving Date" type="date" value={form.receiveDate} onChange={(v) => updateField("receiveDate", v)} />
-                      <Field label="ETA *" type="date" value={form.eta} onChange={(v) => updateField("eta", v)} />
+                      <Field label={_("ble.lbl_receiving_country", "Receiving Country")} value={form.receivingCountry} onChange={(v) => updateField("receivingCountry", v)} />
+                      <Field label={_("ble.lbl_port_of_discharge", "Port of Discharge *")} value={form.dischargePort} onChange={(v) => updateField("dischargePort", v)} />
+                      <Field label={_("ble.lbl_receiving_date", "Receiving Date")} type="date" value={form.receiveDate} onChange={(v) => updateField("receiveDate", v)} />
+                      <Field label={_("ble.lbl_eta", "ETA *")} type="date" value={form.eta} onChange={(v) => updateField("eta", v)} />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2"><button className="h-8 rounded-md bg-slate-700 text-xs font-black text-slate-100" type="button">Reset</button><button className="h-8 rounded-md bg-blue-600 text-xs font-black text-white" type="button" onClick={() => setActiveStep(3)}>Next</button></div>
+                  <div className="grid grid-cols-2 gap-2"><button className="h-8 rounded-md bg-slate-700 text-xs font-black text-slate-100" type="button">{_("ble.btn_reset", "Reset")}</button><button className="h-8 rounded-md bg-blue-600 text-xs font-black text-white" type="button" onClick={() => setActiveStep(3)}>{_("ble.btn_next", "Next")}</button></div>
                 </div>
               ) : null}
 
               {activeStep === 3 ? (
                 <div className="space-y-3">
-                  <div className="text-[10px] font-black uppercase tracking-wide text-amber-600 dark:text-amber-300">SR#: 1 - Goods Entry</div>
-                  <Field label="Goods *" value={form.goodsName} onChange={(v) => updateField("goodsName", v)} asSelect options={[{ value: "PISTACHIOS KERNEL", label: "PISTACHIOS KERNEL" }, { value: "BADAM", label: "BADAM" }, { value: "WALNUT KERNELS", label: "WALNUT KERNELS" }]} />
+                  <div className="text-[10px] font-black uppercase tracking-wide text-amber-600 dark:text-amber-300">{_("ble.step3_heading", "SR#: 1 - Goods Entry")}</div>
+                  <Field label={_("ble.lbl_goods", "Goods *")} value={form.goodsName} onChange={(v) => updateField("goodsName", v)} asSelect options={[{ value: "PISTACHIOS KERNEL", label: "PISTACHIOS KERNEL" }, { value: "BADAM", label: "BADAM" }, { value: "WALNUT KERNELS", label: "WALNUT KERNELS" }]} />
                   <div className="grid grid-cols-2 gap-2">
-                    <Field label="Size" value={form.goodsSize} onChange={(v) => updateField("goodsSize", v)} />
-                    <Field label="Brand" value={form.goodsBrand} onChange={(v) => updateField("goodsBrand", v)} />
-                    <Field label="Origin" value={form.goodsOrigin} onChange={(v) => updateField("goodsOrigin", v)} />
-                    <Field label="HS Code" value={form.hsCode} onChange={(v) => updateField("hsCode", v)} />
-                    <Field label="Allot Name" value={form.allotName} onChange={(v) => updateField("allotName", v)} />
-                    <Field label="Warehouse" value={form.warehouse} onChange={(v) => updateField("warehouse", v)} />
-                    <Field label="Qty Name" value={form.qtyName} onChange={(v) => updateField("qtyName", v)} asSelect options={[{ value: "BAGS", label: "BAGS" }, { value: "COTTON", label: "COTTON" }, { value: "KGS", label: "KGS" }]} />
-                    <Field label="Quantity No" type="number" value={form.qtyNo} onChange={(v) => updateField("qtyNo", v)} />
-                    <Field label="Total Gross Weight (KG)" type="number" value={form.totalGrossWeight} onChange={(v) => updateField("totalGrossWeight", v)} />
-                    <Field label="Empty Wt / Bag (KG)" type="number" value={form.emptyPerBag} onChange={(v) => updateField("emptyPerBag", v)} />
-                    <Field label="Net Weight (KG)" type="number" value={form.netWeight} onChange={(v) => updateField("netWeight", v)} />
-                    <Field label="Divide Name" value={form.divideName} onChange={(v) => updateField("divideName", v)} asSelect options={[{ value: "Ton", label: "Ton" }, { value: "KG", label: "KG" }, { value: "Bag", label: "Bag" }, { value: "Carton", label: "Carton" }]} />
+                    <Field label={_("ble.lbl_size", "Size")} value={form.goodsSize} onChange={(v) => updateField("goodsSize", v)} />
+                    <Field label={_("ble.lbl_brand", "Brand")} value={form.goodsBrand} onChange={(v) => updateField("goodsBrand", v)} />
+                    <Field label={_("ble.lbl_origin", "Origin")} value={form.goodsOrigin} onChange={(v) => updateField("goodsOrigin", v)} />
+                    <Field label={_("ble.lbl_hs_code", "HS Code")} value={form.hsCode} onChange={(v) => updateField("hsCode", v)} />
+                    <Field label={_("ble.lbl_allot_name", "Allot Name")} value={form.allotName} onChange={(v) => updateField("allotName", v)} />
+                    <Field label={_("ble.lbl_warehouse", "Warehouse")} value={form.warehouse} onChange={(v) => updateField("warehouse", v)} />
+                    <Field label={_("ble.lbl_qty_name", "Qty Name")} value={form.qtyName} onChange={(v) => updateField("qtyName", v)} asSelect options={[{ value: "BAGS", label: "BAGS" }, { value: "COTTON", label: "COTTON" }, { value: "KGS", label: "KGS" }]} />
+                    <Field label={_("ble.lbl_qty_no", "Quantity No")} type="number" value={form.qtyNo} onChange={(v) => updateField("qtyNo", v)} />
+                    <Field label={_("ble.lbl_total_gross_kg", "Total Gross Weight (KG)")} type="number" value={form.totalGrossWeight} onChange={(v) => updateField("totalGrossWeight", v)} />
+                    <Field label={_("ble.lbl_empty_per_bag", "Empty Wt / Bag (KG)")} type="number" value={form.emptyPerBag} onChange={(v) => updateField("emptyPerBag", v)} />
+                    <Field label={_("ble.lbl_net_weight", "Net Weight (KG)")} type="number" value={form.netWeight} onChange={(v) => updateField("netWeight", v)} />
+                    <Field label={_("ble.lbl_divide_name", "Divide Name")} value={form.divideName} onChange={(v) => updateField("divideName", v)} asSelect options={[{ value: "Ton", label: "Ton" }, { value: "KG", label: "KG" }, { value: "Bag", label: "Bag" }, { value: "Carton", label: "Carton" }]} />
                   </div>
                   <div className="grid grid-cols-2 gap-2 rounded border bg-background p-2 text-[9px] text-muted-foreground">
-                    <div>Total Gross Weight: <b className="text-foreground">{form.totalGrossWeight}</b></div>
-                    <div>Total Empty Weight: <b className="text-foreground">{form.totalEmptyWeight}</b></div>
-                    <div>NET Weight: <b className="text-amber-300">{form.netWeight}</b></div>
-                    <div>Total Divide: <b className="text-foreground">{form.totalDivide}</b></div>
+                    <div>{_("ble.sum_gross", "Total Gross Weight:")} <b className="text-foreground">{form.totalGrossWeight}</b></div>
+                    <div>{_("ble.sum_empty", "Total Empty Weight:")} <b className="text-foreground">{form.totalEmptyWeight}</b></div>
+                    <div>{_("ble.sum_net", "NET Weight:")} <b className="text-amber-300">{form.netWeight}</b></div>
+                    <div>{_("ble.sum_divide", "Total Divide:")} <b className="text-foreground">{form.totalDivide}</b></div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2"><button className="h-8 rounded-md bg-slate-700 text-xs font-black text-slate-100" type="button">Quality Report</button><button className="h-8 rounded-md bg-blue-600 text-xs font-black text-white" type="button" onClick={() => setActiveStep(4)}>Next Container</button></div>
+                  <div className="grid grid-cols-2 gap-2"><button className="h-8 rounded-md bg-slate-700 text-xs font-black text-slate-100" type="button">{_("ble.btn_quality_report", "Quality Report")}</button><button className="h-8 rounded-md bg-blue-600 text-xs font-black text-white" type="button" onClick={() => setActiveStep(4)}>{_("ble.btn_next_container", "Next Container")}</button></div>
                 </div>
               ) : null}
 
               {activeStep === 4 ? (
                 <div className="space-y-3">
-                  <div className="text-[10px] font-black uppercase tracking-wide text-amber-600 dark:text-amber-300">SR#: 4 - Container Loading Entry</div>
-                  <Field label="Select Goods For This Container" value={form.goodsName} onChange={(v) => updateField("goodsName", v)} asSelect options={[{ value: form.goodsName, label: form.goodsName || "Select Goods First" }]} />
+                  <div className="text-[10px] font-black uppercase tracking-wide text-amber-600 dark:text-amber-300">{_("ble.step4_heading", "SR#: 4 - Container Loading Entry")}</div>
+                  <Field label={_("ble.lbl_select_goods", "Select Goods For This Container")} value={form.goodsName} onChange={(v) => updateField("goodsName", v)} asSelect options={[{ value: form.goodsName, label: form.goodsName || _("ble.select_goods_first", "Select Goods First") }]} />
                   <div className="rounded-lg border bg-background p-2">
-                    <div className="mb-2 text-[10px] font-black uppercase tracking-wide text-cyan-700 dark:text-cyan-300">Shipping Line Details</div>
+                    <div className="mb-2 text-[10px] font-black uppercase tracking-wide text-cyan-700 dark:text-cyan-300">{_("ble.section_shipping_line", "Shipping Line Details")}</div>
                     <div className="grid grid-cols-2 gap-2">
                       <ShippingLinePicker
-                        label="Shipping Line *"
+                        label={_("ble.lbl_shipping_line", "Shipping Line *")}
                         value={form.shippingLineId}
                         onValueChange={async (id) => {
                           updateField("shippingLineId", id);
@@ -654,11 +659,11 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
                           }
                         }}
                       />
-                      <Field label="Voyage Number *" value={form.voyageNumber} onChange={(v) => updateField("voyageNumber", v)} />
+                      <Field label={_("ble.lbl_voyage_number", "Voyage Number *")} value={form.voyageNumber} onChange={(v) => updateField("voyageNumber", v)} />
                     </div>
                     <div className="mt-2">
                       <ClearingAgentPicker
-                        label="Clearing Agent"
+                        label={_("ble.lbl_clearing_agent", "Clearing Agent")}
                         value={form.clearingAgentId}
                         onValueChange={(id) => updateField("clearingAgentId", id)}
                       />
