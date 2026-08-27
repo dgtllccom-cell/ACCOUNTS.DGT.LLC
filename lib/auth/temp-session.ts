@@ -1,4 +1,4 @@
-﻿import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import type { EnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { supportedLanguages, type SupportedLanguage } from "@/lib/i18n/languages";
@@ -10,7 +10,7 @@ const TEMP_USER_UUIDS: Record<string, string> = {
   "temp-quetta-city-admin": "00000000-0000-4000-8000-000000000003"
 };
 
-type TempSessionPayloadV1 = {
+export type TempSessionPayloadV1 = {
   v: 1;
   kind: "temp";
   userId: string;
@@ -82,7 +82,45 @@ export async function setTempSuperAdminSession(options: { remember: boolean }) {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
-    maxAge: options.remember ? 60 * 60 * 24 * 30 : 60 * 60 * 8
+    maxAge: options.remember ? 60 * 60 * 24 * 30 : 60 * 60 * 12
+  });
+}
+
+export async function setDirectUserSession(user: {
+  userId: string;
+  email: string;
+  fullName: string;
+  roles: EnterpriseRole[];
+  assignments?: Array<{
+    role: EnterpriseRole;
+    countryId: string | null;
+    countryBranchId: string | null;
+    cityBranchId: string | null;
+    clearingAgentId?: string | null;
+    ledgerVisibility?: string;
+  }>;
+  remember?: boolean;
+}) {
+  const cookieStore = await cookies();
+  const payload: TempSessionPayloadV1 = {
+    v: 1,
+    kind: "temp",
+    userId: user.userId,
+    email: user.email,
+    fullName: user.fullName,
+    roles: user.roles,
+    assignments: user.assignments,
+    createdAt: Date.now()
+  };
+
+  const payloadB64 = base64UrlEncode(JSON.stringify(payload));
+  const token = `${payloadB64}.${sign(payloadB64)}`;
+
+  cookieStore.set(ERP_SESSION_COOKIE, token, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: user.remember ? 60 * 60 * 24 * 30 : 60 * 60 * 12
   });
 }
 
@@ -149,9 +187,6 @@ export async function readTempSession(): Promise<
   };
 }
 
-// Returns the raw signed token string without writing to cookies.
-// Use this in Route Handlers that return NextResponse.redirect() — those must set cookies
-// directly on the response object, not via the cookies() API.
 export function buildTempAgentToken(options: {
   userId: string;
   email: string;

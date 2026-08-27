@@ -1,9 +1,20 @@
 import postgres from 'postgres';
+import fs from 'fs';
 
-const sql = postgres('postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres', {
-  ssl: { rejectUnauthorized: false },
-  prepare: false
-});
+function loadEnv() {
+  if (fs.existsSync(".env.local")) {
+    const lines = fs.readFileSync(".env.local", "utf8").split(/\r?\n/);
+    for (const line of lines) {
+      if (line.trim().startsWith("DATABASE_URL=")) {
+        process.env.DATABASE_URL = line.slice(line.indexOf("=") + 1).trim();
+      }
+    }
+  }
+}
+loadEnv();
+
+const dbUrl = process.env.DATABASE_URL || "postgresql://postgres:postgres@localhost:5432/postgres";
+const sql = postgres(dbUrl);
 
 async function inspectProfiles() {
   const profileCols = await sql`
@@ -11,14 +22,19 @@ async function inspectProfiles() {
     FROM information_schema.columns 
     WHERE table_name = 'profiles'
   `;
-  console.log("Profiles columns:", profileCols.map(c => c.column_name));
+  console.log("Profiles columns:", profileCols.map(c => `${c.column_name} (${c.data_type})`));
 
   const uraCols = await sql`
     SELECT column_name, data_type 
     FROM information_schema.columns 
     WHERE table_name = 'user_role_assignments'
   `;
-  console.log("user_role_assignments columns:", uraCols.map(c => c.column_name));
+  console.log("user_role_assignments columns:", uraCols.map(c => `${c.column_name} (${c.data_type})`));
+
+  const existingProfiles = await sql`
+    SELECT id, user_code, full_name, raw_password FROM profiles LIMIT 10;
+  `;
+  console.log("Sample profiles:", existingProfiles);
 
   await sql.end();
 }

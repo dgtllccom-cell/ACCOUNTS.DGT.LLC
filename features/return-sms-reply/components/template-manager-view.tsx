@@ -94,7 +94,7 @@ export function TemplateManagerView({ lang }: Props) {
               <FileText className="h-7 w-7 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-white">4-Language Business Reply Templates</h2>
+              <h2 className="text-xl font-black text-white">{_("tmv.header", "4-Language Business Reply Templates")}</h2>
               <p className="text-xs text-white/80 mt-0.5">
                 Manage reusable business response templates in English, Urdu, Pashto, and Farsi with dynamic ERP variable placeholders.
               </p>
@@ -106,7 +106,7 @@ export function TemplateManagerView({ lang }: Props) {
             className="flex items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-xs font-black text-emerald-700 hover:bg-white/90 transition-all shadow-sm whitespace-nowrap"
           >
             <Plus className="h-4 w-4" />
-            Add Template
+            {_("tmv.add_btn", "Add Template")}
           </button>
         </div>
       </div>
@@ -115,7 +115,7 @@ export function TemplateManagerView({ lang }: Props) {
       <div className="flex items-center justify-between gap-2 border-b pb-3 dark:border-slate-800">
         <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-xl p-1 text-xs">
           <Globe className="h-4 w-4 text-slate-400 ml-2" />
-          <span className="font-bold text-slate-600 dark:text-slate-400 mr-2">Preview Language:</span>
+          <span className="font-bold text-slate-600 dark:text-slate-400 mr-2">{_("tmv.preview_lang", "Preview Language:")}</span>
           {(["en", "ur", "ps", "fa"] as const).map((l) => (
             <button
               key={l}
@@ -125,7 +125,7 @@ export function TemplateManagerView({ lang }: Props) {
                 activeLangTab === l ? "bg-emerald-600 text-white shadow-sm" : "text-slate-600 hover:bg-slate-200 dark:text-slate-400"
               )}
             >
-              {l === "en" ? "English" : l === "ur" ? "Urdu (اردو)" : l === "ps" ? "Pashto (پښتو)" : "Farsi (فارسی)"}
+              {l === "en" ? _("tmv.en_lbl", "English (EN)") : l === "ur" ? _("tmv.ur_lbl", "Urdu (UR)") : l === "ps" ? _("tmv.ps_lbl", "Pashto (PS)") : _("tmv.fa_lbl", "Farsi (FA)")}
             </button>
           ))}
         </div>
@@ -138,7 +138,7 @@ export function TemplateManagerView({ lang }: Props) {
       {/* Templates Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {loading ? (
-          <div className="col-span-2 py-16 text-center text-xs text-slate-400">Loading template library...</div>
+          <div className="col-span-2 py-16 text-center text-xs text-slate-400">{_("tmv.loading", "Loading template library...")}</div>
         ) : templates.map((tmpl) => {
           const bodyText = activeLangTab === "ur" ? (tmpl.bodyUr || tmpl.bodyEn) : activeLangTab === "ps" ? (tmpl.bodyPs || tmpl.bodyEn) : activeLangTab === "fa" ? (tmpl.bodyFa || tmpl.bodyEn) : tmpl.bodyEn;
           return (
@@ -160,13 +160,13 @@ export function TemplateManagerView({ lang }: Props) {
 
               <div className="flex items-center justify-between pt-2 border-t dark:border-slate-800">
                 <span className="text-[10px] font-bold text-slate-400">
-                  4 Languages Configured
+                  {_("tmv.langs_count", "4 Languages Configured")}
                 </span>
                 <button
                   onClick={() => { setEditingTemplate(tmpl); setIsModalOpen(true); }}
                   className="flex items-center gap-1 text-xs font-bold text-emerald-600 hover:underline"
                 >
-                  <Edit2 className="h-3.5 w-3.5" /> Edit Template
+                  <Edit2 className="h-3.5 w-3.5" /> {_("tmv.edit_btn", "Edit Template")}
                 </button>
               </div>
             </div>
@@ -179,14 +179,14 @@ export function TemplateManagerView({ lang }: Props) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
           <div className="w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl dark:bg-slate-900 dark:border-slate-800 space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b pb-3 dark:border-slate-800">
-              <h3 className="text-sm font-black text-slate-900 dark:text-white">Edit 4-Language Template</h3>
+              <h3 className="text-sm font-black text-slate-900 dark:text-white">{_("tmv.modal_title", "Edit 4-Language Template")}</h3>
               <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X className="h-5 w-5" /></button>
             </div>
 
             <form onSubmit={handleSaveTemplate} className="space-y-3 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-bold text-slate-600">Template Code</label>
+                  <label className="font-bold text-slate-600">{_("tmv.code_lbl", "Template Code")}</label>
                   <input
                     type="text"
                     value={editingTemplate.code || ""}
@@ -195,7 +195,7 @@ export function TemplateManagerView({ lang }: Props) {
                   />
                 </div>
                 <div>
-                  <label className="font-bold text-slate-600">Title</label>
+                  <label className="font-bold text-slate-600">{_("tmv.title_lbl", "Title")}</label>
                   <input
                     type="text"
                     value={editingTemplate.title || ""}
@@ -206,7 +206,7 @@ export function TemplateManagerView({ lang }: Props) {
               </div>
 
               <div>
-                <label className="font-bold text-slate-600">English (EN)</label>
+                <label className="font-bold text-slate-600">{_("tmv.en_lbl", "English (EN)")}</label>
                 <textarea
                   rows={2}
                   value={editingTemplate.bodyEn || ""}
@@ -216,7 +216,7 @@ export function TemplateManagerView({ lang }: Props) {
               </div>
 
               <div>
-                <label className="font-bold text-slate-600">Urdu (UR)</label>
+                <label className="font-bold text-slate-600">{_("tmv.ur_lbl", "Urdu (UR)")}</label>
                 <textarea
                   rows={2}
                   dir="rtl"
@@ -227,7 +227,7 @@ export function TemplateManagerView({ lang }: Props) {
               </div>
 
               <div>
-                <label className="font-bold text-slate-600">Pashto (PS)</label>
+                <label className="font-bold text-slate-600">{_("tmv.ps_lbl", "Pashto (PS)")}</label>
                 <textarea
                   rows={2}
                   dir="rtl"
@@ -238,7 +238,7 @@ export function TemplateManagerView({ lang }: Props) {
               </div>
 
               <div>
-                <label className="font-bold text-slate-600">Farsi (FA)</label>
+                <label className="font-bold text-slate-600">{_("tmv.fa_lbl", "Farsi (FA)")}</label>
                 <textarea
                   rows={2}
                   dir="rtl"
@@ -249,9 +249,9 @@ export function TemplateManagerView({ lang }: Props) {
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-3">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="rounded-xl border border-slate-200 px-4 py-2 font-bold text-slate-600">Cancel</button>
+                <button type="button" onClick={() => setIsModalOpen(false)} className="rounded-xl border border-slate-200 px-4 py-2 font-bold text-slate-600">{_("common.cancel", "Cancel")}</button>
                 <button type="submit" disabled={saving} className="rounded-xl bg-emerald-600 text-white px-5 py-2 font-black shadow-sm disabled:opacity-50">
-                  {saving ? "Saving..." : "Save Template"}
+                  {saving ? _("tmv.saving", "Saving...") : _("tmv.save_tmpl", "Save Template")}
                 </button>
               </div>
             </form>

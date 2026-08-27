@@ -1,6 +1,8 @@
 import React from "react";
 import { CurrencyService } from "@/lib/services/currency-service";
 import { Th } from "@/components/ui/translated-th";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { t } from "@/lib/i18n/ui";
 
 /**
  * Standardized Purchase Booking Report (Requirement 8)
@@ -50,46 +52,48 @@ type PurchaseOrderReportData = {
   finalRemarks?: string;
 };
 
-export function PurchaseBookingReport({ data }: { data: PurchaseOrderReportData }) {
+export function PurchaseBookingReport({ data, lang = "en" }: { data: PurchaseOrderReportData; lang?: SupportedLanguage }) {
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   // Business Rule Calculation
   const finalLocalAmount = CurrencyService.calculateFinalLocalAmount(data.purchaseAmount, data.exchangeRate);
 
   return (
-    <div className="max-w-4xl mx-auto p-8 bg-white border border-slate-200 shadow-md rounded-lg text-slate-800 font-sans">
+    <div className="max-w-4xl mx-auto p-8 bg-white border border-slate-200 shadow-md rounded-lg text-slate-800 font-sans" dir={isRtl ? "rtl" : "ltr"}>
       <div className="text-center border-b-2 border-slate-800 pb-4 mb-6">
-        <h1 className="text-3xl font-black uppercase tracking-wider">Purchase Booking Report</h1>
+        <h1 className="text-3xl font-black uppercase tracking-wider">{tt("pbr.title", "Purchase Booking Report")}</h1>
       </div>
 
       {/* 1. Purchase Information */}
       <section className="mb-8">
-        <h2 className="text-lg font-bold bg-slate-100 p-2 mb-3 border-l-4 border-slate-800">1. Purchase Information</h2>
+        <h2 className="text-lg font-bold bg-slate-100 p-2 mb-3 border-l-4 border-slate-800">{tt("pbr.sec1", "1. Purchase Information")}</h2>
         <div className="grid grid-cols-2 gap-4 text-sm">
-          <div><span className="font-semibold text-slate-500">Purchase No:</span> {data.purchaseNumber}</div>
-          <div><span className="font-semibold text-slate-500">Date:</span> {data.purchaseDate}</div>
-          <div><span className="font-semibold text-slate-500">Supplier:</span> {data.supplierName}</div>
-          <div><span className="font-semibold text-slate-500">Buyer:</span> {data.buyerName}</div>
-          <div><span className="font-semibold text-slate-500">Country:</span> {data.countryName}</div>
-          <div><span className="font-semibold text-slate-500">Branch:</span> {data.branchName}</div>
+          <div><span className="font-semibold text-slate-500">{tt("pbr.purchase_no", "Purchase No:")}</span> {data.purchaseNumber}</div>
+          <div><span className="font-semibold text-slate-500">{tt("common.date", "Date")}:</span> {data.purchaseDate}</div>
+          <div><span className="font-semibold text-slate-500">{tt("common.supplier", "Supplier")}:</span> {data.supplierName}</div>
+          <div><span className="font-semibold text-slate-500">{tt("pbr.buyer", "Buyer:")}</span> {data.buyerName}</div>
+          <div><span className="font-semibold text-slate-500">{tt("common.country", "Country")}:</span> {data.countryName}</div>
+          <div><span className="font-semibold text-slate-500">{tt("common.branch", "Branch")}:</span> {data.branchName}</div>
         </div>
       </section>
 
       {/* 2. Financial Information */}
       <section className="mb-8">
-        <h2 className="text-lg font-bold bg-slate-100 p-2 mb-3 border-l-4 border-indigo-600">2. Financial Information</h2>
+        <h2 className="text-lg font-bold bg-slate-100 p-2 mb-3 border-l-4 border-indigo-600">{tt("pbr.sec2", "2. Financial Information")}</h2>
         <div className="grid grid-cols-2 gap-4 text-sm">
-          <div><span className="font-semibold text-slate-500">Original Currency:</span> {data.purchaseCurrency}</div>
-          <div><span className="font-semibold text-slate-500">Original Amount:</span> {data.purchaseAmount.toLocaleString()}</div>
-          <div><span className="font-semibold text-slate-500">Exchange Rate:</span> {data.exchangeRate}</div>
-          <div><span className="font-semibold text-slate-500">Final Local Currency:</span> {data.localCurrency}</div>
+          <div><span className="font-semibold text-slate-500">{tt("pbr.orig_currency", "Original Currency:")}</span> {data.purchaseCurrency}</div>
+          <div><span className="font-semibold text-slate-500">{tt("pbr.orig_amount", "Original Amount:")}</span> {data.purchaseAmount.toLocaleString()}</div>
+          <div><span className="font-semibold text-slate-500">{tt("pbr.exchange_rate", "Exchange Rate:")}</span> {data.exchangeRate}</div>
+          <div><span className="font-semibold text-slate-500">{tt("pbr.final_local_currency", "Final Local Currency:")}</span> {data.localCurrency}</div>
           <div className="col-span-2 text-right bg-indigo-50 p-2 rounded">
-            <span className="font-bold text-indigo-800 text-lg">Final Amount: {data.localCurrency} {finalLocalAmount.toLocaleString()}</span>
+            <span className="font-bold text-indigo-800 text-lg">{tt("pbr.final_amount", "Final Amount:")} {data.localCurrency} {finalLocalAmount.toLocaleString()}</span>
           </div>
         </div>
       </section>
 
       {/* 3. Goods Information */}
       <section className="mb-8">
-        <h2 className="text-lg font-bold bg-slate-100 p-2 mb-3 border-l-4 border-slate-800">3. Goods Information</h2>
+        <h2 className="text-lg font-bold bg-slate-100 p-2 mb-3 border-l-4 border-slate-800">{tt("pbr.sec3", "3. Goods Information")}</h2>
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr className="bg-slate-800 text-white text-left">
@@ -120,28 +124,28 @@ export function PurchaseBookingReport({ data }: { data: PurchaseOrderReportData 
 
       {/* 4. Loading & Shipment */}
       <section className="mb-8">
-        <h2 className="text-lg font-bold bg-slate-100 p-2 mb-3 border-l-4 border-slate-800">4. Loading & Shipment</h2>
+        <h2 className="text-lg font-bold bg-slate-100 p-2 mb-3 border-l-4 border-slate-800">{tt("pbr.sec4", "4. Loading & Shipment")}</h2>
         <div className="grid grid-cols-1 gap-2 text-sm">
-          <div><span className="font-semibold text-slate-500">Loading:</span> {data.loadingDetails || 'N/A'}</div>
-          <div><span className="font-semibold text-slate-500">Shipment:</span> {data.shipmentDetails || 'N/A'}</div>
-          <div><span className="font-semibold text-slate-500">Container:</span> {data.containerDetails || 'N/A'}</div>
+          <div><span className="font-semibold text-slate-500">{tt("pbr.loading_lbl", "Loading:")}</span> {data.loadingDetails || tt("pbr.na", "N/A")}</div>
+          <div><span className="font-semibold text-slate-500">{tt("pbr.shipment_lbl", "Shipment:")}</span> {data.shipmentDetails || tt("pbr.na", "N/A")}</div>
+          <div><span className="font-semibold text-slate-500">{tt("pbr.container_lbl", "Container:")}</span> {data.containerDetails || tt("pbr.na", "N/A")}</div>
         </div>
       </section>
 
       {/* 5. Payment Information */}
       <section className="mb-8">
-        <h2 className="text-lg font-bold bg-slate-100 p-2 mb-3 border-l-4 border-emerald-600">5. Payment Information</h2>
+        <h2 className="text-lg font-bold bg-slate-100 p-2 mb-3 border-l-4 border-emerald-600">{tt("pbr.sec5", "5. Payment Information")}</h2>
         <div className="grid grid-cols-3 gap-4 text-sm text-center">
           <div className="p-3 border border-emerald-200 bg-emerald-50 rounded">
-            <div className="font-semibold text-emerald-800">Advance Paid</div>
+            <div className="font-semibold text-emerald-800">{tt("pbr.advance_paid", "Advance Paid")}</div>
             <div className="text-lg font-bold text-emerald-700">{data.advancePayment.toLocaleString()} {data.purchaseCurrency}</div>
           </div>
           <div className="p-3 border border-amber-200 bg-amber-50 rounded">
-            <div className="font-semibold text-amber-800">Remaining Due</div>
+            <div className="font-semibold text-amber-800">{tt("pbr.remaining_due", "Remaining Due")}</div>
             <div className="text-lg font-bold text-amber-700">{data.remainingPayment.toLocaleString()} {data.purchaseCurrency}</div>
           </div>
           <div className="p-3 border border-slate-200 bg-slate-50 rounded flex flex-col justify-center">
-            <div className="font-semibold text-slate-500">Status</div>
+            <div className="font-semibold text-slate-500">{tt("common.status", "Status")}</div>
             <div className="text-md font-bold uppercase tracking-widest">{data.paymentStatus}</div>
           </div>
         </div>
@@ -149,16 +153,16 @@ export function PurchaseBookingReport({ data }: { data: PurchaseOrderReportData 
 
       {/* 6. Notes & Remarks */}
       <section className="mb-4">
-        <h2 className="text-lg font-bold bg-slate-100 p-2 mb-3 border-l-4 border-slate-800">6. Notes & Remarks</h2>
+        <h2 className="text-lg font-bold bg-slate-100 p-2 mb-3 border-l-4 border-slate-800">{tt("pbr.sec6", "6. Notes & Remarks")}</h2>
         <div className="space-y-2 text-sm">
-          <div><span className="font-semibold text-slate-500">User Notes:</span> {data.userNotes || 'None'}</div>
-          <div><span className="font-semibold text-slate-500">Internal Notes:</span> {data.internalNotes || 'None'}</div>
-          <div><span className="font-semibold text-slate-500">Final Remarks:</span> {data.finalRemarks || 'None'}</div>
+          <div><span className="font-semibold text-slate-500">{tt("pbr.user_notes", "User Notes:")}</span> {data.userNotes || tt("pbr.none", "None")}</div>
+          <div><span className="font-semibold text-slate-500">{tt("pbr.internal_notes", "Internal Notes:")}</span> {data.internalNotes || tt("pbr.none", "None")}</div>
+          <div><span className="font-semibold text-slate-500">{tt("pbr.final_remarks", "Final Remarks:")}</span> {data.finalRemarks || tt("pbr.none", "None")}</div>
         </div>
       </section>
-      
+
       <div className="mt-8 text-center text-xs text-slate-400 border-t border-slate-200 pt-4">
-        Generated by DGT ERP System • {new Date().toLocaleString()}
+        {tt("pbr.footer", "Generated by DGT ERP System")} • {new Date().toLocaleString()}
       </div>
     </div>
   );
