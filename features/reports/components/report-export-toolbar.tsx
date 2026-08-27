@@ -5,7 +5,7 @@ import { Download, FileText, Table2, Printer, Share2, RefreshCw, Clock, Search, 
 import { t, type UiKey } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { cn } from "@/lib/utils";
-import { openGenericErpReport, type GenericReportColumn } from "@/lib/reports/open-generic-erp-report";
+import { openGenericErpReport, downloadGenericErpReportHtml, type GenericReportColumn } from "@/lib/reports/open-generic-erp-report";
 import type { ERPCompanyInfo, ERPFilterPill } from "@/lib/reports/erp-report-template-builder";
 
 type Props = {
@@ -132,6 +132,18 @@ export function ReportExportToolbar({
 
   const handlePrint = () => {
     openGenericErpReport({
+      title: reportTitle,
+      lang,
+      columns: columns.filter((column) => visibleSet.has(columnKeyString(column.key))),
+      rows: data,
+      summary,
+      filters: previewFilters,
+      companyInfo,
+    });
+  };
+
+  const handleDownloadHtml = () => {
+    downloadGenericErpReportHtml({
       title: reportTitle,
       lang,
       columns: columns.filter((column) => visibleSet.has(columnKeyString(column.key))),
@@ -283,6 +295,18 @@ export function ReportExportToolbar({
       >
         <Download className="h-3.5 w-3.5" />
         {_("report.export_excel")}
+      </button>
+
+      {/* Download HTML */}
+      <button
+        type="button"
+        onClick={handleDownloadHtml}
+        disabled={isLoading || !data.length}
+        className="flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700 shadow-sm transition-all hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-400"
+        title={_("pdfprev.download_html_desc", "Offline interactive report file")}
+      >
+        <Download className="h-3.5 w-3.5" />
+        {_("report.download_html", "Download HTML")}
       </button>
 
       {/* Print */}

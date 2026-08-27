@@ -110,7 +110,7 @@ function buildKpis(summary: Record<string, unknown>, lang: string, currency?: st
     });
 }
 
-export function openGenericErpReport(input: {
+export function buildGenericErpReportHtml(input: {
   title: string;
   subtitle?: string;
   lang?: string;
@@ -123,9 +123,7 @@ export function openGenericErpReport(input: {
   orientation?: "portrait" | "landscape";
   footerNotesHtml?: string;
   legendHtml?: string;
-}) {
-  if (typeof window === "undefined") return;
-
+}): { html: string; title: string; filename: string } {
   const {
     title,
     subtitle,
@@ -211,8 +209,34 @@ export function openGenericErpReport(input: {
     csvData: buildCsv(columns, rows, lang),
   });
 
+  // ASCII-fold the (possibly RTL/localized) title for a safe, readable filename;
+  // fall back to a transliterated slug, then a constant.
+  const rawName = (translatedTitle || title || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  const safeName = rawName || "erp-report";
+  const filename = `${safeName}-${new Date().toISOString().slice(0, 10)}.html`;
+
+  return { html, title: translatedTitle || translateHeader(lang, "ERP Report"), filename };
+}
+
+export function downloadGenericErpReportHtml(input: Parameters<typeof buildGenericErpReportHtml>[0], customFilename?: string) {
+  if (typeof window === "undefined") return;
+  const { html, filename } = buildGenericErpReportHtml(input);
+  const blob = new Blob([html], { type: "text/html;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = customFilename || filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export function openGenericErpReport(input: Parameters<typeof buildGenericErpReportHtml>[0]) {
+  if (typeof window === "undefined") return;
+
+  const { html, title } = buildGenericErpReportHtml(input);
+
   try {
-    printStore.openPrint(html, translatedTitle || "ERP Report");
+    printStore.openPrint(html, title);
     return;
   } catch (e) {
     console.warn("Could not open in printStore, falling back to window.open", e);

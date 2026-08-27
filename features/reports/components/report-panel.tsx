@@ -24,7 +24,9 @@ import {
   Share2,
   Table2,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Download,
+  FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,7 +38,7 @@ import { ReportFilterBar, type ReportFilterValues, type ReportMetaItem } from ".
 import { ReportDataTable, getColumnsForReportType } from "./report-data-table";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
-import { openGenericErpReport, type GenericReportColumn } from "@/lib/reports/open-generic-erp-report";
+import { openGenericErpReport, downloadGenericErpReportHtml, type GenericReportColumn } from "@/lib/reports/open-generic-erp-report";
 
 type ReportScopeLevel = "global" | "country" | "branch";
 
@@ -469,6 +471,18 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
     });
   };
 
+  const handleDownloadHtmlAction = () => {
+    downloadGenericErpReportHtml({
+      title: `${panelTitle} — ${t(lang, `report.${appliedReportType.replace(/-/g, "_")}` as UiKey, appliedReportType)}`,
+      lang,
+      columns: printableColumns,
+      rows: reportData,
+      summary: reportSummary,
+      filters: previewFilters,
+      companyInfo
+    });
+  };
+
   const handleCsvExport = () => {
     exportToCsv(reportData, printableColumns, `${filename}.csv`);
   };
@@ -691,6 +705,17 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
                 >
                   <Printer className="h-3.5 w-3.5 text-blue-600" />
                   {_("report.print_pdf_document", "Print / PDF Document")}
+                </button>
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-left"
+                  onClick={() => {
+                    setActionsMenuOpen(false);
+                    handleDownloadHtmlAction();
+                  }}
+                >
+                  <Download className="h-3.5 w-3.5 text-indigo-600" />
+                  {_("report.download_html", "Download HTML")}
                 </button>
                 <button
                   type="button"

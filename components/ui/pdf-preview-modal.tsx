@@ -4,15 +4,21 @@ import React, { useEffect, useRef, useState } from "react";
 import { usePrintStore } from "@/lib/store/print-store";
 import { Button } from "@/components/ui/button";
 import { X, Printer, Download, Mail, Share2, Menu, FileText, LayoutList } from "lucide-react";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 export function PdfPreviewModal() {
   const { isOpen, htmlContent, title, closePrint } = usePrintStore();
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  
+  const lang = useActiveLanguage();
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+
   const [orientation, setOrientation] = useState<"portrait" | "landscape">("portrait");
   const [paperSize, setPaperSize] = useState("A4");
   const [pages, setPages] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [downloadMenuOpen, setDownloadMenuOpen] = useState(false);
 
   useEffect(() => {
     if (isOpen && htmlContent) {
@@ -42,10 +48,61 @@ export function PdfPreviewModal() {
     }
   };
 
-  const handleDownload = () => {
-    // In a browser environment, standard print dialog with "Save to PDF" is the most robust 
-    // way to download high-fidelity HTML-to-PDF without external heavy libraries.
+  const handleDownloadPdf = () => {
     handlePrint();
+  };
+
+  const handleDownloadHtml = () => {
+    const safeName = (title || "ERP-Report").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "erp-report";
+    const filename = `${safeName}-${new Date().toISOString().slice(0, 10)}.html`;
+    // injectedHtml is the report body the iframe already renders (report builder output,
+    // already in the selected language + RTL/LTR + scope-filtered) plus @page sizing.
+    // No session/cookie/token data is present in it.
+    const blob = new Blob([injectedHtml || htmlContent], { type: "text/html;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadCsv = () => {
+    if (iframeRef.current?.contentWindow) {
+      try {
+        const win = iframeRef.current.contentWindow as any;
+        if (typeof win.downloadCsv === "function") {
+          win.downloadCsv();
+          return;
+        }
+      } catch (e) {
+        console.warn("Direct iframe downloadCsv failed", e);
+      }
+    }
+    // Fallback: extract table rows to CSV
+    try {
+      const doc = iframeRef.current?.contentDocument;
+      const table = doc?.querySelector("table.data-table");
+      if (table) {
+        const rows = Array.from(table.querySelectorAll("tr"));
+        const csv = rows
+          .map((row) =>
+            Array.from(row.children)
+              .map((cell) => `"${(cell.textContent || "").trim().replace(/"/g, '""')}"`)
+              .join(",")
+          )
+          .join("\n");
+        const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${(title || "report").toLowerCase().replace(/[^a-z0-9]+/g, "-")}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    } catch (e) {
+      console.warn("Fallback CSV extraction failed", e);
+    }
   };
 
   const handleShareWhatsApp = () => {
@@ -76,33 +133,33 @@ export function PdfPreviewModal() {
   `;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col bg-[#1e293b] text-slate-100 font-sans">
+    <div dir={isRtl ? "rtl" : "ltr"} className="fixed inset-0 z-[9999] flex flex-col bg-[#1e293b] text-slate-100 font-sans">
       {/* Top Navigation Bar */}
       <div className="h-14 bg-[#0f172a] border-b border-slate-700 flex items-center justify-between px-4">
-        
+
         {/* Left: Brand & Menu */}
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" className="text-slate-300 hover:text-white" onClick={closePrint}>
+          <Button variant="ghost" size="icon" className="text-slate-300 hover:text-white" onClick={closePrint} title={tt("common.close", "Close")}>
             <X className="w-5 h-5" />
           </Button>
           <div className="flex items-center gap-2 text-white font-semibold">
             <Menu className="w-5 h-5 text-slate-400" />
-            <span className="hidden sm:inline">{title || "Accounts"}</span>
+            <span className="hidden sm:inline">{title || tt("pdfprev.doc_title_fallback", "Document")}</span>
           </div>
         </div>
 
         {/* Center: Controls */}
         <div className="flex items-center gap-2 sm:gap-4 bg-[#1e293b] p-1.5 rounded-lg border border-slate-700">
-          <button 
+          <button
             onClick={() => setOrientation(o => o === "portrait" ? "landscape" : "portrait")}
             className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-slate-800 hover:bg-slate-700 rounded text-slate-200 transition-colors"
           >
             <LayoutList className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline capitalize">{orientation}</span>
+            <span className="hidden sm:inline">{orientation === "portrait" ? tt("pdfprev.portrait", "Portrait") : tt("pdfprev.landscape", "Landscape")}</span>
           </button>
-          
+
           <div className="text-xs font-medium text-slate-300 px-2 border-x border-slate-700">
-            Page {currentPage} of {pages.length}
+            {tt("pdfprev.page_of", "Page {current} of {total}").replace("{current}", String(currentPage)).replace("{total}", String(pages.length))}
           </div>
 
           <select 
@@ -118,22 +175,82 @@ export function PdfPreviewModal() {
 
         {/* Right: Actions */}
         <div className="flex items-center gap-1.5">
-          <Button variant="ghost" size="sm" className="text-slate-300 hover:text-green-400 hover:bg-slate-800 gap-1 text-xs" onClick={handleShareWhatsApp} title="Share via WhatsApp">
+          <Button variant="ghost" size="sm" className="text-slate-300 hover:text-green-400 hover:bg-slate-800 gap-1 text-xs" onClick={handleShareWhatsApp} title={tt("pdfprev.share_whatsapp", "Share via WhatsApp")}>
             <Share2 className="w-3.5 h-3.5" />
             <span className="hidden md:inline">WhatsApp</span>
           </Button>
-          <Button variant="ghost" size="sm" className="text-slate-300 hover:text-blue-400 hover:bg-slate-800 gap-1 text-xs" onClick={handleShareEmail} title="Email Document">
+          <Button variant="ghost" size="sm" className="text-slate-300 hover:text-blue-400 hover:bg-slate-800 gap-1 text-xs" onClick={handleShareEmail} title={tt("pdfprev.email_document", "Email Document")}>
             <Mail className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">Email</span>
+            <span className="hidden md:inline">{tt("pdfprev.email", "Email")}</span>
           </Button>
-          <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800 gap-1 text-xs" onClick={handleDownload} title="Download PDF">
-            <Download className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">Download</span>
-          </Button>
+
+          {/* Download Dropdown */}
+          <div className="relative">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-slate-600 bg-slate-800 text-slate-200 hover:bg-slate-700 hover:text-white gap-1 text-xs font-semibold"
+              onClick={() => setDownloadMenuOpen((v) => !v)}
+              title={tt("pdfprev.download_options", "Download Options")}
+            >
+              <Download className="w-3.5 h-3.5 text-emerald-400" />
+              <span>{tt("common.download", "Download")}</span>
+            </Button>
+            {downloadMenuOpen && (
+              <div
+                className="absolute right-0 top-full z-50 mt-1.5 w-60 overflow-hidden rounded-xl border border-slate-700 bg-[#0f172a] p-1.5 shadow-2xl animate-in fade-in zoom-in-95"
+                onMouseLeave={() => setDownloadMenuOpen(false)}
+              >
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800 text-left transition-colors"
+                  onClick={() => {
+                    setDownloadMenuOpen(false);
+                    handleDownloadPdf();
+                  }}
+                >
+                  <FileText className="h-4 w-4 text-rose-400" />
+                  <div>
+                    <div className="text-white font-bold">{tt("pdfprev.save_pdf", "Save as PDF")}</div>
+                    <div className="text-[10px] text-slate-400">{tt("pdfprev.save_pdf_desc", "Standard print-ready PDF file")}</div>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800 text-left transition-colors"
+                  onClick={() => {
+                    setDownloadMenuOpen(false);
+                    handleDownloadHtml();
+                  }}
+                >
+                  <Download className="h-4 w-4 text-blue-400" />
+                  <div>
+                    <div className="text-white font-bold">{tt("pdfprev.download_html_report", "Download HTML Report")}</div>
+                    <div className="text-[10px] text-slate-400">{tt("pdfprev.download_html_desc", "Offline interactive report file")}</div>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800 text-left transition-colors"
+                  onClick={() => {
+                    setDownloadMenuOpen(false);
+                    handleDownloadCsv();
+                  }}
+                >
+                  <Share2 className="h-4 w-4 text-emerald-400" />
+                  <div>
+                    <div className="text-white font-bold">{tt("pdfprev.export_excel_csv", "Export Excel / CSV")}</div>
+                    <div className="text-[10px] text-slate-400">{tt("pdfprev.export_csv_desc", "Raw spreadsheet table data")}</div>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
+
           <div className="w-px h-6 bg-slate-700 mx-1"></div>
           <Button variant="default" size="sm" className="bg-blue-600 hover:bg-blue-500 text-white gap-2 font-bold text-xs shadow-lg shadow-blue-900/20" onClick={handlePrint}>
             <Printer className="w-4 h-4" />
-            <span>Print</span>
+            <span>{tt("common.print", "Print")}</span>
           </Button>
         </div>
       </div>
@@ -168,19 +285,26 @@ export function PdfPreviewModal() {
 
         {/* Main Preview Area */}
         <div className="flex-1 bg-[#1e293b] p-4 sm:p-8 overflow-auto flex justify-center custom-scrollbar">
+          {/* 
+            FIX: Previously the parent div only had `minHeight` with the iframe using
+            `absolute inset-0 h-full`. Per CSS spec, absolutely-positioned children
+            cannot resolve percentage heights from min-height — only from an explicit
+            height. This caused the iframe to collapse to 0px and appear blank.
+            Solution: remove absolute positioning; give the iframe an explicit height.
+          */}
           <div 
-            className="bg-white shadow-2xl rounded-sm transition-all duration-300 ease-in-out relative"
+            className="shadow-2xl rounded-sm transition-all duration-300 ease-in-out overflow-hidden"
             style={{
               width: orientation === "portrait" ? "210mm" : "297mm",
-              minHeight: orientation === "portrait" ? "297mm" : "210mm",
               maxWidth: "100%",
             }}
           >
              <iframe
                 ref={iframeRef}
                 srcDoc={injectedHtml}
-                className="w-full h-full absolute inset-0 border-none rounded-sm"
-                title="PDF Preview"
+                className="w-full border-none block"
+                style={{ height: orientation === "portrait" ? "297mm" : "210mm" }}
+                title={tt("pdfprev.preview_title", "PDF Preview")}
              />
           </div>
         </div>
