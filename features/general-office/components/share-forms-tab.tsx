@@ -494,7 +494,7 @@ export function ShareFormsTab({ lang }: ShareFormsTabProps) {
               </thead>
               <tbody className="divide-y divide-slate-100 text-xs">
                 {links.map((link, idx) => {
-                  const url = typeof window !== "undefined" ? getFullUrl(link.token) : "";
+                  const url = typeof window !== "undefined" ? getPublicUrl(link.token) : "";
                   const isSubmitted = link.status === "used" || Boolean(link.submitted_at);
 
                   return (
