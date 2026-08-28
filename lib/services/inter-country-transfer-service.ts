@@ -1,5 +1,5 @@
 import { withLocalPg } from "@/lib/db/local-postgres";
-import { postRoznamchaWithErpSession } from "@/app/api/erp/roznamcha/route";
+import { postRoznamchaWithErpSession } from "@/app/api/erp/roznamcha/posting";
 import type { ErpSession } from "@/lib/auth/session";
 
 /**

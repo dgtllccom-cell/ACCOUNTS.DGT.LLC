@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { postRoznamchaWithErpSession } from "@/app/api/erp/roznamcha/route";
+import { postRoznamchaWithErpSession } from "@/app/api/erp/roznamcha/posting";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { z } from "zod";
 

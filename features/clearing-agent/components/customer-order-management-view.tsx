@@ -1579,13 +1579,19 @@ export function CustomerOrderManagementView() {
                   <Download className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline">CSV</span>
                 </button>
-                <div className="relative sm:w-60">
-                  <Search className="pointer-events-none absolute start-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-                  <input
-                    value={reportQuery}
-                    onChange={(e) => setReportQuery(e.target.value)}
+                <div className="w-full sm:w-auto">
+                  <SmartSearchFilter
+                    value={filterState}
+                    onChange={setFilterState}
+                    hideHeader
+                    hideCascadingLocations
+                    hideRiskLevel
+                    hideDateRange
+                    hideModule
+                    hideUser
+                    hideCurrency
                     placeholder={tt("search_order_ph", "Search order, party, route...")}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50/60 py-1.5 pe-3 ps-8 text-xs text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 font-sans"
+                    className="p-2 border-0 bg-transparent shadow-none"
                   />
                 </div>
               </div>
