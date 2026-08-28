@@ -152,11 +152,24 @@ export class HrPayrollService {
             AND remaining_balance > 0`;
         const advanceRecovery = Number(advRows?.[0]?.r || 0);
 
-        const taxEmployee = Number(e.tax_deduction || 0);       // Phase 6 replaces with country config
         const otherDeductions = Number(e.deduction || 0);
-        const employerContrib = 0;
-
         const gross = Math.round((basic + allowancesTotal + overtimeAmount) * 100) / 100;
+
+        // Country payroll-tax config (hr_payroll_tax_config) — falls back to the
+        // employee's fixed tax_deduction when no country rule is configured.
+        let taxEmployee = Number(e.tax_deduction || 0);
+        let employerContrib = 0;
+        if (e.country_id) {
+          const tx = await sql`SELECT employee_tax, employer_contribution FROM public.hr_payroll_tax_for(${e.country_id}, ${gross}, ${basic}, ${run.period_month})`;
+          const hasRule = await sql`SELECT 1 FROM public.hr_payroll_tax_config
+            WHERE deleted_at IS NULL AND is_active AND country_id = ${e.country_id}
+              AND effective_from <= ${run.period_month + "-01"} LIMIT 1`;
+          if (hasRule?.length) {
+            taxEmployee = Number(tx?.[0]?.employee_tax || 0);
+            employerContrib = Number(tx?.[0]?.employer_contribution || 0);
+          }
+        }
+
         const net = Math.round((gross - unpaidLeaveDeduction - otherDeductions - advanceRecovery - taxEmployee) * 100) / 100;
 
         const currency = e.salary_currency || run.presentation_currency || "USD";

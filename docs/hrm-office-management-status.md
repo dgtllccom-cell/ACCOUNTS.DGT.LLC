@@ -84,19 +84,30 @@ Ordered by dependency. Each item = its own migration + service + API + view + i1
    *Still open within this item:* wire `office_leave_requests` submission to decrement
    `hr_employee_leave_balances.pending_days` at request time (currently `recomputeBalances`
    backfills it on demand); shift-based late/early-minutes auto-calc on attendance punch.
-5. **Payroll engine** — `payroll_runs` + `payroll_run_lines` with status
-   Draft→Calculated→Reviewed→Approved→Posted→Paid; components basic/allowances/overtime/
-   bonus/leave-adjustment/deductions/salary-advance-recovery; multi-currency
-   (original currency + txn-date rate + local + USD consolidated); idempotency key per run.
+5. ~~**Payroll engine**~~ ✅ **DONE** — commits `74992b6` + `252591f`, migration `20260919`.
+   `hr_payroll_runs` + `hr_payroll_run_lines` + `hr_payroll_run_events` +
+   `hr_payroll_runs_v`. Draft→Calculated→Reviewed→Approved→Posted→Paid; scope+period
+   unique; `idempotency_key` + `posted_at` guard = no double post. `calculate` pulls
+   basic / 6-way allowance breakdown / overtime (from `office_attendance.overtime_hours`)
+   / unpaid-leave deduction (from `office_leave_requests`) / **salary-advance recovery
+   only** (`employee_advances_loans` `type='advance'` — no loan module). Multi-currency:
+   original currency + `daily_usd_rates` txn-date rate + local + `total_net_usd`
+   consolidation. `PayrollRunView` UI (run list + detail with editable lines +
+   workflow buttons + ledger pickers + audit trail + Payroll Register print),
+   55 `hrm.*` keys ×5. Verified E2E on DEV.
 6. **All-Countries payroll tax** — consume existing country Tax Master (Pakistan/Afghanistan/UAE/…);
    `payroll_tax_config` per country (payroll tax, employee deductions, employer contributions,
    withholding, thresholds, exemptions, effective dates, ledger/account mapping).
    **Kept out of VAT returns** — separate ledger accounts, separate report.
-7. **Accounting posting** — on payroll `Approved→Posted`, call existing `post_roznamcha_entry`
-   RPC with balanced lines (Salary Expense Dr / Allowance-OT Dr / Tax-Contribution Payable Cr /
-   Advance Recovery Cr / Salary Payable-Bank Cr). Idempotent; controlled reversal (never delete).
-   Reconciliation across Payroll Register / Salary Slip / Employee Ledger / Journal / Roznamcha /
-   Cash-Bank Book / GL / Tax Report / Settlement.
+7. ~~**Accounting posting**~~ ✅ **DONE (core)** — commits `74992b6` + `252591f`.
+   `hr-payroll-posting.ts`: `post` (APPROVED→POSTED — per-employee accrual via the
+   existing `post_roznamcha_entry` RPC: Salary Expense Dr / Net Payable Cr / Advance
+   Recovery Cr / Tax Payable Cr; + linked `employee_salaries_due` row;
+   `line.accrual_roznamcha_id` link; `posted_at` idempotency), `markPaid`
+   (POSTED→PAID — Dr Payable / Cr Cash-Bank + apply advance recovery + finalise due
+   rows), `reverse` (controlled contra entry — never deletes). All transactional.
+   Verified balanced on DEV. *Open:* reconciliation report/view tying Payroll Register
+   ↔ Roznamcha ↔ Employee Ledger ↔ GL ↔ Tax Report ↔ Settlement (part of #12/#13).
 8. **Gratuity / final settlement** — `gratuity_settlements` (country-specific accrual rules),
    final-settlement worksheet (pending salary + leave encashment + gratuity − advances − deductions).
 9. **Smart CRM HR reminders** — extend `sync_contract_reminders` (or a sibling fn) for

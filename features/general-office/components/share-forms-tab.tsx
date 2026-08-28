@@ -103,6 +103,7 @@ const dict: Record<string, Record<string, string>> = {
   documentsInfo: { en: "Uploaded Documents", ur: "اپ لوڈ شدہ دستاویزات", ar: "المستندات المرفوعة", fa: "اسناد بارگذاری شده", ps: "پورته شوي اسناد" },
   contractsInfo: { en: "Contracts & Attachments", ur: "معاہدے اور دستاویزات", ar: "العقود والمرفقات", fa: "قراردادها و ضمائم", ps: "قراردادونه او ضمیمې" },
   photoInfo: { en: "Candidate Photo", ur: "امیدوار کی تصویر", ar: "صورة المرشح", fa: "عکس متقاضی", ps: "د کاندید عکس" },
+  openLink: { en: "Open Form Link", ur: "فارم لنک کھولیں", ar: "فتح رابط النموذج", fa: "باز کردن لینک فرم", ps: "د فورم لینک پرانیستل" },
 };
 
 function tx(key: string, lang: Lang): string {
@@ -427,6 +428,15 @@ export function ShareFormsTab({ lang }: ShareFormsTabProps) {
               <MessageCircle size={14} />
               {tx("whatsappShare", lang)}
             </Button>
+            <a
+              href={generatedUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-lg gap-1.5 shadow-2xs inline-flex items-center cursor-pointer transition-all"
+            >
+              <ExternalLink size={13} />
+              <span>{tx("openLink", lang)}</span>
+            </a>
           </div>
         </div>
       )}
@@ -484,7 +494,7 @@ export function ShareFormsTab({ lang }: ShareFormsTabProps) {
               </thead>
               <tbody className="divide-y divide-slate-100 text-xs">
                 {links.map((link, idx) => {
-                  const url = typeof window !== "undefined" ? getPublicUrl(link.token) : "";
+                  const url = typeof window !== "undefined" ? getFullUrl(link.token) : "";
                   const isSubmitted = link.status === "used" || Boolean(link.submitted_at);
 
                   return (
@@ -527,6 +537,17 @@ export function ShareFormsTab({ lang }: ShareFormsTabProps) {
                       </td>
                       <td className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          {/* Open Form directly in new tab */}
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 rounded-md border bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 flex items-center gap-1 text-[11px] font-bold cursor-pointer transition-colors shadow-2xs"
+                            title={tx("openLink", lang)}
+                          >
+                            <ExternalLink size={12} />
+                          </a>
+
                           {/* View Submitted Form Data Modal Button */}
                           {isSubmitted && (
                             <button

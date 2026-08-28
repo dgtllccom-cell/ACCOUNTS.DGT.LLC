@@ -5,13 +5,13 @@
  *
  * Standalone, high-converting public form page.
  * Matching the exact 4-Step Smart & Responsive UI:
- *   Step 1: Personal Info, Documents (CNIC Front/Back, Passport Pages) & Contracts
- *   Step 2: Address Information (Dynamic Country -> State -> City -> Postal Code Cascader)
- *   Step 3: Review Your Information (4 Structured Cards with Edit jump-backs)
- *   Step 4: Photo & Final Submit (Circular Avatar Preview, Camera & Gallery)
+ *   Step 1: Personal Info (Multi-Phone + Numbers Keypad), Documents (CNIC Front/Back, Passport Pages) & Contracts
+ *   Step 2: Address Information (100% 5-Language Localized Country -> State -> City -> Postal Code Cascader)
+ *   Step 3: Review Your Information (Structured Cards with Edit jump-backs)
+ *   Step 4: Photo, Final Submit & Comprehensive Confirmation Receipt Card
  *
  * 100% Responsive on Mobile (iPhone/Android) and Desktop.
- * 5-Language Parity (English, Urdu, Arabic, Persian, Pashto) with full RTL.
+ * 5-Language Parity (English, Urdu, Arabic, Persian, Pashto) with full RTL and A-to-Z translation.
  */
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
@@ -32,6 +32,7 @@ import {
   Edit3,
   Eye,
   Download,
+  Printer,
   MapPin,
   Building,
   CheckCircle2,
@@ -45,7 +46,8 @@ import {
   Briefcase,
   Layers,
   Sparkles,
-  ChevronDown
+  ChevronDown,
+  RotateCcw
 } from "lucide-react";
 
 // ─── 5-Language Dictionary ────────────────────────────────────────────────────
@@ -69,11 +71,11 @@ const dict: Record<string, Record<Lang, string>> = {
     ps: "خوندي فورم ثبتول",
   },
   headerSubtitle: {
-    en: "Smart & Responsive",
-    ur: "اسمارٹ اور ریسپانسو",
-    ar: "ذكي ومتجاوب",
-    fa: "هوشمند و واکنش‌گرا",
-    ps: "هوښیار او چټک",
+    en: "Smart & Responsive ERP Registration",
+    ur: "اسمارٹ اور ریسپانسو رجسٹریشن فارم",
+    ar: "تسجيل ذكي ومتجاوب في نظام ERP",
+    fa: "ثبت‌نام هوشمند و واکنش‌گرا در سیستم",
+    ps: "هوښیار او چټک د ثبت نام فورم",
   },
   step1: {
     en: "Personal Info",
@@ -154,38 +156,66 @@ const dict: Record<string, Record<Lang, string>> = {
   },
   fatherNamePh: {
     en: "Enter father / guardian name",
-    ur: "والد کا نام درج کریں",
-    ar: "أدخل اسم الأب",
-    fa: "نام پدر را وارد کنید",
-    ps: "د پلار نوم ولیکئ",
+    ur: "والد یا سرپرست کا نام درج کریں",
+    ar: "أدخل اسم الأب أو ولي الأمر",
+    fa: "نام پدر یا سرپرست را وارد کنید",
+    ps: "د پلار یا سرپرست نوم ولیکئ",
   },
   mobile: {
     en: "Mobile / Phone",
     ur: "موبائل / فون",
-    ar: "رقم الجوال",
-    fa: "شماره تماس",
-    ps: "موبایل نمبر",
+    ar: "الجوال / الهاتف",
+    fa: "تلفن همراه",
+    ps: "ګرځنده تیلیفون / شمېره",
   },
   mobilePh: {
     en: "Enter mobile number",
     ur: "موبائل نمبر درج کریں",
     ar: "أدخل رقم الجوال",
     fa: "شماره موبایل را وارد کنید",
-    ps: "موبایل نمبر ولیکئ",
+    ps: "د مبایل شمېره ولیکئ",
+  },
+  addAnotherMobile: {
+    en: "+ Add Another Phone",
+    ur: "+ اضافی فون نمبر شامل کریں",
+    ar: "+ إضافة هاتف آخر",
+    fa: "+ افزودن شماره دیگر",
+    ps: "+ بله شمېره ورزیاته کړئ",
   },
   whatsapp: {
     en: "WhatsApp Number",
     ur: "واٹس ایپ نمبر",
     ar: "رقم الواتساب",
-    fa: "شماره واتساپ",
-    ps: "واټساپ نمبر",
+    fa: "شماره واتس‌اپ",
+    ps: "د واټس‌اپ شمېره",
+  },
+  whatsappPh: {
+    en: "Enter WhatsApp number",
+    ur: "واٹس ایپ نمبر درج کریں",
+    ar: "أدخل رقم الواتساب",
+    fa: "شماره واتس‌اپ را وارد کنید",
+    ps: "د واټس‌اپ شمېره ولیکئ",
+  },
+  addAnotherWhatsapp: {
+    en: "+ Add Another WhatsApp",
+    ur: "+ اضافی واٹس ایپ شامل کریں",
+    ar: "+ إضافة واتساب آخر",
+    fa: "+ افزودن واتس‌اپ دیگر",
+    ps: "+ بل واټس‌اپ ورزیاته کړئ",
   },
   email: {
-    en: "Email Address",
-    ur: "ای میل ایڈریس",
-    ar: "البريد الإلكتروني",
-    fa: "آدرس ایمیل",
-    ps: "بریښنالیک پته",
+    en: "Email Address (English)",
+    ur: "ای میل ایڈریس (انگریزی میں لکھیں)",
+    ar: "البريد الإلكتروني (باللغة الإنجليزية)",
+    fa: "آدرس ایمیل (به انگلیسی)",
+    ps: "د بریښنالیک پته (په انګلیسي ولیکئ)",
+  },
+  emailPh: {
+    en: "name@example.com",
+    ur: "name@example.com",
+    ar: "name@example.com",
+    fa: "name@example.com",
+    ps: "name@example.com",
   },
   gender: {
     en: "Gender",
@@ -194,112 +224,124 @@ const dict: Record<string, Record<Lang, string>> = {
     fa: "جنسیت",
     ps: "جنسیت",
   },
-  male: { en: "Male", ur: "مرد", ar: "ذكر", fa: "مرد", ps: "نارینه" },
-  female: { en: "Female", ur: "خاتون", ar: "أنثى", fa: "زن", ps: "ښځه" },
+  male: {
+    en: "Male",
+    ur: "مرد",
+    ar: "ذكر",
+    fa: "مرد",
+    ps: "نارینه",
+  },
+  female: {
+    en: "Female",
+    ur: "عورت",
+    ar: "أنثى",
+    fa: "زن",
+    ps: "ښځینه",
+  },
+  other: {
+    en: "Other",
+    ur: "دیگر",
+    ar: "آخر",
+    fa: "سایر",
+    ps: "نور",
+  },
   documentsTitle: {
     en: "Documents",
     ur: "دستاویزات",
     ar: "المستندات",
-    fa: "اسناد و مدارک",
-    ps: "اسناد او پاڼې",
+    fa: "مدارک",
+    ps: "اسناد",
   },
   documentsSub: {
     en: "Add your documents one by one.",
     ur: "اپنی دستاویزات ایک ایک کر کے شامل کریں۔",
     ar: "أضف مستنداتك واحداً تلو الآخر.",
-    fa: "اسناد خود را یکی یکی اضافه کنید.",
-    ps: "خپل اسناد یو یو اضافه کړئ.",
+    fa: "مدارک خود را یکی یکی اضافه کنید.",
+    ps: "خپل اسناد یو یو ورزیات کړئ.",
   },
-  documentType: {
+  docType: {
     en: "Document Type",
     ur: "دستاویز کی قسم",
     ar: "نوع المستند",
-    fa: "نوع سند",
+    fa: "نوع مدرک",
     ps: "د سند ډول",
   },
-  documentNumber: {
+  docNumber: {
     en: "Document Number",
     ur: "دستاویز نمبر",
     ar: "رقم المستند",
-    fa: "شماره سند",
-    ps: "د سند شمیره",
+    fa: "شماره مدرک",
+    ps: "د سند شمېره",
   },
-  documentNumberPh: {
+  docNumberPh: {
     en: "Enter document number",
     ur: "دستاویز نمبر درج کریں",
     ar: "أدخل رقم المستند",
-    fa: "شماره سند را وارد کنید",
-    ps: "د سند شمیره ولیکئ",
-  },
-  uploadDocument: {
-    en: "Upload Document",
-    ur: "دستاویز اپ لوڈ کریں",
-    ar: "تحميل المستند",
-    fa: "بارگذاری سند",
-    ps: "سند پورته کړئ",
+    fa: "شماره مدرک را وارد کنید",
+    ps: "د سند شمېره ولیکئ",
   },
   frontSide: {
     en: "Front Side",
     ur: "سامنے کا رخ (Front)",
     ar: "الوجه الأمامي",
-    fa: "روی کارت / صفحه اول",
-    ps: "مخکینۍ برخه",
+    fa: "روی مدرک (جلو)",
+    ps: "مخکینی مخ",
   },
   backSide: {
     en: "Back Side",
     ur: "پیچھے کا رخ (Back)",
     ar: "الوجه الخلفي",
-    fa: "پشت کارت / صفحه دوم",
-    ps: "شا برخه",
+    fa: "پشت مدرک (عقب)",
+    ps: "شاته مخ",
   },
-  passportMainPage: {
+  mainPage: {
     en: "Main Info Page",
     ur: "پہلا معلوماتی صفحہ",
-    ar: "صفحة المعلومات الرئيسية",
-    fa: "صفحه اصلی گذرنامه",
-    ps: "لومړی معلوماتي مخ",
+    ar: "صفحة البيانات الرئيسية",
+    fa: "صفحه مشخصات اصلی",
+    ps: "د اصلي معلوماتو پاڼه",
   },
-  passportVisaPage: {
+  visaPage: {
     en: "Visa / Back Page",
-    ur: "ویزا / دوسرا صفحہ",
+    ur: "ویزا / پچھلا صفحہ",
     ar: "صفحة التأشيرة / الخلفية",
-    fa: "صفحه ویزا / صفحه پشتی",
-    ps: "د ویزې / شا مخ",
+    fa: "صفحه ویزا / پشت",
+    ps: "د ویزې / شاته پاڼه",
   },
-  uploadHelp: {
-    en: "Upload file PDF, JPG, PNG (Max 10MB)",
-    ur: "فائل اپ لوڈ کریں PDF, JPG, PNG (زیادہ سے زیادہ 10MB)",
-    ar: "تحميل ملف PDF, JPG, PNG (الحد الأقصى 10 ميجابايت)",
-    fa: "بارگذاری فایل PDF, JPG, PNG (حداکثر 10 مگابایت)",
-    ps: "فایل پورته کړئ PDF, JPG, PNG (تر 10MB پورې)",
+  cameraBtn: {
+    en: "Camera",
+    ur: "کیمرہ",
+    ar: "كاميرا",
+    fa: "دوربین",
+    ps: "کیمره",
   },
-  addDocumentBtn: {
+  galleryBtn: {
+    en: "Gallery",
+    ur: "گیلری",
+    ar: "المعرض",
+    fa: "گالری",
+    ps: "ګالري",
+  },
+  addDocBtn: {
     en: "+ Add Document",
     ur: "+ دستاویز شامل کریں",
     ar: "+ إضافة مستند",
-    fa: "+ افزودن سند",
-    ps: "+ سند اضافه کړئ",
-  },
-  addedDocuments: {
-    en: "Added Documents",
-    ur: "شامل شدہ دستاویزات",
-    ar: "المستندات المضافة",
-    fa: "اسناد اضافه شده",
-    ps: "اضافه شوي اسناد",
+    fa: "+ افزودن مدرک",
+    ps: "+ سند ورزیات کړئ",
   },
   contractsTitle: {
-    en: "Contracts",
-    ur: "معاہدے / کنٹریکٹس",
-    ar: "العقود",
-    fa: "قراردادها",
-    ps: "قراردادونه",
+    en: "Contracts & Attachments",
+    ur: "معاہدے اور دستاویزات",
+    ar: "العقود والمرفقات",
+    fa: "قراردادها و ضمائم",
+    ps: "قراردادونه او ضمیمې",
   },
   contractsSub: {
-    en: "Add your contracts details.",
-    ur: "اپنے معاہدے کی تفصیلات شامل کریں۔",
-    ar: "أضف تفاصيل عقودك.",
-    fa: "جزئیات قرارداد خود را اضافه کنید.",
-    ps: "د خپلو قراردادونو تفصیلات اضافه کړئ.",
+    en: "Add applicable agreements or reference letters.",
+    ur: "متعلقہ معاہدے یا حوالہ جاتی دستاویزات شامل کریں۔",
+    ar: "أضف الاتفاقيات المعمول بها أو خطابات المرجعية.",
+    fa: "توافق‌نامه‌ها یا اسناد مربوطه را اضافه کنید.",
+    ps: "اړوند قراردادونه یا ضمیمې اضافه کړئ.",
   },
   contractType: {
     en: "Contract Type",
@@ -313,35 +355,21 @@ const dict: Record<string, Record<Lang, string>> = {
     ur: "+ معاہدہ شامل کریں",
     ar: "+ إضافة عقد",
     fa: "+ افزودن قرارداد",
-    ps: "+ قرارداد اضافه کړئ",
+    ps: "+ قرارداد ورزیات کړئ",
   },
-  addedContracts: {
-    en: "Added Contracts",
-    ur: "شامل شدہ معاہدے",
-    ar: "العقود المضافة",
-    fa: "قراردادهای افزوده شده",
-    ps: "اضافه شوي قراردادونه",
-  },
-  nextAddressBtn: {
-    en: "Next: Address Information →",
-    ur: "اگلا: پتے کی تفصیلات ←",
-    ar: "التالي: تفاصيل العنوان ←",
-    fa: "بعدی: اطلاعات آدرس ←",
-    ps: "بل: د پتې معلومات ←",
-  },
-  addressInfoTitle: {
-    en: "Address Information",
+  step2Title: {
+    en: "Address Details",
     ur: "پتے کی تفصیلات",
-    ar: "معلومات العنوان",
-    fa: "اطلاعات آدرس",
-    ps: "د پتې معلومات",
+    ar: "تفاصيل العنوان",
+    fa: "جزئیات آدرس",
+    ps: "د پتې تفصیلات",
   },
-  addressInfoSub: {
-    en: "Please select country, province, city, and enter your address.",
+  step2Sub: {
+    en: "Select country, state, city and enter full street address.",
     ur: "براہِ کرم ملک، صوبہ اور شہر منتخب کریں اور مکمل پتہ درج کریں۔",
-    ar: "يرجى تحديد الدولة والمحافظة والمدينة وإدخال العنوان.",
-    fa: "لطفاً کشور، استان، شهر را انتخاب کرده و آدرس را وارد نمایید.",
-    ps: "مهرباني وکړئ هیواد، ولایت، او ښار وټاکئ او خپله پته ولیکئ.",
+    ar: "يرجى تحديد الدولة والمحافظة والمدينة وإدخال العنوان الكامل.",
+    fa: "لطفاً کشور، استان و شهر را انتخاب کرده و آدرس کامل را وارد کنید.",
+    ps: "مهرباني وکړئ هیواد، ولایت او ښار وټاکئ او بشپړه پته ولیکئ.",
   },
   country: {
     en: "Country",
@@ -350,152 +378,117 @@ const dict: Record<string, Record<Lang, string>> = {
     fa: "کشور",
     ps: "هیواد",
   },
-  selectCountry: {
-    en: "Select country",
-    ur: "ملک منتخب کریں",
-    ar: "اختر الدولة",
-    fa: "کشور را انتخاب کنید",
-    ps: "هیواد وټاکئ",
-  },
   stateProvince: {
-    en: "State / Province",
-    ur: "صوبہ / ریاست",
-    ar: "الولاية / المقاطعة",
+    en: "State / Province / Emirate",
+    ur: "صوبہ / ریاست / امارت",
+    ar: "المحافظة / الإمارة / الولاية",
     fa: "استان / ایالت",
-    ps: "ولایت / صوبه",
-  },
-  selectState: {
-    en: "Select state / province",
-    ur: "صوبہ منتخب کریں",
-    ar: "اختر الولاية",
-    fa: "استان را انتخاب کنید",
-    ps: "ولایت وټاکئ",
+    ps: "ولایت / ایالت",
   },
   city: {
-    en: "City",
-    ur: "شہر",
-    ar: "المدينة",
-    fa: "شهر",
-    ps: "ښار",
-  },
-  selectCity: {
-    en: "Select city",
-    ur: "شہر منتخب کریں",
-    ar: "اختر المدينة",
-    fa: "شهر را انتخاب کنید",
-    ps: "ښار وټاکئ",
+    en: "City / Port / Commercial Hub",
+    ur: "شہر / پورٹ / تجارتی مرکز",
+    ar: "المدينة / الميناء / المركز التجاري",
+    fa: "شهر / بندر / مرکز تجاری",
+    ps: "ښار / بندر / سوداګریز مرکز",
   },
   postalCode: {
-    en: "Postal / City Code",
-    ur: "پوسٹل / سٹی کوڈ",
-    ar: "الرمز البريدي / كود المدينة",
+    en: "Postal / City Code (Auto-Filled)",
+    ur: "پوسٹل / سٹی کوڈ (خودکار درج)",
+    ar: "الرمز البريدي / رمز المدينة",
     fa: "کد پستی / کد شهر",
     ps: "پوسټل / ښار کوډ",
   },
-  postalCodePh: {
-    en: "Postal code (auto-filled)",
-    ur: "پوسٹل کوڈ (خودکار درج ہوگا)",
-    ar: "الرمز البريدي (تلقائي)",
-    fa: "کد پستی (خودکار)",
-    ps: "پوسټل کوډ (خپله ډکیږي)",
-  },
   fullAddress: {
-    en: "Full Address",
-    ur: "مکمل پتہ",
-    ar: "العنوان الكامل",
-    fa: "آدرس کامل",
-    ps: "بشپړه پته",
+    en: "Full Address (Street, Building, Office)",
+    ur: "مکمل پتہ (گلی، عمارت، مکان / دفتر)",
+    ar: "العنوان الكامل (الشارع، المبنى، المكتب)",
+    fa: "آدرس کامل (خیابان، ساختمان، پلاک)",
+    ps: "بشپړه پته (کوڅه، ودانۍ، دفتر)",
   },
   fullAddressPh: {
-    en: "Enter your full address (Street, Building, Flat / Office)",
+    en: "Enter complete street address, suite, or flat number",
     ur: "اپنا مکمل پتہ درج کریں (گلی، عمارت، مکان / دفتر)",
-    ar: "أدخل عنوانك الكامل (الشارع، المبنى، الشقة)",
-    fa: "آدرس کامل خود را وارد کنید (خیابان، پلاک، واحد)",
-    ps: "خپله بشپړه پته ولیکئ (کوڅه، ودانۍ، کور / دفتر)",
+    ar: "أدخل عنوان الشارع الكامل أو رقم المكتب أو الشقة",
+    fa: "آدرس دقیق خیابان، ساختمان و پلاک را وارد کنید",
+    ps: "خپله بشپړه پته (کوڅه، ودانۍ، دفتر) ولیکئ",
   },
-  backBtn: {
-    en: "← Back",
-    ur: "← واپس",
-    ar: "← رجوع",
-    fa: "← بازگشت",
-    ps: "← شاته",
-  },
-  nextReviewBtn: {
-    en: "Next: Review →",
-    ur: "اگلا: جائزہ لیں ←",
-    ar: "التالي: المراجعة ←",
-    fa: "بعدی: بازبینی ←",
-    ps: "بل: بیاکتنه ←",
-  },
-  reviewTitle: {
+  step3Title: {
     en: "Review Your Information",
     ur: "اپنی معلومات کا جائزہ لیں",
     ar: "مراجعة معلوماتك",
     fa: "بازبینی اطلاعات شما",
-    ps: "خپل معلومات وڅیړئ",
+    ps: "د خپلو معلوماتو بیاکتنه وکړئ",
   },
-  reviewSub: {
-    en: "Please review all information before submitting.",
+  step3Sub: {
+    en: "Please verify all details before final submission.",
     ur: "جمع کروانے سے پہلے تمام تفصیلات کی تصدیق کر لیں۔",
-    ar: "يرجى مراجعة كافة البيانات قبل الإرسال النهائي.",
-    fa: "لطفاً قبل از ارسال، تمام اطلاعات را بررسی کنید.",
-    ps: "مهرباني وکړئ د سپارلو دمخه ټول معلومات وڅیړئ.",
+    ar: "يرجى التحقق من جميع البيانات قبل الإرسال النهائي.",
+    fa: "لطفاً قبل از ارسال نهایی تمام مشخصات را بازبینی کنید.",
+    ps: "مهرباني وکړئ د سپارلو دمخه ټول معلومات تایید کړئ.",
   },
   editBtn: {
     en: "Edit",
     ur: "ترمیم کریں",
     ar: "تعديل",
     fa: "ویرایش",
-    ps: "سمون",
+    ps: "بدلون",
   },
-  reviewCheckAlert: {
-    en: "Information looks correct? You can go back and edit any section if needed.",
+  reviewVerifyBadge: {
+    en: "Are all details accurate? You can edit any section before submitting.",
     ur: "کیا تمام معلومات درست ہیں؟ آپ ضرورت پڑنے پر کسی بھی حصے میں ترمیم کر سکتے ہیں۔",
-    ar: "هل تبدو المعلومات صحيحة؟ يمكنك الرجوع وتعديل أي قسم إذا لزم الأمر.",
-    fa: "آیا اطلاعات درست به نظر می‌رسد؟ در صورت نیاز می‌توانید بازگردید و ویرایش کنید.",
-    ps: "آیا معلومات سم ښکاري؟ تاسو کولی شئ هرې برخې ته بیرته لاړ شئ او سم یې کړئ.",
+    ar: "هل جميع البيانات دقيقة؟ يمكنك تعديل أي قسم قبل الإرسال.",
+    fa: "آیا تمام اطلاعات صحیح است؟ می‌توانید هر بخش را ویرایش کنید.",
+    ps: "ایا ټول معلومات سم دي؟ تاسو کولی شئ اړین بدلونونه راولئ.",
   },
-  nextPhotoSubmitBtn: {
+  step4Title: {
+    en: "Upload Profile Photo",
+    ur: "اپنی تصویر اپ لوڈ کریں",
+    ar: "تحميل الصورة الشخصية",
+    fa: "بارگذاری عکس پرسنلی",
+    ps: "خپل انځور پورته کړئ",
+  },
+  step4Sub: {
+    en: "Please upload your recent photo.",
+    ur: "براہِ کرم اپنی حالیہ تصویر اپ لوڈ کریں۔",
+    ar: "يرجى تحميل صورتك الشخصية الحديثة.",
+    fa: "لطفاً عکس پرسنلی جدید خود را بارگذاری کنید.",
+    ps: "مهرباني وکړئ خپل نوی عکس پورته کړئ.",
+  },
+  photoSizeHint: {
+    en: "JPG, PNG (Max 5MB)",
+    ur: "(5MB سے زیادہ نہ ہو JPG, PNG)",
+    ar: "JPG, PNG (الحد الأقصى 5 ميجابايت)",
+    fa: "JPG, PNG (حداکثر ۵ مگابایت)",
+    ps: "JPG, PNG (تر 5MB پورې)",
+  },
+  nextReviewBtn: {
+    en: "Next: Review →",
+    ur: "اگلا: جائزہ لیں ←",
+    ar: "التالي: مراجعة ←",
+    fa: "بعدی: بازبینی ←",
+    ps: "بل: کتنه ←",
+  },
+  nextPhotoBtn: {
     en: "Next: Photo & Submit →",
     ur: "اگلا: تصویر اور سبمٹ ←",
     ar: "التالي: الصورة والإرسال ←",
     fa: "بعدی: عکس و ارسال ←",
-    ps: "بل: عکس او سپارل ←",
+    ps: "بل: عکس او ثبت ←",
   },
-  uploadPhotoTitle: {
-    en: "Upload Your Photo",
-    ur: "اپنی تصویر اپ لوڈ کریں",
-    ar: "تحميل صورتك الشخصية",
-    fa: "بارگذاری عکس شما",
-    ps: "خپل عکس پورته کړئ",
+  nextAddressBtn: {
+    en: "Next: Address Details →",
+    ur: "اگلا: پتے کی تفصیلات ←",
+    ar: "التالي: تفاصيل العنوان ←",
+    fa: "بعدی: جزئیات آدرس ←",
+    ps: "بل: د پتې تفصیلات ←",
   },
-  uploadPhotoSub: {
-    en: "Please upload your recent photo.",
-    ur: "براہِ کرم اپنی حالیہ تصویر اپ لوڈ کریں۔",
-    ar: "يرجى تحميل صورة شخصية حديثة.",
-    fa: "لطفاً عکس اخیر خود را بارگذاری کنید.",
-    ps: "مهرباني وکړئ خپل تازه عکس پورته کړئ.",
-  },
-  cameraBtn: {
-    en: "Camera",
-    ur: "کیمرہ",
-    ar: "الكاميرا",
-    fa: "دوربین",
-    ps: "کیمره",
-  },
-  galleryBtn: {
-    en: "Gallery",
-    ur: "گیلری",
-    ar: "معرض الصور",
-    fa: "گالری",
-    ps: "ګالري",
-  },
-  photoSizeHint: {
-    en: "JPG, PNG (Max 5MB)",
-    ur: "JPG, PNG (زیادہ سے زیادہ 5MB)",
-    ar: "JPG, PNG (الحد الأقصى 5 ميجابايت)",
-    fa: "JPG, PNG (حداکثر 5 مگابایت)",
-    ps: "JPG, PNG (تر 5MB پورې)",
+  backBtn: {
+    en: "Back",
+    ur: "واپس",
+    ar: "رجوع",
+    fa: "بازگشت",
+    ps: "شاته",
   },
   submitFormBtn: {
     en: "Submit Form",
@@ -505,18 +498,53 @@ const dict: Record<string, Record<Lang, string>> = {
     ps: "فورم وسپارئ",
   },
   successTitle: {
-    en: "Submitted Successfully!",
+    en: "Form Submitted Successfully!",
     ur: "فارم کامیابی سے جمع ہو گیا!",
-    ar: "تم الإرسال بنجاح!",
-    fa: "با موفقیت ارسال شد!",
-    ps: "په بریالیتوب سره وسپارل شو!",
+    ar: "تم إرسال النموذج بنجاح!",
+    fa: "فرم با موفقیت ارسال شد!",
+    ps: "فورم په بریالیتوب سره ثبت شو!",
   },
   successMsg: {
-    en: "Thank you! Your information has been securely received and recorded in our ERP system.",
-    ur: "شکریہ! آپ کی معلومات محفوظ طریقے سے ہمارے ERP سسٹم میں درج ہو چکی ہیں۔",
-    ar: "شكراً لك! تم استلام بياناتك بأمان وتسجيلها في نظام ERP الخاص بنا.",
-    fa: "با تشکر! اطلاعات شما با موفقیت و به صورت امن در سیستم ERP ثبت شد.",
-    ps: "مننه! ستاسو معلومات په خوندي ډول زموږ په ERP سیسټم کې ثبت شول.",
+    en: "Thank you! Your submission has been securely recorded in our ERP system.",
+    ur: "شکریہ! آپ کی معلومات اور دستاویزات محفوظ طریقے سے ERP سسٹم میں درج ہو چکی ہیں۔",
+    ar: "شكراً لك! تم استلام بياناتك ومستنداتك بأمان وتسجيلها في نظام ERP الخاص بنا.",
+    fa: "با تشکر! اطلاعات و مدارک شما با موفقیت و به صورت امن در سیستم ERP ثبت شد.",
+    ps: "مننه! ستاسو معلومات او اسناد په خوندي ډول زموږ په ERP سیسټم کې ثبت شول.",
+  },
+  receiptTitle: {
+    en: "Official Submission Receipt",
+    ur: "آفیشل سمبیشن رسید",
+    ar: "إيصال التقديم الرسمي",
+    fa: "رسید رسمی ثبت‌نام",
+    ps: "د ثبت رسمي رسید",
+  },
+  receiptRef: {
+    en: "Reference Token",
+    ur: "ریفرنس ٹوکن",
+    ar: "رمز المرجع",
+    fa: "کد پیگیری",
+    ps: "د حوالې کوډ",
+  },
+  submittedOn: {
+    en: "Submitted On",
+    ur: "جمع کرنے کی تاریخ",
+    ar: "تاريخ التقديم",
+    fa: "تاریخ ارسال",
+    ps: "د سپارلو نېټه",
+  },
+  printReceipt: {
+    en: "Print / Save Receipt",
+    ur: "رسید پرنٹ / محفوظ کریں",
+    ar: "طباعة / حفظ الإيصال",
+    fa: "چاپ / ذخیره رسید",
+    ps: "رسید چاپ / خوندي کړئ",
+  },
+  submitAnother: {
+    en: "Submit Another Form",
+    ur: "دوسرا فارم جمع کروائیں",
+    ar: "تقديم نموذج آخر",
+    fa: "ارسال فرم دیگر",
+    ps: "بل فورم وسپارئ",
   },
   errorInvalid: {
     en: "Invalid or Expired Link",
@@ -538,7 +566,132 @@ function t(key: string, lang: Lang): string {
   return dict[key]?.[lang] ?? dict[key]?.en ?? key;
 }
 
-// ─── Location Hierarchy Dataset ───────────────────────────────────────────────
+// ─── Location Dataset & 5-Language Translations ───────────────────────────────
+
+const LOCATION_TRANSLATIONS: Record<string, Record<Lang, string>> = {
+  // Countries
+  Pakistan: { en: "Pakistan (PK)", ur: "پاکستان (PK)", ar: "باكستان (PK)", fa: "پاکستان (PK)", ps: "پاکستان (PK)" },
+  "United Arab Emirates": { en: "United Arab Emirates (UAE)", ur: "متحدہ عرب امارات (UAE)", ar: "الإمارات العربية المتحدة (UAE)", fa: "امارات متحده عربی (UAE)", ps: "متحده عربي امارات (UAE)" },
+  Afghanistan: { en: "Afghanistan (AF)", ur: "افغانستان (AF)", ar: "أفغانستان (AF)", fa: "افغانستان (AF)", ps: "افغانستان (AF)" },
+  "Saudi Arabia": { en: "Saudi Arabia (KSA)", ur: "سعودی عرب (KSA)", ar: "المملكة العربية السعودية (KSA)", fa: "عربستان سعودی (KSA)", ps: "سعودي عربستان (KSA)" },
+  China: { en: "China (CN)", ur: "چین (CN)", ar: "الصين (CN)", fa: "چین (CN)", ps: "چین (CN)" },
+  Turkey: { en: "Turkey (TR)", ur: "ترکی (TR)", ar: "تركيا (TR)", fa: "ترکیه (TR)", ps: "ترکیه (TR)" },
+  Iran: { en: "Iran (IR)", ur: "ایران (IR)", ar: "إيران (IR)", fa: "ایران (IR)", ps: "ایران (IR)" },
+  Oman: { en: "Oman (OM)", ur: "عمان (OM)", ar: "عمان (OM)", fa: "عمان (OM)", ps: "عمان (OM)" },
+  "United Kingdom": { en: "United Kingdom (UK)", ur: "برطانیہ (UK)", ar: "المملكة المتحدة (UK)", fa: "انگلستان (UK)", ps: "برطانیه (UK)" },
+  "United States": { en: "United States (USA)", ur: "امریکہ (USA)", ar: "الولايات المتحدة (USA)", fa: "ایالات متحده (USA)", ps: "امريکا (USA)" },
+
+  // States
+  Sindh: { en: "Sindh", ur: "سندھ", ar: "السند", fa: "سند", ps: "سندھ" },
+  Punjab: { en: "Punjab", ur: "پنجاب", ar: "البنجاب", fa: "پنجاب", ps: "پنجاب" },
+  "Khyber Pakhtunkhwa": { en: "Khyber Pakhtunkhwa", ur: "خیبر پختونخوا", ar: "خيبر بختونخوا", fa: "خیبر پختونخوا", ps: "خيبر پښتونخوا" },
+  Balochistan: { en: "Balochistan", ur: "بلوچستان", ar: "بلوشستان", fa: "بلوچستان", ps: "بلوچستان" },
+  "Islamabad Capital Territory": { en: "Islamabad Capital", ur: "اسلام آباد کیپیٹل", ar: "إسلام آباد العاصمة", fa: "اسلام‌آباد پایتخت", ps: "اسلام آباد پلازمېنه" },
+  "Azad Jammu & Kashmir": { en: "Azad Kashmir", ur: "آزاد کشمیر", ar: "كشمير الحرة", fa: "کشمیر آزاد", ps: "آزاد کشمیر" },
+  Dubai: { en: "Dubai", ur: "دبئی", ar: "دبي", fa: "دبی", ps: "دوبۍ" },
+  "Abu Dhabi": { en: "Abu Dhabi", ur: "ابوظہبی", ar: "أبوظبي", fa: "ابوظبی", ps: "ابوظبۍ" },
+  Sharjah: { en: "Sharjah", ur: "شارجہ", ar: "الشارقة", fa: "شارجه", ps: "شارجه" },
+  Ajman: { en: "Ajman", ur: "عجمان", ar: "عجمان", fa: "عجمان", ps: "عجمان" },
+  Kabul: { en: "Kabul", ur: "کابل", ar: "كابل", fa: "کابل", ps: "کابل" },
+  Kandahar: { en: "Kandahar", ur: "قندھار", ar: "قندهار", fa: "قندهار", ps: "کندهار" },
+  Herat: { en: "Herat", ur: "ہرات", ar: "هرات", fa: "هرات", ps: "هرات" },
+  Nangarhar: { en: "Nangarhar", ur: "ننگرہار", ar: "ننگرهار", fa: "ننگرهار", ps: "ننګرهار" },
+  Balkh: { en: "Balkh", ur: "بلخ", ar: "بلخ", fa: "بلخ", ps: "بلخ" },
+  Nimruz: { en: "Nimruz", ur: "نیمروز", ar: "نیمروز", fa: "نیمروز", ps: "نیمروز" },
+  Riyadh: { en: "Riyadh Region", ur: "ریاض ریجن", ar: "منطقة الرياض", fa: "منطقه ریاض", ps: "د ریاض سیمه" },
+  Makkah: { en: "Makkah / Jeddah", ur: "مکہ / جدہ", ar: "منطقة مكة / جدة", fa: "مکه / جده", ps: "مکه / جده" },
+  "Eastern Province": { en: "Eastern Province", ur: "مشرقی صوبہ (دمام)", ar: "المنطقة الشرقية", fa: "استان شرقی", ps: "ختیځ ولایت" },
+  Zhejiang: { en: "Zhejiang (Yiwu)", ur: "ژجیانگ (ایوو)", ar: "تشجيانغ (إيوو)", fa: "چجیانگ (ایوو)", ps: "ژجیانګ (ایوو)" },
+  Guangdong: { en: "Guangdong (Guangzhou)", ur: "گوانگ ڈونگ (گوانگزو)", ar: "غوانغدونغ", fa: "گوانگ‌دونگ", ps: "ګوانګډونګ" },
+  Shanghai: { en: "Shanghai", ur: "شنگھائی", ar: "شنغهاي", fa: "شانگهای", ps: "شانګهای" },
+  Istanbul: { en: "Istanbul", ur: "استنبول", ar: "إسطنبول", fa: "استانبول", ps: "استانبول" },
+  Mersin: { en: "Mersin", ur: "مرسین", ar: "مرسين", fa: "مرسین", ps: "مرسین" },
+  Hormozgan: { en: "Hormozgan", ur: "ہرمزگان", ar: "هرمزغان", fa: "هرمزگان", ps: "هرمزګان" },
+  "Sistan & Baluchestan": { en: "Sistan & Baluchestan", ur: "سیستان و بلوچستان", ar: "سيستان وبلوشستان", fa: "سیستان و بلوچستان", ps: "سیستان او بلوچستان" },
+  Tehran: { en: "Tehran", ur: "تہران", ar: "طهران", fa: "تهران", ps: "تهران" },
+  Muscat: { en: "Muscat", ur: "مسقط", ar: "مسقط", fa: "مسقط", ps: "مسقط" },
+  "Al Batinah": { en: "Al Batinah (Sohar)", ur: "الباطنہ (صحار)", ar: "الباطنة (صحار)", fa: "الباطنه (صحار)", ps: "الباطنه (صحار)" },
+  England: { en: "England", ur: "انگلستان", ar: "إنجلترا", fa: "انگلستان", ps: "انګلستان" },
+  California: { en: "California", ur: "کیلیفورنیا", ar: "كاليفورنيا", fa: "کالیفرنیا", ps: "کلیفورنیا" },
+  Texas: { en: "Texas", ur: "ٹیکساس", ar: "تكساس", fa: "تگزاس", ps: "ټیکساس" },
+  "New York": { en: "New York", ur: "نیویارک", ar: "نيويورك", fa: "نیویورک", ps: "نیویارک" },
+
+  // Cities
+  Karachi: { en: "Karachi (KHI)", ur: "کراچی (KHI)", ar: "كراتشي (KHI)", fa: "کراچی (KHI)", ps: "کراچۍ (KHI)" },
+  Hyderabad: { en: "Hyderabad (HYD)", ur: "حیدرآباد (HYD)", ar: "حيدر آباد (HYD)", fa: "حیدرآباد (HYD)", ps: "حیدرآباد (HYD)" },
+  Sukkur: { en: "Sukkur (SKR)", ur: "سکھر (SKR)", ar: "سکھر (SKR)", fa: "سکھر (SKR)", ps: "سکھر (SKR)" },
+  Larkana: { en: "Larkana (LRK)", ur: "لاڑکانہ (LRK)", ar: "لاركانا (LRK)", fa: "لارکانه (LRK)", ps: "لاړکانه (LRK)" },
+  "Mirpur Khas": { en: "Mirpur Khas (MPK)", ur: "میرپور خاص (MPK)", ar: "ميربور خاص (MPK)", fa: "میرپور خاص (MPK)", ps: "میرپور خاص (MPK)" },
+  Nawabshah: { en: "Nawabshah (NBS)", ur: "نواب شاہ (NBS)", ar: "نوابشاه (NBS)", fa: "نواب‌شاه (NBS)", ps: "نوابشاه (NBS)" },
+  Lahore: { en: "Lahore (LHE)", ur: "لاہور (LHE)", ar: "لاهور (LHE)", fa: "لاهور (LHE)", ps: "لاهور (LHE)" },
+  Rawalpindi: { en: "Rawalpindi (RWP)", ur: "راولپنڈی (RWP)", ar: "راولبندي (RWP)", fa: "راولپندی (RWP)", ps: "راولپنډۍ (RWP)" },
+  Faisalabad: { en: "Faisalabad (FSD)", ur: "فیصل آباد (FSD)", ar: "فيصل آباد (FSD)", fa: "فیصل‌آباد (FSD)", ps: "فیصل آباد (FSD)" },
+  Multan: { en: "Multan (MUX)", ur: "ملتان (MUX)", ar: "ملتان (MUX)", fa: "ملتان (MUX)", ps: "ملتان (MUX)" },
+  Gujranwala: { en: "Gujranwala (GUJ)", ur: "گوجرانوالہ (GUJ)", ar: "غوجرانوالا (GUJ)", fa: "گوجرانوالا (GUJ)", ps: "ګوجرانواله (GUJ)" },
+  Sialkot: { en: "Sialkot (SKT)", ur: "سیالکوٹ (SKT)", ar: "سيالكوت (SKT)", fa: "سیالکوت (SKT)", ps: "سیالکوټ (SKT)" },
+  Bahawalpur: { en: "Bahawalpur (BWP)", ur: "بہاولپور (BWP)", ar: "بهاولبور (BWP)", fa: "بهاولپور (BWP)", ps: "بهاولپور (BWP)" },
+  Sargodha: { en: "Sargodha (SGD)", ur: "سرگودھا (SGD)", ar: "سرغودها (SGD)", fa: "سرگودها (SGD)", ps: "سرګودها (SGD)" },
+  Sheikhupura: { en: "Sheikhupura (SKP)", ur: "شیخوپورہ (SKP)", ar: "شيخوبورا (SKP)", fa: "شیخوپوره (SKP)", ps: "شیخوپوره (SKP)" },
+  "Rahim Yar Khan": { en: "Rahim Yar Khan (RYK)", ur: "رحیم یار خان (RYK)", ar: "رحيم يار خان (RYK)", fa: "رحیم‌یارخان (RYK)", ps: "رحیم یار خان (RYK)" },
+  Peshawar: { en: "Peshawar (PEW)", ur: "پشاور (PEW)", ar: "بيشاور (PEW)", fa: "پیشاور (PEW)", ps: "پېښور (PEW)" },
+  Mardan: { en: "Mardan (MDN)", ur: "مردان (MDN)", ar: "مردان (MDN)", fa: "مردان (MDN)", ps: "مردان (MDN)" },
+  Abbottabad: { en: "Abbottabad (ABT)", ur: "ایبٹ آباد (ABT)", ar: "أبوت آباد (ABT)", fa: "ایبت‌آباد (ABT)", ps: "ایبټ اباد (ABT)" },
+  "Swat (Mingora)": { en: "Swat / Mingora (SWT)", ur: "سوات / مینگورہ (SWT)", ar: "سوات (SWT)", fa: "سوات (SWT)", ps: "سوات / مینګوره (SWT)" },
+  "Dera Ismail Khan": { en: "D.I. Khan (DIK)", ur: "ڈیرہ اسماعیل خان (DIK)", ar: "ديرا إسماعيل خان (DIK)", fa: "دیره اسماعیل خان (DIK)", ps: "ډیره اسماعیل خان (DIK)" },
+  Kohat: { en: "Kohat (KHT)", ur: "کوہاٹ (KHT)", ar: "كوهات (KHT)", fa: "کوهات (KHT)", ps: "کوهاټ (KHT)" },
+  Bannu: { en: "Bannu (BNU)", ur: "بنوں (BNU)", ar: "بنو (BNU)", fa: "بنو (BNU)", ps: "بنو (BNU)" },
+  Quetta: { en: "Quetta (UET)", ur: "کوئٹہ (UET)", ar: "كويته (UET)", fa: "کویته (UET)", ps: "کوټه (UET)" },
+  Gwadar: { en: "Gwadar Port (GWD)", ur: "گوادر پورٹ (GWD)", ar: "ميناء جوادر (GWD)", fa: "بندر گوادر (GWD)", ps: "ګوادر بندر (GWD)" },
+  "Chaman (Border)": { en: "Chaman Border (CHM)", ur: "چمن بارڈر (CHM)", ar: "معبر چمن (CHM)", fa: "مرز چمن (CHM)", ps: "چمن پوله (CHM)" },
+  Turbat: { en: "Turbat (TBT)", ur: "تربت (TBT)", ar: "تربت (TBT)", fa: "تربت (TBT)", ps: "تربت (TBT)" },
+  "Hub Industrial": { en: "Hub Industrial (HUB)", ur: "حب انڈسٹریل (HUB)", ar: "حب الصناعية (HUB)", fa: "شهرک صنعتی حب (HUB)", ps: "حب صنعتي ښارګوټی (HUB)" },
+  Sibi: { en: "Sibi (SBI)", ur: "سبی (SBI)", ar: "سيبي (SBI)", fa: "سبی (SBI)", ps: "سبۍ (SBI)" },
+  Khuzdar: { en: "Khuzdar (KZD)", ur: "خضدار (KZD)", ar: "خضدار (KZD)", fa: "خضدار (KZD)", ps: "خضدار (KZD)" },
+  Islamabad: { en: "Islamabad (ISB)", ur: "اسلام آباد (ISB)", ar: "إسلام آباد (ISB)", fa: "اسلام‌آباد (ISB)", ps: "اسلام آباد (ISB)" },
+  Muzaffarabad: { en: "Muzaffarabad (MZD)", ur: "مظفرآباد (MZD)", ar: "مظفر آباد (MZD)", fa: "مظفرآباد (MZD)", ps: "مظفراباد (MZD)" },
+  Mirpur: { en: "Mirpur (MPR)", ur: "میرپور (MPR)", ar: "ميربور (MPR)", fa: "میرپور (MPR)", ps: "میرپور (MPR)" },
+
+  // UAE Cities
+  "Dubai (Deira / Port Rashid)": { en: "Dubai (Deira / Port Rashid)", ur: "دبئی (دیرہ / پورٹ راشد)", ar: "دبي (ديرة / ميناء راشد)", fa: "دبی (دیره / بندر راشد)", ps: "دوبۍ (دیره / راشد بندر)" },
+  "Jebel Ali Free Zone (JAFZA)": { en: "Jebel Ali Free Zone (JAFZA)", ur: "جبل علی فری زون (JAFZA)", ar: "منطقة جبل علي الحرة (JAFZA)", fa: "منطقه آزاد جبل علی (JAFZA)", ps: "جبل علي ازاده سيمه (JAFZA)" },
+  "Bur Dubai": { en: "Bur Dubai", ur: "بر دبئی", ar: "بر دبي", fa: "بر دبی", ps: "بر دوبۍ" },
+  "Al Quoz Industrial": { en: "Al Quoz Industrial", ur: "القوز انڈسٹریل", ar: "القوز الصناعية", fa: "القوز صنعتی", ps: "القوز صنعتي" },
+  "Abu Dhabi City": { en: "Abu Dhabi City (AUH)", ur: "ابوظہبی سٹی (AUH)", ar: "مدينة أبوظبي (AUH)", fa: "شهر ابوظبی (AUH)", ps: "ابوظبۍ ښار (AUH)" },
+  "Musaffah Industrial": { en: "Musaffah Industrial (MSF)", ur: "مصفح انڈسٹریل (MSF)", ar: "مصفح الصناعية (MSF)", fa: "مصفح صنعتی (MSF)", ps: "مصفح صنعتي (MSF)" },
+  "Khalifa Port (KIZAD)": { en: "Khalifa Port (KIZAD)", ur: "خلیفہ پورٹ (KIZAD)", ar: "ميناء خليفة (KIZAD)", fa: "بندر خلیفه (KIZAD)", ps: "خليفه بندر (KIZAD)" },
+  "Al Ain": { en: "Al Ain (AAN)", ur: "العین (AAN)", ar: "العين (AAN)", fa: "العین (AAN)", ps: "العین (AAN)" },
+  "Sharjah City": { en: "Sharjah City (SHJ)", ur: "شارجہ سٹی (SHJ)", ar: "مدينة الشارقة (SHJ)", fa: "شهر شارجه (SHJ)", ps: "شارجه ښار (SHJ)" },
+  "Hamriyah Free Zone": { en: "Hamriyah Free Zone (HFZ)", ur: "حمریہ فری زون (HFZ)", ar: "منطقة الحمرية الحرة (HFZ)", fa: "منطقه آزاد حمریه (HFZ)", ps: "د حمريه ازاده سيمه (HFZ)" },
+  "Khor Fakkan": { en: "Khor Fakkan Port (KLF)", ur: "خورفکاں پورٹ (KLF)", ar: "ميناء خورفكان (KLF)", fa: "بندر خورفکان (KLF)", ps: "خورفکان بندر (KLF)" },
+  "Ajman Free Zone / City": { en: "Ajman City / Free Zone", ur: "عجمان سٹی / فری زون", ar: "مدينة عجمان / المنطقة الحرة", fa: "عجمان / منطقه آزاد", ps: "عجمان ښار / ازاده سيمه" },
+
+  // Afghanistan Cities
+  "Kabul City": { en: "Kabul City (KBL)", ur: "کابل شہر (KBL)", ar: "مدينة كابل (KBL)", fa: "شهر کابل (KBL)", ps: "کابل ښار (KBL)" },
+  "Kandahar City": { en: "Kandahar City (KDH)", ur: "قندھار سٹی (KDH)", ar: "مدينة قندهار (KDH)", fa: "شهر قندهار (KDH)", ps: "کندهار ښار (KDH)" },
+  "Spin Boldak Border Crossing": { en: "Spin Boldak Border (SBD)", ur: "سپین بولدک بارڈر (SBD)", ar: "معبر سبين بولداك (SBD)", fa: "مرز اسپین بولدک (SBD)", ps: "سپين بولدک پوله (SBD)" },
+  "Herat City": { en: "Herat City (HEA)", ur: "ہرات سٹی (HEA)", ar: "مدينة هرات (HEA)", fa: "شهر هرات (HEA)", ps: "هرات ښار (HEA)" },
+  "Islam Qala Border Crossing": { en: "Islam Qala Border (ISQ)", ur: "اسلام قلعہ بارڈر (ISQ)", ar: "معبر إسلام قلعة (ISQ)", fa: "مرز اسلام قلعه (ISQ)", ps: "اسلام کلا پوله (ISQ)" },
+  "Torghundi Border": { en: "Torghundi Border (TGH)", ur: "تور غنڈی بارڈر (TGH)", ar: "معبر تورغندي (TGH)", fa: "مرز تورغندی (TGH)", ps: "تورغونډۍ پوله (TGH)" },
+  "Jalalabad City": { en: "Jalalabad (JAA)", ur: "جلال آباد (JAA)", ar: "جلال آباد (JAA)", fa: "جلال‌آباد (JAA)", ps: "جلال اباد (JAA)" },
+  "Torkham Border Crossing": { en: "Torkham Border (TKM)", ur: "تورخم بارڈر (TKM)", ar: "معبر طورخم (TKM)", fa: "مرز تورخم (TKM)", ps: "تورخم پوله (TKM)" },
+  "Mazar-i-Sharif": { en: "Mazar-i-Sharif (MZR)", ur: "مزار شریف (MZR)", ar: "مزار شريف (MZR)", fa: "مزار شریف (MZR)", ps: "مزار شریف (MZR)" },
+  "Hairatan Port / Border": { en: "Hairatan Port (HRT)", ur: "حیرتان پورٹ / بارڈر (HRT)", ar: "ميناء حيرتان (HRT)", fa: "بندر حیرتان (HRT)", ps: "حیرتان بندر (HRT)" },
+  "Zaranj (Milak Border)": { en: "Zaranj / Milak Border (ZRJ)", ur: "زرنج / میلک بارڈر (ZRJ)", ar: "معبر زرنج (ZRJ)", fa: "مرز زرنج / میلک (ZRJ)", ps: "زرنج / میلک پوله (ZRJ)" },
+
+  // Saudi Cities
+  "Riyadh City": { en: "Riyadh City (RUH)", ur: "ریاض سٹی (RUH)", ar: "مدينة الرياض (RUH)", fa: "شهر ریاض (RUH)", ps: "ریاض ښار (RUH)" },
+  "Jeddah Islamic Port / City": { en: "Jeddah Islamic Port (JED)", ur: "جدہ اسلامک پورٹ (JED)", ar: "ميناء جدة الإسلامي (JED)", fa: "بندر اسلامی جده (JED)", ps: "د جدې اسلامي بندر (JED)" },
+  "King Abdulaziz Port (Dammam)": { en: "King Abdulaziz Port (DMM)", ur: "کنگ عبدالعزیز پورٹ دمام (DMM)", ar: "ميناء الملك عبد العزيز (DMM)", fa: "بندر ملک عبدالعزیز دمام (DMM)", ps: "د ملک عبدالعزیز بندر دمام (DMM)" },
+
+  // China Cities
+  "Yiwu (International Trade City)": { en: "Yiwu Trade City (YIW)", ur: "ایوو انٹرنیشنل ٹریڈ سٹی (YIW)", ar: "مدينة إيوو التجارية (YIW)", fa: "شهر تجاری ایوو (YIW)", ps: "د ایوو سوداګریز ښار (YIW)" },
+  "Guangzhou (Huangpu / Nansha Port)": { en: "Guangzhou Port (CAN)", ur: "گوانگزو پورٹ (CAN)", ar: "ميناء غوانغدونغ (CAN)", fa: "بندر گوانگژو (CAN)", ps: "ګوانګډونګ بندر (CAN)" },
+  "Shanghai Port": { en: "Shanghai Port (SHA)", ur: "شنگھائی پورٹ (SHA)", ar: "ميناء شنغهاي (SHA)", fa: "بندر شانگهای (SHA)", ps: "شانګهای بندر (SHA)" },
+};
+
+function locName(key: string, lang: Lang): string {
+  return LOCATION_TRANSLATIONS[key]?.[lang] ?? LOCATION_TRANSLATIONS[key]?.en ?? key;
+}
 
 interface CityData {
   name: string;
@@ -648,12 +801,6 @@ const LOCATION_HIERARCHY: Record<string, CountryData> = {
       Ajman: {
         cities: [{ name: "Ajman Free Zone / City", postalCode: "00000", cityCode: "AJM" }],
       },
-      "Ras Al Khaimah": {
-        cities: [{ name: "RAK City / RAKEZ", postalCode: "00000", cityCode: "RKT" }],
-      },
-      Fujairah: {
-        cities: [{ name: "Fujairah Port / City", postalCode: "00000", cityCode: "FJR" }],
-      },
     },
   },
   Afghanistan: {
@@ -664,16 +811,32 @@ const LOCATION_HIERARCHY: Record<string, CountryData> = {
         cities: [{ name: "Kabul City", postalCode: "1001", cityCode: "KBL" }],
       },
       Kandahar: {
-        cities: [{ name: "Kandahar City / Spin Boldak", postalCode: "3801", cityCode: "KDH" }],
+        cities: [
+          { name: "Kandahar City", postalCode: "3801", cityCode: "KDH" },
+          { name: "Spin Boldak Border Crossing", postalCode: "3805", cityCode: "SBD" },
+        ],
       },
       Herat: {
-        cities: [{ name: "Herat / Islam Qala Border", postalCode: "3001", cityCode: "HRT" }],
+        cities: [
+          { name: "Herat City", postalCode: "3001", cityCode: "HEA" },
+          { name: "Islam Qala Border Crossing", postalCode: "3005", cityCode: "ISQ" },
+          { name: "Torghundi Border", postalCode: "3006", cityCode: "TGH" },
+        ],
       },
       Nangarhar: {
-        cities: [{ name: "Jalalabad / Torkham Border", postalCode: "2601", cityCode: "JAL" }],
+        cities: [
+          { name: "Jalalabad City", postalCode: "2601", cityCode: "JAA" },
+          { name: "Torkham Border Crossing", postalCode: "2605", cityCode: "TKM" },
+        ],
       },
       Balkh: {
-        cities: [{ name: "Mazar-i-Sharif / Hairatan", postalCode: "1701", cityCode: "MZR" }],
+        cities: [
+          { name: "Mazar-i-Sharif", postalCode: "1701", cityCode: "MZR" },
+          { name: "Hairatan Port / Border", postalCode: "1705", cityCode: "HRT" },
+        ],
+      },
+      Nimruz: {
+        cities: [{ name: "Zaranj (Milak Border)", postalCode: "8501", cityCode: "ZRJ" }],
       },
     },
   },
@@ -685,17 +848,10 @@ const LOCATION_HIERARCHY: Record<string, CountryData> = {
         cities: [{ name: "Riyadh City", postalCode: "11564", cityCode: "RUH" }],
       },
       Makkah: {
-        cities: [
-          { name: "Jeddah Islamic Port / City", postalCode: "21442", cityCode: "JED" },
-          { name: "Makkah City", postalCode: "24231", cityCode: "MAK" },
-        ],
+        cities: [{ name: "Jeddah Islamic Port / City", postalCode: "21589", cityCode: "JED" }],
       },
       "Eastern Province": {
-        cities: [
-          { name: "Dammam Port / City", postalCode: "31411", cityCode: "DMM" },
-          { name: "Al Khobar", postalCode: "31952", cityCode: "KHB" },
-          { name: "Jubail Industrial", postalCode: "31951", cityCode: "JBL" },
-        ],
+        cities: [{ name: "King Abdulaziz Port (Dammam)", postalCode: "31411", cityCode: "DMM" }],
       },
     },
   },
@@ -703,18 +859,14 @@ const LOCATION_HIERARCHY: Record<string, CountryData> = {
     code: "CN",
     phoneCode: "+86",
     states: {
+      Zhejiang: {
+        cities: [{ name: "Yiwu (International Trade City)", postalCode: "322000", cityCode: "YIW" }],
+      },
       Guangdong: {
-        cities: [
-          { name: "Guangzhou", postalCode: "510000", cityCode: "CAN" },
-          { name: "Shenzhen (Yantian / Shekou)", postalCode: "518000", cityCode: "SZX" },
-          { name: "Yiwu / Jinhua", postalCode: "322000", cityCode: "YIW" },
-        ],
+        cities: [{ name: "Guangzhou (Huangpu / Nansha Port)", postalCode: "510000", cityCode: "CAN" }],
       },
       Shanghai: {
-        cities: [{ name: "Shanghai Port / City", postalCode: "200000", cityCode: "SHA" }],
-      },
-      Zhejiang: {
-        cities: [{ name: "Ningbo Port", postalCode: "315000", cityCode: "NGB" }],
+        cities: [{ name: "Shanghai Port", postalCode: "200000", cityCode: "SHA" }],
       },
     },
   },
@@ -790,7 +942,123 @@ const LOCATION_HIERARCHY: Record<string, CountryData> = {
   },
 };
 
-// ─── Document & Contract Types ────────────────────────────────────────────────
+// ─── Document & Contract Types with 5-Language Labels ─────────────────────────
+
+const DOC_TYPES: { value: string; labels: Record<Lang, string> }[] = [
+  {
+    value: "CNIC",
+    labels: {
+      en: "CNIC / National ID Card",
+      ur: "شناختی کارڈ / قومی شناختی کارڈ (CNIC)",
+      ar: "بطاقة الهوية الوطنية (CNIC)",
+      fa: "کارت ملی / کارت شناسایی (CNIC)",
+      ps: "ملي پېژندپاڼه / تذکره (CNIC)",
+    },
+  },
+  {
+    value: "Passport",
+    labels: {
+      en: "Passport",
+      ur: "پاسپورٹ (Passport)",
+      ar: "جواز السفر (Passport)",
+      fa: "گذرنامه / پاسپورت",
+      ps: "پاسپورت (Passport)",
+    },
+  },
+  {
+    value: "ID Card",
+    labels: {
+      en: "Resident / ID Card",
+      ur: "رہائشی شناختی کارڈ / اقامہ",
+      ar: "بطاقة الإقامة / الهوية",
+      fa: "کارت اقامت / شناسایی",
+      ps: "د اوسېدو / اقامې کارت",
+    },
+  },
+  {
+    value: "Driving License",
+    labels: {
+      en: "Driving License",
+      ur: "ڈرائیونگ لائسنس",
+      ar: "رخصة القيادة",
+      fa: "گواهینامه رانندگی",
+      ps: "د موټر چلولو جواز",
+    },
+  },
+  {
+    value: "Trade / Tax License",
+    labels: {
+      en: "Trade / Tax License",
+      ur: "تجارتی / ٹیکس لائسنس",
+      ar: "الرخصة التجارية / الضريبية",
+      fa: "جواز کسب / مالیاتی",
+      ps: "سوداګریز / مالیاتي جواز",
+    },
+  },
+  {
+    value: "Other Document",
+    labels: {
+      en: "Other Document",
+      ur: "دیگر دستاویز",
+      ar: "وثيقة أخرى",
+      fa: "سایر مدارک",
+      ps: "نور اسناد",
+    },
+  },
+];
+
+const CONTRACT_TYPES: { value: string; labels: Record<Lang, string> }[] = [
+  {
+    value: "Employment Contract",
+    labels: {
+      en: "Employment Contract",
+      ur: "ملازمت کا معاہدہ",
+      ar: "عقد العمل",
+      fa: "قرارداد استخدامی",
+      ps: "د کار قرارداد",
+    },
+  },
+  {
+    value: "Customer Service Agreement",
+    labels: {
+      en: "Customer Service Agreement",
+      ur: "کسٹمر سروس معاہدہ",
+      ar: "اتفاقية خدمة العملاء",
+      fa: "توافق‌نامه خدمات مشتریان",
+      ps: "د پیرودونکي د خدمت تړون",
+    },
+  },
+  {
+    value: "Trade & Clearing Terms",
+    labels: {
+      en: "Trade & Clearing Terms",
+      ur: "تجارت و کلیرنگ شرائط",
+      ar: "شروط التجارة والتخليص",
+      fa: "شرایط تجارت و ترخیص",
+      ps: "د سوداګرۍ او تصفیې شرایط",
+    },
+  },
+  {
+    value: "NDA & Confidentiality",
+    labels: {
+      en: "NDA & Confidentiality Agreement",
+      ur: "خفیہ رکھنے کا معاہدہ (NDA)",
+      ar: "اتفاقية عدم الإفصاح والسرية",
+      fa: "قرارداد محرمانگی و عدم افشا",
+      ps: "د محرمیت تړون (NDA)",
+    },
+  },
+  {
+    value: "Other Attachment",
+    labels: {
+      en: "Other Attachment / Contract",
+      ur: "دیگر معاہدہ / اٹیچمنٹ",
+      ar: "مرفق / عقد آخر",
+      fa: "سایر ضمائم / قراردادها",
+      ps: "نور قرارداد / ضمیمه",
+    },
+  },
+];
 
 interface DocItem {
   id: string;
@@ -809,7 +1077,7 @@ interface ContractItem {
 }
 
 export function ExtFormClient({ token }: { token: string }) {
-  const [lang, setLang] = useState<Lang>("en");
+  const [lang, setLang] = useState<Lang>("ur");
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
 
   // Link metadata
@@ -828,8 +1096,8 @@ export function ExtFormClient({ token }: { token: string }) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [fatherName, setFatherName] = useState("");
-  const [mobile, setMobile] = useState("");
-  const [whatsapp, setWhatsapp] = useState("");
+  const [mobiles, setMobiles] = useState<string[]>([""]);
+  const [whatsapps, setWhatsapps] = useState<string[]>([""]);
   const [email, setEmail] = useState("");
   const [gender, setGender] = useState("male");
 
@@ -841,7 +1109,7 @@ export function ExtFormClient({ token }: { token: string }) {
   const [documents, setDocuments] = useState<DocItem[]>([]);
 
   // Step 1: Contracts
-  const [contractType, setContractType] = useState("Employment Contract");
+  const [contractType, setContractType] = useState("Customer Service Agreement");
   const [contracts, setContracts] = useState<ContractItem[]>([]);
 
   // Step 2: Address Info (Cascading Location)
@@ -851,101 +1119,129 @@ export function ExtFormClient({ token }: { token: string }) {
   const [postalCode, setPostalCode] = useState("74000");
   const [fullAddress, setFullAddress] = useState("");
 
-  // Step 4: Photo
+  // Step 4: Photo & Submission
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [submittedTimestamp, setSubmittedTimestamp] = useState<string>("");
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // File Input Refs
   const photoInputRef = useRef<HTMLInputElement>(null);
   const photoCameraRef = useRef<HTMLInputElement>(null);
-
-  // Document File Input Refs
   const frontInputRef = useRef<HTMLInputElement>(null);
   const frontCameraRef = useRef<HTMLInputElement>(null);
   const backInputRef = useRef<HTMLInputElement>(null);
   const backCameraRef = useRef<HTMLInputElement>(null);
 
-  // Submission State
-  const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [submitted, setSubmitted] = useState(false);
-
-  // ─── Fetch Token Metadata ───────────────────────────────────────────────────
+  // Load link details on mount
   useEffect(() => {
-    if (!token) {
-      setPageError("Invalid token");
-      setInitialLoading(false);
-      return;
-    }
-    fetch(`/api/public/form-link/${token}`)
-      .then((r) => r.json())
-      .then((json) => {
-        if (json.ok && json.data) {
-          setLinkMeta(json.data);
+    async function checkToken() {
+      try {
+        const res = await fetch(`/api/public/form-link/${token}`);
+        const data = await res.json();
+        if (data.ok && data.link) {
+          setLinkMeta(data.link);
+          if (data.link.status === "used" || data.link.status === "submitted") {
+            setPageError("This form link has already been used and submitted.");
+          } else if (data.link.status === "expired") {
+            setPageError("This form link has expired. Please request a new link.");
+          } else if (data.link.status === "revoked") {
+            setPageError("This form link has been revoked by administration.");
+          }
         } else {
-          setPageError(json.error ?? "Link not found or expired");
+          setPageError("Invalid or non-existent form link.");
         }
-      })
-      .catch(() => setPageError("Network error while validating link"))
-      .finally(() => setInitialLoading(false));
+      } catch {
+        setPageError("Could not reach verification server. Please try again.");
+      } finally {
+        setInitialLoading(false);
+      }
+    }
+    checkToken();
   }, [token]);
 
-  // ─── Cascading Location Handler ─────────────────────────────────────────────
+  // Update State when Country changes
   const handleCountryChange = (newCountry: string) => {
     setCountry(newCountry);
     const countryObj = LOCATION_HIERARCHY[newCountry];
     if (countryObj) {
-      const stateKeys = Object.keys(countryObj.states);
-      const firstState = stateKeys[0] || "";
+      const firstState = Object.keys(countryObj.states)[0] || "";
       setStateProvince(firstState);
-      const cities = firstState ? countryObj.states[firstState]?.cities || [] : [];
-      const firstCity = cities[0];
-      setCity(firstCity ? firstCity.name : "");
-      setPostalCode(firstCity ? firstCity.postalCode : "");
-    } else {
-      setStateProvince("");
-      setCity("");
-      setPostalCode("");
+      if (firstState && countryObj.states[firstState]) {
+        const firstCity = countryObj.states[firstState].cities[0];
+        if (firstCity) {
+          setCity(firstCity.name);
+          setPostalCode(firstCity.postalCode);
+        }
+      }
     }
   };
 
+  // Update City & Postal Code when State changes
   const handleStateChange = (newState: string) => {
     setStateProvince(newState);
     const countryObj = LOCATION_HIERARCHY[country];
     if (countryObj && countryObj.states[newState]) {
-      const cities = countryObj.states[newState].cities;
-      const firstCity = cities[0];
-      setCity(firstCity ? firstCity.name : "");
-      setPostalCode(firstCity ? firstCity.postalCode : "");
-    } else {
-      setCity("");
-      setPostalCode("");
+      const firstCity = countryObj.states[newState].cities[0];
+      if (firstCity) {
+        setCity(firstCity.name);
+        setPostalCode(firstCity.postalCode);
+      }
     }
   };
 
-  const handleCityChange = (newCity: string) => {
-    setCity(newCity);
+  // Update Postal Code when City changes
+  const handleCityChange = (newCityName: string) => {
+    setCity(newCityName);
     const countryObj = LOCATION_HIERARCHY[country];
-    if (countryObj && countryObj.states[stateProvince]) {
-      const foundCity = countryObj.states[stateProvince].cities.find((c) => c.name === newCity);
+    if (countryObj && stateProvince && countryObj.states[stateProvince]) {
+      const foundCity = countryObj.states[stateProvince].cities.find((c) => c.name === newCityName);
       if (foundCity) {
         setPostalCode(foundCity.postalCode);
       }
     }
   };
 
-  // Helper for image file reading
-  const handleFileRead = (file: File | undefined, cb: (dataUrl: string) => void) => {
+  // Phone list handlers
+  const handleAddMobile = () => setMobiles((prev) => [...prev, ""]);
+  const handleRemoveMobile = (idx: number) => setMobiles((prev) => prev.filter((_, i) => i !== idx));
+  const handleMobileChange = (idx: number, val: string) => {
+    setMobiles((prev) => {
+      const next = [...prev];
+      next[idx] = val;
+      return next;
+    });
+  };
+
+  // WhatsApp list handlers
+  const handleAddWhatsapp = () => setWhatsapps((prev) => [...prev, ""]);
+  const handleRemoveWhatsapp = (idx: number) => setWhatsapps((prev) => prev.filter((_, i) => i !== idx));
+  const handleWhatsappChange = (idx: number, val: string) => {
+    setWhatsapps((prev) => {
+      const next = [...prev];
+      next[idx] = val;
+      return next;
+    });
+  };
+
+  // File Upload Helper
+  const handleFileRead = (file: File | undefined, setter: (val: string | null) => void) => {
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => cb(reader.result as string);
+    reader.onload = () => {
+      setter(reader.result as string);
+    };
     reader.readAsDataURL(file);
   };
 
   // Add Document Handler
-  const handleAddDocument = () => {
-    if (!docNumber.trim()) return;
+  const handleAddDoc = () => {
+    if (!docNumber && !docFrontImage) return;
     const newDoc: DocItem = {
       id: Date.now().toString(),
       type: docType,
-      number: docNumber.trim(),
+      number: docNumber || "N/A",
       frontImage: docFrontImage || undefined,
       backImage: docBackImage || undefined,
       fileName: `${docType.toLowerCase().replace(/\s+/g, "_")}.pdf`,
@@ -980,13 +1276,18 @@ export function ExtFormClient({ token }: { token: string }) {
     setSubmitting(true);
     setSubmitError(null);
 
+    const primaryMobile = mobiles.filter(Boolean).join(" / ");
+    const primaryWhatsapp = whatsapps.filter(Boolean).join(" / ");
+
     const payload = {
       fullName: `${firstName} ${lastName}`.trim() || firstName || lastName,
       firstName,
       lastName,
       fatherName,
-      mobile,
-      whatsapp,
+      mobile: primaryMobile,
+      whatsapp: primaryWhatsapp,
+      mobiles: mobiles.filter(Boolean),
+      whatsapps: whatsapps.filter(Boolean),
       email,
       gender,
       country,
@@ -1009,6 +1310,7 @@ export function ExtFormClient({ token }: { token: string }) {
       const json = await res.json();
       if (json.ok) {
         setSubmitted(true);
+        setSubmittedTimestamp(new Date().toLocaleString());
       } else {
         setSubmitError(json.error ?? "Submission failed. Please check inputs.");
       }
@@ -1019,7 +1321,7 @@ export function ExtFormClient({ token }: { token: string }) {
     }
   };
 
-  const dir = LANGS.find((l) => l.code === lang)?.dir ?? "ltr";
+  const dir = LANGS.find((l) => l.code === lang)?.dir ?? "rtl";
 
   const isCnic = docType === "CNIC" || docType === "ID Card";
   const isPassport = docType === "Passport";
@@ -1154,644 +1456,633 @@ export function ExtFormClient({ token }: { token: string }) {
           </div>
         )}
 
-        {/* Error / Expired Link */}
+        {/* Loading Spinner */}
+        {initialLoading && (
+          <div className="py-16 text-center space-y-3">
+            <div className="h-10 w-10 mx-auto border-3 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+            <p className="text-xs font-bold text-slate-400">{t("loading", lang)}</p>
+          </div>
+        )}
+
+        {/* Page Error / Invalid Link */}
         {!initialLoading && pageError && (
-          <div className="rounded-2xl border border-rose-100 bg-rose-50/70 p-6 text-center space-y-2">
-            <AlertCircle className="h-10 w-10 text-rose-500 mx-auto" />
-            <h2 className="text-base font-bold text-rose-900">{t("errorInvalid", lang)}</h2>
-            <p className="text-xs text-rose-700">{pageError}</p>
-          </div>
-        )}
-
-        {/* Submission Success */}
-        {!initialLoading && submitted && (
-          <div className="rounded-3xl border border-emerald-100 bg-emerald-50/70 p-8 text-center space-y-3 animate-in fade-in duration-300">
-            <div className="h-16 w-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-xs">
-              <CheckCircle2 className="h-9 w-9" />
+          <div className="py-12 text-center space-y-4">
+            <div className="h-14 w-14 rounded-full bg-red-50 text-red-500 mx-auto flex items-center justify-center border border-red-200">
+              <AlertCircle size={28} />
             </div>
-            <h2 className="text-lg font-black text-emerald-900">{t("successTitle", lang)}</h2>
-            <p className="text-xs font-semibold text-emerald-800 leading-relaxed max-w-sm mx-auto">
-              {t("successMsg", lang)}
-            </p>
+            <h2 className="text-base font-bold text-slate-800">{t("errorInvalid", lang)}</h2>
+            <p className="text-xs text-slate-500 max-w-sm mx-auto">{pageError}</p>
           </div>
         )}
 
-        {/* Wizard Form */}
+        {/* Form Body */}
         {!initialLoading && !pageError && !submitted && (
-          <>
-            {/* 4-Step Stepper Progress Bar */}
-            <div className="relative flex items-center justify-between px-2 pt-1 pb-3">
-              <div className="absolute left-6 right-6 top-4 -translate-y-1/2 h-0.5 bg-slate-200 z-0">
-                <div
-                  className="h-full bg-indigo-600 transition-all duration-300"
-                  style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
-                />
-              </div>
+          <div className="space-y-6">
+            
+            {/* Step Wizard Progress Header */}
+            <div className="relative flex items-center justify-between px-2 pt-2 pb-1">
+              <div className="absolute left-6 right-6 top-5 h-0.5 bg-slate-200 -z-0" />
+              {[1, 2, 3, 4].map((stepNum) => {
+                const isPassed = currentStep > stepNum;
+                const isCurrent = currentStep === stepNum;
+                const stepLabelKey = `step${stepNum}`;
 
-              {/* Step 1 */}
-              <div className="relative z-10 flex flex-col items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setCurrentStep(1)}
-                  className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold transition-all cursor-pointer ${
-                    currentStep > 1
-                      ? "bg-emerald-500 text-white shadow-xs"
-                      : currentStep === 1
-                      ? "bg-indigo-600 text-white shadow-md ring-4 ring-indigo-100"
-                      : "bg-slate-200 text-slate-600"
-                  }`}
-                >
-                  {currentStep > 1 ? <Check className="h-3.5 w-3.5 stroke-[3]" /> : "1"}
-                </button>
-                <span className={`text-[10px] font-bold ${currentStep === 1 ? "text-indigo-600" : "text-slate-500"}`}>
-                  {t("step1", lang)}
-                </span>
-              </div>
-
-              {/* Step 2 */}
-              <div className="relative z-10 flex flex-col items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setCurrentStep(2)}
-                  className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold transition-all cursor-pointer ${
-                    currentStep > 2
-                      ? "bg-emerald-500 text-white shadow-xs"
-                      : currentStep === 2
-                      ? "bg-indigo-600 text-white shadow-md ring-4 ring-indigo-100"
-                      : "bg-slate-200 text-slate-600"
-                  }`}
-                >
-                  {currentStep > 2 ? <Check className="h-3.5 w-3.5 stroke-[3]" /> : "2"}
-                </button>
-                <span className={`text-[10px] font-bold ${currentStep === 2 ? "text-indigo-600" : "text-slate-500"}`}>
-                  {t("step2", lang)}
-                </span>
-              </div>
-
-              {/* Step 3 */}
-              <div className="relative z-10 flex flex-col items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setCurrentStep(3)}
-                  className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold transition-all cursor-pointer ${
-                    currentStep > 3
-                      ? "bg-emerald-500 text-white shadow-xs"
-                      : currentStep === 3
-                      ? "bg-indigo-600 text-white shadow-md ring-4 ring-indigo-100"
-                      : "bg-slate-200 text-slate-600"
-                  }`}
-                >
-                  {currentStep > 3 ? <Check className="h-3.5 w-3.5 stroke-[3]" /> : "3"}
-                </button>
-                <span className={`text-[10px] font-bold ${currentStep === 3 ? "text-indigo-600" : "text-slate-500"}`}>
-                  {t("step3", lang)}
-                </span>
-              </div>
-
-              {/* Step 4 */}
-              <div className="relative z-10 flex flex-col items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setCurrentStep(4)}
-                  className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold transition-all cursor-pointer ${
-                    currentStep === 4
-                      ? "bg-indigo-600 text-white shadow-md ring-4 ring-indigo-100"
-                      : "bg-slate-200 text-slate-600"
-                  }`}
-                >
-                  4
-                </button>
-                <span className={`text-[10px] font-bold ${currentStep === 4 ? "text-indigo-600" : "text-slate-500"}`}>
-                  {t("step4", lang)}
-                </span>
-              </div>
+                return (
+                  <div key={stepNum} className="flex flex-col items-center relative z-10 space-y-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (isPassed) setCurrentStep(stepNum as 1 | 2 | 3 | 4);
+                      }}
+                      className={`h-9 w-9 rounded-full font-bold text-xs flex items-center justify-center transition-all ${
+                        isPassed
+                          ? "bg-emerald-500 text-white shadow-sm ring-4 ring-emerald-50 cursor-pointer"
+                          : isCurrent
+                          ? "bg-indigo-600 text-white shadow-md ring-4 ring-indigo-50"
+                          : "bg-slate-100 text-slate-400 border border-slate-200"
+                      }`}
+                    >
+                      {isPassed ? <Check size={14} className="stroke-[3]" /> : stepNum}
+                    </button>
+                    <span
+                      className={`text-[11px] font-bold ${
+                        isCurrent
+                          ? "text-indigo-600"
+                          : isPassed
+                          ? "text-emerald-600"
+                          : "text-slate-400"
+                      }`}
+                    >
+                      {t(stepLabelKey, lang)}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
 
-            {/* ══════════════════════════════════════════════════════════════════
-                STEP 1: PERSONAL INFO, CNIC FRONT/BACK & CONTRACTS
-               ══════════════════════════════════════════════════════════════════ */}
+            {/* ════════════════════════════════════════════════════════════════════════
+                STEP 1: PERSONAL INFORMATION & DOCUMENTS
+            ════════════════════════════════════════════════════════════════════════ */}
             {currentStep === 1 && (
-              <div className="space-y-6 animate-in fade-in duration-150">
-                {/* 1. Personal Information Card */}
-                <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 sm:p-5 space-y-3.5">
-                  <div className="flex items-center gap-2">
-                    <div className="h-6 w-6 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                      <User className="h-3.5 w-3.5" />
+              <div className="space-y-5 animate-in fade-in duration-300">
+                {/* Personal Information Box */}
+                <div className="bg-slate-50/70 border border-slate-200 rounded-2xl p-4 sm:p-5 space-y-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-7 w-7 rounded-lg bg-indigo-100/60 text-indigo-600 flex items-center justify-center">
+                      <User size={14} />
                     </div>
                     <div>
-                      <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">
+                      <h3 className="font-black text-slate-900 text-xs sm:text-sm tracking-wide uppercase">
                         {t("personalInfoTitle", lang)}
                       </h3>
-                      <p className="text-[11px] text-slate-400">{t("personalInfoSub", lang)}</p>
+                      <p className="text-[11px] text-slate-400 font-medium">
+                        {t("personalInfoSub", lang)}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                        {t("firstName", lang)} *
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none text-slate-400">
-                          <User className="h-3.5 w-3.5" />
+                  <div className="space-y-3 pt-1">
+                    {/* First Name & Last Name */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-700">
+                          {t("firstName", lang)} <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <User className="absolute start-3 top-3 h-4 w-4 text-slate-400" />
+                          <input
+                            type="text"
+                            value={firstName}
+                            onChange={(e) => setFirstName(e.target.value)}
+                            placeholder={t("firstNamePh", lang)}
+                            className="w-full bg-white border border-slate-200 rounded-xl ps-9 pe-3 py-2 text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
+                          />
                         </div>
-                        <input
-                          type="text"
-                          value={firstName}
-                          onChange={(e) => setFirstName(e.target.value)}
-                          placeholder={t("firstNamePh", lang)}
-                          className="w-full rounded-xl border border-slate-200 bg-white ps-9 pe-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 transition-all font-medium"
-                          required
-                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-700">
+                          {t("lastName", lang)} <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <User className="absolute start-3 top-3 h-4 w-4 text-slate-400" />
+                          <input
+                            type="text"
+                            value={lastName}
+                            onChange={(e) => setLastName(e.target.value)}
+                            placeholder={t("lastNamePh", lang)}
+                            className="w-full bg-white border border-slate-200 rounded-xl ps-9 pe-3 py-2 text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
+                          />
+                        </div>
                       </div>
                     </div>
 
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                        {t("lastName", lang)} *
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none text-slate-400">
-                          <User className="h-3.5 w-3.5" />
-                        </div>
-                        <input
-                          type="text"
-                          value={lastName}
-                          onChange={(e) => setLastName(e.target.value)}
-                          placeholder={t("lastNamePh", lang)}
-                          className="w-full rounded-xl border border-slate-200 bg-white ps-9 pe-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 transition-all font-medium"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    {/* Father Name */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-slate-700">
                         {t("fatherName", lang)}
                       </label>
                       <div className="relative">
-                        <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none text-slate-400">
-                          <User className="h-3.5 w-3.5" />
-                        </div>
+                        <User className="absolute start-3 top-3 h-4 w-4 text-slate-400" />
                         <input
                           type="text"
                           value={fatherName}
                           onChange={(e) => setFatherName(e.target.value)}
                           placeholder={t("fatherNamePh", lang)}
-                          className="w-full rounded-xl border border-slate-200 bg-white ps-9 pe-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 transition-all font-medium"
+                          className="w-full bg-white border border-slate-200 rounded-xl ps-9 pe-3 py-2 text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
                         />
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                          {t("mobile", lang)} *
-                        </label>
-                        <div className="relative">
-                          <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none text-slate-400">
-                            <Phone className="h-3.5 w-3.5" />
+                    {/* Mobile Numbers (Multi-Phone Support with Numeric Dialer) */}
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-slate-700">
+                        {t("mobile", lang)} <span className="text-red-500">*</span>
+                      </label>
+                      {mobiles.map((mobVal, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <div className="relative flex-1">
+                            <Phone className="absolute start-3 top-3 h-4 w-4 text-slate-400" />
+                            <input
+                              type="tel"
+                              inputMode="tel"
+                              dir="ltr"
+                              pattern="[0-9+]*"
+                              value={mobVal}
+                              onChange={(e) => handleMobileChange(idx, e.target.value)}
+                              placeholder="+92 300 1234567"
+                              className="w-full bg-white border border-slate-200 rounded-xl ps-9 pe-3 py-2 text-xs sm:text-sm font-medium text-slate-800 text-left focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all font-mono"
+                            />
                           </div>
-                          <input
-                            type="tel"
-                            value={mobile}
-                            onChange={(e) => setMobile(e.target.value)}
-                            placeholder={t("mobilePh", lang)}
-                            className="w-full rounded-xl border border-slate-200 bg-white ps-9 pe-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 transition-all font-medium"
-                            dir="ltr"
-                          />
+                          {idx === 0 ? (
+                            <button
+                              type="button"
+                              onClick={handleAddMobile}
+                              className="h-9 px-2.5 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 flex items-center gap-1 text-[11px] font-bold cursor-pointer shrink-0"
+                              title={t("addAnotherMobile", lang)}
+                            >
+                              <Plus size={13} />
+                              <span>{t("addAnotherMobile", lang)}</span>
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveMobile(idx)}
+                              className="h-9 w-9 rounded-xl border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center cursor-pointer shrink-0"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          )}
                         </div>
+                      ))}
+                    </div>
+
+                    {/* WhatsApp Numbers (Multi-WhatsApp Support with Numeric Dialer) */}
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-slate-700">
+                        {t("whatsapp", lang)}
+                      </label>
+                      {whatsapps.map((waVal, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <div className="relative flex-1">
+                            <MessageSquare className="absolute start-3 top-3 h-4 w-4 text-slate-400" />
+                            <input
+                              type="tel"
+                              inputMode="tel"
+                              dir="ltr"
+                              pattern="[0-9+]*"
+                              value={waVal}
+                              onChange={(e) => handleWhatsappChange(idx, e.target.value)}
+                              placeholder="+92 300 1234567"
+                              className="w-full bg-white border border-slate-200 rounded-xl ps-9 pe-3 py-2 text-xs sm:text-sm font-medium text-slate-800 text-left focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all font-mono"
+                            />
+                          </div>
+                          {idx === 0 ? (
+                            <button
+                              type="button"
+                              onClick={handleAddWhatsapp}
+                              className="h-9 px-2.5 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 flex items-center gap-1 text-[11px] font-bold cursor-pointer shrink-0"
+                              title={t("addAnotherWhatsapp", lang)}
+                            >
+                              <Plus size={13} />
+                              <span>{t("addAnotherWhatsapp", lang)}</span>
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveWhatsapp(idx)}
+                              className="h-9 w-9 rounded-xl border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center cursor-pointer shrink-0"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Email (English Typing with Localized Label) */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-slate-700">
+                        {t("email", lang)}
+                      </label>
+                      <div className="relative">
+                        <Mail className="absolute start-3 top-3 h-4 w-4 text-slate-400" />
+                        <input
+                          type="email"
+                          inputMode="email"
+                          dir="ltr"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder={t("emailPh", lang)}
+                          className="w-full bg-white border border-slate-200 rounded-xl ps-9 pe-3 py-2 text-xs sm:text-sm font-medium text-slate-800 text-left focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all font-mono"
+                        />
                       </div>
-                      <div>
-                        <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                          {t("whatsapp", lang)}
-                        </label>
-                        <div className="relative">
-                          <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none text-slate-400">
-                            <MessageSquare className="h-3.5 w-3.5" />
-                          </div>
-                          <input
-                            type="tel"
-                            value={whatsapp}
-                            onChange={(e) => setWhatsapp(e.target.value)}
-                            placeholder={t("mobilePh", lang)}
-                            className="w-full rounded-xl border border-slate-200 bg-white ps-9 pe-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 transition-all font-medium"
-                            dir="ltr"
-                          />
-                        </div>
+                    </div>
+
+                    {/* Gender Selection */}
+                    <div className="space-y-1 pt-1">
+                      <label className="text-[11px] font-bold text-slate-700">
+                        {t("gender", lang)}
+                      </label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {["male", "female", "other"].map((gKey) => (
+                          <button
+                            key={gKey}
+                            type="button"
+                            onClick={() => setGender(gKey)}
+                            className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                              gender === gKey
+                                ? "bg-indigo-600 border-indigo-600 text-white shadow-2xs"
+                                : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                            }`}
+                          >
+                            {t(gKey, lang)}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* 2. Documents Section (Front & Back for CNIC / Passport Pages) */}
-                <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 sm:p-5 space-y-3.5">
-                  <div className="flex items-center gap-2">
-                    <div className="h-6 w-6 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                      <FileText className="h-3.5 w-3.5" />
+                {/* Documents Box (CNIC Front/Back & Passport) */}
+                <div className="bg-slate-50/70 border border-slate-200 rounded-2xl p-4 sm:p-5 space-y-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-7 w-7 rounded-lg bg-blue-100/60 text-blue-600 flex items-center justify-center">
+                      <CreditCard size={14} />
                     </div>
                     <div>
-                      <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">
+                      <h3 className="font-black text-slate-900 text-xs sm:text-sm tracking-wide uppercase">
                         {t("documentsTitle", lang)}
                       </h3>
-                      <p className="text-[11px] text-slate-400">{t("documentsSub", lang)}</p>
+                      <p className="text-[11px] text-slate-400 font-medium">
+                        {t("documentsSub", lang)}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                        {t("documentType", lang)} *
+                  <div className="space-y-3 pt-1">
+                    {/* Document Type Dropdown (Fully Localized in Urdu/Pashto/Arabic/Persian) */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-slate-700">
+                        {t("docType", lang)} <span className="text-red-500">*</span>
                       </label>
                       <select
                         value={docType}
                         onChange={(e) => setDocType(e.target.value)}
-                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600 transition-all font-medium cursor-pointer"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
                       >
-                        <option value="CNIC">CNIC / National ID Card</option>
-                        <option value="Passport">Passport</option>
-                        <option value="ID Card">ID Card</option>
-                        <option value="Driving License">Driving License</option>
-                        <option value="Trade License">Trade / Tax License</option>
-                        <option value="Other">Other Document</option>
+                        {DOC_TYPES.map((dt) => (
+                          <option key={dt.value} value={dt.value}>
+                            {dt.labels[lang] || dt.labels.en}
+                          </option>
+                        ))}
                       </select>
                     </div>
 
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                        {t("documentNumber", lang)} *
+                    {/* Document Number */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-slate-700">
+                        {t("docNumber", lang)} <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
-                        <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none text-slate-400">
-                          <CreditCard className="h-3.5 w-3.5" />
-                        </div>
+                        <CreditCard className="absolute start-3 top-3 h-4 w-4 text-slate-400" />
                         <input
                           type="text"
                           value={docNumber}
                           onChange={(e) => setDocNumber(e.target.value)}
-                          placeholder={t("documentNumberPh", lang)}
-                          className="w-full rounded-xl border border-slate-200 bg-white ps-9 pe-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600 transition-all font-medium"
+                          placeholder={t("docNumberPh", lang)}
+                          className="w-full bg-white border border-slate-200 rounded-xl ps-9 pe-3 py-2 text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all font-mono"
                         />
                       </div>
                     </div>
 
-                    {/* Dual Front & Back Upload Boxes */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                      {/* Front Side Upload */}
-                      <div className="border border-slate-200 rounded-xl p-3 bg-white space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-bold text-slate-700">
-                            {isPassport ? t("passportMainPage", lang) : t("frontSide", lang)}
+                    {/* Front Side Upload */}
+                    <div className="border border-slate-200 bg-white rounded-xl p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-bold text-slate-700">
+                          {isPassport ? t("mainPage", lang) : t("frontSide", lang)}
+                        </span>
+                        {docFrontImage && (
+                          <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
+                            <CheckCircle2 size={12} /> Ready
                           </span>
-                          {docFrontImage && (
-                            <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-0.5">
-                              <CheckCircle2 size={11} /> Attached
-                            </span>
-                          )}
-                        </div>
-
-                        {docFrontImage ? (
-                          <div className="relative rounded-lg overflow-hidden border border-slate-200 h-24">
-                            <img src={docFrontImage} alt="Front Preview" className="h-full w-full object-cover" />
-                            <button
-                              type="button"
-                              onClick={() => setDocFrontImage(null)}
-                              className="absolute top-1 right-1 h-5 w-5 bg-rose-600 text-white rounded-full flex items-center justify-center cursor-pointer shadow-xs"
-                            >
-                              <X size={10} />
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              onClick={() => frontCameraRef.current?.click()}
-                              className="flex-1 py-2 px-2 bg-indigo-50 text-indigo-700 rounded-lg text-[11px] font-bold border border-indigo-100 flex items-center justify-center gap-1.5 hover:bg-indigo-100 cursor-pointer"
-                            >
-                              <Camera size={13} /> {t("cameraBtn", lang)}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => frontInputRef.current?.click()}
-                              className="flex-1 py-2 px-2 bg-slate-50 text-slate-700 rounded-lg text-[11px] font-bold border border-slate-200 flex items-center justify-center gap-1.5 hover:bg-slate-100 cursor-pointer"
-                            >
-                              <UploadCloud size={13} /> {t("galleryBtn", lang)}
-                            </button>
-                          </div>
                         )}
                       </div>
-
-                      {/* Back Side Upload */}
-                      <div className="border border-slate-200 rounded-xl p-3 bg-white space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-bold text-slate-700">
-                            {isPassport ? t("passportVisaPage", lang) : t("backSide", lang)}
-                          </span>
-                          {docBackImage && (
-                            <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-0.5">
-                              <CheckCircle2 size={11} /> Attached
-                            </span>
-                          )}
-                        </div>
-
-                        {docBackImage ? (
-                          <div className="relative rounded-lg overflow-hidden border border-slate-200 h-24">
-                            <img src={docBackImage} alt="Back Preview" className="h-full w-full object-cover" />
-                            <button
-                              type="button"
-                              onClick={() => setDocBackImage(null)}
-                              className="absolute top-1 right-1 h-5 w-5 bg-rose-600 text-white rounded-full flex items-center justify-center cursor-pointer shadow-xs"
-                            >
-                              <X size={10} />
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              onClick={() => backCameraRef.current?.click()}
-                              className="flex-1 py-2 px-2 bg-indigo-50 text-indigo-700 rounded-lg text-[11px] font-bold border border-indigo-100 flex items-center justify-center gap-1.5 hover:bg-indigo-100 cursor-pointer"
-                            >
-                              <Camera size={13} /> {t("cameraBtn", lang)}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => backInputRef.current?.click()}
-                              className="flex-1 py-2 px-2 bg-slate-50 text-slate-700 rounded-lg text-[11px] font-bold border border-slate-200 flex items-center justify-center gap-1.5 hover:bg-slate-100 cursor-pointer"
-                            >
-                              <UploadCloud size={13} /> {t("galleryBtn", lang)}
-                            </button>
-                          </div>
-                        )}
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => frontCameraRef.current?.click()}
+                          className="flex-1 py-2 px-3 rounded-lg border border-indigo-100 bg-indigo-50/60 text-indigo-700 hover:bg-indigo-100 flex items-center justify-center gap-1.5 text-xs font-bold cursor-pointer transition-all"
+                        >
+                          <Camera size={13} />
+                          <span>{t("cameraBtn", lang)}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => frontInputRef.current?.click()}
+                          className="flex-1 py-2 px-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 flex items-center justify-center gap-1.5 text-xs font-bold cursor-pointer transition-all"
+                        >
+                          <ImageIcon size={13} />
+                          <span>{t("galleryBtn", lang)}</span>
+                        </button>
                       </div>
+                      {docFrontImage && (
+                        <div className="mt-2 rounded-lg border border-slate-200 overflow-hidden max-h-24 flex items-center justify-center bg-slate-100">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={docFrontImage} alt="Front Preview" className="max-h-24 w-auto object-contain" />
+                        </div>
+                      )}
                     </div>
 
+                    {/* Back Side Upload */}
+                    <div className="border border-slate-200 bg-white rounded-xl p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-bold text-slate-700">
+                          {isPassport ? t("visaPage", lang) : t("backSide", lang)}
+                        </span>
+                        {docBackImage && (
+                          <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
+                            <CheckCircle2 size={12} /> Ready
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => backCameraRef.current?.click()}
+                          className="flex-1 py-2 px-3 rounded-lg border border-indigo-100 bg-indigo-50/60 text-indigo-700 hover:bg-indigo-100 flex items-center justify-center gap-1.5 text-xs font-bold cursor-pointer transition-all"
+                        >
+                          <Camera size={13} />
+                          <span>{t("cameraBtn", lang)}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => backInputRef.current?.click()}
+                          className="flex-1 py-2 px-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 flex items-center justify-center gap-1.5 text-xs font-bold cursor-pointer transition-all"
+                        >
+                          <ImageIcon size={13} />
+                          <span>{t("galleryBtn", lang)}</span>
+                        </button>
+                      </div>
+                      {docBackImage && (
+                        <div className="mt-2 rounded-lg border border-slate-200 overflow-hidden max-h-24 flex items-center justify-center bg-slate-100">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={docBackImage} alt="Back Preview" className="max-h-24 w-auto object-contain" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Add Document to List Button */}
                     <button
                       type="button"
-                      onClick={handleAddDocument}
-                      className="w-full rounded-xl bg-indigo-600 hover:bg-indigo-700 py-2.5 text-xs font-bold text-white shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer mt-2"
+                      onClick={handleAddDoc}
+                      className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs cursor-pointer transition-all"
                     >
-                      <Plus className="h-3.5 w-3.5" />
-                      <span>{t("addDocumentBtn", lang)}</span>
+                      <Plus size={14} />
+                      <span>{t("addDocBtn", lang)}</span>
                     </button>
-                  </div>
 
-                  {/* Added Documents List */}
-                  {documents.length > 0 && (
-                    <div className="space-y-2 pt-2 border-t border-slate-200">
-                      <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                        {t("addedDocuments", lang)} ({documents.length})
-                      </div>
-                      <div className="space-y-2">
+                    {/* Render Added Documents */}
+                    {documents.length > 0 && (
+                      <div className="space-y-2 pt-2 border-t border-slate-200">
                         {documents.map((doc) => (
                           <div
                             key={doc.id}
-                            className="rounded-xl border border-slate-100 bg-white p-3 shadow-2xs space-y-2"
+                            className="flex items-center justify-between p-3 rounded-xl border border-indigo-100 bg-indigo-50/40"
                           >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <div className="h-7 w-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                                  <FileCheck className="h-3.5 w-3.5" />
-                                </div>
-                                <div>
-                                  <div className="text-xs font-bold text-slate-800">{doc.type}</div>
-                                  <div className="text-[10px] text-slate-400 font-mono">{doc.number}</div>
-                                </div>
+                            <div className="flex items-center gap-2">
+                              <FileText size={14} className="text-indigo-600" />
+                              <div>
+                                <span className="font-bold text-xs text-slate-800">
+                                  {DOC_TYPES.find((d) => d.value === doc.type)?.labels[lang] || doc.type}
+                                </span>
+                                <span className="text-[11px] text-slate-500 font-mono ms-2">
+                                  #{doc.number}
+                                </span>
                               </div>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveDoc(doc.id)}
-                                className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
-                                title="Delete"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
                             </div>
-
-                            {/* Previews */}
-                            <div className="grid grid-cols-2 gap-2 pt-1">
-                              {doc.frontImage && (
-                                <div className="border border-slate-200 rounded-lg p-1.5 bg-slate-50">
-                                  <span className="text-[9px] font-bold text-slate-500 uppercase block mb-1">Front</span>
-                                  <img src={doc.frontImage} alt="Front" className="h-16 w-full object-cover rounded" />
-                                </div>
-                              )}
-                              {doc.backImage && (
-                                <div className="border border-slate-200 rounded-lg p-1.5 bg-slate-50">
-                                  <span className="text-[9px] font-bold text-slate-500 uppercase block mb-1">Back</span>
-                                  <img src={doc.backImage} alt="Back" className="h-16 w-full object-cover rounded" />
-                                </div>
-                              )}
-                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveDoc(doc.id)}
+                              className="text-red-500 hover:text-red-700 p-1 cursor-pointer"
+                            >
+                              <Trash2 size={13} />
+                            </button>
                           </div>
                         ))}
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
 
-                {/* 3. Contracts Section */}
-                <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 sm:p-5 space-y-3.5">
-                  <div className="flex items-center gap-2">
-                    <div className="h-6 w-6 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                      <Briefcase className="h-3.5 w-3.5" />
+                {/* Contracts & Attachments Box */}
+                <div className="bg-slate-50/70 border border-slate-200 rounded-2xl p-4 sm:p-5 space-y-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-7 w-7 rounded-lg bg-purple-100/60 text-purple-600 flex items-center justify-center">
+                      <Briefcase size={14} />
                     </div>
                     <div>
-                      <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">
+                      <h3 className="font-black text-slate-900 text-xs sm:text-sm tracking-wide uppercase">
                         {t("contractsTitle", lang)}
                       </h3>
-                      <p className="text-[11px] text-slate-400">{t("contractsSub", lang)}</p>
+                      <p className="text-[11px] text-slate-400 font-medium">
+                        {t("contractsSub", lang)}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                        {t("contractType", lang)} *
+                  <div className="space-y-3 pt-1">
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-slate-700">
+                        {t("contractType", lang)}
                       </label>
                       <select
                         value={contractType}
                         onChange={(e) => setContractType(e.target.value)}
-                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600 transition-all font-medium cursor-pointer"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
                       >
-                        <option value="Employment Contract">Employment Contract</option>
-                        <option value="Service Agreement">Service Agreement</option>
-                        <option value="NDA / Confidentiality">NDA / Confidentiality</option>
-                        <option value="Partnership Agreement">Partnership Agreement</option>
+                        {CONTRACT_TYPES.map((ct) => (
+                          <option key={ct.value} value={ct.value}>
+                            {ct.labels[lang] || ct.labels.en}
+                          </option>
+                        ))}
                       </select>
                     </div>
 
                     <button
                       type="button"
                       onClick={handleAddContract}
-                      className="w-full rounded-xl bg-indigo-600 hover:bg-indigo-700 py-2.5 text-xs font-bold text-white shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="w-full py-2.5 px-4 rounded-xl border border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-all"
                     >
-                      <Plus className="h-3.5 w-3.5" />
+                      <Plus size={14} />
                       <span>{t("addContractBtn", lang)}</span>
                     </button>
-                  </div>
 
-                  {contracts.length > 0 && (
-                    <div className="space-y-2 pt-2 border-t border-slate-200">
-                      <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                        {t("addedContracts", lang)}
-                      </div>
-                      <div className="space-y-1.5">
+                    {contracts.length > 0 && (
+                      <div className="space-y-2 pt-2 border-t border-slate-200">
                         {contracts.map((cnt) => (
                           <div
                             key={cnt.id}
-                            className="flex items-center justify-between rounded-xl border border-slate-100 bg-white p-2.5 shadow-2xs"
+                            className="flex items-center justify-between p-3 rounded-xl border border-purple-100 bg-purple-50/40"
                           >
-                            <div className="flex items-center gap-2.5">
-                              <div className="h-7 w-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                                <Briefcase className="h-3.5 w-3.5" />
-                              </div>
-                              <div>
-                                <div className="text-xs font-bold text-slate-800">{cnt.type}</div>
-                                <div className="text-[10px] text-slate-400 font-mono">Contract No: {cnt.contractNo}</div>
-                              </div>
+                            <div className="flex items-center gap-2">
+                              <FileCheck size={14} className="text-purple-600" />
+                              <span className="font-bold text-xs text-slate-800">
+                                {CONTRACT_TYPES.find((c) => c.value === cnt.type)?.labels[lang] || cnt.type}
+                              </span>
                             </div>
                             <button
                               type="button"
                               onClick={() => handleRemoveContract(cnt.id)}
-                              className="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
+                              className="text-red-500 hover:text-red-700 p-1 cursor-pointer"
                             >
-                              <Trash2 className="h-3.5 w-3.5" />
+                              <Trash2 size={13} />
                             </button>
                           </div>
                         ))}
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
 
-                {/* Next Step Button */}
-                <button
-                  type="button"
-                  onClick={() => setCurrentStep(2)}
-                  className="w-full rounded-2xl bg-indigo-600 hover:bg-indigo-700 py-3.5 text-xs font-bold text-white shadow-md shadow-indigo-200 transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <span>{t("nextAddressBtn", lang)}</span>
-                </button>
+                {/* Step 1 Next Button */}
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(2)}
+                    className="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer transition-all"
+                  >
+                    <span>{t("nextAddressBtn", lang)}</span>
+                  </button>
+                </div>
               </div>
             )}
 
-            {/* ══════════════════════════════════════════════════════════════════
-                STEP 2: ADDRESS INFORMATION (DYNAMIC CASCADE HIERARCHY)
-               ══════════════════════════════════════════════════════════════════ */}
+            {/* ════════════════════════════════════════════════════════════════════════
+                STEP 2: ADDRESS INFORMATION (100% 5-Language Localized Cascader)
+            ════════════════════════════════════════════════════════════════════════ */}
             {currentStep === 2 && (
-              <div className="space-y-6 animate-in fade-in duration-150">
-                <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 sm:p-5 space-y-3.5">
-                  <div className="flex items-center gap-2">
-                    <div className="h-6 w-6 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                      <MapPin className="h-3.5 w-3.5" />
+              <div className="space-y-5 animate-in fade-in duration-300">
+                <div className="bg-slate-50/70 border border-slate-200 rounded-2xl p-4 sm:p-5 space-y-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-7 w-7 rounded-lg bg-emerald-100/60 text-emerald-600 flex items-center justify-center">
+                      <MapPin size={14} />
                     </div>
                     <div>
-                      <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">
-                        {t("addressInfoTitle", lang)}
+                      <h3 className="font-black text-slate-900 text-xs sm:text-sm tracking-wide uppercase">
+                        {t("step2Title", lang)}
                       </h3>
-                      <p className="text-[11px] text-slate-400">{t("addressInfoSub", lang)}</p>
+                      <p className="text-[11px] text-slate-400 font-medium">
+                        {t("step2Sub", lang)}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    {/* 1. Country Dropdown */}
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                        {t("country", lang)} *
+                  <div className="space-y-3 pt-1">
+                    {/* Country Selector (100% Localized) */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-slate-700">
+                        {t("country", lang)} <span className="text-red-500">*</span>
                       </label>
-                      <div className="relative">
-                        <select
-                          value={country}
-                          onChange={(e) => handleCountryChange(e.target.value)}
-                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-900 outline-none focus:border-indigo-600 transition-all font-medium appearance-none cursor-pointer"
-                        >
-                          {Object.keys(LOCATION_HIERARCHY).map((cName) => (
-                            <option key={cName} value={cName}>
-                              {cName} ({LOCATION_HIERARCHY[cName].code})
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                      </div>
+                      <select
+                        value={country}
+                        onChange={(e) => handleCountryChange(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
+                      >
+                        {Object.keys(LOCATION_HIERARCHY).map((cKey) => (
+                          <option key={cKey} value={cKey}>
+                            {locName(cKey, lang)}
+                          </option>
+                        ))}
+                      </select>
                     </div>
 
-                    {/* 2. State / Province Dropdown */}
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                        {t("stateProvince", lang)} *
+                    {/* State / Province Selector (100% Localized) */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-slate-700">
+                        {t("stateProvince", lang)} <span className="text-red-500">*</span>
                       </label>
-                      <div className="relative">
-                        <select
-                          value={stateProvince}
-                          onChange={(e) => handleStateChange(e.target.value)}
-                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-900 outline-none focus:border-indigo-600 transition-all font-medium appearance-none cursor-pointer"
-                        >
-                          {availableStates.map((st) => (
-                            <option key={st} value={st}>
-                              {st}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                      </div>
+                      <select
+                        value={stateProvince}
+                        onChange={(e) => handleStateChange(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
+                      >
+                        {availableStates.map((stKey) => (
+                          <option key={stKey} value={stKey}>
+                            {locName(stKey, lang)}
+                          </option>
+                        ))}
+                      </select>
                     </div>
 
-                    {/* 3. City Dropdown */}
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                        {t("city", lang)} *
+                    {/* City / Port Selector (100% Localized) */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-slate-700">
+                        {t("city", lang)} <span className="text-red-500">*</span>
                       </label>
-                      <div className="relative">
-                        <select
-                          value={city}
-                          onChange={(e) => handleCityChange(e.target.value)}
-                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-900 outline-none focus:border-indigo-600 transition-all font-medium appearance-none cursor-pointer"
-                        >
-                          {availableCities.map((ct) => (
-                            <option key={ct.name} value={ct.name}>
-                              {ct.name} ({ct.cityCode})
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                      </div>
+                      <select
+                        value={city}
+                        onChange={(e) => handleCityChange(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
+                      >
+                        {availableCities.map((c) => (
+                          <option key={c.name} value={c.name}>
+                            {locName(c.name, lang)}
+                          </option>
+                        ))}
+                      </select>
                     </div>
 
-                    {/* 4. Postal / City Code (Auto-populated) */}
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    {/* Postal Code (Auto-filled) */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-slate-700">
                         {t("postalCode", lang)}
                       </label>
                       <div className="relative">
-                        <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none text-slate-400">
-                          <CreditCard className="h-3.5 w-3.5" />
-                        </div>
+                        <CreditCard className="absolute start-3 top-3 h-4 w-4 text-slate-400" />
                         <input
                           type="text"
                           value={postalCode}
                           onChange={(e) => setPostalCode(e.target.value)}
-                          placeholder={t("postalCodePh", lang)}
-                          className="w-full rounded-xl border border-slate-200 bg-slate-50 ps-9 pe-3 py-2.5 text-xs text-slate-900 outline-none focus:border-indigo-600 transition-all font-mono font-bold"
+                          placeholder="Postal Code"
+                          className="w-full bg-slate-100/70 border border-slate-200 rounded-xl ps-9 pe-3 py-2 text-xs sm:text-sm font-bold text-slate-800 font-mono"
                         />
                       </div>
                     </div>
 
-                    {/* 5. Full Address */}
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                        {t("fullAddress", lang)} *
+                    {/* Full Street Address */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-slate-700">
+                        {t("fullAddress", lang)} <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
-                        <div className="absolute top-2.5 start-0 flex items-center ps-3 pointer-events-none text-slate-400">
-                          <MapPin className="h-3.5 w-3.5" />
-                        </div>
+                        <MapPin className="absolute start-3 top-3 h-4 w-4 text-slate-400" />
                         <textarea
                           rows={3}
                           value={fullAddress}
                           onChange={(e) => setFullAddress(e.target.value)}
                           placeholder={t("fullAddressPh", lang)}
-                          className="w-full rounded-xl border border-slate-200 bg-white ps-9 pe-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600 transition-all font-medium resize-none"
+                          className="w-full bg-white border border-slate-200 rounded-xl ps-9 pe-3 py-2 text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all resize-none"
                         />
                       </div>
                     </div>
@@ -1799,18 +2090,18 @@ export function ExtFormClient({ token }: { token: string }) {
                 </div>
 
                 {/* Navigation Buttons */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="flex items-center gap-3 pt-2">
                   <button
                     type="button"
                     onClick={() => setCurrentStep(1)}
-                    className="w-full rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 py-3 text-xs font-bold text-slate-700 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    className="py-3 px-5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs cursor-pointer transition-all"
                   >
-                    <span>{t("backBtn", lang)}</span>
+                    {t("backBtn", lang)}
                   </button>
                   <button
                     type="button"
                     onClick={() => setCurrentStep(3)}
-                    className="w-full rounded-2xl bg-indigo-600 hover:bg-indigo-700 py-3 text-xs font-bold text-white shadow-md shadow-indigo-200 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    className="flex-1 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer transition-all"
                   >
                     <span>{t("nextReviewBtn", lang)}</span>
                   </button>
@@ -1818,237 +2109,419 @@ export function ExtFormClient({ token }: { token: string }) {
               </div>
             )}
 
-            {/* ══════════════════════════════════════════════════════════════════
-                STEP 3: REVIEW YOUR INFORMATION
-               ══════════════════════════════════════════════════════════════════ */}
+            {/* ════════════════════════════════════════════════════════════════════════
+                STEP 3: REVIEW YOUR INFORMATION (Structured Cards)
+            ════════════════════════════════════════════════════════════════════════ */}
             {currentStep === 3 && (
-              <div className="space-y-4 animate-in fade-in duration-150">
-                <div className="text-center space-y-1 mb-2">
-                  <h3 className="text-sm font-black text-slate-900">{t("reviewTitle", lang)}</h3>
-                  <p className="text-xs text-slate-500">{t("reviewSub", lang)}</p>
+              <div className="space-y-4 animate-in fade-in duration-300">
+                <div className="text-center space-y-1 pb-1">
+                  <h3 className="font-black text-slate-900 text-sm sm:text-base">
+                    {t("step3Title", lang)}
+                  </h3>
+                  <p className="text-xs text-slate-400 font-medium">
+                    {t("step3Sub", lang)}
+                  </p>
                 </div>
 
-                {/* 1. Personal Info Card */}
-                <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-2 shadow-2xs">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                    <div className="flex items-center gap-2 text-xs font-black text-slate-800">
-                      <User className="h-4 w-4 text-indigo-600" />
+                {/* Card 1: Personal Info Review */}
+                <div className="border border-slate-200 bg-white rounded-2xl p-4 shadow-2xs space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <div className="flex items-center gap-2 font-bold text-xs text-slate-800">
+                      <User size={14} className="text-indigo-600" />
                       <span>{t("personalInfoTitle", lang)}</span>
                     </div>
                     <button
                       type="button"
                       onClick={() => setCurrentStep(1)}
-                      className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
+                      className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 cursor-pointer"
                     >
-                      <Edit3 className="h-3.5 w-3.5" />
+                      <Edit3 size={11} />
                       <span>{t("editBtn", lang)}</span>
                     </button>
                   </div>
-                  <div className="text-xs space-y-1.5 pt-1">
-                    <div className="flex justify-between">
-                      <span className="text-slate-500 font-semibold">{t("firstName", lang)}:</span>
-                      <span className="font-bold text-slate-900">{firstName || "—"}</span>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-slate-400 text-[11px] block">{t("firstName", lang)}:</span>
+                      <span className="font-bold text-slate-800">{firstName || "—"}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500 font-semibold">{t("lastName", lang)}:</span>
-                      <span className="font-bold text-slate-900">{lastName || "—"}</span>
+                    <div>
+                      <span className="text-slate-400 text-[11px] block">{t("lastName", lang)}:</span>
+                      <span className="font-bold text-slate-800">{lastName || "—"}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500 font-semibold">{t("fatherName", lang)}:</span>
-                      <span className="font-bold text-slate-900">{fatherName || "—"}</span>
+                    <div>
+                      <span className="text-slate-400 text-[11px] block">{t("fatherName", lang)}:</span>
+                      <span className="font-bold text-slate-800">{fatherName || "—"}</span>
                     </div>
-                    {mobile && (
-                      <div className="flex justify-between">
-                        <span className="text-slate-500 font-semibold">{t("mobile", lang)}:</span>
-                        <span className="font-bold text-slate-900" dir="ltr">{mobile}</span>
-                      </div>
-                    )}
+                    <div>
+                      <span className="text-slate-400 text-[11px] block">{t("mobile", lang)}:</span>
+                      <span className="font-bold text-slate-800 font-mono">{mobiles.filter(Boolean).join(", ") || "—"}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 text-[11px] block">{t("whatsapp", lang)}:</span>
+                      <span className="font-bold text-slate-800 font-mono">{whatsapps.filter(Boolean).join(", ") || "—"}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 text-[11px] block">{t("email", lang)}:</span>
+                      <span className="font-bold text-slate-800 font-mono text-[11px]">{email || "—"}</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* 2. Documents Card */}
-                <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-2 shadow-2xs">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                    <div className="flex items-center gap-2 text-xs font-black text-slate-800">
-                      <FileText className="h-4 w-4 text-indigo-600" />
+                {/* Card 2: Documents Review */}
+                <div className="border border-slate-200 bg-white rounded-2xl p-4 shadow-2xs space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <div className="flex items-center gap-2 font-bold text-xs text-slate-800">
+                      <CreditCard size={14} className="text-blue-600" />
                       <span>{t("documentsTitle", lang)}</span>
                     </div>
                     <button
                       type="button"
                       onClick={() => setCurrentStep(1)}
-                      className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
+                      className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 cursor-pointer"
                     >
-                      <Edit3 className="h-3.5 w-3.5" />
+                      <Edit3 size={11} />
                       <span>{t("editBtn", lang)}</span>
                     </button>
                   </div>
-                  <div className="text-xs space-y-2.5 pt-1">
-                    {documents.map((d) => (
-                      <div key={d.id} className="border border-slate-100 rounded-xl p-2 bg-slate-50 space-y-1.5">
-                        <div className="flex justify-between">
-                          <span className="text-slate-700 font-bold">{d.type}:</span>
-                          <span className="font-mono font-bold text-slate-900">{d.number}</span>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          {d.frontImage && (
-                            <img src={d.frontImage} alt="Front" className="h-14 w-full object-cover rounded border border-slate-200" />
+                  {documents.length === 0 ? (
+                    <p className="text-xs text-slate-400 italic">No documents attached.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {documents.map((doc) => (
+                        <div key={doc.id} className="p-2.5 bg-slate-50 border border-slate-100 rounded-xl space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-slate-800">
+                              {DOC_TYPES.find((d) => d.value === doc.type)?.labels[lang] || doc.type}
+                            </span>
+                            <span className="text-[11px] font-mono text-slate-500">#{doc.number}</span>
+                          </div>
+                          {(doc.frontImage || doc.backImage) && (
+                            <div className="flex items-center gap-2 pt-1">
+                              {doc.frontImage && (
+                                <div className="h-12 w-20 rounded-md border border-slate-200 overflow-hidden bg-white flex items-center justify-center">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={doc.frontImage} alt="Front" className="h-full w-full object-cover" />
+                                </div>
+                              )}
+                              {doc.backImage && (
+                                <div className="h-12 w-20 rounded-md border border-slate-200 overflow-hidden bg-white flex items-center justify-center">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={doc.backImage} alt="Back" className="h-full w-full object-cover" />
+                                </div>
+                              )}
+                            </div>
                           )}
-                          {d.backImage && (
-                            <img src={d.backImage} alt="Back" className="h-14 w-full object-cover rounded border border-slate-200" />
-                          )}
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                {/* 3. Address Information Card */}
-                <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-2 shadow-2xs">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                    <div className="flex items-center gap-2 text-xs font-black text-slate-800">
-                      <MapPin className="h-4 w-4 text-indigo-600" />
-                      <span>{t("addressInfoTitle", lang)}</span>
+                {/* Card 3: Address Review */}
+                <div className="border border-slate-200 bg-white rounded-2xl p-4 shadow-2xs space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <div className="flex items-center gap-2 font-bold text-xs text-slate-800">
+                      <MapPin size={14} className="text-emerald-600" />
+                      <span>{t("step2Title", lang)}</span>
                     </div>
                     <button
                       type="button"
                       onClick={() => setCurrentStep(2)}
-                      className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
+                      className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 cursor-pointer"
                     >
-                      <Edit3 className="h-3.5 w-3.5" />
+                      <Edit3 size={11} />
                       <span>{t("editBtn", lang)}</span>
                     </button>
                   </div>
-                  <div className="text-xs space-y-1.5 pt-1">
+                  <div className="space-y-1.5 text-xs">
                     <div className="flex justify-between">
-                      <span className="text-slate-500 font-semibold">{t("country", lang)}:</span>
-                      <span className="font-bold text-slate-900">{country}</span>
+                      <span className="text-slate-400">{t("country", lang)}:</span>
+                      <span className="font-bold text-slate-800">{locName(country, lang)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-500 font-semibold">{t("stateProvince", lang)}:</span>
-                      <span className="font-bold text-slate-900">{stateProvince}</span>
+                      <span className="text-slate-400">{t("stateProvince", lang)}:</span>
+                      <span className="font-bold text-slate-800">{locName(stateProvince, lang)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-500 font-semibold">{t("city", lang)}:</span>
-                      <span className="font-bold text-slate-900">{city}</span>
+                      <span className="text-slate-400">{t("city", lang)}:</span>
+                      <span className="font-bold text-slate-800">{locName(city, lang)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-500 font-semibold">{t("postalCode", lang)}:</span>
-                      <span className="font-bold text-slate-900">{postalCode}</span>
+                      <span className="text-slate-400">{t("postalCode", lang)}:</span>
+                      <span className="font-bold font-mono text-slate-800">{postalCode || "—"}</span>
                     </div>
-                    <div className="flex justify-between text-slate-700">
-                      <span className="text-slate-500 font-semibold">{t("fullAddress", lang)}:</span>
-                      <span className="max-w-[260px] text-end font-medium">{fullAddress || "—"}</span>
+                    <div className="pt-1 border-t border-slate-100">
+                      <span className="text-slate-400 text-[11px] block">{t("fullAddress", lang)}:</span>
+                      <p className="font-medium text-slate-800 mt-0.5">{fullAddress || "—"}</p>
                     </div>
                   </div>
                 </div>
 
-                {/* Correct Alert Box */}
-                <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-3.5 flex items-start gap-2.5 text-xs text-emerald-800">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <p className="font-medium">{t("reviewCheckAlert", lang)}</p>
+                {/* Verification Notice */}
+                <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-3 flex items-start gap-2.5 text-emerald-800 text-xs">
+                  <CheckCircle2 size={16} className="text-emerald-600 shrink-0 mt-0.5" />
+                  <span>{t("reviewVerifyBadge", lang)}</span>
                 </div>
 
-                {/* Actions */}
-                <div className="space-y-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(4)}
-                    className="w-full rounded-2xl bg-indigo-600 hover:bg-indigo-700 py-3.5 text-xs font-bold text-white shadow-md shadow-indigo-200 transition-all flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <span>{t("nextPhotoSubmitBtn", lang)}</span>
-                  </button>
+                {/* Navigation Buttons */}
+                <div className="flex items-center gap-3 pt-2">
                   <button
                     type="button"
                     onClick={() => setCurrentStep(2)}
-                    className="w-full rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 py-3 text-xs font-bold text-slate-700 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    className="py-3 px-5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs cursor-pointer transition-all"
                   >
-                    <span>{t("backBtn", lang)}</span>
+                    {t("backBtn", lang)}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(4)}
+                    className="flex-1 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer transition-all"
+                  >
+                    <span>{t("nextPhotoBtn", lang)}</span>
                   </button>
                 </div>
               </div>
             )}
 
-            {/* ══════════════════════════════════════════════════════════════════
-                STEP 4: UPLOAD YOUR PHOTO & SUBMIT
-               ══════════════════════════════════════════════════════════════════ */}
+            {/* ════════════════════════════════════════════════════════════════════════
+                STEP 4: PHOTO & FINAL SUBMIT
+            ════════════════════════════════════════════════════════════════════════ */}
             {currentStep === 4 && (
-              <div className="space-y-6 animate-in fade-in duration-150">
-                <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-6 text-center space-y-4">
-                  <div className="flex items-center justify-center gap-2">
-                    <User className="h-4 w-4 text-indigo-600" />
-                    <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">
-                      {t("uploadPhotoTitle", lang)}
+              <div className="space-y-6 animate-in fade-in duration-300">
+                <div className="bg-slate-50/70 border border-slate-200 rounded-2xl p-6 text-center space-y-4">
+                  <div className="space-y-1">
+                    <h3 className="font-black text-slate-900 text-sm sm:text-base">
+                      {t("step4Title", lang)}
                     </h3>
+                    <p className="text-xs text-slate-400 font-medium">
+                      {t("step4Sub", lang)}
+                    </p>
                   </div>
-                  <p className="text-xs text-slate-500">{t("uploadPhotoSub", lang)}</p>
 
                   {/* Circular Avatar Preview */}
-                  <div className="relative mx-auto h-32 w-32 rounded-full border-4 border-white bg-slate-200 shadow-md flex items-center justify-center overflow-hidden">
+                  <div className="relative mx-auto w-32 h-32 rounded-full border-4 border-white shadow-md overflow-hidden bg-slate-200 flex items-center justify-center">
                     {photoPreview ? (
-                      <img src={photoPreview} alt="Uploaded Photo" className="h-full w-full object-cover" />
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={photoPreview} alt="Candidate Avatar" className="h-full w-full object-cover" />
                     ) : (
-                      <User className="h-16 w-16 text-slate-400" />
+                      <User size={56} className="text-slate-400" />
                     )}
                   </div>
 
-                  {/* Dual Action Buttons */}
-                  <div className="grid grid-cols-2 gap-3 pt-2">
+                  {/* Camera / Gallery Upload Buttons */}
+                  <div className="flex items-center justify-center gap-3 pt-2">
                     <button
                       type="button"
                       onClick={() => photoCameraRef.current?.click()}
-                      className="rounded-xl border border-slate-200 bg-white py-2.5 px-3 text-xs font-bold text-slate-700 shadow-xs hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      className="py-2.5 px-5 rounded-xl border border-indigo-200 bg-indigo-50/70 text-indigo-700 hover:bg-indigo-100 text-xs font-bold flex items-center gap-2 shadow-2xs cursor-pointer transition-all"
                     >
-                      <Camera className="h-4 w-4 text-indigo-600" />
+                      <Camera size={15} />
                       <span>{t("cameraBtn", lang)}</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => photoInputRef.current?.click()}
-                      className="rounded-xl border border-slate-200 bg-white py-2.5 px-3 text-xs font-bold text-slate-700 shadow-xs hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      className="py-2.5 px-5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold flex items-center gap-2 shadow-2xs cursor-pointer transition-all"
                     >
-                      <ImageIcon className="h-4 w-4 text-indigo-600" />
+                      <ImageIcon size={15} />
                       <span>{t("galleryBtn", lang)}</span>
                     </button>
                   </div>
-                  <div className="text-[10px] text-slate-400 font-medium">
-                    {t("photoSizeHint", lang)}
-                  </div>
+                  <p className="text-[10px] text-slate-400">{t("photoSizeHint", lang)}</p>
                 </div>
 
                 {submitError && (
-                  <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700 font-medium">
-                    {submitError}
+                  <div className="bg-red-50 border border-red-200 text-red-700 p-3.5 rounded-xl text-xs flex items-center gap-2">
+                    <AlertCircle size={15} className="shrink-0 text-red-500" />
+                    <span>{submitError}</span>
                   </div>
                 )}
 
-                {/* Final Submit Button */}
-                <div className="space-y-2">
-                  <button
-                    type="button"
-                    disabled={submitting}
-                    onClick={handleFinalSubmit}
-                    className="w-full rounded-2xl bg-indigo-600 hover:bg-indigo-700 py-3.5 text-xs font-bold text-white shadow-lg shadow-indigo-300 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
-                  >
-                    <Send className="h-4 w-4" />
-                    <span>{submitting ? t("loading", lang) : t("submitFormBtn", lang)}</span>
-                  </button>
-
+                {/* Final Submit & Back Buttons */}
+                <div className="flex items-center gap-3 pt-2">
                   <button
                     type="button"
                     onClick={() => setCurrentStep(3)}
-                    className="w-full rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 py-3 text-xs font-bold text-slate-700 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    disabled={submitting}
+                    className="py-3 px-5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs cursor-pointer transition-all disabled:opacity-50"
                   >
-                    <span>{t("backBtn", lang)}</span>
+                    {t("backBtn", lang)}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleFinalSubmit}
+                    disabled={submitting}
+                    className="flex-1 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm sm:text-base shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2 cursor-pointer transition-all disabled:opacity-50"
+                  >
+                    {submitting ? (
+                      <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <Send size={16} />
+                        <span>{t("submitFormBtn", lang)}</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
             )}
-          </>
+          </div>
         )}
 
-        {/* Footer Branding */}
-        <div className="text-center text-[11px] font-medium text-slate-400 pt-2 border-t border-slate-100">
-          Powered by Digital Dock ERP • Secure Public Gateway
+        {/* ════════════════════════════════════════════════════════════════════════
+            STEP 4 COMPLETE: OFFICIAL DIGITAL RECEIPT & CONFIRMATION SCREEN
+        ════════════════════════════════════════════════════════════════════════ */}
+        {submitted && (
+          <div className="space-y-6 animate-in zoom-in-95 duration-400">
+            {/* Success Banner */}
+            <div className="text-center space-y-2">
+              <div className="h-16 w-16 rounded-full bg-emerald-50 text-emerald-600 mx-auto flex items-center justify-center border border-emerald-200 shadow-sm">
+                <CheckCircle2 size={36} />
+              </div>
+              <h2 className="text-lg sm:text-xl font-black text-slate-900">
+                {t("successTitle", lang)}
+              </h2>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                {t("successMsg", lang)}
+              </p>
+            </div>
+
+            {/* Official Digital Receipt Card */}
+            <div className="border-2 border-dashed border-indigo-200 bg-slate-50/70 rounded-3xl p-5 sm:p-6 space-y-4 shadow-xs">
+              <div className="flex items-center justify-between border-b border-indigo-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-indigo-600" />
+                  <span className="font-black text-xs sm:text-sm text-indigo-950 uppercase tracking-wide">
+                    {t("receiptTitle", lang)}
+                  </span>
+                </div>
+                <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full">
+                  VERIFIED RECORD
+                </span>
+              </div>
+
+              {/* Header: Photo + Name */}
+              <div className="flex items-center gap-3 pt-1">
+                <div className="h-14 w-14 rounded-full border-2 border-white shadow-sm overflow-hidden bg-slate-200 shrink-0 flex items-center justify-center">
+                  {photoPreview ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={photoPreview} alt="Applicant" className="h-full w-full object-cover" />
+                  ) : (
+                    <User size={24} className="text-slate-400" />
+                  )}
+                </div>
+                <div className="space-y-0.5">
+                  <h4 className="font-black text-sm text-slate-900">
+                    {firstName} {lastName}
+                  </h4>
+                  {fatherName && (
+                    <p className="text-[11px] text-slate-500 font-medium">
+                      {t("fatherName", lang)}: <span className="font-bold text-slate-700">{fatherName}</span>
+                    </p>
+                  )}
+                  <p className="text-[10px] text-slate-400 font-mono">
+                    Token: {token.slice(0, 16)}...
+                  </p>
+                </div>
+              </div>
+
+              {/* Data Grid */}
+              <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-200">
+                <div>
+                  <span className="text-slate-400 text-[10px] block">{t("mobile", lang)}:</span>
+                  <span className="font-bold text-slate-800 font-mono text-[11px]">
+                    {mobiles.filter(Boolean).join(", ") || "—"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 text-[10px] block">{t("whatsapp", lang)}:</span>
+                  <span className="font-bold text-slate-800 font-mono text-[11px]">
+                    {whatsapps.filter(Boolean).join(", ") || "—"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 text-[10px] block">{t("country", lang)} / {t("city", lang)}:</span>
+                  <span className="font-bold text-slate-800 text-[11px]">
+                    {locName(country, lang)} / {locName(city, lang)}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 text-[10px] block">{t("postalCode", lang)}:</span>
+                  <span className="font-bold font-mono text-slate-800 text-[11px]">{postalCode || "—"}</span>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-slate-400 text-[10px] block">{t("fullAddress", lang)}:</span>
+                  <span className="font-medium text-slate-800 text-[11px]">{fullAddress || "—"}</span>
+                </div>
+                {email && (
+                  <div className="col-span-2">
+                    <span className="text-slate-400 text-[10px] block">{t("email", lang)}:</span>
+                    <span className="font-bold font-mono text-slate-800 text-[11px]">{email}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Attached Documents Thumbnails */}
+              {documents.length > 0 && (
+                <div className="pt-2 border-t border-slate-200 space-y-2">
+                  <span className="text-[11px] font-bold text-slate-700 block">
+                    {t("documentsTitle", lang)} ({documents.length}):
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {documents.map((d) => (
+                      <div key={d.id} className="bg-white p-2 rounded-xl border border-slate-200 space-y-1">
+                        <span className="font-bold text-[11px] text-slate-800 block">
+                          {DOC_TYPES.find((dt) => dt.value === d.type)?.labels[lang] || d.type}
+                        </span>
+                        <span className="text-[10px] font-mono text-slate-500 block">#{d.number}</span>
+                        {(d.frontImage || d.backImage) && (
+                          <div className="flex gap-1 pt-1">
+                            {d.frontImage && (
+                              <div className="h-9 w-12 rounded border border-slate-200 overflow-hidden bg-slate-50">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={d.frontImage} alt="Front" className="h-full w-full object-cover" />
+                              </div>
+                            )}
+                            {d.backImage && (
+                              <div className="h-9 w-12 rounded border border-slate-200 overflow-hidden bg-slate-50">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={d.backImage} alt="Back" className="h-full w-full object-cover" />
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Footer Timestamp */}
+              <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-400">
+                <span>{t("submittedOn", lang)}: {submittedTimestamp}</span>
+                <span className="font-mono font-bold text-indigo-600">SECURE ERP GATEWAY</span>
+              </div>
+            </div>
+
+            {/* Print / Download Receipt Buttons */}
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="flex-1 py-3 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all"
+              >
+                <Printer size={15} />
+                <span>{t("printReceipt", lang)}</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Footer Gateway Brand */}
+        <div className="text-center pt-2 border-t border-slate-100">
+          <p className="text-[10px] font-semibold text-slate-400 tracking-wider uppercase">
+            Powered by Digital Dock ERP • Secure Public Gateway
+          </p>
         </div>
       </div>
     </div>
