@@ -49,28 +49,21 @@ const val = (f: IntakeFieldRow): string | null =>
 // intake key -> [target payload key(s)] per module. Only labels/chrome are
 // translated elsewhere; these are field identifiers, not user text.
 const MODULE_MAP: Record<string, Record<string, string>> = {
+  // keys align with features/purchases/components/purchase-order-wizard.jsx DEFAULT_FORM
   purchase_orders: {
     contract_number: "purchaseContractNo",
-    manual_contract_number: "manualReferenceNumber",
-    booking_number: "bookingReference",
     po_number: "purchaseOrderNo",
-    invoice_number: "supplierInvoiceNo",
-    document_date: "orderDate",
-    due_date: "paymentDueDate",
+    invoice_number: "billNo",
+    document_date: "purchaseDate",
     currency: "purchaseCurrency",
     exchange_rate: "exchangeRate",
-    grand_total: "orderTotal",
-    subtotal: "subTotal",
-    freight_amount: "freightAmount",
-    insurance_amount: "insuranceAmount",
-    tax_amount: "taxAmount",
     advance_amount: "advanceAmount",
     supplier_name: "supplierName",
-    payment_terms: "paymentTerms",
-    delivery_terms: "deliveryTerms",
-    port_of_loading: "portOfLoading",
-    port_of_discharge: "portOfDischarge",
-    trn: "supplierTrn",
+    payment_terms: "paymentDaysAndMethodDetails",
+    port_of_loading: "loadingPort",
+    port_of_discharge: "receivedPort",
+    vessel: "vesselName",
+    container_numbers: "containerNumbers",
   },
   sales_orders: {
     contract_number: "salesContractNo",

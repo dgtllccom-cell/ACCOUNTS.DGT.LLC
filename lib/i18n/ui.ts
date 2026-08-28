@@ -14296,6 +14296,17 @@ const en: Dict = {
   "dintake.ev_draft_prepared": "Draft prepared",
   "dintake.ev_draft_discarded": "Draft discarded",
   "dintake.ev_draft_consumed": "Draft used to create record",
+  "dintake.em_title": "Select Entry Method",
+  "dintake.em_manual": "Manual Entry",
+  "dintake.em_manual_desc": "Fill the form yourself. Always available.",
+  "dintake.em_scan": "Scan / Upload Document",
+  "dintake.em_scan_desc": "Upload a PDF or photo — local OCR extracts the fields for your review.",
+  "dintake.em_draft": "Continue Saved Draft",
+  "dintake.em_draft_desc": "A reviewed draft prepared by the Document Intake Center pre-fills this form.",
+  "dintake.em_cancel_desc": "Go back without creating anything.",
+  "dintake.em_no_drafts": "No saved drafts for this screen.",
+  "dintake.wizard_prefilled": "Pre-filled from reviewed document draft",
+  "dintake.wizard_prefilled_hint": "Review every field, then save and post as usual.",
 };
 
 const ur: Dict = {
@@ -24226,6 +24237,17 @@ const ur: Dict = {
   "dintake.ev_draft_prepared": "مسودہ تیار",
   "dintake.ev_draft_discarded": "مسودہ رد",
   "dintake.ev_draft_consumed": "ریکارڈ بنانے کے لیے مسودہ استعمال",
+  "dintake.em_title": "انٹری کا طریقہ منتخب کریں",
+  "dintake.em_manual": "دستی اندراج",
+  "dintake.em_manual_desc": "فارم خود بھریں۔ ہمیشہ دستیاب۔",
+  "dintake.em_scan": "دستاویز اسکین / اپلوڈ کریں",
+  "dintake.em_scan_desc": "پی ڈی ایف یا تصویر اپلوڈ کریں — لوکل او سی آر آپ کے جائزے کے لیے فیلڈز نکالتا ہے۔",
+  "dintake.em_draft": "محفوظ مسودہ جاری رکھیں",
+  "dintake.em_draft_desc": "دستاویز اِن ٹیک مرکز کا تیار کردہ جائزہ شدہ مسودہ اس فارم کو پہلے سے بھر دیتا ہے۔",
+  "dintake.em_cancel_desc": "کچھ بنائے بغیر واپس جائیں۔",
+  "dintake.em_no_drafts": "اس اسکرین کے لیے کوئی محفوظ مسودہ نہیں۔",
+  "dintake.wizard_prefilled": "جائزہ شدہ دستاویز مسودے سے پہلے سے بھرا گیا",
+  "dintake.wizard_prefilled_hint": "ہر فیلڈ کا جائزہ لیں، پھر معمول کے مطابق محفوظ اور پوسٹ کریں۔",
 };
 
 const ar: Dict = {
@@ -34158,6 +34180,17 @@ const ar: Dict = {
   "dintake.ev_draft_prepared": "تم إعداد المسودة",
   "dintake.ev_draft_discarded": "تم تجاهل المسودة",
   "dintake.ev_draft_consumed": "استُخدمت المسودة لإنشاء سجل",
+  "dintake.em_title": "اختر طريقة الإدخال",
+  "dintake.em_manual": "إدخال يدوي",
+  "dintake.em_manual_desc": "املأ النموذج بنفسك. متاح دائماً.",
+  "dintake.em_scan": "مسح / رفع مستند",
+  "dintake.em_scan_desc": "ارفع ملف PDF أو صورة — يستخرج التعرف الضوئي المحلي الحقول لمراجعتك.",
+  "dintake.em_draft": "متابعة المسودة المحفوظة",
+  "dintake.em_draft_desc": "مسودة مُراجَعة أعدّها مركز استقبال المستندات تملأ هذا النموذج مسبقاً.",
+  "dintake.em_cancel_desc": "ارجع دون إنشاء أي شيء.",
+  "dintake.em_no_drafts": "لا توجد مسودات محفوظة لهذه الشاشة.",
+  "dintake.wizard_prefilled": "مُعبّأ مسبقاً من مسودة مستند مُراجَعة",
+  "dintake.wizard_prefilled_hint": "راجع كل حقل، ثم احفظ ورحّل كالمعتاد.",
 };
 
 const fa: Dict = {
@@ -44089,6 +44122,17 @@ const fa: Dict = {
   "dintake.ev_draft_prepared": "پیش‌نویس آماده شد",
   "dintake.ev_draft_discarded": "پیش‌نویس دور انداخته شد",
   "dintake.ev_draft_consumed": "پیش‌نویس برای ایجاد رکورد استفاده شد",
+  "dintake.em_title": "روش ورود را انتخاب کنید",
+  "dintake.em_manual": "ورود دستی",
+  "dintake.em_manual_desc": "فرم را خودتان پر کنید. همیشه در دسترس.",
+  "dintake.em_scan": "اسکن / بارگذاری سند",
+  "dintake.em_scan_desc": "یک PDF یا عکس بارگذاری کنید — OCR محلی فیلدها را برای بازبینی شما استخراج می‌کند.",
+  "dintake.em_draft": "ادامه پیش‌نویس ذخیره‌شده",
+  "dintake.em_draft_desc": "پیش‌نویس بازبینی‌شده‌ای که مرکز دریافت اسناد آماده کرده این فرم را از پیش پر می‌کند.",
+  "dintake.em_cancel_desc": "بدون ایجاد چیزی برگردید.",
+  "dintake.em_no_drafts": "پیش‌نویس ذخیره‌شده‌ای برای این صفحه نیست.",
+  "dintake.wizard_prefilled": "از پیش‌نویس سند بازبینی‌شده از پیش پر شد",
+  "dintake.wizard_prefilled_hint": "هر فیلد را بازبینی کنید، سپس مثل همیشه ذخیره و ثبت کنید.",
 };
 
 const ps: Dict = {
@@ -54026,6 +54070,17 @@ const ps: Dict = {
   "dintake.ev_draft_prepared": "مسوده چمتو شوه",
   "dintake.ev_draft_discarded": "مسوده لغوه شوه",
   "dintake.ev_draft_consumed": "مسوده د ریکارډ جوړولو لپاره وکارول شوه",
+  "dintake.em_title": "د ننوتلو طریقه وټاکئ",
+  "dintake.em_manual": "لاسي ننوتل",
+  "dintake.em_manual_desc": "فورمه پخپله ډکه کړئ. تل شتون لري.",
+  "dintake.em_scan": "سند سکن / اپلوډ کړئ",
+  "dintake.em_scan_desc": "PDF یا انځور اپلوډ کړئ — ځايي OCR ستاسو د بیاکتنې لپاره ساحې راباسي.",
+  "dintake.em_draft": "خوندي شوې مسوده دوام ورکړئ",
+  "dintake.em_draft_desc": "د سند اخیستلو مرکز لخوا چمتو شوې بیاکتل شوې مسوده دا فورمه له مخکې ډکوي.",
+  "dintake.em_cancel_desc": "پرته له دې چې څه جوړ کړئ بیرته لاړ شئ.",
+  "dintake.em_no_drafts": "د دې پاڼې لپاره هیڅ خوندي شوې مسوده نشته.",
+  "dintake.wizard_prefilled": "د بیاکتل شوي سند مسودې څخه له مخکې ډک شو",
+  "dintake.wizard_prefilled_hint": "هره ساحه وګورئ، بیا د معمول په څیر خوندي او ثبت کړئ.",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

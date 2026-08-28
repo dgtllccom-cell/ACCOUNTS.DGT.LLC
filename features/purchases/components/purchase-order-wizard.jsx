@@ -58,6 +58,7 @@ import { Th } from "@/components/ui/translated-th";
 import { buildPurchaseBookingTransferUrl } from "@/lib/services/purchase-booking-transfer-routing";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { translationPendingLabel } from "@/lib/i18n/purchase-order-translations";
+import { readDraftPrefill, clearDraftPrefill } from "@/features/document-intelligence/components/entry-method-selector";
 
 // --- Non-location constants (static values, not from master forms) ---
 const CURRENCY_OPTIONS = ["USD", "AED", "EUR", "GBP", "PKR", "AFN", "INR", "CNY", "SAR"];
@@ -542,6 +543,40 @@ export function PurchaseOrderWizard({ session }) {
     };
   });
   const [goodsEntries, setGoodsEntries] = useState([]);
+  const [draftPrefillRef, setDraftPrefillRef] = useState("");
+
+  // Pre-fill from a reviewed AI Document Intake draft (Entry Method Selector →
+  // "Continue Saved Draft"). Best-effort: only keys the form already has are
+  // applied; the user still reviews, completes, validates and posts. The AI
+  // never created or posted anything.
+  useEffect(() => {
+    let prefill = null;
+    try { prefill = readDraftPrefill("purchase_orders"); } catch { prefill = null; }
+    if (!prefill) return;
+    const payload = prefill.payload || {};
+    setForm((prev) => {
+      const next = { ...prev };
+      for (const [k, v] of Object.entries(payload)) {
+        if (v !== null && v !== undefined && v !== "" && k in prev) next[k] = v;
+      }
+      return next;
+    });
+    if (Array.isArray(prefill.goodsEntries) && prefill.goodsEntries.length) {
+      setGoodsEntries((prev) => (prev.length ? prev : prefill.goodsEntries.map((g, i) => ({
+        allotName: g.allotName || `ALT-${i + 1}`,
+        goodsName: g.description || "",
+        brand: g.brand || "",
+        hsCode: g.hsCode || "",
+        qtyName: g.unit || "BAGS",
+        qtyNo: g.quantity ?? 0,
+        netWeight: g.netWeight ?? 0,
+        grossWeight: g.grossWeight ?? 0,
+        coursePrice: g.unitPrice ?? 0,
+      }))));
+    }
+    setDraftPrefillRef(prefill.draftNo || "");
+    clearDraftPrefill();
+  }, []);
   const [editingRemarksType, setEditingRemarksType] = useState(null);
   const [tempRemarksText, setTempRemarksText] = useState("");
   const [reportType, setReportType] = useState("branch"); // "branch" | "totaling" | "payment"
@@ -3629,6 +3664,11 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
 
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className="space-y-2 text-foreground bg-background mt-[-10px] max-w-[1500px] mx-auto">
+      {draftPrefillRef && (
+        <div className="rounded-lg bg-emerald-50 px-3 py-2 text-[11px] font-semibold text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200">
+          {t(lang, "dintake.wizard_prefilled", "Pre-filled from reviewed document draft")} — {draftPrefillRef}. {t(lang, "dintake.wizard_prefilled_hint", "Review every field, then save and post as usual.")}
+        </div>
+      )}
       {isSuperAdmin && (!form.countryId || !form.countryBranchId || !scopeConfirmed) && (
         <SimpleModal
           isOpen={true}
