@@ -15,6 +15,30 @@ import { parseIdCardText } from "@/lib/document-intelligence/id-card-extractor";
 
 export const dynamic = "force-dynamic";
 
+let globalWorkerPromise: Promise<any> | null = null;
+
+async function getOcrWorker() {
+  if (!globalWorkerPromise) {
+    globalWorkerPromise = (async () => {
+      try {
+        const { createWorker, PSM } = await import("tesseract.js");
+        const worker = await createWorker("eng", 1, {
+          logger: () => {}, // suppress verbose logs
+        });
+        await worker.setParameters({
+          tessedit_pageseg_mode: PSM.SPARSE_TEXT,
+        } as any);
+        return worker;
+      } catch (e) {
+        console.warn("[Scan ID] Worker init fallback:", e);
+        globalWorkerPromise = null;
+        return null;
+      }
+    })();
+  }
+  return globalWorkerPromise;
+}
+
 async function ocrImageBuffer(buffer: Buffer): Promise<string> {
   try {
     // 1. Preprocess with Sharp if available
@@ -23,26 +47,30 @@ async function ocrImageBuffer(buffer: Buffer): Promise<string> {
       const sharp = (await import("sharp")).default;
       let img = sharp(buffer, { failOn: "none" }).rotate();
       const meta = await img.metadata();
-      if ((meta.width ?? 0) < 1400) {
-        img = img.resize({ width: 1800, withoutEnlargement: false });
+      if ((meta.width ?? 0) < 1200) {
+        img = img.resize({ width: 1400, withoutEnlargement: false });
       }
       processedBuffer = await img.grayscale().normalise().sharpen().toFormat("png").toBuffer();
     } catch (sharpErr) {
       console.warn("[Scan ID] Sharp preprocess skipped:", sharpErr);
     }
 
-    // 2. OCR with Tesseract.js
-    const { createWorker, PSM } = await import("tesseract.js");
-    const worker = await createWorker("eng+ara");
-    try {
-      await worker.setParameters({
-        tessedit_pageseg_mode: PSM.SPARSE_TEXT,
-      } as any);
+    // 2. Timeout-guarded OCR recognition (Max 12 seconds)
+    const ocrPromise = (async () => {
+      const worker = await getOcrWorker();
+      if (!worker) return "";
       const ret = await worker.recognize(processedBuffer);
-      return ret.data.text || "";
-    } finally {
-      await worker.terminate();
-    }
+      return ret?.data?.text || "";
+    })();
+
+    const timeoutPromise = new Promise<string>((resolve) =>
+      setTimeout(() => {
+        console.warn("[Scan ID] OCR recognition timed out after 12s, returning fallback");
+        resolve("");
+      }, 12000)
+    );
+
+    return await Promise.race([ocrPromise, timeoutPromise]);
   } catch (ocrErr) {
     console.error("[Scan ID] OCR Engine Error:", ocrErr);
     return "";
