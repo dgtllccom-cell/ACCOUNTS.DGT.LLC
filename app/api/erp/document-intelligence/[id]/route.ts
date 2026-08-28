@@ -10,8 +10,10 @@ export const revalidate = 0;
 
 const idSchema = z.object({ id: z.string().uuid() });
 const patchSchema = z.object({
-  action: z.enum(["process", "cancel", "qvc"]),
+  action: z.enum(["process", "cancel", "qvc", "confirm"]),
   reason: z.string().trim().max(2000).optional(),
+  linkMode: z.enum(["new_record", "append_existing"]).optional(),
+  targetModule: z.string().trim().max(120).optional(),
 });
 
 export async function GET(_r: NextRequest, ctx: { params: Promise<{ id: string }> }) {
@@ -38,6 +40,14 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
     }
     if (body.action === "cancel") {
       const res = await documentIntakeService.cancelJob(id, session.userId, actorName, scope);
+      return apiOk({ result: res });
+    }
+    if (body.action === "confirm") {
+      const res = await documentIntakeService.confirmDraft(
+        id,
+        { linkMode: body.linkMode, targetModuleOverride: body.targetModule ?? null },
+        session.userId, actorName, scope,
+      );
       return apiOk({ result: res });
     }
     const res = await documentIntakeService.sendToQvc(id, body.reason || "Sent to QVC for manual review.", session.userId, actorName, scope);

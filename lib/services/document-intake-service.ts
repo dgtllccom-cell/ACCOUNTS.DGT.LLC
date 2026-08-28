@@ -9,6 +9,7 @@ import {
   buildCompositeIdentity, jobScopeWhere, assertRowInScope, type IntakeScope, type OperationalDomain,
 } from "@/lib/document-intelligence/scope";
 import { runScopedMatching } from "@/lib/document-intelligence/matching";
+import { buildPreparedDraft, DRAFTABLE_MODULES } from "@/lib/document-intelligence/draft-mapping";
 
 /**
  * AI Document Intake service.
@@ -384,6 +385,143 @@ export class DocumentIntakeService {
       await sql`UPDATE public.document_intake_jobs SET status = 'cancelled', updated_at = now() WHERE id = ${jobId}`;
       await event(sql, jobId, "cancelled", {}, actorId, actorName);
       return { jobId };
+    });
+  }
+
+  // ── confirm draft (AI prepares a reviewed draft — never a posting) ────
+  async confirmDraft(
+    jobId: string,
+    opts: { linkMode?: "new_record" | "append_existing"; targetModuleOverride?: string | null },
+    actorId: string,
+    actorName: string | null,
+    scope: IntakeScope,
+  ) {
+    return withLocalPg(async (sql) => {
+      const job = (await sql`SELECT * FROM public.document_intake_jobs WHERE id = ${jobId} AND deleted_at IS NULL`)?.[0];
+      if (!job) throw new Error("Job not found.");
+      assertRowInScope(scope, job);
+      if (!["review", "qvc", "draft_ready"].includes(job.status)) {
+        throw new Error(`A draft can only be prepared from a reviewed job (job is ${job.status}).`);
+      }
+
+      const targetModule: string | null = opts.targetModuleOverride ?? job.target_module ?? null;
+      if (!targetModule) throw new Error("This document type has no target module — link it manually from its source module.");
+      if (!DRAFTABLE_MODULES.includes(targetModule)) {
+        throw new Error(`Automatic draft preparation is not available for ${targetModule} yet — use manual entry.`);
+      }
+
+      const fields = await sql`SELECT field_key, corrected_value, normalized_value, raw_value, confidence, page_number, verified, validation_status
+        FROM public.document_intake_fields WHERE job_id = ${jobId}`;
+      const lines = await sql`SELECT line_no, description, hs_code, brand, quantity, unit, packages, gross_weight, net_weight, unit_price, amount, currency
+        FROM public.document_intake_line_items WHERE job_id = ${jobId} ORDER BY line_no`;
+
+      // Every required field the human still has to resolve blocks confirmation.
+      const redUnverified = (fields as any[]).filter((f) => f.validation_status === "red" && !f.verified).map((f) => f.field_key);
+      if (redUnverified.length) {
+        throw new Error(`Resolve or verify these field(s) before preparing the draft: ${redUnverified.join(", ")}`);
+      }
+
+      const linkMode = opts.linkMode ?? (job.match_status === "auto" || job.match_status === "user" ? "append_existing" : "new_record");
+      if (linkMode === "append_existing" && !job.matched_source_id) {
+        throw new Error("No in-scope source record is selected to append to — pick a match or choose 'new record'.");
+      }
+
+      const prepared = buildPreparedDraft(targetModule, fields as any[], lines as any[]);
+
+      // supersede any earlier live draft for this job
+      await sql`UPDATE public.document_intake_drafts SET status = 'superseded', updated_at = now()
+        WHERE job_id = ${jobId} AND status = 'prepared' AND deleted_at IS NULL`;
+
+      const seq = (await sql`SELECT count(*)::int n FROM public.document_intake_drafts`)?.[0]?.n ?? 0;
+      const draftNo = `DID-${new Date().getUTCFullYear()}-${String(seq + 1).padStart(5, "0")}`;
+
+      const row = (await sql`
+        INSERT INTO public.document_intake_drafts
+          (job_id, draft_no, operational_domain, target_module, doc_type_code,
+           company_id, country_id, country_branch_id, city_branch_id, clearing_agent_id, scope_composite_id,
+           link_mode, linked_source_module, linked_source_id,
+           draft_payload, line_items, field_provenance, currency,
+           status, created_by, created_by_name)
+        VALUES
+          (${jobId}, ${draftNo}, ${job.operational_domain}, ${targetModule}, ${job.doc_type_code},
+           ${job.company_id}, ${job.country_id}, ${job.country_branch_id}, ${job.city_branch_id}, ${job.clearing_agent_id}, ${job.scope_composite_id},
+           ${linkMode}, ${linkMode === "append_existing" ? job.matched_source_module : null}, ${linkMode === "append_existing" ? job.matched_source_id : null},
+           ${sql.json(prepared.payload as never)}, ${sql.json(prepared.goodsEntries as never)}, ${sql.json(prepared.provenance as never)}, ${prepared.currency},
+           'prepared', ${actorId}, ${actorName})
+        RETURNING id, draft_no`)?.[0];
+
+      await sql`UPDATE public.document_intake_jobs SET
+        status = 'draft_ready', draft_id = ${row.id}, draft_reference = ${row.draft_no},
+        target_module = ${targetModule}, reviewed_by = ${actorId}, reviewed_at = now(), qvc_reason = NULL, updated_at = now()
+        WHERE id = ${jobId}`;
+      await event(sql, jobId, "draft_prepared", { draftNo: row.draft_no, targetModule, linkMode, unresolved: prepared.unresolved }, actorId, actorName);
+      return { jobId, draftId: row.id, draftNo: row.draft_no, targetModule, linkMode, unresolved: prepared.unresolved };
+    });
+  }
+
+  async listDrafts(scope: IntakeScope, filters: { targetModule?: string; status?: string; jobId?: string } = {}) {
+    const rows = await withLocalPg(async (sql) => {
+      const where: any[] = [sql`d.deleted_at IS NULL`];
+      if (filters.targetModule) where.push(sql`d.target_module = ${filters.targetModule}`);
+      where.push(filters.status ? sql`d.status = ${filters.status}` : sql`d.status = 'prepared'`);
+      if (filters.jobId) where.push(sql`d.job_id = ${filters.jobId}`);
+      if (scope.domain) where.push(sql`d.operational_domain = ${scope.domain}`);
+      if (scope.countryIds) where.push(sql`(d.country_id IS NULL OR d.country_id = ANY(${scope.countryIds}))`);
+      if (scope.cityBranchIds) where.push(sql`(d.city_branch_id IS NULL OR d.city_branch_id = ANY(${scope.cityBranchIds}))`);
+      if (scope.clearingAgentIds) where.push(sql`(d.clearing_agent_id IS NULL OR d.clearing_agent_id = ANY(${scope.clearingAgentIds}))`);
+      const w = where.reduce((a, p, i) => (i === 0 ? p : sql`${a} AND ${p}`));
+      return sql`SELECT d.* FROM public.document_intake_drafts_v d WHERE ${w} ORDER BY d.created_at DESC LIMIT 100`;
+    });
+    return rows ?? [];
+  }
+
+  async getDraft(draftId: string, scope: IntakeScope) {
+    return withLocalPg(async (sql) => {
+      const d = (await sql`SELECT * FROM public.document_intake_drafts_v WHERE id = ${draftId} AND deleted_at IS NULL`)?.[0];
+      if (!d) return null;
+      assertRowInScope(scope, { country_id: d.country_id, city_branch_id: d.city_branch_id, clearing_agent_id: d.clearing_agent_id, operational_domain: d.operational_domain });
+      return d;
+    });
+  }
+
+  async discardDraft(draftId: string, reason: string, actorId: string, actorName: string | null, scope: IntakeScope) {
+    return withLocalPg(async (sql) => {
+      const d = (await sql`SELECT * FROM public.document_intake_drafts WHERE id = ${draftId} AND deleted_at IS NULL`)?.[0];
+      if (!d) throw new Error("Draft not found.");
+      assertRowInScope(scope, { country_id: d.country_id, city_branch_id: d.city_branch_id, clearing_agent_id: d.clearing_agent_id, operational_domain: d.operational_domain });
+      if (d.status === "consumed") throw new Error("A consumed draft cannot be discarded — reverse the created record in its own module.");
+      await sql`UPDATE public.document_intake_drafts SET status = 'discarded', discarded_reason = ${reason}, updated_at = now() WHERE id = ${draftId}`;
+      await sql`UPDATE public.document_intake_jobs SET status = 'review', draft_id = NULL, draft_reference = NULL, updated_at = now()
+        WHERE id = ${d.job_id} AND status = 'draft_ready'`;
+      await event(sql, d.job_id, "draft_discarded", { draftNo: d.draft_no, reason }, actorId, actorName);
+      return { draftId };
+    });
+  }
+
+  /**
+   * Called BY the target module's authorized new-entry flow once it has created
+   * the real record. Idempotent per (module, source_id). Never creates or posts
+   * anything itself — it only records that the draft was used.
+   */
+  async consumeDraft(draftId: string, createdSourceModule: string, createdSourceId: string, actorId: string, actorName: string | null, scope: IntakeScope) {
+    return withLocalPg(async (sql) => {
+      const d = (await sql`SELECT * FROM public.document_intake_drafts WHERE id = ${draftId} AND deleted_at IS NULL`)?.[0];
+      if (!d) throw new Error("Draft not found.");
+      assertRowInScope(scope, { country_id: d.country_id, city_branch_id: d.city_branch_id, clearing_agent_id: d.clearing_agent_id, operational_domain: d.operational_domain });
+      if (d.status === "consumed") {
+        if (d.consumed_source_id === createdSourceId) return { draftId, jobId: d.job_id, alreadyConsumed: true };
+        throw new Error("This draft was already used to create a different record.");
+      }
+      if (d.status !== "prepared") throw new Error(`Draft is ${d.status}.`);
+      await sql`UPDATE public.document_intake_drafts SET
+        status = 'consumed', consumed_source_module = ${createdSourceModule}, consumed_source_id = ${createdSourceId},
+        consumed_by = ${actorId}, consumed_by_name = ${actorName}, consumed_at = now(), updated_at = now()
+        WHERE id = ${draftId}`;
+      await sql`UPDATE public.document_intake_jobs SET
+        status = 'linked', matched_source_module = ${createdSourceModule}, matched_source_id = ${createdSourceId}, updated_at = now()
+        WHERE id = ${d.job_id}`;
+      await event(sql, d.job_id, "draft_consumed", { draftNo: d.draft_no, createdSourceModule, createdSourceId }, actorId, actorName);
+      return { draftId, jobId: d.job_id };
     });
   }
 

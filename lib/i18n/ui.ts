@@ -14290,6 +14290,12 @@ const en: Dict = {
   "dintake.dt_sales_receipt": "Sales Receipt",
   "dintake.dt_shipping_booking": "Shipping Booking",
   "dintake.dt_shipping_packing_list": "Shipping Packing List",
+  "dintake.prepare_draft": "Prepare Reviewed Draft",
+  "dintake.draft_ready_banner": "Reviewed draft prepared",
+  "dintake.draft_open_hint": "Open the target module's New Entry screen and choose “Continue Saved Draft” to complete and post it. The AI has not created or posted anything.",
+  "dintake.ev_draft_prepared": "Draft prepared",
+  "dintake.ev_draft_discarded": "Draft discarded",
+  "dintake.ev_draft_consumed": "Draft used to create record",
 };
 
 const ur: Dict = {
@@ -24214,6 +24220,12 @@ const ur: Dict = {
   "dintake.dt_sales_receipt": "فروخت رسید",
   "dintake.dt_shipping_booking": "شپنگ بکنگ",
   "dintake.dt_shipping_packing_list": "شپنگ پیکنگ لسٹ",
+  "dintake.prepare_draft": "جائزہ شدہ مسودہ تیار کریں",
+  "dintake.draft_ready_banner": "جائزہ شدہ مسودہ تیار",
+  "dintake.draft_open_hint": "ہدف ماڈیول کی نئی انٹری اسکرین کھولیں اور اسے مکمل و پوسٹ کرنے کے لیے ”محفوظ مسودہ جاری رکھیں“ منتخب کریں۔ اے آئی نے کچھ نہیں بنایا یا پوسٹ کیا۔",
+  "dintake.ev_draft_prepared": "مسودہ تیار",
+  "dintake.ev_draft_discarded": "مسودہ رد",
+  "dintake.ev_draft_consumed": "ریکارڈ بنانے کے لیے مسودہ استعمال",
 };
 
 const ar: Dict = {
@@ -34140,6 +34152,12 @@ const ar: Dict = {
   "dintake.dt_sales_receipt": "إيصال البيع",
   "dintake.dt_shipping_booking": "حجز الشحن",
   "dintake.dt_shipping_packing_list": "قائمة تعبئة الشحن",
+  "dintake.prepare_draft": "إعداد مسودة مُراجَعة",
+  "dintake.draft_ready_banner": "تم إعداد مسودة مُراجَعة",
+  "dintake.draft_open_hint": "افتح شاشة الإدخال الجديد للوحدة المستهدفة واختر ”متابعة المسودة المحفوظة“ لإكمالها وترحيلها. لم يقم الذكاء الاصطناعي بإنشاء أو ترحيل أي شيء.",
+  "dintake.ev_draft_prepared": "تم إعداد المسودة",
+  "dintake.ev_draft_discarded": "تم تجاهل المسودة",
+  "dintake.ev_draft_consumed": "استُخدمت المسودة لإنشاء سجل",
 };
 
 const fa: Dict = {
@@ -44065,6 +44083,12 @@ const fa: Dict = {
   "dintake.dt_sales_receipt": "رسید فروش",
   "dintake.dt_shipping_booking": "رزرو حمل",
   "dintake.dt_shipping_packing_list": "فهرست بسته‌بندی حمل",
+  "dintake.prepare_draft": "آماده‌سازی پیش‌نویس بازبینی‌شده",
+  "dintake.draft_ready_banner": "پیش‌نویس بازبینی‌شده آماده شد",
+  "dintake.draft_open_hint": "صفحه ورود جدید ماژول مقصد را باز کنید و برای تکمیل و ثبت آن ”ادامه پیش‌نویس ذخیره‌شده“ را انتخاب کنید. هوش مصنوعی چیزی ایجاد یا ثبت نکرده است.",
+  "dintake.ev_draft_prepared": "پیش‌نویس آماده شد",
+  "dintake.ev_draft_discarded": "پیش‌نویس دور انداخته شد",
+  "dintake.ev_draft_consumed": "پیش‌نویس برای ایجاد رکورد استفاده شد",
 };
 
 const ps: Dict = {
@@ -53996,6 +54020,12 @@ const ps: Dict = {
   "dintake.dt_sales_receipt": "د پلور رسید",
   "dintake.dt_shipping_booking": "د بار بکنګ",
   "dintake.dt_shipping_packing_list": "د بار بسته بندۍ لیست",
+  "dintake.prepare_draft": "بیاکتل شوې مسوده چمتو کړئ",
+  "dintake.draft_ready_banner": "بیاکتل شوې مسوده چمتو شوه",
+  "dintake.draft_open_hint": "د موخې ماډل د نوي ننوتلو پاڼه پرانیزئ او د بشپړولو او ثبتولو لپاره ”خوندي شوې مسوده دوام ورکړئ“ وټاکئ. مصنوعي ذهانت هیڅ نه دي جوړ کړي یا ثبت کړي.",
+  "dintake.ev_draft_prepared": "مسوده چمتو شوه",
+  "dintake.ev_draft_discarded": "مسوده لغوه شوه",
+  "dintake.ev_draft_consumed": "مسوده د ریکارډ جوړولو لپاره وکارول شوه",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

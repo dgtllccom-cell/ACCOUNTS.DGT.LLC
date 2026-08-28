@@ -293,6 +293,13 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
     try { await apiPost(`/api/erp/document-intelligence/${jobId}/match`, { matchId }); await load(); }
     catch (e) { setError(e instanceof Error ? e.message : String(e)); }
   };
+  const prepareDraft = async (linkMode?: "new_record" | "append_existing") => {
+    setBusy(true);
+    setError(null);
+    try { await apiPatch(`/api/erp/document-intelligence/${jobId}`, { action: "confirm", linkMode }); await load(); }
+    catch (e) { setError(e instanceof Error ? e.message : String(e)); }
+    finally { setBusy(false); }
+  };
 
   const job = data?.job;
   const isImage = (job?.mime_type || "").startsWith("image/");
@@ -327,6 +334,9 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
                 {["review", "qvc"].includes(job.status) ? (
                   <button type="button" disabled={busy} onClick={() => void act("process")} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"><RefreshCw className="h-3.5 w-3.5" />{s.t("reprocess", "Re-run")}</button>
                 ) : null}
+                {job.status === "review" && job.target_module ? (
+                  <button type="button" disabled={busy} onClick={() => void prepareDraft()} className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"><CheckCircle2 className="h-3.5 w-3.5" />{s.t("prepare_draft", "Prepare Reviewed Draft")}</button>
+                ) : null}
                 {job.status === "review" ? (
                   <button type="button" disabled={busy} onClick={() => { const r = window.prompt(s.t("qvc_reason", "QVC reason:")); if (r) void act("qvc", r); }} className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 dark:border-rose-900"><ShieldAlert className="h-3.5 w-3.5" />{s.t("send_qvc", "Send to QVC")}</button>
                 ) : null}
@@ -338,6 +348,13 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
 
             {error ? <p className="rounded-xl bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">{error}</p> : null}
             {job.qvc_reason ? <p className="rounded-xl bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"><ShieldAlert className="mr-1 inline h-3.5 w-3.5" />{job.qvc_reason}</p> : null}
+            {job.status === "draft_ready" && job.draft_reference ? (
+              <div className="rounded-xl bg-emerald-50 px-3 py-2.5 text-xs text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200">
+                <CheckCircle2 className="mr-1 inline h-3.5 w-3.5" />
+                <span className="font-bold">{s.t("draft_ready_banner", "Reviewed draft prepared")} — {job.draft_reference}</span>
+                <span className="ms-1">{s.t("draft_open_hint", "Open the target module's New Entry screen and choose “Continue Saved Draft” to complete and post it. The AI has not created or posted anything.")}</span>
+              </div>
+            ) : null}
 
             <div className="grid gap-4 lg:grid-cols-2">
               {/* original document */}
