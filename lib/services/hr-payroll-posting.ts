@@ -132,21 +132,27 @@ export class HrPayrollPosting {
           });
           if (!firstJournalId) firstJournalId = jid;
 
-          // linked employee_salaries_due row
+          // linked employee_salaries_due row (journal_entry_id stays NULL — that FK
+          // points at the legacy/empty journal_entries table; the live GL is
+          // roznamcha_entries, whose id we keep on the run line + the due row's
+          // reference is the shared voucher_no = run_no).
           const due = await sql`
             INSERT INTO public.employee_salaries_due
               (employee_id, salary_month, due_date, basic_salary, allowances, overtime, deductions,
                advance_recovery, loan_recovery, net_salary, currency, exchange_rate, local_currency_amount,
-               status, journal_entry_id, posting_date, country_id, branch_id, created_by, approved_by)
+               status, posting_date, country_id, branch_id, created_by, approved_by)
             VALUES (${l.employee_id}, ${run.period_month}, ${`${run.period_month}-28`},
               ${Number(l.basic_salary)}, ${Number(l.allowances_total)}, ${Number(l.overtime_amount)},
               ${Math.round((otherDed + tax) * 100) / 100}, ${adv}, 0, ${net}, ${l.currency}, ${rate},
-              ${Number(l.local_amount)}, 'Transferred', ${jid}, ${`${run.period_month}-28`},
+              ${Number(l.local_amount)}, 'Transferred', ${`${run.period_month}-28`},
               ${run.country_id}, ${run.country_branch_id}, ${actorId}, ${actorId})
             ON CONFLICT DO NOTHING
             RETURNING id`;
           const dueId = due?.[0]?.id ?? null;
-          await sql`UPDATE public.hr_payroll_run_lines SET status = 'posted', salary_due_id = COALESCE(${dueId}, salary_due_id), updated_at = now() WHERE id = ${l.id}`;
+          await sql`UPDATE public.hr_payroll_run_lines
+            SET status = 'posted', salary_due_id = COALESCE(${dueId}, salary_due_id),
+                accrual_roznamcha_id = ${jid}, updated_at = now()
+            WHERE id = ${l.id}`;
         }
 
         await sql`UPDATE public.hr_payroll_runs SET status = 'posted', posted_at = now(),
@@ -222,10 +228,10 @@ export class HrPayrollPosting {
           }
           if (l.salary_due_id) {
             await sql`UPDATE public.employee_salaries_due SET status = 'Paid', payment_account_id = ${opts.paymentLedgerId},
-              payment_journal_entry_id = ${pid}, paid_date = ${opts.paymentDate}, transferred_by = ${actorId}, updated_at = now()
+              paid_date = ${opts.paymentDate}, transferred_by = ${actorId}, updated_at = now()
               WHERE id = ${l.salary_due_id}`;
           }
-          await sql`UPDATE public.hr_payroll_run_lines SET status = 'paid', updated_at = now() WHERE id = ${l.id}`;
+          await sql`UPDATE public.hr_payroll_run_lines SET status = 'paid', payment_roznamcha_id = ${pid}, updated_at = now() WHERE id = ${l.id}`;
         }
 
         await sql`UPDATE public.hr_payroll_runs SET status = 'paid', paid_at = now(), payment_journal_entry_id = ${firstPayId}, updated_at = now() WHERE id = ${runId}`;
@@ -283,6 +289,7 @@ export class HrPayrollPosting {
             lines: contra,
           });
           if (!reversalId) reversalId = rid;
+          await sql`UPDATE public.hr_payroll_run_lines SET reversal_roznamcha_id = ${rid}, updated_at = now() WHERE id = ${l.id}`;
           if (l.salary_due_id) {
             await sql`UPDATE public.employee_salaries_due SET status = 'Reversed', updated_at = now() WHERE id = ${l.salary_due_id}`;
           }

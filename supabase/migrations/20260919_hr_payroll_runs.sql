@@ -99,6 +99,12 @@ CREATE TABLE IF NOT EXISTS public.hr_payroll_run_lines (
 CREATE UNIQUE INDEX IF NOT EXISTS hr_payroll_run_lines_run_emp_uidx ON public.hr_payroll_run_lines (run_id, employee_id);
 CREATE INDEX IF NOT EXISTS hr_payroll_run_lines_emp_idx ON public.hr_payroll_run_lines (employee_id);
 
+-- roznamcha entry ids per line (journal_entries table is legacy/empty on this ERP;
+-- the live GL is roznamcha_entries + roznamcha_lines).
+ALTER TABLE public.hr_payroll_run_lines ADD COLUMN IF NOT EXISTS accrual_roznamcha_id  uuid REFERENCES public.roznamcha_entries(id) ON DELETE SET NULL;
+ALTER TABLE public.hr_payroll_run_lines ADD COLUMN IF NOT EXISTS payment_roznamcha_id  uuid REFERENCES public.roznamcha_entries(id) ON DELETE SET NULL;
+ALTER TABLE public.hr_payroll_run_lines ADD COLUMN IF NOT EXISTS reversal_roznamcha_id uuid REFERENCES public.roznamcha_entries(id) ON DELETE SET NULL;
+
 CREATE TABLE IF NOT EXISTS public.hr_payroll_run_events (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   run_id      uuid NOT NULL REFERENCES public.hr_payroll_runs(id) ON DELETE CASCADE,
