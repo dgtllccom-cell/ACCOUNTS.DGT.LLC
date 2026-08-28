@@ -1007,6 +1007,7 @@ export const sidebarTree: SidebarNode[] = [
       { key: "go-departments", labelKey: "nav.departments", iconKey: "building-2", href: "/dashboard/general-office/departments" as Route },
       { key: "go-designations", labelKey: "nav.designations", iconKey: "scroll-text", href: "/dashboard/general-office/designations" as Route },
       { key: "go-employee-lifecycle", labelKey: "nav.employee_lifecycle", iconKey: "scroll-text", href: "/dashboard/general-office/employee-lifecycle" as Route },
+      { key: "go-onboarding", labelKey: "nav.onboarding_offboarding", iconKey: "check-square", href: "/dashboard/general-office/onboarding" as Route },
       { key: "go-employee-kyc", labelKey: "nav.employee_kyc", iconKey: "shield-check", href: "/dashboard/general-office/employee-kyc" as Route },
       { key: "go-attendance", labelKey: "nav.attendance", iconKey: "clock", href: "/dashboard/general-office/employees?tab=attendance" as Route },
       { key: "go-leave", labelKey: "nav.leave_management", iconKey: "calendar", href: "/dashboard/general-office/employees?tab=leave" as Route },
