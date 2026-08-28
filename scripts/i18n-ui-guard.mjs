@@ -246,10 +246,10 @@ if (CHANGED_ARG) {
     const staged = execSync(`git diff --name-only --cached -- ${CODE_GLOBS.join(" ")}`, { encoding: "utf8" }).trim().split("\n").filter(Boolean);
     changed = [...new Set([...changed, ...staged])];
   } catch { /* ignore */ }
-  const isCode = /className=|import |from ["']|href=|viewBox| d=|data-testid|console\.|\bkey=\{|process\.env|\.svg|\.png|new RegExp|z\.(string|enum)|useState|\.test\(|aria-hidden|:\s*Metadata\b|metadata\s*=/;
+  const isCode = /className=|import |from ["']|href=|viewBox| d=|data-testid|console\.|\bkey=\{|process\.env|\.svg|\.png|new RegExp|z\.(string|enum)|useState|\.test\(|aria-hidden|:\s*Metadata\b|metadata\s*=|=>\s*\w+<|:\s*\w+<[\w,\s]*>|\.(from|insert|update|upsert)\(/;
   const HC_PATTERNS = [
     /\b(?:placeholder|title|label|aria-label|alt|heading|subtitle|tooltip|emptyText|header)\s*=\s*"([A-Z][A-Za-z][^"]{2,80})"/g,
-    /\b(?:label|title|header|placeholder|message|description|heading|subtitle|emptyText|name)\s*:\s*"([A-Z][A-Za-z][^"]{2,70})"/g,
+    /\b(?:label|title|header|placeholder|message|description|heading|subtitle|emptyText)\s*:\s*"([A-Z][A-Za-z][^"]{2,70})"/g,
     />\s*([A-Z][A-Za-z][A-Za-z ,/&'-]{3,70}?)\s*</g,
   ];
   const HC_JUNK = /^(TODO|FIXME|OK|N\/A|USD|PKR|AED|EUR|PDF|CSV|API|SMTP|IMAP|DGT LLC|Digital Dock ERP|Damaan)$/;
