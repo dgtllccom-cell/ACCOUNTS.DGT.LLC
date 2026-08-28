@@ -35,6 +35,7 @@ const MIGRATIONS = [
   "supabase/migrations/20260905_uae_tax_ledger_reconciliation.sql",
   "supabase/migrations/20260906_uae_import_export_einvoicing.sql",
   "supabase/migrations/20260907_uae_tax_reports_audit.sql",
+  "supabase/migrations/20260908_uae_tax_finalize_fixes.sql",
 ];
 
 const sql = postgres(env.DATABASE_URL, { max: 1, prepare: false, connect_timeout: 60 });

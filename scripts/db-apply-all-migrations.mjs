@@ -40,6 +40,7 @@ const migrations = [
   { name: "20260905_uae_tax_ledger_reconciliation", path: "supabase/migrations/20260905_uae_tax_ledger_reconciliation.sql" },
   { name: "20260906_uae_import_export_einvoicing", path: "supabase/migrations/20260906_uae_import_export_einvoicing.sql" },
   { name: "20260907_uae_tax_reports_audit", path: "supabase/migrations/20260907_uae_tax_reports_audit.sql" },
+  { name: "20260908_uae_tax_finalize_fixes", path: "supabase/migrations/20260908_uae_tax_finalize_fixes.sql" },
   { name: "20260828_external_form_links", path: "supabase/migrations/20260828_external_form_links.sql" }
 ];
 

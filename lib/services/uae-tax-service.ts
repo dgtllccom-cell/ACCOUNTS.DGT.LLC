@@ -418,17 +418,8 @@ export class UaeTaxService {
       let synced = 0;
       for (const r of rows) {
         bySource[r.source] = Number(r.rows_synced ?? 0);
-        synced += Number(r.rows_synced ?? 0);
-      }
-      // Import enrichment (shipping / customs -> purchase tax lines). Added
-      // after the core sync so its function is optional at deploy time.
-      try {
-        const [imp] = await sql<Array<{ n: number }>>`
-          SELECT public.sync_uae_tax_from_import(${options?.fromDate ?? null}::date, ${options?.taxEntityId ?? null}::uuid) AS n
-        `;
-        bySource.import_enrichment = Number(imp?.n ?? 0);
-      } catch {
-        /* function not present yet (older DB) — ignore */
+        // import_enrichment updates existing rows, so don't double-count it
+        if (r.source !== "import_enrichment") synced += Number(r.rows_synced ?? 0);
       }
       return { synced, bySource };
     });
