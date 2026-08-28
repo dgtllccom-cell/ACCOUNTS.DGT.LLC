@@ -198,6 +198,21 @@ export const sidebarTree: SidebarNode[] = [
     ]
   },
   {
+    key: "document-intelligence-group",
+    labelKey: "dintake.nav_group" as any,
+    iconKey: "file-text",
+    roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "cashier", "agent_user", "staff_user", "auditor_viewer"],
+    children: [
+      {
+        key: "document-intelligence-center",
+        labelKey: "dintake.nav_center" as any,
+        iconKey: "file-text",
+        href: "/dashboard/document-intelligence" as Route,
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "cashier", "agent_user", "staff_user", "auditor_viewer"]
+      }
+    ]
+  },
+  {
     key: "tax-setup-rules-group",
     labelKey: "tax_einv.setup_rules_title",
     iconKey: "calculator",

@@ -135,18 +135,29 @@ export function enforceScopeFilter(
 
   // For non-super admins, enforce session scope
   if (!session.isSuperAdmin) {
-    if (session.cityBranchIds.length > 0) {
-      // City branch users see their branches + records without a city branch (country-level)
-      q = q.or(`city_branch_id.in.(${session.cityBranchIds.join(",")}),city_branch_id.is.null`);
-      if (session.countryIds.length > 0) {
+    // 1. Shipping-scoped / Clearing Agent isolation
+    if (session.isShippingScoped && session.clearingAgentIds?.length > 0) {
+      q = q.in("clearing_agent_id", session.clearingAgentIds);
+    }
+    // 2. City Branch isolation: Branch users strictly see records belonging to their city branch
+    else if (session.cityBranchIds.length > 0) {
+      const isCountryRole = session.roles.some((r) => r === "country_admin" || r === "country_user");
+      if (isCountryRole && session.countryIds.length > 0) {
         q = q.in("country_id", session.countryIds);
+      } else {
+        q = q.in("city_branch_id", session.cityBranchIds);
       }
-    } else if (session.countryBranchIds.length > 0) {
+    }
+    // 3. Country Branch isolation
+    else if (session.countryBranchIds.length > 0) {
       q = q.in("country_branch_id", session.countryBranchIds);
-    } else if (session.countryIds.length > 0) {
+    }
+    // 4. Country Admin / Country User isolation
+    else if (session.countryIds.length > 0) {
       q = q.in("country_id", session.countryIds);
-    } else {
-      // Fail-safe: user has no scope assignments → return nothing
+    }
+    // 5. Fail-safe: user has no scope assignments → return empty set
+    else {
       q = q.eq("id", "00000000-0000-0000-0000-000000000000");
     }
   }

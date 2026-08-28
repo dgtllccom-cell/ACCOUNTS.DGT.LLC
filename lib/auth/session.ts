@@ -1,4 +1,4 @@
-﻿import { redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { type EnterpriseRole, enterpriseRoles } from "@/lib/permissions/enterprise-roles";
@@ -136,7 +136,7 @@ async function resolveHierarchyScopes(
   const finalCountryBranchIds = new Set(initialCountryBranchIds);
   const finalCityBranchIds = new Set(initialCityBranchIds);
 
-  // 1. Resolve DOWNWARD from initial roots
+  // 1. Resolve DOWNWARD from country authority roots
   if (initialCountryIds.length > 0) {
     try {
       const [cbRes, cityRes] = await Promise.all([
@@ -150,6 +150,7 @@ async function resolveHierarchyScopes(
     }
   }
 
+  // 2. Resolve DOWNWARD from country branch roots
   if (initialCountryBranchIds.length > 0) {
     try {
       const { data: cityRes } = await supabase
@@ -160,40 +161,6 @@ async function resolveHierarchyScopes(
       cityRes?.forEach((r: any) => { if (r.id) finalCityBranchIds.add(r.id); });
     } catch (e) {
       console.error("Error resolving downward from country branch IDs:", e);
-    }
-  }
-
-  // 2. Resolve UPWARD from all gathered nodes to ensure parent context is included
-  const cityBranchArray = Array.from(finalCityBranchIds);
-  if (cityBranchArray.length > 0) {
-    try {
-      const { data } = await supabase
-        .from("city_branches")
-        .select("country_id, country_branch_id")
-        .in("id", cityBranchArray)
-        .is("deleted_at", null);
-      data?.forEach((r: any) => {
-        if (r.country_id) finalCountryIds.add(r.country_id);
-        if (r.country_branch_id) finalCountryBranchIds.add(r.country_branch_id);
-      });
-    } catch (e) {
-      console.error("Error resolving upward from city branches:", e);
-    }
-  }
-
-  const countryBranchArray = Array.from(finalCountryBranchIds);
-  if (countryBranchArray.length > 0) {
-    try {
-      const { data } = await supabase
-        .from("country_branches")
-        .select("country_id")
-        .in("id", countryBranchArray)
-        .is("deleted_at", null);
-      data?.forEach((r: any) => {
-        if (r.country_id) finalCountryIds.add(r.country_id);
-      });
-    } catch (e) {
-      console.error("Error resolving upward from country branches:", e);
     }
   }
 

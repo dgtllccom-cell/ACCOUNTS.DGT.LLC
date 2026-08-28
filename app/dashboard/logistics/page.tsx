@@ -56,9 +56,54 @@ async function safeCount(table: string, build?: (query: QueryBuilder) => QueryBu
   }
 }
 
-async function loadLogisticsDashboardData(): Promise<LogisticsDashboardData> {
+async function loadLogisticsDashboardData(session: any): Promise<LogisticsDashboardData> {
   try {
     const supabase = createSupabaseAdminClient();
+    const isSuperAdmin = Boolean(session?.isSuperAdmin);
+    const isShippingScoped = Boolean(session?.isShippingScoped && session?.clearingAgentIds?.length > 0);
+    const clearingAgentIds: string[] = session?.clearingAgentIds || [];
+
+    const applyShipmentScope = (query: any) => {
+      let q = query.is("deleted_at", null);
+      if (!isSuperAdmin) {
+        if (isShippingScoped && clearingAgentIds.length > 0) {
+          q = q.in("clearing_agent_id", clearingAgentIds);
+        } else if (session?.cityBranchIds?.length > 0) {
+          q = q.in("city_branch_id", session.cityBranchIds);
+        } else if (session?.countryIds?.length > 0) {
+          q = q.in("country_id", session.countryIds);
+        }
+      }
+      return q;
+    };
+
+    const applyTaskScope = (query: any) => {
+      let q = query.is("deleted_at", null);
+      if (!isSuperAdmin) {
+        if (isShippingScoped && clearingAgentIds.length > 0) {
+          q = q.or(`assignee_id.eq.${session.userId},clearing_agent_id.in.(${clearingAgentIds.join(",")})`);
+        } else if (session?.cityBranchIds?.length > 0) {
+          q = q.in("city_branch_id", session.cityBranchIds);
+        } else if (session?.countryIds?.length > 0) {
+          q = q.in("country_id", session.countryIds);
+        }
+      }
+      return q;
+    };
+
+    let shipmentsQuery = supabase
+      .from("shipping_bl_records")
+      .select("id, shipping_line_name, bl_number, container_number, vessel_name, eta, shipment_status")
+      .order("created_at", { ascending: false })
+      .limit(8);
+    shipmentsQuery = applyShipmentScope(shipmentsQuery);
+
+    let tasksQuery = supabase
+      .from("erp_assignments")
+      .select("id, assignment_no, title, message, status, due_at, target_type")
+      .order("created_at", { ascending: false })
+      .limit(6);
+    tasksQuery = applyTaskScope(tasksQuery);
 
     const [
       assignedShipments,
@@ -70,30 +115,14 @@ async function loadLogisticsDashboardData(): Promise<LogisticsDashboardData> {
       shipmentsResult,
       tasksResult,
     ] = await Promise.all([
-      safeCount("shipping_bl_records", (query) => query.is("deleted_at", null)),
-      safeCount("erp_assignments", (query) => query.is("deleted_at", null).in("status", ["open", "pending", "in_progress"])),
-      safeCount("erp_assignments", (query) => query.is("deleted_at", null).in("status", ["completed", "closed", "done"])),
-      safeCount("shipping_bl_records", (query) => query.is("deleted_at", null).in("shipment_status", ["loaded", "in_transit", "sailing", "draft"])),
-      safeCount("shipping_bl_records", (query) => query.is("deleted_at", null).in("shipment_status", ["delivered", "cleared", "released"])),
-      safeCount("shipping_bl_records", (query) => query.is("deleted_at", null).not("container_number", "is", null)),
-      withTimeout<QueryResult<any[]>>(
-        supabase
-          .from("shipping_bl_records")
-          .select("id, shipping_line_name, bl_number, container_number, vessel_name, eta, shipment_status")
-          .is("deleted_at", null)
-          .order("created_at", { ascending: false })
-          .limit(8),
-        { data: [], error: { message: "Shipment list query timed out." } }
-      ),
-      withTimeout<QueryResult<any[]>>(
-        supabase
-          .from("erp_assignments")
-          .select("id, assignment_no, title, message, status, due_at, target_type")
-          .is("deleted_at", null)
-          .order("created_at", { ascending: false })
-          .limit(6),
-        { data: [], error: { message: "Task list query timed out." } }
-      ),
+      safeCount("shipping_bl_records", (query) => applyShipmentScope(query)),
+      safeCount("erp_assignments", (query) => applyTaskScope(query).in("status", ["open", "pending", "in_progress"])),
+      safeCount("erp_assignments", (query) => applyTaskScope(query).in("status", ["completed", "closed", "done"])),
+      safeCount("shipping_bl_records", (query) => applyShipmentScope(query).in("shipment_status", ["loaded", "in_transit", "sailing", "draft"])),
+      safeCount("shipping_bl_records", (query) => applyShipmentScope(query).in("shipment_status", ["delivered", "cleared", "released"])),
+      safeCount("shipping_bl_records", (query) => applyShipmentScope(query).not("container_number", "is", null)),
+      withTimeout<QueryResult<any[]>>(shipmentsQuery, { data: [], error: { message: "Shipment list query timed out." } }),
+      withTimeout<QueryResult<any[]>>(tasksQuery, { data: [], error: { message: "Task list query timed out." } }),
     ]);
 
     const shipmentRows = !shipmentsResult.error && Array.isArray(shipmentsResult.data) ? shipmentsResult.data : [];
@@ -141,10 +170,8 @@ async function loadLogisticsDashboardData(): Promise<LogisticsDashboardData> {
 }
 
 export default async function LogisticsDashboardPage() {
-  const [data, session] = await Promise.all([
-    loadLogisticsDashboardData(),
-    getCurrentErpSession(),
-  ]);
+  const session = await getCurrentErpSession();
+  const data = await loadLogisticsDashboardData(session);
   const canCreateShipment = session ? hasRolePermission(session, "shipments", "create") : false;
 
   return (
@@ -153,4 +180,3 @@ export default async function LogisticsDashboardPage() {
     </main>
   );
 }
-
