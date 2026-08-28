@@ -143,24 +143,32 @@ export function UaeTaxLinesView({
   };
 
   const printConfig = () => ({
+    moduleType: "register" as const,
+    reportType: "register" as const,
     title: s.t(titleKey.replace(/^tax_einv\./, ""), "UAE VAT Lines"),
     subtitle: s.t("uae", "United Arab Emirates"),
     lang: s.lang,
     orientation: "landscape" as const,
+    scope: { country: "United Arab Emirates", currency: "AED", dateRange: fromDate && toDate ? `${fromDate} – ${toDate}` : undefined },
+    kpis: [
+      { label: s.t("ln_taxable_aed", "Taxable (AED)"), value: fmt(totals.taxable), color: "blue" as const },
+      { label: s.t("ln_vat_aed", "VAT (AED)"), value: fmt(totals.vat), color: "emerald" as const },
+      { label: s.t("ln_recoverable_aed", "Recoverable (AED)"), value: fmt(totals.recoverable), color: "amber" as const },
+      { label: s.t("cc_k_missing_documents", "Missing Documents"), value: totals.missing, color: "red" as const },
+    ],
     columns: [
-      { key: "source_date", label: "Date" },
+      { key: "source_date", label: "Date", format: "date" as const },
       { key: "source_reference_no", label: "Bill Number" },
       { key: "party_name", label: "Party" },
       { key: "description", label: "Description" },
-      { key: "vat_rate", label: "VAT %" },
-      { key: "aed_taxable_amount", label: "Taxable (AED)", isNumeric: true },
-      { key: "aed_vat_amount", label: "VAT (AED)", isNumeric: true },
+      { key: "vat_rate", label: "VAT %", align: "right" as const },
+      { key: "aed_taxable_amount", label: "Taxable (AED)", align: "right" as const, format: "currency" as const },
+      { key: "aed_vat_amount", label: "VAT (AED)", align: "right" as const, format: "currency" as const },
       { key: "recoverability", label: "Recoverability" },
       { key: "document_status", label: "Document" },
     ],
-    data: rows,
-    debitTotal: totals.taxable,
-    creditTotal: totals.vat,
+    rows,
+    totals: { aed_taxable_amount: fmt(totals.taxable), aed_vat_amount: fmt(totals.vat) },
   });
 
   return (
