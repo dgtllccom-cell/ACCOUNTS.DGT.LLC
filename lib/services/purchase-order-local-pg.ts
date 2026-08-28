@@ -189,27 +189,48 @@ export async function createPurchaseOrderViaLocalPg(input: {
       if (!inserted?.id) throw new Error("Purchase order insert failed.");
 
       if (Array.isArray(body.items) && body.items.length > 0) {
-        const itemsPayload = body.items.map((it: any) => ({
-          purchase_order_id: inserted.id,
-          product_id: it.productId || null,
-          goods_name: it.goodsName || "Unknown",
-          hs_code: it.hsCode || null,
-          size: it.size || null,
-          brand: it.brand || null,
-          origin: it.origin || null,
-          quantity: it.quantity || 0,
-          unit_name: it.unitName || "pcs",
-          unit_weight: it.unitWeight || 0,
-          gross_weight: it.grossWeight || 0,
-          net_weight: it.netWeight || 0,
-          rate_original: it.rateOriginal || 0,
-          rate_local: it.rateLocal || 0,
-          rate_usd: it.rateUsd || 0,
-          total_original: it.totalOriginal || 0,
-          total_local: it.totalLocal || 0,
-          total_usd: it.totalUsd || 0
-        }));
+        const itemsPayload = body.items.map((it: any) => {
+          const totalLocal = Number(it.totalLocal || 0);
+          // Line-level VAT (taxable by default — UAE standard-rated goods). Non-UAE
+          // orders are filtered out by sync_uae_tax_from_purchase_orders; a
+          // genuinely exempt/zero-rated UAE line is re-classified in the UAE Tax
+          // module's classify drawer.
+          const isTaxable = it.isTaxable !== false;
+          const vatRate = Number(it.vatRate ?? 5) || 0;
+          const taxableAmount = isTaxable ? totalLocal : 0;
+          const vatAmount = isTaxable ? Math.round(taxableAmount * (vatRate / 100) * 100) / 100 : 0;
+          return {
+            purchase_order_id: inserted.id,
+            product_id: it.productId || null,
+            goods_name: it.goodsName || "Unknown",
+            hs_code: it.hsCode || null,
+            size: it.size || null,
+            brand: it.brand || null,
+            origin: it.origin || null,
+            quantity: it.quantity || 0,
+            unit_name: it.unitName || "pcs",
+            unit_weight: it.unitWeight || 0,
+            gross_weight: it.grossWeight || 0,
+            net_weight: it.netWeight || 0,
+            rate_original: it.rateOriginal || 0,
+            rate_local: it.rateLocal || 0,
+            rate_usd: it.rateUsd || 0,
+            total_original: it.totalOriginal || 0,
+            total_local: totalLocal,
+            total_usd: it.totalUsd || 0,
+            is_taxable: isTaxable,
+            tax_code_id: it.taxCodeId || null,
+            vat_rate: vatRate,
+            taxable_amount: taxableAmount,
+            vat_amount: vatAmount,
+          };
+        });
         await tx`insert into purchase_order_items ${tx(itemsPayload as any)}`;
+        // UAE line-level VAT: the AFTER-write trigger on purchase_order_items
+        // already calls this, but we invoke it explicitly (same transaction,
+        // after the parent + all lines are visible) so booking-purchase input
+        // VAT is guaranteed to materialise regardless of trigger fire order.
+        await tx`select public.sync_uae_tax_from_purchase_orders(null, null, ${inserted.id}::uuid)`.catch(() => undefined);
       }
 
       if (Array.isArray(body.expenses) && body.expenses.length > 0) {

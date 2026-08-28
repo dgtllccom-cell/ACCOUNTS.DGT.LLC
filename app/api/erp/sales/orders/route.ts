@@ -508,6 +508,10 @@ export async function POST(request: NextRequest) {
         await withLocalPg(async (sql) => {
           await sql`DELETE FROM public.sales_order_items WHERE sales_order_id = ${soId}::uuid`;
           await sql`INSERT INTO public.sales_order_items ${sql(itemRows as any)}`;
+          // UAE line-level output VAT: explicit sync in addition to the
+          // AFTER-write trigger on sales_order_items (guarantees booking-sale
+          // output VAT materialises even if trigger fire order varies).
+          await sql`select public.sync_uae_tax_from_sales_orders(null, null, ${soId}::uuid)`.catch(() => undefined);
           return true;
         });
       }
