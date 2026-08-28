@@ -44,6 +44,7 @@ const migrations = [
   { name: "20260909_uae_tax_view_hardening", path: "supabase/migrations/20260909_uae_tax_view_hardening.sql" },
   { name: "20260910_uae_tax_rules_dedupe", path: "supabase/migrations/20260910_uae_tax_rules_dedupe.sql" },
   { name: "20260911_uae_tax_order_item_triggers", path: "supabase/migrations/20260911_uae_tax_order_item_triggers.sql" },
+  { name: "20260912_uae_tax_sync_fn_dedupe", path: "supabase/migrations/20260912_uae_tax_sync_fn_dedupe.sql" },
   { name: "20260828_external_form_links", path: "supabase/migrations/20260828_external_form_links.sql" }
 ];
 
