@@ -1010,6 +1010,7 @@ export const sidebarTree: SidebarNode[] = [
       { key: "go-employee-kyc", labelKey: "nav.employee_kyc", iconKey: "shield-check", href: "/dashboard/general-office/employee-kyc" as Route },
       { key: "go-attendance", labelKey: "nav.attendance", iconKey: "clock", href: "/dashboard/general-office/employees?tab=attendance" as Route },
       { key: "go-leave", labelKey: "nav.leave_management", iconKey: "calendar", href: "/dashboard/general-office/employees?tab=leave" as Route },
+      { key: "go-leave-attendance", labelKey: "nav.leave_attendance_setup", iconKey: "calendar", href: "/dashboard/general-office/leave-attendance" as Route },
       { key: "go-payroll", labelKey: "nav.payroll_salary", iconKey: "banknote", href: "/dashboard/general-office/employees?tab=payroll" as Route },
       { key: "go-contract-control", labelKey: "nav.contract_control", iconKey: "scroll-text", href: "/dashboard/general-office/contracts" as Route, permission: { resource: "contracts", action: "read" } },
       { key: "go-assets", labelKey: "nav.office_assets", iconKey: "clipboard-list", href: "/dashboard/general-office/employees?tab=assets" as Route },

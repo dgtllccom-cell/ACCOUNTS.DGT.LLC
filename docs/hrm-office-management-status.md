@@ -59,11 +59,16 @@ routes return 307→login as expected). Not applied to Production.
 
 Ordered by dependency. Each item = its own migration + service + API + view + i18n + gates.
 
-1. **Masters** — `departments`, `designations` tables + CRUD (currently free-text on `employees`);
-   backfill distinct existing values.
-2. **Employee lifecycle history** — `employee_position_history` (promotion / salary revision),
-   `employee_transfers` (country/branch/department), `employee_separations`
-   (resignation/termination + notice + rehire flag). All link `employee_id`, store old/new/reason/user/timestamp.
+1. ~~**Masters** — `departments`, `designations` tables + CRUD~~ ✅ **DONE** — commit `5782d85`,
+   migration `20260915`. `hr_departments` / `hr_designations` + additive
+   `employees.hr_department_id` / `hr_designation_id`, backfilled + linked,
+   `hr_departments_v` / `hr_designations_v` views, CRUD API + `HrMastersManager` UI,
+   36 `hrm.*` keys ×5. Free-text columns untouched.
+2. ~~**Employee lifecycle history**~~ ✅ **DONE** — commit `c153e11`, migration `20260916`.
+   `hr_employee_position_events` / `hr_employee_transfers` / `hr_employee_separations`
+   (append-only) + `hr_employee_lifecycle_v`. Draft→approved→applied workflow; approved
+   events applied onto the live `employees` row transactionally; verified E2E on DEV.
+   `EmployeeLifecycleView` UI + 68 `hrm.*` keys ×5.
 3. **Employee KYC** — `employee_documents` (passport, visa/residence permit, Emirates ID/CNIC/Tazkira,
    labour card, contract, bank letter, certificates) on top of `office_documents`;
    `kyc_verifications` queue row per employee; wire into existing QVC/KYC Pending Verification
