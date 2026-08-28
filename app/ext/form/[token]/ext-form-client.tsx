@@ -5,10 +5,10 @@
  *
  * Standalone, high-converting public form page.
  * Matching the exact 4-Step Smart & Responsive UI:
- *   Step 1: Personal Info, Documents & Contracts
- *   Step 2: Address Information
- *   Step 3: Review Your Information
- *   Step 4: Photo & Final Submit
+ *   Step 1: Personal Info, Documents (CNIC Front/Back, Passport Pages) & Contracts
+ *   Step 2: Address Information (Dynamic Country -> State -> City -> Postal Code Cascader)
+ *   Step 3: Review Your Information (4 Structured Cards with Edit jump-backs)
+ *   Step 4: Photo & Final Submit (Circular Avatar Preview, Camera & Gallery)
  *
  * 100% Responsive on Mobile (iPhone/Android) and Desktop.
  * 5-Language Parity (English, Urdu, Arabic, Persian, Pashto) with full RTL.
@@ -44,7 +44,8 @@ import {
   FileCheck,
   Briefcase,
   Layers,
-  Sparkles
+  Sparkles,
+  ChevronDown
 } from "lucide-react";
 
 // ─── 5-Language Dictionary ────────────────────────────────────────────────────
@@ -237,6 +238,34 @@ const dict: Record<string, Record<Lang, string>> = {
     fa: "بارگذاری سند",
     ps: "سند پورته کړئ",
   },
+  frontSide: {
+    en: "Front Side",
+    ur: "سامنے کا رخ (Front)",
+    ar: "الوجه الأمامي",
+    fa: "روی کارت / صفحه اول",
+    ps: "مخکینۍ برخه",
+  },
+  backSide: {
+    en: "Back Side",
+    ur: "پیچھے کا رخ (Back)",
+    ar: "الوجه الخلفي",
+    fa: "پشت کارت / صفحه دوم",
+    ps: "شا برخه",
+  },
+  passportMainPage: {
+    en: "Main Info Page",
+    ur: "پہلا معلوماتی صفحہ",
+    ar: "صفحة المعلومات الرئيسية",
+    fa: "صفحه اصلی گذرنامه",
+    ps: "لومړی معلوماتي مخ",
+  },
+  passportVisaPage: {
+    en: "Visa / Back Page",
+    ur: "ویزا / دوسرا صفحہ",
+    ar: "صفحة التأشيرة / الخلفية",
+    fa: "صفحه ویزا / صفحه پشتی",
+    ps: "د ویزې / شا مخ",
+  },
   uploadHelp: {
     en: "Upload file PDF, JPG, PNG (Max 10MB)",
     ur: "فائل اپ لوڈ کریں PDF, JPG, PNG (زیادہ سے زیادہ 10MB)",
@@ -308,11 +337,11 @@ const dict: Record<string, Record<Lang, string>> = {
     ps: "د پتې معلومات",
   },
   addressInfoSub: {
-    en: "Please enter your address details.",
-    ur: "براہِ کرم اپنے پتے کی تفصیلات درج کریں۔",
-    ar: "يرجى إدخال تفاصيل عنوانك.",
-    fa: "لطفاً اطلاعات آدرس خود را وارد کنید.",
-    ps: "مهرباني وکړئ د خپلې پتې تفصیلات ولیکئ.",
+    en: "Please select country, province, city, and enter your address.",
+    ur: "براہِ کرم ملک، صوبہ اور شہر منتخب کریں اور مکمل پتہ درج کریں۔",
+    ar: "يرجى تحديد الدولة والمحافظة والمدينة وإدخال العنوان.",
+    fa: "لطفاً کشور، استان، شهر را انتخاب کرده و آدرس را وارد نمایید.",
+    ps: "مهرباني وکړئ هیواد، ولایت، او ښار وټاکئ او خپله پته ولیکئ.",
   },
   country: {
     en: "Country",
@@ -357,18 +386,18 @@ const dict: Record<string, Record<Lang, string>> = {
     ps: "ښار وټاکئ",
   },
   postalCode: {
-    en: "Postal / Zip Code",
-    ur: "پوسٹل / زپ کوڈ",
-    ar: "الرمز البريدي",
-    fa: "کد پستی",
-    ps: "پوسټل کوډ",
+    en: "Postal / City Code",
+    ur: "پوسٹل / سٹی کوڈ",
+    ar: "الرمز البريدي / كود المدينة",
+    fa: "کد پستی / کد شهر",
+    ps: "پوسټل / ښار کوډ",
   },
   postalCodePh: {
-    en: "Enter postal code",
-    ur: "پوسٹل کوڈ درج کریں",
-    ar: "أدخل الرمز البريدي",
-    fa: "کد پستی را وارد کنید",
-    ps: "پوسټل کوډ ولیکئ",
+    en: "Postal code (auto-filled)",
+    ur: "پوسٹل کوڈ (خودکار درج ہوگا)",
+    ar: "الرمز البريدي (تلقائي)",
+    fa: "کد پستی (خودکار)",
+    ps: "پوسټل کوډ (خپله ډکیږي)",
   },
   fullAddress: {
     en: "Full Address",
@@ -378,11 +407,11 @@ const dict: Record<string, Record<Lang, string>> = {
     ps: "بشپړه پته",
   },
   fullAddressPh: {
-    en: "Enter your full address",
-    ur: "اپنا مکمل پتہ درج کریں",
-    ar: "أدخل عنوانك الكامل",
-    fa: "آدرس کامل خود را وارد کنید",
-    ps: "خپله بشپړه پته ولیکئ",
+    en: "Enter your full address (Street, Building, Flat / Office)",
+    ur: "اپنا مکمل پتہ درج کریں (گلی، عمارت، مکان / دفتر)",
+    ar: "أدخل عنوانك الكامل (الشارع، المبنى، الشقة)",
+    fa: "آدرس کامل خود را وارد کنید (خیابان، پلاک، واحد)",
+    ps: "خپله بشپړه پته ولیکئ (کوڅه، ودانۍ، کور / دفتر)",
   },
   backBtn: {
     en: "← Back",
@@ -509,6 +538,258 @@ function t(key: string, lang: Lang): string {
   return dict[key]?.[lang] ?? dict[key]?.en ?? key;
 }
 
+// ─── Location Hierarchy Dataset ───────────────────────────────────────────────
+
+interface CityData {
+  name: string;
+  postalCode: string;
+  cityCode: string;
+}
+
+interface StateData {
+  cities: CityData[];
+}
+
+interface CountryData {
+  code: string;
+  phoneCode: string;
+  states: Record<string, StateData>;
+}
+
+const LOCATION_HIERARCHY: Record<string, CountryData> = {
+  Pakistan: {
+    code: "PK",
+    phoneCode: "+92",
+    states: {
+      Sindh: {
+        cities: [
+          { name: "Karachi", postalCode: "74000", cityCode: "KHI" },
+          { name: "Hyderabad", postalCode: "71000", cityCode: "HYD" },
+          { name: "Sukkur", postalCode: "65200", cityCode: "SKR" },
+          { name: "Larkana", postalCode: "77150", cityCode: "LRK" },
+          { name: "Mirpur Khas", postalCode: "69000", cityCode: "MPK" },
+          { name: "Nawabshah", postalCode: "67450", cityCode: "NBS" },
+        ],
+      },
+      Punjab: {
+        cities: [
+          { name: "Lahore", postalCode: "54000", cityCode: "LHE" },
+          { name: "Rawalpindi", postalCode: "46000", cityCode: "RWP" },
+          { name: "Faisalabad", postalCode: "38000", cityCode: "FSD" },
+          { name: "Multan", postalCode: "60000", cityCode: "MUX" },
+          { name: "Gujranwala", postalCode: "52250", cityCode: "GUJ" },
+          { name: "Sialkot", postalCode: "51310", cityCode: "SKT" },
+          { name: "Bahawalpur", postalCode: "63100", cityCode: "BWP" },
+          { name: "Sargodha", postalCode: "40100", cityCode: "SGD" },
+          { name: "Sheikhupura", postalCode: "39350", cityCode: "SKP" },
+          { name: "Rahim Yar Khan", postalCode: "64200", cityCode: "RYK" },
+        ],
+      },
+      "Khyber Pakhtunkhwa": {
+        cities: [
+          { name: "Peshawar", postalCode: "25000", cityCode: "PEW" },
+          { name: "Mardan", postalCode: "23200", cityCode: "MDN" },
+          { name: "Abbottabad", postalCode: "22010", cityCode: "ABT" },
+          { name: "Swat (Mingora)", postalCode: "19130", cityCode: "SWT" },
+          { name: "Dera Ismail Khan", postalCode: "29050", cityCode: "DIK" },
+          { name: "Kohat", postalCode: "26000", cityCode: "KHT" },
+          { name: "Bannu", postalCode: "28100", cityCode: "BNU" },
+        ],
+      },
+      Balochistan: {
+        cities: [
+          { name: "Quetta", postalCode: "87300", cityCode: "UET" },
+          { name: "Gwadar", postalCode: "91200", cityCode: "GWD" },
+          { name: "Chaman (Border)", postalCode: "86000", cityCode: "CHM" },
+          { name: "Turbat", postalCode: "92600", cityCode: "TBT" },
+          { name: "Hub Industrial", postalCode: "90150", cityCode: "HUB" },
+          { name: "Sibi", postalCode: "82000", cityCode: "SBI" },
+          { name: "Khuzdar", postalCode: "89100", cityCode: "KZD" },
+        ],
+      },
+      "Islamabad Capital Territory": {
+        cities: [{ name: "Islamabad", postalCode: "44000", cityCode: "ISB" }],
+      },
+      "Azad Jammu & Kashmir": {
+        cities: [
+          { name: "Muzaffarabad", postalCode: "13100", cityCode: "MZD" },
+          { name: "Mirpur", postalCode: "10250", cityCode: "MPR" },
+        ],
+      },
+    },
+  },
+  "United Arab Emirates": {
+    code: "AE",
+    phoneCode: "+971",
+    states: {
+      Dubai: {
+        cities: [
+          { name: "Dubai (Deira / Port Rashid)", postalCode: "00000", cityCode: "DXB" },
+          { name: "Jebel Ali Free Zone (JAFZA)", postalCode: "00000", cityCode: "JAF" },
+          { name: "Bur Dubai", postalCode: "00000", cityCode: "BDB" },
+          { name: "Al Quoz Industrial", postalCode: "00000", cityCode: "AQZ" },
+        ],
+      },
+      "Abu Dhabi": {
+        cities: [
+          { name: "Abu Dhabi City", postalCode: "00000", cityCode: "AUH" },
+          { name: "Musaffah Industrial", postalCode: "00000", cityCode: "MSF" },
+          { name: "Khalifa Port (KIZAD)", postalCode: "00000", cityCode: "KHD" },
+          { name: "Al Ain", postalCode: "00000", cityCode: "AAN" },
+        ],
+      },
+      Sharjah: {
+        cities: [
+          { name: "Sharjah City", postalCode: "00000", cityCode: "SHJ" },
+          { name: "Hamriyah Free Zone", postalCode: "00000", cityCode: "HFZ" },
+          { name: "Khor Fakkan", postalCode: "00000", cityCode: "KLF" },
+        ],
+      },
+      Ajman: {
+        cities: [{ name: "Ajman Free Zone / City", postalCode: "00000", cityCode: "AJM" }],
+      },
+      "Ras Al Khaimah": {
+        cities: [{ name: "RAK City / RAKEZ", postalCode: "00000", cityCode: "RKT" }],
+      },
+      Fujairah: {
+        cities: [{ name: "Fujairah Port / City", postalCode: "00000", cityCode: "FJR" }],
+      },
+    },
+  },
+  Afghanistan: {
+    code: "AF",
+    phoneCode: "+93",
+    states: {
+      Kabul: {
+        cities: [{ name: "Kabul City", postalCode: "1001", cityCode: "KBL" }],
+      },
+      Kandahar: {
+        cities: [{ name: "Kandahar City / Spin Boldak", postalCode: "3801", cityCode: "KDH" }],
+      },
+      Herat: {
+        cities: [{ name: "Herat / Islam Qala Border", postalCode: "3001", cityCode: "HRT" }],
+      },
+      Nangarhar: {
+        cities: [{ name: "Jalalabad / Torkham Border", postalCode: "2601", cityCode: "JAL" }],
+      },
+      Balkh: {
+        cities: [{ name: "Mazar-i-Sharif / Hairatan", postalCode: "1701", cityCode: "MZR" }],
+      },
+    },
+  },
+  "Saudi Arabia": {
+    code: "SA",
+    phoneCode: "+966",
+    states: {
+      Riyadh: {
+        cities: [{ name: "Riyadh City", postalCode: "11564", cityCode: "RUH" }],
+      },
+      Makkah: {
+        cities: [
+          { name: "Jeddah Islamic Port / City", postalCode: "21442", cityCode: "JED" },
+          { name: "Makkah City", postalCode: "24231", cityCode: "MAK" },
+        ],
+      },
+      "Eastern Province": {
+        cities: [
+          { name: "Dammam Port / City", postalCode: "31411", cityCode: "DMM" },
+          { name: "Al Khobar", postalCode: "31952", cityCode: "KHB" },
+          { name: "Jubail Industrial", postalCode: "31951", cityCode: "JBL" },
+        ],
+      },
+    },
+  },
+  China: {
+    code: "CN",
+    phoneCode: "+86",
+    states: {
+      Guangdong: {
+        cities: [
+          { name: "Guangzhou", postalCode: "510000", cityCode: "CAN" },
+          { name: "Shenzhen (Yantian / Shekou)", postalCode: "518000", cityCode: "SZX" },
+          { name: "Yiwu / Jinhua", postalCode: "322000", cityCode: "YIW" },
+        ],
+      },
+      Shanghai: {
+        cities: [{ name: "Shanghai Port / City", postalCode: "200000", cityCode: "SHA" }],
+      },
+      Zhejiang: {
+        cities: [{ name: "Ningbo Port", postalCode: "315000", cityCode: "NGB" }],
+      },
+    },
+  },
+  Turkey: {
+    code: "TR",
+    phoneCode: "+90",
+    states: {
+      Istanbul: {
+        cities: [{ name: "Istanbul (Ambarli Port)", postalCode: "34000", cityCode: "IST" }],
+      },
+      Mersin: {
+        cities: [{ name: "Mersin International Port", postalCode: "33000", cityCode: "MER" }],
+      },
+    },
+  },
+  Iran: {
+    code: "IR",
+    phoneCode: "+98",
+    states: {
+      Hormozgan: {
+        cities: [{ name: "Bandar Abbas (Shahid Rajaee)", postalCode: "79177", cityCode: "BND" }],
+      },
+      "Sistan & Baluchestan": {
+        cities: [
+          { name: "Chabahar (Beheshti Port)", postalCode: "99717", cityCode: "CHB" },
+          { name: "Zahedan / Mirjaveh Border", postalCode: "98135", cityCode: "ZAH" },
+        ],
+      },
+      Tehran: {
+        cities: [{ name: "Tehran", postalCode: "11369", cityCode: "THR" }],
+      },
+    },
+  },
+  Oman: {
+    code: "OM",
+    phoneCode: "+968",
+    states: {
+      Muscat: {
+        cities: [{ name: "Muscat / Port Sultan Qaboos", postalCode: "100", cityCode: "MCT" }],
+      },
+      "Al Batinah": {
+        cities: [{ name: "Sohar Port & Freezone", postalCode: "311", cityCode: "SOH" }],
+      },
+    },
+  },
+  "United Kingdom": {
+    code: "GB",
+    phoneCode: "+44",
+    states: {
+      England: {
+        cities: [
+          { name: "London", postalCode: "EC1A 1BB", cityCode: "LON" },
+          { name: "Felixstowe Port", postalCode: "IP11 3SY", cityCode: "FXT" },
+          { name: "Southampton Port", postalCode: "SO14 2AQ", cityCode: "SOU" },
+        ],
+      },
+    },
+  },
+  "United States": {
+    code: "US",
+    phoneCode: "+1",
+    states: {
+      California: {
+        cities: [{ name: "Los Angeles / Long Beach Port", postalCode: "90001", cityCode: "LAX" }],
+      },
+      Texas: {
+        cities: [{ name: "Houston Port / City", postalCode: "77001", cityCode: "HOU" }],
+      },
+      "New York": {
+        cities: [{ name: "New York / Port of NY & NJ", postalCode: "10001", cityCode: "NYC" }],
+      },
+    },
+  },
+};
+
 // ─── Document & Contract Types ────────────────────────────────────────────────
 
 interface DocItem {
@@ -516,7 +797,8 @@ interface DocItem {
   type: string;
   number: string;
   fileName?: string;
-  fileData?: string;
+  frontImage?: string;
+  backImage?: string;
 }
 
 interface ContractItem {
@@ -552,32 +834,33 @@ export function ExtFormClient({ token }: { token: string }) {
   const [gender, setGender] = useState("male");
 
   // Step 1: Documents
-  const [docType, setDocType] = useState("Passport");
+  const [docType, setDocType] = useState("CNIC");
   const [docNumber, setDocNumber] = useState("");
-  const [documents, setDocuments] = useState<DocItem[]>([
-    { id: "1", type: "Passport", number: "AB1234567", fileName: "passport.pdf" },
-    { id: "2", type: "CNIC", number: "42101-1234567-1", fileName: "cnic_front.jpg" },
-    { id: "3", type: "ID Card", number: "ID987654321", fileName: "id_card.png" },
-    { id: "4", type: "Photo", number: "photo.jpg", fileName: "photo.jpg" },
-  ]);
+  const [docFrontImage, setDocFrontImage] = useState<string | null>(null);
+  const [docBackImage, setDocBackImage] = useState<string | null>(null);
+  const [documents, setDocuments] = useState<DocItem[]>([]);
 
   // Step 1: Contracts
   const [contractType, setContractType] = useState("Employment Contract");
-  const [contracts, setContracts] = useState<ContractItem[]>([
-    { id: "1", type: "Employment Contract", contractNo: "CNT-001", fileName: "employment_contract.pdf" },
-  ]);
+  const [contracts, setContracts] = useState<ContractItem[]>([]);
 
-  // Step 2: Address Info
+  // Step 2: Address Info (Cascading Location)
   const [country, setCountry] = useState("Pakistan");
-  const [stateProvince, setStateProvince] = useState("Punjab");
-  const [city, setCity] = useState("Lahore");
-  const [postalCode, setPostalCode] = useState("54000");
-  const [fullAddress, setFullAddress] = useState("123 Main Street, Model Town, Lahore, Punjab, Pakistan");
+  const [stateProvince, setStateProvince] = useState("Sindh");
+  const [city, setCity] = useState("Karachi");
+  const [postalCode, setPostalCode] = useState("74000");
+  const [fullAddress, setFullAddress] = useState("");
 
   // Step 4: Photo
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const photoCameraRef = useRef<HTMLInputElement>(null);
+
+  // Document File Input Refs
+  const frontInputRef = useRef<HTMLInputElement>(null);
+  const frontCameraRef = useRef<HTMLInputElement>(null);
+  const backInputRef = useRef<HTMLInputElement>(null);
+  const backCameraRef = useRef<HTMLInputElement>(null);
 
   // Submission State
   const [submitting, setSubmitting] = useState(false);
@@ -604,6 +887,58 @@ export function ExtFormClient({ token }: { token: string }) {
       .finally(() => setInitialLoading(false));
   }, [token]);
 
+  // ─── Cascading Location Handler ─────────────────────────────────────────────
+  const handleCountryChange = (newCountry: string) => {
+    setCountry(newCountry);
+    const countryObj = LOCATION_HIERARCHY[newCountry];
+    if (countryObj) {
+      const stateKeys = Object.keys(countryObj.states);
+      const firstState = stateKeys[0] || "";
+      setStateProvince(firstState);
+      const cities = firstState ? countryObj.states[firstState]?.cities || [] : [];
+      const firstCity = cities[0];
+      setCity(firstCity ? firstCity.name : "");
+      setPostalCode(firstCity ? firstCity.postalCode : "");
+    } else {
+      setStateProvince("");
+      setCity("");
+      setPostalCode("");
+    }
+  };
+
+  const handleStateChange = (newState: string) => {
+    setStateProvince(newState);
+    const countryObj = LOCATION_HIERARCHY[country];
+    if (countryObj && countryObj.states[newState]) {
+      const cities = countryObj.states[newState].cities;
+      const firstCity = cities[0];
+      setCity(firstCity ? firstCity.name : "");
+      setPostalCode(firstCity ? firstCity.postalCode : "");
+    } else {
+      setCity("");
+      setPostalCode("");
+    }
+  };
+
+  const handleCityChange = (newCity: string) => {
+    setCity(newCity);
+    const countryObj = LOCATION_HIERARCHY[country];
+    if (countryObj && countryObj.states[stateProvince]) {
+      const foundCity = countryObj.states[stateProvince].cities.find((c) => c.name === newCity);
+      if (foundCity) {
+        setPostalCode(foundCity.postalCode);
+      }
+    }
+  };
+
+  // Helper for image file reading
+  const handleFileRead = (file: File | undefined, cb: (dataUrl: string) => void) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => cb(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
   // Add Document Handler
   const handleAddDocument = () => {
     if (!docNumber.trim()) return;
@@ -611,10 +946,14 @@ export function ExtFormClient({ token }: { token: string }) {
       id: Date.now().toString(),
       type: docType,
       number: docNumber.trim(),
+      frontImage: docFrontImage || undefined,
+      backImage: docBackImage || undefined,
       fileName: `${docType.toLowerCase().replace(/\s+/g, "_")}.pdf`,
     };
     setDocuments((prev) => [...prev, newDoc]);
     setDocNumber("");
+    setDocFrontImage(null);
+    setDocBackImage(null);
   };
 
   const handleRemoveDoc = (id: string) => {
@@ -634,18 +973,6 @@ export function ExtFormClient({ token }: { token: string }) {
 
   const handleRemoveContract = (id: string) => {
     setContracts((prev) => prev.filter((c) => c.id !== id));
-  };
-
-  // Photo Upload Handler
-  const handlePhotoFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setPhotoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
   };
 
   // Final Submit
@@ -693,7 +1020,16 @@ export function ExtFormClient({ token }: { token: string }) {
   };
 
   const dir = LANGS.find((l) => l.code === lang)?.dir ?? "ltr";
-  const isRtl = dir === "rtl";
+
+  const isCnic = docType === "CNIC" || docType === "ID Card";
+  const isPassport = docType === "Passport";
+
+  const currentCountryObj = LOCATION_HIERARCHY[country];
+  const availableStates = currentCountryObj ? Object.keys(currentCountryObj.states) : [];
+  const availableCities =
+    currentCountryObj && stateProvince && currentCountryObj.states[stateProvince]
+      ? currentCountryObj.states[stateProvince].cities
+      : [];
 
   return (
     <div
@@ -702,19 +1038,51 @@ export function ExtFormClient({ token }: { token: string }) {
     >
       {/* Hidden File Inputs for Photo Upload */}
       <input
-        ref={fileInputRef}
+        ref={photoInputRef}
         type="file"
         accept="image/png,image/jpeg,image/webp"
         className="hidden"
-        onChange={handlePhotoFile}
+        onChange={(e) => handleFileRead(e.target.files?.[0], setPhotoPreview)}
       />
       <input
-        ref={cameraInputRef}
+        ref={photoCameraRef}
         type="file"
         accept="image/*"
         capture="user"
         className="hidden"
-        onChange={handlePhotoFile}
+        onChange={(e) => handleFileRead(e.target.files?.[0], setPhotoPreview)}
+      />
+
+      {/* Hidden File Inputs for Document Front/Back */}
+      <input
+        ref={frontInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,application/pdf"
+        className="hidden"
+        onChange={(e) => handleFileRead(e.target.files?.[0], setDocFrontImage)}
+      />
+      <input
+        ref={frontCameraRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={(e) => handleFileRead(e.target.files?.[0], setDocFrontImage)}
+      />
+      <input
+        ref={backInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,application/pdf"
+        className="hidden"
+        onChange={(e) => handleFileRead(e.target.files?.[0], setDocBackImage)}
+      />
+      <input
+        ref={backCameraRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={(e) => handleFileRead(e.target.files?.[0], setDocBackImage)}
       />
 
       {/* Main Container Card */}
@@ -740,7 +1108,7 @@ export function ExtFormClient({ token }: { token: string }) {
           <button
             type="button"
             onClick={() => setLangModalOpen(true)}
-            className="h-9 w-9 rounded-full border border-slate-200 bg-slate-50 flex items-center justify-center text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-xs"
+            className="h-9 w-9 rounded-full border border-slate-200 bg-slate-50 flex items-center justify-center text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-xs cursor-pointer"
             title="Change Language"
           >
             <Globe className="h-4 w-4" />
@@ -749,20 +1117,19 @@ export function ExtFormClient({ token }: { token: string }) {
 
         {/* Language Modal */}
         {langModalOpen && (
-          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-            <div className="w-full max-w-xs rounded-2xl bg-white p-5 shadow-2xl border border-slate-100 space-y-3">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-                  Select Language
-                </span>
+          <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl max-w-xs w-full border border-slate-200 p-5 shadow-2xl space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 className="font-bold text-slate-900 text-sm">Select Language / زبان منتخب کریں</h3>
                 <button
                   type="button"
                   onClick={() => setLangModalOpen(false)}
-                  className="text-slate-400 hover:text-slate-700"
+                  className="h-7 w-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 cursor-pointer"
                 >
-                  <X className="h-4 w-4" />
+                  <X size={14} />
                 </button>
               </div>
+
               <div className="space-y-1.5">
                 {LANGS.map((item) => (
                   <button
@@ -772,28 +1139,18 @@ export function ExtFormClient({ token }: { token: string }) {
                       setLang(item.code);
                       setLangModalOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                    className={`w-full flex items-center justify-between p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                       lang === item.code
-                        ? "bg-indigo-50 text-indigo-700 border border-indigo-200"
-                        : "bg-slate-50 text-slate-700 hover:bg-slate-100"
+                        ? "bg-indigo-50 border-indigo-300 text-indigo-700"
+                        : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
                     }`}
                   >
                     <span>{item.nativeName}</span>
-                    <span className="text-[11px] text-slate-400 font-medium">{item.label}</span>
+                    <span className="text-[11px] text-slate-400 font-mono">({item.label})</span>
                   </button>
                 ))}
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Loading State */}
-        {initialLoading && (
-          <div className="py-16 text-center space-y-3">
-            <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 animate-pulse">
-              <Sparkles className="h-6 w-6" />
-            </div>
-            <p className="text-xs font-bold text-slate-500">{t("loading", lang)}</p>
           </div>
         )}
 
@@ -808,7 +1165,7 @@ export function ExtFormClient({ token }: { token: string }) {
 
         {/* Submission Success */}
         {!initialLoading && submitted && (
-          <div className="rounded-3xl border border-emerald-100 bg-emerald-50/70 p-8 text-center space-y-3">
+          <div className="rounded-3xl border border-emerald-100 bg-emerald-50/70 p-8 text-center space-y-3 animate-in fade-in duration-300">
             <div className="h-16 w-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-xs">
               <CheckCircle2 className="h-9 w-9" />
             </div>
@@ -824,7 +1181,6 @@ export function ExtFormClient({ token }: { token: string }) {
           <>
             {/* 4-Step Stepper Progress Bar */}
             <div className="relative flex items-center justify-between px-2 pt-1 pb-3">
-              {/* Connector Line */}
               <div className="absolute left-6 right-6 top-4 -translate-y-1/2 h-0.5 bg-slate-200 z-0">
                 <div
                   className="h-full bg-indigo-600 transition-all duration-300"
@@ -837,7 +1193,7 @@ export function ExtFormClient({ token }: { token: string }) {
                 <button
                   type="button"
                   onClick={() => setCurrentStep(1)}
-                  className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                  className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold transition-all cursor-pointer ${
                     currentStep > 1
                       ? "bg-emerald-500 text-white shadow-xs"
                       : currentStep === 1
@@ -857,7 +1213,7 @@ export function ExtFormClient({ token }: { token: string }) {
                 <button
                   type="button"
                   onClick={() => setCurrentStep(2)}
-                  className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                  className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold transition-all cursor-pointer ${
                     currentStep > 2
                       ? "bg-emerald-500 text-white shadow-xs"
                       : currentStep === 2
@@ -877,7 +1233,7 @@ export function ExtFormClient({ token }: { token: string }) {
                 <button
                   type="button"
                   onClick={() => setCurrentStep(3)}
-                  className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                  className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold transition-all cursor-pointer ${
                     currentStep > 3
                       ? "bg-emerald-500 text-white shadow-xs"
                       : currentStep === 3
@@ -897,7 +1253,7 @@ export function ExtFormClient({ token }: { token: string }) {
                 <button
                   type="button"
                   onClick={() => setCurrentStep(4)}
-                  className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                  className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold transition-all cursor-pointer ${
                     currentStep === 4
                       ? "bg-indigo-600 text-white shadow-md ring-4 ring-indigo-100"
                       : "bg-slate-200 text-slate-600"
@@ -911,7 +1267,9 @@ export function ExtFormClient({ token }: { token: string }) {
               </div>
             </div>
 
-            {/* STEP 1: PERSONAL INFO, DOCUMENTS & CONTRACTS */}
+            {/* ══════════════════════════════════════════════════════════════════
+                STEP 1: PERSONAL INFO, CNIC FRONT/BACK & CONTRACTS
+               ══════════════════════════════════════════════════════════════════ */}
             {currentStep === 1 && (
               <div className="space-y-6 animate-in fade-in duration-150">
                 {/* 1. Personal Information Card */}
@@ -969,7 +1327,7 @@ export function ExtFormClient({ token }: { token: string }) {
 
                     <div>
                       <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                        {t("fatherName", lang)} *
+                        {t("fatherName", lang)}
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none text-slate-400">
@@ -1026,7 +1384,7 @@ export function ExtFormClient({ token }: { token: string }) {
                   </div>
                 </div>
 
-                {/* 2. Documents Section */}
+                {/* 2. Documents Section (Front & Back for CNIC / Passport Pages) */}
                 <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 sm:p-5 space-y-3.5">
                   <div className="flex items-center gap-2">
                     <div className="h-6 w-6 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
@@ -1048,14 +1406,13 @@ export function ExtFormClient({ token }: { token: string }) {
                       <select
                         value={docType}
                         onChange={(e) => setDocType(e.target.value)}
-                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600 transition-all font-medium"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600 transition-all font-medium cursor-pointer"
                       >
+                        <option value="CNIC">CNIC / National ID Card</option>
                         <option value="Passport">Passport</option>
-                        <option value="CNIC">CNIC / National ID</option>
                         <option value="ID Card">ID Card</option>
                         <option value="Driving License">Driving License</option>
-                        <option value="Visa">Visa</option>
-                        <option value="Photo">Photo</option>
+                        <option value="Trade License">Trade / Tax License</option>
                         <option value="Other">Other Document</option>
                       </select>
                     </div>
@@ -1078,33 +1435,101 @@ export function ExtFormClient({ token }: { token: string }) {
                       </div>
                     </div>
 
-                    {/* Upload Box */}
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                        {t("uploadDocument", lang)} *
-                      </label>
-                      <div className="flex items-center justify-between rounded-xl border border-dashed border-slate-300 bg-white p-3 hover:border-indigo-400 transition-all">
-                        <div className="flex items-center gap-2.5">
-                          <UploadCloud className="h-5 w-5 text-indigo-500" />
-                          <div>
-                            <div className="text-xs font-bold text-slate-700">Upload file</div>
-                            <div className="text-[10px] text-slate-400">{t("uploadHelp", lang)}</div>
-                          </div>
+                    {/* Dual Front & Back Upload Boxes */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                      {/* Front Side Upload */}
+                      <div className="border border-slate-200 rounded-xl p-3 bg-white space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-slate-700">
+                            {isPassport ? t("passportMainPage", lang) : t("frontSide", lang)}
+                          </span>
+                          {docFrontImage && (
+                            <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-0.5">
+                              <CheckCircle2 size={11} /> Attached
+                            </span>
+                          )}
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="h-8 w-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-100 transition-all"
-                        >
-                          <Camera className="h-4 w-4" />
-                        </button>
+
+                        {docFrontImage ? (
+                          <div className="relative rounded-lg overflow-hidden border border-slate-200 h-24">
+                            <img src={docFrontImage} alt="Front Preview" className="h-full w-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => setDocFrontImage(null)}
+                              className="absolute top-1 right-1 h-5 w-5 bg-rose-600 text-white rounded-full flex items-center justify-center cursor-pointer shadow-xs"
+                            >
+                              <X size={10} />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => frontCameraRef.current?.click()}
+                              className="flex-1 py-2 px-2 bg-indigo-50 text-indigo-700 rounded-lg text-[11px] font-bold border border-indigo-100 flex items-center justify-center gap-1.5 hover:bg-indigo-100 cursor-pointer"
+                            >
+                              <Camera size={13} /> {t("cameraBtn", lang)}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => frontInputRef.current?.click()}
+                              className="flex-1 py-2 px-2 bg-slate-50 text-slate-700 rounded-lg text-[11px] font-bold border border-slate-200 flex items-center justify-center gap-1.5 hover:bg-slate-100 cursor-pointer"
+                            >
+                              <UploadCloud size={13} /> {t("galleryBtn", lang)}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Back Side Upload */}
+                      <div className="border border-slate-200 rounded-xl p-3 bg-white space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-slate-700">
+                            {isPassport ? t("passportVisaPage", lang) : t("backSide", lang)}
+                          </span>
+                          {docBackImage && (
+                            <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-0.5">
+                              <CheckCircle2 size={11} /> Attached
+                            </span>
+                          )}
+                        </div>
+
+                        {docBackImage ? (
+                          <div className="relative rounded-lg overflow-hidden border border-slate-200 h-24">
+                            <img src={docBackImage} alt="Back Preview" className="h-full w-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => setDocBackImage(null)}
+                              className="absolute top-1 right-1 h-5 w-5 bg-rose-600 text-white rounded-full flex items-center justify-center cursor-pointer shadow-xs"
+                            >
+                              <X size={10} />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => backCameraRef.current?.click()}
+                              className="flex-1 py-2 px-2 bg-indigo-50 text-indigo-700 rounded-lg text-[11px] font-bold border border-indigo-100 flex items-center justify-center gap-1.5 hover:bg-indigo-100 cursor-pointer"
+                            >
+                              <Camera size={13} /> {t("cameraBtn", lang)}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => backInputRef.current?.click()}
+                              className="flex-1 py-2 px-2 bg-slate-50 text-slate-700 rounded-lg text-[11px] font-bold border border-slate-200 flex items-center justify-center gap-1.5 hover:bg-slate-100 cursor-pointer"
+                            >
+                              <UploadCloud size={13} /> {t("galleryBtn", lang)}
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     <button
                       type="button"
                       onClick={handleAddDocument}
-                      className="w-full rounded-xl bg-indigo-600 hover:bg-indigo-700 py-2.5 text-xs font-bold text-white shadow-xs transition-all flex items-center justify-center gap-1.5"
+                      className="w-full rounded-xl bg-indigo-600 hover:bg-indigo-700 py-2.5 text-xs font-bold text-white shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer mt-2"
                     >
                       <Plus className="h-3.5 w-3.5" />
                       <span>{t("addDocumentBtn", lang)}</span>
@@ -1115,46 +1540,48 @@ export function ExtFormClient({ token }: { token: string }) {
                   {documents.length > 0 && (
                     <div className="space-y-2 pt-2 border-t border-slate-200">
                       <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                        {t("addedDocuments", lang)}
+                        {t("addedDocuments", lang)} ({documents.length})
                       </div>
-                      <div className="space-y-1.5">
+                      <div className="space-y-2">
                         {documents.map((doc) => (
                           <div
                             key={doc.id}
-                            className="flex items-center justify-between rounded-xl border border-slate-100 bg-white p-2.5 shadow-2xs"
+                            className="rounded-xl border border-slate-100 bg-white p-3 shadow-2xs space-y-2"
                           >
-                            <div className="flex items-center gap-2.5">
-                              <div className="h-7 w-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                                <FileCheck className="h-3.5 w-3.5" />
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className="h-7 w-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                  <FileCheck className="h-3.5 w-3.5" />
+                                </div>
+                                <div>
+                                  <div className="text-xs font-bold text-slate-800">{doc.type}</div>
+                                  <div className="text-[10px] text-slate-400 font-mono">{doc.number}</div>
+                                </div>
                               </div>
-                              <div>
-                                <div className="text-xs font-bold text-slate-800">{doc.type}</div>
-                                <div className="text-[10px] text-slate-400 font-mono">{doc.number}</div>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <button
-                                type="button"
-                                className="p-1 rounded-md text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
-                                title="Download / View"
-                              >
-                                <Download className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                className="p-1 rounded-md text-slate-400 hover:text-blue-600 hover:bg-blue-50"
-                                title="Edit"
-                              >
-                                <Edit3 className="h-3.5 w-3.5" />
-                              </button>
                               <button
                                 type="button"
                                 onClick={() => handleRemoveDoc(doc.id)}
-                                className="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50"
+                                className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
                                 title="Delete"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
                               </button>
+                            </div>
+
+                            {/* Previews */}
+                            <div className="grid grid-cols-2 gap-2 pt-1">
+                              {doc.frontImage && (
+                                <div className="border border-slate-200 rounded-lg p-1.5 bg-slate-50">
+                                  <span className="text-[9px] font-bold text-slate-500 uppercase block mb-1">Front</span>
+                                  <img src={doc.frontImage} alt="Front" className="h-16 w-full object-cover rounded" />
+                                </div>
+                              )}
+                              {doc.backImage && (
+                                <div className="border border-slate-200 rounded-lg p-1.5 bg-slate-50">
+                                  <span className="text-[9px] font-bold text-slate-500 uppercase block mb-1">Back</span>
+                                  <img src={doc.backImage} alt="Back" className="h-16 w-full object-cover rounded" />
+                                </div>
+                              )}
                             </div>
                           </div>
                         ))}
@@ -1185,7 +1612,7 @@ export function ExtFormClient({ token }: { token: string }) {
                       <select
                         value={contractType}
                         onChange={(e) => setContractType(e.target.value)}
-                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600 transition-all font-medium"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600 transition-all font-medium cursor-pointer"
                       >
                         <option value="Employment Contract">Employment Contract</option>
                         <option value="Service Agreement">Service Agreement</option>
@@ -1197,7 +1624,7 @@ export function ExtFormClient({ token }: { token: string }) {
                     <button
                       type="button"
                       onClick={handleAddContract}
-                      className="w-full rounded-xl bg-indigo-600 hover:bg-indigo-700 py-2.5 text-xs font-bold text-white shadow-xs transition-all flex items-center justify-center gap-1.5"
+                      className="w-full rounded-xl bg-indigo-600 hover:bg-indigo-700 py-2.5 text-xs font-bold text-white shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <Plus className="h-3.5 w-3.5" />
                       <span>{t("addContractBtn", lang)}</span>
@@ -1224,27 +1651,13 @@ export function ExtFormClient({ token }: { token: string }) {
                                 <div className="text-[10px] text-slate-400 font-mono">Contract No: {cnt.contractNo}</div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-1">
-                              <button
-                                type="button"
-                                className="p-1 rounded-md text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
-                              >
-                                <Eye className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                className="p-1 rounded-md text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
-                              >
-                                <Download className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveContract(cnt.id)}
-                                className="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
-                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveContract(cnt.id)}
+                              className="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
                           </div>
                         ))}
                       </div>
@@ -1256,14 +1669,16 @@ export function ExtFormClient({ token }: { token: string }) {
                 <button
                   type="button"
                   onClick={() => setCurrentStep(2)}
-                  className="w-full rounded-2xl bg-indigo-600 hover:bg-indigo-700 py-3.5 text-xs font-bold text-white shadow-md shadow-indigo-200 transition-all flex items-center justify-center gap-2"
+                  className="w-full rounded-2xl bg-indigo-600 hover:bg-indigo-700 py-3.5 text-xs font-bold text-white shadow-md shadow-indigo-200 transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <span>{t("nextAddressBtn", lang)}</span>
                 </button>
               </div>
             )}
 
-            {/* STEP 2: ADDRESS INFORMATION */}
+            {/* ══════════════════════════════════════════════════════════════════
+                STEP 2: ADDRESS INFORMATION (DYNAMIC CASCADE HIERARCHY)
+               ══════════════════════════════════════════════════════════════════ */}
             {currentStep === 2 && (
               <div className="space-y-6 animate-in fade-in duration-150">
                 <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 sm:p-5 space-y-3.5">
@@ -1280,60 +1695,70 @@ export function ExtFormClient({ token }: { token: string }) {
                   </div>
 
                   <div className="space-y-3">
+                    {/* 1. Country Dropdown */}
                     <div>
                       <label className="block text-[11px] font-bold text-slate-600 mb-1">
                         {t("country", lang)} *
                       </label>
                       <div className="relative">
-                        <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none text-slate-400">
-                          <Globe className="h-3.5 w-3.5" />
-                        </div>
-                        <input
-                          type="text"
+                        <select
                           value={country}
-                          onChange={(e) => setCountry(e.target.value)}
-                          placeholder={t("selectCountry", lang)}
-                          className="w-full rounded-xl border border-slate-200 bg-white ps-9 pe-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 transition-all font-medium"
-                        />
+                          onChange={(e) => handleCountryChange(e.target.value)}
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-900 outline-none focus:border-indigo-600 transition-all font-medium appearance-none cursor-pointer"
+                        >
+                          {Object.keys(LOCATION_HIERARCHY).map((cName) => (
+                            <option key={cName} value={cName}>
+                              {cName} ({LOCATION_HIERARCHY[cName].code})
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                       </div>
                     </div>
 
+                    {/* 2. State / Province Dropdown */}
                     <div>
                       <label className="block text-[11px] font-bold text-slate-600 mb-1">
                         {t("stateProvince", lang)} *
                       </label>
                       <div className="relative">
-                        <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none text-slate-400">
-                          <Layers className="h-3.5 w-3.5" />
-                        </div>
-                        <input
-                          type="text"
+                        <select
                           value={stateProvince}
-                          onChange={(e) => setStateProvince(e.target.value)}
-                          placeholder={t("selectState", lang)}
-                          className="w-full rounded-xl border border-slate-200 bg-white ps-9 pe-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 transition-all font-medium"
-                        />
+                          onChange={(e) => handleStateChange(e.target.value)}
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-900 outline-none focus:border-indigo-600 transition-all font-medium appearance-none cursor-pointer"
+                        >
+                          {availableStates.map((st) => (
+                            <option key={st} value={st}>
+                              {st}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                       </div>
                     </div>
 
+                    {/* 3. City Dropdown */}
                     <div>
                       <label className="block text-[11px] font-bold text-slate-600 mb-1">
                         {t("city", lang)} *
                       </label>
                       <div className="relative">
-                        <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none text-slate-400">
-                          <Building className="h-3.5 w-3.5" />
-                        </div>
-                        <input
-                          type="text"
+                        <select
                           value={city}
-                          onChange={(e) => setCity(e.target.value)}
-                          placeholder={t("selectCity", lang)}
-                          className="w-full rounded-xl border border-slate-200 bg-white ps-9 pe-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 transition-all font-medium"
-                        />
+                          onChange={(e) => handleCityChange(e.target.value)}
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-900 outline-none focus:border-indigo-600 transition-all font-medium appearance-none cursor-pointer"
+                        >
+                          {availableCities.map((ct) => (
+                            <option key={ct.name} value={ct.name}>
+                              {ct.name} ({ct.cityCode})
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                       </div>
                     </div>
 
+                    {/* 4. Postal / City Code (Auto-populated) */}
                     <div>
                       <label className="block text-[11px] font-bold text-slate-600 mb-1">
                         {t("postalCode", lang)}
@@ -1347,11 +1772,12 @@ export function ExtFormClient({ token }: { token: string }) {
                           value={postalCode}
                           onChange={(e) => setPostalCode(e.target.value)}
                           placeholder={t("postalCodePh", lang)}
-                          className="w-full rounded-xl border border-slate-200 bg-white ps-9 pe-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 transition-all font-medium"
+                          className="w-full rounded-xl border border-slate-200 bg-slate-50 ps-9 pe-3 py-2.5 text-xs text-slate-900 outline-none focus:border-indigo-600 transition-all font-mono font-bold"
                         />
                       </div>
                     </div>
 
+                    {/* 5. Full Address */}
                     <div>
                       <label className="block text-[11px] font-bold text-slate-600 mb-1">
                         {t("fullAddress", lang)} *
@@ -1365,7 +1791,7 @@ export function ExtFormClient({ token }: { token: string }) {
                           value={fullAddress}
                           onChange={(e) => setFullAddress(e.target.value)}
                           placeholder={t("fullAddressPh", lang)}
-                          className="w-full rounded-xl border border-slate-200 bg-white ps-9 pe-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 transition-all font-medium resize-none"
+                          className="w-full rounded-xl border border-slate-200 bg-white ps-9 pe-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-600 transition-all font-medium resize-none"
                         />
                       </div>
                     </div>
@@ -1377,14 +1803,14 @@ export function ExtFormClient({ token }: { token: string }) {
                   <button
                     type="button"
                     onClick={() => setCurrentStep(1)}
-                    className="w-full rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 py-3 text-xs font-bold text-slate-700 transition-all flex items-center justify-center gap-1.5"
+                    className="w-full rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 py-3 text-xs font-bold text-slate-700 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <span>{t("backBtn", lang)}</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setCurrentStep(3)}
-                    className="w-full rounded-2xl bg-indigo-600 hover:bg-indigo-700 py-3 text-xs font-bold text-white shadow-md shadow-indigo-200 transition-all flex items-center justify-center gap-1.5"
+                    className="w-full rounded-2xl bg-indigo-600 hover:bg-indigo-700 py-3 text-xs font-bold text-white shadow-md shadow-indigo-200 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <span>{t("nextReviewBtn", lang)}</span>
                   </button>
@@ -1392,7 +1818,9 @@ export function ExtFormClient({ token }: { token: string }) {
               </div>
             )}
 
-            {/* STEP 3: REVIEW YOUR INFORMATION */}
+            {/* ══════════════════════════════════════════════════════════════════
+                STEP 3: REVIEW YOUR INFORMATION
+               ══════════════════════════════════════════════════════════════════ */}
             {currentStep === 3 && (
               <div className="space-y-4 animate-in fade-in duration-150">
                 <div className="text-center space-y-1 mb-2">
@@ -1410,7 +1838,7 @@ export function ExtFormClient({ token }: { token: string }) {
                     <button
                       type="button"
                       onClick={() => setCurrentStep(1)}
-                      className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
+                      className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
                     >
                       <Edit3 className="h-3.5 w-3.5" />
                       <span>{t("editBtn", lang)}</span>
@@ -1448,49 +1876,33 @@ export function ExtFormClient({ token }: { token: string }) {
                     <button
                       type="button"
                       onClick={() => setCurrentStep(1)}
-                      className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
+                      className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
                     >
                       <Edit3 className="h-3.5 w-3.5" />
                       <span>{t("editBtn", lang)}</span>
                     </button>
                   </div>
-                  <div className="text-xs space-y-1.5 pt-1">
+                  <div className="text-xs space-y-2.5 pt-1">
                     {documents.map((d) => (
-                      <div key={d.id} className="flex justify-between">
-                        <span className="text-slate-500 font-semibold">{d.type}:</span>
-                        <span className="font-mono font-bold text-slate-800">{d.number}</span>
+                      <div key={d.id} className="border border-slate-100 rounded-xl p-2 bg-slate-50 space-y-1.5">
+                        <div className="flex justify-between">
+                          <span className="text-slate-700 font-bold">{d.type}:</span>
+                          <span className="font-mono font-bold text-slate-900">{d.number}</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          {d.frontImage && (
+                            <img src={d.frontImage} alt="Front" className="h-14 w-full object-cover rounded border border-slate-200" />
+                          )}
+                          {d.backImage && (
+                            <img src={d.backImage} alt="Back" className="h-14 w-full object-cover rounded border border-slate-200" />
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* 3. Contracts Card */}
-                <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-2 shadow-2xs">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                    <div className="flex items-center gap-2 text-xs font-black text-slate-800">
-                      <Briefcase className="h-4 w-4 text-indigo-600" />
-                      <span>{t("contractsTitle", lang)}</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setCurrentStep(1)}
-                      className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
-                    >
-                      <Edit3 className="h-3.5 w-3.5" />
-                      <span>{t("editBtn", lang)}</span>
-                    </button>
-                  </div>
-                  <div className="text-xs space-y-1.5 pt-1">
-                    {contracts.map((c) => (
-                      <div key={c.id} className="flex justify-between">
-                        <span className="font-bold text-slate-900">{c.type}</span>
-                        <span className="font-mono text-slate-500">{c.contractNo}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 4. Address Information Card */}
+                {/* 3. Address Information Card */}
                 <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-2 shadow-2xs">
                   <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                     <div className="flex items-center gap-2 text-xs font-black text-slate-800">
@@ -1500,7 +1912,7 @@ export function ExtFormClient({ token }: { token: string }) {
                     <button
                       type="button"
                       onClick={() => setCurrentStep(2)}
-                      className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
+                      className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
                     >
                       <Edit3 className="h-3.5 w-3.5" />
                       <span>{t("editBtn", lang)}</span>
@@ -1525,7 +1937,7 @@ export function ExtFormClient({ token }: { token: string }) {
                     </div>
                     <div className="flex justify-between text-slate-700">
                       <span className="text-slate-500 font-semibold">{t("fullAddress", lang)}:</span>
-                      <span className="max-w-[260px] text-end font-medium">{fullAddress}</span>
+                      <span className="max-w-[260px] text-end font-medium">{fullAddress || "—"}</span>
                     </div>
                   </div>
                 </div>
@@ -1541,14 +1953,14 @@ export function ExtFormClient({ token }: { token: string }) {
                   <button
                     type="button"
                     onClick={() => setCurrentStep(4)}
-                    className="w-full rounded-2xl bg-indigo-600 hover:bg-indigo-700 py-3.5 text-xs font-bold text-white shadow-md shadow-indigo-200 transition-all flex items-center justify-center gap-2"
+                    className="w-full rounded-2xl bg-indigo-600 hover:bg-indigo-700 py-3.5 text-xs font-bold text-white shadow-md shadow-indigo-200 transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <span>{t("nextPhotoSubmitBtn", lang)}</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setCurrentStep(2)}
-                    className="w-full rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 py-3 text-xs font-bold text-slate-700 transition-all flex items-center justify-center gap-1.5"
+                    className="w-full rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 py-3 text-xs font-bold text-slate-700 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <span>{t("backBtn", lang)}</span>
                   </button>
@@ -1556,7 +1968,9 @@ export function ExtFormClient({ token }: { token: string }) {
               </div>
             )}
 
-            {/* STEP 4: UPLOAD YOUR PHOTO & SUBMIT */}
+            {/* ══════════════════════════════════════════════════════════════════
+                STEP 4: UPLOAD YOUR PHOTO & SUBMIT
+               ══════════════════════════════════════════════════════════════════ */}
             {currentStep === 4 && (
               <div className="space-y-6 animate-in fade-in duration-150">
                 <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-6 text-center space-y-4">
@@ -1568,7 +1982,7 @@ export function ExtFormClient({ token }: { token: string }) {
                   </div>
                   <p className="text-xs text-slate-500">{t("uploadPhotoSub", lang)}</p>
 
-                  {/* Circular Avatar Placeholder / Preview */}
+                  {/* Circular Avatar Preview */}
                   <div className="relative mx-auto h-32 w-32 rounded-full border-4 border-white bg-slate-200 shadow-md flex items-center justify-center overflow-hidden">
                     {photoPreview ? (
                       <img src={photoPreview} alt="Uploaded Photo" className="h-full w-full object-cover" />
@@ -1581,16 +1995,16 @@ export function ExtFormClient({ token }: { token: string }) {
                   <div className="grid grid-cols-2 gap-3 pt-2">
                     <button
                       type="button"
-                      onClick={() => cameraInputRef.current?.click()}
-                      className="rounded-xl border border-slate-200 bg-white py-2.5 px-3 text-xs font-bold text-slate-700 shadow-xs hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200 transition-all flex items-center justify-center gap-2"
+                      onClick={() => photoCameraRef.current?.click()}
+                      className="rounded-xl border border-slate-200 bg-white py-2.5 px-3 text-xs font-bold text-slate-700 shadow-xs hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200 transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <Camera className="h-4 w-4 text-indigo-600" />
                       <span>{t("cameraBtn", lang)}</span>
                     </button>
                     <button
                       type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="rounded-xl border border-slate-200 bg-white py-2.5 px-3 text-xs font-bold text-slate-700 shadow-xs hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200 transition-all flex items-center justify-center gap-2"
+                      onClick={() => photoInputRef.current?.click()}
+                      className="rounded-xl border border-slate-200 bg-white py-2.5 px-3 text-xs font-bold text-slate-700 shadow-xs hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200 transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <ImageIcon className="h-4 w-4 text-indigo-600" />
                       <span>{t("galleryBtn", lang)}</span>
@@ -1613,7 +2027,7 @@ export function ExtFormClient({ token }: { token: string }) {
                     type="button"
                     disabled={submitting}
                     onClick={handleFinalSubmit}
-                    className="w-full rounded-2xl bg-indigo-600 hover:bg-indigo-700 py-3.5 text-xs font-bold text-white shadow-lg shadow-indigo-300 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="w-full rounded-2xl bg-indigo-600 hover:bg-indigo-700 py-3.5 text-xs font-bold text-white shadow-lg shadow-indigo-300 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
                   >
                     <Send className="h-4 w-4" />
                     <span>{submitting ? t("loading", lang) : t("submitFormBtn", lang)}</span>
@@ -1622,7 +2036,7 @@ export function ExtFormClient({ token }: { token: string }) {
                   <button
                     type="button"
                     onClick={() => setCurrentStep(3)}
-                    className="w-full rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 py-3 text-xs font-bold text-slate-700 transition-all flex items-center justify-center gap-1.5"
+                    className="w-full rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 py-3 text-xs font-bold text-slate-700 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <span>{t("backBtn", lang)}</span>
                   </button>
