@@ -72,7 +72,7 @@ export type ClassificationResult = {
 export type ExtractionResult = {
   fields: FieldCandidate[];
   lineItems: LineItemCandidate[];
-  summary: Record<string, unknown>;
+  summary: Record<string, string | number | null>;
 };
 
 export type RegistryDocType = {

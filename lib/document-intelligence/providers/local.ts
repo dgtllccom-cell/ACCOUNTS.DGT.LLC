@@ -38,19 +38,44 @@ function detectLanguage(text: string): string | null {
   return "en";
 }
 
-async function ingestPdf(buffer: Buffer): Promise<{ pages: OcrPage[]; fullText: string; isDigital: boolean }> {
+async function ingestPdf(buffer: Buffer): Promise<{ pages: OcrPage[]; fullText: string; isDigital: boolean; ocrUsed: boolean; meanConfidence: number | null }> {
   const { PDFParse } = await import("pdf-parse");
   const parser = new PDFParse({ data: new Uint8Array(buffer) });
   try {
     const res = await parser.getText();
-    const pages: OcrPage[] = (res.pages ?? []).map((p: any, i: number) => ({
+    let pages: OcrPage[] = (res.pages ?? []).map((p: any, i: number) => ({
       pageNumber: i + 1,
       text: String(p.text ?? ""),
     }));
-    const fullText = pages.map((p) => p.text).join("\n\n").trim();
-    // digital if there is a meaningful text layer
+    let fullText = pages.map((p) => p.text).join("\n\n").trim();
     const isDigital = fullText.replace(/\s/g, "").length > 40;
-    return { pages: pages.length ? pages : [{ pageNumber: 1, text: fullText }], fullText, isDigital };
+    if (isDigital) {
+      return { pages: pages.length ? pages : [{ pageNumber: 1, text: fullText }], fullText, isDigital: true, ocrUsed: false, meanConfidence: null };
+    }
+    // Scanned PDF (no text layer) → render each page to an image and OCR it.
+    const maxPages = Number(process.env.DOC_INTAKE_MAX_PAGES || 60);
+    const confs: number[] = [];
+    const ocrPages: OcrPage[] = [];
+    let pageNo = 0;
+    while (pageNo < maxPages) {
+      pageNo += 1;
+      let shot: { buffer?: Buffer } | Buffer | null = null;
+      try {
+        shot = await (parser as any).getScreenshot({ pages: [pageNo], scale: 2.0 });
+      } catch { break; }
+      const imgBuf: Buffer | null = Buffer.isBuffer(shot) ? shot : (shot as any)?.pages?.[0]?.buffer ?? (shot as any)?.buffer ?? null;
+      if (!imgBuf) break;
+      const pre = await preprocessImage(imgBuf, "image/png");
+      const r = await ocrImage(pre);
+      confs.push(r.meanConfidence);
+      ocrPages.push({ pageNumber: pageNo, text: r.text, wordBoxes: r.words });
+    }
+    if (ocrPages.length) {
+      pages = ocrPages;
+      fullText = ocrPages.map((p) => p.text).join("\n\n").trim();
+      return { pages, fullText, isDigital: false, ocrUsed: true, meanConfidence: confs.length ? confs.reduce((a, b) => a + b, 0) / confs.length : 0 };
+    }
+    return { pages: pages.length ? pages : [{ pageNumber: 1, text: "" }], fullText, isDigital: false, ocrUsed: false, meanConfidence: 0 };
   } finally {
     await parser.destroy?.();
   }
@@ -70,10 +95,16 @@ async function preprocessImage(buffer: Buffer, mime: string): Promise<Buffer> {
 
 async function ocrImage(buffer: Buffer): Promise<{ text: string; meanConfidence: number; words: OcrPage["wordBoxes"] }> {
   const { createWorker, PSM } = await import("tesseract.js");
-  const opts: Record<string, unknown> = {};
+  const opts: Record<string, unknown> = { cachePath: VENDOR_DIR };
   if (hasVendor("tesseract-core.wasm")) opts.corePath = VENDOR_DIR;
-  if (fs.existsSync(path.join(VENDOR_DIR, "eng.traineddata")) || fs.existsSync(path.join(VENDOR_DIR, "eng.traineddata.gz"))) {
+  // A vendored, UNcompressed <lang>.traineddata → point langPath there with gzip:false.
+  // A vendored <lang>.traineddata.gz → langPath + gzip stays true (default).
+  const firstLang = OCR_LANGS.split("+")[0];
+  if (fs.existsSync(path.join(VENDOR_DIR, `${firstLang}.traineddata.gz`))) {
     opts.langPath = VENDOR_DIR;
+  } else if (fs.existsSync(path.join(VENDOR_DIR, `${firstLang}.traineddata`))) {
+    opts.langPath = VENDOR_DIR;
+    opts.gzip = false;
   }
   const worker = await createWorker(OCR_LANGS, 1, opts as never);
   try {
@@ -99,19 +130,16 @@ export class LocalDocumentAiProvider implements DocumentAiProvider {
     const isPdf = mime.includes("pdf") || input.filename.toLowerCase().endsWith(".pdf");
 
     if (isPdf) {
-      const { pages, fullText, isDigital } = await ingestPdf(input.buffer);
-      if (isDigital) {
-        return {
-          engine: "pdf-parse", isDigital: true, pageCount: pages.length, fullText, pages,
-          languageDetected: detectLanguage(fullText), ocrMs: Date.now() - started, meanConfidence: null,
-        };
-      }
-      // scanned PDF with no text layer — OCR is not run on PDF pages directly here
-      // (needs pdf→image raster). Return the (empty) text so the caller routes to
-      // QVC "document unreadable" unless an image is provided instead.
+      const { pages, fullText, isDigital, ocrUsed, meanConfidence } = await ingestPdf(input.buffer);
       return {
-        engine: "pdf-parse(no-text-layer)", isDigital: false, pageCount: pages.length,
-        fullText, pages, languageDetected: null, ocrMs: Date.now() - started, meanConfidence: 0,
+        engine: isDigital ? "pdf-parse" : ocrUsed ? `pdf-parse+tesseract.js@${OCR_LANGS}` : "pdf-parse(no-text-layer)",
+        isDigital,
+        pageCount: pages.length,
+        fullText,
+        pages,
+        languageDetected: detectLanguage(fullText),
+        ocrMs: Date.now() - started,
+        meanConfidence: isDigital ? null : meanConfidence,
       };
     }
 
@@ -132,7 +160,7 @@ export class LocalDocumentAiProvider implements DocumentAiProvider {
   async extract(input: { text: string; pages: OcrPage[]; docType: RegistryDocType }): Promise<ExtractionResult> {
     const fields = extractFields(input.text, input.pages, input.docType.code);
     const lineItems = extractLineItems(input.text, input.pages);
-    const summary: Record<string, unknown> = {};
+    const summary: Record<string, string | number | null> = {};
     for (const f of fields) summary[f.key] = f.normalizedValue ?? f.rawValue;
     return { fields, lineItems, summary };
   }
