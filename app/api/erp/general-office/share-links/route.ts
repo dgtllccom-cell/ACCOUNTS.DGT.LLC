@@ -126,8 +126,10 @@ export async function POST(request: NextRequest) {
       return row;
     });
 
-    // Build the public URL
-    const host = request.nextUrl.origin;
+    // Build the public URL using host and forwarded headers
+    const forwardedHost = request.headers.get("x-forwarded-host") || request.headers.get("host") || request.nextUrl.host;
+    const proto = request.headers.get("x-forwarded-proto") || (request.url.startsWith("https") ? "https" : "http");
+    const host = `${proto}://${forwardedHost}`;
     const publicUrl = `${host}/ext/form/${link.token}`;
 
     return ok({ link, publicUrl }, 201);

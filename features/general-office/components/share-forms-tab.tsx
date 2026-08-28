@@ -170,7 +170,10 @@ export function ShareFormsTab({ lang }: ShareFormsTabProps) {
       });
       const json = await res.json();
       if (json.ok) {
-        setGeneratedUrl(json.data?.publicUrl ?? "");
+        const token = json.data?.link?.token;
+        const origin = typeof window !== "undefined" ? window.location.origin : "";
+        const url = token && origin ? `${origin}/ext/form/${token}` : (json.data?.publicUrl ?? "");
+        setGeneratedUrl(url);
         setGeneratedFormType(formType);
         setFormType("");
         setNotes("");

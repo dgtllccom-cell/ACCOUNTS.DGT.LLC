@@ -101,8 +101,11 @@ export function SendToCustomerModal({
         })
       });
       const json = await res.json();
-      if (json.ok && json.data?.publicUrl) {
-        setPublicUrl(json.data.publicUrl);
+      if (json.ok && json.data) {
+        const token = json.data.link?.token;
+        const origin = typeof window !== "undefined" ? window.location.origin : "";
+        const url = token && origin ? `${origin}/ext/form/${token}` : (json.data.publicUrl || "");
+        setPublicUrl(url);
       } else {
         setError(json.error || "Failed to generate link");
       }
