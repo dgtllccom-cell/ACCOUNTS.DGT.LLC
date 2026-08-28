@@ -329,6 +329,13 @@ export function UaeTaxSettingsView({ lang: langProp }: { lang?: SupportedLanguag
             )}
           </div>
         ) : tab === "zones" ? (
+          <div className="space-y-3">
+            <ZoneAddForm
+              s={s}
+              onAdded={async () => {
+                await load();
+              }}
+            />
           <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
             {zones.length === 0 ? (
               <p className="p-10 text-center text-xs text-slate-500">{s.t("set_no_zones", "No Designated Zones configured.")}</p>
@@ -364,6 +371,7 @@ export function UaeTaxSettingsView({ lang: langProp }: { lang?: SupportedLanguag
                 </tbody>
               </table>
             )}
+          </div>
           </div>
         ) : (
           <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center dark:border-slate-700 dark:bg-slate-900">
@@ -570,5 +578,66 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{label}</span>
       {children}
     </label>
+  );
+}
+
+function ZoneAddForm({ s, onAdded }: { s: ReturnType<typeof useErpScreen>; onAdded: () => Promise<void> }) {
+  const [name, setName] = useState("");
+  const [emirate, setEmirate] = useState("");
+  const [zoneType, setZoneType] = useState<"free_zone" | "designated_zone" | "mainland_special">("free_zone");
+  const [isDesignated, setIsDesignated] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const add = async () => {
+    if (name.trim().length < 2) return;
+    setSaving(true);
+    try {
+      await apiPost("/api/erp/uae-tax/designated-zones", {
+        zoneName: name.trim(),
+        emirate: emirate.trim() || null,
+        zoneType,
+        isDesignated,
+      });
+      setName("");
+      setEmirate("");
+      setIsDesignated(false);
+      await onAdded();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-wrap items-end gap-2 rounded-2xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
+      <label className="flex flex-col gap-1 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+        {s.t("set_zone_name", "Zone Name")}
+        <input value={name} onChange={(e) => setName(e.target.value)} className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-xs dark:border-slate-700 dark:bg-slate-800" />
+      </label>
+      <label className="flex flex-col gap-1 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+        {s.t("set_zone_emirate", "Emirate")}
+        <input value={emirate} onChange={(e) => setEmirate(e.target.value)} className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-xs dark:border-slate-700 dark:bg-slate-800" />
+      </label>
+      <label className="flex flex-col gap-1 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+        {s.t("set_zone_type", "Zone Type")}
+        <select value={zoneType} onChange={(e) => setZoneType(e.target.value as typeof zoneType)} className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-xs dark:border-slate-700 dark:bg-slate-800">
+          <option value="free_zone">free_zone</option>
+          <option value="designated_zone">designated_zone</option>
+          <option value="mainland_special">mainland_special</option>
+        </select>
+      </label>
+      <label className="flex items-center gap-1.5 pb-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
+        <input type="checkbox" checked={isDesignated} onChange={(e) => setIsDesignated(e.target.checked)} />
+        {s.t("set_zone_designated", "VAT Designated")}
+      </label>
+      <button
+        type="button"
+        onClick={() => void add()}
+        disabled={saving || name.trim().length < 2}
+        className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700 disabled:opacity-50"
+      >
+        {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+        {s.tGlobal("common.add", "Add")}
+      </button>
+    </div>
   );
 }

@@ -46,6 +46,9 @@ export async function POST(request: NextRequest) {
       email: body.email || null,
       createdBy: session.userId,
     });
+    // Provision the 5 VAT control ledgers immediately so the entity is
+    // reconciliation-ready (idempotent).
+    await uaeTaxService.bootstrapLedgers(id, session.userId).catch(() => undefined);
     return apiCreated({ id });
   } catch (error) {
     return handleApiError(error);

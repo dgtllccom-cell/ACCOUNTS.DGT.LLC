@@ -227,6 +227,48 @@ export class UaeTaxService {
     return res ?? [];
   }
 
+  async upsertDesignatedZone(input: {
+    id?: string;
+    zoneName: string;
+    emirate?: string | null;
+    zoneType: "free_zone" | "designated_zone" | "mainland_special";
+    isDesignated: boolean;
+    status?: "active" | "inactive" | "superseded";
+    sourceReference?: string | null;
+    actor: string;
+  }): Promise<{ id: string }> {
+    const res = await withLocalPg(async (sql) => {
+      if (input.id) {
+        const [row] = await sql`
+          UPDATE public.uae_designated_zones
+          SET zone_name = ${input.zoneName}, emirate = ${input.emirate ?? null},
+              zone_type = ${input.zoneType}, is_designated = ${input.isDesignated},
+              status = ${input.status ?? "active"}, source_reference = ${input.sourceReference ?? null},
+              updated_at = NOW()
+          WHERE id = ${input.id} AND deleted_at IS NULL RETURNING id
+        `;
+        return { id: String(row?.id ?? "") };
+      }
+      const [row] = await sql`
+        INSERT INTO public.uae_designated_zones (zone_name, emirate, zone_type, is_designated, status, source_reference, created_by)
+        VALUES (${input.zoneName}, ${input.emirate ?? null}, ${input.zoneType}, ${input.isDesignated},
+                ${input.status ?? "active"}, ${input.sourceReference ?? null}, ${input.actor}::uuid)
+        RETURNING id
+      `;
+      return { id: String(row?.id ?? "") };
+    });
+    if (!res) throw new Error("Database is not configured");
+    return res;
+  }
+
+  async proposePeriodPosting(periodId: string): Promise<{ postingId: string }> {
+    const res = await withLocalPg(async (sql) => {
+      const [row] = await sql`SELECT public.uae_propose_period_vat_posting(${periodId}::uuid) AS id`;
+      return { postingId: String(row?.id ?? "") };
+    });
+    return res ?? { postingId: "" };
+  }
+
   // ---- Periods ----------------------------------------------------------
 
   async listPeriods(taxEntityId?: string, scope?: UaeTaxScope): Promise<UaeTaxPeriod[]> {
@@ -377,6 +419,16 @@ export class UaeTaxService {
       for (const r of rows) {
         bySource[r.source] = Number(r.rows_synced ?? 0);
         synced += Number(r.rows_synced ?? 0);
+      }
+      // Import enrichment (shipping / customs -> purchase tax lines). Added
+      // after the core sync so its function is optional at deploy time.
+      try {
+        const [imp] = await sql<Array<{ n: number }>>`
+          SELECT public.sync_uae_tax_from_import(${options?.fromDate ?? null}::date, ${options?.taxEntityId ?? null}::uuid) AS n
+        `;
+        bySource.import_enrichment = Number(imp?.n ?? 0);
+      } catch {
+        /* function not present yet (older DB) — ignore */
       }
       return { synced, bySource };
     });
