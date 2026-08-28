@@ -31,7 +31,8 @@ export async function GET(request: NextRequest) {
                COALESCE(c.customer_name, c.company_name, e.employee_code) AS name,
                e.designation, e.department, e.hr_department_id, e.hr_designation_id,
                e.country_id, e.country_branch_id, e.city_branch_id,
-               e.status, e.basic_salary, e.monthly_salary, e.salary_currency,
+               e.status, e.basic_salary, e.monthly_salary,
+               public.hr_resolve_currency(e.country_id, e.country_branch_id, e.city_branch_id) AS salary_currency,
                co.name AS country_name
         FROM public.employees e
         LEFT JOIN public.customers c ON c.id = e.person_master_id

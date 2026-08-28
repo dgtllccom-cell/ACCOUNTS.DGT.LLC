@@ -67,7 +67,9 @@ export class HrGratuityService {
       const sepType = sep?.separation_type || "end_of_contract";
 
       const g = (await sql`SELECT * FROM public.hr_calc_gratuity(${input.employeeId}, ${asOf}, ${sepType})`)?.[0] ?? {};
-      const currency = e.salary_currency || e.reporting_currency || "USD";
+      // Official currency of the employee's country/branch — resolved dynamically.
+      const curRow = await sql`SELECT public.hr_resolve_currency(${e.country_id}, ${e.country_branch_id}, ${e.city_branch_id}) AS c`;
+      const currency = curRow?.[0]?.c || e.salary_currency || e.reporting_currency || "USD";
       const dailyBasic = Number(e.basic_salary || e.monthly_salary || 0) / 30;
 
       // leave encashment: sum of remaining paid-leave-type balances for the current year

@@ -324,6 +324,27 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
     loadCityBranches();
   }, [countryId, countryBranchId]);
 
+  // Salary currency is the OFFICIAL currency of the assigned country/branch —
+  // resolved server-side (city branch → main branch → country), never typed by
+  // the user and never hard-coded.
+  useEffect(() => {
+    if (!countryId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const params = new URLSearchParams({ countryId });
+        if (countryBranchId) params.set("countryBranchId", countryBranchId);
+        if (cityBranchId) params.set("cityBranchId", cityBranchId);
+        const res: any = await apiGet(`/api/erp/hr/currency?${params.toString()}`);
+        const cur = res?.currency || res?.data?.currency;
+        if (!cancelled && cur) setSalaryCurrency(cur);
+      } catch {
+        /* keep the current value on failure */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [countryId, countryBranchId, cityBranchId]);
+
   // Auto-sync countryBranchId if a city branch with parent branch is selected
   useEffect(() => {
     if (cityBranchId && cityBranches.length > 0) {

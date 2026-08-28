@@ -56,7 +56,8 @@ const migrations = [
   { name: "20260919_hr_payroll_runs", path: "supabase/migrations/20260919_hr_payroll_runs.sql" },
   { name: "20260920_hr_payroll_tax_config", path: "supabase/migrations/20260920_hr_payroll_tax_config.sql" },
   { name: "20260921_hr_smart_crm_reminders", path: "supabase/migrations/20260921_hr_smart_crm_reminders.sql" },
-  { name: "20260922_hr_gratuity_settlement", path: "supabase/migrations/20260922_hr_gratuity_settlement.sql" }
+  { name: "20260922_hr_gratuity_settlement", path: "supabase/migrations/20260922_hr_gratuity_settlement.sql" },
+  { name: "20260923_hr_country_currency", path: "supabase/migrations/20260923_hr_country_currency.sql" }
 ];
 
 const sql = postgres(env.DATABASE_URL, { max: 1, prepare: false, connect_timeout: 60 });

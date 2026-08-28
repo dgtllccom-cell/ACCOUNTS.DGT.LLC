@@ -76,11 +76,18 @@ export class HrPayrollService {
     return withLocalPg(async (sql) => {
       const seq = (await sql`SELECT count(*)::int n FROM public.hr_payroll_runs`)?.[0]?.n ?? 0;
       const runNo = `PR-${input.periodMonth.replace("-", "")}-${String(seq + 1).padStart(4, "0")}`;
+      // presentation currency = the scope's official currency (USD is the
+      // consolidated-reporting fallback for a global / mixed run).
+      let presCurrency = input.presentationCurrency;
+      if (!presCurrency && (input.countryId || input.countryBranchId || input.cityBranchId)) {
+        const cr = await sql`SELECT public.hr_resolve_currency(${input.countryId ?? null}, ${input.countryBranchId ?? null}, ${input.cityBranchId ?? null}) AS c`;
+        presCurrency = cr?.[0]?.c || "USD";
+      }
       const rows = await sql`
         INSERT INTO public.hr_payroll_runs
           (run_no, period_month, country_id, country_branch_id, city_branch_id, presentation_currency, notes, created_by)
         VALUES (${runNo}, ${input.periodMonth}, ${input.countryId ?? null}, ${input.countryBranchId ?? null},
-          ${input.cityBranchId ?? null}, ${input.presentationCurrency ?? "USD"}, ${input.notes ?? null}, ${actorId})
+          ${input.cityBranchId ?? null}, ${presCurrency ?? "USD"}, ${input.notes ?? null}, ${actorId})
         RETURNING id`;
       const runId = rows?.[0]?.id;
       await sql`INSERT INTO public.hr_payroll_run_events (run_id, action, actor_id, actor_name, detail)
@@ -172,7 +179,11 @@ export class HrPayrollService {
 
         const net = Math.round((gross - unpaidLeaveDeduction - otherDeductions - advanceRecovery - taxEmployee) * 100) / 100;
 
-        const currency = e.salary_currency || run.presentation_currency || "USD";
+        // Currency is the OFFICIAL currency of the employee's country/branch —
+        // resolved dynamically (city branch → main branch → country), never the
+        // stale employees.salary_currency column and never hard-coded.
+        const curRow = await sql`SELECT public.hr_resolve_currency(${e.country_id}, ${e.country_branch_id}, ${e.city_branch_id}) AS c`;
+        const currency = curRow?.[0]?.c || e.salary_currency || run.presentation_currency || "USD";
         let rate = 1;
         if (currency !== "USD") {
           const rr = await sql`SELECT selling_rate FROM public.daily_usd_rates
