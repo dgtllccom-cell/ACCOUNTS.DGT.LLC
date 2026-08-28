@@ -3,6 +3,7 @@ import { z } from "zod";
 import { apiOk, apiError, handleApiError } from "@/lib/api/response";
 import { guardIntake } from "@/lib/services/document-intake-api";
 import { documentIntakeService } from "@/lib/services/document-intake-service";
+import { checkRateLimit, sweepRateLimiter } from "@/lib/document-intelligence/rate-limit";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -35,6 +36,9 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
     const body = patchSchema.parse(await request.json());
     const actorName = session.fullName ?? null;
     if (body.action === "process") {
+      sweepRateLimiter();
+      const rl = checkRateLimit("process", session.userId);
+      if (!rl.ok) return apiError("RATE_LIMITED", `Too many processing requests — retry in ${rl.retryAfterSec}s.`, 429);
       const res = await documentIntakeService.processJob(id, session.userId, actorName, scope);
       return apiOk({ result: res });
     }

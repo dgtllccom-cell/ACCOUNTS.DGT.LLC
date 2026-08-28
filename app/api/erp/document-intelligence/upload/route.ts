@@ -3,6 +3,7 @@ import { z } from "zod";
 import { apiCreated, handleApiError, apiError } from "@/lib/api/response";
 import { guardIntake } from "@/lib/services/document-intake-api";
 import { documentIntakeService } from "@/lib/services/document-intake-service";
+import { checkRateLimit, sweepRateLimiter } from "@/lib/document-intelligence/rate-limit";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -40,6 +41,13 @@ export async function POST(request: NextRequest) {
     const meta = metaSchema.parse(rawMeta);
 
     const { session, scope } = await guardIntake("write", meta.operationalDomain);
+
+    sweepRateLimiter();
+    const rl = checkRateLimit("upload", session.userId);
+    if (!rl.ok) {
+      return apiError("RATE_LIMITED", `Too many uploads — retry in ${rl.retryAfterSec}s.`, 429);
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer());
     const res = await documentIntakeService.createJob(
       meta,

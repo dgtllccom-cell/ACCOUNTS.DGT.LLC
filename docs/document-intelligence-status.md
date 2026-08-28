@@ -184,7 +184,60 @@ guards). E2E `scratch/di-roz-e2e.mts`: bank transfer advice → classified
 **Remaining Phase-8 work:** the Entry Method Selector wrapper on the Cash /
 Bank Roznamcha screen; carrying the preview's account hints into that form.
 
-### Phase 9 — not started
+### Phase 9 — hardening, tests, evidence 🔶 (partial — this commit)
+
+**Security (spec §19)**
+- `lib/document-intelligence/rate-limit.ts` — in-process sliding-window limiter;
+  `upload` (30/min/user) and `process` (60/min/user) enforced in the routes,
+  429 + retry-after. Swap for a Redis limiter later without touching callers.
+- Private storage (`0600`, no public URL), MIME + magic-signature validation
+  (signature wins over declared MIME), size + page limits, malware heuristic
+  (+ `DOC_INTAKE_MALWARE_SCAN=strict`), append-only `document_intake_events`,
+  scope enforced in the API guard **and** re-checked in every service `WHERE`
+  (`withLocalPg` bypasses RLS), idempotency + sha256 duplicate detection,
+  no secrets in logs, no external transmission (provider adapter gated by env).
+- `tests/services/document-intelligence.test.ts` — 12 unit tests: extractor
+  (invoice / currency / total / containers / bank-transfer amount + method),
+  classifier tie-break, composite-identity scope-distinctness, `rowInScope`
+  country + shipping-domain isolation, the exact no-match message, draft
+  mapping + unresolved-field detection, upload signature trust, malware scan,
+  rate limit. `npx vitest run` → **123 passed / 1 skipped**.
+
+**Remaining Phase-9 work (operator / follow-up):**
+- The full 18-scenario authenticated E2E matrix (needs a Super-Admin session +
+  the dev server — blocked here).
+- Encryption at rest for `storage/document-intake/` where the host provides it.
+- Wire the shipping-side handover inbox page + the loading-form `batchId` /
+  roznamcha account-hint carry-through.
+- The remaining 7 Entry-Method-Selector screen wrappers.
+- Real-document UAT and the signed 19-point acceptance evidence.
+
+---
+
+## 19-point acceptance checklist — current state
+
+| # | Item | State |
+|---|---|---|
+| 1 | Existing-system audit | ✅ (this doc, "Architecture") |
+| 2 | Architecture / data-flow map | ✅ |
+| 3 | Reused vs new components | ✅ (per-phase sections) |
+| 4 | Migrations + rollback | ✅ 5 migrations, all `IF NOT EXISTS` / additive; rollback = drop new tables/columns |
+| 5 | Document-type matrix | ✅ 39 seeded in `document_type_registry` |
+| 6 | Field-extraction matrix | ✅ `extractors.ts` RULES (40+ keys) |
+| 7 | Accuracy / confidence report | 🔶 synthetic only (tesseract meanConf ≈ 0.93 on clean scans); real-doc UAT pending |
+| 8 | Duplicate-prevention evidence | ✅ sha256 + idempotency (jobs), unique `(job_id)` (drafts), container dedup (batches), `(module,source_id)` (consume), live-handover unique idx, roznamcha duplicate-posting check |
+| 9 | QVC evidence | ✅ `di-e2e.mts` → `crm_action_items` row, module `document_intake` |
+| 10 | Country / branch / agent scope evidence | ✅ `document-intelligence.test.ts` + `di-handover-e2e.mts` (money-leak clean, agent view has no business id) |
+| 11 | Purchase / Sales / Shipping E2E | 🔶 service-level E2E done (`di-*-e2e.mts`); authenticated UI E2E pending |
+| 12 | Accounting + stock reconciliation | ✅ by construction — AI writes only `document_intake_*` / `*_drafts` / `*_batches` / `*_handovers`; never journal / roznamcha / ledger / stock |
+| 13 | Five-language evidence | ✅ `i18n:guard` green, 9999 keys × 5, all `dintake.*` appended after `...en`; RTL via `useErpScreen` |
+| 14 | Security evidence | ✅ (Phase 9 section) |
+| 15 | Test results | ✅ `vitest` 123 passed / 1 skipped; `tsc` 0; `i18n:guard` + `:changed` green |
+| 16 | Clean production build | ✅ `npm run build` exit 0 (7 commits) |
+| 17 | Final commit hash | phase commits `a7ef609` · `6917746` · `d101462` · `242d49c` · `6c99f6e` · `91635c4` · `09ac4b9` · `3512e38` · (this) |
+| 18 | Remaining-work list | ✅ (per-phase "Remaining" + Phase 9) |
+| 19 | Production-Ready sign-off | ❌ **withheld** — pending real-document UAT, authenticated scope testing, local verification and explicit production approval |
+
 8. Cash / Bank Roznamcha manual + scan (payment-method-driven form, pre-post
    preview of serials / bill numbers / debit-credit accounts / currency / rate /
    source module, balanced Dr/Cr, duplicate-posting protection).
