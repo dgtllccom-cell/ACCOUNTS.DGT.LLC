@@ -467,6 +467,54 @@ export async function POST(request: NextRequest) {
       }
     } catch { /* non-fatal — never blocks the order/posting */ }
 
+    // Persist normalised sales line items (used by the UAE Tax engine for
+    // line-level Output VAT). Non-fatal; the order + posting never depend on it.
+    try {
+      const b = body as any;
+      const goodsEntries: any[] = Array.isArray(b?.formData?.goodsEntries)
+        ? b.formData.goodsEntries
+        : Array.isArray(b?.items)
+          ? b.items
+          : [];
+      if (goodsEntries.length > 0) {
+        const soId = (row as any).id;
+        const itemRows = goodsEntries.map((g: any, i: number) => {
+          const totalLocal = Number(g.finalAmount ?? g.totalLocal ?? g.totalAmount ?? 0);
+          const isTaxable = g.isTaxable !== false;
+          const vatRate = Number(g.vatRate ?? 5) || 0;
+          const taxableAmount = isTaxable ? totalLocal : 0;
+          const vatAmount = isTaxable ? Math.round(taxableAmount * (vatRate / 100) * 100) / 100 : 0;
+          return {
+            sales_order_id: soId,
+            row_serial: i + 1,
+            goods_name: g.goodsName || g.goods_name || "Item",
+            hs_code: g.hsCode || g.hs_code || null,
+            brand: g.brand || null,
+            size: g.size || null,
+            quantity: Number(g.qtyNo ?? g.quantity ?? 0),
+            unit_name: g.qtyName || g.unitName || null,
+            net_weight: Number(g.netWeight ?? g.net_weight ?? 0),
+            rate_original: Number(g.coursePrice ?? g.rateOriginal ?? 0),
+            rate_local: Number(g.rateLocal ?? g.coursePrice ?? 0),
+            total_original: Number(g.totalAmount ?? g.totalOriginal ?? 0),
+            total_local: totalLocal,
+            is_taxable: isTaxable,
+            tax_code_id: g.taxCodeId || null,
+            vat_rate: vatRate,
+            taxable_amount: taxableAmount,
+            vat_amount: vatAmount,
+          };
+        });
+        await withLocalPg(async (sql) => {
+          await sql`DELETE FROM public.sales_order_items WHERE sales_order_id = ${soId}::uuid`;
+          await sql`INSERT INTO public.sales_order_items ${sql(itemRows as any)}`;
+          return true;
+        });
+      }
+    } catch (itemsError) {
+      console.warn("sales_order_items persistence skipped:", itemsError);
+    }
+
     await writeAuditLog({
       action: "create",
       entityTable: "sales_orders",
