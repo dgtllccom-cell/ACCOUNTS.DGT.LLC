@@ -477,6 +477,8 @@ function PartyRolePanel({
               <span className="truncate max-w-[240px]">{effectiveAddress}</span>
             </div>
           ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }
