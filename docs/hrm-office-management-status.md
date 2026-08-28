@@ -313,3 +313,31 @@ All HRM commits listed in §2 are on `main`.
     approval is given.**
 12. `features/customers/components/customer-profile.tsx` typecheck errors from
     concurrent commit `856ad11` should be fixed by whoever owns that refactor.
+
+---
+
+## Final Closure — Part A (2026-08-30)
+
+Migration `20260930_hr_leave_attendance_reconciliation` (non-destructive: 3
+columns, 2 trigger functions + triggers, 1 helper function, 1 view, 1 seed).
+Applied + idempotent on DEV; `node scripts/db-apply-all-migrations.mjs` → all 10
+migrations `[SKIP] already applied`, `ok: true`.
+
+| # | Item | Implementation | DEV verification |
+|---|---|---|---|
+| A1 | **Leave balance integration** | `office_leave_requests.balance_effect` + `hr_apply_leave_balance()` BEFORE trigger (INSERT/UPDATE of status/days/deleted_at/leave_type). Resolves `leave_type_id` from `hr_leave_types` by code/name within the employee's country. Request→Pending: `pending_days += days`. Pending→Approved: pending→taken. Any→Rejected/Cancelled/soft-delete: release. `balance_effect` stores the last-applied state → no double-count on re-save. | `scratch/hr-closure-test.mjs`: Pending → balance {pending 5, taken 0} → Approved {0, 5} → re-save {0, 5} unchanged → Rejected {0, 0}. |
+| A2 | **Shift-based attendance calc** | `office_attendance.expected_hours / is_holiday / on_approved_leave` + `hr_calc_attendance()` BEFORE trigger. Resolves the shift: explicit `shift_id` → employee `working_shift` by name/code within scope → country default. Computes expected duty hours (overnight = end < start → +24 h, minus break), actual `work_hours`, `late_minutes` (check-in − shift start − grace), `early_leave_minutes` (shift end − grace − check-out), `overtime_hours` (actual − expected). Holiday / approved leave → late & early = 0, all hours = overtime. Seeds one "Day Shift" (09:00–17:00, 60 m break, 15 m grace) per country that has employees. | Attendance 09:25–18:30 against 09:00–17:00 / grace 15 / break 60 → `expected_hours 7.00`, `work_hours 8.08`, `late_minutes 10`, `early_leave_minutes 0`, `overtime_hours 1.08`, `shift_id` resolved. |
+| A3 | **Payroll ↔ Accounting ↔ Tax reconciliation** | `hr_payroll_reconciliation_v` — read-only JOIN: `hr_payroll_runs` → `hr_payroll_run_lines` → `employee_salaries_due` → `roznamcha_entries` (accrual + payment via the existing `*_roznamcha_id` columns) with a per-line `Dr − Cr` sum from `roznamcha_lines` and a `balanced` / `unbalanced` / `not_posted` check. **No new accounting engine.** `/api/erp/hr/payroll/reconciliation` + `/dashboard/general-office/payroll-reconciliation` report (KPIs, Dr = Cr banner, trace table, period filter) + sidebar node. `hrm.recon_*` i18n ×5. | `scratch/a3-test.mjs`: balanced roznamcha (Dr 5000 = Cr 5000) → view `accrual_dr_minus_cr 0.00`, `accrual_balance_check balanced`; Dr 5100 vs Cr 5000 → `100.00`, `unbalanced`. Report renders (empty — no payroll runs in DEV yet). |
+| A4 | **Employee ↔ ERP User relationship** | Audited: `employees.person_master_id → customers.id` (Person Master) already exists for all 54 DEV employees; no user link existed. Added `employees.user_id → profiles(id)` FK + partial unique index (one user ↔ one employee) + `hr_link_employee_user(employee, user)` helper that rejects a user already linked elsewhere. **No backfill** — 0 confident name matches between an employee's Person Master and a `profiles` row in DEV; linking is an explicit admin action that preserves the Person → Employee → User chain and never creates a duplicate identity. | Helper links employee→profile; a second `hr_link_employee_user` with the same user → *"That ERP user is already linked to another employee."* |
+
+**Gates:** `npx tsc --noEmit` 0 errors in any HRM file (25 pre-existing repo
+errors are all in `customer-profile.tsx` / `customer-form.tsx` /
+`ext-form-client.tsx` / `share-forms-tab.tsx` — other contributors' active WIP,
+not regressions); `npm run i18n:guard` + `:guard:changed` green (10,097 keys × 5);
+`npm run build` exit 0; `npx vitest run` 123 passed / 1 skipped / 0 failed.
+
+**Still requires owner action:** authenticated multi-role browser UAT of the leave
+approval → balance, attendance calculation, and payroll → reconciliation flows
+with real payroll runs; production deployment approval. (Leave/attendance/payroll
+schemas hold **0 rows** in DEV — the triggers and view are verified with
+representative records created and removed by the closure test scripts.)

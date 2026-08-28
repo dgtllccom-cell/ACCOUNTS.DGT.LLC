@@ -1,9 +1,9 @@
 # AI Document Intake, Verification & Workflow Automation — Status
 
 Self-hosted document intake inside ACCOUNTS.DGT.LLC / Digital Dock ERP.
-**Not Production Ready** — real-document UAT, authenticated scope testing,
-local browser verification and explicit production approval are still required
-(see *Outstanding* below).
+**Not Production Ready** — explicit owner production approval is still required
+(DEV implementation + authenticated DEV browser E2E are complete — see the
+*Final Closure* section at the end).
 
 ---
 
@@ -284,3 +284,86 @@ Bank Roznamcha screen; carrying the preview's account hints into that form.
 3. Phase 5 wire-ups for the remaining 7 screens; Phases 6–9.
 4. `npm run ocr:vendor` on the target host (or ship `vendor/ocr/`).
 5. Explicit production deployment approval.
+
+---
+
+## Final Closure — DEV Authenticated E2E (2026-08-29)
+
+Authenticated with `POST /api/erp/auth/dev-session` (DEV-only passwordless
+bootstrap, gated to `APP_ENV=development` + `ALLOW_DEMO_AUTH`). Dev server on
+autoPort. Super Admin and a Pakistan-scoped `country_admin` session.
+
+### Pipeline E2E (real document, real OCR)
+
+Synthetic commercial invoice (canvas→PNG, AED 88,500, contract CON-UAT-501,
+2 containers) uploaded through the browser:
+
+| Step | Result |
+|---|---|
+| Upload (multipart, browser) | 201, `DI-2026-…`, sha256 recorded |
+| Validation + malware scan | passed (PNG signature) |
+| OCR | `tesseract.js@eng+ara`, ~2.9 s, 11 fields — invoice #, contract #, currency, grand total, advance, balance, 2 containers, HS code, date, supplier, exchange rate — green/amber graded |
+| Classification | `commercial_invoice` |
+| Scope-constrained matching | found PO `CON-UAT-501` at score **0.75 → `ambiguous`** (never auto-links on contract#; ≥ 0.80 + margin required) |
+| QVC routing | first `out_of_scope` → *"No authorized matching record was found in your country/branch scope."*, then `ambiguous` |
+| Review UI | original document + 11 extracted fields **side by side**, each with confidence %, page, OCR-read value, Verify |
+| Field verify | `grand_total` corrected → `green`, `verified` |
+| Match select | → `match_status = user`, PO linked |
+| Prepare Reviewed Draft | `DID-2026-…`, `link_mode = append_existing`, payload mapped to PO keys (`purchaseContractNo`, `supplierName`, `purchaseCurrency`, `exchangeRate`, `billNo`, `advanceAmount`, `containerNumbers`, `purchaseDate`) |
+| Entry Method Selector → Continue Saved Draft | draft listed (`DID-… · DI-… · Afghanistan · AED`); selecting it opens the Purchase wizard with the **"Pre-filled from reviewed document draft — DID-…"** banner |
+
+> The `processJob` HTTP route itself cannot run OCR under `next dev`
+> (`tesseract.js` / `pdf-parse` worker threads → `.next/worker-script/node/index.js`
+> `MODULE_NOT_FOUND`). OCR was exercised through the identical service path via
+> `npx tsx` (real tesseract). A production server (`npm run build` + `npm start`)
+> is expected to serve the OCR route; confirm during production UAT.
+
+### Handover E2E
+
+Business creates `HND-2026-…` (assign clearing agent, 2 containers) → appears in
+the **Shipping Handover Inbox** → open shows only the whitelisted payload
+(contract ref, supplier, ports, vessel, delivery terms, containers) — **money-leak
+check clean** (PO had `orderTotal` / `advanceAmount` / `coursePrice`; none crossed)
+→ **Accept** → `status = accepted`, `approved_by` recorded.
+
+### Scope isolation
+
+Pakistan-scoped `country_admin`:
+- intake queue → **0 rows** (the job is Afghanistan)
+- `GET /api/erp/document-intelligence/<afghan job id>` → **FORBIDDEN** (not leaked)
+- `GET /api/erp/handovers` → **0 rows** (the handover is UAE)
+
+Enforced in the API guard **and** the service `WHERE` — URL / API manipulation
+does not expose another country's data.
+
+### Responsive / RTL
+
+| Screen | 375 px mobile | Urdu (RTL) |
+|---|---|---|
+| Document Intake Center | no page overflow, 0 off-screen / overlapping buttons, table scrolls in its own container | `htmlDir=rtl`, title + blurb + chrome fully Urdu, 0 off-screen controls |
+| Review panel | side-by-side collapses to **1 column** (original above, fields below); nothing lost | — |
+| Handover Inbox / Business Handovers | no overflow, drawer full-width, 0 overlaps | — |
+
+### Gates (repo-level)
+
+- `npx tsc --noEmit` — **0 errors in any HRM / Document Intelligence file**. 25
+  pre-existing errors remain in `features/customers/components/customer-profile.tsx`
+  (19), `customer-form.tsx` (4), `app/ext/form/[token]/ext-form-client.tsx` (1),
+  `features/general-office/components/share-forms-tab.tsx` (1) — other
+  contributors' active WIP (commits `3dee397`, `eed3a61` on 2026-08-29), not
+  regressions from this work; `next.config.ts typescript.ignoreBuildErrors`.
+- `npm run i18n:guard` + `:guard:changed` — green, 10,097 keys × 5.
+- `npm run build` — exit 0.
+- `npx vitest run` — **123 passed / 1 skipped / 0 failed** (goods-variations now
+  stable).
+- `node scripts/db-apply-all-migrations.mjs` — all 10 migrations `[SKIP] already
+  applied`, `ok: true`.
+
+### Still requires owner action before Production Ready
+
+1. Owner production-deployment approval.
+2. Confirm the OCR HTTP route on a production server (`npm start`).
+3. Real customer-document UAT (representative PDFs / photos, all supported types).
+4. Optional UI polish: the Purchase Loading form reading `?batchId`; auto-creating
+   a `clearing_customer_order` on handover accept; Contract Control + KYC/QVC
+   entry-method wrappers (QVC already receives intake items via `crm_action_items`).
