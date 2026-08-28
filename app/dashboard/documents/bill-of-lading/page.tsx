@@ -4,6 +4,9 @@ import { ArrowLeft, FileText } from "lucide-react";
 import { PrintButton } from "@/components/documents/print-button";
 import { Th } from "@/components/ui/translated-th";
 
+export const metadata = { title: "Documents — Bill Of Lading" };
+
+
 function InfoBox({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="border-b-2 border-r-2 border-neutral-800 p-3 even:border-r-0">

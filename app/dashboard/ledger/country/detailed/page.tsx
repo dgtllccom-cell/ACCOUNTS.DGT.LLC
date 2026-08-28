@@ -2,6 +2,9 @@ export const dynamic = "force-dynamic";
 
 import { CountryDetailedLedgerView } from "@/features/reports/ledger-report/components/country-detailed-ledger";
 
+export const metadata = { title: "Ledger — Country — Detailed" };
+
+
 export default function CountryDetailedLedgerPage() {
   return <CountryDetailedLedgerView />;
 }

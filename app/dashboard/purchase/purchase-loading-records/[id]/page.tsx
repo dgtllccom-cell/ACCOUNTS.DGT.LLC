@@ -2,6 +2,9 @@ import { PurchaseLoadingRecordDetailsView } from "@/features/purchases/component
 import { requireErpSession } from "@/lib/auth/session";
 import { Suspense } from "react";
 
+export const metadata = { title: "Purchase — Purchase Loading Records" };
+
+
 export default async function PurchaseLoadingRecordDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   await requireErpSession();
   const { id } = await params;

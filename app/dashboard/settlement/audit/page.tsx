@@ -1,5 +1,8 @@
 import { SettlementAuditView } from "@/features/settlement/components/settlement-audit-view";
 
+export const metadata = { title: "Settlement — Audit" };
+
+
 export const dynamic = "force-dynamic";
 
 export default function SettlementAuditPage() {

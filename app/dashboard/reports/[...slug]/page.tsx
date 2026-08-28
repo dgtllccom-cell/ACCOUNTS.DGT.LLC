@@ -1,6 +1,9 @@
 import type { Route } from "next";
 import { redirect } from "next/navigation";
 
+export const metadata = { title: "Reports" };
+
+
 export default async function ReportsCatchAllRedirect({
   params
 }: {

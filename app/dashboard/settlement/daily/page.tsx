@@ -1,5 +1,8 @@
 import { DailySettlementView } from "@/features/settlement/components/daily-settlement-view";
 
+export const metadata = { title: "Settlement — Daily" };
+
+
 export const dynamic = "force-dynamic";
 
 export default function DailySettlementPage() {

@@ -1,3 +1,5 @@
+export const metadata = { title: "Purchases" };
+
 export default function PurchasesPage() {
   return (
     <div className="space-y-6">

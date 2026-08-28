@@ -1,6 +1,9 @@
 import { requireErpSession } from "@/lib/auth/session";
 import { CrmReportsView } from "@/features/crm/components/crm-reports-view";
 
+export const metadata = { title: "CRM Reports" };
+
+
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 

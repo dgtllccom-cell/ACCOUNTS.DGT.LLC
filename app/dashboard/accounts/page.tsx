@@ -1,6 +1,9 @@
 import { AccountGeneralReportView } from "@/features/accounts/components/account-general-report-view";
 import { getRequestLanguage } from "@/lib/i18n/server";
 
+export const metadata = { title: "Account Master Registry & Search" };
+
+
 export default async function AccountsPage({
   searchParams
 }: {

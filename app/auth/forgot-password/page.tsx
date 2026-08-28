@@ -4,6 +4,9 @@ import { requestPasswordReset } from "@/features/auth/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+export const metadata = { title: "Auth — Forgot Password" };
+
+
 export default async function ForgotPasswordPage({
   searchParams
 }: {

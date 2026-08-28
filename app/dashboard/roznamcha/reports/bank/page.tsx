@@ -2,6 +2,9 @@ import { Suspense } from "react";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { BankRoznamchaReportView } from "@/features/roznamcha/components/bank-roznamcha-report-view";
 
+export const metadata = { title: "Roznamcha — Reports — Bank" };
+
+
 export default async function BankRoznamchaReportPage() {
   const lang = await getRequestLanguage();
   return (

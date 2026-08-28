@@ -1,5 +1,8 @@
 import { EmailManagementWorkspace } from "@/features/messages/components/email-management";
 
+export const metadata = { title: "Messages" };
+
+
 const channelBySlug: Record<string, "email" | "whatsapp" | "internal" | "notifications"> = {
   email: "email",
   whatsapp: "whatsapp",

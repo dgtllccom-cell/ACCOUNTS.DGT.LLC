@@ -1,5 +1,8 @@
 import { PurchaseModuleWorkspace } from "@/features/purchases/components/purchase-module-workspace";
 
+export const metadata = { title: "Purchase — Finalized Purchase Orders" };
+
+
 export const dynamic = "force-dynamic";
 
 export default function FinalizedPurchaseOrdersPage() {

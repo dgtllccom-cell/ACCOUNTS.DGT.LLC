@@ -1,5 +1,8 @@
 import { UserEntryForm } from "@/features/users/components/user-entry-form";
 
+export const metadata = { title: "New Entry — Users — Agent" };
+
+
 export default function AgentUserEntryPage() {
   return (
     <div className="space-y-6">

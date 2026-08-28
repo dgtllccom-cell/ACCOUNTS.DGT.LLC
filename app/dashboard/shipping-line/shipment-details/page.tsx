@@ -1,5 +1,8 @@
 import { ShippingLineStagePage } from "@/features/shipping/components/shipping-line-stage-page";
 
+export const metadata = { title: "Shipping Line — Shipment Details" };
+
+
 export default function ShipmentDetailsPage() {
   return (
     <ShippingLineStagePage

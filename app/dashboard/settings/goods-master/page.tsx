@@ -1,3 +1,5 @@
+export const metadata = { title: "Settings — Goods Master" };
+
 ﻿import { GoodsMasterRegistry } from "@/features/goods-master/components/goods-master-registry";
 
 export default function GoodsMasterPage() {

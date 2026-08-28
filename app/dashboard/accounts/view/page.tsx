@@ -1,6 +1,9 @@
 import { AccountProfileView } from "@/features/accounts/components/account-profile-view";
 import { getRequestLanguage } from "@/lib/i18n/server";
 
+export const metadata = { title: "Account Ledger View" };
+
+
 export default async function AccountViewPage({
   searchParams
 }: {

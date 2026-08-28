@@ -4,7 +4,7 @@ import { UaeTaxLinesView } from "@/features/uae-tax/components/uae-tax-lines-vie
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "UAE Tax & e-Invoicing" };
+export const metadata: Metadata = { title: "UAE Tax — Booking Sales Output VAT" };
 
 export default async function TaxUaeBookingSalesTaxPage() {
   const session = await requireErpSession();

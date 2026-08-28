@@ -1,5 +1,8 @@
 import { OrganizationFoundation } from "@/features/companies/components/organization-foundation";
 
+export const metadata = { title: "Companies & Branches" };
+
+
 export default function CompaniesPage() {
   return (
     <div className="space-y-6">

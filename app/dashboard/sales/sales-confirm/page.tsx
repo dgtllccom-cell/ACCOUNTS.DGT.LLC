@@ -1,5 +1,8 @@
 import { SalesModuleWorkspace } from "@/features/sales/components/sales-module-workspace";
 
+export const metadata = { title: "Sales — Sales Confirm" };
+
+
 export default function ConfirmedSalesPage() {
   return (
     <SalesModuleWorkspace

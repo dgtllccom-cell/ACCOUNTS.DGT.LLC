@@ -1,5 +1,8 @@
 import { SettlementModuleView } from "@/features/settlement/components/settlement-module-view";
 
+export const metadata = { title: "Settlement — Sales" };
+
+
 export const dynamic = "force-dynamic";
 
 export default function SalesSettlementPage() {

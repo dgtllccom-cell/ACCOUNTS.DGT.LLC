@@ -2,6 +2,9 @@ import { BranchGeneralReportView } from "@/features/branch-management/components
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { t } from "@/lib/i18n/ui";
 
+export const metadata = { title: "Branch Management — General Report" };
+
+
 export default async function BranchGeneralReportPage() {
   const lang = await getRequestLanguage();
 

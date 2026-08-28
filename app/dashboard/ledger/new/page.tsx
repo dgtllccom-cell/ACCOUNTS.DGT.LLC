@@ -2,6 +2,9 @@ export const dynamic = "force-dynamic";
 
 import { NewLedgerDashboard } from "@/features/ledger/components/new-ledger-dashboard";
 
+export const metadata = { title: "New Ledger Entry" };
+
+
 export default async function NewLedgerPage({
   searchParams
 }: {

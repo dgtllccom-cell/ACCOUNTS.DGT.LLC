@@ -3,6 +3,9 @@ import { getCurrentErpSession } from "@/lib/auth/session";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { EntryDetailView } from "@/features/super-admin/components/entry-detail-view";
 
+export const metadata = { title: "All Release Entries" };
+
+
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 

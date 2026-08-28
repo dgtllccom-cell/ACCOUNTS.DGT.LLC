@@ -3,6 +3,9 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentErpSession } from "@/lib/auth/session";
 import { hasRolePermission } from "@/lib/permissions/middleware";
 
+export const metadata = { title: "Logistics" };
+
+
 type QueryBuilder = any;
 type QueryResult<T> = {
   data?: T | null;

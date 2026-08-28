@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+export const metadata = { title: "Onboarding" };
+
+
 export default function OnboardingPage() {
   return (
     <main className="grid min-h-screen place-items-center bg-muted px-4 py-10">

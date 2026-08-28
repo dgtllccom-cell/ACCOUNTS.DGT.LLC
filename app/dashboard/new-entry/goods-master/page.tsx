@@ -4,6 +4,9 @@ import { getCurrentErpSession } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
 import { PackageOpen } from "lucide-react";
 
+export const metadata = { title: "New Entry — Goods Master" };
+
+
 export default async function GoodsMasterPage() {
   const session = await getCurrentErpSession();
   if (!session) redirect("/auth/login");

@@ -1,6 +1,9 @@
 import { Suspense } from "react";
 import { SalesTransferErpReportView } from "@/features/sales/components/sales-transfer-erp-report-view";
 
+export const metadata = { title: "Sales — Sales Order — View" };
+
+
 export default function SalesOrderViewPage() {
   return (
     <Suspense fallback={

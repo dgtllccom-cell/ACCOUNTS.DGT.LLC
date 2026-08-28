@@ -3,6 +3,9 @@ import { redirect } from "next/navigation";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { LocalPurchaseView } from "@/features/purchases/components/local-purchase-view";
 
+export const metadata = { title: "Purchase — Local Purchase" };
+
+
 export const dynamic = "force-dynamic";
 
 export default async function LocalPurchasePage() {

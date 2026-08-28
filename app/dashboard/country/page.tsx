@@ -13,6 +13,9 @@ import { CountryDashboardOverview } from "@/features/dashboard/components/countr
 
 import { withLocalPg } from "@/lib/db/local-postgres";
 
+export const metadata = { title: "Country Dashboard" };
+
+
 type RecentEntry = {
   id: string;
   voucher_no: string | null;

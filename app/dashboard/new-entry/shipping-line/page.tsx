@@ -1,3 +1,5 @@
+export const metadata = { title: "New Entry — Shipping Line" };
+
 export default function ShippingLineEntryPage() {
   return (
     <div className="space-y-4">

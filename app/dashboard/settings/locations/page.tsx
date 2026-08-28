@@ -1,5 +1,8 @@
 import { LocationManagementWizard } from "@/features/locations/components/location-management-wizard";
 
+export const metadata = { title: "Settings — Locations" };
+
+
 export default async function LocationsSettingsPage({
   searchParams
 }: {

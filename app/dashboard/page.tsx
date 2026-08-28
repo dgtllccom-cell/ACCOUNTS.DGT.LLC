@@ -13,6 +13,9 @@ import { dashboardByRole } from "@/lib/permissions/enterprise-roles";
 import type { Route } from "next";
 import { Th } from "@/components/ui/translated-th";
 
+export const metadata = { title: "Dashboard" };
+
+
 
 type CountMap = {
   countries: number;

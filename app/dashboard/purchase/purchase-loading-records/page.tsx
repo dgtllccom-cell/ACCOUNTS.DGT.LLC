@@ -1,6 +1,9 @@
 import { PurchaseLoadingRecordsView } from "@/features/purchases/components/purchase-loading-records-view";
 import { requireErpSession } from "@/lib/auth/session";
 
+export const metadata = { title: "Purchase — Purchase Loading Records" };
+
+
 export const dynamic = "force-dynamic";
 
 export default async function PurchaseLoadingRecordsPage({ searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> }) {

@@ -1,6 +1,9 @@
 import { SalesOrderWizard } from "@/features/sales/components/sales-order-wizard.jsx";
 import { requireErpSession } from "@/lib/auth/session";
 
+export const metadata = { title: "Sales — New Sales Booking Order" };
+
+
 export default async function NewSalesBookingOrderPage() {
   const session = await requireErpSession();
   return (

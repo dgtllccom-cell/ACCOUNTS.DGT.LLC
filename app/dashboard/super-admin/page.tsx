@@ -9,6 +9,9 @@ import { SuperAdminOverviewCharts, type CountryFinancialSummary, type MonthlyFin
 import { DashboardWidget, SuperAdminDashboardSettingsPanel, SuperAdminDashboardSettingsProvider } from "@/features/dashboard/components/super-admin-dashboard-settings";
 import { SuperAdminDashboardLiveRefresh } from "@/features/dashboard/components/super-admin-dashboard-live-refresh";
 
+export const metadata = { title: "Super Admin Dashboard" };
+
+
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 

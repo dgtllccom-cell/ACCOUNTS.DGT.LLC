@@ -1,5 +1,8 @@
 import { PurchaseModuleWorkspace } from "@/features/purchases/components/purchase-module-workspace";
 
+export const metadata = { title: "Purchase — Purchase Order Tracking" };
+
+
 export const dynamic = "force-dynamic";
 
 export default function PurchaseOrderTrackingPage() {

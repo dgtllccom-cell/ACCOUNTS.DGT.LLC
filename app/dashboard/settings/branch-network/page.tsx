@@ -1,6 +1,9 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { Building, Globe } from "lucide-react";
 
+export const metadata = { title: "Settings — Branch Network" };
+
+
 type CountryBranchNode = {
   id: string;
   name: string;

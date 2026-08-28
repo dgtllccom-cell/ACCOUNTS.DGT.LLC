@@ -1,5 +1,8 @@
 import { SettlementReportsView } from "@/features/settlement/components/settlement-reports-view";
 
+export const metadata = { title: "Settlement — Reports" };
+
+
 export const dynamic = "force-dynamic";
 
 export default function SettlementReportsPage() {

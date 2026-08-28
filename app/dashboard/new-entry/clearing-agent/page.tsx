@@ -1,3 +1,5 @@
+export const metadata = { title: "New Entry — Clearing Agent" };
+
 export default function ClearingAgentEntryPage() {
   return (
     <div className="space-y-4">

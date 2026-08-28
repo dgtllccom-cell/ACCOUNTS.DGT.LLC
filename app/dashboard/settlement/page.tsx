@@ -1,5 +1,8 @@
 import { SettlementDashboardView } from "@/features/settlement/components/settlement-dashboard-view";
 
+export const metadata = { title: "Settlement & Reconciliation" };
+
+
 export const dynamic = "force-dynamic";
 
 export default function SettlementDashboardPage() {

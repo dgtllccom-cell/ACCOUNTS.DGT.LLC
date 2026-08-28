@@ -3,6 +3,9 @@ import { getCurrentErpSession } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
+export const metadata = { title: "Purchase — Local Goods Received" };
+
+
 export const dynamic = "force-dynamic";
 
 export default async function LocalGoodsReceivedPage() {

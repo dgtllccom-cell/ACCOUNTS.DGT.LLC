@@ -9,6 +9,9 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { BranchAdminDashboardOverview } from "@/features/dashboard/components/branch-admin-dashboard-overview";
 import { Building, GitBranch, MapPin } from "lucide-react";
 
+export const metadata = { title: "City Branch Dashboard" };
+
+
 type CustomerRow = {
   id: string;
   customer_name: string;
