@@ -35,6 +35,11 @@ const migrations = [
   { name: "20260829_settlement_integration_registry", path: "supabase/migrations/20260829_settlement_integration_registry.sql" },
   { name: "20260901_uae_tax_einvoicing_foundation", path: "supabase/migrations/20260901_uae_tax_einvoicing_foundation.sql" },
   { name: "20260902_uae_tax_ingestion", path: "supabase/migrations/20260902_uae_tax_ingestion.sql" },
+  { name: "20260903_uae_tax_documents", path: "supabase/migrations/20260903_uae_tax_documents.sql" },
+  { name: "20260904_uae_vat_return", path: "supabase/migrations/20260904_uae_vat_return.sql" },
+  { name: "20260905_uae_tax_ledger_reconciliation", path: "supabase/migrations/20260905_uae_tax_ledger_reconciliation.sql" },
+  { name: "20260906_uae_import_export_einvoicing", path: "supabase/migrations/20260906_uae_import_export_einvoicing.sql" },
+  { name: "20260907_uae_tax_reports_audit", path: "supabase/migrations/20260907_uae_tax_reports_audit.sql" },
   { name: "20260828_external_form_links", path: "supabase/migrations/20260828_external_form_links.sql" }
 ];
 
