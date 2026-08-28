@@ -122,6 +122,9 @@ export function CustomerProfile({
     }
 
     if (!meta.fatherName && customer.father_name) meta.fatherName = customer.father_name;
+    if (!meta.country && customer.country_name) meta.country = customer.country_name;
+    if (!meta.stateProvince && customer.state_province_name) meta.stateProvince = customer.state_province_name;
+    if (!meta.city && customer.city_name) meta.city = customer.city_name;
 
     // Clean customerType: ensure it only holds customer types (Male, Female, Corporate, Individual)
     const rawType = String((meta as any).personType || meta.customerType || (customer.company_name ? "Corporate" : "Male")).toLowerCase();
@@ -268,6 +271,14 @@ export function CustomerProfile({
     }
   };
 
+  const hasCompanyDetails = Boolean(
+    (customer.company_name && customer.company_name.trim() !== "") ||
+    (parsedMeta.companyName && parsedMeta.companyName.trim() !== "") ||
+    customer.customer_type === "Corporate" ||
+    (parsedMeta.companyRegNo && parsedMeta.companyRegNo.trim() !== "") ||
+    (parsedMeta.companyTaxNo && parsedMeta.companyTaxNo.trim() !== "")
+  );
+
   if (isDrawer) {
     return (
       <div className="bg-white text-slate-900 p-2 relative select-text flex flex-col justify-between dark:bg-slate-900 dark:text-slate-100" dir={isRtl ? "rtl" : "ltr"}>
@@ -279,8 +290,14 @@ export function CustomerProfile({
           {/* Header branding */}
           <div className="border-b-2 border-teal-600 pb-2.5 flex items-center justify-between dark:border-teal-500">
             <div>
-              <h2 className="text-sm font-extrabold text-teal-800 tracking-tight dark:text-teal-400">DAMAAN GROUP</h2>
-              <p className="text-[8px] text-slate-500 uppercase font-bold tracking-widest mt-0.5 dark:text-slate-400">{getLabel("enterpriseRegistry", lang)}</p>
+              <h2 className="text-sm font-extrabold text-teal-800 tracking-tight dark:text-teal-400">
+                {hasCompanyDetails
+                  ? (parsedMeta.companyName || customer.company_name || "COMPANY PROFILE")
+                  : (customer.customer_name || "CUSTOMER PROFILE")}
+              </h2>
+              <p className="text-[8px] text-slate-500 uppercase font-bold tracking-widest mt-0.5 dark:text-slate-400">
+                {hasCompanyDetails ? getLabel("enterpriseRegistry", lang) : (getLabel("customerRegistry", lang) || "PERSONAL ACCOUNT REGISTRY")}
+              </p>
             </div>
             <div className="text-right">
               <span className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2 py-0.5 text-[9px] font-bold text-teal-700 border border-teal-200 uppercase dark:bg-teal-950/30 dark:text-teal-300 dark:border-teal-900">
@@ -300,6 +317,12 @@ export function CustomerProfile({
                   <span className="text-slate-500">{t(lang, "purchase.f_account_name", "Account Name")}</span>
                   <span className="font-bold text-slate-900 dark:text-slate-100">{parsedMeta.accountName || customer.customer_name}</span>
                 </div>
+                {(customer.father_name || parsedMeta.fatherName) && (
+                  <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
+                    <span className="text-slate-500">{t(lang, "customer_form.father_name_label", "Father's / Guardian's Name")}</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{customer.father_name || parsedMeta.fatherName}</span>
+                  </div>
+                )}
                 <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
                   <span className="text-slate-500">{t(lang, "bank.account_number", "Account Number")}</span>
                   <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{parsedMeta.accountNumber || parsedMeta.customerAccountNumber}</span>
@@ -308,25 +331,29 @@ export function CustomerProfile({
                   <span className="text-slate-500">{t(lang, "roz.cef_customer_number", "Customer Number")}</span>
                   <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{parsedMeta.customerAccountNumber}</span>
                 </div>
+                {parsedMeta.manualReference && (
+                  <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
+                    <span className="text-slate-500">{getLabel("manualReference", lang)}</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.manualReference}</span>
+                  </div>
+                )}
+                {parsedMeta.branchName && (
+                  <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
+                    <span className="text-slate-500">{t(lang, "cdash.col_branch_name", "Branch Name")}</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.branchName}</span>
+                  </div>
+                )}
                 <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">{getLabel("manualReference", lang)}</span>
-                  <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.manualReference || "-"}</span>
+                  <span className="text-slate-500">{getLabel("country", lang)}</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">{customer.country_name || parsedMeta.country || "-"}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">{t(lang, "cdash.col_branch_name", "Branch Name")}</span>
-                  <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.branchName || "-"}</span>
+                  <span className="text-slate-500">{t(lang, "branch.state_label", "State / Province")}</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">{customer.state_province_name || parsedMeta.stateProvince || "-"}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">{t(lang, "bdash.branch_code", "Branch Code")}</span>
-                  <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{parsedMeta.branchCode || "-"}</span>
-                </div>
-                <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">{t(lang, "report.scope_city_branch", "City Branch")}</span>
-                  <span className="font-bold text-slate-850 dark:text-slate-200">{parsedMeta.cityBranch || parsedMeta.city || "-"}</span>
-                </div>
-                <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">{getLabel("countryAndState", lang)}</span>
-                  <span className="font-bold text-slate-800 dark:text-slate-200">{[parsedMeta.country, parsedMeta.stateProvince].filter(Boolean).join(", ") || "-"}</span>
+                  <span className="text-slate-500">{getLabel("city", lang)}</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">{customer.city_name || parsedMeta.city || "-"}</span>
                 </div>
                 <div className="flex justify-between pb-0.5">
                   <span className="text-slate-500">{t(lang, "purchase.f_address", "Address")}</span>
@@ -335,52 +362,62 @@ export function CustomerProfile({
               </div>
             </div>
 
-            {/* Customer Company Details Card */}
-            <div className="border rounded-xl p-3 bg-slate-50/50 space-y-1.5 dark:bg-slate-900/40 dark:border-slate-800">
-              <h3 className="text-[9px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1 dark:text-teal-400">{getLabel("customerCompanyDetails", lang)}</h3>
-              <div className="space-y-1 text-xs">
-                <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">{t(lang, "branch.row_company_name", "Company Name")}</span>
-                  <span className="font-bold text-slate-900 dark:text-slate-100">{parsedMeta.companyName || customer.company_name || "-"}</span>
-                </div>
-                <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">{t(lang, "ledger.registration_number", "Registration Number")}</span>
-                  <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{parsedMeta.companyRegNo || "-"}</span>
-                </div>
-                <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">{getLabel("taxNtnNumber", lang)}</span>
-                  <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{parsedMeta.companyTaxNo || "-"}</span>
-                </div>
-                <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">{t(lang, "company_form.business_type_label", "Business Type")}</span>
-                  <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.companyBusinessType || "-"}</span>
-                </div>
-                <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">{t(lang, "purchase.f_phone_number", "Phone Number")}</span>
-                  <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{parsedMeta.companyPhone || "-"}</span>
-                </div>
-                <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">{getLabel("emailAddress", lang)}</span>
-                  <span className="font-bold text-slate-800 dark:text-slate-200 text-right truncate max-w-[120px]" title={parsedMeta.companyEmail}>{parsedMeta.companyEmail || "-"}</span>
-                </div>
-                <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">{getLabel("country", lang)}</span>
-                  <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.companyCountry || parsedMeta.country || "-"}</span>
-                </div>
-                <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">{getLabel("city", lang)}</span>
-                  <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.companyCity || parsedMeta.city || "-"}</span>
-                </div>
-                <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">{t(lang, "branch.state_label", "State")}</span>
-                  <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.companyState || parsedMeta.stateProvince || "-"}</span>
-                </div>
-                <div className="flex justify-between pb-0.5">
-                  <span className="text-slate-500">{getLabel("completeAddress", lang)}</span>
-                  <span className="font-bold text-slate-900 dark:text-slate-100 text-right truncate max-w-[120px]" title={parsedMeta.companyAddress || customer.address || ""}>{parsedMeta.companyAddress || customer.address || "-"}</span>
+            {/* Customer Company Details Card — only rendered when company information exists */}
+            {hasCompanyDetails && (
+              <div className="border rounded-xl p-3 bg-slate-50/50 space-y-1.5 dark:bg-slate-900/40 dark:border-slate-800">
+                <h3 className="text-[9px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1 dark:text-teal-400">{getLabel("customerCompanyDetails", lang)}</h3>
+                <div className="space-y-1 text-xs">
+                  <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
+                    <span className="text-slate-500">{t(lang, "branch.row_company_name", "Company Name")}</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-100">{parsedMeta.companyName || customer.company_name || "-"}</span>
+                  </div>
+                  {parsedMeta.companyRegNo && (
+                    <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
+                      <span className="text-slate-500">{t(lang, "ledger.registration_number", "Registration Number")}</span>
+                      <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{parsedMeta.companyRegNo}</span>
+                    </div>
+                  )}
+                  {parsedMeta.companyTaxNo && (
+                    <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
+                      <span className="text-slate-500">{getLabel("taxNtnNumber", lang)}</span>
+                      <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{parsedMeta.companyTaxNo}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
+                    <span className="text-slate-500">{t(lang, "company_form.business_type_label", "Business Type")}</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.companyBusinessType || "-"}</span>
+                  </div>
+                  {parsedMeta.companyPhone && (
+                    <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
+                      <span className="text-slate-500">{t(lang, "purchase.f_phone_number", "Phone Number")}</span>
+                      <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{parsedMeta.companyPhone}</span>
+                    </div>
+                  )}
+                  {parsedMeta.companyEmail && (
+                    <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
+                      <span className="text-slate-500">{getLabel("emailAddress", lang)}</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200 text-right truncate max-w-[120px]" title={parsedMeta.companyEmail}>{parsedMeta.companyEmail}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
+                    <span className="text-slate-500">{getLabel("country", lang)}</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.companyCountry || parsedMeta.country || customer.country_name || "-"}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
+                    <span className="text-slate-500">{getLabel("city", lang)}</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.companyCity || parsedMeta.city || customer.city_name || "-"}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
+                    <span className="text-slate-500">{t(lang, "branch.state_label", "State")}</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.companyState || parsedMeta.stateProvince || customer.state_province_name || "-"}</span>
+                  </div>
+                  <div className="flex justify-between pb-0.5">
+                    <span className="text-slate-500">{getLabel("completeAddress", lang)}</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-100 text-right truncate max-w-[120px]" title={parsedMeta.companyAddress || customer.address || ""}>{parsedMeta.companyAddress || customer.address || "-"}</span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
           </div>
 
@@ -545,10 +582,16 @@ export function CustomerProfile({
 
           <div className="space-y-8">
             {/* Header branding */}
-            <div className="border-b-2 border-teal-600 pb-4 flex items-center justify-between">
+            <div className="border-b-2 border-teal-600 pb-3 flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-extrabold text-teal-800 tracking-tight">DAMAAN BUSINESS GROUP</h2>
-                <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest mt-0.5">{getLabel("enterpriseErpFmsPortal", lang)}</p>
+                <h2 className="text-lg font-extrabold text-teal-800 tracking-tight">
+                  {hasCompanyDetails
+                    ? (parsedMeta.companyName || customer.company_name || "COMPANY PROFILE")
+                    : (customer.customer_name || "CUSTOMER PROFILE")}
+                </h2>
+                <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest mt-0.5">
+                  {hasCompanyDetails ? getLabel("enterpriseRegistry", lang) : (getLabel("customerRegistry", lang) || "PERSONAL ACCOUNT REGISTRY")}
+                </p>
               </div>
               <div className="text-right">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-50 px-3 py-1 text-[10px] font-bold text-teal-700 border border-teal-200 uppercase">
@@ -565,7 +608,7 @@ export function CustomerProfile({
             </div>
 
             {/* Content Grids */}
-            <div className="grid gap-6 sm:grid-cols-2">
+            <div className={`grid gap-6 ${hasCompanyDetails ? "sm:grid-cols-2" : "grid-cols-1"}`}>
               {/* Customer Account Details Card */}
               <div className="border rounded-xl p-4 bg-slate-50/50 space-y-3 relative">
                 <div className="absolute top-3 right-3 text-teal-600/30">
@@ -577,6 +620,12 @@ export function CustomerProfile({
                     <span className="text-slate-500">{t(lang, "purchase.f_account_name", "Account Name")}</span>
                     <span className="font-bold text-slate-800">{parsedMeta.accountName || customer.customer_name}</span>
                   </div>
+                  {(customer.father_name || parsedMeta.fatherName) && (
+                    <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                      <span className="text-slate-500">{t(lang, "customer_form.father_name_label", "Father's / Guardian's Name")}</span>
+                      <span className="font-bold text-slate-800">{customer.father_name || parsedMeta.fatherName}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between border-b border-slate-100 pb-1.5">
                     <span className="text-slate-500">{t(lang, "bank.account_number", "Account Number")}</span>
                     <span className="font-bold text-slate-800 font-mono">{parsedMeta.accountNumber || parsedMeta.customerAccountNumber}</span>
@@ -585,25 +634,29 @@ export function CustomerProfile({
                     <span className="text-slate-500">{t(lang, "roz.cef_customer_number", "Customer Number")}</span>
                     <span className="font-bold text-slate-800 font-mono">{parsedMeta.customerAccountNumber}</span>
                   </div>
+                  {parsedMeta.manualReference && (
+                    <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                      <span className="text-slate-500">{getLabel("manualReference", lang)}</span>
+                      <span className="font-bold text-slate-800">{parsedMeta.manualReference}</span>
+                    </div>
+                  )}
+                  {parsedMeta.branchName && (
+                    <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                      <span className="text-slate-500">{t(lang, "cdash.col_branch_name", "Branch Name")}</span>
+                      <span className="font-bold text-slate-800">{parsedMeta.branchName}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">{getLabel("manualReference", lang)}</span>
-                    <span className="font-bold text-slate-800">{parsedMeta.manualReference || "-"}</span>
+                    <span className="text-slate-500">{getLabel("country", lang)}</span>
+                    <span className="font-bold text-slate-800">{customer.country_name || parsedMeta.country || "-"}</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">{t(lang, "cdash.col_branch_name", "Branch Name")}</span>
-                    <span className="font-bold text-slate-800">{parsedMeta.branchName || "-"}</span>
+                    <span className="text-slate-500">{t(lang, "branch.state_label", "State / Province")}</span>
+                    <span className="font-bold text-slate-800">{customer.state_province_name || parsedMeta.stateProvince || "-"}</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">{t(lang, "bdash.branch_code", "Branch Code")}</span>
-                    <span className="font-bold text-slate-800 font-mono">{parsedMeta.branchCode || "-"}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">{t(lang, "report.scope_city_branch", "City Branch")}</span>
-                    <span className="font-bold text-slate-800">{parsedMeta.cityBranch || parsedMeta.city || "-"}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">{getLabel("countryAndState", lang)}</span>
-                    <span className="font-bold text-slate-800">{[parsedMeta.country, parsedMeta.stateProvince].filter(Boolean).join(", ") || "-"}</span>
+                    <span className="text-slate-500">{getLabel("city", lang)}</span>
+                    <span className="font-bold text-slate-800">{customer.city_name || parsedMeta.city || "-"}</span>
                   </div>
                   <div className="flex justify-between pb-0.5">
                     <span className="text-slate-500">{t(lang, "purchase.f_address", "Address")}</span>
@@ -612,55 +665,65 @@ export function CustomerProfile({
                 </div>
               </div>
 
-              {/* Customer Company Details Card */}
-              <div className="border rounded-xl p-4 bg-slate-50/50 space-y-3 relative">
-                <div className="absolute top-3 right-3 text-teal-600/30">
-                  <Building2 className="h-6 w-6" />
+              {/* Customer Company Details Card — only rendered when company information exists */}
+              {hasCompanyDetails && (
+                <div className="border rounded-xl p-4 bg-slate-50/50 space-y-3 relative">
+                  <div className="absolute top-3 right-3 text-teal-600/30">
+                    <Building2 className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-[10px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1">{getLabel("customerCompanyDetails", lang)}</h3>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                      <span className="text-slate-500">{t(lang, "branch.row_company_name", "Company Name")}</span>
+                      <span className="font-bold text-slate-800">{parsedMeta.companyName || customer.company_name || "-"}</span>
+                    </div>
+                    {parsedMeta.companyRegNo && (
+                      <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                        <span className="text-slate-500">{t(lang, "ledger.registration_number", "Registration Number")}</span>
+                        <span className="font-bold text-slate-800 font-mono">{parsedMeta.companyRegNo}</span>
+                      </div>
+                    )}
+                    {parsedMeta.companyTaxNo && (
+                      <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                        <span className="text-slate-500">{getLabel("taxNtnNumber", lang)}</span>
+                        <span className="font-bold text-slate-800 font-mono">{parsedMeta.companyTaxNo}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                      <span className="text-slate-500">{t(lang, "company_form.business_type_label", "Business Type")}</span>
+                      <span className="font-bold text-slate-800">{parsedMeta.companyBusinessType || "-"}</span>
+                    </div>
+                    {parsedMeta.companyPhone && (
+                      <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                        <span className="text-slate-500">{t(lang, "purchase.f_phone_number", "Phone Number")}</span>
+                        <span className="font-bold text-slate-800 font-mono">{parsedMeta.companyPhone}</span>
+                      </div>
+                    )}
+                    {parsedMeta.companyEmail && (
+                      <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                        <span className="text-slate-500">{getLabel("emailAddress", lang)}</span>
+                        <span className="font-bold text-slate-800 text-right max-w-[150px] truncate text-[11px]" title={parsedMeta.companyEmail}>{parsedMeta.companyEmail}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                      <span className="text-slate-500">{getLabel("country", lang)}</span>
+                      <span className="font-bold text-slate-800">{parsedMeta.companyCountry || parsedMeta.country || customer.country_name || "-"}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                      <span className="text-slate-500">{getLabel("city", lang)}</span>
+                      <span className="font-bold text-slate-800">{parsedMeta.companyCity || parsedMeta.city || customer.city_name || "-"}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                      <span className="text-slate-500">{t(lang, "branch.state_label", "State")}</span>
+                      <span className="font-bold text-slate-800">{parsedMeta.companyState || parsedMeta.stateProvince || customer.state_province_name || "-"}</span>
+                    </div>
+                    <div className="flex justify-between pb-0.5">
+                      <span className="text-slate-500">{getLabel("completeAddress", lang)}</span>
+                      <span className="font-bold text-slate-900 text-right max-w-[150px] truncate" title={parsedMeta.companyAddress || customer.address || ""}>{parsedMeta.companyAddress || customer.address || "-"}</span>
+                    </div>
+                  </div>
                 </div>
-                <h3 className="text-[10px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1">{getLabel("customerCompanyDetails", lang)}</h3>
-                <div className="space-y-2 text-xs">
-                  <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">{t(lang, "branch.row_company_name", "Company Name")}</span>
-                    <span className="font-bold text-slate-800">{parsedMeta.companyName || customer.company_name || "-"}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">{t(lang, "ledger.registration_number", "Registration Number")}</span>
-                    <span className="font-bold text-slate-800 font-mono">{parsedMeta.companyRegNo || "-"}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">{getLabel("taxNtnNumber", lang)}</span>
-                    <span className="font-bold text-slate-800 font-mono">{parsedMeta.companyTaxNo || "-"}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">{t(lang, "company_form.business_type_label", "Business Type")}</span>
-                    <span className="font-bold text-slate-800">{parsedMeta.companyBusinessType || "-"}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">{t(lang, "purchase.f_phone_number", "Phone Number")}</span>
-                    <span className="font-bold text-slate-800 font-mono">{parsedMeta.companyPhone || "-"}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">{getLabel("emailAddress", lang)}</span>
-                    <span className="font-bold text-slate-800 text-right max-w-[150px] truncate text-[11px]" title={parsedMeta.companyEmail}>{parsedMeta.companyEmail || "-"}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">{getLabel("country", lang)}</span>
-                    <span className="font-bold text-slate-800">{parsedMeta.companyCountry || parsedMeta.country || "-"}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">{getLabel("city", lang)}</span>
-                    <span className="font-bold text-slate-800">{parsedMeta.companyCity || parsedMeta.city || "-"}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-500">{t(lang, "branch.state_label", "State")}</span>
-                    <span className="font-bold text-slate-800">{parsedMeta.companyState || parsedMeta.stateProvince || "-"}</span>
-                  </div>
-                  <div className="flex justify-between pb-0.5">
-                    <span className="text-slate-500">{getLabel("completeAddress", lang)}</span>
-                    <span className="font-bold text-slate-900 text-right max-w-[150px] truncate" title={parsedMeta.companyAddress || customer.address || ""}>{parsedMeta.companyAddress || customer.address || "-"}</span>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Contacts Table style */}

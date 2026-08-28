@@ -6,8 +6,9 @@
  * opened by recipients who have NOT logged in to the ERP.
  *
  * GET  → Validates token, returns form_type and metadata
- * POST → Accepts form data, creates the record in the ERP via existing
- *        service functions, marks the link as "used"
+ * POST → Accepts form data, resolves Country/State/City names to UUIDs,
+ *        creates the record in the ERP via existing service functions,
+ *        and marks the link as "used"
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -105,34 +106,164 @@ export async function POST(
     if (!body) return err("Invalid request body", 400);
 
     let submittedRecordId: string | null = null;
-
-    // ── Route to the correct service ──────────────────────────────────────────
     const formType: string = link.form_type;
 
+    // ── Location Resolver: Map text names to DB UUIDs ─────────────────────────
+    let resolvedCountryId: string | null = body.countryId ?? null;
+    let resolvedStateId: string | null = body.stateProvinceId ?? null;
+    let resolvedCityId: string | null = body.cityId ?? null;
+
+    await withLocalPg(async (sql) => {
+      // 1. Resolve Country
+      const countryRaw = (body.country || body.countryName || "").trim();
+      if (!resolvedCountryId && countryRaw) {
+        const rows = await sql<any[]>`
+          SELECT id FROM public.countries
+          WHERE deleted_at IS NULL
+            AND (
+              name ILIKE ${countryRaw}
+              OR iso2 ILIKE ${countryRaw}
+              OR iso3 ILIKE ${countryRaw}
+              OR name ILIKE ${'%' + countryRaw + '%'}
+            )
+          ORDER BY
+            CASE WHEN name ILIKE ${countryRaw} THEN 1
+                 WHEN iso2 ILIKE ${countryRaw} THEN 2
+                 ELSE 3 END
+          LIMIT 1
+        `;
+        if (rows.length > 0) {
+          resolvedCountryId = rows[0].id;
+        }
+      }
+
+      if (!resolvedCountryId && link.country_id) {
+        resolvedCountryId = link.country_id;
+      }
+
+      // 2. Resolve State / Province
+      const stateRaw = (body.stateProvince || body.stateName || "").trim();
+      if (resolvedCountryId && !resolvedStateId && stateRaw) {
+        const rows = await sql<any[]>`
+          SELECT id FROM public.states_provinces
+          WHERE deleted_at IS NULL
+            AND country_id = ${resolvedCountryId}::uuid
+            AND (
+              name ILIKE ${stateRaw}
+              OR code ILIKE ${stateRaw}
+              OR name ILIKE ${'%' + stateRaw + '%'}
+            )
+          ORDER BY
+            CASE WHEN name ILIKE ${stateRaw} THEN 1 ELSE 2 END
+          LIMIT 1
+        `;
+        if (rows.length > 0) {
+          resolvedStateId = rows[0].id;
+        }
+      }
+
+      // 3. Resolve City
+      const cityRaw = (body.city || body.cityName || "").trim();
+      if (resolvedCountryId && !resolvedCityId && cityRaw) {
+        const rows = await sql<any[]>`
+          SELECT id FROM public.cities
+          WHERE deleted_at IS NULL
+            AND (country_id = ${resolvedCountryId}::uuid ${resolvedStateId ? sql`OR state_province_id = ${resolvedStateId}::uuid` : sql``})
+            AND (
+              name ILIKE ${cityRaw}
+              OR code ILIKE ${cityRaw}
+              OR name ILIKE ${'%' + cityRaw + '%'}
+            )
+          ORDER BY
+            CASE WHEN name ILIKE ${cityRaw} THEN 1 ELSE 2 END
+          LIMIT 1
+        `;
+        if (rows.length > 0) {
+          resolvedCityId = rows[0].id;
+        }
+      }
+    });
+
+    // ── Build contacts array (Multi-Phone, Multi-WhatsApp, Email) ─────────────
+    const contacts: Array<{ type: string; value: string; isPrimary?: boolean }> = Array.isArray(body.contacts) ? [...body.contacts] : [];
+    
+    if (body.mobiles && Array.isArray(body.mobiles)) {
+      for (const m of body.mobiles) {
+        const cleanM = typeof m === "string" ? m.trim() : "";
+        if (cleanM && !contacts.some((c) => c.value === cleanM)) {
+          contacts.push({ type: "Mobile", value: cleanM, isPrimary: contacts.length === 0 });
+        }
+      }
+    }
+    if (body.mobile && typeof body.mobile === "string") {
+      const cleanM = body.mobile.trim();
+      if (cleanM && !contacts.some((c) => c.value === cleanM)) {
+        contacts.push({ type: "Mobile", value: cleanM, isPrimary: contacts.length === 0 });
+      }
+    }
+
+    if (body.whatsapps && Array.isArray(body.whatsapps)) {
+      for (const w of body.whatsapps) {
+        const cleanW = typeof w === "string" ? w.trim() : "";
+        if (cleanW && !contacts.some((c) => c.value === cleanW)) {
+          contacts.push({ type: "WhatsApp", value: cleanW });
+        }
+      }
+    }
+    if (body.whatsapp && typeof body.whatsapp === "string") {
+      const cleanW = body.whatsapp.trim();
+      if (cleanW && !contacts.some((c) => c.value === cleanW)) {
+        contacts.push({ type: "WhatsApp", value: cleanW });
+      }
+    }
+
+    if (body.email && typeof body.email === "string") {
+      const cleanE = body.email.trim();
+      if (cleanE && !contacts.some((c) => c.value === cleanE)) {
+        contacts.push({ type: "Email", value: cleanE });
+      }
+    }
+
+    // ── Build registrations array (CNIC, Passport, etc.) ──────────────────────
+    const registrations: Array<{ type: string; value: string }> = Array.isArray(body.registrations) ? [...body.registrations] : [];
+    if (body.documents && Array.isArray(body.documents)) {
+      for (const doc of body.documents) {
+        if (doc && doc.type && doc.number && !registrations.some((r) => r.type === doc.type)) {
+          registrations.push({ type: doc.type, value: String(doc.number).trim() });
+        }
+      }
+    }
+
+    const primaryMobile = contacts.find((c) => c.type === "Mobile")?.value ?? body.mobile ?? null;
+    const primaryWhatsapp = contacts.find((c) => c.type === "WhatsApp")?.value ?? body.whatsapp ?? null;
+    const primaryEmail = contacts.find((c) => c.type === "Email")?.value ?? body.email ?? null;
+    const resolvedPhoto = body.photoUrl ?? body.photo ?? null;
+
+    // ── Route to the correct service ──────────────────────────────────────────
     if (formType === "customer") {
       submittedRecordId = await customersService.create(
         {
-          countryId:       body.countryId ?? link.country_id ?? "",
-          stateProvinceId: body.stateProvinceId ?? null,
+          countryId:       resolvedCountryId ?? "",
+          stateProvinceId: resolvedStateId ?? null,
           districtId:      body.districtId ?? null,
-          cityId:          body.cityId ?? null,
+          cityId:          resolvedCityId ?? null,
           areaLocationId:  body.areaLocationId ?? null,
           customerName:    body.customerName ?? body.fullName ?? "Unknown",
           firstName:       body.firstName ?? null,
           lastName:        body.lastName ?? null,
           fatherName:      body.fatherName ?? null,
           gender:          body.gender ?? null,
-          photoUrl:        body.photoUrl ?? null,
+          photoUrl:        resolvedPhoto,
           companyName:     body.companyName ?? null,
           contactPerson:   body.contactPerson ?? null,
-          mobile:          body.mobile ?? null,
-          whatsapp:        body.whatsapp ?? null,
-          email:           body.email ?? null,
+          mobile:          primaryMobile,
+          whatsapp:        primaryWhatsapp,
+          email:           primaryEmail,
           address:         body.address ?? null,
           notes:           `[External Form Submission] ${body.notes ?? ""}`.trim(),
           originalLanguage: body.originalLanguage ?? "en",
-          contacts:        body.contacts ?? [],
-          registrations:   body.registrations ?? [],
+          contacts,
+          registrations,
         },
         null // no authenticated user
       );
@@ -147,40 +278,36 @@ export async function POST(
           ownerPersonId:    null,
           managerPersonId:  null,
           businessType:     body.businessType ?? null,
-          countryId:        body.countryId ?? link.country_id ?? null,
+          countryId:        resolvedCountryId ?? null,
           countryBranchId:  body.countryBranchId ?? link.country_branch_id ?? null,
           cityBranchId:     body.cityBranchId ?? link.city_branch_id ?? null,
           isBranchOperative: false,
-          stateProvinceId:  body.stateProvinceId ?? null,
+          stateProvinceId:  resolvedStateId ?? null,
           districtId:       body.districtId ?? null,
-          cityId:           body.cityId ?? null,
+          cityId:           resolvedCityId ?? null,
           areaLocationId:   body.areaLocationId ?? null,
-          countryName:      body.countryName ?? null,
-          stateName:        body.stateName ?? null,
+          countryName:      body.countryName ?? body.country ?? null,
+          stateName:        body.stateName ?? body.stateProvince ?? null,
           districtName:     body.districtName ?? null,
-          cityName:         body.cityName ?? null,
+          cityName:         body.cityName ?? body.city ?? null,
           areaName:         body.areaName ?? null,
-          zipCode:          body.zipCode ?? null,
+          zipCode:          body.postalCode ?? body.zipCode ?? null,
           address:          body.address ?? null,
-          contacts:         body.contacts ?? [],
-          registrations:    body.registrations ?? [],
+          contacts,
+          registrations,
           ownerIds:         body.ownerIds ?? [],
         },
         null
       );
     } else if (formType === "employee" || formType === "agent") {
-      // For employee & agent: insert into pending_ext_submissions and
-      // let ERP staff review/approve. This avoids bypassing the richer
-      // employee form validations that require HR context.
       await withLocalPg(async (sql) => {
         const [row] = await sql<any[]>`
           insert into pending_ext_submissions
             (form_type, form_link_token, submission_data, submitted_at, country_id)
           values
-            (${formType}, ${token}, ${sql.json(body)}, now(), ${link.country_id ?? null})
+            (${formType}, ${token}, ${sql.json(body)}, now(), ${resolvedCountryId ?? link.country_id ?? null})
           returning id
         `.catch(async () => {
-          // Table may not exist yet — create it on-the-fly and retry
           await sql`
             create table if not exists pending_ext_submissions (
               id            uuid primary key default gen_random_uuid(),
@@ -200,7 +327,7 @@ export async function POST(
             insert into pending_ext_submissions
               (form_type, form_link_token, submission_data, submitted_at, country_id)
             values
-              (${formType}, ${token}, ${sql.json(body)}, now(), ${link.country_id ?? null})
+              (${formType}, ${token}, ${sql.json(body)}, now(), ${resolvedCountryId ?? link.country_id ?? null})
             returning id
           `;
           return [r2];

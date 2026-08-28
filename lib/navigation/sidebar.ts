@@ -1014,6 +1014,7 @@ export const sidebarTree: SidebarNode[] = [
       { key: "go-payroll", labelKey: "nav.payroll_salary", iconKey: "banknote", href: "/dashboard/general-office/employees?tab=payroll" as Route },
       { key: "go-payroll-runs", labelKey: "nav.payroll_runs", iconKey: "banknote", href: "/dashboard/general-office/payroll" as Route },
       { key: "go-payroll-tax", labelKey: "nav.payroll_tax_config", iconKey: "calculator", href: "/dashboard/general-office/payroll-tax" as Route },
+      { key: "go-gratuity", labelKey: "nav.gratuity_settlement", iconKey: "banknote", href: "/dashboard/general-office/gratuity" as Route },
       { key: "go-contract-control", labelKey: "nav.contract_control", iconKey: "scroll-text", href: "/dashboard/general-office/contracts" as Route, permission: { resource: "contracts", action: "read" } },
       { key: "go-assets", labelKey: "nav.office_assets", iconKey: "clipboard-list", href: "/dashboard/general-office/employees?tab=assets" as Route },
       { key: "go-documents", labelKey: "nav.office_documents", iconKey: "file-text", href: "/dashboard/general-office/employees?tab=documents" as Route },
