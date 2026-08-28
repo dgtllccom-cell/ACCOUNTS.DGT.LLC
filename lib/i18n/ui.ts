@@ -1,6 +1,22 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type UiKey =
+  | "settlement.title"
+  | "nav.settlement_reconciliation"
+  | "settlement.dashboard"
+  | "settlement.daily"
+  | "settlement.cash"
+  | "settlement.bank"
+  | "settlement.party"
+  | "settlement.purchase"
+  | "settlement.sales"
+  | "settlement.payment"
+  | "settlement.expense"
+  | "settlement.fx"
+  | "settlement.unsettled"
+  | "settlement.reports"
+  | "settlement.system_doc"
+  | "settlement.audit"
   | "nav.super_admin_menu"
   | "nav.export_pdf_center"
   | "nav.audit_logs"
@@ -4331,6 +4347,22 @@ export type UiKey =
 type Dict = Record<string, string>;
 
 const en: Dict = {
+  "settlement.title": "SETTLEMENT & RECONCILIATION",
+  "nav.settlement_reconciliation": "SETTLEMENT & RECONCILIATION",
+  "settlement.dashboard": "Settlement Dashboard",
+  "settlement.daily": "Daily Settlement",
+  "settlement.cash": "Cash Settlement",
+  "settlement.bank": "Bank Settlement",
+  "settlement.party": "Party Settlement",
+  "settlement.purchase": "Purchase Settlement",
+  "settlement.sales": "Sales Settlement",
+  "settlement.payment": "Payment Settlement",
+  "settlement.expense": "Expense Settlement",
+  "settlement.fx": "Currency & FX Settlement",
+  "settlement.unsettled": "Unsettled Queue",
+  "settlement.reports": "Settlement Reports",
+  "settlement.system_doc": "System Documentation (PDF)",
+  "settlement.audit": "Audit & Exceptions",
   "crm.title": "SMART CRM / DUE & FOLLOW-UP CONTROL CENTER",
   "crm.menu_reports": "CRM Universal Reports & Due Center",
   "crm.filter_by_country": "Filter Scope:",
@@ -13302,6 +13334,22 @@ const en: Dict = {
 };
 
 const ur: Dict = {
+  "settlement.title": "تصفیہ اور مفاہمت",
+  "nav.settlement_reconciliation": "تصفیہ اور مفاہمت",
+  "settlement.dashboard": "تصفیہ ڈیش بورڈ",
+  "settlement.daily": "روزانہ تصفیہ",
+  "settlement.cash": "کیش تصفیہ",
+  "settlement.bank": "بینک تصفیہ",
+  "settlement.party": "پارٹی تصفیہ",
+  "settlement.purchase": "خریداری تصفیہ",
+  "settlement.sales": "فروخت تصفیہ",
+  "settlement.payment": "ادائیگی تصفیہ",
+  "settlement.expense": "اخراجات تصفیہ",
+  "settlement.fx": "کرنسی و فاریکس تصفیہ",
+  "settlement.unsettled": "غیر تصفیہ شدہ قطار",
+  "settlement.reports": "تصفیہ رپورٹس",
+  "settlement.system_doc": "سسٹم دستاویزات (پی ڈی ایف)",
+  "settlement.audit": "آڈٹ اور مستثنیات",
   "crm.title": "اسمارٹ سی آر ایم / واجب الادا اور فالو اپ کنٹرول سینٹر",
   "crm.menu_reports": "CRM یونیورسل رپورٹس اور ڈیو سینٹر",
   "crm.filter_by_country": "دائرہ کار فلٹر:",
@@ -22252,6 +22300,22 @@ const ur: Dict = {
 };
 
 const ar: Dict = {
+  "settlement.title": "التسوية والمطابقة",
+  "nav.settlement_reconciliation": "التسوية والمطابقة",
+  "settlement.dashboard": "لوحة تحكم التسوية",
+  "settlement.daily": "التسوية اليومية",
+  "settlement.cash": "التسوية النقدية",
+  "settlement.bank": "التسوية المصرفية",
+  "settlement.party": "تسوية الأطراف",
+  "settlement.purchase": "تسوية المشتريات",
+  "settlement.sales": "تسوية المبيعات",
+  "settlement.payment": "تسوية المدفوعات",
+  "settlement.expense": "تسوية المصروفات",
+  "settlement.fx": "تسوية العملات والصرف",
+  "settlement.unsettled": "طابور المعاملات غير المسواة",
+  "settlement.reports": "تقارير التسوية",
+  "settlement.system_doc": "توثيق النظام (PDF)",
+  "settlement.audit": "التدقيق والاستثناءات",
   "crm.title": "مركز إدارة علاقات العملاء الذكي / متابعة المستحقات والمهام",
   "crm.menu_reports": "تقارير CRM الشاملة ومركز الاستحقاق",
   "crm.filter_by_country": "نطاق التصفية:",
@@ -31204,6 +31268,22 @@ const ar: Dict = {
 };
 
 const fa: Dict = {
+  "settlement.title": "تسویه و تطبیق",
+  "nav.settlement_reconciliation": "تسویه و تطبیق",
+  "settlement.dashboard": "داشبورد تسویه",
+  "settlement.daily": "تسویه روزانه",
+  "settlement.cash": "تسویه نقدی",
+  "settlement.bank": "تسویه بانکی",
+  "settlement.party": "تسویه طرف حساب",
+  "settlement.purchase": "تسویه خرید",
+  "settlement.sales": "تسویه فروش",
+  "settlement.payment": "تسویه پرداخت‌ها",
+  "settlement.expense": "تسویه مصارف",
+  "settlement.fx": "تسویه ارزی و فارکس",
+  "settlement.unsettled": "صف تسویه نشده",
+  "settlement.reports": "گزارش‌های تسویه",
+  "settlement.system_doc": "مستندات سیستم (PDF)",
+  "settlement.audit": "حسابرسی و مغایرت‌ها",
   "crm.title": "مرکز هوشمند CRM / کنترل سررسیدها و پیگیری‌ها",
   "crm.menu_reports": "گزارش‌های جامع CRM و مرکز سررسید",
   "crm.filter_by_country": "محدوده فیلتر:",
@@ -40155,6 +40235,22 @@ const fa: Dict = {
 };
 
 const ps: Dict = {
+  "settlement.title": "تصفیه او مطابقت",
+  "nav.settlement_reconciliation": "تصفیه او مطابقت",
+  "settlement.dashboard": "د تصفیې ډشبورډ",
+  "settlement.daily": "ورځنۍ تصفیه",
+  "settlement.cash": "نغدي تصفیه",
+  "settlement.bank": "بانکي تصفیه",
+  "settlement.party": "د اړخ تصفیه",
+  "settlement.purchase": "د پیرود تصفیه",
+  "settlement.sales": "د پلور تصفیه",
+  "settlement.payment": "د تادیاتو تصفیه",
+  "settlement.expense": "د لګښتونو تصفیه",
+  "settlement.fx": "د اسعارو او فارکس تصفیه",
+  "settlement.unsettled": "د نه تصفیه شویو کتار",
+  "settlement.reports": "د تصفیې راپورونه",
+  "settlement.system_doc": "د سیسټم اسناد (PDF)",
+  "settlement.audit": "پلټنه او استثناوې",
   "crm.title": "د سمارټ CRM / واجباتو او تعقیب کنټرول مرکز",
   "crm.menu_reports": "د CRM نړیوال راپورونه او د واجباتو مرکز",
   "crm.filter_by_country": "د فلټر ساحه:",
