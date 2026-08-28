@@ -1006,6 +1006,7 @@ export const sidebarTree: SidebarNode[] = [
       { key: "go-bank-registry", labelKey: "nav.bank_form", iconKey: "banknote", href: "/dashboard/settings/bank" as Route },
       { key: "go-departments", labelKey: "nav.departments", iconKey: "building-2", href: "/dashboard/general-office/departments" as Route },
       { key: "go-designations", labelKey: "nav.designations", iconKey: "scroll-text", href: "/dashboard/general-office/designations" as Route },
+      { key: "go-employee-lifecycle", labelKey: "nav.employee_lifecycle", iconKey: "scroll-text", href: "/dashboard/general-office/employee-lifecycle" as Route },
       { key: "go-attendance", labelKey: "nav.attendance", iconKey: "clock", href: "/dashboard/general-office/employees?tab=attendance" as Route },
       { key: "go-leave", labelKey: "nav.leave_management", iconKey: "calendar", href: "/dashboard/general-office/employees?tab=leave" as Route },
       { key: "go-payroll", labelKey: "nav.payroll_salary", iconKey: "banknote", href: "/dashboard/general-office/employees?tab=payroll" as Route },

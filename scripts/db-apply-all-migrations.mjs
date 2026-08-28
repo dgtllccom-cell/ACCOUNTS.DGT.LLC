@@ -49,7 +49,8 @@ const migrations = [
   { name: "20260828_external_form_links", path: "supabase/migrations/20260828_external_form_links.sql" },
   { name: "20260913_goods_master_category", path: "supabase/migrations/20260913_goods_master_category.sql" },
   { name: "20260914_contract_control_center", path: "supabase/migrations/20260914_contract_control_center.sql" },
-  { name: "20260915_hr_departments_designations", path: "supabase/migrations/20260915_hr_departments_designations.sql" }
+  { name: "20260915_hr_departments_designations", path: "supabase/migrations/20260915_hr_departments_designations.sql" },
+  { name: "20260916_hr_employment_history", path: "supabase/migrations/20260916_hr_employment_history.sql" }
 ];
 
 const sql = postgres(env.DATABASE_URL, { max: 1, prepare: false, connect_timeout: 60 });
