@@ -99,9 +99,34 @@ validation → approval → DB → audit flow.
 New Sales Booking, Purchase Loading, Shipping / BL Entry, Clearing Document
 Entry, Contract Control, KYC / QVC, Cash / Bank Roznamcha.
 
-### Phases 6–9 — not started
-6. Partial Container Purchase Workflow (LOAD-01/02 batches, Planned/Loaded/Remaining,
-   container-level trace, no duplicate Purchase/Payment/Loading/Container records).
+### Phase 6 — Partial Container Purchase Workflow ✅ (this commit)
+Migration `20260927_purchase_loading_batches` — `purchase_loading_batches`
+(LOAD-01, LOAD-02 … per purchase order), nullable `loading_batch_id` /
+`loading_batch_no` on `purchase_loading_records` (existing rows untouched), and
+`purchase_loading_progress_v` (Planned / Loaded / Remaining containers + a
+`planned` / `partially_loaded` / `fully_loaded` status per purchase order).
+`purchase-loading-batch-service.ts` — `proposeBatchFromJob` (only from an
+in-scope intake job **matched to a purchase order**; extracts container numbers;
+**excludes containers already loaded or already in a live batch** → no
+duplicates; auto-numbers `LOAD-0N`), `confirmBatch`, `cancelBatch` (blocked once
+loading records are linked), `progressForOrder`, `listBatches`.
+API `app/api/erp/purchases/loading-batches` (GET list / `?view=progress`, POST
+propose, PATCH confirm|cancel) — `authorizeApiScope("purchases", …)`, scope
+re-checked in the service. Intake `ReviewPanel` gains a "Propose Loading Batch"
+button + result banner when the job is matched to a purchase order.
+
+**Never** creates a loading record, payment, container master or a second
+purchase booking — the existing Purchase Loading form still creates the loading
+records (pre-filled from the batch); the batch only groups and tracks.
+E2E `scratch/di-batch-e2e.mts`: propose `LOAD-01` (2 containers) → re-propose
+rejected (dedup) → progress view → confirm → job events
+`loading_batch_proposed → loading_batch_confirmed`.
+
+**Remaining Phase-6 work:** the Purchase Loading form reading `?batchId` /
+`di_draft_prefill` to pre-fill the container list and stamp `loading_batch_id`
+on the records it creates; a Planned/Loaded/Remaining panel on the loading page.
+
+### Phases 7–9 — not started
 7. Controlled Business → Shipping handover link table.
 8. Cash / Bank Roznamcha manual + scan (payment-method-driven form, pre-post
    preview of serials / bill numbers / debit-credit accounts / currency / rate /

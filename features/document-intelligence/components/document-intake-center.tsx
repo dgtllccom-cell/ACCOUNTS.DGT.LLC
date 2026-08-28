@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Loader2, UploadCloud, RefreshCw, FileText, ShieldAlert, CheckCircle2, X, ChevronLeft, Play, Ban, Link2, AlertTriangle,
+  Loader2, UploadCloud, RefreshCw, FileText, ShieldAlert, CheckCircle2, X, ChevronLeft, Play, Ban, Link2, AlertTriangle, Package,
 } from "lucide-react";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { apiGet, apiPost, apiPatch } from "@/lib/api/client";
@@ -300,6 +300,18 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
     catch (e) { setError(e instanceof Error ? e.message : String(e)); }
     finally { setBusy(false); }
   };
+  const [batchInfo, setBatchInfo] = useState<Row | null>(null);
+  const proposeBatch = async () => {
+    setBusy(true);
+    setError(null);
+    setBatchInfo(null);
+    try {
+      const r = await apiPost<Row>("/api/erp/purchases/loading-batches", { jobId });
+      setBatchInfo(r);
+      await load();
+    } catch (e) { setError(e instanceof Error ? e.message : String(e)); }
+    finally { setBusy(false); }
+  };
 
   const job = data?.job;
   const isImage = (job?.mime_type || "").startsWith("image/");
@@ -337,6 +349,9 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
                 {job.status === "review" && job.target_module ? (
                   <button type="button" disabled={busy} onClick={() => void prepareDraft()} className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"><CheckCircle2 className="h-3.5 w-3.5" />{s.t("prepare_draft", "Prepare Reviewed Draft")}</button>
                 ) : null}
+                {["auto", "user"].includes(job.match_status) && job.matched_source_module === "purchase_orders" && !["linked", "cancelled"].includes(job.status) ? (
+                  <button type="button" disabled={busy} onClick={() => void proposeBatch()} className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 px-3 py-2 text-xs font-bold text-blue-700 hover:bg-blue-50 dark:border-blue-900 dark:text-blue-300"><Package className="h-3.5 w-3.5" />{s.t("propose_batch", "Propose Loading Batch")}</button>
+                ) : null}
                 {job.status === "review" ? (
                   <button type="button" disabled={busy} onClick={() => { const r = window.prompt(s.t("qvc_reason", "QVC reason:")); if (r) void act("qvc", r); }} className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 dark:border-rose-900"><ShieldAlert className="h-3.5 w-3.5" />{s.t("send_qvc", "Send to QVC")}</button>
                 ) : null}
@@ -348,6 +363,17 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
 
             {error ? <p className="rounded-xl bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">{error}</p> : null}
             {job.qvc_reason ? <p className="rounded-xl bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"><ShieldAlert className="mr-1 inline h-3.5 w-3.5" />{job.qvc_reason}</p> : null}
+            {batchInfo?.batchNo ? (
+              <div className="rounded-xl bg-blue-50 px-3 py-2.5 text-xs text-blue-800 dark:bg-blue-950/30 dark:text-blue-200">
+                <Package className="mr-1 inline h-3.5 w-3.5" />
+                <span className="font-bold">{s.t("batch_proposed", "Loading batch proposed")} — {batchInfo.batchNo}</span>
+                <span className="ms-1">
+                  {(batchInfo.containers ?? []).length} {s.t("batch_containers", "container(s)")}: {(batchInfo.containers ?? []).join(", ")}
+                  {batchInfo.planned ? ` · ${s.t("batch_planned", "planned")}: ${batchInfo.planned}` : ""}
+                </span>
+                <span className="ms-1">{s.t("batch_next", "Confirm it in Purchase Loading and create the loading records there — no second Purchase Booking, no duplicate containers.")}</span>
+              </div>
+            ) : null}
             {job.status === "draft_ready" && job.draft_reference ? (
               <div className="rounded-xl bg-emerald-50 px-3 py-2.5 text-xs text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200">
                 <CheckCircle2 className="mr-1 inline h-3.5 w-3.5" />

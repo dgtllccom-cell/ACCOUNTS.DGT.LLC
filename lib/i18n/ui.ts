@@ -14307,6 +14307,13 @@ const en: Dict = {
   "dintake.em_no_drafts": "No saved drafts for this screen.",
   "dintake.wizard_prefilled": "Pre-filled from reviewed document draft",
   "dintake.wizard_prefilled_hint": "Review every field, then save and post as usual.",
+  "dintake.propose_batch": "Propose Loading Batch",
+  "dintake.batch_proposed": "Loading batch proposed",
+  "dintake.batch_containers": "container(s)",
+  "dintake.batch_planned": "planned",
+  "dintake.batch_next": "Confirm it in Purchase Loading and create the loading records there — no second Purchase Booking, no duplicate containers.",
+  "dintake.ev_loading_batch_proposed": "Loading batch proposed",
+  "dintake.ev_loading_batch_confirmed": "Loading batch confirmed",
 };
 
 const ur: Dict = {
@@ -24248,6 +24255,13 @@ const ur: Dict = {
   "dintake.em_no_drafts": "اس اسکرین کے لیے کوئی محفوظ مسودہ نہیں۔",
   "dintake.wizard_prefilled": "جائزہ شدہ دستاویز مسودے سے پہلے سے بھرا گیا",
   "dintake.wizard_prefilled_hint": "ہر فیلڈ کا جائزہ لیں، پھر معمول کے مطابق محفوظ اور پوسٹ کریں۔",
+  "dintake.propose_batch": "لوڈنگ بیچ تجویز کریں",
+  "dintake.batch_proposed": "لوڈنگ بیچ تجویز کر دیا گیا",
+  "dintake.batch_containers": "کنٹینر",
+  "dintake.batch_planned": "منصوبہ بند",
+  "dintake.batch_next": "اسے پرچیز لوڈنگ میں تصدیق کریں اور لوڈنگ ریکارڈ وہیں بنائیں — کوئی دوسری پرچیز بکنگ نہیں، کوئی نقل کنٹینر نہیں۔",
+  "dintake.ev_loading_batch_proposed": "لوڈنگ بیچ تجویز",
+  "dintake.ev_loading_batch_confirmed": "لوڈنگ بیچ تصدیق",
 };
 
 const ar: Dict = {
@@ -34191,6 +34205,13 @@ const ar: Dict = {
   "dintake.em_no_drafts": "لا توجد مسودات محفوظة لهذه الشاشة.",
   "dintake.wizard_prefilled": "مُعبّأ مسبقاً من مسودة مستند مُراجَعة",
   "dintake.wizard_prefilled_hint": "راجع كل حقل، ثم احفظ ورحّل كالمعتاد.",
+  "dintake.propose_batch": "اقتراح دفعة تحميل",
+  "dintake.batch_proposed": "تم اقتراح دفعة التحميل",
+  "dintake.batch_containers": "حاوية/حاويات",
+  "dintake.batch_planned": "مخطط",
+  "dintake.batch_next": "أكّدها في تحميل المشتريات وأنشئ سجلات التحميل هناك — دون حجز شراء ثانٍ ودون حاويات مكررة.",
+  "dintake.ev_loading_batch_proposed": "اقتُرحت دفعة تحميل",
+  "dintake.ev_loading_batch_confirmed": "تم تأكيد دفعة التحميل",
 };
 
 const fa: Dict = {
@@ -44133,6 +44154,13 @@ const fa: Dict = {
   "dintake.em_no_drafts": "پیش‌نویس ذخیره‌شده‌ای برای این صفحه نیست.",
   "dintake.wizard_prefilled": "از پیش‌نویس سند بازبینی‌شده از پیش پر شد",
   "dintake.wizard_prefilled_hint": "هر فیلد را بازبینی کنید، سپس مثل همیشه ذخیره و ثبت کنید.",
+  "dintake.propose_batch": "پیشنهاد دسته بارگیری",
+  "dintake.batch_proposed": "دسته بارگیری پیشنهاد شد",
+  "dintake.batch_containers": "کانتینر",
+  "dintake.batch_planned": "برنامه‌ریزی‌شده",
+  "dintake.batch_next": "آن را در بارگیری خرید تأیید کنید و رکوردهای بارگیری را همان‌جا ایجاد کنید — بدون رزرو خرید دوم، بدون کانتینر تکراری.",
+  "dintake.ev_loading_batch_proposed": "دسته بارگیری پیشنهاد شد",
+  "dintake.ev_loading_batch_confirmed": "دسته بارگیری تأیید شد",
 };
 
 const ps: Dict = {
@@ -54081,6 +54109,13 @@ const ps: Dict = {
   "dintake.em_no_drafts": "د دې پاڼې لپاره هیڅ خوندي شوې مسوده نشته.",
   "dintake.wizard_prefilled": "د بیاکتل شوي سند مسودې څخه له مخکې ډک شو",
   "dintake.wizard_prefilled_hint": "هره ساحه وګورئ، بیا د معمول په څیر خوندي او ثبت کړئ.",
+  "dintake.propose_batch": "د بارولو ډله وړاندیز کړئ",
+  "dintake.batch_proposed": "د بارولو ډله وړاندیز شوه",
+  "dintake.batch_containers": "کانټینر(ونه)",
+  "dintake.batch_planned": "پلان شوی",
+  "dintake.batch_next": "دا د پیرود بارولو کې تایید کړئ او هلته د بارولو ریکارډونه جوړ کړئ — دویم د پیرود بکنګ نشته، تکراري کانټینر نشته.",
+  "dintake.ev_loading_batch_proposed": "د بارولو ډله وړاندیز شوه",
+  "dintake.ev_loading_batch_confirmed": "د بارولو ډله تایید شوه",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
