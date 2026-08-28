@@ -1,0 +1,1 @@
+features/customers/components/customer-list.tsx(867,63): error TS2304: Cannot find name 'searchQuery'.

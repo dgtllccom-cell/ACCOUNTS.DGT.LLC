@@ -2229,3 +2229,66 @@ ZodError: [
     at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
     at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
 2026-08-28T11:46:54.198Z - VALIDATION_ERROR - Request validation failed: Role: Expected 'super_admin' | 'super_admin_reports' | 'country_admin' | 'country_user' | 'main_branch_admin' | 'city_branch_admin' | 'accountant' | 'cashier' | 'agent_user' | 'staff_user' | 'auditor_viewer', received null - {"formErrors":[],"fieldErrors":{"role":["Expected 'super_admin' | 'super_admin_reports' | 'country_admin' | 'country_user' | 'main_branch_admin' | 'city_branch_admin' | 'accountant' | 'cashier' | 'agent_user' | 'staff_user' | 'auditor_viewer', received null"]}}
+2026-08-28T11:59:30.895Z - SERVER_ERROR - Unexpected server error - {}
+2026-08-28T11:59:33.945Z - SERVER_ERROR - Unexpected server error - {}
+
+[2026-08-28T11:59:37.479Z] PostgresError: relation "public.inter_country_transfers" does not exist
+PostgresError: relation "public.inter_country_transfers" does not exist
+    at ErrorResponse (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:830:70)
+    at handle (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:504:6)
+    at TLSSocket.data (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:339:9)
+    at TLSSocket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:189:23)
+    at TLSWrap.callbackTrampoline (node:internal/async_hooks:130:17)
+    at cachedError (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:175:23)
+    at new Query (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:41:24)
+    at sql (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:110:11)
+    at eval (webpack-internal:///(rsc)/./lib/services/inter-country-transfer-service.ts:336:29)
+2026-08-28T11:59:37.890Z - SERVER_ERROR - relation "public.inter_country_transfers" does not exist - {}
+
+[2026-08-28T11:59:46.689Z] Error: Could not embed because more than one relationship was found for 'purchase_orders' and 'countries'
+Error: Could not embed because more than one relationship was found for 'purchase_orders' and 'countries'
+    at GET (webpack-internal:///(rsc)/./app/api/erp/purchases/journal-booking-stock/route.ts:174:86)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fpurchases%2Fjournal-booking-stock%2Froute&page=%2Fapi%2Ferp%2Fpurchases%2Fjournal-booking-stock%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fpurchases%2Fjournal-booking-stock%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fpurchases%2Fjournal-booking-stock%2Froute&page=%2Fapi%2Ferp%2Fpurchases%2Fjournal-booking-stock%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fpurchases%2Fjournal-booking-stock%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fpurchases%2Fjournal-booking-stock%2Froute&page=%2Fapi%2Ferp%2Fpurchases%2Fjournal-booking-stock%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fpurchases%2Fjournal-booking-stock%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+2026-08-28T11:59:47.118Z - SERVER_ERROR - Could not embed because more than one relationship was found for 'purchase_orders' and 'countries' - {}
+2026-08-28T11:59:49.415Z - SERVER_ERROR - Unexpected server error - {}
+2026-08-28T11:59:51.875Z - SERVER_ERROR - Unexpected server error - {}
+
+[2026-08-28T11:59:55.149Z] PostgresError: relation "public.super_admin_capital_accounts" does not exist
+PostgresError: relation "public.super_admin_capital_accounts" does not exist
+    at ErrorResponse (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:830:70)
+    at handle (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:504:6)
+    at TLSSocket.data (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:339:9)
+    at TLSSocket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:189:23)
+    at TLSWrap.callbackTrampoline (node:internal/async_hooks:130:17)
+    at cachedError (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:175:23)
+    at new Query (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:41:24)
+    at sql (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:110:11)
+    at eval (webpack-internal:///(rsc)/./lib/services/super-admin-capital-service.ts:188:34)
+2026-08-28T11:59:55.549Z - SERVER_ERROR - relation "public.super_admin_capital_accounts" does not exist - {}
