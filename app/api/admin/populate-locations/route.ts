@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import postgres from "postgres";
+import { requireErpSession } from "@/lib/auth/session";
+import { handleApiError } from "@/lib/api/response";
 
 export const dynamic = "force-dynamic";
 
@@ -1694,8 +1696,7 @@ const OFFICIAL_LOCATIONS_DATA: CountryData[] = [
   }
 ];
 
-export async function GET(request: NextRequest) {
-  try {
+async function runLocationSeed() {
     const databaseUrl = process.env.DATABASE_URL;
     if (!databaseUrl) {
       return NextResponse.json({ error: "DATABASE_URL not set" }, { status: 500 });
@@ -1838,7 +1839,47 @@ export async function GET(request: NextRequest) {
       message: "Official location master data populated directly into server database tables.",
       stats
     });
-  } catch (error: any) {
-    return NextResponse.json({ error: error?.message || String(error) }, { status: 500 });
+}
+
+/**
+ * GET = read-only status (how much reference location data is already loaded).
+ * The heavy idempotent seed now runs only on POST and only for a super admin —
+ * it used to run on an unauthenticated GET, which both left it open to anyone
+ * and made a bare GET take 60-90s.
+ */
+export async function GET(_request: NextRequest) {
+  try {
+    await requireErpSession();
+    const databaseUrl = process.env.DATABASE_URL;
+    if (!databaseUrl) return NextResponse.json({ error: "DATABASE_URL not set" }, { status: 500 });
+    const sql = postgres(databaseUrl, { max: 1, prepare: false });
+    try {
+      const [c] = await sql`SELECT COUNT(*)::int n FROM public.countries WHERE deleted_at IS NULL`;
+      const [s] = await sql`SELECT COUNT(*)::int n FROM public.states_provinces WHERE deleted_at IS NULL`;
+      const [d] = await sql`SELECT COUNT(*)::int n FROM public.districts WHERE deleted_at IS NULL`;
+      const [ci] = await sql`SELECT COUNT(*)::int n FROM public.cities WHERE deleted_at IS NULL`;
+      return NextResponse.json({
+        success: true,
+        seededCountriesAvailable: OFFICIAL_LOCATIONS_DATA.length,
+        current: { countries: c.n, states: s.n, districts: d.n, cities: ci.n },
+        hint: "POST to this endpoint as a super admin to (re-)run the idempotent seed.",
+      });
+    } finally {
+      await sql.end({ timeout: 5 });
+    }
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
+export async function POST(_request: NextRequest) {
+  try {
+    const session = await requireErpSession();
+    if (!session.isSuperAdmin && !session.roles?.includes("super_admin")) {
+      return NextResponse.json({ error: "Forbidden: super admin only." }, { status: 403 });
+    }
+    return await runLocationSeed();
+  } catch (error) {
+    return handleApiError(error);
   }
 }

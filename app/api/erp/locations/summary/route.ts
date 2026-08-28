@@ -9,24 +9,26 @@ export async function GET(request: NextRequest) {
     const stateId = searchParams.get("stateId");
     const includeTree = searchParams.get("tree") === "true";
 
-    const stats = await locationsRepository.getLocationSummaryStats();
-
     if (includeTree) {
+      const stats = await locationsRepository.getLocationSummaryStats();
       const fullTree = await locationsRepository.getFullLocationTree();
       return apiOk({ stats, fullTree });
     }
 
     if (stateId) {
+      const stats = await locationsRepository.getLocationSummaryStats();
       const citySummaries = await locationsRepository.listCitySummaries(stateId);
       return apiOk({ stats, citySummaries });
     }
 
     if (countryId) {
+      const stats = await locationsRepository.getLocationSummaryStats();
       const stateSummaries = await locationsRepository.listStateSummaries(countryId);
       return apiOk({ stats, stateSummaries });
     }
 
-    const countrySummaries = await locationsRepository.listCountrySummaries();
+    // Default view — stats + per-country breakdown in one round-trip.
+    const { stats, countrySummaries } = await locationsRepository.getLocationOverview();
     return apiOk({ stats, countrySummaries });
   } catch (error) {
     return handleApiError(error);

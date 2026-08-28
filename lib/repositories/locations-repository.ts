@@ -1489,6 +1489,69 @@ export class LocationsRepository {
     }));
   }
 
+  /**
+   * Combined stats + per-country breakdown in ONE connection / ONE round-trip.
+   * The Locations summary screen previously called getLocationSummaryStats()
+   * (4 COUNTs) and listCountrySummaries() back-to-back, each opening its own
+   * pooled connection against a 660k-row `cities` table — which under any
+   * concurrency stalled the endpoint for 60-90s. This does it once.
+   */
+  async getLocationOverview() {
+    const dbUrl = getDbUrl();
+    if (!dbUrl) {
+      const stats = await this.getLocationSummaryStats();
+      const countrySummaries = await this.listCountrySummaries();
+      return { stats, countrySummaries };
+    }
+    const sql = postgres(dbUrl, { max: 1, prepare: false });
+    try {
+      const rows = await sql`
+        WITH s AS (
+          SELECT country_id, COUNT(*)::int AS n FROM public.states_provinces
+          WHERE deleted_at IS NULL GROUP BY country_id
+        ),
+        d AS (
+          SELECT country_id, COUNT(*)::int AS n FROM public.districts
+          WHERE deleted_at IS NULL GROUP BY country_id
+        ),
+        ci AS (
+          SELECT country_id, COUNT(*)::int AS n FROM public.cities
+          WHERE deleted_at IS NULL GROUP BY country_id
+        )
+        SELECT
+          c.id, c.name, c.iso2, c.iso3, c.currency_code, c.is_active,
+          COALESCE(s.n, 0)  AS total_states,
+          COALESCE(d.n, 0)  AS total_districts,
+          COALESCE(ci.n, 0) AS total_cities
+        FROM public.countries c
+        LEFT JOIN s  ON s.country_id  = c.id
+        LEFT JOIN d  ON d.country_id  = c.id
+        LEFT JOIN ci ON ci.country_id = c.id
+        WHERE c.deleted_at IS NULL
+        ORDER BY c.name ASC
+      `;
+      const countrySummaries = rows.map((r: any) => ({
+        id: r.id, name: r.name, iso2: r.iso2, iso3: r.iso3,
+        currency_code: r.currency_code, is_active: r.is_active,
+        total_states: r.total_states,
+        total_districts: r.total_districts,
+        total_cities: r.total_cities,
+      }));
+      const stats = countrySummaries.reduce(
+        (acc, c) => ({
+          totalCountries: acc.totalCountries + 1,
+          totalStates: acc.totalStates + c.total_states,
+          totalDistricts: acc.totalDistricts + c.total_districts,
+          totalCities: acc.totalCities + c.total_cities,
+        }),
+        { totalCountries: 0, totalStates: 0, totalDistricts: 0, totalCities: 0 },
+      );
+      return { stats, countrySummaries };
+    } finally {
+      await sql.end({ timeout: 5 });
+    }
+  }
+
   async listStateSummaries(countryId: string) {
     const dbUrl = getDbUrl();
     if (dbUrl) {
