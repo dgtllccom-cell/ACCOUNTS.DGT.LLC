@@ -209,6 +209,13 @@ export const sidebarTree: SidebarNode[] = [
         iconKey: "file-text",
         href: "/dashboard/document-intelligence" as Route,
         roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "cashier", "agent_user", "staff_user", "auditor_viewer"]
+      },
+      {
+        key: "business-shipping-handovers",
+        labelKey: "dintake.nav_handovers" as any,
+        iconKey: "send",
+        href: "/dashboard/handovers" as Route,
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"]
       }
     ]
   },
@@ -931,6 +938,13 @@ export const sidebarTree: SidebarNode[] = [
         key: "clearing-customer-order",
         labelKey: "nav.customer_order",
         href: "/dashboard/clearing-agent/customer-order" as Route,
+        roles: ["super_admin", "agent_user"],
+        permission: { resource: "shipping_records", action: "read" }
+      },
+      {
+        key: "shipping-handover-inbox",
+        labelKey: "dintake.hi_nav" as any,
+        href: "/dashboard/shipping-line/handover-inbox" as Route,
         roles: ["super_admin", "agent_user"],
         permission: { resource: "shipping_records", action: "read" }
       },

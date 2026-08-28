@@ -12,6 +12,7 @@ import { Th } from "@/components/ui/translated-th";
 import { derivePurchaseStockLifecycle, normalizePurchaseStockDestination, purchaseStockDestinationLabel } from "@/lib/services/purchase-stock-lifecycle";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { LoadingBatchPanel } from "./loading-batch-panel";
 
 const CONTAINER_TYPES = ["20 FT", "40 FT", "20 FT Reefer", "40 FT Reefer", "Reefer Container", "Non Reefer", "Open Top", "Flat Rack", "LCL / Bulk"];
 
@@ -524,6 +525,12 @@ export function PurchaseLoadingFormView() {
 
               {activeTab === "load" && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-right-2 duration-300">
+                  <LoadingBatchPanel
+                    purchaseOrderId={selectedPO?.id}
+                    loadedContainerNos={poRecords.map((r: any) => r.container_number).filter(Boolean)}
+                    onPickContainer={(c) => setLoadForm(f => ({ ...f, containerNumber: c }))}
+                    lang={lang}
+                  />
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[10px] text-slate-500 font-bold mb-1">{tt("plrf.container_no_req", "Container Number *")}</label>

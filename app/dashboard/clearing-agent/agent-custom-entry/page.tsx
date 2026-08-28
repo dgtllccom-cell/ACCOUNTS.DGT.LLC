@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { requireErpSession } from "@/lib/auth/session";
 import { AgentCustomEntryManagementView } from "@/features/clearing-agent/components/agent-custom-entry-management";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { EntryMethodSelector } from "@/features/document-intelligence/components/entry-method-selector";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,9 @@ export default async function AgentCustomEntryPage() {
   return (
     <div className="min-h-screen bg-slate-50/50 p-4 dark:bg-slate-950/50 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-screen-2xl">
-        <AgentCustomEntryManagementView lang={lang} />
+        <EntryMethodSelector targetModule="clearing_agent_custom_entries" domain="shipping" lang={lang}>
+          <AgentCustomEntryManagementView lang={lang} />
+        </EntryMethodSelector>
       </div>
     </div>
   );
