@@ -14,6 +14,18 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Local OCR / document-parsing libs must be require()d from node_modules at
+  // runtime, not bundled — they load internal worker scripts / native binaries
+  // by relative path (e.g. tesseract.js → src/worker-script/node/index.js).
+  // Bundling rewrites those paths to .next/... which does not exist →
+  // "Cannot find module '.next/worker-script/node/index.js'".
+  serverExternalPackages: [
+    "tesseract.js",
+    "pdf-parse",
+    "pdfjs-dist",
+    "sharp",
+    "@napi-rs/canvas",
+  ],
   // typedRoutes disabled: enabling it creates a .next/types/link.d.ts symlink
   // which OneDrive cannot sync (EINVAL). Disable to keep .next inside the project.
   typedRoutes: false,
