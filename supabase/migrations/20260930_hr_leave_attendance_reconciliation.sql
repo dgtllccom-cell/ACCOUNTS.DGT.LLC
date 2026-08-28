@@ -173,10 +173,11 @@ BEGIN
       AND lower(l.status) IN ('approved','approve')
       AND NEW.attendance_date BETWEEN l.from_date AND l.to_date);
 
+  -- shift values, or a sane default working day (09:00–17:00, 1h break, 15m grace)
   v_start := coalesce(v_shift.start_time, time '09:00');
   v_end   := coalesce(v_shift.end_time,   time '17:00');
-  v_grace := coalesce(v_shift.grace_minutes, 0);
-  v_break := coalesce(v_shift.break_minutes, 0);
+  v_grace := coalesce(v_shift.grace_minutes, 15);
+  v_break := coalesce(v_shift.break_minutes, 60);
 
   -- expected duty hours (overnight shift: end < start → add 24h)
   v_span := EXTRACT(EPOCH FROM (v_end - v_start)) / 3600.0;
@@ -218,9 +219,11 @@ CREATE TRIGGER trg_hr_calc_attendance
 COMMENT ON FUNCTION public.hr_calc_attendance() IS
   'Computes expected_hours, work_hours, late_minutes, early_leave_minutes, overtime_hours from the assigned shift. Handles overnight shifts, holidays and approved leave.';
 
--- default "Day Shift" per country that has employees (only if none exists there)
+-- default "Day Shift" per country that has employees (only if none exists there).
+-- hr_shifts has a unique index on lower(code) → make the code country-scoped.
 INSERT INTO public.hr_shifts (code, name, country_id, start_time, end_time, break_minutes, grace_minutes, working_days, is_night_shift, is_active)
-SELECT 'DAY', 'Day Shift', c.country_id, time '09:00', time '17:00', 60, 15, 'Mon-Fri', false, true
+SELECT 'DAY-' || substr(replace(c.country_id::text, '-', ''), 1, 8), 'Day Shift', c.country_id,
+       time '09:00', time '17:00', 60, 15, 'Mon-Fri', false, true
 FROM (SELECT DISTINCT country_id FROM public.employees WHERE deleted_at IS NULL AND country_id IS NOT NULL) c
 WHERE NOT EXISTS (SELECT 1 FROM public.hr_shifts s WHERE s.country_id = c.country_id AND s.deleted_at IS NULL)
 ON CONFLICT DO NOTHING;
