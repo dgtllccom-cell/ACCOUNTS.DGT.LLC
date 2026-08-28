@@ -515,7 +515,7 @@ export function CustomerForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs font-semibold text-slate-500 mb-2">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs font-semibold text-slate-500 mb-2">
         {[
           { id: 1, label: getLabel("stepPersonalInfo", lang) },
           { id: 2, label: getLabel("stepLocation", lang) },
@@ -529,30 +529,30 @@ export function CustomerForm({
               key={s.id}
               type="button"
               onClick={() => setCurrentStep(s.id as any)}
-              className={`flex items-center gap-2 border rounded-xl p-3 text-start transition-all ${
+              className={`flex items-center gap-2.5 border rounded-xl p-3 text-start transition-all w-full justify-start ${
                 active
-                  ? "border-teal-500 bg-teal-50/70 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 font-bold shadow-sm"
+                  ? "border-teal-600 bg-teal-50/80 dark:bg-teal-950/40 text-teal-800 dark:text-teal-300 font-bold shadow-xs ring-2 ring-teal-500/20"
                   : completed
-                  ? "border-emerald-200 bg-emerald-50/50 text-emerald-700 font-bold"
-                  : "border-slate-100 bg-slate-50/50 text-slate-500 hover:bg-slate-100"
+                  ? "border-emerald-200 bg-emerald-50/60 text-emerald-800 font-bold"
+                  : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
               }`}
             >
               <div
-                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-bold ${
-                  active ? "bg-teal-500 text-white" : completed ? "bg-emerald-500 text-white" : "bg-slate-200 text-slate-600"
+                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-xs font-black ${
+                  active ? "bg-teal-600 text-white shadow-xs" : completed ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-600 border border-slate-200"
                 }`}
               >
                 {completed ? <CheckCircle2 className="h-4 w-4" /> : s.id}
               </div>
-              <span className="truncate font-semibold leading-tight">{s.label}</span>
+              <span className="truncate text-xs font-bold leading-tight">{s.label}</span>
             </button>
           );
         })}
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid gap-6 lg:grid-cols-12">
         {/* Left Form Panels */}
-        <div className="space-y-6">
+        <div className="lg:col-span-7 xl:col-span-7 space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
           {currentStep === 1 && (
             <Card className="rounded-xl border shadow-sm bg-white overflow-hidden md:col-span-2">
@@ -1046,7 +1046,7 @@ export function CustomerForm({
         </div>
 
         {/* Right Preview Panel */}
-        <aside className="h-fit rounded-lg border bg-card p-5 shadow-sm xl:sticky xl:top-24">
+        <aside className="lg:col-span-5 xl:col-span-5 h-fit rounded-xl border bg-card p-6 shadow-sm xl:sticky xl:top-24">
           <div className="flex items-center justify-between border-b pb-3 mb-4">
             <div className="flex items-center gap-2">
               <Building2 className="h-4.5 w-4.5 text-teal-600" />

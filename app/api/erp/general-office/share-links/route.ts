@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
       return err(`Invalid form type. Must be one of: ${VALID_FORM_TYPES.join(", ")}`, 400);
     }
 
-    const expiryHours: number = typeof body.expiryHours === "number" ? body.expiryHours : 168; // 7 days default
+    const expiryHours: number = typeof body.expiryHours === "number" ? body.expiryHours : 48; // 48 hours default
 
     const expiresAt: string | null =
       expiryHours > 0

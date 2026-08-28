@@ -96,7 +96,7 @@ export function SendToCustomerModal({
         credentials: "include",
         body: JSON.stringify({
           formType: defaultFormType,
-          expiryHours: 168, // 7 days
+          expiryHours: 48, // 48 Hours Valid
           notes: "Generated from Customer Master View"
         })
       });

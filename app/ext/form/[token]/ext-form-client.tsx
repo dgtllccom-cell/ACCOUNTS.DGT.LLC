@@ -1140,17 +1140,18 @@ export function ExtFormClient({ token }: { token: string }) {
       try {
         const res = await fetch(`/api/public/form-link/${token}`);
         const data = await res.json();
-        if (data.ok && data.link) {
-          setLinkMeta(data.link);
-          if (data.link.status === "used" || data.link.status === "submitted") {
+        const linkInfo = data?.data || data?.link;
+        if (data?.ok && linkInfo) {
+          setLinkMeta(linkInfo);
+          if (linkInfo.status === "used" || linkInfo.status === "submitted") {
             setPageError("This form link has already been used and submitted.");
-          } else if (data.link.status === "expired") {
+          } else if (linkInfo.status === "expired") {
             setPageError("This form link has expired. Please request a new link.");
-          } else if (data.link.status === "revoked") {
+          } else if (linkInfo.status === "revoked") {
             setPageError("This form link has been revoked by administration.");
           }
         } else {
-          setPageError("Invalid or non-existent form link.");
+          setPageError(data?.error || "Invalid or non-existent form link.");
         }
       } catch {
         setPageError("Could not reach verification server. Please try again.");

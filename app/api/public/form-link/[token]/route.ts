@@ -71,15 +71,22 @@ export async function GET(
 
     if (link.status === "revoked") return err("This link has been revoked", 410);
     if (link.status === "expired") return err("This link has expired", 410);
-    if (link.status === "used")    return err("This link has already been used", 410);
+    if (link.status === "used" || link.status === "submitted") return err("This link has already been used", 410);
 
-    return ok({
-      formType:       link.form_type,
-      status:         link.status,
-      createdByName:  link.created_by_name ?? null,
-      expiresAt:      link.expires_at ?? null,
-      notes:          link.notes ?? null,
-    });
+    const payload = {
+      token: link.token,
+      formType: link.form_type,
+      status: link.status,
+      createdByName: link.created_by_name ?? null,
+      expiresAt: link.expires_at ?? null,
+      notes: link.notes ?? null,
+    };
+
+    return NextResponse.json({
+      ok: true,
+      data: payload,
+      link: payload
+    }, { status: 200 });
   } catch (e: any) {
     console.error("[Public Form Link GET]", e);
     return err("Server error", 500);
