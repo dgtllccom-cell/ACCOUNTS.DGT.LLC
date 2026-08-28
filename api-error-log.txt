@@ -2435,3 +2435,341 @@ PostgresError: duplicate key value violates unique constraint "roznamcha_entries
     at sql (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:110:11)
     at postEntry (webpack-internal:///(rsc)/./lib/services/hr-payroll-posting.ts:16:27)
 2026-08-28T22:19:11.361Z - SERVER_ERROR - duplicate key value violates unique constraint "roznamcha_entries_voucher_idx" - {}
+
+[2026-08-28T22:32:18.494Z] ZodError: [
+  {
+    "expected": "'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history'",
+    "received": "null",
+    "code": "invalid_type",
+    "path": [],
+    "message": "Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null"
+  }
+]
+ZodError: [
+  {
+    "expected": "'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history'",
+    "received": "null",
+    "code": "invalid_type",
+    "path": [],
+    "message": "Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null"
+  }
+]
+    at get error (webpack-internal:///(rsc)/./node_modules/zod/v3/types.js:134:31)
+    at ZodEnum.parse (webpack-internal:///(rsc)/./node_modules/zod/v3/types.js:209:22)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/hr/reports/route.ts:33:33)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fhr%2Freports%2Froute&page=%2Fapi%2Ferp%2Fhr%2Freports%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fhr%2Freports%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fhr%2Freports%2Froute&page=%2Fapi%2Ferp%2Fhr%2Freports%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fhr%2Freports%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fhr%2Freports%2Froute&page=%2Fapi%2Ferp%2Fhr%2Freports%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fhr%2Freports%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+2026-08-28T22:32:19.141Z - VALIDATION_ERROR - Request validation failed: : Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null - {"formErrors":["Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null"],"fieldErrors":{}}
+
+[2026-08-28T22:32:19.628Z] ZodError: [
+  {
+    "expected": "'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history'",
+    "received": "null",
+    "code": "invalid_type",
+    "path": [],
+    "message": "Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null"
+  }
+]
+ZodError: [
+  {
+    "expected": "'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history'",
+    "received": "null",
+    "code": "invalid_type",
+    "path": [],
+    "message": "Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null"
+  }
+]
+    at get error (webpack-internal:///(rsc)/./node_modules/zod/v3/types.js:134:31)
+    at ZodEnum.parse (webpack-internal:///(rsc)/./node_modules/zod/v3/types.js:209:22)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/hr/reports/route.ts:33:33)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at process.processTimers (node:internal/timers:538:9)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fhr%2Freports%2Froute&page=%2Fapi%2Ferp%2Fhr%2Freports%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fhr%2Freports%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fhr%2Freports%2Froute&page=%2Fapi%2Ferp%2Fhr%2Freports%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fhr%2Freports%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fhr%2Freports%2Froute&page=%2Fapi%2Ferp%2Fhr%2Freports%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fhr%2Freports%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+2026-08-28T22:32:20.027Z - VALIDATION_ERROR - Request validation failed: : Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null - {"formErrors":["Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null"],"fieldErrors":{}}
+
+[2026-08-28T22:32:20.217Z] ZodError: [
+  {
+    "expected": "'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history'",
+    "received": "null",
+    "code": "invalid_type",
+    "path": [],
+    "message": "Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null"
+  }
+]
+ZodError: [
+  {
+    "expected": "'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history'",
+    "received": "null",
+    "code": "invalid_type",
+    "path": [],
+    "message": "Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null"
+  }
+]
+    at get error (webpack-internal:///(rsc)/./node_modules/zod/v3/types.js:134:31)
+    at ZodEnum.parse (webpack-internal:///(rsc)/./node_modules/zod/v3/types.js:209:22)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/hr/reports/route.ts:33:33)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fhr%2Freports%2Froute&page=%2Fapi%2Ferp%2Fhr%2Freports%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fhr%2Freports%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fhr%2Freports%2Froute&page=%2Fapi%2Ferp%2Fhr%2Freports%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fhr%2Freports%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fhr%2Freports%2Froute&page=%2Fapi%2Ferp%2Fhr%2Freports%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fhr%2Freports%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+2026-08-28T22:32:20.873Z - VALIDATION_ERROR - Request validation failed: : Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null - {"formErrors":["Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null"],"fieldErrors":{}}
+
+[2026-08-28T22:32:21.158Z] ZodError: [
+  {
+    "expected": "'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history'",
+    "received": "null",
+    "code": "invalid_type",
+    "path": [],
+    "message": "Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null"
+  }
+]
+ZodError: [
+  {
+    "expected": "'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history'",
+    "received": "null",
+    "code": "invalid_type",
+    "path": [],
+    "message": "Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null"
+  }
+]
+    at get error (webpack-internal:///(rsc)/./node_modules/zod/v3/types.js:134:31)
+    at ZodEnum.parse (webpack-internal:///(rsc)/./node_modules/zod/v3/types.js:209:22)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/hr/reports/route.ts:33:33)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fhr%2Freports%2Froute&page=%2Fapi%2Ferp%2Fhr%2Freports%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fhr%2Freports%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fhr%2Freports%2Froute&page=%2Fapi%2Ferp%2Fhr%2Freports%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fhr%2Freports%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fhr%2Freports%2Froute&page=%2Fapi%2Ferp%2Fhr%2Freports%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fhr%2Freports%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+2026-08-28T22:32:21.531Z - VALIDATION_ERROR - Request validation failed: : Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null - {"formErrors":["Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null"],"fieldErrors":{}}
+
+[2026-08-28T22:32:21.780Z] ZodError: [
+  {
+    "expected": "'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history'",
+    "received": "null",
+    "code": "invalid_type",
+    "path": [],
+    "message": "Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null"
+  }
+]
+ZodError: [
+  {
+    "expected": "'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history'",
+    "received": "null",
+    "code": "invalid_type",
+    "path": [],
+    "message": "Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null"
+  }
+]
+    at get error (webpack-internal:///(rsc)/./node_modules/zod/v3/types.js:134:31)
+    at ZodEnum.parse (webpack-internal:///(rsc)/./node_modules/zod/v3/types.js:209:22)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/hr/reports/route.ts:33:33)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fhr%2Freports%2Froute&page=%2Fapi%2Ferp%2Fhr%2Freports%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fhr%2Freports%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fhr%2Freports%2Froute&page=%2Fapi%2Ferp%2Fhr%2Freports%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fhr%2Freports%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fhr%2Freports%2Froute&page=%2Fapi%2Ferp%2Fhr%2Freports%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fhr%2Freports%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+2026-08-28T22:32:22.146Z - VALIDATION_ERROR - Request validation failed: : Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null - {"formErrors":["Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null"],"fieldErrors":{}}
+
+[2026-08-28T22:32:22.301Z] ZodError: [
+  {
+    "expected": "'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history'",
+    "received": "null",
+    "code": "invalid_type",
+    "path": [],
+    "message": "Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null"
+  }
+]
+ZodError: [
+  {
+    "expected": "'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history'",
+    "received": "null",
+    "code": "invalid_type",
+    "path": [],
+    "message": "Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null"
+  }
+]
+    at get error (webpack-internal:///(rsc)/./node_modules/zod/v3/types.js:134:31)
+    at ZodEnum.parse (webpack-internal:///(rsc)/./node_modules/zod/v3/types.js:209:22)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/hr/reports/route.ts:33:33)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fhr%2Freports%2Froute&page=%2Fapi%2Ferp%2Fhr%2Freports%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fhr%2Freports%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fhr%2Freports%2Froute&page=%2Fapi%2Ferp%2Fhr%2Freports%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fhr%2Freports%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fhr%2Freports%2Froute&page=%2Fapi%2Ferp%2Fhr%2Freports%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fhr%2Freports%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+2026-08-28T22:32:22.930Z - VALIDATION_ERROR - Request validation failed: : Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null - {"formErrors":["Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null"],"fieldErrors":{}}
+
+[2026-08-28T22:32:23.140Z] ZodError: [
+  {
+    "expected": "'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history'",
+    "received": "null",
+    "code": "invalid_type",
+    "path": [],
+    "message": "Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null"
+  }
+]
+ZodError: [
+  {
+    "expected": "'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history'",
+    "received": "null",
+    "code": "invalid_type",
+    "path": [],
+    "message": "Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null"
+  }
+]
+    at get error (webpack-internal:///(rsc)/./node_modules/zod/v3/types.js:134:31)
+    at ZodEnum.parse (webpack-internal:///(rsc)/./node_modules/zod/v3/types.js:209:22)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/hr/reports/route.ts:33:33)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fhr%2Freports%2Froute&page=%2Fapi%2Ferp%2Fhr%2Freports%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fhr%2Freports%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fhr%2Freports%2Froute&page=%2Fapi%2Ferp%2Fhr%2Freports%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fhr%2Freports%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fhr%2Freports%2Froute&page=%2Fapi%2Ferp%2Fhr%2Freports%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fhr%2Freports%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+2026-08-28T22:32:24.182Z - VALIDATION_ERROR - Request validation failed: : Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null - {"formErrors":["Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null"],"fieldErrors":{}}
+
+[2026-08-28T22:32:24.426Z] ZodError: [
+  {
+    "expected": "'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history'",
+    "received": "null",
+    "code": "invalid_type",
+    "path": [],
+    "message": "Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null"
+  }
+]
+ZodError: [
+  {
+    "expected": "'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history'",
+    "received": "null",
+    "code": "invalid_type",
+    "path": [],
+    "message": "Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null"
+  }
+]
+    at get error (webpack-internal:///(rsc)/./node_modules/zod/v3/types.js:134:31)
+    at ZodEnum.parse (webpack-internal:///(rsc)/./node_modules/zod/v3/types.js:209:22)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/hr/reports/route.ts:33:33)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fhr%2Freports%2Froute&page=%2Fapi%2Ferp%2Fhr%2Freports%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fhr%2Freports%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fhr%2Freports%2Froute&page=%2Fapi%2Ferp%2Fhr%2Freports%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fhr%2Freports%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fhr%2Freports%2Froute&page=%2Fapi%2Ferp%2Fhr%2Freports%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fhr%2Freports%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+2026-08-28T22:32:24.814Z - VALIDATION_ERROR - Request validation failed: : Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null - {"formErrors":["Expected 'employee_directory' | 'attendance' | 'leave' | 'overtime' | 'payroll_register' | 'salary_slip' | 'employee_ledger' | 'expiring_documents' | 'gratuity' | 'audit_history', received null"],"fieldErrors":{}}
