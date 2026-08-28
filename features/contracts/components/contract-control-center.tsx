@@ -16,7 +16,6 @@ import {
   X,
 } from "lucide-react";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
-import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { apiGet, apiPatch, apiPost } from "@/lib/api/client";
 import { Th } from "@/components/ui/translated-th";
 import { UniversalPrintActionButton } from "@/components/reports/universal-print-action-button";
@@ -91,7 +90,7 @@ function sourceHref(r: ContractRow): string {
   }
 }
 
-export function ContractControlCenter({ lang: langProp }: { lang?: SupportedLanguage }) {
+export function ContractControlCenter({ lang: langProp }: { lang?: string }) {
   const s = useErpScreen("contract", langProp);
 
   const [rows, setRows] = useState<ContractRow[]>([]);

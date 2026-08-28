@@ -274,6 +274,17 @@ export const ERP_MODULE_DEFINITIONS: ErpModuleDef[] = [
     deletePerms: [],
     approvePerms: ["uae_tax_filing:write"],
     exportPerms: ["reports:export"]
+  },
+  {
+    key: "contract_control",
+    name: "Central Contract Control Center",
+    category: "Administration, HR & System",
+    viewPerms: ["contracts:read"],
+    createPerms: ["contracts:write"],
+    editPerms: ["contracts:write"],
+    deletePerms: [],
+    approvePerms: ["contracts:write"],
+    exportPerms: ["reports:export"]
   }
 ];
 
