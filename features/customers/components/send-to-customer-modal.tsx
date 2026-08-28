@@ -151,30 +151,30 @@ export function SendToCustomerModal({
   const isRtl = lang === "ur" || lang === "ar" || lang === "fa" || lang === "ps";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
       <div
-        className="w-full max-w-xl rounded-2xl bg-slate-900 border border-emerald-500/40 p-6 shadow-2xl text-slate-100 relative animate-in fade-in zoom-in-95 duration-150"
+        className="w-full max-w-lg rounded-3xl bg-white border border-slate-200 p-6 shadow-2xl text-slate-900 relative animate-in fade-in zoom-in-95 duration-150"
         dir={isRtl ? "rtl" : "ltr"}
       >
         {/* Close button */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg bg-slate-800/80 transition-colors"
+          className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100 transition-colors"
         >
-          <X className="h-5 w-5" />
+          <X className="h-4 w-4" />
         </button>
 
         {/* Header */}
-        <div className="flex items-center gap-3 mb-4">
-          <div className="h-10 w-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
-            <Shield className="h-5 w-5" />
+        <div className="flex items-center gap-3 mb-5 border-b border-slate-100 pb-4">
+          <div className="h-10 w-10 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0 shadow-xs">
+            <Shield className="h-5 w-5 fill-indigo-100" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-white tracking-tight">
+            <h2 className="text-base font-black text-slate-900 tracking-tight">
               {t("title", lang)}
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
+            <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
               {t("subtitle", lang)}
             </p>
           </div>
@@ -182,32 +182,32 @@ export function SendToCustomerModal({
 
         {/* Content Body */}
         {loading ? (
-          <div className="py-8 text-center text-slate-400 space-y-3">
-            <div className="h-8 w-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto" />
+          <div className="py-10 text-center text-slate-500 space-y-3">
+            <div className="h-8 w-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto" />
             <p className="text-xs font-semibold">{t("generating", lang)}</p>
           </div>
         ) : error ? (
-          <div className="p-4 rounded-xl bg-rose-950/50 border border-rose-800 text-rose-300 text-xs my-4">
+          <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs my-4">
             ⚠️ {error}
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={generateLink}
-              className="mt-3 block text-xs border-rose-700 bg-rose-900/40 text-white"
+              className="mt-3 block text-xs border-rose-300 bg-white text-rose-700 hover:bg-rose-100"
             >
               Retry
             </Button>
           </div>
         ) : (
-          <div className="space-y-4 my-3">
-            <div className="rounded-xl bg-slate-950/80 border border-slate-800 p-3.5 flex items-center gap-3">
-              <Link2 className="h-4 w-4 text-emerald-400 shrink-0" />
+          <div className="space-y-4 my-2">
+            <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3.5 flex items-center gap-3">
+              <Link2 className="h-4 w-4 text-indigo-600 shrink-0" />
               <input
                 type="text"
                 readOnly
                 value={publicUrl || ""}
-                className="bg-transparent text-xs text-emerald-300 w-full outline-none select-all font-mono"
+                className="bg-transparent text-xs text-slate-800 font-semibold w-full outline-none select-all font-mono"
               />
             </div>
 
@@ -215,16 +215,16 @@ export function SendToCustomerModal({
               <Button
                 type="button"
                 onClick={handleCopy}
-                className="flex-1 min-w-[140px] bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 font-bold text-xs gap-2 h-10 rounded-xl"
+                className="flex-1 min-w-[140px] bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 font-bold text-xs gap-2 h-11 rounded-2xl shadow-xs"
               >
-                {copied ? <CheckCircle2 className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+                {copied ? <CheckCircle2 className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4 text-slate-600" />}
                 {copied ? t("copied", lang) : t("copyLink", lang)}
               </Button>
 
               <Button
                 type="button"
                 onClick={handleWhatsapp}
-                className="flex-1 min-w-[160px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs gap-2 h-10 rounded-xl shadow-lg shadow-emerald-950/50"
+                className="flex-1 min-w-[160px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs gap-2 h-11 rounded-2xl shadow-md shadow-emerald-200"
               >
                 <MessageCircle className="h-4 w-4" />
                 {t("whatsappShare", lang)}
@@ -233,12 +233,12 @@ export function SendToCustomerModal({
           </div>
         )}
 
-        <div className="mt-5 pt-4 border-t border-slate-800 flex justify-end">
+        <div className="mt-5 pt-4 border-t border-slate-100 flex justify-end">
           <Button
             type="button"
             variant="ghost"
             onClick={onClose}
-            className="text-xs text-slate-400 hover:text-white"
+            className="text-xs text-slate-500 hover:text-slate-900 rounded-xl"
           >
             {t("close", lang)}
           </Button>

@@ -29,7 +29,7 @@ import {
   XCircle
 } from "lucide-react";
 import { apiGet } from "@/lib/api/client";
-import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
+import { openBranchProfileReport } from "@/lib/reports/build-branch-profile-report";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -732,66 +732,33 @@ export function BranchGeneralReportView({
       const whatsappVal = findContactValue(row.contacts, "whatsapp") || "";
 
       const activeLang = typeof document !== "undefined" ? document.documentElement.lang : "en";
-      openA4ReportWindow({
-        title: "Country Main Branch Report",
-        subtitle: "Branch Profile Report (A4)",
-        autoPrint: false,
+      openBranchProfileReport({
+        kind: "country",
         lang: activeLang,
-        branchData: {
+        autoPrint: false,
+        data: {
           serialNumber: row.id.slice(0, 4).toUpperCase(),
           branchStatus: row.status || "Active",
-          branchCode: row.code || "-",
+          branchCode: row.code || null,
           branchType: "MAIN",
           country: countryName,
           currency: row.local_currency || "USD",
-          
           branchName: row.name || `${countryName} Main Branch`,
-          createdDate: row.created_at ? new Date(row.created_at).toLocaleDateString() : undefined,
-          updatedDate: row.updated_at ? new Date(row.updated_at).toLocaleDateString() : undefined,
-          createdBy: "Super Admin",
-          updatedBy: "Super Admin",
-          establishedOn: "-",
-          taxRegNo: "-",
-          ntnGstNo: "-",
-
-          city: "-",
-          cityCode: "-",
-          stateProvince: "-",
-          areaRegion: "-",
-          zipCode: "-",
-          fullAddress: row.address || "-",
-
-          ownerName: row.owner_name || "-",
-          ownerCode: "OWN-0001",
-          fatherHusbandName: "-",
-          cnicId: "-",
-          nationality: "Pakistani",
-          designation: "Country Admin",
-          ownershipType: "Individual",
-          ownershipPercent: "100%",
-          ownerPhone: phoneVal || "-",
-          ownerWhatsApp: whatsappVal || "-",
-          ownerEmail: emailVal || "-",
-          ownerAltEmail: "-",
-          ownerLandline: "-",
-          ownerWebsite: "-",
-
-          companyName: "Asmat & Brothers (Pvt) Ltd.",
-          companyCode: "COMP-001",
-          companyType: "Private Limited",
-          companyRegNo: "-",
-          companyIncDate: "-",
-          companyTaxRegNo: "-",
-          companyNtnGstNo: "-",
+          createdDate: row.created_at ? new Date(row.created_at).toLocaleDateString() : null,
+          updatedDate: row.updated_at ? new Date(row.updated_at).toLocaleDateString() : null,
+          createdBy: row.created_by_name || "Super Admin",
+          fullAddress: row.address || null,
+          ownerName: row.owner_name || null,
+          ownerPhone: phoneVal || null,
+          ownerWhatsApp: whatsappVal || null,
+          ownerEmail: emailVal || null,
+          companyName: row.company_name || null,
           companyStatus: "Active",
-          companyPhone: phoneVal || "-",
-          companyEmail: emailVal || "-",
-          companyWebsite: "-",
-          companyOfficeAddress: row.address || "-",
-
+          companyOfficeAddress: row.address || null,
           allowedPermissions: row.permission_grants || [],
-          remarks: "Country Main Branch details profile."
-        }
+          permissionTemplate: row.permission_template || null,
+          remarks: null,
+        },
       });
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to load branch details.");
@@ -815,66 +782,34 @@ export function BranchGeneralReportView({
       const whatsappVal = findContactValue(row.contacts, "whatsapp") || "";
 
       const activeLang = typeof document !== "undefined" ? document.documentElement.lang : "en";
-      openA4ReportWindow({
-        title: "City Branch Report",
-        subtitle: "Branch Profile Report (A4)",
-        autoPrint: false,
+      openBranchProfileReport({
+        kind: "city",
         lang: activeLang,
-        branchData: {
+        autoPrint: false,
+        data: {
           serialNumber: row.id.slice(0, 4).toUpperCase(),
           branchStatus: row.status || "Active",
-          branchCode: row.code || "-",
+          branchCode: row.code || null,
           branchType: "CITY",
           country: countryName,
-          currency: row.local_currency || "USD",
-          
-          branchName: row.name || `${cityName} City Branch`,
-          createdDate: row.created_at ? new Date(row.created_at).toLocaleDateString() : undefined,
-          updatedDate: row.updated_at ? new Date(row.updated_at).toLocaleDateString() : undefined,
-          createdBy: "Super Admin",
-          updatedBy: "Super Admin",
-          establishedOn: "-",
-          taxRegNo: "-",
-          ntnGstNo: "-",
-
           city: cityName,
-          cityCode: row.code?.split("-")?.[1] || "-",
-          stateProvince: "-",
-          areaRegion: "-",
-          zipCode: "-",
-          fullAddress: row.address || "-",
-
-          ownerName: row.owner_name || "-",
-          ownerCode: "OWN-0001",
-          fatherHusbandName: "-",
-          cnicId: "-",
-          nationality: "Pakistani",
-          designation: "Branch Manager",
-          ownershipType: "Individual",
-          ownershipPercent: "100%",
-          ownerPhone: phoneVal || "-",
-          ownerWhatsApp: whatsappVal || "-",
-          ownerEmail: emailVal || "-",
-          ownerAltEmail: "-",
-          ownerLandline: "-",
-          ownerWebsite: "-",
-
-          companyName: "Asmat & Brothers (Pvt) Ltd.",
-          companyCode: "COMP-001",
-          companyType: "Private Limited",
-          companyRegNo: "-",
-          companyIncDate: "-",
-          companyTaxRegNo: "-",
-          companyNtnGstNo: "-",
+          currency: row.local_currency || "USD",
+          branchName: row.name || `${cityName} City Branch`,
+          createdDate: row.created_at ? new Date(row.created_at).toLocaleDateString() : null,
+          updatedDate: row.updated_at ? new Date(row.updated_at).toLocaleDateString() : null,
+          createdBy: row.created_by_name || "Super Admin",
+          fullAddress: row.address || null,
+          ownerName: row.owner_name || null,
+          ownerPhone: phoneVal || null,
+          ownerWhatsApp: whatsappVal || null,
+          ownerEmail: emailVal || null,
+          companyName: row.company_name || null,
           companyStatus: "Active",
-          companyPhone: phoneVal || "-",
-          companyEmail: emailVal || "-",
-          companyWebsite: "-",
-          companyOfficeAddress: row.address || "-",
-
+          companyOfficeAddress: row.address || null,
           allowedPermissions: row.permission_grants || [],
-          remarks: "City Branch details profile."
-        }
+          permissionTemplate: row.permission_template || null,
+          remarks: null,
+        },
       });
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to load branch details.");
