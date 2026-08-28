@@ -74,7 +74,7 @@ const RULES: Rule[] = [
   { key: "eta", label: "ETA", kind: "date", patterns: [/\beta\b\s*[:.\-]?\s*([0-3]?\d[-/. ][A-Za-z0-9]{2,9}[-/. ]\d{2,4}|\d{4}[-/.]\d{1,2}[-/.]\d{1,2})/i] },
   { key: "etd", label: "ETD", kind: "date", patterns: [/\betd\b\s*[:.\-]?\s*([0-3]?\d[-/. ][A-Za-z0-9]{2,9}[-/. ]\d{2,4}|\d{4}[-/.]\d{1,2}[-/.]\d{1,2})/i] },
   { key: "currency", label: "Currency", kind: "currency", patterns: [/\b(USD|AED|PKR|AFN|INR|SAR|EUR|GBP|CNY|JPY|QAR|KWD|BHD|OMR|IRR|TRY)\b/] },
-  { key: "grand_total", label: "Grand Total", kind: "amount", patterns: [/(?:grand\s*total|total\s*amount|amount\s*due|invoice\s*total|total\s*payable|net\s*payable)\s*[:.\-]?\s*(?:[A-Z]{3}|[$€£₹﷼])?\s*([0-9][0-9,.\s]{2,20})/i] },
+  { key: "grand_total", label: "Grand Total", kind: "amount", patterns: [/(?:grand\s*total|total\s*amount|amount\s*due|invoice\s*total|total\s*payable|net\s*payable|amount\s*(?:transferred|paid|received)|transfer\s*amount)\s*[:.\-]?\s*(?:[A-Z]{3}|[$€£₹﷼])?\s*([0-9][0-9,.\s]{2,20})/i, /\bamount\s*[:.]\s*(?:[A-Z]{3}\s*)?([0-9][0-9,]{2,15}\.\d{2})/i] },
   { key: "subtotal", label: "Subtotal", kind: "amount", patterns: [/(?:sub\s*total|sub-total|net\s*amount)\s*[:.\-]?\s*(?:[A-Z]{3}|[$€£₹﷼])?\s*([0-9][0-9,.\s]{2,20})/i] },
   { key: "freight_amount", label: "Freight", kind: "amount", patterns: [/(?:ocean\s*freight|freight\s*charges?|freight)\s*[:.\-]?\s*(?:[A-Z]{3}|[$€£₹﷼])?\s*([0-9][0-9,.\s]{2,20})/i] },
   { key: "insurance_amount", label: "Insurance", kind: "amount", patterns: [/(?:insurance|marine\s*insurance)\s*[:.\-]?\s*(?:[A-Z]{3}|[$€£₹﷼])?\s*([0-9][0-9,.\s]{2,20})/i] },
@@ -95,6 +95,11 @@ const RULES: Rule[] = [
   { key: "payment_terms", label: "Payment Terms", kind: "text", patterns: [/(?:payment\s*terms?|terms\s*of\s*payment)\s*[:.\-]?\s*([A-Za-z0-9 %,./\-]{3,60})/i] },
   { key: "delivery_terms", label: "Delivery Terms / Incoterm", kind: "text", patterns: [/\b(FOB|CIF|CFR|CPT|CIP|DAP|DDP|EXW|FCA|FAS)\b[ ,-]?([A-Za-z ]{0,25})/ ] },
   { key: "trn", label: "TRN / Tax Registration", kind: "text", patterns: [/(?:trn|tax\s*reg(?:istration)?\s*(?:no\.?)?|vat\s*no\.?|ntn|gst\s*no\.?)\s*[:.\-]?\s*([0-9A-Z\-]{5,20})/i] },
+  { key: "payment_method", label: "Payment Method", kind: "text", patterns: [/\b(cash|bank\s*transfer|telegraphic\s*transfer|wire\s*transfer|cheque|check|online\s*transfer|card|pos)\b/i] },
+  { key: "cheque_number", label: "Cheque Number", kind: "text", patterns: [/(?:cheque|check)\s*(?:no\.?|number|#)\s*[:.\-]?\s*([0-9]{4,12})/i] },
+  { key: "cheque_status", label: "Cheque Status", kind: "text", patterns: [/\b(post\s*dated|pdc|cleared|honou?red|dishonou?red|bounced|returned|cancelled|stop\s*payment|pending)\b/i] },
+  { key: "bank_name", label: "Bank Name", kind: "text", patterns: [/\b([A-Z][A-Za-z& ]{2,40}\s+bank(?:\s+(?:ltd|limited|plc))?)\b/] },
+  { key: "value_date", label: "Value Date", kind: "date", patterns: [/(?:value\s*date|settlement\s*date)\s*[:.\-]?\s*([0-3]?\d[-/. ][A-Za-z0-9]{2,9}[-/. ]\d{2,4}|\d{4}[-/.]\d{1,2}[-/.]\d{1,2})/i] },
 ];
 
 const CONTAINER_RE = /\b([A-Z]{4}\d{7})\b/g;

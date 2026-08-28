@@ -152,7 +152,39 @@ rejected → agent accepts → business cancel-after-accept rejected.
 buttons on the Purchase/Sales screens + intake ReviewPanel; an inbox page for
 the shipping side; auto-creating a `clearing_customer_order` on accept.
 
-### Phases 8–9 — not started
+### Phase 8 — Cash / Bank Roznamcha intake ✅ (this commit)
+Migration `20260929_document_intake_roznamcha` — routes the finance document
+types (`cash_receipt`, `bank_transfer_advice`, `cheque_image`,
+`payment_confirmation`, `sales_receipt`, `advance_receipt`) to
+`target_module = 'roznamcha_entries'` and sharpens their classifier keywords for
+Cash / Bank Transfer / Cheque detection. `extractors.ts` gains `payment_method`,
+`cheque_number`, `cheque_status`, `bank_name`, `value_date` field rules + a
+wider amount pattern.
+`roznamcha-intake-preview-service.ts` — `previewFromJob` builds the spec §15
+**pre-post preview** without posting: payment method + cheque status,
+super-admin / country / branch / entry serial *schemes* (numbers allocate only
+at post time), bill / manual bill number, debit & credit account hints, original
+currency, exchange rate, final & base amount, source module, contract/PO/SO
+reference, entry date — plus a **balanced-Dr/Cr check** and a
+**duplicate-posting check** against `roznamcha_entries`
+(country + reference + date). `draft-mapping.ts` maps finance fields to a
+roznamcha draft (so "Prepare Reviewed Draft" also works for these).
+API `app/api/erp/document-intelligence/[id]/roznamcha-preview` (GET).
+ReviewPanel: "Cash / Bank Pre-Post Preview" button + a full preview table with
+duplicate / unbalanced banners.
+
+The AI never posts to `roznamcha_entries` / `roznamcha_lines` / journal /
+ledgers — the human posts through the existing Cash / Bank Roznamcha screen
+(which owns the payment-method-driven form, cheque pending/cleared/
+dishonoured/cancelled states, and the enforced balanced-Dr/Cr + duplicate
+guards). E2E `scratch/di-roz-e2e.mts`: bank transfer advice → classified
+`bank_transfer_advice` → `roznamcha_entries` → preview with method
+`bank_transfer`, amount 41,500, balanced, no duplicate.
+
+**Remaining Phase-8 work:** the Entry Method Selector wrapper on the Cash /
+Bank Roznamcha screen; carrying the preview's account hints into that form.
+
+### Phase 9 — not started
 8. Cash / Bank Roznamcha manual + scan (payment-method-driven form, pre-post
    preview of serials / bill numbers / debit-credit accounts / currency / rate /
    source module, balanced Dr/Cr, duplicate-posting protection).

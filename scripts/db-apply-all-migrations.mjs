@@ -62,7 +62,8 @@ const migrations = [
   { name: "20260925_document_intelligence_foundation", path: "supabase/migrations/20260925_document_intelligence_foundation.sql" },
   { name: "20260926_document_intake_drafts", path: "supabase/migrations/20260926_document_intake_drafts.sql" },
   { name: "20260927_purchase_loading_batches", path: "supabase/migrations/20260927_purchase_loading_batches.sql" },
-  { name: "20260928_business_shipping_handovers", path: "supabase/migrations/20260928_business_shipping_handovers.sql" }
+  { name: "20260928_business_shipping_handovers", path: "supabase/migrations/20260928_business_shipping_handovers.sql" },
+  { name: "20260929_document_intake_roznamcha", path: "supabase/migrations/20260929_document_intake_roznamcha.sql" }
 ];
 
 const sql = postgres(env.DATABASE_URL, { max: 1, prepare: false, connect_timeout: 60 });

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Loader2, UploadCloud, RefreshCw, FileText, ShieldAlert, CheckCircle2, X, ChevronLeft, Play, Ban, Link2, AlertTriangle, Package,
+  Loader2, UploadCloud, RefreshCw, FileText, ShieldAlert, CheckCircle2, X, ChevronLeft, Play, Ban, Link2, AlertTriangle, Package, Receipt,
 } from "lucide-react";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { apiGet, apiPost, apiPatch } from "@/lib/api/client";
@@ -312,6 +312,14 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
     } catch (e) { setError(e instanceof Error ? e.message : String(e)); }
     finally { setBusy(false); }
   };
+  const [rozPreview, setRozPreview] = useState<Row | null>(null);
+  const loadRozPreview = async () => {
+    setBusy(true);
+    setError(null);
+    try { setRozPreview(await apiGet<Row>(`/api/erp/document-intelligence/${jobId}/roznamcha-preview`)); }
+    catch (e) { setError(e instanceof Error ? e.message : String(e)); }
+    finally { setBusy(false); }
+  };
 
   const job = data?.job;
   const isImage = (job?.mime_type || "").startsWith("image/");
@@ -352,6 +360,9 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
                 {["auto", "user"].includes(job.match_status) && job.matched_source_module === "purchase_orders" && !["linked", "cancelled"].includes(job.status) ? (
                   <button type="button" disabled={busy} onClick={() => void proposeBatch()} className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 px-3 py-2 text-xs font-bold text-blue-700 hover:bg-blue-50 dark:border-blue-900 dark:text-blue-300"><Package className="h-3.5 w-3.5" />{s.t("propose_batch", "Propose Loading Batch")}</button>
                 ) : null}
+                {job.target_module === "roznamcha_entries" && !["linked", "cancelled"].includes(job.status) ? (
+                  <button type="button" disabled={busy} onClick={() => void loadRozPreview()} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"><Receipt className="h-3.5 w-3.5" />{s.t("roz_preview", "Cash / Bank Pre-Post Preview")}</button>
+                ) : null}
                 {job.status === "review" ? (
                   <button type="button" disabled={busy} onClick={() => { const r = window.prompt(s.t("qvc_reason", "QVC reason:")); if (r) void act("qvc", r); }} className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 dark:border-rose-900"><ShieldAlert className="h-3.5 w-3.5" />{s.t("send_qvc", "Send to QVC")}</button>
                 ) : null}
@@ -363,6 +374,45 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
 
             {error ? <p className="rounded-xl bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">{error}</p> : null}
             {job.qvc_reason ? <p className="rounded-xl bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"><ShieldAlert className="mr-1 inline h-3.5 w-3.5" />{job.qvc_reason}</p> : null}
+            {rozPreview?.preview ? (
+              <div className="rounded-2xl border border-slate-200 bg-white p-3 text-xs dark:border-slate-800 dark:bg-slate-900">
+                <p className="mb-2 text-[11px] font-black uppercase tracking-wider text-slate-400">{s.t("roz_preview_title", "Before Posting — Cash / Bank Roznamcha")}</p>
+                {rozPreview.checks?.duplicateOf ? (
+                  <p className="mb-2 rounded-lg bg-rose-50 px-2 py-1.5 text-[11px] font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
+                    <AlertTriangle className="mr-1 inline h-3.5 w-3.5" />{s.t("roz_dup", "A matching Roznamcha entry already exists")}: {rozPreview.checks.duplicateOf.voucherNo || rozPreview.checks.duplicateOf.entrySerial}
+                  </p>
+                ) : null}
+                {!rozPreview.checks?.balanced ? (
+                  <p className="mb-2 rounded-lg bg-amber-50 px-2 py-1.5 text-[11px] font-bold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">{rozPreview.checks?.balancedMessage || s.t("roz_unbalanced", "Debit and Credit are not balanced yet.")}</p>
+                ) : null}
+                <table className="w-full">
+                  <tbody className="[&>tr>td]:py-1 [&>tr>td:first-child]:pe-3 [&>tr>td:first-child]:font-bold [&>tr>td:first-child]:text-slate-500">
+                    {[
+                      ["roz_f_method", "Payment Method", s.t(`pm_${rozPreview.preview.paymentMethod}`, rozPreview.preview.paymentMethod)],
+                      ["roz_f_cheque_status", "Cheque Status", rozPreview.preview.chequeStatus ? s.t(`cs_${rozPreview.preview.chequeStatus}`, rozPreview.preview.chequeStatus) : "—"],
+                      ["roz_f_sa_serial", "Super Admin Serial", rozPreview.preview.superAdminSerialScheme],
+                      ["roz_f_country_serial", "Country Serial", rozPreview.preview.countrySerialScheme],
+                      ["roz_f_branch_serial", "Branch Serial", rozPreview.preview.branchSerialScheme],
+                      ["roz_f_entry_serial", "Entry Serial", rozPreview.preview.entrySerialScheme],
+                      ["roz_f_bill", "Bill Number", rozPreview.preview.billNumber || "—"],
+                      ["roz_f_manual_bill", "Manual Bill Number", rozPreview.preview.manualBillNumber || "—"],
+                      ["roz_f_debit", "Debit Account", rozPreview.preview.debitAccount],
+                      ["roz_f_credit", "Credit Account", rozPreview.preview.creditAccount],
+                      ["roz_f_currency", "Original Currency", rozPreview.preview.originalCurrency || "—"],
+                      ["roz_f_rate", "Exchange Rate", String(rozPreview.preview.exchangeRate ?? "—")],
+                      ["roz_f_final", "Final Amount", rozPreview.preview.finalAmount != null ? String(rozPreview.preview.finalAmount) : "—"],
+                      ["roz_f_base", "Base Amount", rozPreview.preview.baseAmount != null ? String(rozPreview.preview.baseAmount) : "—"],
+                      ["roz_f_source_module", "Source Module", rozPreview.preview.sourceModule || "—"],
+                      ["roz_f_source_ref", "Contract / Purchase / Sales Reference", rozPreview.preview.sourceReference || "—"],
+                      ["roz_f_date", "Entry Date", rozPreview.preview.entryDate || "—"],
+                    ].map(([k, fb, v]) => (
+                      <tr key={k as string}><td>{s.t(k as string, fb as string)}</td><td className="tabular-nums text-slate-700 dark:text-slate-200">{v as string}</td></tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p className="mt-2 text-[10px] text-slate-400">{s.t("roz_note", "Serial numbers are allocated only when you post from the Cash / Bank Roznamcha screen. The AI does not post.")}</p>
+              </div>
+            ) : null}
             {batchInfo?.batchNo ? (
               <div className="rounded-xl bg-blue-50 px-3 py-2.5 text-xs text-blue-800 dark:bg-blue-950/30 dark:text-blue-200">
                 <Package className="mr-1 inline h-3.5 w-3.5" />

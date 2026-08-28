@@ -116,6 +116,22 @@ const MODULE_MAP: Record<string, Record<string, string>> = {
     document_date: "loadingDate",
     port_of_loading: "portOfLoading",
   },
+  // Cash / Bank Roznamcha — a reviewed draft + pre-post preview only. The AI
+  // never posts; the human posts through the existing Roznamcha screen.
+  roznamcha_entries: {
+    invoice_number: "billNumber",
+    manual_contract_number: "manualBillNumber",
+    document_date: "entryDate",
+    currency: "originalCurrency",
+    exchange_rate: "exchangeRate",
+    grand_total: "finalAmount",
+    paid_amount: "finalAmount",
+    supplier_name: "counterpartyName",
+    customer_name: "counterpartyName",
+    contract_number: "sourceReference",
+    po_number: "sourceReference",
+    so_number: "sourceReference",
+  },
 };
 
 const AMOUNT_KEYS = new Set([
