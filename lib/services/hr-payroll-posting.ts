@@ -95,7 +95,9 @@ export class HrPayrollPosting {
         const scopeType: "country" | "branch" = run.country_branch_id ? "branch" : "country";
         let firstJournalId: string | null = null;
 
+        let __accrualIdx = 0;
         for (const l of lines) {
+          __accrualIdx += 1;
           const gross = Number(l.gross_salary);
           const net = Number(l.net_salary);
           const otherDed = Number(l.unpaid_leave_deduction) + Number(l.other_deductions);
@@ -125,7 +127,9 @@ export class HrPayrollPosting {
             countryBranchId: run.country_branch_id,
             entryDate: `${run.period_month}-28`,
             journalNo: "JO-PAYROLL-ACCRUAL",
-            voucherNo: run.run_no,
+            // roznamcha_entries.voucher_no is globally unique — one voucher per
+            // employee accrual line, all sharing the run_no prefix.
+            voucherNo: `${run.run_no}-A${String(__accrualIdx).padStart(3, "0")}`,
             referenceNo: `Payroll Run ${run.run_no}`,
             narration: `Accrued salary ${l.employee_name} — ${run.period_month} (${run.run_no})`,
             lines: accrualLines,
@@ -197,7 +201,9 @@ export class HrPayrollPosting {
 
         const scopeType: "country" | "branch" = run.country_branch_id ? "branch" : "country";
         let firstPayId: string | null = null;
+        let __payIdx = 0;
         for (const l of lines ?? []) {
+          __payIdx += 1;
           const net = Number(l.net_salary);
           if (net <= 0) { await sql`UPDATE public.hr_payroll_run_lines SET status = 'paid' WHERE id = ${l.id}`; continue; }
           const rate = Number(l.exchange_rate) || 1;

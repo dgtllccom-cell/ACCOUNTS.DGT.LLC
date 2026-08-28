@@ -1593,6 +1593,24 @@ export function ExtFormClient({ token }: { token: string }) {
     }
   };
 
+  // Dedicated Back ID Upload with Auto-Scan Trigger (MRZ & Details Extraction)
+  const handleBackUpload = async (file: File | undefined) => {
+    if (!file) return;
+    try {
+      const compressed = await compressImageFile(file, 1400, 1400, 0.85);
+      setDocBackImage(compressed);
+      await scanAndAutoFill(compressed, docType);
+    } catch {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const res = reader.result as string;
+        setDocBackImage(res);
+        await scanAndAutoFill(res, docType);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   // Add Document Handler
   const handleAddDoc = () => {
     if (!docNumber && !docFrontImage) return;
@@ -1601,7 +1619,7 @@ export function ExtFormClient({ token }: { token: string }) {
       id: Date.now().toString(),
       type: finalType,
       customName: docType === "Custom" ? customDocType.trim() : undefined,
-      number: docNumber || "N/A",
+      number: docNumber || "",
       dob: docDob || undefined,
       issueDate: docIssueDate || undefined,
       expiryDate: docExpiryDate || undefined,
@@ -1639,6 +1657,170 @@ export function ExtFormClient({ token }: { token: string }) {
     setContracts((prev) => prev.filter((c) => c.id !== id));
   };
 
+  // Direct Mobile & Desktop Download Slip Helper
+  const handleDownloadSlip = () => {
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1200;
+      canvas.height = 1600;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        window.print();
+        return;
+      }
+
+      // Background
+      ctx.fillStyle = "#f8fafc";
+      ctx.fillRect(0, 0, 1200, 1600);
+
+      // Header Banner
+      const headerGrad = ctx.createLinearGradient(0, 0, 1200, 0);
+      headerGrad.addColorStop(0, "#312e81");
+      headerGrad.addColorStop(1, "#4f46e5");
+      ctx.fillStyle = headerGrad;
+      ctx.fillRect(0, 0, 1200, 150);
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 32px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("DIGITAL DOCK ERP • OFFICIAL VERIFICATION RECORD", 600, 75);
+      ctx.font = "18px monospace";
+      ctx.fillStyle = "#c7d2fe";
+      ctx.fillText(`TOKEN REF: ${token.toUpperCase()}`, 600, 115);
+
+      // Main Card Container
+      ctx.fillStyle = "#ffffff";
+      ctx.strokeStyle = "#e2e8f0";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(50, 180, 1100, 1370, 20);
+      ctx.fill();
+      ctx.stroke();
+
+      // Applicant Name & Profile
+      ctx.textAlign = "start";
+      ctx.fillStyle = "#0f172a";
+      ctx.font = "bold 34px sans-serif";
+      ctx.fillText(`${firstName} ${lastName}`.trim() || "Applicant", 90, 260);
+
+      if (fatherName) {
+        ctx.font = "bold 22px sans-serif";
+        ctx.fillStyle = "#475569";
+        ctx.fillText(`Father / Guardian: ${fatherName}`, 90, 305);
+      }
+
+      ctx.font = "18px monospace";
+      ctx.fillStyle = "#4f46e5";
+      ctx.fillText(`Gender: ${gender.toUpperCase()} | DOB: ${docDob || "N/A"}`, 90, 350);
+
+      // Divider
+      ctx.strokeStyle = "#e2e8f0";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(90, 380);
+      ctx.lineTo(1110, 380);
+      ctx.stroke();
+
+      // Registered Contacts Section
+      ctx.fillStyle = "#1e293b";
+      ctx.font = "bold 24px sans-serif";
+      ctx.fillText("Registered Contact Numbers:", 90, 425);
+
+      let yPos = 475;
+      const validContacts = contactsList.filter((c) => c.value.trim());
+      if (validContacts.length === 0) {
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "italic 20px sans-serif";
+        ctx.fillText("No contacts registered", 90, yPos);
+        yPos += 40;
+      } else {
+        validContacts.forEach((c) => {
+          ctx.fillStyle = "#f8fafc";
+          ctx.beginPath();
+          ctx.roundRect(90, yPos - 30, 1020, 48, 10);
+          ctx.fill();
+          ctx.strokeStyle = "#e2e8f0";
+          ctx.stroke();
+
+          ctx.fillStyle = "#4338ca";
+          ctx.font = "bold 20px sans-serif";
+          const label = c.type === "Custom" && c.customLabel ? c.customLabel : (CONTACT_TYPES.find(ct => ct.value === c.type)?.labels[lang] || c.type);
+          ctx.fillText(`${label}:`, 110, yPos);
+
+          ctx.fillStyle = "#0f172a";
+          ctx.font = "bold 22px monospace";
+          ctx.fillText(c.value, 340, yPos);
+          yPos += 60;
+        });
+      }
+
+      // Address Section
+      yPos += 15;
+      ctx.fillStyle = "#1e293b";
+      ctx.font = "bold 24px sans-serif";
+      ctx.fillText("Residential & Business Location:", 90, yPos);
+      yPos += 45;
+
+      ctx.fillStyle = "#f8fafc";
+      ctx.beginPath();
+      ctx.roundRect(90, yPos - 30, 1020, 90, 10);
+      ctx.fill();
+      ctx.strokeStyle = "#e2e8f0";
+      ctx.stroke();
+
+      ctx.fillStyle = "#0f172a";
+      ctx.font = "bold 20px sans-serif";
+      ctx.fillText(`Country / City: ${country} • ${stateProvince} • ${city} (Postal: ${postalCode})`, 110, yPos);
+      yPos += 35;
+      ctx.font = "18px sans-serif";
+      ctx.fillStyle = "#475569";
+      ctx.fillText(`Full Street Address: ${fullAddress || "—"}`, 110, yPos);
+      yPos += 65;
+
+      // Identity Document Section
+      ctx.fillStyle = "#1e293b";
+      ctx.font = "bold 24px sans-serif";
+      ctx.fillText("Identity Document & Verification:", 90, yPos);
+      yPos += 45;
+
+      ctx.fillStyle = "#eef2ff";
+      ctx.beginPath();
+      ctx.roundRect(90, yPos - 30, 1020, 110, 12);
+      ctx.fill();
+      ctx.strokeStyle = "#c7d2fe";
+      ctx.stroke();
+
+      const docDisplayType = DOC_TYPES.find((dt) => dt.value === docType)?.labels[lang] || docType;
+      ctx.fillStyle = "#312e81";
+      ctx.font = "bold 22px sans-serif";
+      ctx.fillText(docDisplayType, 110, yPos);
+      if (docNumber) {
+        ctx.fillStyle = "#4f46e5";
+        ctx.font = "bold 22px monospace";
+        ctx.fillText(`ID #: ${docNumber}`, 600, yPos);
+      }
+      yPos += 40;
+      ctx.font = "18px monospace";
+      ctx.fillStyle = "#475569";
+      ctx.fillText(`DOB: ${docDob || "N/A"} | Issued: ${docIssueDate || "N/A"} | Expires: ${docExpiryDate || "N/A"}`, 110, yPos);
+
+      // Bottom Status Badge
+      ctx.fillStyle = "#059669";
+      ctx.font = "bold 20px monospace";
+      ctx.fillText(`RECORD STATUS: VERIFIED & REGISTERED • ${new Date().toLocaleDateString()}`, 90, 1500);
+
+      // Download Link
+      const a = document.createElement("a");
+      a.download = `DigitalDock_Verification_Slip_${token.slice(0, 8)}.png`;
+      a.href = canvas.toDataURL("image/png");
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch {
+      window.print();
+    }
+  };
+
   // Final Submit
   const handleFinalSubmit = async () => {
     setSubmitting(true);
@@ -1648,6 +1830,23 @@ export function ExtFormClient({ token }: { token: string }) {
     const waContacts = contactsList.filter((c) => c.type === "WhatsApp" && c.value.trim());
     const primaryMobile = mobContacts.length > 0 ? mobContacts.map((c) => c.value.trim()).join(" / ") : contactsList.find((c) => c.value.trim())?.value.trim() || "";
     const primaryWhatsapp = waContacts.length > 0 ? waContacts.map((c) => c.value.trim()).join(" / ") : primaryMobile;
+
+    const finalDocs = [...documents];
+    if (finalDocs.length === 0 && (docFrontImage || docNumber.trim())) {
+      const finalType = docType === "Custom" && customDocType.trim() ? customDocType.trim() : docType;
+      finalDocs.push({
+        id: "active-doc",
+        type: finalType,
+        customName: docType === "Custom" ? customDocType.trim() : undefined,
+        number: docNumber || "",
+        dob: docDob || undefined,
+        issueDate: docIssueDate || undefined,
+        expiryDate: docExpiryDate || undefined,
+        frontImage: docFrontImage || undefined,
+        backImage: docBackImage || undefined,
+        fileName: `${finalType.toLowerCase().replace(/\s+/g, "_")}.pdf`,
+      });
+    }
 
     const payload = {
       fullName: `${firstName} ${lastName}`.trim() || firstName || lastName,
@@ -1659,7 +1858,7 @@ export function ExtFormClient({ token }: { token: string }) {
       mobiles: mobContacts.map((c) => c.value.trim()),
       whatsapps: waContacts.map((c) => c.value.trim()),
       contacts: contactsList.filter((c) => c.value.trim()).map((c) => ({
-        type: c.type === "Custom" && c.customLabel ? c.customLabel : c.type,
+        type: c.type === "Custom" && c.customLabel ? c.customLabel : (CONTACT_TYPES.find(ct => ct.value === c.type)?.labels[lang] || c.type),
         value: c.value.trim()
       })),
       email,
@@ -1669,7 +1868,7 @@ export function ExtFormClient({ token }: { token: string }) {
       city,
       postalCode,
       address: fullAddress,
-      documents,
+      documents: finalDocs,
       contracts,
       photo: photoPreview,
       originalLanguage: lang,
@@ -2410,14 +2609,14 @@ export function ExtFormClient({ token }: { token: string }) {
                       type="file"
                       accept="image/*"
                       capture="environment"
-                      onChange={(e) => handleImageUpload(e.target.files?.[0], setDocBackImage)}
+                      onChange={(e) => handleBackUpload(e.target.files?.[0])}
                       className="hidden"
                     />
                     <input
                       ref={backInputRef}
                       type="file"
                       accept="image/*"
-                      onChange={(e) => handleImageUpload(e.target.files?.[0], setDocBackImage)}
+                      onChange={(e) => handleBackUpload(e.target.files?.[0])}
                       className="hidden"
                     />
 
@@ -2603,241 +2802,6 @@ export function ExtFormClient({ token }: { token: string }) {
                         ))}
                       </div>
                     )}
-                  </div>
-                </div>
-
-                {/* Step 2 Navigation Buttons */}
-                <div className="flex items-center gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(1)}
-                    className="py-3 px-5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs cursor-pointer transition-all shadow-2xs"
-                  >
-                    {t("backBtn", lang)}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(3)}
-                    className="flex-1 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer transition-all"
-                  >
-                    <span>{t("nextAddressBtn", lang)}</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* ════════════════════════════════════════════════════════════════════════
-                STEP 3: ADDRESS INFORMATION (100% 5-Language Localized Cascader)
-            ════════════════════════════════════════════════════════════════════════ */}
-            {currentStep === 3 && (
-              <div className="space-y-5 animate-in fade-in duration-300">
-                <div className="bg-slate-50/70 border border-slate-200 rounded-2xl p-4 sm:p-5 space-y-4">
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-7 w-7 rounded-lg bg-emerald-100/60 text-emerald-600 flex items-center justify-center">
-                      <MapPin size={14} />
-                    </div>
-                    <div>
-                      <h3 className="font-black text-slate-900 text-xs sm:text-sm tracking-wide uppercase">
-                        {t("step2Title", lang)}
-                      </h3>
-                      <p className="text-[11px] text-slate-400 font-medium">
-                        {t("step2Sub", lang)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 pt-1">
-                    {/* Country Selector (100% Localized) */}
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-slate-700">
-                        {t("country", lang)} <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        value={country}
-                        onChange={(e) => handleCountryChange(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
-                      >
-                        {Object.keys(LOCATION_HIERARCHY).map((cKey) => (
-                          <option key={cKey} value={cKey}>
-                            {locName(cKey, lang)}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* State / Province Selector (100% Localized) */}
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-slate-700">
-                        {t("stateProvince", lang)} <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        value={stateProvince}
-                        onChange={(e) => handleStateChange(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
-                      >
-                        {availableStates.map((stKey) => (
-                          <option key={stKey} value={stKey}>
-                            {locName(stKey, lang)}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* City / Port Selector (100% Localized) */}
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-slate-700">
-                        {t("city", lang)} <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        value={city}
-                        onChange={(e) => handleCityChange(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
-                      >
-                        {availableCities.map((c) => (
-                          <option key={c.name} value={c.name}>
-                            {locName(c.name, lang)}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Postal Code (Auto-filled) */}
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-slate-700">
-                        {t("postalCode", lang)}
-                      </label>
-                      <div className="relative">
-                        <CreditCard className="absolute start-3 top-3 h-4 w-4 text-slate-400" />
-                        <input
-                          type="text"
-                          value={postalCode}
-                          onChange={(e) => setPostalCode(e.target.value)}
-                          placeholder="Postal Code"
-                          className="w-full bg-slate-100/70 border border-slate-200 rounded-xl ps-9 pe-3 py-2 text-xs sm:text-sm font-bold text-slate-800 font-mono"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Full Street Address */}
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-slate-700">
-                        {t("fullAddress", lang)} <span className="text-red-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <MapPin className="absolute start-3 top-3 h-4 w-4 text-slate-400" />
-                        <textarea
-                          rows={3}
-                          value={fullAddress}
-                          onChange={(e) => setFullAddress(e.target.value)}
-                          placeholder={t("fullAddressPh", lang)}
-                          className="w-full bg-white border border-slate-200 rounded-xl ps-9 pe-3 py-2 text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all resize-none"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Step 3 Navigation Buttons */}
-                <div className="flex items-center gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(2)}
-                    className="py-3 px-5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs cursor-pointer transition-all shadow-2xs"
-                  >
-                    {t("backBtn", lang)}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(4)}
-                    className="flex-1 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer transition-all"
-                  >
-                    <span>{t("nextPhotoBtn", lang)}</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* ════════════════════════════════════════════════════════════════════════
-                STEP 4: PROFILE PHOTO (Applicant Photo / Selfie)
-            ════════════════════════════════════════════════════════════════════════ */}
-            {currentStep === 4 && (
-              <div className="space-y-6 animate-in fade-in duration-300">
-                <div className="bg-slate-50/70 border border-slate-200 rounded-2xl p-6 text-center space-y-4">
-                  <div className="space-y-1">
-                    <h3 className="font-black text-slate-900 text-sm sm:text-base">
-                      {t("step4Title", lang)}
-                    </h3>
-                    <p className="text-xs text-slate-400 font-medium">
-                      {t("step4Sub", lang)}
-                    </p>
-                  </div>
-
-                  {/* Circular Avatar Preview */}
-                  <div className="relative mx-auto w-32 h-32 rounded-full border-4 border-white shadow-md overflow-hidden bg-slate-200 flex items-center justify-center">
-                    {photoPreview ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={photoPreview} alt="Candidate Avatar" className="h-full w-full object-cover" />
-                    ) : (
-                      <User size={56} className="text-slate-400" />
-                    )}
-                  </div>
-
-                  {/* Camera / Gallery Upload Buttons */}
-                  <div className="flex items-center justify-center gap-3 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => photoCameraRef.current?.click()}
-                      className="py-2.5 px-5 rounded-xl border border-indigo-200 bg-indigo-50/70 text-indigo-700 hover:bg-indigo-100 text-xs font-bold flex items-center gap-2 shadow-2xs cursor-pointer transition-all"
-                    >
-                      <Camera size={15} />
-                      <span>{t("cameraBtn", lang)}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => photoInputRef.current?.click()}
-                      className="py-2.5 px-5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold flex items-center gap-2 shadow-2xs cursor-pointer transition-all"
-                    >
-                      <ImageIcon size={15} />
-                      <span>{t("galleryBtn", lang)}</span>
-                    </button>
-                  </div>
-                  <p className="text-[10px] text-slate-400">{t("photoSizeHint", lang)}</p>
-                </div>
-
-                {/* Step 4 Navigation Buttons */}
-                <div className="flex items-center gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(3)}
-                    className="py-3 px-5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs cursor-pointer transition-all shadow-2xs"
-                  >
-                    {t("backBtn", lang)}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(5)}
-                    className="flex-1 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-indigo-600/25 flex items-center justify-center gap-2 cursor-pointer transition-all"
-                  >
-                    <span>{t("nextReviewBtn", lang)}</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* ════════════════════════════════════════════════════════════════════════
-                STEP 5: REVIEW YOUR INFORMATION & PRE-SUBMISSION APPLICATION SLIP
-            ════════════════════════════════════════════════════════════════════════ */}
-            {currentStep === 5 && (
-              <div className="space-y-5 animate-in fade-in duration-300">
-                <div className="text-center space-y-1 pb-1">
-                  <h3 className="font-black text-slate-900 text-sm sm:text-base uppercase tracking-wide">
-                    {t("appSlipHeading", lang)}
-                  </h3>
-                  <p className="text-xs text-slate-400 font-medium max-w-md mx-auto">
-                    {t("appSlipSub", lang)}
-                  </p>
-                </div>
-
                 {/* Pre-Submission Download & Print Action Toolbar */}
                 <div className="bg-linear-to-r from-indigo-900 to-slate-900 text-white rounded-2xl p-4 sm:p-5 shadow-md flex flex-col sm:flex-row items-center justify-between gap-3 print:hidden">
                   <div className="space-y-0.5 text-center sm:text-start">
@@ -2849,6 +2813,237 @@ export function ExtFormClient({ token }: { token: string }) {
                     </div>
                     <p className="text-[11px] text-slate-300 font-normal">
                       Download or print your complete verified application before submitting.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <button
+                      type="button"
+                      onClick={handleDownloadSlip}
+                      className="flex-1 sm:flex-initial py-2.5 px-4 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs transition-all"
+                    >
+                      <Download size={14} />
+                      <span>{t("downloadSlipBtn", lang)}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => window.print()}
+                      className="py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all border border-white/20"
+                    >
+                      <Printer size={14} />
+                      <span>{t("printSlipBtn", lang)}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Official Verification Application Summary Sheet */}
+                <div className="border-2 border-indigo-200 bg-white rounded-3xl p-5 sm:p-7 space-y-5 shadow-sm print:border-none print:shadow-none print:p-0">
+                  {/* Enterprise Official Header */}
+                  <div className="flex items-center justify-between border-b-2 border-slate-100 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-sm shadow-xs">
+                        DD
+                      </div>
+                      <div>
+                        <h4 className="font-black text-xs sm:text-sm text-slate-900 uppercase tracking-wider">
+                          Digital Dock ERP
+                        </h4>
+                        <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest">
+                          Public Verification Gateway
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-end">
+                      <span className="inline-block text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                        APPLICATION DRAFT
+                      </span>
+                      <p className="text-[9px] text-slate-400 font-mono mt-0.5">
+                        Ref: {token.slice(0, 12).toUpperCase()}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Applicant Profile Header */}
+                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                    <div className="h-20 w-20 rounded-2xl border-2 border-white shadow-sm overflow-hidden bg-slate-200 shrink-0 flex items-center justify-center">
+                      {photoPreview ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={photoPreview} alt="Applicant" className="h-full w-full object-cover" />
+                      ) : (
+                        <User size={36} className="text-slate-400" />
+                      )}
+                    </div>
+                    <div className="space-y-1 text-center sm:text-start flex-1">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                        <h3 className="font-black text-base sm:text-lg text-slate-900">
+                          {firstName} {lastName}
+                        </h3>
+                        <button
+                          type="button"
+                          onClick={() => setCurrentStep(1)}
+                          className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 flex items-center justify-center sm:justify-start gap-1 cursor-pointer print:hidden"
+                        >
+                          <Edit3 size={11} />
+                          <span>{t("editBtn", lang)}</span>
+                        </button>
+                      </div>
+                      {fatherName && (
+                        <p className="text-xs text-slate-500 font-medium">
+                          {t("fatherName", lang)}: <span className="font-bold text-slate-800">{fatherName}</span>
+                        </p>
+                      )}
+                      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
+                        <span className="px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 text-[10px] font-bold uppercase">
+                          {t(gender, lang)}
+                        </span>
+                        {docDob && (
+                          <span className="px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 text-[11px] font-mono">
+                            DOB: {docDob}
+                          </span>
+                        )}
+                        {email && (
+                          <span className="px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 text-[11px] font-mono">
+                            {email}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section 1: Contact Breakdown */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+                      <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider">
+                        {t("phoneLabel", lang)}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        {contactsList.filter(c => c.value.trim()).length} Registered
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {contactsList.filter(c => c.value.trim()).map((c) => (
+                        <div key={c.id} className="p-2 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
+                          <span className="font-bold text-indigo-700 text-[11px]">
+                            {c.type === "Custom" && c.customLabel ? c.customLabel : (CONTACT_TYPES.find(ct => ct.value === c.type)?.labels[lang] || c.type)}
+                          </span>
+                          <span className="font-mono font-bold text-slate-800">{c.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Section 2: Identity Documents & Dual Card Previews */}
+                  <div className="space-y-3 pt-1">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+                      <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider">
+                        {t("documentsTitle", lang)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setCurrentStep(2)}
+                        className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 cursor-pointer print:hidden"
+                      >
+                        <Edit3 size={11} />
+                        <span>{t("editBtn", lang)}</span>
+                      </button>
+                    </div>
+
+                    {documents.length === 0 && !docFrontImage ? (
+                      <p className="text-xs text-slate-400 italic">No identity documents attached.</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {/* If user hasn't pressed '+ Add Document' but has active front image */}
+                        {docFrontImage && (
+                          <div className="p-3.5 rounded-2xl bg-indigo-50/40 border border-indigo-200 space-y-2.5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-black text-slate-900">
+                                {DOC_TYPES.find((d) => d.value === docType)?.labels[lang] || (docType === "Custom" ? customDocType : docType)}
+                              </span>
+                              {docNumber && (
+                                <span className="text-xs font-mono font-bold text-indigo-700">#{docNumber}</span>
+                              )}
+                            </div>
+                            {(docDob || docIssueDate || docExpiryDate) && (
+                              <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-600 font-mono bg-white p-2 rounded-xl border border-slate-200">
+                                {docDob && <span>DOB: <b>{docDob}</b></span>}
+                                {docIssueDate && <span>Issued: <b>{docIssueDate}</b></span>}
+                                {docExpiryDate && <span>Expires: <b>{docExpiryDate}</b></span>}
+                              </div>
+                            )}
+                            {/* Dual Side-by-Side Photo Previews */}
+                            <div className="grid grid-cols-2 gap-2 pt-1">
+                              {docFrontImage && (
+                                <div className="space-y-1">
+                                  <span className="text-[10px] font-bold text-slate-500 block">Front Side</span>
+                                  <div
+                                    onClick={() => setPreviewModalImage({ src: docFrontImage, title: "ID Front Side" })}
+                                    className="h-28 rounded-xl border border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center cursor-pointer shadow-2xs"
+                                  >
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={docFrontImage} alt="Front" className="h-full w-full object-contain" />
+                                  </div>
+                                </div>
+                              )}
+                              {docBackImage && (
+                                <div className="space-y-1">
+                                  <span className="text-[10px] font-bold text-slate-500 block">Back Side</span>
+                                  <div
+                                    onClick={() => setPreviewModalImage({ src: docBackImage, title: "ID Back Side" })}
+                                    className="h-28 rounded-xl border border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center cursor-pointer shadow-2xs"
+                                  >
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={docBackImage} alt="Back" className="h-full w-full object-contain" />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Stored Documents in List */}
+                        {documents.map((doc) => (
+                          <div key={doc.id} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-black text-slate-900">
+                                {DOC_TYPES.find((d) => d.value === doc.type)?.labels[lang] || doc.type}
+                              </span>
+                              {doc.number && doc.number !== "N/A" && (
+                                <span className="text-xs font-mono font-bold text-indigo-700">#{doc.number}</span>
+                              )}
+                            </div>
+                            {(doc.dob || docIssueDate || docExpiryDate) && (
+                              <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-600 font-mono bg-white p-2 rounded-xl border border-slate-200">
+                                {doc.dob && <span>DOB: <b>{doc.dob}</b></span>}
+                                {docIssueDate && <span>Issued: <b>{docIssueDate}</b></span>}
+                                {docExpiryDate && <span>Expires: <b>{docExpiryDate}</b></span>}
+                              </div>
+                            )}
+                            {(doc.frontImage || doc.backImage) && (
+                              <div className="grid grid-cols-2 gap-2 pt-1">
+                                {doc.frontImage && (
+                                  <div
+                                    onClick={() => setPreviewModalImage({ src: doc.frontImage!, title: "Document Front" })}
+                                    className="h-28 rounded-xl border border-slate-200 overflow-hidden bg-white flex items-center justify-center cursor-pointer"
+                                  >
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={doc.frontImage} alt="Front" className="h-full w-full object-contain" />
+                                  </div>
+                                )}
+                                {doc.backImage && (
+                                  <div
+                                    onClick={() => setPreviewModalImage({ src: doc.backImage!, title: "Document Back" })}
+                                    className="h-28 rounded-xl border border-slate-200 overflow-hidden bg-white flex items-center justify-center cursor-pointer"
+                                  >
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={doc.backImage} alt="Back" className="h-full w-full object-contain" />
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>our complete verified application before submitting.
                     </p>
                   </div>
                   <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -3268,21 +3463,33 @@ export function ExtFormClient({ token }: { token: string }) {
               </div>
 
               {/* Attached Documents Thumbnails */}
-              {documents.length > 0 && (
+              {(documents.length > 0 || docFrontImage || docNumber.trim()) && (
                 <div className="pt-2 border-t border-slate-200 space-y-2">
                   <span className="text-[11px] font-bold text-slate-700 block">
-                    {t("documentsTitle", lang)} ({documents.length}):
+                    {t("documentsTitle", lang)} ({documents.length > 0 ? documents.length : 1}):
                   </span>
                   <div className="grid grid-cols-2 gap-2">
-                    {documents.map((d) => (
+                    {(documents.length > 0 ? documents : [{
+                      id: "active",
+                      type: docType === "Custom" && customDocType.trim() ? customDocType.trim() : docType,
+                      number: docNumber,
+                      dob: docDob,
+                      issueDate: docIssueDate,
+                      expiryDate: docExpiryDate,
+                      frontImage: docFrontImage || undefined,
+                      backImage: docBackImage || undefined,
+                    }]).map((d) => (
                       <div key={d.id} className="bg-white p-2 rounded-xl border border-slate-200 space-y-1">
                         <span className="font-bold text-[11px] text-slate-800 block">
                           {DOC_TYPES.find((dt) => dt.value === d.type)?.labels[lang] || d.type}
                         </span>
-                        <span className="text-[10px] font-mono text-slate-500 block">#{d.number}</span>
+                        {d.number && d.number !== "N/A" && (
+                          <span className="text-[10px] font-mono text-slate-500 block">#{d.number}</span>
+                        )}
                         {(d.dob || d.issueDate || d.expiryDate) && (
                           <div className="text-[9px] text-slate-400 font-mono">
                             {d.dob && <div>DOB: {d.dob}</div>}
+                            {d.issueDate && <div>Issued: {d.issueDate}</div>}
                             {d.expiryDate && <div>Exp: {d.expiryDate}</div>}
                           </div>
                         )}
@@ -3316,11 +3523,19 @@ export function ExtFormClient({ token }: { token: string }) {
             </div>
 
             {/* Print / Download Receipt Buttons */}
-            <div className="flex items-center gap-3 pt-2">
+            <div className="flex flex-col sm:flex-row items-center gap-3 pt-2 print:hidden">
+              <button
+                type="button"
+                onClick={handleDownloadSlip}
+                className="w-full sm:flex-1 py-3.5 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all"
+              >
+                <Download size={16} />
+                <span>{t("downloadSlipBtn", lang)}</span>
+              </button>
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="flex-1 py-3 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all"
+                className="w-full sm:w-auto py-3.5 px-5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs sm:text-sm shadow-2xs flex items-center justify-center gap-2 cursor-pointer transition-all"
               >
                 <Printer size={15} />
                 <span>{t("printReceipt", lang)}</span>

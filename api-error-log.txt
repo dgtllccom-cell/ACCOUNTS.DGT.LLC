@@ -2374,3 +2374,64 @@ Error: This document / record is outside your country, branch or agent scope.
     at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
     at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
 2026-08-28T21:35:23.243Z - FORBIDDEN - This document / record is outside your country, branch or agent scope. - {}
+
+[2026-08-28T22:07:23.303Z] PostgresError: could not determine data type of parameter $2
+PostgresError: could not determine data type of parameter $2
+    at ErrorResponse (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:830:70)
+    at handle (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:504:6)
+    at TLSSocket.data (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:339:9)
+    at TLSSocket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:189:23)
+    at TLSWrap.callbackTrampoline (node:internal/async_hooks:130:17)
+    at cachedError (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:175:23)
+    at new Query (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:41:24)
+    at sql (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:110:11)
+    at eval (webpack-internal:///(rsc)/./lib/services/hr-payroll-service.ts:170:41)
+2026-08-28T22:07:23.956Z - SERVER_ERROR - could not determine data type of parameter $2 - {}
+
+[2026-08-28T22:11:05.214Z] Error: Salary Expense + Employee Payable ledgers must be set on 10 employee profile(s) before posting: DEVTEST-20260813-CSESVYXX-DEV-AE-TEST-DUBAI-001-EMP-01, DEVTEST-20260813-CSESVYXX-DEV-AE-TEST-DUBAI-001-EMP-07, DEVTEST-20260813-CSESVYXX-DEV-AE-TEST-DUBAI-001-EMP-04, DEVTEST-20260813-CSESVYXX-DEV-AE-TEST-DUBAI-001-EMP-09, DEVTEST-20260813-CSESVYXX-DEV-AE-TEST-DUBAI-001-EMP-06
+Error: Salary Expense + Employee Payable ledgers must be set on 10 employee profile(s) before posting: DEVTEST-20260813-CSESVYXX-DEV-AE-TEST-DUBAI-001-EMP-01, DEVTEST-20260813-CSESVYXX-DEV-AE-TEST-DUBAI-001-EMP-07, DEVTEST-20260813-CSESVYXX-DEV-AE-TEST-DUBAI-001-EMP-04, DEVTEST-20260813-CSESVYXX-DEV-AE-TEST-DUBAI-001-EMP-09, DEVTEST-20260813-CSESVYXX-DEV-AE-TEST-DUBAI-001-EMP-06
+    at eval (webpack-internal:///(rsc)/./lib/services/hr-payroll-posting.ts:60:27)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async withLocalPg (webpack-internal:///(rsc)/./lib/db/local-postgres.ts:68:16)
+    at async PATCH (webpack-internal:///(rsc)/./app/api/erp/hr/payroll/[id]/route.ts:74:23)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fhr%2Fpayroll%2F%5Bid%5D%2Froute&page=%2Fapi%2Ferp%2Fhr%2Fpayroll%2F%5Bid%5D%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fhr%2Fpayroll%2F%5Bid%5D%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fhr%2Fpayroll%2F%5Bid%5D%2Froute&page=%2Fapi%2Ferp%2Fhr%2Fpayroll%2F%5Bid%5D%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fhr%2Fpayroll%2F%5Bid%5D%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fhr%2Fpayroll%2F%5Bid%5D%2Froute&page=%2Fapi%2Ferp%2Fhr%2Fpayroll%2F%5Bid%5D%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fhr%2Fpayroll%2F%5Bid%5D%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+2026-08-28T22:11:06.920Z - SERVER_ERROR - Salary Expense + Employee Payable ledgers must be set on 10 employee profile(s) before posting: DEVTEST-20260813-CSESVYXX-DEV-AE-TEST-DUBAI-001-EMP-01, DEVTEST-20260813-CSESVYXX-DEV-AE-TEST-DUBAI-001-EMP-07, DEVTEST-20260813-CSESVYXX-DEV-AE-TEST-DUBAI-001-EMP-04, DEVTEST-20260813-CSESVYXX-DEV-AE-TEST-DUBAI-001-EMP-09, DEVTEST-20260813-CSESVYXX-DEV-AE-TEST-DUBAI-001-EMP-06 - {}
+
+[2026-08-28T22:19:10.685Z] PostgresError: duplicate key value violates unique constraint "roznamcha_entries_voucher_idx"
+PostgresError: duplicate key value violates unique constraint "roznamcha_entries_voucher_idx"
+    at ErrorResponse (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:830:70)
+    at handle (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:504:6)
+    at TLSSocket.data (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:339:9)
+    at TLSSocket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:189:23)
+    at TLSWrap.callbackTrampoline (node:internal/async_hooks:130:17)
+    at cachedError (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:175:23)
+    at new Query (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:41:24)
+    at sql (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:110:11)
+    at postEntry (webpack-internal:///(rsc)/./lib/services/hr-payroll-posting.ts:16:27)
+2026-08-28T22:19:11.361Z - SERVER_ERROR - duplicate key value violates unique constraint "roznamcha_entries_voucher_idx" - {}
