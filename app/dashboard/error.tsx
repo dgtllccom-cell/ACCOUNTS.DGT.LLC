@@ -54,6 +54,22 @@ function extractTargetRouteFromChunkError(msg: string): string | null {
   return null;
 }
 
+function hardReloadFresh() {
+  clearChunkReloadCache();
+  try {
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("_v");
+      url.searchParams.set("_v", String(Date.now()));
+      window.location.href = url.toString();
+    }
+  } catch (e) {
+    if (typeof window !== "undefined") {
+      window.location.reload();
+    }
+  }
+}
+
 export default function DashboardError({
   error,
   reset,
@@ -80,29 +96,24 @@ export default function DashboardError({
       const lastTs = parseInt(sessionStorage.getItem(tsKey) || "0", 10);
       let currentCount = parseInt(sessionStorage.getItem(countKey) || "0", 10);
 
-      if (now - lastTs > 15000) {
+      if (now - lastTs > 30000) {
         currentCount = 0;
       }
 
-      if (currentCount < 3) {
-        clearChunkReloadCache();
+      if (currentCount < 2) {
         sessionStorage.setItem(countKey, String(currentCount + 1));
         sessionStorage.setItem(tsKey, String(now));
-        const url = new URL(window.location.href);
-        url.searchParams.set("_v", String(now));
-        window.location.replace(url.toString());
-        return;
+        // Short timeout to allow transient server restart to settle
+        const timer = setTimeout(() => {
+          hardReloadFresh();
+        }, 800);
+        return () => clearTimeout(timer);
       }
     }
   }, [error]);
 
-  const msg = String(error?.message || error || "");
-
   const handleTryAgain = () => {
-    clearChunkReloadCache();
-    const url = new URL(window.location.href);
-    url.searchParams.set("_v", String(Date.now()));
-    window.location.replace(url.toString());
+    hardReloadFresh();
   };
 
   return (
@@ -115,7 +126,7 @@ export default function DashboardError({
           Module Temporary Exception
         </h3>
         <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
-          This dashboard module encountered a temporary chunk loading error after a system update. Click below to reload fresh assets.
+          This dashboard module encountered a temporary chunk loading error during a live update. Click below to reload fresh assets.
         </p>
         {error && (
           <div className="mt-4 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 text-left font-mono text-[10.5px] text-rose-600 dark:text-rose-400 overflow-x-auto">
