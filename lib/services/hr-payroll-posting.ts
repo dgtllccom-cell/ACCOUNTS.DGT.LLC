@@ -217,7 +217,7 @@ export class HrPayrollPosting {
             countryBranchId: run.country_branch_id,
             entryDate: opts.paymentDate,
             journalNo: "JO-PAYROLL-PAYMENT",
-            voucherNo: run.run_no,
+            voucherNo: `${run.run_no}-P${String(__payIdx).padStart(3, "0")}`,
             referenceNo: `Payroll Run ${run.run_no}`,
             narration: `Salary payment ${l.employee_name} — ${run.period_month} (${run.run_no})`,
             lines: paymentLines,
@@ -271,7 +271,9 @@ export class HrPayrollPosting {
           WHERE l.run_id = ${runId} AND l.status IN ('posted','paid')`;
         const scopeType: "country" | "branch" = run.country_branch_id ? "branch" : "country";
         let reversalId: string | null = null;
+        let __revIdx = 0;
         for (const l of lines ?? []) {
+          __revIdx += 1;
           const gross = Number(l.gross_salary);
           const net = Number(l.net_salary);
           const otherDed = Number(l.unpaid_leave_deduction) + Number(l.other_deductions);
@@ -289,7 +291,7 @@ export class HrPayrollPosting {
           const rid = await postEntry(sql, {
             type: scopeType, countryId: run.country_id, countryBranchId: run.country_branch_id,
             entryDate: new Date().toISOString().slice(0, 10),
-            journalNo: "JO-PAYROLL-REVERSAL", voucherNo: run.run_no,
+            journalNo: "JO-PAYROLL-REVERSAL", voucherNo: `${run.run_no}-R${String(__revIdx).padStart(3, "0")}`,
             referenceNo: `Payroll Run ${run.run_no} reversal`,
             narration: `Reversal of payroll ${run.run_no} — ${l.employee_name}: ${reason}`,
             lines: contra,
