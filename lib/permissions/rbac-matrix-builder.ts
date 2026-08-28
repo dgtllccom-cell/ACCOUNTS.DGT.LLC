@@ -263,6 +263,17 @@ export const ERP_MODULE_DEFINITIONS: ErpModuleDef[] = [
     deletePerms: [],
     approvePerms: ["approvals:approve"],
     exportPerms: ["reports:export"]
+  },
+  {
+    key: "uae_tax_einvoicing",
+    name: "UAE Tax, VAT & e-Invoicing",
+    category: "Finance & Accounting",
+    viewPerms: ["uae_tax:read"],
+    createPerms: ["uae_tax:write", "uae_tax_settings:write"],
+    editPerms: ["uae_tax:write", "uae_tax_settings:write"],
+    deletePerms: [],
+    approvePerms: ["uae_tax_filing:write"],
+    exportPerms: ["reports:export"]
   }
 ];
 

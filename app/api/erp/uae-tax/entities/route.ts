@@ -3,6 +3,7 @@ import { z } from "zod";
 import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { assertUaeCountryAccess } from "@/lib/services/uae-tax-api";
 import { uaeTaxService } from "@/lib/services/uae-tax-service";
 import { uaeTaxScopeFromSession } from "@/lib/services/uae-tax-scope";
 
@@ -28,6 +29,7 @@ export async function GET() {
   try {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "uae_tax", action: "read" });
+    await assertUaeCountryAccess(session);
     const entities = await uaeTaxService.listEntities(uaeTaxScopeFromSession(session));
     return apiOk({ entities });
   } catch (error) {
@@ -39,6 +41,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "uae_tax_settings", action: "write" });
+    await assertUaeCountryAccess(session);
 
     const body = createSchema.parse(await request.json());
     const { id } = await uaeTaxService.createEntity({

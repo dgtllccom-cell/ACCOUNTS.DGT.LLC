@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { assertUaeCountryAccess } from "@/lib/services/uae-tax-api";
 import { uaeTaxService } from "@/lib/services/uae-tax-service";
 
 export const dynamic = "force-dynamic";
@@ -11,6 +12,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "uae_tax", action: "read" });
+    await assertUaeCountryAccess(session);
     const ruleType = new URL(request.url).searchParams.get("ruleType") || undefined;
     const rules = await uaeTaxService.listRules(ruleType);
     return apiOk({ rules });

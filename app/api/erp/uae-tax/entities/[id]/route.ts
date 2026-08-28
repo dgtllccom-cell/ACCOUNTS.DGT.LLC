@@ -3,6 +3,7 @@ import { z } from "zod";
 import { apiError, apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { assertUaeCountryAccess } from "@/lib/services/uae-tax-api";
 import { uaeTaxService } from "@/lib/services/uae-tax-service";
 import { uaeTaxScopeFromSession } from "@/lib/services/uae-tax-scope";
 
@@ -48,6 +49,7 @@ export async function GET(_request: NextRequest, ctx: { params: Promise<{ id: st
   try {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "uae_tax", action: "read" });
+    await assertUaeCountryAccess(session);
     const { id } = await ctx.params;
     const entity = await uaeTaxService.getEntity(id, uaeTaxScopeFromSession(session));
     if (!entity) return apiError("NOT_FOUND", "Tax entity not found", 404);
@@ -62,6 +64,7 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
   try {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "uae_tax_settings", action: "write" });
+    await assertUaeCountryAccess(session);
     const { id } = await ctx.params;
     const body = patchSchema.parse(await request.json());
     const scope = uaeTaxScopeFromSession(session);

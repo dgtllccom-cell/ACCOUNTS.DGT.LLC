@@ -621,6 +621,38 @@ export const permissionCatalog: PermissionDefinition[] = [
     group: "Document Management",
     resources: ["office_documents", "scanner_devices", "attachments"],
     actions: ["create", "read", "update"]
+  },
+  {
+    key: "uae_tax.view",
+    label: "UAE Tax & e-Invoicing — View",
+    description: "View UAE VAT tax lines, dashboards, reports, reconciliation, documentation completeness, and audit trail.",
+    group: "UAE Tax & e-Invoicing",
+    resources: ["uae_tax", "reports"],
+    actions: ["read", "export", "print"]
+  },
+  {
+    key: "uae_tax.manage",
+    label: "UAE Tax & e-Invoicing — Manage",
+    description: "Sync taxable lines, classify recoverability, attach evidence, and build e-invoice drafts.",
+    group: "UAE Tax & e-Invoicing",
+    resources: ["uae_tax"],
+    actions: ["read", "write"]
+  },
+  {
+    key: "uae_tax.filing",
+    label: "UAE VAT Filing & ASP Submission",
+    description: "Generate and file the FTA VAT return, manage VAT recovery, propose period postings, and submit e-invoices / credit notes through the ASP.",
+    group: "UAE Tax & e-Invoicing",
+    resources: ["uae_tax_filing"],
+    actions: ["read", "write"]
+  },
+  {
+    key: "uae_tax.settings",
+    label: "UAE Tax Setup & Rules",
+    description: "Manage tax entities / TRN, branch mapping, VAT rules, designated zones, and control ledgers.",
+    group: "UAE Tax & e-Invoicing",
+    resources: ["uae_tax_settings"],
+    actions: ["read", "write"]
   }
 ];
 

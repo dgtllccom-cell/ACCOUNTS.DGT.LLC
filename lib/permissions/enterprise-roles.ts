@@ -60,7 +60,10 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "clearing_agent_branches:read",
     "financial_periods:read",
     "currency_rates:read",
-    "audit_logs:read"
+    "audit_logs:read",
+    "uae_tax:read",
+    "uae_tax_filing:read",
+    "uae_tax_settings:read"
   ],
   country_admin: [
     "companies:read",
@@ -169,7 +172,13 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "documents:update",
     "documents:delete",
     "documents:export",
-    "documents:print"
+    "documents:print",
+    "uae_tax:read",
+    "uae_tax:write",
+    "uae_tax_filing:read",
+    "uae_tax_filing:write",
+    "uae_tax_settings:read",
+    "uae_tax_settings:write"
   ],
   country_user: [
     "dashboard:read",
@@ -202,7 +211,8 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "email_management:read",
     "kyc:read",
     "documents:read",
-    "documents:create"
+    "documents:create",
+    "uae_tax:read"
   ],
   main_branch_admin: [
     "companies:read",
@@ -278,7 +288,10 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "documents:create",
     "documents:update",
     "documents:export",
-    "documents:print"
+    "documents:print",
+    "uae_tax:read",
+    "uae_tax:write",
+    "uae_tax_filing:read"
   ],
   city_branch_admin: [
     "companies:read",
@@ -348,7 +361,9 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "documents:create",
     "documents:update",
     "documents:export",
-    "documents:print"
+    "documents:print",
+    "uae_tax:read",
+    "uae_tax:write"
   ],
   accountant: [
     "companies:read",
@@ -399,7 +414,11 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "approvals:create",
     "approvals:read",
     "approvals:approve",
-    "reports:read"
+    "reports:read",
+    "uae_tax:read",
+    "uae_tax:write",
+    "uae_tax_filing:read",
+    "uae_tax_filing:write"
   ],
   cashier: [
     "companies:read",
@@ -437,7 +456,7 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "whatsapp:create"
   ],
   staff_user: ["transactions:create", "transactions:read", "customers:read", "companies:read", "shipping_records:read", "whatsapp:read"],
-  auditor_viewer: ["reports:read", "audit_logs:read", "ledgers:read", "companies:read", "kyc:read", "documents:read"]
+  auditor_viewer: ["reports:read", "audit_logs:read", "ledgers:read", "companies:read", "kyc:read", "documents:read", "uae_tax:read", "uae_tax_filing:read"]
 };
 
 export const dashboardByRole: Record<EnterpriseRole, string> = {
