@@ -163,6 +163,112 @@ export const sidebarTree: SidebarNode[] = [
     ]
   },
   {
+    key: "settlement-reconciliation-group",
+    labelKey: "settlement.title" as any,
+    iconKey: "scale",
+    roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "auditor_viewer"],
+    children: [
+      {
+        key: "settlement-dashboard",
+        labelKey: "settlement.dashboard" as any,
+        iconKey: "layout-dashboard",
+        href: "/dashboard/settlement" as Route,
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "auditor_viewer"]
+      },
+      {
+        key: "settlement-daily",
+        labelKey: "settlement.daily" as any,
+        iconKey: "clock",
+        href: "/dashboard/settlement/daily" as Route,
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "settlement-cash",
+        labelKey: "settlement.cash" as any,
+        iconKey: "banknote",
+        href: "/dashboard/settlement/cash" as Route,
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "settlement-bank",
+        labelKey: "settlement.bank" as any,
+        iconKey: "building-2",
+        href: "/dashboard/settlement/bank" as Route,
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "settlement-party",
+        labelKey: "settlement.party" as any,
+        iconKey: "users",
+        href: "/dashboard/settlement/party" as Route,
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "settlement-purchase",
+        labelKey: "settlement.purchase" as any,
+        iconKey: "shopping-bag",
+        href: "/dashboard/settlement/purchase" as Route,
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "settlement-sales",
+        labelKey: "settlement.sales" as any,
+        iconKey: "coins",
+        href: "/dashboard/settlement/sales" as Route,
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "settlement-payment",
+        labelKey: "settlement.payment" as any,
+        iconKey: "check-square",
+        href: "/dashboard/settlement/payment" as Route,
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "settlement-expense",
+        labelKey: "settlement.expense" as any,
+        iconKey: "file-text",
+        href: "/dashboard/settlement/expense" as Route,
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "settlement-fx",
+        labelKey: "settlement.fx" as any,
+        iconKey: "calculator",
+        href: "/dashboard/settlement/fx" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "accountant"]
+      },
+      {
+        key: "settlement-unsettled",
+        labelKey: "settlement.unsettled" as any,
+        iconKey: "clipboard-list",
+        href: "/dashboard/settlement/unsettled" as Route,
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "settlement-reports",
+        labelKey: "settlement.reports" as any,
+        iconKey: "bar-chart-3",
+        href: "/dashboard/settlement/reports" as Route,
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "auditor_viewer"]
+      },
+      {
+        key: "settlement-doc-pdf",
+        labelKey: "settlement.system_doc" as any,
+        iconKey: "file-text",
+        href: "/docs/Settlement-and-Reconciliation-System-Report.pdf" as Route,
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "auditor_viewer"]
+      },
+      {
+        key: "settlement-audit",
+        labelKey: "settlement.audit" as any,
+        iconKey: "shield-check",
+        href: "/dashboard/settlement/audit" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "auditor_viewer"]
+      }
+    ]
+  },
+  {
     key: "enterprise-audit-group",
     labelKey: "nav.enterprise_audit_monitoring" as any,
     iconKey: "shield-check",
