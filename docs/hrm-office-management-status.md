@@ -395,13 +395,16 @@ browser (EN + Urdu RTL) with the green "Debit = Credit" banner.
 > The system exposes **10** HRM report types (the HRM Reports hub). The original
 > "13 reports" list maps onto these 10 plus print/PDF/Excel/CSV variants of each.
 
-### Known report display gap
-The **Employee Directory** report shows currency `USD` and Country `—` for the
-UAE Dubai test employees (their `salary_currency` column is stale `USD`, while
-`hr_resolve_currency` correctly returns `AED` for the payroll postings). The
-Kabul employees show `AFN` / `Afghanistan` correctly. The directory report reads
-the raw `employees.salary_currency` rather than the resolved country currency —
-a display inconsistency in that one report, not in payroll / accounting.
+### 3rd bug found & fixed: PATCH hr-payroll/employees/[id] partial update (`afb53a0`)
+While mapping employee ledger accounts for the payroll test, a `PATCH` that sent
+only the two account ids nulled `country_id` / `country_branch_id` /
+`city_branch_id` / `designation` / `department` / dates on the employee (every
+column was `SET col = ${value || null}` with no `COALESCE`). Fixed — every
+preserve-able column now uses `COALESCE(${incoming}, existing)`. The 10 damaged
+UAE Dubai DEV test employees were restored; `hr_employee_currency` then correctly
+returns `AED` and the Employee Directory report shows country "United Arab
+Emirates" / currency "AED". (The Directory report code was always correct — it
+uses `hr_employee_currency`; the employee data was the problem.)
 
 ### Test data retained as evidence (DEV only)
 Payroll run `PR-202609-0001` (10 lines, posted, 10 balanced roznamcha entries),
@@ -419,6 +422,5 @@ migrations idempotent.
 - Full 5-role browser walkthrough (Country Admin / Branch Admin / HR / ESS) of
   every HRM screen (verified: Super Admin end-to-end; Country-Admin scope
   isolation on the intake side).
-- Fix the Employee Directory currency/country display (use `hr_resolve_currency`).
 - Payroll **payment** step (`{action:pay}`) + Gratuity settlement E2E with real
   data.
