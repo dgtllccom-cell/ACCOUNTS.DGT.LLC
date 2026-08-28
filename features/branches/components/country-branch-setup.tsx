@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { getPermissionKeysForTemplate } from "@/lib/permissions/catalog";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
 import { openMasterProfileReportWindow } from "@/lib/reports/open-master-profile-report-window";
+import { buildPermissionPrintSummary } from "@/lib/reports/permission-print-summary";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import type { ContactTypeKey } from "@/features/contact-types/contact-type-api";

@@ -26,6 +26,7 @@ import {
   Save,
   Search,
   Truck,
+  Users,
   Warehouse,
   X
 } from "lucide-react";
@@ -124,7 +125,8 @@ const EMPTY_FORM = {
   destination_port_name: "",
   cargo_details: "",
   expected_loading_date: new Date().toISOString().split("T")[0],
-  remarks: ""
+  remarks: "",
+  order_no: ""
 };
 
 function emptyPartySelection(): PartySelection {
@@ -287,46 +289,6 @@ function getOrderProgress(order: ClearingCustomerOrderRow) {
   }
   return { step: 1, label: "Step 1/4 (Goods)", color: "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700" };
 }
-
-function PartyRolePanel({
-  roleKey,
-  label,
-  required,
-  selection,
-  customers,
-  companies,
-  orders,
-  onChange,
-  disabled,
-  lang
-}: {
-  roleKey: PartyRoleKey;
-  label: string;
-  required?: boolean;
-  selection: PartySelection;
-  customers: CustomerRow[];
-  companies: CompanyRow[];
-  orders: ClearingCustomerOrderRow[];
-  onChange: (next: PartySelection) => void;
-  disabled?: boolean;
-  lang: string;
-}) {
-  const tt = (k: string, f: string) => t(lang, ("com." + k) as never, f);
-  const [companyPickerOpen, setCompanyPickerOpen] = useState(false);
-  const [customerSearch, setCustomerSearch] = useState("");
-  const [companySearch, setCompanySearch] = useState("");
-
-  const customerOptions = useMemo(() => {
-    const list = customers.map((row) => ({
-      value: row.id,
-      label: optionLabelFromCustomer(row),
-      keywords: [row.customer_name, row.company_name, row.contact_person, row.mobile, row.whatsapp, row.email, row.address].filter(Boolean).join(" ")
-    }));
-    if (selection.customerId && !list.some((item) => item.value === selection.customerId)) {
-      list.unshift({ value: selection.customerId, label: selection.customerName || selection.customerId, keywords: selection.customerName });
-    }
-    return list;
-  }, [customers, selection.customerId, selection.customerName]);
 
 function PartyRolePanel({
   roleKey,
@@ -803,7 +765,8 @@ export function CustomerOrderManagementView() {
       destination_port_name: order.destination_port_name || "",
       cargo_details: order.cargo_details || "",
       expected_loading_date: order.expected_loading_date ? order.expected_loading_date.split("T")[0] : new Date().toISOString().split("T")[0],
-      remarks: order.remarks || ""
+      remarks: order.remarks || "",
+      order_no: order.order_no || ""
     });
 
     const nextState = emptyPartyState();
