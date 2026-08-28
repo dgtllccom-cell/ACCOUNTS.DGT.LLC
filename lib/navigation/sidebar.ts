@@ -198,6 +198,48 @@ export const sidebarTree: SidebarNode[] = [
     ]
   },
   {
+    key: "tax-einvoicing-group",
+    labelKey: "tax_einv.title",
+    iconKey: "calculator",
+    roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "accountant", "auditor_viewer"],
+    children: [
+      {
+        key: "tax-einv-uae",
+        labelKey: "tax_einv.uae",
+        iconKey: "globe",
+        roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "accountant", "auditor_viewer"],
+        children: [
+          { key: "tax-uae-dashboard", labelKey: "tax_einv.nav_dashboard", iconKey: "layout-dashboard", href: "/dashboard/tax-einvoicing/uae/dashboard" as Route, roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "accountant", "auditor_viewer"] },
+          { key: "tax-uae-vat-control", labelKey: "tax_einv.nav_vat_control", iconKey: "scale", href: "/dashboard/tax-einvoicing/uae/vat-control" as Route, roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "accountant", "auditor_viewer"] },
+          { key: "tax-uae-purchase-input-vat", labelKey: "tax_einv.nav_purchase_input_vat", iconKey: "shopping-bag", href: "/dashboard/tax-einvoicing/uae/purchase-input-vat" as Route, roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "accountant"] },
+          { key: "tax-uae-sales-output-vat", labelKey: "tax_einv.nav_sales_output_vat", iconKey: "coins", href: "/dashboard/tax-einvoicing/uae/sales-output-vat" as Route, roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "accountant"] },
+          { key: "tax-uae-daily-expenses-vat", labelKey: "tax_einv.nav_daily_expenses_vat", iconKey: "file-text", href: "/dashboard/tax-einvoicing/uae/daily-expenses-vat" as Route, roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "accountant"] },
+          { key: "tax-uae-local-purchase-tax", labelKey: "tax_einv.nav_local_purchase_tax", iconKey: "shopping-bag", href: "/dashboard/tax-einvoicing/uae/local-purchase-tax" as Route, roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "accountant"] },
+          { key: "tax-uae-local-sales-tax", labelKey: "tax_einv.nav_local_sales_tax", iconKey: "coins", href: "/dashboard/tax-einvoicing/uae/local-sales-tax" as Route, roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "accountant"] },
+          { key: "tax-uae-booking-purchase-tax", labelKey: "tax_einv.nav_booking_purchase_tax", iconKey: "shopping-bag", href: "/dashboard/tax-einvoicing/uae/booking-purchase-tax" as Route, roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "accountant"] },
+          { key: "tax-uae-booking-sales-tax", labelKey: "tax_einv.nav_booking_sales_tax", iconKey: "coins", href: "/dashboard/tax-einvoicing/uae/booking-sales-tax" as Route, roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "accountant"] },
+          { key: "tax-uae-import-vat", labelKey: "tax_einv.nav_import_vat", iconKey: "package", href: "/dashboard/tax-einvoicing/uae/import-vat" as Route, roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "accountant"] },
+          { key: "tax-uae-export-reexport", labelKey: "tax_einv.nav_export_reexport", iconKey: "send", href: "/dashboard/tax-einvoicing/uae/export-reexport" as Route, roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "accountant"] },
+          { key: "tax-uae-free-zone", labelKey: "tax_einv.nav_free_zone", iconKey: "building-2", href: "/dashboard/tax-einvoicing/uae/free-zone" as Route, roles: ["super_admin", "super_admin_reports", "country_admin", "main_branch_admin", "accountant"] },
+          { key: "tax-uae-vat-recovery", labelKey: "tax_einv.nav_vat_recovery", iconKey: "credit-card", href: "/dashboard/tax-einvoicing/uae/vat-recovery" as Route, roles: ["super_admin", "country_admin", "accountant"] },
+          { key: "tax-uae-e-invoices", labelKey: "tax_einv.nav_e_invoices", iconKey: "file-spreadsheet", href: "/dashboard/tax-einvoicing/uae/e-invoices" as Route, roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "accountant"] },
+          { key: "tax-uae-credit-notes", labelKey: "tax_einv.nav_credit_notes", iconKey: "scroll-text", href: "/dashboard/tax-einvoicing/uae/credit-notes" as Route, roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "accountant"] },
+          { key: "tax-uae-vat-return", labelKey: "tax_einv.nav_vat_return", iconKey: "clipboard-list", href: "/dashboard/tax-einvoicing/uae/vat-return" as Route, roles: ["super_admin", "country_admin", "accountant"] },
+          { key: "tax-uae-tax-documentation", labelKey: "tax_einv.nav_tax_documentation", iconKey: "book-open", href: "/dashboard/tax-einvoicing/uae/tax-documentation" as Route, roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "accountant", "auditor_viewer"] },
+          { key: "tax-uae-asp-fta-status", labelKey: "tax_einv.nav_asp_fta_status", iconKey: "shield-check", href: "/dashboard/tax-einvoicing/uae/asp-fta-status" as Route, roles: ["super_admin", "country_admin", "accountant"] },
+          { key: "tax-uae-tax-reports", labelKey: "tax_einv.nav_tax_reports", iconKey: "bar-chart-3", href: "/dashboard/tax-einvoicing/uae/tax-reports" as Route, roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "accountant", "auditor_viewer"] },
+          { key: "tax-uae-audit-logs", labelKey: "tax_einv.nav_audit_logs", iconKey: "shield-check", href: "/dashboard/tax-einvoicing/uae/audit-logs" as Route, roles: ["super_admin", "country_admin", "main_branch_admin", "auditor_viewer"] },
+          { key: "tax-uae-settings", labelKey: "tax_einv.nav_settings", iconKey: "settings", href: "/dashboard/tax-einvoicing/uae/settings" as Route, roles: ["super_admin", "country_admin"] }
+        ]
+      },
+      { key: "tax-einv-pakistan", labelKey: "tax_einv.country_pakistan", iconKey: "globe", href: "/dashboard/tax-einvoicing/coming-soon?country=pakistan" as Route, roles: ["super_admin", "country_admin"] },
+      { key: "tax-einv-india", labelKey: "tax_einv.country_india", iconKey: "globe", href: "/dashboard/tax-einvoicing/coming-soon?country=india" as Route, roles: ["super_admin", "country_admin"] },
+      { key: "tax-einv-afghanistan", labelKey: "tax_einv.country_afghanistan", iconKey: "globe", href: "/dashboard/tax-einvoicing/coming-soon?country=afghanistan" as Route, roles: ["super_admin", "country_admin"] },
+      { key: "tax-einv-iran", labelKey: "tax_einv.country_iran", iconKey: "globe", href: "/dashboard/tax-einvoicing/coming-soon?country=iran" as Route, roles: ["super_admin", "country_admin"] },
+      { key: "tax-einv-other", labelKey: "tax_einv.country_other", iconKey: "globe", href: "/dashboard/tax-einvoicing/coming-soon?country=other" as Route, roles: ["super_admin", "country_admin"] }
+    ]
+  },
+  {
     key: "crm-main-group",
     labelKey: "crm.title" as any,
     iconKey: "calendar",
@@ -1323,6 +1365,10 @@ function impliedPermission(node: SidebarNode): PermissionRequirement | null {
 
   if (href.includes("/new-entry/users/registration")) return { resource: "users", action: "create" };
   if (href.includes("/new-entry/users/journal-report")) return { resource: "users", action: "read" };
+
+  // Tax & e-Invoicing menu visibility is gated by `roles` on each node (same as
+  // the settlement and CRM groups). Data access is enforced server-side by
+  // authorizeApiScope(session, { resource: "uae_tax" | "uae_tax_filing" | "uae_tax_settings" }).
 
   if (href.includes("/branch-management/general-report")) return { resource: "reports", action: "read" };
   if (href.includes("/branch-management/org-chart")) return { resource: "reports", action: "read" };
