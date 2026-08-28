@@ -2,7 +2,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import InventoryWorkspaceClient from "@/features/inventory/components/inventory-workspace-client";
 
 export const metadata = {
-  title: "Stock & Inventory Management | Digital Dock ERP"
+  title: "Stock & Inventory Management"
 };
 
 export default async function InventoryPage() {

@@ -2,7 +2,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import JournalStockReportDashboard from "@/features/journal/components/journal-stock-report-dashboard";
 
 export const metadata = {
-  title: "Country Stock Report | Digital Dock ERP"
+  title: "Country Stock Report"
 };
 
 export default async function CountryStockReportPage() {

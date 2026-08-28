@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { EnterpriseAuditMonitoringDashboard } from "@/features/audit/components/enterprise-audit-monitoring-dashboard";
 
 export const metadata: Metadata = {
-  title: "Enterprise Audit & Monitoring Center | Digital Dock ERP",
+  title: "Enterprise Audit & Monitoring Center",
   description: "Comprehensive multi-country edit version timelines, deleted records vault, and daily branch monitoring."
 };
 

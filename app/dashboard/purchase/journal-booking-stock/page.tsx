@@ -4,7 +4,7 @@ import { JournalBookingStockDashboard } from "@/features/journal/components/jour
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Journal Booking Stock | Digital Dock ERP"
+  title: "Journal Booking Stock"
 };
 
 export default async function JournalBookingStockPage() {

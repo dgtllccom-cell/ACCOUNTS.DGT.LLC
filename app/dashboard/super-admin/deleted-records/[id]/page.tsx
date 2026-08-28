@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { DeletedRecordDetailView } from "@/features/audit/components/deleted-record-detail-view";
 
 export const metadata: Metadata = {
-  title: "Deleted Record Details | Digital Dock ERP",
+  title: "Deleted Record Details",
   description: "Detailed deleted record snapshot, evidence, and version lifecycle"
 };
 
