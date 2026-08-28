@@ -1916,26 +1916,22 @@ export function ExtFormClient({ token }: { token: string }) {
                   </div>
 
                   <div className="space-y-3 pt-1">
-                    {/* Gender / Title Selection (At the top before names) */}
-                    <div className="space-y-1.5">
+                    {/* Gender / Title Selection (Dropdown at the top before names) */}
+                    <div className="space-y-1">
                       <label className="text-[11px] font-bold text-slate-700">
                         {t("gender", lang)} <span className="text-red-500">*</span>
                       </label>
-                      <div className="grid grid-cols-3 gap-2">
-                        {["male", "female", "other"].map((gKey) => (
-                          <button
-                            key={gKey}
-                            type="button"
-                            onClick={() => setGender(gKey)}
-                            className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
-                              gender === gKey
-                                ? "bg-indigo-600 border-indigo-600 text-white shadow-2xs"
-                                : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
-                            }`}
-                          >
-                            {t(gKey, lang)}
-                          </button>
-                        ))}
+                      <div className="relative">
+                        <User className="absolute start-3 top-3 h-4 w-4 text-slate-400 pointer-events-none" />
+                        <select
+                          value={gender}
+                          onChange={(e) => setGender(e.target.value)}
+                          className="w-full bg-white border border-slate-200 rounded-xl ps-9 pe-3 py-2 text-xs sm:text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all cursor-pointer"
+                        >
+                          <option value="male">{t("male", lang)}</option>
+                          <option value="female">{t("female", lang)}</option>
+                          <option value="other">{t("other", lang)}</option>
+                        </select>
                       </div>
                     </div>
 
