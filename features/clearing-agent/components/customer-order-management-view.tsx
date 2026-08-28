@@ -328,85 +328,120 @@ function PartyRolePanel({
     return list;
   }, [customers, selection.customerId, selection.customerName]);
 
-  const linkedCompanies = useMemo(
-    () => deriveLinkedCompanies(roleKey, selection, customers, companies, orders),
-    [roleKey, selection, customers, companies, orders]
-  );
-  const addressOptions = useMemo(
-    () => guessAddressOptions(selection, customers, companies, orders),
-    [selection, customers, companies, orders]
-  );
-
+function PartyRolePanel({
+  roleKey,
+  label,
+  required = false,
+  selection,
+  onChange,
+  customers,
+  companies,
+  customerOptions,
+  companyOptions,
+  orders,
+  disabled = false,
+  lang
+}: {
+  roleKey: PartyRoleKey;
+  label: string;
+  required?: boolean;
+  selection: PartySelection;
+  onChange: (next: PartySelection) => void;
+  customers: CustomerRow[];
+  companies: CompanyRow[];
+  customerOptions: SearchSelectOption[];
+  companyOptions: SearchSelectOption[];
+  orders: ClearingCustomerOrderRow[];
+  disabled?: boolean;
+  lang: string;
+}) {
+  const tt = (k: string, f: string) => t(lang as never, ("com." + k) as never, f);
+  const selectedCustomer = customers.find((item) => item.id === selection.customerId);
   const selectedCompany = companies.find((item) => item.id === selection.companyId);
   const effectiveCompanyName = selection.companyName || selectedCompany?.name || "";
-  const effectiveAddress = selection.addressText || selectedCompany?.address || customers.find((item) => item.id === selection.customerId)?.address || "";
+  const effectiveAddress = selection.addressText || selectedCompany?.address || selectedCustomer?.address || "";
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-xs space-y-2.5 dark:border-slate-800 dark:bg-slate-900">
+    <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-xs space-y-3 dark:border-slate-800 dark:bg-slate-900">
       <div className="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-2">
-        <div className="text-[11px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
+        <div className="text-xs font-black uppercase tracking-wider text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
+          <Building2 className="h-4 w-4 text-blue-600" />
           <span>{label}</span>
           {required ? <span className="text-rose-500 font-bold">*</span> : null}
         </div>
-        <button
-          type="button"
-          onClick={() => setCompanyPickerOpen(true)}
-          className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[10px] font-bold text-blue-700 hover:bg-blue-100 transition dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 cursor-pointer"
-        >
-          <Building2 className="h-3 w-3" />
-          {effectiveCompanyName ? tt("company_linked", "Company Linked") : tt("pick_company", "Pick Company")}
-        </button>
+        {selection.customerId ? (
+          <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700">
+            ✓ {selection.customerName}
+          </span>
+        ) : null}
       </div>
 
-      <SearchSelect
-        label={`${tt("search_party", "Search party")} — ${label}`}
-        value={selection.customerId}
-        placeholder={disabled ? t(lang, "common.loading" as never, "Loading...") : `${tt("search_party", "Search party")} — ${label}`}
-        options={customerOptions}
-        onValueChange={(customerId) => {
-          const customer = customers.find((item) => item.id === customerId);
-          const guessedCompany = companies.find((company) => {
-            const haystack = normalize([company.name, company.legal_name, company.owner_name, company.address].filter(Boolean).join(" "));
-            const needles = [
-              normalize(customer?.company_name),
-              normalize(customer?.customer_name),
-              normalize(customer?.contact_person),
-              normalize(customer?.mobile),
-              normalize(customer?.whatsapp),
-              normalize(customer?.email)
-            ].filter(Boolean);
-            return needles.some((needle) => needle && haystack.includes(needle));
-          });
+      {/* 1. Customer / Person / Ledger Select */}
+      <div>
+        <SearchSelect
+          label={`${lang === "ur" ? "کسٹمر / لیجر نام" : "Customer / Person Name"} *`}
+          value={selection.customerId}
+          placeholder={disabled ? t(lang as never, "common.loading" as never, "Loading...") : `${lang === "ur" ? "کسٹمر نام یا کوڈ منتخب کریں" : "Select Customer Account"} — ${label}`}
+          options={customerOptions}
+          onValueChange={(customerId) => {
+            const customer = customers.find((item) => item.id === customerId);
+            const guessedCompany = companies.find((comp) => {
+              const haystack = normalize([comp.name, comp.legal_name, comp.owner_name, comp.address].filter(Boolean).join(" "));
+              const needles = [
+                normalize(customer?.company_name),
+                normalize(customer?.customer_name),
+                normalize(customer?.contact_person),
+                normalize(customer?.mobile),
+                normalize(customer?.whatsapp),
+                normalize(customer?.email)
+              ].filter(Boolean);
+              return needles.some((needle) => needle && haystack.includes(needle));
+            });
 
-          onChange({
-            ...selection,
-            customerId,
-            customerName: customer?.customer_name || selection.customerName,
-            companyId: selection.companyId || guessedCompany?.id || "",
-            companyName: selection.companyName || guessedCompany?.name || "",
-            addressText: selection.addressText || guessedCompany?.address || customer?.address || "",
-            addressSource: selection.addressSource || (guessedCompany?.address ? "Company master" : customer?.address ? "Customer master" : "Direct input")
-          });
-        }}
-        disabled={disabled}
-        searchPlaceholder={tt("search_customer_ph", "Search by customer name, company, contact...")}
-        emptyLabel={tt("no_customers", "No matching customers found")}
-      />
-
-      <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
-        <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-          <Building2 className="h-3 w-3 text-slate-500" />
-          {linkedCompanies.length} {tt("linked_companies", "Linked Companies")}
-        </span>
-        <span className="font-semibold text-slate-600 dark:text-slate-400">
-          {tt("company", "Company")}: <strong className="text-slate-900 dark:text-slate-100">{effectiveCompanyName || "-"}</strong>
-        </span>
+            onChange({
+              ...selection,
+              customerId,
+              customerName: customer?.customer_name || selection.customerName,
+              companyId: selection.companyId || guessedCompany?.id || "",
+              companyName: selection.companyName || guessedCompany?.name || customer?.company_name || "",
+              addressText: selection.addressText || guessedCompany?.address || customer?.address || "",
+              addressSource: selection.addressSource || (guessedCompany?.address ? "Company master" : customer?.address ? "Customer master" : "Direct input")
+            });
+          }}
+          disabled={disabled}
+          searchPlaceholder={tt("search_customer_ph", "Search by customer name, company, contact...")}
+          emptyLabel={tt("no_customers", "No matching customers found")}
+        />
       </div>
 
+      {/* 2. Company / Business Direct Dropdown */}
+      <div>
+        <SearchSelect
+          label={lang === "ur" ? "کمپنی / کاروباری ادارہ" : "Company / Business Name"}
+          value={selection.companyId}
+          placeholder={lang === "ur" ? "کمپنی منتخب کریں (اختیاری)..." : "Select Company (Optional)..."}
+          options={companyOptions}
+          onValueChange={(companyId) => {
+            const comp = companies.find((item) => item.id === companyId);
+            onChange({
+              ...selection,
+              companyId,
+              companyName: comp?.name || "",
+              addressText: selection.addressText || comp?.address || "",
+              addressSource: comp?.address ? "Company master" : selection.addressSource
+            });
+          }}
+          disabled={disabled}
+          searchPlaceholder={lang === "ur" ? "کمپنی نام سے تلاش کریں..." : "Search company name..."}
+          emptyLabel={lang === "ur" ? "کوئی کمپنی نہیں ملی" : "No matching companies found"}
+        />
+      </div>
+
+      {/* 3. Direct Address Field */}
       <div className="space-y-1.5">
         <label className="flex items-center gap-1 text-[11px] font-bold text-slate-700 dark:text-slate-300">
-          <MapPin className="h-3 w-3 text-emerald-600" />
-          {tt("address_billing_shipping", "Address / Billing / Shipping")}
+          <MapPin className="h-3.5 w-3.5 text-emerald-600" />
+          <span>{lang === "ur" ? "مکمل پتہ / ڈیلیوری ایڈریس" : "Address / Billing / Shipping"}</span>
         </label>
         <input
           type="text"
@@ -418,116 +453,30 @@ function PartyRolePanel({
               addressSource: "Direct input"
             })
           }
-          placeholder={tt("enter_address_ph", "Enter address or select from master...")}
-          className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-1.5 text-xs text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+          placeholder={lang === "ur" ? "پتہ درج کریں یا ماسٹر سے منتخب کریں..." : "Enter address or select from master..."}
+          className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2 text-xs text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
         />
       </div>
 
-      {/* Mini Summary Strip */}
-      <div className="rounded-lg border border-slate-100 bg-slate-50/70 p-2 text-[10px] space-y-0.5 dark:border-slate-800 dark:bg-slate-800/50">
-        <div className="text-slate-500 uppercase font-bold tracking-wider">{tt("selected_address", "Selected Address")}:</div>
-        <div className="font-semibold text-slate-700 dark:text-slate-300">
-          {tt("party", "Party")}: <span className="font-bold text-slate-900 dark:text-slate-100">{selection.customerName || "-"}</span> • {tt("company", "Company")}: <span className="font-bold text-slate-900 dark:text-slate-100">{effectiveCompanyName || "-"}</span>
-        </div>
-        <div className="truncate text-slate-600 dark:text-slate-400" title={effectiveAddress}>
-          {tt("address", "Address")}: {effectiveAddress || "-"}
-        </div>
-      </div>
-
-      <SimpleModal
-        isOpen={companyPickerOpen}
-        onClose={() => setCompanyPickerOpen(false)}
-        title={`${label} — ${tt("link_company_address", "Link Company & Address")}`}
-        maxWidth="2xl"
-      >
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-xs font-bold text-slate-700">{tt("customer_person", "Customer / Person")}</label>
-              <input
-                type="text"
-                value={customerSearch}
-                onChange={(e) => setCustomerSearch(e.target.value)}
-                placeholder={tt("search_customer_name", "Search customer name...")}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs"
-              />
-              <div className="mt-2 max-h-48 overflow-y-auto space-y-1 rounded-lg border border-slate-100 p-1">
-                {customers
-                  .filter((item) => normalize(item.customer_name).includes(normalize(customerSearch)))
-                  .slice(0, 8)
-                  .map((cust) => (
-                    <button
-                      key={cust.id}
-                      type="button"
-                      onClick={() => {
-                        onChange({
-                          ...selection,
-                          customerId: cust.id,
-                          customerName: cust.customer_name,
-                          addressText: selection.addressText || cust.address || "",
-                          addressSource: "Customer master"
-                        });
-                      }}
-                      className={`w-full text-left p-1.5 rounded text-xs transition ${
-                        selection.customerId === cust.id ? "bg-blue-50 text-blue-700 font-bold" : "hover:bg-slate-50"
-                      }`}
-                    >
-                      <div className="font-bold">{cust.customer_name}</div>
-                      <div className="text-[10px] text-slate-500">{cust.company_name || cust.address || "-"}</div>
-                    </button>
-                  ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="mb-1 block text-xs font-bold text-slate-700">{tt("company_business", "Company / Business")}</label>
-              <input
-                type="text"
-                value={companySearch}
-                onChange={(e) => setCompanySearch(e.target.value)}
-                placeholder={tt("search_company_name", "Search company name...")}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs"
-              />
-              <div className="mt-2 max-h-48 overflow-y-auto space-y-1 rounded-lg border border-slate-100 p-1">
-                {companies
-                  .filter((item) => normalize(item.name).includes(normalize(companySearch)))
-                  .slice(0, 8)
-                  .map((comp) => (
-                    <button
-                      key={comp.id}
-                      type="button"
-                      onClick={() => {
-                        onChange({
-                          ...selection,
-                          companyId: comp.id,
-                          companyName: comp.name,
-                          addressText: comp.address || selection.addressText,
-                          addressSource: "Company master"
-                        });
-                      }}
-                      className={`w-full text-left p-1.5 rounded text-xs transition ${
-                        selection.companyId === comp.id ? "bg-blue-50 text-blue-700 font-bold" : "hover:bg-slate-50"
-                      }`}
-                    >
-                      <div className="font-bold">{comp.name}</div>
-                      <div className="text-[10px] text-slate-500">{comp.legal_name || comp.address || "-"}</div>
-                    </button>
-                  ))}
-              </div>
-            </div>
+      {/* Summary Box */}
+      {(selection.customerName || effectiveCompanyName || effectiveAddress) ? (
+        <div className="rounded-lg border border-slate-100 bg-slate-50/70 p-2.5 text-[11px] space-y-1 dark:border-slate-800 dark:bg-slate-800/50">
+          <div className="flex justify-between">
+            <span className="text-slate-500 font-semibold">{lang === "ur" ? "نام:" : "Party:"}</span>
+            <span className="font-bold text-slate-900 dark:text-slate-100">{selection.customerName || "-"}</span>
           </div>
-
-          <div className="flex justify-end gap-2 pt-2 border-t">
-            <button
-              type="button"
-              onClick={() => setCompanyPickerOpen(false)}
-              className="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700"
-            >
-              {tt("apply_close", "Apply & Close")}
-            </button>
-          </div>
-        </div>
-      </SimpleModal>
+          {effectiveCompanyName ? (
+            <div className="flex justify-between">
+              <span className="text-slate-500 font-semibold">{lang === "ur" ? "کمپنی:" : "Company:"}</span>
+              <span className="font-bold text-blue-700 dark:text-blue-300">{effectiveCompanyName}</span>
+            </div>
+          ) : null}
+          {effectiveAddress ? (
+            <div className="flex justify-between text-slate-600 dark:text-slate-400 truncate">
+              <span className="text-slate-500 font-semibold">{lang === "ur" ? "پتہ:" : "Address:"}</span>
+              <span className="truncate max-w-[240px]">{effectiveAddress}</span>
+            </div>
+          ) : null}
     </div>
   );
 }
@@ -651,6 +600,30 @@ export function CustomerOrderManagementView() {
       destination_port_name: row?.port_name || ""
     }));
   };
+
+  const customerOptions = useMemo(
+    () =>
+      customers.map((row) => ({
+        value: row.id,
+        label: optionLabelFromCustomer(row),
+        keywords: [row.customer_name, row.company_name, row.contact_person, row.mobile, row.whatsapp, row.email, row.address]
+          .filter(Boolean)
+          .join(" ")
+      })),
+    [customers]
+  );
+
+  const companyOptions = useMemo(
+    () =>
+      companies.map((row) => ({
+        value: row.id,
+        label: optionLabelFromCompany(row),
+        keywords: [row.name, row.legal_name, row.owner_name, row.address, row.city_name]
+          .filter(Boolean)
+          .join(" ")
+      })),
+    [companies]
+  );
 
   const handleGoodsChange = (goodsId: string) => {
     const row = goods.find((item) => item.id === goodsId);
@@ -1137,14 +1110,136 @@ export function CustomerOrderManagementView() {
             </div>
           </div>
 
-          {/* STEP 1: MOVEMENT, TRANSPORT & GOODS MASTER */}
+          {/* STEP 1: SERIALS, CUSTOMER LEDGER, ROUTE & GOODS */}
           {currentStep === 1 && (
             <div className="space-y-3.5 animate-in fade-in duration-150">
               <div className="flex items-center gap-2 text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
                 <Boxes className="h-4 w-4" />
-                <span>1. {tt("step1_title", "Order Movement & Goods Master")}</span>
+                <span>1. {tt("step1_title", "Order Serials, Customer & Goods Master")}</span>
               </div>
 
+              {/* 4 Serial Numbers Bar */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2.5 rounded-xl border border-slate-200 bg-slate-50/80 dark:border-slate-800 dark:bg-slate-850">
+                <div className="space-y-0.5">
+                  <div className="text-[9px] font-bold text-slate-500 uppercase">1. Super Admin</div>
+                  <div className="text-xs font-black text-slate-800 dark:text-slate-200">SA-001</div>
+                </div>
+                <div className="space-y-0.5">
+                  <div className="text-[9px] font-bold text-slate-500 uppercase">2. Country Serial</div>
+                  <div className="text-xs font-black text-slate-800 dark:text-slate-200">PK-001</div>
+                </div>
+                <div className="space-y-0.5">
+                  <div className="text-[9px] font-bold text-slate-500 uppercase">3. Branch Serial</div>
+                  <div className="text-xs font-black text-slate-800 dark:text-slate-200">KHI-01</div>
+                </div>
+                <div className="space-y-0.5">
+                  <div className="text-[9px] font-bold text-slate-500 uppercase">4. Order / Entry</div>
+                  <div className="text-xs font-black text-blue-600 dark:text-blue-400 truncate">{formData.order_no || "CL-ORD-AUTO"}</div>
+                </div>
+              </div>
+
+              {/* Customer / Ledger Account Search & Select */}
+              <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                    <Users className="h-3.5 w-3.5 text-blue-600" />
+                    <span>{lang === "ur" ? "کسٹمر / لیجر اکاؤنٹ *" : "Customer / Ledger Account *"}</span>
+                  </label>
+                  {formData.customer_name ? (
+                    <span className="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-200">
+                      ✓ {formData.customer_name}
+                    </span>
+                  ) : null}
+                </div>
+                <SearchSelect
+                  label={lang === "ur" ? "کسٹمر اکاؤنٹ منتخب کریں" : "Select Customer Account"}
+                  value={formData.customer_id}
+                  options={customerOptions}
+                  placeholder={lang === "ur" ? "کسٹمر نام، اکاؤنٹ کوڈ یا موبائل سے تلاش کریں..." : "Search customer by name, code or mobile..."}
+                  onValueChange={(cid) => {
+                    const cust = customers.find((c) => c.id === cid);
+                    if (cust) {
+                      setFormData((prev) => ({
+                        ...prev,
+                        customer_id: cust.id,
+                        customer_name: cust.customer_name,
+                      }));
+                      setPartySelections((prev) => ({
+                        ...prev,
+                        supplier: {
+                          ...prev.supplier,
+                          customerId: cust.id,
+                          customerName: cust.customer_name,
+                          addressText: prev.supplier.addressText || cust.address || "",
+                        }
+                      }));
+                    }
+                  }}
+                  disabled={loading}
+                  searchPlaceholder={lang === "ur" ? "کسٹمر نام یا کوڈ تلاش کریں..." : "Search customer name or code..."}
+                  emptyLabel={lang === "ur" ? "کوئی کسٹمر نہیں ملا" : "No customers found"}
+                />
+              </div>
+
+              {/* Route Countries (2 Clear Dropdowns: Loading Country & Receiving Country) */}
+              <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 space-y-2 dark:border-slate-800 dark:bg-slate-800/40">
+                <div className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <Route className="h-3.5 w-3.5 text-blue-600" />
+                  <span>{lang === "ur" ? "روٹ کے ممالک (Route Countries) *" : "Route Countries (Origin & Destination) *"}</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="mb-1 block text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                      {lang === "ur" ? "روانگی ملک (Loading Country) *" : "1. Loading Country *"}
+                    </label>
+                    <select
+                      value={formData.loading_country_id}
+                      onChange={(e) => {
+                        const cId = e.target.value;
+                        const cName = countries.find((c) => c.id === cId)?.name || "";
+                        setFormData((prev) => ({
+                          ...prev,
+                          loading_country_id: cId,
+                          loading_country_name: cName,
+                          route_name: cName && prev.receiving_country_name ? `${cName} ➔ ${prev.receiving_country_name}` : prev.route_name
+                        }));
+                      }}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                    >
+                      <option value="">{lang === "ur" ? "— روانگی ملک منتخب کریں —" : "— Select Loading Country —"}</option>
+                      {countries.map((c) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                      {lang === "ur" ? "وصولی ملک (Receiving Country) *" : "2. Receiving Country *"}
+                    </label>
+                    <select
+                      value={formData.receiving_country_id}
+                      onChange={(e) => {
+                        const cId = e.target.value;
+                        const cName = countries.find((c) => c.id === cId)?.name || "";
+                        setFormData((prev) => ({
+                          ...prev,
+                          receiving_country_id: cId,
+                          receiving_country_name: cName,
+                          route_name: prev.loading_country_name && cName ? `${prev.loading_country_name} ➔ ${cName}` : prev.route_name
+                        }));
+                      }}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                    >
+                      <option value="">{lang === "ur" ? "— وصولی ملک منتخب کریں —" : "— Select Receiving Country —"}</option>
+                      {countries.map((c) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Movement Type & Shipment Type */}
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("movement_type", "Movement Type")} *</label>
@@ -1174,6 +1269,7 @@ export function CustomerOrderManagementView() {
                 </div>
               </div>
 
+              {/* Transport Mode */}
               <div>
                 <label className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("transport_mode", "Transport Mode")} *</label>
                 <div className="grid grid-cols-2 gap-2">
@@ -1200,6 +1296,7 @@ export function CustomerOrderManagementView() {
                 </div>
               </div>
 
+              {/* Loading Source */}
               <div>
                 <label className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("loading_source", "Loading Source")}</label>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
@@ -1300,6 +1397,8 @@ export function CustomerOrderManagementView() {
                 selection={partySelections.supplier}
                 customers={customers}
                 companies={companies}
+                customerOptions={customerOptions}
+                companyOptions={companyOptions}
                 orders={orders}
                 disabled={loading}
                 lang={lang}
@@ -1312,6 +1411,8 @@ export function CustomerOrderManagementView() {
                 selection={partySelections.buyer}
                 customers={customers}
                 companies={companies}
+                customerOptions={customerOptions}
+                companyOptions={companyOptions}
                 orders={orders}
                 disabled={loading}
                 lang={lang}
@@ -1335,6 +1436,8 @@ export function CustomerOrderManagementView() {
                 selection={partySelections.importer}
                 customers={customers}
                 companies={companies}
+                customerOptions={customerOptions}
+                companyOptions={companyOptions}
                 orders={orders}
                 disabled={loading}
                 lang={lang}
@@ -1348,6 +1451,8 @@ export function CustomerOrderManagementView() {
                 selection={partySelections.exporter}
                 customers={customers}
                 companies={companies}
+                customerOptions={customerOptions}
+                companyOptions={companyOptions}
                 orders={orders}
                 disabled={loading}
                 lang={lang}
@@ -1374,6 +1479,8 @@ export function CustomerOrderManagementView() {
                     selection={partySelections.notify_party}
                     customers={customers}
                     companies={companies}
+                    customerOptions={customerOptions}
+                    companyOptions={companyOptions}
                     orders={orders}
                     disabled={loading}
                     lang={lang}
