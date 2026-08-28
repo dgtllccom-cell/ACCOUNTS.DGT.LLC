@@ -13,6 +13,7 @@ import { CustomerProfile } from "./customer-profile";
 import { Party360Modal } from "./party-360-modal";
 import { UniversalPartyDirectoryReport } from "./universal-party-directory-report";
 import { SendToCustomerModal } from "./send-to-customer-modal";
+import { SmartSearchFilter, type SmartFilterState } from "@/components/ui/smart-search-filter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { DocumentAttachmentIcon } from "@/components/documents/document-attachment-icon";
@@ -100,8 +101,13 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
   const lang = (activeLang !== "en" ? activeLang : langProp) as SupportedLanguage;
   const [loading, setLoading] = useState(true);
   const [customers, setCustomers] = useState<CustomerRow[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [filterState, setFilterState] = useState<SmartFilterState>({
+    query: "",
+    country: "all",
+    branch: "all",
+    mainBranch: "all",
+    status: "all"
+  });
   const [error, setError] = useState<string | null>(null);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [showReport, setShowReport] = useState(false);
@@ -231,7 +237,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
   const filteredCustomers = useMemo(() => {
     let list = parsedCustomers;
 
-    const q = searchQuery.trim().toLowerCase();
+    const q = (filterState.query || "").trim().toLowerCase();
     if (q) {
       list = list.filter(
         (c) =>
@@ -240,16 +246,26 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
           (c.person_code && c.person_code.toLowerCase().includes(q)) ||
           (c.father_name && c.father_name.toLowerCase().includes(q)) ||
           (c.mobile && c.mobile.includes(q)) ||
-          (c.email && c.email.toLowerCase().includes(q))
+          (c.email && c.email.toLowerCase().includes(q)) ||
+          (c.address && c.address.toLowerCase().includes(q))
       );
     }
 
-    if (statusFilter !== "all") {
-      list = list.filter((c) => c.meta.status.toLowerCase() === statusFilter.toLowerCase());
+    if (filterState.status && filterState.status !== "all") {
+      list = list.filter((c) => c.meta.status.toLowerCase() === filterState.status?.toLowerCase());
+    }
+
+    if (filterState.country && filterState.country !== "all") {
+      const countryNeedle = filterState.country.toLowerCase();
+      list = list.filter((c) => {
+        const countryName = (c.country_name || "").toLowerCase();
+        const countryId = (c.country_id || "").toLowerCase();
+        return countryName.includes(countryNeedle) || countryId.includes(countryNeedle);
+      });
     }
 
     return list;
-  }, [searchQuery, statusFilter, parsedCustomers]);
+  }, [filterState, parsedCustomers]);
 
   // Delete Action
   const handleDelete = async (id: string, name: string) => {
@@ -623,33 +639,26 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
         </div>
       </div>
 
+      {/* Standardized Smart Search & Filter */}
+      <SmartSearchFilter
+        value={filterState}
+        onChange={setFilterState}
+        placeholder={getLabel("searchPlaceholder", lang)}
+        hideRiskLevel
+        hideModule
+        hideCurrency
+      />
+
       {/* Main Table */}
       <Card className="rounded-xl border shadow-sm overflow-hidden bg-white">
-        <CardHeader className="border-b px-5 py-4 bg-slate-50/50">
+        <CardHeader className="border-b px-5 py-3.5 bg-slate-50/50">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <CardTitle className="text-base font-semibold text-slate-800">{getLabel("customerListDirectory", lang)}</CardTitle>
               <p className="text-xs text-muted-foreground mt-0.5">{getLabel("useActionsToViewEditPrintMsg", lang)}</p>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="relative w-64">
-                <Search className={`absolute ${isRtl ? "right-3" : "left-3"} top-2.5 h-4 w-4 text-muted-foreground`} />
-                <Input
-                  placeholder={getLabel("searchPlaceholder", lang)}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`${isRtl ? "pr-9" : "pl-9"} h-9 text-xs bg-white text-slate-900 border-slate-200 focus:border-teal-500`}
-                />
-              </div>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-700 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20"
-              >
-                <option value="all">{getLabel("allStatuses", lang)}</option>
-                <option value="active">{getLabel("activeStatus", lang)}</option>
-                <option value="inactive">{getLabel("inactiveStatus", lang)}</option>
-              </select>
+            <div className="text-xs text-slate-500 font-bold">
+              {filteredCustomers.length} {t(lang, "hr.records_found", "records found")}
             </div>
           </div>
         </CardHeader>
@@ -855,7 +864,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
         subtitle={getLabel("completeMasterCustomerDirectorySub", lang)}
         exportFileName="customer_directory_report"
         filters={[
-          { label: getLabel("searchQueryLabel", lang), value: searchQuery || t(lang, "purchase.card_none_label", "None") }
+          { label: getLabel("searchQueryLabel", lang), value: filterState.query || t(lang, "purchase.card_none_label", "None") }
         ]}
         columns={[
           { key: "customer_name", label: getLabel("customerOwnerNameLabel", lang) },

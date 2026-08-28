@@ -33,6 +33,7 @@ import {
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { Th } from "@/components/ui/translated-th";
+import { SmartSearchFilter, type SmartFilterState } from "@/components/ui/smart-search-filter";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import type { ClearingCustomerOrderRow, PartyLinkInput, PartyRoleKey } from "@/lib/services/clearing-customer-order-service";
@@ -544,7 +545,13 @@ export function CustomerOrderManagementView() {
   const [saving, setSaving] = useState(false);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState("");
-  const [reportQuery, setReportQuery] = useState("");
+  const [filterState, setFilterState] = useState<SmartFilterState>({
+    query: "",
+    country: "all",
+    branch: "all",
+    mainBranch: "all",
+    status: "all"
+  });
   const [viewOrder, setViewOrder] = useState<ClearingCustomerOrderRow | null>(null);
   const [partySelections, setPartySelections] = useState<Record<PartyRoleKey, PartySelection>>(emptyPartyState());
   const [formData, setFormData] = useState({ ...EMPTY_FORM });
@@ -709,37 +716,54 @@ export function CustomerOrderManagementView() {
   );
 
   const visibleOrders = useMemo(() => {
-    const query = normalize(reportQuery);
-    if (!query) return orders;
-    return orders.filter((order) => {
-      const haystack = [
-        order.order_no,
-        order.customer_name,
-        order.goods_name,
-        order.goods_chs_code,
-        order.goods_variation_label,
-        order.goods_brand,
-        order.goods_size,
-        order.goods_origin_country_name,
-        order.exporter_name,
-        order.importer_name,
-        order.notify_party_name,
-        order.buyer_name,
-        order.loading_source_name,
-        order.loading_country_name,
-        order.receiving_country_name,
-        order.loading_port_name,
-        order.destination_port_name,
-        order.route_name,
-        order.cargo_details,
-        ...(order.party_links ?? []).map((link) => [link.party_customer_name, link.party_company_name, link.selected_address_text].filter(Boolean).join(" "))
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-      return haystack.includes(query);
-    });
-  }, [orders, reportQuery]);
+    let list = orders;
+    const query = normalize(filterState.query);
+    if (query) {
+      list = list.filter((order) => {
+        const haystack = [
+          order.order_no,
+          order.customer_name,
+          order.goods_name,
+          order.goods_chs_code,
+          order.goods_variation_label,
+          order.goods_brand,
+          order.goods_size,
+          order.goods_origin_country_name,
+          order.exporter_name,
+          order.importer_name,
+          order.notify_party_name,
+          order.buyer_name,
+          order.loading_source_name,
+          order.loading_country_name,
+          order.receiving_country_name,
+          order.loading_port_name,
+          order.destination_port_name,
+          order.route_name,
+          order.cargo_details,
+          ...(order.party_links ?? []).map((link) => [link.party_customer_name, link.party_company_name, link.selected_address_text].filter(Boolean).join(" "))
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        return haystack.includes(query);
+      });
+    }
+
+    if (filterState.country && filterState.country !== "all") {
+      const c = filterState.country.toLowerCase();
+      list = list.filter((o) =>
+        (o.loading_country_name || "").toLowerCase().includes(c) ||
+        (o.receiving_country_name || "").toLowerCase().includes(c) ||
+        (o.goods_origin_country_name || "").toLowerCase().includes(c)
+      );
+    }
+
+    if (filterState.status && filterState.status !== "all") {
+      list = list.filter((o) => (o.status || "pending").toLowerCase() === filterState.status?.toLowerCase());
+    }
+
+    return list;
+  }, [orders, filterState]);
 
   const orderCounts = useMemo(
     () => ({
