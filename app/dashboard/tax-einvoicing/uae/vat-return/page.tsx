@@ -1,18 +1,11 @@
 import type { Metadata } from "next";
 import { requireErpSession } from "@/lib/auth/session";
-import { UaeTaxPageShell } from "@/features/uae-tax/components/uae-tax-page-shell";
+import { UaeVatReturnView } from "@/features/uae-tax/components/uae-vat-return-view";
 
 export const dynamic = "force-dynamic";
-
 export const metadata: Metadata = { title: "UAE Tax & e-Invoicing" };
 
-export default async function TaxUaeVatReturnPage() {
+export default async function Page() {
   const session = await requireErpSession();
-  return (
-    <UaeTaxPageShell
-      lang={session.preferredLanguage ?? "en"}
-      titleKey="tax_einv.nav_vat_return"
-      phaseNote="tax_einv.phase_vat_return"
-    />
-  );
+  return <UaeVatReturnView lang={session.preferredLanguage ?? "en"} />;
 }
