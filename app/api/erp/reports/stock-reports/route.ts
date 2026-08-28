@@ -572,8 +572,8 @@ export async function GET(request: NextRequest) {
         city_branch_id,
         form_data,
         created_by,
-        countries(id, name),
-        city_branches(id, name)
+        countries!purchase_orders_country_id_fkey(id, name),
+        city_branches!purchase_orders_city_branch_id_fkey(id, name)
       `)
       .eq("ledger_posting_status", "posted")
       .is("deleted_at", null);

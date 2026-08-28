@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
               AND DATE(p.created_at) BETWEEN ${startDate}::date AND ${endDate}::date
           ), 0) AS purchases_count,
           COALESCE((
-            SELECT SUM(COALESCE(p.total_amount, 0)) 
+            SELECT SUM(COALESCE(p.order_total, 0)) 
             FROM purchase_orders p 
             WHERE p.city_branch_id = b.id 
               AND DATE(p.created_at) BETWEEN ${startDate}::date AND ${endDate}::date
@@ -51,34 +51,39 @@ export async function GET(request: NextRequest) {
               AND DATE(s.created_at) BETWEEN ${startDate}::date AND ${endDate}::date
           ), 0) AS sales_count,
           COALESCE((
-            SELECT SUM(COALESCE(s.total_amount, 0)) 
+            SELECT SUM(COALESCE(s.order_total, 0)) 
             FROM sales_orders s 
             WHERE s.city_branch_id = b.id 
               AND DATE(s.created_at) BETWEEN ${startDate}::date AND ${endDate}::date
           ), 0) AS sales_amount,
-          -- Payments count and amount
+          -- Payments count and amount (payment rows carry no branch column of
+          -- their own — the branch is resolved through the parent order).
           COALESCE((
-            SELECT COUNT(*) 
-            FROM purchase_order_payments pop 
-            WHERE pop.city_branch_id = b.id 
+            SELECT COUNT(*)
+            FROM purchase_order_payments pop
+            JOIN purchase_orders poo ON poo.id = pop.purchase_order_id
+            WHERE poo.city_branch_id = b.id
               AND DATE(pop.created_at) BETWEEN ${startDate}::date AND ${endDate}::date
           ), 0) AS purchase_payments_count,
           COALESCE((
-            SELECT SUM(COALESCE(pop.amount, 0)) 
-            FROM purchase_order_payments pop 
-            WHERE pop.city_branch_id = b.id 
+            SELECT SUM(COALESCE(pop.amount, 0))
+            FROM purchase_order_payments pop
+            JOIN purchase_orders poo ON poo.id = pop.purchase_order_id
+            WHERE poo.city_branch_id = b.id
               AND DATE(pop.created_at) BETWEEN ${startDate}::date AND ${endDate}::date
           ), 0) AS purchase_payments_amount,
           COALESCE((
-            SELECT COUNT(*) 
-            FROM sales_order_payments sop 
-            WHERE sop.city_branch_id = b.id 
+            SELECT COUNT(*)
+            FROM sales_order_payments sop
+            JOIN sales_orders soo ON soo.id = sop.sales_order_id
+            WHERE soo.city_branch_id = b.id
               AND DATE(sop.created_at) BETWEEN ${startDate}::date AND ${endDate}::date
           ), 0) AS sales_payments_count,
           COALESCE((
-            SELECT SUM(COALESCE(sop.amount, 0)) 
-            FROM sales_order_payments sop 
-            WHERE sop.city_branch_id = b.id 
+            SELECT SUM(COALESCE(sop.amount, 0))
+            FROM sales_order_payments sop
+            JOIN sales_orders soo ON soo.id = sop.sales_order_id
+            WHERE soo.city_branch_id = b.id
               AND DATE(sop.created_at) BETWEEN ${startDate}::date AND ${endDate}::date
           ), 0) AS sales_payments_amount,
           -- Roznamcha entries

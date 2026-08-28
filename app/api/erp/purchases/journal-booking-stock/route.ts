@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
     let dbQuery = supabase
       .from("purchase_orders")
       .select(
-        "id, purchase_order_no, purchase_contract_no, country_id, country_branch_id, city_branch_id, ledger_posting_status, payment_status, form_data, created_at, countries(name, iso2), country_branches(name, code), city_branches(name, code, city_name)"
+        "id, purchase_order_no, purchase_contract_no, country_id, country_branch_id, city_branch_id, ledger_posting_status, payment_status, form_data, created_at, countries!purchase_orders_country_id_fkey(name, iso2), country_branches!purchase_orders_country_branch_id_fkey(name, code), city_branches!purchase_orders_city_branch_id_fkey(name, code, city_name)"
       )
       .eq("ledger_posting_status", "posted")
       .is("deleted_at", null)

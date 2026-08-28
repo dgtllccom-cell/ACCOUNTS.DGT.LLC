@@ -282,8 +282,8 @@ export async function GET(request: NextRequest) {
         .from("purchase_orders")
         .select(`
           *,
-          countries(name, currency_code),
-          country_branches(name, code)
+          countries!purchase_orders_country_id_fkey(name, currency_code),
+          country_branches!purchase_orders_country_branch_id_fkey(name, code)
         `)
         .is("deleted_at", null)
         .order("created_at", { ascending: false });
