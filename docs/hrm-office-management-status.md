@@ -69,13 +69,21 @@ Ordered by dependency. Each item = its own migration + service + API + view + i1
    (append-only) + `hr_employee_lifecycle_v`. Draft→approved→applied workflow; approved
    events applied onto the live `employees` row transactionally; verified E2E on DEV.
    `EmployeeLifecycleView` UI + 68 `hrm.*` keys ×5.
-3. **Employee KYC** — `employee_documents` (passport, visa/residence permit, Emirates ID/CNIC/Tazkira,
-   labour card, contract, bank letter, certificates) on top of `office_documents`;
-   `kyc_verifications` queue row per employee; wire into existing QVC/KYC Pending Verification
-   with the exact missing-field list; Completed/Verified history retained after approval.
-4. **Attendance/Leave completion** — `shifts`, `rosters`, `attendance_corrections`
-   (old/new/reason/user/date/time), `leave_types`, `employee_leave_balances`,
-   country/branch leave calendar, overtime, weekly-off, holiday master.
+3. ~~**Employee KYC**~~ ✅ **DONE** — commit `58c6fc9`, migration `20260917`.
+   `hr_employee_kyc_requirements` (seeded 9-doc checklist) + `hr_employee_kyc_documents`
+   (number/issue/expiry/verification state; file in `office_documents`) +
+   `hr_employee_kyc_status_v` (completeness + exact missing mandatory items — the
+   Pending Verification feed). `EmployeeKycView` UI (queue + per-employee checklist
+   drawer + verify/reject), 37 `hrm.*` keys ×5. Verified E2E on DEV.
+4. ~~**Attendance/Leave completion**~~ ✅ **DONE** — commit `fa75bc4`, migration `20260918`.
+   `hr_shifts`, `hr_holidays`, `hr_leave_types` (seeded 8), `hr_employee_leave_balances`
+   (+ `_v` with computed `remaining_days`), `hr_attendance_corrections` (append-only,
+   prev/new + reason + requester + approver + timestamps), additive `office_attendance`
+   columns. `initializeYear` / `recomputeBalances` / correction approve→apply.
+   `HrLeaveAttendanceView` 5-tab UI, 46 `hrm.*` keys ×5. Verified E2E on DEV.
+   *Still open within this item:* wire `office_leave_requests` submission to decrement
+   `hr_employee_leave_balances.pending_days` at request time (currently `recomputeBalances`
+   backfills it on demand); shift-based late/early-minutes auto-calc on attendance punch.
 5. **Payroll engine** — `payroll_runs` + `payroll_run_lines` with status
    Draft→Calculated→Reviewed→Approved→Posted→Paid; components basic/allowances/overtime/
    bonus/leave-adjustment/deductions/salary-advance-recovery; multi-currency

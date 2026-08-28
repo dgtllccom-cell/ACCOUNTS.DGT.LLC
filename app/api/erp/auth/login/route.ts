@@ -77,16 +77,45 @@ export async function POST(request: NextRequest) {
 
   const admin = createSupabaseAdminClient() as any;
 
-  // 1. Look up profile in database
+  // 1. Look up profile in database with flexible city/email/userCode matching
   let profileRecord: any = null;
+  const cleanId = rawIdentifier.replace(/@dgt\.llc$/i, "").trim().toLowerCase();
+  
   try {
+    // A. Direct user_code match
     const { data: profile } = await admin
       .from("profiles")
       .select("id, user_code, full_name, raw_password")
-      .ilike("user_code", rawIdentifier)
+      .or(`user_code.ilike.${rawIdentifier},user_code.ilike.${cleanId}`)
       .is("deleted_at", null)
+      .limit(1)
       .maybeSingle();
     profileRecord = profile;
+
+    // B. If not found by direct code, search by city name in profiles or branches
+    if (!profileRecord) {
+      const cityKeywords = [
+        "quetta", "chaman", "karachi", "lahore", "peshawar", "gwadar",
+        "kabul", "kandahar", "herat", "jalalabad", "mazar", "deira",
+        "alras", "jebelali", "dubai", "abudhabi", "sharjah", "riyadh",
+        "jeddah", "dammam", "yiwu", "guangzhou", "shanghai", "istanbul",
+        "mersin", "tehran", "bandarabbas", "chabahar", "delhi", "mumbai"
+      ];
+      
+      const matchedCity = cityKeywords.find(k => cleanId.includes(k));
+      if (matchedCity) {
+        const { data: cityProfile } = await admin
+          .from("profiles")
+          .select("id, user_code, full_name, raw_password")
+          .ilike("full_name", `%${matchedCity}%`)
+          .is("deleted_at", null)
+          .limit(1)
+          .maybeSingle();
+        if (cityProfile) {
+          profileRecord = cityProfile;
+        }
+      }
+    }
   } catch (err) {
     console.warn("Profile direct lookup err:", err);
   }

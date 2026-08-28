@@ -184,28 +184,78 @@ export default function SuperAdminAllUsersDirectoryPage() {
             loginUrl = "/auth/login/city";
           }
 
-          // Format structured enterprise login email
+          // Format short, clean, professional enterprise login email
           let email = (u.email || "").toLowerCase().trim();
-          if (!email || email.startsWith("user") || email.startsWith("usr-") || !email.includes("@dgt.llc")) {
-            const cName = (u.countryName || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-            const cCode = cName.includes("pakistan") ? "pk" : cName.includes("emirates") || cName.includes("uae") ? "ae" : cName.includes("afghanistan") ? "af" : cName.includes("india") ? "in" : cName.includes("china") ? "cn" : "pk";
-            const bName = (u.branchName || u.cityName || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-
-            if (role.includes("super_admin") || role.includes("superadmin")) {
-              email = "superadmin@dgt.llc";
-            } else if (role.includes("country_admin") || role.includes("country")) {
-              email = `${cCode}.${cName || "pakistan"}@dgt.llc`;
-            } else if (role.includes("clearing") || role.includes("agent") || role.includes("shipping")) {
-              if (bName && bName !== "mainheadquarters" && bName !== "global") {
-                email = `${bName}.clearingagent.c@dgt.llc`;
-              } else {
-                email = `${cCode}.clearingagent@dgt.llc`;
-              }
-            } else if (bName && bName !== "mainheadquarters" && bName !== "global") {
-              email = `${bName}.branch.b@dgt.llc`;
-            } else {
-              email = `${cCode}.${(u.userCode || `user${idx + 1}`).toLowerCase()}@dgt.llc`;
-            }
+          const rawName = `${u.branchName || ""} ${u.cityName || ""} ${u.fullName || ""} ${u.userCode || ""}`.toLowerCase();
+          
+          if (role.includes("super_admin") || role.includes("superadmin")) {
+            email = "superadmin@dgt.llc";
+          } else if (rawName.includes("quetta") || rawName.includes("queeta")) {
+            email = "quetta@dgt.llc";
+          } else if (rawName.includes("chaman")) {
+            email = rawName.includes("01") || rawName.includes("agent") ? "chaman01@dgt.llc" : "chaman@dgt.llc";
+          } else if (rawName.includes("karachi")) {
+            email = "karachi@dgt.llc";
+          } else if (rawName.includes("lahore")) {
+            email = "lahore@dgt.llc";
+          } else if (rawName.includes("peshawar")) {
+            email = "peshawar@dgt.llc";
+          } else if (rawName.includes("gwadar")) {
+            email = "gwadar@dgt.llc";
+          } else if (rawName.includes("kabul")) {
+            email = "kabul@dgt.llc";
+          } else if (rawName.includes("kandahar")) {
+            email = "kandahar@dgt.llc";
+          } else if (rawName.includes("herat")) {
+            email = "herat@dgt.llc";
+          } else if (rawName.includes("jalalabad")) {
+            email = "jalalabad@dgt.llc";
+          } else if (rawName.includes("mazar") || rawName.includes("sharif")) {
+            email = "mazar@dgt.llc";
+          } else if (rawName.includes("deira")) {
+            email = "deira@dgt.llc";
+          } else if (rawName.includes("al ras") || rawName.includes("alras") || rawName.includes("ras")) {
+            email = "alras@dgt.llc";
+          } else if (rawName.includes("jebel") || rawName.includes("jafza")) {
+            email = "jebelali@dgt.llc";
+          } else if (rawName.includes("dubai")) {
+            email = "dubai@dgt.llc";
+          } else if (rawName.includes("abu dhabi") || rawName.includes("abudhabi")) {
+            email = "abudhabi@dgt.llc";
+          } else if (rawName.includes("sharjah")) {
+            email = "sharjah@dgt.llc";
+          } else if (rawName.includes("riyadh")) {
+            email = "riyadh@dgt.llc";
+          } else if (rawName.includes("jeddah")) {
+            email = "jeddah@dgt.llc";
+          } else if (rawName.includes("dammam")) {
+            email = "dammam@dgt.llc";
+          } else if (rawName.includes("yiwu")) {
+            email = "yiwu@dgt.llc";
+          } else if (rawName.includes("guangzhou")) {
+            email = "guangzhou@dgt.llc";
+          } else if (rawName.includes("shanghai")) {
+            email = "shanghai@dgt.llc";
+          } else if (rawName.includes("istanbul")) {
+            email = "istanbul@dgt.llc";
+          } else if (rawName.includes("mersin")) {
+            email = "mersin@dgt.llc";
+          } else if (rawName.includes("tehran")) {
+            email = "tehran@dgt.llc";
+          } else if (rawName.includes("bandar") || rawName.includes("abbas")) {
+            email = "bandarabbas@dgt.llc";
+          } else if (rawName.includes("chabahar")) {
+            email = "chabahar@dgt.llc";
+          } else if (rawName.includes("delhi")) {
+            email = "delhi@dgt.llc";
+          } else if (rawName.includes("mumbai")) {
+            email = "mumbai@dgt.llc";
+          } else if (!email || email.includes("@damaan.com") || email.startsWith("user") || !email.includes("@dgt.llc")) {
+            const cleanShort = rawName
+              .replace(/\b(branch|port|clearing|agent|customs|city|office|main|headquarters|border)\b/gi, "")
+              .replace(/[^a-z0-9]/g, "")
+              .trim();
+            email = cleanShort.length >= 3 ? `${cleanShort}@dgt.llc` : `user${idx + 1}@dgt.llc`;
           }
 
           return {
