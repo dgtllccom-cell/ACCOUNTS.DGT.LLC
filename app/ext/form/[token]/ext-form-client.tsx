@@ -46,6 +46,7 @@ import {
   Briefcase,
   Layers,
   Sparkles,
+  ShieldCheck,
   ChevronDown,
   RotateCcw
 } from "lucide-react";
@@ -615,6 +616,104 @@ const dict: Record<string, Record<Lang, string>> = {
     ar: "رقم الهاتف / الاتصال",
     fa: "شماره تماس / تلفن",
     ps: "د اړیکې / تیلیفون شمېره",
+  },
+  aiScanTitle: {
+    en: "⚡ Instant AI Document & Smart ID Scanner",
+    ur: "⚡ فوری اسمارٹ شناختی کارڈ اسکینر (آٹو فل)",
+    ar: "⚡ الماسح الذكي للهوية والمستندات (تعبئة تلقائية)",
+    fa: "⚡ اسکنر هوشمند کارت شناسایی (تکمیل خودکار)",
+    ps: "⚡ د هویت د کارت هوښیار سکینر (خپلکار ډکول)",
+  },
+  aiScanSubtitle: {
+    en: "Take a photo of your ID card — names, ID number & dates are auto-extracted instantly!",
+    ur: "شناختی کارڈ کی تصویر لیں — نام، شناختی نمبر اور تاریخیں خود بخود درج ہو جائیں گی!",
+    ar: "التقط صورة لبطاقة الهوية — سيتم استخراج الاسم ورقم الهوية والتواريخ تلقائيًا!",
+    fa: "از کارت شناسایی عکس بگیرید — نام، شماره و تاریخ‌ها خودکار پر می‌شوند!",
+    ps: "د هویت د کارت انځور واخلئ — نوم، د کارت شمېره او نېټې به پخپله ډکې شي!",
+  },
+  aiScanningBadge: {
+    en: "⚡ Scanning & Auto-Extracting details...",
+    ur: "⚡ اسمارٹ اسکیننگ جاری ہے، تفصیلات حاصل کی جا رہی ہیں...",
+    ar: "⚡ جارٍ المسح واستخراج البيانات تلقائيًا...",
+    fa: "⚡ در حال اسکن و استخراج هوشمند اطلاعات...",
+    ps: "⚡ سکین روان دی، معلومات په اوتومات ډول راایستل کیږي...",
+  },
+  aiScanSuccessMsg: {
+    en: "Document details auto-extracted! You can review or edit anytime.",
+    ur: "دستاویز کی تفصیلات خود بخود درج ہو گئیں۔ آپ ضرورت کے مطابق ترمیم کر سکتے ہیں۔",
+    ar: "تم استخراج بيانات المستند بنجاح! يمكنك مراجعتها أو تعديلها في أي وقت.",
+    fa: "اطلاعات مدرک با موفقیت استخراج شد! می‌توانید در صورت نیاز ویرایش کنید.",
+    ps: "د سند معلومات په بریالیتوب سره راواخیستل شول! تاسو یې هر وخت سمولی شئ.",
+  },
+  retakeBtn: {
+    en: "Retake",
+    ur: "دوبارہ تصویر لیں",
+    ar: "إعادة التقاط",
+    fa: "عکس مجدد",
+    ps: "بیا انځور واخلئ",
+  },
+  clearBtn: {
+    en: "Clear",
+    ur: "صاف کریں",
+    ar: "مسح",
+    fa: "پاک کردن",
+    ps: "پاک کړئ",
+  },
+  viewFullBtn: {
+    en: "View Full",
+    ur: "بڑی تصویر دیکھیں",
+    ar: "عرض الصورة",
+    fa: "مشاهده کامل",
+    ps: "بشپړ انځور کتل",
+  },
+  frontSideReady: {
+    en: "Front Side (Ready)",
+    ur: "سامنے والی سائیڈ (تیار ہے)",
+    ar: "الجهة الأمامية (جاهزة)",
+    fa: "رویه کارت (آماده)",
+    ps: "مخکینی اړخ (چمتو دی)",
+  },
+  backSideReady: {
+    en: "Back Side (Ready)",
+    ur: "پچھلی سائیڈ (تیار ہے)",
+    ar: "الجهة الخلفية (جاهزة)",
+    fa: "پشت کارت (آماده)",
+    ps: "شا اړخ (چمتو دی)",
+  },
+  downloadSlipBtn: {
+    en: "Download Application Slip (PDF)",
+    ur: "درخواست کی تصدیقی سلپ ڈاؤنلوڈ کریں (PDF)",
+    ar: "تحميل استمارة التقديم الرسمية (PDF)",
+    fa: "دانلود برگ درخواست رسمی (PDF)",
+    ps: "د غوښتنلیک رسمي پاڼه ډاونلوډ کړئ (PDF)",
+  },
+  printSlipBtn: {
+    en: "Print Application Sheet",
+    ur: "درخواست فارم پرنٹ کریں",
+    ar: "طباعة استمارة التقديم",
+    fa: "چاپ برگ درخواست",
+    ps: "د غوښتنلیک پاڼه چاپ کړئ",
+  },
+  appSlipHeading: {
+    en: "Official Registration & Verification Sheet",
+    ur: "آفیشل رجسٹریشن اور تصدیقی رپورٹ",
+    ar: "استمارة التسجيل والتحقق الرسمية",
+    fa: "برگ رسمی ثبت‌نام و راستی‌آزمایی",
+    ps: "د ثبت نام او تایید رسمي پاڼه",
+  },
+  appSlipSub: {
+    en: "Please review and download your complete verification application before final submission.",
+    ur: "براہِ کرم حتمی جمع کروانے سے پہلے اپنی مکمل تصدیقی درخواست کا جائزہ لیں اور ڈاؤنلوڈ کریں۔",
+    ar: "يرجى مراجعة استمارة التقديم وتحميلها لحفظ سجلك قبل الإرسال النهائي.",
+    fa: "لطفاً قبل از ارسال نهایی، برگ درخواست خود را بازبینی و ذخیره کنید.",
+    ps: "مهرباني وکړئ د وروستي سپارلو مخکې خپله بشپړه تایید شوې پاڼه وګورئ او ډاونلوډ یې کړئ.",
+  },
+  declarationText: {
+    en: "I hereby confirm that the personal details, contact information, address, and uploaded documents provided in this application are accurate, true, and complete.",
+    ur: "میں تصدیق کرتا/کرتی ہوں کہ اس درخواست میں درج کی گئی تمام ذاتی معلومات، رابطہ نمبر، پتہ اور منسلک دستاویزات بالکل درست اور مکمل ہیں۔",
+    ar: "أقر وأؤكد بموجب هذا أن جميع البيانات الشخصية وأرقام الاتصال والعنوان والمستندات المرفقة صحيحة ودقيقة وكاملة.",
+    fa: "بدینوسیله تأیید می‌نمایم که کلیه اطلاعات شخصی، شماره‌های تماس، آدرس و مدارک بارگذاری‌شده دقیق، صحیح و کامل می‌باشند.",
+    ps: "زه دلته تصدیق کوم چې په دې غوښتنلیک کې وړاندې شوي شخصي معلومات، د اړیکې شمېرې، پته او اسناد بشپړ سم او باوري دي.",
   },
 };
 
@@ -1265,6 +1364,11 @@ export function ExtFormClient({ token }: { token: string }) {
   const [docBackImage, setDocBackImage] = useState<string | null>(null);
   const [documents, setDocuments] = useState<DocItem[]>([]);
 
+  // Smart ID Scanning & Extraction State
+  const [scanningId, setScanningId] = useState(false);
+  const [scanNotification, setScanNotification] = useState<{ message: string; type: "success" | "info" | "error" } | null>(null);
+  const [previewModalImage, setPreviewModalImage] = useState<{ src: string; title: string } | null>(null);
+
   // Step 1: Contracts
   const [contractType, setContractType] = useState("Customer Service Agreement");
   const [contracts, setContracts] = useState<ContractItem[]>([]);
@@ -1391,15 +1495,85 @@ export function ExtFormClient({ token }: { token: string }) {
     );
   };
 
+  // Smart OCR Scan & Auto-Fill Handler
+  const scanAndAutoFill = async (base64Img: string, typeHint?: string) => {
+    setScanningId(true);
+    setScanNotification({ message: t("aiScanningBadge", lang), type: "info" });
+    try {
+      const res = await fetch("/api/public/scan-id", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64: base64Img, docTypeHint: typeHint || docType })
+      });
+      const data = await res.json();
+      if (data?.ok && data?.extracted) {
+        const ext = data.extracted;
+        if (ext.firstName && !firstName) setFirstName(ext.firstName);
+        if (ext.lastName && !lastName) setLastName(ext.lastName);
+        if (ext.fatherName && !fatherName) setFatherName(ext.fatherName);
+        if (ext.documentNumber) setDocNumber(ext.documentNumber);
+        if (ext.dob) setDocDob(ext.dob);
+        if (ext.issueDate) setDocIssueDate(ext.issueDate);
+        if (ext.expiryDate) setDocExpiryDate(ext.expiryDate);
+        if (ext.gender) setGender(ext.gender.toLowerCase() === "female" ? "female" : "male");
+        
+        if (ext.documentType) {
+          const match = DOC_TYPES.find((dt) =>
+            dt.value.toLowerCase().includes(ext.documentType.toLowerCase()) ||
+            ext.documentType.toLowerCase().includes(dt.value.toLowerCase())
+          );
+          if (match) setDocType(match.value);
+        }
+
+        if (ext.country) {
+          const cMatch = Object.keys(LOCATION_HIERARCHY).find(
+            (c) => c.toLowerCase() === ext.country.toLowerCase() || ext.country.toLowerCase().includes(c.toLowerCase())
+          );
+          if (cMatch) handleCountryChange(cMatch);
+        }
+
+        const summary = [ext.fullName || `${ext.firstName} ${ext.lastName}`.trim(), ext.documentNumber].filter(Boolean).join(" • ");
+        setScanNotification({
+          message: summary ? `✓ ${summary} — ${t("aiScanSuccessMsg", lang)}` : t("aiScanSuccessMsg", lang),
+          type: "success"
+        });
+      } else {
+        setScanNotification(null);
+      }
+    } catch {
+      setScanNotification(null);
+    } finally {
+      setScanningId(false);
+    }
+  };
+
   // Image Upload Helper with Canvas Compression
   const handleImageUpload = async (file: File | undefined, setter: (val: string | null) => void) => {
     if (!file) return;
     try {
-      const compressed = await compressImageFile(file, 1200, 1200, 0.8);
+      const compressed = await compressImageFile(file, 1400, 1400, 0.85);
       setter(compressed);
     } catch {
       const reader = new FileReader();
       reader.onload = () => setter(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Dedicated Front ID Upload with Auto-Scan Trigger
+  const handleFrontUpload = async (file: File | undefined) => {
+    if (!file) return;
+    try {
+      const compressed = await compressImageFile(file, 1400, 1400, 0.85);
+      setDocFrontImage(compressed);
+      await scanAndAutoFill(compressed, docType);
+    } catch {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const res = reader.result as string;
+        setDocFrontImage(res);
+        await scanAndAutoFill(res, docType);
+      };
       reader.readAsDataURL(file);
     }
   };
@@ -1428,6 +1602,7 @@ export function ExtFormClient({ token }: { token: string }) {
     setCustomDocType("");
     setDocFrontImage(null);
     setDocBackImage(null);
+    setScanNotification(null);
   };
 
   const handleRemoveDoc = (id: string) => {
@@ -1923,19 +2098,46 @@ export function ExtFormClient({ token }: { token: string }) {
 
                 {/* Documents Box (CNIC, Passport, Emirates ID, Tazkira, Iqama, Aadhaar, Custom) */}
                 <div className="bg-slate-50/70 border border-slate-200 rounded-2xl p-4 sm:p-5 space-y-4">
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-7 w-7 rounded-lg bg-blue-100/60 text-blue-600 flex items-center justify-center">
-                      <CreditCard size={14} />
-                    </div>
-                    <div>
-                      <h3 className="font-black text-slate-900 text-xs sm:text-sm tracking-wide uppercase">
-                        {t("documentsTitle", lang)}
-                      </h3>
-                      <p className="text-[11px] text-slate-400 font-medium">
-                        {t("documentsSub", lang)}
-                      </p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-8 w-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs">
+                        <Sparkles size={16} className="animate-pulse" />
+                      </div>
+                      <div>
+                        <h3 className="font-black text-slate-900 text-xs sm:text-sm tracking-wide uppercase">
+                          {t("aiScanTitle", lang)}
+                        </h3>
+                        <p className="text-[11px] text-slate-400 font-medium">
+                          {t("aiScanSubtitle", lang)}
+                        </p>
+                      </div>
                     </div>
                   </div>
+
+                  {/* Dynamic Scanning Status Pulse */}
+                  {scanningId && (
+                    <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3 flex items-center gap-2.5 text-indigo-700 text-xs font-bold animate-pulse">
+                      <div className="h-4 w-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin shrink-0" />
+                      <span>{t("aiScanningBadge", lang)}</span>
+                    </div>
+                  )}
+
+                  {/* Scan Result Notification */}
+                  {!scanningId && scanNotification && (
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-center justify-between gap-2 text-emerald-800 text-xs font-semibold">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 size={15} className="text-emerald-600 shrink-0" />
+                        <span>{scanNotification.message}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setScanNotification(null)}
+                        className="text-emerald-600 hover:text-emerald-900 p-0.5 cursor-pointer"
+                      >
+                        <X size={13} />
+                      </button>
+                    </div>
+                  )}
 
                   <div className="space-y-3 pt-1">
                     {/* Document Type Dropdown (Fully Localized with Custom Type option) */}
@@ -1972,8 +2174,209 @@ export function ExtFormClient({ token }: { token: string }) {
                       </div>
                     )}
 
+                    {/* Dual Visual Photo Upload Cards: Front Side & Back Side */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                      {/* Front Side Card */}
+                      <div className={`border rounded-2xl p-3.5 space-y-2.5 transition-all ${docFrontImage ? 'bg-indigo-50/40 border-indigo-200' : 'bg-white border-slate-200 shadow-2xs'}`}>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <CreditCard size={13} className="text-indigo-600" />
+                            <span className="text-xs font-bold text-slate-800">
+                              {isPassport ? t("mainPage", lang) : t("frontSide", lang)}
+                            </span>
+                          </div>
+                          {docFrontImage ? (
+                            <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full flex items-center gap-1">
+                              <CheckCircle2 size={11} /> {t("frontSideReady", lang)}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-medium text-slate-400">
+                              Required *
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Front Side Thumbnail Preview */}
+                        {docFrontImage ? (
+                          <div className="space-y-2">
+                            <div
+                              onClick={() => setPreviewModalImage({ src: docFrontImage, title: isPassport ? "Passport Main Page" : "ID Front Side" })}
+                              className="relative h-28 w-full rounded-xl overflow-hidden border border-indigo-100 bg-slate-100 flex items-center justify-center cursor-pointer group"
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={docFrontImage} alt="Front Preview" className="h-full w-full object-contain" />
+                              <div className="absolute inset-0 bg-slate-900/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 text-white text-xs font-bold">
+                                <Eye size={14} />
+                                <span>{t("viewFullBtn", lang)}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => frontCameraRef.current?.click()}
+                                className="flex-1 py-1.5 px-2 rounded-lg border border-indigo-200 bg-white hover:bg-indigo-50 text-indigo-700 text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer transition-all shadow-2xs"
+                              >
+                                <Camera size={12} />
+                                <span>{t("retakeBtn", lang)}</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => frontInputRef.current?.click()}
+                                className="flex-1 py-1.5 px-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer transition-all shadow-2xs"
+                              >
+                                <ImageIcon size={12} />
+                                <span>{t("chooseGallery", lang)}</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setDocFrontImage(null)}
+                                className="h-7 w-7 rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center cursor-pointer transition-all shrink-0"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 pt-1">
+                            <button
+                              type="button"
+                              onClick={() => frontCameraRef.current?.click()}
+                              className="flex-1 py-2 px-3 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 flex items-center justify-center gap-1.5 text-xs font-bold cursor-pointer transition-all shadow-2xs"
+                            >
+                              <Camera size={14} />
+                              <span>{t("cameraBtn", lang)}</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => frontInputRef.current?.click()}
+                              className="flex-1 py-2 px-3 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 flex items-center justify-center gap-1.5 text-xs font-bold cursor-pointer transition-all shadow-2xs"
+                            >
+                              <ImageIcon size={14} />
+                              <span>{t("galleryBtn", lang)}</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Back Side Card (Hidden for Passport) */}
+                      {!isPassport && (
+                        <div className={`border rounded-2xl p-3.5 space-y-2.5 transition-all ${docBackImage ? 'bg-indigo-50/40 border-indigo-200' : 'bg-white border-slate-200 shadow-2xs'}`}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <CreditCard size={13} className="text-indigo-600" />
+                              <span className="text-xs font-bold text-slate-800">
+                                {t("backSide", lang)}
+                              </span>
+                            </div>
+                            {docBackImage ? (
+                              <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                <CheckCircle2 size={11} /> {t("backSideReady", lang)}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-medium text-slate-400">
+                                Optional
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Back Side Thumbnail Preview */}
+                          {docBackImage ? (
+                            <div className="space-y-2">
+                              <div
+                                onClick={() => setPreviewModalImage({ src: docBackImage, title: "ID Back Side" })}
+                                className="relative h-28 w-full rounded-xl overflow-hidden border border-indigo-100 bg-slate-100 flex items-center justify-center cursor-pointer group"
+                              >
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={docBackImage} alt="Back Preview" className="h-full w-full object-contain" />
+                                <div className="absolute inset-0 bg-slate-900/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 text-white text-xs font-bold">
+                                  <Eye size={14} />
+                                  <span>{t("viewFullBtn", lang)}</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => backCameraRef.current?.click()}
+                                  className="flex-1 py-1.5 px-2 rounded-lg border border-indigo-200 bg-white hover:bg-indigo-50 text-indigo-700 text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer transition-all shadow-2xs"
+                                >
+                                  <Camera size={12} />
+                                  <span>{t("retakeBtn", lang)}</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => backInputRef.current?.click()}
+                                  className="flex-1 py-1.5 px-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer transition-all shadow-2xs"
+                                >
+                                  <ImageIcon size={12} />
+                                  <span>{t("chooseGallery", lang)}</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setDocBackImage(null)}
+                                  className="h-7 w-7 rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center cursor-pointer transition-all shrink-0"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 pt-1">
+                              <button
+                                type="button"
+                                onClick={() => backCameraRef.current?.click()}
+                                className="flex-1 py-2 px-3 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 flex items-center justify-center gap-1.5 text-xs font-bold cursor-pointer transition-all shadow-2xs"
+                              >
+                                <Camera size={14} />
+                                <span>{t("cameraBtn", lang)}</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => backInputRef.current?.click()}
+                                className="flex-1 py-2 px-3 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 flex items-center justify-center gap-1.5 text-xs font-bold cursor-pointer transition-all shadow-2xs"
+                              >
+                                <ImageIcon size={14} />
+                                <span>{t("galleryBtn", lang)}</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Hidden Native File Inputs */}
+                    <input
+                      ref={frontCameraRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={(e) => handleFrontUpload(e.target.files?.[0])}
+                      className="hidden"
+                    />
+                    <input
+                      ref={frontInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFrontUpload(e.target.files?.[0])}
+                      className="hidden"
+                    />
+                    <input
+                      ref={backCameraRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={(e) => handleImageUpload(e.target.files?.[0], setDocBackImage)}
+                      className="hidden"
+                    />
+                    <input
+                      ref={backInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleImageUpload(e.target.files?.[0], setDocBackImage)}
+                      className="hidden"
+                    />
+
                     {/* Document Number */}
-                    <div className="space-y-1">
+                    <div className="space-y-1 pt-1">
                       <label className="text-[11px] font-bold text-slate-700">
                         {t("docNumber", lang)} <span className="text-red-500">*</span>
                       </label>
@@ -2025,102 +2428,6 @@ export function ExtFormClient({ token }: { token: string }) {
                         />
                       </div>
                     </div>
-
-                    {/* Front Side Upload */}
-                    <div className="border border-slate-200 bg-white rounded-xl p-3 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-bold text-slate-700">
-                          {isPassport ? t("mainPage", lang) : t("frontSide", lang)}
-                        </span>
-                        {docFrontImage && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
-                              <CheckCircle2 size={12} /> Ready
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => setDocFrontImage(null)}
-                              className="text-red-500 hover:text-red-700 p-0.5"
-                            >
-                              <X size={12} />
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => frontCameraRef.current?.click()}
-                          className="flex-1 py-2 px-3 rounded-lg border border-indigo-100 bg-indigo-50/60 text-indigo-700 hover:bg-indigo-100 flex items-center justify-center gap-1.5 text-xs font-bold cursor-pointer transition-all"
-                        >
-                          <Camera size={13} />
-                          <span>{t("cameraBtn", lang)}</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => frontInputRef.current?.click()}
-                          className="flex-1 py-2 px-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 flex items-center justify-center gap-1.5 text-xs font-bold cursor-pointer transition-all"
-                        >
-                          <ImageIcon size={13} />
-                          <span>{t("galleryBtn", lang)}</span>
-                        </button>
-                      </div>
-                      {docFrontImage && (
-                        <div className="mt-2 rounded-lg border border-slate-200 overflow-hidden max-h-28 flex items-center justify-center bg-slate-100">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={docFrontImage} alt="Front Preview" className="max-h-28 w-auto object-contain" />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Back Side Upload (Hidden if Passport) */}
-                    {!isPassport && (
-                      <div className="border border-slate-200 bg-white rounded-xl p-3 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-bold text-slate-700">
-                            {t("backSide", lang)}
-                          </span>
-                          {docBackImage && (
-                            <div className="flex items-center gap-2">
-                              <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
-                                <CheckCircle2 size={12} /> Ready
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => setDocBackImage(null)}
-                                className="text-red-500 hover:text-red-700 p-0.5"
-                              >
-                                <X size={12} />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => backCameraRef.current?.click()}
-                            className="flex-1 py-2 px-3 rounded-lg border border-indigo-100 bg-indigo-50/60 text-indigo-700 hover:bg-indigo-100 flex items-center justify-center gap-1.5 text-xs font-bold cursor-pointer transition-all"
-                          >
-                            <Camera size={13} />
-                            <span>{t("cameraBtn", lang)}</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => backInputRef.current?.click()}
-                            className="flex-1 py-2 px-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 flex items-center justify-center gap-1.5 text-xs font-bold cursor-pointer transition-all"
-                          >
-                            <ImageIcon size={13} />
-                            <span>{t("galleryBtn", lang)}</span>
-                          </button>
-                        </div>
-                        {docBackImage && (
-                          <div className="mt-2 rounded-lg border border-slate-200 overflow-hidden max-h-28 flex items-center justify-center bg-slate-100">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={docBackImage} alt="Back Preview" className="max-h-28 w-auto object-contain" />
-                          </div>
-                        )}
-                      </div>
-                    )}
 
                     {/* Add Document to List Button */}
                     <button
@@ -2409,188 +2716,330 @@ export function ExtFormClient({ token }: { token: string }) {
             )}
 
             {/* ════════════════════════════════════════════════════════════════════════
-                STEP 3: REVIEW YOUR INFORMATION (Structured Cards)
+                STEP 3: REVIEW YOUR INFORMATION & PRE-SUBMISSION APPLICATION SLIP
             ════════════════════════════════════════════════════════════════════════ */}
             {currentStep === 3 && (
-              <div className="space-y-4 animate-in fade-in duration-300">
+              <div className="space-y-5 animate-in fade-in duration-300">
                 <div className="text-center space-y-1 pb-1">
-                  <h3 className="font-black text-slate-900 text-sm sm:text-base">
-                    {t("step3Title", lang)}
+                  <h3 className="font-black text-slate-900 text-sm sm:text-base uppercase tracking-wide">
+                    {t("appSlipHeading", lang)}
                   </h3>
-                  <p className="text-xs text-slate-400 font-medium">
-                    {t("step3Sub", lang)}
+                  <p className="text-xs text-slate-400 font-medium max-w-md mx-auto">
+                    {t("appSlipSub", lang)}
                   </p>
                 </div>
 
-                {/* Card 1: Personal Info & Contacts Review */}
-                <div className="border border-slate-200 bg-white rounded-2xl p-4 shadow-2xs space-y-3">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                    <div className="flex items-center gap-2 font-bold text-xs text-slate-800">
-                      <User size={14} className="text-indigo-600" />
-                      <span>{t("personalInfoTitle", lang)}</span>
+                {/* Pre-Submission Download & Print Action Toolbar */}
+                <div className="bg-linear-to-r from-indigo-900 to-slate-900 text-white rounded-2xl p-4 sm:p-5 shadow-md flex flex-col sm:flex-row items-center justify-between gap-3 print:hidden">
+                  <div className="space-y-0.5 text-center sm:text-start">
+                    <div className="flex items-center justify-center sm:justify-start gap-2">
+                      <ShieldCheck size={16} className="text-emerald-400" />
+                      <span className="font-black text-xs sm:text-sm tracking-wide uppercase">
+                        {t("receiptTitle", lang)} (Draft / Verified)
+                      </span>
                     </div>
+                    <p className="text-[11px] text-slate-300 font-normal">
+                      Download or print your complete verified application before submitting.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
                     <button
                       type="button"
-                      onClick={() => setCurrentStep(1)}
-                      className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 cursor-pointer"
+                      onClick={() => window.print()}
+                      className="flex-1 sm:flex-initial py-2.5 px-4 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs transition-all"
                     >
-                      <Edit3 size={11} />
-                      <span>{t("editBtn", lang)}</span>
+                      <Download size={14} />
+                      <span>{t("downloadSlipBtn", lang)}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => window.print()}
+                      className="py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all border border-white/20"
+                    >
+                      <Printer size={14} />
+                      <span>{t("printSlipBtn", lang)}</span>
                     </button>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div>
-                      <span className="text-slate-400 text-[11px] block">{t("firstName", lang)}:</span>
-                      <span className="font-bold text-slate-800">{firstName || "—"}</span>
+                </div>
+
+                {/* Official Verification Application Summary Sheet */}
+                <div className="border-2 border-indigo-200 bg-white rounded-3xl p-5 sm:p-7 space-y-5 shadow-sm print:border-none print:shadow-none print:p-0">
+                  {/* Enterprise Official Header */}
+                  <div className="flex items-center justify-between border-b-2 border-slate-100 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-sm shadow-xs">
+                        DD
+                      </div>
+                      <div>
+                        <h4 className="font-black text-xs sm:text-sm text-slate-900 uppercase tracking-wider">
+                          Digital Dock ERP
+                        </h4>
+                        <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest">
+                          Public Verification Gateway
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-slate-400 text-[11px] block">{t("lastName", lang)}:</span>
-                      <span className="font-bold text-slate-800">{lastName || "—"}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 text-[11px] block">{t("fatherName", lang)}:</span>
-                      <span className="font-bold text-slate-800">{fatherName || "—"}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 text-[11px] block">{t("email", lang)}:</span>
-                      <span className="font-bold text-slate-800 font-mono text-[11px]">{email || "—"}</span>
+                    <div className="text-end">
+                      <span className="inline-block text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                        APPLICATION DRAFT
+                      </span>
+                      <p className="text-[9px] text-slate-400 font-mono mt-0.5">
+                        Ref: {token.slice(0, 12).toUpperCase()}
+                      </p>
                     </div>
                   </div>
 
-                  {/* Contacts List with Badges */}
-                  <div className="pt-2 border-t border-slate-100 space-y-1">
-                    <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">
-                      {t("phoneLabel", lang)} ({contactsList.filter(c => c.value.trim()).length}):
-                    </span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {contactsList.filter(c => c.value.trim()).map(c => (
-                        <div key={c.id} className="px-2 py-1 rounded-lg bg-slate-100 border border-slate-200 flex items-center gap-1 text-[11px]">
-                          <span className="font-bold text-indigo-700">{c.type === "Custom" && c.customLabel ? c.customLabel : c.type}:</span>
-                          <span className="font-mono font-medium text-slate-800">{c.value}</span>
+                  {/* Applicant Profile Header */}
+                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                    <div className="h-20 w-20 rounded-2xl border-2 border-white shadow-sm overflow-hidden bg-slate-200 shrink-0 flex items-center justify-center">
+                      {photoPreview ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={photoPreview} alt="Applicant" className="h-full w-full object-cover" />
+                      ) : (
+                        <User size={36} className="text-slate-400" />
+                      )}
+                    </div>
+                    <div className="space-y-1 text-center sm:text-start flex-1">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                        <h3 className="font-black text-base sm:text-lg text-slate-900">
+                          {firstName} {lastName}
+                        </h3>
+                        <button
+                          type="button"
+                          onClick={() => setCurrentStep(1)}
+                          className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 flex items-center justify-center sm:justify-start gap-1 cursor-pointer print:hidden"
+                        >
+                          <Edit3 size={11} />
+                          <span>{t("editBtn", lang)}</span>
+                        </button>
+                      </div>
+                      {fatherName && (
+                        <p className="text-xs text-slate-500 font-medium">
+                          {t("fatherName", lang)}: <span className="font-bold text-slate-800">{fatherName}</span>
+                        </p>
+                      )}
+                      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
+                        <span className="px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 text-[10px] font-bold uppercase">
+                          {t(gender, lang)}
+                        </span>
+                        {email && (
+                          <span className="px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 text-[11px] font-mono">
+                            {email}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section 1: Contact Breakdown */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+                      <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider">
+                        {t("phoneLabel", lang)}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        {contactsList.filter(c => c.value.trim()).length} Registered
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {contactsList.filter(c => c.value.trim()).map((c) => (
+                        <div key={c.id} className="p-2 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
+                          <span className="font-bold text-indigo-700 text-[11px]">
+                            {c.type === "Custom" && c.customLabel ? c.customLabel : c.type}
+                          </span>
+                          <span className="font-mono font-bold text-slate-800">{c.value}</span>
                         </div>
                       ))}
                     </div>
                   </div>
-                </div>
 
-                {/* Card 2: Documents Review */}
-                <div className="border border-slate-200 bg-white rounded-2xl p-4 shadow-2xs space-y-3">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                    <div className="flex items-center gap-2 font-bold text-xs text-slate-800">
-                      <CreditCard size={14} className="text-blue-600" />
-                      <span>{t("documentsTitle", lang)}</span>
+                  {/* Section 2: Identity Documents & Dual Card Previews */}
+                  <div className="space-y-3 pt-1">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+                      <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider">
+                        {t("documentsTitle", lang)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setCurrentStep(1)}
+                        className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 cursor-pointer print:hidden"
+                      >
+                        <Edit3 size={11} />
+                        <span>{t("editBtn", lang)}</span>
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setCurrentStep(1)}
-                      className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 cursor-pointer"
-                    >
-                      <Edit3 size={11} />
-                      <span>{t("editBtn", lang)}</span>
-                    </button>
-                  </div>
-                  {documents.length === 0 ? (
-                    <p className="text-xs text-slate-400 italic">No documents attached.</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {documents.map((doc) => (
-                        <div key={doc.id} className="p-2.5 bg-slate-50 border border-slate-100 rounded-xl space-y-1.5">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-slate-800">
-                              {DOC_TYPES.find((d) => d.value === doc.type)?.labels[lang] || doc.type}
-                            </span>
-                            <span className="text-[11px] font-mono text-slate-500">#{doc.number}</span>
+
+                    {documents.length === 0 && !docFrontImage ? (
+                      <p className="text-xs text-slate-400 italic">No identity documents attached.</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {/* If user hasn't pressed '+ Add Document' but has active front image */}
+                        {docFrontImage && (
+                          <div className="p-3.5 rounded-2xl bg-indigo-50/40 border border-indigo-200 space-y-2.5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-black text-slate-900">
+                                {DOC_TYPES.find((d) => d.value === docType)?.labels[lang] || (docType === "Custom" ? customDocType : docType)}
+                              </span>
+                              <span className="text-xs font-mono font-bold text-indigo-700">#{docNumber || "N/A"}</span>
+                            </div>
+                            {(docDob || docIssueDate || docExpiryDate) && (
+                              <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-600 font-mono bg-white p-2 rounded-xl border border-slate-200">
+                                {docDob && <span>DOB: <b>{docDob}</b></span>}
+                                {docIssueDate && <span>Issued: <b>{docIssueDate}</b></span>}
+                                {docExpiryDate && <span>Expires: <b>{docExpiryDate}</b></span>}
+                              </div>
+                            )}
+                            {/* Dual Side-by-Side Photo Previews */}
+                            <div className="grid grid-cols-2 gap-2 pt-1">
+                              {docFrontImage && (
+                                <div className="space-y-1">
+                                  <span className="text-[10px] font-bold text-slate-500 block">Front Side</span>
+                                  <div
+                                    onClick={() => setPreviewModalImage({ src: docFrontImage, title: "ID Front Side" })}
+                                    className="h-28 rounded-xl border border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center cursor-pointer shadow-2xs"
+                                  >
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={docFrontImage} alt="Front" className="h-full w-full object-contain" />
+                                  </div>
+                                </div>
+                              )}
+                              {docBackImage && (
+                                <div className="space-y-1">
+                                  <span className="text-[10px] font-bold text-slate-500 block">Back Side</span>
+                                  <div
+                                    onClick={() => setPreviewModalImage({ src: docBackImage, title: "ID Back Side" })}
+                                    className="h-28 rounded-xl border border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center cursor-pointer shadow-2xs"
+                                  >
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={docBackImage} alt="Back" className="h-full w-full object-contain" />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          {(doc.dob || doc.issueDate || doc.expiryDate) && (
-                            <div className="flex flex-wrap gap-3 text-[10px] text-slate-500 font-mono">
-                              {doc.dob && <span>DOB: {doc.dob}</span>}
-                              {doc.issueDate && <span>Issued: {doc.issueDate}</span>}
-                              {doc.expiryDate && <span>Expires: {doc.expiryDate}</span>}
+                        )}
+
+                        {/* Stored Documents in List */}
+                        {documents.map((doc) => (
+                          <div key={doc.id} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-black text-slate-900">
+                                {DOC_TYPES.find((d) => d.value === doc.type)?.labels[lang] || doc.type}
+                              </span>
+                              <span className="text-xs font-mono font-bold text-indigo-700">#{doc.number}</span>
                             </div>
-                          )}
-                          {(doc.frontImage || doc.backImage) && (
-                            <div className="flex items-center gap-2 pt-1">
-                              {doc.frontImage && (
-                                <div className="h-12 w-20 rounded-md border border-slate-200 overflow-hidden bg-white flex items-center justify-center">
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img src={doc.frontImage} alt="Front" className="h-full w-full object-cover" />
-                                </div>
-                              )}
-                              {doc.backImage && (
-                                <div className="h-12 w-20 rounded-md border border-slate-200 overflow-hidden bg-white flex items-center justify-center">
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img src={doc.backImage} alt="Back" className="h-full w-full object-cover" />
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Card 3: Address Review */}
-                <div className="border border-slate-200 bg-white rounded-2xl p-4 shadow-2xs space-y-3">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                    <div className="flex items-center gap-2 font-bold text-xs text-slate-800">
-                      <MapPin size={14} className="text-emerald-600" />
-                      <span>{t("step2Title", lang)}</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setCurrentStep(2)}
-                      className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 cursor-pointer"
-                    >
-                      <Edit3 size={11} />
-                      <span>{t("editBtn", lang)}</span>
-                    </button>
+                            {(doc.dob || doc.issueDate || doc.expiryDate) && (
+                              <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-600 font-mono bg-white p-2 rounded-xl border border-slate-200">
+                                {doc.dob && <span>DOB: <b>{doc.dob}</b></span>}
+                                {doc.issueDate && <span>Issued: <b>{doc.issueDate}</b></span>}
+                                {doc.expiryDate && <span>Expires: <b>{doc.expiryDate}</b></span>}
+                              </div>
+                            )}
+                            {(doc.frontImage || doc.backImage) && (
+                              <div className="grid grid-cols-2 gap-2 pt-1">
+                                {doc.frontImage && (
+                                  <div
+                                    onClick={() => setPreviewModalImage({ src: doc.frontImage!, title: "Document Front" })}
+                                    className="h-28 rounded-xl border border-slate-200 overflow-hidden bg-white flex items-center justify-center cursor-pointer"
+                                  >
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={doc.frontImage} alt="Front" className="h-full w-full object-contain" />
+                                  </div>
+                                )}
+                                {doc.backImage && (
+                                  <div
+                                    onClick={() => setPreviewModalImage({ src: doc.backImage!, title: "Document Back" })}
+                                    className="h-28 rounded-xl border border-slate-200 overflow-hidden bg-white flex items-center justify-center cursor-pointer"
+                                  >
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={doc.backImage} alt="Back" className="h-full w-full object-contain" />
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <div className="space-y-1.5 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">{t("country", lang)}:</span>
-                      <span className="font-bold text-slate-800">{locName(country, lang)}</span>
+
+                  {/* Section 3: Full Address Hierarchy */}
+                  <div className="space-y-2 pt-1">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+                      <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider">
+                        {t("step2Title", lang)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setCurrentStep(2)}
+                        className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 cursor-pointer print:hidden"
+                      >
+                        <Edit3 size={11} />
+                        <span>{t("editBtn", lang)}</span>
+                      </button>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">{t("stateProvince", lang)}:</span>
-                      <span className="font-bold text-slate-800">{locName(stateProvince, lang)}</span>
+                    <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-3 rounded-2xl border border-slate-200">
+                      <div>
+                        <span className="text-slate-400 text-[10px] block">{t("country", lang)}:</span>
+                        <span className="font-bold text-slate-800">{locName(country, lang)}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 text-[10px] block">{t("stateProvince", lang)}:</span>
+                        <span className="font-bold text-slate-800">{locName(stateProvince, lang)}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 text-[10px] block">{t("city", lang)}:</span>
+                        <span className="font-bold text-slate-800">{locName(city, lang)}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 text-[10px] block">{t("postalCode", lang)}:</span>
+                        <span className="font-mono font-bold text-slate-800">{postalCode || "—"}</span>
+                      </div>
+                      <div className="col-span-2 pt-2 border-t border-slate-200">
+                        <span className="text-slate-400 text-[10px] block">{t("fullAddress", lang)}:</span>
+                        <p className="font-medium text-slate-800 mt-0.5">{fullAddress || "—"}</p>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">{t("city", lang)}:</span>
-                      <span className="font-bold text-slate-800">{locName(city, lang)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">{t("postalCode", lang)}:</span>
-                      <span className="font-bold font-mono text-slate-800">{postalCode || "—"}</span>
-                    </div>
-                    <div className="pt-1 border-t border-slate-100">
-                      <span className="text-slate-400 text-[11px] block">{t("fullAddress", lang)}:</span>
-                      <p className="font-medium text-slate-800 mt-0.5">{fullAddress || "—"}</p>
+                  </div>
+
+                  {/* Declaration & Signature Box */}
+                  <div className="pt-2 border-t border-slate-200 space-y-3">
+                    <p className="text-[10px] text-slate-500 italic leading-relaxed">
+                      {t("declarationText", lang)}
+                    </p>
+                    <div className="flex items-center justify-between pt-2">
+                      <div>
+                        <span className="text-[9px] text-slate-400 uppercase tracking-wider block">Generated On</span>
+                        <span className="text-[10px] font-mono text-slate-700">
+                          {new Date().toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="text-end">
+                        <span className="text-[9px] text-slate-400 uppercase tracking-wider block">Applicant Status</span>
+                        <span className="text-[10px] font-bold text-emerald-700 font-mono">
+                          Ready for Submission
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Verification Notice */}
-                <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-3 flex items-start gap-2.5 text-emerald-800 text-xs">
-                  <CheckCircle2 size={16} className="text-emerald-600 shrink-0 mt-0.5" />
-                  <span>{t("reviewVerifyBadge", lang)}</span>
-                </div>
-
-                {/* Navigation Buttons */}
-                <div className="flex items-center gap-3 pt-2">
+                {/* Step 3 Navigation Buttons */}
+                <div className="flex items-center gap-3 pt-2 print:hidden">
                   <button
                     type="button"
                     onClick={() => setCurrentStep(2)}
-                    className="py-3 px-5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs cursor-pointer transition-all"
+                    className="py-3 px-5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs cursor-pointer transition-all shadow-2xs"
                   >
                     {t("backBtn", lang)}
                   </button>
                   <button
                     type="button"
                     onClick={() => setCurrentStep(4)}
-                    className="flex-1 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer transition-all"
+                    className="flex-1 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-indigo-600/25 flex items-center justify-center gap-2 cursor-pointer transition-all"
                   >
                     <span>{t("nextPhotoBtn", lang)}</span>
+                    <ArrowRight size={15} />
                   </button>
                 </div>
               </div>
@@ -2835,11 +3284,52 @@ export function ExtFormClient({ token }: { token: string }) {
         )}
 
         {/* Footer Gateway Brand */}
-        <div className="text-center pt-2 border-t border-slate-100">
+        <div className="text-center pt-2 border-t border-slate-100 print:hidden">
           <p className="text-[10px] font-semibold text-slate-400 tracking-wider uppercase">
             Powered by Digital Dock ERP • Secure Public Gateway
           </p>
         </div>
+
+        {/* Full Image Lightbox / Inspection Modal */}
+        {previewModalImage && (
+          <div
+            onClick={() => setPreviewModalImage(null)}
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl space-y-3 p-4 animate-in zoom-in-95 duration-200"
+            >
+              <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                <span className="font-black text-xs text-slate-900 uppercase tracking-wider">
+                  {previewModalImage.title}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setPreviewModalImage(null)}
+                  className="h-7 w-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center cursor-pointer transition-all"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+              <div className="rounded-2xl overflow-hidden bg-slate-900 flex items-center justify-center max-h-[70vh]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={previewModalImage.src}
+                  alt={previewModalImage.title}
+                  className="max-h-[70vh] w-auto object-contain"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewModalImage(null)}
+                className="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer transition-all"
+              >
+                Close Preview
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
