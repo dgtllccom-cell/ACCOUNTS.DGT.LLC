@@ -126,8 +126,33 @@ rejected (dedup) → progress view → confirm → job events
 `di_draft_prefill` to pre-fill the container list and stamp `loading_batch_id`
 on the records it creates; a Planned/Loaded/Remaining panel on the loading page.
 
-### Phases 7–9 — not started
-7. Controlled Business → Shipping handover link table.
+### Phase 7 — Controlled Business → Shipping handover ✅ (this commit)
+Migration `20260928_business_shipping_handovers` — `business_shipping_handovers`
+(action_type `create_shipping_request` / `send_to_shipping_line` /
+`assign_clearing_agent` / `approve_shipping_handover`; business source + agent +
+scope + containers + **whitelisted `shared_payload`**; `submitted → accepted /
+rejected / cancelled`) + restricted `business_shipping_handover_shared_v` (no
+`business_source_id`, no amounts). Unique index → one live handover per
+`(business record, action, agent)`.
+`business-shipping-handover-service.ts` — `create` (validates the business
+record + scope; a shipping-scoped user **cannot originate**; `shared_payload`
+built from a hard whitelist — supplier/customer identity, ports, vessel,
+incoterms, cargo/weights — **never** order total, unit price, advance/paid,
+profit, currency amounts, accounts or ledgers), `approve` / `reject` (shipping
+side), `cancel` (business side; blocked once accepted), `listForBusiness` (full
+row, own scope), `listForAgent` (restricted view, own `clearing_agent_id` only).
+API `app/api/erp/handovers` (GET business|agent, POST create) + `[id]`
+(PATCH approve | reject | cancel), authz split: `purchases:write` to originate /
+cancel, `shipping_records:write` to accept / reject.
+E2E `scratch/di-handover-e2e.mts`: create → shared_payload money-leak check
+**clean** → agent restricted view has no `business_source_id` → duplicate
+rejected → agent accepts → business cancel-after-accept rejected.
+
+**Remaining Phase-7 work:** "Create Shipping Request / Assign Clearing Agent"
+buttons on the Purchase/Sales screens + intake ReviewPanel; an inbox page for
+the shipping side; auto-creating a `clearing_customer_order` on accept.
+
+### Phases 8–9 — not started
 8. Cash / Bank Roznamcha manual + scan (payment-method-driven form, pre-post
    preview of serials / bill numbers / debit-credit accounts / currency / rate /
    source module, balanced Dr/Cr, duplicate-posting protection).
