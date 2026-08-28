@@ -30,6 +30,8 @@ type CustomerRow = {
   city_id: string | null;
   area_location_id: string | null;
   customer_name: string;
+  first_name?: string | null;
+  last_name?: string | null;
   company_name: string | null;
   contact_person: string | null;
   father_name?: string | null;

@@ -251,7 +251,7 @@ export function ShareFormsTab({ lang }: ShareFormsTabProps) {
 
   const [resendingId, setResendingId] = useState<string | null>(null);
 
-  const handleResend = useCallback(async (link: ShareLink) => {
+  const handleResend = useCallback(async (link: LinkRecord) => {
     setResendingId(link.id);
     try {
       const res = await fetch("/api/erp/general-office/share-links", {

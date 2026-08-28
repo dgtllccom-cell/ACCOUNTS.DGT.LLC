@@ -37,6 +37,11 @@ type CustomerRow = {
   notes: string | null;
   created_at: string;
   updated_at: string;
+  // joined display fields returned by GET /api/erp/customers/[id]
+  customer_type?: string | null;
+  country_name?: string | null;
+  state_province_name?: string | null;
+  city_name?: string | null;
 };
 
 export function CustomerProfile({
