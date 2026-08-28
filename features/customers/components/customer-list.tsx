@@ -5,13 +5,14 @@ import { printStore } from "@/lib/store/print-store";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
-import { Building2, Search, Eye, PencilLine, Printer, Trash2, Users, UserCheck, UserMinus, Plus, Mail, MessageSquare, MoreHorizontal, Phone, FileText, Download, Layers } from "lucide-react";
+import { Building2, Search, Eye, PencilLine, Printer, Trash2, Users, UserCheck, UserMinus, Plus, Mail, MessageSquare, MoreHorizontal, Phone, FileText, Download, Layers, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { CustomerProfile } from "./customer-profile";
 import { Party360Modal } from "./party-360-modal";
 import { UniversalPartyDirectoryReport } from "./universal-party-directory-report";
+import { SendToCustomerModal } from "./send-to-customer-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { DocumentAttachmentIcon } from "@/components/documents/document-attachment-icon";
@@ -106,6 +107,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
   const [showReport, setShowReport] = useState(false);
   const [selected360Party, setSelected360Party] = useState<{ id?: string; name: string } | null>(null);
   const [showUniversalDirectory, setShowUniversalDirectory] = useState(false);
+  const [showSendModal, setShowSendModal] = useState(false);
   
   // State to track which row action menu is open
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -482,6 +484,14 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
           >
             <Printer className="h-4 w-4 text-cyan-400" />
             {t(lang, "wh.print_report", "Print / Report")}
+          </Button>
+          <Button
+            type="button"
+            onClick={() => setShowSendModal(true)}
+            className="gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-md h-10 px-4 rounded-xl text-xs"
+          >
+            <Send className="h-4 w-4" />
+            {lang === "ur" ? "کسٹمر کو بھیجیں (SEND TO CUSTOMER)" : lang === "ar" ? "إرسال للعميل (SEND TO CUSTOMER)" : lang === "fa" ? "ارسال به مشتری (SEND TO CUSTOMER)" : lang === "ps" ? "پیرودونکي ته لیږل (SEND TO CUSTOMER)" : "SEND TO CUSTOMER"}
           </Button>
           <Button
             type="button"
@@ -888,6 +898,14 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
           </div>
         </div>
       )}
+
+      {/* Send to Customer Modal */}
+      <SendToCustomerModal
+        isOpen={showSendModal}
+        onClose={() => setShowSendModal(false)}
+        lang={lang}
+        defaultFormType="customer"
+      />
     </div>
   );
 }

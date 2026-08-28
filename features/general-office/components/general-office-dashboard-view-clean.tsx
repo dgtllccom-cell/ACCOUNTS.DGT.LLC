@@ -1032,6 +1032,19 @@ export function GeneralOfficeDashboardView() {
           <div className="flex flex-wrap items-center gap-1.5 font-sans">
             <Button
               type="button"
+              onClick={() => setActiveTab("share-forms")}
+              className={`h-8.5 rounded-xl font-bold text-xs px-3.5 gap-1.5 shadow-sm transition-all ${
+                activeTab === "share-forms"
+                  ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-900/30"
+                  : "bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-800"
+              }`}
+            >
+              <Send className="h-3.5 w-3.5" />
+              <span>{lang === "ur" ? "کسٹمر کو بھیجیں (SEND TO CUSTOMER)" : lang === "ar" ? "إرسال للعميل (SEND TO CUSTOMER)" : lang === "fa" ? "ارسال به مشتری (SEND TO CUSTOMER)" : lang === "ps" ? "پیرودونکي ته لیږل (SEND TO CUSTOMER)" : "SEND TO CUSTOMER"}</span>
+            </Button>
+
+            <Button
+              type="button"
               variant="outline"
               onClick={() => router.push("/dashboard/settings/customers" as Route)}
               className="h-8.5 rounded-xl border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200 text-xs font-bold px-2.5 gap-1 shadow-xs"
@@ -1205,6 +1218,49 @@ export function GeneralOfficeDashboardView() {
 
       {/* ── WORKSPACE ── */}
       <div className="space-y-6">
+        {/* Workspace Sub-Module Tabs Bar */}
+        <div className="flex items-center gap-2 border-b border-slate-200/80 dark:border-slate-800 pb-3 overflow-x-auto">
+          <button
+            type="button"
+            onClick={() => setActiveTab("management")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
+              activeTab === "management" || activeTab === "master-setup"
+                ? "bg-blue-600 text-white shadow-sm"
+                : "bg-slate-100 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800"
+            }`}
+          >
+            <Users className="h-4 w-4" />
+            <span>{tr("EMPLOYEES LIST")}</span>
+            <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-white/20 text-current">{employees.length}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("share-forms")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
+              activeTab === "share-forms"
+                ? "bg-emerald-600 text-white shadow-sm shadow-emerald-900/30"
+                : "bg-emerald-50 text-emerald-800 border border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800 hover:bg-emerald-100"
+            }`}
+          >
+            <Send className="h-4 w-4" />
+            <span>{lang === "ur" ? "📲 کسٹمر کو بھیجیں (SEND TO CUSTOMER)" : lang === "ar" ? "📲 إرسال للعميل (SEND TO CUSTOMER)" : lang === "fa" ? "📲 ارسال به مشتری (SEND TO CUSTOMER)" : lang === "ps" ? "📲 پیرودونکي ته لیږل (SEND TO CUSTOMER)" : "📲 SEND TO CUSTOMER / SHARE FORM"}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("reports")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
+              activeTab === "reports"
+                ? "bg-blue-600 text-white shadow-sm"
+                : "bg-slate-100 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800"
+            }`}
+          >
+            <FileText className="h-4 w-4" />
+            <span>{t.reports}</span>
+          </button>
+        </div>
+
         {/* TAB 1 & 2: EMPLOYEE MASTER SETUP & MANAGEMENT TABLE DIRECTORY */}
         {(activeTab === "master-setup" || activeTab === "management") && (
           <div className="space-y-4">

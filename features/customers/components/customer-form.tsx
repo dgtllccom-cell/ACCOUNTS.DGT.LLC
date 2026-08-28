@@ -3,12 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
-import { Building2, Save, X, RefreshCcw, CheckCircle2, User, MapPin, Phone, FileText, Info, Paperclip } from "lucide-react";
+import { Building2, Save, X, RefreshCcw, CheckCircle2, User, MapPin, Phone, FileText, Info, Paperclip, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiGet, apiPost, apiPatch } from "@/lib/api/client";
+import { SendToCustomerModal } from "./send-to-customer-modal";
 import {
   LocationHierarchySelect,
   type LocationHierarchyMeta,
@@ -62,6 +63,7 @@ export function CustomerForm({
   const lang = useActiveLanguage() || initialLang;
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [showSendModal, setShowSendModal] = useState(false);
   const [dupCandidates, setDupCandidates] = useState<PersonDuplicateCandidate[]>([]);
   const [dupSearchedName, setDupSearchedName] = useState("");
   const [pendingPayload, setPendingPayload] = useState<Record<string, unknown> | null>(null);
@@ -490,16 +492,27 @@ export function CustomerForm({
             {initialCustomerId ? getLabel("updateExistingCustomerSub", lang) : getLabel("createOrUpdateCustomerSub", lang)}
           </p>
         </div>
-        <span
-          className={
-            ready
-              ? "inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200"
-              : "inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 border border-amber-200"
-          }
-        >
-          <CheckCircle2 className="h-4 w-4" aria-hidden />
-          {ready ? getLabel("ready", lang) : getLabel("draftStatus", lang)}
-        </span>
+        <div className="flex items-center gap-2.5">
+          <Button
+            type="button"
+            onClick={() => setShowSendModal(true)}
+            className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs gap-1.5 h-9 rounded-xl shadow-xs px-3.5"
+          >
+            <Send className="h-3.5 w-3.5" />
+            <span>{lang === "ur" ? "کسٹمر کو بھیجیں (SEND TO CUSTOMER)" : lang === "ar" ? "إرسال للعميل (SEND TO CUSTOMER)" : lang === "fa" ? "ارسال به مشتری (SEND TO CUSTOMER)" : lang === "ps" ? "پیرودونکي ته لیږل (SEND TO CUSTOMER)" : "SEND TO CUSTOMER"}</span>
+          </Button>
+
+          <span
+            className={
+              ready
+                ? "inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200"
+                : "inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 border border-amber-200"
+            }
+          >
+            <CheckCircle2 className="h-4 w-4" aria-hidden />
+            {ready ? getLabel("ready", lang) : getLabel("draftStatus", lang)}
+          </span>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs font-semibold text-slate-500 mb-2">
@@ -1148,6 +1161,14 @@ export function CustomerForm({
           }}
         />
       ) : null}
+
+      {/* Send to Customer External Link Modal */}
+      <SendToCustomerModal
+        isOpen={showSendModal}
+        onClose={() => setShowSendModal(false)}
+        lang={lang}
+        defaultFormType="customer"
+      />
     </div>
   );
 }
