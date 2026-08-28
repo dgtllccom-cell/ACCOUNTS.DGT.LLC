@@ -1,4 +1,5 @@
 "use client";
+import { ShareFormsTab } from "@/features/general-office/components/share-forms-tab";
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -566,7 +567,8 @@ type TabKey =
   | "assets"
   | "documents"
   | "id-cards"
-  | "reports";
+  | "reports"
+  | "share-forms";
 
 export function GeneralOfficeDashboardView() {
   const router = useRouter();
@@ -1785,6 +1787,13 @@ export function GeneralOfficeDashboardView() {
                   {tr("Employee Master Report compiles all active staff records, GL ledger balances, salary deductions, and attendance rates across Pakistan, UAE, Afghanistan, and Iran branches.")}
                 </p>
               </div>
+            </div>
+          )}
+
+          {/* TAB 12: SHARE FORM / EXTERNAL FORM LINK */}
+          {activeTab === "share-forms" && (
+            <div className="rounded-2xl border bg-card p-6 shadow-sm">
+              <ShareFormsTab lang={lang} />
             </div>
           )}
         </div>

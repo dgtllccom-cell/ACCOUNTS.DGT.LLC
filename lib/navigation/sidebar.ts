@@ -452,6 +452,13 @@ export const sidebarTree: SidebarNode[] = [
         roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
       },
       {
+        key: "general-office-share-forms",
+        labelKey: "nav.share_form_external_link" as any,
+        iconKey: "send",
+        href: "/dashboard/general-office/employees?tab=share-forms" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
         key: "new-entry-hub",
         labelKey: "nav.new_entry_hub" as any,
         iconKey: "gantt",
