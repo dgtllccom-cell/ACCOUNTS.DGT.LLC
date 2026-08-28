@@ -823,6 +823,14 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                             onEdit={() => router.push(`/dashboard/settings/customers/setup?customerId=${c.id}` as Route)}
                             onPrint={() => handlePrint(c)}
                             onDelete={() => void handleDelete(c.id, c.customer_name)}
+                            customItems={[
+                              {
+                                key: "send-form-link",
+                                label: lang === "ur" ? "کسٹمر کو فارم لنک بھیجیں" : lang === "ps" ? "پیرودونکي ته د فورم لینک واستوئ" : lang === "fa" ? "ارسال لینک فرم به مشتری" : lang === "ar" ? "إرسال رابط النموذج للعميل" : "Send Form Link to Customer",
+                                icon: <Send className="h-3.5 w-3.5 text-teal-600" />,
+                                onClick: () => setShowSendModal(true)
+                              }
+                            ]}
                           />
                         </div>
                       </td>

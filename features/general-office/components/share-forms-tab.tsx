@@ -104,6 +104,7 @@ const dict: Record<string, Record<string, string>> = {
   contractsInfo: { en: "Contracts & Attachments", ur: "معاہدے اور دستاویزات", ar: "العقود والمرفقات", fa: "قراردادها و ضمائم", ps: "قراردادونه او ضمیمې" },
   photoInfo: { en: "Candidate Photo", ur: "امیدوار کی تصویر", ar: "صورة المرشح", fa: "عکس متقاضی", ps: "د کاندید عکس" },
   openLink: { en: "Open Form Link", ur: "فارم لنک کھولیں", ar: "فتح رابط النموذج", fa: "باز کردن لینک فرم", ps: "د فورم لینک پرانیستل" },
+  resendLink: { en: "Re-send Fresh Link", ur: "دوبارہ نیا لنک بھیجیں", ar: "إعادة إرسال رابط جديد", fa: "ارسال مجدد لینک جدید", ps: "بیا نوی لینک واستوئ" },
 };
 
 function tx(key: string, lang: Lang): string {
@@ -247,6 +248,36 @@ export function ShareFormsTab({ lang }: ShareFormsTabProps) {
     const msg = encodeURIComponent(`${tx("whatsappMsg", lang)}:\n${url}`);
     window.open(`https://wa.me/?text=${msg}`, "_blank");
   }, [lang]);
+
+  const [resendingId, setResendingId] = useState<string | null>(null);
+
+  const handleResend = useCallback(async (link: ShareLink) => {
+    setResendingId(link.id);
+    try {
+      const res = await fetch("/api/erp/general-office/share-links", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          formType: link.form_type,
+          expiryHours: 48,
+          notes: link.notes ? `${link.notes} (Re-sent)` : "Re-sent fresh link"
+        })
+      });
+      const json = await res.json();
+      if (json.ok && json.data) {
+        await loadLinks();
+        const newUrl = json.data.publicUrl || (typeof window !== "undefined" ? getPublicUrl(json.data.link?.token) : "");
+        if (newUrl) {
+          handleWhatsapp(newUrl);
+        }
+      }
+    } catch {
+      // Ignore
+    } finally {
+      setResendingId(null);
+    }
+  }, [loadLinks, handleWhatsapp]);
 
   const handleRevoke = useCallback(async (id: string) => {
     if (!confirm("Revoke this link? The recipient will no longer be able to open it.")) return;
@@ -537,6 +568,18 @@ export function ShareFormsTab({ lang }: ShareFormsTabProps) {
                       </td>
                       <td className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          {/* Re-send Fresh 48-Hour Link (WhatsApp & Copy) */}
+                          <button
+                            type="button"
+                            onClick={() => handleResend(link)}
+                            disabled={resendingId === link.id}
+                            className="px-2 py-1 rounded-md border bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100 flex items-center gap-1 text-[11px] font-bold cursor-pointer transition-colors shadow-2xs"
+                            title={tx("resendLink", lang)}
+                          >
+                            <RefreshCcw size={11} className={resendingId === link.id ? "animate-spin text-amber-600" : "text-amber-600"} />
+                            <span className="hidden sm:inline">{tx("resendLink", lang)}</span>
+                          </button>
+
                           {/* Open Form directly in new tab */}
                           <a
                             href={url}

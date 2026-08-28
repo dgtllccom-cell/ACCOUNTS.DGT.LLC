@@ -144,11 +144,15 @@ export function CustomerForm({
     })();
   }, []);
 
-  // Load details if editing
+  // Load details directly from API if editing
   useEffect(() => {
-    if (initialCustomerId && savedCompanies.length > 0) {
-      const c = savedCompanies.find((item) => item.id === initialCustomerId);
-      if (c) {
+    if (!initialCustomerId) return;
+    (async () => {
+      try {
+        const res = await apiGet<{ customer: CustomerRow }>(`/api/erp/customers/${initialCustomerId}?lang=${encodeURIComponent(lang || "en")}`);
+        const c = res.customer;
+        if (!c) return;
+
         setAddress(c.address || "");
         setLocation({
           countryId: c.country_id || "",
@@ -158,14 +162,18 @@ export function CustomerForm({
           areaId: c.area_location_id || ""
         });
 
+        if (c.father_name) setFatherName(c.father_name);
+        if ((c as any).photo_url) setPassportPicture((c as any).photo_url);
+
         if (c.notes) {
           try {
-            const parsed = JSON.parse(c.notes);
+            const parsed = typeof c.notes === "string" ? JSON.parse(c.notes) : c.notes;
             if (parsed && typeof parsed === "object") {
               if (parsed.customerType) setCustomerType(parsed.customerType);
               if (parsed.cityCode) setCityCode(parsed.cityCode);
               if (parsed.status) setStatus(parsed.status);
               if (parsed.remarks) setRemarks(parsed.remarks);
+              if (parsed.photoUrl) setPassportPicture(parsed.photoUrl);
 
               // Load account fields
               if (parsed.accountName) setAccountName(parsed.accountName);
@@ -187,8 +195,8 @@ export function CustomerForm({
               if (parsed.companyState) setCompanyState(parsed.companyState);
               if (parsed.companyAddress) setCompanyAddress(parsed.companyAddress);
 
-              // Backwards compatibility for dynamic lists
-              if (parsed.contacts && Array.isArray(parsed.contacts)) {
+              // Dynamic contacts list
+              if (parsed.contacts && Array.isArray(parsed.contacts) && parsed.contacts.length > 0) {
                 setContacts(parsed.contacts);
               } else {
                 const legacyContacts = [];
@@ -199,9 +207,10 @@ export function CustomerForm({
                 setContacts(legacyContacts);
               }
 
-              if (parsed.documents && Array.isArray(parsed.documents)) {
+              // Dynamic documents list
+              if (parsed.documents && Array.isArray(parsed.documents) && parsed.documents.length > 0) {
                 setDocuments(parsed.documents);
-              } else {
+              } else if (parsed.documentType || parsed.documentNumber) {
                 setDocuments([
                   {
                     type: parsed.documentType || "CNIC",
@@ -211,24 +220,39 @@ export function CustomerForm({
                 ]);
               }
 
-              // Load business details
+              // Load business or personal names
               if (parsed.customerType === "Business") {
                 setBusinessName(parsed.businessName || c.company_name || c.customer_name || "");
                 setFirstName(parsed.firstName || c.contact_person?.split(" ")[0] || "");
                 setLastName(parsed.lastName || c.contact_person?.split(" ").slice(1).join(" ") || "");
               } else {
-                setFirstName(parsed.firstName || c.customer_name.split(" ")[0] || c.customer_name || "");
-                setLastName(parsed.lastName || c.customer_name.split(" ").slice(1).join(" ") || "");
-                setFatherName(c.father_name || parsed.fatherName || c.contact_person || "");
+                setFirstName(parsed.firstName || c.first_name || c.customer_name.split(" ")[0] || c.customer_name || "");
+                setLastName(parsed.lastName || c.last_name || c.customer_name.split(" ").slice(1).join(" ") || "");
+                setFatherName(c.father_name || parsed.fatherName || "");
               }
             }
           } catch {
             // Notes parsing error fallback
           }
+        } else {
+          setFirstName(c.first_name || c.customer_name.split(" ")[0] || c.customer_name || "");
+          setLastName(c.last_name || c.customer_name.split(" ").slice(1).join(" ") || "");
+          setFatherName(c.father_name || "");
+          if (c.company_name) {
+            setBusinessName(c.company_name);
+            setCustomerType("Business");
+          }
+          const legacyContacts = [];
+          if (c.mobile) legacyContacts.push({ type: "Mobile", value: c.mobile });
+          if (c.whatsapp) legacyContacts.push({ type: "WhatsApp", value: c.whatsapp });
+          if (c.email) legacyContacts.push({ type: "Email", value: c.email });
+          if (legacyContacts.length > 0) setContacts(legacyContacts);
         }
+      } catch (e) {
+        console.error("Failed to load customer for editing", e);
       }
-    }
-  }, [initialCustomerId, savedCompanies]);
+    })();
+  }, [initialCustomerId, lang]);
 
   const country = locationMeta.country?.name ?? "";
   const stateName = locationMeta.state?.name ?? "";

@@ -4,7 +4,7 @@ import { DownloadActionIcon } from "@/components/ui/download-action-icon";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
-import { Building2, PencilLine, Printer, Download, ArrowLeft, User, MapPin, Phone, FileText, Info, Mail, MessageSquare, Columns, File } from "lucide-react";
+import { Building2, PencilLine, Printer, Download, ArrowLeft, User, MapPin, Phone, FileText, Info, Mail, MessageSquare, Columns, File, Send, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { apiGet } from "@/lib/api/client";
@@ -15,7 +15,7 @@ import { Th } from "@/components/ui/translated-th";
 import { t } from "@/lib/i18n/ui";
 import { openMasterProfileReportWindow } from "@/lib/reports/open-master-profile-report-window";
 import { Party360Modal } from "./party-360-modal";
-import { Link2 } from "lucide-react";
+import { SendToCustomerModal } from "./send-to-customer-modal";
 
 type CustomerRow = {
   id: string;
@@ -58,6 +58,7 @@ export function CustomerProfile({
   const [customer, setCustomer] = useState<CustomerRow | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showErpLinks, setShowErpLinks] = useState(false);
+  const [showSendModal, setShowSendModal] = useState(false);
 
   useEffect(() => {
     if (!customerId) return;
@@ -542,6 +543,16 @@ export function CustomerProfile({
           >
             <DownloadActionIcon className="h-4 w-4" />
           </button>
+          {/* Send / Re-send Form Link */}
+          <Button
+            type="button"
+            onClick={() => setShowSendModal(true)}
+            className="h-8 bg-teal-600 hover:bg-teal-500 text-white rounded-md text-xs font-bold gap-1.5 px-2.5 shadow-xs cursor-pointer"
+            title={lang === "ur" ? "کسٹمر کو نیا فارم لنک بھیجیں" : "Send / Re-send Form Link"}
+          >
+            <Send className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{lang === "ur" ? "فارم لنک بھیجیں" : lang === "ps" ? "فورم لینک واستوئ" : lang === "fa" ? "ارسال لینک فرم" : lang === "ar" ? "إرسال الرابط" : "Send Form Link"}</span>
+          </Button>
           {/* Edit details redirect */}
           <button
             onClick={() => router.push(`/dashboard/settings/customers/setup?customerId=${customer.id}` as Route)}
@@ -887,6 +898,13 @@ export function CustomerProfile({
           onClose={() => setShowErpLinks(false)}
         />
       ) : null}
+
+      <SendToCustomerModal
+        isOpen={showSendModal}
+        onClose={() => setShowSendModal(false)}
+        lang={lang}
+        defaultFormType="customer"
+      />
     </div>
   );
 }
