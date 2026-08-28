@@ -92,6 +92,20 @@ export function EmployeeKycView({ lang }: { lang?: string }) {
             <button type="button" onClick={() => void load()} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
               <RefreshCw className="h-3.5 w-3.5" />{s.t("refresh", "Refresh")}
             </button>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const r = await apiPost<{ hr: number }>("/api/erp/hr/reminders/sync", { daysAhead: 30 });
+                  window.alert(s.t("hr_reminders_done", "{n} HR reminders sent to Smart CRM").replace("{n}", String(r.hr ?? 0)));
+                } catch (e) {
+                  setError(e instanceof Error ? e.message : String(e));
+                }
+              }}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-2 text-xs font-bold text-white hover:bg-blue-700"
+            >
+              <ShieldAlert className="h-3.5 w-3.5" />{s.t("hr_reminders_sync", "Generate CRM Reminders")}
+            </button>
           </div>
         </header>
 

@@ -14018,6 +14018,8 @@ const en: Dict = {
   "hrm.ptax_exemption": "Monthly Exemption",
   "hrm.ptax_source": "Source Reference",
   "hrm.select_country": "Select country…",
+  "hrm.hr_reminders_sync": "Generate CRM Reminders",
+  "hrm.hr_reminders_done": "{n} HR reminders sent to Smart CRM",
 };
 
 const ur: Dict = {
@@ -23670,6 +23672,8 @@ const ur: Dict = {
   "hrm.ptax_exemption": "ماہانہ استثنا",
   "hrm.ptax_source": "ماخذ حوالہ",
   "hrm.select_country": "ملک منتخب کریں…",
+  "hrm.hr_reminders_sync": "CRM یاد دہانیاں بنائیں",
+  "hrm.hr_reminders_done": "{n} ایچ آر یاد دہانیاں سمارٹ CRM کو بھیجی گئیں",
 };
 
 const ar: Dict = {
@@ -33324,6 +33328,8 @@ const ar: Dict = {
   "hrm.ptax_exemption": "الإعفاء الشهري",
   "hrm.ptax_source": "مرجع المصدر",
   "hrm.select_country": "اختر دولة…",
+  "hrm.hr_reminders_sync": "إنشاء تذكيرات CRM",
+  "hrm.hr_reminders_done": "تم إرسال {n} تذكيرات موارد بشرية إلى Smart CRM",
 };
 
 const fa: Dict = {
@@ -42977,6 +42983,8 @@ const fa: Dict = {
   "hrm.ptax_exemption": "معافیت ماهانه",
   "hrm.ptax_source": "مرجع منبع",
   "hrm.select_country": "کشور را انتخاب کنید…",
+  "hrm.hr_reminders_sync": "ایجاد یادآوری‌های CRM",
+  "hrm.hr_reminders_done": "{n} یادآوری منابع انسانی به Smart CRM ارسال شد",
 };
 
 const ps: Dict = {
@@ -52636,6 +52644,8 @@ const ps: Dict = {
   "hrm.ptax_exemption": "میاشتنۍ معافي",
   "hrm.ptax_source": "د سرچینې حواله",
   "hrm.select_country": "هیواد وټاکئ…",
+  "hrm.hr_reminders_sync": "د CRM یادونې جوړول",
+  "hrm.hr_reminders_done": "{n} د بشري منابعو یادونې سمارټ CRM ته ولېږل شوې",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
