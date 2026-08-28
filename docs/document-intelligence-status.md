@@ -448,3 +448,47 @@ direct API `FORBIDDEN`, 0 UAE handovers.
   customer PDFs/photos remain).
 - Real-document UAT with representative PDF / photo / scanned / rotated /
   low-quality / multi-page / Arabic documents.
+
+---
+
+## 18-Scenario Acceptance Matrix (`scratch/di-18-scenarios.mts` + `scratch/s11-fix.mts`) — **18 / 18 PASS**
+
+| # | Scenario | Result |
+|---|---|---|
+| 1 | Digital PDF, text layer, **no OCR** (`pdf-parse`) | ✓ 5 fields |
+| 2 | Image OCR extraction (`tesseract.js@eng+ara`) | ✓ 4 fields |
+| 3 | Low-confidence / blurry scan → all fields < 0.85 or QVC | ✓ QVC |
+| 4 | Unreadable (blank) → QVC "Document is unreadable" | ✓ |
+| 5 | No authorized match → QVC + exact spec message | ✓ |
+| 6 | Ambiguous match (contract# + amount, score 0.60) — **never auto-links** | ✓ `matched_source_id` null |
+| 7 | Duplicate document (sha256) → flagged "Possible duplicate of …" | ✓ |
+| 8 | Idempotency key → dedup returns same job | ✓ |
+| 9 | Malware scan rejects `/EmbeddedFile` + `/Launch` PDF | ✓ 422 |
+| 10 | Spoofed MIME → normalised by file signature | ✓ image/png |
+| 11 | Cross-scope job access (UAE job, Pakistan reader) → not listed + `get()` blocked | ✓ |
+| 12 | Review field correction + verify → status green | ✓ |
+| 13 | Send to QVC → `crm_action_items` row (module `document_intake`) | ✓ |
+| 14 | Prepare reviewed draft (`append_existing`) → `draft_ready`, `DID-…` | ✓ |
+| 15 | Draft continuation — listed for the target module | ✓ |
+| 16 | Consume draft → job `linked`, idempotent re-consume | ✓ |
+| 17 | Cancel job → `cancelled` | ✓ |
+| 18 | Finance doc → roznamcha pre-post preview (method `bank_transfer`, amount 19 500, balanced) | ✓ |
+
+## Real-document formats (`scratch/di-formats.mts`) — all handled
+
+| Format | OCR engine | Fields |
+|---|---|---|
+| Digital PDF (text layer) | `pdf-parse` | 5 |
+| PNG image scan | `tesseract.js@eng+ara` | 4 |
+| Rotated 90° JPEG | tesseract (PSM.AUTO) | 3 |
+| EXIF-orientation JPEG (phone-photo case) | sharp `.rotate()` auto-orient + tesseract | 3 |
+| WEBP | tesseract | 1 |
+| TIFF | tesseract | 1 |
+| Hi-res 2400 px PNG | tesseract | 3 |
+| Arabic / RTL content (فاتورة تجارية) | tesseract `eng+ara` | 2 |
+| Blurry / low-quality JPEG | tesseract → QVC | 0 (correctly low-confidence) |
+| Blank / unreadable | → QVC | 0 |
+
+> Multi-page PDF path (`pdf-parse` `getScreenshot` per page → sharp → tesseract) is
+> implemented and unit-covered; a representative real multi-page scanned PDF is
+> part of the remaining real-customer-document UAT.
