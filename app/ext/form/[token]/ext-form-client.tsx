@@ -48,7 +48,8 @@ import {
   Sparkles,
   ShieldCheck,
   ChevronDown,
-  RotateCcw
+  RotateCcw,
+  Calendar
 } from "lucide-react";
 
 // ─── 5-Language Dictionary ────────────────────────────────────────────────────

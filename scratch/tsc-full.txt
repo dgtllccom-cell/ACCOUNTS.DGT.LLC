@@ -1,0 +1,25 @@
+app/ext/form/[token]/ext-form-client.tsx(1999,28): error TS2304: Cannot find name 'Calendar'.
+features/customers/components/customer-form.tsx(229,52): error TS2339: Property 'first_name' does not exist on type 'CustomerRow'.
+features/customers/components/customer-form.tsx(230,50): error TS2339: Property 'last_name' does not exist on type 'CustomerRow'.
+features/customers/components/customer-form.tsx(238,26): error TS2339: Property 'first_name' does not exist on type 'CustomerRow'.
+features/customers/components/customer-form.tsx(239,25): error TS2339: Property 'last_name' does not exist on type 'CustomerRow'.
+features/customers/components/customer-profile.tsx(126,35): error TS2339: Property 'country_name' does not exist on type 'CustomerRow'.
+features/customers/components/customer-profile.tsx(126,73): error TS2339: Property 'country_name' does not exist on type 'CustomerRow'.
+features/customers/components/customer-profile.tsx(127,41): error TS2551: Property 'state_province_name' does not exist on type 'CustomerRow'. Did you mean 'state_province_id'?
+features/customers/components/customer-profile.tsx(127,92): error TS2551: Property 'state_province_name' does not exist on type 'CustomerRow'. Did you mean 'state_province_id'?
+features/customers/components/customer-profile.tsx(128,32): error TS2339: Property 'city_name' does not exist on type 'CustomerRow'.
+features/customers/components/customer-profile.tsx(128,64): error TS2339: Property 'city_name' does not exist on type 'CustomerRow'.
+features/customers/components/customer-profile.tsx(278,14): error TS2339: Property 'customer_type' does not exist on type 'CustomerRow'.
+features/customers/components/customer-profile.tsx(349,92): error TS2339: Property 'country_name' does not exist on type 'CustomerRow'.
+features/customers/components/customer-profile.tsx(353,92): error TS2551: Property 'state_province_name' does not exist on type 'CustomerRow'. Did you mean 'state_province_id'?
+features/customers/components/customer-profile.tsx(357,92): error TS2339: Property 'city_name' does not exist on type 'CustomerRow'.
+features/customers/components/customer-profile.tsx(405,145): error TS2339: Property 'country_name' does not exist on type 'CustomerRow'.
+features/customers/components/customer-profile.tsx(409,139): error TS2339: Property 'city_name' does not exist on type 'CustomerRow'.
+features/customers/components/customer-profile.tsx(413,149): error TS2551: Property 'state_province_name' does not exist on type 'CustomerRow'. Did you mean 'state_province_id'?
+features/customers/components/customer-profile.tsx(662,74): error TS2339: Property 'country_name' does not exist on type 'CustomerRow'.
+features/customers/components/customer-profile.tsx(666,74): error TS2551: Property 'state_province_name' does not exist on type 'CustomerRow'. Did you mean 'state_province_id'?
+features/customers/components/customer-profile.tsx(670,74): error TS2339: Property 'city_name' does not exist on type 'CustomerRow'.
+features/customers/components/customer-profile.tsx(721,127): error TS2339: Property 'country_name' does not exist on type 'CustomerRow'.
+features/customers/components/customer-profile.tsx(725,121): error TS2339: Property 'city_name' does not exist on type 'CustomerRow'.
+features/customers/components/customer-profile.tsx(729,131): error TS2551: Property 'state_province_name' does not exist on type 'CustomerRow'. Did you mean 'state_province_id'?
+features/general-office/components/share-forms-tab.tsx(254,49): error TS2304: Cannot find name 'ShareLink'.
