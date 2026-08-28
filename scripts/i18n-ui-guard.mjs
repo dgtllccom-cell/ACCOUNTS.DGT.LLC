@@ -139,6 +139,34 @@ log(`  t() misuse ..... ${misuse.length === 0 ? "OK" : misuse.length + " (warnin
 misuse.slice(0, 15).forEach((x) => log(`      ${x}`));
 
 // ---------------------------------------------------------------------------
+// 3b. CLOBBERED BY SPREAD — each non-en block contains a `...en,` spread that
+//     back-fills untranslated keys with English. Any real translation defined
+//     ABOVE that spread is silently overwritten by English at runtime (the
+//     text-based parse above still "sees" it, so PARITY/FALLBACK stay green —
+//     this is the only check that catches it). Regression guard for the
+//     2026-08 tax_einv incident.
+// ---------------------------------------------------------------------------
+const clobbered = [];
+for (let k = 1; k < 5; k++) {
+  const lang = order[k];
+  const a = marks[lang];
+  const b = marks[order[k + 1]] ?? marks.end;
+  let spreadLine = -1;
+  for (let i = a; i < b; i++) {
+    if (/^\s*\.\.\.en,?\s*$/.test(uiLines[i])) { spreadLine = i; break; }
+  }
+  if (spreadLine === -1) continue; // no spread in this block — nothing to clobber
+  const keyRe = /"([a-zA-Z0-9_]+\.[a-zA-Z0-9_.]+)":\s*"/;
+  for (let i = a + 1; i < spreadLine; i++) {
+    const m = uiLines[i].match(keyRe);
+    if (m) clobbered.push(`${lang}  ${m[1]}  (line ${i + 1}, above ...en at line ${spreadLine + 1})`);
+  }
+}
+if (clobbered.length) fail.push(`SPREAD-CLOBBER: ${clobbered.length} translation(s) defined above the \`...en\` spread — overwritten by English at runtime`);
+log(`  spread clobber . ${clobbered.length === 0 ? "OK" : clobbered.length + " CLOBBERED"}`);
+clobbered.slice(0, 25).forEach((x) => log(`      ${x}`));
+
+// ---------------------------------------------------------------------------
 // 4. FALLBACK (non-en value identical to en)
 // ---------------------------------------------------------------------------
 const NEUTRAL = /^(PDF|CSV|XLSX|JSON|HTML|SMTP|IMAP|WhatsApp|Excel|B\/L|BL|QR|ETA|ETD|HS Code|WABA ID|WABA|ID|ISO|ISO2|ISO3|DR|CR|DR \/ CR|USD|AED|PKR|EUR|AFN|INR|CRM|API|SMS|Email|OK|N\/A|#|R#|IBAN|SWIFT|IFSC|TRN|VAT|VAT %|CC|BCC|TRN \/ VAT|IFSC:|HS:|TRN 100293848)$/i;
