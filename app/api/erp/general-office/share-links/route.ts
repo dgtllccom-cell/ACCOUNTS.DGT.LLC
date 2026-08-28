@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
 
     // Auto-expire stale links without a separate job
     const now = new Date();
-    const processed = links.map((link) => {
+    const processed = (links ?? []).map((link) => {
       if (
         link.status === "active" &&
         link.expires_at &&
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
           (form_type, status, created_by, created_by_name,
            country_id, country_branch_id, city_branch_id, expires_at, notes)
         values (
-          ${formType}, 'active', ${session.userId}, ${session.userFullName ?? session.userId},
+          ${formType}, 'active', ${session.userId}, ${(session as any).fullName ?? session.userId},
           ${session.countryIds?.[0] ?? null},
           ${session.countryBranchIds?.[0] ?? null},
           ${session.cityBranchIds?.[0] ?? null},
