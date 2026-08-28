@@ -36,18 +36,34 @@ const MIGRATIONS = [
   "supabase/migrations/20260906_uae_import_export_einvoicing.sql",
   "supabase/migrations/20260907_uae_tax_reports_audit.sql",
   "supabase/migrations/20260908_uae_tax_finalize_fixes.sql",
+  "supabase/migrations/20260909_uae_tax_view_hardening.sql",
+  "supabase/migrations/20260910_uae_tax_rules_dedupe.sql",
 ];
 
 const sql = postgres(env.DATABASE_URL, { max: 1, prepare: false, connect_timeout: 60 });
 
 async function main() {
+  await sql`CREATE TABLE IF NOT EXISTS public.erp_schema_migrations (name text primary key, status text not null default 'applied', applied_at timestamptz not null default now())`;
+
+  const force = process.argv.includes("--force");
+
   for (const file of MIGRATIONS) {
     if (!fs.existsSync(file)) {
       console.log(`skip (not found yet): ${file}`);
       continue;
     }
+    const name = file.replace(/^.*\//, "").replace(/\.sql$/, "");
+    if (!force) {
+      const [row] = await sql`SELECT status FROM public.erp_schema_migrations WHERE name = ${name}`;
+      if (row?.status === "applied") {
+        console.log(`skip (already applied): ${name}`);
+        continue;
+      }
+    }
     console.log(`Applying ${file} ...`);
     await sql.unsafe(fs.readFileSync(file, "utf8"));
+    // each migration records itself, but record here too in case one forgot
+    await sql`INSERT INTO public.erp_schema_migrations (name, status) VALUES (${name}, 'applied') ON CONFLICT (name) DO UPDATE SET status = 'applied', applied_at = NOW()`;
     console.log("  ok");
   }
 
