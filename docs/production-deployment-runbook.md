@@ -1,8 +1,13 @@
 # Production Deployment Runbook — 2026-08-28 release
 
 Run these steps **on the machine that holds the production VPS SSH key and the
-production DB credentials** (this session does not have them). Every command is
-copy-paste ready. Do not skip step 1.
+production DB credentials**. Claude's sandbox refuses both `ssh root@72.60.209.121`
+and any direct connection to the production Supabase pooler, so the deploy, the
+production backup, and the live production verification must be run by the
+operator. Every command below is copy-paste ready. **Do not skip step 1.**
+
+Post-deploy live verification checklist is in § 4 — run all of it and record
+PASS/FAIL; that is the acceptance gate, not "the build succeeded".
 
 Target production VPS: `root@72.60.209.121` — app at `/var/www/dgt-nextjs`, PM2
 process `dgt-nextjs`.
@@ -79,6 +84,7 @@ The migrations to apply (all additive, `IF NOT EXISTS`, idempotent):
 20260910_uae_tax_rules_dedupe
 20260911_uae_tax_order_item_triggers
 20260912_uae_tax_sync_fn_dedupe
+20260913_goods_master_category            (ALTER TABLE goods ADD COLUMN IF NOT EXISTS category text — additive)
 ```
 
 ### 2a. Dry check — what's already on prod
@@ -159,6 +165,15 @@ curl -s -o /dev/null -w "%{http_code}\n" "$BASE/login"        # 200
 #    - Tax → UAE → Purchase Input VAT: the "Tax Status" column shows per line
 #    - Tax → UAE → VAT Return: preview a period; boxes populate
 #    - Reports → Journal Report and Stock Report both return data (not a 500)
+#    - Settings → Goods Master: list loads; add a test item (CHS + name +
+#      category + brand + origin); it appears; soft-delete it; it disappears
+#      but stays in the DB (SELECT ... FROM goods WHERE goods_name LIKE 'test%')
+#    - New Entry → Goods Master & Variations shows the SAME goods (one source)
+#    - Audit → User Activity: productivity list loads with role/country/counts;
+#      open one user → deep breakdown loads
+#    - Locations summary API responds in a few seconds, not 60-90s:
+#      curl -s -o /dev/null -w '%{time_total}\n' -b <cookie> "$BASE/api/erp/locations/summary"
+#    - GET /api/admin/populate-locations with NO auth cookie → 307/401 (was open)
 
 # c. Accounting reconciliation spot check (in the DB):
 psql "$PROD_DB" -c "
