@@ -360,18 +360,88 @@ export class UaeTaxService {
   }
 
   /**
-   * Phase 2 fills this in. Kept as a stable entry point so the /sync route and
-   * its UI exist from Phase 1.
+   * Pull taxable lines from the ERP source modules into uae_tax_lines.
+   * Idempotent — safe to run repeatedly (unique on the source key).
    */
-  async syncFromErp(_options?: {
+  async syncFromErp(options?: {
     fromDate?: string | null;
     taxEntityId?: string | null;
   }): Promise<{ synced: number; bySource: Record<string, number>; note?: string }> {
-    return {
-      synced: 0,
-      bySource: {},
-      note: "Ingestion sync functions are added in Phase 2 (expenses_bill_lines.tax_on, local_purchases.apply_tax).",
-    };
+    const res = await withLocalPg(async (sql) => {
+      const rows = await sql<Array<{ source: string; rows_synced: number }>>`
+        SELECT source, rows_synced
+        FROM public.sync_uae_tax_all(${options?.fromDate ?? null}::date, ${options?.taxEntityId ?? null}::uuid)
+      `;
+      const bySource: Record<string, number> = {};
+      let synced = 0;
+      for (const r of rows) {
+        bySource[r.source] = Number(r.rows_synced ?? 0);
+        synced += Number(r.rows_synced ?? 0);
+      }
+      return { synced, bySource };
+    });
+    return res ?? { synced: 0, bySource: {}, note: "Database is not configured." };
+  }
+
+  /**
+   * Manual classification of a tax line by a reviewer (recoverability,
+   * tax category, transaction category, review status).
+   */
+  async updateLineClassification(
+    id: string,
+    patch: {
+      recoverability?: string;
+      recoverableAmount?: number;
+      taxCategory?: string;
+      transactionCategory?: string;
+      reviewStatus?: string;
+      taxCodeId?: string | null;
+    },
+    scope?: UaeTaxScope,
+  ): Promise<{ updated: boolean }> {
+    const clean: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (patch.recoverability) clean.recoverability = patch.recoverability;
+    if (patch.recoverableAmount !== undefined) clean.recoverable_amount = patch.recoverableAmount;
+    if (patch.taxCategory) clean.tax_category = patch.taxCategory;
+    if (patch.transactionCategory) clean.transaction_category = patch.transactionCategory;
+    if (patch.reviewStatus) clean.review_status = patch.reviewStatus;
+    if (patch.taxCodeId !== undefined) clean.tax_code_id = patch.taxCodeId;
+    if (Object.keys(clean).length <= 1) return { updated: false };
+
+    const res = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        UPDATE public.uae_tax_lines
+        SET ${sql(clean as any)}
+        WHERE id = ${id} AND deleted_at IS NULL
+          AND (${
+            scope?.countryIds && scope.countryIds.length
+              ? sql`country_id = ANY(${scope.countryIds})`
+              : sql`TRUE`
+          })
+        RETURNING id
+      `;
+      return { updated: rows.length > 0 };
+    });
+    return res ?? { updated: false };
+  }
+
+  /**
+   * Resolve the dashboard URL of the original transaction behind a tax line,
+   * so the UI row click opens the source bill (never a copy).
+   */
+  sourceLink(line: Pick<UaeTaxLine, "source_module" | "source_id">): string {
+    switch (line.source_module) {
+      case "expenses_bill":
+        return `/dashboard/roznamcha/expenses?bill=${line.source_id}`;
+      case "local_purchase":
+        return `/dashboard/purchase/local-purchase?id=${line.source_id}`;
+      case "purchase_order":
+        return `/dashboard/purchase/purchase-order?id=${line.source_id}`;
+      case "sales_order":
+        return `/dashboard/sales/sales-order?id=${line.source_id}`;
+      default:
+        return `/dashboard/tax-einvoicing/uae/vat-control`;
+    }
   }
 }
 

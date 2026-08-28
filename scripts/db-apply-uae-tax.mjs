@@ -29,7 +29,12 @@ if (!env.DATABASE_URL) {
 
 const MIGRATIONS = [
   "supabase/migrations/20260901_uae_tax_einvoicing_foundation.sql",
-  // Phase 2+: "supabase/migrations/20260902_uae_tax_ingestion.sql", ...
+  "supabase/migrations/20260902_uae_tax_ingestion.sql",
+  "supabase/migrations/20260903_uae_tax_documents.sql",
+  "supabase/migrations/20260904_uae_vat_return.sql",
+  "supabase/migrations/20260905_uae_tax_ledger_reconciliation.sql",
+  "supabase/migrations/20260906_uae_import_export_einvoicing.sql",
+  "supabase/migrations/20260907_uae_tax_reports_audit.sql",
 ];
 
 const sql = postgres(env.DATABASE_URL, { max: 1, prepare: false, connect_timeout: 60 });

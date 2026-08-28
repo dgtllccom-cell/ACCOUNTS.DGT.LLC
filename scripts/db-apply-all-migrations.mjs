@@ -34,6 +34,7 @@ const migrations = [
   { name: "20260828_settlement_reconciliation_engine", path: "supabase/migrations/20260828_settlement_reconciliation_engine.sql" },
   { name: "20260829_settlement_integration_registry", path: "supabase/migrations/20260829_settlement_integration_registry.sql" },
   { name: "20260901_uae_tax_einvoicing_foundation", path: "supabase/migrations/20260901_uae_tax_einvoicing_foundation.sql" },
+  { name: "20260902_uae_tax_ingestion", path: "supabase/migrations/20260902_uae_tax_ingestion.sql" },
   { name: "20260828_external_form_links", path: "supabase/migrations/20260828_external_form_links.sql" }
 ];
 

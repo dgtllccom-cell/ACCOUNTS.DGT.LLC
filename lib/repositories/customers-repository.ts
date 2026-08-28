@@ -307,6 +307,20 @@ export class CustomersRepository {
         }
       }
 
+      const trimmedName = input.customerName.trim();
+      const existing = await sql`
+        SELECT id, person_code, customer_name FROM public.customers
+        WHERE country_id = ${resolvedCountryId}::uuid
+          AND deleted_at IS NULL
+          AND LOWER(TRIM(customer_name)) = LOWER(${trimmedName})
+        LIMIT 1
+      `;
+      if (existing.length > 0) {
+        throw new Error(
+          `Customer with name "${trimmedName}" already exists in this country (${existing[0].person_code}). Duplicate registration is not allowed.`
+        );
+      }
+
       const insertRow = {
         country_id: resolvedCountryId,
         state_province_id: validStateId,

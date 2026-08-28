@@ -198,11 +198,18 @@ export const sidebarTree: SidebarNode[] = [
     ]
   },
   {
-    key: "tax-einvoicing-group",
-    labelKey: "tax_einv.title",
+    key: "tax-setup-rules-group",
+    labelKey: "tax_einv.setup_rules_title",
     iconKey: "calculator",
     roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "accountant", "auditor_viewer"],
     children: [
+      {
+        key: "tax-all-taxes",
+        labelKey: "tax_einv.all_taxes",
+        iconKey: "list-plus",
+        href: "/dashboard/tax-einvoicing" as Route,
+        roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "accountant", "auditor_viewer"],
+      },
       {
         key: "tax-einv-uae",
         labelKey: "tax_einv.uae",
@@ -232,11 +239,10 @@ export const sidebarTree: SidebarNode[] = [
           { key: "tax-uae-settings", labelKey: "tax_einv.nav_settings", iconKey: "settings", href: "/dashboard/tax-einvoicing/uae/settings" as Route, roles: ["super_admin", "country_admin"] }
         ]
       },
-      { key: "tax-einv-pakistan", labelKey: "tax_einv.country_pakistan", iconKey: "globe", href: "/dashboard/tax-einvoicing/coming-soon?country=pakistan" as Route, roles: ["super_admin", "country_admin"] },
-      { key: "tax-einv-india", labelKey: "tax_einv.country_india", iconKey: "globe", href: "/dashboard/tax-einvoicing/coming-soon?country=india" as Route, roles: ["super_admin", "country_admin"] },
-      { key: "tax-einv-afghanistan", labelKey: "tax_einv.country_afghanistan", iconKey: "globe", href: "/dashboard/tax-einvoicing/coming-soon?country=afghanistan" as Route, roles: ["super_admin", "country_admin"] },
-      { key: "tax-einv-iran", labelKey: "tax_einv.country_iran", iconKey: "globe", href: "/dashboard/tax-einvoicing/coming-soon?country=iran" as Route, roles: ["super_admin", "country_admin"] },
-      { key: "tax-einv-other", labelKey: "tax_einv.country_other", iconKey: "globe", href: "/dashboard/tax-einvoicing/coming-soon?country=other" as Route, roles: ["super_admin", "country_admin"] }
+      { key: "tax-einv-pakistan", labelKey: "tax_einv.country_pakistan", iconKey: "globe", href: "/dashboard/tax-einvoicing/coming-soon?country=pakistan" as Route, roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "accountant"] },
+      { key: "tax-einv-afghanistan", labelKey: "tax_einv.country_afghanistan", iconKey: "globe", href: "/dashboard/tax-einvoicing/coming-soon?country=afghanistan" as Route, roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "accountant"] },
+      { key: "tax-einv-india", labelKey: "tax_einv.country_india", iconKey: "globe", href: "/dashboard/tax-einvoicing/coming-soon?country=india" as Route, roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "accountant"] },
+      { key: "tax-einv-other", labelKey: "tax_einv.country_other", iconKey: "globe", href: "/dashboard/tax-einvoicing/coming-soon?country=other" as Route, roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "accountant"] }
     ]
   },
   {

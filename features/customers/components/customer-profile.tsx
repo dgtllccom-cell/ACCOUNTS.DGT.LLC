@@ -514,13 +514,14 @@ export function CustomerProfile({
             <PencilLine className="h-4 w-4" />
           </button>
           {/* ERP Links / Registration Details — every module/role this Person Master is linked to */}
-          <button
+          <Button
+            type="button"
             onClick={() => setShowErpLinks(true)}
-            title={t(lang, "erp.person_links_title", "ERP Links / Registration Details")}
-            className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-indigo-400 hover:bg-slate-800 transition-colors cursor-pointer"
+            className="h-8 bg-indigo-600 hover:bg-indigo-500 text-white rounded-md text-xs font-bold gap-1.5 px-3 shadow-xs"
           >
-            <Link2 className="h-4 w-4" />
-          </button>
+            <Link2 className="h-3.5 w-3.5" />
+            <span>{t(lang, "erp.person_links_title", "360° ERP Attached Forms")}</span>
+          </Button>
           <div className="h-4 w-px bg-slate-700" />
           {/* Print */}
           <button
