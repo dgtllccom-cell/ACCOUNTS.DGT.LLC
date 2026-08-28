@@ -2802,6 +2802,241 @@ export function ExtFormClient({ token }: { token: string }) {
                         ))}
                       </div>
                     )}
+                  </div>
+                </div>
+
+                {/* Step 2 Navigation Buttons */}
+                <div className="flex items-center gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(1)}
+                    className="py-3 px-5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs cursor-pointer transition-all shadow-2xs"
+                  >
+                    {t("backBtn", lang)}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(3)}
+                    className="flex-1 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer transition-all"
+                  >
+                    <span>{t("nextAddressBtn", lang)}</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ════════════════════════════════════════════════════════════════════════
+                STEP 3: ADDRESS INFORMATION (100% 5-Language Localized Cascader)
+            ════════════════════════════════════════════════════════════════════════ */}
+            {currentStep === 3 && (
+              <div className="space-y-5 animate-in fade-in duration-300">
+                <div className="bg-slate-50/70 border border-slate-200 rounded-2xl p-4 sm:p-5 space-y-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-7 w-7 rounded-lg bg-emerald-100/60 text-emerald-600 flex items-center justify-center">
+                      <MapPin size={14} />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-slate-900 text-xs sm:text-sm tracking-wide uppercase">
+                        {t("step2Title", lang)}
+                      </h3>
+                      <p className="text-[11px] text-slate-400 font-medium">
+                        {t("step2Sub", lang)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 pt-1">
+                    {/* Country Selector (100% Localized) */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-slate-700">
+                        {t("country", lang)} <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={country}
+                        onChange={(e) => handleCountryChange(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
+                      >
+                        {Object.keys(LOCATION_HIERARCHY).map((cKey) => (
+                          <option key={cKey} value={cKey}>
+                            {locName(cKey, lang)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* State / Province Selector (100% Localized) */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-slate-700">
+                        {t("stateProvince", lang)} <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={stateProvince}
+                        onChange={(e) => handleStateChange(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
+                      >
+                        {availableStates.map((stKey) => (
+                          <option key={stKey} value={stKey}>
+                            {locName(stKey, lang)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* City / Port Selector (100% Localized) */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-slate-700">
+                        {t("city", lang)} <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={city}
+                        onChange={(e) => handleCityChange(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
+                      >
+                        {availableCities.map((c) => (
+                          <option key={c.name} value={c.name}>
+                            {locName(c.name, lang)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Postal Code (Auto-filled) */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-slate-700">
+                        {t("postalCode", lang)}
+                      </label>
+                      <div className="relative">
+                        <CreditCard className="absolute start-3 top-3 h-4 w-4 text-slate-400" />
+                        <input
+                          type="text"
+                          value={postalCode}
+                          onChange={(e) => setPostalCode(e.target.value)}
+                          placeholder="Postal Code"
+                          className="w-full bg-slate-100/70 border border-slate-200 rounded-xl ps-9 pe-3 py-2 text-xs sm:text-sm font-bold text-slate-800 font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Full Street Address */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-slate-700">
+                        {t("fullAddress", lang)} <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <MapPin className="absolute start-3 top-3 h-4 w-4 text-slate-400" />
+                        <textarea
+                          rows={3}
+                          value={fullAddress}
+                          onChange={(e) => setFullAddress(e.target.value)}
+                          placeholder={t("fullAddressPh", lang)}
+                          className="w-full bg-white border border-slate-200 rounded-xl ps-9 pe-3 py-2 text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all resize-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Step 3 Navigation Buttons */}
+                <div className="flex items-center gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(2)}
+                    className="py-3 px-5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs cursor-pointer transition-all shadow-2xs"
+                  >
+                    {t("backBtn", lang)}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(4)}
+                    className="flex-1 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer transition-all"
+                  >
+                    <span>{t("nextPhotoBtn", lang)}</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ════════════════════════════════════════════════════════════════════════
+                STEP 4: PROFILE PHOTO (Applicant Photo / Selfie)
+            ════════════════════════════════════════════════════════════════════════ */}
+            {currentStep === 4 && (
+              <div className="space-y-6 animate-in fade-in duration-300">
+                <div className="bg-slate-50/70 border border-slate-200 rounded-2xl p-6 text-center space-y-4">
+                  <div className="space-y-1">
+                    <h3 className="font-black text-slate-900 text-sm sm:text-base">
+                      {t("step4Title", lang)}
+                    </h3>
+                    <p className="text-xs text-slate-400 font-medium">
+                      {t("step4Sub", lang)}
+                    </p>
+                  </div>
+
+                  {/* Circular Avatar Preview */}
+                  <div className="relative mx-auto w-32 h-32 rounded-full border-4 border-white shadow-md overflow-hidden bg-slate-200 flex items-center justify-center">
+                    {photoPreview ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={photoPreview} alt="Candidate Avatar" className="h-full w-full object-cover" />
+                    ) : (
+                      <User size={56} className="text-slate-400" />
+                    )}
+                  </div>
+
+                  {/* Camera / Gallery Upload Buttons */}
+                  <div className="flex items-center justify-center gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => photoCameraRef.current?.click()}
+                      className="py-2.5 px-5 rounded-xl border border-indigo-200 bg-indigo-50/70 text-indigo-700 hover:bg-indigo-100 text-xs font-bold flex items-center gap-2 shadow-2xs cursor-pointer transition-all"
+                    >
+                      <Camera size={15} />
+                      <span>{t("cameraBtn", lang)}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => photoInputRef.current?.click()}
+                      className="py-2.5 px-5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold flex items-center gap-2 shadow-2xs cursor-pointer transition-all"
+                    >
+                      <ImageIcon size={15} />
+                      <span>{t("galleryBtn", lang)}</span>
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-slate-400">{t("photoSizeHint", lang)}</p>
+                </div>
+
+                {/* Step 4 Navigation Buttons */}
+                <div className="flex items-center gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(3)}
+                    className="py-3 px-5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs cursor-pointer transition-all shadow-2xs"
+                  >
+                    {t("backBtn", lang)}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(5)}
+                    className="flex-1 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-indigo-600/25 flex items-center justify-center gap-2 cursor-pointer transition-all"
+                  >
+                    <span>{t("nextReviewBtn", lang)}</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ════════════════════════════════════════════════════════════════════════
+                STEP 5: REVIEW YOUR INFORMATION & PRE-SUBMISSION APPLICATION SLIP
+            ════════════════════════════════════════════════════════════════════════ */}
+            {currentStep === 5 && (
+              <div className="space-y-5 animate-in fade-in duration-300">
+                <div className="text-center space-y-1 pb-1">
+                  <h3 className="font-black text-slate-900 text-sm sm:text-base uppercase tracking-wide">
+                    {t("appSlipHeading", lang)}
+                  </h3>
+                  <p className="text-xs text-slate-400 font-medium max-w-md mx-auto">
+                    {t("appSlipSub", lang)}
+                  </p>
+                </div>
+
                 {/* Pre-Submission Download & Print Action Toolbar */}
                 <div className="bg-linear-to-r from-indigo-900 to-slate-900 text-white rounded-2xl p-4 sm:p-5 shadow-md flex flex-col sm:flex-row items-center justify-between gap-3 print:hidden">
                   <div className="space-y-0.5 text-center sm:text-start">
@@ -3043,54 +3278,6 @@ export function ExtFormClient({ token }: { token: string }) {
                         ))}
                       </div>
                     )}
-                  </div>our complete verified application before submitting.
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <button
-                      type="button"
-                      onClick={() => window.print()}
-                      className="flex-1 sm:flex-initial py-2.5 px-4 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs transition-all"
-                    >
-                      <Download size={14} />
-                      <span>{t("downloadSlipBtn", lang)}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => window.print()}
-                      className="py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all border border-white/20"
-                    >
-                      <Printer size={14} />
-                      <span>{t("printSlipBtn", lang)}</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Official Verification Application Summary Sheet */}
-                <div className="border-2 border-indigo-200 bg-white rounded-3xl p-5 sm:p-7 space-y-5 shadow-sm print:border-none print:shadow-none print:p-0">
-                  {/* Enterprise Official Header */}
-                  <div className="flex items-center justify-between border-b-2 border-slate-100 pb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-sm shadow-xs">
-                        DD
-                      </div>
-                      <div>
-                        <h4 className="font-black text-xs sm:text-sm text-slate-900 uppercase tracking-wider">
-                          Digital Dock ERP
-                        </h4>
-                        <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest">
-                          Public Verification Gateway
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-end">
-                      <span className="inline-block text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-1 rounded-full uppercase tracking-wider">
-                        APPLICATION DRAFT
-                      </span>
-                      <p className="text-[9px] text-slate-400 font-mono mt-0.5">
-                        Ref: {token.slice(0, 12).toUpperCase()}
-                      </p>
-                    </div>
                   </div>
 
                   {/* Applicant Profile Header */}
