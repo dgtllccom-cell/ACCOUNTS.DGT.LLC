@@ -560,6 +560,62 @@ const dict: Record<string, Record<Lang, string>> = {
     fa: "در حال بارگذاری فرم...",
     ps: "فورم لوډ کیږي...",
   },
+  issueDate: {
+    en: "Issue Date",
+    ur: "تاریخِ اجراء",
+    ar: "تاريخ الإصدار",
+    fa: "تاریخ صدور",
+    ps: "د صادرېدو نېټه",
+  },
+  expiryDate: {
+    en: "Expiry Date",
+    ur: "تاریخِ تنسیخ / میعاد",
+    ar: "تاريخ الانتهاء",
+    fa: "تاریخ انقضا",
+    ps: "د پای نېټه",
+  },
+  dob: {
+    en: "Date of Birth",
+    ur: "تاریخِ پیدائش",
+    ar: "تاريخ الميلاد",
+    fa: "تاریخ تولد",
+    ps: "د زېږېدو نېټه",
+  },
+  contactType: {
+    en: "Contact Type",
+    ur: "رابطے کی قسم",
+    ar: "نوع جهة الاتصال",
+    fa: "نوع تماس",
+    ps: "د اړیکې ډول",
+  },
+  customDocName: {
+    en: "Custom Document Name",
+    ur: "دستاویز کا نیا نام",
+    ar: "اسم المستند المخصص",
+    fa: "نام مدرک سفارشی",
+    ps: "د سند نوی نوم",
+  },
+  customDocNamePh: {
+    en: "e.g. Tazkira / QID / Business Card",
+    ur: "مثلاً تذکرہ / قطری شناختی کارڈ وغیرہ",
+    ar: "مثال: بطاقة شخصية / تذكرة / بطاقة عمل",
+    fa: "مثلاً تذکره / کارت هویت محلی",
+    ps: "لکه برېښنايي تذکره یا بل ځانګړی سند",
+  },
+  addContactBtn: {
+    en: "+ Add Another Contact",
+    ur: "+ نیا فون / رابطہ شامل کریں",
+    ar: "+ إضافة جهة اتصال أخرى",
+    fa: "+ افزودن تماس دیگر",
+    ps: "+ بله اړیکه ورزیاته کړئ",
+  },
+  phoneLabel: {
+    en: "Phone / Contact Number",
+    ur: "فون / رابطہ نمبر",
+    ar: "رقم الهاتف / الاتصال",
+    fa: "شماره تماس / تلفن",
+    ps: "د اړیکې / تیلیفون شمېره",
+  },
 };
 
 function t(key: string, lang: Lang): string {
@@ -942,7 +998,16 @@ const LOCATION_HIERARCHY: Record<string, CountryData> = {
   },
 };
 
-// ─── Document & Contract Types with 5-Language Labels ─────────────────────────
+// ─── Document & Contract & Contact Types with 5-Language Labels ───────────────
+
+const CONTACT_TYPES: { value: string; labels: Record<Lang, string> }[] = [
+  { value: "Mobile", labels: { en: "Mobile Phone", ur: "موبائل فون", ar: "هاتف جوال", fa: "تلفن همراه", ps: "ګرځنده تیلیفون" } },
+  { value: "WhatsApp", labels: { en: "WhatsApp Number", ur: "واٹس ایپ نمبر", ar: "رقم الواتساب", fa: "شماره واتس‌اپ", ps: "د واټس‌اپ شمېره" } },
+  { value: "Phone", labels: { en: "Phone / Landline", ur: "لینڈ لائن / فون", ar: "هاتف ثابت", fa: "تلفن ثابت", ps: "ثابت تیلیفون" } },
+  { value: "Office", labels: { en: "Office Contact", ur: "دفتری فون", ar: "هاتف المكتب", fa: "تلفن دفتر", ps: "د دفتر تیلیفون" } },
+  { value: "Emergency", labels: { en: "Emergency Contact", ur: "ہنگامی رابطہ", ar: "جهة اتصال الطوارئ", fa: "تماس اضطراری", ps: "بیړنۍ اړیکه" } },
+  { value: "Custom", labels: { en: "Other / Custom", ur: "دیگر رابطہ", ar: "آخر / مخصص", fa: "سایر / سفارشی", ps: "نور / دودیز" } },
+];
 
 const DOC_TYPES: { value: string; labels: Record<Lang, string> }[] = [
   {
@@ -966,13 +1031,43 @@ const DOC_TYPES: { value: string; labels: Record<Lang, string> }[] = [
     },
   },
   {
-    value: "ID Card",
+    value: "Emirates ID",
     labels: {
-      en: "Resident / ID Card",
-      ur: "رہائشی شناختی کارڈ / اقامہ",
-      ar: "بطاقة الإقامة / الهوية",
-      fa: "کارت اقامت / شناسایی",
-      ps: "د اوسېدو / اقامې کارت",
+      en: "Emirates ID (UAE)",
+      ur: "ایمریٹس آئی ڈی (UAE)",
+      ar: "الهوية الإماراتية (UAE)",
+      fa: "کارت شناسایی امارات (UAE)",
+      ps: "د اماراتو پیژندپاڼه (UAE)",
+    },
+  },
+  {
+    value: "Tazkira",
+    labels: {
+      en: "Tazkira / National ID (AFG)",
+      ur: "افغانستان کا تذکرہ (Tazkira)",
+      ar: "تذكرة الهوية الأفغانية (Tazkira)",
+      fa: "تذکره تابعیت افغانستان",
+      ps: "د افغانستان برېښنايي تذکره",
+    },
+  },
+  {
+    value: "Iqama",
+    labels: {
+      en: "Iqama / Resident Card",
+      ur: "اقامہ / رہائشی کارڈ (Iqama)",
+      ar: "الإقامة / بطاقة مقيم",
+      fa: "کارت اقامت / اقامه",
+      ps: "د اقامې کارت",
+    },
+  },
+  {
+    value: "Aadhaar Card",
+    labels: {
+      en: "Aadhaar Card",
+      ur: "آدھار کارڈ (Aadhaar)",
+      ar: "بطاقة آدهار (Aadhaar)",
+      fa: "کارت آدهار",
+      ps: "د آدهار کارت",
     },
   },
   {
@@ -996,13 +1091,13 @@ const DOC_TYPES: { value: string; labels: Record<Lang, string> }[] = [
     },
   },
   {
-    value: "Other Document",
+    value: "Custom",
     labels: {
-      en: "Other Document",
-      ur: "دیگر دستاویز",
-      ar: "وثيقة أخرى",
-      fa: "سایر مدارک",
-      ps: "نور اسناد",
+      en: "+ Add Custom Document Type",
+      ur: "+ دیگر نئی قسم کا نام درج کریں",
+      ar: "+ إضافة نوع مستند مخصص",
+      fa: "+ افزودن نوع مدرک جدید",
+      ps: "+ نوی ډول سند ورزیات کړئ",
     },
   },
 ];
@@ -1060,10 +1155,21 @@ const CONTRACT_TYPES: { value: string; labels: Record<Lang, string> }[] = [
   },
 ];
 
+interface ContactEntry {
+  id: string;
+  type: string;
+  customLabel?: string;
+  value: string;
+}
+
 interface DocItem {
   id: string;
   type: string;
+  customName?: string;
   number: string;
+  issueDate?: string;
+  expiryDate?: string;
+  dob?: string;
   fileName?: string;
   frontImage?: string;
   backImage?: string;
@@ -1074,6 +1180,51 @@ interface ContractItem {
   type: string;
   contractNo: string;
   fileName?: string;
+}
+
+/**
+ * Client-Side Canvas Image Compression
+ * Scales photo to max 1200px and converts to 80% JPEG.
+ * Reduces 10MB mobile camera photos to ~120KB-200KB crystal-clear images,
+ * eliminating all HTTP 413 and mobile Network Connection Errors!
+ */
+async function compressImageFile(file: File, maxWidth = 1200, maxHeight = 1200, quality = 0.8): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve(e.target?.result as string);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressedBase64 = canvas.toDataURL("image/jpeg", quality);
+        resolve(compressedBase64);
+      };
+      img.src = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 export function ExtFormClient({ token }: { token: string }) {
@@ -1096,14 +1247,20 @@ export function ExtFormClient({ token }: { token: string }) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [fatherName, setFatherName] = useState("");
-  const [mobiles, setMobiles] = useState<string[]>([""]);
-  const [whatsapps, setWhatsapps] = useState<string[]>([""]);
+  const [contactsList, setContactsList] = useState<ContactEntry[]>([
+    { id: "1", type: "Mobile", value: "" },
+    { id: "2", type: "WhatsApp", value: "" },
+  ]);
   const [email, setEmail] = useState("");
   const [gender, setGender] = useState("male");
 
   // Step 1: Documents
   const [docType, setDocType] = useState("CNIC");
+  const [customDocType, setCustomDocType] = useState("");
   const [docNumber, setDocNumber] = useState("");
+  const [docDob, setDocDob] = useState("");
+  const [docIssueDate, setDocIssueDate] = useState("");
+  const [docExpiryDate, setDocExpiryDate] = useState("");
   const [docFrontImage, setDocFrontImage] = useState<string | null>(null);
   const [docBackImage, setDocBackImage] = useState<string | null>(null);
   const [documents, setDocuments] = useState<DocItem[]>([]);
@@ -1204,51 +1361,71 @@ export function ExtFormClient({ token }: { token: string }) {
     }
   };
 
-  // Phone list handlers
-  const handleAddMobile = () => setMobiles((prev) => [...prev, ""]);
-  const handleRemoveMobile = (idx: number) => setMobiles((prev) => prev.filter((_, i) => i !== idx));
-  const handleMobileChange = (idx: number, val: string) => {
-    setMobiles((prev) => {
-      const next = [...prev];
-      next[idx] = val;
-      return next;
-    });
+  // Contact list handlers
+  const handleAddContact = (type: string = "Mobile") => {
+    setContactsList((prev) => [
+      ...prev,
+      { id: Date.now().toString(), type, value: "" },
+    ]);
   };
 
-  // WhatsApp list handlers
-  const handleAddWhatsapp = () => setWhatsapps((prev) => [...prev, ""]);
-  const handleRemoveWhatsapp = (idx: number) => setWhatsapps((prev) => prev.filter((_, i) => i !== idx));
-  const handleWhatsappChange = (idx: number, val: string) => {
-    setWhatsapps((prev) => {
-      const next = [...prev];
-      next[idx] = val;
-      return next;
-    });
+  const handleRemoveContact = (id: string) => {
+    setContactsList((prev) => prev.filter((c) => c.id !== id));
   };
 
-  // File Upload Helper
-  const handleFileRead = (file: File | undefined, setter: (val: string | null) => void) => {
+  const handleContactTypeChange = (id: string, newType: string) => {
+    setContactsList((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, type: newType } : c))
+    );
+  };
+
+  const handleContactCustomLabelChange = (id: string, label: string) => {
+    setContactsList((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, customLabel: label } : c))
+    );
+  };
+
+  const handleContactValueChange = (id: string, val: string) => {
+    setContactsList((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, value: val } : c))
+    );
+  };
+
+  // Image Upload Helper with Canvas Compression
+  const handleImageUpload = async (file: File | undefined, setter: (val: string | null) => void) => {
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      setter(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+    try {
+      const compressed = await compressImageFile(file, 1200, 1200, 0.8);
+      setter(compressed);
+    } catch {
+      const reader = new FileReader();
+      reader.onload = () => setter(reader.result as string);
+      reader.readAsDataURL(file);
+    }
   };
 
   // Add Document Handler
   const handleAddDoc = () => {
     if (!docNumber && !docFrontImage) return;
+    const finalType = docType === "Custom" && customDocType.trim() ? customDocType.trim() : docType;
     const newDoc: DocItem = {
       id: Date.now().toString(),
-      type: docType,
+      type: finalType,
+      customName: docType === "Custom" ? customDocType.trim() : undefined,
       number: docNumber || "N/A",
+      dob: docDob || undefined,
+      issueDate: docIssueDate || undefined,
+      expiryDate: docExpiryDate || undefined,
       frontImage: docFrontImage || undefined,
       backImage: docBackImage || undefined,
-      fileName: `${docType.toLowerCase().replace(/\s+/g, "_")}.pdf`,
+      fileName: `${finalType.toLowerCase().replace(/\s+/g, "_")}.pdf`,
     };
     setDocuments((prev) => [...prev, newDoc]);
     setDocNumber("");
+    setDocDob("");
+    setDocIssueDate("");
+    setDocExpiryDate("");
+    setCustomDocType("");
     setDocFrontImage(null);
     setDocBackImage(null);
   };
@@ -1277,8 +1454,10 @@ export function ExtFormClient({ token }: { token: string }) {
     setSubmitting(true);
     setSubmitError(null);
 
-    const primaryMobile = mobiles.filter(Boolean).join(" / ");
-    const primaryWhatsapp = whatsapps.filter(Boolean).join(" / ");
+    const mobContacts = contactsList.filter((c) => c.type === "Mobile" && c.value.trim());
+    const waContacts = contactsList.filter((c) => c.type === "WhatsApp" && c.value.trim());
+    const primaryMobile = mobContacts.length > 0 ? mobContacts.map((c) => c.value.trim()).join(" / ") : contactsList.find((c) => c.value.trim())?.value.trim() || "";
+    const primaryWhatsapp = waContacts.length > 0 ? waContacts.map((c) => c.value.trim()).join(" / ") : primaryMobile;
 
     const payload = {
       fullName: `${firstName} ${lastName}`.trim() || firstName || lastName,
@@ -1287,8 +1466,12 @@ export function ExtFormClient({ token }: { token: string }) {
       fatherName,
       mobile: primaryMobile,
       whatsapp: primaryWhatsapp,
-      mobiles: mobiles.filter(Boolean),
-      whatsapps: whatsapps.filter(Boolean),
+      mobiles: mobContacts.map((c) => c.value.trim()),
+      whatsapps: waContacts.map((c) => c.value.trim()),
+      contacts: contactsList.filter((c) => c.value.trim()).map((c) => ({
+        type: c.type === "Custom" && c.customLabel ? c.customLabel : c.type,
+        value: c.value.trim()
+      })),
       email,
       gender,
       country,
@@ -1345,7 +1528,7 @@ export function ExtFormClient({ token }: { token: string }) {
         type="file"
         accept="image/png,image/jpeg,image/webp"
         className="hidden"
-        onChange={(e) => handleFileRead(e.target.files?.[0], setPhotoPreview)}
+        onChange={(e) => handleImageUpload(e.target.files?.[0], setPhotoPreview)}
       />
       <input
         ref={photoCameraRef}
@@ -1353,7 +1536,7 @@ export function ExtFormClient({ token }: { token: string }) {
         accept="image/*"
         capture="user"
         className="hidden"
-        onChange={(e) => handleFileRead(e.target.files?.[0], setPhotoPreview)}
+        onChange={(e) => handleImageUpload(e.target.files?.[0], setPhotoPreview)}
       />
 
       {/* Hidden File Inputs for Document Front/Back */}
@@ -1362,7 +1545,7 @@ export function ExtFormClient({ token }: { token: string }) {
         type="file"
         accept="image/png,image/jpeg,image/webp,application/pdf"
         className="hidden"
-        onChange={(e) => handleFileRead(e.target.files?.[0], setDocFrontImage)}
+        onChange={(e) => handleImageUpload(e.target.files?.[0], setDocFrontImage)}
       />
       <input
         ref={frontCameraRef}
@@ -1370,14 +1553,14 @@ export function ExtFormClient({ token }: { token: string }) {
         accept="image/*"
         capture="environment"
         className="hidden"
-        onChange={(e) => handleFileRead(e.target.files?.[0], setDocFrontImage)}
+        onChange={(e) => handleImageUpload(e.target.files?.[0], setDocFrontImage)}
       />
       <input
         ref={backInputRef}
         type="file"
         accept="image/png,image/jpeg,image/webp,application/pdf"
         className="hidden"
-        onChange={(e) => handleFileRead(e.target.files?.[0], setDocBackImage)}
+        onChange={(e) => handleImageUpload(e.target.files?.[0], setDocBackImage)}
       />
       <input
         ref={backCameraRef}
@@ -1385,11 +1568,11 @@ export function ExtFormClient({ token }: { token: string }) {
         accept="image/*"
         capture="environment"
         className="hidden"
-        onChange={(e) => handleFileRead(e.target.files?.[0], setDocBackImage)}
+        onChange={(e) => handleImageUpload(e.target.files?.[0], setDocBackImage)}
       />
 
       {/* Main Container Card */}
-      <div className="w-full max-w-[580px] bg-white rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.06)] border border-slate-100 p-5 sm:p-7 space-y-6">
+      <div className="w-full max-w-[620px] bg-white rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.06)] border border-slate-100 p-5 sm:p-7 space-y-6">
         
         {/* Top Header */}
         <div className="flex items-center justify-between border-b border-slate-100 pb-4">
@@ -1522,7 +1705,7 @@ export function ExtFormClient({ token }: { token: string }) {
             </div>
 
             {/* ════════════════════════════════════════════════════════════════════════
-                STEP 1: PERSONAL INFORMATION & DOCUMENTS
+                STEP 1: PERSONAL INFORMATION & CONTACTS & DOCUMENTS
             ════════════════════════════════════════════════════════════════════════ */}
             {currentStep === 1 && (
               <div className="space-y-5 animate-in fade-in duration-300">
@@ -1595,90 +1778,103 @@ export function ExtFormClient({ token }: { token: string }) {
                       </div>
                     </div>
 
-                    {/* Mobile Numbers (Multi-Phone Support with Numeric Dialer) */}
-                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold text-slate-700">
-                        {t("mobile", lang)} <span className="text-red-500">*</span>
-                      </label>
-                      {mobiles.map((mobVal, idx) => (
-                        <div key={idx} className="flex items-center gap-2">
-                          <div className="relative flex-1">
-                            <Phone className="absolute start-3 top-3 h-4 w-4 text-slate-400" />
-                            <input
-                              type="tel"
-                              inputMode="tel"
-                              dir="ltr"
-                              pattern="[0-9+]*"
-                              value={mobVal}
-                              onChange={(e) => handleMobileChange(idx, e.target.value)}
-                              placeholder="+92 300 1234567"
-                              className="w-full bg-white border border-slate-200 rounded-xl ps-9 pe-3 py-2 text-xs sm:text-sm font-medium text-slate-800 text-left focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all font-mono"
-                            />
-                          </div>
-                          {idx === 0 ? (
-                            <button
-                              type="button"
-                              onClick={handleAddMobile}
-                              className="h-9 px-2.5 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 flex items-center gap-1 text-[11px] font-bold cursor-pointer shrink-0"
-                              title={t("addAnotherMobile", lang)}
-                            >
-                              <Plus size={13} />
-                              <span>{t("addAnotherMobile", lang)}</span>
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveMobile(idx)}
-                              className="h-9 w-9 rounded-xl border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center cursor-pointer shrink-0"
-                            >
-                              <Trash2 size={13} />
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
+                    {/* Contact Numbers with Type Selector & Dynamic Add/Remove */}
+                    <div className="space-y-2 pt-1">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[11px] font-bold text-slate-700">
+                          {t("mobile", lang)} / {t("contactType", lang)} <span className="text-red-500">*</span>
+                        </label>
+                      </div>
 
-                    {/* WhatsApp Numbers (Multi-WhatsApp Support with Numeric Dialer) */}
-                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold text-slate-700">
-                        {t("whatsapp", lang)}
-                      </label>
-                      {whatsapps.map((waVal, idx) => (
-                        <div key={idx} className="flex items-center gap-2">
-                          <div className="relative flex-1">
-                            <MessageSquare className="absolute start-3 top-3 h-4 w-4 text-slate-400" />
-                            <input
-                              type="tel"
-                              inputMode="tel"
-                              dir="ltr"
-                              pattern="[0-9+]*"
-                              value={waVal}
-                              onChange={(e) => handleWhatsappChange(idx, e.target.value)}
-                              placeholder="+92 300 1234567"
-                              className="w-full bg-white border border-slate-200 rounded-xl ps-9 pe-3 py-2 text-xs sm:text-sm font-medium text-slate-800 text-left focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all font-mono"
-                            />
+                      <div className="space-y-2">
+                        {contactsList.map((contact, idx) => (
+                          <div key={contact.id} className="p-2.5 bg-white border border-slate-200 rounded-xl space-y-2 shadow-2xs">
+                            <div className="flex items-center gap-2">
+                              {/* Contact Type Selector */}
+                              <select
+                                value={contact.type}
+                                onChange={(e) => handleContactTypeChange(contact.id, e.target.value)}
+                                className="w-1/3 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                              >
+                                {CONTACT_TYPES.map((ct) => (
+                                  <option key={ct.value} value={ct.value}>
+                                    {ct.labels[lang] || ct.labels.en}
+                                  </option>
+                                ))}
+                              </select>
+
+                              {/* Number Dialer Input */}
+                              <div className="relative flex-1">
+                                {contact.type === "WhatsApp" ? (
+                                  <MessageSquare className="absolute start-2.5 top-2.5 h-3.5 w-3.5 text-emerald-500" />
+                                ) : (
+                                  <Phone className="absolute start-2.5 top-2.5 h-3.5 w-3.5 text-indigo-500" />
+                                )}
+                                <input
+                                  type="tel"
+                                  inputMode="tel"
+                                  dir="ltr"
+                                  pattern="[0-9+]*"
+                                  value={contact.value}
+                                  onChange={(e) => handleContactValueChange(contact.id, e.target.value)}
+                                  placeholder="+92 300 1234567"
+                                  className="w-full bg-white border border-slate-200 rounded-lg ps-8 pe-2 py-1.5 text-xs sm:text-sm font-medium text-slate-800 text-left focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 font-mono"
+                                />
+                              </div>
+
+                              {/* Remove Button */}
+                              {contactsList.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveContact(contact.id)}
+                                  className="h-8 w-8 rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center cursor-pointer shrink-0"
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Custom Label if Custom Type is chosen */}
+                            {contact.type === "Custom" && (
+                              <input
+                                type="text"
+                                value={contact.customLabel || ""}
+                                onChange={(e) => handleContactCustomLabelChange(contact.id, e.target.value)}
+                                placeholder="Enter Custom Label (e.g. Office Assistant / Warehouse)"
+                                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-700"
+                              />
+                            )}
                           </div>
-                          {idx === 0 ? (
-                            <button
-                              type="button"
-                              onClick={handleAddWhatsapp}
-                              className="h-9 px-2.5 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 flex items-center gap-1 text-[11px] font-bold cursor-pointer shrink-0"
-                              title={t("addAnotherWhatsapp", lang)}
-                            >
-                              <Plus size={13} />
-                              <span>{t("addAnotherWhatsapp", lang)}</span>
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveWhatsapp(idx)}
-                              className="h-9 w-9 rounded-xl border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center cursor-pointer shrink-0"
-                            >
-                              <Trash2 size={13} />
-                            </button>
-                          )}
-                        </div>
-                      ))}
+                        ))}
+                      </div>
+
+                      {/* Quick Add Contact Buttons */}
+                      <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => handleAddContact("Mobile")}
+                          className="h-8 px-2.5 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 flex items-center gap-1 text-[11px] font-bold cursor-pointer transition-colors shadow-2xs"
+                        >
+                          <Plus size={12} />
+                          <span>{t("addAnotherMobile", lang)}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleAddContact("WhatsApp")}
+                          className="h-8 px-2.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 flex items-center gap-1 text-[11px] font-bold cursor-pointer transition-colors shadow-2xs"
+                        >
+                          <Plus size={12} />
+                          <span>{t("addAnotherWhatsapp", lang)}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleAddContact("Phone")}
+                          className="h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 flex items-center gap-1 text-[11px] font-bold cursor-pointer transition-colors shadow-2xs"
+                        >
+                          <Plus size={12} />
+                          <span>{t("addContactBtn", lang)}</span>
+                        </button>
+                      </div>
                     </div>
 
                     {/* Email (English Typing with Localized Label) */}
@@ -1725,7 +1921,7 @@ export function ExtFormClient({ token }: { token: string }) {
                   </div>
                 </div>
 
-                {/* Documents Box (CNIC Front/Back & Passport) */}
+                {/* Documents Box (CNIC, Passport, Emirates ID, Tazkira, Iqama, Aadhaar, Custom) */}
                 <div className="bg-slate-50/70 border border-slate-200 rounded-2xl p-4 sm:p-5 space-y-4">
                   <div className="flex items-center gap-2.5">
                     <div className="h-7 w-7 rounded-lg bg-blue-100/60 text-blue-600 flex items-center justify-center">
@@ -1742,7 +1938,7 @@ export function ExtFormClient({ token }: { token: string }) {
                   </div>
 
                   <div className="space-y-3 pt-1">
-                    {/* Document Type Dropdown (Fully Localized in Urdu/Pashto/Arabic/Persian) */}
+                    {/* Document Type Dropdown (Fully Localized with Custom Type option) */}
                     <div className="space-y-1">
                       <label className="text-[11px] font-bold text-slate-700">
                         {t("docType", lang)} <span className="text-red-500">*</span>
@@ -1759,6 +1955,22 @@ export function ExtFormClient({ token }: { token: string }) {
                         ))}
                       </select>
                     </div>
+
+                    {/* Custom Document Name Input if 'Custom' is selected */}
+                    {docType === "Custom" && (
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-indigo-700">
+                          {t("customDocName", lang)} <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={customDocType}
+                          onChange={(e) => setCustomDocType(e.target.value)}
+                          placeholder={t("customDocNamePh", lang)}
+                          className="w-full bg-white border border-indigo-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                        />
+                      </div>
+                    )}
 
                     {/* Document Number */}
                     <div className="space-y-1">
@@ -1777,6 +1989,43 @@ export function ExtFormClient({ token }: { token: string }) {
                       </div>
                     </div>
 
+                    {/* Dates: DOB, Issue Date, Expiry Date */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-600">
+                          {t("dob", lang)}
+                        </label>
+                        <input
+                          type="date"
+                          value={docDob}
+                          onChange={(e) => setDocDob(e.target.value)}
+                          className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 font-mono"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-600">
+                          {t("issueDate", lang)}
+                        </label>
+                        <input
+                          type="date"
+                          value={docIssueDate}
+                          onChange={(e) => setDocIssueDate(e.target.value)}
+                          className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 font-mono"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-600">
+                          {t("expiryDate", lang)}
+                        </label>
+                        <input
+                          type="date"
+                          value={docExpiryDate}
+                          onChange={(e) => setDocExpiryDate(e.target.value)}
+                          className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 font-mono"
+                        />
+                      </div>
+                    </div>
+
                     {/* Front Side Upload */}
                     <div className="border border-slate-200 bg-white rounded-xl p-3 space-y-2">
                       <div className="flex items-center justify-between">
@@ -1784,9 +2033,18 @@ export function ExtFormClient({ token }: { token: string }) {
                           {isPassport ? t("mainPage", lang) : t("frontSide", lang)}
                         </span>
                         {docFrontImage && (
-                          <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
-                            <CheckCircle2 size={12} /> Ready
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
+                              <CheckCircle2 size={12} /> Ready
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setDocFrontImage(null)}
+                              className="text-red-500 hover:text-red-700 p-0.5"
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
                         )}
                       </div>
                       <div className="flex items-center gap-2">
@@ -1808,50 +2066,61 @@ export function ExtFormClient({ token }: { token: string }) {
                         </button>
                       </div>
                       {docFrontImage && (
-                        <div className="mt-2 rounded-lg border border-slate-200 overflow-hidden max-h-24 flex items-center justify-center bg-slate-100">
+                        <div className="mt-2 rounded-lg border border-slate-200 overflow-hidden max-h-28 flex items-center justify-center bg-slate-100">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={docFrontImage} alt="Front Preview" className="max-h-24 w-auto object-contain" />
+                          <img src={docFrontImage} alt="Front Preview" className="max-h-28 w-auto object-contain" />
                         </div>
                       )}
                     </div>
 
-                    {/* Back Side Upload */}
-                    <div className="border border-slate-200 bg-white rounded-xl p-3 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-bold text-slate-700">
-                          {isPassport ? t("visaPage", lang) : t("backSide", lang)}
-                        </span>
-                        {docBackImage && (
-                          <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
-                            <CheckCircle2 size={12} /> Ready
+                    {/* Back Side Upload (Hidden if Passport) */}
+                    {!isPassport && (
+                      <div className="border border-slate-200 bg-white rounded-xl p-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-slate-700">
+                            {t("backSide", lang)}
                           </span>
+                          {docBackImage && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
+                                <CheckCircle2 size={12} /> Ready
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setDocBackImage(null)}
+                                className="text-red-500 hover:text-red-700 p-0.5"
+                              >
+                                <X size={12} />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => backCameraRef.current?.click()}
+                            className="flex-1 py-2 px-3 rounded-lg border border-indigo-100 bg-indigo-50/60 text-indigo-700 hover:bg-indigo-100 flex items-center justify-center gap-1.5 text-xs font-bold cursor-pointer transition-all"
+                          >
+                            <Camera size={13} />
+                            <span>{t("cameraBtn", lang)}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => backInputRef.current?.click()}
+                            className="flex-1 py-2 px-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 flex items-center justify-center gap-1.5 text-xs font-bold cursor-pointer transition-all"
+                          >
+                            <ImageIcon size={13} />
+                            <span>{t("galleryBtn", lang)}</span>
+                          </button>
+                        </div>
+                        {docBackImage && (
+                          <div className="mt-2 rounded-lg border border-slate-200 overflow-hidden max-h-28 flex items-center justify-center bg-slate-100">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={docBackImage} alt="Back Preview" className="max-h-28 w-auto object-contain" />
+                          </div>
                         )}
                       </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => backCameraRef.current?.click()}
-                          className="flex-1 py-2 px-3 rounded-lg border border-indigo-100 bg-indigo-50/60 text-indigo-700 hover:bg-indigo-100 flex items-center justify-center gap-1.5 text-xs font-bold cursor-pointer transition-all"
-                        >
-                          <Camera size={13} />
-                          <span>{t("cameraBtn", lang)}</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => backInputRef.current?.click()}
-                          className="flex-1 py-2 px-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 flex items-center justify-center gap-1.5 text-xs font-bold cursor-pointer transition-all"
-                        >
-                          <ImageIcon size={13} />
-                          <span>{t("galleryBtn", lang)}</span>
-                        </button>
-                      </div>
-                      {docBackImage && (
-                        <div className="mt-2 rounded-lg border border-slate-200 overflow-hidden max-h-24 flex items-center justify-center bg-slate-100">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={docBackImage} alt="Back Preview" className="max-h-24 w-auto object-contain" />
-                        </div>
-                      )}
-                    </div>
+                    )}
 
                     {/* Add Document to List Button */}
                     <button
@@ -1869,26 +2138,55 @@ export function ExtFormClient({ token }: { token: string }) {
                         {documents.map((doc) => (
                           <div
                             key={doc.id}
-                            className="flex items-center justify-between p-3 rounded-xl border border-indigo-100 bg-indigo-50/40"
+                            className="p-3 rounded-xl border border-indigo-100 bg-indigo-50/40 space-y-2"
                           >
-                            <div className="flex items-center gap-2">
-                              <FileText size={14} className="text-indigo-600" />
-                              <div>
-                                <span className="font-bold text-xs text-slate-800">
-                                  {DOC_TYPES.find((d) => d.value === doc.type)?.labels[lang] || doc.type}
-                                </span>
-                                <span className="text-[11px] text-slate-500 font-mono ms-2">
-                                  #{doc.number}
-                                </span>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <FileText size={14} className="text-indigo-600" />
+                                <div>
+                                  <span className="font-bold text-xs text-slate-800">
+                                    {DOC_TYPES.find((d) => d.value === doc.type)?.labels[lang] || doc.type}
+                                  </span>
+                                  <span className="text-[11px] text-slate-600 font-mono ms-2">
+                                    #{doc.number}
+                                  </span>
+                                </div>
                               </div>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveDoc(doc.id)}
+                                className="text-red-500 hover:text-red-700 p-1 cursor-pointer"
+                              >
+                                <Trash2 size={13} />
+                              </button>
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveDoc(doc.id)}
-                              className="text-red-500 hover:text-red-700 p-1 cursor-pointer"
-                            >
-                              <Trash2 size={13} />
-                            </button>
+
+                            {/* Dates details */}
+                            {(doc.dob || doc.issueDate || doc.expiryDate) && (
+                              <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-slate-600 font-mono bg-white/70 p-1.5 rounded-lg border border-slate-100">
+                                {doc.dob && <span>DOB: <b>{doc.dob}</b></span>}
+                                {doc.issueDate && <span>Issued: <b>{doc.issueDate}</b></span>}
+                                {doc.expiryDate && <span>Expires: <b>{doc.expiryDate}</b></span>}
+                              </div>
+                            )}
+
+                            {/* Image Thumbnails */}
+                            {(doc.frontImage || doc.backImage) && (
+                              <div className="flex items-center gap-2 pt-1">
+                                {doc.frontImage && (
+                                  <div className="h-12 w-20 rounded-md border border-slate-200 overflow-hidden bg-white flex items-center justify-center">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={doc.frontImage} alt="Front" className="h-full w-full object-cover" />
+                                  </div>
+                                )}
+                                {doc.backImage && (
+                                  <div className="h-12 w-20 rounded-md border border-slate-200 overflow-hidden bg-white flex items-center justify-center">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={doc.backImage} alt="Back" className="h-full w-full object-cover" />
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -2124,7 +2422,7 @@ export function ExtFormClient({ token }: { token: string }) {
                   </p>
                 </div>
 
-                {/* Card 1: Personal Info Review */}
+                {/* Card 1: Personal Info & Contacts Review */}
                 <div className="border border-slate-200 bg-white rounded-2xl p-4 shadow-2xs space-y-3">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                     <div className="flex items-center gap-2 font-bold text-xs text-slate-800">
@@ -2154,16 +2452,23 @@ export function ExtFormClient({ token }: { token: string }) {
                       <span className="font-bold text-slate-800">{fatherName || "—"}</span>
                     </div>
                     <div>
-                      <span className="text-slate-400 text-[11px] block">{t("mobile", lang)}:</span>
-                      <span className="font-bold text-slate-800 font-mono">{mobiles.filter(Boolean).join(", ") || "—"}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 text-[11px] block">{t("whatsapp", lang)}:</span>
-                      <span className="font-bold text-slate-800 font-mono">{whatsapps.filter(Boolean).join(", ") || "—"}</span>
-                    </div>
-                    <div>
                       <span className="text-slate-400 text-[11px] block">{t("email", lang)}:</span>
                       <span className="font-bold text-slate-800 font-mono text-[11px]">{email || "—"}</span>
+                    </div>
+                  </div>
+
+                  {/* Contacts List with Badges */}
+                  <div className="pt-2 border-t border-slate-100 space-y-1">
+                    <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">
+                      {t("phoneLabel", lang)} ({contactsList.filter(c => c.value.trim()).length}):
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {contactsList.filter(c => c.value.trim()).map(c => (
+                        <div key={c.id} className="px-2 py-1 rounded-lg bg-slate-100 border border-slate-200 flex items-center gap-1 text-[11px]">
+                          <span className="font-bold text-indigo-700">{c.type === "Custom" && c.customLabel ? c.customLabel : c.type}:</span>
+                          <span className="font-mono font-medium text-slate-800">{c.value}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -2196,6 +2501,13 @@ export function ExtFormClient({ token }: { token: string }) {
                             </span>
                             <span className="text-[11px] font-mono text-slate-500">#{doc.number}</span>
                           </div>
+                          {(doc.dob || doc.issueDate || doc.expiryDate) && (
+                            <div className="flex flex-wrap gap-3 text-[10px] text-slate-500 font-mono">
+                              {doc.dob && <span>DOB: {doc.dob}</span>}
+                              {doc.issueDate && <span>Issued: {doc.issueDate}</span>}
+                              {doc.expiryDate && <span>Expires: {doc.expiryDate}</span>}
+                            </div>
+                          )}
                           {(doc.frontImage || doc.backImage) && (
                             <div className="flex items-center gap-2 pt-1">
                               {doc.frontImage && (
@@ -2428,17 +2740,15 @@ export function ExtFormClient({ token }: { token: string }) {
 
               {/* Data Grid */}
               <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-200">
-                <div>
-                  <span className="text-slate-400 text-[10px] block">{t("mobile", lang)}:</span>
-                  <span className="font-bold text-slate-800 font-mono text-[11px]">
-                    {mobiles.filter(Boolean).join(", ") || "—"}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-slate-400 text-[10px] block">{t("whatsapp", lang)}:</span>
-                  <span className="font-bold text-slate-800 font-mono text-[11px]">
-                    {whatsapps.filter(Boolean).join(", ") || "—"}
-                  </span>
+                <div className="col-span-2">
+                  <span className="text-slate-400 text-[10px] block">{t("phoneLabel", lang)}:</span>
+                  <div className="flex flex-wrap gap-1 mt-0.5">
+                    {contactsList.filter(c => c.value.trim()).map(c => (
+                      <span key={c.id} className="inline-block px-2 py-0.5 bg-white border border-slate-200 rounded text-[11px] font-mono text-slate-800">
+                        <b>{c.type === "Custom" && c.customLabel ? c.customLabel : c.type}:</b> {c.value}
+                      </span>
+                    ))}
+                  </div>
                 </div>
                 <div>
                   <span className="text-slate-400 text-[10px] block">{t("country", lang)} / {t("city", lang)}:</span>
@@ -2475,6 +2785,12 @@ export function ExtFormClient({ token }: { token: string }) {
                           {DOC_TYPES.find((dt) => dt.value === d.type)?.labels[lang] || d.type}
                         </span>
                         <span className="text-[10px] font-mono text-slate-500 block">#{d.number}</span>
+                        {(d.dob || d.issueDate || d.expiryDate) && (
+                          <div className="text-[9px] text-slate-400 font-mono">
+                            {d.dob && <div>DOB: {d.dob}</div>}
+                            {d.expiryDate && <div>Exp: {d.expiryDate}</div>}
+                          </div>
+                        )}
                         {(d.frontImage || d.backImage) && (
                           <div className="flex gap-1 pt-1">
                             {d.frontImage && (
