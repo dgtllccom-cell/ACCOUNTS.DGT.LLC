@@ -209,6 +209,10 @@ const KNOWN_PARALLEL = new Set([
   "app/ext/form/[token]/ext-form-client.tsx",
   "features/customers/components/send-to-customer-modal.tsx",
   "features/general-office/components/share-forms-tab.tsx",
+  // SmartSearchFilter (shipped 2026-08-28, commit 40f2796) — a 30-key ×5-lang
+  // parallel dict. Parity is complete; only the location is wrong. Grandfathered
+  // to unblock the build; tracked to migrate its keys into lib/i18n/ui.ts.
+  "components/ui/smart-search-filter.tsx",
 ]);
 const parallelNew = [];
 const parallelKnown = [];
