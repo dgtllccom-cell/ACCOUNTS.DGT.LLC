@@ -86,25 +86,32 @@ const dict: Record<string, Record<Lang, string>> = {
     ps: "شخصي معلومات",
   },
   step2: {
-    en: "Address",
-    ur: "پتہ",
-    ar: "العنوان",
-    fa: "آدرس",
-    ps: "پته",
+    en: "Documents & Contracts",
+    ur: "دستاویزات اور معاہدے",
+    ar: "المستندات والعقود",
+    fa: "مدارک و قراردادها",
+    ps: "اسناد او قراردادونه",
   },
   step3: {
-    en: "Review",
-    ur: "جائزہ",
-    ar: "مراجعة",
-    fa: "بازبینی",
-    ps: "بیا کتنه",
+    en: "Address",
+    ur: "پتہ اور رہائش",
+    ar: "العنوان والإقامة",
+    fa: "آدرس و اقامت",
+    ps: "پته او استوګنه",
   },
   step4: {
-    en: "Photo & Submit",
-    ur: "تصویر اور جمع",
-    ar: "الصورة والإرسال",
-    fa: "عکس و ارسال",
-    ps: "عکس او سپارل",
+    en: "Profile Photo",
+    ur: "امیدوار کی تصویر",
+    ar: "الصورة الشخصية",
+    fa: "عکس پرسنلی",
+    ps: "د غوښتونکي انځور",
+  },
+  step5: {
+    en: "Review & Report",
+    ur: "جائزہ اور رپورٹ",
+    ar: "المراجعة والتقرير",
+    fa: "بازبینی و گزارش",
+    ps: "کتنه او راپور",
   },
   personalInfoTitle: {
     en: "Personal Information",
@@ -463,26 +470,33 @@ const dict: Record<string, Record<Lang, string>> = {
     fa: "JPG, PNG (حداکثر ۵ مگابایت)",
     ps: "JPG, PNG (تر 5MB پورې)",
   },
-  nextReviewBtn: {
-    en: "Next: Review →",
-    ur: "اگلا: جائزہ لیں ←",
-    ar: "التالي: مراجعة ←",
-    fa: "بعدی: بازبینی ←",
-    ps: "بل: کتنه ←",
-  },
-  nextPhotoBtn: {
-    en: "Next: Photo & Submit →",
-    ur: "اگلا: تصویر اور سبمٹ ←",
-    ar: "التالي: الصورة والإرسال ←",
-    fa: "بعدی: عکس و ارسال ←",
-    ps: "بل: عکس او ثبت ←",
+  nextDocsBtn: {
+    en: "Next: Documents & Contracts →",
+    ur: "اگلا: دستاویزات اور معاہدے →",
+    ar: "التالي: المستندات والعقود ←",
+    fa: "بعدی: مدارک و قراردادها ←",
+    ps: "بل: اسناد او قراردادونه ←",
   },
   nextAddressBtn: {
     en: "Next: Address Details →",
-    ur: "اگلا: پتے کی تفصیلات ←",
-    ar: "التالي: تفاصيل العنوان ←",
-    fa: "بعدی: جزئیات آدرس ←",
-    ps: "بل: د پتې تفصیلات ←",
+    ur: "اگلا: پتہ اور رہائش →",
+    ar: "التالي: العنوان والإقامة ←",
+    fa: "بعدی: آدرس و اقامت ←",
+    ps: "بل: پته او استوګنه ←",
+  },
+  nextPhotoBtn: {
+    en: "Next: Profile Photo →",
+    ur: "اگلا: تصویر اپلوڈ کریں →",
+    ar: "التالي: الصورة الشخصية ←",
+    fa: "بعدی: عکس پرسنلی ←",
+    ps: "بل: انځور پورته کول ←",
+  },
+  nextReviewBtn: {
+    en: "Next: Review & Application Report →",
+    ur: "اگلا: مکمل جائزہ اور تصدیقی رپورٹ →",
+    ar: "التالي: المراجعة وتقرير الطلب ←",
+    fa: "بعدی: بازبینی و گزارش درخواست ←",
+    ps: "بل: کتنه او د غوښتنلیک راپور ←",
   },
   backBtn: {
     en: "Back",
@@ -1328,7 +1342,7 @@ async function compressImageFile(file: File, maxWidth = 1200, maxHeight = 1200, 
 
 export function ExtFormClient({ token }: { token: string }) {
   const [lang, setLang] = useState<Lang>("ur");
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5>(1);
 
   // Link metadata
   const [initialLoading, setInitialLoading] = useState(true);
@@ -1841,7 +1855,7 @@ export function ExtFormClient({ token }: { token: string }) {
             {/* Step Wizard Progress Header */}
             <div className="relative flex items-center justify-between px-2 pt-2 pb-1">
               <div className="absolute left-6 right-6 top-5 h-0.5 bg-slate-200 -z-0" />
-              {[1, 2, 3, 4].map((stepNum) => {
+              {[1, 2, 3, 4, 5].map((stepNum) => {
                 const isPassed = currentStep > stepNum;
                 const isCurrent = currentStep === stepNum;
                 const stepLabelKey = `step${stepNum}`;
@@ -1851,7 +1865,7 @@ export function ExtFormClient({ token }: { token: string }) {
                     <button
                       type="button"
                       onClick={() => {
-                        if (isPassed) setCurrentStep(stepNum as 1 | 2 | 3 | 4);
+                        if (isPassed) setCurrentStep(stepNum as 1 | 2 | 3 | 4 | 5);
                       }}
                       className={`h-9 w-9 rounded-full font-bold text-xs flex items-center justify-center transition-all ${
                         isPassed
@@ -1864,7 +1878,7 @@ export function ExtFormClient({ token }: { token: string }) {
                       {isPassed ? <Check size={14} className="stroke-[3]" /> : stepNum}
                     </button>
                     <span
-                      className={`text-[11px] font-bold ${
+                      className={`text-[10px] sm:text-[11px] font-bold text-center ${
                         isCurrent
                           ? "text-indigo-600"
                           : isPassed
@@ -1880,7 +1894,7 @@ export function ExtFormClient({ token }: { token: string }) {
             </div>
 
             {/* ════════════════════════════════════════════════════════════════════════
-                STEP 1: PERSONAL INFORMATION & CONTACTS & DOCUMENTS
+                STEP 1: PERSONAL INFORMATION & CONTACTS
             ════════════════════════════════════════════════════════════════════════ */}
             {currentStep === 1 && (
               <div className="space-y-5 animate-in fade-in duration-300">
@@ -1901,6 +1915,29 @@ export function ExtFormClient({ token }: { token: string }) {
                   </div>
 
                   <div className="space-y-3 pt-1">
+                    {/* Gender / Title Selection (At the top before names) */}
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-slate-700">
+                        {t("gender", lang)} <span className="text-red-500">*</span>
+                      </label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {["male", "female", "other"].map((gKey) => (
+                          <button
+                            key={gKey}
+                            type="button"
+                            onClick={() => setGender(gKey)}
+                            className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                              gender === gKey
+                                ? "bg-indigo-600 border-indigo-600 text-white shadow-2xs"
+                                : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                            }`}
+                          >
+                            {t(gKey, lang)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
                     {/* First Name & Last Name */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-1">
@@ -1936,20 +1973,37 @@ export function ExtFormClient({ token }: { token: string }) {
                       </div>
                     </div>
 
-                    {/* Father Name */}
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-slate-700">
-                        {t("fatherName", lang)}
-                      </label>
-                      <div className="relative">
-                        <User className="absolute start-3 top-3 h-4 w-4 text-slate-400" />
-                        <input
-                          type="text"
-                          value={fatherName}
-                          onChange={(e) => setFatherName(e.target.value)}
-                          placeholder={t("fatherNamePh", lang)}
-                          className="w-full bg-white border border-slate-200 rounded-xl ps-9 pe-3 py-2 text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
-                        />
+                    {/* Father Name & Date of Birth (Compact 2-col Grid) */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-700">
+                          {t("fatherName", lang)}
+                        </label>
+                        <div className="relative">
+                          <User className="absolute start-3 top-3 h-4 w-4 text-slate-400" />
+                          <input
+                            type="text"
+                            value={fatherName}
+                            onChange={(e) => setFatherName(e.target.value)}
+                            placeholder={t("fatherNamePh", lang)}
+                            className="w-full bg-white border border-slate-200 rounded-xl ps-9 pe-3 py-2 text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-700">
+                          {t("dob", lang)}
+                        </label>
+                        <div className="relative">
+                          <Calendar className="absolute start-3 top-3 h-4 w-4 text-slate-400" />
+                          <input
+                            type="date"
+                            value={docDob}
+                            onChange={(e) => setDocDob(e.target.value)}
+                            className="w-full bg-white border border-slate-200 rounded-xl ps-9 pe-3 py-2 text-xs sm:text-sm font-medium text-slate-800 font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
+                          />
+                        </div>
                       </div>
                     </div>
 
@@ -1962,7 +2016,7 @@ export function ExtFormClient({ token }: { token: string }) {
                       </div>
 
                       <div className="space-y-2">
-                        {contactsList.map((contact, idx) => (
+                        {contactsList.map((contact) => (
                           <div key={contact.id} className="p-2.5 bg-white border border-slate-200 rounded-xl space-y-2 shadow-2xs">
                             <div className="flex items-center gap-2">
                               {/* Contact Type Selector */}
@@ -2070,32 +2124,27 @@ export function ExtFormClient({ token }: { token: string }) {
                         />
                       </div>
                     </div>
-
-                    {/* Gender Selection */}
-                    <div className="space-y-1 pt-1">
-                      <label className="text-[11px] font-bold text-slate-700">
-                        {t("gender", lang)}
-                      </label>
-                      <div className="grid grid-cols-3 gap-2">
-                        {["male", "female", "other"].map((gKey) => (
-                          <button
-                            key={gKey}
-                            type="button"
-                            onClick={() => setGender(gKey)}
-                            className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
-                              gender === gKey
-                                ? "bg-indigo-600 border-indigo-600 text-white shadow-2xs"
-                                : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
-                            }`}
-                          >
-                            {t(gKey, lang)}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
                   </div>
                 </div>
 
+                {/* Step 1 Next Button */}
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(2)}
+                    className="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer transition-all"
+                  >
+                    <span>{t("nextDocsBtn", lang)}</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ════════════════════════════════════════════════════════════════════════
+                STEP 2: DOCUMENTS & CONTRACTS (Moved to Step 2)
+            ════════════════════════════════════════════════════════════════════════ */}
+            {currentStep === 2 && (
+              <div className="space-y-5 animate-in fade-in duration-300">
                 {/* Documents Box (CNIC, Passport, Emirates ID, Tazkira, Iqama, Aadhaar, Custom) */}
                 <div className="bg-slate-50/70 border border-slate-200 rounded-2xl p-4 sm:p-5 space-y-4">
                   <div className="flex items-center justify-between">
@@ -2392,19 +2441,8 @@ export function ExtFormClient({ token }: { token: string }) {
                       </div>
                     </div>
 
-                    {/* Dates: DOB, Issue Date, Expiry Date */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-600">
-                          {t("dob", lang)}
-                        </label>
-                        <input
-                          type="date"
-                          value={docDob}
-                          onChange={(e) => setDocDob(e.target.value)}
-                          className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 font-mono"
-                        />
-                      </div>
+                    {/* Dates: Issue Date, Expiry Date */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold text-slate-600">
                           {t("issueDate", lang)}
@@ -2571,12 +2609,19 @@ export function ExtFormClient({ token }: { token: string }) {
                   </div>
                 </div>
 
-                {/* Step 1 Next Button */}
-                <div className="pt-2">
+                {/* Step 2 Navigation Buttons */}
+                <div className="flex items-center gap-3 pt-2">
                   <button
                     type="button"
-                    onClick={() => setCurrentStep(2)}
-                    className="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer transition-all"
+                    onClick={() => setCurrentStep(1)}
+                    className="py-3 px-5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs cursor-pointer transition-all shadow-2xs"
+                  >
+                    {t("backBtn", lang)}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(3)}
+                    className="flex-1 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer transition-all"
                   >
                     <span>{t("nextAddressBtn", lang)}</span>
                   </button>
@@ -2585,9 +2630,9 @@ export function ExtFormClient({ token }: { token: string }) {
             )}
 
             {/* ════════════════════════════════════════════════════════════════════════
-                STEP 2: ADDRESS INFORMATION (100% 5-Language Localized Cascader)
+                STEP 3: ADDRESS INFORMATION (100% 5-Language Localized Cascader)
             ════════════════════════════════════════════════════════════════════════ */}
-            {currentStep === 2 && (
+            {currentStep === 3 && (
               <div className="space-y-5 animate-in fade-in duration-300">
                 <div className="bg-slate-50/70 border border-slate-200 rounded-2xl p-4 sm:p-5 space-y-4">
                   <div className="flex items-center gap-2.5">
@@ -2695,19 +2740,86 @@ export function ExtFormClient({ token }: { token: string }) {
                   </div>
                 </div>
 
-                {/* Navigation Buttons */}
+                {/* Step 3 Navigation Buttons */}
                 <div className="flex items-center gap-3 pt-2">
                   <button
                     type="button"
-                    onClick={() => setCurrentStep(1)}
-                    className="py-3 px-5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs cursor-pointer transition-all"
+                    onClick={() => setCurrentStep(2)}
+                    className="py-3 px-5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs cursor-pointer transition-all shadow-2xs"
                   >
                     {t("backBtn", lang)}
                   </button>
                   <button
                     type="button"
-                    onClick={() => setCurrentStep(3)}
+                    onClick={() => setCurrentStep(4)}
                     className="flex-1 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer transition-all"
+                  >
+                    <span>{t("nextPhotoBtn", lang)}</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ════════════════════════════════════════════════════════════════════════
+                STEP 4: PROFILE PHOTO (Applicant Photo / Selfie)
+            ════════════════════════════════════════════════════════════════════════ */}
+            {currentStep === 4 && (
+              <div className="space-y-6 animate-in fade-in duration-300">
+                <div className="bg-slate-50/70 border border-slate-200 rounded-2xl p-6 text-center space-y-4">
+                  <div className="space-y-1">
+                    <h3 className="font-black text-slate-900 text-sm sm:text-base">
+                      {t("step4Title", lang)}
+                    </h3>
+                    <p className="text-xs text-slate-400 font-medium">
+                      {t("step4Sub", lang)}
+                    </p>
+                  </div>
+
+                  {/* Circular Avatar Preview */}
+                  <div className="relative mx-auto w-32 h-32 rounded-full border-4 border-white shadow-md overflow-hidden bg-slate-200 flex items-center justify-center">
+                    {photoPreview ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={photoPreview} alt="Candidate Avatar" className="h-full w-full object-cover" />
+                    ) : (
+                      <User size={56} className="text-slate-400" />
+                    )}
+                  </div>
+
+                  {/* Camera / Gallery Upload Buttons */}
+                  <div className="flex items-center justify-center gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => photoCameraRef.current?.click()}
+                      className="py-2.5 px-5 rounded-xl border border-indigo-200 bg-indigo-50/70 text-indigo-700 hover:bg-indigo-100 text-xs font-bold flex items-center gap-2 shadow-2xs cursor-pointer transition-all"
+                    >
+                      <Camera size={15} />
+                      <span>{t("cameraBtn", lang)}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => photoInputRef.current?.click()}
+                      className="py-2.5 px-5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold flex items-center gap-2 shadow-2xs cursor-pointer transition-all"
+                    >
+                      <ImageIcon size={15} />
+                      <span>{t("galleryBtn", lang)}</span>
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-slate-400">{t("photoSizeHint", lang)}</p>
+                </div>
+
+                {/* Step 4 Navigation Buttons */}
+                <div className="flex items-center gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(3)}
+                    className="py-3 px-5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs cursor-pointer transition-all shadow-2xs"
+                  >
+                    {t("backBtn", lang)}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(5)}
+                    className="flex-1 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-indigo-600/25 flex items-center justify-center gap-2 cursor-pointer transition-all"
                   >
                     <span>{t("nextReviewBtn", lang)}</span>
                   </button>
@@ -2716,9 +2828,9 @@ export function ExtFormClient({ token }: { token: string }) {
             )}
 
             {/* ════════════════════════════════════════════════════════════════════════
-                STEP 3: REVIEW YOUR INFORMATION & PRE-SUBMISSION APPLICATION SLIP
+                STEP 5: REVIEW YOUR INFORMATION & PRE-SUBMISSION APPLICATION SLIP
             ════════════════════════════════════════════════════════════════════════ */}
-            {currentStep === 3 && (
+            {currentStep === 5 && (
               <div className="space-y-5 animate-in fade-in duration-300">
                 <div className="text-center space-y-1 pb-1">
                   <h3 className="font-black text-slate-900 text-sm sm:text-base uppercase tracking-wide">
@@ -2822,6 +2934,11 @@ export function ExtFormClient({ token }: { token: string }) {
                         <span className="px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 text-[10px] font-bold uppercase">
                           {t(gender, lang)}
                         </span>
+                        {docDob && (
+                          <span className="px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 text-[11px] font-mono">
+                            DOB: {docDob}
+                          </span>
+                        )}
                         {email && (
                           <span className="px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 text-[11px] font-mono">
                             {email}
@@ -2861,7 +2978,7 @@ export function ExtFormClient({ token }: { token: string }) {
                       </span>
                       <button
                         type="button"
-                        onClick={() => setCurrentStep(1)}
+                        onClick={() => setCurrentStep(2)}
                         className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 cursor-pointer print:hidden"
                       >
                         <Edit3 size={11} />
@@ -2928,7 +3045,7 @@ export function ExtFormClient({ token }: { token: string }) {
                               </span>
                               <span className="text-xs font-mono font-bold text-indigo-700">#{doc.number}</span>
                             </div>
-                            {(doc.dob || doc.issueDate || doc.expiryDate) && (
+                            {(doc.dob || docIssueDate || docExpiryDate) && (
                               <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-600 font-mono bg-white p-2 rounded-xl border border-slate-200">
                                 {doc.dob && <span>DOB: <b>{doc.dob}</b></span>}
                                 {doc.issueDate && <span>Issued: <b>{doc.issueDate}</b></span>}
@@ -2971,7 +3088,7 @@ export function ExtFormClient({ token }: { token: string }) {
                       </span>
                       <button
                         type="button"
-                        onClick={() => setCurrentStep(2)}
+                        onClick={() => setCurrentStep(3)}
                         className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 cursor-pointer print:hidden"
                       >
                         <Edit3 size={11} />
@@ -3024,74 +3141,6 @@ export function ExtFormClient({ token }: { token: string }) {
                   </div>
                 </div>
 
-                {/* Step 3 Navigation Buttons */}
-                <div className="flex items-center gap-3 pt-2 print:hidden">
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(2)}
-                    className="py-3 px-5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs cursor-pointer transition-all shadow-2xs"
-                  >
-                    {t("backBtn", lang)}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(4)}
-                    className="flex-1 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-indigo-600/25 flex items-center justify-center gap-2 cursor-pointer transition-all"
-                  >
-                    <span>{t("nextPhotoBtn", lang)}</span>
-                    <ArrowRight size={15} />
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* ════════════════════════════════════════════════════════════════════════
-                STEP 4: PHOTO & FINAL SUBMIT
-            ════════════════════════════════════════════════════════════════════════ */}
-            {currentStep === 4 && (
-              <div className="space-y-6 animate-in fade-in duration-300">
-                <div className="bg-slate-50/70 border border-slate-200 rounded-2xl p-6 text-center space-y-4">
-                  <div className="space-y-1">
-                    <h3 className="font-black text-slate-900 text-sm sm:text-base">
-                      {t("step4Title", lang)}
-                    </h3>
-                    <p className="text-xs text-slate-400 font-medium">
-                      {t("step4Sub", lang)}
-                    </p>
-                  </div>
-
-                  {/* Circular Avatar Preview */}
-                  <div className="relative mx-auto w-32 h-32 rounded-full border-4 border-white shadow-md overflow-hidden bg-slate-200 flex items-center justify-center">
-                    {photoPreview ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={photoPreview} alt="Candidate Avatar" className="h-full w-full object-cover" />
-                    ) : (
-                      <User size={56} className="text-slate-400" />
-                    )}
-                  </div>
-
-                  {/* Camera / Gallery Upload Buttons */}
-                  <div className="flex items-center justify-center gap-3 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => photoCameraRef.current?.click()}
-                      className="py-2.5 px-5 rounded-xl border border-indigo-200 bg-indigo-50/70 text-indigo-700 hover:bg-indigo-100 text-xs font-bold flex items-center gap-2 shadow-2xs cursor-pointer transition-all"
-                    >
-                      <Camera size={15} />
-                      <span>{t("cameraBtn", lang)}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => photoInputRef.current?.click()}
-                      className="py-2.5 px-5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold flex items-center gap-2 shadow-2xs cursor-pointer transition-all"
-                    >
-                      <ImageIcon size={15} />
-                      <span>{t("galleryBtn", lang)}</span>
-                    </button>
-                  </div>
-                  <p className="text-[10px] text-slate-400">{t("photoSizeHint", lang)}</p>
-                </div>
-
                 {submitError && (
                   <div className="bg-red-50 border border-red-200 text-red-700 p-3.5 rounded-xl text-xs flex items-center gap-2">
                     <AlertCircle size={15} className="shrink-0 text-red-500" />
@@ -3099,11 +3148,11 @@ export function ExtFormClient({ token }: { token: string }) {
                   </div>
                 )}
 
-                {/* Final Submit & Back Buttons */}
-                <div className="flex items-center gap-3 pt-2">
+                {/* Step 5 Navigation & Submit Buttons */}
+                <div className="flex items-center gap-3 pt-2 print:hidden">
                   <button
                     type="button"
-                    onClick={() => setCurrentStep(3)}
+                    onClick={() => setCurrentStep(4)}
                     disabled={submitting}
                     className="py-3 px-5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs cursor-pointer transition-all disabled:opacity-50"
                   >
