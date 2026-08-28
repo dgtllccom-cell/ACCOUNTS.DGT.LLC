@@ -194,6 +194,10 @@ export default function SuperAdminAllUsersDirectoryPage() {
             email = "quetta@dgt.llc";
           } else if (rawName.includes("chaman")) {
             email = rawName.includes("01") || rawName.includes("agent") ? "chaman01@dgt.llc" : "chaman@dgt.llc";
+          } else if (rawName.includes("delhi")) {
+            email = "delhi@dgt.llc";
+          } else if (rawName.includes("mumbai")) {
+            email = "mumbai@dgt.llc";
           } else if (rawName.includes("karachi")) {
             email = "karachi@dgt.llc";
           } else if (rawName.includes("lahore")) {
@@ -246,11 +250,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
             email = "bandarabbas@dgt.llc";
           } else if (rawName.includes("chabahar")) {
             email = "chabahar@dgt.llc";
-          } else if (rawName.includes("delhi")) {
-            email = "delhi@dgt.llc";
-          } else if (rawName.includes("mumbai")) {
-            email = "mumbai@dgt.llc";
-          } else if (!email || email.includes("@damaan.com") || email.startsWith("user") || !email.includes("@dgt.llc")) {
+          } else if (!email || email.includes("@damaan.com") || email.startsWith("user") || !email.includes("@dgt.llc") || email.length > 25) {
             const cleanShort = rawName
               .replace(/\b(branch|port|clearing|agent|customs|city|office|main|headquarters|border)\b/gi, "")
               .replace(/[^a-z0-9]/g, "")
@@ -1371,11 +1371,11 @@ export default function SuperAdminAllUsersDirectoryPage() {
               {/* TAB 3: A4 ONBOARDING SLIP */}
               {activeModalTab === "handover" && (
                 <div className="space-y-4 flex flex-col items-center">
-                  <div className="bg-white text-slate-900 w-full max-w-xl p-6 rounded-2xl shadow-md border border-slate-300 font-sans space-y-4">
+                  <div className="bg-white text-slate-900 w-full max-w-xl p-6 rounded-2xl shadow-md border border-slate-200 font-sans space-y-4">
                     <div className="flex items-center justify-between border-b pb-3">
                       <div>
-                        <h4 className="text-sm font-black text-slate-900">DAMAAN BUSINESS GROUP</h4>
-                        <p className="text-[10px] font-bold text-slate-600">OFFICIAL EMPLOYEE ACCESS SLIP</p>
+                        <h4 className="text-sm font-black text-slate-900">DGT ENTERPRISE ERP SYSTEM</h4>
+                        <p className="text-[10px] font-bold text-indigo-700 uppercase">OFFICIAL EMPLOYEE ACCESS SLIP</p>
                       </div>
                       <div className="text-right text-[9px] font-mono text-slate-500">
                         Date: {new Date().toLocaleDateString("en-GB")}
@@ -1384,7 +1384,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
 
                     <div className="grid grid-cols-2 gap-3 text-xs">
                       <div>
-                        <span className="text-[10px] text-slate-500 font-bold block">EMPLOYEE NAME</span>
+                        <span className="text-[10px] text-slate-500 font-bold block">EMPLOYEE / OFFICER NAME</span>
                         <span className="font-bold text-slate-900">{selectedUser.fullName}</span>
                       </div>
                       <div>
@@ -1400,27 +1400,27 @@ export default function SuperAdminAllUsersDirectoryPage() {
                         <span className="font-bold text-slate-900">{selectedUser.branchName}</span>
                       </div>
                       <div className="col-span-2">
-                        <span className="text-[10px] text-slate-500 font-bold block">LOGIN USERNAME</span>
-                        <span className="font-mono font-bold text-slate-900">{selectedUser.email}</span>
+                        <span className="text-[10px] text-slate-500 font-bold block">LOGIN USERNAME / EMAIL</span>
+                        <span className="font-mono font-bold text-slate-900 break-all bg-slate-50 p-1.5 rounded border border-slate-200 block">{selectedUser.email}</span>
                       </div>
-                      <div className="col-span-2 bg-slate-50 p-2 rounded border border-slate-200">
-                        <span className="text-[10px] text-slate-500 font-bold block">INITIAL ACCESS PASSWORD</span>
-                        <span className="font-mono font-black text-emerald-700 text-sm">{selectedUser.passwordKey || "Dgt@2026#Vault"}</span>
+                      <div className="col-span-2 bg-emerald-50/60 p-2.5 rounded-lg border border-emerald-200">
+                        <span className="text-[10px] text-emerald-800 font-bold block">INITIAL ACCESS PASSWORD</span>
+                        <span className="font-mono font-black text-emerald-700 text-sm">{selectedUser.passwordKey || "Admin@123"}</span>
                       </div>
                     </div>
 
-                    <div className="pt-4 border-t border-slate-200 flex justify-between text-[9px] text-slate-500">
+                    <div className="pt-3 border-t border-slate-200 flex justify-between text-[9px] text-slate-500 font-medium">
                       <span>Authorized by: Super Admin</span>
-                      <span>Security Stamp: Verified</span>
+                      <span>Security Stamp: Cryptographically Verified</span>
                     </div>
                   </div>
 
                   <Button
-                    onClick={handlePrintA4}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-9 px-4 rounded-xl cursor-pointer"
+                    onClick={() => { setPrintModalUser(selectedUser); }}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-9 px-4 rounded-xl cursor-pointer shadow-xs"
                   >
                     <Printer className="h-3.5 w-3.5 mr-1.5" />
-                    Print This Slip Now
+                    Open Official Print Preview
                   </Button>
                 </div>
               )}
@@ -1456,11 +1456,11 @@ export default function SuperAdminAllUsersDirectoryPage() {
 
       {/* ─── A4 HANDOVER MODAL PREVIEW (Batch or Single User) ─── */}
       {(showBatchPrint || printModalUser) && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
-          <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden text-foreground">
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 print:p-0 print:bg-white print:static print:z-auto">
+          <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-5xl w-full max-h-[92vh] flex flex-col overflow-hidden text-foreground print:border-none print:shadow-none print:max-w-none print:max-h-none print:overflow-visible print:p-0">
             
-            {/* Modal Header */}
-            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40">
+            {/* Modal Header (Hidden on print) */}
+            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40 print:hidden">
               <div className="flex items-center gap-2 font-bold text-foreground text-sm">
                 <Printer className="w-4 h-4 text-indigo-600" />
                 {printModalUser ? `Official A4 Handover Slip: ${printModalUser.fullName}` : "A4 Batch Credential Handover Sheet"}
@@ -1468,9 +1468,9 @@ export default function SuperAdminAllUsersDirectoryPage() {
               <div className="flex items-center gap-2">
                 <Button
                   onClick={handlePrintA4}
-                  className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs h-8 px-3 rounded-xl cursor-pointer"
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs h-8 px-4 rounded-xl cursor-pointer shadow-xs"
                 >
-                  <Printer className="w-3.5 h-3.5 mr-1" />
+                  <Printer className="w-3.5 h-3.5 mr-1.5" />
                   Print Now
                 </Button>
                 <Button
@@ -1484,63 +1484,180 @@ export default function SuperAdminAllUsersDirectoryPage() {
             </div>
 
             {/* Modal Body: A4 Sheet Preview */}
-            <div className="p-6 overflow-y-auto bg-muted/10 flex justify-center">
-              <div className="bg-white text-slate-900 w-full max-w-2xl p-8 rounded-lg shadow-lg border border-slate-300 font-sans space-y-6">
-                <div className="flex items-center justify-between border-b-2 border-slate-900 pb-4">
-                  <div>
-                    <h2 className="text-xl font-black tracking-tight text-slate-900">DAMAAN BUSINESS GROUP</h2>
-                    <p className="text-xs font-bold text-slate-600 uppercase">OFFICIAL SYSTEM ACCESS & CREDENTIAL HANDOVER FORM</p>
+            <div className="p-4 sm:p-6 overflow-y-auto bg-muted/10 flex justify-center print:p-0 print:bg-white print:overflow-visible">
+              
+              {/* SINGLE USER HANDOVER SLIP */}
+              {printModalUser ? (
+                <div id="a4-handover-printable" className="bg-white text-slate-900 w-full max-w-3xl p-8 rounded-2xl shadow-xl border border-slate-200 font-sans space-y-6 print:shadow-none print:border-none print:p-8 print:max-w-none">
+                  {/* Header */}
+                  <div className="flex items-center justify-between border-b-2 border-slate-900 pb-4">
+                    <div>
+                      <h2 className="text-xl font-black tracking-tight text-slate-900">DGT ENTERPRISE ERP SYSTEM</h2>
+                      <p className="text-xs font-bold text-indigo-700 uppercase tracking-widest mt-0.5">OFFICIAL USER ACCESS & CREDENTIAL HANDOVER SLIP</p>
+                    </div>
+                    <div className="text-right text-[10px] font-mono text-slate-500 space-y-0.5">
+                      <div className="font-bold text-slate-800">REF: {printModalUser.userCode}</div>
+                      <div>DATE: {new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</div>
+                      <span className="inline-block bg-rose-50 text-rose-700 font-bold px-1.5 py-0.5 rounded border border-rose-200 text-[9px]">CONFIDENTIAL</span>
+                    </div>
                   </div>
-                  <div className="text-right text-[10px] font-mono text-slate-500">
-                    <div>Date: {new Date().toLocaleDateString()}</div>
-                    <div>CONFIDENTIAL</div>
-                  </div>
-                </div>
 
-                <div className="space-y-4">
-                  <p className="text-xs text-slate-700 leading-relaxed">
-                    This document authorizes the assigned user access to the DAMAAN BUSINESS GROUP ERP System in accordance with the allocated role and branch jurisdiction.
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    This official credential slip authorizes the designated officer to access the DGT Enterprise ERP & FMS platform in accordance with the allocated role and branch jurisdiction.
                   </p>
 
-                  <table className="w-full text-xs border border-slate-300">
-                    <thead className="bg-slate-100 font-bold">
-                      <tr>
-                        <th className="p-2 border border-slate-300">User Code</th>
-                        <th className="p-2 border border-slate-300">Full Name</th>
-                        <th className="p-2 border border-slate-300">Role</th>
-                        <th className="p-2 border border-slate-300">Assigned Branch</th>
-                        <th className="p-2 border border-slate-300">Login Username</th>
-                        <th className="p-2 border border-slate-300">Password Key</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(printModalUser ? [printModalUser] : filteredUsers).map((u) => (
-                        <tr key={u.userId} className="border-b border-slate-300">
-                          <td className="p-2 font-mono font-bold border border-slate-300">{u.userCode}</td>
-                          <td className="p-2 font-bold border border-slate-300">{u.fullName}</td>
-                          <td className="p-2 border border-slate-300">{u.roleLabel}</td>
-                          <td className="p-2 border border-slate-300">{u.branchName}</td>
-                          <td className="p-2 font-mono border border-slate-300">{u.email}</td>
-                          <td className="p-2 font-mono font-bold text-emerald-700 border border-slate-300">{u.passwordKey}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                  {/* 2-Column Structured Card */}
+                  <div className="border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+                    <div className="bg-slate-50 border-b border-slate-200 px-4 py-2 flex items-center justify-between">
+                      <span className="text-[11px] font-black text-slate-800 uppercase tracking-wider">OFFICER & SYSTEM IDENTITY</span>
+                      <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">ACTIVE STATUS</span>
+                    </div>
+                    <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">OFFICER / FULL NAME</span>
+                        <span className="font-bold text-slate-900 text-sm">{printModalUser.fullName}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">SYSTEM USER CODE</span>
+                        <span className="font-mono font-bold text-slate-900 text-sm">{printModalUser.userCode}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">SYSTEM ROLE / LEVEL</span>
+                        <span className="font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 inline-block mt-0.5">{printModalUser.roleLabel}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">ASSIGNED BRANCH JURISDICTION</span>
+                        <span className="font-bold text-slate-900">{printModalUser.branchName}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">COUNTRY JURISDICTION</span>
+                        <span className="font-bold text-slate-800">{printModalUser.countryName}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">DIRECT LOGIN URL</span>
+                        <span className="font-mono text-blue-700 font-bold break-all">{printModalUser.loginUrl}</span>
+                      </div>
+                    </div>
+                  </div>
 
-                <div className="grid grid-cols-2 gap-8 pt-8 border-t-2 border-slate-900 text-xs">
-                  <div className="space-y-4">
-                    <div className="font-bold text-slate-800 uppercase">Super Admin Authorization</div>
-                    <div className="border-b border-slate-400 h-8"></div>
-                    <div className="text-[10px] text-slate-500">Signature & Stamp</div>
+                  {/* Credentials Box */}
+                  <div className="bg-slate-50 border-2 border-indigo-200 rounded-xl p-4 space-y-3">
+                    <div className="text-[11px] font-black text-indigo-900 uppercase tracking-wider flex items-center gap-1.5">
+                      <KeyRound className="w-3.5 h-3.5 text-indigo-600" />
+                      OFFICIAL LOGIN CREDENTIALS
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                      <div>
+                        <span className="text-[10px] text-slate-500 font-bold uppercase block">LOGIN USERNAME / EMAIL</span>
+                        <span className="font-mono font-black text-slate-900 text-sm bg-white px-2.5 py-1 rounded border border-slate-300 block break-all mt-1">{printModalUser.email}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-500 font-bold uppercase block">INITIAL ACCESS PASSWORD</span>
+                        <span className="font-mono font-black text-emerald-700 text-sm bg-white px-2.5 py-1 rounded border border-emerald-300 block mt-1">{printModalUser.passwordKey || "Admin@123"}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="space-y-4">
-                    <div className="font-bold text-slate-800 uppercase">Staff Member Acknowledgement</div>
-                    <div className="border-b border-slate-400 h-8"></div>
-                    <div className="text-[10px] text-slate-500">Received By & Date</div>
+
+                  {/* Security Notice */}
+                  <div className="bg-amber-50/70 border border-amber-200 rounded-lg p-3 text-[10.5px] text-amber-900 space-y-1">
+                    <div className="font-bold flex items-center gap-1 text-[11px]">
+                      <ShieldCheck className="w-3.5 h-3.5 text-amber-700" />
+                      SECURITY & COMPLIANCE NOTICE:
+                    </div>
+                    <p>1. Keep your credentials confidential. Never share your password across email or chat.</p>
+                    <p>2. You must change your temporary password upon first login to your personal password.</p>
+                    <p>3. All actions, entries, and edits are permanently audited under your cryptographic user code.</p>
+                  </div>
+
+                  {/* Authorization & Signature Block */}
+                  <div className="grid grid-cols-2 gap-8 pt-6 border-t-2 border-slate-900 text-xs">
+                    <div className="space-y-4">
+                      <div className="font-bold text-slate-800 uppercase text-[11px]">Super Admin Authorization</div>
+                      <div className="border-b border-slate-400 h-10"></div>
+                      <div className="text-[10px] text-slate-500 font-medium">Signature & Official Stamp</div>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="font-bold text-slate-800 uppercase text-[11px]">Staff Member Acknowledgement</div>
+                      <div className="border-b border-slate-400 h-10"></div>
+                      <div className="text-[10px] text-slate-500 font-medium">Received By, Signature & Date</div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                /* BATCH HANDOVER DIRECTORY SHEET */
+                <div id="a4-handover-printable" className="bg-white text-slate-900 w-full max-w-5xl p-8 rounded-2xl shadow-xl border border-slate-200 font-sans space-y-6 print:shadow-none print:border-none print:p-4 print:max-w-none">
+                  {/* Header */}
+                  <div className="flex items-center justify-between border-b-2 border-slate-900 pb-4">
+                    <div>
+                      <h2 className="text-xl font-black tracking-tight text-slate-900">DGT ENTERPRISE ERP SYSTEM</h2>
+                      <p className="text-xs font-bold text-indigo-700 uppercase tracking-widest mt-0.5">OFFICIAL SYSTEM ACCESS & BATCH CREDENTIAL HANDOVER DIRECTORY</p>
+                    </div>
+                    <div className="text-right text-[10px] font-mono text-slate-500 space-y-0.5">
+                      <div className="font-bold text-slate-800">TOTAL USERS: {filteredUsers.length}</div>
+                      <div>DATE: {new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</div>
+                      <span className="inline-block bg-rose-50 text-rose-700 font-bold px-1.5 py-0.5 rounded border border-rose-200 text-[9px]">CONFIDENTIAL</span>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Official batch credential handover manifest for all active branch officers and system administrators.
+                  </p>
+
+                  <div className="overflow-x-auto border border-slate-300 rounded-lg">
+                    <table className="w-full text-[11px] text-left border-collapse">
+                      <thead className="bg-slate-100 font-bold text-slate-800 border-b border-slate-300">
+                        <tr>
+                          <th className="p-2 border-r border-slate-300 w-8 text-center">#</th>
+                          <th className="p-2 border-r border-slate-300">User Code</th>
+                          <th className="p-2 border-r border-slate-300">Full Name & Role</th>
+                          <th className="p-2 border-r border-slate-300">Assigned Branch</th>
+                          <th className="p-2 border-r border-slate-300">Login Username / Email</th>
+                          <th className="p-2 border-r border-slate-300">Password Key</th>
+                          <th className="p-2">Recipient Signature</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200">
+                        {filteredUsers.map((u, idx) => (
+                          <tr key={u.userId} className="hover:bg-slate-50">
+                            <td className="p-2 font-mono text-center border-r border-slate-200 text-slate-500">{idx + 1}</td>
+                            <td className="p-2 font-mono font-bold text-slate-900 border-r border-slate-200 whitespace-nowrap">{u.userCode}</td>
+                            <td className="p-2 border-r border-slate-200">
+                              <div className="font-bold text-slate-900">{u.fullName}</div>
+                              <div className="text-[10px] text-indigo-700 font-medium">{u.roleLabel}</div>
+                            </td>
+                            <td className="p-2 border-r border-slate-200 text-slate-700">
+                              <div>{u.branchName}</div>
+                              <div className="text-[9.5px] text-slate-400 font-medium">{u.countryName}</div>
+                            </td>
+                            <td className="p-2 font-mono font-bold text-slate-900 border-r border-slate-200 break-all">{u.email}</td>
+                            <td className="p-2 font-mono font-bold text-emerald-700 border-r border-slate-200 whitespace-nowrap bg-emerald-50/40">
+                              {u.passwordKey || "Admin@123"}
+                            </td>
+                            <td className="p-2 border-slate-200 min-w-[110px]">
+                              <div className="border-b border-dashed border-slate-300 h-5"></div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Authorization & Signature Block */}
+                  <div className="grid grid-cols-2 gap-8 pt-6 border-t-2 border-slate-900 text-xs">
+                    <div className="space-y-4">
+                      <div className="font-bold text-slate-800 uppercase text-[11px]">Super Admin Authorization</div>
+                      <div className="border-b border-slate-400 h-10"></div>
+                      <div className="text-[10px] text-slate-500 font-medium">Signature & Official Stamp</div>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="font-bold text-slate-800 uppercase text-[11px]">Internal Security Verification</div>
+                      <div className="border-b border-slate-400 h-10"></div>
+                      <div className="text-[10px] text-slate-500 font-medium">Audit Officer Signature & Date</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
             </div>
 
           </div>

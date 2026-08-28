@@ -1020,8 +1020,16 @@ export const sidebarTree: SidebarNode[] = [
       { key: "go-documents", labelKey: "nav.office_documents", iconKey: "file-text", href: "/dashboard/general-office/employees?tab=documents" as Route },
       { key: "go-id-cards", labelKey: "nav.employee_id_cards", iconKey: "badge", href: "/dashboard/general-office/employees?tab=id-cards" as Route },
       { key: "go-reports", labelKey: "nav.employee_reports", iconKey: "bar-chart", href: "/dashboard/general-office/employees?tab=reports" as Route },
-      { key: "go-hr-reports", labelKey: "nav.hr_reports_hub", iconKey: "bar-chart", href: "/dashboard/general-office/hr-reports" as Route }
+      { key: "go-hr-reports", labelKey: "nav.hr_reports_hub", iconKey: "bar-chart", href: "/dashboard/general-office/hr-reports" as Route },
+      { key: "go-hr-reports-my-profile", labelKey: "nav.my_employee_profile", iconKey: "user-check", href: "/dashboard/general-office/my-profile" as Route }
     ]
+  },
+  {
+    key: "my-employee-profile",
+    labelKey: "nav.my_employee_profile",
+    iconKey: "user-check",
+    href: "/dashboard/general-office/my-profile" as Route,
+    roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "cashier", "agent_user", "staff_user", "auditor_viewer"]
   },
   {
     key: "smart-due-center",
