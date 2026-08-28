@@ -1,8 +1,26 @@
+import fs from "node:fs";
 import postgres from "postgres";
 
-const sql = postgres(
-  process.env.DATABASE_URL || "postgres://postgres:postgres@127.0.0.1:5432/accounts_dgt_llc"
-);
+function parseEnvFile(file) {
+  const env = {};
+  if (!fs.existsSync(file)) return env;
+  for (const line of fs.readFileSync(file, "utf8").split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const index = trimmed.indexOf("=");
+    if (index === -1) continue;
+    env[trimmed.slice(0, index)] = trimmed.slice(index + 1).replace(/^"|"$/g, "");
+  }
+  return env;
+}
+
+function loadEnv() {
+  return { ...parseEnvFile(".env"), ...parseEnvFile(".env.local") };
+}
+
+const env = loadEnv();
+const dbUrl = env.DATABASE_URL || process.env.DATABASE_URL || "postgres://postgres:postgres@127.0.0.1:5432/accounts_dgt_llc";
+const sql = postgres(dbUrl);
 
 async function run() {
   console.log("Checking customer PER-00000015 or Shms...");
