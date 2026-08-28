@@ -87,9 +87,11 @@ function escapeHtml(value: string) {
     .replace(/'/g, "&#39;");
 }
 
-export function openMasterProfileReportWindow(config: MasterProfileConfig) {
-  if (typeof window === "undefined") return;
-
+/**
+ * Pure HTML builder — no DOM. Used by `openMasterProfileReportWindow` and by
+ * verification/snapshot tooling.
+ */
+export function buildMasterProfileReportHtml(config: MasterProfileConfig): string {
   const lang = (config.lang || "en") as SupportedLanguage;
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
@@ -169,7 +171,7 @@ export function openMasterProfileReportWindow(config: MasterProfileConfig) {
         </div>`,
       )
       .join("");
-    permissionsBlock = `<div class="section-card section-card--full">
+    permissionsBlock = `<div class="section-card section-card--full perm-section">
       <div class="section-header"><span class="section-badge">${idx + 1}</span> ${escapeHtml(config.permissions.title)}
         <span class="perm-count">${escapeHtml(templateLabel || "Template")}: ${escapeHtml(summary.template)} · ${summary.grantedCount}/${summary.totalCount} ${escapeHtml(grantedLabel || "granted")}</span>
       </div>
@@ -222,7 +224,7 @@ export function openMasterProfileReportWindow(config: MasterProfileConfig) {
 
       @page {
         size: A4 portrait;
-        margin: 11mm 11mm 14mm 11mm;
+        margin: 10mm 10mm 13mm 10mm;
         @top-left   { content: "${escapeHtml(tt("acct.brand_short", "Digital Dock ERP"))} — ${title}"; font-size: 7pt; color: #64748b; font-weight: 700; }
         @top-right  { content: "${escapeHtml(stampDate)} ${escapeHtml(stampTime)}"; font-size: 7pt; color: #94a3b8; }
         @bottom-left   { content: "${escapeHtml(tt("acct.brand_short", "Digital Dock ERP"))} | ${footerAccount}"; font-size: 7pt; color: #94a3b8; font-weight: 700; }
@@ -237,7 +239,7 @@ export function openMasterProfileReportWindow(config: MasterProfileConfig) {
       html[lang="ar"] body, html[lang="fa"] body, html[lang="ps"] body { font-family: 'Noto Naskh Arabic', 'Inter', sans-serif; }
 
       .wrap { padding: 24px; display: flex; justify-content: center; }
-      .page { width: 210mm; padding: 11mm; margin: 0 auto; background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 10px 30px rgba(15,23,42,0.08); border-radius: 10px; box-sizing: border-box; }
+      .page { width: 210mm; padding: 10mm; margin: 0 auto; background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 10px 30px rgba(15,23,42,0.08); border-radius: 10px; box-sizing: border-box; }
 
       /* ---- on-screen (preview) header/footer, hidden in print (the @page boxes take over) ---- */
       .screen-head, .screen-foot { color: #64748b; font-size: 8px; font-weight: 700; display: flex; justify-content: space-between; padding: 0 2px 6px; }
@@ -268,10 +270,10 @@ export function openMasterProfileReportWindow(config: MasterProfileConfig) {
       .kpi-val { font-size: 13px; font-weight: 900; margin-top: 2px; word-break: break-word; }
       .kpi-open { color: #93c5fd; } .kpi-current { color: #fff; } .kpi-debit { color: #fca5a5; } .kpi-credit { color: #6ee7b7; }
 
-      .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; break-inside: avoid; page-break-inside: avoid; }
+      .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; align-items: start; break-inside: avoid; page-break-inside: avoid; }
       .grid-2:has(.section-card--full) { display: block; }
 
-      .section-card { background: #fff; border: 1px solid #dbe2ea; border-radius: 7px; margin-bottom: 10px; overflow: hidden; break-inside: avoid; page-break-inside: avoid; }
+      .section-card { background: #fff; border: 1px solid #dbe2ea; border-radius: 7px; margin-bottom: 8px; overflow: hidden; break-inside: avoid; page-break-inside: avoid; }
       .section-card--full { grid-column: 1 / -1; }
       .section-card--break { break-before: page; page-break-before: always; }
       .section-header { background: #1e3a8a; color: #fff; padding: 5px 10px; font-size: 9px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase; display: flex; align-items: center; gap: 6px; }
@@ -286,8 +288,11 @@ export function openMasterProfileReportWindow(config: MasterProfileConfig) {
       .info-table td.value { font-weight: 700; color: #1e293b; text-align: end; word-break: break-word; overflow-wrap: anywhere; }
       html[dir="rtl"] .info-table td.value { text-align: start; }
 
-      .perm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px 12px; padding: 8px 10px; }
-      .perm-group { break-inside: avoid; page-break-inside: avoid; margin-bottom: 4px; }
+      /* the permissions section may legitimately be taller than one page — let it
+         flow; keep each group intact. */
+      .perm-section { break-inside: auto; page-break-inside: auto; }
+      .perm-grid { columns: 3; column-gap: 12px; padding: 8px 10px; }
+      .perm-group { break-inside: avoid; page-break-inside: avoid; margin-bottom: 6px; -webkit-column-break-inside: avoid; display: inline-block; width: 100%; }
       .perm-group-title { font-size: 7.5px; font-weight: 800; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid #e2e8f0; padding-bottom: 2px; margin-bottom: 3px; }
       .perm-list { list-style: none; margin: 0; padding: 0; }
       .perm-list li { font-size: 8px; line-height: 1.5; color: #334155; display: flex; align-items: flex-start; gap: 4px; break-inside: avoid; }
@@ -319,7 +324,8 @@ export function openMasterProfileReportWindow(config: MasterProfileConfig) {
         .wrap { padding: 0; }
         .page { border: none; box-shadow: none; border-radius: 0; padding: 0; width: 100%; }
         .screen-head, .screen-foot { display: none; }
-        .section-card, .grid-2, .overview-banner, .footer-signatures, .perm-group, .approval-box, .info-table tr { break-inside: avoid !important; page-break-inside: avoid !important; }
+        .section-card:not(.perm-section), .grid-2, .overview-banner, .footer-signatures, .perm-group, .approval-box, .info-table tr { break-inside: avoid !important; page-break-inside: avoid !important; }
+        .perm-section { break-inside: auto !important; page-break-inside: auto !important; }
         .section-card--break { break-before: page !important; page-break-before: always !important; }
       }
     </style>
@@ -381,5 +387,10 @@ export function openMasterProfileReportWindow(config: MasterProfileConfig) {
   </body>
 </html>`;
 
-  printStore.openPrint(html, config.title);
+  return html;
+}
+
+export function openMasterProfileReportWindow(config: MasterProfileConfig) {
+  if (typeof window === "undefined") return;
+  printStore.openPrint(buildMasterProfileReportHtml(config), config.title);
 }

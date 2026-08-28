@@ -1,5 +1,9 @@
 import { t } from "@/lib/i18n/ui";
-import { openMasterProfileReportWindow } from "@/lib/reports/open-master-profile-report-window";
+import {
+  buildMasterProfileReportHtml,
+  openMasterProfileReportWindow,
+  type MasterProfileConfig,
+} from "@/lib/reports/open-master-profile-report-window";
 import { buildPermissionPrintSummary } from "@/lib/reports/permission-print-summary";
 
 /**
@@ -73,6 +77,24 @@ export function openBranchProfileReport(opts: {
   autoPrint?: boolean;
   data: BranchProfileData;
 }) {
+  openMasterProfileReportWindow(branchProfileConfig(opts));
+}
+
+/** Pure config builder — no DOM. Used by the opener and by snapshot tooling. */
+export function buildBranchProfileReportHtml(opts: {
+  kind: "country" | "city" | "super";
+  lang?: string;
+  data: BranchProfileData;
+}): string {
+  return buildMasterProfileReportHtml(branchProfileConfig(opts));
+}
+
+function branchProfileConfig(opts: {
+  kind: "country" | "city" | "super";
+  lang?: string;
+  autoPrint?: boolean;
+  data: BranchProfileData;
+}): MasterProfileConfig {
   const lang = (opts.lang || "en") as never;
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const d = opts.data;
@@ -87,7 +109,7 @@ export function openBranchProfileReport(opts: {
 
   const perm = buildPermissionPrintSummary(d.allowedPermissions, d.permissionTemplate);
 
-  openMasterProfileReportWindow({
+  return {
     lang: opts.lang,
     autoPrint: opts.autoPrint,
     title,
@@ -109,7 +131,7 @@ export function openBranchProfileReport(opts: {
     ],
     sections: [
       // -------- PAGE 1 --------
-      { title: tt("cnbs.sec_location_info", "Country / Location Information"), rows: [
+      { title: tt("cnbs.rpt_location", "Country / Location Information"), fullWidth: true, rows: [
         { label: tt("cnbs.country", "Country"), value: d.country },
         { label: tt("cnbs.country_code", "Country Code"), value: d.countryCode },
         { label: tt("cnbs.state", "State / Province"), value: d.stateProvince },
@@ -119,21 +141,21 @@ export function openBranchProfileReport(opts: {
         { label: tt("cnbs.zip", "ZIP / Postal Code"), value: d.zipCode },
         { label: tt("cnbs.address", "Address"), value: d.fullAddress },
       ]},
-      { title: tt("cnbs.sec_branch_info", "Main Branch Details"), rows: [
+      { title: tt("cnbs.rpt_main_branch", "Main Branch Details"), rows: [
         { label: tt("branch.branch_name", "Branch Name"), value: d.branchName },
         { label: tt("branch.serial", "Serial No."), value: d.serialNumber },
         { label: tt("acct.currency", "Currency"), value: d.currency },
         { label: tt("acct.status", "Status"), value: d.branchStatus },
         { label: tt("cnbs.parent_branch", "Parent (HQ)"), value: d.parentBranch ? `${d.parentBranch.name || "-"} (${d.parentBranch.code || "-"})` : undefined },
       ]},
-      { title: tt("cnbs.sec_branch_code_type", "Branch Code & Type"), rows: [
+      { title: tt("cnbs.rpt_code_type", "Branch Code and Type"), rows: [
         { label: tt("branch.branch_code", "Branch Code"), value: d.branchCode },
         { label: tt("branch.branch_type", "Branch Type"), value: d.branchType },
         { label: tt("cnbs.established_on", "Established On"), value: d.establishedOn },
         { label: tt("cnbs.tax_reg_no", "Tax Reg. No."), value: d.taxRegNo },
         { label: tt("cnbs.ntn_gst_no", "NTN / GST No."), value: d.ntnGstNo },
       ]},
-      { title: tt("cnbs.sec_owner_info", "Owner Details"), rows: [
+      { title: tt("cnbs.rpt_owner", "Owner Details"), rows: [
         { label: tt("cnbs.owner_name", "Owner Name"), value: d.ownerName },
         { label: tt("cnbs.owner_code", "Owner Code"), value: d.ownerCode },
         { label: tt("cnbs.designation", "Designation"), value: d.designation },
@@ -141,15 +163,16 @@ export function openBranchProfileReport(opts: {
         { label: tt("cnbs.ownership_type", "Ownership Type"), value: d.ownershipType },
         { label: tt("cnbs.ownership_percent", "Ownership %"), value: d.ownershipPercent },
       ]},
-      { title: tt("cnbs.sec_contact_info", "Contact Information"), rows: [
+      { title: tt("cnbs.rpt_contact", "Contact Information"), rows: [
         { label: tt("acct.phone", "Phone"), value: d.ownerPhone },
         { label: tt("cnbs.whatsapp", "WhatsApp"), value: d.ownerWhatsApp },
         { label: tt("acct.email", "Email"), value: d.ownerEmail },
         { label: tt("cnbs.landline", "Landline"), value: d.ownerLandline },
         { label: tt("cnbs.website", "Website"), value: d.ownerWebsite },
       ]},
-      // -------- PAGE 2 --------
-      { title: tt("cnbs.sec_company_info", "Company Details"), pageBreakBefore: true, rows: [
+      // -------- PAGE 2 (natural block-level break; a whole section moves down,
+      //          never splits — see open-master-profile-report-window print CSS) --------
+      { title: tt("cnbs.rpt_company", "Company Details"), rows: [
         { label: tt("acct.company_name", "Company Name"), value: d.companyName },
         { label: tt("cnbs.company_code", "Company Code"), value: d.companyCode },
         { label: tt("cnbs.company_type", "Company Type"), value: d.companyType },
@@ -158,7 +181,7 @@ export function openBranchProfileReport(opts: {
         { label: tt("acct.status", "Status"), value: d.companyStatus },
         { label: tt("cnbs.company_office_address", "Registered Office"), value: d.companyOfficeAddress },
       ]},
-      { title: tt("cnbs.sec_branch_summary", "Branch Summary"), rows: [
+      { title: tt("cnbs.rpt_summary", "Branch Summary"), rows: [
         { label: tt("cnbs.branch", "Branch"), value: d.branchType },
         { label: tt("cnbs.country", "Country"), value: d.country },
         { label: tt("acct.currency", "Currency"), value: d.currency },
@@ -168,7 +191,7 @@ export function openBranchProfileReport(opts: {
       ]},
     ],
     permissions: {
-      title: tt("cnbs.step4_roles_perms", "Roles & Permissions Summary"),
+      title: tt("cnbs.rpt_permissions", "Roles & Permissions Summary"),
       summary: perm,
       templateLabel: tt("cnbs.role_template", "Role Template"),
       grantedLabel: tt("cnbs.granted", "granted"),
@@ -182,5 +205,5 @@ export function openBranchProfileReport(opts: {
       authorityValue: tt("cnbs.super_admin", "Super Admin"),
       companyValue: d.companyName || undefined,
     },
-  });
+  };
 }
