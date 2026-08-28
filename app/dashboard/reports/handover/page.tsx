@@ -44,6 +44,55 @@ interface DailyLog {
 
 const DAILY_DEVELOPMENT_LOGS: DailyLog[] = [
   {
+    date: "28 August 2026",
+    developer: "Antigravity Senior AI Agent & Systems Engineer",
+    title: "Clearing Agent Customer Order 4-Step Wizard, 4-Level Serial Counters & Public External Forms 4-Step Gateway",
+    summary: "Refactored Clearing Agent Customer Order wizard with a 4-serial numbers bar (Super Admin SA-001, Country PK-001, Branch KHI-01, Order Serial), direct Customer Ledger search with instant name/code synchronization, 2 route country dropdowns (Loading Country & Receiving Country), in-place party role panels (Supplier, Buyer, Importer, Exporter, Notify Party), and Goods Master variations. Redesigned Public External Forms (/ext/form/[token]) into a 4-step responsive wizard (Personal Info + Documents/Contracts, Address, Review with edit jump-backs, and Photo upload via live camera/gallery). Hardened ERP-wide 4-level serial engine and Settlement Reconciliation system.",
+    modulesAffected: [
+      "Clearing Agent Customer Order (/dashboard/clearing-agent/customer-order)",
+      "Public External Form Gateway (/ext/form/[token] & /api/public/form-link/[token])",
+      "Customer Master 360 & Send-to-Customer Modal (/dashboard/customers)",
+      "4-Level Serial Counters Engine (Super Admin, Country, Branch, Transaction)",
+      "Settlement & Reconciliation Subsystem (/dashboard/settlement)",
+      "UAE Tax & FTA E-Invoicing Foundation (/dashboard/tax-einvoicing)",
+      "Master System Journal PDF & Handover Center (/dashboard/handover-report)"
+    ],
+    databaseChanges: "Applied 20260828_erp_wide_4level_serial_engine.sql, 20260828_settlement_reconciliation_engine.sql, and external_form_links idempotency schema.",
+    testingStatus: "VPS_TESTED",
+    gitRef: "main (HEAD)",
+    issuesFixed: [
+      "Refactored Customer Order form from popup modal to 4-step in-place wizard with 4 serials and 2 route countries",
+      "Redesigned Public External Form to 4-step smart & responsive wizard with multi-language selector and mobile camera capture",
+      "Replaced dark theme with official clean white ERP theme across all customer share forms and modals",
+      "Exempted public form endpoints in middleware to guarantee unauthenticated mobile access worldwide",
+      "Added master system journal and handover PDF direct entry in main navigation sidebar"
+    ],
+    pendingItems: [
+      "Production verification and continuous live reporting"
+    ]
+  },
+  {
+    date: "23 August 2026",
+    developer: "Antigravity Senior AI Agent & Systems Engineer",
+    title: "Settlement & Reconciliation Subsystem, Roznamcha Overload Resolution & Multi-Branch Accounting",
+    summary: "Delivered 9-module Settlement & Reconciliation subsystem with daily cash audit, bank statement matching, party ledger reconciliation, FX currency adjustments, and unsettled transaction tracking. Resolved Roznamcha posting overload ambiguities and guaranteed single-source-of-truth double-entry ledger balances.",
+    modulesAffected: [
+      "Settlement & Reconciliation Subsystem (Daily, Cash, Bank, Party, FX, Reports)",
+      "Roznamcha Posting Engine & Double-Entry Accounting",
+      "Branch & Upcountry User Isolation"
+    ],
+    databaseChanges: "Applied 20260823_fix_sales_order_payment_roznamcha_overload_ambiguity.sql and 0074_fix_recalc_with_loading_proportional.sql.",
+    testingStatus: "VPS_TESTED",
+    gitRef: "main (commit 83b21af)",
+    issuesFixed: [
+      "Eliminated duplicate roznamcha line creation during multi-currency settlements",
+      "Added multi-criteria SmartSearchFilter with instant debounce across all settlement registers"
+    ],
+    pendingItems: [
+      "Customer Order and Public Form modernizations"
+    ]
+  },
+  {
     date: "17 August 2026",
     developer: "Antigravity Senior AI Agent & Systems Engineer",
     title: "Super Admin / All Users Directory & Credential Register, A4 Handover Sheet & Reporting Hub 14-Submenu Sync",

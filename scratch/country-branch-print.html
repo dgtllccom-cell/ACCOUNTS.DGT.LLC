@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Country Branch Report</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Naskh+Arabic:wght@400;600;700&family=Noto+Nastaliq+Urdu:wght@400;600;700&display=swap');
+
+      @page {
+        size: A4 portrait;
+        margin: 10mm 10mm 13mm 10mm;
+        @top-left   { content: "Digital Dock ERP — Country Branch Report"; font-size: 7pt; color: #64748b; font-weight: 700; }
+        @top-right  { content: "28 Aug 2026 06:01:10 PM"; font-size: 7pt; color: #94a3b8; }
+        @bottom-left   { content: "Digital Dock ERP | Damaan Trading Company LLC"; font-size: 7pt; color: #94a3b8; font-weight: 700; }
+        @bottom-center { content: "CBRANCH-AE-MB-0001-28Aug2026"; font-size: 6.5pt; color: #cbd5e1; }
+        @bottom-right  { content: "Page " counter(page) " of " counter(pages); font-size: 7pt; color: #64748b; font-weight: 700; }
+      }
+
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body { background: #f1f5f9; color: #1e293b; font-family: 'Inter', 'Noto Naskh Arabic', Arial, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      html[lang="ur"] body { font-family: 'Noto Nastaliq Urdu', 'Noto Naskh Arabic', 'Inter', serif; }
+      html[lang="ar"] body, html[lang="fa"] body, html[lang="ps"] body { font-family: 'Noto Naskh Arabic', 'Inter', sans-serif; }
+
+      .wrap { padding: 24px; display: flex; justify-content: center; }
+      .page { width: 210mm; padding: 10mm; margin: 0 auto; background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 10px 30px rgba(15,23,42,0.08); border-radius: 10px; box-sizing: border-box; }
+
+      /* ---- on-screen (preview) header/footer, hidden in print (the @page boxes take over) ---- */
+      .screen-head, .screen-foot { color: #64748b; font-size: 8px; font-weight: 700; display: flex; justify-content: space-between; padding: 0 2px 6px; }
+      .screen-foot { padding: 6px 2px 0; border-top: 1px solid #f1f5f9; margin-top: 8px; }
+
+      .header-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+      .header-table td { border: none; padding: 0; vertical-align: middle; }
+      .logo-title { display: flex; align-items: center; gap: 9px; }
+      .logo-icon { width: 32px; height: 32px; background: #1e3a8a; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; }
+      .logo-text { font-size: 13px; font-weight: 900; color: #0f172a; line-height: 1.1; }
+      .logo-subtext { font-size: 7.5px; color: #64748b; font-weight: 600; }
+      .report-title { font-size: 15px; font-weight: 900; color: #1e3a8a; margin: 0 0 3px 0; text-align: center; text-transform: uppercase; letter-spacing: 0.4px; }
+      .subtitle-pill { font-size: 7.5px; font-weight: 800; border: 1px solid #1e3a8a; color: #1e3a8a; border-radius: 999px; padding: 2px 9px; display: inline-block; }
+      .meta-box { font-size: 8px; color: #334155; font-weight: 700; line-height: 1.45; }
+      .meta-label { color: #64748b; font-weight: 500; }
+
+      .overview-banner { background: #0f172a; color: #fff; border-radius: 7px; padding: 12px 16px; margin-bottom: 12px; break-inside: avoid; page-break-inside: avoid; }
+      .overview-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+      .overview-title { font-size: 9px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+      .overview-name { font-size: 17px; font-weight: 900; color: #fff; margin-top: 2px; word-break: break-word; }
+      .overview-status { font-size: 8px; font-weight: 800; border: 1px solid rgba(16,185,129,0.35); background: rgba(16,185,129,0.15); color: #34d399; border-radius: 4px; padding: 3px 8px; text-transform: uppercase; white-space: nowrap; }
+      .overview-meta-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; margin-top: 11px; border-top: 1px solid #334155; padding-top: 10px; }
+      .overview-meta-label { font-size: 7.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; }
+      .overview-meta-val { font-size: 10px; font-weight: 800; color: #e2e8f0; margin-top: 2px; word-break: break-word; }
+      .overview-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; margin-top: 10px; }
+      .kpi { background: rgba(255,255,255,0.04); border-radius: 6px; padding: 7px 9px; }
+      .kpi-label { font-size: 7.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; }
+      .kpi-val { font-size: 13px; font-weight: 900; margin-top: 2px; word-break: break-word; }
+      .kpi-open { color: #93c5fd; } .kpi-current { color: #fff; } .kpi-debit { color: #fca5a5; } .kpi-credit { color: #6ee7b7; }
+
+      .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; align-items: start; break-inside: avoid; page-break-inside: avoid; }
+      .grid-2:has(.section-card--full) { display: block; }
+
+      .section-card { background: #fff; border: 1px solid #dbe2ea; border-radius: 7px; margin-bottom: 8px; overflow: hidden; break-inside: avoid; page-break-inside: avoid; }
+      .section-card--full { grid-column: 1 / -1; }
+      .section-card--break { break-before: page; page-break-before: always; }
+      .section-header { background: #1e3a8a; color: #fff; padding: 5px 10px; font-size: 9px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase; display: flex; align-items: center; gap: 6px; }
+      .section-badge { background: #fff; color: #1e3a8a; width: 14px; height: 14px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 7.5px; font-weight: 900; flex: 0 0 auto; }
+      .perm-count { margin-inline-start: auto; font-size: 7px; font-weight: 700; color: #cbd5e1; text-transform: none; letter-spacing: 0; }
+
+      .info-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+      .info-table tr { break-inside: avoid; page-break-inside: avoid; }
+      .info-table td { padding: 4px 8px; font-size: 9px; border-bottom: 1px solid #f1f5f9; vertical-align: top; line-height: 1.35; }
+      .info-table tr:last-child td { border-bottom: none; }
+      .info-table td.label { color: #64748b; font-weight: 600; width: 44%; }
+      .info-table td.value { font-weight: 700; color: #1e293b; text-align: end; word-break: break-word; overflow-wrap: anywhere; }
+      html[dir="rtl"] .info-table td.value { text-align: start; }
+
+      /* the permissions section may legitimately be taller than one page — let it
+         flow; keep each group intact. */
+      .perm-section { break-inside: auto; page-break-inside: auto; }
+      .perm-grid { columns: 3; column-gap: 12px; padding: 8px 10px; }
+      .perm-group { break-inside: avoid; page-break-inside: avoid; margin-bottom: 6px; -webkit-column-break-inside: avoid; display: inline-block; width: 100%; }
+      .perm-group-title { font-size: 7.5px; font-weight: 800; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid #e2e8f0; padding-bottom: 2px; margin-bottom: 3px; }
+      .perm-list { list-style: none; margin: 0; padding: 0; }
+      .perm-list li { font-size: 8px; line-height: 1.5; color: #334155; display: flex; align-items: flex-start; gap: 4px; break-inside: avoid; }
+      .perm-list li.off { color: #94a3b8; }
+      .perm-mark { font-weight: 900; width: 8px; flex: 0 0 auto; text-align: center; }
+      .perm-list li.on .perm-mark { color: #059669; }
+      .perm-list li.off .perm-mark { color: #cbd5e1; }
+
+      .footer-signatures { display: flex; justify-content: space-between; align-items: stretch; margin-top: 12px; padding-top: 10px; border-top: 1px solid #e2e8f0; gap: 16px; break-inside: avoid; page-break-inside: avoid; }
+      .notes-box { width: 52%; font-size: 8px; color: #64748b; line-height: 1.4; }
+      .notes-box strong { color: #0f172a; font-size: 8.5px; display: block; margin-bottom: 2px; }
+      .approval-box { width: 44%; border: 1px solid #dbe2ea; border-radius: 6px; overflow: hidden; break-inside: avoid; }
+      .approval-title { background: #1e3a8a; color: #fff; font-size: 8px; font-weight: 800; text-transform: uppercase; padding: 4px 8px; letter-spacing: 0.3px; }
+      .approval-table { width: 100%; border-collapse: collapse; }
+      .approval-table td { padding: 3px 8px; font-size: 8px; border-bottom: 1px solid #f1f5f9; }
+      .approval-table td:first-child { color: #64748b; font-weight: 600; width: 48%; }
+      .approval-table td:last-child { font-weight: 700; color: #1e293b; text-align: end; }
+      .approval-table tr:last-child td { border-bottom: none; }
+      .sig-box { width: 32%; text-align: center; font-size: 8px; align-self: flex-end; }
+      .sig-line { border-bottom: 1px solid #94a3b8; margin-bottom: 4px; height: 20px; }
+      .sig-name { font-size: 8px; font-weight: 700; color: #64748b; }
+      .sig-role { font-size: 7px; color: #94a3b8; font-weight: 500; }
+
+      html[dir="rtl"] .logo-title { flex-direction: row-reverse; }
+
+      @media screen { .screen-only { display: block; } }
+      @media print {
+        body { background: #fff; }
+        .wrap { padding: 0; }
+        .page { border: none; box-shadow: none; border-radius: 0; padding: 0; width: 100%; }
+        .screen-head, .screen-foot { display: none; }
+        .section-card:not(.perm-section), .grid-2, .overview-banner, .footer-signatures, .perm-group, .approval-box, .info-table tr { break-inside: avoid !important; page-break-inside: avoid !important; }
+        .perm-section { break-inside: auto !important; page-break-inside: auto !important; }
+        .section-card--break { break-before: page !important; page-break-before: always !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="page">
+        <div class="screen-head"><span>Digital Dock ERP — Country Branch Report</span><span>28 Aug 2026 06:01:10 PM</span></div>
+
+        <table class="header-table">
+          <tr>
+            <td style="width: 34%;">
+              <div class="logo-title">
+                <div class="logo-icon">🏢</div>
+                <div>
+                  <div class="logo-text">Damaan Trading Company LLC</div>
+                  <div class="logo-subtext">Digital Dock ERP / FMS</div>
+                </div>
+              </div>
+            </td>
+            <td style="width: 32%; text-align: center;">
+              <h1 class="report-title">Country Branch Report</h1>
+              <div class="subtitle-pill">Country Main Branch Profile</div>
+            </td>
+            <td style="width: 34%; text-align: right;">
+              <div class="meta-box">
+                <div><span class="meta-label">Date / As On :</span> 28 Aug 2026</div>
+                <div><span class="meta-label">Time :</span> 06:01:10 PM</div>
+                <div><span class="meta-label">Created By :</span> Super Admin</div>
+                <div><span class="meta-label">Report Type :</span> Country Main Branch Profile</div>
+              </div>
+            </td>
+          </tr>
+        </table>
+
+        <div class="overview-banner">
+          <div class="overview-top">
+            <div>
+              <div class="overview-title">Country Branch Profile Overview</div>
+              <div class="overview-name">United Arab Emirates Main Branch</div>
+            </div>
+            <span class="overview-status">Active</span>
+          </div>
+          <div class="overview-meta-grid"><div><span class="overview-meta-label">Branch Code</span><div class="overview-meta-val">AE-MB-0001</div></div><div><span class="overview-meta-label">Branch Type</span><div class="overview-meta-val">MAIN</div></div><div><span class="overview-meta-label">Country</span><div class="overview-meta-val">United Arab Emirates</div></div><div><span class="overview-meta-label">Currency</span><div class="overview-meta-val">AED</div></div></div>
+          
+        </div>
+
+        <div class="grid-2"><div class="section-card">
+      <div class="section-header"><span class="section-badge">1</span> Country / Location Information</div>
+      <table class="info-table"><tr><td class="label">Country</td><td class="value">United Arab Emirates</td></tr><tr><td class="label">Country Code</td><td class="value">AE</td></tr><tr><td class="label">State / Province</td><td class="value">Dubai</td></tr><tr><td class="label">District</td><td class="value">Bur Dubai</td></tr><tr><td class="label">City</td><td class="value">Dubai</td></tr><tr><td class="label">Area / Region</td><td class="value">Al Fahidi</td></tr><tr><td class="label">ZIP / Postal Code</td><td class="value">00000</td></tr><tr><td class="label">Address</td><td class="value">Office 1204, Al Fahidi Business Tower, Khalid Bin Al Waleed Road, Bur Dubai, Dubai, United Arab Emirates</td></tr></table>
+    </div><div class="section-card">
+      <div class="section-header"><span class="section-badge">2</span> Main Branch Details</div>
+      <table class="info-table"><tr><td class="label">Branch Name</td><td class="value">United Arab Emirates Main Branch</td></tr><tr><td class="label">Serial No.</td><td class="value">0001</td></tr><tr><td class="label">Currency</td><td class="value">AED</td></tr><tr><td class="label">Status</td><td class="value">Active</td></tr><tr><td class="label">Parent (HQ)</td><td class="value">ACCOUNTS.DGT.LLC Headquarters (SUPER-HQ-001)</td></tr></table>
+    </div></div><div class="grid-2"><div class="section-card">
+      <div class="section-header"><span class="section-badge">3</span> Branch Code &amp; Type</div>
+      <table class="info-table"><tr><td class="label">Branch Code</td><td class="value">AE-MB-0001</td></tr><tr><td class="label">Branch Type</td><td class="value">MAIN</td></tr><tr><td class="label">Established On</td><td class="value">01 Jul 2026</td></tr><tr><td class="label">Tax Reg. No.</td><td class="value">100399999900003</td></tr><tr><td class="label">NTN / GST No.</td><td class="value">TRN-100399999900003</td></tr></table>
+    </div><div class="section-card">
+      <div class="section-header"><span class="section-badge">4</span> Owner Details</div>
+      <table class="info-table"><tr><td class="label">Owner Name</td><td class="value">Haji Asmatullah</td></tr><tr><td class="label">Owner Code</td><td class="value">OWN-0001</td></tr><tr><td class="label">Designation</td><td class="value">Country Admin</td></tr><tr><td class="label">Nationality</td><td class="value">Afghan</td></tr><tr><td class="label">Ownership Type</td><td class="value">Individual</td></tr><tr><td class="label">Ownership %</td><td class="value">100%</td></tr></table>
+    </div></div><div class="grid-2"><div class="section-card">
+      <div class="section-header"><span class="section-badge">5</span> Contact Information</div>
+      <table class="info-table"><tr><td class="label">Phone</td><td class="value">+971 4 000 0000</td></tr><tr><td class="label">WhatsApp</td><td class="value">+971 50 000 0000</td></tr><tr><td class="label">Email</td><td class="value">uae.branch@damaantrading.ae</td></tr><tr><td class="label">Landline</td><td class="value">+971 4 111 1111</td></tr><tr><td class="label">Website</td><td class="value">https://www.damaantrading.ae</td></tr></table>
+    </div><div class="section-card">
+      <div class="section-header"><span class="section-badge">6</span> Company Details</div>
+      <table class="info-table"><tr><td class="label">Company Name</td><td class="value">Damaan Trading Company LLC</td></tr><tr><td class="label">Company Code</td><td class="value">CMP-AE-01</td></tr><tr><td class="label">Company Type</td><td class="value">Limited Liability Company</td></tr><tr><td class="label">Company Reg. No.</td><td class="value">DED-1234567</td></tr><tr><td class="label">Incorporation Date</td><td class="value">12 Jan 2019</td></tr><tr><td class="label">Status</td><td class="value">Active</td></tr><tr><td class="label">Registered Office</td><td class="value">Office 1204, Al Fahidi Business Tower, Bur Dubai, Dubai, United Arab Emirates</td></tr></table>
+    </div></div><div class="grid-2"><div class="section-card">
+      <div class="section-header"><span class="section-badge">7</span> Branch Summary</div>
+      <table class="info-table"><tr><td class="label">Branch</td><td class="value">MAIN</td></tr><tr><td class="label">Country</td><td class="value">United Arab Emirates</td></tr><tr><td class="label">Currency</td><td class="value">AED</td></tr><tr><td class="label">Created On</td><td class="value">01 Jul 2026</td></tr><tr><td class="label">Last Updated On</td><td class="value">28 Aug 2026</td></tr><tr><td class="label">Permissions Granted</td><td class="value">48 / 63</td></tr></table>
+    </div></div>
+        <div class="section-card section-card--full perm-section">
+      <div class="section-header"><span class="section-badge">8</span> Roles &amp; Permissions Summary
+        <span class="perm-count">Role Template: country-standard · 48/63 granted</span>
+      </div>
+      <div class="perm-grid"><div class="perm-group">
+          <div class="perm-group-title">Dashboard &amp; Master</div>
+          <ul class="perm-list">
+            <li class="on"><span class="perm-mark">✓</span>All Branches</li><li class="on"><span class="perm-mark">✓</span>Branch General Report</li><li class="on"><span class="perm-mark">✓</span>City Branch</li><li class="off"><span class="perm-mark">×</span>Company Settings</li><li class="off"><span class="perm-mark">×</span>Country Branch</li><li class="on"><span class="perm-mark">✓</span>Currency Settings</li><li class="on"><span class="perm-mark">✓</span>Dashboard</li><li class="on"><span class="perm-mark">✓</span>New Branch Entry</li><li class="off"><span class="perm-mark">×</span>Super Admin Branch</li><li class="off"><span class="perm-mark">×</span>System Settings</li><li class="on"><span class="perm-mark">✓</span>User Permissions</li>
+          </ul>
+        </div><div class="perm-group">
+          <div class="perm-group-title">Users &amp; Roles</div>
+          <ul class="perm-list">
+            <li class="on"><span class="perm-mark">✓</span>Create User</li><li class="off"><span class="perm-mark">×</span>Delete User</li><li class="on"><span class="perm-mark">✓</span>Edit User</li><li class="on"><span class="perm-mark">✓</span>Users</li><li class="on"><span class="perm-mark">✓</span>View User</li>
+          </ul>
+        </div><div class="perm-group">
+          <div class="perm-group-title">Finance / Transactions</div>
+          <ul class="perm-list">
+            <li class="on"><span class="perm-mark">✓</span>Account Master</li><li class="on"><span class="perm-mark">✓</span>Account Reports</li><li class="on"><span class="perm-mark">✓</span>Add New Payment</li><li class="on"><span class="perm-mark">✓</span>Cash Entry Payment</li><li class="on"><span class="perm-mark">✓</span>Daily Entry Report</li><li class="on"><span class="perm-mark">✓</span>General Ledger</li><li class="on"><span class="perm-mark">✓</span>General Roznamcha</li><li class="on"><span class="perm-mark">✓</span>Ledger Reports</li><li class="on"><span class="perm-mark">✓</span>New Account Entry</li><li class="on"><span class="perm-mark">✓</span>Payment Voucher</li><li class="on"><span class="perm-mark">✓</span>Purchase Entry</li><li class="on"><span class="perm-mark">✓</span>Purchase Orders</li><li class="on"><span class="perm-mark">✓</span>Purchase Payment</li><li class="on"><span class="perm-mark">✓</span>Purchase Reports</li><li class="on"><span class="perm-mark">✓</span>Remaining Credit Payment</li><li class="on"><span class="perm-mark">✓</span>Sales Entry</li><li class="on"><span class="perm-mark">✓</span>Sales Orders</li><li class="on"><span class="perm-mark">✓</span>Sales Reports</li><li class="off"><span class="perm-mark">×</span>UAE Tax &amp; e-Invoicing — Manage</li><li class="off"><span class="perm-mark">×</span>UAE Tax &amp; e-Invoicing — View</li><li class="off"><span class="perm-mark">×</span>UAE Tax Setup &amp; Rules</li><li class="off"><span class="perm-mark">×</span>UAE VAT Filing &amp; ASP Submission</li>
+          </ul>
+        </div><div class="perm-group">
+          <div class="perm-group-title">Reports</div>
+          <ul class="perm-list">
+            <li class="on"><span class="perm-mark">✓</span>Branch Analysis</li><li class="on"><span class="perm-mark">✓</span>Bulk Report</li><li class="on"><span class="perm-mark">✓</span>City Report</li><li class="on"><span class="perm-mark">✓</span>Country Report</li><li class="on"><span class="perm-mark">✓</span>Customer Report</li><li class="on"><span class="perm-mark">✓</span>Financial Summary</li><li class="on"><span class="perm-mark">✓</span>General Ledger Report</li><li class="on"><span class="perm-mark">✓</span>Management Dashboard</li><li class="on"><span class="perm-mark">✓</span>Purchase Summary</li><li class="on"><span class="perm-mark">✓</span>Sales Summary</li><li class="off"><span class="perm-mark">×</span>Super Admin Report</li><li class="on"><span class="perm-mark">✓</span>Supplier Report</li>
+          </ul>
+        </div><div class="perm-group">
+          <div class="perm-group-title">Shipping / Clearing</div>
+          <ul class="perm-list">
+            <li class="on"><span class="perm-mark">✓</span>Clearing Agent Master</li><li class="on"><span class="perm-mark">✓</span>Clearing Agent Processing System</li><li class="on"><span class="perm-mark">✓</span>Shipping Line Master</li><li class="on"><span class="perm-mark">✓</span>Shipping Processing System</li>
+          </ul>
+        </div><div class="perm-group">
+          <div class="perm-group-title">Additional Modules</div>
+          <ul class="perm-list">
+            <li class="off"><span class="perm-mark">×</span>Document Scanner</li><li class="on"><span class="perm-mark">✓</span>Email Management</li><li class="on"><span class="perm-mark">✓</span>Inbox</li><li class="off"><span class="perm-mark">×</span>KYC Documents</li><li class="off"><span class="perm-mark">×</span>KYC Reports</li><li class="off"><span class="perm-mark">×</span>KYC Review &amp; Verification</li><li class="on"><span class="perm-mark">✓</span>Notifications</li><li class="off"><span class="perm-mark">×</span>Send KYC Link</li><li class="on"><span class="perm-mark">✓</span>Sent Messages</li>
+          </ul>
+        </div></div>
+    </div>
+        <div class="footer-signatures">
+      <div class="notes-box">
+        <strong>Remarks / Notes</strong>
+        <span>Official Country Main Branch profile document generated by Digital Dock ERP. All figures reflect the saved record at the time of printing.</span>
+      </div>
+      <div class="approval-box">
+        <div class="approval-title">Verified / Authorized By</div>
+        <table class="approval-table">
+          <tr><td>Verified / Authorized By</td><td>Verified</td></tr>
+          <tr><td>Approved / Authorized By</td><td>Super Admin</td></tr>
+          <tr><td>Approved Authority</td><td>Super Admin</td></tr>
+          <tr><td>Company</td><td>Damaan Trading Company LLC</td></tr>
+        </table>
+      </div>
+    </div>
+
+        <div class="screen-foot"><span>Digital Dock ERP | Damaan Trading Company LLC</span><span>CBRANCH-AE-MB-0001-28Aug2026</span></div>
+      </div>
+    </div>
+    <script>
+      window.__ERP_A4_AUTOPRINT__ = false;
+      window.addEventListener('load', () => { if (window.__ERP_A4_AUTOPRINT__) { setTimeout(() => window.print(), 150); } }, { once: true });
+    </script>
+  </body>
+</html>

@@ -63,7 +63,8 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "audit_logs:read",
     "uae_tax:read",
     "uae_tax_filing:read",
-    "uae_tax_settings:read"
+    "uae_tax_settings:read",
+    "contracts:read"
   ],
   country_admin: [
     "companies:read",
@@ -178,7 +179,9 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "uae_tax_filing:read",
     "uae_tax_filing:write",
     "uae_tax_settings:read",
-    "uae_tax_settings:write"
+    "uae_tax_settings:write",
+    "contracts:read",
+    "contracts:write"
   ],
   country_user: [
     "dashboard:read",
@@ -212,7 +215,8 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "kyc:read",
     "documents:read",
     "documents:create",
-    "uae_tax:read"
+    "uae_tax:read",
+    "contracts:read"
   ],
   main_branch_admin: [
     "companies:read",
@@ -291,7 +295,9 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "documents:print",
     "uae_tax:read",
     "uae_tax:write",
-    "uae_tax_filing:read"
+    "uae_tax_filing:read",
+    "contracts:read",
+    "contracts:write"
   ],
   city_branch_admin: [
     "companies:read",
@@ -363,7 +369,9 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "documents:export",
     "documents:print",
     "uae_tax:read",
-    "uae_tax:write"
+    "uae_tax:write",
+    "contracts:read",
+    "contracts:write"
   ],
   accountant: [
     "companies:read",
@@ -418,7 +426,9 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "uae_tax:read",
     "uae_tax:write",
     "uae_tax_filing:read",
-    "uae_tax_filing:write"
+    "uae_tax_filing:write",
+    "contracts:read",
+    "contracts:write"
   ],
   cashier: [
     "companies:read",
@@ -456,7 +466,7 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "whatsapp:create"
   ],
   staff_user: ["transactions:create", "transactions:read", "customers:read", "companies:read", "shipping_records:read", "whatsapp:read"],
-  auditor_viewer: ["reports:read", "audit_logs:read", "ledgers:read", "companies:read", "kyc:read", "documents:read", "uae_tax:read", "uae_tax_filing:read"]
+  auditor_viewer: ["reports:read", "audit_logs:read", "ledgers:read", "companies:read", "kyc:read", "documents:read", "uae_tax:read", "uae_tax_filing:read", "contracts:read"]
 };
 
 export const dashboardByRole: Record<EnterpriseRole, string> = {

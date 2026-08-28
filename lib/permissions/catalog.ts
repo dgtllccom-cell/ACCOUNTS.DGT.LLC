@@ -653,6 +653,22 @@ export const permissionCatalog: PermissionDefinition[] = [
     group: "UAE Tax & e-Invoicing",
     resources: ["uae_tax_settings"],
     actions: ["read", "write"]
+  },
+  {
+    key: "contracts.view",
+    label: "Central Contract Control — View",
+    description: "View the linked contract register (employee, purchase, sales) and open source records, KYC, payments, journal, loading and audit trail.",
+    group: "Contract Control",
+    resources: ["contracts", "reports"],
+    actions: ["read", "export", "print"]
+  },
+  {
+    key: "contracts.followup",
+    label: "Contract Follow-Up & Reminders",
+    description: "Add contract follow-ups, set next-action dates and (re)generate Smart CRM contract reminders. Does not permit editing the source contract.",
+    group: "Contract Control",
+    resources: ["contracts"],
+    actions: ["read", "write"]
   }
 ];
 

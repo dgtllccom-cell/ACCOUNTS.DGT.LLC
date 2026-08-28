@@ -1359,6 +1359,13 @@ export const sidebarTree: SidebarNode[] = [
     ]
   },
   {
+    key: "master-system-journal-pdf",
+    labelKey: "nav.master_system_journal_pdf",
+    iconKey: "file-text",
+    href: "/dashboard/handover-report" as Route,
+    roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "auditor_viewer"]
+  },
+  {
     key: "walkthrough-video",
     labelKey: "nav.walkthrough_video",
     iconKey: "video",

@@ -1,0 +1,14 @@
+import { chromium } from "playwright";
+import fs from "node:fs";
+const htmlPath = process.argv[2], outPdf = process.argv[3];
+const html = fs.readFileSync(htmlPath, "utf8");
+const exe = "C:/Program Files/Google/Chrome/Application/chrome.exe";
+const browser = await chromium.launch({ executablePath: exe, headless: true });
+const page = await browser.newPage();
+await page.setContent(html, { waitUntil: "networkidle" });
+await page.emulateMedia({ media: "print" });
+await page.pdf({ path: outPdf, format: "A4", printBackground: true, preferCSSPageSize: true });
+const bytes = fs.readFileSync(outPdf);
+const pageCount = (bytes.toString("latin1").match(/\/Type\s*\/Page[^s]/g) || []).length;
+console.log("PDF:", outPdf, "| pages:", pageCount, "| bytes:", bytes.length);
+await browser.close();

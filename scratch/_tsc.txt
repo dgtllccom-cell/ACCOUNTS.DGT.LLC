@@ -1,0 +1,5 @@
+features/clearing-agent/components/customer-order-management-view.tsx(719,29): error TS2304: Cannot find name 'reportQuery'.
+features/clearing-agent/components/customer-order-management-view.tsx(749,15): error TS2304: Cannot find name 'reportQuery'.
+features/clearing-agent/components/customer-order-management-view.tsx(1592,28): error TS2304: Cannot find name 'reportQuery'.
+features/clearing-agent/components/customer-order-management-view.tsx(1593,38): error TS2304: Cannot find name 'setReportQuery'.
+features/customers/components/customer-list.tsx(867,63): error TS2304: Cannot find name 'searchQuery'.

@@ -1,0 +1,10 @@
+import { chromium } from "playwright"; import fs from "node:fs";
+const pdfPath = process.argv[2], outDir = process.argv[3];
+const b = await chromium.launch({ executablePath:"C:/Program Files/Google/Chrome/Application/chrome.exe", headless:true, args:["--no-sandbox"] });
+const p = await b.newPage({ viewport:{width:900,height:2400}, deviceScaleFactor:2 });
+const url = "file:///" + pdfPath.replace(/\/g,"/");
+await p.goto(url, { waitUntil:"load" });
+await p.waitForTimeout(2500);
+await p.screenshot({ path: `${outDir}/cb-pdf-render.png`, fullPage: true });
+console.log("pdf render screenshot saved");
+await b.close();

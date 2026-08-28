@@ -400,6 +400,7 @@ export type UiKey =
   | "jrn.overview" | "jrn.net_balance" | "jrn.entry_count" | "jrn.roznamcha_journal" | "jrn.date_range"
   | "vch.overview" | "vch.entry_voucher" | "vch.prepared_by" | "vch.checked_by" | "vch.approved_by"
   | "vch.received_by"
+  | "nav.master_system_journal_pdf"
   | "nav.super_admin_dashboard"
   | "nav.country_dashboard"
   | "nav.city_dashboard"
@@ -7477,6 +7478,7 @@ const en: Dict = {
   "purchase.pmw_no_live_records": "No live purchase records found for this stage.",
   "purchase.pmw_no_dashboard_records": "No purchase records found for this dashboard scope.",
   "purchase.pmw_err_load_failed": "Purchase records could not be loaded.",
+  "nav.master_system_journal_pdf": "ERP Master Journal & Complete Handover PDF",
   "nav.super_admin_dashboard": "Super Admin Dashboard",
   "nav.country_dashboard": "Country Dashboard",
   "nav.city_dashboard": "City Dashboard",
@@ -17817,6 +17819,7 @@ const ur: Dict = {
   "pem.pem_search_ledger_ph": "لیجر تلاش کریں...",
   "pem.pem_ref_slip_chq_ph": "ریف / سلپ / چیک",
   "pem.pem_enter_details_ph": "تفصیلات درج کریں...",
+  "nav.master_system_journal_pdf": "ماسٹر سسٹم جرنل اور ہینڈ اوور PDF",
   "nav.super_admin_dashboard": "سپر ایڈمن ڈیش بورڈ",
   "nav.country_dashboard": "کنٹری ڈیش بورڈ",
   "nav.city_dashboard": "سٹی ڈیش بورڈ",
@@ -27111,6 +27114,7 @@ const ar: Dict = {
   "pem.pem_search_ledger_ph": "البحث عن دفتر الأستاذ...",
   "pem.pem_ref_slip_chq_ph": "مرجع / إيصال / شيك",
   "pem.pem_enter_details_ph": "أدخل التفاصيل...",
+  "nav.master_system_journal_pdf": "سجل النظام الرئيسي وتقرير التسليم PDF",
   "nav.super_admin_dashboard": "لوحة المشرف الأعلى",
   "nav.country_dashboard": "لوحة الدولة",
   "nav.city_dashboard": "لوحة الفرع",
@@ -36402,6 +36406,7 @@ const fa: Dict = {
   "pem.pem_search_ledger_ph": "جستجوی دفتر کل...",
   "pem.pem_ref_slip_chq_ph": "مرجع / رسید / چک",
   "pem.pem_enter_details_ph": "جزئیات را وارد کنید...",
+  "nav.master_system_journal_pdf": "ژورنال سیستم اصلی و گزارش تحویل PDF",
   "nav.super_admin_dashboard": "داشبورد سوپر ادمین",
   "nav.country_dashboard": "داشبورد کشور",
   "nav.city_dashboard": "داشبورد شعبه",
@@ -45687,6 +45692,7 @@ const ps: Dict = {
   "pem.pem_search_ledger_ph": "لیجر ولټوئ...",
   "pem.pem_ref_slip_chq_ph": "حواله / رسید / چک",
   "pem.pem_enter_details_ph": "توضیحات ولیکئ...",
+  "nav.master_system_journal_pdf": "د اصلي سیسټم ژورنال او سپارلو راپور PDF",
   "nav.super_admin_dashboard": "د سوپر اډمین ډشبورډ",
   "nav.country_dashboard": "د هېواد ډشبورډ",
   "nav.city_dashboard": "د څانګې ډشبورډ",
