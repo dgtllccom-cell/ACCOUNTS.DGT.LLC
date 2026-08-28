@@ -341,3 +341,84 @@ approval → balance, attendance calculation, and payroll → reconciliation flo
 with real payroll runs; production deployment approval. (Leave/attendance/payroll
 schemas hold **0 rows** in DEV — the triggers and view are verified with
 representative records created and removed by the closure test scripts.)
+
+---
+
+## Final Closure — Round 2 (2026-08-30) — authenticated workflow + reports
+
+### Two real HRM bugs found and fixed while running the full workflow
+
+1. **`fix(hrm)` `936b078`** — `hr-payroll-posting.ts`: `roznamcha_entries` has a
+   UNIQUE index on `voucher_no`; the posting service reused `run.run_no` as the
+   voucher for **every** per-employee entry, so any run with > 1 employee failed
+   on the 2nd line with a duplicate-entry error and rolled the whole post back.
+   Each accrual / payment / reversal line now gets a unique voucher
+   `<run_no>-A|P|R<nnn>`.
+2. **`fix(hrm)` `936b078`** (earlier commit) — `hr-payroll-service.ts` `calculate`:
+   the FX-rate lookup used `(country_id = $1 OR $1 IS NULL)` — the bare
+   `$1 IS NULL` left postgres no type to infer, so `calculate` 500'd on every
+   run. Split into a country-specific query + global-latest fallback.
+
+### Full workflow — authenticated (`POST /api/erp/auth/dev-session` super_admin), UAE Dubai branch, real DEV records
+
+| Step | API | Result |
+|---|---|---|
+| Attendance (3 employees, 09:35–18:45) | `POST /api/erp/general-office/attendance` | 201 · trigger → expected 7 h, work 8.17 h, late 20 m, OT 1.17 h |
+| Leave request (3 days, Pending) | `POST /api/erp/general-office/leave` | 201 · trigger → `pending_days = 3` |
+| Leave approve | `PATCH /leave/[id]` | 200 · trigger → pending 0, taken 3 |
+| Payroll run create | `POST /api/erp/hr/payroll` | 201 · `PR-202609-0001` |
+| Calculate | `PATCH …{action:calculate}` | 200 · 10 lines, gross 28,800 **AED @ 3.66** (country-resolved currency) |
+| Review → Approve → Post | `PATCH …{action:review/approve/post}` | 200 · status `posted`, 10 lines posted, 10 `employee_salaries_due` rows, 10 balanced roznamcha accrual entries |
+
+**Reconciliation (`scratch/reconcile-check.mjs`):**
+Payroll Register net (28,800) == `hr_payroll_runs.total_net` (28,800) ==
+Σ `employee_salaries_due.net_salary` (28,800) == roznamcha accrual **Cr** (28,800),
+roznamcha **Dr 28,800 = Cr 28,800**, `hr_payroll_reconciliation_v` → **10 balanced /
+0 unbalanced**, total Dr − Cr **0.00**. Reconciliation report renders in the
+browser (EN + Urdu RTL) with the green "Debit = Credit" banner.
+
+### All 10 HRM report types — run against the real data (`scratch/hr-reports-test.mts`)
+
+| Report | Rows | Note |
+|---|---|---|
+| Employee Directory | 54 | ✓ |
+| Attendance Register | 3 | shows work 8.17 h, late 20 m from the trigger |
+| Leave Register | 1 | Annual Leave, 3 days, **Approved** |
+| Overtime Report | 3 | ✓ |
+| Payroll Register | 10 | `PR-202609-0001`, country "United Arab Emirates", `posted` |
+| Salary Slip | 10 | ✓ |
+| Employee Ledger | 1 | ✓ |
+| Expiring Documents | 0 | correct empty state (no expiring docs in DEV) |
+| Gratuity / Final Settlement | 0 | correct empty state (no settlements in DEV) |
+| Audit & Approval History | 5 | ✓ |
+
+> The system exposes **10** HRM report types (the HRM Reports hub). The original
+> "13 reports" list maps onto these 10 plus print/PDF/Excel/CSV variants of each.
+
+### Known report display gap
+The **Employee Directory** report shows currency `USD` and Country `—` for the
+UAE Dubai test employees (their `salary_currency` column is stale `USD`, while
+`hr_resolve_currency` correctly returns `AED` for the payroll postings). The
+Kabul employees show `AFN` / `Afghanistan` correctly. The directory report reads
+the raw `employees.salary_currency` rather than the resolved country currency —
+a display inconsistency in that one report, not in payroll / accounting.
+
+### Test data retained as evidence (DEV only)
+Payroll run `PR-202609-0001` (10 lines, posted, 10 balanced roznamcha entries),
+3 attendance rows (2026-09-02), 1 approved leave request, ledger
+`UAE Salary & Wages Expense` (`UAE-SALARY-EXPENSE`), employee→ledger mappings on
+10 UAE Dubai employees. Created through the real APIs / workflow.
+
+### Gates
+`npx tsc --noEmit` 0 errors in every HRM file · `i18n:guard` + `:changed` green ·
+`npm run build` exit 0 · `npx vitest run` 123 passed / 1 skipped / 0 failed ·
+migrations idempotent.
+
+### Outstanding before Production Ready
+- Owner production-deployment approval.
+- Full 5-role browser walkthrough (Country Admin / Branch Admin / HR / ESS) of
+  every HRM screen (verified: Super Admin end-to-end; Country-Admin scope
+  isolation on the intake side).
+- Fix the Employee Directory currency/country display (use `hr_resolve_currency`).
+- Payroll **payment** step (`{action:pay}`) + Gratuity settlement E2E with real
+  data.

@@ -367,3 +367,84 @@ does not expose another country's data.
 4. Optional UI polish: the Purchase Loading form reading `?batchId`; auto-creating
    a `clearing_customer_order` on handover accept; Contract Control + KYC/QVC
    entry-method wrappers (QVC already receives intake items via `crm_action_items`).
+
+---
+
+## Final Closure — Round 2 (2026-08-30)
+
+### 1. OCR HTTP route — FIXED ✅
+`next.config.ts` `serverExternalPackages: ["tesseract.js","pdf-parse","pdfjs-dist","sharp","@napi-rs/canvas"]`.
+Next was bundling those libs into the route chunk, rewriting their internal
+worker-script / native-binary relative paths to `.next/...` → the
+`Cannot find module '.next/worker-script/node/index.js'` crash.
+**Verified through the real HTTP path** (`next dev`): browser upload →
+`POST /upload` 201 → `PATCH {action:process}` **200 `{ok:true, status:processed}`**,
+`tesseract.js@eng+ara` 2389 ms, `error: null`, **0 server errors** → classified
+`commercial_invoice` → 6 fields → routed to QVC. Same fix applies to
+`npm run build` + `npm start`.
+
+### 7. Remaining UI integrations — DONE ✅
+- **`?batchId`**: Purchase Loading form reads `?batchId`, fetches the AI-proposed
+  batch, selects its purchase order, opens the Load tab, pre-fills the first
+  pending container. Intake ReviewPanel batch banner → "Open in Purchase Loading"
+  deep link.
+- **Handover → clearing_customer_order**: accepting an `action_type =
+  create_shipping_request` handover opens a real `clearing_customer_order` via
+  the **existing `saveCustomerOrder` service** (route "Jebel Ali → Karachi",
+  cargo "Containers: …; Incoterm: CIF") and records its id on
+  `handover.shipping_request_id`. No duplicate module.
+  E2E `scratch/handover-cco-e2e.mts`.
+- **KYC/QVC**: Employee KYC page wrapped in the Entry Method Selector
+  (Manual / Scan-Upload / Cancel). Document-intake QVC items already feed the
+  Smart-CRM action queue (`crm_action_items`, module `document_intake`).
+- **Contract Control**: entry-method intentionally **not** added — it is a
+  monitoring / linking centre; contracts are owned by the Purchase / Sales /
+  Employee modules and only linked here via `source_module` / `source_id`.
+
+### 8. Repository TypeScript
+`npx tsc --noEmit` → **0 errors in every HRM and Document Intelligence file**.
+The 4 previously-reported errors in `customer-form.tsx` / `customer-profile.tsx`
+/ `share-forms-tab.tsx` were fixed (safe additive-field / typo fixes, commit
+`42dc435`). **1 repo-level error remains**:
+`app/ext/form/[token]/ext-form-client.tsx(3047)` — a JSX-structure break
+introduced today by another contributor's active refactor of that file
+(their commits `3dee397`, `5a5a1b6`, `9e8e3d1`, `da9e3c2`). A minimal fix
+exposed a deeper multi-`<div>` imbalance in their in-progress edit, so it was
+reverted rather than conflict with their work. Not in HRM / Document
+Intelligence; `next.config.ts typescript.ignoreBuildErrors` keeps the build
+green.
+
+### Authenticated document E2E (real OCR)
+Upload → validation/malware → OCR (`tesseract.js@eng+ara`) → classify
+`commercial_invoice` → 11 fields green/amber → scoped match PO `CON-UAT-501`
+score 0.75 `ambiguous` (never auto-links) → QVC exact message → side-by-side
+review UI → verify field → select match → **Prepare Reviewed Draft**
+`DID-2026-…` (payload mapped to PO keys, `append_existing`) → Entry Method
+Selector "Continue Saved Draft" → Purchase wizard **"Pre-filled from reviewed
+document draft — DID-…"** banner. Scope: Pakistan `country_admin` → 0 rows,
+direct API `FORBIDDEN`, 0 UAE handovers.
+
+### Responsive (programmatic audit — page overflow / off-screen controls / control overlaps / clipped text)
+| Screen | 375 mobile EN | 375 mobile UR-RTL | 768 tablet EN | 768 tablet UR-RTL |
+|---|---|---|---|---|
+| Document Intake Center + Review panel | clean (review stacks 1-col) | clean, `dir=rtl` | clean | clean |
+| Shipping Handover Inbox | clean | clean | clean | clean, `dir=rtl` |
+| Business Handovers + New Handover drawer | clean (drawer full-width) | — | clean | — |
+| Payroll Reconciliation | clean (table scrolls in container) | clean, `dir=rtl` | — | — |
+
+### Gates
+`npx tsc --noEmit` 0 errors in HRM/DI (1 unrelated repo error, above) ·
+`i18n:guard` + `:changed` green (10,099 × 5) · `npm run build` exit 0 ·
+`npx vitest run` 123 passed / 1 skipped / 0 failed ·
+`db-apply-all-migrations` all idempotent, `ok:true`.
+
+### Outstanding before Production Ready
+- Owner production-deployment approval.
+- Full 18-scenario authenticated matrix (representative scenarios executed:
+  successful upload, low-confidence extraction, no-match/out-of-scope, ambiguous
+  match, sha256 duplicate detection, scope-invalid FORBIDDEN, review correction,
+  QVC route, draft preparation, draft continuation, handover create/accept,
+  Purchase + Loading + Finance-preview paths — full 18-row grid and real
+  customer PDFs/photos remain).
+- Real-document UAT with representative PDF / photo / scanned / rotated /
+  low-quality / multi-page / Arabic documents.
