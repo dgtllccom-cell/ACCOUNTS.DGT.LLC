@@ -157,6 +157,24 @@ export class UaeTaxService {
     return res ?? { updated: false };
   }
 
+  async listEntityBranches(taxEntityId: string): Promise<
+    Array<{ id: string; country_branch_id: string | null; city_branch_id: string | null; city_branch_name: string | null; country_branch_name: string | null }>
+  > {
+    const res = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        SELECT b.id, b.country_branch_id, b.city_branch_id,
+               cib.name AS city_branch_name, cb.name AS country_branch_name
+        FROM public.uae_tax_entity_branches b
+        LEFT JOIN public.city_branches cib ON cib.id = b.city_branch_id
+        LEFT JOIN public.country_branches cb ON cb.id = b.country_branch_id
+        WHERE b.tax_entity_id = ${taxEntityId} AND b.deleted_at IS NULL
+        ORDER BY cib.name NULLS LAST, cb.name
+      `;
+      return rows as any[];
+    });
+    return res ?? [];
+  }
+
   async setEntityBranches(
     taxEntityId: string,
     branches: Array<{ countryBranchId?: string | null; cityBranchId?: string | null }>,

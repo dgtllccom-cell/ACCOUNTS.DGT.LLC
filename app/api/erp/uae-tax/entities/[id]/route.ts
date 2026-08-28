@@ -51,7 +51,8 @@ export async function GET(_request: NextRequest, ctx: { params: Promise<{ id: st
     const { id } = await ctx.params;
     const entity = await uaeTaxService.getEntity(id, uaeTaxScopeFromSession(session));
     if (!entity) return apiError("NOT_FOUND", "Tax entity not found", 404);
-    return apiOk({ entity });
+    const branches = await uaeTaxService.listEntityBranches(id);
+    return apiOk({ entity: { ...entity, branches } });
   } catch (error) {
     return handleApiError(error);
   }
