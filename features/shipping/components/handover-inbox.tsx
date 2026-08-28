@@ -129,6 +129,12 @@ export function ShippingHandoverInbox({ lang }: { lang?: string }) {
             </div>
           ) : null}
 
+          {open.status === "accepted" && open.shipping_request_id ? (
+            <p className="mt-3 rounded-lg bg-emerald-50 px-2 py-1.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+              {s.t("hi_request_opened", "A clearing customer order was opened from this handover — continue it in the Customer Order / BL workflow.")}
+            </p>
+          ) : null}
+
           <p className="mt-3 rounded-lg bg-slate-50 px-2 py-1.5 text-[10px] text-slate-400 dark:bg-slate-800/60">
             {s.t("hi_privacy", "This is the approved operational information only. Business prices, profit and ledgers are never shared with the shipping side.")}
           </p>

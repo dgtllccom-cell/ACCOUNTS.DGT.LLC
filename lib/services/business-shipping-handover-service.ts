@@ -1,4 +1,5 @@
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { saveCustomerOrder } from "@/lib/services/clearing-customer-order-service";
 
 /**
  * Controlled Business → Shipping / Clearing handover (spec §13).
@@ -147,7 +148,48 @@ export class BusinessShippingHandoverService {
       if (!h) throw new Error("Handover not found.");
       if (!scopeOk(scope, h)) throw new Error("Handover is outside your authorized scope.");
       if (!["submitted", "draft"].includes(h.status)) throw new Error(`Handover is ${h.status}.`);
-      await sql`UPDATE public.business_shipping_handovers SET status = 'accepted', approved_by = ${actorId}, approved_by_name = ${actorName}, approved_at = now(), updated_at = now() WHERE id = ${id}`;
+
+      // Reuse the existing Shipping / Clearing workflow: a "create_shipping_request"
+      // handover, on acceptance, opens a real clearing_customer_order (never a new
+      // module) from the whitelisted payload — and records its id back on the
+      // handover so the shipment / BL workflow can pick it up.
+      let shippingRequestId: string | null = h.shipping_request_id ?? null;
+      if (h.action_type === "create_shipping_request" && !shippingRequestId) {
+        const sp = h.shared_payload || {};
+        try {
+          const created = await saveCustomerOrder({
+            customerName: sp.consigneeName || sp.importerName || sp.customerName || sp.supplierName || "Shipping Party",
+            exporterName: sp.supplierName || sp.shipperName || sp.exporterName || null,
+            importerName: sp.consigneeName || sp.importerName || null,
+            buyerName: sp.customerName || null,
+            routeName: [sp.portOfLoading || sp.loadingPort, sp.portOfDischarge || sp.receivedPort].filter(Boolean).join(" → ") || null,
+            shipmentType: sp.containerSize?.includes("LCL") ? "LCL" : "FCL",
+            transportMode: /air/i.test(sp.transportMode || sp.shippingMode || "") ? "by_air" : "by_sea",
+            movementType: "import",
+            loadingCountryName: sp.loadingCountry || null,
+            receivingCountryName: sp.receivedCountry || null,
+            loadingPortName: sp.portOfLoading || sp.loadingPort || null,
+            destinationPortName: sp.portOfDischarge || sp.receivedPort || null,
+            cargoDetails: [
+              ...(Array.isArray(sp.goods) ? sp.goods.map((g: any) => `${g.description || g.goodsName || ""}${g.quantity ? ` x${g.quantity}${g.unit || ""}` : ""}`.trim()) : []),
+              h.container_numbers?.length ? `Containers: ${h.container_numbers.join(", ")}` : "",
+              sp.deliveryTerms || sp.incoterms ? `Incoterm: ${sp.deliveryTerms || sp.incoterms}` : "",
+            ].filter(Boolean).join("; ") || null,
+            remarks: `From Business handover ${h.handover_no}${h.contract_reference ? ` (contract ${h.contract_reference})` : ""}`,
+            status: "pending",
+            countryId: h.country_id,
+            countryBranchId: h.country_branch_id,
+            cityBranchId: h.city_branch_id,
+          } as never);
+          shippingRequestId = created?.order?.id ?? null;
+        } catch {
+          // non-fatal — the handover is still accepted; the request can be opened manually
+        }
+      }
+
+      await sql`UPDATE public.business_shipping_handovers SET
+        status = 'accepted', approved_by = ${actorId}, approved_by_name = ${actorName}, approved_at = now(),
+        shipping_request_id = ${shippingRequestId}, updated_at = now() WHERE id = ${id}`;
       if (h.source_intake_job_id) {
         await sql`INSERT INTO public.document_intake_events (job_id, action, detail, actor_id, actor_name)
           VALUES (${h.source_intake_job_id}, 'shipping_handover_accepted', ${sql.json({ handoverNo: h.handover_no } as never)}, ${actorId}, ${actorName})`;

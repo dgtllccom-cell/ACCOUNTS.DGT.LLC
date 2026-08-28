@@ -14447,6 +14447,8 @@ const en: Dict = {
   "hrm.recon_chk_balanced": "Balanced",
   "hrm.recon_chk_unbalanced": "Unbalanced",
   "hrm.recon_chk_not_posted": "Not Posted",
+  "dintake.batch_open": "Open in Purchase Loading",
+  "dintake.hi_request_opened": "A clearing customer order was opened from this handover — continue it in the Customer Order / BL workflow.",
 };
 
 const ur: Dict = {
@@ -24528,6 +24530,8 @@ const ur: Dict = {
   "hrm.recon_chk_balanced": "متوازن",
   "hrm.recon_chk_unbalanced": "غیر متوازن",
   "hrm.recon_chk_not_posted": "غیر پوسٹ شدہ",
+  "dintake.batch_open": "پرچیز لوڈنگ میں کھولیں",
+  "dintake.hi_request_opened": "اس ہینڈ اوور سے ایک کلیئرنگ کسٹمر آرڈر کھولا گیا — اسے کسٹمر آرڈر / بی ایل ورک فلو میں جاری رکھیں۔",
 };
 
 const ar: Dict = {
@@ -34611,6 +34615,8 @@ const ar: Dict = {
   "hrm.recon_chk_balanced": "متوازن",
   "hrm.recon_chk_unbalanced": "غير متوازن",
   "hrm.recon_chk_not_posted": "غير مُرحَّل",
+  "dintake.batch_open": "افتح في تحميل المشتريات",
+  "dintake.hi_request_opened": "تم فتح أمر عميل تخليص من هذا التسليم — تابعه في سير عمل أمر العميل / بوليصة الشحن.",
 };
 
 const fa: Dict = {
@@ -44693,6 +44699,8 @@ const fa: Dict = {
   "hrm.recon_chk_balanced": "متوازن",
   "hrm.recon_chk_unbalanced": "نامتوازن",
   "hrm.recon_chk_not_posted": "ثبت‌نشده",
+  "dintake.batch_open": "در بارگیری خرید باز کن",
+  "dintake.hi_request_opened": "یک سفارش مشتری ترخیص از این تحویل باز شد — آن را در گردش‌کار سفارش مشتری / بارنامه ادامه دهید.",
 };
 
 const ps: Dict = {
@@ -54781,6 +54789,8 @@ const ps: Dict = {
   "hrm.recon_chk_balanced": "برابر",
   "hrm.recon_chk_unbalanced": "نابرابر",
   "hrm.recon_chk_not_posted": "نه ثبت شوی",
+  "dintake.batch_open": "د پیرود بارولو کې پرانیزئ",
+  "dintake.hi_request_opened": "له دې سپارنې څخه د ترخیص پیرودونکي امر پرانیستل شو — دا د پیرودونکي امر / BL کاري بهیر کې دوام ورکړئ.",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

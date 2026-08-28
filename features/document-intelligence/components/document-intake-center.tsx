@@ -422,6 +422,11 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
                   {batchInfo.planned ? ` · ${s.t("batch_planned", "planned")}: ${batchInfo.planned}` : ""}
                 </span>
                 <span className="ms-1">{s.t("batch_next", "Confirm it in Purchase Loading and create the loading records there — no second Purchase Booking, no duplicate containers.")}</span>
+                {batchInfo.batch?.id ? (
+                  <a href={`/dashboard/purchase/loading-form?batchId=${batchInfo.batch.id}`} className="ms-1 inline-flex items-center gap-1 rounded-md bg-blue-600 px-2 py-0.5 text-[10px] font-bold text-white hover:bg-blue-700">
+                    {s.t("batch_open", "Open in Purchase Loading")}
+                  </a>
+                ) : null}
               </div>
             ) : null}
             {job.status === "draft_ready" && job.draft_reference ? (

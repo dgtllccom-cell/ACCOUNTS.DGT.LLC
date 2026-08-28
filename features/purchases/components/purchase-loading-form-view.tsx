@@ -81,6 +81,28 @@ export function PurchaseLoadingFormView() {
           setActiveTab("load");
         }
       }
+      // Deep-link from the AI Document Intake "Propose Loading Batch" flow:
+      //   /dashboard/purchase/loading-form?batchId=<uuid>
+      // → select the batch's purchase order and open the Load tab (the
+      //   LoadingBatchPanel then lists that batch's pending containers).
+      const batchId = searchParams.get("batchId");
+      if (batchId && !poNo) {
+        fetch(`/api/erp/purchases/loading-batches`, { cache: "no-store" })
+          .then(r => r.ok ? r.json() : null)
+          .then(j => {
+            const rows: any[] = j?.data?.rows ?? j?.rows ?? [];
+            const batch = rows.find((b: any) => b.id === batchId);
+            if (!batch) return;
+            const match = orders.find(o => o.id === batch.purchase_order_id || o.purchase_order_no === batch.purchase_order_no);
+            if (match) {
+              setSelectedPO(match);
+              setActiveTab("load");
+              const firstContainer = (batch.container_numbers || [])[0];
+              if (firstContainer) setLoadForm(f => ({ ...f, containerNumber: String(firstContainer).toUpperCase() }));
+            }
+          })
+          .catch(() => {});
+      }
     }
   }, [orders, selectedPO]);
 
