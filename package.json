@@ -20,6 +20,7 @@
     "prepare": "node scripts/setup-git-hooks.mjs",
     "i18n:guard": "node scripts/i18n-ui-guard.mjs",
     "i18n:guard:changed": "node scripts/i18n-ui-guard.mjs --changed",
+    "ocr:vendor": "node scripts/vendor-ocr-assets.mjs",
     "i18n:verify": "node scripts/i18n-ui-guard.mjs && node scripts/i18n-scan.mjs",
     "prebuild": "node scripts/i18n-ui-guard.mjs",
     "pretest": "node scripts/patch-vite-net-use.cjs",
@@ -69,6 +70,7 @@
     "lucide-react": "^0.468.0",
     "next": "^15.3.2",
     "nodemailer": "^6.9.13",
+    "pdf-parse": "^2.4.5",
     "postcss": "^8.5.3",
     "postgres": "^3.4.5",
     "react": "^19.2.7",
@@ -78,6 +80,7 @@
     "tailwind-merge": "^2.6.0",
     "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7",
+    "tesseract.js": "^5.1.1",
     "typescript": "^5.8.3",
     "zod": "^3.24.4"
   },

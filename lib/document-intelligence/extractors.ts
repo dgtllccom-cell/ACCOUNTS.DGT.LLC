@@ -1,0 +1,234 @@
+/**
+ * AI Document Intake — local heuristic field extractors.
+ *
+ * 100% local, deterministic regex/rule extraction over the OCR/text-layer output.
+ * Every extracted value carries a confidence (0..1) and, where a page can be
+ * identified, a page number. No external calls.
+ */
+
+import type { FieldCandidate, LineItemCandidate, OcrPage } from "./types";
+
+const CURRENCIES = ["USD", "AED", "PKR", "AFN", "INR", "SAR", "EUR", "GBP", "CNY", "JPY", "QAR", "KWD", "BHD", "OMR", "IRR", "TRY"];
+const CURRENCY_SYMBOLS: Record<string, string> = { "$": "USD", "€": "EUR", "£": "GBP", "₹": "INR", "﷼": "SAR", "¥": "CNY", "درهم": "AED", "روپیہ": "PKR", "افغانی": "AFN" };
+
+function clean(s: string | null | undefined): string {
+  return (s ?? "").replace(/\s+/g, " ").trim();
+}
+
+function pageOf(pages: OcrPage[], needle: string): number | null {
+  const n = needle.toLowerCase().slice(0, 40);
+  for (const p of pages) if (p.text.toLowerCase().includes(n)) return p.pageNumber;
+  return null;
+}
+
+function parseAmount(raw: string): number | null {
+  const m = clean(raw).replace(/[^0-9.,-]/g, "");
+  if (!m) return null;
+  // handle 1.234,56 (eu) vs 1,234.56 (us)
+  let v = m;
+  if (/,\d{2}$/.test(v) && v.includes(".")) v = v.replace(/\./g, "").replace(",", ".");
+  else v = v.replace(/,/g, "");
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+function normDate(raw: string): string | null {
+  const s = clean(raw);
+  // dd/mm/yyyy | dd-mm-yyyy | dd.mm.yyyy | yyyy-mm-dd | dd Mon yyyy
+  let m = s.match(/\b(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})\b/);
+  if (m) return `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`;
+  m = s.match(/\b(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})\b/);
+  if (m) {
+    const y = m[3].length === 2 ? `20${m[3]}` : m[3];
+    return `${y}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+  }
+  const months = "jan feb mar apr may jun jul aug sep oct nov dec".split(" ");
+  m = s.match(/\b(\d{1,2})[ -]?([A-Za-z]{3,9})[ ,-]?(\d{4})\b/);
+  if (m) {
+    const mi = months.indexOf(m[2].toLowerCase().slice(0, 3));
+    if (mi >= 0) return `${m[3]}-${String(mi + 1).padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+  }
+  return null;
+}
+
+type Rule = {
+  key: string;
+  label: string;
+  patterns: RegExp[];
+  kind?: "date" | "amount" | "currency" | "text" | "container" | "hs";
+  required?: boolean;
+};
+
+// Ordered — earlier, more specific patterns win.
+const RULES: Rule[] = [
+  { key: "invoice_number", label: "Invoice Number", patterns: [/invoice\s*(?:no\.?|number|#)\s*[:.\-]?\s*([A-Z0-9][A-Z0-9/\-.]{2,30})/i, /\binv[\s\-#:]*([A-Z0-9][A-Z0-9/\-.]{3,30})/i] },
+  { key: "contract_number", label: "Contract Number", patterns: [/contract\s*(?:no\.?|number|#|ref)\s*[:.\-]?\s*([A-Z0-9][A-Z0-9/\-.]{2,30})/i, /\bcon[\s\-#:]*([0-9]{3,10})/i] },
+  { key: "manual_contract_number", label: "Manual Contract / Bill Number", patterns: [/(?:manual|reference)\s*(?:contract|bill)\s*(?:no\.?)?\s*[:.\-]?\s*([A-Z0-9][A-Z0-9/\-.]{2,30})/i] },
+  { key: "booking_number", label: "Booking Number", patterns: [/booking\s*(?:no\.?|number|ref|confirmation)\s*[:.\-]?\s*([A-Z0-9][A-Z0-9/\-.]{2,30})/i] },
+  { key: "po_number", label: "Purchase Order Number", patterns: [/(?:purchase\s*order|p\.?o\.?)\s*(?:no\.?|number|#)\s*[:.\-]?\s*([A-Z0-9][A-Z0-9/\-.]{2,30})/i] },
+  { key: "so_number", label: "Sales Order Number", patterns: [/(?:sales\s*order|s\.?o\.?)\s*(?:no\.?|number|#)\s*[:.\-]?\s*([A-Z0-9][A-Z0-9/\-.]{2,30})/i] },
+  { key: "bl_number", label: "Bill of Lading Number", patterns: [/(?:b\/?l|bill\s*of\s*lading|awb|hbl|mbl)\s*(?:no\.?|number|#)\s*[:.\-]?\s*([A-Z0-9][A-Z0-9/\-.]{4,30})/i] },
+  { key: "customs_reference", label: "Customs Reference / GD No", patterns: [/(?:gd|goods\s*declaration|bill\s*of\s*entry|customs\s*(?:ref|declaration))\s*(?:no\.?)?\s*[:.\-]?\s*([A-Z0-9][A-Z0-9/\-.]{3,30})/i] },
+  { key: "document_date", label: "Document Date", kind: "date", patterns: [/(?:date|dated|invoice\s*date|document\s*date)\s*[:.\-]?\s*([0-3]?\d[-/. ][A-Za-z0-9]{2,9}[-/. ]\d{2,4}|\d{4}[-/.]\d{1,2}[-/.]\d{1,2})/i] },
+  { key: "due_date", label: "Due Date", kind: "date", patterns: [/(?:due\s*date|payment\s*due|maturity)\s*[:.\-]?\s*([0-3]?\d[-/. ][A-Za-z0-9]{2,9}[-/. ]\d{2,4}|\d{4}[-/.]\d{1,2}[-/.]\d{1,2})/i] },
+  { key: "eta", label: "ETA", kind: "date", patterns: [/\beta\b\s*[:.\-]?\s*([0-3]?\d[-/. ][A-Za-z0-9]{2,9}[-/. ]\d{2,4}|\d{4}[-/.]\d{1,2}[-/.]\d{1,2})/i] },
+  { key: "etd", label: "ETD", kind: "date", patterns: [/\betd\b\s*[:.\-]?\s*([0-3]?\d[-/. ][A-Za-z0-9]{2,9}[-/. ]\d{2,4}|\d{4}[-/.]\d{1,2}[-/.]\d{1,2})/i] },
+  { key: "currency", label: "Currency", kind: "currency", patterns: [/\b(USD|AED|PKR|AFN|INR|SAR|EUR|GBP|CNY|JPY|QAR|KWD|BHD|OMR|IRR|TRY)\b/] },
+  { key: "grand_total", label: "Grand Total", kind: "amount", patterns: [/(?:grand\s*total|total\s*amount|amount\s*due|invoice\s*total|total\s*payable|net\s*payable)\s*[:.\-]?\s*(?:[A-Z]{3}|[$€£₹﷼])?\s*([0-9][0-9,.\s]{2,20})/i] },
+  { key: "subtotal", label: "Subtotal", kind: "amount", patterns: [/(?:sub\s*total|sub-total|net\s*amount)\s*[:.\-]?\s*(?:[A-Z]{3}|[$€£₹﷼])?\s*([0-9][0-9,.\s]{2,20})/i] },
+  { key: "freight_amount", label: "Freight", kind: "amount", patterns: [/(?:ocean\s*freight|freight\s*charges?|freight)\s*[:.\-]?\s*(?:[A-Z]{3}|[$€£₹﷼])?\s*([0-9][0-9,.\s]{2,20})/i] },
+  { key: "insurance_amount", label: "Insurance", kind: "amount", patterns: [/(?:insurance|marine\s*insurance)\s*[:.\-]?\s*(?:[A-Z]{3}|[$€£₹﷼])?\s*([0-9][0-9,.\s]{2,20})/i] },
+  { key: "tax_amount", label: "Tax / VAT", kind: "amount", patterns: [/(?:vat|tax|gst|sales\s*tax)\s*(?:@?\s*\d+%?)?\s*[:.\-]?\s*(?:[A-Z]{3}|[$€£₹﷼])?\s*([0-9][0-9,.\s]{2,20})/i] },
+  { key: "advance_amount", label: "Advance", kind: "amount", patterns: [/(?:advance\s*(?:payment|paid|amount)?)\s*[:.\-]?\s*(?:[A-Z]{3}|[$€£₹﷼])?\s*([0-9][0-9,.\s]{2,20})/i] },
+  { key: "paid_amount", label: "Paid Amount", kind: "amount", patterns: [/(?:amount\s*paid|paid\s*amount|received)\s*[:.\-]?\s*(?:[A-Z]{3}|[$€£₹﷼])?\s*([0-9][0-9,.\s]{2,20})/i] },
+  { key: "balance_amount", label: "Remaining Balance", kind: "amount", patterns: [/(?:balance\s*(?:due|amount)?|remaining|outstanding)\s*[:.\-]?\s*(?:[A-Z]{3}|[$€£₹﷼])?\s*([0-9][0-9,.\s]{2,20})/i] },
+  { key: "exchange_rate", label: "Exchange Rate", kind: "amount", patterns: [/(?:exchange\s*rate|rate\s*of\s*exchange|fx\s*rate|conversion\s*rate)\s*[:.\-]?\s*([0-9]+\.?[0-9]*)/i] },
+  { key: "vessel", label: "Vessel", kind: "text", patterns: [/(?:vessel|ship\s*name|carrier\s*vessel)\s*(?:name)?\s*[:.\-]?\s*([A-Za-z0-9][A-Za-z0-9 .\-]{2,32}?)(?=\s{2,}|\s*(?:voyage|voy|b\/?l|date|$)|\n)/i] },
+  { key: "voyage", label: "Voyage", kind: "text", patterns: [/(?:voyage|voy\.?)\s*(?:no\.?)?\s*[:.\-]?\s*([A-Z0-9\-]{2,15})/i] },
+  { key: "port_of_loading", label: "Port of Loading", kind: "text", patterns: [/(?:port\s*of\s*loading|pol|load\s*port)\s*[:.\-]?\s*([A-Za-z][A-Za-z ,.\-]{2,32}?)(?=\s{2,}|\s*(?:port\s*of|pod|$)|\n)/i] },
+  { key: "port_of_discharge", label: "Port of Discharge", kind: "text", patterns: [/(?:port\s*of\s*discharge|pod|discharge\s*port|destination\s*port)\s*[:.\-]?\s*([A-Za-z][A-Za-z ,.\-]{2,32}?)(?=\s{2,}|\s*(?:vessel|voyage|$)|\n)/i] },
+  { key: "shipping_line", label: "Shipping Line", kind: "text", patterns: [/(?:shipping\s*line|carrier|line\s*name)\s*[:.\-]?\s*([A-Za-z0-9 .\-&]{3,40})/i] },
+  { key: "shipper", label: "Shipper", kind: "text", patterns: [/shipper\s*[:.\-]?\s*\n?\s*([A-Za-z0-9 .,&()\-]{4,60})/i] },
+  { key: "consignee", label: "Consignee", kind: "text", patterns: [/consignee\s*[:.\-]?\s*\n?\s*([A-Za-z0-9 .,&()\-]{4,60})/i] },
+  { key: "supplier_name", label: "Supplier / Seller", kind: "text", patterns: [/(?:supplier|seller|from|beneficiary|exporter)\s*[:.\-]?\s*\n?\s*([A-Za-z0-9 .,&()\-]{4,60})/i] },
+  { key: "customer_name", label: "Customer / Buyer", kind: "text", patterns: [/(?:customer|buyer|bill\s*to|sold\s*to|consignee|importer)\s*[:.\-]?\s*\n?\s*([A-Za-z0-9 .,&()\-]{4,60})/i] },
+  { key: "payment_terms", label: "Payment Terms", kind: "text", patterns: [/(?:payment\s*terms?|terms\s*of\s*payment)\s*[:.\-]?\s*([A-Za-z0-9 %,./\-]{3,60})/i] },
+  { key: "delivery_terms", label: "Delivery Terms / Incoterm", kind: "text", patterns: [/\b(FOB|CIF|CFR|CPT|CIP|DAP|DDP|EXW|FCA|FAS)\b[ ,-]?([A-Za-z ]{0,25})/ ] },
+  { key: "trn", label: "TRN / Tax Registration", kind: "text", patterns: [/(?:trn|tax\s*reg(?:istration)?\s*(?:no\.?)?|vat\s*no\.?|ntn|gst\s*no\.?)\s*[:.\-]?\s*([0-9A-Z\-]{5,20})/i] },
+];
+
+const CONTAINER_RE = /\b([A-Z]{4}\d{7})\b/g;
+const SEAL_RE = /\bseal\s*(?:no\.?)?\s*[:.\-]?\s*([A-Z0-9\-]{4,15})/gi;
+const HS_RE = /\b(\d{4}\.?\d{2}\.?\d{2,4})\b/g;
+
+export function extractFields(text: string, pages: OcrPage[], docTypeCode: string): FieldCandidate[] {
+  const out: FieldCandidate[] = [];
+  const seen = new Set<string>();
+  const push = (c: FieldCandidate) => {
+    if (seen.has(c.key)) return;
+    seen.add(c.key);
+    out.push(c);
+  };
+
+  for (const rule of RULES) {
+    for (const re of rule.patterns) {
+      const m = text.match(re);
+      if (!m) continue;
+      const rawGroup = rule.key === "currency" ? m[1] : (m[1] || m[0]);
+      const raw = clean(rawGroup);
+      if (!raw) continue;
+      let normalized: string | null = raw;
+      let confidence = 0.72;
+      if (rule.kind === "date") { normalized = normDate(raw); confidence = normalized ? 0.8 : 0.45; }
+      else if (rule.kind === "amount") { const n = parseAmount(raw); normalized = n == null ? null : String(n); confidence = n == null ? 0.4 : 0.78; }
+      else if (rule.kind === "currency") { normalized = raw.toUpperCase(); confidence = CURRENCIES.includes(normalized) ? 0.9 : 0.5; }
+      const status: FieldCandidate["validationStatus"] = confidence >= 0.8 ? "green" : confidence >= 0.55 ? "amber" : "red";
+      push({
+        key: rule.key,
+        label: rule.label,
+        rawValue: raw,
+        normalizedValue: normalized,
+        confidence,
+        pageNumber: pageOf(pages, raw) ?? pageOf(pages, m[0]),
+        bbox: null,
+        validationStatus: status,
+        validationMessage: normalized == null ? "Could not normalise the extracted value — please confirm." : null,
+      });
+      break;
+    }
+  }
+
+  // currency from symbol fallback
+  if (!seen.has("currency")) {
+    for (const [sym, cur] of Object.entries(CURRENCY_SYMBOLS)) {
+      if (text.includes(sym)) {
+        push({ key: "currency", label: "Currency", rawValue: sym, normalizedValue: cur, confidence: 0.55, pageNumber: pageOf(pages, sym), bbox: null, validationStatus: "amber", validationMessage: "Inferred from a currency symbol — please confirm." });
+        break;
+      }
+    }
+  }
+
+  // containers (multi)
+  const containers = [...new Set([...text.matchAll(CONTAINER_RE)].map((m) => m[1]))];
+  if (containers.length) {
+    push({ key: "container_numbers", label: "Container Numbers", rawValue: containers.join(", "), normalizedValue: containers.join(","), confidence: 0.85, pageNumber: pageOf(pages, containers[0]), bbox: null, validationStatus: "green", validationMessage: `${containers.length} container number(s) detected.` });
+  }
+  const seals = [...new Set([...text.matchAll(SEAL_RE)].map((m) => clean(m[1])))].filter(Boolean);
+  if (seals.length) {
+    push({ key: "seal_numbers", label: "Seal Numbers", rawValue: seals.join(", "), normalizedValue: seals.join(","), confidence: 0.7, pageNumber: null, bbox: null, validationStatus: "amber", validationMessage: null });
+  }
+  const hs = [...new Set([...text.matchAll(HS_RE)].map((m) => m[1].replace(/\./g, "")))].filter((x) => x.length >= 6 && x.length <= 10);
+  if (hs.length) {
+    push({ key: "hs_codes", label: "HS Codes", rawValue: hs.join(", "), normalizedValue: hs.join(","), confidence: 0.62, pageNumber: null, bbox: null, validationStatus: "amber", validationMessage: null });
+  }
+
+  return out;
+}
+
+/**
+ * Very light table-row heuristic for goods lines: rows that end in
+ * `<qty> <unit?> <unit_price> <amount>` or contain a description + a trailing number.
+ */
+export function extractLineItems(text: string, pages: OcrPage[]): LineItemCandidate[] {
+  const rows: LineItemCandidate[] = [];
+  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  let lineNo = 0;
+  const rowRe = /^(.{4,80}?)\s+([0-9][0-9,.]*)\s*(kg|kgs|pcs|pc|ctn|cartons?|units?|mt|tons?|bags?|drums?|rolls?)?\s+([0-9][0-9,.]*)\s+([0-9][0-9,.]*)\s*$/i;
+  for (const l of lines) {
+    const m = l.match(rowRe);
+    if (!m) continue;
+    const desc = clean(m[1]);
+    if (/total|subtotal|amount|balance|vat|tax|freight/i.test(desc)) continue;
+    lineNo += 1;
+    rows.push({
+      lineNo,
+      description: desc,
+      hsCode: (desc.match(HS_RE) || [])[0]?.replace(/\./g, "") || null,
+      brand: null,
+      quantity: parseAmount(m[2]),
+      unit: m[3] ? m[3].toLowerCase() : null,
+      packages: null,
+      grossWeight: null,
+      netWeight: null,
+      unitPrice: parseAmount(m[4]),
+      amount: parseAmount(m[5]),
+      currency: null,
+      confidence: 0.55,
+      pageNumber: pageOf(pages, desc),
+    });
+    if (lineNo >= 200) break;
+  }
+  return rows;
+}
+
+/** Keyword-scored classification against the registry. Returns 0..1 confidence. */
+export function classifyByKeywords(
+  text: string,
+  registry: Array<{ code: string; name: string; operational_domain: "business" | "shipping" | "both"; category: string; target_module: string | null; classifier_keywords: string[]; requires_qvc: boolean; min_confidence: number }>,
+  domainHint?: "business" | "shipping" | null,
+) {
+  const lc = text.toLowerCase();
+  const scores = registry.map((d) => {
+    let hits = 0;
+    for (const kw of d.classifier_keywords) if (kw && lc.includes(kw.toLowerCase())) hits += 1;
+    let score = d.classifier_keywords.length ? hits / Math.max(3, d.classifier_keywords.length) : 0;
+    if (domainHint && d.operational_domain !== "both" && d.operational_domain !== domainHint) score *= 0.4;
+    return { code: d.code, score: Math.min(1, score), def: d };
+  }).sort((a, b) => b.score - a.score);
+
+  const top = scores[0];
+  const other = registry.find((d) => d.code === "other_document")!;
+  if (!top || top.score < 0.15) {
+    return {
+      code: "other_document", name: other?.name ?? "Other / Unclassified", confidence: 0.2,
+      domain: "both" as const, category: "other", targetModule: null, requiresQvc: true,
+      scores: scores.slice(0, 5).map((s) => ({ code: s.code, score: Number(s.score.toFixed(2)) })),
+    };
+  }
+  return {
+    code: top.def.code, name: top.def.name, confidence: Number(top.score.toFixed(2)),
+    domain: top.def.operational_domain, category: top.def.category, targetModule: top.def.target_module,
+    requiresQvc: top.def.requires_qvc || top.score < top.def.min_confidence,
+    scores: scores.slice(0, 5).map((s) => ({ code: s.code, score: Number(s.score.toFixed(2)) })),
+  };
+}

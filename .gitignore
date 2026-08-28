@@ -47,3 +47,10 @@ api-error-log.txt
 Thumbs.db
 .vscode/
 .idea/
+
+# AI Document Intake — vendored OCR assets (run: npm run ocr:vendor) + private intake storage
+vendor/ocr/
+storage/document-intake/
+
+# tesseract.js cwd cache
+*.traineddata
