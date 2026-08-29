@@ -696,7 +696,8 @@ export function PurchaseOrderWizard({ session }) {
   const isSuperAdmin = activeSession?.isSuperAdmin || activeSession?.scopes?.isSuperAdmin || false;
   const isCountryAdmin = activeSession?.roles?.includes("country_admin") || activeSession?.scopes?.isCountryAdmin || (activeSession?.countryIds?.length > 0) || (activeSession?.scopes?.countryIds?.length > 0) || false;
   const [countries, setCountries] = useState([]);
-  const [allCountries, setAllCountries] = useState([]); // unscoped — for transit pickers
+  const [allCountries, setAllCountries] = useState([]); // unscoped — for transit pickers
+  const [allMainBranches, setAllMainBranches] = useState([]);
   const [dbGoods, setDbGoods] = useState([]); // goods from master DB
   const [dbLoadingPorts, setDbLoadingPorts] = useState([]);
   const [dbReceivedPorts, setDbReceivedPorts] = useState([]);
@@ -711,6 +712,26 @@ export function PurchaseOrderWizard({ session }) {
   const [dbAccountsLoading, setDbAccountsLoading] = useState(true);
   const [customQtyNames, setCustomQtyNames] = useState([]);
 
+  // Fetch all main branches on mount to determine which countries have configured branches
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/erp/locations/branches/main")
+      .then((r) => r.json())
+      .then((res) => {
+        if (cancelled) return;
+        const list = res?.data?.branches || res?.branches || [];
+        setAllMainBranches(list);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  const scopeCountries = useMemo(() => {
+    if (!allMainBranches || allMainBranches.length === 0) return countries || [];
+    const branchCountryIds = new Set(allMainBranches.map(b => b.country_id || b.countryId));
+    return (countries || []).filter(c => branchCountryIds.has(c.id));
+  }, [countries, allMainBranches]);
+
   // Load Countries
   useEffect(() => {
     let cancelled = false;
@@ -721,7 +742,7 @@ export function PurchaseOrderWizard({ session }) {
         const list = res?.countries || res?.data?.countries || [];
         setCountries(list);
         setAllCountries(list);
-        if (list.length > 0 && !form.countryId) {
+        if (list.length > 0 && !form.countryId && !isSuperAdmin) {
           const first = list[0];
           setForm((p) => ({
             ...p,
@@ -734,7 +755,7 @@ export function PurchaseOrderWizard({ session }) {
       })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, []);
+  }, [isSuperAdmin]);
 
   // Load Main Branches when Country changes
   useEffect(() => {
@@ -3712,20 +3733,29 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
           isOpen={true}
           onClose={() => {}} // Cannot close without selecting
           title={t(lang, "purchase.working_scope_title", "Super Admin: Select Working Scope")}
-          width="md"
+          width="sm"
         >
           <div className="space-y-4 p-2">
-            <p className="text-xs text-slate-600 dark:text-slate-400">
-              {t(lang, "purchase.working_scope_desc", "Please select the Country, Branch, and City Branch you want to work in for Purchase Orders.")}
-            </p>
+            <div className="flex items-center gap-2.5 pb-2 border-b border-border/60">
+              <div className="h-8 w-8 rounded-lg bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 flex items-center justify-center font-bold shrink-0">
+                <ShieldCheck className="h-4 w-4" />
+              </div>
+              <div>
+                <span className="text-[10px] font-black tracking-widest uppercase text-indigo-600 dark:text-indigo-400 block leading-tight">SUPER ADMIN CONTROL</span>
+                <p className="text-xs text-muted-foreground font-medium">
+                  {t(lang, "purchase.working_scope_desc", "Select Country, Main Branch, and City Branch scope.")}
+                </p>
+              </div>
+            </div>
+
             <div className="space-y-3">
               <div>
-                <label className="text-xs font-black">{t(lang, "purchase.f_country", "Country")}</label>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">{t(lang, "purchase.f_country", "Country")}</label>
                 <select
                   value={form.countryId || ""}
                   onChange={(e) => {
                     const cId = e.target.value;
-                    const country = (countries || []).find(c => c.id === cId);
+                    const country = (scopeCountries || []).find(c => c.id === cId);
                     setForm(p => ({
                       ...p,
                       countryId: cId,
@@ -3737,16 +3767,16 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                       paymentCurrency: country ? (country.currency_code || country.currencyCode || "USD") : p.paymentCurrency
                     }));
                   }}
-                  className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-xs font-semibold outline-none focus:border-primary"
+                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-xs font-medium outline-none focus:border-primary focus:ring-1 focus:ring-primary shadow-xs transition"
                 >
                   <option value="">{t(lang, "purchase.select_country_ellipsis", "Select Country...")}</option>
-                  {(countries || []).map((c) => (
+                  {(scopeCountries || []).map((c) => (
                     <option key={c.id} value={c.id}>{c.name} ({c.currency_code || c.currencyCode || "USD"})</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="text-xs font-black">{t(lang, "purchase.f_branch", "Branch")}</label>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">{t(lang, "purchase.f_branch", "Branch")}</label>
                 <select
                   value={form.countryBranchId || ""}
                   onChange={(e) => {
@@ -3762,7 +3792,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                     }));
                   }}
                   disabled={!form.countryId}
-                  className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-xs font-semibold outline-none focus:border-primary disabled:opacity-50"
+                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-xs font-medium outline-none focus:border-primary focus:ring-1 focus:ring-primary shadow-xs transition disabled:opacity-50"
                 >
                   <option value="">{t(lang, "purchase.select_branch_ellipsis", "Select Branch...")}</option>
                   {(mainBranches || []).map((b) => (
@@ -3771,7 +3801,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                 </select>
               </div>
               <div>
-                <label className="text-xs font-black">{t(lang, "branch.city_label", "City Branch")}</label>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">{t(lang, "branch.city_label", "City Branch")}</label>
                 <select
                   value={form.cityBranchId || ""}
                   onChange={(e) => {
@@ -3786,7 +3816,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                     }));
                   }}
                   disabled={!form.countryBranchId}
-                  className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-xs font-semibold outline-none focus:border-primary disabled:opacity-50"
+                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-xs font-medium outline-none focus:border-primary focus:ring-1 focus:ring-primary shadow-xs transition disabled:opacity-50"
                 >
                   <option value="">{t(lang, "purchase.select_city_branch_ellipsis", "Select City Branch...")}</option>
                   {(cityBranches || []).map((b) => (
@@ -3796,12 +3826,12 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
               </div>
             </div>
 
-            <div className="pt-4 flex justify-end">
+            <div className="pt-3 flex justify-end">
               <Button
                 type="button"
                 onClick={() => setScopeConfirmed(true)}
                 disabled={!form.countryId || !form.countryBranchId}
-                className="bg-[#0F172A] hover:bg-slate-800 text-white font-bold h-9 text-xs px-6 rounded-lg shadow-sm disabled:opacity-50 disabled:bg-slate-300 disabled:text-slate-500 cursor-pointer"
+                className="bg-primary text-primary-foreground font-bold h-9 text-xs px-5 rounded-lg shadow-sm hover:opacity-90 disabled:opacity-50 cursor-pointer"
               >
                 {t(lang, "purchase.confirm_scope", "Confirm Scope")} &rarr;
               </Button>
