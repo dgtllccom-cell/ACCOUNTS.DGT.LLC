@@ -35,6 +35,17 @@ export type DocumentBranding = {
   countryName: string | null;
   branchName: string | null;
   baseCurrency: string | null;
+  /** beneficiary bank from the entity's branding profile (banking_information) */
+  bank: {
+    bankName?: string | null;
+    branchName?: string | null;
+    accountTitle?: string | null;
+    accountNumber?: string | null;
+    iban?: string | null;
+    swift?: string | null;
+    currency?: string | null;
+    address?: string | null;
+  } | null;
   /** raw resolver payload for callers that need extra fields */
   raw: Branding | null;
 };
@@ -52,8 +63,28 @@ const EMPTY: DocumentBranding = {
   entityName: null, legalName: null, logoUrl: null, stampUrl: null,
   address: null, phone: null, email: null, website: null,
   registrationNumber: null, taxNumber: null, countryName: null,
-  branchName: null, baseCurrency: null, raw: null,
+  branchName: null, baseCurrency: null, bank: null, raw: null,
 };
+
+/** Map the free-form banking_information json to a normalized bank block. */
+function bankFrom(banking: Record<string, any> | null | undefined): DocumentBranding["bank"] {
+  if (!banking || typeof banking !== "object") return null;
+  const g = (...keys: string[]) => {
+    for (const k of keys) { const v = real(banking[k]); if (v) return v; }
+    return null;
+  };
+  const bank = {
+    bankName: g("bankName", "bank_name", "bank", "name"),
+    branchName: g("branchName", "branch_name", "branch"),
+    accountTitle: g("accountTitle", "account_title", "title", "beneficiary"),
+    accountNumber: g("accountNumber", "account_number", "account", "accountNo"),
+    iban: g("iban", "IBAN"),
+    swift: g("swift", "swiftCode", "swift_bic", "bic"),
+    currency: g("currency", "accountCurrency"),
+    address: g("address", "bankAddress"),
+  };
+  return Object.values(bank).some(Boolean) ? bank : null;
+}
 
 /** Ignore config-placeholder junk sometimes typed into the profile record. */
 function real(v: unknown): string | null {
@@ -108,6 +139,7 @@ export async function resolveDocumentBranding(
     countryName: real(b.countryName) || real(scope.countryName),
     branchName: real(scope.branchName),
     baseCurrency: real(b.baseCurrency),
+    bank: bankFrom(b.banking),
     raw: b,
   };
 }

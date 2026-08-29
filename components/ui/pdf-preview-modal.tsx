@@ -7,14 +7,32 @@ import { X, Printer, Download, Mail, Share2, Menu, FileText, LayoutList } from "
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 
+const DOC_LANGS: Array<{ code: string; label: string }> = [
+  { code: "en", label: "English" }, { code: "ur", label: "اردو" }, { code: "ps", label: "پښتو" },
+  { code: "fa", label: "فارسی" }, { code: "ar", label: "العربية" },
+];
+
 export function PdfPreviewModal() {
-  const { isOpen, htmlContent, title, closePrint } = usePrintStore();
+  const { isOpen, htmlContent, title, rebuild, lang: docLang, closePrint, updateHtml } = usePrintStore();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const lang = useActiveLanguage();
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
 
   const [orientation, setOrientation] = useState<"portrait" | "landscape">("portrait");
+  const [previewLang, setPreviewLang] = useState<string>(docLang || "en");
+
+  useEffect(() => { setPreviewLang(docLang || "en"); }, [docLang, isOpen]);
+
+  // When the document exposes a rebuild fn, the language / orientation selectors
+  // re-render the document from source instead of only restyling.
+  const applyRebuild = (nextLang: string, nextOrientation: "portrait" | "landscape") => {
+    if (!rebuild) return;
+    try {
+      const html = rebuild({ lang: nextLang, orientation: nextOrientation });
+      updateHtml(html, nextLang);
+    } catch { /* keep current preview on failure */ }
+  };
   const [paperSize, setPaperSize] = useState("A4");
   const [pages, setPages] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -158,12 +176,27 @@ export function PdfPreviewModal() {
         {/* Center: Controls */}
         <div className="flex items-center gap-2 sm:gap-4 bg-[#1e293b] p-1.5 rounded-lg border border-slate-700">
           <button
-            onClick={() => setOrientation(o => o === "portrait" ? "landscape" : "portrait")}
+            onClick={() => {
+              const next = orientation === "portrait" ? "landscape" : "portrait";
+              setOrientation(next);
+              applyRebuild(previewLang, next);
+            }}
             className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-slate-800 hover:bg-slate-700 rounded text-slate-200 transition-colors"
           >
             <LayoutList className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">{orientation === "portrait" ? tt("pdfprev.portrait", "Portrait") : tt("pdfprev.landscape", "Landscape")}</span>
           </button>
+
+          {rebuild && (
+            <select
+              value={previewLang}
+              onChange={(e) => { setPreviewLang(e.target.value); applyRebuild(e.target.value, orientation); }}
+              className="bg-slate-800 text-slate-200 text-xs px-2 py-1 rounded outline-none border-none cursor-pointer"
+              title={tt("pdfprev.document_language", "Document Language")}
+            >
+              {DOC_LANGS.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}
+            </select>
+          )}
 
           <div className="text-xs font-medium text-slate-300 px-2 border-x border-slate-700">
             {tt("pdfprev.page_of", "Page {current} of {total}").replace("{current}", String(currentPage)).replace("{total}", String(pages.length))}

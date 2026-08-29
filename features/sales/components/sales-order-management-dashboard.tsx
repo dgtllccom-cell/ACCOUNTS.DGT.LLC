@@ -33,6 +33,7 @@ import { resolveVerifiedTranslation, translationPendingLabel } from "@/lib/i18n/
 import { t } from "@/lib/i18n/ui";
 import { RecordTranslationCorrectionDialog } from "@/features/translations/components/record-translation-correction-dialog";
 import { ERP_TABLE_STYLES } from "@/components/ui/erp-data-table";
+import { TradeDocumentCenter } from "@/features/reports/components/trade-document-center";
 
 type SalesOrder = {
   [key: string]: any;
@@ -84,6 +85,7 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [tradeDocsOrder, setTradeDocsOrder] = useState<SalesOrder | null>(null);
   const localized = (order: SalesOrder, field: string, fallback: string) =>
     resolveVerifiedTranslation(order.translations?.[field], activeLang) || fallback || translationPendingLabel(activeLang);
 
@@ -480,6 +482,15 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
                           >
                             <Printer className="h-3.5 w-3.5" />
                           </Button>
+                          <Button
+                            onClick={() => setTradeDocsOrder(order)}
+                            variant="outline"
+                            size="sm"
+                            className="h-8 w-8 p-0 border-slate-300 dark:border-slate-700 text-blue-600 dark:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0"
+                            title={t(activeLang, "tdoc.center_title", "Commercial Document Center")}
+                          >
+                            <FileText className="h-3.5 w-3.5" />
+                          </Button>
                           
                           {order.sales_status === "draft" && (
                             <Button
@@ -506,6 +517,23 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
         </table>
         </div>
       </div>
+
+      {tradeDocsOrder && (
+        <TradeDocumentCenter
+          open={!!tradeDocsOrder}
+          onClose={() => setTradeDocsOrder(null)}
+          txnKind="sales"
+          record={tradeDocsOrder as any}
+          companyId={(tradeDocsOrder as any).seller_company_id || (tradeDocsOrder as any).company_id || null}
+          scope={{
+            countryId: (tradeDocsOrder as any).country_id || null,
+            countryBranchId: (tradeDocsOrder as any).country_branch_id || null,
+            cityBranchId: (tradeDocsOrder as any).city_branch_id || null,
+            countryName: (tradeDocsOrder as any).country_name || null,
+            branchName: (tradeDocsOrder as any).branch_name || null,
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -28,7 +28,7 @@ export async function GET(req: Request) {
     const [{ data: profile }, { data: country }] = await Promise.all([
       supabase
         .from("country_company_profiles")
-        .select("id, country_id, company_name, company_name_en, company_name_ur, company_name_ar, company_name_fa, company_name_ps, legal_name, company_logo_url, company_stamp_url, letterhead_url, report_header, certificate_header, hr_manager_name, company_address, contact_information, registration_number, tax_information, email_information, website_information, document_header_template, document_footer_template, base_currency, hr_department_name, watermark_text, qr_enabled")
+        .select("id, country_id, company_name, company_name_en, company_name_ur, company_name_ar, company_name_fa, company_name_ps, legal_name, company_logo_url, company_stamp_url, letterhead_url, report_header, certificate_header, hr_manager_name, company_address, contact_information, registration_number, tax_information, email_information, website_information, banking_information, document_header_template, document_footer_template, base_currency, hr_department_name, watermark_text, qr_enabled")
         .eq("country_id", countryId)
         .eq("is_active", true)
         .is("deleted_at", null)
@@ -69,6 +69,7 @@ export async function GET(req: Request) {
           headerTemplate: profile.document_header_template ?? {},
           footerTemplate: profile.document_footer_template ?? {},
           baseCurrency: profile.base_currency,
+          banking: (profile.banking_information ?? {}) as Record<string, any>,
         }
       : { countryId, countryName: country?.name ?? null, companyName: country?.name ?? null, logoUrl: null };
 

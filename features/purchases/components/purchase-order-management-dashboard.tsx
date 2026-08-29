@@ -46,9 +46,11 @@ import { useRouter } from "next/navigation";
 import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
 import { openPurchaseA4ReportWindow } from "@/lib/reports/open-purchase-a4-report-window";
 import { openProformaInvoiceWindow } from "@/lib/reports/open-proforma-invoice-window";
+import { TradeDocumentCenter } from "@/features/reports/components/trade-document-center";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { t as tUi } from "@/lib/i18n/ui";
 import { BranchUserSummary, type OrgBreakdownNode } from "@/components/reports/branch-user-summary";
 import { useBranchUserContext } from "@/lib/hooks/use-branch-user-context";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
@@ -2084,6 +2086,7 @@ export function PurchaseOrderManagementDashboard() {
   });
   const [transferDropdownOpen, setTransferDropdownOpen] = useState(false);
   const [moreActionsDropdownOpen, setMoreActionsDropdownOpen] = useState(false);
+  const [tradeDocsOpen, setTradeDocsOpen] = useState(false);
   const [drawerReportType, setDrawerReportType] = useState<"branch" | "totaling" | "payment">("branch");
 
   useEffect(() => {
@@ -3182,6 +3185,17 @@ export function PurchaseOrderManagementDashboard() {
                         type="button"
                         onClick={() => {
                           setMoreActionsDropdownOpen(false);
+                          setTradeDocsOpen(true);
+                        }}
+                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-900"
+                      >
+                        <FileText className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                        {tUi(activeLang, "tdoc.center_title", "Commercial Document Center")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMoreActionsDropdownOpen(false);
                           openProformaInvoiceWindow({ purchaseData: selected });
                         }}
                         className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-900"
@@ -3880,6 +3894,23 @@ export function PurchaseOrderManagementDashboard() {
             );
           })()}
         </DetailDrawer>
+      )}
+
+      {tradeDocsOpen && selected && (
+        <TradeDocumentCenter
+          open={tradeDocsOpen}
+          onClose={() => setTradeDocsOpen(false)}
+          txnKind="purchase"
+          record={selected as any}
+          companyId={(selected as any).supplier_company_id || null}
+          scope={{
+            countryId: (selected as any).country_id || null,
+            countryBranchId: (selected as any).country_branch_id || null,
+            cityBranchId: (selected as any).city_branch_id || null,
+            countryName: (selected as any).country_name || (selected as any).countryName || null,
+            branchName: (selected as any).branch_name || (selected as any).branchName || null,
+          }}
+        />
       )}
     </div>
   );

@@ -4,6 +4,10 @@ type PrintState = {
   isOpen: boolean;
   htmlContent: string;
   title: string;
+  /** optional: lets the preview modal re-render the document in another language
+   *  / orientation by rebuilding the HTML from source. */
+  rebuild?: ((opts: { lang: string; orientation: "portrait" | "landscape" }) => string) | null;
+  lang?: string;
 };
 
 type PrintListener = (state: PrintState) => void;
@@ -13,6 +17,8 @@ class PrintStore {
     isOpen: false,
     htmlContent: "",
     title: "Print Document",
+    rebuild: null,
+    lang: "en",
   };
   private listeners: Set<PrintListener> = new Set();
 
@@ -30,12 +36,27 @@ class PrintStore {
     };
   };
 
-  openPrint = (htmlContent: string, title: string = "Print Document") => {
-    this.setState({ isOpen: true, htmlContent, title });
+  openPrint = (
+    htmlContent: string,
+    title: string = "Print Document",
+    extra?: { rebuild?: PrintState["rebuild"]; lang?: string },
+  ) => {
+    this.setState({
+      isOpen: true,
+      htmlContent,
+      title,
+      rebuild: extra?.rebuild ?? null,
+      lang: extra?.lang ?? "en",
+    });
+  };
+
+  /** replace the previewed HTML in place (used by the modal's language / orientation switch). */
+  updateHtml = (htmlContent: string, lang?: string) => {
+    this.setState({ htmlContent, ...(lang ? { lang } : {}) });
   };
 
   closePrint = () => {
-    this.setState({ isOpen: false, htmlContent: "", title: "Print Document" });
+    this.setState({ isOpen: false, htmlContent: "", title: "Print Document", rebuild: null });
   };
 }
 
@@ -51,6 +72,7 @@ export function usePrintStore() {
   return {
     ...state,
     openPrint: printStore.openPrint,
+    updateHtml: printStore.updateHtml,
     closePrint: printStore.closePrint,
   };
 }

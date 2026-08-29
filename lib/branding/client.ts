@@ -32,6 +32,8 @@ export type Branding = {
   footerTemplate?: any;
   headerTemplate?: any;
   baseCurrency?: string | null;
+  /** beneficiary bank block from country_company_profiles.banking_information */
+  banking?: Record<string, any> | null;
 };
 
 const cache = new Map<string, Branding | null>();
