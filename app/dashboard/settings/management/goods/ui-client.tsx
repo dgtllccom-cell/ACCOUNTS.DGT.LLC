@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronRight, Eye, Pencil, Plus, Save, Search, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -68,8 +68,8 @@ export default function GoodsManagementClient({ session }: { session: any }) {
   const refresh = useCallback(async (opts?: { q?: string }) => {
     setBusy(true);
     try {
-      const res = await listGoods({ query: opts?.q ?? "", limit: 100 });
-      setRows(res.goods as GoodsRecord[]);
+      const res = await listGoods({ q: opts?.q ?? "", limit: 100 });
+      setRows((res.goods as unknown as GoodsRecord[]) ?? []);
     } catch (e: any) {
       setBanner({ type: "error", text: e?.message ?? "Failed to load goods." });
     } finally {
