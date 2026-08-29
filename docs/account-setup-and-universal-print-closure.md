@@ -1,88 +1,84 @@
-# Account Setup + Universal Print/PDF — closure status
+# Account Setup + Universal Print/PDF — closure status (round 2)
 
-Date: 2026-08-30. Two workstreams from the "FINAL COMBINED CLOSURE INSTRUCTION".
+Date: 2026-08-30. Continuation of the two-workstream closure.
+
+**Still NOT "100% COMPLETE — REMAINING ISSUES: 0".** Honest matrix below.
 
 ---
 
-## A. ACCOUNT SETUP — session scope, login context, 5-language, creation
+## A. ACCOUNT SETUP
 
-Architecture-level fix (commit `0924be7`), not a cosmetic patch.
+Commit `0924be7`. Architecture-level, not cosmetic.
 
 | Item | State | Evidence |
 |---|---|---|
-| **Login Scope** (banner) | ✅ | `components/layout/login-scope-banner.tsx` — "Logged-in Scope: Country → Main Branch → City Branch → Role", from `useErpScope()` → `/api/erp/auth/session` (server-RBAC). Browser: PK country_admin shows *Pakistan → Country-wide → Country Admin*; super_admin shows *All Countries → All Branches → Super Admin*; Urdu RTL verified. |
-| **Country Scope** | ✅ | Country `<select>` **disabled + option list filtered to the user's countries** when scope is fixed. Browser: PK country_admin → 1 option ("Pakistan (PK)"), `disabled=true`. Super admin → 6 options, enabled. |
-| **Branch Scope** | ✅ | Branch options filtered to `countryBranchIds` / `cityBranchIds`; branch + branch-type locked for a city-branch user. `simulateCityAdmin` fake checkbox removed. |
-| **Backend Permission** | ✅ (already enforced) | `POST /api/erp/accounting/accounts` calls `authorizeApiScope(session, {resource:"accounts", action:"create", countryId, countryBranchId, cityBranchId})` → `authorize()` throws `ErpPermissionError` on any out-of-scope id. |
-| **Direct API Block** | ✅ Verified | `scratch/account-scope-security.mts` **3/3**: PK country_admin → India account = **403 FORBIDDEN "Country scope is not allowed"**; PK branch user → India = **403**; own-country create = *not* scope-rejected. |
-| **Review Data** | ✅ | `branchInfo` now resolves from the session when the branch list is still loading / scope-filtered (no blank Company / Branch / Currency). Hard-coded `"Damaan <country>"` replaced with the branding-master company (`country_company_profiles`). |
-| **Account Creation** | ✅ | Step-1 "Save & Next" no longer silently auto-fills Company / Trading Company / Sundry Debtors / `"b-main-001"`. `"incomplete — please review steps"` replaced with a message naming the exact missing fields. Double-submit guard on `saveEntry`. |
-| **Database Save** | ✅ Verified | `scratch/account-save-e2e.mts` **9/0**: create → 201, `accountId` + `accountNumber` (`UAE-AC-0001`) + `ledgerId` (ledger row created), account visible in `/api/erp/accounting/reports/accounts/general`, filed under UAE. |
-| **Account List / Ledger Visibility** | ✅ Verified | (same E2E) the new account appears in the accounts general report — the source of the Account List / Ledger view. |
-| **Contact Validation** | ✅ | `contactErrorKey()` — Mobile/WhatsApp/Landline/Office = 7–15-digit E.164-ish; Email regex. Inline red error + blocks save. |
-| **EN / UR / PS / FA / AR** | ✅ parity; ⚠️ browser EN+UR only | All new strings in the account `translations.ts` (5 langs) + 5 `scope.*` keys in `lib/i18n/ui.ts` (guard green 10 456×5). Raw English toasts ("Could not load countries", etc.) translated. Browser-verified EN + UR (RTL). FA/PS/AR not separately screenshotted. |
-| **RTL / LTR** | ✅ | Banner + whole screen flip; chevrons rotate. Verified UR. |
-| **Mobile / Desktop** | ⚠️ partial | Verified at 471 px (mobile viewport). iPad/Android device grid not tested. |
-| **Local / DEV** | ✅ | All of the above on DEV. |
-| **EPS / Production** | ⏳ pending deploy | Frontend + a new hook only — no migration. Verify after the commits deploy. |
-
-**A remaining:** the account `translations.ts` is a parallel per-module dict (pre-existing tech-debt, not migrated to `lib/i18n/ui.ts`); FA/PS/AR + device-grid browser passes; production re-verification.
+| Login Scope banner | ✅ | server-resolved `useErpScope()` → `LoginScopeBanner`. |
+| Country / Branch scope lock + filter | ✅ | disabled + option list filtered when scope fixed. |
+| Backend permission | ✅ (already enforced) | `authorizeApiScope` on `POST /api/erp/accounting/accounts`. |
+| Direct-API block | ✅ **verified** | `scratch/account-scope-security.mts` **3/0** — PK country_admin → India = **403 FORBIDDEN**; PK branch user → India = 403. |
+| Review data / no `Damaan <country>` / no silent auto-fill | ✅ | branchInfo falls back to session; branding-master company; missing-field names shown. |
+| Account creation + DB save + list/ledger visibility | ✅ **verified** | `scratch/account-save-e2e.mts` **9/0** — 201 + ledger row + visible in accounts general report, filed under UAE. |
+| Contact validation (Mobile/WhatsApp/Email) | ✅ | inline error + blocks save. |
+| Double-submit guard | ✅ | `if (saving) return`. |
+| **EN / UR / PS / FA / AR** | ✅ **all 5 browser-verified** | Account Setup opened as PK country_admin in each language: banner + country-locked ("Pakistan (PK)", disabled) + all step/field labels translated + `dir=rtl` for UR/PS/FA/AR. |
+| Mobile / Desktop | ✅ mobile viewport (471 px); ⚠️ iPad/Android device grid not tested |
+| Local / DEV | ✅ |
+| **EPS / Production** | ⏳ **pending deploy** | Frontend + new hook only, no migration. Verify after commits deploy. |
 
 ---
 
 ## B. UNIVERSAL PRINT / PDF
 
-Two **centralized engines** built and wired (commits `537f217`, `3f20980`, `774cffb`, `d4171c2`).
+### Central engines (built earlier — commits `537f217`, `3f20980`, `774cffb`, `d4171c2`)
 
-| Document family | State | Notes |
+| | Master Profile engine | Trade Document engine |
 |---|---|---|
-| **Account Master Profile** | ✅ done + browser-verified | `lib/reports/master-profiles/`; replaces raw `window.print()` in `account-profile-view.tsx`. |
-| **Company Master Profile** | ✅ done | new action + `/api/erp/companies/[id]/profile`. |
-| **Customer Master Profile** | ✅ done | inline builder extracted. |
-| **Employee Master Profile** | ✅ done | + photo / KYC / payroll summary. |
-| **Commercial Invoice** | ✅ engine + wired | `lib/reports/trade-documents/`; Purchase & Sales management dashboards + both wizards' View menu. |
-| **Packing List** | ✅ engine + wired | no prices; weight/packages emphasis. |
-| **Proforma Invoice** | ✅ engine + wired | quotation refs, validity, bank. |
-| **Purchase / Sales / Local Purchase docs** | ✅ mapper | `from-transaction.ts` — international vs local **inferred**; frozen FX read, never invented; verified vs real DSA2025-0908 (→ AED 810,337.50). |
-| **Local Sales doc** | ⚠️ | `salesOrderToTradeInput` handles it; no dedicated `local_sales` table on DEV to click-through. |
-| **Ledger / Journal / Roznamcha** | ⚠️ prior work only | ~10 views were migrated to `openUniversalPrintReport` in an earlier pass (memory `erp-master-verification-phase8`); **this session did not re-audit them**. `purchase-order-payment-journal.tsx`, `sales-order-payment-journal.tsx`, `roznamcha-type-report-view.tsx` still contain `window.print()` / `document.write()`. |
-| **Stock / CRM / Audit / HRM / Shipping / Clearing / other reports** | ❌ not migrated this session | See the legacy-print list below. |
+| Account / Company / Customer / Employee Master Profile | ✅ (Account browser-verified EN+UR) | — |
+| Commercial Invoice / Packing List / Proforma | — | ✅ engine + wizards + dashboards |
+| Real data / no invented FX / frozen rate | ✅ | ✅ verified vs real DSA2025-0908 → AED 810,337.50 |
+| A4 P/L · PDF · pagination "Page X of Y" · 5-lang · RTL · dynamic branding | ✅ | ✅ (535 offline assertions total) |
 
-### Legacy `window.print()` / `document.write()` — still present (32 files, 46 sites)
+### Legacy `window.print()` / `document.write()` migration (commits `b751ec4`, `e986279`)
 
-Not migrated this session (a full per-file migration + A4 / 5-language / device
-re-verification of each is a large separate effort):
+**Before this session: 32 files / 46 sites. After: raw `window.print()` remains only as a
+fallback (`if (!printDomFragmentViaModal(...)) window.print()`) or inside self-contained
+generated receipt HTML.** New shared helpers:
+- `lib/reports/open-scoped-report.ts` — dynamic branding + `openGenericErpReport`.
+- `lib/reports/print-dom-fragment.ts` — renders an already-built A4 block into the shared
+  `PdfPreviewModal` iframe (kills the `document.body.innerHTML = frag; print(); reload()`
+  anti-pattern).
 
-`features/{shipping/bl-entry-view, branch-management/branch-general-report-view,
-messages/email-management, users/user-registration-wizard,
-locations/{location-registry, location-management-wizard},
-audit/{deleted-record-detail-view, all-edit-version-history-view, all-deleted-records-view},
-accounts/{account-profile-view (fallback only), account-setup-report, account-general-report-view},
-clearing-agent/{customer-order-management-view, transit-entry-management},
-branches/city-branch-registration-wizard, customers/customer-list,
-journal/{sales-order-payment-journal, journal-booking-stock-dashboard, purchase-order-payment-journal},
-hr-payroll/payroll-reports-view, sales/{quotation-view, sales-transfer-erp-report-view},
-roznamcha/roznamcha-type-report-view,
-purchases/{local-purchase-journal-report-view, purchase-transfer-erp-report-view-v2,
-completed-purchase-bills-view, purchase-booking-journal-report-view, local-purchase-view,
-purchase-loading-records-view}}`.
-
-### Dynamic branding / A4 / PDF / 5-lang / RTL
-
-| Requirement | Master Profiles | Trade Documents |
+| Screen | Migrated to | Verified |
 |---|---|---|
-| Central engine | ✅ | ✅ |
-| A4 portrait + landscape | ✅ | ✅ (in-preview toggle rebuilds) |
-| PDF download | ✅ (preview modal) | ✅ |
-| Pagination + "Page X of Y" | ✅ `counter(page)` | ✅ `counter(page)` |
-| No blank pages / no dashboard chrome | ✅ | ✅ |
-| Dynamic company/branch/logo branding | ✅ `resolve-document-branding` | ✅ (+ bank from `banking_information`) |
-| Real data only / no invented FX | ✅ | ✅ |
-| EN/UR/PS/FA/AR parity | ✅ guard | ✅ guard |
-| RTL/LTR | ✅ (EN/UR browser) | ✅ (offline 5-lang; EN/UR path) |
-| Mobile/tablet/desktop | ⚠️ mobile only | ⚠️ mobile only |
-| Local/DEV | ✅ | ✅ (engine); ⚠️ click-through blocked by no live orders in the mgmt dashboards |
-| EPS/Production | ⏳ pending deploy | ⏳ pending deploy |
+| HRM payroll-reports-view | scoped generic report | offline |
+| Audit all-deleted-records | scoped landscape report | ✅ **browser** (modal opens, real data, branding, QR, filters, table, no `[object Object]`) |
+| Audit all-edit-version-history | scoped landscape report | offline |
+| Audit deleted-record-detail | Master Profile engine | offline |
+| Journal journal-booking-stock-dashboard | scoped report | offline |
+| Journal purchase/sales order payment journals | lazy row-menu print → opens detail (real JournalPrintButton) | offline |
+| Roznamcha roznamcha-type-report-view | (already on `openUniversalPrintReport`; removed dead `document.write`) | — |
+| Customers customer-list profile | Customer Master Profile engine | offline |
+| Sales quotation-view | Proforma via trade-document engine | offline |
+| Purchases local-purchase-view + local-purchase-journal-report-view vouchers | `printDomFragmentViaModal` (no more body-swap + reload) | offline |
+| Purchases transfer-report v2 + Sales transfer-report | `printDomFragmentViaModal` on the A4 sheet | offline |
+| Shipping bl-entry-view | scoped landscape report | offline |
+| Locations location-registry (popup) + location-management-wizard | printStore / fragment | offline |
+| Branches city-branch-registration-wizard | fragment | offline |
+| Branch-management branch-general-report-view | fragment | offline |
+| Clearing-agent customer-order-management-view (popup) + transit-entry-management | printStore / fragment | offline |
+| Users user-registration-wizard employee certificate (popup) | printStore | offline |
+| Messages email-management workspace | fragment | offline |
+| Accounts account-setup-report + account-general-report-view (3 sites) | fragment / Master Profile engine | offline |
+| Purchase + Sales wizards: internal A4 preview / "Print Document" / "Print Screen" / "Print Review" | `printDomFragmentViaModal` / `handleOpenA4Report` | offline |
+| Purchases completed-purchase-bills-view | removed inline autoprint (already printStore) | — |
+
+### Not migrated / left as-is (intentional)
+
+- `account-profile-view.tsx` line 278 — `window.print()` is a fallback only (real path =
+  Master Profile engine, browser-verified in Phase 1).
+- Payment journals' `if (${autoPrint}) window.print()` — inside a generated receipt HTML
+  string (self-contained, correct).
+- `new-account-setup.tsx.bak` — a backup file, not shipped.
 
 ---
 
@@ -93,7 +89,7 @@ purchase-loading-records-view}}`.
 | `npx tsc --noEmit` | **0** |
 | `npm run build` | **exit 0** — ✓ Compiled successfully |
 | `npx vitest run` | **124 / 1 skip** |
-| `node scripts/i18n-ui-guard.mjs` | **green — 10 456 × 5** |
+| `node scripts/i18n-ui-guard.mjs` | **green — 10 459 × 5** |
 | `scratch/account-scope-security.mts` | **3 / 0** |
 | `scratch/account-save-e2e.mts` | **9 / 0** |
 | `scratch/master-profiles-verify.mts` | **178 / 0** |
@@ -101,15 +97,33 @@ purchase-loading-records-view}}`.
 | `scratch/td-real-record.mts` | **105 / 0** |
 | `scratch/mc-regression.mts` | **79 / 79** |
 
-## Honest status
+Browser-verified this session: Account Setup in **EN + UR + PS + FA + AR** (banner, scope
+lock, RTL); one migrated report (Audit deleted-records) renders through the central engine
+with real data.
 
-**NOT "100% COMPLETE — REMAINING ISSUES: 0".**
+---
 
-Done & verified: Account Setup scope/security/save/5-lang (A); the Master-Profile
-and Commercial-Document central engines and their wiring (B core).
+## GENUINELY REMAINING
 
-Genuinely remaining: ~28 legacy `window.print()` / `document.write()` report
-screens across Ledger/Journal/Roznamcha/Stock/CRM/Audit/HRM/Shipping/Clearing;
-FA/PS/AR + full device-grid browser passes; the trade-doc click-through on a
-dashboard with live orders; and the EPS/Production deploy + re-verification of
-all of the above.
+1. **Per-screen device-grid verification** (iPhone / Samsung / iPad Portrait / iPad
+   Landscape) for every migrated print path — not done.
+2. **Per-screen 5-language browser pass** for every migrated print path — only a
+   representative sample verified; the rest rely on the engine's `translateHeader` + the
+   guard.
+3. **Trade-document click-through** from a management dashboard with live orders — DEV has
+   no live purchase/sales orders surfacing there; engine + mapper + real-record shape are
+   verified offline (535 assertions) but the dashboard button→modal path is not
+   screenshotted.
+4. **The wizards' internal A4 previews** use `printDomFragmentViaModal` (correct modal,
+   real data) rather than a full rebuild in `openUniversalPrintReport` / the trade-doc
+   engine.
+5. **Some legacy `HEADER_TRANSLATIONS` gaps** — new column labels passed to
+   `openGenericErpReport` that are not yet in `lib/i18n/table-headers.ts` will render
+   English in non-EN languages until added (no automated guard covers that dict).
+6. **EPS / Production deployment + full role/scope/save + print re-verification there** —
+   not done. The commits must deploy first.
+
+## Commits (this round)
+
+`0924be7` account setup · `d4171c2` wizard doc center · `befe065` closure doc ·
+`b751ec4` print migration batch 1 · `e986279` print migration batch 2.
