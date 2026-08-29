@@ -97,16 +97,15 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
       throw new Error(`Failed to remove old payment record: ${deleteError.message}`);
     }
 
-    const isForeignCurrency = body.currencyCode?.toUpperCase() === ((order as any)?.currency_code?.toUpperCase() || "USD");
-    const amountUSD = isForeignCurrency ? Number(body.amount) : Number(body.amount) / Number(body.exchangeRate || 1);
-
-    // 5. Post the new edited payment using the existing RPC
+    // 5. Post the new edited payment using the existing RPC. Pass the raw payment
+    //    facts — post_purchase_order_payment owns all the currency conversion and
+    //    freezes the real historical rate (see 20261001 migration).
     const { data: newPaymentId, error: postError } = await supabase.rpc("post_purchase_booking_transfer", {
       p_actor_id: session.userId,
       p_purchase_order_id: params.id,
       p_kind: body.kind,
       p_entry_date: body.entryDate,
-      p_amount: amountUSD,
+      p_amount: Number(body.amount),
       p_currency_code: body.currencyCode,
       p_exchange_rate: Number(body.exchangeRate || 1),
       p_debit_ledger_id: body.debitLedgerId,

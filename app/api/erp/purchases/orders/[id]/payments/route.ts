@@ -250,32 +250,45 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
 
     const orderRow = order as any;
     const form = orderRow.form_data?.form || {};
-    let exchangeRate = Number(orderRow.exchange_rate || 0);
-    if (exchangeRate <= 1) {
-      exchangeRate = Number(form.exchangeRate || 1);
-    }
-    if (exchangeRate <= 0) exchangeRate = 1;
 
-    const orderTotalUSD = Number(orderRow.order_total || 0) / exchangeRate;
-    const advancePaidUSD = Number(orderRow.advance_paid || 0);
-    const remainingPaidUSD = Number(orderRow.remaining_paid || 0);
-    const creditAmountUSD = Number(orderRow.credit_amount || 0);
-    
-    let remainingDueUSD = 0;
+    // Currency model (see 20261001_multicurrency_purchase_payment_fix.sql):
+    //  - order_total / advance_paid / remaining_paid / credit_amount / remaining_due
+    //    are all in the PURCHASE currency (orderRow.currency_code).
+    //  - orderRate = base-currency units per 1 purchase-currency unit.
+    //  - body.exchangeRate = base-currency units per 1 body.currencyCode unit
+    //    (the historical FX rate for this payment).
+    // All balance validation below is done in the PURCHASE currency.
+    const orderCcy = (orderRow.currency_code || orderRow.purchase_currency || "USD").toUpperCase();
+    let orderRate = Number(orderRow.exchange_rate || 0);
+    if (orderRate <= 0) orderRate = Number(form.exchangeRate || 1) || 1;
+    const bodyCcy = (body.currencyCode || orderCcy).toUpperCase();
+    let bodyRate = Number(body.exchangeRate || 0);
+    if (bodyRate <= 0) bodyRate = bodyCcy === orderCcy ? orderRate : 1;
+
+    // the payment amount expressed in the order's (purchase) currency
+    const toPurchaseCcy = (amt: number, ccy: string, rate: number) =>
+      ccy === orderCcy ? amt : (amt * rate) / (orderRate || 1);
+
+    const orderTotalPur = Number(orderRow.order_total || 0);
+    const advancePaidPur = Number(orderRow.advance_paid || 0);
+    const remainingPaidPur = Number(orderRow.remaining_paid || 0);
+    const creditAmountPur = Number(orderRow.credit_amount || 0);
+
+    let remainingDuePur = 0;
     if (orderRow.remaining_due != null) {
-      remainingDueUSD = Number(orderRow.remaining_due);
+      remainingDuePur = Number(orderRow.remaining_due);
     } else {
-      remainingDueUSD = Math.max(0, orderTotalUSD - advancePaidUSD - remainingPaidUSD - creditAmountUSD);
+      remainingDuePur = Math.max(0, orderTotalPur - advancePaidPur - remainingPaidPur - creditAmountPur);
     }
 
     const goodsEntries = Array.isArray(orderRow.form_data?.goodsEntries) ? orderRow.form_data.goodsEntries : [];
-    const formTotalUSD = goodsEntries.length
+    const formTotalPur = goodsEntries.length
       ? goodsEntries.reduce((sum: number, item: any) => sum + Number(item.totalAmount || 0), 0)
-      : Number(form.totalAmount || orderTotalUSD);
-      
+      : Number(form.totalAmount || orderTotalPur);
+
     const advancePercent = Number(form.advancePercent || 0);
-    const requiredAdvanceUSD = advancePercent > 0 ? (formTotalUSD * advancePercent) / 100 : 0;
-    const remainingAdvanceUSD = Math.max(0, requiredAdvanceUSD - advancePaidUSD);
+    const requiredAdvancePur = advancePercent > 0 ? (formTotalPur * advancePercent) / 100 : 0;
+    const remainingAdvancePur = Math.max(0, requiredAdvancePur - advancePaidPur);
     const tolerance = 0.01;
 
     const debitLedger = await withLocalPg((sql) => assertLedgerMatchesPurchaseScope(sql, body.debitLedgerId, orderRow, "Debit")) as any;
@@ -299,28 +312,31 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       "Paid Amount: " + body.amount
     ].filter(Boolean).join(" | ");
 
-    const isForeignCurrency = body.currencyCode?.toUpperCase() === (orderRow.currency_code?.toUpperCase() || "USD");
-    const bodyAmountUSD = isForeignCurrency ? Number(body.amount) : Number(body.amount) / Number(body.exchangeRate || 1);
+    // payment amount, expressed in the order's purchase currency, for validation
+    const bodyAmountPur = toPurchaseCcy(Number(body.amount), bodyCcy, bodyRate);
 
     if (body.kind === "advance" && advancePercent > 0) {
-      const maxAllowedAdvanceUSD = Math.max(remainingAdvanceUSD, remainingDueUSD);
-      if (remainingDueUSD <= tolerance) {
+      const maxAllowedAdvancePur = Math.max(remainingAdvancePur, remainingDuePur);
+      if (remainingDuePur <= tolerance) {
         throw new Error("This purchase order is already fully paid. Duplicate posting is not allowed.");
       }
-      if (bodyAmountUSD > maxAllowedAdvanceUSD + tolerance) {
-        throw new Error(`Payment amount cannot exceed remaining purchase order balance (${remainingDueUSD.toFixed(2)} USD).`);
+      if (bodyAmountPur > maxAllowedAdvancePur + tolerance) {
+        throw new Error(`Payment amount cannot exceed remaining purchase order balance (${remainingDuePur.toFixed(2)} ${orderCcy}).`);
       }
     }
 
-    if ((body.kind === "remaining" || body.kind === "credit") && remainingDueUSD <= tolerance) {
+    if ((body.kind === "remaining" || body.kind === "credit") && remainingDuePur <= tolerance) {
       throw new Error("This purchase order has no remaining payable balance. Duplicate posting is not allowed.");
     }
 
-    if ((body.kind === "remaining" || body.kind === "credit") && bodyAmountUSD > remainingDueUSD + tolerance) {
-      throw new Error(`Payment amount cannot exceed remaining payable balance (${remainingDueUSD.toFixed(2)} USD).`);
+    if ((body.kind === "remaining" || body.kind === "credit") && bodyAmountPur > remainingDuePur + tolerance) {
+      throw new Error(`Payment amount cannot exceed remaining payable balance (${remainingDuePur.toFixed(2)} ${orderCcy}).`);
     }
 
-    const effectiveRoznamchaExchangeRate = isForeignCurrency ? Number(body.exchangeRate || 1) : 1;
+    // Pass the raw payment facts straight through — post_purchase_order_payment
+    // owns all the currency logic (transaction ccy vs base ccy vs order ccy) and
+    // freezes the real historical rate on the payment row.
+    const effectiveRoznamchaExchangeRate = bodyRate;
 
     // Transaction-safe posting via the security definer wrapper post_purchase_booking_transfer —
     // calling it directly over the raw Postgres connection is equivalent to (and more reliable
@@ -399,7 +415,6 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       return { paymentId, paymentRecord, journalRecord, journalLines };
     }) as any;
 
-    const exRate = Number(body.exchangeRate || (orderRow as any)?.exchange_rate || 1) || 1;
     assertDistinctBookingLedgers(resolvedDebitLedgerId, resolvedCreditLedgerId, "Purchase payment");
     assertBalancedPostedLines({
       label: "Purchase payment",
@@ -407,7 +422,9 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       expectedDebitLedgerId: resolvedDebitLedgerId,
       expectedCreditLedgerId: resolvedCreditLedgerId,
       expectedAmount: Number(body.amount),
-      expectedExchangeRate: exRate
+      // the posted lines are in the base currency; base = amount × frozen rate
+      expectedExchangeRate: bodyRate,
+      expectedBaseAmount: Number(paymentRecord.base_currency_amount ?? Number(body.amount) * bodyRate)
     });
     assertPostedRoznamchaTrace({
       label: "Purchase payment",
