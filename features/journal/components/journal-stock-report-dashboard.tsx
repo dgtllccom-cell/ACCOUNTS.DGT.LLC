@@ -128,7 +128,7 @@ export default function JournalStockReportDashboard({
   session,
   initialLevel = "salesman"
 }: {
-  session: { branchName?: string; fullName?: string | null; email?: string | null } | null | undefined;
+  session: { branchName?: string; fullName?: string | null; email?: string | null; userId?: string | null } | null | undefined;
   initialLevel?: "salesman" | "country" | "branch";
 }) {
   const lang = useActiveLanguage();
@@ -554,7 +554,9 @@ export default function JournalStockReportDashboard({
               </div>
               <div className="flex justify-between items-center">
                 <span>{t(lang, "form.user_id", "USER ID")}:</span>
-                <span className="font-mono font-extrabold text-slate-800 dark:text-slate-200">7719341B-BFCB-4A31-B852-0F67E8062E95</span>
+                <span className="font-mono font-extrabold text-slate-800 dark:text-slate-200" title={session?.userId || undefined}>
+                  {session?.email || (session?.userId ? session.userId.slice(0, 8).toUpperCase() : "—")}
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span>{t(lang, "form.user_name", "USER NAME")}:</span>

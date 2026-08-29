@@ -236,7 +236,7 @@ function PurchaseTransferErpReportViewContent({
                 {tt("pterv2.page_title", "Purchase Transfer Verification")}
               </h1>
               <p className="text-[11px] text-slate-400">
-                Dashboard &gt; Purchase &gt; Transfer Verification
+                {tt("pterv2.breadcrumb", "Dashboard > Purchase > Transfer Verification")}
               </p>
             </div>
           </div>
@@ -251,7 +251,7 @@ function PurchaseTransferErpReportViewContent({
               {error || tt("pterv2.record_not_found", "Purchase Transfer Record Not Found")}
             </h2>
             <p className="text-sm text-slate-400 max-w-md mx-auto">
-              The requested purchase transfer verification record could not be located or has been deleted. Please select a valid record from the purchase registry.
+              {tt("pterv2.record_not_found_desc", "The requested purchase transfer verification record could not be located or has been deleted. Please select a valid record from the purchase registry.")}
             </p>
             <div className="flex flex-wrap justify-center gap-3 pt-4 border-t border-slate-800">
               <Button onClick={() => router.push("/dashboard/purchase/purchase-confirm")} variant="default" size="sm" className="bg-blue-600 hover:bg-blue-700 text-white font-bold">

@@ -1,6 +1,8 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type UiKey =
+  | "pterv2.record_not_found_desc"
+  | "pterv2.breadcrumb"
   | "settlement.title"
   | "nav.settlement_reconciliation"
   | "settlement.dashboard"
@@ -14547,6 +14549,8 @@ const en: Dict = {
   "gmr.ph_extra": "Enter quality description, shell/nut characteristics, color, shape, moisture, surface grade, packing specification, etc.",
   "gmr.status_active": "Active",
   "gmr.status_inactive": "Inactive",
+  "pterv2.record_not_found_desc": "The requested purchase transfer verification record could not be located or has been deleted. Please select a valid record from the purchase registry.",
+  "pterv2.breadcrumb": "Dashboard > Purchase > Transfer Verification",
 };
 
 const ur: Dict = {
@@ -24680,6 +24684,8 @@ const ur: Dict = {
   "gmr.ph_extra": "معیار کی تفصیل، چھلکا/گری کی خصوصیات، رنگ، شکل، نمی، سطح کا گریڈ، پیکنگ کی خصوصیات، وغیرہ درج کریں۔",
   "gmr.status_active": "فعال",
   "gmr.status_inactive": "غیر فعال",
+  "pterv2.record_not_found_desc": "درخواست کردہ پرچیز ٹرانسفر تصدیقی ریکارڈ نہیں ملا یا حذف کر دیا گیا ہے۔ براہ کرم پرچیز رجسٹری سے ایک درست ریکارڈ منتخب کریں۔",
+  "pterv2.breadcrumb": "ڈیش بورڈ > پرچیز > ٹرانسفر تصدیق",
 };
 
 const ar: Dict = {
@@ -34815,6 +34821,8 @@ const ar: Dict = {
   "gmr.ph_extra": "أدخل وصف الجودة، خصائص القشرة/اللب، اللون، الشكل، الرطوبة، درجة السطح، مواصفات التعبئة، إلخ.",
   "gmr.status_active": "نشط",
   "gmr.status_inactive": "غير نشط",
+  "pterv2.record_not_found_desc": "تعذّر العثور على سجل التحقق من تحويل المشتريات المطلوب أو تم حذفه. يرجى اختيار سجل صالح من سجل المشتريات.",
+  "pterv2.breadcrumb": "لوحة التحكم > المشتريات > التحقق من التحويل",
 };
 
 const fa: Dict = {
@@ -44949,6 +44957,8 @@ const fa: Dict = {
   "gmr.ph_extra": "شرح کیفیت، ویژگی‌های پوسته/مغز، رنگ، شکل، رطوبت، درجه سطح، مشخصات بسته‌بندی و غیره را وارد کنید.",
   "gmr.status_active": "فعال",
   "gmr.status_inactive": "غیرفعال",
+  "pterv2.record_not_found_desc": "رکورد تأیید انتقال خرید درخواست‌شده یافت نشد یا حذف شده است. لطفاً یک رکورد معتبر از دفتر خرید انتخاب کنید.",
+  "pterv2.breadcrumb": "داشبورد > خرید > تأیید انتقال",
 };
 
 const ps: Dict = {
@@ -55089,6 +55099,8 @@ const ps: Dict = {
   "gmr.ph_extra": "د کیفیت تشریح، د پوستکي/مغز ځانګړنې، رنګ، بڼه، لندبل، د سطحې درجه، د بسته‌بندۍ مشخصات، او نور دننه کړئ.",
   "gmr.status_active": "فعال",
   "gmr.status_inactive": "غیرفعال",
+  "pterv2.record_not_found_desc": "غوښتل شوی د پیرود لیږد تایید ریکارډ ونه موندل شو یا ړنګ شوی دی. مهرباني وکړئ د پیرود له راجستر څخه یو باوري ریکارډ وټاکئ.",
+  "pterv2.breadcrumb": "ډشبورډ > پیرود > د لیږد تایید",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
