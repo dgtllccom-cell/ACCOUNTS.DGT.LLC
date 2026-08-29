@@ -149,10 +149,11 @@ export function printEmployeeCertificate(emp: EmployeeCertificate, company: Comp
         </div>
       </div>
     </div>
-    <script>window.onload=function(){setTimeout(function(){window.print();}, 350);}</script>
   </body></html>`;
 
-  const w = window.open("", "_blank", "width=900,height=1000");
-  if (!w) return;
-  w.document.open(); w.document.write(html); w.document.close();
+  // Route into the shared PdfPreviewModal (Print / Save-as-PDF / orientation /
+  // Email / WhatsApp) instead of a hand-rolled popup + auto window.print().
+  void import("@/lib/store/print-store").then(({ printStore }) => {
+    printStore.openPrint(html, `Employee Certificate — ${emp.name ?? ""}`.trim());
+  });
 }

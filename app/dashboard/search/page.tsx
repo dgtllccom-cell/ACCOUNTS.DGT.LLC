@@ -31,6 +31,7 @@ import { apiGet } from "@/lib/api/client";
 import { listCountries, type LocationCountry, listCities, type LocationCity } from "@/features/locations/location-api";
 import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 type CustomerResult = {
   id: string;
@@ -70,6 +71,7 @@ type RoznamchaResult = {
 
 export default function SearchPage() {
   const router = useRouter();
+  const lang = useActiveLanguage();
   const [activeTab, setActiveTab] = useState<"all" | "customers" | "transactions">("all");
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -175,34 +177,31 @@ export default function SearchPage() {
     router.push(`/dashboard/roznamcha/cash-entry?id=${id}&edit=true` as Route);
   };
 
-  const handlePrint = (title: string, data: any) => {
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) return;
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Print - ${title}</title>
-          <style>
-            body { font-family: monospace; padding: 20px; color: #333; }
-            h1 { border-bottom: 2px solid #000; padding-bottom: 5px; }
-            .row { margin: 10px 0; display: flex; justify-content: space-between; border-bottom: 1px dashed #ccc; padding-bottom: 3px; }
-            .label { font-weight: bold; }
-          </style>
-        </head>
-        <body>
-          <h1>${title}</h1>
-          <p>Generated: ${new Date().toLocaleString()}</p>
-          ${Object.entries(data).map(([k, v]) => `
-            <div class="row">
-              <span class="label">${k}</span>
-              <span>${v || "-"}</span>
-            </div>
-          `).join("")}
-          <script>window.print();</script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
+  const handlePrint = async (title: string, data: any) => {
+    const esc = (v: unknown) =>
+      String(v ?? "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+    const rows = Object.entries(data)
+      .map(
+        ([k, v]) =>
+          `<div class="row"><span class="label">${esc(k)}</span><span>${esc(v || "-")}</span></div>`
+      )
+      .join("");
+    const html = `<!doctype html><html lang="${lang}" dir="${isRtl ? "rtl" : "ltr"}"><head><meta charset="utf-8"><title>${esc(title)}</title>
+      <style>
+        @page { size: A4 portrait; margin: 14mm; }
+        body { font-family: 'Noto Naskh Arabic','Segoe UI',system-ui,sans-serif; padding: 4mm; color: #1e293b; }
+        h1 { border-bottom: 2px solid #0f172a; padding-bottom: 6px; font-size: 18px; }
+        .meta { color: #64748b; font-size: 12px; margin: 6px 0 14px; }
+        .row { margin: 8px 0; display: flex; justify-content: space-between; gap: 16px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px; font-size: 13px; }
+        .label { font-weight: 700; }
+      </style></head><body>
+      <h1>${esc(title)}</h1>
+      <div class="meta">${esc(new Date().toLocaleString())}</div>
+      ${rows}
+    </body></html>`;
+    const { printStore } = await import("@/lib/store/print-store");
+    printStore.openPrint(html, title);
   };
 
   const handleExportPDF = (title: string, data: any) => {

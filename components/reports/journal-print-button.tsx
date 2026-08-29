@@ -4,8 +4,10 @@ import { useState } from "react";
 import { Printer, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { t } from "@/lib/i18n/ui";
-import { openGenericErpReport, type GenericReportColumn } from "@/lib/reports/open-generic-erp-report";
+import { openScopedGenericReport } from "@/lib/reports/open-scoped-report";
+import { type GenericReportColumn } from "@/lib/reports/open-generic-erp-report";
 import type { ERPCompanyInfo, ERPFilterPill } from "@/lib/reports/erp-report-template-builder";
 
 export type JournalPrintButtonProps = {
@@ -17,7 +19,12 @@ export type JournalPrintButtonProps = {
   summary?: Record<string, unknown>;
   totalsRow?: Record<string, unknown>;
   filters?: ERPFilterPill[];
+  /** optional explicit branding override; when omitted branding resolves from the login scope */
   companyInfo?: ERPCompanyInfo;
+  /** optional explicit scope for branding resolution (defaults to the logged-in scope) */
+  countryId?: string | null;
+  countryBranchId?: string | null;
+  cityBranchId?: string | null;
   orientation?: "portrait" | "landscape";
   className?: string;
   variant?: "default" | "outline" | "secondary" | "ghost";
@@ -34,12 +41,16 @@ export function JournalPrintButton({
   totalsRow,
   filters,
   companyInfo,
+  countryId,
+  countryBranchId,
+  cityBranchId,
   orientation,
   className = "",
   variant = "outline",
   size = "sm"
 }: JournalPrintButtonProps) {
   const lang = useActiveLanguage();
+  const scope = useErpScope();
   const [loading, setLoading] = useState(false);
 
   const handlePrint = async () => {
@@ -50,7 +61,13 @@ export function JournalPrintButton({
         dataset = await fetchFullData();
       }
 
-      openGenericErpReport({
+      // Branding: an explicit override wins; otherwise resolve dynamically from
+      // the logged-in country/branch scope. Never a hard-coded company.
+      const resolvedCountryId = countryId ?? scope.lockedCountryId ?? undefined;
+      const resolvedCountryBranchId = countryBranchId ?? scope.lockedCountryBranchId ?? undefined;
+      const resolvedCityBranchId = cityBranchId ?? scope.lockedCityBranchId ?? undefined;
+
+      await openScopedGenericReport({
         title,
         subtitle,
         lang,
@@ -58,15 +75,15 @@ export function JournalPrintButton({
         rows: dataset,
         summary,
         totalsRow,
-        filters,
-        companyInfo: {
-          name: "DAMAAN GENERAL TRADING LLC",
-          tagline: "Wholesale & Commission Trading",
-          address: "Dubai, United Arab Emirates",
-          printedBy: "ERP User",
-          ...companyInfo
-        },
-        orientation
+        filters: filters?.map((f) => ({ label: f.label, value: String(f.value ?? "") })),
+        orientation,
+        countryId: resolvedCountryId,
+        countryBranchId: resolvedCountryBranchId,
+        cityBranchId: resolvedCityBranchId,
+        countryName: companyInfo?.country ?? scope.countryName,
+        branchName: companyInfo?.branch ?? scope.branchDisplayName,
+        currency: companyInfo?.currency,
+        printedBy: companyInfo?.printedBy ?? scope.userName,
       });
     } catch (err) {
       console.error("Journal Print Error:", err);
@@ -88,8 +105,7 @@ export function JournalPrintButton({
       ) : (
         <Printer className="h-4 w-4 text-blue-600" />
       )}
-      <span>{loading ? "Preparing Report..." : t(lang, "report.print", "Print Report")}</span>
+      <span>{loading ? t(lang, "common.loading", "Loading...") : t(lang, "report.print", "Print Report")}</span>
     </Button>
   );
 }
-

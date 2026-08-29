@@ -124,6 +124,21 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
     action();
   }
 
+  // Generic page Print / PDF: render only the page's <main> content into the
+  // shared preview modal (no sidebar / top nav / this menu). Pages with their
+  // own report engine wire their action into #erp-page-actions-slot instead.
+  async function printPageContent() {
+    const main = typeof document !== "undefined"
+      ? (document.querySelector("main") || document.querySelector("[data-erp-page-content]"))
+      : null;
+    if (main) {
+      if (!main.id) main.id = "erp-generic-page-print";
+      const { printDomFragmentViaModal } = await import("@/lib/reports/print-dom-fragment");
+      if (printDomFragmentViaModal(main.id, document.title || t(lang, "pa.print", "Print"), { lang })) return;
+    }
+    if (typeof window !== "undefined") window.print();
+  }
+
   function goBack() {
     if (backLink) {
       router.push(backLink as any);
@@ -198,11 +213,11 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
 
           {open ? (
             <div className={cn("absolute right-0 top-full z-40 mt-1.5 w-52 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900")}>
-              <button type="button" onClick={() => closeAndRun(() => window.print())} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
+              <button type="button" onClick={() => closeAndRun(() => { void printPageContent(); })} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
                 <Printer className="h-4 w-4" aria-hidden />
                 {t(lang, "pa.print", "Print")}
               </button>
-              <button type="button" onClick={() => closeAndRun(() => window.print())} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
+              <button type="button" onClick={() => closeAndRun(() => { void printPageContent(); })} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
                 <DownloadActionIcon className="h-4 w-4" aria-hidden />
                 {t(lang, "pa.pdf_download", "PDF Download")}
               </button>
