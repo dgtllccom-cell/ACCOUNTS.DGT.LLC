@@ -5,14 +5,14 @@
 ### LOCAL Development
 - Database: csesvyxxjivnkkozgopt (Supabase DEV)
 - Host: csesvyxxjivnkkozgopt.supabase.co
-- Database URL: postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres
+- Database URL: postgresql://USER:PASSWORD@DEV_HOST:6543/postgres
 
 ### VPS Production  
 - Server IP: 72.60.209.121
 - App Path: /var/www/dgt-nextjs
 - Database: inmayhrxucimxqhgseqi (Supabase PROD)
 - Host: inmayhrxucimxqhgseqi.supabase.co
-- Database URL: postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres
+- Database URL: postgresql://USER:PASSWORD@PROD_HOST:5432/postgres
 
 ## DEPLOYMENT STEPS
 

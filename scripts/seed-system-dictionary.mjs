@@ -1,3 +1,4 @@
+import { resolveDbUrl } from "./lib/prod-db-url.mjs";
 // Bootstrap the central Local Translator dictionary (record_translations, record_table=
 // 'system_dictionary') from the built-in APPROVED 5-language value/header dictionaries.
 // These are already-verified business/UI terms in EN/UR/AR/FA/PS. Idempotent (UUIDv5 key).
@@ -5,7 +6,7 @@
 import crypto from "node:crypto";
 import postgres from "postgres";
 
-const VPS = "postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres";
+const VPS = resolveDbUrl("prod");
 const url = process.argv.includes("--vps") ? VPS : process.env.DATABASE_URL;
 const { VALUE_TRANSLATIONS } = await import("../lib/i18n/table-values.ts");
 const { HEADER_TRANSLATIONS } = await import("../lib/i18n/table-headers.ts");

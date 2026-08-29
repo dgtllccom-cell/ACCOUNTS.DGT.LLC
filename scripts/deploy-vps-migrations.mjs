@@ -1,9 +1,10 @@
+import { resolveDbUrl } from "./lib/prod-db-url.mjs";
 import { execSync } from 'child_process';
 import fs from 'fs';
 
 const VPS_HOST = "root@72.60.209.121";
 const VPS_APP_PATH = "/var/www/dgt-nextjs";
-const VPS_DB_URL = "postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres";
+const VPS_DB_URL = resolveDbUrl("prod");
 
 console.log("╔════════════════════════════════════════════════════════════════╗");
 console.log("║         DEPLOYING MIGRATIONS TO VPS PRODUCTION DATABASE        ║");

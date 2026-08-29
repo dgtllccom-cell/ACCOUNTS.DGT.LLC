@@ -18,9 +18,10 @@ import path from "node:path";
 import crypto from "node:crypto";
 import postgres from "postgres";
 
+import { resolveDbUrl } from "./lib/prod-db-url.mjs";
 function pe(f){const e={};if(!fs.existsSync(f))return e;for(const l of fs.readFileSync(f,"utf8").split(/\r?\n/)){const t=l.trim();if(!t||t.startsWith("#"))continue;const i=t.indexOf("=");if(i>-1)e[t.slice(0,i)]=t.slice(i+1).replace(/^"|"$/g,"");}return e;}
 const env={...pe(".env"),...pe(".env.local")};
-const VPS="postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres";
+const VPS=resolveDbUrl("prod");
 const isVps=process.argv.includes("--vps");
 const dryRun=process.argv.includes("--dry-run");
 const url=isVps?VPS:env.DATABASE_URL;

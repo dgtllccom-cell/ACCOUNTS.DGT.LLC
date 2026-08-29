@@ -1,8 +1,9 @@
 import postgres from 'postgres';
 import crypto from 'crypto';
 
-const devUrl = "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:5432/postgres";
-const prodUrl = "postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres";
+import { resolveDbUrl } from "../scripts/lib/prod-db-url.mjs";
+const devUrl = resolveDbUrl("dev");
+const prodUrl = resolveDbUrl("prod");
 
 async function seedDatabaseUsers(envName, dbUrl) {
   const sql = postgres(dbUrl, { ssl: 'require' });

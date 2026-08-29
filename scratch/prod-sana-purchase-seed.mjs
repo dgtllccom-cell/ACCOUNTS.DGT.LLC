@@ -1,6 +1,7 @@
+import { resolveDbUrl } from "../scripts/lib/prod-db-url.mjs";
 import postgres from "postgres";
 
-const PROD_URL = "postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres";
+const PROD_URL = resolveDbUrl("prod");
 const SOURCE_TAG = "PROD-SANA-TEST";
 const DAYS = ["2026-08-05", "2026-08-06", "2026-08-07", "2026-08-08"];
 const TARGET_BRANCH_IDS = [

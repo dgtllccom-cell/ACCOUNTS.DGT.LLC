@@ -1,7 +1,8 @@
+import { resolveDbUrl } from "../scripts/lib/prod-db-url.mjs";
 import postgres from "postgres";
 
 const PROD_URL =
-  "postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres";
+  resolveDbUrl("prod");
 
 const SOURCE_TAG = "PROD-TEST-20260817-R01";
 const ACTOR_ID = "9b9d24d9-5532-47a1-b612-3e95f2285a86";

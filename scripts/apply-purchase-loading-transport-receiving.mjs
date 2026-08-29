@@ -3,6 +3,7 @@
 import fs from "node:fs";
 import postgres from "postgres";
 
+import { resolveDbUrl } from "./lib/prod-db-url.mjs";
 function parseEnvFile(file) {
   const env = {};
   if (!fs.existsSync(file)) return env;
@@ -18,7 +19,7 @@ function parseEnvFile(file) {
 
 const isVps = process.argv.includes("--vps");
 const VPS_URL =
-  "postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres";
+  resolveDbUrl("prod");
 const env = { ...parseEnvFile(".env"), ...parseEnvFile(".env.local") };
 const dbUrl = isVps ? VPS_URL : env.DATABASE_URL;
 if (!dbUrl) {

@@ -1,9 +1,10 @@
+import { resolveDbUrl } from "./lib/prod-db-url.mjs";
 import fs from "node:fs";
 import postgres from "postgres";
 
-const vpsUrl = "postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.southeast-1.supabase.com:5432/postgres";
+const vpsUrl = resolveDbUrl("prod");
 // Use the tested working URL:
-const workingVpsUrl = "postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres";
+const workingVpsUrl = resolveDbUrl("prod");
 
 const vpsSql = postgres(workingVpsUrl, { max: 1, prepare: false, connect_timeout: 30, ssl: { rejectUnauthorized: false } });
 

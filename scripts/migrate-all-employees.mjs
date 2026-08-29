@@ -1,7 +1,8 @@
+import { resolveDbUrl } from "./lib/prod-db-url.mjs";
 import postgres from 'postgres';
 
-const localSql = postgres('postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres', { ssl: { rejectUnauthorized: false }, prepare: false });
-const vpsSql = postgres('postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres', { ssl: { rejectUnauthorized: false }, prepare: false });
+const localSql = postgres(resolveDbUrl("dev"), { ssl: { rejectUnauthorized: false }, prepare: false });
+const vpsSql = postgres(resolveDbUrl("prod"), { ssl: { rejectUnauthorized: false }, prepare: false });
 
 async function migrateAllEmployees() {
   const localCbs = await localSql`SELECT id, country_id, code FROM country_branches`;

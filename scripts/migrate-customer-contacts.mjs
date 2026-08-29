@@ -1,9 +1,10 @@
+import { resolveDbUrl } from "./lib/prod-db-url.mjs";
 import fs from "node:fs";
 import postgres from "postgres";
 function pe(f){const e={};if(!fs.existsSync(f))return e;for(const l of fs.readFileSync(f,"utf8").split(/\r?\n/)){const t=l.trim();if(!t||t.startsWith("#"))continue;const i=t.indexOf("=");if(i>-1)e[t.slice(0,i)]=t.slice(i+1).replace(/^"|"$/g,"");}return e;}
 const env={...pe(".env"),...pe(".env.local")};
 const local=postgres(env.DATABASE_URL,{max:1,prepare:false,connect_timeout:30});
-const vps=postgres("postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres",{max:1,prepare:false,connect_timeout:30});
+const vps=postgres(resolveDbUrl("prod"),{max:1,prepare:false,connect_timeout:30});
 async function common(t){const lc=await local.unsafe(`select column_name from information_schema.columns where table_schema='public' and table_name=$1`,[t]);const vc=await vps.unsafe(`select column_name from information_schema.columns where table_schema='public' and table_name=$1`,[t]);const s=new Set(vc.map(r=>r.column_name));return lc.map(r=>r.column_name).filter(c=>s.has(c));}
 async function cnt(db,t){const r=await db.unsafe(`select count(*)::int c from public."${t}"`);return r[0].c;}
 for (const t of ["customer_contacts"]) {

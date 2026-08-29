@@ -1,3 +1,4 @@
+import { resolveDbUrl } from "./lib/prod-db-url.mjs";
 import fs from 'node:fs';
 import postgres from 'postgres';
 
@@ -15,7 +16,7 @@ function parseEnvFile(file) {
 }
 
 const localEnv = { ...parseEnvFile('.env'), ...parseEnvFile('.env.local') };
-const vpsEnv = { DATABASE_URL: 'postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres' };
+const vpsEnv = { DATABASE_URL: resolveDbUrl("prod") };
 
 const localSql = postgres(localEnv.DATABASE_URL, { max: 5 });
 const vpsSql = postgres(vpsEnv.DATABASE_URL, { max: 5, ssl: { rejectUnauthorized: false } });

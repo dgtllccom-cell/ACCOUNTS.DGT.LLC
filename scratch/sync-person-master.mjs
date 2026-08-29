@@ -1,7 +1,8 @@
+import { resolveDbUrl } from "../scripts/lib/prod-db-url.mjs";
 import postgres from 'postgres';
 import fs from 'fs';
 
-const prodUrl = "postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres";
+const prodUrl = resolveDbUrl("prod");
 const sql = postgres(prodUrl, { ssl: 'require' });
 
 async function syncAndMigrate() {

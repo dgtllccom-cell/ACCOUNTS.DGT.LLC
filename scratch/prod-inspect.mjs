@@ -1,6 +1,7 @@
+import { resolveDbUrl } from "../scripts/lib/prod-db-url.mjs";
 import postgres from "postgres";
 
-const PROD_URL = "postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres";
+const PROD_URL = resolveDbUrl("prod");
 
 const sql = postgres(PROD_URL, {
   ssl: { rejectUnauthorized: false },

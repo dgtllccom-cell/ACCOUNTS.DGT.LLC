@@ -1,10 +1,11 @@
+import { resolveDbUrl } from "./lib/prod-db-url.mjs";
 import postgres from 'postgres';
 
-const localSql = postgres('postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres', { 
+const localSql = postgres(resolveDbUrl("dev"), { 
   ssl: { rejectUnauthorized: false },
   prepare: false 
 });
-const vpsSql = postgres('postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres', { 
+const vpsSql = postgres(resolveDbUrl("prod"), { 
   ssl: { rejectUnauthorized: false },
   prepare: false 
 });

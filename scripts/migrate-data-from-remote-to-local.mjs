@@ -1,7 +1,8 @@
+import { resolveDbUrl } from "./lib/prod-db-url.mjs";
 import fs from "node:fs";
 import postgres from "postgres";
 
-const REMOTE_DB_URL = "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres";
+const REMOTE_DB_URL = resolveDbUrl("dev");
 const LOCAL_DB_URL = "postgresql://postgres:Gulistan%403636@localhost:5432/postgres";
 
 const sourceSql = postgres(REMOTE_DB_URL, { max: 2, prepare: false, connect_timeout: 30 });

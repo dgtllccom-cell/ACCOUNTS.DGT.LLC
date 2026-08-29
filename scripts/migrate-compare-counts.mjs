@@ -1,3 +1,4 @@
+import { resolveDbUrl } from "./lib/prod-db-url.mjs";
 import fs from "node:fs";
 import postgres from "postgres";
 
@@ -15,7 +16,7 @@ function parseEnvFile(file) {
 }
 const env = { ...parseEnvFile(".env"), ...parseEnvFile(".env.local") };
 const LOCAL = env.DATABASE_URL; // csesvyxx (dev/old-prod)
-const VPS = "postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres";
+const VPS = resolveDbUrl("prod");
 
 // Dependency-ordered set of business/master tables to migrate.
 const TABLES = [

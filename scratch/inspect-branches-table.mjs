@@ -1,6 +1,7 @@
 import postgres from 'postgres';
 
-const devUrl = "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:5432/postgres";
+import { resolveDbUrl } from "../scripts/lib/prod-db-url.mjs";
+const devUrl = resolveDbUrl("dev");
 const sql = postgres(devUrl, { ssl: 'require' });
 
 async function main() {

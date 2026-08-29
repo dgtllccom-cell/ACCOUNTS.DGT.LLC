@@ -4,10 +4,11 @@
 import fs from "node:fs";
 import postgres from "postgres";
 
+import { resolveDbUrl } from "./lib/prod-db-url.mjs";
 function pe(f) { const e = {}; if (!fs.existsSync(f)) return e; for (const l of fs.readFileSync(f, "utf8").split(/\r?\n/)) { const t = l.trim(); if (!t || t.startsWith("#")) continue; const i = t.indexOf("="); if (i > -1) e[t.slice(0, i)] = t.slice(i + 1).replace(/^"|"$/g, ""); } return e; }
 const env = { ...pe(".env"), ...pe(".env.local") };
 const url = process.argv.includes("--vps")
-  ? "postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres"
+  ? resolveDbUrl("prod")
   : env.DATABASE_URL;
 const sql = postgres(url, { max: 1, prepare: false, connect_timeout: 30 });
 

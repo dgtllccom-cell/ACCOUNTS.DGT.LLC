@@ -1,3 +1,4 @@
+import { resolveDbUrl } from "./lib/prod-db-url.mjs";
 // Quetta Office import: 38 accounts (13 Expenses 'U' + 25 Bank 'B') -> enterprise_accounts (VPS)
 // + per-account 5-language record_translations (needs_review) + QVC Pending.
 // Manual Number (Khata #) preserved EXACTLY. Source category authoritative (U->expense, B->asset/bank).
@@ -6,7 +7,7 @@
 import fs from "node:fs";
 import postgres from "postgres";
 
-const VPS="postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres";
+const VPS=resolveDbUrl("prod");
 const dry=process.argv.includes("--dry-run");
 const sql=postgres(VPS,{max:1,prepare:false,connect_timeout:40});
 const src=JSON.parse(fs.readFileSync("dictionary-import/quetta-source.json","utf8")).records;

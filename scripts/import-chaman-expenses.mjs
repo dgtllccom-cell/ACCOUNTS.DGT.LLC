@@ -7,7 +7,8 @@
 import fs from "node:fs";
 import postgres from "postgres";
 
-const VPS="postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres";
+import { resolveDbUrl } from "./lib/prod-db-url.mjs";
+const VPS=resolveDbUrl("prod");
 const dry=process.argv.includes("--dry-run");
 const sql=postgres(VPS,{max:1,prepare:false,connect_timeout:40});
 const src=JSON.parse(fs.readFileSync("dictionary-import/chaman-source.json","utf8")).records;

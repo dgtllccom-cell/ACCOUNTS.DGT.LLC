@@ -1,6 +1,7 @@
+import { resolveDbUrl } from "./lib/prod-db-url.mjs";
 import postgres from 'postgres';
 
-const localSql = postgres('postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres', { ssl: { rejectUnauthorized: false }, prepare: false });
+const localSql = postgres(resolveDbUrl("dev"), { ssl: { rejectUnauthorized: false }, prepare: false });
 
 async function inspectPersonTables() {
   const tables = await localSql`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`;

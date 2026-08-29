@@ -17,6 +17,7 @@
 import fs from "node:fs";
 import postgres from "postgres";
 
+import { resolveDbUrl } from "./lib/prod-db-url.mjs";
 function loadEnvFile(f: string): Record<string, string> {
   const env: Record<string, string> = {};
   if (!fs.existsSync(f)) return env;
@@ -43,7 +44,7 @@ const onlyField = opt("field");
 const perTargetLimit = Number(opt("limit") || "0") || null;
 
 const VPS_URL =
-  "postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres";
+  resolveDbUrl("prod");
 
 const env = { ...loadEnvFile(".env"), ...loadEnvFile(".env.local") };
 const dbUrl = isVps ? VPS_URL : env.DATABASE_URL;

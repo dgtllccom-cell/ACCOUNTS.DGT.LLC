@@ -1,6 +1,7 @@
+import { resolveDbUrl } from "./lib/prod-db-url.mjs";
 import postgres from 'postgres';
 
-const vpsEnv = { DATABASE_URL: 'postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres' };
+const vpsEnv = { DATABASE_URL: resolveDbUrl("prod") };
 const vpsSql = postgres(vpsEnv.DATABASE_URL, { max: 5, ssl: { rejectUnauthorized: false } });
 
 async function main() {

@@ -90,7 +90,7 @@ The migrations to apply (all additive, `IF NOT EXISTS`, idempotent):
 ### 2a. Dry check — what's already on prod
 
 ```bash
-PROD_DB='postgresql://postgres.inmayhrxucimxqhgseqi:<PROD_DB_PW>@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres'
+PROD_DB='postgresql://USER:PASSWORD@PROD_HOST:5432/postgres'
 psql "$PROD_DB" -c "SELECT name, status, applied_at FROM erp_schema_migrations ORDER BY applied_at DESC LIMIT 25;"
 psql "$PROD_DB" -c "SELECT to_regclass('public.uae_tax_lines') AS uae_tax_lines, to_regclass('public.inter_country_transfers') AS ict, to_regclass('public.super_admin_capital_accounts') AS sac;"
 ```

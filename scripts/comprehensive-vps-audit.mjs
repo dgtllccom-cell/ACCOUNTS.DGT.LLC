@@ -1,8 +1,9 @@
+import { resolveDbUrl } from "./lib/prod-db-url.mjs";
 import postgres from 'postgres';
 import fs from 'fs';
 import path from 'path';
 
-const vpsSql = postgres('postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres', { 
+const vpsSql = postgres(resolveDbUrl("prod"), { 
   ssl: { rejectUnauthorized: false },
   max: 5,
   prepare: false 

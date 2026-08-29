@@ -1,3 +1,4 @@
+import { resolveDbUrl } from "./lib/prod-db-url.mjs";
 import postgres from "postgres";
 import fs from "node:fs";
 
@@ -17,7 +18,7 @@ function loadEnv() {
 }
 
 const env = loadEnv();
-const dbUrl = env.DATABASE_URL || "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres";
+const dbUrl = env.DATABASE_URL || resolveDbUrl("dev");
 
 const sql = postgres(dbUrl, { max: 1, prepare: false, connect_timeout: 30 });
 

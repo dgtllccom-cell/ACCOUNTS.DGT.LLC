@@ -1,3 +1,4 @@
+import { resolveDbUrl } from "./lib/prod-db-url.mjs";
 /**
  * Load the schema-only baseline into the PRODUCTION Supabase database.
  *
@@ -12,11 +13,11 @@
  *     (Production project → Settings → Database → reset password if needed).
  *
  * USAGE (PowerShell)
- *   $env:PROD_DATABASE_URL="postgresql://postgres.inmayhrxucimxqhgseqi:<PW>@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres"
+ *   $env:PROD_DATABASE_URL=resolveDbUrl("prod")
  *   node scripts/load-prod-schema.mjs
  *
  * USAGE (bash)
- *   PROD_DATABASE_URL="postgresql://postgres.inmayhrxucimxqhgseqi:<PW>@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres" \
+ *   PROD_DATABASE_URL=resolveDbUrl("prod") \
  *     node scripts/load-prod-schema.mjs
  *
  * Safety: refuses to run unless the target URL is the PROD project ref, so you

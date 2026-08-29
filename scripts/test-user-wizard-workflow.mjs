@@ -1,7 +1,8 @@
 import { buildRbacRoleSummary } from '../lib/permissions/rbac-matrix-builder.ts';
 import postgres from 'postgres';
 
-const sql = postgres('postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres', {
+import { resolveDbUrl } from "./lib/prod-db-url.mjs";
+const sql = postgres(resolveDbUrl("prod"), {
   ssl: { rejectUnauthorized: false },
   prepare: false
 });

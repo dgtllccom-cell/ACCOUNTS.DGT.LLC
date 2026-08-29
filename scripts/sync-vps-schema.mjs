@@ -1,7 +1,8 @@
+import { resolveDbUrl } from "./lib/prod-db-url.mjs";
 import fs from "fs";
 import postgres from "postgres";
 
-const VPS_DB_URL = "postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres";
+const VPS_DB_URL = resolveDbUrl("prod");
 
 const sql = postgres(VPS_DB_URL);
 

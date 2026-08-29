@@ -1,27 +1,38 @@
-import postgres from 'postgres';
+import { createClient } from "@supabase/supabase-js";
+import fs from "fs";
 
-const devUrl = "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:5432/postgres";
-const prodUrl = "postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres";
-
-async function inspectUsers(name, url) {
-  const sql = postgres(url, { ssl: 'require' });
-  try {
-    console.log(`=== Inspecting ${name} Users ===`);
-    const users = await sql`
-      SELECT u.id, u.email, p.full_name, p.user_code, a.role, a.country_id, a.country_branch_id, a.city_branch_id
-      FROM auth.users u
-      LEFT JOIN public.user_profiles p ON p.id = u.id
-      LEFT JOIN public.user_branch_assignments a ON a.user_id = u.id
-    `;
-    console.log(`${name} Users count: ${users.length}`, users);
-  } finally {
-    await sql.end();
+const envLocal = fs.readFileSync(".env.local", "utf8");
+const envVars = {};
+for (const line of envLocal.split("\n")) {
+  const trimmed = line.trim();
+  if (!trimmed || trimmed.startsWith("#")) continue;
+  const eqIdx = trimmed.indexOf("=");
+  if (eqIdx > 0) {
+    const k = trimmed.slice(0, eqIdx).trim();
+    let v = trimmed.slice(eqIdx + 1).trim();
+    if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+      v = v.slice(1, -1);
+    }
+    envVars[k] = v;
   }
 }
 
-async function main() {
-  await inspectUsers("DEV", devUrl);
-  await inspectUsers("PROD", prodUrl);
+const supabaseUrl = envVars.NEXT_PUBLIC_SUPABASE_URL;
+const serviceKey = envVars.SUPABASE_SERVICE_ROLE_KEY;
+const supabase = createClient(supabaseUrl, serviceKey);
+
+async function inspectAuthUsers() {
+  const { data: { users }, error } = await supabase.auth.admin.listUsers();
+  if (error) {
+    console.error("Error listing auth users:", error);
+    return;
+  }
+  console.log(`Total Auth Users: ${users.length}`);
+  console.table(users.map(u => ({
+    id: u.id,
+    email: u.email,
+    created_at: u.created_at
+  })));
 }
 
-main();
+inspectAuthUsers();
