@@ -221,6 +221,18 @@ export async function handleApiError(error: unknown) {
     code = "ROZNAMCHA_VALIDATION_ERROR";
     message = error.message;
     status = 422;
+  } else if (
+    error && typeof error === "object" && "code" in error &&
+    typeof (error as any).code === "string" && /^23\d{3}$/.test((error as any).code)
+  ) {
+    // PostgreSQL integrity-constraint violations (SQLSTATE class 23) are caused by
+    // the request, not a server fault — surface them as 4xx, not 500.
+    const pgCode = (error as any).code as string;
+    if (pgCode === "23505") { code = "DUPLICATE"; message = "This record already exists."; status = 409; }
+    else if (pgCode === "23503") { code = "FK_VIOLATION"; message = "A related record is missing or still in use."; status = 409; }
+    else if (pgCode === "23514") { code = "CHECK_VIOLATION"; message = "One or more values are not allowed."; status = 422; }
+    else if (pgCode === "23502") { code = "NOT_NULL_VIOLATION"; message = "A required field is missing."; status = 422; }
+    else { code = "CONSTRAINT_VIOLATION"; status = 422; }
   }
 
   // Normalize scope and ledger mismatches to user-friendly messages
