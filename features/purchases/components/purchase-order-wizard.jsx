@@ -3105,6 +3105,40 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
     }
   };
 
+  const handleSaveParamToMaster = async (paramType, paramValue) => {
+    const selectedGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+    if (!selectedGood || !paramValue || !paramValue.trim()) return;
+
+    setSavingOrder(true);
+    setSaveMessage(`Saving ${paramType.replace("_", " ")} to Goods Master...`);
+    try {
+      const response = await fetch("/api/erp/goods/parameters", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          goodsId: selectedGood.id,
+          paramType,
+          paramValue: paramValue.trim(),
+          sortOrder: 1,
+          isActive: true
+        })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) throw new Error(data?.error || data?.error?.message || "Failed to save parameter to master.");
+
+      const reloadRes = await fetch("/api/erp/goods?limit=500").then(r => r.json()).catch(() => ({}));
+      const goodsData = reloadRes?.data?.goods || reloadRes?.goods;
+      if (goodsData) setDbGoods(goodsData);
+
+      setSaveMessage(`Saved "${paramValue.trim()}" to Goods Master.`);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Error saving parameter.");
+    } finally {
+      setSavingOrder(false);
+      setTimeout(() => setSaveMessage(""), 3000);
+    }
+  };
+
   const handleAddNewVariationItem = async (type) => {
     const selectedGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
     if (!selectedGood) {
@@ -5294,7 +5328,25 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.th_brand", "Brand")}</label>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-[10px] text-muted-foreground">{t(lang, "purchase.th_brand", "Brand")}</label>
+                          {form.goodsName && form.brand && (() => {
+                            const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                            const masterBrands = selGood?.master_brands || (selGood?.variations || []).map(v => v.brand).filter(Boolean);
+                            if (selGood && !masterBrands.includes(form.brand)) {
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSaveParamToMaster("brand", form.brand)}
+                                  className="text-[9px] bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground px-1.5 py-0.5 rounded transition-colors"
+                                >
+                                  {t(lang, "purchase.save_to_master", "Save to Master")}
+                                </button>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
                         <SearchableSelect
                           value={form.brand || ""}
                           onChange={(val) => {
@@ -5304,23 +5356,22 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                 alert(t(lang, "purchase.select_good_first_brand", "Please select a Good first before adding a new Brand."));
                                 return;
                               }
-                              setCustomVariationForm({
-                                goodsName: selGood.goods_name || selGood.goodsName,
-                                brand: "",
-                                size: form.size || "",
-                                originCountryId: ""
-                              });
-                              setCustomVariationModal(true);
+                              const newB = window.prompt("Enter New Brand:");
+                              if (newB && newB.trim()) {
+                                setValue("brand", newB.trim());
+                                handleSaveParamToMaster("brand", newB.trim());
+                              }
                             } else {
                               setValue("brand", val);
                             }
                           }}
                           options={(() => {
-                            const selGood = dbGoods.find(g => (g.goods_name || g.goodsName) === form.goodsName);
+                            const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
                             const brands = Array.from(new Set([
-                              ...BRAND_OPTIONS,
+                              ...(selGood?.master_brands || []),
                               ...(selGood?.variations || []).map(v => v.brand).filter(Boolean),
-                              ...dbGoods.flatMap(g => (g.variations || []).map(v => v.brand)).filter(Boolean),
+                              ...BRAND_OPTIONS,
+                              ...dbGoods.flatMap(g => [...(g.master_brands || []), ...(g.variations || []).map(v => v.brand)]).filter(Boolean),
                               form.brand
                             ].filter(Boolean))).sort();
                             return brands.map(b => ({ label: b, value: b }));
@@ -5330,7 +5381,25 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.th_size", "Size Specification")}</label>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-[10px] text-muted-foreground">{t(lang, "purchase.th_size", "Size Specification")}</label>
+                          {form.goodsName && form.size && (() => {
+                            const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                            const masterSizes = selGood?.master_sizes || (selGood?.variations || []).map(v => v.size).filter(Boolean);
+                            if (selGood && !masterSizes.includes(form.size)) {
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSaveParamToMaster("size", form.size)}
+                                  className="text-[9px] bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground px-1.5 py-0.5 rounded transition-colors"
+                                >
+                                  {t(lang, "purchase.save_to_master", "Save to Master")}
+                                </button>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
                         <SearchableSelect
                           value={form.size || ""}
                           onChange={(val) => {
@@ -5340,29 +5409,105 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                 alert(t(lang, "purchase.select_good_first_size", "Please select a Good first before adding a new Size."));
                                 return;
                               }
-                              setCustomVariationForm({
-                                goodsName: selGood.goods_name || selGood.goodsName,
-                                brand: form.brand || "",
-                                size: "",
-                                originCountryId: ""
-                              });
-                              setCustomVariationModal(true);
+                              const newS = window.prompt("Enter New Size:");
+                              if (newS && newS.trim()) {
+                                setValue("size", newS.trim());
+                                handleSaveParamToMaster("size", newS.trim());
+                              }
                             } else {
                               setValue("size", val);
                             }
                           }}
                           options={(() => {
-                            const selGood = dbGoods.find(g => (g.goods_name || g.goodsName) === form.goodsName);
+                            const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
                             const sizes = Array.from(new Set([
-                              ...SIZE_OPTIONS,
+                              ...(selGood?.master_sizes || []),
                               ...(selGood?.variations || []).map(v => v.size).filter(Boolean),
-                              ...dbGoods.flatMap(g => (g.variations || []).map(v => v.size)).filter(Boolean),
+                              ...SIZE_OPTIONS,
+                              ...dbGoods.flatMap(g => [...(g.master_sizes || []), ...(g.variations || []).map(v => v.size)]).filter(Boolean),
                               form.size
                             ].filter(Boolean))).sort();
                             return sizes.map(s => ({ label: s, value: s }));
                           })()}
                           placeholder={t(lang, "purchase.select_size", "Select Size")}
                           addOptionLabel={t(lang, "purchase.add_new_size", "Add New Size")}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-[10px] text-muted-foreground">{t(lang, "purchase.variety_label", "Variety")}</label>
+                          {form.goodsName && form.variety && (() => {
+                            const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                            const masterVars = selGood?.master_varieties || [];
+                            if (selGood && !masterVars.includes(form.variety)) {
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSaveParamToMaster("variety", form.variety)}
+                                  className="text-[9px] bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500 hover:text-white px-1.5 py-0.5 rounded transition-colors"
+                                >
+                                  {t(lang, "purchase.save_to_master", "Save to Master")}
+                                </button>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                        <SearchableSelect
+                          value={form.variety || ""}
+                          onChange={(val) => {
+                            if (val === "__ADD_NEW__") {
+                              const newV = window.prompt("Enter New Variety:");
+                              if (newV && newV.trim()) {
+                                setValue("variety", newV.trim());
+                                handleSaveParamToMaster("variety", newV.trim());
+                              }
+                            } else {
+                              setValue("variety", val);
+                            }
+                          }}
+                          options={(() => {
+                            const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                            const varieties = Array.from(new Set([
+                              ...(selGood?.master_varieties || []),
+                              "Nonpareil", "Carmel", "Independence", "Butte", "Marcona", "Aldrich", "Fritz", "Monterey", "Padre", "Price", "Sonora", "Wood Colony",
+                              form.variety
+                            ].filter(Boolean))).sort();
+                            return varieties.map(v => ({ label: v, value: v }));
+                          })()}
+                          placeholder={t(lang, "purchase.select_variety", "Select Variety")}
+                          addOptionLabel={t(lang, "purchase.add_new_variety", "Add New Variety")}
+                        />
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-[10px] text-muted-foreground">{t(lang, "purchase.extra_details_label", "Quality / Extra Details")}</label>
+                          {form.goodsName && form.extraDetails && (() => {
+                            const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                            const masterSpecs = selGood?.master_extra_details || [];
+                            if (selGood && !masterSpecs.includes(form.extraDetails)) {
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSaveParamToMaster("extra_details", form.extraDetails)}
+                                  className="text-[9px] bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500 hover:text-white px-1.5 py-0.5 rounded transition-colors"
+                                >
+                                  {t(lang, "purchase.save_to_master", "Save to Master")}
+                                </button>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                        <input
+                          type="text"
+                          value={form.extraDetails || ""}
+                          onChange={(e) => setValue("extraDetails", e.target.value)}
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
+                          placeholder={t(lang, "purchase.extra_details_placeholder", "e.g. Soft Shell / Light Color")}
                         />
                       </div>
                     </div>

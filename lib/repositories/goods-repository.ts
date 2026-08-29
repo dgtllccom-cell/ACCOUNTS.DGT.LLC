@@ -43,18 +43,36 @@ function cleanQuery(value: string) {
   return value.trim().replace(/\s+/g, " ");
 }
 
-function withStats(row: any, variations: any[]) {
+function withStats(row: any, variations: any[], params: any[] = []) {
   const uniqueOrigins = new Set([row.origin_country_id].filter(Boolean));
-  const uniqueSizes = new Set(variations.map((v: any) => v.size).filter(Boolean));
-  const uniqueBrands = new Set(variations.map((v: any) => v.brand).filter(Boolean));
-  const uniqueVarieties = new Set([row.variety, ...variations.map((v: any) => v.variety)].filter(Boolean));
+
+  const brandsFromVars = variations.map((v: any) => v.brand).filter(Boolean);
+  const brandsFromParams = params.filter((p: any) => p.goods_id === row.id && p.param_type === "brand").map((p: any) => p.param_value);
+  const masterBrands = Array.from(new Set([...brandsFromVars, ...brandsFromParams]));
+
+  const sizesFromVars = variations.map((v: any) => v.size).filter(Boolean);
+  const sizesFromParams = params.filter((p: any) => p.goods_id === row.id && p.param_type === "size").map((p: any) => p.param_value);
+  const masterSizes = Array.from(new Set([...sizesFromVars, ...sizesFromParams]));
+
+  const varietiesFromVars = [row.variety, ...variations.map((v: any) => v.variety)].filter(Boolean);
+  const varietiesFromParams = params.filter((p: any) => p.goods_id === row.id && p.param_type === "variety").map((p: any) => p.param_value);
+  const masterVarieties = Array.from(new Set([...varietiesFromVars, ...varietiesFromParams]));
+
+  const extraDetailsFromVars = [row.extra_details, ...variations.map((v: any) => v.extra_details)].filter(Boolean);
+  const extraDetailsFromParams = params.filter((p: any) => p.goods_id === row.id && p.param_type === "extra_details").map((p: any) => p.param_value);
+  const masterExtraDetails = Array.from(new Set([...extraDetailsFromVars, ...extraDetailsFromParams]));
+
   return {
     ...row,
     variations,
+    master_brands: masterBrands,
+    master_sizes: masterSizes,
+    master_varieties: masterVarieties,
+    master_extra_details: masterExtraDetails,
     total_origins: uniqueOrigins.size,
-    total_sizes: uniqueSizes.size,
-    total_brands: uniqueBrands.size,
-    total_varieties: uniqueVarieties.size
+    total_sizes: masterSizes.length,
+    total_brands: masterBrands.length,
+    total_varieties: masterVarieties.length
   };
 }
 
@@ -88,7 +106,10 @@ export class GoodsRepository {
       const variationRows = ids.length
         ? await sql`SELECT ${sql(VARIATION_COLUMNS)} FROM public.goods_variations WHERE goods_id = ANY(${ids}::uuid[]) AND deleted_at IS NULL`
         : [];
-      const goods = goodsRows.map((row: any) => withStats(row, variationRows.filter((v: any) => v.goods_id === row.id)));
+      const paramRows = ids.length
+        ? await sql`SELECT id, goods_id, param_type, param_value FROM public.goods_master_parameters WHERE deleted_at IS NULL AND is_active = true AND (goods_id = ANY(${ids}::uuid[]) OR goods_id IS NULL)`
+        : [];
+      const goods = goodsRows.map((row: any) => withStats(row, variationRows.filter((v: any) => v.goods_id === row.id), paramRows));
       return { goods: goods as GoodsRow[], limit };
     });
     if (viaPg) return viaPg;
