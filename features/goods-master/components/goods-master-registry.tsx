@@ -276,8 +276,8 @@ export function GoodsMasterRegistry() {
   return (
     <>
     <Card className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
-        <div>
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+        <div className="min-w-0">
           <CardTitle className="text-xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
             <Package className="w-6 h-6 text-emerald-600" />
             {t(lang, "gmr.title", "Goods Master Registry")}
@@ -286,7 +286,7 @@ export function GoodsMasterRegistry() {
             {t(lang, "gmr.subtitle", "Goods Name → HS Code → Brand → Size → Variety → Extra Details")}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 shrink-0">
           <Button onClick={() => setIsParamModalOpen(true)} size="sm" variant="outline" className="border-amber-300 text-amber-700 dark:text-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-950/40">
             <Settings2 className="w-4 h-4 mr-1" /> {t(lang, "gmr.master_parameters_btn", "Master Parameters")}
           </Button>
@@ -299,8 +299,8 @@ export function GoodsMasterRegistry() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4 pt-4">
-        <div className="flex gap-2">
-          <Input placeholder={t(lang, "gmr.search_ph", "Search by Goods Name, HS Code, Brand, Variety, or Specs...")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="max-w-md" />
+        <div className="flex flex-wrap gap-2">
+          <Input placeholder={t(lang, "gmr.search_ph", "Search by Goods Name, HS Code, Brand, Variety, or Specs...")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full sm:max-w-md" />
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)} className="px-3 py-2 border rounded-md bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-sm">
             <option value="all">{t(lang, "gmr.all_status", "All Statuses")}</option>
             <option value="Active">{t(lang, "gmr.active_only", "Active Only")}</option>
