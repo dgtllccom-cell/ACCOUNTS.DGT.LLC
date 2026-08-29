@@ -511,3 +511,68 @@ Scenario 18 pre-post preview: Debit = Credit (`balanced: true`), preview only �
 
 ### BLOCKED on owner-supplied material
 Representative **real customer documents** (PDF / phone photo / scanned / rotated / low-quality / multi-page / English / Arabic-RTL) for the final real-document UAT. Every format has been exercised with a comprehensive **synthetic** set (`scratch/di-formats.mts`) — the multi-page scanned-PDF path is implemented + unit-covered but not yet run against a real multi-page customer scan.
+
+---
+
+## Real Customer Document UAT — 2026-08-29 (owner-supplied contract)
+
+**Document:** a genuine 5-page CamScanner PDF bundle supplied by the owner —
+Proforma Invoice `DSA-25087` + Sales Contract `DSA2025-0908` + terms + a Mashreq
+fund-transfer e-receipt. Seller **DALIAN SUNSHINE IMP. & EXP.** (Dalian, China);
+buyer **DAMMAN GENERAL TRADING LLC** (Al Ras, Dubai). Goods: 45 TON Yunnan
+Walnut Kernels @ USD 4,900/TON CFR Jebel Ali = **USD 220,500.00**. Original file
+unchanged; SHA-256 `f11a4362…`.
+
+### Pipeline run (real service, DEV, authenticated Super Admin)
+
+| Stage | Result |
+|---|---|
+| Upload → security validation | job `DI-2026-00001`; PDF, 5 pages, magic-signature OK, malware scan OK, `duplicateOf: null` |
+| OCR | `pdf-parse + tesseract.js@eng+ara`, 5/5 pages, mean confidence ~0.80 — **2 OCR bugs fixed** (see below) |
+| Classification | `sales_contract` @ 0.75 → reviewer overrode target to `purchase_orders` |
+| Extraction | currency **USD** (green), document_date **2025-09-08** (green), grand_total **220500**, advance/deposit **22050**, invoice **DSA-25087**, supplier **DALIAN SUNSHINE IMP. & EXP.**, buyer **DAMMAN GENERAL TRADING LLC**, bank **China Construction Bank** — **extractor hardened** for this real layout |
+| Confidence / Review | 9 fields corrected + verified to the document; all `verified` |
+| Matching | correctly **out-of-scope → QVC** (no existing PO to append to — new purchase); no false auto-link; nothing posted |
+| Confirm Draft | `DID-2026-00001`, target `purchase_orders`, `new_record`, `unresolved: []` |
+| Purchase prefill | `purchaseContractNo DSA2025-0908`, `billNo DSA-25087`, `purchaseDate 2025-09-08`, `supplierName`, `advanceAmount 22050`, `purchaseCurrency USD`, payment terms — contract no seeded from the intake reference |
+| Existing account | matched the **existing** `enterprise_accounts` row `UAE-DUB-AC-0003` "DALIAN SUNSHINE IMP. & EXP." (ledger `fd7a5f86…`) under the Dubai city branch — **no duplicate account created** |
+| Save / Link | purchase order **`AE-001-0022`** created (one PO, contract `DSA2025-0908`); draft **consumed**; job → `linked` → `matched_source_id = AE-001-0022` |
+| USD → AED | `purchase_orders`: `purchase_currency=USD`, `payment_currency=AED`, `exchange_rate=3.67500000`, `order_total=220500`, `total_goods_original=220500`, **`total_goods_local=810337.50`**, `total_goods_usd=220500` |
+| Accounting trace | booking transfer → roznamcha entry `original_currency_code=USD`, **`base_currency_amount=810337.50 AED`**, Dr `AE Purchase` 810,337.50 = Cr `DALIAN SUNSHINE` 810,337.50 (**balanced**); `purchase_order_payments` amount 220,500 USD / base 810,337.50 AED |
+| Duplicate guard | re-transfer blocked; exactly **1** booking roznamcha entry; exactly **1** PO for contract `DSA2025-0908` |
+| Audit | `document_intake_events`: uploaded → ocr → processed → field_corrected ×9 → draft_prepared → draft_consumed |
+
+**USD → AED result: USD 220,500.00 × 3.675 = AED 810,337.50** — stored on the PO
+and on the roznamcha entry; the original USD amount and the historical rate 3.675
+are both permanently recorded.
+
+### Bugs fixed by this UAT (committed on `main`)
+
+| Commit | Fix |
+|---|---|
+| `d9479f4` | scanned-PDF OCR never ran — `pdf-parse@2 getScreenshot` returns bytes on `.data`, code only checked `.buffer`; also `grayscale+normalise+sharpen` on a phone scan left only the "Scanned with CamScanner" watermark. Now prefers the embedded full-page image, gentler preprocess. |
+| `42a1015` | extractor hardening for the real layout: month-first dates, `TOTAL VALUE:` / bare `USD 220,500.00`, `Deposit` amounts, `Contract NO./:___` separator noise, HS-code false positives (phone/fax numbers), bank-line "line items", cheque fields gated to finance docs. |
+| `b96d699` | reviewed-draft payload seeded from the references typed at intake when OCR doesn't re-extract them. |
+
+### Held for owner decision (blocks a clean production posting, not the pipeline)
+
+1. **The existing `DALIAN SUNSHINE` account is USD-denominated**, but this UAE
+   entity posts in an AED functional currency. The booking credited it the AED
+   base amount (810,337.50) tagged "USD". To keep one account (no duplicate),
+   the owner should **re-base that existing account to AED**, or confirm the
+   supplier ledger is meant to track the transaction currency.
+2. **Pre-existing multi-currency purchase-payment defects** surfaced (not
+   introduced) and **not patched** (they touch the core posting RPC used by every
+   purchase and need their own design + regression cycle):
+   - `recalc_purchase_order_payment_totals` does `amount / exchange_rate` on the
+     payment rows, assuming `amount` is in the functional currency — for a
+     USD-priced order it under-scales `advance_paid` by the rate.
+   - `post_purchase_order_payment` writes `purchase_order_payments.exchange_rate = 1`
+     whenever the payment currency equals `purchase_orders.currency_code` (which
+     holds the *purchase* currency, not the functional one) — the rate is still
+     recoverable from `base_currency_amount / amount` and from
+     `purchase_orders.exchange_rate`, but the column itself is misleading.
+
+The UAT booking + advance postings were **reversed** after verification; ledger
+balances are back to their pre-UAT values. PO `AE-001-0022` and the linked intake
+job are retained as the UAT evidence (PO left `unposted` pending item 1).
