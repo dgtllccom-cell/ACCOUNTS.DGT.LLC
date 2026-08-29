@@ -1,8 +1,59 @@
-# Account Setup + Universal Print/PDF — closure status (round 2)
+# Account Setup + Universal Print/PDF — closure status (round 3)
 
 Date: 2026-08-30. Continuation of the two-workstream closure.
 
 **Still NOT "100% COMPLETE — REMAINING ISSUES: 0".** Honest matrix below.
+
+---
+
+## ROUND 3 ADDITIONS (this session)
+
+### 1. HEADER_TRANSLATIONS gaps — CLOSED (commit `4acec44`)
+`scratch/scan-header-gaps.mjs` sweeps every `openGenericErpReport` /
+`openScopedGenericReport` call site in `features/ app/ components/` and cross-checks the
+label/title strings against `lib/i18n/table-headers.ts`. **49 entries added** (2 batches);
+final scan = **0 untranslated labels**. Each entry carries `ur` + `ar` + `fa` + `ps`.
+
+### 2. Final legacy-print sweep (commit `4acd11f`)
+| Path | Fix |
+|---|---|
+| `components/layout/erp-page-actions.tsx` — the **global** page Print / PDF-Download menu (every dashboard page) | printed the *whole dashboard* (sidebar + nav). Now renders only the page `<main>` into the shared `PdfPreviewModal` via `printDomFragmentViaModal`; raw `window.print()` only as fallback when no `<main>`. |
+| `components/reports/journal-print-button.tsx` — `JournalPrintButton`, used by ~10 ledger / journal / roznamcha / HRM report screens | removed hard-coded `"DAMAAN GENERAL TRADING LLC"` companyInfo. Branding now resolves from the **logged-in country/branch scope** (`useErpScope` → `openScopedGenericReport` → `/api/erp/branding`). Super-admin with no locked country → neutral header (engine strips placeholders). |
+| `app/dashboard/search/page.tsx` — record "Print" quick action | `document.write` popup → `printStore.openPrint` (RTL/dir-aware A4, escaped). |
+| `components/ui/employee-certificate-print.ts` | `window.open` + `document.write` + auto-`window.print()` → `printStore.openPrint` (shared modal). |
+| `components/reports/{commercial-invoice,packing-list,shipping-invoice}-report.tsx` | **deleted** — hard-coded Damaan, English-only, unreferenced (barrel-only). Superseded by `lib/reports/trade-documents/`. |
+
+Remaining raw `window.print()` after this sweep = one of:
+`printStore.openPrint` toolbar buttons inside self-contained builder HTML
+(`erp-report-template-builder`, `open-roznamcha-voucher-print-report`,
+`open-company-360-report-window`), `@media print`-isolated full-screen A4 preview
+components (`professional-report-viewer`, `cash-receipt-viewer`, `loading-slip-viewer` —
+each has `body * { visibility:hidden }` + `.print-area` + `@page`), or
+`if (!printDomFragmentViaModal(...)) window.print()` fallbacks. Server PDF routes
+(`access-register/pdf`, `handover-pdf`) are self-contained. `components/documents/print-button.tsx`
+(BL documents page) and legacy `lib/reports/open-trade-document-window.ts` /
+`open-proforma-invoice-window.ts` (still wired in `purchase-booking-journal-report-view`,
+the wizards, `print-reports/page.tsx`, `purchase-order-management-dashboard`) are the
+**known-remaining** trade-doc legacy paths — migrating them to `TradeDocumentCenter` +
+adding a `contract` doc type to the new engine is the next bounded task.
+
+### 3. Two real PdfPreviewModal bugs found + fixed by browser testing
+| Commit | Bug | Fix |
+|---|---|---|
+| `b481147` | Report-builder HTML embeds `<script>…window.print()…</script>` (gated on `autoPrint`) for the legacy popup path. Rendered inside the modal iframe it fired an **immediate native print dialog on load**, bypassing the preview and freezing the renderer. Repro: Accounts → "Account Master Registry & Search Report" → PRINT hung. | modal sanitizes injected HTML — drops any `<script>` referencing `window.print()` / `__ERP_A4_AUTOPRINT__`. `open-a4-report-window.ts` drops the dead script outright. |
+| `81d5720` | Wide registers ship `@page { size: A4 landscape }` but the modal always opened **portrait** → 20+ columns wrapped one character per line. | modal detects `@page … landscape` in the report HTML and defaults the preview to that orientation (toggle still works). **Browser-verified**: Purchase Booking Journal Report → Print (Loading Records, 23 columns) now opens landscape, table lays out horizontally at 1123 px sheet width. |
+
+### 4. Browser verification this session (super_admin dev-session, `next start -p 3200` on fresh build)
+| Path | EN | UR | FA | PS | AR | Notes |
+|---|---|---|---|---|---|---|
+| Generic ERP report (Reports → Actions → Print / PDF) | ✅ | ✅ RTL | ✅ RTL | ✅ RTL | — (same code path + dict) | headers all translated (سیریل/تاریخ/تفصیل/بنام/جمع/بیلنس/حیثیت …), title translated, `dir=rtl`, page counter localized, neutral "DIGITAL DOCK ERP" branding (not Damaan), landscape auto-detected |
+| Account Register Report (Accounts → PRINT) | ✅ | — | — | — | — | opens cleanly post-fix (was frozen); A4, "Page 1 of 1" |
+| Purchase Loading Records (23-col) | ✅ landscape | — | — | — | — | horizontal layout at 1123 px; readable at desktop width |
+| Mobile 375×812 | ✅ | — | — | — | — | no horizontal page overflow; A4 sheet scales to fit; toolbar right-edge icons clip (minor) |
+
+**Not yet browser-verified this session:** AR on any report (same code path as UR/FA/PS —
+inferred, not screenshotted); the full device grid (iPad P/L, Samsung) on every screen;
+the trade-document dashboard click-through with live orders; Account Setup on iPad/Android.
 
 ---
 
@@ -123,7 +174,20 @@ with real data.
 6. **EPS / Production deployment + full role/scope/save + print re-verification there** —
    not done. The commits must deploy first.
 
-## Commits (this round)
+## Commits
 
-`0924be7` account setup · `d4171c2` wizard doc center · `befe065` closure doc ·
-`b751ec4` print migration batch 1 · `e986279` print migration batch 2.
+Round 1–2: `0924be7` account setup · `d4171c2` wizard doc center · `befe065` closure doc ·
+`b751ec4` print migration batch 1 · `e986279` print migration batch 2 · `d84c757` closure r2.
+
+Round 3: `4acec44` HEADER_TRANSLATIONS gaps · `4acd11f` legacy-print sweep + journal-button
+branding + dead trade-doc deletion · `b481147` strip embedded auto-print · `81d5720`
+modal honours `@page` orientation.
+
+## Deployment
+
+**18 commits unpushed to `origin/main`.** The only migration in the range is
+`20261011_doc_intake_employee_expense_types.sql` — additive, idempotent (`WHERE NOT EXISTS`),
+2 rows into `document_type_registry`. The destructive `20261008_*` migrations are **not
+committed** (working-tree only) and will not deploy. Production push is **held for owner
+go-ahead** — the user's own precondition ("when Local/DEV is completely green") is not met
+while the per-screen device grid and trade-doc click-through remain unverified.
