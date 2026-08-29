@@ -29,6 +29,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         goodsId: body.goodsId || "",
         size: body.size,
         brand: body.brand,
+        variety: body.variety,
+        extraDetails: body.extraDetails,
         isActive: body.isActive,
         originalLanguage: session.preferredLanguage
       },

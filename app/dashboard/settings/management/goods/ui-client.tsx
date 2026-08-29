@@ -15,6 +15,8 @@ type GoodsVariation = {
   goods_id: string;
   size: string;
   brand: string;
+  variety?: string | null;
+  extra_details?: string | null;
   is_active: boolean;
   created_at: string;
 };
@@ -52,27 +54,28 @@ export default function GoodsManagementClient({ session }: { session: any }) {
     chsCode: "",
     originCountryId: "",
     size: "",
-    brand: ""
+    brand: "",
+    variety: "",
+    extraDetails: ""
   });
 
   useEffect(() => {
     listCountries()
       .then((res) => setCountries(res))
-      .catch(() => null);
+      .catch(() => setCountries([]));
   }, []);
 
-  async function refresh(input?: { q?: string }) {
+  const refresh = useCallback(async (opts?: { q?: string }) => {
     setBusy(true);
-    setBanner(null);
     try {
-      const res = await listGoods({ q: input?.q, limit: 200 });
-      setRows((res.goods as unknown as GoodsRecord[]) ?? []);
+      const res = await listGoods({ query: opts?.q ?? "", limit: 100 });
+      setRows(res.goods as GoodsRecord[]);
     } catch (e: any) {
-      setBanner({ type: "error", text: e?.message ?? "Failed to fetch goods list." });
+      setBanner({ type: "error", text: e?.message ?? "Failed to load goods." });
     } finally {
       setBusy(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -87,7 +90,7 @@ export default function GoodsManagementClient({ session }: { session: any }) {
       return;
     }
 
-    const hasVariation = form.size.trim() || form.brand.trim() || form.originCountryId;
+    const hasVariation = form.size.trim() || form.brand.trim() || form.variety.trim() || form.extraDetails.trim() || form.originCountryId;
     if (hasVariation && (!form.size.trim() || !form.brand.trim())) {
       setBanner({ type: "error", text: "To add a variation, both Size and Brand are required." });
       return;
@@ -103,7 +106,9 @@ export default function GoodsManagementClient({ session }: { session: any }) {
         initialVariation: hasVariation ? {
           originCountryId: form.originCountryId || null,
           size: form.size.trim(),
-          brand: form.brand.trim()
+          brand: form.brand.trim(),
+          variety: form.variety.trim() || null,
+          extraDetails: form.extraDetails.trim() || null
         } : null
       });
 
@@ -112,7 +117,9 @@ export default function GoodsManagementClient({ session }: { session: any }) {
         chsCode: "",
         originCountryId: "",
         size: "",
-        brand: ""
+        brand: "",
+        variety: "",
+        extraDetails: ""
       });
       await refresh({ q });
       setBanner({ type: "success", text: "Goods Master record and initial variation saved successfully." });
@@ -166,7 +173,7 @@ export default function GoodsManagementClient({ session }: { session: any }) {
 
   // --- Variation Handlers ---
 
-  async function handleAddVariation(next: { size: string; brand: string }) {
+  async function handleAddVariation(next: { size: string; brand: string; variety?: string; extraDetails?: string }) {
     if (!addVarGoods) return;
     if (!next.size.trim() || !next.brand.trim()) {
       alert("Size and Brand are required fields.");
@@ -178,7 +185,9 @@ export default function GoodsManagementClient({ session }: { session: any }) {
       await apiPost("/api/erp/goods/variations", {
         goodsId: addVarGoods.id,
         size: next.size,
-        brand: next.brand
+        brand: next.brand,
+        variety: next.variety,
+        extraDetails: next.extraDetails
       });
       setAddVarGoods(null);
       await refresh({ q });
@@ -190,7 +199,7 @@ export default function GoodsManagementClient({ session }: { session: any }) {
     }
   }
 
-  async function handleEditVariation(next: { size: string; brand: string }) {
+  async function handleEditVariation(next: { size: string; brand: string; variety?: string; extraDetails?: string }) {
     if (!editVarRow) return;
     if (!next.size.trim() || !next.brand.trim()) {
       alert("Size and Brand are required fields.");
@@ -202,7 +211,9 @@ export default function GoodsManagementClient({ session }: { session: any }) {
       await apiPatch(`/api/erp/goods/variations/${editVarRow.variation.id}`, {
         goodsId: editVarRow.goodsId,
         size: next.size,
-        brand: next.brand
+        brand: next.brand,
+        variety: next.variety,
+        extraDetails: next.extraDetails
       });
       setEditVarRow(null);
       await refresh({ q });
@@ -311,38 +322,57 @@ export default function GoodsManagementClient({ session }: { session: any }) {
             </label>
           </div>
 
-          <div className="mt-4 border-t pt-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Initial Variation (Optional)</span>
-            <div className="mt-2 grid gap-3 md:grid-cols-2">
-
+          <div className="mt-3 border-t pt-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Initial Variation (Optional)</span>
+            <div className="mt-1.5 grid gap-2.5 md:grid-cols-4">
               <label className="grid gap-1">
-                <span className="text-xs text-muted-foreground font-semibold">Size</span>
+                <span className="text-[11px] text-muted-foreground font-semibold">Size</span>
                 <input
                   value={form.size}
                   onChange={(e) => setForm((s) => ({ ...s, size: e.target.value }))}
-                  className="h-10 rounded-lg border border-input bg-background px-3 text-sm outline-none transition focus:border-primary"
-                  placeholder="e.g. 22/24"
+                  className="h-8 rounded-md border border-input bg-background px-2.5 text-xs outline-none transition focus:border-primary"
+                  placeholder="e.g. 18/20"
                 />
               </label>
 
               <label className="grid gap-1">
-                <span className="text-xs text-muted-foreground font-semibold">Brand</span>
+                <span className="text-[11px] text-muted-foreground font-semibold">Brand</span>
                 <input
                   value={form.brand}
                   onChange={(e) => setForm((s) => ({ ...s, brand: e.target.value }))}
-                  className="h-10 rounded-lg border border-input bg-background px-3 text-sm outline-none transition focus:border-primary"
-                  placeholder="e.g. Brand A"
+                  className="h-8 rounded-md border border-input bg-background px-2.5 text-xs outline-none transition focus:border-primary"
+                  placeholder="e.g. Digital LLC"
+                />
+              </label>
+
+              <label className="grid gap-1">
+                <span className="text-[11px] text-muted-foreground font-semibold">Variety</span>
+                <input
+                  value={form.variety || ""}
+                  onChange={(e) => setForm((s) => ({ ...s, variety: e.target.value }))}
+                  className="h-8 rounded-md border border-input bg-background px-2.5 text-xs outline-none transition focus:border-primary"
+                  placeholder="e.g. Nonpareil"
+                />
+              </label>
+
+              <label className="grid gap-1">
+                <span className="text-[11px] text-muted-foreground font-semibold">Extra Details / Specs</span>
+                <input
+                  value={form.extraDetails || ""}
+                  onChange={(e) => setForm((s) => ({ ...s, extraDetails: e.target.value }))}
+                  className="h-8 rounded-md border border-input bg-background px-2.5 text-xs outline-none transition focus:border-primary"
+                  placeholder="e.g. Soft Shell"
                 />
               </label>
             </div>
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t pt-3">
-            <div className="text-xs text-muted-foreground">
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t pt-2">
+            <div className="text-[11px] text-muted-foreground">
               Goods records require a unique CHS Code and a Name. Variations are added below.
             </div>
-            <Button type="button" className="h-10 rounded-lg font-bold" onClick={createGoods} disabled={busy}>
-              {busy ? "Saving..." : <span className="inline-flex items-center gap-2"><Save className="h-4 w-4" />Save Goods Master</span>}
+            <Button type="button" className="h-8 rounded-md text-xs font-bold px-4" onClick={createGoods} disabled={busy}>
+              {busy ? "Saving..." : <span className="inline-flex items-center gap-1.5"><Save className="h-3.5 w-3.5" />Save Goods Master</span>}
             </Button>
           </div>
         </CardContent>
@@ -443,14 +473,18 @@ export default function GoodsManagementClient({ session }: { session: any }) {
                                       <tr className="text-muted-foreground border-b font-medium">
                                         <Th className="py-2 text-start">Size</Th>
                                         <Th className="py-2 text-start">Brand</Th>
+                                        <Th className="py-2 text-start">Variety</Th>
+                                        <Th className="py-2 text-start">Extra Details / Specs</Th>
                                         <Th className="py-2 text-end">Actions</Th>
                                       </tr>
                                     </thead>
                                     <tbody className="divide-y divide-border/60">
                                       {r.variations.map((v) => (
                                         <tr key={v.id} className="hover:bg-muted/20">
-                                          <td className="py-2 text-muted-foreground">{v.size}</td>
-                                          <td className="py-2 text-muted-foreground">{v.brand}</td>
+                                          <td className="py-2 text-muted-foreground font-semibold">{v.size}</td>
+                                          <td className="py-2 text-muted-foreground font-semibold">{v.brand}</td>
+                                          <td className="py-2 text-muted-foreground">{v.variety || "-"}</td>
+                                          <td className="py-2 text-muted-foreground max-w-xs truncate" title={v.extra_details || ""}>{v.extra_details || "-"}</td>
                                           <td className="py-2 text-end">
                                             <div className="flex justify-end gap-1">
                                               <Button
@@ -565,7 +599,9 @@ export default function GoodsManagementClient({ session }: { session: any }) {
           title={`Edit Variation`}
           initialValues={{
             size: editVarRow.variation.size,
-            brand: editVarRow.variation.brand
+            brand: editVarRow.variation.brand,
+            variety: editVarRow.variation.variety || "",
+            extraDetails: editVarRow.variation.extra_details || ""
           }}
           onClose={() => setEditVarRow(null)}
           onSave={handleEditVariation}
@@ -654,37 +690,61 @@ function VariationModal({
   busy
 }: {
   title: string;
-  initialValues?: { size: string; brand: string };
+  initialValues?: { size: string; brand: string; variety?: string; extraDetails?: string };
   onClose: () => void;
-  onSave: (next: { size: string; brand: string }) => void;
+  onSave: (next: { size: string; brand: string; variety?: string; extraDetails?: string }) => void;
   busy: boolean;
 }) {
   const [draft, setDraft] = useState({
     size: initialValues?.size ?? "",
-    brand: initialValues?.brand ?? ""
+    brand: initialValues?.brand ?? "",
+    variety: initialValues?.variety ?? "",
+    extraDetails: initialValues?.extraDetails ?? ""
   });
 
   return (
     <SimpleModal title={title} onClose={onClose}>
       <div className="grid gap-3 mb-4">
-        <label className="grid gap-1">
-          <span className="text-xs text-muted-foreground font-semibold">Size</span>
-          <input
-            value={draft.size}
-            onChange={(e) => setDraft((s) => ({ ...s, size: e.target.value }))}
-            className="h-10 rounded-lg border border-input bg-background px-3 text-sm outline-none transition focus:border-primary"
-            placeholder="e.g. 22/24"
-          />
-        </label>
-        <label className="grid gap-1">
-          <span className="text-xs text-muted-foreground font-semibold">Brand</span>
-          <input
-            value={draft.brand}
-            onChange={(e) => setDraft((s) => ({ ...s, brand: e.target.value }))}
-            className="h-10 rounded-lg border border-input bg-background px-3 text-sm outline-none transition focus:border-primary"
-            placeholder="e.g. Brand A"
-          />
-        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="grid gap-1">
+            <span className="text-xs text-muted-foreground font-semibold">Size Specification</span>
+            <input
+              value={draft.size}
+              onChange={(e) => setDraft((s) => ({ ...s, size: e.target.value }))}
+              className="h-10 rounded-lg border border-input bg-background px-3 text-sm outline-none transition focus:border-primary"
+              placeholder="e.g. 18/20"
+            />
+          </label>
+          <label className="grid gap-1">
+            <span className="text-xs text-muted-foreground font-semibold">Brand</span>
+            <input
+              value={draft.brand}
+              onChange={(e) => setDraft((s) => ({ ...s, brand: e.target.value }))}
+              className="h-10 rounded-lg border border-input bg-background px-3 text-sm outline-none transition focus:border-primary"
+              placeholder="e.g. Digital LLC"
+            />
+          </label>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="grid gap-1">
+            <span className="text-xs text-muted-foreground font-semibold">Variety</span>
+            <input
+              value={draft.variety}
+              onChange={(e) => setDraft((s) => ({ ...s, variety: e.target.value }))}
+              className="h-10 rounded-lg border border-input bg-background px-3 text-sm outline-none transition focus:border-primary"
+              placeholder="e.g. Nonpareil"
+            />
+          </label>
+          <label className="grid gap-1">
+            <span className="text-xs text-muted-foreground font-semibold">Quality / Extra Details</span>
+            <input
+              value={draft.extraDetails}
+              onChange={(e) => setDraft((s) => ({ ...s, extraDetails: e.target.value }))}
+              className="h-10 rounded-lg border border-input bg-background px-3 text-sm outline-none transition focus:border-primary"
+              placeholder="e.g. Soft Shell / Light Color"
+            />
+          </label>
+        </div>
       </div>
 
       <div className="flex justify-end gap-2 border-t pt-3">
