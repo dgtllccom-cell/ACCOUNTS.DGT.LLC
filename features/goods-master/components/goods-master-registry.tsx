@@ -1,11 +1,11 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
-import { apiGet, apiPost, apiDelete } from "@/lib/api/client";
+import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Loader2, Plus, Trash2, Printer, X, Check, Package, Sparkles, Layers, Tag, FileText } from "lucide-react";
+import { Loader2, Plus, Trash2, Printer, X, Check, Package, Sparkles, Layers, Tag, FileText, Settings2, Edit2 } from "lucide-react";
 import { Th } from "@/components/ui/translated-th";
 import { UniversalReportModal } from "@/components/ui/universal-report-modal";
 import { SearchSelect } from "@/components/ui/search-select";
@@ -27,10 +27,15 @@ type GoodsRecord = {
   created_at: string;
 };
 
-const ALMOND_VARIETIES = [
-  "Aldrich", "Butte", "Carmel", "Fritz", "Independence", 
-  "Marcona", "Monterey", "Nonpareil", "Padre", "Price", "Sonora", "Wood Colony"
-];
+type MasterParamRecord = {
+  id: string;
+  goods_id: string | null;
+  param_type: "brand" | "size" | "variety" | "extra_details";
+  param_code: string;
+  param_value: string;
+  sort_order: number;
+  is_active: boolean;
+};
 
 export function GoodsMasterRegistry() {
   const lang = useActiveLanguage();
@@ -41,7 +46,29 @@ export function GoodsMasterRegistry() {
   const [summary, setSummary] = useState({ total: 0, active: 0, inactive: 0 });
   const [showReport, setShowReport] = useState(false);
 
-  // Modal State
+  // Database Parameters State (NO HARDCODING)
+  const [dbParameters, setDbParameters] = useState<{
+    brands: string[];
+    sizes: string[];
+    varieties: string[];
+    extraDetails: string[];
+  }>({
+    brands: [],
+    sizes: [],
+    varieties: [],
+    extraDetails: []
+  });
+  const [allDbParams, setAllDbParams] = useState<MasterParamRecord[]>([]);
+  const [isParamModalOpen, setIsParamModalOpen] = useState(false);
+  const [paramTab, setParamTab] = useState<"brand" | "size" | "variety" | "extra_details">("variety");
+
+  // New/Edit Parameter State
+  const [newParamValue, setNewParamValue] = useState("");
+  const [editingParamId, setEditingParamId] = useState<string | null>(null);
+  const [editingParamValue, setEditingParamValue] = useState("");
+  const [savingParam, setSavingParam] = useState(false);
+
+  // Modal State for Goods
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [countries, setCountries] = useState<{ id: string; name: string }[]>([]);
@@ -56,6 +83,28 @@ export function GoodsMasterRegistry() {
     extraDetails: "",
     isActive: true
   });
+
+  async function loadMasterParameters(goodsNameFilter?: string) {
+    try {
+      const res = await apiGet<{
+        parameters: MasterParamRecord[];
+        grouped: { brands: string[]; sizes: string[]; varieties: string[]; extraDetails: string[] };
+      }>(`/api/erp/goods/parameters?goodsName=${encodeURIComponent(goodsNameFilter || "Almond")}`);
+      if (res.grouped) {
+        setDbParameters({
+          brands: res.grouped.brands || [],
+          sizes: res.grouped.sizes || [],
+          varieties: res.grouped.varieties || [],
+          extraDetails: res.grouped.extraDetails || []
+        });
+      }
+      if (res.parameters) {
+        setAllDbParams(res.parameters);
+      }
+    } catch (err) {
+      console.error("Failed to load master parameters from database:", err);
+    }
+  }
 
   async function loadCountries() {
     try {
@@ -85,6 +134,7 @@ export function GoodsMasterRegistry() {
   useEffect(() => {
     loadGoods();
     loadCountries();
+    loadMasterParameters("Almond");
   }, [statusFilter]);
 
   const filtered = useMemo(() => {
@@ -131,6 +181,7 @@ export function GoodsMasterRegistry() {
         isActive: true
       });
       loadGoods();
+      loadMasterParameters("Almond");
     } catch (err: any) {
       alert(`Failed to save: ${err.message}`);
     } finally {
@@ -138,7 +189,68 @@ export function GoodsMasterRegistry() {
     }
   }
 
-  // Auto pre-fill Almond Kernel details if selected
+  // Master Parameter CRUD handlers
+  async function handleAddParameter(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newParamValue.trim()) return;
+    setSavingParam(true);
+    try {
+      await apiPost("/api/erp/goods/parameters", {
+        paramType: paramTab,
+        paramValue: newParamValue.trim(),
+        sortOrder: (allDbParams.filter(p => p.param_type === paramTab).length || 0) + 1,
+        isActive: true
+      });
+      setNewParamValue("");
+      await loadMasterParameters("Almond");
+    } catch (err: any) {
+      alert(`Failed to add parameter: ${err.message}`);
+    } finally {
+      setSavingParam(false);
+    }
+  }
+
+  async function handleUpdateParameter(id: string) {
+    if (!editingParamValue.trim()) return;
+    setSavingParam(true);
+    try {
+      await apiPatch("/api/erp/goods/parameters", {
+        id,
+        paramValue: editingParamValue.trim()
+      });
+      setEditingParamId(null);
+      setEditingParamValue("");
+      await loadMasterParameters("Almond");
+    } catch (err: any) {
+      alert(`Failed to update parameter: ${err.message}`);
+    } finally {
+      setSavingParam(false);
+    }
+  }
+
+  async function handleToggleParamStatus(id: string, currentActive: boolean) {
+    try {
+      await apiPatch("/api/erp/goods/parameters", {
+        id,
+        isActive: !currentActive
+      });
+      await loadMasterParameters("Almond");
+    } catch (err: any) {
+      alert(`Failed to update status: ${err.message}`);
+    }
+  }
+
+  async function handleDeleteParameter(id: string) {
+    if (!window.confirm("Are you sure you want to delete this master parameter?")) return;
+    try {
+      await apiDelete(`/api/erp/goods/parameters?id=${id}`);
+      await loadMasterParameters("Almond");
+    } catch (err: any) {
+      alert(`Failed to delete parameter: ${err.message}`);
+    }
+  }
+
+  // Auto pre-fill Almond Kernel details if selected using DB-driven parameters
   function handleGoodsNameChange(val: string) {
     if (val.toLowerCase().includes("almond")) {
       setFormData(prev => ({
@@ -146,10 +258,11 @@ export function GoodsMasterRegistry() {
         name: val,
         chsCode: prev.chsCode || "0802.12.0000",
         category: "Agriculture & Food",
-        variety: prev.variety || "Nonpareil",
-        sizes: prev.sizes || "20/22",
-        brand: prev.brand || "CALIFORNIA GOLD",
-        extraDetails: prev.extraDetails || "Grade A Sweet Almond Kernels, Medium Flattish Shape, Smooth Light Brown Skin, Shell-Free, Max 5% Moisture"
+        variety: prev.variety || dbParameters.varieties[0] || "Nonpareil",
+        sizes: prev.sizes || dbParameters.sizes[0] || "20/22",
+        brand: prev.brand || dbParameters.brands[0] || "Digital LLC",
+        extraDetails: prev.extraDetails || dbParameters.extraDetails[0] || "Nonpareil Type / Soft Shell / Light Color / Smooth Surface",
+        originCountry: prev.originCountry || "United States"
       }));
     } else {
       setFormData(prev => ({ ...prev, name: val }));
@@ -170,6 +283,9 @@ export function GoodsMasterRegistry() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button onClick={() => setIsParamModalOpen(true)} size="sm" variant="outline" className="border-amber-300 text-amber-700 dark:text-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-950/40">
+            <Settings2 className="w-4 h-4 mr-1" /> Master Parameters
+          </Button>
           <Button onClick={() => setShowReport(true)} size="sm" variant="outline" className="border-slate-300 dark:border-slate-700">
             <Printer className="w-4 h-4 mr-1" /> {t(lang, "gmr.print_preview", "Print / PDF Report")}
           </Button>
@@ -269,6 +385,136 @@ export function GoodsMasterRegistry() {
       </CardContent>
     </Card>
 
+    {/* Master Parameters Management Modal */}
+    {isParamModalOpen && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
+        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-3xl overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-amber-50/50 dark:bg-amber-950/30">
+            <div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <Settings2 className="w-5 h-5 text-amber-600" />
+                Goods Master Parameters Manager (Database-Driven)
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Add, Rename, Edit, or Deactivate Brands, Sizes, Varieties, and Extra Details in the live database.
+              </p>
+            </div>
+            <button onClick={() => setIsParamModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+            {/* Tabs for parameter types */}
+            <div className="flex border-b border-slate-200 dark:border-slate-800 gap-2">
+              {(["variety", "brand", "size", "extra_details"] as const).map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setParamTab(tab)}
+                  className={cn(
+                    "px-4 py-2 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors",
+                    paramTab === tab
+                      ? "border-amber-600 text-amber-600 dark:text-amber-400"
+                      : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                  )}
+                >
+                  {tab === "brand" ? "1. Brands" : tab === "size" ? "2. Sizes" : tab === "variety" ? "3. Varieties" : "4. Extra Details"}
+                </button>
+              ))}
+            </div>
+
+            {/* Add new parameter form */}
+            <form onSubmit={handleAddParameter} className="flex gap-2 items-center bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
+              <Input
+                placeholder={`Add new ${paramTab.replace("_", " ")} master entry...`}
+                value={newParamValue}
+                onChange={(e) => setNewParamValue(e.target.value)}
+                className="bg-white dark:bg-slate-900"
+              />
+              <Button type="submit" disabled={savingParam || !newParamValue.trim()} className="bg-amber-600 hover:bg-amber-700 text-white shrink-0 font-semibold">
+                {savingParam ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Plus className="w-4 h-4 mr-1" />}
+                Add Parameter
+              </Button>
+            </form>
+
+            {/* Parameter List */}
+            <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300">
+                    <th className="p-3 text-left">#</th>
+                    <th className="p-3 text-left">Parameter Value</th>
+                    <th className="p-3 text-center">Status</th>
+                    <th className="p-3 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {allDbParams.filter(p => p.param_type === paramTab).length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="p-6 text-center text-slate-400">No {paramTab} records found in database.</td>
+                    </tr>
+                  ) : (
+                    allDbParams.filter(p => p.param_type === paramTab).map((p, idx) => (
+                      <tr key={p.id} className="border-b border-slate-100 dark:border-slate-800/60 hover:bg-slate-50/50">
+                        <td className="p-3 text-slate-400 text-xs">{idx + 1}</td>
+                        <td className="p-3 font-medium text-slate-900 dark:text-slate-100">
+                          {editingParamId === p.id ? (
+                            <div className="flex gap-2">
+                              <Input
+                                value={editingParamValue}
+                                onChange={(e) => setEditingParamValue(e.target.value)}
+                                className="h-8 text-xs"
+                              />
+                              <Button size="sm" onClick={() => handleUpdateParameter(p.id)} className="h-8 bg-emerald-600 text-white">Save</Button>
+                              <Button size="sm" variant="ghost" onClick={() => setEditingParamId(null)} className="h-8">Cancel</Button>
+                            </div>
+                          ) : (
+                            p.param_value
+                          )}
+                        </td>
+                        <td className="p-3 text-center">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleParamStatus(p.id, p.is_active)}
+                            className={cn("px-2 py-0.5 text-xs rounded-full font-semibold", p.is_active ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" : "bg-slate-200 text-slate-600")}
+                          >
+                            {p.is_active ? "Active" : "Inactive"}
+                          </button>
+                        </td>
+                        <td className="p-3 text-center flex justify-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => { setEditingParamId(p.id); setEditingParamValue(p.param_value); }}
+                            className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-300"
+                            title="Edit / Rename Parameter"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteParameter(p.id)}
+                            className="p-1 hover:bg-rose-100 text-rose-600 rounded"
+                            title="Delete Parameter"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 flex justify-end">
+            <Button onClick={() => setIsParamModalOpen(false)} variant="outline">Close Manager</Button>
+          </div>
+        </div>
+      </div>
+    )}
+
     {/* New Goods Master Modal — Full 6-Part Structure */}
     {isModalOpen && (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
@@ -320,32 +566,81 @@ export function GoodsMasterRegistry() {
             {/* Row 2: Brand & Size */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1 flex items-center gap-1">
-                  <Layers className="w-3.5 h-3.5 text-blue-600" /> 3. BRAND NAME
-                </label>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1">
+                    <Layers className="w-3.5 h-3.5 text-blue-600" /> 3. BRAND NAME
+                  </label>
+                  <button type="button" onClick={() => { setIsParamModalOpen(true); setParamTab("brand"); }} className="text-[11px] text-amber-600 hover:underline">
+                    + Manage Brands
+                  </button>
+                </div>
                 <Input
-                  placeholder="e.g. CALIFORNIA GOLD / BLUE DIAMOND"
+                  placeholder="e.g. Digital LLC / BG / Blue Diamond"
                   value={formData.brand}
                   onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
                 />
+                {dbParameters.brands.length > 0 && (
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    {dbParameters.brands.slice(0, 6).map((b) => (
+                      <button
+                        key={b}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, brand: b })}
+                        className={cn(
+                          "text-[11px] px-1.5 py-0.5 rounded border transition-colors",
+                          formData.brand === b ? "bg-blue-600 text-white border-blue-600 font-bold" : "bg-slate-100 dark:bg-slate-800 text-slate-600 hover:bg-slate-200"
+                        )}
+                      >
+                        {b}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1 flex items-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5 text-blue-600" /> 4. SIZE / GRADE
-                </label>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1">
+                    <Sparkles className="w-3.5 h-3.5 text-blue-600" /> 4. SIZE / GRADE
+                  </label>
+                  <button type="button" onClick={() => { setIsParamModalOpen(true); setParamTab("size"); }} className="text-[11px] text-amber-600 hover:underline">
+                    + Manage Sizes
+                  </button>
+                </div>
                 <Input
-                  placeholder="e.g. 20/22 / 23/25 / 50kg Bags"
+                  placeholder="e.g. 18/20 / 20/22 / 23/25"
                   value={formData.sizes}
                   onChange={(e) => setFormData({ ...formData, sizes: e.target.value })}
                 />
+                {dbParameters.sizes.length > 0 && (
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    {dbParameters.sizes.map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, sizes: s })}
+                        className={cn(
+                          "text-[11px] px-1.5 py-0.5 rounded border transition-colors",
+                          formData.sizes === s ? "bg-blue-600 text-white border-blue-600 font-bold" : "bg-slate-100 dark:bg-slate-800 text-slate-600 hover:bg-slate-200"
+                        )}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Row 3: Variety (Field #5) */}
             <div>
-              <label className="block text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-                <Tag className="w-3.5 h-3.5 text-amber-600" /> 5. VARIETY (SEPARATE MASTER ATTRIBUTE)
-              </label>
+              <div className="flex justify-between items-center mb-1">
+                <label className="block text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1">
+                  <Tag className="w-3.5 h-3.5 text-amber-600" /> 5. VARIETY (DATABASE MASTER ATTRIBUTE)
+                </label>
+                <button type="button" onClick={() => { setIsParamModalOpen(true); setParamTab("variety"); }} className="text-[11px] text-amber-600 hover:underline font-semibold">
+                  + Manage Varieties
+                </button>
+              </div>
               <Input
                 placeholder="e.g. Nonpareil / Carmel / Independence / Butte / Marcona"
                 value={formData.variety}
@@ -353,8 +648,8 @@ export function GoodsMasterRegistry() {
                 className="border-amber-200 dark:border-amber-900/60 focus:ring-amber-500"
               />
               <div className="mt-2 flex flex-wrap gap-1.5">
-                <span className="text-[11px] font-semibold text-slate-400 py-0.5">Almond Chart Varieties:</span>
-                {ALMOND_VARIETIES.map((v) => (
+                <span className="text-[11px] font-semibold text-slate-400 py-0.5">Database Master Varieties:</span>
+                {dbParameters.varieties.map((v) => (
                   <button
                     key={v}
                     type="button"
@@ -374,9 +669,14 @@ export function GoodsMasterRegistry() {
 
             {/* Row 4: Extra Details / Specification (Field #6) */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1 flex items-center gap-1">
-                <FileText className="w-3.5 h-3.5 text-blue-600" /> 6. EXTRA DETAILS / SPECIFICATION
-              </label>
+              <div className="flex justify-between items-center mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1">
+                  <FileText className="w-3.5 h-3.5 text-blue-600" /> 6. EXTRA DETAILS / SPECIFICATION
+                </label>
+                <button type="button" onClick={() => { setIsParamModalOpen(true); setParamTab("extra_details"); }} className="text-[11px] text-amber-600 hover:underline font-semibold">
+                  + Manage Specs
+                </button>
+              </div>
               <textarea
                 rows={3}
                 placeholder="Enter quality description, shell/nut characteristics, color, shape, moisture, surface grade, packing specification, etc."
@@ -384,6 +684,22 @@ export function GoodsMasterRegistry() {
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, extraDetails: e.target.value })}
                 className="w-full px-3 py-2 border rounded-md bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
+              {dbParameters.extraDetails.length > 0 && (
+                <div className="mt-1.5 flex flex-wrap gap-1">
+                  <span className="text-[11px] font-semibold text-slate-400 py-0.5">Preset Specs:</span>
+                  {dbParameters.extraDetails.slice(0, 4).map((ex) => (
+                    <button
+                      key={ex}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, extraDetails: ex })}
+                      className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 truncate max-w-[200px]"
+                      title={ex}
+                    >
+                      {ex}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Row 5: Category & Origin */}
