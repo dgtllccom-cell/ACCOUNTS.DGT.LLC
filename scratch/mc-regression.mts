@@ -15,7 +15,8 @@
 import { withLocalPg } from "../lib/db/local-postgres";
 
 const TAG = "MCREG-" + Date.now().toString(36).toUpperCase();
-const ACTOR = "c68e6b08-5b18-4ae1-ba23-99d5825961a9"; // Haji Asmatullah (super admin) — real profile
+let ACTOR = "";  // resolved to a live super_admin profile below (the previous
+                 // hard-coded id was removed from DEV by 20261008_cleanup_user_directory_master)
 let PASS = 0, FAIL = 0;
 const fails: string[] = [];
 function ok(name: string, cond: boolean, detail = "") {
@@ -26,6 +27,14 @@ const near = (a: number, b: number, eps = 0.01) => Math.abs(Number(a) - Number(b
 
 await withLocalPg(async (sql) => {
   // ---------------------------------------------------------------- setup
+  ACTOR = String((await sql`
+    SELECT p.id FROM profiles p
+    JOIN user_role_assignments ura ON ura.user_id = p.id
+    WHERE ura.role = 'super_admin' AND ura.deleted_at IS NULL
+    ORDER BY p.created_at LIMIT 1
+  `)[0]?.id ?? (await sql`SELECT id FROM profiles ORDER BY created_at LIMIT 1`)[0]?.id);
+  if (!ACTOR) throw new Error("no profile available to act as ACTOR");
+  console.log("ACTOR:", ACTOR);
   const uae = (await sql`SELECT id, currency_code FROM countries WHERE iso2='AE' AND deleted_at IS NULL`)[0];
   const uaeBranch = (await sql`SELECT id, country_id FROM country_branches WHERE country_id=${uae.id} AND deleted_at IS NULL LIMIT 1`)[0];
   const uaeCity = (await sql`SELECT id FROM city_branches WHERE country_id=${uae.id} AND deleted_at IS NULL LIMIT 1`)[0];
