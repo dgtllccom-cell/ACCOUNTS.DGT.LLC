@@ -55,10 +55,12 @@ const MODULE_MAP: Record<string, Record<string, string>> = {
     po_number: "purchaseOrderNo",
     invoice_number: "billNo",
     document_date: "purchaseDate",
+    contract_start_date: "purchaseDate",
     currency: "purchaseCurrency",
     exchange_rate: "exchangeRate",
     advance_amount: "advanceAmount",
     supplier_name: "supplierName",
+    contract_parties: "supplierName",
     payment_terms: "paymentDaysAndMethodDetails",
     port_of_loading: "loadingPort",
     port_of_discharge: "receivedPort",
@@ -154,18 +156,11 @@ const MODULE_MAP: Record<string, Record<string, string>> = {
     currency: "currency",
     address: "address",
   },
-  contracts: {
-    contract_number: "contractNumber",
-    contract_parties: "counterpartyName",
-    supplier_name: "counterpartyName",
-    customer_name: "counterpartyName",
-    document_date: "contractDate",
-    contract_start_date: "startDate",
-    contract_end_date: "endDate",
-    grand_total: "contractValue",
-    currency: "currency",
-    payment_terms: "paymentTerms",
-  },
+  // "Contract / Agreement" documents route to the Purchase or Sales workflow
+  // (this ERP has no standalone contract entity — the Contract Control Center is
+  // a read-only projection of purchase_orders / sales_orders / employees). The
+  // user picks Purchase or Sales in the intake purpose selector; the contract
+  // fields prefill that wizard via the purchase_orders / sales_orders maps above.
   // Cash / Bank Roznamcha — a reviewed draft + pre-post preview only. The AI
   // never posts; the human posts through the existing Roznamcha screen.
   roznamcha_entries: {

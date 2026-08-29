@@ -296,7 +296,9 @@ const DOC_PURPOSES: Array<{ target: string; labelKey: string; label: string; gro
   { target: "companies", labelKey: "purpose_company", label: "Company / Entity", group: "Masters" },
   { target: "customers", labelKey: "purpose_customer", label: "Customer / Person KYC", group: "Masters" },
   { target: "banks", labelKey: "purpose_bank", label: "Bank Account", group: "Masters" },
-  { target: "contracts", labelKey: "purpose_contract", label: "Contract / Agreement", group: "Masters" },
+  // A contract/agreement between the entity and a supplier → Purchase workflow.
+  { target: "purchase_orders", labelKey: "purpose_contract_purchase", label: "Contract / Agreement (Purchase side)", group: "Masters" },
+  { target: "sales_orders", labelKey: "purpose_contract_sales", label: "Contract / Agreement (Sales side)", group: "Masters" },
 ];
 
 function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>; jobId: string; onBack: () => void }) {
@@ -366,6 +368,21 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
     catch (e) { setError(e instanceof Error ? e.message : String(e)); }
     finally { setBusy(false); }
   };
+  const [acctPreview, setAcctPreview] = useState<Row | null>(null);
+  const [drAcct, setDrAcct] = useState("");
+  const [crAcct, setCrAcct] = useState("");
+  const loadAcctPreview = async (dr = drAcct, cr = crAcct) => {
+    setBusy(true);
+    setError(null);
+    try {
+      const qs = new URLSearchParams();
+      if (dr) qs.set("debitAccountId", dr);
+      if (cr) qs.set("creditAccountId", cr);
+      setAcctPreview(await apiGet<Row>(`/api/erp/document-intelligence/${jobId}/accounting-preview${qs.toString() ? `?${qs}` : ""}`));
+    }
+    catch (e) { setError(e instanceof Error ? e.message : String(e)); }
+    finally { setBusy(false); }
+  };
 
   const job = data?.job;
   const isImage = (job?.mime_type || "").startsWith("image/");
@@ -406,6 +423,9 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
                 {["auto", "user"].includes(job.match_status) && job.matched_source_module === "purchase_orders" && !["linked", "cancelled"].includes(job.status) ? (
                   <button type="button" disabled={busy} onClick={() => void proposeBatch()} className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 px-3 py-2 text-xs font-bold text-blue-700 hover:bg-blue-50 dark:border-blue-900 dark:text-blue-300"><Package className="h-3.5 w-3.5" />{s.t("propose_batch", "Propose Loading Batch")}</button>
                 ) : null}
+                {["purchase_orders", "sales_orders"].includes(purpose || job.target_module || "") && !["linked", "cancelled"].includes(job.status) ? (
+                  <button type="button" disabled={busy} onClick={() => void loadAcctPreview()} className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300 px-3 py-2 text-xs font-bold text-amber-700 hover:bg-amber-50 dark:border-amber-800 dark:text-amber-300"><Receipt className="h-3.5 w-3.5" />{s.t("acct_preview_btn", "Accounting Preview")}</button>
+                ) : null}
                 {job.target_module === "roznamcha_entries" && !["linked", "cancelled"].includes(job.status) ? (
                   <button type="button" disabled={busy} onClick={() => void loadRozPreview()} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"><Receipt className="h-3.5 w-3.5" />{s.t("roz_preview", "Cash / Bank Pre-Post Preview")}</button>
                 ) : null}
@@ -435,7 +455,7 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
                     {["Trade", "Finance", "Logistics", "Masters"].map((grp) => (
                       <optgroup key={grp} label={grp}>
                         {DOC_PURPOSES.filter((p) => p.group === grp).map((p) => (
-                          <option key={p.target} value={p.target}>{s.t(p.labelKey, p.label)}</option>
+                          <option key={p.labelKey} value={p.target}>{s.t(p.labelKey, p.label)}</option>
                         ))}
                       </optgroup>
                     ))}
@@ -451,6 +471,74 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
                     </span>
                   ) : null}
                 </div>
+              </div>
+            ) : null}
+            {acctPreview?.preview ? (
+              <div className="rounded-2xl border border-amber-300 bg-amber-50/40 p-4 text-xs dark:border-amber-800 dark:bg-amber-950/20">
+                <p className="mb-2 text-[11px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-300">
+                  {s.t("acct_preview_title", "Accounting Preview — Before Posting")} ({acctPreview.side === "sales" ? s.t("purpose_sales", "Sales") : s.t("purpose_purchase", "Purchase")})
+                </p>
+                {acctPreview.checks?.duplicateOf ? (
+                  <p className="mb-2 rounded-lg bg-rose-50 px-2 py-1.5 text-[11px] font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
+                    <AlertTriangle className="mr-1 inline h-3.5 w-3.5" />{s.t("acct_dup", "A record with this contract already exists")}: {acctPreview.checks.duplicateOf.ref} ({acctPreview.checks.duplicateOf.status})
+                  </p>
+                ) : null}
+                <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+                  {[
+                    ["ap_business", "Business", acctPreview.preview.business || "—"],
+                    ["ap_country", "Country", acctPreview.preview.country || "—"],
+                    ["ap_branch", "Branch", acctPreview.preview.branch || "—"],
+                    ["ap_dr", "Debit Account", `${acctPreview.preview.debitAccount?.name || "—"}${acctPreview.preview.debitAccount?.suggested ? " ★" : ""}`],
+                    ["ap_cr", "Credit Account", `${acctPreview.preview.creditAccount?.name || "—"}${acctPreview.preview.creditAccount?.suggested ? " ★" : ""}`],
+                    ["ap_src", "Source Document", acctPreview.preview.sourceDocument || "—"],
+                    ["ap_orig_ccy", "Original Currency", acctPreview.preview.originalCurrency || "—"],
+                    ["ap_orig_amt", "Original Amount", acctPreview.preview.originalAmount != null ? Number(acctPreview.preview.originalAmount).toLocaleString() : "—"],
+                    ["ap_rate", "Exchange Rate", `${acctPreview.preview.exchangeRate} (${s.t(`ap_rs_${acctPreview.preview.rateSource}`, acctPreview.preview.rateSource)})`],
+                    ["ap_func_ccy", "Functional Currency", acctPreview.preview.functionalCurrency || "—"],
+                    ["ap_final_amt", "Final / Base Amount", acctPreview.preview.finalAmount != null ? Number(acctPreview.preview.finalAmount).toLocaleString() : "—"],
+                    ["ap_contract", "Contract No.", acctPreview.preview.contractNo || "—"],
+                  ].map(([k, fb, v]: any) => (
+                    <div key={k} className="rounded-lg bg-white px-2 py-1.5 dark:bg-slate-900">
+                      <span className="block text-[9px] font-bold uppercase text-slate-400">{s.t(k, fb)}</span>
+                      <span className="block font-semibold text-slate-800 dark:text-slate-100">{v}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-2 flex flex-wrap items-center gap-3 border-t border-amber-200 pt-2 text-[11px] font-bold dark:border-amber-800">
+                  <span className={acctPreview.preview.finalAmount ? "text-emerald-700 dark:text-emerald-300" : "text-slate-400"}>
+                    {s.t("ap_dr_total", "Total DR")}: {acctPreview.preview.functionalCurrency} {Number(acctPreview.preview.drTotal || 0).toLocaleString()}
+                  </span>
+                  <span className={acctPreview.preview.finalAmount ? "text-emerald-700 dark:text-emerald-300" : "text-slate-400"}>
+                    {s.t("ap_cr_total", "Total CR")}: {acctPreview.preview.functionalCurrency} {Number(acctPreview.preview.crTotal || 0).toLocaleString()}
+                  </span>
+                  <span className={acctPreview.checks?.balanced ? "rounded bg-emerald-100 px-1.5 py-0.5 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300" : "rounded bg-rose-100 px-1.5 py-0.5 text-rose-800 dark:bg-rose-950 dark:text-rose-300"}>
+                    {acctPreview.checks?.balanced ? s.t("ap_balanced", "DR = CR ✓") : s.t("ap_unbalanced", "DR ≠ CR")}
+                  </span>
+                </div>
+                {[acctPreview.checks?.balancedMessage, acctPreview.checks?.rateMessage, acctPreview.checks?.accountsMessage].filter(Boolean).map((m: string, i: number) => (
+                  <p key={i} className="mt-1.5 rounded-lg bg-amber-100/70 px-2 py-1 text-[10.5px] font-semibold text-amber-800 dark:bg-amber-950/40 dark:text-amber-200">{m}</p>
+                ))}
+                <p className="mt-2 text-[10px] text-slate-500 dark:text-slate-400">
+                  {s.t("ap_post_note", "The AI does not post. Prepare the reviewed draft, then open the Purchase / Sales wizard (Continue Saved Draft) — you confirm the accounts and rate there and post via the verified accounting engine.")}
+                </p>
+                {(acctPreview.preview.debitAccount?.options?.length || acctPreview.preview.creditAccount?.options?.length) ? (
+                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                    <label className="text-[10px] font-bold text-slate-500">
+                      {s.t("ap_pick_dr", "Debit account")}
+                      <select value={drAcct} onChange={(e) => { setDrAcct(e.target.value); void loadAcctPreview(e.target.value, crAcct); }} className="mt-0.5 h-8 w-full rounded border border-slate-300 bg-white px-1.5 text-[11px] dark:border-slate-700 dark:bg-slate-900">
+                        <option value="">{s.t("ap_ai_suggested", "AI suggested")}: {acctPreview.preview.debitAccount?.name}</option>
+                        {(acctPreview.preview.debitAccount?.options || []).map((o: any) => <option key={o.id} value={o.id}>{o.code} · {o.name}</option>)}
+                      </select>
+                    </label>
+                    <label className="text-[10px] font-bold text-slate-500">
+                      {s.t("ap_pick_cr", "Credit account")}
+                      <select value={crAcct} onChange={(e) => { setCrAcct(e.target.value); void loadAcctPreview(drAcct, e.target.value); }} className="mt-0.5 h-8 w-full rounded border border-slate-300 bg-white px-1.5 text-[11px] dark:border-slate-700 dark:bg-slate-900">
+                        <option value="">{s.t("ap_ai_suggested", "AI suggested")}: {acctPreview.preview.creditAccount?.name}</option>
+                        {(acctPreview.preview.creditAccount?.options || []).map((o: any) => <option key={o.id} value={o.id}>{o.code} · {o.name}</option>)}
+                      </select>
+                    </label>
+                  </div>
+                ) : null}
               </div>
             ) : null}
             {rozPreview?.preview ? (

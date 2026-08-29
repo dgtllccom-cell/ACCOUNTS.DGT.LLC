@@ -47,6 +47,7 @@ import { t } from "@/lib/i18n/ui";
 import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
 import { PreferencesControls } from "@/components/layout/preferences-controls";
 import { openCompany360Report } from "@/lib/reports/open-company-360-report-window";
+import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
 
 export type CompanyRegistrationEntry = {
   type: string;
@@ -158,6 +159,12 @@ export function CompanyIncorporationForm({
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+
+  // ── AI Document Intake draft (Scan / Upload Document → reviewed draft) ──
+  const intake = useIntakeDraft("companies");
+  // When the reviewed draft was linked to an existing company (Link / Update),
+  // load that company; otherwise stay in create mode with the extracted prefill.
+  const effectiveCompanyId = initialCompanyId || intake.linkedSourceId || undefined;
 
   function handleAddRegistration(defaultType = "Commercial Registration") {
     setRegistrations((prev) => [...prev, { type: defaultType, value: "" }]);
@@ -373,10 +380,10 @@ export function CompanyIncorporationForm({
     })();
   }, [ownerPersonId, lang]);
 
-  // Load initial company if editing
+  // Load initial company if editing (or if a reviewed draft is linked to one)
   useEffect(() => {
-    if (initialCompanyId) {
-      apiGet<{ company: any }>(`/api/erp/companies/${encodeURIComponent(initialCompanyId)}`)
+    if (effectiveCompanyId) {
+      apiGet<{ company: any }>(`/api/erp/companies/${encodeURIComponent(effectiveCompanyId)}`)
         .then((res) => {
           const comp = res.company;
           if (comp) {
@@ -409,7 +416,36 @@ export function CompanyIncorporationForm({
         })
         .catch(() => null);
     }
-  }, [initialCompanyId]);
+  }, [effectiveCompanyId]);
+
+  // Overlay the AI-extracted values from the reviewed draft. Runs after the
+  // (optional) existing-company load so the user sees AI values on top of the
+  // current record and can accept or edit each one before saving.
+  useEffect(() => {
+    if (!intake.draft) return;
+    const p = intake.payload;
+    if (p.companyName) setCompanyName(String(p.companyName));
+    if (p.legalStructure) setLegalStructure(String(p.legalStructure));
+    if (p.natureOfBusiness) setNatureOfBusiness(String(p.natureOfBusiness));
+    if (p.ownerName) setOwnerName(String(p.ownerName));
+    if (p.phone) setPhone(String(p.phone));
+    if (p.email) setEmail(String(p.email));
+    if (p.address) setAddress(String(p.address));
+    if (p.baseCurrency) setBaseCurrency(String(p.baseCurrency).toUpperCase().slice(0, 3));
+    // registrations: map the two most common extracted identifiers
+    setRegistrations((prev) => {
+      const next = prev.map((r) => ({ ...r }));
+      const setReg = (type: string, value: string) => {
+        if (!value) return;
+        const i = next.findIndex((r) => r.type === type);
+        if (i >= 0) next[i].value = next[i].value || value;
+        else next.push({ type, value });
+      };
+      setReg("Trade License Number", String(p.registrationNumber || ""));
+      setReg("VAT/TRN", String(p.taxRegistrationNumber || ""));
+      return next;
+    });
+  }, [intake.draft]);
 
   // Sync English to Urdu Company Name automatically
   useEffect(() => {
@@ -470,14 +506,20 @@ export function CompanyIncorporationForm({
         registrations: finalRegistrations
       };
 
-      let savedCompanyId = initialCompanyId;
-      if (initialCompanyId) {
-        await apiPatch(`/api/erp/companies/${encodeURIComponent(initialCompanyId)}`, payload);
+      let savedCompanyId = effectiveCompanyId;
+      if (effectiveCompanyId) {
+        await apiPatch(`/api/erp/companies/${encodeURIComponent(effectiveCompanyId)}`, payload);
         setMessage(lang === "ur" ? "کمپنی کے کوائف کامیابی سے اپ ڈیٹ ہو گئے۔" : "Company updated successfully.");
       } else {
         const res = await apiPost<{ companyId: string }>("/api/erp/companies", payload);
         savedCompanyId = res.companyId ?? (res as any).data?.companyId ?? (res as any)?.id;
         setMessage(lang === "ur" ? "نئی کمپنی کامیابی سے رجسٹر ہو گئی۔" : "New company registered successfully.");
+      }
+
+      // Record that the AI reviewed-draft was used to create/update this record
+      // (draft → 'consumed', intake job → 'linked'). Never blocks the save.
+      if (savedCompanyId && intake.draft) {
+        await intake.consume(String(savedCompanyId));
       }
 
       if (mode === "embedded") {
@@ -519,7 +561,18 @@ export function CompanyIncorporationForm({
 
   return (
     <div className="mx-auto w-full max-w-[1750px] p-4 lg:p-6 space-y-6 font-sans" dir={isRtl ? "rtl" : "ltr"}>
-      
+
+      {intake.draft ? (
+        <div className="rounded-2xl border border-blue-200 bg-blue-50/70 px-4 py-3 text-xs font-semibold text-blue-800 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200">
+          <Sparkles className="mr-1.5 inline h-3.5 w-3.5" />
+          {t(lang, "dintake.wizard_prefilled", "Pre-filled from reviewed document draft")} — {intake.draftNo}.
+          {intake.linkedSourceId
+            ? " " + t(lang, "dintake.wizard_update_hint", "This will UPDATE the linked existing record. Review every field, then save.")
+            : " " + t(lang, "dintake.wizard_prefilled_hint", "Review every field, then save and post as usual.")}
+          {intake.consumeError ? <span className="ml-2 text-rose-600">({intake.consumeError})</span> : null}
+        </div>
+      ) : null}
+
       {/* ── TOP BAR: Header, Mode Toggle, Step Tracker, Close ── */}
       <header className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 lg:p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">

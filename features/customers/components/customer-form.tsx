@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiGet, apiPost, apiPatch } from "@/lib/api/client";
+import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
 import { SendToCustomerModal } from "./send-to-customer-modal";
 import {
   LocationHierarchySelect,
@@ -66,6 +67,10 @@ export function CustomerForm({
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [showSendModal, setShowSendModal] = useState(false);
+
+  // ── AI Document Intake draft (Scan / Upload Document → reviewed draft) ──
+  const intake = useIntakeDraft("customers");
+  const effectiveCustomerId = initialCustomerId || intake.linkedSourceId || undefined;
   const [dupCandidates, setDupCandidates] = useState<PersonDuplicateCandidate[]>([]);
   const [dupSearchedName, setDupSearchedName] = useState("");
   const [pendingPayload, setPendingPayload] = useState<Record<string, unknown> | null>(null);
@@ -146,12 +151,37 @@ export function CustomerForm({
     })();
   }, []);
 
-  // Load details directly from API if editing
+  // Overlay AI-extracted values from the reviewed draft (runs after any
+  // existing-record load so the user reviews AI values on top of the record).
   useEffect(() => {
-    if (!initialCustomerId) return;
+    if (!intake.draft) return;
+    const p = intake.payload;
+    const full = String(p.customerName || "").trim();
+    if (full) { setFirstName(full.split(" ")[0] || ""); setLastName(full.split(" ").slice(1).join(" ")); }
+    if (p.companyName) setBusinessName(String(p.companyName));
+    if (p.fatherName) setFatherName(String(p.fatherName));
+    if (p.address) setAddress(String(p.address));
+    if (p.phone || p.email) {
+      setContacts((prev) => {
+        const next = prev.map((c) => ({ ...c }));
+        const set = (type: string, value: string) => {
+          if (!value) return;
+          const i = next.findIndex((c) => c.type === type);
+          if (i >= 0) next[i].value = next[i].value || value; else next.push({ type, value });
+        };
+        set("Mobile Number", String(p.phone || ""));
+        set("Email Address", String(p.email || ""));
+        return next;
+      });
+    }
+  }, [intake.draft]);
+
+  // Load details directly from API if editing (or a draft is linked to a record)
+  useEffect(() => {
+    if (!effectiveCustomerId) return;
     (async () => {
       try {
-        const res = await apiGet<{ customer: CustomerRow }>(`/api/erp/customers/${initialCustomerId}?lang=${encodeURIComponent(lang || "en")}`);
+        const res = await apiGet<{ customer: CustomerRow }>(`/api/erp/customers/${effectiveCustomerId}?lang=${encodeURIComponent(lang || "en")}`);
         const c = res.customer;
         if (!c) return;
 
@@ -254,7 +284,7 @@ export function CustomerForm({
         console.error("Failed to load customer for editing", e);
       }
     })();
-  }, [initialCustomerId, lang]);
+  }, [effectiveCustomerId, lang]);
 
   const country = locationMeta.country?.name ?? "";
   const stateName = locationMeta.state?.name ?? "";
@@ -472,21 +502,23 @@ export function CustomerForm({
   const performSave = async (payload: Record<string, unknown>) => {
     setSaving(true);
     try {
-      if (initialCustomerId) {
-        // Edit mode
-        await apiPatch(`/api/erp/customers/${initialCustomerId}`, payload);
+      if (effectiveCustomerId) {
+        // Edit mode (explicit edit OR a reviewed draft linked to this record)
+        await apiPatch(`/api/erp/customers/${effectiveCustomerId}`, payload);
         setMessage(getLabel("customerUpdatedMsg", lang));
+        if (intake.draft) await intake.consume(String(effectiveCustomerId));
         if (mode === "standalone") {
           setTimeout(() => {
-            router.push(`/dashboard/settings/customers/view?customerId=${initialCustomerId}` as Route);
+            router.push(`/dashboard/settings/customers/view?customerId=${effectiveCustomerId}` as Route);
           }, 1000);
         } else {
-          onSave?.(initialCustomerId);
+          onSave?.(effectiveCustomerId);
         }
       } else {
         // Creation mode
         const res = await apiPost<{ customerId: string }>("/api/erp/customers", payload);
         const newId = res.customerId ?? (res as any)?.data?.customerId ?? (res as any)?.id;
+        if (newId && intake.draft) await intake.consume(String(newId));
         setMessage(getLabel("customerCreatedMsg", lang));
         if (mode === "standalone") {
           setTimeout(() => {
@@ -507,6 +539,14 @@ export function CustomerForm({
 
   return (
     <div className="space-y-6" dir={isRtl ? "rtl" : "ltr"}>
+      {intake.draft ? (
+        <div className="rounded-2xl border border-blue-200 bg-blue-50/70 px-4 py-3 text-xs font-semibold text-blue-800 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200">
+          ✨ {t(lang, "dintake.wizard_prefilled", "Pre-filled from reviewed document draft")} — {intake.draftNo}.
+          {intake.linkedSourceId
+            ? " " + t(lang, "dintake.wizard_update_hint", "This will UPDATE the linked existing record. Review every field, then save.")
+            : " " + t(lang, "dintake.wizard_prefilled_hint", "Review every field, then save and post as usual.")}
+        </div>
+      ) : null}
       {/* Page Title */}
       <div className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
         <div className="flex items-center gap-3">

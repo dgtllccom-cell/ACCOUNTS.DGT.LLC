@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Building2,
   CheckCircle2,
@@ -20,6 +20,7 @@ import {
   type LocationHierarchyValue
 } from "@/features/locations/components/location-hierarchy-select";
 import { createBank, type BankRecord } from "@/features/banks/bank-api";
+import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { PersonPicker } from "@/components/erp/person-picker";
@@ -174,6 +175,25 @@ export function BankForm({
   const lang = useActiveLanguage();
   const tr = (key: Parameters<typeof t>[1], fallback: string) => t(lang, key, fallback);
   const [form, setForm] = useState<BankFormState>(emptyForm);
+
+  // ── AI Document Intake draft (Scan / Upload Document → reviewed draft) ──
+  const intake = useIntakeDraft("banks");
+  useEffect(() => {
+    if (!intake.draft) return;
+    const p = intake.payload;
+    setForm((prev) => ({
+      ...prev,
+      bankName: p.bankName ? String(p.bankName) : prev.bankName,
+      branchName: p.branchName ? String(p.branchName) : prev.branchName,
+      accountTitle: p.accountTitle ? String(p.accountTitle) : prev.accountTitle,
+      accountNumber: p.accountNumber ? String(p.accountNumber) : prev.accountNumber,
+      ibanNumber: p.iban ? String(p.iban) : prev.ibanNumber,
+      swiftBic: p.swiftCode ? String(p.swiftCode) : prev.swiftBic,
+      currency: p.currency ? String(p.currency).toUpperCase().slice(0, 3) : prev.currency,
+      fullAddress: p.address ? String(p.address) : prev.fullAddress,
+    }));
+  }, [intake.draft]);
+
   const [location, setLocation] = useState<LocationHierarchyValue>({
     countryId: "",
     stateProvinceId: "",
@@ -310,6 +330,7 @@ export function BankForm({
       };
       setSavedBank(saved);
       setMessage({ type: "success", text: tr("bank.saved_success_message", `Bank "${form.bankName}" saved successfully!`).replace("{name}", form.bankName) });
+      if (bankId && intake.draft) await intake.consume(String(bankId));
       onSave?.(bankId, saved);
     } catch (err: any) {
       setMessage({ type: "error", text: err?.message ?? tr("bank.save_failed", "Failed to save bank.") });
@@ -330,6 +351,11 @@ export function BankForm({
 
   return (
     <div className={mode === "standalone" ? "space-y-6" : "space-y-4"}>
+      {intake.draft ? (
+        <div className="rounded-2xl border border-blue-200 bg-blue-50/70 px-4 py-3 text-xs font-semibold text-blue-800 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200">
+          ✨ {tr("dintake.wizard_prefilled" as any, "Pre-filled from reviewed document draft")} — {intake.draftNo}. {tr("dintake.wizard_prefilled_hint" as any, "Review every field, then save.")}
+        </div>
+      ) : null}
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-center gap-3">

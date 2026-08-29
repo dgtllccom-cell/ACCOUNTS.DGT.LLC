@@ -50,6 +50,7 @@ export function EntryMethodSelector({
   title,
   children,
   onDraftChosen,
+  skipGate = false,
 }: {
   targetModule: string;
   domain: "business" | "shipping";
@@ -57,10 +58,12 @@ export function EntryMethodSelector({
   title?: string;
   children: ReactNode;
   onDraftChosen?: (draft: EntryDraft) => void;
+  /** Render the form directly, no method gate (e.g. editing an existing record). */
+  skipGate?: boolean;
 }) {
   const s = useErpScreen("dintake", lang);
   const router = useRouter();
-  const [mode, setMode] = useState<"choose" | "manual" | "drafts">("choose");
+  const [mode, setMode] = useState<"choose" | "manual" | "drafts">(skipGate ? "manual" : "choose");
   const [drafts, setDrafts] = useState<EntryDraft[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
