@@ -224,14 +224,48 @@ function PurchaseTransferErpReportViewContent({
 
   if (error || !d) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-900">
-        <div className="rounded-2xl border border-rose-800 bg-slate-900 p-8 text-center max-w-md shadow-2xl space-y-3">
-          <AlertTriangle className="h-10 w-10 text-rose-500 mx-auto" />
-          <p className="text-base font-extrabold text-white">{error || tt("pterv2.record_not_found","Purchase record not found.")}</p>
-          <Button onClick={() => router.back()} variant="outline" size="sm" className="mt-4 bg-slate-800 border-slate-700 text-white">
-            {tt("pterv2.return_dashboard","← Return to Dashboard")}
-          </Button>
-        </div>
+      <div dir={isRtl ? "rtl" : "ltr"} className="min-h-screen bg-slate-950 text-slate-100 font-sans">
+        <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 px-6 py-3 flex items-center justify-between shadow-xl">
+          <div className="flex items-center gap-3">
+            <Button onClick={() => router.back()} variant="ghost" size="sm" className="text-slate-400 hover:text-white">
+              <ArrowLeft className="h-4 w-4 mr-1" /> {tt("common.back", "Back")}
+            </Button>
+            <div className="h-4 w-px bg-slate-700" />
+            <div>
+              <h1 className="text-sm font-black text-white uppercase tracking-tight">
+                {tt("pterv2.page_title", "Purchase Transfer Verification")}
+              </h1>
+              <p className="text-[11px] text-slate-400">
+                Dashboard &gt; Purchase &gt; Transfer Verification
+              </p>
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-4xl mx-auto p-6 mt-12">
+          <div className="rounded-2xl border border-rose-800/80 bg-slate-900/90 p-8 text-center shadow-2xl space-y-4">
+            <div className="p-3 rounded-full bg-rose-950/60 border border-rose-800/60 text-rose-400 w-fit mx-auto">
+              <AlertTriangle className="h-8 w-8" />
+            </div>
+            <h2 className="text-lg font-bold text-white tracking-tight">
+              {error || tt("pterv2.record_not_found", "Purchase Transfer Record Not Found")}
+            </h2>
+            <p className="text-sm text-slate-400 max-w-md mx-auto">
+              The requested purchase transfer verification record could not be located or has been deleted. Please select a valid record from the purchase registry.
+            </p>
+            <div className="flex flex-wrap justify-center gap-3 pt-4 border-t border-slate-800">
+              <Button onClick={() => router.push("/dashboard/purchase/purchase-confirm")} variant="default" size="sm" className="bg-blue-600 hover:bg-blue-700 text-white font-bold">
+                {tt("pterv2.return_registry", "Return to Purchase Registry")}
+              </Button>
+              <Button onClick={() => router.push("/dashboard/purchase/local-goods-received")} variant="outline" size="sm" className="border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700">
+                {tt("pterv2.view_goods_received", "View Local Goods Received")}
+              </Button>
+              <Button onClick={() => window.location.reload()} variant="ghost" size="sm" className="text-slate-400 hover:text-white">
+                {tt("common.refresh", "Refresh Page")}
+              </Button>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }

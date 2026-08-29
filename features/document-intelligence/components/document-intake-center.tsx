@@ -134,7 +134,31 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
               {loading ? (
                 <tr><td colSpan={7} className="px-3 py-10 text-center text-slate-400"><Loader2 className="mx-auto h-4 w-4 animate-spin" /></td></tr>
               ) : rows.length === 0 ? (
-                <tr><td colSpan={7} className="px-3 py-10 text-center text-xs text-slate-400">{s.t("empty", "No documents in the intake queue.")}</td></tr>
+                <tr>
+                  <td colSpan={7} className="px-3 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center space-y-3">
+                      <div className="p-3 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400">
+                        <UploadCloud className="h-8 w-8 text-slate-400 dark:text-slate-500" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                          {s.t("empty_title", "No documents in the intake queue")}
+                        </p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mt-1">
+                          {s.t("empty_desc", "No documents are currently available for processing. Upload a document to trigger automated OCR, classification, and field extraction.")}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowUpload(true)}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-500 shadow-sm transition-all mt-2"
+                      >
+                        <UploadCloud className="h-4 w-4" />
+                        {s.t("upload_now", "Upload Document Now")}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
               ) : (
                 rows.map((r) => (
                   <tr key={r.id} className="cursor-pointer border-t border-slate-100 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40" onClick={() => setOpenId(r.id)}>

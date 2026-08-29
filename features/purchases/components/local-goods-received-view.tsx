@@ -4,7 +4,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { fetchWarehouses } from "@/features/warehouses/warehouse-api";
 import {
-  Package, Search, Coins, Loader2, Truck, Globe, Pencil, CheckCircle2, X, ChevronDown, Building2, FileText, Send, Eye, MoreVertical, Edit3, ArrowRight, ArrowLeft, Calendar
+  Package, Search, Coins, Loader2, Truck, Globe, Pencil, CheckCircle2, X, ChevronDown, Building2, FileText, Send, Eye, MoreVertical, Edit3, ArrowRight, ArrowLeft, Calendar, RefreshCw
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,9 +17,9 @@ type LocalGoodsReceiptType = "warehouse" | "loading" | "export";
 
 function localGoodsReceiptTypeFromShipment(value: unknown): LocalGoodsReceiptType {
   const normalized = String(value || "").toLowerCase();
-  if (normalized.includes("warehouse")) return "warehouse";
   if (normalized.includes("export")) return "export";
-  return "loading";
+  if (normalized.includes("loading") || normalized.includes("transit")) return "loading";
+  return "warehouse";
 }
 
 function localGoodsReceiptCompletedStatus(type: LocalGoodsReceiptType, lang: SupportedLanguage) {
@@ -194,8 +194,8 @@ export function LocalGoodsReceivedView({
     const empty = { warehouse: [] as any[], loading: [] as any[], export: [] as any[] };
     filteredPurchases.forEach((row: any) => {
       const status = String(row.status || row.bill_status || "draft").toLowerCase();
-      // Route only accepted or transferred bills (routed by shipment type into one receiving process)
-      const isEligible = ["accepted", "transferred", "posted", "paid"].includes(status) || row.transferred_at || row.transferredAt;
+      // Allow all active, accepted, posted, transferred, or created local purchase records
+      const isEligible = !row.deleted_at && (["accepted", "transferred", "posted", "paid", "approved", "completed", "active", "draft", "pending"].includes(status) || Boolean(row.transferred_at || row.transferredAt));
       if (!isEligible) return;
       const type = localGoodsReceiptTypeFromShipment(row.shipping_mode || row.shippingMode || row.shipment_type || row.shipmentType);
       empty[type].push(row);
@@ -366,14 +366,50 @@ export function LocalGoodsReceivedView({
               <span className="text-xs font-bold uppercase tracking-wider">{t(lang, "purchase.lgr_loading_registry", "Loading receiving registry...")}</span>
             </div>
           ) : activeGoodsReceivedRows.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center space-y-2">
-              <Package className="h-10 w-10 text-slate-300 dark:text-slate-700" />
-              <p className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase">
-                {localGoodsReceiptLabel(goodsReceivedTab, lang)} {t(lang, "purchase.lgr_no_pending_suffix", "Receipts Pending")}
-              </p>
-              <p className="text-xs text-slate-400 max-w-sm">
-                {t(lang, "purchase.lgr_no_match_prefix", "No accepted local purchase bills matching")} "{goodsReceivedTab}" {t(lang, "purchase.lgr_no_match_suffix", "shipment type found for the selected branch.")}
-              </p>
+            <div className="flex flex-col items-center justify-center py-12 px-4 text-center space-y-3 bg-slate-50/50 dark:bg-slate-900/30 rounded-xl my-3 mx-4 border border-dashed border-slate-200 dark:border-slate-800">
+              <div className="p-3 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400">
+                <Package className="h-8 w-8 text-slate-400 dark:text-slate-500" />
+              </div>
+              <div>
+                <p className="text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-tight">
+                  {localGoodsReceiptLabel(goodsReceivedTab, lang)} {t(lang, "purchase.lgr_no_pending_suffix", "Receipts Pending")}
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mt-1">
+                  {searchQuery || dateFrom || dateTo || selectedCountryId || selectedBranchId ? (
+                    <span>No receiving records match your active search filters or date range. Try clearing your filters to view all pending bills.</span>
+                  ) : (
+                    <span>No pending goods receipts found under the "{localGoodsReceiptLabel(goodsReceivedTab, lang)}" category.</span>
+                  )}
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setDateFrom("");
+                    setDateTo("");
+                    setSelectedCountryId("");
+                    setSelectedBranchId("");
+                    setSelectedCityBranchId("");
+                    void loadHistory();
+                  }}
+                  className="h-8 text-[11px] font-bold border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
+                >
+                  Reset & Clear Filters
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => void loadHistory()}
+                  className="h-8 text-[11px] font-bold text-slate-600 dark:text-slate-300"
+                >
+                  <RefreshCw className="h-3.5 w-3.5 mr-1" /> Refresh Data
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="overflow-x-auto">

@@ -427,7 +427,9 @@ export const goodsUpdateSchema = goodsCreateSchema.partial().extend({
 
 export const goodsVariationCreateSchema = z.object({
   size: z.string().trim().min(1).max(100),
-  brand: z.string().trim().min(1).max(100)
+  brand: z.string().trim().min(1).max(100),
+  variety: z.string().trim().max(150).optional().nullable(),
+  extraDetails: z.string().trim().max(2000).optional().nullable()
 });
 
 export const goodsVariationUpdateSchema = goodsVariationCreateSchema.partial().extend({

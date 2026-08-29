@@ -3711,7 +3711,9 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             })}
                             {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, customerSearch)).length === 0 && (
                               <div className="p-4 text-center text-muted-foreground text-xs italic">
-                                {t(lang, "purchase.no_matching_accounts", "No matching accounts found. Try searching by Code, Name, Currency, or Phone.")}
+                                {customerSearch.length < 2
+                                  ? t(lang, "purchase.type_min_2_chars", "Type at least 2 characters to search accounts...")
+                                  : t(lang, "purchase.no_matching_accounts", "No matching accounts found. Try searching by Code, Name, Currency, or Phone.")}
                               </div>
                             )}
                           </div>
@@ -3787,7 +3789,9 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             })}
                             {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).length === 0 && (
                               <div className="p-4 text-center text-muted-foreground text-xs italic">
-                                {t(lang, "purchase.no_matching_accounts", "No matching accounts found. Try searching by Code, Name, Currency, or Phone.")}
+                                {salesSearch.length < 2
+                                  ? t(lang, "purchase.type_min_2_chars", "Type at least 2 characters to search accounts...")
+                                  : t(lang, "purchase.no_matching_accounts", "No matching accounts found. Try searching by Code, Name, Currency, or Phone.")}
                               </div>
                             )}
                           </div>
@@ -4485,15 +4489,21 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 <span className="w-4 h-4 rounded bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-[8px]">3</span>
                 {t(lang, "sales.customer_account_dr_badge", "Customer Account (DR)")}
               </h3>
-              <div className="grid grid-cols-[90px_1fr] gap-x-2 gap-y-1.5">
-                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span><span className="font-bold text-slate-800 font-mono">{form.customerAccountNo || "N/A"}</span>
-                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span><span className="font-bold text-slate-800">{form.customerAccountName || "N/A"}</span>
-                <span className="text-slate-400 font-semibold">{t(lang, "purchase.branch_colon_label", "Branch:")}</span><span className="font-bold text-slate-800">{form.customerAccountBranch || "N/A"}</span>
-                <span className="text-slate-400 font-semibold">{t(lang, "purchase.currency_colon_label", "Currency:")}</span><span className="font-bold text-slate-800">{form.salesCurrency || "PKR"}</span>
-                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_company_colon", "Company:")}</span><span className="font-bold text-slate-800">{form.salesCompanyName || t(lang, "purchase.card_none_label", "None")}</span>
-                <span className="text-slate-400 font-semibold">{t(lang, "cusm.email_word", "Email:")}</span><span className="font-bold text-slate-800 truncate" title={form.customerAccountEmail}>{form.customerAccountEmail || "N/A"}</span>
-                <span className="text-slate-400 font-semibold">{t(lang, "sales.whatsapp_colon", "WhatsApp:")}</span><span className="font-bold text-slate-800">{form.customerAccountWhatsapp || "N/A"}</span>
-              </div>
+              {form.customerAccountNo || form.customerAccountName ? (
+                <div className="grid grid-cols-[90px_1fr] gap-x-2 gap-y-1.5">
+                  <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span><span className="font-bold text-slate-800 font-mono">{form.customerAccountNo || "—"}</span>
+                  <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span><span className="font-bold text-slate-800">{form.customerAccountName || "—"}</span>
+                  <span className="text-slate-400 font-semibold">{t(lang, "purchase.branch_colon_label", "Branch:")}</span><span className="font-bold text-slate-800">{form.customerAccountBranch || "—"}</span>
+                  <span className="text-slate-400 font-semibold">{t(lang, "purchase.currency_colon_label", "Currency:")}</span><span className="font-bold text-slate-800">{form.salesCurrency || "—"}</span>
+                  <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_company_colon", "Company:")}</span><span className="font-bold text-slate-800">{form.salesCompanyName || "—"}</span>
+                  <span className="text-slate-400 font-semibold">{t(lang, "cusm.email_word", "Email:")}</span><span className="font-bold text-slate-800 truncate" title={form.customerAccountEmail}>{form.customerAccountEmail || "—"}</span>
+                  <span className="text-slate-400 font-semibold">{t(lang, "sales.whatsapp_colon", "WhatsApp:")}</span><span className="font-bold text-slate-800">{form.customerAccountWhatsapp || "—"}</span>
+                </div>
+              ) : (
+                <div className="text-slate-400 italic text-[11px] text-center py-6">
+                  {t(lang, "sales.no_customer_selected", "No customer account selected")}
+                </div>
+              )}
             </div>
 
             {/* 4. Sales Account (CR) */}
@@ -4502,15 +4512,21 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 <span className="w-4 h-4 rounded bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-[8px]">4</span>
                 {t(lang, "purchase.sales_account_cr_badge", "Sales Account (CR)")}
               </h3>
-              <div className="grid grid-cols-[90px_1fr] gap-x-2 gap-y-1.5">
-                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span><span className="font-bold text-slate-800 font-mono">{form.salesAccountNo || "N/A"}</span>
-                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span><span className="font-bold text-slate-800">{form.salesAccountName || "N/A"}</span>
-                <span className="text-slate-400 font-semibold">{t(lang, "purchase.branch_colon_label", "Branch:")}</span><span className="font-bold text-slate-800">{form.salesAccountBranch || "N/A"}</span>
-                <span className="text-slate-400 font-semibold">{t(lang, "purchase.currency_colon_label", "Currency:")}</span><span className="font-bold text-slate-800">{form.salesCurrency || "PKR"}</span>
-                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_company_colon", "Company:")}</span><span className="font-bold text-slate-800">{form.salesCompanyName || t(lang, "purchase.card_none_label", "None")}</span>
-                <span className="text-slate-400 font-semibold">{t(lang, "cusm.email_word", "Email:")}</span><span className="font-bold text-slate-800 truncate" title={form.salesAccountEmail}>{form.salesAccountEmail || "N/A"}</span>
-                <span className="text-slate-400 font-semibold">{t(lang, "sales.whatsapp_colon", "WhatsApp:")}</span><span className="font-bold text-slate-800">{form.salesAccountWhatsapp || "N/A"}</span>
-              </div>
+              {form.salesAccountNo || form.salesAccountName ? (
+                <div className="grid grid-cols-[90px_1fr] gap-x-2 gap-y-1.5">
+                  <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span><span className="font-bold text-slate-800 font-mono">{form.salesAccountNo || "—"}</span>
+                  <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span><span className="font-bold text-slate-800">{form.salesAccountName || "—"}</span>
+                  <span className="text-slate-400 font-semibold">{t(lang, "purchase.branch_colon_label", "Branch:")}</span><span className="font-bold text-slate-800">{form.salesAccountBranch || "—"}</span>
+                  <span className="text-slate-400 font-semibold">{t(lang, "purchase.currency_colon_label", "Currency:")}</span><span className="font-bold text-slate-800">{form.salesCurrency || "—"}</span>
+                  <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_company_colon", "Company:")}</span><span className="font-bold text-slate-800">{form.salesCompanyName || "—"}</span>
+                  <span className="text-slate-400 font-semibold">{t(lang, "cusm.email_word", "Email:")}</span><span className="font-bold text-slate-800 truncate" title={form.salesAccountEmail}>{form.salesAccountEmail || "—"}</span>
+                  <span className="text-slate-400 font-semibold">{t(lang, "sales.whatsapp_colon", "WhatsApp:")}</span><span className="font-bold text-slate-800">{form.salesAccountWhatsapp || "—"}</span>
+                </div>
+              ) : (
+                <div className="text-slate-400 italic text-[11px] text-center py-6">
+                  {t(lang, "sales.no_sales_account_selected", "No sales account selected")}
+                </div>
+              )}
             </div>
 
           </div>

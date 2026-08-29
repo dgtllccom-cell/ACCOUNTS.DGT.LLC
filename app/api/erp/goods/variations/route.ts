@@ -47,6 +47,8 @@ export async function POST(request: NextRequest) {
         goodsId: body.goodsId,
         size: body.size,
         brand: body.brand,
+        variety: body.variety,
+        extraDetails: body.extraDetails,
         originalLanguage: session.preferredLanguage
       },
       session.userId
@@ -59,7 +61,9 @@ export async function POST(request: NextRequest) {
       after: {
         goodsId: body.goodsId,
         size: body.size,
-        brand: body.brand
+        brand: body.brand,
+        variety: body.variety,
+        extraDetails: body.extraDetails
       }
     });
 

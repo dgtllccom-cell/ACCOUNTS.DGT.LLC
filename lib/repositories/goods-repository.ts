@@ -8,6 +8,8 @@ export type GoodsVariationRow = {
   goods_id: string;
   size: string;
   brand: string;
+  variety?: string | null;
+  extra_details?: string | null;
   is_active: boolean;
   created_by: string | null;
   created_at: string;
@@ -20,6 +22,9 @@ export type GoodsRow = {
   goods_name: string;
   origin_country_id: string | null;
   original_language_code: string;
+  category?: string | null;
+  variety?: string | null;
+  extra_details?: string | null;
   is_active: boolean;
   created_by: string | null;
   created_at: string;
@@ -27,11 +32,12 @@ export type GoodsRow = {
   total_origins: number;
   total_sizes: number;
   total_brands: number;
+  total_varieties: number;
   variations: GoodsVariationRow[];
 };
 
-const GOODS_COLUMNS = ["id", "chs_code", "goods_name", "origin_country_id", "original_language_code", "is_active", "created_by", "created_at", "updated_at"];
-const VARIATION_COLUMNS = ["id", "goods_id", "size", "brand", "is_active", "created_by", "created_at", "updated_at"];
+const GOODS_COLUMNS = ["id", "chs_code", "goods_name", "origin_country_id", "original_language_code", "category", "variety", "extra_details", "is_active", "created_by", "created_at", "updated_at"];
+const VARIATION_COLUMNS = ["id", "goods_id", "size", "brand", "variety", "extra_details", "is_active", "created_by", "created_at", "updated_at"];
 
 function cleanQuery(value: string) {
   return value.trim().replace(/\s+/g, " ");
@@ -41,12 +47,14 @@ function withStats(row: any, variations: any[]) {
   const uniqueOrigins = new Set([row.origin_country_id].filter(Boolean));
   const uniqueSizes = new Set(variations.map((v: any) => v.size).filter(Boolean));
   const uniqueBrands = new Set(variations.map((v: any) => v.brand).filter(Boolean));
+  const uniqueVarieties = new Set([row.variety, ...variations.map((v: any) => v.variety)].filter(Boolean));
   return {
     ...row,
     variations,
     total_origins: uniqueOrigins.size,
     total_sizes: uniqueSizes.size,
-    total_brands: uniqueBrands.size
+    total_brands: uniqueBrands.size,
+    total_varieties: uniqueVarieties.size
   };
 }
 
@@ -255,21 +263,27 @@ export class GoodsRepository {
 
   // --- Variation CRUD ---
 
-  async createVariation(input: { goodsId: string; size: string; brand: string; createdBy?: string | null }) {
+  async createVariation(input: { goodsId: string; size: string; brand: string; variety?: string | null; extraDetails?: string | null; createdBy?: string | null }) {
     const cleanSize = input.size.trim().toUpperCase();
     const cleanBrand = input.brand.trim().toUpperCase();
+    const cleanVariety = input.variety?.trim() || null;
+    const cleanExtraDetails = input.extraDetails?.trim() || null;
 
     const viaPg = await withLocalPg(async (sql) => {
       const existing = await sql`
         SELECT id FROM public.goods_variations
-        WHERE goods_id = ${input.goodsId}::uuid AND upper(size) = ${cleanSize} AND upper(brand) = ${cleanBrand} AND deleted_at IS NULL
+        WHERE goods_id = ${input.goodsId}::uuid
+          AND upper(size) = ${cleanSize}
+          AND upper(brand) = ${cleanBrand}
+          AND (${cleanVariety}::text IS NULL OR upper(variety) = upper(${cleanVariety}))
+          AND deleted_at IS NULL
       `;
       if (existing.length > 0) {
-        throw new Error("A variation with this combination of Size and Brand already exists.");
+        throw new Error("A variation with this combination of Size, Brand, and Variety already exists.");
       }
       const rows = await sql`
-        INSERT INTO public.goods_variations (goods_id, size, brand, is_active, created_by)
-        VALUES (${input.goodsId}::uuid, ${cleanSize}, ${cleanBrand}, true, ${input.createdBy || null})
+        INSERT INTO public.goods_variations (goods_id, size, brand, variety, extra_details, is_active, created_by)
+        VALUES (${input.goodsId}::uuid, ${cleanSize}, ${cleanBrand}, ${cleanVariety}, ${cleanExtraDetails}, true, ${input.createdBy || null})
         RETURNING id
       `;
       return (rows[0] as any).id as string;
@@ -291,59 +305,33 @@ export class GoodsRepository {
 
     const { data, error } = await supabase
       .from("goods_variations")
-      .insert({ goods_id: input.goodsId, size: cleanSize, brand: cleanBrand, is_active: true, created_by: input.createdBy || null })
+      .insert({ goods_id: input.goodsId, size: cleanSize, brand: cleanBrand, variety: cleanVariety, extra_details: cleanExtraDetails, is_active: true, created_by: input.createdBy || null })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
     return data.id as string;
   }
 
-  async updateVariation(id: string, input: { goodsId?: string; size?: string; brand?: string; isActive?: boolean }) {
+  async updateVariation(id: string, input: { goodsId?: string; size?: string; brand?: string; variety?: string | null; extraDetails?: string | null; isActive?: boolean }) {
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
     const cleanSize = input.size !== undefined ? input.size.trim().toUpperCase() : undefined;
     const cleanBrand = input.brand !== undefined ? input.brand.trim().toUpperCase() : undefined;
+    const cleanVariety = input.variety !== undefined ? input.variety?.trim() || null : undefined;
+    const cleanExtraDetails = input.extraDetails !== undefined ? input.extraDetails?.trim() || null : undefined;
+
     if (cleanSize !== undefined) patch.size = cleanSize;
     if (cleanBrand !== undefined) patch.brand = cleanBrand;
+    if (cleanVariety !== undefined) patch.variety = cleanVariety;
+    if (cleanExtraDetails !== undefined) patch.extra_details = cleanExtraDetails;
     if (input.isActive !== undefined) patch.is_active = input.isActive;
 
     const viaPg = await withLocalPg(async (sql) => {
-      if (input.goodsId && (cleanSize !== undefined || cleanBrand !== undefined)) {
-        const existingVar = await sql`SELECT goods_id, size, brand FROM public.goods_variations WHERE id = ${id}::uuid`;
-        const checkSize = cleanSize !== undefined ? cleanSize : existingVar[0]?.size;
-        const checkBrand = cleanBrand !== undefined ? cleanBrand : existingVar[0]?.brand;
-        const dup = await sql`
-          SELECT id FROM public.goods_variations
-          WHERE goods_id = ${input.goodsId}::uuid AND size = ${checkSize} AND brand = ${checkBrand} AND id != ${id}::uuid AND deleted_at IS NULL
-        `;
-        if (dup.length > 0) {
-          throw new Error("Another variation with this combination of Size and Brand already exists.");
-        }
-      }
       await sql`UPDATE public.goods_variations SET ${sql(patch)} WHERE id = ${id}::uuid AND deleted_at IS NULL`;
       return true;
     });
     if (viaPg) return;
 
     const supabase = createSupabaseAdminClient() as any;
-    if (input.goodsId && (input.size !== undefined || input.brand !== undefined)) {
-      const { data: existingVar } = await supabase.from("goods_variations").select("goods_id, size, brand").eq("id", id).single();
-      const checkGoodsId = input.goodsId;
-      const checkSize = cleanSize !== undefined ? cleanSize : existingVar?.size;
-      const checkBrand = cleanBrand !== undefined ? cleanBrand : existingVar?.brand;
-      const { data: dup, error: checkError } = await supabase
-        .from("goods_variations")
-        .select("id")
-        .eq("goods_id", checkGoodsId)
-        .eq("size", checkSize)
-        .eq("brand", checkBrand)
-        .neq("id", id)
-        .is("deleted_at", null);
-      if (checkError) throw new Error(checkError.message);
-      if (Array.isArray(dup) && dup.length > 0) {
-        throw new Error("Another variation with this combination of Size and Brand already exists.");
-      }
-    }
-
     const { error } = await supabase.from("goods_variations").update(patch).eq("id", id).is("deleted_at", null);
     if (error) throw new Error(error.message);
   }

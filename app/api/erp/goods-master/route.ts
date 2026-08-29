@@ -30,6 +30,8 @@ const createSchema = z.object({
   category: z.string().trim().max(120).optional().nullable(),
   brand: z.string().trim().max(120).optional().nullable(),
   sizes: z.string().trim().max(120).optional().nullable(),
+  variety: z.string().trim().max(150).optional().nullable(),
+  extraDetails: z.string().trim().max(2000).optional().nullable(),
   originCountry: z.string().trim().max(120).optional().nullable(),
   isActive: z.boolean().optional().default(true),
   originalLanguage: z.string().optional(),
@@ -54,6 +56,8 @@ export async function GET(request: NextRequest) {
           g.chs_code,
           g.goods_name AS name,
           g.category,
+          g.variety AS master_variety,
+          g.extra_details AS master_extra_details,
           g.is_active,
           g.created_at,
           co.name AS origin_country,
@@ -66,7 +70,17 @@ export async function GET(request: NextRequest) {
             SELECT string_agg(DISTINCT NULLIF(btrim(v.size), ''), ' / ')
             FROM public.goods_variations v
             WHERE v.goods_id = g.id AND v.deleted_at IS NULL
-          ) AS sizes
+          ) AS sizes,
+          (
+            SELECT string_agg(DISTINCT NULLIF(btrim(v.variety), ''), ' / ')
+            FROM public.goods_variations v
+            WHERE v.goods_id = g.id AND v.deleted_at IS NULL
+          ) AS variation_varieties,
+          (
+            SELECT string_agg(DISTINCT NULLIF(btrim(v.extra_details), ''), ' | ')
+            FROM public.goods_variations v
+            WHERE v.goods_id = g.id AND v.deleted_at IS NULL
+          ) AS variation_extra_details
         FROM public.goods g
         LEFT JOIN public.countries co ON co.id = g.origin_country_id
         WHERE g.deleted_at IS NULL
@@ -83,6 +97,8 @@ export async function GET(request: NextRequest) {
       category: r.category ?? "",
       brand: r.brand ?? "",
       sizes: r.sizes ?? "",
+      variety: r.variation_varieties || r.master_variety || "",
+      extra_details: r.variation_extra_details || r.master_extra_details || "",
       origin_country: r.origin_country ?? "",
       is_active: !!r.is_active,
       created_at: r.created_at,
@@ -129,24 +145,41 @@ export async function POST(request: NextRequest) {
         originCountryId,
         originalLanguage: lang as never,
         initialVariation:
-          body.brand || body.sizes
-            ? { size: body.sizes || "", brand: body.brand || "" }
+          body.brand || body.sizes || body.variety || body.extraDetails
+            ? {
+                size: body.sizes || "Standard",
+                brand: body.brand || "Default",
+              }
             : null,
       },
       session.userId,
     );
 
-    // category + explicit is_active are not part of GoodsMasterInput — set them
-    // directly on the freshly-created row.
+    // Update category, variety, extra_details, and is_active on the new goods row
     await withLocalPg(async (sql) => {
       await sql`
         UPDATE public.goods
         SET category = ${body.category ?? null},
+            variety = ${body.variety ?? null},
+            extra_details = ${body.extraDetails ?? null},
             is_active = ${body.isActive ?? true},
             updated_at = NOW()
         WHERE id = ${goodsId}
       `;
+
+      // Update initial variation with variety and extra_details if created
+      if (body.variety || body.extraDetails) {
+        await sql`
+          UPDATE public.goods_variations
+          SET variety = ${body.variety ?? null},
+              extra_details = ${body.extraDetails ?? null},
+              updated_at = NOW()
+          WHERE goods_id = ${goodsId} AND deleted_at IS NULL
+        `;
+      }
     });
+
+    return apiCreated({ id: goodsId });
 
     return apiCreated({ id: goodsId });
   } catch (error) {

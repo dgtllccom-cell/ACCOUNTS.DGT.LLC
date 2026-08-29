@@ -144,8 +144,16 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "description", mode: "translate" },
   ],
   product_units: [{ field: "unit_name", mode: "translate" }],
-  goods: [{ field: "goods_name", mode: "translate" }],
-  goods_variations: [{ field: "brand", mode: "translate" }],
+  goods: [
+    { field: "goods_name", mode: "translate" },
+    { field: "variety", mode: "translate" },
+    { field: "extra_details", mode: "translate" },
+  ],
+  goods_variations: [
+    { field: "brand", mode: "translate" },
+    { field: "variety", mode: "translate" },
+    { field: "extra_details", mode: "translate" },
+  ],
   warehouses: [
     { field: "warehouse_name", mode: "transliterate" },
     { field: "owner_name", mode: "transliterate" },

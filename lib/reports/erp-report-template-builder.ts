@@ -74,10 +74,10 @@ export function generateReportHtml(input: {
 
   const compName = companyInfo.name || "DIGITAL DOCK ERP";
   const compTagline = companyInfo.tagline || "ERP Reporting System";
-  const compAddress = companyInfo.address || "Configured organization address";
-  const compPhone = companyInfo.phone || "Configured contact";
-  const compEmail = companyInfo.email || "Configured email";
-  const compWebsite = companyInfo.website || "Configured website";
+  const compAddress = companyInfo.address || "Main Commercial Hub, Business District";
+  const compPhone = companyInfo.phone || "+971 4 000 0000 / +92 42 000 0000";
+  const compEmail = companyInfo.email || "info@dgt.llc";
+  const compWebsite = companyInfo.website || "www.dgt.llc";
   const printedBy = companyInfo.printedBy || "ERP User";
   const printedDate = companyInfo.printedDate || new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
   const financialYear = companyInfo.financialYear || "Current Financial Year";

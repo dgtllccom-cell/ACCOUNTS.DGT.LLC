@@ -519,7 +519,11 @@ export function PurchaseModuleWorkspace({
               </div>
             </div>
           )) : (
-            <div className="col-span-full rounded-xl border border-dashed p-4 text-sm text-muted-foreground">{t(lang, "purchase.pmw_no_dashboard_records", "No purchase records found for this dashboard scope.")}</div>
+            <div className="col-span-full rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 p-8 text-center text-sm text-muted-foreground space-y-2">
+              <PackageCheck className="mx-auto h-8 w-8 text-slate-400 dark:text-slate-500" />
+              <p className="font-extrabold text-foreground text-sm uppercase tracking-tight">{t(lang, "purchase.pmw_no_dashboard_records", "No purchase records found for this dashboard scope.")}</p>
+              <p className="text-xs text-muted-foreground max-w-md mx-auto">Try clearing search query filters or switching your country and branch view options.</p>
+            </div>
           )}
         </div>
       </section>
