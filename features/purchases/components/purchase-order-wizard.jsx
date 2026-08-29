@@ -50,6 +50,7 @@ import { Button } from "@/components/ui/button";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { openTradeDocumentWindow } from "@/lib/reports/open-trade-document-window";
+import { TradeDocumentCenter } from "@/features/reports/components/trade-document-center";
 import { openPurchaseA4ReportWindow } from "@/lib/reports/open-purchase-a4-report-window";
 import { PurchaseBookingJournalReportView } from "./purchase-booking-journal-report-view";
 import { PurchaseBookingReportGrid } from "./purchase-booking-report-grid";
@@ -546,6 +547,7 @@ export function PurchaseOrderWizard({ session }) {
   const [goodsEntries, setGoodsEntries] = useState([]);
   const [draftPrefillRef, setDraftPrefillRef] = useState("");
   const [draftPrefillId, setDraftPrefillId] = useState("");
+  const [tradeDocsOpen, setTradeDocsOpen] = useState(false);
   const draftConsumedRef = useRef(false);
 
   // Pre-fill from a reviewed AI Document Intake draft (Entry Method Selector →
@@ -3534,34 +3536,12 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
               type="button"
               onClick={() => {
                 setViewDropdownOpen(false);
-                openTradeDocumentWindow("proforma", { form_data: { form, goodsEntries }, containerCount: form.containerCount });
+                setTradeDocsOpen(true);
               }}
               className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
             >
               <FileText className="h-3.5 w-3.5 text-blue-500" />
-              <span>{t(lang, "purchase.dd_print_proforma", "Print Proforma Invoice")}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setViewDropdownOpen(false);
-                openTradeDocumentWindow("commercial", { form_data: { form, goodsEntries }, containerCount: form.containerCount });
-              }}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
-            >
-              <Receipt className="h-3.5 w-3.5 text-rose-500" />
-              <span>{t(lang, "purchase.dd_print_commercial", "Print Commercial Invoice")}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setViewDropdownOpen(false);
-                openTradeDocumentWindow("packing", { form_data: { form, goodsEntries }, containerCount: form.containerCount });
-              }}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
-            >
-              <Package className="h-3.5 w-3.5 text-emerald-500" />
-              <span>{t(lang, "purchase.dd_print_packing", "Print Packing List")}</span>
+              <span>{t(lang, "tdoc.center_title", "Commercial Document Center")}</span>
             </button>
             <button
               type="button"
@@ -7223,6 +7203,33 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
         </div>
       )}
         </div>
+      )}
+
+      {tradeDocsOpen && (
+        <TradeDocumentCenter
+          open={tradeDocsOpen}
+          onClose={() => setTradeDocsOpen(false)}
+          txnKind="purchase"
+          source="purchase_order"
+          record={{
+            id: savedOrderId || undefined,
+            purchase_order_no: form.purchaseOrderNo,
+            purchase_contract_no: form.purchaseContractNo,
+            currency_code: form.purchaseCurrency || form.currencyType,
+            exchange_rate: form.exchangeRate,
+            order_total: form.orderTotal,
+            country_id: form.countryId,
+            country_branch_id: form.countryBranchId,
+            city_branch_id: form.cityBranchId,
+            form_data: { form, goodsEntries },
+          }}
+          companyId={form.purchaseCompanyId || null}
+          scope={{
+            countryId: form.countryId || null,
+            countryBranchId: form.countryBranchId || null,
+            cityBranchId: form.cityBranchId || null,
+          }}
+        />
       )}
     </div>
   );

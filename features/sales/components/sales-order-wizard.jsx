@@ -47,6 +47,7 @@ import { Button } from "@/components/ui/button";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { openTradeDocumentWindow } from "@/lib/reports/open-trade-document-window";
+import { TradeDocumentCenter } from "@/features/reports/components/trade-document-center";
 import { openSalesA4ReportWindow } from "@/lib/reports/open-sales-a4-report-window";
 import { resolveSalesBookingPaymentRoute } from "@/lib/services/sales-booking-routing";
 import { SalesBookingJournalReportView } from "./sales-booking-journal-report-view";
@@ -626,6 +627,7 @@ export function SalesOrderWizard({ session }) {
   const [savingOrder, setSavingOrder] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const [savedOrderId, setSavedOrderId] = useState("");
+  const [tradeDocsOpen, setTradeDocsOpen] = useState(false);
   const [savedOrderNo, setSavedOrderNo] = useState("");
   const [registerRefreshKey, setRegisterRefreshKey] = useState(0);
   const [accountLookupMessage, setAccountLookupMessage] = useState("");
@@ -2883,6 +2885,14 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       >
                         <Eye className="h-3.5 w-3.5 text-emerald-500 animate-pulse" />
                         <span className="font-bold text-emerald-600 dark:text-emerald-400">{t(lang, "purchase.dd_view_check_entry", "View / Check Entry")}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setViewDropdownOpen(false); setTradeDocsOpen(true); }}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
+                      >
+                        <FileText className="h-3.5 w-3.5 text-blue-500" />
+                        <span>{t(lang, "tdoc.center_title", "Commercial Document Center")}</span>
                       </button>
                       <button
                         type="button"
@@ -5815,6 +5825,34 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             </div>
           </div>
         </div>
+      )}
+
+      {tradeDocsOpen && (
+        <TradeDocumentCenter
+          open={tradeDocsOpen}
+          onClose={() => setTradeDocsOpen(false)}
+          txnKind="sales"
+          source="sales_order"
+          record={{
+            id: savedOrderId || undefined,
+            sales_order_no: form.salesOrderNo,
+            sales_contract_no: form.salesContractNo,
+            currency_code: form.currencyCode || form.currencyType,
+            exchange_rate: form.exchangeRate,
+            order_total: form.orderTotal,
+            country_id: form.countryId,
+            country_branch_id: form.countryBranchId,
+            city_branch_id: form.cityBranchId,
+            customer_name: form.customerName,
+            form_data: { form, goodsEntries },
+          }}
+          companyId={form.salesCompanyId || null}
+          scope={{
+            countryId: form.countryId || null,
+            countryBranchId: form.countryBranchId || null,
+            cityBranchId: form.cityBranchId || null,
+          }}
+        />
       )}
     </div>
   );
