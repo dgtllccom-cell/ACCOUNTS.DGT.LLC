@@ -492,3 +492,22 @@ direct API `FORBIDDEN`, 0 UAE handovers.
 > Multi-page PDF path (`pdf-parse` `getScreenshot` per page → sharp → tesseract) is
 > implemented and unit-covered; a representative real multi-page scanned PDF is
 > part of the remaining real-customer-document UAT.
+
+---
+
+## Final Closure — Round 3 (2026-08-29): gate re-run + regression
+
+### OCR HTTP route — verified through the real application path
+`next.config.ts` `serverExternalPackages: ["tesseract.js","pdf-parse","pdfjs-dist","sharp","@napi-rs/canvas"]` (commit `a4d9c09`) fixes the `.next/worker-script/node/index.js` `MODULE_NOT_FOUND`. Real HTTP `PATCH /api/erp/document-intake/[id] {action:process}` → **200** `{ok:true, status:"processed"}`, tesseract ~2.4 s, `error: null`, 0 server errors.
+
+### 18-scenario E2E regression (`scratch/di-18-scenarios.mts`, 2026-08-29)
+**18 / 18 PASS** — digital PDF · image OCR · low-confidence → QVC · unreadable → QVC · no-match → QVC + exact message · ambiguous match never auto-links (0.60) · sha256 duplicate flag · idempotency dedup · malware scan (`/EmbeddedFile`) · signature-beats-MIME · cross-scope job access blocked · field correction + verify → green · send to QVC → `crm_action_items` · prepare reviewed draft → `draft_ready` · draft continuation listed · consume draft → linked + idempotent · cancel job · finance doc → roznamcha pre-post preview (balanced, method `bank_transfer`, amount 19 500).
+
+### Finance document safety (re-confirmed)
+Scenario 18 pre-post preview: Debit = Credit (`balanced: true`), preview only — the AI pipeline writes **only** to `document_intake_*` tables; it never posts to journal / roznamcha / ledger / tax / stock autonomously. Posting still requires an authenticated user action through the normal roznamcha route.
+
+### Final gate suite (2026-08-29, fresh run)
+`npx tsc --noEmit` **0 errors** · `npm run i18n:guard` OK (10 099 keys × 5) · `npm run i18n:guard:changed` OK · `npm run build` **exit 0** · `npx vitest run` **123 passed / 1 skipped / 0 failed** (incl. `tests/uae-tax/mock-asp`, `i18n-tax-einv-keys`) · `node scripts/db-apply-all-migrations.mjs` all `[SKIP]`, `ok: true`.
+
+### BLOCKED on owner-supplied material
+Representative **real customer documents** (PDF / phone photo / scanned / rotated / low-quality / multi-page / English / Arabic-RTL) for the final real-document UAT. Every format has been exercised with a comprehensive **synthetic** set (`scratch/di-formats.mts`) — the multi-page scanned-PDF path is implemented + unit-covered but not yet run against a real multi-page customer scan.

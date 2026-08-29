@@ -50,7 +50,10 @@ await withLocalPg(async (sql) => {
   console.log("recon view rows:", rv[0].rows);
 
   console.log("\n--- A4: employee-user link ---");
-  const pf = await sql`SELECT id FROM public.profiles WHERE deleted_at IS NULL LIMIT 1`;
+  const pf = await sql`SELECT p.id FROM public.profiles p
+    WHERE p.deleted_at IS NULL
+      AND NOT EXISTS (SELECT 1 FROM public.employees em WHERE em.user_id = p.id AND em.deleted_at IS NULL)
+    LIMIT 1`;
   await sql`SELECT public.hr_link_employee_user(${e.id}, ${pf[0].id})`;
   const linked = await sql`SELECT user_id FROM public.employees WHERE id = ${e.id}`;
   console.log("linked employee.user_id:", linked[0].user_id, "==", pf[0].id);

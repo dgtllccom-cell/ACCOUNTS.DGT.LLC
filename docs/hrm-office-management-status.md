@@ -424,3 +424,63 @@ migrations idempotent.
   isolation on the intake side).
 - Payroll **payment** step (`{action:pay}`) + Gratuity settlement E2E with real
   data.
+
+---
+
+## Final Closure — Round 3 (2026-08-29): full gate re-run + role/scope + evidence matrix
+
+### Bug fixes this round (all committed on `main`, isolated commits)
+
+| Commit | Fix |
+|---|---|
+| `936b078` | Payroll `calculate` 500 — `(country_id = $1 OR $1 IS NULL)` FX-lookup antipattern → "could not determine data type of parameter $2". Split into country-specific + global fallback query. |
+| `520dcd6` | Payroll `post` — `roznamcha_entries.voucher_no` is globally UNIQUE; posting reused `run_no` for every employee → run #2 "duplicate entry" + rollback. Now one unique voucher per line (`<run_no>-A/P/R<nnn>`). |
+| `afb53a0` | `PATCH /api/erp/hr-payroll/employees/[id]` partial update nulled every absent column. All preserve-able columns now `COALESCE(${incoming}, existing)`. |
+| `0d3cccf` | Gratuity `calculate` — identical `$2 IS NULL` FX bug as payroll. Fixed. |
+| `5b13046` | (a) `hrScopeFromSession` — branch/city admins whose `session.countryIds` collapsed to the "match-nothing" sentinel now recover country context from `session.assignments`. (b) `resolveSelfEmployeeId` checks `employees.user_id` before Person-Master email. (c) `selfServiceBundle` `e.confirmation_date` (nonexistent) → `e.probation_start_date`. |
+| `94b2aaa` | `officeScopeWhere` emitted unqualified `country_id`/`city_branch_id`/`created_by`; General-Office attendance/leave/assets GET joined `employees`+`customers` → "column reference country_id is ambiguous". Added alias qualification. |
+
+### Full authenticated E2E — payroll payment + gratuity settlement
+
+- **Payroll payment**: `PR-202609-0001` create → `calculate` (gross 28 800 AED @ 3.66) → `review` → `approve` → `post` (10 balanced accrual roznamcha entries, Dr = Cr = 28 800; 10 `employee_salaries_due` rows) → `pay` `{action:pay, paymentLedgerId, paymentDate}` (10 balanced payment roznamcha entries, Dr payable / Cr bank = 28 800; `salary_due` status → Paid).
+- **Gratuity / Final Settlement**: separation (`POST /hr/lifecycle {kind:separation}`) → `approve` → `apply` → gratuity `FS-0001` (2.661 yr service, net 2 432.45 AED) → `approve` → `pay` `{expenseLedgerId, paymentLedgerId, paymentDate}` (balanced roznamcha entry Dr = Cr = 2 432.45).
+- **Reconciliation** (`scratch/reconcile-check.mjs`): Payroll Register net == `hr_payroll_runs` net == `employee_salaries_due` net == Roznamcha Cr = **28 800.00**, accrual balanced = **true**.
+
+### Role / scope matrix (authenticated, `POST /api/erp/auth/dev-session`)
+
+| Role | Result |
+|---|---|
+| `super_admin` | all 54 employees, all runs, all reports |
+| `country_admin` (UAE) | 12 (10 UAE + 2 null-country), 0 PK, 0 AF · 3 attendance · 1 leave |
+| `country_admin` (PK) | 22 (20 PK + 2 null), 0 UAE, 0 AF · 0 attendance/leave |
+| `city_branch_admin` (Dubai) | 12 UAE employees, 1 payroll run, 10 reconciliation lines, 0 PK (fixed by `5b13046`) |
+| `auditor_viewer` | read 200 · write 401 · payroll action 403 |
+| `staff_user` / ESS | `/api/erp/hr/self` 200 own record only · list-all 403 |
+
+### 10 HRM report types — real DEV data through the real workflow
+
+Employee Directory 54 · Attendance 3 · Leave 1 · Overtime 3 · Payroll Register 10 (`PR-202609-0001`, posted) · Salary Slip 10 · Employee Ledger 1 · Expiring Documents 0 (correct empty) · Gratuity 1 (`FS-0001`) · Audit History 5. All also verified via `type=` query param on `/api/erp/hr/reports`.
+
+### 5-language + RTL (browser, 375 px mobile)
+
+Payroll Reconciliation, Employee Directory, ESS: EN (ltr) + UR / AR / FA / PS (rtl) — whole screen (title, cards, filters, table headers, statuses) follows the language, correct RTL, 0 page overflow / offscreen controls / overlaps. Language persists across refresh + navigation.
+
+### Responsive
+
+iPhone 375×812 · Samsung/Android 375×812 · iPad portrait 768×1024 · iPad landscape 1024×768 · Desktop — representative HRM screens (reconciliation, directory, ESS, payroll drawer): no buttons off-screen, no overlap/clipping, drawers full-width and submit reachable on mobile, panels stack 1-col on tablet portrait.
+
+### Final gate suite (2026-08-29, fresh run)
+
+| Gate | Result |
+|---|---|
+| `npx tsc --noEmit` | **0 errors** (whole repo) |
+| `npm run i18n:guard` | OK — 10 099 keys × 5 languages, full parity |
+| `npm run i18n:guard:changed` | OK — no new hard-coded English |
+| `npm run build` | **exit 0** |
+| `npx vitest run` | **123 passed / 1 skipped / 0 failed** |
+| `node scripts/db-apply-all-migrations.mjs` | all `[SKIP] already applied`, `ok: true` |
+| `scratch/hr-closure-test.mjs` | A1 leave balance ✓ · A2 shift attendance ✓ · A3 recon view ✓ · A4 employee↔user link + duplicate-block ✓ |
+
+### Still requires the owner
+- **Production deployment approval** — DEV only until then.
+- Real *customer* HR documents for KYC/QVC real-document UAT (synthetic full-format set used).
