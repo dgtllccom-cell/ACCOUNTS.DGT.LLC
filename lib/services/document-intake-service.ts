@@ -357,7 +357,9 @@ export class DocumentIntakeService {
       if (!m) throw new Error("Match candidate not found.");
       if (!m.scope_ok) throw new Error("That candidate is outside your authorized scope.");
       await sql`UPDATE public.document_intake_matches SET is_selected = (id = ${matchId}) WHERE job_id = ${jobId} AND match_kind = ${m.match_kind}`;
-      if (m.match_kind === "source_record") {
+      // A source_record OR a General-Office master (company / customer / account)
+      // selection records the record the reviewed draft should be linked to.
+      if (["source_record", "company", "customer", "account"].includes(m.match_kind)) {
         await sql`UPDATE public.document_intake_jobs SET
           match_status = 'user', matched_source_module = ${m.source_module}, matched_source_id = ${m.source_id},
           matched_confidence = ${m.score}, status = CASE WHEN status = 'qvc' THEN 'review' ELSE status END, updated_at = now()

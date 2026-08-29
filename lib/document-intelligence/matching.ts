@@ -21,7 +21,7 @@ import type { FieldCandidate } from "./types";
 import type { IntakeScope } from "./scope";
 
 export type MatchCandidate = {
-  matchKind: "source_record";
+  matchKind: "source_record" | "company" | "customer" | "account";
   sourceModule: string;
   sourceId: string;
   label: string;
@@ -29,6 +29,15 @@ export type MatchCandidate = {
   scopeOk: boolean;
   reason: string;
   isSelected?: boolean;
+};
+
+// Document type → General-Office master to search for an existing record so the
+// user can Link / Update rather than create a duplicate. The AI only suggests.
+const MASTER_DOCS: Record<string, { table: string; kind: MatchCandidate["matchKind"]; module: string }> = {
+  company_registration: { table: "companies", kind: "company", module: "companies" },
+  bank_account_document: { table: "banks", kind: "account", module: "banks" },
+  kyc_document: { table: "customers", kind: "customer", module: "customers" },
+  service_agreement: { table: "companies", kind: "company", module: "companies" },
 };
 
 export type MatchOutcome = {
@@ -75,6 +84,85 @@ export async function runScopedMatching(input: {
   const party = (fv(fields, "supplier_name") || fv(fields, "customer_name") || fv(fields, "shipper") || fv(fields, "consignee") || "").toUpperCase();
   const total = num(fv(fields, "grand_total"));
   const currency = (fv(fields, "currency") || "").toUpperCase();
+
+  const masterDoc = MASTER_DOCS[docTypeCode];
+
+  // Master-data documents (Company / Bank / KYC / Contract) — search the existing
+  // master for a likely duplicate so the user can Link / Update instead of
+  // creating a new record. Runs even when no trade reference is present.
+  if (masterDoc) {
+    const candidates: MatchCandidate[] = [];
+    const nameSig = (fv(fields, "company_name") || fv(fields, "account_title") || fv(fields, "customer_name")
+      || fv(fields, "contract_parties") || fv(fields, "supplier_name") || "").toUpperCase().replace(/\s+/g, " ").trim();
+    const regSig = norm(fv(fields, "registration_number"));
+    const trnSig = norm(fv(fields, "trn"));
+    const acctSig = norm(fv(fields, "account_number"));
+    const ibanSig = norm(fv(fields, "iban"));
+    const idSig = norm(fv(fields, "national_id"));
+
+    await withLocalPg(async (sql) => {
+      const scopeCountry = scope.countryIds === null ? sql`TRUE` : sql`(t.country_id = ANY(${scope.countryIds}) OR t.country_id IS NULL)`;
+      if (masterDoc.table === "companies") {
+        const rows = await sql`
+          SELECT t.id, t.name, t.legal_name, t.company_code, t.registrations, t.country_id
+          FROM public.companies t
+          WHERE t.deleted_at IS NULL AND ${scopeCountry}
+            AND (${nameSig ? sql`(upper(t.name) LIKE ${"%" + nameSig.slice(0, 14) + "%"} OR upper(coalesce(t.legal_name,'')) LIKE ${"%" + nameSig.slice(0, 14) + "%"})` : sql`FALSE`}
+                 ${regSig ? sql`OR t.registrations::text ILIKE ${"%" + regSig + "%"}` : sql``})
+          LIMIT 15`;
+        for (const r of rows ?? []) {
+          const nm = String(r.name || r.legal_name || "").toUpperCase();
+          let score = 0; const rs: string[] = [];
+          if (nameSig && nm && (nm.includes(nameSig.slice(0, 12)) || nameSig.includes(nm.slice(0, 12)))) { score += 0.55; rs.push("company name"); }
+          if (regSig && String(r.registrations || "").toUpperCase().replace(/[^A-Z0-9]/g, "").includes(regSig)) { score += 0.4; rs.push("registration no"); }
+          if (trnSig && String(r.registrations || "").toUpperCase().replace(/[^A-Z0-9]/g, "").includes(trnSig)) { score += 0.35; rs.push("TRN"); }
+          candidates.push({ matchKind: "company", sourceModule: "companies", sourceId: r.id, score: Math.min(1, Number(score.toFixed(2))), scopeOk: true,
+            label: `${r.name || r.legal_name}${r.company_code ? ` · ${r.company_code}` : ""}`, reason: rs.length ? `Matched on: ${rs.join(", ")}` : "Name similarity" });
+        }
+      } else if (masterDoc.table === "banks") {
+        const rows = await sql`
+          SELECT t.id, t.bank_name, t.account_title, t.account_number, t.iban_number, t.account_code, t.country_id
+          FROM public.banks t
+          WHERE t.deleted_at IS NULL AND ${scopeCountry}
+            AND (${acctSig ? sql`regexp_replace(coalesce(t.account_number,''),'[^0-9]','','g') = ${acctSig}` : sql`FALSE`}
+                 ${ibanSig ? sql`OR upper(regexp_replace(coalesce(t.iban_number,''),'[^A-Z0-9]','','g')) = ${ibanSig}` : sql``}
+                 ${nameSig ? sql`OR upper(coalesce(t.account_title,'')) LIKE ${"%" + nameSig.slice(0, 14) + "%"}` : sql``})
+          LIMIT 15`;
+        for (const r of rows ?? []) {
+          let score = 0; const rs: string[] = [];
+          if (ibanSig && norm(r.iban_number) === ibanSig) { score += 0.7; rs.push("IBAN"); }
+          if (acctSig && String(r.account_number || "").replace(/[^0-9]/g, "") === acctSig) { score += 0.6; rs.push("account number"); }
+          if (nameSig && String(r.account_title || "").toUpperCase().includes(nameSig.slice(0, 12))) { score += 0.2; rs.push("account title"); }
+          candidates.push({ matchKind: "account", sourceModule: "banks", sourceId: r.id, score: Math.min(1, Number(score.toFixed(2))), scopeOk: true,
+            label: `${r.bank_name} · ${r.account_title || r.account_number}${r.account_code ? ` (${r.account_code})` : ""}`, reason: rs.length ? `Matched on: ${rs.join(", ")}` : "Weak match" });
+        }
+      } else if (masterDoc.table === "customers") {
+        const rows = await sql`
+          SELECT t.id, t.customer_name, t.company_name, t.father_name, t.person_code, t.country_id
+          FROM public.customers t
+          WHERE t.deleted_at IS NULL AND ${scopeCountry}
+            AND ${nameSig ? sql`upper(coalesce(t.customer_name, t.company_name, '')) LIKE ${"%" + nameSig.slice(0, 14) + "%"}` : sql`FALSE`}
+          LIMIT 15`;
+        for (const r of rows ?? []) {
+          const nm = String(r.customer_name || r.company_name || "").toUpperCase();
+          let score = 0; const rs: string[] = [];
+          if (nameSig && nm && (nm.includes(nameSig.slice(0, 12)) || nameSig.includes(nm.slice(0, 12)))) { score += 0.55; rs.push("name"); }
+          candidates.push({ matchKind: "customer", sourceModule: "customers", sourceId: r.id, score: Math.min(1, Number(score.toFixed(2))), scopeOk: true,
+            label: `${r.customer_name || r.company_name}${r.person_code ? ` · ${r.person_code}` : ""}`, reason: rs.length ? `Matched on: ${rs.join(", ")}` : "Name similarity" });
+        }
+      }
+    });
+
+    const sorted = candidates.filter((c) => c.score > 0).sort((a, b) => b.score - a.score);
+    if (sorted.length === 0) {
+      return { status: "none", matchedModule: null, matchedId: null, matchedScore: null,
+        reason: "No existing master record matched — the reviewed draft will be for a NEW record.", candidates: [] };
+    }
+    // Never auto-link a master; always present it for the user to confirm.
+    return { status: "ambiguous", matchedModule: sorted[0].sourceModule, matchedId: null, matchedScore: sorted[0].score,
+      reason: `${sorted.length} possible existing ${masterDoc.table.replace(/s$/, "")} record(s) — review and choose Link / Update / Create-new.`,
+      candidates: sorted.slice(0, 10) };
+  }
 
   const anyRef = Boolean(contract || booking || poNo || soNo || blNo || containers.length || job.purchase_order_id || job.sales_order_id);
   if (!anyRef) {
