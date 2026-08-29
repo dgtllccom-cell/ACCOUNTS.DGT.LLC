@@ -708,6 +708,7 @@ export function PurchaseOrderWizard({ session }) {
   const [destCityBranches, setDestCityBranches] = useState([]);
   const [scopeConfirmed, setScopeConfirmed] = useState(false);
   const [dbAccounts, setDbAccounts] = useState([]);
+  const [dbAccountsLoading, setDbAccountsLoading] = useState(true);
   const [customQtyNames, setCustomQtyNames] = useState([]);
 
   // Load Countries
@@ -1138,6 +1139,8 @@ export function PurchaseOrderWizard({ session }) {
         }
       } catch (err) {
         console.error("Failed to load accounts:", err);
+      } finally {
+        if (!cancelled) setDbAccountsLoading(false);
       }
     }
     async function initPorts() {
@@ -4937,7 +4940,9 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                             })}
                             {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, purchaseSearch)).length === 0 && (
                               <div className="p-4 text-center text-muted-foreground text-xs italic">
-                                {t(lang, "purchase.no_matching_accounts", "No matching accounts found. Try searching by Code, Name, Currency, or Phone.")}
+                                {dbAccountsLoading
+                                  ? t(lang, "purchase.loading_accounts", "Loading accounts...")
+                                  : t(lang, "purchase.no_matching_accounts", "No matching accounts found. Try searching by Code, Name, Currency, or Phone.")}
                               </div>
                             )}
                           </div>
@@ -5031,7 +5036,9 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                             })}
                             {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).length === 0 && (
                               <div className="p-4 text-center text-muted-foreground text-xs italic">
-                                {t(lang, "purchase.no_matching_accounts", "No matching accounts found. Try searching by Code, Name, Currency, or Phone.")}
+                                {dbAccountsLoading
+                                  ? t(lang, "purchase.loading_accounts", "Loading accounts...")
+                                  : t(lang, "purchase.no_matching_accounts", "No matching accounts found. Try searching by Code, Name, Currency, or Phone.")}
                               </div>
                             )}
                           </div>

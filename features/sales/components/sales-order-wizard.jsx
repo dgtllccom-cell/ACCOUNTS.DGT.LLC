@@ -686,6 +686,7 @@ export function SalesOrderWizard({ session }) {
   const [cityBranches, setCityBranches] = useState([]);
   const [scopeConfirmed, setScopeConfirmed] = useState(false);
   const [dbAccounts, setDbAccounts] = useState([]);
+  const [dbAccountsLoading, setDbAccountsLoading] = useState(true);
   const [customQtyNames, setCustomQtyNames] = useState([]);
 
   // Load Countries
@@ -1171,6 +1172,8 @@ export function SalesOrderWizard({ session }) {
         }
       } catch (err) {
         console.error("Failed to load accounts:", err);
+      } finally {
+        if (!cancelled) setDbAccountsLoading(false);
       }
     }
     async function initPorts() {
@@ -3745,7 +3748,9 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             })}
                             {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, customerSearch)).length === 0 && (
                               <div className="p-4 text-center text-muted-foreground text-xs italic">
-                                {customerSearch.length < 2
+                                {dbAccountsLoading
+                                  ? t(lang, "purchase.loading_accounts", "Loading accounts...")
+                                  : customerSearch.length < 2
                                   ? t(lang, "purchase.type_min_2_chars", "Type at least 2 characters to search accounts...")
                                   : t(lang, "purchase.no_matching_accounts", "No matching accounts found. Try searching by Code, Name, Currency, or Phone.")}
                               </div>
@@ -3823,7 +3828,9 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             })}
                             {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).length === 0 && (
                               <div className="p-4 text-center text-muted-foreground text-xs italic">
-                                {salesSearch.length < 2
+                                {dbAccountsLoading
+                                  ? t(lang, "purchase.loading_accounts", "Loading accounts...")
+                                  : salesSearch.length < 2
                                   ? t(lang, "purchase.type_min_2_chars", "Type at least 2 characters to search accounts...")
                                   : t(lang, "purchase.no_matching_accounts", "No matching accounts found. Try searching by Code, Name, Currency, or Phone.")}
                               </div>

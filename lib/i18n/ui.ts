@@ -2087,6 +2087,8 @@ export type UiKey =
   | "purchase.manual_ac_colon"
   | "purchase.curr_colon"
   | "purchase.no_matching_accounts"
+  | "purchase.type_min_2_chars"
+  | "purchase.loading_accounts"
   | "purchase.contract_no_label"
   | "purchase.contract_booking_date_label"
   | "purchase.invoice_payment_select_label"
@@ -14575,6 +14577,8 @@ const en: Dict = {
   "common.reset_clear_filters": "Reset & Clear Filters",
   "common.refresh_data": "Refresh Data",
   "report.print_pdf": "Print / PDF",
+  "purchase.type_min_2_chars": "Type at least 2 characters to search accounts...",
+  "purchase.loading_accounts": "Loading accounts...",
 };
 
 const ur: Dict = {
@@ -24722,6 +24726,8 @@ const ur: Dict = {
   "common.reset_clear_filters": "فلٹرز ری سیٹ اور صاف کریں",
   "common.refresh_data": "ڈیٹا ریفریش کریں",
   "report.print_pdf": "پرنٹ / پی ڈی ایف",
+  "purchase.type_min_2_chars": "اکاؤنٹس تلاش کرنے کے لیے کم از کم 2 حروف لکھیں...",
+  "purchase.loading_accounts": "اکاؤنٹس لوڈ ہو رہے ہیں...",
 };
 
 const ar: Dict = {
@@ -34871,6 +34877,8 @@ const ar: Dict = {
   "common.reset_clear_filters": "إعادة تعيين ومسح عوامل التصفية",
   "common.refresh_data": "تحديث البيانات",
   "report.print_pdf": "طباعة / PDF",
+  "purchase.type_min_2_chars": "اكتب حرفين على الأقل للبحث عن الحسابات...",
+  "purchase.loading_accounts": "جارٍ تحميل الحسابات...",
 };
 
 const fa: Dict = {
@@ -45019,6 +45027,8 @@ const fa: Dict = {
   "common.reset_clear_filters": "بازنشانی و پاک‌سازی فیلترها",
   "common.refresh_data": "به‌روزرسانی داده‌ها",
   "report.print_pdf": "چاپ / PDF",
+  "purchase.type_min_2_chars": "برای جستجوی حساب‌ها حداقل ۲ کاراکتر وارد کنید...",
+  "purchase.loading_accounts": "در حال بارگذاری حساب‌ها...",
 };
 
 const ps: Dict = {
@@ -55173,6 +55183,8 @@ const ps: Dict = {
   "common.reset_clear_filters": "فلټرونه بیا تنظیم او پاک کړئ",
   "common.refresh_data": "ډاټا تازه کړئ",
   "report.print_pdf": "چاپ / PDF",
+  "purchase.type_min_2_chars": "د حسابونو د لټون لپاره لږ تر لږه ۲ توري ولیکئ...",
+  "purchase.loading_accounts": "حسابونه پورته کیږي...",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
