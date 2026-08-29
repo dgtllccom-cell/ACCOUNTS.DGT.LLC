@@ -167,3 +167,28 @@ ssh root@72.60.209.121 "pm2 restart dgt-nextjs && pm2 logs dgt-nextjs --lines 60
 
 **A single explicit GO to run Step 4 (§4) against the live production database.**
 Everything up to that point is rehearsed and reversible. Nothing else is outstanding.
+
+---
+
+## 6. Step 5 — EXECUTED on live production (2026-08-29)
+
+| Step | Result |
+|---|---|
+| 5.1 Fresh backup + verify | ✅ `backups/PROD-pre-reconcile-2026-08-29T11-10-47-606Z` — 188 tables (all complete), 69,803 rows, 26.2 MB |
+| 5.2 Rollback anchor | ✅ tag `prod-rollback-2026-08-29-pre-hrm-docintel` → `ff7bffc`; prod code HEAD recorded; DB rollback = the backup + `scratch/*.sql` prior function bodies |
+| 5.3 Re-confirm prod baseline | ✅ 188 tables / 691 idx / 193 pol / 696 fk / 9 view / 26 migrations — **identical to the rehearsal baseline** |
+| 5.4 Apply 53 migrations (per-file txn) | ✅ **53/53 applied, 0 failures** (1 pre-satisfied recorded) — matched rehearsal exactly |
+| 5.5/6 Post-migration verification | ✅ 188→235 tables · 691→878 idx · 193→214 pol · 9→24 view · 110→138 fn · 26→80 migrations · `post_purchase_order_payment` + `recalc` FIXED · 12/12 HR-payroll RPCs · RLS 15/15 · **FK integrity 178 FKs, 0 orphans** |
+| 5.6 Pre-existing data integrity | ✅ **every business-table row count unchanged** (profiles 72, employees 5, customers 17, ledgers 11, roznamcha 2/4, purchase_orders 0, permissions 105, user_role_assignments 68 …). Only additive master-data seeds by migrations: `goods` +1 (Almond-Kernel reference item, `20261002`), `document_type_registry` 39, `hr_shifts` 2 — the 2 original `goods` rows byte-identical to the backup |
+| 5.8 Code sync + rebuild + pm2 restart | ✅ prod code `06812b74`, clean `npm run build`, pm2 `dgt-nextjs` online, 0 unstable restarts |
+| 5.9c Multi-currency accounting on LIVE prod | ✅ **12/12** — tagged test transaction: **USD 220,500.00 × 3.675 = AED 810,337.50**, DR=CR balanced, historical rate frozen, original USD amount + source reference + accounting trace intact, roznamcha lines labelled AED (USD supplier ledger **not** tagged USD), duplicate posting BLOCKED, exactly 1 booking entry — then **reversed + purged; production returned to EXACT pre-verification state** (no residue, no duplicate postings) |
+| 5.9 Server health | ✅ pm2 online · `https://api.dgt.llc/api/erp/locations/countries` 200 · **0 schema errors** in logs since restart |
+| 5.9 Frontend | ✅ `https://api.dgt.llc/login` renders · 5 languages (EN / UR / PS / AR / FA) present · **RTL verified** (English→Urdu switch, full RTL layout) · no console errors |
+| DALIAN SUNSHINE currency metadata | ⏸️ **not altered** — separate owner decision, not approved |
+
+**The production ERP is served at `https://api.dgt.llc`** (nginx → `127.0.0.1:3000`);
+`dgt.llc` / `www.dgt.llc` are a separate WordPress site.
+
+Authenticated UI walkthrough (dashboard screens for each role) was **not** performed
+on production — it needs an owner login; the screen code is byte-identical to DEV,
+where the full role / 5-language / RTL / responsive matrix was verified.
