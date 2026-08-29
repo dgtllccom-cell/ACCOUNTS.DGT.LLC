@@ -65,7 +65,10 @@ const migrations = [
   { name: "20260928_business_shipping_handovers", path: "supabase/migrations/20260928_business_shipping_handovers.sql" },
   { name: "20260929_document_intake_roznamcha", path: "supabase/migrations/20260929_document_intake_roznamcha.sql" },
   { name: "20260930_hr_leave_attendance_reconciliation", path: "supabase/migrations/20260930_hr_leave_attendance_reconciliation.sql" },
-  { name: "20261001_multicurrency_purchase_payment_fix", path: "supabase/migrations/20261001_multicurrency_purchase_payment_fix.sql" }
+  { name: "20261001_multicurrency_purchase_payment_fix", path: "supabase/migrations/20261001_multicurrency_purchase_payment_fix.sql" },
+  { name: "20261003_prod_reconcile_rls_hardening", path: "supabase/migrations/20261003_prod_reconcile_rls_hardening.sql" },
+  { name: "20261004_prod_reconcile_functions", path: "supabase/migrations/20261004_prod_reconcile_functions.sql" },
+  { name: "20261005_prod_reconcile_missing_objects", path: "supabase/migrations/20261005_prod_reconcile_missing_objects.sql" }
 ];
 
 const sql = postgres(env.DATABASE_URL, { max: 1, prepare: false, connect_timeout: 60 });
