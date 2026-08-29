@@ -4,7 +4,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { fetchWarehouses } from "@/features/warehouses/warehouse-api";
 import {
-  Package, Search, Coins, Loader2, Truck, Globe, Pencil, CheckCircle2, X, ChevronDown, Building2, FileText, Send, Eye, MoreVertical, Edit3, ArrowRight, ArrowLeft, Calendar, RefreshCw
+  Package, Search, Coins, Loader2, Truck, Globe, Pencil, CheckCircle2, X, ChevronDown, Building2, FileText, Send, Eye, MoreVertical, Edit3, ArrowRight, ArrowLeft, Calendar, RefreshCw, Printer
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -205,6 +205,40 @@ export function LocalGoodsReceivedView({
 
   const activeGoodsReceivedRows = localGoodsReceivedDashboard[goodsReceivedTab] || [];
 
+  // Print / PDF — a dedicated A4 report, never the dashboard DOM.
+  function handlePrintReport() {
+    const catLabel = localGoodsReceiptLabel(goodsReceivedTab, lang);
+    const filters: { label: string; value: string }[] = [
+      { label: t(lang, "purchase.lgr_label_warehouse", "Category"), value: catLabel },
+    ];
+    if (selectedCountryId) filters.push({ label: t(lang, "ledger.country", "Country"), value: countryOptions.find(c => c.id === selectedCountryId)?.name || selectedCountryId });
+    if (selectedBranchId) filters.push({ label: t(lang, "common.branch", "Branch"), value: filteredCountryBranches.find(b => b.id === selectedBranchId)?.name || selectedBranchId });
+    if (searchQuery) filters.push({ label: t(lang, "common.search", "Search"), value: searchQuery });
+    if (dateFrom) filters.push({ label: t(lang, "common.from", "From"), value: dateFrom });
+    if (dateTo) filters.push({ label: t(lang, "common.to", "To"), value: dateTo });
+    filters.push({ label: t(lang, "ledger.ledger_status", "Records"), value: String(activeGoodsReceivedRows.length) });
+
+    void import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => {
+      openGenericErpReport({
+        title: `${t(lang, "purchase.lgr_title", "Local Goods Received")} — ${catLabel}`,
+        lang,
+        orientation: "landscape",
+        columns: [
+          { key: (r: Record<string, unknown>) => (r.serialNo || r.serial_no || `#PO-${String(r.id || "").slice(0, 6)}`), label: t(lang, "cpb.po_no", "Purchase Bill") },
+          { key: (r: Record<string, unknown>) => (r.supplierName || r.supplier_name || ""), label: t(lang, "common.supplier", "Supplier") },
+          { key: (r: Record<string, unknown>) => (r.goodsName || r.goods_name || ""), label: t(lang, "purchase.lgr_general_goods", "Goods / Item") },
+          { key: (r: Record<string, unknown>) => `${r.quantity || r.qty || 0} ${r.unit || ""}`, label: t(lang, "plr.qty_name", "Quantity") },
+          { key: (r: Record<string, unknown>) => Number(r.totalAmount || r.total_amount || 0), label: t(lang, "cpb.purchase_amount", "Total Amount"), align: "right", format: "currency", currency: localCurrency },
+          { key: (r: Record<string, unknown>) => (r.truckNo || r.truck_no || r.shippingMode || r.shipping_mode || ""), label: t(lang, "purchase.lgr_truck_hash", "Shipment / Truck") },
+          { key: (r: Record<string, unknown>) => (r.status || r.receipt_status || ""), label: t(lang, "common.status", "Status"), format: "status" },
+        ],
+        rows: activeGoodsReceivedRows as unknown as Record<string, unknown>[],
+        filters,
+        companyInfo: { printedBy: session?.fullName || session?.email || "ERP User", currency: localCurrency },
+      });
+    });
+  }
+
   // Handle Goods Receipt submission
   async function saveLocalGoodsReceipt(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -320,6 +354,16 @@ export function LocalGoodsReceivedView({
               className="h-8 w-36 sm:w-44 pl-8 pr-2 text-[11px] font-medium bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-blue-500"
             />
           </div>
+
+          {/* 7. Print / PDF — dedicated report */}
+          <button
+            type="button"
+            onClick={handlePrintReport}
+            className="flex items-center gap-1 h-8 px-2.5 rounded-lg bg-[#0d2d6b] hover:bg-[#0a2456] text-white text-[11px] font-bold uppercase"
+          >
+            <Printer className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{t(lang, "report.print_pdf", "Print / PDF")}</span>
+          </button>
         </div>,
         actionsSlot
       )}
@@ -376,9 +420,9 @@ export function LocalGoodsReceivedView({
                 </p>
                 <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mt-1">
                   {searchQuery || dateFrom || dateTo || selectedCountryId || selectedBranchId ? (
-                    <span>No receiving records match your active search filters or date range. Try clearing your filters to view all pending bills.</span>
+                    <span>{t(lang, "purchase.lgr_empty_filtered", "No receiving records match your active search filters or date range. Try clearing your filters to view all pending bills.")}</span>
                   ) : (
-                    <span>No pending goods receipts found under the "{localGoodsReceiptLabel(goodsReceivedTab, lang)}" category.</span>
+                    <span>{t(lang, "purchase.lgr_empty_none", "No pending goods receipts found under the selected category.")}</span>
                   )}
                 </p>
               </div>
@@ -398,7 +442,7 @@ export function LocalGoodsReceivedView({
                   }}
                   className="h-8 text-[11px] font-bold border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
                 >
-                  Reset & Clear Filters
+                  {t(lang, "common.reset_clear_filters", "Reset & Clear Filters")}
                 </Button>
                 <Button
                   type="button"
@@ -407,7 +451,7 @@ export function LocalGoodsReceivedView({
                   onClick={() => void loadHistory()}
                   className="h-8 text-[11px] font-bold text-slate-600 dark:text-slate-300"
                 >
-                  <RefreshCw className="h-3.5 w-3.5 mr-1" /> Refresh Data
+                  <RefreshCw className="h-3.5 w-3.5 mr-1" /> {t(lang, "common.refresh_data", "Refresh Data")}
                 </Button>
               </div>
             </div>

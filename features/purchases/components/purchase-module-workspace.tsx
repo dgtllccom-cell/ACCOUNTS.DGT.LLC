@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { openFinalizedPOPrintReport } from "@/lib/reports/open-finalized-po-print-report";
 import {
-  ArrowLeft,
   CalendarDays,
   Download,
   Eye,
@@ -247,6 +247,8 @@ export function PurchaseModuleWorkspace({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reportNow, setReportNow] = useState<{ date: string; time: string } | null>(null);
+  const [titleSlot, setTitleSlot] = useState<HTMLElement | null>(null);
+  useEffect(() => { setTitleSlot(document.getElementById("erp-page-title-slot")); }, []);
 
   async function loadOrders() {
     setLoading(true);
@@ -339,20 +341,16 @@ export function PurchaseModuleWorkspace({
 
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className="w-full space-y-3 px-2 py-2 sm:px-4">
+      {titleSlot && createPortal(
+        <div className="flex min-w-0 items-center gap-2">
+          <h1 className="truncate text-sm font-black text-foreground">{title}</h1>
+          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-black uppercase text-primary">{t(lang, "purchase.pmw_spreadsheet_dashboard", "Spreadsheet Dashboard")}</span>
+        </div>,
+        titleSlot
+      )}
       <section className="rounded-xl border border-border bg-card px-3 py-2 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex min-w-0 items-center gap-2">
-            <Button type="button" variant="outline" size="sm" className="h-8 px-2" onClick={() => window.history.back()}>
-              <ArrowLeft className="h-3.5 w-3.5" /> {t(lang, "common.back", "Back")}
-            </Button>
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="truncate text-sm font-black text-foreground sm:text-base">{title}</h1>
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-black uppercase text-primary">{t(lang, "purchase.pmw_spreadsheet_dashboard", "Spreadsheet Dashboard")}</span>
-              </div>
-              <p className="truncate text-[11px] text-muted-foreground">{description}</p>
-            </div>
-          </div>
+          <p className="truncate text-[11px] text-muted-foreground">{description}</p>
           <div className="flex flex-wrap items-center gap-1.5">
             <div className="relative">
               <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />

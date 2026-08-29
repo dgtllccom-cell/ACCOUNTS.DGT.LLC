@@ -111,8 +111,20 @@ export function openA4ReportWindow(input: {
 
   let contentHtml = "";
 
+  // Ignore configuration-placeholder strings that occasionally get typed into the
+  // company/branch record so they never show up in a printed document.
+  const clean = (v: unknown): string => {
+    const s = String(v ?? "").trim();
+    if (!s || /^(configured\b|n\/?a$|none$|null$|undefined$|-+$|tbd$|todo$|placeholder\b|not\s+set$|not\s+configured$)/i.test(s)) return "";
+    return s;
+  };
+
   if (input.branchData) {
-    const b = input.branchData;
+    const rawB = input.branchData;
+    const b: typeof rawB = { ...rawB };
+    for (const k of ["ownerPhone", "ownerEmail", "ownerAltEmail", "ownerWebsite", "companyPhone", "companyEmail", "companyWebsite", "companyOfficeAddress"] as const) {
+      if (k in b) (b as Record<string, unknown>)[k] = clean((b as Record<string, unknown>)[k]) || undefined;
+    }
     const permissionsMap = [
       { key: "dashboard.access", label: "Dashboard Access" },
       { key: "branch.new_entry", label: "Branch Entry (New)" },

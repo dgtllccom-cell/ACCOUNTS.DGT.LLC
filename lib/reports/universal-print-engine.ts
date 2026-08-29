@@ -182,8 +182,15 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
   const resolvedCountry = ledgerSummary?.countryName || scope.country || "Global Scope";
   const resolvedBranch = ledgerSummary?.cityBranch || ledgerSummary?.mainBranch || scope.branch || "Main Branch";
   const resolvedTaxNo = ledgerSummary?.taxNo || (companyInfo as any).taxNo || generalBrand.taxNo || (resolvedCountry === "Pakistan" ? "NTN: Registered" : resolvedCountry === "United Arab Emirates" ? "TRN: 100458923400003" : "");
-  const resolvedAddress = ledgerSummary?.address || companyInfo.address || generalBrand.address || `${resolvedBranch}, ${resolvedCountry}`;
-  const resolvedContact = companyInfo.email || (companyInfo as any).phone || generalBrand.contact || "accounts@dgt.llc";
+  // Ignore configuration-placeholder strings ("Configured contact", "N/A", "None", "-", …)
+  // that occasionally get typed into the company/brand record.
+  const realOrEmpty = (v: unknown): string => {
+    const s = String(v ?? "").trim();
+    if (!s || /^(configured\b|n\/?a$|none$|null$|undefined$|-+$|tbd$|todo$|placeholder\b|not\s+set$|not\s+configured$)/i.test(s)) return "";
+    return s;
+  };
+  const resolvedAddress = realOrEmpty(ledgerSummary?.address) || realOrEmpty(companyInfo.address) || realOrEmpty(generalBrand.address) || `${resolvedBranch}, ${resolvedCountry}`;
+  const resolvedContact = realOrEmpty(companyInfo.email) || realOrEmpty((companyInfo as any).phone) || realOrEmpty(generalBrand.contact) || "accounts@dgt.llc";
 
   const brandName = resolvedCompanyName || (resolvedCountry !== "Global Scope" ? `${resolvedCountry.toUpperCase()} OPERATING ENTITY` : "ERP ACCOUNTING STATEMENT");
   const brandTagline = generalBrand.tagline || `${resolvedBranch.toUpperCase()} NETWORK • ${resolvedCountry.toUpperCase()}`;

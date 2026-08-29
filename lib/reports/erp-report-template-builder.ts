@@ -72,12 +72,22 @@ export function generateReportHtml(input: {
   const { title, orientation, companyInfo = {}, filters = [], kpis = [], mainTableHtml, footerNotesHtml, legendHtml, lang = "en", csvData = "" } = input;
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
 
-  const compName = companyInfo.name || "DIGITAL DOCK ERP";
-  const compTagline = companyInfo.tagline || "ERP Reporting System";
-  const compAddress = companyInfo.address || "Main Commercial Hub, Business District";
-  const compPhone = companyInfo.phone || "+971 4 000 0000 / +92 42 000 0000";
-  const compEmail = companyInfo.email || "info@dgt.llc";
-  const compWebsite = companyInfo.website || "www.dgt.llc";
+  // Treat configuration placeholder strings ("Configured contact", "Configured email",
+  // "N/A", "None", "-", "TBD", "TODO") that occasionally get typed into the company
+  // record as unset, so they never surface in a customer-facing report.
+  const realOrEmpty = (v: unknown): string => {
+    const s = String(v ?? "").trim();
+    if (!s) return "";
+    if (/^(configured\b|n\/?a$|none$|null$|undefined$|-+$|tbd$|todo$|placeholder\b|not\s+set$|not\s+configured$)/i.test(s)) return "";
+    return s;
+  };
+
+  const compName = realOrEmpty(companyInfo.name) || "DIGITAL DOCK ERP";
+  const compTagline = realOrEmpty(companyInfo.tagline) || "ERP Reporting System";
+  const compAddress = realOrEmpty(companyInfo.address) || "Main Commercial Hub, Business District";
+  const compPhone = realOrEmpty(companyInfo.phone) || "+971 4 000 0000 / +92 42 000 0000";
+  const compEmail = realOrEmpty(companyInfo.email) || "info@dgt.llc";
+  const compWebsite = realOrEmpty(companyInfo.website) || "www.dgt.llc";
   const printedBy = companyInfo.printedBy || "ERP User";
   const printedDate = companyInfo.printedDate || new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
   const financialYear = companyInfo.financialYear || "Current Financial Year";

@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft,
   CalendarDays,
   Download,
   Eye,
@@ -312,9 +311,6 @@ export function SalesModuleWorkspace({
       <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-white rounded-3xl border border-slate-800 p-5 sm:p-7 shadow-lg">
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
-            <Button type="button" variant="outline" size="sm" className="h-9 px-3 border-slate-700 bg-slate-800 text-white hover:bg-slate-700 rounded-xl font-bold transition" onClick={() => window.history.back()}>
-              <ArrowLeft className="h-4 w-4 mr-1" /> {t(lang, "common.back", "Back")}
-            </Button>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="truncate text-xl sm:text-2xl md:text-3xl font-black text-white">{title}</h1>

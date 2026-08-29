@@ -3557,6 +3557,18 @@ export type UiKey =
   | "ledger.orlv_call_word" | "ledger.orlv_subtitle"
   | "ledger.nld_ledger_statement" | "ledger.nld_no_entries" | "ledger.nld_no_entries_sub"
   | "ledger.nld_search_account_ph" | "ledger.nld_login_date" | "ledger.nld_login_time" | "nav.bank_management" | "report.active_types" | "report.activity_history" | "report.all_categories" | "report.balance_pkr" | "report.bill_entries_summary" | "report.branch" | "report.branch_name" | "report.branch_summary" | "report.cleared_entries" | "report.comprehensive_daily" | "report.consolidated" | "report.country" | "report.country_name" | "report.country_summary" | "report.current_filter" | "report.dc_cartons" | "report.edit_history" | "report.explore" | "report.filter_all_projects" | "report.filter_project" | "report.global_financial_summary" | "report.hide_details" | "report.hide_report_details" | "report.invoice_payment_pkr" | "report.net_weight_kg" | "report.no_history" | "report.no_of_bills" | "report.performance_overview" | "report.purchase_payment_pkr" | "report.record_details" | "report.records_found" | "report.remaining_entries" | "report.remaining_payment_pkr" | "report.role" | "report.salesman_name" | "report.salesman_summary" | "report.salesperson" | "report.scope_city_branch" | "report.scope_entire_country" | "report.scope_main_branch" | "report.show_details" | "report.show_report_details" | "report.system_status" | "report.total_bill_entries" | "report.total_global_entries" | "report.total_purchase_pkr" | "report.total_transferred_pkr" | "roz.edit_payment_entry" | "roz.journal_roznamcha_entry_table"
+  | "common.from"
+  | "common.to"
+  | "purchase.contract_no"
+  | "report.total_purchase"
+  | "report.purchase_payment"
+  | "report.invoice_payment"
+  | "report.remaining_payment"
+  | "purchase.lgr_empty_filtered"
+  | "purchase.lgr_empty_none"
+  | "common.reset_clear_filters"
+  | "common.refresh_data"
+  | "report.print_pdf"
   | "roz.cef_customer_no" | "roz.cef_mobile_ph" | "roz.cef_attach" | "roz.cef_select_bank"
   | "roz.cef_method_label" | "roz.cef_select_method" | "roz.cef_new_method_option" | "roz.cef_ref_no"
   | "roz.cef_upload_label" | "roz.cef_multiply_opt" | "roz.cef_divide_opt" | "roz.cef_global_label"
@@ -14551,6 +14563,18 @@ const en: Dict = {
   "gmr.status_inactive": "Inactive",
   "pterv2.record_not_found_desc": "The requested purchase transfer verification record could not be located or has been deleted. Please select a valid record from the purchase registry.",
   "pterv2.breadcrumb": "Dashboard > Purchase > Transfer Verification",
+  "common.from": "From",
+  "common.to": "To",
+  "purchase.contract_no": "Contract No",
+  "report.total_purchase": "Total Purchase",
+  "report.purchase_payment": "Purchase Payment",
+  "report.invoice_payment": "Invoice Payment",
+  "report.remaining_payment": "Remaining Payment",
+  "purchase.lgr_empty_filtered": "No receiving records match your active search filters or date range. Try clearing your filters to view all pending bills.",
+  "purchase.lgr_empty_none": "No pending goods receipts found under the selected category.",
+  "common.reset_clear_filters": "Reset & Clear Filters",
+  "common.refresh_data": "Refresh Data",
+  "report.print_pdf": "Print / PDF",
 };
 
 const ur: Dict = {
@@ -24686,6 +24710,18 @@ const ur: Dict = {
   "gmr.status_inactive": "غیر فعال",
   "pterv2.record_not_found_desc": "درخواست کردہ پرچیز ٹرانسفر تصدیقی ریکارڈ نہیں ملا یا حذف کر دیا گیا ہے۔ براہ کرم پرچیز رجسٹری سے ایک درست ریکارڈ منتخب کریں۔",
   "pterv2.breadcrumb": "ڈیش بورڈ > پرچیز > ٹرانسفر تصدیق",
+  "common.from": "منجانب",
+  "common.to": "بنام",
+  "purchase.contract_no": "کنٹریکٹ نمبر",
+  "report.total_purchase": "کل خریداری",
+  "report.purchase_payment": "خریداری ادائیگی",
+  "report.invoice_payment": "انوائس ادائیگی",
+  "report.remaining_payment": "باقی ادائیگی",
+  "purchase.lgr_empty_filtered": "کوئی وصولی ریکارڈ آپ کے فعال سرچ فلٹرز یا تاریخ کی حد سے میل نہیں کھاتا۔ تمام زیر التوا بلوں کو دیکھنے کے لیے اپنے فلٹرز صاف کرنے کی کوشش کریں۔",
+  "purchase.lgr_empty_none": "منتخب زمرے کے تحت کوئی زیر التوا اشیاء کی رسیدیں نہیں ملیں۔",
+  "common.reset_clear_filters": "فلٹرز ری سیٹ اور صاف کریں",
+  "common.refresh_data": "ڈیٹا ریفریش کریں",
+  "report.print_pdf": "پرنٹ / پی ڈی ایف",
 };
 
 const ar: Dict = {
@@ -34823,6 +34859,18 @@ const ar: Dict = {
   "gmr.status_inactive": "غير نشط",
   "pterv2.record_not_found_desc": "تعذّر العثور على سجل التحقق من تحويل المشتريات المطلوب أو تم حذفه. يرجى اختيار سجل صالح من سجل المشتريات.",
   "pterv2.breadcrumb": "لوحة التحكم > المشتريات > التحقق من التحويل",
+  "common.from": "من",
+  "common.to": "إلى",
+  "purchase.contract_no": "رقم العقد",
+  "report.total_purchase": "إجمالي المشتريات",
+  "report.purchase_payment": "دفعة المشتريات",
+  "report.invoice_payment": "دفعة الفاتورة",
+  "report.remaining_payment": "الدفعة المتبقية",
+  "purchase.lgr_empty_filtered": "لا توجد سجلات استلام تطابق عوامل تصفية البحث النشطة أو النطاق الزمني. حاول مسح عوامل التصفية لعرض جميع الفواتير المعلقة.",
+  "purchase.lgr_empty_none": "لم يتم العثور على إيصالات بضائع معلقة ضمن الفئة المحددة.",
+  "common.reset_clear_filters": "إعادة تعيين ومسح عوامل التصفية",
+  "common.refresh_data": "تحديث البيانات",
+  "report.print_pdf": "طباعة / PDF",
 };
 
 const fa: Dict = {
@@ -44959,6 +45007,18 @@ const fa: Dict = {
   "gmr.status_inactive": "غیرفعال",
   "pterv2.record_not_found_desc": "رکورد تأیید انتقال خرید درخواست‌شده یافت نشد یا حذف شده است. لطفاً یک رکورد معتبر از دفتر خرید انتخاب کنید.",
   "pterv2.breadcrumb": "داشبورد > خرید > تأیید انتقال",
+  "common.from": "از",
+  "common.to": "تا",
+  "purchase.contract_no": "شماره قرارداد",
+  "report.total_purchase": "مجموع خرید",
+  "report.purchase_payment": "پرداخت خرید",
+  "report.invoice_payment": "پرداخت فاکتور",
+  "report.remaining_payment": "پرداخت باقی‌مانده",
+  "purchase.lgr_empty_filtered": "هیچ رکورد دریافتی با فیلترهای جستجوی فعال یا بازه تاریخ شما مطابقت ندارد. برای مشاهده همه صورتحساب‌های در انتظار، فیلترها را پاک کنید.",
+  "purchase.lgr_empty_none": "هیچ رسید کالای در انتظاری در دسته انتخاب‌شده یافت نشد.",
+  "common.reset_clear_filters": "بازنشانی و پاک‌سازی فیلترها",
+  "common.refresh_data": "به‌روزرسانی داده‌ها",
+  "report.print_pdf": "چاپ / PDF",
 };
 
 const ps: Dict = {
@@ -55101,6 +55161,18 @@ const ps: Dict = {
   "gmr.status_inactive": "غیرفعال",
   "pterv2.record_not_found_desc": "غوښتل شوی د پیرود لیږد تایید ریکارډ ونه موندل شو یا ړنګ شوی دی. مهرباني وکړئ د پیرود له راجستر څخه یو باوري ریکارډ وټاکئ.",
   "pterv2.breadcrumb": "ډشبورډ > پیرود > د لیږد تایید",
+  "common.from": "له",
+  "common.to": "ته",
+  "purchase.contract_no": "د تړون شمېره",
+  "report.total_purchase": "ټول پیرود",
+  "report.purchase_payment": "د پیرود تادیه",
+  "report.invoice_payment": "د انوائس تادیه",
+  "report.remaining_payment": "پاتې تادیه",
+  "purchase.lgr_empty_filtered": "هیڅ د ترلاسه کولو ریکارډ ستاسو د فعالو لټون فلټرونو یا نېټې له سلسلې سره سمون نه خوري. د ټولو پاتې بیلونو لیدو لپاره خپل فلټرونه پاک کړئ.",
+  "purchase.lgr_empty_none": "د ټاکل شوې کټګورۍ لاندې د پاتې توکو هیڅ رسیدونه ونه موندل شول.",
+  "common.reset_clear_filters": "فلټرونه بیا تنظیم او پاک کړئ",
+  "common.refresh_data": "ډاټا تازه کړئ",
+  "report.print_pdf": "چاپ / PDF",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

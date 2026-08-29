@@ -172,8 +172,8 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
           <ArrowLeft className="h-3 w-3" aria-hidden />
           {t(lang, "pa.back", "Back")}
         </Button>
+        <style>{`#erp-page-title-slot:not(:empty) ~ .default-title { display: none !important; }`}</style>
         <div id="erp-page-title-slot" className="min-w-0 empty:hidden" />
-        <style>{`#erp-page-title-slot:not(:empty) + .default-title { display: none; }`}</style>
         <div className="min-w-0 default-title">
           <h1 className="truncate text-xs font-black tracking-tight text-slate-900 dark:text-slate-100 sm:text-sm">{title}</h1>
           <p className="hidden text-[9.5px] font-medium text-slate-400 sm:block">{subtitle}</p>

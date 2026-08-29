@@ -116,7 +116,10 @@ export function PdfPreviewModal() {
     window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
   };
 
-  // Inject dynamic styles into the iframe for orientation and paper size
+  // Inject dynamic styles into the iframe for orientation and paper size.
+  // The report HTML ships its own screen toolbar (.no-print-toolbar) for the
+  // standalone popup-window fallback; inside this modal it duplicates the
+  // toolbar above, so hide it here.
   const injectedHtml = `
     ${htmlContent}
     <style>
@@ -128,6 +131,10 @@ export function PdfPreviewModal() {
           margin: 0;
           padding: 0;
         }
+      }
+      @media screen {
+        .no-print-toolbar { display: none !important; }
+        .wrap, body { padding-top: 0 !important; }
       }
     </style>
   `;

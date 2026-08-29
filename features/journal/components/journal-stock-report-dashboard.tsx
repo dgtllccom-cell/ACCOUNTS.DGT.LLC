@@ -372,6 +372,58 @@ export default function JournalStockReportDashboard({
     link.click();
   };
 
+  // Print / PDF — a dedicated A4 report (NOT the dashboard DOM). Screen filters,
+  // cards and controls never reach the printed document.
+  const handlePrintReport = () => {
+    const levelLabel = activeTab === "country"
+      ? t(lang, "report.country_summary", "Country Summary")
+      : activeTab === "branch"
+      ? t(lang, "report.branch_summary", "Branch Summary")
+      : t(lang, "report.salesman_summary", "Salesman Summary");
+    const filters: { label: string; value: string }[] = [];
+    if (dateFrom) filters.push({ label: t(lang, "common.from", "From"), value: dateFrom });
+    if (dateTo) filters.push({ label: t(lang, "common.to", "To"), value: dateTo });
+    if (selectedCountryId && selectedCountryId !== "all") filters.push({ label: t(lang, "ledger.country", "Country"), value: countries.find(c => c.id === selectedCountryId)?.name || selectedCountryId });
+    if (selectedBranchId && selectedBranchId !== "all") filters.push({ label: t(lang, "common.branch", "Branch"), value: branches.find(b => b.id === selectedBranchId)?.name || selectedBranchId });
+    if (selectedSalesmanId && selectedSalesmanId !== "all") filters.push({ label: t(lang, "report.salesman_summary", "Salesman"), value: salesmen.find(s => s.id === selectedSalesmanId)?.name || selectedSalesmanId });
+    filters.push({ label: t(lang, "ledger.ledger_status", "Records"), value: String(records.length) });
+
+    void import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => {
+      openGenericErpReport({
+        title: `${levelLabel} & Stock Report`,
+        lang,
+        orientation: "landscape",
+        columns: [
+          { key: "date", label: t(lang, "common.date", "Date"), format: "date" },
+          { key: "purchase_order_no", label: t(lang, "purchase.pmw_col_po_number", "PO / Bill No") },
+          { key: "purchase_contract_no", label: t(lang, "purchase.contract_no", "Contract No") },
+          { key: "salesman", label: t(lang, "report.salesman_summary", "Salesman") },
+          { key: "country", label: t(lang, "ledger.country", "Country") },
+          { key: "branch", label: t(lang, "common.branch", "Branch") },
+          { key: "goodsName", label: t(lang, "purchase.pmw_col_goods", "Goods") },
+          { key: "supplier", label: t(lang, "common.supplier", "Supplier") },
+          { key: "netWeight", label: t(lang, "purchase.pmw_col_net_weight", "Net Weight"), align: "right", format: "number" },
+          { key: "dc", label: t(lang, "report.dc_cartons", "DC (Cartons)"), align: "right", format: "number" },
+          { key: "purchaseAmount", label: t(lang, "report.total_purchase", "Total Purchase"), align: "right", format: "currency" },
+          { key: "purchasePayment", label: t(lang, "report.purchase_payment", "Purchase Payment"), align: "right", format: "currency" },
+          { key: "invoicePayment", label: t(lang, "report.invoice_payment", "Invoice Payment"), align: "right", format: "currency" },
+          { key: "remainingPayment", label: t(lang, "report.remaining_payment", "Remaining Payment"), align: "right", format: "currency" },
+        ],
+        rows: records as unknown as Record<string, unknown>[],
+        filters,
+        totalsRow: {
+          netWeight: records.reduce((s, r) => s + (Number(r.netWeight) || 0), 0),
+          dc: records.reduce((s, r) => s + (Number(r.dc) || 0), 0),
+          purchaseAmount: records.reduce((s, r) => s + (Number(r.purchaseAmount) || 0), 0),
+          purchasePayment: records.reduce((s, r) => s + (Number(r.purchasePayment) || 0), 0),
+          invoicePayment: records.reduce((s, r) => s + (Number(r.invoicePayment) || 0), 0),
+          remainingPayment: records.reduce((s, r) => s + (Number(r.remainingPayment) || 0), 0),
+        },
+        companyInfo: { printedBy: session?.fullName || session?.email || "ERP User" },
+      });
+    });
+  };
+
   const [titleSlot, setTitleSlot] = useState<HTMLElement | null>(null);
   const [actionsSlot, setActionsSlot] = useState<HTMLElement | null>(null);
   const [viewDropdownOpen, setViewDropdownOpen] = useState(false);
@@ -522,7 +574,7 @@ export default function JournalStockReportDashboard({
           </button>
 
           <button
-            onClick={() => window.print()}
+            onClick={handlePrintReport}
             className="flex items-center gap-1 px-2.5 py-1 bg-[#0d2d6b] hover:bg-[#0a2456] text-white rounded-lg text-xs font-bold uppercase transition-all duration-150"
           >
             <Printer className="w-3.5 h-3.5" />
