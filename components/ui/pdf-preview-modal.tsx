@@ -44,6 +44,13 @@ export function PdfPreviewModal() {
       const sheetCount = (htmlContent.match(/class="sheet"/g) || []).length;
       setPages(Array.from({ length: Math.max(1, sheetCount) }, (_, i) => i + 1));
       setCurrentPage(1);
+      // Honour the orientation the report builder chose: many wide registers ship
+      // `@page { size: A4 landscape }`. Opening them in the modal's default
+      // portrait crushes 20+ columns into per-character wrapping. Detect and
+      // default to the document's own orientation (user can still toggle).
+      const wantsLandscape = /@page[^}]*\blandscape\b/i.test(htmlContent)
+        || /size\s*:\s*landscape/i.test(htmlContent);
+      setOrientation(wantsLandscape ? "landscape" : "portrait");
     }
   }, [isOpen, htmlContent]);
 
