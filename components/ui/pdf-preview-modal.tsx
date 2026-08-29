@@ -138,8 +138,19 @@ export function PdfPreviewModal() {
   // The report HTML ships its own screen toolbar (.no-print-toolbar) for the
   // standalone popup-window fallback; inside this modal it duplicates the
   // toolbar above, so hide it here.
+  //
+  // Report builders historically embed `<script>…window.print()…</script>`
+  // (gated on an `autoPrint` flag) for the legacy popup-window path. Inside this
+  // preview iframe that script fires an *immediate* native print dialog on load,
+  // bypassing the preview and freezing the renderer. Strip any auto-print
+  // script — the user drives Print / Save-as-PDF from the toolbar above.
+  const sanitizedHtml = (htmlContent || "").replace(
+    /<script\b[^>]*>[\s\S]*?<\/script>/gi,
+    (block) => (/window\.print\s*\(|__ERP_A4_AUTOPRINT__/.test(block) ? "" : block)
+  );
+
   const injectedHtml = `
-    ${htmlContent}
+    ${sanitizedHtml}
     <style>
       @page {
         size: ${paperSize} ${orientation} !important;

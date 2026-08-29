@@ -727,18 +727,14 @@ export function openA4ReportWindow(input: {
         ${contentHtml}
       </div>
     </div>
-    <script>
-      window.__ERP_A4_AUTOPRINT__ = ${input.autoPrint ? "true" : "false"};
-      window.addEventListener('load', () => {
-        if (window.__ERP_A4_AUTOPRINT__) {
-          setTimeout(() => window.print(), 100);
-        }
-      }, { once: true });
-    </script>
   </body>
 </html>`;
 
-  // Use the new PDF Print Preview Modal instead of window.open
+  // Render into the shared in-app PdfPreviewModal. The user drives Print /
+  // Save-as-PDF from the modal toolbar — an embedded `window.print()` here would
+  // fire *inside the preview iframe* and freeze the renderer, so `autoPrint` is
+  // intentionally a no-op now that this never opens a standalone window.
+  void input.autoPrint;
   printStore.openPrint(html, input.title);
 }
 
