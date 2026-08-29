@@ -1,0 +1,10 @@
+import fs from "node:fs"; import postgres from "postgres";
+const PROD = fs.readFileSync("scripts/backup-vps-db.mjs","utf8").match(/postgresql:\/\/[^\s'"]+/)[0];
+const sql = postgres(PROD,{max:1,prepare:false,ssl:{rejectUnauthorized:false}});
+const n = (await sql`SELECT count(*)::int c FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'`)[0].c;
+const m = (await sql`SELECT count(*)::int c FROM erp_schema_migrations WHERE status='applied'`)[0].c;
+const cpb = (await sql`SELECT to_regclass('public.clearing_payment_bills') r`)[0].r;
+const fn = (await sql`SELECT pg_get_functiondef(oid) d FROM pg_proc WHERE proname='post_purchase_order_payment'`)[0]?.d || "";
+console.log(`PROD now: ${n} tables, ${m} migrations applied, clearing_payment_bills=${cpb}, mc-fix-present=${/v_base_currency/.test(fn)}`);
+console.log("(expected: 188 tables, 26 migrations, null, false — i.e. UNCHANGED)");
+await sql.end();

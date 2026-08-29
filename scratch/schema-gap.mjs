@@ -1,0 +1,13 @@
+import fs from "node:fs"; import postgres from "postgres";
+const PROD = fs.readFileSync("scripts/backup-vps-db.mjs","utf8").match(/postgresql:\/\/[^\s'"]+/)[0];
+const DEV = fs.readFileSync(".env.local","utf8").split(/\r?\n/).find(l=>l.startsWith("DATABASE_URL=")).slice(13).replace(/^"|"$/g,"");
+const p = postgres(PROD,{max:1,prepare:false,ssl:{rejectUnauthorized:false}});
+const d = postgres(DEV,{max:1,prepare:false});
+const pt = new Set((await p`SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'`).map(r=>r.table_name));
+const dt = new Set((await d`SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'`).map(r=>r.table_name));
+const onlyDev = [...dt].filter(t=>!pt.has(t)).sort();
+const onlyProd = [...pt].filter(t=>!dt.has(t)).sort();
+console.log(`PROD tables: ${pt.size} | DEV tables: ${dt.size}`);
+console.log(`\nTables on DEV but NOT on PROD (${onlyDev.length}):\n  ` + onlyDev.join("\n  "));
+console.log(`\nTables on PROD but NOT on DEV (${onlyProd.length}):\n  ` + onlyProd.join("\n  "));
+await p.end(); await d.end();
