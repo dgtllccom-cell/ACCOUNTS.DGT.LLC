@@ -98,8 +98,11 @@ export class HrGratuityService {
 
       let rate = 1;
       if (currency !== "USD") {
-        const rr = await sql`SELECT selling_rate FROM public.daily_usd_rates WHERE deleted_at IS NULL AND (country_id = ${e.country_id} OR ${e.country_id} IS NULL) ORDER BY rate_date DESC LIMIT 1`;
-        rate = Number(rr?.[0]?.selling_rate || 0) || 1;
+        const rr = e.country_id
+          ? await sql`SELECT selling_rate FROM public.daily_usd_rates WHERE deleted_at IS NULL AND country_id = ${e.country_id} ORDER BY rate_date DESC LIMIT 1`
+          : [];
+        const rrAny = rr?.length ? rr : await sql`SELECT selling_rate FROM public.daily_usd_rates WHERE deleted_at IS NULL ORDER BY rate_date DESC LIMIT 1`;
+        rate = Number(rrAny?.[0]?.selling_rate || 0) || 1;
       }
       const usd = currency === "USD" ? net : Math.round((net / rate) * 100) / 100;
 
