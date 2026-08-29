@@ -428,6 +428,28 @@ export class DocumentIntakeService {
 
       const prepared = buildPreparedDraft(targetModule, fields as any[], lines as any[]);
 
+      // The references the user typed at intake are authoritative — seed them
+      // into the draft payload for any target key the extractor did not fill.
+      const seedRef = (payloadKey: string, value: string | null) => {
+        if (value && (prepared.payload[payloadKey] === undefined || prepared.payload[payloadKey] === null || prepared.payload[payloadKey] === "")) {
+          prepared.payload[payloadKey] = value;
+        }
+      };
+      if (targetModule === "purchase_orders") {
+        seedRef("purchaseContractNo", job.contract_reference);
+        seedRef("billNo", job.document_reference);
+      } else if (targetModule === "sales_orders") {
+        seedRef("salesContractNo", job.contract_reference);
+        seedRef("invoiceNo", job.document_reference);
+      } else if (targetModule === "shipping_bl_records") {
+        seedRef("blNumber", job.bl_reference);
+      } else if (targetModule === "purchase_loading_records") {
+        seedRef("purchaseContractNo", job.contract_reference);
+      }
+      if (job.container_reference && !prepared.payload.containerNumbers) {
+        prepared.payload.containerNumbers = job.container_reference;
+      }
+
       // supersede any earlier live draft for this job
       await sql`UPDATE public.document_intake_drafts SET status = 'superseded', updated_at = now()
         WHERE job_id = ${jobId} AND status = 'prepared' AND deleted_at IS NULL`;
