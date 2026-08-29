@@ -20,6 +20,8 @@ import { ExpensesInvoicePrint } from "@/components/reports/expenses-invoice-prin
 import { ExpensesInvoicePrintStyle2 } from "@/components/reports/expenses-invoice-print-style2";
 import { apiGet, apiPost } from "@/lib/api/client";
 import { Th } from "@/components/ui/translated-th";
+import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
+import { Sparkles } from "lucide-react";
 
 type TaxCodeRow = {
   id: string;
@@ -214,6 +216,13 @@ export function ExpensesBillEntryForm({
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
 
+  // AI Document Intake — reviewed draft bridge. Prefills the bill header + first
+  // row-entry line; the human locks the header, reviews the line and posts the
+  // transfer through the existing expenses/transfer route. Draft is consumed
+  // (audit) only after the real bill row is saved.
+  const intake = useIntakeDraft("expenses");
+  const intakePrefilled = useRef(false);
+
   const [viewMode, setViewMode] = useState<"list" | "form">("list");
   const [portalNode, setPortalNode] = useState<HTMLElement | null>(null);
 
@@ -258,6 +267,22 @@ export function ExpensesBillEntryForm({
   useEffect(() => {
     setPortalNode(document.getElementById("erp-page-actions-slot"));
   }, []);
+
+  // Overlay the AI reviewed draft once: open the form, prefill header ref/date +
+  // seed the first line's details / amount / currency / FX / tax.
+  useEffect(() => {
+    if (intakePrefilled.current || !intake.draft) return;
+    intakePrefilled.current = true;
+    const p = intake.payload as Record<string, string | number | null>;
+    setViewMode("form");
+    if (p.billDate) setBillDate(String(p.billDate).slice(0, 10));
+    if (p.referenceNo) { setReferenceNo(String(p.referenceNo)); setBillMode("attached"); }
+    if (p.details) setDetails(String(p.details));
+    if (p.amount != null && p.amount !== "") { setQty(1); setUnitPrice(Number(p.amount)); }
+    if (p.currency) setCurrency(String(p.currency).toUpperCase().slice(0, 3));
+    if (p.exchangeRate != null && p.exchangeRate !== "") setExchangeRate(Number(p.exchangeRate));
+    if (p.taxAmt != null && p.taxAmt !== "") { setTaxOn(true); }
+  }, [intake.draft]);
 
   // Header State
   const [headerLocked, setHeaderLocked] = useState(false);
@@ -801,7 +826,8 @@ export function ExpensesBillEntryForm({
           grandAmount: r.grandAmount
         }))
       };
-      const res = await apiPost("/api/erp/expenses", payload);
+      const res = await apiPost<any>("/api/erp/expenses", payload);
+      if (res?.billId && intake.draft) await intake.consume(String(res.billId));
       alert(editingBillId ? "Expenses Bill updated successfully!" : "Expenses Bill saved successfully!");
       setRows([]);
       setBillTitle("");
@@ -918,6 +944,15 @@ export function ExpensesBillEntryForm({
       )}
 
       <div className={viewMode === "list" ? "hidden" : "space-y-4 mb-8"}>
+          {intake.draft ? (
+            <div className="flex items-start gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-xs text-violet-900">
+              <Sparkles className="h-4 w-4 mt-0.5 shrink-0 text-violet-600" />
+              <span>
+                {tt("dintake.wizard_prefilled", "Fields pre-filled from an AI-reviewed document draft")} — {intake.draftNo}. {tt("dintake.wizard_prefilled_hint", "Review every value, then save. The draft is recorded against this entry.")}
+                {intake.consumed ? " ✓" : ""}
+              </span>
+            </div>
+          ) : null}
           {/* TOP REPORTS ROW (5 Steps) */}
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3">
             

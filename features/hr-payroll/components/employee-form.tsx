@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
 import {
@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { apiGet, apiPost, apiPatch } from "@/lib/api/client";
 import { PersonPicker } from "./person-picker";
+import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
 import { Button } from "@/components/ui/button";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
@@ -187,6 +188,13 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [activeStep, setActiveStep] = useState<number>(1);
+
+  // AI Document Intake — reviewed draft from an ID / employment-contract document.
+  // Identity fields (name / father / national id) are shown as a hint only: the
+  // person master is ALWAYS selected/created manually via PersonPicker so no
+  // duplicate person row is ever created. Contract dates + salary prefill.
+  const intake = useIntakeDraft("employees");
+  const intakePrefilled = useRef(false);
 
   // Core fields
   const [personMasterId, setPersonMasterId] = useState("");
@@ -413,6 +421,18 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
     loadEmployee();
   }, [employeeId]);
 
+  // Overlay the AI reviewed draft once (create mode only): contract dates + salary.
+  useEffect(() => {
+    if (intakePrefilled.current || employeeId || !intake.draft) return;
+    intakePrefilled.current = true;
+    const p = intake.payload as Record<string, string | number | null>;
+    if (p.joiningDate) setJoiningDate(String(p.joiningDate).slice(0, 10));
+    if (p.contractStartDate) setContractStartDate(String(p.contractStartDate).slice(0, 10));
+    if (p.contractEndDate) setContractEndDate(String(p.contractEndDate).slice(0, 10));
+    if (p.basicSalary != null && p.basicSalary !== "") setBasicSalary(Number(p.basicSalary));
+    if (p.salaryCurrency) setSalaryCurrency(String(p.salaryCurrency).toUpperCase().slice(0, 3));
+  }, [intake.draft, employeeId]);
+
   // Calculations
   const totalAllowances = Number(accommodationAllowance) + Number(transportAllowance) + Number(foodAllowance) + Number(mobileAllowance) + Number(otherAllowance);
   const netSalary = Math.max(0, Number(basicSalary) + totalAllowances - Number(deduction) - Number(taxDeduction));
@@ -551,6 +571,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
         const result = await apiPost<{ employee?: { id?: string } }>("/api/erp/hr-payroll/employees", payload);
         savedId = result?.employee?.id;
       }
+      if (savedId && intake.draft) await intake.consume(String(savedId));
       onSave(savedId);
     } catch (err: any) {
       alert(t(lang, "hr.error_saving_profile", "Error saving employee profile: ") + err.message);
@@ -711,6 +732,20 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
           </span>
         )}
       </div>
+
+      {intake.draft && !employeeId ? (
+        <div className="flex items-start gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-xs text-violet-900 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-200">
+          <Sparkles className="h-4 w-4 mt-0.5 shrink-0 text-violet-600" />
+          <span>
+            {t(lang, "dintake.wizard_prefilled", "Fields pre-filled from an AI-reviewed document draft")} — {intake.draftNo}.{" "}
+            {t(lang, "dintake.emp_identity_hint", "Select or add the person below to match this document")}
+            {intake.payload.fullName ? `: ${intake.payload.fullName}` : ""}
+            {intake.payload.nationalId ? ` · ${t(lang, "dintake.emp_id_label", "ID")} ${intake.payload.nationalId}` : ""}
+            {intake.payload.fatherName ? ` · S/O ${intake.payload.fatherName}` : ""}.
+            {intake.consumed ? " ✓" : ""}
+          </span>
+        </div>
+      ) : null}
 
       {/* 5-Step Packets Bar */}
       <div className="grid gap-2 sm:grid-cols-5">

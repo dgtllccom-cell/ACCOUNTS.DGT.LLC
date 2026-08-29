@@ -14623,6 +14623,8 @@ const en: Dict = {
   "dintake.ap_rs_daily_rate": "approved daily rate",
   "dintake.ap_rs_implied_1": "same currency (1.0)",
   "dintake.purpose_employee": "Employee / HR Record",
+  "dintake.emp_identity_hint": "Select or add the person below to match this document",
+  "dintake.emp_id_label": "ID",
   "dintake.purpose_expense": "Expense Bill",
 };
 
@@ -24817,6 +24819,8 @@ const ur: Dict = {
   "dintake.ap_rs_daily_rate": "منظور شدہ روزانہ شرح",
   "dintake.ap_rs_implied_1": "ایک ہی کرنسی (1.0)",
   "dintake.purpose_employee": "ملازم / ایچ آر ریکارڈ",
+  "dintake.emp_identity_hint": "اس دستاویز سے مطابقت کے لیے نیچے شخص منتخب یا شامل کریں",
+  "dintake.emp_id_label": "شناختی نمبر",
   "dintake.purpose_expense": "اخراجات کا بل",
 };
 
@@ -35013,6 +35017,8 @@ const ar: Dict = {
   "dintake.ap_rs_daily_rate": "السعر اليومي المعتمد",
   "dintake.ap_rs_implied_1": "نفس العملة (1.0)",
   "dintake.purpose_employee": "موظف / سجل الموارد البشرية",
+  "dintake.emp_identity_hint": "اختر أو أضف الشخص أدناه لمطابقة هذا المستند",
+  "dintake.emp_id_label": "الهوية",
   "dintake.purpose_expense": "فاتورة مصروفات",
 };
 
@@ -45208,6 +45214,8 @@ const fa: Dict = {
   "dintake.ap_rs_daily_rate": "نرخ روزانه تأییدشده",
   "dintake.ap_rs_implied_1": "همان ارز (۱٫۰)",
   "dintake.purpose_employee": "کارمند / سابقه منابع انسانی",
+  "dintake.emp_identity_hint": "برای تطبیق با این سند، شخص را در پایین انتخاب یا اضافه کنید",
+  "dintake.emp_id_label": "شناسه",
   "dintake.purpose_expense": "صورتحساب هزینه",
 };
 
@@ -55409,6 +55417,8 @@ const ps: Dict = {
   "dintake.ap_rs_daily_rate": "منظور شوی ورځنی نرخ",
   "dintake.ap_rs_implied_1": "ورته اسعار (1.0)",
   "dintake.purpose_employee": "کارمند / د بشري سرچینو ریکارډ",
+  "dintake.emp_identity_hint": "د دې سند سره د سمون لپاره لاندې شخص وټاکئ یا اضافه کړئ",
+  "dintake.emp_id_label": "پېژندنه",
   "dintake.purpose_expense": "د لګښت بیل",
 };
 

@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useMemo, useState, useEffect } from "react";
+import React, { useCallback, useMemo, useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -545,6 +545,8 @@ export function PurchaseOrderWizard({ session }) {
   });
   const [goodsEntries, setGoodsEntries] = useState([]);
   const [draftPrefillRef, setDraftPrefillRef] = useState("");
+  const [draftPrefillId, setDraftPrefillId] = useState("");
+  const draftConsumedRef = useRef(false);
 
   // Pre-fill from a reviewed AI Document Intake draft (Entry Method Selector →
   // "Continue Saved Draft"). Best-effort: only keys the form already has are
@@ -576,8 +578,23 @@ export function PurchaseOrderWizard({ session }) {
       }))));
     }
     setDraftPrefillRef(prefill.draftNo || "");
+    setDraftPrefillId(prefill.draftId || "");
     clearDraftPrefill();
   }, []);
+
+  // Record the reviewed AI draft against the saved Purchase Order (audit trail).
+  // Idempotent and non-fatal — a failure here never blocks the save.
+  const consumeIntakeDraft = useCallback(async (createdSourceId) => {
+    if (draftConsumedRef.current || !draftPrefillId || !createdSourceId) return;
+    draftConsumedRef.current = true;
+    try {
+      await fetch(`/api/erp/document-intelligence/drafts/${draftPrefillId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "consume", createdSourceModule: "purchase_orders", createdSourceId: String(createdSourceId) }),
+      });
+    } catch { /* audit link is best-effort */ }
+  }, [draftPrefillId]);
   const [editingRemarksType, setEditingRemarksType] = useState(null);
   const [tempRemarksText, setTempRemarksText] = useState("");
   const [reportType, setReportType] = useState("branch"); // "branch" | "totaling" | "payment"
@@ -986,81 +1003,81 @@ export function PurchaseOrderWizard({ session }) {
       fiscalYear: "2025-26",
       bookingBranch: loginBranchName || "Global System",
       status: form.salesStatus || "DRAFT",
-      systemSerialNo: form.purchaseOrderNo || "PO-2026-2837",
-      countrySerialNo: form.countrySerial || (form.purchaseOrderNo ? `CS-${form.purchaseOrderNo.slice(-4)}` : "CS-1837"),
-      superAdminSerialNo: form.purchaseOrderNo ? `SA-2026-${form.purchaseOrderNo.slice(-4)}` : "SA-2026-5567",
-      branchSerialNo: form.billNo || (form.purchaseOrderNo ? `DUBAI-${form.purchaseOrderNo.slice(-5)}` : "DUBAI-25837"),
-      billContractNo: form.purchaseContractNo || (form.purchaseOrderNo ? `052-${form.purchaseOrderNo.slice(-5)}` : "052-25837"),
-      paymentType: form.paymentType || "Advance Payment",
-      shipType: form.shipmentType || "Sea Freight",
-      loadingMode: form.shippingMode || "By Sea",
-      originCountry: form.origin || form.branchCountry || "China",
+      systemSerialNo: form.purchaseOrderNo || "PO-2026-0000",
+      countrySerialNo: form.countrySerial || (form.purchaseOrderNo ? `CS-${form.purchaseOrderNo.slice(-4)}` : "CS-0000"),
+      superAdminSerialNo: form.purchaseOrderNo ? `SA-2026-${form.purchaseOrderNo.slice(-4)}` : "SA-2026-0000",
+      branchSerialNo: form.billNo || (form.purchaseOrderNo ? `BR-${form.purchaseOrderNo.slice(-5)}` : "BR-0000"),
+      billContractNo: form.purchaseContractNo || "—",
+      paymentType: form.paymentType || "—",
+      shipType: form.shipmentType || "—",
+      loadingMode: form.shippingMode || "—",
+      originCountry: form.origin || "—",
 
       // Payment Details
-      paymentTerms: form.paymentTerms || "45 Days After B/L Date",
-      paymentMethod: form.paymentMethod || "Bank Transfer",
-      paymentCurrency: form.purchaseCurrency ? `${form.purchaseCurrency} - ${form.purchaseCurrency === "AED" ? "UAE Dirham" : form.purchaseCurrency === "USD" ? "US Dollar" : form.purchaseCurrency}` : "AED - UAE Dirham",
+      paymentTerms: form.paymentTerms || "—",
+      paymentMethod: form.paymentMethod || "—",
+      paymentCurrency: form.purchaseCurrency ? `${form.purchaseCurrency} - ${form.purchaseCurrency === "AED" ? "UAE Dirham" : form.purchaseCurrency === "USD" ? "US Dollar" : form.purchaseCurrency}` : "—",
 
       // Shipping Details
-      shippingMode: form.shippingMode || "By Sea",
-      shippingLine: form.shippingLine || "WAN HAI LINES LTD.",
-      loadingPort: form.loadingPort || "NINGBO PORT, CHINA",
-      receivingPort: form.receivingPort || "JEBEL ALI PORT, DUBAI",
-      containerInfo: form.containerNo ? `${form.containerType || "1x 40HQ"} (${form.containerNo})` : "1x 40HQ (WHLU-982341-0)",
+      shippingMode: form.shippingMode || "—",
+      shippingLine: form.shippingLine || "—",
+      loadingPort: form.loadingPort || "—",
+      receivingPort: form.receivingPort || "—",
+      containerInfo: form.containerNo ? `${form.containerType || "1x Container"} (${form.containerNo})` : "—",
 
       // Purchase Account
-      purchaseAccountName: form.purchaseAccountName || "United Arab Emirates Main Country Clearing",
-      purchaseAccountCode: form.purchaseAccountNo || "UAE-CORP-GEN-001",
-      purchaseTotalCredit: typeof pCredit === "number" ? pCredit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : pCredit,
-      purchaseTotalDebit: typeof pDebit === "number" ? pDebit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : pDebit,
-      purchaseBalance: typeof pBal === "number" ? pBal.toLocaleString(undefined, { minimumFractionDigits: 2 }) : pBal,
-      purchaseCompanyName: form.purchaseCompanyName || pComp.name || "da Consolidated General Trading FZE",
-      purchaseBranch: form.purchaseAccountBranch || form.branchName || "Dubai Main Branch",
-      purchaseCountry: form.branchCountry || "United Arab Emirates",
-      purchaseCompanyCode: form.purchaseCompanyCode || pComp.code || "DA-CONSOLIDATED-001",
-      purchaseLegalType: pComp.legal_type || pComp.legalType || "Free Zone Company",
-      purchaseLicenseNo: pComp.license_no || pComp.licenseNo || "1234567",
-      purchaseTaxRegNo: pComp.tax_reg_no || pComp.taxRegistrationNumber || pComp.taxRegNo || "DA40225334449000003",
-      purchaseVatRegNo: pComp.vat_reg_no || pComp.vatRegistrationNumber || pComp.vatRegNo || "AE10022534449000003",
-      purchaseCompanyEstDate: pComp.established_date || pComp.establishedDate || "2018-05-12",
-      purchaseCompanyEmail: pComp.email || pComp.registeredEmail || "info@da-consolidated.ae",
-      purchaseCompanyPhone: pComp.phone || pComp.mobile || "+971 50 123 4567",
-      purchaseCompanyWebsite: pComp.website || "www.da-consolidated.ae",
-      purchaseCompanyAddress: pComp.address || pComp.registeredAddress || "SAIF Zone, PO BOX 12345, Sharjah, United Arab Emirates",
-      purchaseBankName: pComp.bank_name || pComp.bankName || pAcc.bankName || "Emirates NBD",
-      purchaseBankAccountName: pComp.bank_account_name || pComp.bankAccountName || "da Consolidated FZE",
-      purchaseBankAccountNo: pComp.bank_account_no || pComp.bankAccountNo || "1012345678901",
-      purchaseIban: pComp.iban || pComp.ibanNo || "AE020260001012345678901",
-      purchaseSwiftCode: pComp.swift_code || pComp.swiftCode || "EBILAEAD",
-      purchaseCurrencyLabel: pComp.currency || (form.purchaseCurrency ? `${form.purchaseCurrency} - ${form.purchaseCurrency === "AED" ? "UAE Dirham" : form.purchaseCurrency === "USD" ? "US Dollar" : form.purchaseCurrency}` : "AED - UAE Dirham"),
-      purchaseCurrencyCode: form.purchaseCurrency || "AED",
+      purchaseAccountName: form.purchaseAccountName || "—",
+      purchaseAccountCode: form.purchaseAccountNo || "—",
+      purchaseTotalCredit: typeof pCredit === "number" ? pCredit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : (pCredit || "0.00"),
+      purchaseTotalDebit: typeof pDebit === "number" ? pDebit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : (pDebit || "0.00"),
+      purchaseBalance: typeof pBal === "number" ? pBal.toLocaleString(undefined, { minimumFractionDigits: 2 }) : (pBal || "0.00"),
+      purchaseCompanyName: form.purchaseCompanyName || pComp.name || "—",
+      purchaseBranch: form.purchaseAccountBranch || form.branchName || "—",
+      purchaseCountry: form.branchCountry || "—",
+      purchaseCompanyCode: form.purchaseCompanyCode || pComp.code || "—",
+      purchaseLegalType: pComp.legal_type || pComp.legalType || "—",
+      purchaseLicenseNo: pComp.license_no || pComp.licenseNo || "—",
+      purchaseTaxRegNo: pComp.tax_reg_no || pComp.taxRegistrationNumber || pComp.taxRegNo || "—",
+      purchaseVatRegNo: pComp.vat_reg_no || pComp.vatRegistrationNumber || pComp.vatRegNo || "—",
+      purchaseCompanyEstDate: pComp.established_date || pComp.establishedDate || "—",
+      purchaseCompanyEmail: pComp.email || pComp.registeredEmail || "—",
+      purchaseCompanyPhone: pComp.phone || pComp.mobile || "—",
+      purchaseCompanyWebsite: pComp.website || "—",
+      purchaseCompanyAddress: pComp.address || pComp.registeredAddress || "—",
+      purchaseBankName: pComp.bank_name || pComp.bankName || pAcc.bankName || "—",
+      purchaseBankAccountName: pComp.bank_account_name || pComp.bankAccountName || "—",
+      purchaseBankAccountNo: pComp.bank_account_no || pComp.bankAccountNo || "—",
+      purchaseIban: pComp.iban || pComp.ibanNo || "—",
+      purchaseSwiftCode: pComp.swift_code || pComp.swiftCode || "—",
+      purchaseCurrencyLabel: pComp.currency || (form.purchaseCurrency ? `${form.purchaseCurrency} - ${form.purchaseCurrency === "AED" ? "UAE Dirham" : form.purchaseCurrency === "USD" ? "US Dollar" : form.purchaseCurrency}` : "—"),
+      purchaseCurrencyCode: form.purchaseCurrency || "—",
 
       // Sales Account
-      salesAccountName: form.salesAccountName || "United Arab Emirates Main Country Clearing Ledger",
-      salesAccountCode: form.salesAccountNo || "UAE-CORP-GEN-001",
-      salesTotalCredit: typeof sCredit === "number" ? sCredit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : sCredit,
-      salesTotalDebit: typeof sDebit === "number" ? sDebit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : sDebit,
-      salesBalance: typeof sBal === "number" ? sBal.toLocaleString(undefined, { minimumFractionDigits: 2 }) : sBal,
-      salesCompanyName: form.salesCompanyName || sComp.name || "da Consolidated General Trading FZE",
-      salesBranch: form.salesAccountBranch || form.branchName || "Dubai Main Branch",
-      salesCountry: form.branchCountry || "United Arab Emirates",
-      salesCompanyCode: form.salesCompanyCode || sComp.code || "DA-CONSOLIDATED-001",
-      salesLegalType: sComp.legal_type || sComp.legalType || "Free Zone Company",
-      salesLicenseNo: sComp.license_no || sComp.licenseNo || "1234567",
-      salesTaxRegNo: sComp.tax_reg_no || sComp.taxRegistrationNumber || sComp.taxRegNo || "DA40225334449000003",
-      salesVatRegNo: sComp.vat_reg_no || sComp.vatRegistrationNumber || sComp.vatRegNo || "AE10022534449000003",
-      salesCompanyEstDate: sComp.established_date || sComp.establishedDate || "2018-05-12",
-      salesCompanyEmail: sComp.email || sComp.registeredEmail || "info@da-consolidated.ae",
-      salesCompanyPhone: sComp.phone || sComp.mobile || "+971 50 123 4567",
-      salesCompanyWebsite: sComp.website || "www.da-consolidated.ae",
-      salesCompanyAddress: sComp.address || sComp.registeredAddress || "SAIF Zone, PO BOX 12345, Sharjah, United Arab Emirates",
-      salesBankName: sComp.bank_name || sComp.bankName || sAcc.bankName || "Emirates NBD",
-      salesBankAccountName: sComp.bank_account_name || sComp.bankAccountName || "da Consolidated FZE",
-      salesBankAccountNo: sComp.bank_account_no || sComp.bankAccountNo || "1012345678901",
-      salesIban: sComp.iban || sComp.ibanNo || "AE020260001012345678901",
-      salesSwiftCode: sComp.swift_code || sComp.swiftCode || "EBILAEAD",
-      salesCurrencyLabel: sComp.currency || (form.purchaseCurrency ? `${form.purchaseCurrency} - ${form.purchaseCurrency === "AED" ? "UAE Dirham" : form.purchaseCurrency === "USD" ? "US Dollar" : form.purchaseCurrency}` : "AED - UAE Dirham"),
-      salesCurrencyCode: form.purchaseCurrency || "AED",
+      salesAccountName: form.salesAccountName || "—",
+      salesAccountCode: form.salesAccountNo || "—",
+      salesTotalCredit: typeof sCredit === "number" ? sCredit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : (sCredit || "0.00"),
+      salesTotalDebit: typeof sDebit === "number" ? sDebit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : (sDebit || "0.00"),
+      salesBalance: typeof sBal === "number" ? sBal.toLocaleString(undefined, { minimumFractionDigits: 2 }) : (sBal || "0.00"),
+      salesCompanyName: form.salesCompanyName || sComp.name || "—",
+      salesBranch: form.salesAccountBranch || form.branchName || "—",
+      salesCountry: form.branchCountry || "—",
+      salesCompanyCode: form.salesCompanyCode || sComp.code || "—",
+      salesLegalType: sComp.legal_type || sComp.legalType || "—",
+      salesLicenseNo: sComp.license_no || sComp.licenseNo || "—",
+      salesTaxRegNo: sComp.tax_reg_no || sComp.taxRegistrationNumber || sComp.taxRegNo || "—",
+      salesVatRegNo: sComp.vat_reg_no || sComp.vatRegistrationNumber || sComp.vatRegNo || "—",
+      salesCompanyEstDate: sComp.established_date || sComp.establishedDate || "—",
+      salesCompanyEmail: sComp.email || sComp.registeredEmail || "—",
+      salesCompanyPhone: sComp.phone || sComp.mobile || "—",
+      salesCompanyWebsite: sComp.website || "—",
+      salesCompanyAddress: sComp.address || sComp.registeredAddress || "—",
+      salesBankName: sComp.bank_name || sComp.bankName || sAcc.bankName || "—",
+      salesBankAccountName: sComp.bank_account_name || sComp.bankAccountName || "—",
+      salesBankAccountNo: sComp.bank_account_no || sComp.bankAccountNo || "—",
+      salesIban: sComp.iban || sComp.ibanNo || "—",
+      salesSwiftCode: sComp.swift_code || sComp.swiftCode || "—",
+      salesCurrencyLabel: sComp.currency || (form.purchaseCurrency ? `${form.purchaseCurrency} - ${form.purchaseCurrency === "AED" ? "UAE Dirham" : form.purchaseCurrency === "USD" ? "US Dollar" : form.purchaseCurrency}` : "—"),
+      salesCurrencyCode: form.purchaseCurrency || "—",
     };
 
     return (
@@ -2467,6 +2484,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
       setSavedOrderNo(returnedOrderNo);
       setSaveMessage(`Successfully saved Purchase Order: ${returnedOrderNo}.`);
       setRegisterRefreshKey((key) => key + 1);
+      if (returnedOrderId) await consumeIntakeDraft(returnedOrderId);
 
       if (shouldClose) {
         setIsFormOpen(false);
@@ -2514,6 +2532,8 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
       const returnedOrderNo = payload.data?.purchaseOrderNo || savedOrderNo || form.purchaseOrderNo;
       let transferDestination = buildPurchaseBookingTransferUrl(form.paymentType, returnedOrderNo);
       
+      if (returnedOrderId) await consumeIntakeDraft(returnedOrderId);
+
       // Now call the transfer API to actually post to Roznamcha
       if (returnedOrderId) {
         const transferResponse = await fetch(`/api/erp/purchases/orders/${returnedOrderId}/transfer`, {
@@ -2572,6 +2592,8 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
       const returnedOrderNo = payload.data?.purchaseOrderNo || savedOrderNo || form.purchaseOrderNo;
       let transferDestination = buildPurchaseBookingTransferUrl(form.paymentType);
       
+      if (returnedOrderId) await consumeIntakeDraft(returnedOrderId);
+
       // Now call the transfer API to actually post to Roznamcha
       if (returnedOrderId) {
         const transferResponse = await fetch(`/api/erp/purchases/orders/${returnedOrderId}/transfer`, {

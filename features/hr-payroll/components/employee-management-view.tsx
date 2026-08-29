@@ -73,6 +73,19 @@ export function EmployeeManagementView() {
   const [showFormModal, setShowFormModal] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
+
+  // AI Document Intake — if the user arrived via "Continue Saved Draft" for an
+  // employee document, open the create form so EmployeeForm can pick up the
+  // sessionStorage prefill.
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("di_draft_prefill");
+      if (raw && JSON.parse(raw)?.targetModule === "employees") {
+        setSelectedEmployeeId(null);
+        setShowFormModal(true);
+      }
+    } catch { /* no draft */ }
+  }, []);
   const [viewingEmployeeId, setViewingEmployeeId] = useState<string | null>(null);
 
   const [selectedEmployeeForLoan, setSelectedEmployeeForLoan] = useState<any | null>(null);
