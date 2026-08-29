@@ -288,8 +288,11 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
     showNotification(`${tt("transit.new_initialized", "New Transit Entry initialized")} (${randomSerial})`, "info");
   };
 
-  const handlePrint = () => {
-    window.print();
+  const handlePrint = async () => {
+    const { printDomFragmentViaModal } = await import("@/lib/reports/print-dom-fragment");
+    if (!printDomFragmentViaModal("printable-transit-report", tt("transit.print_title", "Transit Entry"), { lang })) {
+      window.print();
+    }
   };
 
   const qrUrl = useMemo(() => {

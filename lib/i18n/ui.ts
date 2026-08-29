@@ -14870,6 +14870,9 @@ const en: Dict = {
   "scope.all_branches": "All Branches",
   "scope.country_wide": "Country-wide",
   "scope.unassigned": "No scope assigned",
+  "bgr.title": "Branch General Report",
+  "transit.print_title": "Transit Entry",
+  "sales.ster_report_title": "Sales Transfer — ERP Report",
 };
 
 const ur: Dict = {
@@ -25310,6 +25313,9 @@ const ur: Dict = {
   "scope.all_branches": "تمام برانچز",
   "scope.country_wide": "ملک بھر",
   "scope.unassigned": "کوئی دائرہ کار تفویض نہیں",
+  "bgr.title": "برانچ جنرل رپورٹ",
+  "transit.print_title": "ٹرانزٹ انٹری",
+  "sales.ster_report_title": "سیلز ٹرانسفر — ای آر پی رپورٹ",
 };
 
 const ar: Dict = {
@@ -35752,6 +35758,9 @@ const ar: Dict = {
   "scope.all_branches": "جميع الفروع",
   "scope.country_wide": "على مستوى الدولة",
   "scope.unassigned": "لم يُخصَّص نطاق",
+  "bgr.title": "التقرير العام للفرع",
+  "transit.print_title": "قيد العبور",
+  "sales.ster_report_title": "تحويل المبيعات — تقرير ERP",
 };
 
 const fa: Dict = {
@@ -46193,6 +46202,9 @@ const fa: Dict = {
   "scope.all_branches": "همه شعبه‌ها",
   "scope.country_wide": "سراسر کشور",
   "scope.unassigned": "دامنه‌ای اختصاص نیافته",
+  "bgr.title": "گزارش عمومی شعبه",
+  "transit.print_title": "ورودی ترانزیت",
+  "sales.ster_report_title": "انتقال فروش — گزارش ERP",
 };
 
 const ps: Dict = {
@@ -56640,6 +56652,9 @@ const ps: Dict = {
   "scope.all_branches": "ټولې څانګې",
   "scope.country_wide": "د هیواد په کچه",
   "scope.unassigned": "کومه ساحه نه ده ټاکل شوې",
+  "bgr.title": "د څانګې عمومي راپور",
+  "transit.print_title": "د ترانزیت ننوتنه",
+  "sales.ster_report_title": "د پلور لېږد — د ERP راپور",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

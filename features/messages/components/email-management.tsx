@@ -613,8 +613,9 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
     }
   }
 
-  function printWorkspace() {
-    window.print();
+  async function printWorkspace() {
+    const { printDomFragmentViaModal } = await import("@/lib/reports/print-dom-fragment");
+    if (!printDomFragmentViaModal("email-workspace-print", channelLabels[channel].title, { lang })) window.print();
   }
 
   function exportCsv() {
@@ -623,7 +624,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
   }
 
   function exportPdf() {
-    window.print();
+    void printWorkspace();
   }
 
   function openInErp() {
@@ -663,7 +664,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
     !emailConfig.hasPassword;
 
   return (
-    <div className="space-y-4" dir={isRtl ? "rtl" : "ltr"}>
+    <div id="email-workspace-print" className="space-y-4" dir={isRtl ? "rtl" : "ltr"}>
       <ReportPageHeader
         title={channelLabels[channel].title}
         subtitle={channelLabels[channel].subtitle}

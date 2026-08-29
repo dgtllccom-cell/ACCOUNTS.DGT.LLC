@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState, useEffect, useRef } from "react";
+import { printDomFragmentViaModal } from "@/lib/reports/print-dom-fragment";
 import { fetchWarehouses } from "@/features/warehouses/warehouse-api";
 import {
   ShoppingCart, Plus, Search, Scale, Coins,

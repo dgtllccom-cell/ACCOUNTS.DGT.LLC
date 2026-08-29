@@ -844,6 +844,33 @@ export function AccountGeneralReportView({
   );
   const highlightedAccountId = highlightCreated ? initialAccountId ?? null : null;
 
+  // Centralized A4 Account Master Profile (real row data + dynamic branding).
+  const printAccountRow = async (row: AccountGeneralReportRow | null) => {
+    if (!row) return;
+    const { openMasterProfile } = await import("@/lib/reports/master-profiles");
+    void openMasterProfile({
+      entity: "account",
+      lang: lang as never,
+      autoPrint: true,
+      scope: { countryId: row.countryId, countryName: row.countryName, branchName: row.cityBranchName || row.branchName },
+      record: {
+        accountId: row.accountId, accountCode: row.accountCode, accountName: row.accountName,
+        accountCategory: row.accountCategory, subType: row.subType, status: row.status,
+        currency: row.currency, createdAt: row.createdAt, manualReferenceNumber: row.manualReferenceNumber,
+        customerNumber: row.customerNumber, countrySerialNumber: row.countrySerialNumber,
+        branchSerialNumber: row.branchSerialNumber, countryName: row.countryName, countryId: row.countryId,
+        mainBranchName: row.mainBranchName, cityBranchName: row.cityBranchName, branchName: row.branchName,
+        branchCode: row.branchCode, cityName: row.cityName, companyName: row.companyName,
+        companyCode: row.companyCode, companyOwner: row.companyOwner,
+        openingBalance: row.openingBalance, debitTotal: row.debitTotal, creditTotal: row.creditTotal,
+        currentBalance: row.currentBalance, linkedLedgerCount: row.linkedLedgerCount,
+        journalActivityCount: row.journalActivityCount, latestJournalNo: row.latestJournalNo,
+        latestActivityAt: row.latestActivityAt, ledgerName: row.ledgerName,
+        ledgerStatus: row.ledgerStatus, ledgerCurrency: row.ledgerCurrency,
+      } as never,
+    });
+  };
+
   const visibleSummary = useMemo(() => {
     const totalAccounts = filteredRows.length;
     const activeAccounts = filteredRows.filter((row) => row.status === "active").length;
@@ -2054,8 +2081,8 @@ export function AccountGeneralReportView({
                                 if (row.ledgerId) router.push(`/dashboard/ledger/general-report?ledgerId=${row.ledgerId}` as Route);
                               }}
                               onViewJournal={() => setSelectedAccountId(row.accountId)}
-                              onPrint={() => window.print()}
-                              onPdf={() => window.print()}
+                              onPrint={() => printAccountRow(row)}
+                              onPdf={() => printAccountRow(row)}
                               onExcel={() => exportCsv("selected")}
                               onDelete={canDelete ? () => void deleteAccount(row) : undefined}
                             />
@@ -2140,7 +2167,7 @@ export function AccountGeneralReportView({
                       <Button type="button" variant="outline" className="flex-1 h-9 font-bold text-[10px] uppercase tracking-wider shadow-sm" onClick={() => router.push(`/dashboard/accounts/setup?accountId=${selectedRow.accountId}` as Route)}>
                         <PencilLine className="h-3.5 w-3.5 mr-1.5" /> {t(lang, "acct.asr_edit_account", "Edit Account")}
                       </Button>
-                      <Button type="button" variant="outline" className="flex-1 h-9 font-bold text-[10px] uppercase tracking-wider shadow-sm" onClick={() => window.print()}>
+                      <Button type="button" variant="outline" className="flex-1 h-9 font-bold text-[10px] uppercase tracking-wider shadow-sm" onClick={() => printAccountRow(selectedRow)}>
                         <Printer className="h-3.5 w-3.5 mr-1.5" /> {t(lang, "acct.agrv_print_info", "Print Info")}
                       </Button>
                     </div>

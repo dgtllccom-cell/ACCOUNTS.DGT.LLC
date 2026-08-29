@@ -188,7 +188,7 @@ export function CompletedPurchaseBillsView() {
           System Generated Completed Purchase Register Archive Report • Operating Branch: ${details.branchName}
         </div>
 
-        <script>window.onload = function() { window.print(); window.close(); }</script>
+        
       </body>
       </html>
     `;

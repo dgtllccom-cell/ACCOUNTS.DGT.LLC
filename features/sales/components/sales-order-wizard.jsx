@@ -2661,7 +2661,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
     );
   };
   return (
-    <div className="space-y-2 text-foreground bg-background mt-[-10px] max-w-[1500px] mx-auto">
+    <div id="wizard-root-print" className="space-y-2 text-foreground bg-background mt-[-10px] max-w-[1500px] mx-auto">
       {isSuperAdmin && (!form.countryId || !form.countryBranchId || !scopeConfirmed) ? (
         <SimpleModal
           isOpen={true}
@@ -2841,10 +2841,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       </button>
                       <button
                         type="button"
-                        onClick={() => {
-                          setViewDropdownOpen(false);
-                          window.print();
-                        }}
+                        onClick={() => { setViewDropdownOpen(false); import("@/lib/reports/print-dom-fragment").then((m) => { if (!m.printDomFragmentViaModal("wizard-root-print", t(lang, "purchase.dd_print_screen", "Print Screen"), { lang })) window.print(); }); }}
                         className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition border-b border-border/40 pb-2 mb-1"
                       >
                         <Printer className="h-3.5 w-3.5 text-blue-500" />
@@ -3018,10 +3015,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     </button>
                     <button
                       type="button"
-                      onClick={() => {
-                        setViewDropdownOpen(false);
-                        window.print();
-                      }}
+                      onClick={() => { setViewDropdownOpen(false); import("@/lib/reports/print-dom-fragment").then((m) => { if (!m.printDomFragmentViaModal("wizard-root-print", t(lang, "purchase.dd_print_screen", "Print Screen"), { lang })) window.print(); }); }}
                       className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition border-b border-border/40 pb-2 mb-1"
                     >
                       <Printer className="h-3.5 w-3.5 text-blue-500" />
@@ -4591,7 +4585,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               </Button>
               <Button
                 type="button"
-                onClick={() => window.print()}
+                onClick={() => handleOpenA4Report && handleOpenA4Report(true)}
                 className="bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-[10px] font-bold h-9 px-3 rounded-lg shadow-sm flex items-center gap-1.5"
               >
                 <Printer className="h-3.5 w-3.5 text-slate-500" />
@@ -4956,12 +4950,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 <Printer className="h-4 w-4 text-blue-600" /> {t(lang, "acct.print_preview", "Print Preview")}
               </h2>
               <div className="flex items-center gap-3">
-                <Button type="button" onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-700 text-white h-8 px-4 text-xs font-bold rounded shadow transition-all">{t(lang, "purchase.print_document_btn", "Print Document")}</Button>
+                <Button type="button" onClick={() => { import("@/lib/reports/print-dom-fragment").then((m) => { if (!m.printDomFragmentViaModal("wizard-a4-preview", t(lang, "purchase.print_document_btn", "Print Document"), { lang })) window.print(); }); }} className="bg-blue-600 hover:bg-blue-700 text-white h-8 px-4 text-xs font-bold rounded shadow transition-all">{t(lang, "purchase.print_document_btn", "Print Document")}</Button>
                 <Button type="button" variant="outline" onClick={() => setPreviewModalOpen(false)} className="h-8 px-4 text-xs font-bold hover:bg-slate-100">{t(lang, "purchase.close_btn", "Close")}</Button>
               </div>
             </div>
             <div className="flex-1 overflow-y-auto p-8 bg-slate-100/50 flex justify-center custom-scrollbar">
-              <div className="w-[210mm] min-h-[297mm] bg-white shadow-xl border border-slate-200 p-8 transform scale-[0.9] origin-top print:scale-100 print:shadow-none print:m-0 print:border-none print:p-0">
+              <div id="wizard-a4-preview" className="w-[210mm] min-h-[297mm] bg-white shadow-xl border border-slate-200 p-8 transform scale-[0.9] origin-top print:scale-100 print:shadow-none print:m-0 print:border-none print:p-0">
 
                 {/* Header Banner */}
                 <div className="mb-6 overflow-hidden rounded-xl border border-slate-200 text-left">

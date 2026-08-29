@@ -757,9 +757,12 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
     return Math.min(appliedLocal, Math.max(0, finance.amountPKR || appliedLocal));
   };
 
-  function downloadLoadDetails(kind: "json" | "pdf") {
+  async function downloadLoadDetails(kind: "json" | "pdf") {
     if (kind === "pdf") {
-      window.print();
+      const { printDomFragmentViaModal } = await import("@/lib/reports/print-dom-fragment");
+      if (!printDomFragmentViaModal("loading-record-detail-sheet", `Loading Record ${record.loading_record_no ?? ""}`.trim(), { lang: activeLang })) {
+        window.print();
+      }
       return;
     }
     const payload = {
@@ -1018,7 +1021,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 md:p-6 w-full">
-        <div className="w-full space-y-6">
+        <div id="loading-record-detail-sheet" className="w-full space-y-6">
           <div className={cn("grid gap-6 items-start w-full", showNewLoading ? "grid-cols-1 xl:grid-cols-[380px_1fr]" : "grid-cols-1")}>
             {showNewLoading && (
               <div className="flex flex-col gap-4 animate-in slide-in-from-left-4 fade-in duration-300">

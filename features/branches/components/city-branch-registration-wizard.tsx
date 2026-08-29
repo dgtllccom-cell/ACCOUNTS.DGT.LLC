@@ -90,8 +90,9 @@ function selectedBranchOption(branch: CountryBranchRow): SearchSelectOption {
   };
 }
 
-function printWizardSummary() {
-  window.print();
+async function printWizardSummary() {
+  const { printDomFragmentViaModal } = await import("@/lib/reports/print-dom-fragment");
+  if (!printDomFragmentViaModal("city-branch-wizard-print", "City Branch Registration")) window.print();
 }
 
 const STEP_I18N: Record<StepKey, { title: string; sub: string }> = {
@@ -341,7 +342,7 @@ export function CityBranchRegistrationWizard() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1500px] space-y-5 px-4 py-5 print:px-0" dir={isRtl ? "rtl" : "ltr"}>
+    <div id="city-branch-wizard-print" className="mx-auto w-full max-w-[1500px] space-y-5 px-4 py-5 print:px-0" dir={isRtl ? "rtl" : "ltr"}>
       <header className="rounded-2xl border bg-card p-4 shadow-sm print:hidden">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div>

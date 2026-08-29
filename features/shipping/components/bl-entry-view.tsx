@@ -433,9 +433,31 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
     }
   }
 
-  function printReport() {
-    window.print();
+  async function printReport() {
     setMenuOpen(false);
+    const { openScopedGenericReport } = await import("@/lib/reports/open-scoped-report");
+    await openScopedGenericReport({
+      title: "Bill of Lading (B/L) Report",
+      lang,
+      countryId: form.countryId || null,
+      countryBranchId: form.countryBranchId || null,
+      cityBranchId: form.cityBranchId || null,
+      countryName: selectedCountry?.name ?? null,
+      orientation: "landscape",
+      columns: [
+        { key: (r) => (r as any).countries?.name ?? "-", label: "Country" },
+        { key: (r) => (r as any).country_branches?.name ?? "-", label: "Branch" },
+        { key: (r) => (r as any).city_branches?.name ?? "-", label: "City Branch" },
+        { key: "shipping_line_name", label: "Shipping Line" },
+        { key: "bl_number", label: "B/L Number" },
+        { key: (r) => (r as any).profiles?.full_name ?? "-", label: "User" },
+        { key: (r) => (r as any).account_number ?? (r as any).ledgers?.code ?? "-", label: "Account Number" },
+        { key: "debit", label: "Debit", format: "currency", align: "right" },
+        { key: "credit", label: "Credit", format: "currency", align: "right" },
+        { key: "shipment_status", label: "Shipment Status", format: "status" },
+      ],
+      rows: records as unknown as Record<string, unknown>[],
+    });
   }
 
   function exportCsv() {

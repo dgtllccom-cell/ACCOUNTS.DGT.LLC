@@ -160,12 +160,11 @@ export function LocationRegistry() {
         </body>
       </html>
     `;
-    const win = window.open("", "_blank", "width=1120,height=900");
-    if (!win) return;
-    win.document.write(html);
-    win.document.close();
-    win.focus();
-    win.print();
+    // Centralized preview modal (Print / Save-as-PDF / orientation / share) —
+    // no popup window / document.write.
+    import("@/lib/store/print-store").then(({ printStore }) => {
+      printStore.openPrint(html, s.t("title", "Location Registry"));
+    });
   }
 
   const totalPages = Math.ceil(filtered.length / pageSize);

@@ -1045,7 +1045,7 @@ export function BranchGeneralReportView({
     : "space-y-4 font-sans text-xs text-slate-800 bg-gradient-to-b from-slate-50 to-white p-4 rounded-2xl border border-slate-200";
 
   return (
-    <div className={containerClassName} dir={isRtl ? "rtl" : "ltr"}>
+    <div id="branch-general-report-shell" className={containerClassName} dir={isRtl ? "rtl" : "ltr"}>
 
       {/* Title Slot Portal */}
       {titleSlot && createPortal(
@@ -1241,7 +1241,7 @@ export function BranchGeneralReportView({
             variant="outline"
             size="sm"
             className="h-7 text-[9px] font-bold gap-1 bg-white border-slate-300 hover:bg-slate-50 focus:ring-1 focus:ring-indigo-500 py-0 px-2"
-            onClick={() => window.print()}
+            onClick={() => { import("@/lib/reports/print-dom-fragment").then((m) => { if (!m.printDomFragmentViaModal("branch-general-report-shell", tt("bgr.title", "Branch General Report"), { lang })) window.print(); }); }}
           >
             <Printer className="h-3 w-3" />
             {tt("bgr.print", "Print")}

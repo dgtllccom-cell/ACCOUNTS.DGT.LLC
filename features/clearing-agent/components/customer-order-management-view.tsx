@@ -867,13 +867,10 @@ export function CustomerOrderManagementView() {
           `).join("")}
         </tbody>
       </table>
-      <script>window.onload=()=>window.print();</script>
       </body></html>`;
-    const win = window.open("", "_blank", "noopener,noreferrer,width=1100,height=850");
-    if (!win) return;
-    win.document.open();
-    win.document.write(html);
-    win.document.close();
+    import("@/lib/store/print-store").then(({ printStore }) => {
+      printStore.openPrint(html, tt("print_title", "Clearing Order"));
+    });
   };
 
   const handleSaveProgress = async (advanceStep: boolean = false) => {

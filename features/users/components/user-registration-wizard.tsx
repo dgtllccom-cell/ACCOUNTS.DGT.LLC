@@ -1848,9 +1848,7 @@ function EmployeeDetailModal({
   const joiningDate = emp.joining_date || emp.joiningDate || "N/A";
 
   const handlePrintCertificate = () => {
-    const printWin = window.open("", "_blank", "width=850,height=900");
-    if (!printWin) return;
-    printWin.document.write(`
+    const certHtml = `
       <!DOCTYPE html>
       <html lang="${s.lang}" dir="${s.dir}">
         <head>
@@ -1904,11 +1902,12 @@ function EmployeeDetailModal({
           <div class="footer">
             ${s.t("generated_on", "Generated on")} ${new Date().toLocaleString()} | ${s.t("company_name", "DGT ERP SYSTEM")}
           </div>
-          <script>window.onload = () => { window.print(); };</script>
         </body>
       </html>
-    `);
-    printWin.document.close();
+    `;
+    import("@/lib/store/print-store").then(({ printStore }) => {
+      printStore.openPrint(certHtml, `${s.t("report_sheet_title", "Employee Record Sheet")} - ${code}`);
+    });
   };
 
   return (

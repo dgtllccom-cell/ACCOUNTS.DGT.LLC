@@ -397,7 +397,7 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
   };
 
   return (
-    <div className="asr-shell" dir={isRtl ? "rtl" : "ltr"}>
+    <div id="asr-report-shell" className="asr-shell" dir={isRtl ? "rtl" : "ltr"}>
       <AsrStyles />
 
       {/* Portals to main page header */}
@@ -528,7 +528,7 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
                 <div className="asr-action-divider" />
                 <div className="asr-action-section-label">{tr("Print")}</div>
                 {[
-                  { icon: Printer, label: "Print Report", action: () => window.print() },
+                  { icon: Printer, label: "Print Report", action: () => { import("@/lib/reports/print-dom-fragment").then(m => m.printDomFragmentViaModal("asr-report-shell", "Account Setup Report")); } },
                   { icon: DownloadActionIcon, label: "Download Report", action: () => exportCSV(filtered) },
                 ].map(({ icon: Icon, label, action }) => (
                   <button key={label} type="button" className="asr-action-item" onClick={() => { action(); setActionMenuOpen(false); }}>

@@ -295,8 +295,11 @@ function getCurrencySymbol(c: string) {
   }
 
   /* ── Print ─────────────────────────────────────────────────── */
-  function handlePrint() {
-    window.print();
+  async function handlePrint() {
+    const { printDomFragmentViaModal } = await import("@/lib/reports/print-dom-fragment");
+    if (!printDomFragmentViaModal("erp-sales-transfer-sheet", t(lang, "sales.ster_report_title", "Sales Transfer — ERP Report"), { lang })) {
+      window.print();
+    }
   }
 
   /* ── Render states ─────────────────────────────────────────── */
@@ -393,7 +396,7 @@ function getCurrencySymbol(c: string) {
       </header>
 
       {/* ───────────── A4 CONTENT AREA ───────────── */}
-      <main className="mx-auto max-w-[900px] py-6 px-4 space-y-4 print:py-0 print:px-0 print:max-w-none">
+      <main id="erp-sales-transfer-sheet" className="mx-auto max-w-[900px] py-6 px-4 space-y-4 print:py-0 print:px-0 print:max-w-none">
 
         {/* Document Branding Header */}
         <div className="rounded-xl bg-[#0f2942] text-white p-5 shadow-md print:rounded-none">

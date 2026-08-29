@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState, useEffect, Fragment } from "react";
+import { printDomFragmentViaModal } from "@/lib/reports/print-dom-fragment";
 import { useRouter } from "next/navigation";
 import {
   Building2, FileText, ArrowDownLeft, ArrowUpRight,

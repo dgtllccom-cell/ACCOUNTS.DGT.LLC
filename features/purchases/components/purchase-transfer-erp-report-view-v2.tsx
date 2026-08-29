@@ -207,8 +207,11 @@ function PurchaseTransferErpReportViewContent({
     }
   }
 
-  function handlePrint() {
-    window.print();
+  async function handlePrint() {
+    const { printDomFragmentViaModal } = await import("@/lib/reports/print-dom-fragment");
+    if (!printDomFragmentViaModal("erp-transfer-report-sheet", tt("pterv2.report_title", "Purchase Transfer — ERP Report"), { lang: activeLang })) {
+      window.print();
+    }
   }
 
   if (loading) {
@@ -432,7 +435,7 @@ function PurchaseTransferErpReportViewContent({
         <main className="lg:col-span-8 flex justify-center">
           
           {/* SAP / Oracle Grade Printable A4 Sheet Container */}
-          <div className="w-[210mm] min-h-[297mm] bg-white border border-slate-300 shadow-2xl p-[7mm] text-[8px] text-slate-900 space-y-3 relative print:border-none print:shadow-none print:w-full print:p-0 font-sans">
+          <div id="erp-transfer-report-sheet" className="w-[210mm] min-h-[297mm] bg-white border border-slate-300 shadow-2xl p-[7mm] text-[8px] text-slate-900 space-y-3 relative print:border-none print:shadow-none print:w-full print:p-0 font-sans">
 
             {/* Official Stamp Overlay */}
             {isPosted && (

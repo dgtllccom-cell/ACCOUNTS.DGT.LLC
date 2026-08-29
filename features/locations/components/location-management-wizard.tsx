@@ -1121,12 +1121,13 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
     downloadCSV("Complete_Location_Hierarchy_Tree.csv", headers, rows);
   }
 
-  function handlePrintTree() {
-    window.print();
+  async function handlePrintTree() {
+    const { printDomFragmentViaModal } = await import("@/lib/reports/print-dom-fragment");
+    if (!printDomFragmentViaModal("location-hierarchy-print", "Location Hierarchy")) window.print();
   }
 
   return (
-    <div className="space-y-6" dir={isRtl ? "rtl" : "ltr"}>
+    <div id="location-hierarchy-print" className="space-y-6" dir={isRtl ? "rtl" : "ltr"}>
       {/* Title Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-5">
         <div>
