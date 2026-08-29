@@ -303,194 +303,37 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
     }
   };
 
-  // Custom A4 printable window generator
-  const handlePrint = (c: typeof parsedCustomers[0]) => {
-    const contactsHtml = c.meta.contacts
-      .map(
-        (cn) => `
-        <div class="field">
-          <div class="label">${cn.type}</div>
-          <div class="value">${cn.value || "-"}</div>
-        </div>
-      `
-      )
-      .join("");
-
-    const docsHtml = c.meta.documents
-      .map(
-        (d) => `
-        <div class="field">
-          <div class="label">${d.type}</div>
-          <div class="value">${d.number || "-"} ${d.upload ? `(${d.upload})` : ""}</div>
-        </div>
-      `
-      )
-      .join("");
-
-    const html = `
-      <html>
-        <head>
-          <title>Customer Profile - ${c.customer_name}</title>
-          <style>
-            @page {
-              size: A4;
-              margin: 15mm;
-            }
-            body {
-              font-family: system-ui, -apple-system, sans-serif;
-              color: #1e293b;
-              margin: 0;
-              padding: 0;
-              line-height: 1.5;
-              font-size: 13px;
-              background-color: #f8fafc;
-            }
-            .certificate-container {
-              border: 1px solid #e2e8f0;
-              padding: 30px;
-              border-radius: 12px;
-              background-color: #ffffff;
-              max-width: 800px;
-              margin: 20px auto;
-              box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
-            }
-            .header {
-              border-bottom: 2px solid #0f766e;
-              padding-bottom: 15px;
-              margin-bottom: 25px;
-            }
-            .title {
-              font-size: 24px;
-              font-weight: 800;
-              color: #0f766e;
-              margin: 0;
-            }
-            .subtitle {
-              font-size: 11px;
-              color: #64748b;
-              font-weight: 500;
-              text-transform: uppercase;
-              letter-spacing: 0.05em;
-              margin-top: 3px;
-            }
-            .section {
-              margin-bottom: 25px;
-            }
-            .section-title {
-              font-size: 11px;
-              font-weight: 700;
-              color: #0f766e;
-              border-bottom: 1.5px solid #cbd5e1;
-              padding-bottom: 4px;
-              margin-bottom: 12px;
-              text-transform: uppercase;
-              letter-spacing: 0.05em;
-            }
-            .grid {
-              display: grid;
-              grid-template-cols: repeat(2, 1fr);
-              gap: 20px;
-            }
-            .field {
-              margin-bottom: 8px;
-            }
-            .label {
-              font-size: 9px;
-              text-transform: uppercase;
-              color: #64748b;
-              font-weight: 700;
-              letter-spacing: 0.05em;
-            }
-            .value {
-              font-size: 13px;
-              font-weight: 600;
-              color: #0f172a;
-              margin-top: 1px;
-            }
-            @media print {
-              body {
-                background: none;
-                margin: 0;
-              }
-              .certificate-container {
-                border: none;
-                padding: 0;
-                box-shadow: none;
-                margin: 0;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="certificate-container">
-            <div class="header">
-              <h1 class="title">${c.customer_name}</h1>
-              <div class="subtitle">${getLabel("officialCustomerProfileCertificate", lang)}</div>
-            </div>
-
-            <div class="grid">
-              <div class="section">
-                <div class="section-title">${getLabel("personalInfo", lang)}</div>
-                <div class="field">
-                  <div class="label">${getLabel("customerAccountCode", lang)}</div>
-                  <div class="value">${c.meta.customerAccountNumber}</div>
-                </div>
-                <div class="field">
-                  <div class="label">${getLabel("customerType", lang)}</div>
-                  <div class="value">${c.meta.customerType}</div>
-                </div>
-                <div class="field">
-                  <div class="label">${t(lang, "hr.f_full_name", "Full Name")}</div>
-                  <div class="value">${c.customer_name}</div>
-                </div>
-                <div class="field">
-                  <div class="label">${getLabel("fatherNameRepresentative", lang)}</div>
-                  <div class="value">${c.father_name || c.meta.fatherName || "-"}</div>
-                </div>
-              </div>
-
-              <div class="section">
-                <div class="section-title">${getLabel("locationInfo", lang)}</div>
-                <div class="field">
-                  <div class="label">${getLabel("fullAddress", lang)}</div>
-                  <div class="value">${c.address || "-"}</div>
-                </div>
-                <div class="field">
-                  <div class="label">${getLabel("zipCityCode", lang)}</div>
-                  <div class="value">${c.meta.cityCode || "-"}</div>
-                </div>
-                <div class="field">
-                  <div class="label">${getLabel("countryStateCity", lang)}</div>
-                  <div class="value">${[c.meta.city, c.meta.stateProvince, c.meta.country].filter(Boolean).join(", ") || "-"}</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="section">
-              <div class="section-title">${getLabel("contactInfo", lang)}</div>
-              <div class="grid" style="grid-template-cols: repeat(3, 1fr);">
-                ${contactsHtml || `<div class="value">${getLabel("noContactsRegistered", lang)}</div>`}
-              </div>
-            </div>
-
-            <div class="section">
-              <div class="section-title">${getLabel("documentInfo", lang)}</div>
-              <div class="grid" style="grid-template-cols: repeat(3, 1fr);">
-                ${docsHtml || `<div class="value">${getLabel("noDocumentsRegistered", lang)}</div>`}
-              </div>
-            </div>
-          </div>
-          
-          <script>
-            window.onload = function() {
-              window.print();
-              setTimeout(function() { window.close(); }, 500);
-            };
-          </script>
-        </body>
-      </html>
-    `;
-    printStore.openPrint(html, `Customer Profile - ${c.customer_name}`);
+  // Centralized A4 Customer Master Profile via the shared engine.
+  const handlePrint = async (c: (typeof parsedCustomers)[number]) => {
+    const { openMasterProfile } = await import("@/lib/reports/master-profiles");
+    const cc = c as any;
+    void openMasterProfile({
+      entity: 'customer',
+      lang: lang,
+      autoPrint: true,
+      scope: { countryId: cc.country_id ?? null, countryName: cc.country_name ?? null },
+      record: {
+        id: cc.id,
+        customer_name: cc.customer_name,
+        customer_number: cc.customer_number,
+        company_name: cc.company_name || cc.meta?.companyName,
+        father_name: cc.father_name || cc.meta?.fatherName,
+        customer_type: cc.meta?.customerType,
+        national_id: cc.national_id,
+        trn: cc.trn || cc.meta?.companyTaxNo,
+        is_active: cc.is_active,
+        created_at: cc.created_at,
+        mobile: cc.mobile,
+        whatsapp: cc.whatsapp,
+        email: cc.email,
+        address: cc.address || cc.meta?.companyAddress,
+        city_name: cc.city_name || cc.meta?.city,
+        country_name: cc.country_name || cc.meta?.country,
+        country_id: cc.country_id,
+        contacts: Array.isArray(cc.meta?.contacts) ? cc.meta.contacts : [],
+        documents: Array.isArray(cc.meta?.documents) ? cc.meta.documents.map((d: any) => ({ type: d.type, number: d.number })) : [],
+      },
+    });
   };
 
   const isRtl = lang !== "en";

@@ -226,73 +226,7 @@ function primaryLine(row: ReportRow): ReportLine | undefined {
   return row.roznamcha_lines?.[0];
 }
 
-function printReportTable(opts: { title: string; subtitle: string; rows: ReportRow[]; totals: { debit: number; credit: number }; lang: SupportedLanguage }) {
-  if (typeof window === "undefined") return;
-  const isRtl = ["ur", "ar", "fa", "ps"].includes(opts.lang);
-  const win = window.open("", "_blank", "width=1300,height=800");
-  if (!win) return;
 
-  const bodyRows = opts.rows
-    .map((row, idx) => {
-      const line = primaryLine(row);
-      const debit = Number(line?.debit || 0);
-      const credit = Number(line?.credit || 0);
-      return `<tr>
-        <td style="text-align:center;">${idx + 1}</td>
-        <td style="text-align:center;">${cleanDate(row.entry_date || row.created_at)}</td>
-        <td style="text-align:center;font-weight:bold;">${entrySerial(row)}</td>
-        <td>${row.countries?.name ?? "-"}</td>
-        <td>${branchName(row)}</td>
-        <td>${row.profiles?.full_name ?? "-"}</td>
-        <td>${formatEntryType(row.source_transaction_type || row.type, opts.lang)}</td>
-        <td>${getCategoryLabel(row.entry_category, opts.lang)}</td>
-        <td style="font-family:monospace;text-align:center;">${line?.account_number || line?.ledgers?.code || "-"}</td>
-        <td style="font-weight:bold;text-align:${isRtl ? "right" : "left"};">${line?.ledgers?.name ?? "-"}</td>
-        <td style="text-align:${isRtl ? "right" : "left"};">${(row.narration ?? "-").slice(0, 80)}</td>
-        <td style="text-align:center;font-weight:bold;">${line?.currency ?? row.countries?.currency_code ?? "-"}</td>
-        <td class="num">${debit ? fmtNumber(debit) : "-"}</td>
-        <td class="num">${credit ? fmtNumber(credit) : "-"}</td>
-        <td class="num">${fmtNumber(credit - debit)}</td>
-        <td style="text-align:center;font-family:monospace;">${billNumber(row)}</td>
-        <td style="text-align:center;">${formatStatus(row.status, opts.lang)}</td>
-      </tr>`;
-    })
-    .join("");
-
-  win.document.write(`<!doctype html><html dir="${isRtl ? "rtl" : "ltr"}" lang="${opts.lang}"><head><title>${opts.title}</title>
-    <style>
-      body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Arabic", sans-serif; padding: 20px; color: #111; direction: ${isRtl ? "rtl" : "ltr"}; }
-      h1 { font-size: 18px; margin-bottom: 2px; }
-      p.sub { color: #555; margin-top: 0; font-size: 12px; }
-      table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 10px; }
-      th, td { border: 1px solid #ccc; padding: 4px 5px; text-align: ${isRtl ? "right" : "left"}; }
-      th { background: #0f172a; color: #fff; text-align: center; font-size: 10px; }
-      td.num { text-align: ${isRtl ? "left" : "right"}; font-family: monospace; }
-      tfoot td { font-weight: bold; background: #f1f5f9; }
-    </style>
-  </head><body>
-    <h1>${opts.title}</h1>
-    <p class="sub">${opts.subtitle}</p>
-    <table>
-      <thead><tr>
-        <th>${t(opts.lang, "rozrep.sno", "S.No")}</th><th>${t(opts.lang, "rozrep.date", "Date")}</th><th>${t(opts.lang, "rozrep.entry_serial", "Entry Serial")}</th><th>${t(opts.lang, "rozrep.country", "Country")}</th><th>${t(opts.lang, "rozrep.branch", "Branch")}</th><th>${t(opts.lang, "rozrep.user", "User")}</th>
-        <th>${t(opts.lang, "rozrep.entry_type", "Entry Type")}</th><th>${t(opts.lang, "rozrep.roznamcha_type", "Roznamcha Type")}</th><th>${t(opts.lang, "rozrep.account_no", "Account No")}</th><th>${t(opts.lang, "rozrep.account_name", "Account Name")}</th><th>${t(opts.lang, "rozrep.narration", "Narration / Remarks")}</th>
-        <th>${t(opts.lang, "rozrep.currency", "Currency")}</th><th>${t(opts.lang, "rozrep.debit", "Debit")}</th><th>${t(opts.lang, "rozrep.credit", "Credit")}</th><th>${t(opts.lang, "rozrep.balance", "Balance")}</th><th>${t(opts.lang, "rozrep.bill_ref", "Bill/Ref No")}</th><th>${t(opts.lang, "rozrep.status", "Status")}</th>
-      </tr></thead>
-      <tbody>${bodyRows}</tbody>
-      <tfoot><tr>
-        <td colspan="12">${t(opts.lang, "rozrep.totals", "Totals")}</td>
-        <td class="num">${fmtNumber(opts.totals.debit)}</td>
-        <td class="num">${fmtNumber(opts.totals.credit)}</td>
-        <td class="num">${fmtNumber(opts.totals.credit - opts.totals.debit)}</td>
-        <td colspan="2"></td>
-      </tr></tfoot>
-    </table>
-  </body></html>`);
-  win.document.close();
-  win.focus();
-  win.print();
-}
 
 export function RoznamchaTypeReportView({
   lang,

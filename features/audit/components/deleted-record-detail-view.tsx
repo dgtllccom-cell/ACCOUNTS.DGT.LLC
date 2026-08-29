@@ -100,8 +100,40 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
     }
   }
 
-  function handlePrint() {
-    window.print();
+  async function handlePrint() {
+    const { openMasterProfile } = await import("@/lib/reports/master-profiles");
+    // Reuse the Master Profile A4 engine — the deleted record is a single audit
+    // subject with sections + a lifecycle table. Real record data only.
+    const rc: any = data?.deletedRecord ?? {};
+    const snap: any = rc.previous_snapshot || rc.current_snapshot || {};
+    const life: any[] = data?.lifecycleTimeline || [];
+    void openMasterProfile({
+      entity: "account",
+      lang: lang as never,
+      autoPrint: true,
+      scope: { countryId: rc.country_id ?? null, countryName: rc.country_name ?? null, branchName: rc.branch_name ?? null },
+      record: {
+        accountId: rc.id || rc.entity_id || "",
+        accountCode: rc.reference_no || rc.entity_id || "",
+        accountName: rc.party_name || snap.party_name || snap.customer_name || rc.reference_no || "Deleted Record",
+        accountCategory: rc.module,
+        subType: rc.entity_type,
+        status: rc.review_status || "Deleted",
+        currency: rc.currency || snap.currency,
+        createdAt: rc.original_created_at || rc.original_date,
+        countryName: rc.country_name,
+        branchName: rc.branch_name,
+        companyName: rc.company_name,
+        customerName: rc.party_name,
+        latestActivityAt: rc.deleted_at,
+        relatedContracts: life.map((v: any) => ({
+          reference: v.action || v.event || v.type,
+          party: v.user_name,
+          date: v.created_at || v.at,
+          status: v.reason || v.review_status,
+        })),
+      } as never,
+    });
   }
 
   if (loading) {

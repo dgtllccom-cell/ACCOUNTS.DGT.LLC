@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { openScopedGenericReport } from "@/lib/reports/open-scoped-report";
 import {
   FileText, Package, Scale, Gauge, Container, MessageSquare,
   Search, ChevronDown, ChevronUp, Download, Upload, Printer,
@@ -268,7 +269,38 @@ export function JournalBookingStockDashboard({ session }: { session: any }) {
     URL.revokeObjectURL(url);
   };
 
-  const handlePrint = () => window.print();
+  const handlePrint = () => {
+    void openScopedGenericReport({
+      title: "Journal Booking Stock — Container Goods Received",
+      subtitle: [dateFrom, dateTo].filter(Boolean).join(" — "),
+      lang,
+      countryId: countryId || null,
+      countryBranchId: countryBranchId || null,
+      orientation: "landscape",
+      filters: [
+        { label: "Date Range", value: [dateFrom, dateTo].filter(Boolean).join(" — ") || "All" },
+        { label: "Purchase Order No", value: purchaseOrderNo || "All" },
+        { label: "Goods Name", value: goodsName || "All" },
+        { label: "HS Code", value: hsCode || "All" },
+      ],
+      columns: [
+        { key: "receiptDate", label: "Receipt Date", format: "date" },
+        { key: "billNumber", label: "Purchase Bill No" },
+        { key: "goodsName", label: "Goods Name" },
+        { key: "hsCode", label: "HS Code" },
+        { key: "unit", label: "Unit" },
+        { key: "quantity", label: "Qty", format: "number", align: "right" },
+        { key: "grossWeight", label: "Gross Wt (KG)", format: "number", align: "right" },
+        { key: "netWeight", label: "Net Wt (KG)", format: "number", align: "right" },
+        { key: "purchaseCountry", label: "Purchase Country" },
+        { key: "purchaseBranch", label: "Purchase Branch" },
+        { key: (r) => `${(r as any).purchaseAccountNo ?? ""} - ${(r as any).purchaseAccount ?? ""}`, label: "Purchase Account" },
+        { key: (r) => `${(r as any).salesAccountNo ?? ""} - ${(r as any).salesAccount ?? ""}`, label: "Sales Account" },
+        { key: "importExport", label: "Imp/Exp" },
+      ],
+      rows: (data?.rows ?? []) as unknown as Record<string, unknown>[],
+    });
+  };
 
   const summary = data?.summary;
   const branchSummary = data?.branchSummary;

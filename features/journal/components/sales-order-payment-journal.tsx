@@ -6655,8 +6655,8 @@ function RowActions({ onSelect, rowId }: { onSelect: () => void; rowId: string }
             { icon: <Eye style={{ width: 14, height: 14 }} />, label: t("row_view_details", currentLanguage), color: "#2563eb", fn: () => handleItem(onSelect) },
             { icon: <WalletCards style={{ width: 14, height: 14 }} />, label: t("payment_history", currentLanguage), color: "#7c3aed", fn: () => handleItem(onSelect) },
             { icon: <Banknote style={{ width: 14, height: 14 }} />, label: t("journal_entry", currentLanguage), color: "#059669", fn: () => handleItem(onSelect) },
-            { icon: <Printer style={{ width: 14, height: 14 }} />, label: t("print_btn", currentLanguage), color: "#475569", fn: () => handleItem(() => window.print()) },
-            { icon: <DownloadActionIcon />, label: t("export_pdf", currentLanguage), color: "#dc2626", fn: () => handleItem(() => window.print()) },
+            { icon: <Printer style={{ width: 14, height: 14 }} />, label: t("print_btn", currentLanguage), color: "#475569", fn: () => handleItem(onSelect) },
+            { icon: <DownloadActionIcon />, label: t("export_pdf", currentLanguage), color: "#dc2626", fn: () => handleItem(onSelect) },
           ].map(({ icon, label, color, fn }) => (
             <button
               key={label}

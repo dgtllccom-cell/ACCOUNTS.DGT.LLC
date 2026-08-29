@@ -727,15 +727,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                   </Button>
                 )}
                 <Button
-                  onClick={() => {
-                    const printContents = document.getElementById("printable-modal-voucher")?.innerHTML;
-                    if (!printContents) return;
-                    const originalContents = document.body.innerHTML;
-                    document.body.innerHTML = printContents;
-                    window.print();
-                    document.body.innerHTML = originalContents;
-                    window.location.reload(); // Refresh to restore react state
-                  }}
+                  onClick={() => printDomFragmentViaModal("printable-modal-voucher", "Voucher")}
                   className="h-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1"
                 >
                   <Printer className="h-3.5 w-3.5" /> Print

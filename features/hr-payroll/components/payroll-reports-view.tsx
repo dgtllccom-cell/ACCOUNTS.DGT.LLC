@@ -8,6 +8,7 @@ import { SalaryTransferModal } from "./salary-transfer-modal";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { openScopedGenericReport } from "@/lib/reports/open-scoped-report";
 
 export function PayrollReportsView() {
   const lang = useActiveLanguage();
@@ -102,9 +103,45 @@ export function PayrollReportsView() {
     }
   }
 
-  // Exports
+  // Centralized A4 print / PDF via the shared engine (real data + dynamic branding).
   function handlePrint() {
-    window.print();
+    const all = t(lang, "common.all", "All");
+    void openScopedGenericReport({
+      title: "Payroll — Salary Due Register",
+      subtitle: month,
+      lang,
+      countryId: countryId || null,
+      countryBranchId: branchId || null,
+      countryName: countries.find((c) => c.id === countryId)?.name ?? null,
+      branchName: branches.find((b) => b.id === branchId)?.name ?? null,
+      reportPeriod: month,
+      filters: [
+        { label: "Month", value: month || "—" },
+        { label: "Country", value: countries.find((c) => c.id === countryId)?.name ?? all },
+        { label: "Branch", value: branches.find((b) => b.id === branchId)?.name ?? all },
+        { label: "Status", value: status || all },
+      ],
+      columns: [
+        { key: (r) => (r.employee as any)?.employee_code, label: "Emp Code" },
+        { key: (r) => (r.employee as any)?.person?.customer_name, label: "Employee Name" },
+        { key: "salary_month", label: "Month" },
+        { key: "basic_salary", label: "Basic Salary", format: "currency", align: "right" },
+        { key: "allowances", label: "Allowances", format: "currency", align: "right" },
+        { key: "deductions", label: "Deductions", format: "currency", align: "right" },
+        { key: "advance_recovery", label: "Advance Recovery", format: "currency", align: "right" },
+        { key: "loan_recovery", label: "Loan Recovery", format: "currency", align: "right" },
+        { key: "net_salary", label: "Net Paid", format: "currency", align: "right" },
+        { key: "status", label: "Status", format: "status" },
+      ],
+      rows: records,
+      totalsRow: {
+        salary_month: t(lang, "common.total", "Total"),
+        basic_salary: records.reduce((s, r) => s + Number(r.basic_salary || 0), 0),
+        allowances: records.reduce((s, r) => s + Number(r.allowances || 0), 0),
+        deductions: records.reduce((s, r) => s + Number(r.deductions || 0), 0),
+        net_salary: records.reduce((s, r) => s + Number(r.net_salary || 0), 0),
+      },
+    });
   }
 
   function handleExportCsv() {

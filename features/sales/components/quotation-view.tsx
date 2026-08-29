@@ -136,9 +136,45 @@ export function QuotationView({
     },
     { gross: 0, disc: 0, net: 0, tax: 0, total: 0 },
   );
-  const handlePrint = () => {
-    setView("print");
-    requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(() => window.print(), 80)));
+  const handlePrint = async () => {
+    // Centralized Proforma Invoice via the shared trade-document engine
+    // (A4 / PDF / 5-lang / RTL / dynamic branding).
+    const { openTradeDocument } = await import("@/lib/reports/trade-documents");
+    const { resolveDocumentBranding } = await import("@/lib/reports/resolve-document-branding");
+    const branding = await resolveDocumentBranding({ countryName: (company as any).country ?? null }, lang);
+    openTradeDocument({
+      docType: "proforma_invoice",
+      txnKind: "sales",
+      tradeScope: "local",
+      lang: lang as never,
+      branding: { ...branding, entityName: branding.entityName || company.name || null },
+      docNo: meta.quoteNo || "PFI",
+      docDate: meta.quoteDate,
+      referenceNos: { quotation: meta.quoteNo, invoice: meta.reference },
+      seller: { name: company.name, address: company.address, phone: company.phone, email: company.email, taxId: company.trn },
+      buyer: { name: customer.name, address: customer.address, phone: customer.phone, email: customer.email, taxId: (customer as any).trn },
+      delivery: { paymentTerms: (meta as any).paymentTerms },
+      goods: items.map((it) => {
+        const l = calcLine(it);
+        return {
+          description: it.description,
+          hsCode: it.code,
+          quantity: it.qty,
+          unit: it.unit,
+          unitPrice: it.price,
+          amount: l.total,
+        };
+      }),
+      currency: meta.currency || "USD",
+      totals: {
+        subTotal: totals.net,
+        taxAmount: totals.tax,
+        grandTotal: totals.total,
+      },
+      validity: meta.validUntil,
+      notes,
+      autoPrint: false,
+    });
   };
   useEffect(() => {
     const after = () => setView("form");

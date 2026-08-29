@@ -33,6 +33,7 @@ import { Badge } from "@/components/ui/badge";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { downloadCsv } from "@/features/branches/components/branch-report-export";
+import { openScopedGenericReport } from "@/lib/reports/open-scoped-report";
 
 interface DeletedRecordRow {
   id: string;
@@ -184,7 +185,33 @@ export function AllDeletedRecordsView() {
   }
 
   function handlePrint() {
-    window.print();
+    void openScopedGenericReport({
+      title: "Deleted Records Control — All Countries & Branches",
+      lang,
+      countryId: selectedCountry !== "all" ? selectedCountry : null,
+      countryName: selectedCountry !== "all" ? records[0]?.country_name ?? null : null,
+      filters: [
+        { label: "Country", value: selectedCountry === "all" ? "All" : (records[0]?.country_name || selectedCountry) },
+        { label: "Branch", value: selectedBranch === "all" ? "All" : selectedBranch },
+        { label: "Module", value: selectedModule === "all" ? "All" : selectedModule },
+        { label: "Date Range", value: [fromDate, toDate].filter(Boolean).join(" — ") || "All" },
+      ],
+      orientation: "landscape",
+      columns: [
+        { key: "deleted_at", label: "Deleted At", format: "date" },
+        { key: "original_date", label: "Original Date", format: "date" },
+        { key: "module", label: "Module" },
+        { key: (r) => r.country_name || "Global", label: "Country" },
+        { key: (r) => r.branch_name || "-", label: "Branch" },
+        { key: (r) => r.reference_no || r.entity_id || "", label: "Bill / Ref No" },
+        { key: (r) => r.party_name || "-", label: "Record / Party" },
+        { key: (r) => `${r.user_name} (${r.user_role})`, label: "Deleted By" },
+        { key: (r) => r.reason || "-", label: "Reason" },
+        { key: "risk_level", label: "Risk Level", format: "status" },
+        { key: "review_status", label: "Review Status", format: "status" },
+      ],
+      rows: records as unknown as Record<string, unknown>[],
+    });
   }
 
   const totalPages = Math.ceil(totalCount / pageSize) || 1;

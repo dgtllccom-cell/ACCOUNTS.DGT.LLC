@@ -2916,7 +2916,7 @@ export function LocalPurchaseView({
                                       onClick={() => {
                                         setSelectedRowForVoucher(row);
                                         setActiveActionMenuId(null);
-                                        setTimeout(() => window.print(), 300);
+                                        setTimeout(() => printDomFragmentViaModal("printable-modal-voucher", "Local Purchase Voucher"), 350);
                                       }}
                                       className="w-full px-3 py-1.5 text-[10px] font-bold text-slate-700 hover:bg-purple-50 hover:text-purple-600 flex items-center gap-2 transition"
                                     >
@@ -3381,15 +3381,7 @@ export function LocalPurchaseView({
                   </Button>
                 )}
                 <Button
-                  onClick={() => {
-                    const printContents = document.getElementById("printable-modal-voucher")?.innerHTML;
-                    if (!printContents) return;
-                    const originalContents = document.body.innerHTML;
-                    document.body.innerHTML = printContents;
-                    window.print();
-                    document.body.innerHTML = originalContents;
-                    window.location.reload(); // Refresh to restore react state
-                  }}
+                  onClick={() => printDomFragmentViaModal("printable-modal-voucher", "Voucher")}
                   className="h-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1"
                 >
                   <Printer className="h-3.5 w-3.5" /> Print
