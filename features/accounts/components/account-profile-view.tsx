@@ -44,6 +44,7 @@ import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
+import { openMasterProfile } from "@/lib/reports/master-profiles";
 
 type AccountGeneralReportRow = {
   accountId: string;
@@ -273,7 +274,59 @@ export function AccountProfileView({
   }
 
   function handlePrint() {
-    window.print();
+    if (!selectedRow) {
+      window.print();
+      return;
+    }
+    // Professional A4 Account Master Profile via the shared engine (real record
+    // data + dynamic branding for this account's country/branch).
+    void openMasterProfile({
+      entity: "account",
+      lang,
+      autoPrint: true,
+      record: {
+        accountId: selectedRow.accountId,
+        accountCode: selectedRow.accountCode,
+        accountName: selectedRow.accountName,
+        accountCategory: selectedRow.accountCategory,
+        subType: selectedRow.subType,
+        status: selectedRow.status,
+        currency: selectedRow.currency,
+        createdAt: selectedRow.createdAt,
+        manualReferenceNumber: selectedRow.manualReferenceNumber,
+        customerNumber: selectedRow.customerNumber,
+        countrySerialNumber: selectedRow.countrySerialNumber,
+        branchSerialNumber: selectedRow.branchSerialNumber,
+        countryName: selectedRow.countryName,
+        countryId: selectedRow.countryId,
+        mainBranchName: selectedRow.mainBranchName,
+        cityBranchName: selectedRow.cityBranchName,
+        branchName: selectedRow.branchName,
+        branchCode: selectedRow.branchCode,
+        cityName: selectedRow.cityName,
+        companyName: selectedRow.companyName,
+        companyCode: selectedRow.companyCode,
+        companyOwner: selectedRow.companyOwner,
+        customerName: selectedRow.customerName,
+        bankName: selectedRow.bankName,
+        openingBalance: selectedRow.openingBalance,
+        debitTotal: selectedRow.debitTotal,
+        creditTotal: selectedRow.creditTotal,
+        currentBalance: selectedRow.currentBalance,
+        linkedLedgerCount: selectedRow.linkedLedgerCount,
+        journalActivityCount: selectedRow.journalActivityCount,
+        latestJournalNo: selectedRow.latestJournalNo,
+        latestActivityAt: selectedRow.latestActivityAt,
+        ledgerName: selectedRow.ledgerName,
+        ledgerStatus: selectedRow.ledgerStatus,
+        ledgerCurrency: selectedRow.ledgerCurrency,
+      },
+      scope: {
+        countryId: selectedRow.countryId,
+        countryName: selectedRow.countryName,
+        branchName: selectedRow.cityBranchName || selectedRow.branchName,
+      },
+    });
   }
 
   if (loading) {

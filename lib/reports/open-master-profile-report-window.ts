@@ -32,6 +32,15 @@ export type MProfileSection = {
   /** force this section to start on a new printed page. */
   pageBreakBefore?: boolean;
 };
+
+/** A full-width "list" section — e.g. Related Ledgers, Related Contracts, Bank
+ *  Relationships. Rendered as a numbered card with a compact table; each row is
+ *  break-inside: avoid. Empty (no rows) sections are skipped by the caller. */
+export type MProfileTable = {
+  title: string;
+  columns: string[];
+  rows: Array<Array<string | number | null | undefined>>;
+};
 export type MProfileKpi = { label: string; value: string; tone?: "open" | "current" | "debit" | "credit" | "neutral" };
 export type MProfileMeta = { label: string; value: string | null | undefined };
 
@@ -59,10 +68,20 @@ export type MasterProfileConfig = {
   meta: MProfileMeta[];      // up to 4 header banner cells (label translated, value = data)
   kpis?: MProfileKpi[];     // 0 or 4 KPI cards (label translated, value formatted data)
   sections: MProfileSection[]; // numbered section cards
+  /** full-width list/table sections rendered after `sections` (Related Ledgers, Contracts, Banks). */
+  relatedTables?: MProfileTable[];
   createdBy?: string;       // record audit data
   reportIdPrefix?: string;  // e.g. "BRANCH" / "LEDGER" for the footer report id
   reportIdValue?: string;   // e.g. code
   footerAccountName?: string; // company / account name shown in the running footer
+
+  /** Dynamic branding (spec D) — the operating entity this record belongs to.
+   *  Logo replaces the header glyph; the brand lines render under the logo text. */
+  logoUrl?: string | null;
+  brandEntityName?: string | null;
+  brandLines?: Array<string | null | undefined>;
+  /** Person/employee photo — shown in the dark overview banner. */
+  photoUrl?: string | null;
 
   /** Compact Roles & Permissions summary (spec §4). Rendered full-width. */
   permissions?: {
@@ -110,6 +129,15 @@ export function buildMasterProfileReportHtml(config: MasterProfileConfig): strin
   const subtitle = escapeHtml(config.subtitle || config.title);
   const reportType = escapeHtml(config.reportTypeLabel || config.subtitle || config.title);
   const footerAccount = escapeHtml(config.footerAccountName || "ACCOUNTS.DGT.LLC");
+
+  // Dynamic branding (spec D) — the operating entity for this record. When no
+  // branding is resolved we fall back to the neutral ERP name, never a hardcoded
+  // company. `brandLines` are pre-filtered by the caller (only real values).
+  const brandEntity = escapeHtml((config.brandEntityName || config.footerAccountName || "ACCOUNTS.DGT.LLC").toString());
+  const brandLines = (config.brandLines || []).map((s) => (s == null ? "" : String(s).trim())).filter(Boolean);
+  const logoUrl = (config.logoUrl || "").toString().trim();
+  const photoUrl = (config.photoUrl || "").toString().trim();
+  const safeImg = (u: string) => (/^https?:\/\//i.test(u) || u.startsWith("data:") || u.startsWith("/") ? escapeHtml(u) : "");
 
   const metaCells = (config.meta || []).slice(0, 4)
     .map((m) => `<div><span class="overview-meta-label">${escapeHtml(m.label)}</span><div class="overview-meta-val">${v(m.value)}</div></div>`)
@@ -176,6 +204,26 @@ export function buildMasterProfileReportHtml(config: MasterProfileConfig): strin
         <span class="perm-count">${escapeHtml(templateLabel || "Template")}: ${escapeHtml(summary.template)} · ${summary.grantedCount}/${summary.totalCount} ${escapeHtml(grantedLabel || "granted")}</span>
       </div>
       <div class="perm-grid">${groups}</div>
+    </div>`;
+    idx++;
+  }
+
+  // ---- related list/table sections (Ledgers, Contracts, Banks) ----------
+  let relatedTablesBlock = "";
+  for (const tbl of config.relatedTables || []) {
+    if (!tbl.rows || tbl.rows.length === 0) continue;
+    const head = tbl.columns.map((c) => `<th>${escapeHtml(c)}</th>`).join("");
+    const body = tbl.rows
+      .map(
+        (r) =>
+          `<tr>${tbl.columns
+            .map((_, ci) => `<td>${v(r[ci] == null ? "" : String(r[ci]))}</td>`)
+            .join("")}</tr>`,
+      )
+      .join("");
+    relatedTablesBlock += `<div class="section-card section-card--full related-card">
+      <div class="section-header"><span class="section-badge">${idx + 1}</span> ${escapeHtml(tbl.title)}</div>
+      <table class="related-table"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>
     </div>`;
     idx++;
   }
@@ -249,8 +297,15 @@ export function buildMasterProfileReportHtml(config: MasterProfileConfig): strin
       .header-table td { border: none; padding: 0; vertical-align: middle; }
       .logo-title { display: flex; align-items: center; gap: 9px; }
       .logo-icon { width: 32px; height: 32px; background: #1e3a8a; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; }
+      .logo-img { width: 38px; height: 38px; object-fit: contain; border-radius: 6px; border: 1px solid #e2e8f0; background: #fff; flex: 0 0 auto; }
       .logo-text { font-size: 13px; font-weight: 900; color: #0f172a; line-height: 1.1; }
-      .logo-subtext { font-size: 7.5px; color: #64748b; font-weight: 600; }
+      .logo-subtext { font-size: 7.5px; color: #64748b; font-weight: 600; line-height: 1.3; }
+      .overview-photo { width: 46px; height: 46px; object-fit: cover; border-radius: 8px; border: 2px solid rgba(255,255,255,0.25); flex: 0 0 auto; }
+      .related-table { width: 100%; border-collapse: collapse; }
+      .related-table th { background: #eef2f7; color: #334155; font-size: 7.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.3px; padding: 4px 8px; text-align: start; border-bottom: 1px solid #dbe2ea; }
+      .related-table td { padding: 4px 8px; font-size: 8.5px; color: #1e293b; border-bottom: 1px solid #f1f5f9; vertical-align: top; word-break: break-word; }
+      .related-table tr { break-inside: avoid; page-break-inside: avoid; }
+      .related-card { break-inside: auto; page-break-inside: auto; }
       .report-title { font-size: 15px; font-weight: 900; color: #1e3a8a; margin: 0 0 3px 0; text-align: center; text-transform: uppercase; letter-spacing: 0.4px; }
       .subtitle-pill { font-size: 7.5px; font-weight: 800; border: 1px solid #1e3a8a; color: #1e3a8a; border-radius: 999px; padding: 2px 9px; display: inline-block; }
       .meta-box { font-size: 8px; color: #334155; font-weight: 700; line-height: 1.45; }
@@ -339,10 +394,12 @@ export function buildMasterProfileReportHtml(config: MasterProfileConfig): strin
           <tr>
             <td style="width: 34%;">
               <div class="logo-title">
-                <div class="logo-icon">🏢</div>
+                ${safeImg(logoUrl) ? `<img class="logo-img" src="${safeImg(logoUrl)}" alt="" />` : `<div class="logo-icon">🏢</div>`}
                 <div>
-                  <div class="logo-text">${footerAccount}</div>
-                  <div class="logo-subtext">${escapeHtml(tt("acct.brand_short", "Digital Dock ERP"))} / FMS</div>
+                  <div class="logo-text">${brandEntity}</div>
+                  ${brandLines.length
+                    ? brandLines.map((l) => `<div class="logo-subtext">${escapeHtml(l)}</div>`).join("")
+                    : `<div class="logo-subtext">${escapeHtml(tt("acct.brand_short", "Digital Dock ERP"))} / FMS</div>`}
                 </div>
               </div>
             </td>
@@ -363,9 +420,12 @@ export function buildMasterProfileReportHtml(config: MasterProfileConfig): strin
 
         <div class="overview-banner">
           <div class="overview-top">
-            <div>
-              <div class="overview-title">${escapeHtml(config.overviewLabel || title)}</div>
-              <div class="overview-name">${v(config.name || subtitle || "-")}</div>
+            <div style="display:flex; align-items:flex-start; gap:12px;">
+              ${safeImg(photoUrl) ? `<img class="overview-photo" src="${safeImg(photoUrl)}" alt="" />` : ""}
+              <div>
+                <div class="overview-title">${escapeHtml(config.overviewLabel || title)}</div>
+                <div class="overview-name">${v(config.name || subtitle || "-")}</div>
+              </div>
             </div>
             ${config.status ? `<span class="overview-status">${v(config.status)}</span>` : ""}
           </div>
@@ -374,6 +434,7 @@ export function buildMasterProfileReportHtml(config: MasterProfileConfig): strin
         </div>
 
         ${sectionFlow}
+        ${relatedTablesBlock}
         ${permissionsBlock}
         ${footerBlock}
 

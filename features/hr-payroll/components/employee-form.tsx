@@ -29,7 +29,7 @@ import { Button } from "@/components/ui/button";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
-import { openMasterProfileReportWindow } from "@/lib/reports/open-master-profile-report-window";
+import { openMasterProfile } from "@/lib/reports/master-profiles";
 
 type EmployeeFormProps = {
   employeeId?: string | null;
@@ -634,68 +634,65 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
     return c;
   };
 
-  // A4 Employee Master Profile Print/PDF via the shared master-profile engine (item 10).
+  // A4 Employee Master Profile Print/PDF via the shared master-profile engine
+  // (real record data + dynamic branding for the employee's country/branch).
   function printProfile() {
-    const dash = "-";
-    const cur = salaryCurrency;
-    openMasterProfileReportWindow({
+    void openMasterProfile({
+      entity: "employee",
       lang,
-      title: t(lang, "hr.f_master_report_card", "Employee Master Profile"),
-      subtitle: fullName || t(lang, "hr.f_cat_employee", "Employee"),
-      reportTypeLabel: catLabel(category),
-      meta: [
-        { label: t(lang, "hr.f_full_name", "Full Name"), value: fullName },
-        { label: t(lang, "rozrep.country", "Country"), value: selectedCountryObj?.name },
-        { label: t(lang, "hr.f_main_branch", "Main Branch"), value: selectedMainBranchObj?.name },
-        { label: t(lang, "hr.f_joining_date", "Joining Date"), value: joiningDate }
-      ],
-      kpis: [
-        { label: t(lang, "hr.f_basic_salary", "Basic Salary"), value: `${Number(basicSalary).toLocaleString()} ${cur}`, tone: "current" },
-        { label: t(lang, "hr.f_total_allowances", "Total Allowances"), value: `${totalAllowances.toLocaleString()} ${cur}`, tone: "credit" },
-        { label: t(lang, "hr.f_deductions", "Deductions"), value: `${(Number(deduction) + Number(taxDeduction)).toLocaleString()} ${cur}`, tone: "debit" },
-        { label: t(lang, "hr.f_net_salary", "Net Salary"), value: `${netSalary.toLocaleString()} ${cur}`, tone: "open" }
-      ],
-      sections: [
-        { title: t(lang, "hr.f_sec_identity", "Identity & Contact"), rows: [
-          { label: t(lang, "hr.f_first_name", "First Name"), value: firstName || dash },
-          { label: t(lang, "hr.f_last_name", "Last Name"), value: lastName || dash },
-          { label: t(lang, "hr.f_full_name", "Full Name"), value: fullName || dash },
-          { label: t(lang, "hr.f_gender", "Gender"), value: gender || dash },
-          { label: t(lang, "hr.pp_mobile_phone", "Mobile Phone"), value: selectedPersonObj?.mobile || dash },
-          { label: t(lang, "sed.f_whatsapp", "WhatsApp"), value: selectedPersonObj?.whatsapp || dash },
-          { label: t(lang, "hr.pp_email_address", "Email"), value: selectedPersonObj?.email || dash },
-          { label: t(lang, "hr.pp_address_location", "Address"), value: selectedPersonObj?.address || dash }
-        ] },
-        { title: t(lang, "hr.f_sec_employment", "Employment & Designation"), rows: [
-          { label: t(lang, "hr.f_lbl_category", "Category"), value: catLabel(category) },
-          { label: t(lang, "hr.f_lbl_designation_short", "Designation"), value: designation || dash },
-          { label: t(lang, "hr.f_lbl_department", "Department"), value: department || dash },
-          { label: t(lang, "hr.f_employment_type", "Employment Type"), value: employmentType || dash },
-          { label: t(lang, "hr.f_job_status", "Job Status"), value: jobStatus || dash }
-        ] },
-        { title: t(lang, "hr.f_sec_location", "Country / Branches"), rows: [
-          { label: t(lang, "rozrep.country", "Country"), value: selectedCountryObj?.name || dash },
-          { label: t(lang, "hr.f_main_branch", "Main Branch"), value: selectedMainBranchObj?.name || dash },
-          { label: t(lang, "hr.f_city_branch", "City Branch"), value: selectedCityBranchObj?.name || dash }
-        ] },
-        { title: t(lang, "hr.f_sec_shift", "Shift & Attendance"), rows: [
-          { label: t(lang, "hr.f_working_shift", "Working Shift"), value: workingShift || dash },
-          { label: t(lang, "hr.f_duty_hours", "Duty Hours"), value: (dutyStartTime && dutyEndTime) ? `${dutyStartTime} – ${dutyEndTime}` : dash },
-          { label: t(lang, "hr.f_weekly_off", "Weekly Off"), value: weeklyOffDay || dash },
-          { label: t(lang, "hr.f_joining_date", "Joining Date"), value: joiningDate || dash }
-        ] },
-        { title: t(lang, "hr.f_sec_payroll", "Salary & Payroll"), rows: [
-          { label: t(lang, "hr.f_salary_type", "Salary Type"), value: salaryType || dash },
-          { label: t(lang, "hr.f_basic_salary", "Basic Salary"), value: `${Number(basicSalary).toLocaleString()} ${cur}` },
-          { label: t(lang, "hr.f_total_allowances", "Total Allowances"), value: `${totalAllowances.toLocaleString()} ${cur}` },
-          { label: t(lang, "hr.f_net_salary", "Net Salary"), value: `${netSalary.toLocaleString()} ${cur}` },
-          { label: t(lang, "hr.f_currency", "Currency"), value: cur }
-        ] },
-        { title: t(lang, "hr.f_sec_status", "Status & Audit"), rows: [
-          { label: t(lang, "hr.f_status", "Status"), value: status || dash },
-          { label: t(lang, "hr.f_job_status", "Job Status"), value: jobStatus || dash }
-        ] }
-      ]
+      autoPrint: true,
+      record: {
+        id: employeeId || undefined,
+        fullName: fullName || t(lang, "hr.f_cat_employee", "Employee"),
+        firstName,
+        lastName,
+        fatherName: selectedPersonObj?.father_name || null,
+        gender,
+        nationalId: selectedPersonObj?.national_id || selectedPersonObj?.customer_number || null,
+        personCode: selectedPersonObj?.person_code || null,
+        photoUrl: selectedPersonObj?.photo_url || selectedPersonObj?.avatar_url || null,
+        category: catLabel(category),
+        designation,
+        department,
+        employmentType,
+        jobStatus,
+        status,
+        companyName: null,
+        countryName: selectedCountryObj?.name || null,
+        countryId,
+        countryBranchId,
+        cityBranchId,
+        mainBranchName: selectedMainBranchObj?.name || null,
+        cityBranchName: selectedCityBranchObj?.name || null,
+        reportingManager: selectedManagerObj?.person?.customer_name || selectedManagerObj?.employee_code || null,
+        joiningDate,
+        probationStartDate,
+        probationEndDate,
+        contractStartDate,
+        contractEndDate,
+        workingShift,
+        dutyStartTime,
+        dutyEndTime,
+        weeklyOffDay,
+        salaryType,
+        basicSalary: Number(basicSalary) || 0,
+        salaryCurrency,
+        totalAllowances,
+        deduction: Number(deduction) || 0,
+        taxDeduction: Number(taxDeduction) || 0,
+        netSalary,
+        mobile: selectedPersonObj?.mobile || null,
+        whatsapp: selectedPersonObj?.whatsapp || null,
+        email: selectedPersonObj?.email || null,
+        address: selectedPersonObj?.address || null,
+      },
+      scope: {
+        countryId: countryId || undefined,
+        countryBranchId: countryBranchId || undefined,
+        cityBranchId: cityBranchId || undefined,
+        countryName: selectedCountryObj?.name || null,
+        branchName: selectedCityBranchObj?.name || selectedMainBranchObj?.name || null,
+      },
     });
   }
 

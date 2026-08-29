@@ -13,7 +13,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { getLabel } from "./translations";
 import { Th } from "@/components/ui/translated-th";
 import { t } from "@/lib/i18n/ui";
-import { openMasterProfileReportWindow } from "@/lib/reports/open-master-profile-report-window";
+import { openMasterProfile } from "@/lib/reports/master-profiles";
 import { Party360Modal } from "./party-360-modal";
 import { SendToCustomerModal } from "./send-to-customer-modal";
 
@@ -194,47 +194,48 @@ export function CustomerProfile({
   // Dedicated A4 customer profile via the shared master-profile engine (real record data only).
   const handlePrint = () => {
     if (!customer) return;
-    const tt = (key: string, fallback: string) => t(lang as never, key as never, fallback);
     const c: any = customer;
-    const created = c.created_at ? new Date(c.created_at).toLocaleString() : "";
-    openMasterProfileReportWindow({
+    const m: any = parsedMeta || {};
+    void openMasterProfile({
+      entity: "customer",
       lang,
       autoPrint: true,
-      title: tt("cust.report_title", "Customer Profile Report"),
-      subtitle: tt("cust.report_subtitle", "Customer Profile Summary"),
-      overviewLabel: tt("cust.overview", "Customer Profile Overview"),
-      name: c.customer_name,
-      status: c.is_active === false ? tt("acct.not_registered", "Inactive") : tt("acct.registered", "Active"),
-      reportIdPrefix: "CUST",
-      reportIdValue: c.customer_number || (c.id ? String(c.id).slice(0, 8).toUpperCase() : ""),
-      meta: [
-        { label: tt("acct.customer_code", "Customer Code"), value: c.customer_number },
-        { label: tt("acct.company_name", "Company Name"), value: c.company_name },
-        { label: tt("acct.country", "Country"), value: parsedMeta?.country || c.country_name },
-        { label: tt("acct.city", "City"), value: c.city_name }
-      ],
-      sections: [
-        { title: tt("cust.sec_customer", "Customer Information"), rows: [
-          { label: tt("acct.customer_name", "Customer Name"), value: c.customer_name },
-          { label: tt("acct.company_name", "Company Name"), value: c.company_name },
-          { label: tt("cust.contact_person", "Contact Person"), value: c.contact_person },
-          { label: tt("acct.customer_code", "Customer Code"), value: c.customer_number }
-        ]},
-        { title: tt("cust.sec_contact", "Contact Information"), rows: [
-          { label: tt("acct.phone", "Phone"), value: c.mobile },
-          { label: tt("branch.whatsapp", "WhatsApp"), value: c.whatsapp },
-          { label: tt("acct.email", "Email"), value: c.email }
-        ]},
-        { title: tt("branch.sec_location", "Location & Address"), rows: [
-          { label: tt("acct.address", "Address"), value: c.address },
-          { label: tt("acct.city", "City"), value: c.city_name },
-          { label: tt("acct.country", "Country"), value: parsedMeta?.country || c.country_name }
-        ]},
-        { title: tt("acct.sec_audit_info", "System / Audit Information"), rows: [
-          { label: tt("acct.created_on", "Created On"), value: created },
-          { label: tt("acct.reference_no", "Reference No."), value: c.customer_number }
-        ]}
-      ]
+      record: {
+        id: c.id,
+        customer_name: c.customer_name,
+        customer_number: c.customer_number,
+        company_name: c.company_name || m.companyName,
+        contact_person: c.contact_person,
+        father_name: c.father_name || m.fatherName,
+        customer_type: m.customerType,
+        national_id: c.national_id || m.nationalId,
+        trn: c.trn || m.companyTaxNo,
+        kyc_date: c.kyc_date,
+        is_active: c.is_active,
+        created_at: c.created_at,
+        mobile: c.mobile,
+        whatsapp: c.whatsapp,
+        email: c.email,
+        address: c.address || m.companyAddress,
+        city_name: c.city_name || m.city,
+        country_name: c.country_name || m.country,
+        country_id: c.country_id,
+        country_branch_id: c.country_branch_id,
+        city_branch_id: c.city_branch_id,
+        branch_name: m.branchName,
+        companyRegNo: m.companyRegNo,
+        companyTaxNo: m.companyTaxNo,
+        businessRelationship: m.companyBusinessType,
+        contacts: Array.isArray(m.contacts) ? m.contacts : [],
+        documents: Array.isArray(m.documents)
+          ? m.documents.map((d: any) => ({ type: d.type, number: d.number, issue: d.issue, expiry: d.expiry }))
+          : [],
+      },
+      scope: {
+        countryId: c.country_id,
+        countryName: c.country_name || m.country,
+        branchName: m.branchName,
+      },
     });
   };
 

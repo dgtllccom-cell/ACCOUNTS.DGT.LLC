@@ -37,6 +37,7 @@ import { Party360Modal } from "@/features/customers/components/party-360-modal";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { CompanyIncorporationForm } from "@/features/companies/components/company-incorporation-form";
 import { openCompany360Report } from "@/lib/reports/open-company-360-report-window";
+import { openMasterProfile } from "@/lib/reports/master-profiles";
 
 export type CompanyRegistryItem = {
   id: string;
@@ -268,6 +269,57 @@ export function CompanyRegistry() {
     const totalInAccounts = companies.reduce((acc, c) => acc + (c.companiesCount || 1), 0);
     return { totalCompanies, totalBranches, totalAccounts, totalContracts, totalInAccounts };
   }, [companies, totalDbBranches]);
+
+  // Professional A4 Company Master Profile via the shared master-profile engine
+  // (real record + bank relationships + related accounts + dynamic branding).
+  const handleMasterProfile = async (c: CompanyRegistryItem) => {
+    let profile: any = { id: c.id, name: c.accountName, ...(c.raw || {}) };
+    try {
+      const res: any = await apiGet(`/api/erp/companies/${c.id}/profile?lang=${lang}`);
+      if (res?.profile) profile = res.profile;
+    } catch { /* fall back to list-level data */ }
+    void openMasterProfile({
+      entity: "company",
+      lang: lang as never,
+      autoPrint: true,
+      record: {
+        id: profile.id || c.id,
+        name: profile.name || c.accountName,
+        code: profile.code || profile.company_code || c.accountNo,
+        legal_name: profile.legal_name,
+        base_currency: profile.base_currency,
+        business_type: profile.business_type || profile.nature_of_business,
+        owner_name: profile.owner_name,
+        incorporation_date: profile.incorporation_date,
+        is_active: profile.is_active,
+        created_at: profile.created_at,
+        country_name: profile.country_name || c.country,
+        country_id: profile.country_id,
+        country_branch_id: profile.country_branch_id,
+        city_branch_id: profile.city_branch_id,
+        state_name: profile.state_name || c.state,
+        district_name: profile.district_name,
+        city_name: profile.city_name || c.city,
+        area_name: profile.area_name,
+        zip_code: profile.zip_code,
+        address: profile.address || c.address,
+        main_branch_name: profile.main_branch_name,
+        city_branch_name: profile.city_branch_name,
+        contacts: profile.contacts,
+        registrations: profile.registrations,
+        owners: profile.owners,
+        banks: profile.banks,
+        relatedAccounts: profile.relatedAccounts,
+      },
+      scope: {
+        countryId: profile.country_id,
+        countryBranchId: profile.country_branch_id,
+        cityBranchId: profile.city_branch_id,
+        countryName: profile.country_name || c.country,
+        branchName: profile.city_branch_name || profile.main_branch_name || null,
+      },
+    });
+  };
 
   // 360 Degree Dossier Print & PDF Handler
   const handlePrint = async (c: CompanyRegistryItem) => {
@@ -736,6 +788,17 @@ export function CompanyRegistry() {
                               type="button"
                               onClick={() => {
                                 setOpenActionMenuId(null);
+                                handleMasterProfile(c);
+                              }}
+                              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                            >
+                              <Printer className="h-3.5 w-3.5 text-blue-500" />
+                              <span>{tt("pdoc.company_report_title", "Company Master Profile")}</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOpenActionMenuId(null);
                                 handlePrint(c);
                               }}
                               className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
@@ -930,6 +993,14 @@ export function CompanyRegistry() {
                 className="text-xs font-bold gap-1.5 cursor-pointer text-indigo-600 border-indigo-200 hover:bg-indigo-50"
               >
                 <Globe className="h-3.5 w-3.5" /> {tt("cusm.view_360", "View 360 Profile")}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleMasterProfile(previewCompany)}
+                className="text-xs font-bold gap-1.5 cursor-pointer text-blue-600 border-blue-200 hover:bg-blue-50"
+              >
+                <Printer className="h-3.5 w-3.5" /> {tt("pdoc.company_report_title", "Company Master Profile")}
               </Button>
               <Button
                 variant="outline"
