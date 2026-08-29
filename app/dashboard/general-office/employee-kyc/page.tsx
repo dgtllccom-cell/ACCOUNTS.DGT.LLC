@@ -9,7 +9,7 @@ export const metadata = { title: "Employee KYC / QVC — HRM" };
 export default async function EmployeeKycPage() {
   const session = await requireErpSession();
   return (
-    <EntryMethodSelector targetModule="kyc_document" domain="business" lang={session.preferredLanguage ?? "en"}>
+    <EntryMethodSelector targetModule="employees" domain="business" lang={session.preferredLanguage ?? "en"}>
       <EmployeeKycView lang={session.preferredLanguage ?? "en"} />
     </EntryMethodSelector>
   );

@@ -146,6 +146,22 @@ const MODULE_MAP: Record<string, Record<string, string>> = {
     address: "address",
     document_date: "kycDate",
   },
+  // Employee / HR identity from an ID / contract document. The identity is
+  // stored on the person master; the employee form prefills name + contract
+  // dates and links / creates the person record — never a duplicate.
+  employees: {
+    customer_name: "fullName",
+    father_name: "fatherName",
+    national_id: "nationalId",
+    phone: "phone",
+    email: "email",
+    address: "address",
+    document_date: "joiningDate",
+    contract_start_date: "contractStartDate",
+    contract_end_date: "contractEndDate",
+    grand_total: "basicSalary",
+    currency: "salaryCurrency",
+  },
   banks: {
     bank_name: "bankName",
     branch_name: "branchName",
@@ -161,6 +177,21 @@ const MODULE_MAP: Record<string, Record<string, string>> = {
   // a read-only projection of purchase_orders / sales_orders / employees). The
   // user picks Purchase or Sales in the intake purpose selector; the contract
   // fields prefill that wizard via the purchase_orders / sales_orders maps above.
+  // Daily / office Expense bill — reviewed draft prefills the Expense Bill Entry
+  // form; the human confirms the Debit (expense) and Credit (payable/cash)
+  // ledgers and posts via the existing expenses/transfer route.
+  expenses: {
+    invoice_number: "referenceNo",
+    contract_number: "referenceNo",
+    document_date: "billDate",
+    currency: "currency",
+    exchange_rate: "exchangeRate",
+    grand_total: "amount",
+    subtotal: "amount",
+    tax_amount: "taxAmt",
+    supplier_name: "details",
+    payment_terms: "details",
+  },
   // Cash / Bank Roznamcha — a reviewed draft + pre-post preview only. The AI
   // never posts; the human posts through the existing Roznamcha screen.
   roznamcha_entries: {

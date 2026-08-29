@@ -291,10 +291,12 @@ const DOC_PURPOSES: Array<{ target: string; labelKey: string; label: string; gro
   { target: "sales_orders", labelKey: "purpose_sales", label: "Sales (New / Existing)", group: "Trade" },
   { target: "purchase_loading_records", labelKey: "purpose_loading", label: "Purchase Loading / Receiving", group: "Trade" },
   { target: "roznamcha_entries", labelKey: "purpose_payment", label: "Payment / Cash / Bank Roznamcha", group: "Finance" },
+  { target: "expenses", labelKey: "purpose_expense", label: "Expense Bill", group: "Finance" },
   { target: "shipping_bl_records", labelKey: "purpose_shipping", label: "Shipping / Bill of Lading", group: "Logistics" },
   { target: "clearing_agent_custom_entries", labelKey: "purpose_clearing", label: "Clearing / Customs Entry", group: "Logistics" },
   { target: "companies", labelKey: "purpose_company", label: "Company / Entity", group: "Masters" },
   { target: "customers", labelKey: "purpose_customer", label: "Customer / Person KYC", group: "Masters" },
+  { target: "employees", labelKey: "purpose_employee", label: "Employee / HR Record", group: "Masters" },
   { target: "banks", labelKey: "purpose_bank", label: "Bank Account", group: "Masters" },
   // A contract/agreement between the entity and a supplier → Purchase workflow.
   { target: "purchase_orders", labelKey: "purpose_contract_purchase", label: "Contract / Agreement (Purchase side)", group: "Masters" },

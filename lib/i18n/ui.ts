@@ -14622,6 +14622,8 @@ const en: Dict = {
   "dintake.ap_rs_document": "from document",
   "dintake.ap_rs_daily_rate": "approved daily rate",
   "dintake.ap_rs_implied_1": "same currency (1.0)",
+  "dintake.purpose_employee": "Employee / HR Record",
+  "dintake.purpose_expense": "Expense Bill",
 };
 
 const ur: Dict = {
@@ -24814,6 +24816,8 @@ const ur: Dict = {
   "dintake.ap_rs_document": "دستاویز سے",
   "dintake.ap_rs_daily_rate": "منظور شدہ روزانہ شرح",
   "dintake.ap_rs_implied_1": "ایک ہی کرنسی (1.0)",
+  "dintake.purpose_employee": "ملازم / ایچ آر ریکارڈ",
+  "dintake.purpose_expense": "اخراجات کا بل",
 };
 
 const ar: Dict = {
@@ -35008,6 +35012,8 @@ const ar: Dict = {
   "dintake.ap_rs_document": "من المستند",
   "dintake.ap_rs_daily_rate": "السعر اليومي المعتمد",
   "dintake.ap_rs_implied_1": "نفس العملة (1.0)",
+  "dintake.purpose_employee": "موظف / سجل الموارد البشرية",
+  "dintake.purpose_expense": "فاتورة مصروفات",
 };
 
 const fa: Dict = {
@@ -45201,6 +45207,8 @@ const fa: Dict = {
   "dintake.ap_rs_document": "از سند",
   "dintake.ap_rs_daily_rate": "نرخ روزانه تأییدشده",
   "dintake.ap_rs_implied_1": "همان ارز (۱٫۰)",
+  "dintake.purpose_employee": "کارمند / سابقه منابع انسانی",
+  "dintake.purpose_expense": "صورتحساب هزینه",
 };
 
 const ps: Dict = {
@@ -55400,6 +55408,8 @@ const ps: Dict = {
   "dintake.ap_rs_document": "له سند څخه",
   "dintake.ap_rs_daily_rate": "منظور شوی ورځنی نرخ",
   "dintake.ap_rs_implied_1": "ورته اسعار (1.0)",
+  "dintake.purpose_employee": "کارمند / د بشري سرچینو ریکارډ",
+  "dintake.purpose_expense": "د لګښت بیل",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

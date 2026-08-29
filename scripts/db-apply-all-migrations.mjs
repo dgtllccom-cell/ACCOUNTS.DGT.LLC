@@ -74,7 +74,8 @@ const migrations = [
   { name: "20261007_goods_master_parameters_unique_guard", path: "supabase/migrations/20261007_goods_master_parameters_unique_guard.sql" },
   { name: "20261008_cleanup_user_directory_master", path: "supabase/migrations/20261008_cleanup_user_directory_master.sql" },
   { name: "20261009_doc_intake_master_document_types", path: "supabase/migrations/20261009_doc_intake_master_document_types.sql" },
-  { name: "20261010_doc_intake_contract_route", path: "supabase/migrations/20261010_doc_intake_contract_route.sql" }
+  { name: "20261010_doc_intake_contract_route", path: "supabase/migrations/20261010_doc_intake_contract_route.sql" },
+  { name: "20261011_doc_intake_employee_expense_types", path: "supabase/migrations/20261011_doc_intake_employee_expense_types.sql" }
 ];
 
 const sql = postgres(env.DATABASE_URL, { max: 1, prepare: false, connect_timeout: 60 });
