@@ -125,6 +125,27 @@ export const customerTranslations: Record<string, Record<SupportedLanguage, stri
     fa: "نام پدر / نماینده",
     ps: "د پلار نوم / استازی"
   },
+  fatherNameOnly: {
+    en: "Father / Guardian Name",
+    ur: "والد کا نام",
+    ar: "اسم الأب",
+    fa: "نام پدر",
+    ps: "د پلار نوم"
+  },
+  filterToggle: {
+    en: "Search & Filter",
+    ur: "تلاش اور فلٹر",
+    ar: "البحث والتصفية",
+    fa: "جستجو و فیلتر",
+    ps: "لټون او فلټر"
+  },
+  resetFilters: {
+    en: "Reset",
+    ur: "ری سیٹ",
+    ar: "إعادة ضبط",
+    fa: "بازنشانی",
+    ps: "بیا تنظیمول"
+  },
   country: {
     en: "Country",
     ur: "ملک",

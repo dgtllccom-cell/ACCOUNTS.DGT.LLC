@@ -53,6 +53,33 @@ export type UniversalPrintInput = {
     company?: string;
     scopeLevel?: string;
   };
+
+  // Explicit Ledger Summary Metadata
+  ledgerSummary?: {
+    accountName?: string;
+    accountCode?: string;
+    accountOpenDate?: string;
+    currency?: string;
+    status?: string;
+    manualReference?: string;
+    customerReference?: string;
+    accountType?: string;
+    taxNo?: string;
+    companyName?: string;
+    countryName?: string;
+    mainBranch?: string;
+    cityBranch?: string;
+    branchCode?: string;
+    address?: string;
+    openingBalance?: number;
+    openingDcType?: "Dr" | "Cr";
+    totalDebit?: number;
+    totalCredit?: number;
+    closingBalance?: number;
+    closingDcType?: "Dr" | "Cr";
+    datePeriod?: string;
+    countryBranch?: string;
+  };
   
   // Company & Branding (General Brand Tier 1 + Operating Entity Tier 2)
   companyInfo?: ERPCompanyInfo;
@@ -108,6 +135,7 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
     subtitle,
     documentNo,
     scope = {},
+    ledgerSummary,
     companyInfo = {},
     generalBrand = {},
     kpis = [],
@@ -119,7 +147,7 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
     paymentTerms,
     bankDetails,
     notes,
-    showSignatures = ["sales_invoice", "purchase_procurement", "hr_payroll"].includes(moduleType),
+    showSignatures = ["sales_invoice", "purchase_procurement", "hr_payroll", "ledger"].includes(moduleType),
     signatureBlocks = [
       { title: "Prepared By", subtitle: "Signature & Stamp" },
       { title: "Verified & Audited", subtitle: "Accounts Department" },
@@ -129,9 +157,13 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
     lang = "en"
   } = input;
 
-  // Auto-detect orientation: if columns > 7 or total width exceeds portrait, default to landscape
+  const isLedger = moduleType === "ledger";
+
+  // Auto-detect orientation
   const effectiveOrientation: "portrait" | "landscape" =
-    input.orientation === "landscape" || (input.orientation !== "portrait" && columns.length > 7)
+    input.orientation === "portrait"
+      ? "portrait"
+      : input.orientation === "landscape" || columns.length > 8
       ? "landscape"
       : "portrait";
 
@@ -145,18 +177,19 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
 
   const isRtl = ["ur", "ar", "fa", "ps"].includes(targetLang);
 
-  // Two-Tier Branding: General Brand (Tier 1) + Operating Entity (Tier 2)
-  const brandName = generalBrand.name || "DAMAAN GENERAL TRADING LLC";
-  const brandTagline = generalBrand.tagline || "GLOBAL ENTERPRISE MANAGEMENT SYSTEM";
-  const brandAddress = generalBrand.address || companyInfo.address || "Operating Address: Office 402, Business Bay, Dubai, United Arab Emirates";
-  const brandTaxNo = generalBrand.taxNo || "TRN: 100458923400003";
-  const brandContact = generalBrand.contact || companyInfo.email || "accounts@dgt.llc | support@dgt.llc";
+  // Dynamic Hierarchy Branding Resolution: Selected Ledger -> Company -> Country -> Main Branch / City Branch
+  const resolvedCompanyName = ledgerSummary?.companyName || scope.company || companyInfo.name || generalBrand.name;
+  const resolvedCountry = ledgerSummary?.countryName || scope.country || "Global Scope";
+  const resolvedBranch = ledgerSummary?.cityBranch || ledgerSummary?.mainBranch || scope.branch || "Main Branch";
+  const resolvedTaxNo = ledgerSummary?.taxNo || (companyInfo as any).taxNo || generalBrand.taxNo || (resolvedCountry === "Pakistan" ? "NTN: Registered" : resolvedCountry === "United Arab Emirates" ? "TRN: 100458923400003" : "");
+  const resolvedAddress = ledgerSummary?.address || companyInfo.address || generalBrand.address || `${resolvedBranch}, ${resolvedCountry}`;
+  const resolvedContact = companyInfo.email || (companyInfo as any).phone || generalBrand.contact || "accounts@dgt.llc";
 
-  const entityName = scope.company || companyInfo.name || brandName;
-  const countryName = scope.country || "Global Scope";
-  const branchName = scope.branch || "All Branches";
-  const baseCurrency = scope.currency || "USD";
-  const dateRange = scope.dateRange || "All Available Records";
+  const brandName = resolvedCompanyName || (resolvedCountry !== "Global Scope" ? `${resolvedCountry.toUpperCase()} OPERATING ENTITY` : "ERP ACCOUNTING STATEMENT");
+  const brandTagline = generalBrand.tagline || `${resolvedBranch.toUpperCase()} NETWORK • ${resolvedCountry.toUpperCase()}`;
+  const entityName = resolvedCompanyName || brandName;
+  const baseCurrency = ledgerSummary?.currency || scope.currency || "AED";
+  const dateRange = ledgerSummary?.datePeriod || scope.dateRange || "All Available Records";
 
   const printDate = new Date();
   const printDateFormatted = printDate.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
@@ -164,7 +197,15 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
   const fullDateTime = `${printDateFormatted}, ${printTimeFormatted}`;
   const userName = scope.userName || companyInfo.printedBy || "ERP User";
 
-  const qrPayload = `ERP|${entityName}|${title}|${documentNo || "DOC"}|${fullDateTime}`;
+  // Financial summary calculations for Ledgers
+  const openBal = ledgerSummary?.openingBalance ?? Number(totals?.openingBalance ?? 0);
+  const openDc = ledgerSummary?.openingDcType || (openBal >= 0 ? "Dr" : "Cr");
+  const totalDr = ledgerSummary?.totalDebit ?? Number(totals?.debit ?? totals?.totalDebit ?? 0);
+  const totalCr = ledgerSummary?.totalCredit ?? Number(totals?.credit ?? totals?.totalCredit ?? 0);
+  const closeBal = ledgerSummary?.closingBalance ?? Number(totals?.runningBalance ?? totals?.balance ?? totals?.closingBalance ?? (openBal + totalDr - totalCr));
+  const closeDc = ledgerSummary?.closingDcType || (closeBal >= 0 ? "Dr" : "Cr");
+
+  const qrPayload = `ERP|${entityName}|${title}|${documentNo || "LEDGER"}|${fullDateTime}`;
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(qrPayload)}`;
 
   const html = `<!DOCTYPE html>
@@ -177,12 +218,7 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
 
     @page {
       size: A4 ${effectiveOrientation};
-      margin: 8mm 8mm 12mm 8mm;
-      @bottom-right {
-        content: "${tr("Page")} " counter(page) " ${tr("of")} " counter(pages);
-        font-size: 7pt;
-        color: #64748b;
-      }
+      margin: 6mm 6mm 10mm 6mm;
     }
     
     * {
@@ -193,28 +229,13 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
     
     body {
       font-family: ${isRtl ? "'Noto Naskh Arabic', 'Segoe UI', Tahoma, Arial, sans-serif" : "'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"};
-      font-size: 8pt;
-      line-height: 1.35;
+      font-size: 7.2pt;
+      line-height: 1.28;
       color: #0f172a;
       background: #ffffff;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
       position: relative;
-    }
-
-    .watermark-bg {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) rotate(-30deg);
-      font-size: 72pt;
-      font-weight: 900;
-      color: rgba(15, 23, 42, 0.03);
-      pointer-events: none;
-      z-index: 0;
-      text-transform: uppercase;
-      white-space: nowrap;
-      user-select: none;
     }
 
     .no-print {
@@ -246,7 +267,7 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
       tfoot {
         display: table-footer-group !important;
       }
-      tr, .summary-card, .meta-box, .signature-block, .terms-box {
+      tr, .financial-summary-strip, .signature-block, .account-meta-box {
         page-break-inside: avoid !important;
         break-inside: avoid !important;
       }
@@ -300,156 +321,158 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
     .report-container {
       max-width: ${effectiveOrientation === "landscape" ? "1350px" : "980px"};
       margin: 0 auto;
-      padding: 10px 14px;
+      padding: 8px 10px;
       position: relative;
       z-index: 1;
     }
 
-    /* ── 1. TWO-TIER BRAND & TITLE HEADER ──────────────── */
+    /* ── 1. DYNAMIC ERP HEADER ──────────────────────────── */
     .header-table {
       width: 100%;
       border-bottom: 2px solid #0f172a;
-      padding-bottom: 6px;
-      margin-bottom: 10px;
+      padding-bottom: 4px;
+      margin-bottom: 6px;
     }
     .brand-title {
-      font-size: 13pt;
+      font-size: 11.5pt;
       font-weight: 900;
       color: #0f172a;
-      letter-spacing: -0.3px;
+      letter-spacing: -0.2px;
       text-transform: uppercase;
     }
     .brand-tagline {
-      font-size: 7.5pt;
+      font-size: 6.8pt;
       color: #2563eb;
       font-weight: 800;
-      letter-spacing: 0.6px;
+      letter-spacing: 0.5px;
       text-transform: uppercase;
-      margin-top: 1px;
     }
     .brand-meta {
-      font-size: 7pt;
+      font-size: 6.5pt;
       color: #475569;
-      margin-top: 2px;
-      line-height: 1.25;
+      margin-top: 1px;
+      line-height: 1.2;
     }
     .doc-title-block {
       text-align: ${isRtl ? "left" : "right"};
     }
     .doc-title {
-      font-size: 13pt;
+      font-size: 11.5pt;
       font-weight: 900;
       color: #1e3a8a;
       text-transform: uppercase;
       letter-spacing: 0.2px;
     }
     .doc-subtitle {
-      font-size: 8pt;
-      font-weight: 700;
-      color: #475569;
+      font-size: 7.8pt;
+      font-weight: 800;
+      color: #0f172a;
       margin-top: 1px;
     }
     .doc-meta {
-      font-size: 7pt;
+      font-size: 6.5pt;
       color: #475569;
-      margin-top: 3px;
-      line-height: 1.35;
-    }
-    .doc-scope-pill {
-      display: inline-block;
-      background: #f1f5f9;
-      border: 1px solid #cbd5e1;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-weight: 800;
-      color: #0f172a;
-      font-size: 6.8pt;
-      margin-top: 3px;
+      margin-top: 2px;
+      line-height: 1.25;
     }
     .qr-badge {
-      width: 44px;
-      height: 44px;
+      width: 38px;
+      height: 38px;
       border-radius: 4px;
       border: 1px solid #cbd5e1;
-      padding: 2px;
+      padding: 1px;
       background: #ffffff;
       display: inline-block;
       vertical-align: middle;
-      margin-inline-start: 8px;
+      margin-inline-start: 6px;
     }
 
-    /* ── 2. METADATA & PARTY BOXES ─────────────────────── */
-    .meta-boxes-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-    .meta-box {
+    /* ── 2. ACCOUNT DETAILS & METADATA GRID ────────────── */
+    .account-meta-box {
       border: 1px solid #cbd5e1;
-      border-radius: 5px;
-      padding: 6px 8px;
-      background: #f8fafc;
-      font-size: 7.2pt;
+      border-radius: 4px;
+      padding: 5px 8px;
+      background: #ffffff;
+      margin-bottom: 6px;
+      font-size: 6.8pt;
     }
-    .meta-box-header {
-      font-weight: 900;
-      text-transform: uppercase;
-      color: #1e3a8a;
-      border-bottom: 1px solid #e2e8f0;
-      padding-bottom: 2px;
-      margin-bottom: 3px;
-      font-size: 7.2pt;
-    }
-
-    /* ── 3. SUMMARY KPI METRIC CARDS ───────────────────── */
-    .summary-grid {
+    .account-meta-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 6px;
-      margin-bottom: 10px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px 8px;
+      line-height: 1.35;
     }
-    .summary-card {
-      border: 1px solid #cbd5e1;
-      border-radius: 5px;
-      background: #f8fafc;
-      padding: 5px 7px;
-      font-size: 7.2pt;
+    .meta-item {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
-    .card-label {
-      color: #64748b;
+    .meta-item strong {
+      color: #475569;
       font-weight: 700;
-      font-size: 6.5pt;
-      text-transform: uppercase;
     }
-    .card-val {
-      font-size: 10.5pt;
-      font-weight: 900;
+    .meta-item span {
       color: #0f172a;
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      margin-top: 2px;
+      font-weight: 800;
     }
 
-    /* ── 4. DATA TABLE ─────────────────────────────────── */
+    /* ── 3. FINANCIAL SUMMARY STRIP (4-COLUMN COMPACT) ──── */
+    .financial-summary-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      margin-bottom: 6px;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      padding: 5px 8px;
+    }
+    .summary-box {
+      font-size: 6.5pt;
+    }
+    .summary-box-label {
+      color: #64748b;
+      font-weight: 800;
+      text-transform: uppercase;
+      font-size: 6pt;
+      letter-spacing: 0.2px;
+    }
+    .summary-box-val {
+      font-size: 9pt;
+      font-weight: 900;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: #0f172a;
+      margin-top: 1px;
+    }
+    .dr-text { color: #991b1b !important; }
+    .cr-text { color: #065f46 !important; }
+    .net-text { color: #1e3a8a !important; }
+    .dc-badge {
+      font-size: 7pt;
+      font-weight: 900;
+      margin-inline-start: 2px;
+    }
+
+    /* ── 4. ACCOUNTING LEDGER DATA TABLE ──────────────── */
     .report-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 7.5pt;
-      margin-bottom: 10px;
+      font-size: 7pt;
+      margin-bottom: 6px;
     }
     .report-table th {
       background: #0f172a;
       color: #ffffff;
       font-weight: 800;
       text-transform: uppercase;
-      font-size: 6.8pt;
-      letter-spacing: 0.3px;
-      padding: 5px 6px;
+      font-size: 6.2pt;
+      letter-spacing: 0.2px;
+      padding: 3.5px 4px;
       border: 1px solid #0f172a;
       text-align: ${isRtl ? "right" : "left"};
     }
     .report-table td {
-      padding: 4px 6px;
+      padding: 3px 4px;
       border: 1px solid #cbd5e1;
       color: #1e293b;
       vertical-align: middle;
@@ -470,31 +493,23 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
     }
     .totals-row td {
       border: 1px solid #94a3b8;
-      padding: 5px 6px;
-      font-size: 7.8pt;
+      padding: 3.5px 4px;
+      font-size: 7.2pt;
     }
 
-    /* ── 5. TERMS & SIGNATURES ─────────────────────────── */
-    .terms-box {
-      border: 1px solid #cbd5e1;
-      border-radius: 5px;
-      padding: 6px 8px;
-      background: #f8fafc;
-      font-size: 7pt;
-      margin-bottom: 12px;
-    }
+    /* ── 5. COMPACT SIGNATURES & FOOTER ───────────────── */
     .signature-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      margin-top: 20px;
-      margin-bottom: 12px;
+      gap: 14px;
+      margin-top: 10px;
+      margin-bottom: 6px;
     }
     .signature-block {
       text-align: center;
       border-top: 1px solid #475569;
-      padding-top: 4px;
-      font-size: 7pt;
+      padding-top: 2px;
+      font-size: 6.5pt;
     }
     .signature-title {
       font-weight: 800;
@@ -502,38 +517,34 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
     }
     .signature-sub {
       color: #64748b;
-      font-size: 6.2pt;
-      margin-top: 1px;
+      font-size: 5.8pt;
     }
 
-    /* ── 6. PAGE FOOTER ────────────────────────────────── */
     .page-footer {
       border-top: 1px solid #cbd5e1;
-      padding-top: 5px;
-      margin-top: 10px;
+      padding-top: 3px;
+      margin-top: 4px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 6.8pt;
+      font-size: 6.2pt;
       color: #64748b;
     }
   </style>
 </head>
 <body>
 
-  <div class="watermark-bg">${escapeHtml(brandName)}</div>
-
   <!-- Screen Only Toolbar -->
   <div class="toolbar no-print">
     <div style="font-weight: 800; font-size: 12px; display: flex; align-items: center; gap: 6px;">
-      <span>🖨️</span> ${escapeHtml(title)} [${effectiveOrientation.toUpperCase()}]
+      <span>🖨️</span> ${escapeHtml(title)} [<span id="orient-label">${effectiveOrientation.toUpperCase()}</span>]
     </div>
     <div class="toolbar-actions">
       <button onclick="window.print()">
         <span>📄</span> ${tr("Print / Save as PDF")}
       </button>
       <button class="secondary-btn" onclick="toggleOrientation()">
-        <span>🔄</span> ${effectiveOrientation === 'landscape' ? tr("Portrait") : tr("Landscape")}
+        <span>🔄</span> <span id="toggle-label">${effectiveOrientation === 'landscape' ? tr("Switch to Portrait") : tr("Switch to Landscape")}</span>
       </button>
       <button class="close-btn" onclick="window.close()">
         ${tr("Close")}
@@ -541,81 +552,77 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
     </div>
   </div>
 
-  <div class="report-container">
+  <div class="report-container" id="report-container">
     
-    <!-- ── 1. TWO-TIER HEADER ────────────────────────────── -->
+    <!-- ── 1. DYNAMIC ERP HEADER ────────────────────────────── -->
     <table class="header-table">
       <tr>
-        <td style="width: 55%; vertical-align: top;">
+        <td style="width: 50%; vertical-align: top;">
           <div class="brand-title">${escapeHtml(brandName)}</div>
           <div class="brand-tagline">${escapeHtml(brandTagline)}</div>
           <div class="brand-meta">
-            ${escapeHtml(brandAddress)}<br />
-            <strong>${escapeHtml(brandTaxNo)}</strong> | ${escapeHtml(brandContact)}<br />
+            ${escapeHtml(resolvedAddress)}<br />
+            <strong>${escapeHtml(resolvedTaxNo)}</strong> | ${escapeHtml(resolvedContact)}<br />
             <strong>${tr("Operating Entity")}:</strong> ${escapeHtml(entityName)}
           </div>
         </td>
-        <td style="width: 45%; vertical-align: top;" class="doc-title-block">
-          <div style="display: inline-flex; align-items: center; gap: 8px;">
+        <td style="width: 50%; vertical-align: top;" class="doc-title-block">
+          <div style="display: inline-flex; align-items: center; gap: 6px;">
             <div>
               <div class="doc-title">${escapeHtml(title)}</div>
-              ${subtitle ? `<div class="doc-subtitle">${escapeHtml(subtitle)}</div>` : ""}
+              <div class="doc-subtitle">${escapeHtml(ledgerSummary?.accountName || partyDetails?.name || subtitle || "Account Statement")}</div>
             </div>
             <img class="qr-badge" src="${qrUrl}" alt="QR Verification" />
           </div>
           <div class="doc-meta">
-            ${documentNo ? `<strong>${tr("Document No")}:</strong> ${escapeHtml(documentNo)}<br />` : ""}
-            <strong>${tr("Generated By")}:</strong> ${escapeHtml(userName)}<br />
-            <strong>${tr("Generated Date & Time")}:</strong> ${escapeHtml(fullDateTime)}<br />
-            <span class="doc-scope-pill">
-              ${tr("Scope")}: ${escapeHtml(countryName)} | ${escapeHtml(branchName)} | ${escapeHtml(baseCurrency)}
-            </span>
+            <strong>${tr("Account Code")}:</strong> ${escapeHtml(ledgerSummary?.accountCode || partyDetails?.code || documentNo || "LEDGER")}<br />
+            <strong>${tr("Country / Branch")}:</strong> ${escapeHtml(resolvedCountry)} • ${escapeHtml(resolvedBranch)}<br />
+            <strong>${tr("Currency / Period")}:</strong> ${escapeHtml(baseCurrency)} | ${escapeHtml(dateRange)}<br />
+            <strong>${tr("Generated")}:</strong> ${escapeHtml(fullDateTime)} (${escapeHtml(userName)})
           </div>
         </td>
       </tr>
     </table>
 
-    <!-- ── 2. METADATA & PARTY SUMMARY ───────────────────── -->
-    ${partyDetails || filters.length > 0 ? `
-    <div class="meta-boxes-grid">
-      ${partyDetails ? `
-      <div class="meta-box">
-        <div class="meta-box-header">
-          📋 ${partyDetails.type === "customer" ? tr("Customer / Buyer Details") : partyDetails.type === "supplier" ? tr("Supplier / Vendor Details") : partyDetails.type === "employee" ? tr("Employee Details") : tr("Entity Details")}
-        </div>
-        <div style="font-weight: 800; font-size: 8pt; color: #0f172a;">${escapeHtml(partyDetails.name)}</div>
-        ${partyDetails.code ? `<div style="font-family: monospace; color: #64748b;">${escapeHtml(partyDetails.code)}</div>` : ""}
-        ${partyDetails.address ? `<div>${escapeHtml(partyDetails.address)}</div>` : ""}
-        ${partyDetails.trn ? `<div><strong>TRN:</strong> ${escapeHtml(partyDetails.trn)}</div>` : ""}
-        ${partyDetails.phone || partyDetails.email ? `<div>${escapeHtml(partyDetails.phone || "")} ${partyDetails.email ? `| ${escapeHtml(partyDetails.email)}` : ""}</div>` : ""}
-      </div>
-      ` : `<div></div>`}
-
-      <div class="meta-box">
-        <div class="meta-box-header">
-          ⚙️ ${tr("Reporting Parameters & Filter Summary")}
-        </div>
-        <div><strong>${tr("Date Range")}:</strong> ${escapeHtml(dateRange)}</div>
-        <div><strong>${tr("Operating Branch")}:</strong> ${escapeHtml(branchName)} (${escapeHtml(countryName)})</div>
-        <div><strong>${tr("Currency")}:</strong> ${escapeHtml(baseCurrency)}</div>
-        ${filters.map(f => `<div><strong>${escapeHtml(f.label)}:</strong> ${escapeHtml(f.value)}</div>`).join("")}
+    <!-- ── 2. FULL SELECTED LEDGER REAL METADATA BAR ──────────── -->
+    <div class="account-meta-box">
+      <div class="account-meta-grid">
+        <div class="meta-item"><strong>${tr("Account Code")}:</strong> <span>${escapeHtml(ledgerSummary?.accountCode || partyDetails?.code || "-")}</span></div>
+        <div class="meta-item"><strong>${tr("Account Name")}:</strong> <span>${escapeHtml(ledgerSummary?.accountName || partyDetails?.name || "-")}</span></div>
+        <div class="meta-item"><strong>${tr("Open Date")}:</strong> <span>${escapeHtml(ledgerSummary?.accountOpenDate || "-")}</span></div>
+        <div class="meta-item"><strong>${tr("Currency")}:</strong> <span>${escapeHtml(baseCurrency)}</span></div>
+        <div class="meta-item"><strong>${tr("Status")}:</strong> <span style="color:#059669;">${escapeHtml(ledgerSummary?.status || "Active")}</span></div>
+        <div class="meta-item"><strong>${tr("Manual Ref")}:</strong> <span>${escapeHtml(ledgerSummary?.manualReference || "-")}</span></div>
+        <div class="meta-item"><strong>${tr("Customer / Party Ref")}:</strong> <span>${escapeHtml(ledgerSummary?.customerReference || partyDetails?.code || "-")}</span></div>
+        <div class="meta-item"><strong>${tr("Account Type")}:</strong> <span>${escapeHtml(ledgerSummary?.accountType || "Standard Ledger")}</span></div>
+        <div class="meta-item"><strong>${tr("Country")}:</strong> <span>${escapeHtml(resolvedCountry)}</span></div>
+        <div class="meta-item"><strong>${tr("Main Branch")}:</strong> <span>${escapeHtml(ledgerSummary?.mainBranch || resolvedBranch)}</span></div>
+        <div class="meta-item"><strong>${tr("City Branch")}:</strong> <span>${escapeHtml(ledgerSummary?.cityBranch || resolvedBranch)}</span></div>
+        <div class="meta-item"><strong>${tr("Branch Code")}:</strong> <span>${escapeHtml(ledgerSummary?.branchCode || "-")}</span></div>
       </div>
     </div>
-    ` : ""}
 
-    <!-- ── 3. SUMMARY KPI CARDS ──────────────────────────── -->
-    ${kpis.length > 0 ? `
-    <div class="summary-grid">
-      ${kpis.map(k => `
-      <div class="summary-card">
-        <div class="card-label">${escapeHtml(tr(k.label))}</div>
-        <div class="card-val">${typeof k.value === "number" ? formatMoney(k.value) : escapeHtml(String(k.value))}</div>
+    <!-- ── 3. FINANCIAL SUMMARY STRIP (4-COLUMN BOX) ──────────── -->
+    <div class="financial-summary-strip">
+      <div class="summary-box">
+        <div class="summary-box-label">${tr("Opening Balance")}</div>
+        <div class="summary-box-val">${formatMoney(openBal)} <span class="dc-badge ${openDc === 'Dr' ? 'dr-text' : 'cr-text'}">${openDc}</span></div>
       </div>
-      `).join("")}
+      <div class="summary-box">
+        <div class="summary-box-label">${tr("Total Debit (DR)")}</div>
+        <div class="summary-box-val dr-text">${formatMoney(totalDr)}</div>
+      </div>
+      <div class="summary-box">
+        <div class="summary-box-label">${tr("Total Credit (CR)")}</div>
+        <div class="summary-box-val cr-text">${formatMoney(totalCr)}</div>
+      </div>
+      <div class="summary-box">
+        <div class="summary-box-label">${tr("Closing / Net Balance")}</div>
+        <div class="summary-box-val net-text">${formatMoney(Math.abs(closeBal))} <span class="dc-badge ${closeDc === 'Dr' ? 'dr-text' : 'cr-text'}">${closeDc}</span></div>
+      </div>
     </div>
-    ` : ""}
 
-    <!-- ── 4. DATA TABLE ─────────────────────────────────── -->
+    <!-- ── 4. ACCOUNTING LEDGER DATA TABLE ──────────────────── -->
     <table class="report-table">
       <thead>
         <tr>
@@ -632,22 +639,44 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
             ${columns.map(c => {
               const val = r[c.key];
               let displayVal = val;
-              if (c.format === "currency") displayVal = formatMoney(val);
-              else if (c.format === "number") displayVal = formatNumber(val);
-              else if (c.format === "date") displayVal = formatDate(val);
-              else if (val === null || val === undefined) displayVal = "-";
+              
+              // Custom Multi-Currency Column Handling
+              if (c.key === "currencyExRate" || c.key === "exchangeRateInfo") {
+                if (r.origCurrency && r.origCurrency !== baseCurrency) {
+                  displayVal = `${r.origCurrency} ${formatMoney(r.origAmount || 0)} (@ ${r.exchangeRate || r.usdRate || 1})`;
+                } else {
+                  displayVal = baseCurrency;
+                }
+              } else if (c.format === "currency") {
+                displayVal = formatMoney(val);
+              } else if (c.format === "number") {
+                displayVal = formatNumber(val);
+              } else if (c.format === "date") {
+                displayVal = formatDate(val);
+              } else if (val === null || val === undefined) {
+                displayVal = "-";
+              }
+
+              const isDebitCol = c.key.toLowerCase().includes("debit") || c.key === "dr";
+              const isCreditCol = c.key.toLowerCase().includes("credit") || c.key === "cr";
+              const isBalanceCol = c.key.toLowerCase().includes("balance");
+
+              let colorClass = "";
+              if (isDebitCol && Number(val) > 0) colorClass = "dr-text";
+              else if (isCreditCol && Number(val) > 0) colorClass = "cr-text";
 
               return `
-                <td class="${c.align === 'center' ? 'text-center' : c.align === 'right' ? 'text-right' : 'text-left'} ${c.format === 'currency' || c.format === 'number' ? 'font-mono font-bold' : ''}">
+                <td class="${c.align === 'center' ? 'text-center' : c.align === 'right' ? 'text-right' : 'text-left'} ${c.format === 'currency' || c.format === 'number' || isBalanceCol ? 'font-mono font-bold' : ''} ${colorClass}">
                   ${escapeHtml(String(displayVal))}
+                  ${isBalanceCol && r.dcType ? ` <span class="${r.dcType === 'Dr' ? 'dr-text' : 'cr-text'}" style="font-size:6.2pt;">${r.dcType}</span>` : ""}
                 </td>
               `;
             }).join("")}
           </tr>
         `).join("") : `
           <tr>
-            <td colspan="${columns.length}" class="text-center" style="padding: 16px; color: #64748b;">
-              ${tr("No records found for this report.")}
+            <td colspan="${columns.length}" class="text-center" style="padding: 14px; color: #64748b;">
+              ${tr("No ledger transactions found for the selected period.")}
             </td>
           </tr>
         `}
@@ -658,10 +687,17 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
           ${columns.map((c, i) => {
             const totVal = totals[c.key];
             if (i === 0 && !totVal) {
-              return `<td class="text-left font-bold" style="text-transform: uppercase;">${tr("Grand Totals")}</td>`;
+              return `<td class="text-left font-bold" style="text-transform: uppercase;">${tr("Grand Totals & Net Closing Balance")}</td>`;
             }
+
+            const isDebitCol = c.key.toLowerCase().includes("debit") || c.key === "dr";
+            const isCreditCol = c.key.toLowerCase().includes("credit") || c.key === "cr";
+            let colorClass = "";
+            if (isDebitCol) colorClass = "dr-text";
+            else if (isCreditCol) colorClass = "cr-text";
+
             return `
-              <td class="${c.align === 'center' ? 'text-center' : c.align === 'right' ? 'text-right' : 'text-left'} font-mono font-bold">
+              <td class="${c.align === 'center' ? 'text-center' : c.align === 'right' ? 'text-right' : 'text-left'} font-mono font-bold ${colorClass}">
                 ${totVal !== undefined ? (typeof totVal === "number" || c.format === "currency" ? formatMoney(totVal) : escapeHtml(String(totVal))) : ""}
               </td>
             `;
@@ -673,14 +709,14 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
 
     <!-- ── 5. TERMS & BANK DETAILS ───────────────────────── -->
     ${paymentTerms || bankDetails || notes ? `
-    <div class="terms-box">
+    <div class="meta-box-compact" style="flex-direction: column; align-items: flex-start; gap: 2px;">
       ${paymentTerms ? `<div><strong>${tr("Payment Terms")}:</strong> ${escapeHtml(paymentTerms)}</div>` : ""}
       ${bankDetails ? `<div><strong>${tr("Bank & Wire Details")}:</strong> ${escapeHtml(bankDetails)}</div>` : ""}
-      ${notes ? `<div><strong>${tr("Special Notes / Remarks")}:</strong> ${escapeHtml(notes)}</div>` : ""}
+      ${notes ? `<div><strong>${tr("Notes")}:</strong> ${escapeHtml(notes)}</div>` : ""}
     </div>
     ` : ""}
 
-    <!-- ── 6. SIGNATURE BLOCKS ───────────────────────────── -->
+    <!-- ── 6. COMPACT SIGNATURE BLOCKS ───────────────────── -->
     ${showSignatures ? `
     <div class="signature-grid">
       ${signatureBlocks.map(s => `
@@ -692,10 +728,10 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
     </div>
     ` : ""}
 
-    <!-- ── 7. STANDARDIZED PAGE FOOTER ───────────────────── -->
+    <!-- ── 7. COMPACT PAGE FOOTER ────────────────────────── -->
     <div class="page-footer">
-      <div>${escapeHtml(brandName)} • ${escapeHtml(title)} • ${escapeHtml(fullDateTime)}</div>
-      <div>${tr("Page")} 1 of 1 — <strong>${tr("Confidential ERP Report")}</strong></div>
+      <div>${escapeHtml(brandName)} • ${escapeHtml(title)} • ${escapeHtml(fullDateTime)} • Ref: ${escapeHtml(documentNo || ledgerSummary?.accountCode || "LEDGER")}</div>
+      <div>${tr("Page")} 1 of 1 — <strong>${tr("Confidential Enterprise Statement")}</strong></div>
     </div>
 
   </div>
@@ -703,10 +739,23 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
   <script>
     function toggleOrientation() {
       const styleEl = document.querySelector('style');
+      const containerEl = document.getElementById('report-container');
+      const orientLabel = document.getElementById('orient-label');
+      const toggleLabel = document.getElementById('toggle-label');
+
       const isCurrentlyLandscape = styleEl.innerHTML.includes('size: A4 landscape');
       const newOrientation = isCurrentlyLandscape ? 'portrait' : 'landscape';
+      
       styleEl.innerHTML = styleEl.innerHTML.replace(/size: A4 (portrait|landscape)/, 'size: A4 ' + newOrientation);
-      document.querySelector('.report-container').style.maxWidth = newOrientation === 'landscape' ? '1350px' : '980px';
+      if (containerEl) {
+        containerEl.style.maxWidth = newOrientation === 'landscape' ? '1350px' : '980px';
+      }
+      if (orientLabel) {
+        orientLabel.innerText = newOrientation.toUpperCase();
+      }
+      if (toggleLabel) {
+        toggleLabel.innerText = newOrientation === 'landscape' ? '${tr("Switch to Portrait")}' : '${tr("Switch to Landscape")}';
+      }
     }
 
     ${autoPrint ? `
@@ -722,7 +771,7 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
 
   // Prefer in-app PDF Preview Modal for seamless UX with zero popup blocker issues
   try {
-    printStore.openPrint(html, title || "ERP Report");
+    printStore.openPrint(html, title || "Account Ledger Statement");
     return;
   } catch (e) {
     console.warn("Could not open in printStore, falling back to window.open", e);
@@ -736,30 +785,4 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
     printWindow.document.close();
     return;
   }
-
-  // Final fallback: append hidden iframe
-  try {
-    const iframe = document.createElement("iframe");
-    iframe.style.position = "fixed";
-    iframe.style.right = "0";
-    iframe.style.bottom = "0";
-    iframe.style.width = "0";
-    iframe.style.height = "0";
-    iframe.style.border = "0";
-    document.body.appendChild(iframe);
-    const doc = iframe.contentWindow?.document;
-    if (doc) {
-      doc.open();
-      doc.write(html);
-      doc.close();
-      setTimeout(() => {
-        iframe.contentWindow?.focus();
-        iframe.contentWindow?.print();
-        setTimeout(() => document.body.removeChild(iframe), 1000);
-      }, 500);
-    }
-  } catch (e) {
-    console.error("Print invocation failed:", e);
-  }
 }
-

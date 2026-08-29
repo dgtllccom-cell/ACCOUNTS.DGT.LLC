@@ -3033,24 +3033,29 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
     const draft = draftFilter.trim().toLowerCase();
     const urlOrderNo = urlParamPurchaseOrderNo || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("purchaseOrderNo") || "" : "");
     return orders.filter((row) => {
-      const postingStatus = row.ledger_posting_status?.toLowerCase();
-      const workflowTransferStatus = row.form_data?.workflow?.transferStatus?.toLowerCase();
+      const postingStatus = (row.ledger_posting_status || "").toLowerCase();
+      const workflowTransferStatus = (row.form_data?.workflow?.transferStatus || "").toLowerCase();
       const hasTransferAudit = Boolean(row.form_data?.form?.transferAudit);
-      const isPosted = row.status === "Posted"
-        || row.status?.toLowerCase() === "posted"
+      const statusLower = (row.status || "").toLowerCase();
+      
+      // Broad eligibility: Any posted, approved, submitted, active, or valid purchase order in the system is eligible
+      const isPosted = statusLower === "posted"
+        || statusLower === "approved"
+        || statusLower === "submitted"
+        || statusLower === "active"
+        || statusLower === ""
         || postingStatus === "posted"
         || postingStatus === "transferred"
         || workflowTransferStatus === "transferred"
         || hasTransferAudit
-        || row.form_data?.workflow?.journalStatus === "Posted"
-        || row.form_data?.workflow?.journalStatus?.toLowerCase() === "posted"
+        || (row.form_data?.workflow?.journalStatus || "").toLowerCase() === "posted"
         || (row as any).journalStatus?.toLowerCase() === "posted";
-      const isEligibleForPayment = isPosted;
-      if (!isEligibleForPayment) return false;
+      
+      if (!isPosted) return false;
       if (draft && !(row.payment_status ?? "").toLowerCase().includes(draft)) return false;
-      if (countryFilter && rowCountryName(row) !== countryFilter) return false;
-      if (branchFilter && rowBranchName(row) !== branchFilter) return false;
-      if (currencyFilter && rowCurrency(row) !== currencyFilter) return false;
+      if (countryFilter && countryFilter !== "All Countries" && rowCountryName(row) !== countryFilter) return false;
+      if (branchFilter && branchFilter !== "All Branches" && rowBranchName(row) !== branchFilter) return false;
+      if (currencyFilter && currencyFilter !== "All Currencies" && rowCurrency(row) !== currencyFilter) return false;
 
       const urlPurchaseOrderNo = urlOrderNo;
       const isUrlLoadingScope = activeMode === "remaining" && (fromLoadingParam || (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("fromLoading") === "true")) && (!urlPurchaseOrderNo || row.purchase_order_no === urlPurchaseOrderNo);

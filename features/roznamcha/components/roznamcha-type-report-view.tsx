@@ -32,6 +32,7 @@ import { cn } from "@/lib/utils";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { openJournalReportWindow } from "@/lib/reports/open-journal-report-window";
+import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
 
 export type RoznamchaEntryCategory = "business" | "bank" | "cash" | "invoice" | "transfer";
 
@@ -431,7 +432,6 @@ export function RoznamchaTypeReportView({
   }, [entryCategory, pageTitle, currentLang]);
 
   function exportCsv() {
-    if (!rows.length) return;
     const headers = [
       tt("rozrep.sno", "S.No"),
       tt("rozrep.date", "Date"),
@@ -481,16 +481,57 @@ export function RoznamchaTypeReportView({
   }
 
   function printReport() {
-    if (!rows.length) return;
-    printReportTable({
+    const totDr = data?.totalDebit ?? rows.reduce((s, r) => s + Number(primaryLine(r)?.debit || 0), 0);
+    const totCr = data?.totalCredit ?? rows.reduce((s, r) => s + Number(primaryLine(r)?.credit || 0), 0);
+
+    openUniversalPrintReport({
       title: localizedPageTitle,
-      subtitle: `${tt("rozrep.from_date", "From Date")}: ${fromDate || "-"}  |  ${tt("rozrep.to_date", "To Date")}: ${toDate || "-"}  |  ${tt("rozrep.total_entries", "Total Entries")}: ${data?.totalCount ?? rows.length}`,
-      rows,
-      totals: {
-        debit: data?.totalDebit ?? rows.reduce((s, r) => s + Number(primaryLine(r)?.debit || 0), 0),
-        credit: data?.totalCredit ?? rows.reduce((s, r) => s + Number(primaryLine(r)?.credit || 0), 0),
+      subtitle: `From: ${fromDate || "Start"} | To: ${toDate || "Today"} | Total Entries: ${data?.totalCount ?? rows.length}`,
+      lang: currentLang,
+      moduleType: "roznamcha",
+      orientation: "landscape",
+      scope: {
+        company: sessionInfo?.scopes?.summary?.countryName ? `${sessionInfo.scopes.summary.countryName} Operating Entity` : "Damaan General Trading LLC",
+        country: sessionInfo?.scopes?.summary?.countryName || "United Arab Emirates",
+        branch: sessionInfo?.scopes?.summary?.branchDisplayName || sessionInfo?.scopes?.summary?.branchName || "Main Branch",
+        currency: "AED",
+        dateRange: `${fromDate || "Start"} → ${toDate || "Today"}`,
+        userName: sessionInfo?.user?.fullName || "ERP User",
       },
-      lang: currentLang
+      columns: [
+        { key: "srNo", label: tt("rozrep.sno", "S.No"), width: "4%", align: "center" },
+        { key: "entryDate", label: tt("rozrep.date", "Date"), format: "date", width: "8%" },
+        { key: "entrySerial", label: tt("rozrep.entry_serial", "Entry Serial"), align: "center", width: "10%" },
+        { key: "countryName", label: tt("rozrep.country", "Country"), width: "9%" },
+        { key: "branchName", label: tt("rozrep.branch", "Branch"), width: "10%" },
+        { key: "userName", label: tt("rozrep.user", "User"), width: "9%" },
+        { key: "entryType", label: tt("rozrep.entry_type", "Entry Type"), width: "9%" },
+        { key: "accountNo", label: tt("rozrep.account_no", "Account No"), width: "9%" },
+        { key: "narration", label: tt("rozrep.narration", "Narration / Remarks"), width: "18%" },
+        { key: "debit", label: tt("rozrep.debit", "Debit"), format: "currency", align: "right", width: "7%" },
+        { key: "credit", label: tt("rozrep.credit", "Credit"), format: "currency", align: "right", width: "7%" },
+      ],
+      rows: rows.map((row, idx) => {
+        const line = primaryLine(row);
+        return {
+          srNo: idx + 1 + (page - 1) * pageSize,
+          entryDate: cleanDate(row.entry_date || row.created_at),
+          entrySerial: entrySerial(row),
+          countryName: row.countries?.name ?? "-",
+          branchName: branchName(row),
+          userName: row.profiles?.full_name ?? "-",
+          entryType: formatEntryType(row.source_transaction_type || row.type, currentLang),
+          accountNo: line?.account_number || line?.ledgers?.code || "-",
+          narration: row.narration || "-",
+          debit: Number(line?.debit || 0),
+          credit: Number(line?.credit || 0),
+        };
+      }),
+      totals: {
+        debit: totDr,
+        credit: totCr,
+      },
+      autoPrint: false,
     });
   }
 

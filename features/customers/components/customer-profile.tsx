@@ -286,201 +286,368 @@ export function CustomerProfile({
   );
 
   if (isDrawer) {
+    const cType = parsedMeta.customerType || "Male";
     return (
-      <div className="bg-white text-slate-900 p-2 relative select-text flex flex-col justify-between dark:bg-slate-900 dark:text-slate-100" dir={isRtl ? "rtl" : "ltr"}>
+      <div className="bg-slate-50/50 text-slate-900 relative select-text flex flex-col justify-between min-h-full dark:bg-slate-950 dark:text-slate-100" dir={isRtl ? "rtl" : "ltr"}>
         {/* Subtle Watermark */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.02] overflow-hidden select-none">
           <Building2 className="w-[180px] h-[180px] text-slate-900 dark:text-slate-100" />
         </div>
-        <div className="space-y-5">
-          {/* Header branding */}
-          <div className="border-b-2 border-teal-600 pb-2.5 flex items-center justify-between dark:border-teal-500">
-            <div>
-              <h2 className="text-sm font-extrabold text-teal-800 tracking-tight dark:text-teal-400">
-                {hasCompanyDetails
-                  ? (parsedMeta.companyName || customer.company_name || "COMPANY PROFILE")
-                  : (customer.customer_name || "CUSTOMER PROFILE")}
-              </h2>
-              <p className="text-[8px] text-slate-500 uppercase font-bold tracking-widest mt-0.5 dark:text-slate-400">
-                {hasCompanyDetails ? getLabel("enterpriseRegistry", lang) : (getLabel("customerRegistry", lang) || "PERSONAL ACCOUNT REGISTRY")}
-              </p>
+
+        <div className="space-y-4 p-4 pb-20">
+          {/* Quick Action Top Bar inside Drawer */}
+          <div className="flex flex-wrap items-center justify-between gap-2 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                onClick={() => router.push(`/dashboard/settings/customers/setup?customerId=${customer.id}` as Route)}
+                className="gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs h-9 px-4 rounded-xl shadow-xs"
+              >
+                <PencilLine className="h-4 w-4" />
+                {lang === "ur" ? "کسٹمر ڈیٹا ایڈٹ کریں" : lang === "ar" ? "تعديل بيانات العميل" : lang === "fa" ? "ویرایش اطلاعات مشتری" : lang === "ps" ? "د پیرودونکي معلومات سم کړئ" : "Edit Customer"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handlePrint}
+                className="gap-1.5 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold text-xs h-9 px-3 rounded-xl shadow-xs"
+              >
+                <Printer className="h-4 w-4 text-amber-500" />
+                <span className="hidden sm:inline">{t(lang, "wh.print_report", "Print / Report")}</span>
+              </Button>
             </div>
-            <div className="text-right">
-              <span className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2 py-0.5 text-[9px] font-bold text-teal-700 border border-teal-200 uppercase dark:bg-teal-950/30 dark:text-teal-300 dark:border-teal-900">
-                {parsedMeta.status}
-              </span>
-              <p className="text-[9px] text-slate-500 font-mono mt-0.5 dark:text-slate-400">{parsedMeta.customerAccountNumber}</p>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={shareWhatsApp}
+                title={getLabel("openWhatsAppChatTitle", lang)}
+                className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-slate-800 transition-colors cursor-pointer border border-slate-200 dark:border-slate-800"
+              >
+                <MessageSquare className="h-4 w-4" />
+              </button>
+              <button
+                onClick={shareEmail}
+                title={getLabel("composeEmailTitle", lang)}
+                className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors cursor-pointer border border-slate-200 dark:border-slate-800"
+              >
+                <Mail className="h-4 w-4" />
+              </button>
+              <Button
+                type="button"
+                onClick={() => setShowSendModal(true)}
+                className="h-8 bg-teal-600 hover:bg-teal-500 text-white rounded-lg text-xs font-bold gap-1 px-2.5 shadow-xs cursor-pointer"
+                title={lang === "ur" ? "کسٹمر کو نیا فارم لنک بھیجیں" : "Send / Re-send Form Link"}
+              >
+                <Send className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">{lang === "ur" ? "فارم لنک" : "Send Link"}</span>
+              </Button>
+              <Button
+                type="button"
+                onClick={() => setShowErpLinks(true)}
+                className="h-8 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold gap-1 px-2.5 shadow-xs"
+              >
+                <Link2 className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">360° ERP</span>
+              </Button>
             </div>
           </div>
 
-          {/* Content Grids */}
-          <div className="space-y-3">
+          {/* Hero Profile Banner Card */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-4.5 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3.5">
+                <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-700 flex items-center justify-center text-white font-black text-lg shadow-md">
+                  {customer.customer_name?.charAt(0)?.toUpperCase() || "C"}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base font-black text-slate-900 tracking-tight dark:text-slate-100">
+                      {customer.customer_name}
+                    </h2>
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold border ${
+                        parsedMeta.status === "Active"
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
+                          : "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
+                      }`}
+                    >
+                      {parsedMeta.status}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                    <span className="text-xs font-mono font-bold text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/40 px-2 py-0.5 rounded-md border border-teal-200 dark:border-teal-900/50">
+                      {parsedMeta.customerAccountNumber}
+                    </span>
+                    <span className="text-xs font-extrabold px-2 py-0.5 rounded-md border bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+                      {cType === "Female" ? "👩 Female" : cType === "Corporate" ? "🏢 Corporate" : "👨 Male"}
+                    </span>
+                    {(customer.father_name || parsedMeta.fatherName) && (
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-900/50">
+                        <span className="text-[10px] uppercase font-black text-blue-500">S/O / D/O:</span>
+                        <span>{customer.father_name || parsedMeta.fatherName}</span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Location Badge */}
+              <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/60 px-3 py-2 rounded-xl border border-slate-200/80 dark:border-slate-700/60">
+                <MapPin className="h-4 w-4 text-rose-500 shrink-0" />
+                <span>{[customer.city_name || parsedMeta.city, customer.state_province_name || parsedMeta.stateProvince, customer.country_name || parsedMeta.country].filter(Boolean).join(", ") || "-"}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Details Grids */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Customer Account Details Card */}
-            <div className="border rounded-xl p-3 bg-slate-50/50 space-y-1.5 dark:bg-slate-900/40 dark:border-slate-800">
-              <h3 className="text-[9px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1 dark:text-teal-400">{t(lang, "nav.customer_account_details", "Customer Account Details")}</h3>
-              <div className="space-y-1 text-xs">
-                <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">{t(lang, "purchase.f_account_name", "Account Name")}</span>
+            <div className="border border-slate-200 dark:border-slate-800 rounded-2xl p-4 bg-white dark:bg-slate-900 shadow-xs space-y-2">
+              <h3 className="text-xs font-bold text-teal-800 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-2 dark:text-teal-400 flex items-center gap-1.5">
+                <User className="h-3.5 w-3.5 text-teal-600" />
+                {t(lang, "nav.customer_account_details", "Customer Account Details")}
+              </h3>
+              <div className="space-y-1.5 text-xs">
+                <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
+                  <span className="text-slate-500 font-medium">{t(lang, "purchase.f_account_name", "Account Name")}</span>
                   <span className="font-bold text-slate-900 dark:text-slate-100">{parsedMeta.accountName || customer.customer_name}</span>
                 </div>
                 {(customer.father_name || parsedMeta.fatherName) && (
-                  <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                    <span className="text-slate-500">{t(lang, "customer_form.father_name_label", "Father's / Guardian's Name")}</span>
+                  <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
+                    <span className="text-slate-500 font-medium">{getLabel("fatherNameOnly", lang) || "Father / Guardian Name"}</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200">{customer.father_name || parsedMeta.fatherName}</span>
                   </div>
                 )}
-                <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">{t(lang, "bank.account_number", "Account Number")}</span>
+                <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
+                  <span className="text-slate-500 font-medium">{t(lang, "bank.account_number", "Account Number")}</span>
                   <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{parsedMeta.accountNumber || parsedMeta.customerAccountNumber}</span>
                 </div>
-                <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">{t(lang, "roz.cef_customer_number", "Customer Number")}</span>
+                <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
+                  <span className="text-slate-500 font-medium">{t(lang, "roz.cef_customer_number", "Customer Number")}</span>
                   <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{parsedMeta.customerAccountNumber}</span>
                 </div>
                 {parsedMeta.manualReference && (
-                  <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                    <span className="text-slate-500">{getLabel("manualReference", lang)}</span>
+                  <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
+                    <span className="text-slate-500 font-medium">{getLabel("manualReference", lang)}</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.manualReference}</span>
                   </div>
                 )}
                 {parsedMeta.branchName && (
-                  <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                    <span className="text-slate-500">{t(lang, "cdash.col_branch_name", "Branch Name")}</span>
+                  <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
+                    <span className="text-slate-500 font-medium">{t(lang, "cdash.col_branch_name", "Branch Name")}</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.branchName}</span>
                   </div>
                 )}
-                <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">{getLabel("country", lang)}</span>
+                <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
+                  <span className="text-slate-500 font-medium">{getLabel("country", lang)}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">{customer.country_name || parsedMeta.country || "-"}</span>
                 </div>
-                <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">{t(lang, "branch.state_label", "State / Province")}</span>
+                <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
+                  <span className="text-slate-500 font-medium">{t(lang, "branch.state_label", "State / Province")}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">{customer.state_province_name || parsedMeta.stateProvince || "-"}</span>
                 </div>
-                <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                  <span className="text-slate-500">{getLabel("city", lang)}</span>
+                <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
+                  <span className="text-slate-500 font-medium">{getLabel("city", lang)}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">{customer.city_name || parsedMeta.city || "-"}</span>
                 </div>
                 <div className="flex justify-between pb-0.5">
-                  <span className="text-slate-500">{t(lang, "purchase.f_address", "Address")}</span>
-                  <span className="font-bold text-slate-900 dark:text-slate-100 text-right truncate max-w-[180px]" title={customer.address || ""}>{customer.address || "-"}</span>
+                  <span className="text-slate-500 font-medium">{t(lang, "purchase.f_address", "Address")}</span>
+                  <span className="font-bold text-slate-900 dark:text-slate-100 text-right truncate max-w-[200px]" title={customer.address || ""}>{customer.address || "-"}</span>
                 </div>
               </div>
             </div>
 
-            {/* Customer Company Details Card — only rendered when company information exists */}
-            {hasCompanyDetails && (
-              <div className="border rounded-xl p-3 bg-slate-50/50 space-y-1.5 dark:bg-slate-900/40 dark:border-slate-800">
-                <h3 className="text-[9px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1 dark:text-teal-400">{getLabel("customerCompanyDetails", lang)}</h3>
-                <div className="space-y-1 text-xs">
-                  <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                    <span className="text-slate-500">{t(lang, "branch.row_company_name", "Company Name")}</span>
+            {/* Customer Company Details Card */}
+            {hasCompanyDetails ? (
+              <div className="border border-slate-200 dark:border-slate-800 rounded-2xl p-4 bg-white dark:bg-slate-900 shadow-xs space-y-2">
+                <h3 className="text-xs font-bold text-teal-800 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-2 dark:text-teal-400 flex items-center gap-1.5">
+                  <Building2 className="h-3.5 w-3.5 text-teal-600" />
+                  {getLabel("customerCompanyDetails", lang)}
+                </h3>
+                <div className="space-y-1.5 text-xs">
+                  <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
+                    <span className="text-slate-500 font-medium">{t(lang, "branch.row_company_name", "Company Name")}</span>
                     <span className="font-bold text-slate-900 dark:text-slate-100">{parsedMeta.companyName || customer.company_name || "-"}</span>
                   </div>
                   {parsedMeta.companyRegNo && (
-                    <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                      <span className="text-slate-500">{t(lang, "ledger.registration_number", "Registration Number")}</span>
+                    <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
+                      <span className="text-slate-500 font-medium">{t(lang, "ledger.registration_number", "Registration Number")}</span>
                       <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{parsedMeta.companyRegNo}</span>
                     </div>
                   )}
                   {parsedMeta.companyTaxNo && (
-                    <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                      <span className="text-slate-500">{getLabel("taxNtnNumber", lang)}</span>
+                    <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
+                      <span className="text-slate-500 font-medium">{getLabel("taxNtnNumber", lang)}</span>
                       <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{parsedMeta.companyTaxNo}</span>
                     </div>
                   )}
-                  <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                    <span className="text-slate-500">{t(lang, "company_form.business_type_label", "Business Type")}</span>
+                  <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
+                    <span className="text-slate-500 font-medium">{t(lang, "company_form.business_type_label", "Business Type")}</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.companyBusinessType || "-"}</span>
                   </div>
                   {parsedMeta.companyPhone && (
-                    <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                      <span className="text-slate-500">{t(lang, "purchase.f_phone_number", "Phone Number")}</span>
+                    <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
+                      <span className="text-slate-500 font-medium">{t(lang, "purchase.f_phone_number", "Phone Number")}</span>
                       <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{parsedMeta.companyPhone}</span>
                     </div>
                   )}
                   {parsedMeta.companyEmail && (
-                    <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                      <span className="text-slate-500">{getLabel("emailAddress", lang)}</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-200 text-right truncate max-w-[120px]" title={parsedMeta.companyEmail}>{parsedMeta.companyEmail}</span>
+                    <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
+                      <span className="text-slate-500 font-medium">{getLabel("emailAddress", lang)}</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200 text-right truncate max-w-[140px]" title={parsedMeta.companyEmail}>{parsedMeta.companyEmail}</span>
                     </div>
                   )}
-                  <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                    <span className="text-slate-500">{getLabel("country", lang)}</span>
+                  <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
+                    <span className="text-slate-500 font-medium">{getLabel("country", lang)}</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.companyCountry || parsedMeta.country || customer.country_name || "-"}</span>
                   </div>
-                  <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                    <span className="text-slate-500">{getLabel("city", lang)}</span>
+                  <div className="flex justify-between pb-0.5">
+                    <span className="text-slate-500 font-medium">{getLabel("city", lang)}</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.companyCity || parsedMeta.city || customer.city_name || "-"}</span>
                   </div>
-                  <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
-                    <span className="text-slate-500">{t(lang, "branch.state_label", "State")}</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.companyState || parsedMeta.stateProvince || customer.state_province_name || "-"}</span>
+                </div>
+              </div>
+            ) : (
+              /* Location & Address overview */
+              <div className="border border-slate-200 dark:border-slate-800 rounded-2xl p-4 bg-white dark:bg-slate-900 shadow-xs space-y-2">
+                <h3 className="text-xs font-bold text-teal-800 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-2 dark:text-teal-400 flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5 text-teal-600" />
+                  {getLabel("locationInfo", lang)}
+                </h3>
+                <div className="space-y-1.5 text-xs">
+                  <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
+                    <span className="text-slate-500 font-medium">{getLabel("country", lang)}</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{customer.country_name || parsedMeta.country || "-"}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
+                    <span className="text-slate-500 font-medium">{t(lang, "branch.state_label", "State / Province")}</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{customer.state_province_name || parsedMeta.stateProvince || "-"}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-100/70 pb-1.5 dark:border-slate-800/70">
+                    <span className="text-slate-500 font-medium">{getLabel("city", lang)}</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{customer.city_name || parsedMeta.city || "-"}</span>
                   </div>
                   <div className="flex justify-between pb-0.5">
-                    <span className="text-slate-500">{getLabel("completeAddress", lang)}</span>
-                    <span className="font-bold text-slate-900 dark:text-slate-100 text-right truncate max-w-[120px]" title={parsedMeta.companyAddress || customer.address || ""}>{parsedMeta.companyAddress || customer.address || "-"}</span>
+                    <span className="text-slate-500 font-medium">{t(lang, "purchase.f_address", "Full Address")}</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-100 text-right">{customer.address || "-"}</span>
                   </div>
                 </div>
               </div>
             )}
-
           </div>
 
-          {/* Contacts */}
-          <div className="space-y-1.5">
-            <h3 className="text-[9px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1 dark:text-teal-400">{getLabel("contacts", lang)}</h3>
-            <div className="border rounded-lg overflow-hidden dark:border-slate-800">
-              <table className="w-full text-xs text-left">
-                <thead className="bg-slate-50 text-slate-600 uppercase font-bold border-b dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800">
-                  <tr>
-                    <Th className="px-3 py-1">{getLabel("typeLabel", lang)}</Th>
-                    <Th className="px-3 py-1 font-mono">{t(lang, "god.asset_value", "Value")}</Th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y dark:divide-slate-800">
-                  {parsedMeta.contacts.map((contact, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/50">
-                      <td className="px-3 py-1 font-bold text-slate-700 dark:text-slate-300">{contact.type}</td>
-                      <td className="px-3 py-1 font-mono text-slate-900 dark:text-slate-100">{contact.value || "-"}</td>
+          {/* Contacts & Documents side-by-side */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Contacts Table */}
+            <div className="border border-slate-200 dark:border-slate-800 rounded-2xl p-4 bg-white dark:bg-slate-900 shadow-xs space-y-2">
+              <h3 className="text-xs font-bold text-teal-800 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-2 dark:text-teal-400 flex items-center gap-1.5">
+                <Phone className="h-3.5 w-3.5 text-teal-600" />
+                {getLabel("contacts", lang)}
+              </h3>
+              <div className="border rounded-xl overflow-hidden dark:border-slate-800">
+                <table className="w-full text-xs text-left">
+                  <thead className="bg-slate-50 text-slate-600 uppercase font-bold border-b dark:bg-slate-800/80 dark:text-slate-300 dark:border-slate-800">
+                    <tr>
+                      <Th className="px-3 py-1.5">{getLabel("typeLabel", lang)}</Th>
+                      <Th className="px-3 py-1.5 font-mono">{t(lang, "god.asset_value", "Value")}</Th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {parsedMeta.contacts.map((contact, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/50">
+                        <td className="px-3 py-1.5 font-bold text-slate-700 dark:text-slate-300">{contact.type}</td>
+                        <td className="px-3 py-1.5 font-mono text-slate-900 dark:text-slate-100">{contact.value || "-"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
 
-          {/* Documents */}
-          <div className="space-y-1.5">
-            <h3 className="text-[9px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1 dark:text-teal-400">{getLabel("documents", lang)}</h3>
-            <div className="border rounded-lg overflow-hidden dark:border-slate-800">
-              <table className="w-full text-xs text-left">
-                <thead className="bg-slate-50 text-slate-600 uppercase font-bold border-b dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800">
-                  <tr>
-                    <Th className="px-3 py-1">{getLabel("typeLabel", lang)}</Th>
-                    <Th className="px-3 py-1 font-mono">{getLabel("numberLabel", lang)}</Th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y dark:divide-slate-800">
-                  {parsedMeta.documents.map((doc, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/50">
-                      <td className="px-3 py-1 font-bold text-slate-700 dark:text-slate-300">{doc.type}</td>
-                      <td className="px-3 py-1 font-mono text-slate-900 dark:text-slate-100">{doc.number || "-"}</td>
+            {/* Documents Table */}
+            <div className="border border-slate-200 dark:border-slate-800 rounded-2xl p-4 bg-white dark:bg-slate-900 shadow-xs space-y-2">
+              <h3 className="text-xs font-bold text-teal-800 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-2 dark:text-teal-400 flex items-center gap-1.5">
+                <FileText className="h-3.5 w-3.5 text-teal-600" />
+                {getLabel("documents", lang)}
+              </h3>
+              <div className="border rounded-xl overflow-hidden dark:border-slate-800">
+                <table className="w-full text-xs text-left">
+                  <thead className="bg-slate-50 text-slate-600 uppercase font-bold border-b dark:bg-slate-800/80 dark:text-slate-300 dark:border-slate-800">
+                    <tr>
+                      <Th className="px-3 py-1.5">{getLabel("typeLabel", lang)}</Th>
+                      <Th className="px-3 py-1.5 font-mono">{getLabel("numberLabel", lang)}</Th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {parsedMeta.documents.map((doc, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/50">
+                        <td className="px-3 py-1.5 font-bold text-slate-700 dark:text-slate-300">{doc.type}</td>
+                        <td className="px-3 py-1.5 font-mono text-slate-900 dark:text-slate-100">{doc.number || "-"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
 
           {/* Remarks */}
           {parsedMeta.remarks && (
-            <div className="space-y-1 border rounded-lg p-2.5 bg-slate-50/50 dark:bg-slate-900/40 dark:border-slate-800">
-              <h4 className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">{getLabel("remarksRegistryNotes", lang)}</h4>
+            <div className="space-y-1.5 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 bg-white dark:bg-slate-900 shadow-xs">
+              <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{getLabel("remarksRegistryNotes", lang)}</h4>
               <p className="text-xs text-slate-700 leading-relaxed font-medium dark:text-slate-300">{parsedMeta.remarks}</p>
             </div>
           )}
         </div>
+
+        {/* Sticky Bottom Action Bar inside Drawer */}
+        <div className="sticky bottom-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 p-3 flex items-center justify-between gap-2 shadow-lg">
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              onClick={() => router.push(`/dashboard/settings/customers/setup?customerId=${customer.id}` as Route)}
+              className="gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-10 px-5 rounded-xl shadow-md"
+            >
+              <PencilLine className="h-4 w-4" />
+              {lang === "ur" ? "ایڈٹ کریں (Edit Profile)" : "Edit Profile"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handlePrint}
+              className="gap-1.5 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs h-10 px-4 rounded-xl"
+            >
+              <Printer className="h-4 w-4 text-amber-500" />
+              {t(lang, "wh.print_report", "Print / Report")}
+            </Button>
+          </div>
+          <Button
+            type="button"
+            onClick={() => setShowSendModal(true)}
+            className="gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs h-10 px-4 rounded-xl shadow-md"
+          >
+            <Send className="h-4 w-4" />
+            <span className="hidden sm:inline">{lang === "ur" ? "کسٹمر کو بھیجیں" : "SEND TO CUSTOMER"}</span>
+          </Button>
+        </div>
+
+        {/* 360 ERP Links modal */}
+        {showErpLinks && (
+          <Party360Modal
+            customerId={customer.id}
+            name={customer.customer_name}
+            lang={lang}
+            onClose={() => setShowErpLinks(false)}
+          />
+        )}
+
+        {/* Send to customer modal */}
+        <SendToCustomerModal
+          isOpen={showSendModal}
+          onClose={() => setShowSendModal(false)}
+          lang={lang}
+          defaultFormType="customer"
+        />
       </div>
     );
   }

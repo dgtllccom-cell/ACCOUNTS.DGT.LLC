@@ -5,7 +5,7 @@ import { printStore } from "@/lib/store/print-store";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
-import { Building2, Search, Eye, PencilLine, Printer, Trash2, Users, UserCheck, UserMinus, Plus, Mail, MessageSquare, MoreHorizontal, Phone, FileText, Download, Layers, Send } from "lucide-react";
+import { Building2, Search, Eye, PencilLine, Printer, Trash2, Users, UserCheck, UserMinus, Plus, Mail, MessageSquare, MoreHorizontal, Phone, FileText, Download, Layers, Send, ArrowLeft, SlidersHorizontal, RotateCcw, ChevronDown, ChevronUp, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
@@ -115,6 +115,30 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
   const [showUniversalDirectory, setShowUniversalDirectory] = useState(false);
   const [showSendModal, setShowSendModal] = useState(false);
   
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+
+  // Calculate active filter count
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (filterState.query?.trim()) count++;
+    if (filterState.country && filterState.country !== "all") count++;
+    if (filterState.branch && filterState.branch !== "all") count++;
+    if (filterState.mainBranch && filterState.mainBranch !== "all") count++;
+    if (filterState.status && filterState.status !== "all") count++;
+    return count;
+  }, [filterState]);
+
+  // Reset filters handler
+  const handleResetFilters = () => {
+    setFilterState({
+      query: "",
+      country: "all",
+      branch: "all",
+      mainBranch: "all",
+      status: "all"
+    });
+  };
+
   // State to track which row action menu is open
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
@@ -245,6 +269,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
           c.meta.customerAccountNumber.toLowerCase().includes(q) ||
           (c.person_code && c.person_code.toLowerCase().includes(q)) ||
           (c.father_name && c.father_name.toLowerCase().includes(q)) ||
+          (c.meta.fatherName && c.meta.fatherName.toLowerCase().includes(q)) ||
           (c.mobile && c.mobile.includes(q)) ||
           (c.email && c.email.toLowerCase().includes(q)) ||
           (c.address && c.address.toLowerCase().includes(q))
@@ -420,7 +445,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                 </div>
                 <div class="field">
                   <div class="label">${getLabel("fatherNameRepresentative", lang)}</div>
-                  <div class="value">${c.meta.fatherName || "-"}</div>
+                  <div class="value">${c.father_name || c.meta.fatherName || "-"}</div>
                 </div>
               </div>
 
@@ -472,50 +497,110 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
 
   return (
     <div className="space-y-6" dir={isRtl ? "rtl" : "ltr"}>
-      {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-teal-600">{t(lang, "cusm.settings_management", "Settings / Management")}</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
-            {getLabel("customersTitle", lang)}
-          </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {getLabel("createOrUpdateCustomerSub", lang)}
-          </p>
+      {/* Top Header Strip with Integrated Actions & Navigation */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+        {/* Left Side: Back button + Title */}
+        <div className="flex items-center gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => router.back()}
+            className="gap-1.5 h-9 px-3 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl font-bold text-xs shadow-xs"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>{getLabel("backButton", lang) || "Back"}</span>
+          </Button>
+
+          <div className="h-6 w-px bg-slate-200 dark:bg-slate-700" />
+
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-teal-600">{t(lang, "cusm.settings_management", "Settings / Management")}</p>
+            <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              {getLabel("customersTitle", lang)}
+              <span className="text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+                {filteredCustomers.length}
+              </span>
+            </h1>
+          </div>
         </div>
+
+        {/* Right Side: Action Buttons & Filter Toggle */}
         <div className="flex flex-wrap items-center gap-2">
+          {/* Reset Filters button */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleResetFilters}
+            title={getLabel("resetFilters", lang) || "Reset Filters"}
+            className="gap-1.5 h-9 px-3 border-slate-300 dark:border-slate-700 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-600 dark:hover:bg-rose-950/30 text-slate-600 dark:text-slate-300 rounded-xl font-semibold text-xs transition-all"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{getLabel("resetFilters", lang) || "Reset"}</span>
+          </Button>
+
+          {/* Search & Filter Dropdown Toggle Button */}
+          <Button
+            type="button"
+            variant={showFilterDropdown ? "default" : "outline"}
+            onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+            className={cn(
+              "gap-1.5 h-9 px-3.5 rounded-xl font-bold text-xs shadow-xs transition-all",
+              showFilterDropdown
+                ? "bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900"
+                : "border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
+            )}
+          >
+            <SlidersHorizontal className="h-3.5 w-3.5" />
+            <span>{getLabel("filterToggle", lang) || "Search & Filter"}</span>
+            {activeFiltersCount > 0 && (
+              <span className="px-1.5 py-0.2 bg-emerald-500 text-white text-[10px] rounded-full font-black">
+                {activeFiltersCount}
+              </span>
+            )}
+            {showFilterDropdown ? <ChevronUp className="h-3.5 w-3.5 ml-0.5 opacity-70" /> : <ChevronDown className="h-3.5 w-3.5 ml-0.5 opacity-70" />}
+          </Button>
+
+          {/* 360 Parties Directory */}
           <Button
             type="button"
             onClick={() => setShowUniversalDirectory(true)}
-            className="gap-2 bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 hover:from-indigo-700 hover:to-blue-800 text-white font-bold shadow-md h-10 px-4 rounded-xl text-xs"
+            className="gap-1.5 bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 hover:from-indigo-700 hover:to-blue-800 text-white font-bold shadow-md h-9 px-3.5 rounded-xl text-xs"
           >
-            <Layers className="h-4 w-4" />
-            {t(lang, "p360.universal_directory", "360° Universal Parties Directory")}
+            <Layers className="h-3.5 w-3.5" />
+            <span className="hidden xl:inline">{t(lang, "p360.universal_directory", "360° Universal Parties Directory")}</span>
+            <span className="xl:hidden">360° Directory</span>
           </Button>
+
+          {/* Print / Report */}
           <Button
             type="button"
             variant="outline"
             onClick={() => setShowReport(true)}
-            className="gap-2 border-slate-700 hover:bg-slate-800 text-slate-200 font-medium shadow-sm h-10 px-4 rounded-lg text-xs"
+            className="gap-1.5 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium shadow-xs h-9 px-3 rounded-xl text-xs"
           >
-            <Printer className="h-4 w-4 text-cyan-400" />
-            {t(lang, "wh.print_report", "Print / Report")}
+            <Printer className="h-3.5 w-3.5 text-cyan-500" />
+            <span className="hidden sm:inline">{t(lang, "wh.print_report", "Print / Report")}</span>
           </Button>
+
+          {/* SEND TO CUSTOMER */}
           <Button
             type="button"
             onClick={() => setShowSendModal(true)}
-            className="gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-md h-10 px-4 rounded-xl text-xs"
+            className="gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-md h-9 px-3.5 rounded-xl text-xs"
           >
-            <Send className="h-4 w-4" />
-            {lang === "ur" ? "کسٹمر کو بھیجیں (SEND TO CUSTOMER)" : lang === "ar" ? "إرسال للعميل (SEND TO CUSTOMER)" : lang === "fa" ? "ارسال به مشتری (SEND TO CUSTOMER)" : lang === "ps" ? "پیرودونکي ته لیږل (SEND TO CUSTOMER)" : "SEND TO CUSTOMER"}
+            <Send className="h-3.5 w-3.5" />
+            <span>{lang === "ur" ? "کسٹمر کو بھیجیں" : lang === "ar" ? "إرسال للعميل" : lang === "fa" ? "ارسال به مشتری" : lang === "ps" ? "پیرودونکي ته لیږل" : "SEND TO CUSTOMER"}</span>
           </Button>
+
+          {/* Add Customer */}
           <Button
             type="button"
             onClick={() => router.push("/dashboard/settings/customers/setup" as Route)}
-            className="gap-2 bg-teal-600 hover:bg-teal-700 text-white font-medium shadow-sm h-10 px-4 rounded-lg text-xs"
+            className="gap-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold shadow-md h-9 px-3.5 rounded-xl text-xs"
           >
             <Plus className="h-4 w-4" />
-            {t(lang, "bdash.qa_add_customer", "Add Customer")}
+            <span>{t(lang, "bdash.qa_add_customer", "Add Customer")}</span>
           </Button>
         </div>
       </div>
@@ -639,38 +724,91 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
         </div>
       </div>
 
-      {/* Standardized Smart Search & Filter */}
-      <SmartSearchFilter
-        value={filterState}
-        onChange={setFilterState}
-        placeholder={getLabel("searchPlaceholder", lang)}
-        hideRiskLevel
-        hideModule
-        hideCurrency
-      />
+      {/* Collapsible Dropdown Search & Filter Container */}
+      {showFilterDropdown && (
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in slide-in-from-top-2 duration-200 space-y-3">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+            <div className="flex items-center gap-2">
+              <SlidersHorizontal className="h-4 w-4 text-teal-600" />
+              <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                {getLabel("filterToggle", lang) || "Smart Search & Filter"}
+              </span>
+              {activeFiltersCount > 0 && (
+                <span className="text-[10px] font-bold text-teal-700 bg-teal-50 dark:bg-teal-950/40 px-2 py-0.5 rounded-full border border-teal-200 dark:border-teal-900">
+                  {activeFiltersCount} active filter{activeFiltersCount > 1 ? "s" : ""}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleResetFilters}
+                className="h-7 text-[11px] text-slate-500 hover:text-rose-600 gap-1 px-2"
+              >
+                <RotateCcw className="h-3 w-3" />
+                {getLabel("resetFilters", lang) || "Clear"}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowFilterDropdown(false)}
+                className="h-7 w-7 p-0 text-slate-400 hover:text-slate-600 rounded-lg"
+              >
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </div>
+          <SmartSearchFilter
+            value={filterState}
+            onChange={setFilterState}
+            placeholder={getLabel("searchPlaceholder", lang)}
+            hideRiskLevel
+            hideModule
+            hideCurrency
+          />
+        </div>
+      )}
 
       {/* Main Table */}
-      <Card className="rounded-xl border shadow-sm overflow-hidden bg-white">
-        <CardHeader className="border-b px-5 py-3.5 bg-slate-50/50">
+      <Card className="rounded-2xl border shadow-sm overflow-hidden bg-white dark:bg-slate-900 dark:border-slate-800">
+        <CardHeader className="border-b px-5 py-3.5 bg-slate-50/70 dark:bg-slate-950/60 dark:border-slate-800">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <CardTitle className="text-base font-semibold text-slate-800">{getLabel("customerListDirectory", lang)}</CardTitle>
+              <CardTitle className="text-base font-semibold text-slate-800 dark:text-slate-100">{getLabel("customerListDirectory", lang)}</CardTitle>
               <p className="text-xs text-muted-foreground mt-0.5">{getLabel("useActionsToViewEditPrintMsg", lang)}</p>
             </div>
-            <div className="text-xs text-slate-500 font-bold">
-              {filteredCustomers.length} {t(lang, "hr.records_found", "records found")}
+            <div className="flex items-center gap-3">
+              {!showFilterDropdown && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowFilterDropdown(true)}
+                  className="h-7 text-xs font-semibold gap-1.5 rounded-lg border-slate-200 dark:border-slate-700"
+                >
+                  <Search className="h-3 w-3 text-teal-600" />
+                  <span>{getLabel("filterToggle", lang) || "Search & Filter"}</span>
+                </Button>
+              )}
+              <div className="text-xs text-slate-500 dark:text-slate-400 font-bold bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg">
+                {filteredCustomers.length} {t(lang, "hr.records_found", "records found")}
+              </div>
             </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
-              <thead className="bg-slate-50 text-slate-700 uppercase font-bold border-b border-slate-200">
+              <thead className="bg-slate-50 text-slate-700 uppercase font-bold border-b border-slate-200 dark:bg-slate-950 dark:text-slate-300 dark:border-slate-800">
                 <tr>
-                  <Th className="px-4 py-3.5">#</Th>
+                  <Th className="px-3.5 py-3.5">#</Th>
                   <Th className="px-4 py-3.5">{getLabel("customerCode", lang)}</Th>
                   <Th className="px-4 py-3.5">{getLabel("customerType", lang)}</Th>
                   <Th className="px-5 py-3.5">{getLabel("customerName", lang)}</Th>
+                  <Th className="px-4 py-3.5">{getLabel("fatherNameOnly", lang) || "Father / Guardian Name"}</Th>
                   <Th className="px-4 py-3.5">{getLabel("country", lang)}</Th>
                   <Th className="px-4 py-3.5">{getLabel("stateProvince", lang)}</Th>
                   <Th className="px-4 py-3.5">{getLabel("city", lang)}</Th>
@@ -681,24 +819,25 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   <Th className="px-4 py-3.5 text-center">{getLabel("actions", lang)}</Th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {loading ? (
                   <tr>
-                    <td colSpan={12} className="px-5 py-10 text-center text-slate-500 font-medium italic">
+                    <td colSpan={13} className="px-5 py-10 text-center text-slate-500 font-medium italic">
                       {getLabel("loadingCustomerRegistryDirectory", lang)}
                     </td>
                   </tr>
                 ) : filteredCustomers.length > 0 ? (
                   filteredCustomers.map((c, i) => {
                     const cType = c.meta.customerType || "Male";
+                    const fName = c.father_name || c.meta.fatherName;
                     return (
                     <tr
                       key={c.id}
                       onClick={() => setSelectedCustomerId(c.id)}
-                      className="cursor-pointer hover:bg-slate-50/70 transition-colors"
+                      className="cursor-pointer hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors"
                     >
-                      <td className="px-4 py-3.5 font-semibold text-slate-500">{i + 1}</td>
-                      <td className="px-4 py-3.5 font-bold text-slate-900 font-mono">
+                      <td className="px-3.5 py-3.5 font-semibold text-slate-500">{i + 1}</td>
+                      <td className="px-4 py-3.5 font-bold text-slate-900 dark:text-slate-100 font-mono">
                         {c.meta.customerAccountNumber}
                       </td>
                       <td className="px-4 py-3.5">
@@ -717,30 +856,33 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                         </span>
                       </td>
                       <td className="px-5 py-3.5">
-                        <div className="flex flex-col gap-1">
-                          <span className="font-black text-slate-900 dark:text-slate-100 text-[13px]">
-                            {translateCustomerText(c.customer_name, lang)}
-                          </span>
-                          {c.father_name ? (
-                            <span className="inline-flex items-center gap-1 text-[10.5px] font-bold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.5 rounded w-fit border border-blue-100 dark:border-blue-900/50">
-                              <span className="text-[9px] uppercase tracking-wider font-black text-blue-500">S/O:</span>
-                              <span>{translateCustomerText(c.father_name, lang)}</span>
-                            </span>
-                          ) : (
-                            <span className="text-[10px] text-slate-400 italic">—</span>
-                          )}
-                        </div>
+                        <span className="font-black text-slate-900 dark:text-slate-100 text-[13px]">
+                          {translateCustomerText(c.customer_name, lang)}
+                        </span>
                       </td>
-                      <td className="px-4 py-3.5 text-slate-600 font-medium">
+                      {/* Dedicated Father / Guardian Name Column */}
+                      <td className="px-4 py-3.5">
+                        {fName ? (
+                          <span className="inline-flex items-center gap-1 text-[11.5px] font-bold text-slate-800 dark:text-slate-200">
+                            <span className="text-[9.5px] uppercase tracking-wider font-extrabold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-900/40">
+                              S/O:
+                            </span>
+                            <span>{translateCustomerText(fName, lang)}</span>
+                          </span>
+                        ) : (
+                          <span className="text-[11px] text-slate-400 italic">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3.5 text-slate-600 dark:text-slate-300 font-medium">
                         {translateCustomerText(c.meta.country, lang)}
                       </td>
-                      <td className="px-4 py-3.5 text-slate-600 font-medium">
+                      <td className="px-4 py-3.5 text-slate-600 dark:text-slate-300 font-medium">
                         {translateCustomerText(c.meta.stateProvince, lang)}
                       </td>
-                      <td className="px-4 py-3.5 text-slate-600 font-medium">
+                      <td className="px-4 py-3.5 text-slate-600 dark:text-slate-300 font-medium">
                         {translateCustomerText(c.meta.city, lang)}
                       </td>
-                      <td className="px-5 py-3.5 text-slate-700">
+                      <td className="px-4 py-3.5 text-slate-700">
                         <div className="group relative flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                           <div className="flex gap-1 items-center">
                             {c.meta.contacts.map((cn, idx) => {
@@ -795,29 +937,45 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                           </div>
                         </div>
                       </td>
-                      <td className="px-5 py-3.5 text-slate-600">
+                      <td className="px-4 py-3.5 text-slate-600">
                         <DocumentAttachmentIcon entityType="customers" entityId={c.id} />
                       </td>
-                      <td className="px-5 py-3.5">
+                      <td className="px-4 py-3.5">
                         <span
                           className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold border ${
                             c.meta.status === "Active"
-                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                              : "bg-slate-100 text-slate-600 border-slate-200"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
+                              : "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
                           }`}
                         >
                           {c.meta.status}
                         </span>
                       </td>
-                      <td className="px-5 py-3.5 text-slate-500 font-mono font-medium">
+                      <td className="px-4 py-3.5 text-slate-500 font-mono font-medium">
                         {new Date(c.created_at).toLocaleDateString(undefined, {
                           day: "2-digit",
                           month: "short",
                           year: "numeric"
                         })}
                       </td>
-                      <td className="px-5 py-3.5 text-center">
-                        <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+                      <td className="px-4 py-3.5 text-center">
+                        <div className="flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedCustomerId(c.id)}
+                            title="View Customer Profile"
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-slate-800 transition-colors"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => router.push(`/dashboard/settings/customers/setup?customerId=${c.id}` as Route)}
+                            title="Edit Customer"
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors"
+                          >
+                            <PencilLine className="h-4 w-4" />
+                          </button>
                           <UnifiedActionMenu
                             onView={() => setSelectedCustomerId(c.id)}
                             onEdit={() => router.push(`/dashboard/settings/customers/setup?customerId=${c.id}` as Route)}
@@ -839,7 +997,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={12} className="px-5 py-10 text-center text-slate-500 font-medium italic">
+                    <td colSpan={13} className="px-5 py-10 text-center text-slate-500 font-medium italic">
                       {getLabel("noCustomersFoundFilterMsg", lang)}
                     </td>
                   </tr>

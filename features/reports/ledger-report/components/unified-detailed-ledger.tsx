@@ -283,8 +283,13 @@ export function UnifiedDetailedLedgerView() {
   }, [lines, filterType, filterValue, header]);
 
   function printDetailedStatement() {
+    const openBal = (header as any)?.openingBalance || 0;
+    const totalDr = calculatedTotals.sumDr;
+    const totalCr = calculatedTotals.sumCr;
+    const closingBal = openBal + totalDr - totalCr;
+
     openUniversalPrintReport({
-      title: `Detailed Ledger Statement - ${header?.accountName || "Account"}`,
+      title: `Account Ledger Statement - ${header?.accountName || "Account"}`,
       subtitle: `${header?.accountCode || ""} • ${header?.countryName || ""} • ${(header as any)?.branchName || (header as any)?.cityBranchName || ""}`,
       lang,
       moduleType: "ledger",
@@ -295,6 +300,20 @@ export function UnifiedDetailedLedgerView() {
         country: header?.countryName || "",
         branch: (header as any)?.branchName || (header as any)?.cityBranchName || "",
         currency: header?.ledgerCurrency || "AED",
+        dateRange: `${fromDate || ""} → ${toDate || ""}`,
+      },
+      ledgerSummary: {
+        accountName: header?.accountName || "Account Holder",
+        accountCode: header?.accountCode || "",
+        countryBranch: `${header?.countryName || ""} • ${(header as any)?.branchName || (header as any)?.cityBranchName || ""}`,
+        currency: header?.ledgerCurrency || "AED",
+        datePeriod: `${fromDate || ""} → ${toDate || ""}`,
+        openingBalance: openBal,
+        openingDcType: openBal >= 0 ? "Dr" : "Cr",
+        totalDebit: totalDr,
+        totalCredit: totalCr,
+        closingBalance: closingBal,
+        closingDcType: closingBal >= 0 ? "Dr" : "Cr",
       },
 
       partyDetails: {
@@ -303,31 +322,45 @@ export function UnifiedDetailedLedgerView() {
         code: header?.accountCode || "",
       },
       columns: [
-        { key: "index", label: tr("S.No"), width: "5%", align: "center" },
-        { key: "entryDate", label: tr("Date"), format: "date", width: "9%" },
-        { key: "serialNo", label: tr("Serial #"), width: "9%" },
-        { key: "voucherNo", label: tr("Voucher #"), width: "9%" },
-        { key: "narration", label: tr("Description / Narration"), width: "24%" },
-        { key: "debit", label: tr("Debit"), align: "right", format: "currency", width: "11%" },
-        { key: "credit", label: tr("Credit"), align: "right", format: "currency", width: "11%" },
-        { key: "runningBalance", label: tr("Balance"), align: "right", format: "currency", width: "11%" },
-        { key: "branchName", label: tr("Branch"), width: "11%" },
+        { key: "index", label: tr("S.No"), width: "4%", align: "center" },
+        { key: "entryDate", label: tr("Date"), format: "date", width: "8%" },
+        { key: "serialNo", label: tr("Voucher / Serial #"), width: "10%" },
+        { key: "voucherNo", label: tr("Manual Ref"), width: "9%" },
+        { key: "sourceModule", label: tr("Source"), width: "8%" },
+        { key: "narration", label: tr("Description / Narration"), width: "22%" },
+        { key: "currencyExRate", label: tr("Currency / Ex. Rate"), width: "11%" },
+        { key: "debit", label: tr("Debit (DR)"), align: "right", format: "currency", width: "10%" },
+        { key: "credit", label: tr("Credit (CR)"), align: "right", format: "currency", width: "10%" },
+        { key: "runningBalance", label: tr("Balance"), align: "right", format: "currency", width: "10%" },
       ],
-      rows: calculatedTotals.lines.map((l, i) => ({
-        index: i + 1,
-        entryDate: l.entryDate,
-        serialNo: l.branchSerialNo || l.countrySerialNo || l.superAdminSerialNo || "-",
-        voucherNo: l.referenceNo || "-",
-        narration: l.description || "-",
-        debit: l.debit || 0,
-        credit: l.credit || 0,
-        runningBalance: l.runningBalance || 0,
-        branchName: l.branchName || "-",
-      })),
+      rows: calculatedTotals.lines.map((l, i) => {
+        const origCurr = (l as any).origCurrency || (l as any).currency;
+        const origAmt = (l as any).origAmount || (l.debit || l.credit || 0);
+        const rate = l.usdRate || (l as any).exchangeRate || 1;
+        const baseCurr = header?.ledgerCurrency || "AED";
+
+        return {
+          index: i + 1,
+          entryDate: l.entryDate,
+          serialNo: l.branchSerialNo || l.countrySerialNo || l.superAdminSerialNo || "-",
+          voucherNo: l.referenceNo || "-",
+          sourceModule: l.sourceTable || "Journal",
+          narration: l.description || "-",
+          origCurrency: origCurr,
+          origAmount: origAmt,
+          exchangeRate: rate,
+          currencyExRate: origCurr && origCurr !== baseCurr ? `${origCurr} ${origAmt} (@ ${rate})` : baseCurr,
+          debit: l.debit || 0,
+          credit: l.credit || 0,
+          runningBalance: l.runningBalance || 0,
+          dcType: (l.runningBalance || 0) >= 0 ? "Dr" : "Cr",
+          branchName: l.branchName || "-",
+        };
+      }),
       totals: {
-        debit: calculatedTotals.sumDr,
-        credit: calculatedTotals.sumCr,
-        runningBalance: calculatedTotals.running,
+        debit: totalDr,
+        credit: totalCr,
+        runningBalance: closingBal,
       },
       autoPrint: false,
     });

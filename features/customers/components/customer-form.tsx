@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
-import { Building2, Save, X, RefreshCcw, CheckCircle2, User, MapPin, Phone, FileText, Info, Paperclip, Send } from "lucide-react";
+import { Building2, Save, X, RefreshCcw, CheckCircle2, User, MapPin, Phone, FileText, Info, Paperclip, Send, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -508,15 +508,33 @@ export function CustomerForm({
   return (
     <div className="space-y-6" dir={isRtl ? "rtl" : "ltr"}>
       {/* Page Title */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-teal-600">{t(lang, "cusm.settings_management", "Settings / Management")}</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
-            {initialCustomerId ? getLabel("editCustomerDetails", lang) : getLabel("customerDetails", lang)}
-          </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {initialCustomerId ? getLabel("updateExistingCustomerSub", lang) : getLabel("createOrUpdateCustomerSub", lang)}
-          </p>
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+        <div className="flex items-center gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (onClose) onClose();
+              else router.push("/dashboard/settings/customers" as Route);
+            }}
+            className="gap-1.5 h-9 px-3 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl font-bold text-xs shadow-xs"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>{getLabel("backToCustomers", lang) || "Back"}</span>
+          </Button>
+
+          <div className="h-6 w-px bg-slate-200 dark:bg-slate-700" />
+
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-teal-600">{t(lang, "cusm.settings_management", "Settings / Management")}</p>
+            <h1 className="mt-0.5 text-xl font-black tracking-tight text-slate-900 dark:text-slate-100">
+              {initialCustomerId ? getLabel("editCustomerDetails", lang) : getLabel("customerDetails", lang)}
+            </h1>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {initialCustomerId ? getLabel("updateExistingCustomerSub", lang) : getLabel("createOrUpdateCustomerSub", lang)}
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-2.5">
           <Button

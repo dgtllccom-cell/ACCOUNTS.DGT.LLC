@@ -338,7 +338,12 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
   function printLedger() {
     if (!account) return;
     const tr = (label: string) => translateHeader(activeLang, label);
-    const curr = account.ledgerCurrency || "USD";
+    const curr = account.ledgerCurrency || "AED";
+
+    const openBal = openingBalance || 0;
+    const totDr = totals.debit || 0;
+    const totCr = totals.credit || 0;
+    const closeBal = totals.balance ?? (openBal + totDr - totCr);
 
     openUniversalPrintReport({
       title: tr("Account Ledger Statement"),
@@ -347,61 +352,83 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
       moduleType: "ledger",
       orientation: "landscape",
       documentNo: account.accountCode || account.ledgerCode || "LEDGER-STMT",
+      companyInfo: {
+        name: account.companyName || (account.countryName ? `${account.countryName} Operating Entity` : "Damaan General Trading LLC"),
+        address: account.address || `${account.cityBranchName || ""}, ${account.countryName || ""}`.replace(/^[\s,]+|[\s,]+$/g, ""),
+        email: "accounts@dgt.llc",
+        printedBy: session?.user?.fullName || session?.user?.email || "ERP User",
+      },
       scope: {
         scopeLevel: "Account Ledger Statement",
         userName: session?.user?.fullName || session?.user?.email || "ERP User",
-        country: account.countryName || selectedCountry || "All Countries",
-        branch: account.cityBranchName || account.countryBranchName || selectedBranch || "All Branches",
+        company: account.companyName || (account.countryName ? `${account.countryName} Operating Entity` : undefined),
+        country: account.countryName || selectedCountry || "Global Scope",
+        branch: account.cityBranchName || account.countryBranchName || selectedBranch || "Main Branch",
         currency: curr,
         dateRange: `${fromDate || "Start"} → ${toDate || "Today"}`
+      },
+      ledgerSummary: {
+        accountName: account.accountName || account.ledgerName || "Account",
+        accountCode: account.accountCode || account.ledgerCode || "-",
+        accountOpenDate: account.createdAt ? account.createdAt.split("T")[0] : undefined,
+        currency: curr,
+        status: "Active",
+        manualReference: account.manualReferenceNumber || undefined,
+        customerReference: account.customerNumber || undefined,
+        accountType: account.accountKind || "Standard Account",
+        taxNo: (account as any).taxNo || (account.countryName === 'Pakistan' ? 'NTN: Registered' : account.countryName === 'United Arab Emirates' ? 'TRN: 100458923400003' : ''),
+        companyName: account.companyName || (account.countryName ? `${account.countryName} Operating Entity` : undefined),
+        countryName: account.countryName || selectedCountry || "Global Scope",
+        mainBranch: account.countryBranchName || "Main Branch",
+        cityBranch: account.cityBranchName || selectedBranch || "City Branch",
+        branchCode: account.cityBranchId || account.countryBranchId || "-",
+        address: account.address || `${account.cityBranchName || ""}, ${account.countryName || ""}`.replace(/^[\s,]+|[\s,]+$/g, "") || undefined,
+        openingBalance: openBal,
+        openingDcType: openBal >= 0 ? "Dr" : "Cr",
+        totalDebit: totDr,
+        totalCredit: totCr,
+        closingBalance: closeBal,
+        closingDcType: closeBal >= 0 ? "Dr" : "Cr",
+        datePeriod: `${fromDate || "Start"} → ${toDate || "Today"}`,
       },
       partyDetails: {
         type: "entity",
         name: account.accountName || account.ledgerName || "Account",
         code: account.accountCode || account.ledgerCode || undefined,
+        address: account.address || undefined,
         departmentOrBranch: account.cityBranchName || account.countryBranchName || account.countryName || undefined,
       },
-      kpis: [
-        { label: tr("Opening Balance"), value: fmtNumber(openingBalance), color: "blue" },
-        { label: tr("Total Debit"), value: fmtNumber(totals.debit), color: "emerald" },
-        { label: tr("Total Credit"), value: fmtNumber(totals.credit), color: "red" },
-        { label: tr("Closing Balance"), value: fmtNumber(totals.balance), color: "purple" },
-      ],
-      filters: [
-        { label: tr("Account"), value: `${account.accountCode || account.ledgerCode || "-"} · ${account.accountName || account.ledgerName || "-"}` },
-        { label: tr("Country"), value: account.countryName || selectedCountry || "All Countries" },
-        { label: tr("Branch"), value: account.cityBranchName || account.countryBranchName || selectedBranch || "All Branches" },
-        { label: tr("From Date"), value: fromDate || "Start" },
-        { label: tr("To Date"), value: toDate || "Today" },
-      ],
       columns: [
-        { key: "entryDate", label: tr("Date"), format: "date", width: "9%" },
-        { key: "superAdminSerialNo", label: tr("SA Serial"), align: "center", width: "8%" },
-        { key: "countrySerialNo", label: tr("Country Serial"), align: "center", width: "8%" },
-        { key: "branchSerialNo", label: tr("Branch Serial"), align: "center", width: "8%" },
-        { key: "createdByName", label: tr("User"), width: "10%" },
-        { key: "referenceNo", label: tr("Reference No"), width: "11%" },
-        { key: "description", label: tr("Narration"), width: "20%" },
-        { key: "debit", label: tr("Debit"), format: "currency", align: "right", width: "8%" },
-        { key: "credit", label: tr("Credit"), format: "currency", align: "right", width: "8%" },
+        { key: "entryDate", label: tr("Date"), format: "date", width: "8%" },
+        { key: "entrySerial", label: tr("Entry Serial"), align: "center", width: "10%" },
+        { key: "branchCode", label: tr("Branch Code"), align: "center", width: "8%" },
+        { key: "branchName", label: tr("Branch Name"), width: "10%" },
+        { key: "referenceNo", label: tr("Roznamcha No."), width: "10%" },
+        { key: "createdByName", label: tr("User Name"), width: "10%" },
+        { key: "createdById", label: tr("User Code"), align: "center", width: "8%" },
+        { key: "description", label: tr("Details / Narration"), width: "18%" },
+        { key: "debit", label: tr("Debit"), format: "currency", align: "right", width: "9%" },
+        { key: "credit", label: tr("Credit"), format: "currency", align: "right", width: "9%" },
         { key: "runningBalance", label: tr("Balance"), format: "currency", align: "right", width: "10%" },
       ],
-      rows: lines.map((line) => ({
+      rows: displayedLines.map((line) => ({
         entryDate: line.entryDate,
-        superAdminSerialNo: line.superAdminSerialNo || "-",
-        countrySerialNo: line.countrySerialNo || "-",
-        branchSerialNo: line.branchSerialNo || "-",
-        createdByName: line.createdByName || "-",
+        entrySerial: line.branchSerialNo || line.countrySerialNo || line.superAdminSerialNo || "-",
+        branchCode: account.cityBranchId || account.countryBranchId || "-",
+        branchName: line.branchName || account.cityBranchName || account.countryBranchName || "-",
         referenceNo: line.referenceNo || "-",
+        createdByName: line.createdByName || "-",
+        createdById: line.createdById ? `USR-${line.createdById.slice(0, 4).toUpperCase()}` : "-",
         description: line.description || "-",
         debit: line.debit || 0,
         credit: line.credit || 0,
         runningBalance: line.runningBalance || 0,
+        dcType: (line.runningBalance || 0) >= 0 ? "Dr" : "Cr",
       })),
       totals: {
-        debit: totals.debit,
-        credit: totals.credit,
-        runningBalance: totals.balance,
+        debit: totDr,
+        credit: totCr,
+        runningBalance: closeBal,
       },
       showSignatures: true,
       signatureBlocks: [
@@ -411,7 +438,7 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
       ],
       autoPrint: false,
     });
-  }
+  };
 
   function downloadCsv() {
     let runningUsd = 0;

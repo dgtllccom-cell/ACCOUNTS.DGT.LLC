@@ -286,10 +286,13 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
         srNo: idx + 1,
         accountName: r.name,
         accountCode: r.code,
+        accountType: (r as any).accountType || (r as any).accountKind || "Customer",
         branchAndCountry,
-        outstandingAmount: r.outstanding,
         currency: r.currency || "AED",
-        agingStatus: isOverdue ? `Overdue (>${overdueDays} Days)` : `0–${overdueDays} Days`,
+        debit: r.outstanding > 0 ? r.outstanding : 0,
+        credit: r.outstanding < 0 ? Math.abs(r.outstanding) : 0,
+        outstandingAmount: r.outstanding,
+        agingStatus: isOverdue ? `Overdue (>${overdueDays}D)` : `0–${overdueDays}D (${r.daysOutstanding ?? 7}D)`,
         daysOutstanding: r.daysOutstanding ?? 7,
         lastTransactionDate: r.lastMovementDate || "2026-08-05",
         recoveryStatus: recStatus
@@ -297,6 +300,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
     });
 
     const netOutstanding = (summary?.totalReceivable ?? 0) - (summary?.totalPayable ?? 0);
+    const sessionActiveText = sessionInfo?.authenticated ? "Session Active" : "SESSION UNKNOWN";
 
     openOutstandingRecoveryPrintReport({
       rows: printRows,
@@ -311,7 +315,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
         remainingEntries: Math.ceil(filtered.length * 0.5) || 16,
         activeCountriesCount: 1,
         totalBranchesCount: 1,
-        statusText: "Session Active",
+        statusText: sessionActiveText,
         coverageText: "Global Network"
       },
       scope: {
@@ -319,7 +323,10 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
         branch: scopeBranch,
         currency: "AED",
         userName: scopeUserName,
-        role: scopeRole
+        role: scopeRole,
+        sessionStatus: sessionActiveText,
+        filterType: tab === "all" ? "All Outstanding Records" : tab === "receivable" ? "Receivables Only" : tab === "payable" ? "Payables Only" : "Overdue >10 Days",
+        dateRange: "Current Session (2026)",
       },
       companyInfo: {
         name: "DAMAAN GENERAL TRADING LLC",

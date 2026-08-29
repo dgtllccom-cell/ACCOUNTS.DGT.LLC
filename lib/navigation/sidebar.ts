@@ -92,6 +92,684 @@ export const sidebarTree: SidebarNode[] = [
     ]
   },
   {
+    key: "new-entry",
+    labelKey: "nav.new_entry" as any,
+    iconKey: "list-plus",
+    roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"],
+    children: [
+      {
+        key: "new-entry-branch-group",
+        labelKey: "nav.branch_setup_network" as any,
+        iconKey: "building-2",
+        roles: ["super_admin", "country_admin", "main_branch_admin"],
+        children: [
+          {
+            key: "new-entry-country-branch",
+            labelKey: "nav.country_branch" as any,
+            href: "/dashboard/new-entry/branch-entry/country-branch" as Route,
+            roles: ["super_admin"]
+          },
+          {
+            key: "new-entry-city-branch",
+            labelKey: "nav.city_branch" as any,
+            href: "/dashboard/new-entry/branch-entry/city-branch" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin"]
+          },
+          {
+            key: "new-entry-super-admin-branch",
+            labelKey: "nav.super_admin_branch" as any,
+            href: "/dashboard/new-entry/branches/super-admin" as Route,
+            roles: ["super_admin"]
+          },
+          {
+            key: "new-entry-branch-general-report",
+            labelKey: "nav.branch_general_report" as any,
+            href: "/dashboard/branch-management/general-report" as Route,
+            roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"]
+          },
+          {
+            key: "new-entry-location-management",
+            labelKey: "nav.locations_management" as any,
+            href: "/dashboard/settings/locations" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin"]
+          }
+        ]
+      },
+      {
+        key: "new-entry-user-group",
+        labelKey: "nav.user_entry" as any,
+        iconKey: "user-check",
+        roles: ["super_admin", "country_admin", "main_branch_admin"],
+        children: [
+          {
+            key: "new-entry-user-registration",
+            labelKey: "nav.new_user_registration" as any,
+            href: "/dashboard/new-entry/users/registration" as Route,
+            roles: ["super_admin"]
+          },
+          {
+            key: "new-entry-users-all-report",
+            labelKey: "nav.user_general_report" as any,
+            href: "/dashboard/new-entry/users/all" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin"]
+          },
+          {
+            key: "new-entry-user-super-admin",
+            labelKey: "nav.super_admin_user" as any,
+            href: "/dashboard/new-entry/users/super-admin" as Route,
+            roles: ["super_admin"]
+          },
+          {
+            key: "new-entry-user-country",
+            labelKey: "nav.country_user" as any,
+            href: "/dashboard/new-entry/users/country" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin"]
+          },
+          {
+            key: "new-entry-user-branch",
+            labelKey: "nav.branch_user" as any,
+            href: "/dashboard/new-entry/users/branch" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin"]
+          }
+        ]
+      },
+      {
+        key: "new-entry-account-group",
+        labelKey: "nav.accounts" as any,
+        iconKey: "book-open",
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"],
+        children: [
+          {
+            key: "new-entry-account-setup",
+            labelKey: "nav.new_account" as any,
+            href: "/dashboard/accounts/setup" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+          },
+          {
+            key: "new-entry-account-ledger",
+            labelKey: "nav.ledger_account" as any,
+            href: "/dashboard/ledger/new" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+          },
+          {
+            key: "new-entry-account-report",
+            labelKey: "nav.new_account_general_report" as any,
+            href: "/dashboard/new-entry/accounts/general-report" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+          }
+        ]
+      },
+      {
+        key: "new-entry-employee",
+        labelKey: "nav.register_employee" as any,
+        iconKey: "users",
+        href: "/dashboard/general-office/employees" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "general-office-share-forms",
+        labelKey: "nav.share_form_external_link" as any,
+        iconKey: "send",
+        href: "/dashboard/general-office/employees?tab=share-forms" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "new-entry-hub",
+        labelKey: "nav.new_entry_hub" as any,
+        iconKey: "gantt",
+        href: "/dashboard/new-entry" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+      }
+    ]
+  },
+  {
+    key: "ledgers",
+    labelKey: "nav.ledgers",
+    iconKey: "book-open",
+    children: [
+      {
+        key: "ledgers-new",
+        labelKey: "nav.new_ledger",
+        href: "/dashboard/ledger/new" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "ledgers-super-admin-detailed",
+        labelKey: "nav.ledger_super_admin_detailed",
+        href: "/dashboard/ledger/super-admin/detailed" as Route,
+        roles: ["super_admin"]
+      },
+      {
+        key: "ledgers-country-detailed",
+        labelKey: "nav.ledger_country_detailed",
+        href: "/dashboard/ledger/country/detailed" as Route,
+        roles: ["super_admin", "country_admin"]
+      },
+      {
+        key: "ledgers-general-report",
+        labelKey: "nav.ledger_general_report",
+        href: "/dashboard/ledger/general-report" as Route,
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "auditor_viewer"]
+      },
+      {
+        key: "ledgers-outstanding",
+        labelKey: "nav.ledger_outstanding",
+        href: "/dashboard/ledger/outstanding" as Route,
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "auditor_viewer"]
+      }
+    ]
+  },
+  {
+    key: "journal",
+    labelKey: "nav.journal",
+    iconKey: "banknote",
+    children: [
+      {
+        key: "purchase-order-payment",
+        labelKey: "nav.purchase_order_payment",
+        iconKey: "banknote",
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"],
+        children: [
+          {
+            key: "purchase-order-payment-advance",
+            labelKey: "nav.purchase_order_payment_advance",
+            href: "/dashboard/journal/purchase-order-payment/advance" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+          },
+          {
+            key: "purchase-order-payment-remaining",
+            labelKey: "nav.purchase_order_payment_remaining",
+            href: "/dashboard/journal/purchase-order-payment/remaining" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+          },
+          {
+            key: "purchase-order-payment-charges",
+            labelKey: "nav.purchase_order_payment_charges",
+            href: "/dashboard/journal/purchase-order-payment/charges" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+          },
+          {
+            key: "purchase-order-payment-history",
+            labelKey: "nav.purchase_order_payment_history",
+            href: "/dashboard/journal/purchase-order-payment/history" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+          }
+        ]
+      },
+      {
+        key: "sales-order-payment",
+        labelKey: "nav.sales_order_payment",
+        iconKey: "banknote",
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"],
+        children: [
+          {
+            key: "sales-order-payment-advance",
+            labelKey: "nav.sales_order_payment_advance",
+            href: "/dashboard/journal/sales-order-payment/advance" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+          },
+          {
+            key: "sales-order-payment-remaining",
+            labelKey: "nav.sales_order_payment_remaining",
+            href: "/dashboard/journal/sales-order-payment/remaining" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+          },
+          {
+            key: "sales-order-payment-charges",
+            labelKey: "nav.sales_order_payment_charges",
+            href: "/dashboard/journal/sales-order-payment/charges" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+          },
+          {
+            key: "sales-order-payment-history",
+            labelKey: "nav.sales_order_payment_history",
+            href: "/dashboard/journal/sales-order-payment/history" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+          }
+        ]
+      },
+      {
+        key: "final-payments",
+        labelKey: "nav.final_payments",
+        iconKey: "banknote",
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"],
+        children: [
+          {
+            key: "final-payments-advance-nil",
+            labelKey: "nav.final_payments_advance_nil",
+            href: "/dashboard/journal/final-payments/advance-nil" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+          }
+        ]
+      },
+      {
+        key: "roznamcha",
+        labelKey: "nav.roznamcha",
+        iconKey: "scroll-text",
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"],
+        children: [
+          {
+            key: "roz-cash-entry",
+            labelKey: "nav.cash_journal_entry",
+            href: "/dashboard/roznamcha/cash-entry" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+          },
+          {
+            key: "roz-daily-expenses-bill",
+            labelKey: "nav.daily_operational_expenses",
+            href: "/dashboard/roznamcha/daily-expenses-bill" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+          },
+          {
+            key: "roz-expenses-bill",
+            labelKey: "nav.office_home_expenses_bill",
+            href: "/dashboard/roznamcha/expenses-bill" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+          },
+          {
+            key: "roz-money-exchange",
+            labelKey: "nav.money_changer_short",
+            href: "/dashboard/roznamcha/money-exchange" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+          }
+        ]
+      },
+      {
+        key: "general-roznamcha-reports",
+        labelKey: "nav.general_roznamcha_reports",
+        iconKey: "bar-chart-3",
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"],
+        children: [
+          {
+            key: "roz-report-business",
+            labelKey: "nav.business_report",
+            href: "/dashboard/roznamcha/reports/business" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+          },
+          {
+            key: "roz-report-bank",
+            labelKey: "nav.bank_report_roz",
+            href: "/dashboard/roznamcha/reports/bank" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+          },
+          {
+            key: "roz-report-cash-entry",
+            labelKey: "nav.cash_entry_report",
+            href: "/dashboard/roznamcha/reports/cash-entry" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+          },
+          {
+            key: "roz-report-invoice",
+            labelKey: "nav.invoice_report",
+            href: "/dashboard/roznamcha/reports/invoice" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+          },
+          {
+            key: "roz-report-transfer",
+            labelKey: "report.transfer",
+            href: "/dashboard/roznamcha/reports/transfer" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+          },
+          {
+            key: "roz-report-all",
+            labelKey: "nav.roznamcha_all_report",
+            href: "/dashboard/roznamcha/reports/all" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+          }
+        ]
+      },
+      {
+        key: "journal-super-admin-exchange-rate",
+        labelKey: "nav.super_admin_exchange_rate",
+        href: "/dashboard/reports/exchange-rate" as Route,
+        roles: ["super_admin", "country_admin"]
+      }
+    ]
+  },
+  {
+    key: "purchase",
+    labelKey: "nav.purchase",
+    iconKey: "shopping-bag",
+    href: "/dashboard/purchase/new-purchase-booking-order" as Route,
+    roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "cashier"],
+    children: [
+      {
+        key: "purchase-new-booking-order",
+        labelKey: "nav.new_purchase_booking",
+        iconKey: "clipboard-list",
+        href: "/dashboard/purchase/new-purchase-booking-order" as Route
+      },
+      {
+        key: "purchase-order-master",
+        labelKey: "nav.purchase_transfer_payment",
+        iconKey: "send",
+        href: "/dashboard/purchase/purchase-order" as Route
+      },
+      {
+        key: "purchase-confirmed-orders",
+        labelKey: "nav.booking_purchase_confirmation",
+        iconKey: "check-square",
+        href: "/dashboard/purchase/purchase-confirm" as Route
+      },
+      {
+        key: "purchase-order-tracking",
+        labelKey: "nav.purchase_order_tracking",
+        iconKey: "gantt",
+        href: "/dashboard/purchase/purchase-order-tracking" as Route
+      }
+    ]
+  },
+  {
+    key: "sales",
+    labelKey: "nav.sales",
+    iconKey: "gantt",
+    children: [
+      {
+        key: "sales-order-management",
+        labelKey: "nav.sales_order_management",
+        iconKey: "clipboard-list",
+        children: [
+          {
+            key: "sales-new-booking",
+            labelKey: "nav.new_sales_booking",
+            href: "/dashboard/sales/new-sales-booking-order" as Route
+          },
+          {
+            key: "sales-order",
+            labelKey: "nav.sales_transfer_payment",
+            href: "/dashboard/sales/sales-order" as Route
+          },
+          {
+            key: "sales-confirm",
+            labelKey: "nav.confirmed_sales",
+            href: "/dashboard/sales/sales-confirm" as Route
+          },
+          {
+            key: "sales-booking-register",
+            labelKey: "nav.sales_booking_register",
+            href: "/dashboard/sales/sales-booking-journal-report" as Route
+          }
+        ]
+      },
+      {
+        key: "local-sales-management",
+        labelKey: "nav.local_sales_management",
+        iconKey: "clipboard-list",
+        children: [
+          {
+            key: "sales-local",
+            labelKey: "nav.local_sales",
+            href: "/dashboard/sales/local-sales" as Route
+          }
+        ]
+      }
+    ]
+  },
+  {
+    key: "journal-stock",
+    labelKey: "nav.journal_stock",
+    iconKey: "clipboard-list",
+    children: [
+      {
+        key: "journal-stock-sub",
+        labelKey: "nav.journal_stock",
+        iconKey: "file-text",
+        children: [
+          {
+            key: "journal-stock-group",
+            labelKey: "nav.journal_stock_report",
+            iconKey: "bar-chart",
+            children: [
+              {
+                key: "salesman-report",
+                labelKey: "nav.salesman_report",
+                href: "/dashboard/inventory/stock-reports/salesman" as Route
+              },
+              {
+                key: "country-report",
+                labelKey: "nav.country_report",
+                href: "/dashboard/inventory/stock-reports/country" as Route
+              },
+              {
+                key: "branch-report",
+                labelKey: "nav.branch_report",
+                href: "/dashboard/inventory/stock-reports/branch" as Route
+              }
+            ]
+          },
+          {
+            key: "journal-bill-checking-group",
+            labelKey: "nav.journal_stock_checking_report",
+            iconKey: "file-text",
+            children: [
+              {
+                key: "journal-salesman-report",
+                labelKey: "nav.journal_salesman_report",
+                href: "/dashboard/inventory/journal-report/salesman" as Route
+              },
+              {
+                key: "journal-country-report",
+                labelKey: "nav.journal_country_report",
+                href: "/dashboard/inventory/journal-report/country" as Route
+              },
+              {
+                key: "journal-branch-report",
+                labelKey: "nav.journal_branch_report",
+                href: "/dashboard/inventory/journal-report/branch" as Route
+              }
+            ]
+          }
+        ]
+      },
+      {
+        key: "stock-sub",
+        labelKey: "nav.stock",
+        iconKey: "clipboard-list",
+        menuSettingKey: "menu_purchase_stock_section",
+        children: [
+          {
+            key: "stock-booking",
+            labelKey: "nav.booking_stock",
+            href: "/dashboard/purchase/stock/booking" as Route
+          },
+          {
+            key: "stock-confirmed",
+            labelKey: "nav.confirmed_stock",
+            href: "/dashboard/purchase/stock/confirmed" as Route
+          },
+          {
+            key: "stock-import",
+            labelKey: "nav.import_stock",
+            href: "/dashboard/purchase/stock/import" as Route
+          },
+          {
+            key: "stock-warehouse",
+            labelKey: "nav.warehouse_stock",
+            href: "/dashboard/purchase/stock/warehouse" as Route
+          },
+          {
+            key: "stock-in-transit",
+            labelKey: "nav.in_transit_stock",
+            href: "/dashboard/purchase/stock/in-transit" as Route
+          },
+          {
+            key: "stock-export",
+            labelKey: "nav.export_stock",
+            href: "/dashboard/purchase/stock/export" as Route
+          },
+          {
+            key: "stock-delivered",
+            labelKey: "nav.delivered_stock",
+            href: "/dashboard/purchase/stock/delivered" as Route
+          }
+        ]
+      }
+    ]
+  },
+  {
+    key: "inter-country-trade",
+    labelKey: "nav.inter_country_trade",
+    iconKey: "globe",
+    roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"],
+    children: [
+      {
+        key: "inter-country-booking",
+        labelKey: "nav.inter_country_purchase_booking",
+        iconKey: "clipboard-list",
+        href: "/dashboard/purchase/local-purchase" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "inter-country-transfer-payment",
+        labelKey: "nav.inter_country_transfer_payment",
+        iconKey: "send",
+        href: "/dashboard/purchase/local-purchase-transfer-payment" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "inter-country-verification",
+        labelKey: "nav.inter_country_transfer_verification",
+        iconKey: "shield-check",
+        href: "/dashboard/purchase/purchase-transfer-verification" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "receiving-country-workflow",
+        labelKey: "nav.receiving_country_workflow",
+        iconKey: "package",
+        href: "/dashboard/purchase/local-goods-received" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+      }
+    ]
+  },
+  {
+    key: "logistics",
+    labelKey: "nav.shipping_clearing",
+    iconKey: "truck",
+    children: [
+      {
+        key: "clearing-customer-order",
+        labelKey: "nav.customer_order",
+        href: "/dashboard/clearing-agent/customer-order" as Route,
+        roles: ["super_admin", "agent_user"],
+        permission: { resource: "shipping_records", action: "read" }
+      },
+      {
+        key: "shipping-handover-inbox",
+        labelKey: "dintake.hi_nav" as any,
+        href: "/dashboard/shipping-line/handover-inbox" as Route,
+        roles: ["super_admin", "agent_user"],
+        permission: { resource: "shipping_records", action: "read" }
+      },
+      {
+        key: "shipping-shipment-details",
+        labelKey: "nav.shipment_details",
+        href: "/dashboard/shipping-line/shipment-details" as Route,
+        roles: ["super_admin", "agent_user"]
+      },
+      {
+        key: "shipping-bl-entry",
+        labelKey: "nav.bl_entry",
+        href: "/dashboard/shipping-line/bl-entry" as Route,
+        roles: ["super_admin", "agent_user"]
+      },
+      {
+        key: "shipping-shipment-report",
+        labelKey: "nav.shipment_report",
+        href: "/dashboard/shipping-line/shipment-report" as Route,
+        roles: ["super_admin", "agent_user"]
+      },
+      {
+        key: "shipping-agent",
+        labelKey: "nav.shipping_agent_entry",
+        href: "/dashboard/shipping-line/agent-entry" as Route,
+        roles: ["super_admin", "agent_user"]
+      },
+      {
+        key: "clearing-truck-registration",
+        labelKey: "nav.truck_registration",
+        href: "/dashboard/clearing-agent/truck-registration" as Route,
+        permission: { resource: "shipping_records", action: "read" }
+      },
+      {
+        key: "clearing-truck-recreation",
+        labelKey: "nav.truck_recreation",
+        href: "/dashboard/clearing-agent/truck-recreation" as Route,
+        permission: { resource: "shipping_records", action: "read" }
+      },
+      {
+        key: "clearing-truck-loading",
+        labelKey: "nav.truck_loading",
+        href: "/dashboard/clearing-agent/truck-loading" as Route,
+        permission: { resource: "shipping_records", action: "read" }
+      },
+      {
+        key: "clearing-custom",
+        labelKey: "nav.agent_custom_entry",
+        href: "/dashboard/clearing-agent/agent-custom-entry" as Route,
+        roles: ["super_admin", "agent_user"]
+      },
+      {
+        key: "clearing-bill",
+        labelKey: "nav.clearing_bill_entry",
+        href: "/dashboard/clearing-agent/bill-entry" as Route,
+        roles: ["super_admin", "agent_user"]
+      },
+      {
+        key: "clearing-transit-entry",
+        labelKey: "nav.agent_custom_entry",
+        href: "/dashboard/clearing-agent/transit-entry" as Route,
+        roles: ["super_admin", "agent_user", "country_admin", "main_branch_admin"]
+      },
+      {
+        key: "clearing-payment-bill",
+        labelKey: "nav.payment_bill_entry",
+        href: "/dashboard/clearing-agent/payment-bill-entry" as Route,
+        roles: ["super_admin", "agent_user"]
+      }
+    ]
+  },
+  {
+    key: "kyc-reports-top",
+    labelKey: "nav.kyc_reports",
+    iconKey: "clipboard-list",
+    href: "/dashboard/kyc-reports" as Route,
+    roles: ["super_admin", "auditor_viewer", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+  },
+  {
+    key: "general-office",
+    labelKey: "nav.general_office_management",
+    iconKey: "users",
+    href: "/dashboard/general-office/employees" as Route,
+    roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"],
+    children: [
+      { key: "go-employees", labelKey: "nav.employee_management", iconKey: "users", href: "/dashboard/general-office/employees" as Route },
+      { key: "go-customers-registry", labelKey: "nav.customers_form", iconKey: "users", href: "/dashboard/settings/customers" as Route },
+      { key: "go-company-registry", labelKey: "nav.company_form", iconKey: "building-2", href: "/dashboard/settings/company" as Route },
+      { key: "go-bank-registry", labelKey: "nav.bank_form", iconKey: "banknote", href: "/dashboard/settings/bank" as Route },
+      { key: "go-departments", labelKey: "nav.departments", iconKey: "building-2", href: "/dashboard/general-office/departments" as Route },
+      { key: "go-designations", labelKey: "nav.designations", iconKey: "scroll-text", href: "/dashboard/general-office/designations" as Route },
+      { key: "go-employee-lifecycle", labelKey: "nav.employee_lifecycle", iconKey: "scroll-text", href: "/dashboard/general-office/employee-lifecycle" as Route },
+      { key: "go-onboarding", labelKey: "nav.onboarding_offboarding", iconKey: "check-square", href: "/dashboard/general-office/onboarding" as Route },
+      { key: "go-employee-kyc", labelKey: "nav.employee_kyc", iconKey: "shield-check", href: "/dashboard/general-office/employee-kyc" as Route },
+      { key: "go-attendance", labelKey: "nav.attendance", iconKey: "clock", href: "/dashboard/general-office/employees?tab=attendance" as Route },
+      { key: "go-leave", labelKey: "nav.leave_management", iconKey: "calendar", href: "/dashboard/general-office/employees?tab=leave" as Route },
+      { key: "go-leave-attendance", labelKey: "nav.leave_attendance_setup", iconKey: "calendar", href: "/dashboard/general-office/leave-attendance" as Route },
+      { key: "go-payroll", labelKey: "nav.payroll_salary", iconKey: "banknote", href: "/dashboard/general-office/employees?tab=payroll" as Route },
+      { key: "go-payroll-runs", labelKey: "nav.payroll_runs", iconKey: "banknote", href: "/dashboard/general-office/payroll" as Route },
+      { key: "go-payroll-recon", labelKey: "hrm.recon_nav" as any, iconKey: "scale", href: "/dashboard/general-office/payroll-reconciliation" as Route },
+      { key: "go-payroll-tax", labelKey: "nav.payroll_tax_config", iconKey: "calculator", href: "/dashboard/general-office/payroll-tax" as Route },
+      { key: "go-gratuity", labelKey: "nav.gratuity_settlement", iconKey: "banknote", href: "/dashboard/general-office/gratuity" as Route },
+      { key: "go-contract-control", labelKey: "nav.contract_control", iconKey: "scroll-text", href: "/dashboard/general-office/contracts" as Route, permission: { resource: "contracts", action: "read" } },
+      { key: "go-assets", labelKey: "nav.office_assets", iconKey: "clipboard-list", href: "/dashboard/general-office/employees?tab=assets" as Route },
+      { key: "go-documents", labelKey: "nav.office_documents", iconKey: "file-text", href: "/dashboard/general-office/employees?tab=documents" as Route },
+      { key: "go-id-cards", labelKey: "nav.employee_id_cards", iconKey: "badge", href: "/dashboard/general-office/employees?tab=id-cards" as Route },
+      { key: "go-reports", labelKey: "nav.employee_reports", iconKey: "bar-chart", href: "/dashboard/general-office/employees?tab=reports" as Route },
+      { key: "go-hr-reports", labelKey: "nav.hr_reports_hub", iconKey: "bar-chart", href: "/dashboard/general-office/hr-reports" as Route },
+      { key: "go-hr-reports-my-profile", labelKey: "nav.my_employee_profile", iconKey: "user-check", href: "/dashboard/general-office/my-profile" as Route }
+    ]
+  },
+  {
     key: "settlement-reconciliation-group",
     labelKey: "settlement.title" as any,
     iconKey: "scale",
@@ -268,6 +946,12 @@ export const sidebarTree: SidebarNode[] = [
     ]
   },
   {
+    key: "tax",
+    labelKey: "nav.tax",
+    iconKey: "banknote",
+    href: "/dashboard/tax" as Route
+  },
+  {
     key: "crm-main-group",
     labelKey: "crm.title" as any,
     iconKey: "calendar",
@@ -365,697 +1049,6 @@ export const sidebarTree: SidebarNode[] = [
     ]
   },
   {
-    key: "new-entry",
-    labelKey: "nav.new_entry" as any,
-    iconKey: "list-plus",
-    roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"],
-    children: [
-      {
-        key: "new-entry-branch-group",
-        labelKey: "nav.branch_setup_network" as any,
-        iconKey: "building-2",
-        roles: ["super_admin", "country_admin", "main_branch_admin"],
-        children: [
-          {
-            key: "new-entry-country-branch",
-            labelKey: "nav.country_branch" as any,
-            href: "/dashboard/new-entry/branch-entry/country-branch" as Route,
-            roles: ["super_admin"]
-          },
-          {
-            key: "new-entry-city-branch",
-            labelKey: "nav.city_branch" as any,
-            href: "/dashboard/new-entry/branch-entry/city-branch" as Route,
-            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin"]
-          },
-          {
-            key: "new-entry-super-admin-branch",
-            labelKey: "nav.super_admin_branch" as any,
-            href: "/dashboard/new-entry/branches/super-admin" as Route,
-            roles: ["super_admin"]
-          },
-          {
-            key: "new-entry-branch-general-report",
-            labelKey: "nav.branch_general_report" as any,
-            href: "/dashboard/branch-management/general-report" as Route,
-            roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"]
-          },
-          {
-            key: "new-entry-location-management",
-            labelKey: "nav.locations_management" as any,
-            href: "/dashboard/settings/locations" as Route,
-            roles: ["super_admin", "country_admin", "main_branch_admin"]
-          }
-        ]
-      },
-      {
-        key: "new-entry-user-group",
-        labelKey: "nav.user_entry" as any,
-        iconKey: "user-check",
-        roles: ["super_admin", "country_admin", "main_branch_admin"],
-        children: [
-          {
-            key: "new-entry-user-registration",
-            labelKey: "nav.new_user_registration" as any,
-            href: "/dashboard/new-entry/users/registration" as Route,
-            roles: ["super_admin"]
-          },
-          {
-            key: "new-entry-users-all-report",
-            labelKey: "nav.user_general_report" as any,
-            href: "/dashboard/new-entry/users/all" as Route,
-            roles: ["super_admin", "country_admin", "main_branch_admin"]
-          },
-          {
-            key: "new-entry-user-super-admin",
-            labelKey: "nav.super_admin_user" as any,
-            href: "/dashboard/new-entry/users/super-admin" as Route,
-            roles: ["super_admin"]
-          },
-          {
-            key: "new-entry-user-country",
-            labelKey: "nav.country_user" as any,
-            href: "/dashboard/new-entry/users/country" as Route,
-            roles: ["super_admin", "country_admin", "main_branch_admin"]
-          },
-          {
-            key: "new-entry-user-branch",
-            labelKey: "nav.branch_user" as any,
-            href: "/dashboard/new-entry/users/branch" as Route,
-            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin"]
-          }
-        ]
-      },
-      {
-        key: "new-entry-account-group",
-        labelKey: "nav.accounts" as any,
-        iconKey: "book-open",
-        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"],
-        children: [
-          {
-            key: "new-entry-account-setup",
-            labelKey: "nav.new_account" as any,
-            href: "/dashboard/accounts/setup" as Route,
-            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-          },
-          {
-            key: "new-entry-account-ledger",
-            labelKey: "nav.ledger_account" as any,
-            href: "/dashboard/ledger/new" as Route,
-            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-          },
-          {
-            key: "new-entry-account-report",
-            labelKey: "nav.new_account_general_report" as any,
-            href: "/dashboard/new-entry/accounts/general-report" as Route,
-            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-          }
-        ]
-      },
-      {
-        key: "new-entry-employee",
-        labelKey: "nav.register_employee" as any,
-        iconKey: "users",
-        href: "/dashboard/general-office/employees" as Route,
-        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-      },
-      {
-        key: "general-office-share-forms",
-        labelKey: "nav.share_form_external_link" as any,
-        iconKey: "send",
-        href: "/dashboard/general-office/employees?tab=share-forms" as Route,
-        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-      },
-      {
-        key: "new-entry-hub",
-        labelKey: "nav.new_entry_hub" as any,
-        iconKey: "gantt",
-        href: "/dashboard/new-entry" as Route,
-        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-      }
-    ]
-  },
-  {
-    key: "ledgers",
-    labelKey: "nav.ledgers",
-    iconKey: "book-open",
-    children: [
-      {
-        key: "ledgers-new",
-        labelKey: "nav.new_ledger",
-        href: "/dashboard/ledger/new" as Route,
-        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-      },
-      {
-        key: "ledgers-super-admin-detailed",
-        labelKey: "nav.ledger_super_admin_detailed",
-        href: "/dashboard/ledger/super-admin/detailed" as Route,
-        roles: ["super_admin"]
-      },
-      {
-        key: "ledgers-country-detailed",
-        labelKey: "nav.ledger_country_detailed",
-        href: "/dashboard/ledger/country/detailed" as Route,
-        roles: ["super_admin", "country_admin"]
-      },
-      {
-        key: "ledgers-general-report",
-        labelKey: "nav.ledger_general_report",
-        href: "/dashboard/ledger/general-report" as Route,
-        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "auditor_viewer"]
-      },
-      {
-        key: "ledgers-outstanding",
-        labelKey: "nav.ledger_outstanding",
-        href: "/dashboard/ledger/outstanding" as Route,
-        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "auditor_viewer"]
-      }
-    ]
-  },
-      {
-        key: "journal",
-        labelKey: "nav.journal",
-        iconKey: "banknote",
-        children: [
-          {
-            key: "purchase-order-payment",
-            labelKey: "nav.purchase_order_payment",
-            iconKey: "banknote",
-            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"],
-            children: [
-              {
-                key: "purchase-order-payment-advance",
-                labelKey: "nav.purchase_order_payment_advance",
-                href: "/dashboard/journal/purchase-order-payment/advance" as Route,
-                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
-              },
-              {
-                key: "purchase-order-payment-remaining",
-                labelKey: "nav.purchase_order_payment_remaining",
-                href: "/dashboard/journal/purchase-order-payment/remaining" as Route,
-                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
-              },
-              {
-                key: "purchase-order-payment-charges",
-                labelKey: "nav.purchase_order_payment_charges",
-                href: "/dashboard/journal/purchase-order-payment/charges" as Route,
-                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
-              },
-              {
-                key: "purchase-order-payment-history",
-                labelKey: "nav.purchase_order_payment_history",
-                href: "/dashboard/journal/purchase-order-payment/history" as Route,
-                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
-              }
-            ]
-          },
-          {
-            key: "sales-order-payment",
-            labelKey: "nav.sales_order_payment",
-            iconKey: "banknote",
-            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"],
-            children: [
-              {
-                key: "sales-order-payment-advance",
-                labelKey: "nav.sales_order_payment_advance",
-                href: "/dashboard/journal/sales-order-payment/advance" as Route,
-                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
-              },
-              {
-                key: "sales-order-payment-remaining",
-                labelKey: "nav.sales_order_payment_remaining",
-                href: "/dashboard/journal/sales-order-payment/remaining" as Route,
-                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
-              },
-              {
-                key: "sales-order-payment-charges",
-                labelKey: "nav.sales_order_payment_charges",
-                href: "/dashboard/journal/sales-order-payment/charges" as Route,
-                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
-              },
-              {
-                key: "sales-order-payment-history",
-                labelKey: "nav.sales_order_payment_history",
-                href: "/dashboard/journal/sales-order-payment/history" as Route,
-                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
-              }
-            ]
-          },
-          {
-            key: "final-payments",
-            labelKey: "nav.final_payments",
-            iconKey: "banknote",
-            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"],
-            children: [
-              {
-                key: "final-payments-advance-nil",
-                labelKey: "nav.final_payments_advance_nil",
-                href: "/dashboard/journal/final-payments/advance-nil" as Route,
-                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
-              }
-            ]
-          },
-          {
-            key: "roznamcha",
-            labelKey: "nav.roznamcha",
-            iconKey: "scroll-text",
-            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"],
-            children: [
-              {
-                key: "roz-cash-entry",
-                labelKey: "nav.cash_journal_entry",
-                href: "/dashboard/roznamcha/cash-entry" as Route,
-                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
-              },
-              {
-                key: "roz-daily-expenses-bill",
-                labelKey: "nav.daily_operational_expenses",
-                href: "/dashboard/roznamcha/daily-expenses-bill" as Route,
-                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
-              },
-              {
-                key: "roz-expenses-bill",
-                labelKey: "nav.office_home_expenses_bill",
-                href: "/dashboard/roznamcha/expenses-bill" as Route,
-                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
-              },
-              {
-                key: "roz-money-exchange",
-                labelKey: "nav.money_changer_short",
-                href: "/dashboard/roznamcha/money-exchange" as Route,
-                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
-              }
-            ]
-          },
-          {
-            key: "general-roznamcha-reports",
-            labelKey: "nav.general_roznamcha_reports",
-            iconKey: "bar-chart-3",
-            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"],
-            children: [
-              {
-                key: "roz-report-business",
-                labelKey: "nav.business_report",
-                href: "/dashboard/roznamcha/reports/business" as Route,
-                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
-              },
-              {
-                key: "roz-report-bank",
-                labelKey: "nav.bank_report_roz",
-                href: "/dashboard/roznamcha/reports/bank" as Route,
-                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
-              },
-              {
-                key: "roz-report-cash-entry",
-                labelKey: "nav.cash_entry_report",
-                href: "/dashboard/roznamcha/reports/cash-entry" as Route,
-                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
-              },
-              {
-                key: "roz-report-invoice",
-                labelKey: "nav.invoice_report",
-                href: "/dashboard/roznamcha/reports/invoice" as Route,
-                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
-              },
-              {
-                key: "roz-report-transfer",
-                labelKey: "report.transfer",
-                href: "/dashboard/roznamcha/reports/transfer" as Route,
-                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
-              },
-              {
-                key: "roz-report-all",
-                labelKey: "nav.roznamcha_all_report",
-                href: "/dashboard/roznamcha/reports/all" as Route,
-                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
-              }
-            ]
-          },
-          {
-            key: "journal-super-admin-exchange-rate",
-            labelKey: "nav.super_admin_exchange_rate",
-            href: "/dashboard/reports/exchange-rate" as Route,
-            roles: ["super_admin", "country_admin"]
-          }
-        ]
-      },
-  {
-    key: "inter-country-trade",
-    labelKey: "nav.inter_country_trade",
-    iconKey: "globe",
-    roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"],
-    children: [
-      {
-        key: "inter-country-booking",
-        labelKey: "nav.inter_country_purchase_booking",
-        iconKey: "clipboard-list",
-        href: "/dashboard/purchase/local-purchase" as Route,
-        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-      },
-      {
-        key: "inter-country-transfer-payment",
-        labelKey: "nav.inter_country_transfer_payment",
-        iconKey: "send",
-        href: "/dashboard/purchase/local-purchase-transfer-payment" as Route,
-        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-      },
-      {
-        key: "inter-country-verification",
-        labelKey: "nav.inter_country_transfer_verification",
-        iconKey: "shield-check",
-        href: "/dashboard/purchase/purchase-transfer-verification" as Route,
-        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-      },
-      {
-        key: "receiving-country-workflow",
-        labelKey: "nav.receiving_country_workflow",
-        iconKey: "package",
-        href: "/dashboard/purchase/local-goods-received" as Route,
-        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-      }
-    ]
-  },
-  {
-    key: "purchase",
-    labelKey: "nav.purchase",
-    iconKey: "shopping-bag",
-    href: "/dashboard/purchase/new-purchase-booking-order" as Route,
-    roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "cashier"],
-    children: [
-      {
-        key: "purchase-new-booking-order",
-        labelKey: "nav.new_purchase_booking",
-        iconKey: "clipboard-list",
-        href: "/dashboard/purchase/new-purchase-booking-order" as Route
-      },
-      {
-        key: "purchase-order-master",
-        labelKey: "nav.purchase_transfer_payment",
-        iconKey: "send",
-        href: "/dashboard/purchase/purchase-order" as Route
-      },
-      {
-        key: "purchase-confirmed-orders",
-        labelKey: "nav.booking_purchase_confirmation",
-        iconKey: "check-square",
-        href: "/dashboard/purchase/purchase-confirm" as Route
-      },
-      {
-        key: "purchase-order-tracking",
-        labelKey: "nav.purchase_order_tracking",
-        iconKey: "gantt",
-        href: "/dashboard/purchase/purchase-order-tracking" as Route
-      }
-    ]
-  },
-  {
-    key: "sales",
-    labelKey: "nav.sales",
-    iconKey: "gantt",
-    children: [
-      {
-        key: "sales-order-management",
-        labelKey: "nav.sales_order_management",
-        iconKey: "clipboard-list",
-        children: [
-          {
-            key: "sales-new-booking",
-            labelKey: "nav.new_sales_booking",
-            href: "/dashboard/sales/new-sales-booking-order" as Route
-          },
-          {
-            key: "sales-order",
-            labelKey: "nav.sales_transfer_payment",
-            href: "/dashboard/sales/sales-order" as Route
-          },
-          {
-            key: "sales-confirm",
-            labelKey: "nav.confirmed_sales",
-            href: "/dashboard/sales/sales-confirm" as Route
-          },
-          {
-            key: "sales-booking-register",
-            labelKey: "nav.sales_booking_register",
-            href: "/dashboard/sales/sales-booking-journal-report" as Route
-          }
-        ]
-      },
-      {
-        key: "local-sales-management",
-        labelKey: "nav.local_sales_management",
-        iconKey: "clipboard-list",
-        children: [
-          {
-            key: "sales-local",
-            labelKey: "nav.local_sales",
-            href: "/dashboard/sales/local-sales" as Route
-          }
-        ]
-      }
-    ]
-  },
-  {
-    key: "documents-hub",
-    labelKey: "nav.document_management",
-    iconKey: "file-text",
-    href: "/dashboard/documents" as Route,
-    roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"]
-  },
-  {
-    key: "journal-stock",
-    labelKey: "nav.journal_stock",
-    iconKey: "clipboard-list",
-    children: [
-      {
-        key: "journal-stock-sub",
-        labelKey: "nav.journal_stock",
-        iconKey: "file-text",
-        children: [
-          {
-            key: "journal-stock-group",
-            labelKey: "nav.journal_stock_report",
-            iconKey: "bar-chart",
-            children: [
-              {
-                key: "salesman-report",
-                labelKey: "nav.salesman_report",
-                href: "/dashboard/inventory/stock-reports/salesman" as Route
-              },
-              {
-                key: "country-report",
-                labelKey: "nav.country_report",
-                href: "/dashboard/inventory/stock-reports/country" as Route
-              },
-              {
-                key: "branch-report",
-                labelKey: "nav.branch_report",
-                href: "/dashboard/inventory/stock-reports/branch" as Route
-              }
-            ]
-          },
-          {
-            key: "journal-bill-checking-group",
-            labelKey: "nav.journal_stock_checking_report",
-            iconKey: "file-text",
-            children: [
-              {
-                key: "journal-salesman-report",
-                labelKey: "nav.journal_salesman_report",
-                href: "/dashboard/inventory/journal-report/salesman" as Route
-              },
-              {
-                key: "journal-country-report",
-                labelKey: "nav.journal_country_report",
-                href: "/dashboard/inventory/journal-report/country" as Route
-              },
-              {
-                key: "journal-branch-report",
-                labelKey: "nav.journal_branch_report",
-                href: "/dashboard/inventory/journal-report/branch" as Route
-              }
-            ]
-          }
-        ]
-      },
-      {
-        key: "stock-sub",
-        labelKey: "nav.stock",
-        iconKey: "clipboard-list",
-        menuSettingKey: "menu_purchase_stock_section",
-        children: [
-          {
-            key: "stock-booking",
-            labelKey: "nav.booking_stock",
-            href: "/dashboard/purchase/stock/booking" as Route
-          },
-          {
-            key: "stock-confirmed",
-            labelKey: "nav.confirmed_stock",
-            href: "/dashboard/purchase/stock/confirmed" as Route
-          },
-          {
-            key: "stock-import",
-            labelKey: "nav.import_stock",
-            href: "/dashboard/purchase/stock/import" as Route
-          },
-          {
-            key: "stock-warehouse",
-            labelKey: "nav.warehouse_stock",
-            href: "/dashboard/purchase/stock/warehouse" as Route
-          },
-          {
-            key: "stock-in-transit",
-            labelKey: "nav.in_transit_stock",
-            href: "/dashboard/purchase/stock/in-transit" as Route
-          },
-          {
-            key: "stock-export",
-            labelKey: "nav.export_stock",
-            href: "/dashboard/purchase/stock/export" as Route
-          },
-          {
-            key: "stock-delivered",
-            labelKey: "nav.delivered_stock",
-            href: "/dashboard/purchase/stock/delivered" as Route
-          }
-        ]
-      }
-    ]
-  },
-  {
-    key: "kyc-reports-top",
-    labelKey: "nav.kyc_reports",
-    iconKey: "clipboard-list",
-    href: "/dashboard/kyc-reports" as Route,
-    roles: ["super_admin", "auditor_viewer", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-  },
-  {
-    key: "logistics",
-    labelKey: "nav.shipping_clearing",
-    iconKey: "truck",
-    children: [
-      {
-        key: "clearing-customer-order",
-        labelKey: "nav.customer_order",
-        href: "/dashboard/clearing-agent/customer-order" as Route,
-        roles: ["super_admin", "agent_user"],
-        permission: { resource: "shipping_records", action: "read" }
-      },
-      {
-        key: "shipping-handover-inbox",
-        labelKey: "dintake.hi_nav" as any,
-        href: "/dashboard/shipping-line/handover-inbox" as Route,
-        roles: ["super_admin", "agent_user"],
-        permission: { resource: "shipping_records", action: "read" }
-      },
-      {
-        key: "shipping-shipment-details",
-        labelKey: "nav.shipment_details",
-        href: "/dashboard/shipping-line/shipment-details" as Route,
-        roles: ["super_admin", "agent_user"]
-      },
-      {
-        key: "shipping-bl-entry",
-        labelKey: "nav.bl_entry",
-        href: "/dashboard/shipping-line/bl-entry" as Route,
-        roles: ["super_admin", "agent_user"]
-      },
-      {
-        key: "shipping-shipment-report",
-        labelKey: "nav.shipment_report",
-        href: "/dashboard/shipping-line/shipment-report" as Route,
-        roles: ["super_admin", "agent_user"]
-      },
-      {
-        key: "shipping-agent",
-        labelKey: "nav.shipping_agent_entry",
-        href: "/dashboard/shipping-line/agent-entry" as Route,
-        roles: ["super_admin", "agent_user"]
-      },
-      {
-        key: "clearing-truck-registration",
-        labelKey: "nav.truck_registration",
-        href: "/dashboard/clearing-agent/truck-registration" as Route,
-        permission: { resource: "shipping_records", action: "read" }
-      },
-      {
-        key: "clearing-truck-recreation",
-        labelKey: "nav.truck_recreation",
-        href: "/dashboard/clearing-agent/truck-recreation" as Route,
-        permission: { resource: "shipping_records", action: "read" }
-      },
-      {
-        key: "clearing-truck-loading",
-        labelKey: "nav.truck_loading",
-        href: "/dashboard/clearing-agent/truck-loading" as Route,
-        permission: { resource: "shipping_records", action: "read" }
-      },
-      {
-        key: "clearing-custom",
-        labelKey: "nav.agent_custom_entry",
-        href: "/dashboard/clearing-agent/agent-custom-entry" as Route,
-        roles: ["super_admin", "agent_user"]
-      },
-      {
-        key: "clearing-bill",
-        labelKey: "nav.clearing_bill_entry",
-        href: "/dashboard/clearing-agent/bill-entry" as Route,
-        roles: ["super_admin", "agent_user"]
-      },
-      {
-        key: "clearing-transit-entry",
-        labelKey: "nav.agent_custom_entry",
-        href: "/dashboard/clearing-agent/transit-entry" as Route,
-        roles: ["super_admin", "agent_user", "country_admin", "main_branch_admin"]
-      },
-      {
-        key: "clearing-payment-bill",
-        labelKey: "nav.payment_bill_entry",
-        href: "/dashboard/clearing-agent/payment-bill-entry" as Route,
-        roles: ["super_admin", "agent_user"]
-      }
-    ]
-  },
-  {
-    key: "tax",
-    labelKey: "nav.tax",
-    iconKey: "banknote",
-    href: "/dashboard/tax" as Route
-  },
-  {
-    key: "general-office",
-    labelKey: "nav.general_office_management",
-    iconKey: "users",
-    href: "/dashboard/general-office/employees" as Route,
-    roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"],
-    children: [
-      { key: "go-employees", labelKey: "nav.employee_management", iconKey: "users", href: "/dashboard/general-office/employees" as Route },
-      { key: "go-customers-registry", labelKey: "nav.customers_form", iconKey: "users", href: "/dashboard/settings/customers" as Route },
-      { key: "go-company-registry", labelKey: "nav.company_form", iconKey: "building-2", href: "/dashboard/settings/company" as Route },
-      { key: "go-bank-registry", labelKey: "nav.bank_form", iconKey: "banknote", href: "/dashboard/settings/bank" as Route },
-      { key: "go-departments", labelKey: "nav.departments", iconKey: "building-2", href: "/dashboard/general-office/departments" as Route },
-      { key: "go-designations", labelKey: "nav.designations", iconKey: "scroll-text", href: "/dashboard/general-office/designations" as Route },
-      { key: "go-employee-lifecycle", labelKey: "nav.employee_lifecycle", iconKey: "scroll-text", href: "/dashboard/general-office/employee-lifecycle" as Route },
-      { key: "go-onboarding", labelKey: "nav.onboarding_offboarding", iconKey: "check-square", href: "/dashboard/general-office/onboarding" as Route },
-      { key: "go-employee-kyc", labelKey: "nav.employee_kyc", iconKey: "shield-check", href: "/dashboard/general-office/employee-kyc" as Route },
-      { key: "go-attendance", labelKey: "nav.attendance", iconKey: "clock", href: "/dashboard/general-office/employees?tab=attendance" as Route },
-      { key: "go-leave", labelKey: "nav.leave_management", iconKey: "calendar", href: "/dashboard/general-office/employees?tab=leave" as Route },
-      { key: "go-leave-attendance", labelKey: "nav.leave_attendance_setup", iconKey: "calendar", href: "/dashboard/general-office/leave-attendance" as Route },
-      { key: "go-payroll", labelKey: "nav.payroll_salary", iconKey: "banknote", href: "/dashboard/general-office/employees?tab=payroll" as Route },
-      { key: "go-payroll-runs", labelKey: "nav.payroll_runs", iconKey: "banknote", href: "/dashboard/general-office/payroll" as Route },
-      { key: "go-payroll-recon", labelKey: "hrm.recon_nav" as any, iconKey: "scale", href: "/dashboard/general-office/payroll-reconciliation" as Route },
-      { key: "go-payroll-tax", labelKey: "nav.payroll_tax_config", iconKey: "calculator", href: "/dashboard/general-office/payroll-tax" as Route },
-      { key: "go-gratuity", labelKey: "nav.gratuity_settlement", iconKey: "banknote", href: "/dashboard/general-office/gratuity" as Route },
-      { key: "go-contract-control", labelKey: "nav.contract_control", iconKey: "scroll-text", href: "/dashboard/general-office/contracts" as Route, permission: { resource: "contracts", action: "read" } },
-      { key: "go-assets", labelKey: "nav.office_assets", iconKey: "clipboard-list", href: "/dashboard/general-office/employees?tab=assets" as Route },
-      { key: "go-documents", labelKey: "nav.office_documents", iconKey: "file-text", href: "/dashboard/general-office/employees?tab=documents" as Route },
-      { key: "go-id-cards", labelKey: "nav.employee_id_cards", iconKey: "badge", href: "/dashboard/general-office/employees?tab=id-cards" as Route },
-      { key: "go-reports", labelKey: "nav.employee_reports", iconKey: "bar-chart", href: "/dashboard/general-office/employees?tab=reports" as Route },
-      { key: "go-hr-reports", labelKey: "nav.hr_reports_hub", iconKey: "bar-chart", href: "/dashboard/general-office/hr-reports" as Route },
-      { key: "go-hr-reports-my-profile", labelKey: "nav.my_employee_profile", iconKey: "user-check", href: "/dashboard/general-office/my-profile" as Route }
-    ]
-  },
-  {
     key: "my-employee-profile",
     labelKey: "nav.my_employee_profile",
     iconKey: "user-check",
@@ -1147,6 +1140,13 @@ export const sidebarTree: SidebarNode[] = [
         roles: ["super_admin", "super_admin_reports"]
       }
     ]
+  },
+  {
+    key: "documents-hub",
+    labelKey: "nav.document_management",
+    iconKey: "file-text",
+    href: "/dashboard/documents" as Route,
+    roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"]
   },
   {
     key: "reports",

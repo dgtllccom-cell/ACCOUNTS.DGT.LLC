@@ -222,15 +222,20 @@ export function DailyExchangeRateManager() {
 
   async function handleSaveRate(e: React.FormEvent) {
     e.preventDefault();
-    if (!selectedCountry) {
-      setMessage({ type: "error", text: "Please select a country first." });
+    if (!selectedCountryId || !selectedCountry) {
+      setMessage({ type: "error", text: "Please select a valid country from the dropdown." });
       return;
     }
     const credit = Number(creditPrice);
     const debit = Number(debitPrice);
 
-    if (!credit || !debit) {
-      setMessage({ type: "error", text: "Please enter valid Credit ($) and Debit ($) rates." });
+    if (!creditPrice || Number.isNaN(credit) || credit <= 0) {
+      setMessage({ type: "error", text: `Please enter a valid Credit rate (> 0) in ${selectedCountry.currency_code} per USD.` });
+      return;
+    }
+
+    if (!debitPrice || Number.isNaN(debit) || debit <= 0) {
+      setMessage({ type: "error", text: `Please enter a valid Debit rate (> 0) in ${selectedCountry.currency_code} per USD.` });
       return;
     }
 
@@ -284,7 +289,7 @@ export function DailyExchangeRateManager() {
 
       setMessage({
         type: "success",
-        text: `Exchange Rate Saved & Accepted to Database! (${selectedCountry.name}: Credit $${credit} / Debit $${debit} ${selectedCountry.currency_code} by ${operatorUser})`
+        text: `Exchange Rate Saved & Accepted! (${selectedCountry.name}: Credit ${credit} ${selectedCountry.currency_code}/$ | Debit ${debit} ${selectedCountry.currency_code}/$ by ${operatorUser || "User"})`
       });
 
       await loadData();
@@ -327,10 +332,10 @@ export function DailyExchangeRateManager() {
         { key: "country", label: "Country" },
         { key: "branch", label: "Branch" },
         { key: "user", label: "User" },
-        { key: "buyingRate", label: "Buying Rate", format: "number", align: "right" },
-        { key: "sellingRate", label: "Selling Rate", format: "number", align: "right" },
-        { key: "creditRate", label: "Credit Rate", format: "number", align: "right" },
-        { key: "debitRate", label: "Debit Rate", format: "number", align: "right" },
+        { key: "buyingRate", label: "Buying Rate (Local/$)", format: "number", align: "right" },
+        { key: "sellingRate", label: "Selling Rate (Local/$)", format: "number", align: "right" },
+        { key: "creditRate", label: "Credit Rate (Local/$)", format: "number", align: "right" },
+        { key: "debitRate", label: "Debit Rate (Local/$)", format: "number", align: "right" },
         { key: "currency", label: "Currency", align: "center" }
       ],
       rows: reportRows,
@@ -412,17 +417,24 @@ export function DailyExchangeRateManager() {
             
             {/* 1. Country Selection */}
             <div className="space-y-1">
-              <Label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400">
-                {th("1. COUNTRY NAME")}
+              <Label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 flex items-center justify-between">
+                <span>{th("1. COUNTRY NAME")}</span>
+                {selectedCountry && (
+                  <span className="text-[10px] font-mono font-bold text-blue-600 dark:text-blue-400">
+                    Currency: {selectedCountry.currency_code}
+                  </span>
+                )}
               </Label>
               <select
                 value={selectedCountryId}
                 onChange={(e) => setSelectedCountryId(e.target.value)}
-                className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 text-xs font-black text-slate-800 dark:text-slate-100 outline-none focus:border-blue-500 transition-all uppercase"
+                className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-black text-slate-800 dark:text-slate-100 shadow-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all cursor-pointer uppercase"
               >
-                <option value="">{countries.length ? "SELECT COUNTRY" : "NO COUNTRIES AVAILABLE"}</option>
+                <option value="" disabled hidden>
+                  {countries.length ? "-- SELECT COUNTRY --" : "NO COUNTRIES AVAILABLE"}
+                </option>
                 {countries.map((c) => (
-                  <option key={c.id} value={c.id}>
+                  <option key={c.id} value={c.id} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-bold py-1">
                     {getFlag(c.iso2)} {c.name} ({c.currency_code})
                   </option>
                 ))}
@@ -486,48 +498,68 @@ export function DailyExchangeRateManager() {
               </div>
             </div>
 
-            {/* 3. Credit Dollar Price ($) */}
+            {/* 3. Credit Rate (Selling / Outflow) */}
             <div className="space-y-1">
-              <Label className="text-[11px] font-black uppercase text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
-                <ArrowUpRight className="w-3.5 h-3.5" />
-                {th("4. CREDIT DOLLAR PRICE ($)")}
+              <Label className="text-[11px] font-black uppercase text-emerald-700 dark:text-emerald-400 flex items-center justify-between">
+                <span className="flex items-center gap-1">
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                  {selectedCountry ? `4. CREDIT RATE (SELLING RATE)` : th("4. CREDIT RATE (LOCAL PER USD)")}
+                </span>
+                <span className="text-[9px] font-bold text-slate-400">
+                  {selectedCountry ? `1 USD = ? ${selectedCountry.currency_code}` : "Local / USD"}
+                </span>
               </Label>
               <div className="relative">
                 <Input
                   type="number"
                   step="0.0001"
                   min="0"
-                  placeholder="e.g. 280.00"
+                  placeholder={selectedCountry ? `e.g. Rate in ${selectedCountry.currency_code}` : "Select country first"}
                   value={creditPrice}
                   onChange={(e) => setCreditPrice(e.target.value)}
-                  className="h-10 text-xs font-black font-mono text-emerald-700 dark:text-emerald-400 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800 focus:border-emerald-500"
+                  className="h-10 text-xs font-black font-mono text-emerald-700 dark:text-emerald-400 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800 focus:border-emerald-500 pr-24"
                 />
-                <span className="absolute right-3 top-2.5 text-[11px] font-mono font-bold text-slate-400">
-                  {selectedCountry?.currency_code || "---"}
+                <span className="absolute right-3 top-2.5 text-[11px] font-mono font-black text-emerald-700 dark:text-emerald-400">
+                  {selectedCountry ? `${selectedCountry.currency_code} / $` : "LOCAL / $"}
                 </span>
               </div>
+              {selectedCountry && creditPrice && Number(creditPrice) > 0 && (
+                <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
+                  ⚡ Conversion: 1.00 USD = {money(Number(creditPrice), 2)} {selectedCountry.currency_code} (Credit / Selling)
+                </p>
+              )}
             </div>
 
-            {/* 4. Debit Dollar Price ($) */}
+            {/* 4. Debit Rate (Buying / Inflow) */}
             <div className="space-y-1">
-              <Label className="text-[11px] font-black uppercase text-blue-700 dark:text-blue-400 flex items-center gap-1">
-                <ArrowDownLeft className="w-3.5 h-3.5" />
-                {th("5. DEBIT DOLLAR PRICE ($)")}
+              <Label className="text-[11px] font-black uppercase text-blue-700 dark:text-blue-400 flex items-center justify-between">
+                <span className="flex items-center gap-1">
+                  <ArrowDownLeft className="w-3.5 h-3.5" />
+                  {selectedCountry ? `5. DEBIT RATE (BUYING RATE)` : th("5. DEBIT RATE (LOCAL PER USD)")}
+                </span>
+                <span className="text-[9px] font-bold text-slate-400">
+                  {selectedCountry ? `1 USD = ? ${selectedCountry.currency_code}` : "Local / USD"}
+                </span>
               </Label>
               <div className="relative">
                 <Input
                   type="number"
                   step="0.0001"
                   min="0"
-                  placeholder="e.g. 278.50"
+                  placeholder={selectedCountry ? `e.g. Rate in ${selectedCountry.currency_code}` : "Select country first"}
                   value={debitPrice}
                   onChange={(e) => setDebitPrice(e.target.value)}
-                  className="h-10 text-xs font-black font-mono text-blue-700 dark:text-blue-400 rounded-xl bg-blue-50/50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-800 focus:border-blue-500"
+                  className="h-10 text-xs font-black font-mono text-blue-700 dark:text-blue-400 rounded-xl bg-blue-50/50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-800 focus:border-blue-500 pr-24"
                 />
-                <span className="absolute right-3 top-2.5 text-[11px] font-mono font-bold text-slate-400">
-                  {selectedCountry?.currency_code || "---"}
+                <span className="absolute right-3 top-2.5 text-[11px] font-mono font-black text-blue-700 dark:text-blue-400">
+                  {selectedCountry ? `${selectedCountry.currency_code} / $` : "LOCAL / $"}
                 </span>
               </div>
+              {selectedCountry && debitPrice && Number(debitPrice) > 0 && (
+                <p className="text-[10px] font-bold text-blue-700 dark:text-blue-400">
+                  ⚡ Conversion: 1.00 USD = {money(Number(debitPrice), 2)} {selectedCountry.currency_code} (Debit / Buying)
+                </p>
+              )}
             </div>
 
             {/* Save Button */}
@@ -586,11 +618,11 @@ export function DailyExchangeRateManager() {
                 <select
                   value={filterCountryId}
                   onChange={(e) => setFilterCountryId(e.target.value)}
-                  className="w-full h-8 px-2 rounded-lg bg-slate-800 text-slate-100 border border-slate-700 text-[11px] font-bold outline-none uppercase"
+                  className="w-full h-8 px-2 rounded-lg bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 text-[11px] font-bold outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all cursor-pointer uppercase shadow-xs"
                 >
                   <option value="all">{th("ALL COUNTRIES")}</option>
                   {countries.map((c) => (
-                    <option key={c.id} value={c.id}>
+                    <option key={c.id} value={c.id} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-bold py-1">
                       {c.name} ({c.currency_code})
                     </option>
                   ))}
@@ -602,11 +634,11 @@ export function DailyExchangeRateManager() {
                 <select
                   value={filterBranch}
                   onChange={(e) => setFilterBranch(e.target.value)}
-                  className="w-full h-8 px-2 rounded-lg bg-slate-800 text-slate-100 border border-slate-700 text-[11px] font-bold outline-none uppercase"
+                  className="w-full h-8 px-2 rounded-lg bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 text-[11px] font-bold outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all cursor-pointer uppercase shadow-xs"
                 >
                   <option value="all">{th("ALL BRANCHES")}</option>
                   {branchOptions.map((branchName) => (
-                    <option key={branchName} value={branchName}>{branchName}</option>
+                    <option key={branchName} value={branchName} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-bold py-1">{branchName}</option>
                   ))}
                 </select>
               </div>
@@ -618,7 +650,7 @@ export function DailyExchangeRateManager() {
                   placeholder="Date From"
                   value={dateFrom}
                   onChange={(e) => setDateFrom(e.target.value)}
-                  className="h-8 text-[10px] font-bold bg-slate-800 text-slate-100 border-slate-700 rounded-lg"
+                  className="h-8 text-[10px] font-bold bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border-slate-200 dark:border-slate-700 rounded-lg shadow-xs"
                 />
               </div>
 
@@ -630,7 +662,7 @@ export function DailyExchangeRateManager() {
                   placeholder={th("Search user, branch...")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-8 text-[11px] font-bold pl-8 bg-slate-800 text-slate-100 border-slate-700 rounded-lg placeholder:text-slate-500"
+                  className="h-8 text-[11px] font-bold pl-8 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border-slate-200 dark:border-slate-700 rounded-lg placeholder:text-slate-400 shadow-xs"
                 />
               </div>
 
@@ -649,8 +681,8 @@ export function DailyExchangeRateManager() {
                     <th className="py-2.5 px-3">{th("USER NAME")}</th>
                     <th className="py-2.5 px-3 text-center">{th("CURRENCY")}</th>
                     <th className="py-2.5 px-3">{th("DATE & TIME")}</th>
-                    <th className="py-2.5 px-3 text-right text-emerald-600 dark:text-emerald-400">{th("CREDIT RATE ($)")}</th>
-                    <th className="py-2.5 px-3 text-right text-blue-600 dark:text-blue-400">{th("DEBIT RATE ($)")}</th>
+                    <th className="py-2.5 px-3 text-right text-emerald-600 dark:text-emerald-400">{th("CREDIT RATE (LOCAL/$)")}</th>
+                    <th className="py-2.5 px-3 text-right text-blue-600 dark:text-blue-400">{th("DEBIT RATE (LOCAL/$)")}</th>
                     <th className="py-2.5 px-3 text-right">{th("LAST UPDATED")}</th>
                   </tr>
                 </thead>
@@ -693,10 +725,10 @@ export function DailyExchangeRateManager() {
                           {r.rate_date || isoToday()} {r.rate_time || "09:00 AM"}
                         </td>
                         <td className="py-2.5 px-3 text-right font-mono font-extrabold text-emerald-600 dark:text-emerald-400 text-[11px]">
-                          ${money(r.credit_rate || r.selling_rate, 2)}
+                          {money(r.credit_rate || r.selling_rate, 2)} {currencyCode}
                         </td>
                         <td className="py-2.5 px-3 text-right font-mono font-extrabold text-blue-600 dark:text-blue-400 text-[11px]">
-                          ${money(r.debit_rate || r.buying_rate, 2)}
+                          {money(r.debit_rate || r.buying_rate, 2)} {currencyCode}
                         </td>
                         <td className="py-2.5 px-3 text-right text-[9px] text-slate-400 font-mono">
                           {new Date(r.updated_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

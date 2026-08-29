@@ -59,50 +59,65 @@ async function event(sql: any, jobId: string, action: string, detail: unknown, a
 export class DocumentIntakeService {
   // ── queue / detail ─────────────────────────────────────────────────────
   async list(scope: IntakeScope, filters: { status?: string; domain?: string; docType?: string; search?: string; limit?: number } = {}) {
-    const rows = await withLocalPg(async (sql) => {
-      const where: any[] = [jobScopeWhere(sql, scope)];
-      if (filters.status) where.push(sql`j.status = ${filters.status}`);
-      if (filters.domain) where.push(sql`j.operational_domain = ${filters.domain}`);
-      if (filters.docType) where.push(sql`j.doc_type_code = ${filters.docType}`);
-      if (filters.search) {
-        const q = "%" + filters.search + "%";
-        where.push(sql`(j.job_no ILIKE ${q} OR j.original_filename ILIKE ${q} OR j.contract_reference ILIKE ${q}
-          OR j.document_reference ILIKE ${q} OR j.bl_reference ILIKE ${q} OR j.draft_reference ILIKE ${q})`);
-      }
-      const w = where.reduce((a, p, i) => (i === 0 ? p : sql`${a} AND ${p}`));
-      const limit = Math.min(Math.max(Number(filters.limit) || 100, 1), 300);
-      return sql`SELECT j.* FROM public.document_intake_queue_v j WHERE ${w} ORDER BY j.created_at DESC LIMIT ${limit}`;
-    });
-    return rows ?? [];
+    try {
+      const rows = await withLocalPg(async (sql) => {
+        const where: any[] = [jobScopeWhere(sql, scope)];
+        if (filters.status) where.push(sql`j.status = ${filters.status}`);
+        if (filters.domain) where.push(sql`j.operational_domain = ${filters.domain}`);
+        if (filters.docType) where.push(sql`j.doc_type_code = ${filters.docType}`);
+        if (filters.search) {
+          const q = "%" + filters.search + "%";
+          where.push(sql`(j.job_no ILIKE ${q} OR j.original_filename ILIKE ${q} OR j.contract_reference ILIKE ${q}
+            OR j.document_reference ILIKE ${q} OR j.bl_reference ILIKE ${q} OR j.draft_reference ILIKE ${q})`);
+        }
+        const w = where.reduce((a, p, i) => (i === 0 ? p : sql`${a} AND ${p}`));
+        const limit = Math.min(Math.max(Number(filters.limit) || 100, 1), 300);
+        return sql`SELECT j.* FROM public.document_intake_queue_v j WHERE ${w} ORDER BY j.created_at DESC LIMIT ${limit}`;
+      });
+      return rows ?? [];
+    } catch (err) {
+      console.warn("document_intake_queue_v notice:", err instanceof Error ? err.message : String(err));
+      return [];
+    }
   }
 
   async kpis(scope: IntakeScope) {
-    const r = await withLocalPg(async (sql) => {
-      const w = jobScopeWhere(sql, scope);
-      return sql`SELECT
-        count(*)::int AS total,
-        count(*) FILTER (WHERE j.status = 'review')::int AS in_review,
-        count(*) FILTER (WHERE j.status = 'qvc')::int AS in_qvc,
-        count(*) FILTER (WHERE j.status = 'draft_ready')::int AS draft_ready,
-        count(*) FILTER (WHERE j.status = 'linked')::int AS linked,
-        count(*) FILTER (WHERE j.status IN ('error','rejected'))::int AS failed,
-        count(*) FILTER (WHERE j.match_status = 'out_of_scope')::int AS out_of_scope
-        FROM public.document_intake_queue_v j WHERE ${w}`;
-    });
-    return r?.[0] ?? {};
+    try {
+      const r = await withLocalPg(async (sql) => {
+        const w = jobScopeWhere(sql, scope);
+        return sql`SELECT
+          count(*)::int AS total,
+          count(*) FILTER (WHERE j.status = 'review')::int AS in_review,
+          count(*) FILTER (WHERE j.status = 'qvc')::int AS in_qvc,
+          count(*) FILTER (WHERE j.status = 'draft_ready')::int AS draft_ready,
+          count(*) FILTER (WHERE j.status = 'linked')::int AS linked,
+          count(*) FILTER (WHERE j.status IN ('error','rejected'))::int AS failed,
+          count(*) FILTER (WHERE j.match_status = 'out_of_scope')::int AS out_of_scope
+          FROM public.document_intake_queue_v j WHERE ${w}`;
+      });
+      return r?.[0] ?? {};
+    } catch (err) {
+      console.warn("document_intake_queue_v kpis notice:", err instanceof Error ? err.message : String(err));
+      return {};
+    }
   }
 
   async get(jobId: string, scope: IntakeScope) {
-    return withLocalPg(async (sql) => {
-      const job = (await sql`SELECT * FROM public.document_intake_queue_v WHERE id = ${jobId}`)?.[0];
-      if (!job) return null;
-      assertRowInScope(scope, job);
-      const fields = await sql`SELECT * FROM public.document_intake_fields WHERE job_id = ${jobId} ORDER BY field_key`;
-      const lineItems = await sql`SELECT * FROM public.document_intake_line_items WHERE job_id = ${jobId} ORDER BY line_no`;
-      const matches = await sql`SELECT * FROM public.document_intake_matches WHERE job_id = ${jobId} ORDER BY match_kind, score DESC`;
-      const events = await sql`SELECT * FROM public.document_intake_events WHERE job_id = ${jobId} ORDER BY created_at DESC LIMIT 100`;
-      return { job, fields: fields ?? [], lineItems: lineItems ?? [], matches: matches ?? [], events: events ?? [] };
-    });
+    try {
+      return await withLocalPg(async (sql) => {
+        const job = (await sql`SELECT * FROM public.document_intake_queue_v WHERE id = ${jobId}`)?.[0];
+        if (!job) return null;
+        assertRowInScope(scope, job);
+        const fields = await sql`SELECT * FROM public.document_intake_fields WHERE job_id = ${jobId} ORDER BY field_key`;
+        const lineItems = await sql`SELECT * FROM public.document_intake_line_items WHERE job_id = ${jobId} ORDER BY line_no`;
+        const matches = await sql`SELECT * FROM public.document_intake_matches WHERE job_id = ${jobId} ORDER BY match_kind, score DESC`;
+        const events = await sql`SELECT * FROM public.document_intake_events WHERE job_id = ${jobId} ORDER BY created_at DESC LIMIT 100`;
+        return { job, fields: fields ?? [], lineItems: lineItems ?? [], matches: matches ?? [], events: events ?? [] };
+      });
+    } catch (err) {
+      console.warn("document_intake_queue_v get notice:", err instanceof Error ? err.message : String(err));
+      return null;
+    }
   }
 
   async fileBuffer(jobId: string, scope: IntakeScope): Promise<{ buffer: Buffer; mime: string; filename: string } | null> {
@@ -482,28 +497,38 @@ export class DocumentIntakeService {
   }
 
   async listDrafts(scope: IntakeScope, filters: { targetModule?: string; status?: string; jobId?: string } = {}) {
-    const rows = await withLocalPg(async (sql) => {
-      const where: any[] = [sql`d.deleted_at IS NULL`];
-      if (filters.targetModule) where.push(sql`d.target_module = ${filters.targetModule}`);
-      where.push(filters.status ? sql`d.status = ${filters.status}` : sql`d.status = 'prepared'`);
-      if (filters.jobId) where.push(sql`d.job_id = ${filters.jobId}`);
-      if (scope.domain) where.push(sql`d.operational_domain = ${scope.domain}`);
-      if (scope.countryIds) where.push(sql`(d.country_id IS NULL OR d.country_id = ANY(${scope.countryIds}))`);
-      if (scope.cityBranchIds) where.push(sql`(d.city_branch_id IS NULL OR d.city_branch_id = ANY(${scope.cityBranchIds}))`);
-      if (scope.clearingAgentIds) where.push(sql`(d.clearing_agent_id IS NULL OR d.clearing_agent_id = ANY(${scope.clearingAgentIds}))`);
-      const w = where.reduce((a, p, i) => (i === 0 ? p : sql`${a} AND ${p}`));
-      return sql`SELECT d.* FROM public.document_intake_drafts_v d WHERE ${w} ORDER BY d.created_at DESC LIMIT 100`;
-    });
-    return rows ?? [];
+    try {
+      const rows = await withLocalPg(async (sql) => {
+        const where: any[] = [sql`d.deleted_at IS NULL`];
+        if (filters.targetModule) where.push(sql`d.target_module = ${filters.targetModule}`);
+        where.push(filters.status ? sql`d.status = ${filters.status}` : sql`d.status = 'prepared'`);
+        if (filters.jobId) where.push(sql`d.job_id = ${filters.jobId}`);
+        if (scope.domain) where.push(sql`d.operational_domain = ${scope.domain}`);
+        if (scope.countryIds) where.push(sql`(d.country_id IS NULL OR d.country_id = ANY(${scope.countryIds}))`);
+        if (scope.cityBranchIds) where.push(sql`(d.city_branch_id IS NULL OR d.city_branch_id = ANY(${scope.cityBranchIds}))`);
+        if (scope.clearingAgentIds) where.push(sql`(d.clearing_agent_id IS NULL OR d.clearing_agent_id = ANY(${scope.clearingAgentIds}))`);
+        const w = where.reduce((a, p, i) => (i === 0 ? p : sql`${a} AND ${p}`));
+        return sql`SELECT d.* FROM public.document_intake_drafts_v d WHERE ${w} ORDER BY d.created_at DESC LIMIT 100`;
+      });
+      return rows ?? [];
+    } catch (err) {
+      console.warn("document_intake_drafts_v notice:", err instanceof Error ? err.message : String(err));
+      return [];
+    }
   }
 
   async getDraft(draftId: string, scope: IntakeScope) {
-    return withLocalPg(async (sql) => {
-      const d = (await sql`SELECT * FROM public.document_intake_drafts_v WHERE id = ${draftId} AND deleted_at IS NULL`)?.[0];
-      if (!d) return null;
-      assertRowInScope(scope, { country_id: d.country_id, city_branch_id: d.city_branch_id, clearing_agent_id: d.clearing_agent_id, operational_domain: d.operational_domain });
-      return d;
-    });
+    try {
+      return await withLocalPg(async (sql) => {
+        const d = (await sql`SELECT * FROM public.document_intake_drafts_v WHERE id = ${draftId} AND deleted_at IS NULL`)?.[0];
+        if (!d) return null;
+        assertRowInScope(scope, { country_id: d.country_id, city_branch_id: d.city_branch_id, clearing_agent_id: d.clearing_agent_id, operational_domain: d.operational_domain });
+        return d;
+      });
+    } catch (err) {
+      console.warn("document_intake_drafts_v get notice:", err instanceof Error ? err.message : String(err));
+      return null;
+    }
   }
 
   async discardDraft(draftId: string, reason: string, actorId: string, actorName: string | null, scope: IntakeScope) {

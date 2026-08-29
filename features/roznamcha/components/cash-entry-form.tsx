@@ -2963,6 +2963,17 @@ export function CashEntryForm({
                               <span className="text-slate-400">{t(lang, "roz.cef_manual_rate_saved", "manual rate saved with entry")}</span>
                             </div>
                           ) : null}
+                          {showCalcPanel && calcAmount && (!exchangeRate || Number(exchangeRate) <= 0) && (
+                            <p className="mt-1 text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                              ⚠️ Exchange rate is required for {currency} ➔ {branchCurrency} calculation
+                            </p>
+                          )}
+                          {showCalcPanel && calcFinal !== null && (
+                            <div className="mt-1.5 p-1.5 bg-emerald-50/80 dark:bg-emerald-950/40 rounded border border-emerald-200 dark:border-emerald-800 text-[10px] font-bold text-emerald-800 dark:text-emerald-300 flex justify-between items-center">
+                              <span>Converted Amount:</span>
+                              <span className="font-mono text-xs font-black">{calcFinal.toFixed(2)} {branchCurrency}</span>
+                            </div>
+                          )}
                         </FieldBlock>
                         <FieldBlock label={t(lang, "form.operation")}>
                           <select
