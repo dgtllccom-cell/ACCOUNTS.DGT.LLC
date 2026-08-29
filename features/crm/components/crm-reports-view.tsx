@@ -108,6 +108,37 @@ export function CrmReportsView({ session }: CrmReportsViewProps) {
     a.click();
   };
 
+  const handlePrintReport = () => {
+    const recs = data?.records || [];
+    void import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => {
+      openGenericErpReport({
+        title: `CRM Report — ${reportType || "Smart Due"}`,
+        lang,
+        orientation: "landscape",
+        columns: [
+          { key: "globalSerial", label: "Global Serial" },
+          { key: "referenceNo", label: "Reference No" },
+          { key: "itemType", label: "Type" },
+          { key: "partyName", label: "Party" },
+          { key: "dueDate", label: "Due Date", format: "date" },
+          { key: "amount", label: "Amount", align: "right", format: "currency" },
+          { key: "paidAmount", label: "Paid", align: "right", format: "currency" },
+          { key: "remainingAmount", label: "Remaining", align: "right", format: "currency" },
+          { key: "currency", label: "Currency" },
+          { key: "status", label: "Status", format: "status" },
+          { key: "responsibleUser", label: "Responsible User" },
+        ],
+        rows: recs as Record<string, unknown>[],
+        filters: [{ label: "Report Type", value: String(reportType || "-") }, { label: "Records", value: String(recs.length) }],
+        totalsRow: {
+          amount: recs.reduce((s: number, r: any) => s + (Number(r.amount) || 0), 0),
+          paidAmount: recs.reduce((s: number, r: any) => s + (Number(r.paidAmount) || 0), 0),
+          remainingAmount: recs.reduce((s: number, r: any) => s + (Number(r.remainingAmount) || 0), 0),
+        },
+      });
+    });
+  };
+
   return (
     <div className={`space-y-6 p-4 md:p-8 font-sans ${isRtl ? "rtl" : "ltr"}`}>
       {/* Top Header Card with Universal Traceability */}
@@ -209,7 +240,7 @@ export function CrmReportsView({ session }: CrmReportsViewProps) {
           </Button>
           <Button
             size="sm"
-            onClick={() => window.print()}
+            onClick={handlePrintReport}
             className="h-8 text-xs font-bold gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
           >
             <Printer className="h-3.5 w-3.5" />

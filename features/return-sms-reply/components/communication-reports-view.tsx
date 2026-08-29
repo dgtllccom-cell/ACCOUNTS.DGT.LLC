@@ -44,7 +44,25 @@ export function CommunicationReportsView({ lang }: Props) {
     { id: "log-3", date: new Date().toISOString(), user: "Branch Accountant", action: "Manual Reply", channel: "WhatsApp", recipient: "+971 50 9876543", status: "Delivered" }
   ];
 
-  const handlePrint = () => window.print();
+  const handlePrint = () => {
+    void import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => {
+      openGenericErpReport({
+        title: _("crv.audit_trail", "Communication Audit Trail & Delivery History"),
+        lang,
+        orientation: "landscape",
+        columns: [
+          { key: "date", label: "Date", format: "date" },
+          { key: "user", label: "User" },
+          { key: "action", label: "Action" },
+          { key: "channel", label: "Channel" },
+          { key: "recipient", label: "Recipient" },
+          { key: "status", label: "Status", format: "status" },
+        ],
+        rows: mockAuditLogs as unknown as Record<string, unknown>[],
+        filters: [{ label: "Records", value: String(mockAuditLogs.length) }],
+      });
+    });
+  };
 
   const handleExportCsv = () => {
     const headers = "ID,Date,User,Action,Channel,Recipient,Status\n";

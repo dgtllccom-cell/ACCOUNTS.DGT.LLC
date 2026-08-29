@@ -439,7 +439,30 @@ export default function SuperAdminAllUsersDirectoryPage() {
   };
 
   const handlePrintA4 = () => {
-    window.print();
+    // Dedicated report — deliberately omits password/key columns (never print secrets).
+    void import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => {
+      openGenericErpReport({
+        title: "User Directory",
+        lang,
+        orientation: "landscape",
+        columns: [
+          { key: "userCode", label: "User Code" },
+          { key: "fullName", label: "Full Name" },
+          { key: "roleLabel", label: "Role" },
+          { key: "countryName", label: "Country" },
+          { key: "branchName", label: "Branch" },
+          { key: "email", label: "Username / Email" },
+          { key: (u: Record<string, unknown>) => ((u as any).isActive ? "Active" : "Inactive"), label: "Status", format: "status" },
+        ],
+        rows: filteredUsers as unknown as Record<string, unknown>[],
+        filters: [
+          ...(countryFilter !== "all" ? [{ label: "Country", value: countryFilter }] : []),
+          ...(roleFilter !== "all" ? [{ label: "Role", value: roleFilter }] : []),
+          ...(statusFilter !== "all" ? [{ label: "Status", value: statusFilter }] : []),
+          { label: "Records", value: String(filteredUsers.length) },
+        ],
+      });
+    });
   };
 
   const stats = useMemo(() => {

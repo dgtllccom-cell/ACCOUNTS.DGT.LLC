@@ -101,8 +101,43 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
     timeStyle: "short"
   });
 
+  const buildUniversalInput = () => {
+    const totals: Record<string, string | number> = {};
+    columns.forEach((c) => {
+      if (!c.isNumeric && !c.isCurrency) return;
+      const sum = data.reduce((s, row) => s + (Number((row as any)[c.key]) || 0), 0);
+      if (sum) totals[c.key] = sum;
+    });
+    if (typeof grandTotal === "number") totals.__grandTotal = grandTotal;
+    return {
+      title,
+      subtitle,
+      lang: currentLanguage,
+      orientation: (columns.length > 8 ? "landscape" : "portrait") as "portrait" | "landscape",
+      scope: {
+        company: companyName,
+        country: countryName,
+        branch: branchName,
+        userName,
+        currency,
+        dateRange: fromDate && toDate ? `${fromDate} — ${toDate}` : (fromDate || toDate || undefined),
+      },
+      filters,
+      columns: columns.map((c) => ({
+        key: c.key,
+        label: c.label,
+        align: c.align,
+        format: (c.isCurrency ? "currency" : c.isNumeric ? "number" : undefined) as any,
+        currency: c.isCurrency ? currency : undefined,
+      })),
+      rows: data as Record<string, any>[],
+      totals: Object.keys(totals).length ? totals : undefined,
+      autoPrint: true,
+    };
+  };
+
   const handlePrint = () => {
-    window.print();
+    openUniversalPrintReport(buildUniversalInput());
   };
 
   const handleExportCSV = () => {
@@ -170,14 +205,7 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
   };
 
   const handleExportPDF = () => {
-    openUniversalPrintReport({
-      title,
-      subtitle,
-      lang: currentLanguage,
-      columns: columns.map(c => ({ key: c.key, label: c.label })),
-      rows: data,
-      autoPrint: true,
-    });
+    openUniversalPrintReport(buildUniversalInput());
   };
 
 

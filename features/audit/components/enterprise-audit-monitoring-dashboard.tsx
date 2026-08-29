@@ -72,6 +72,60 @@ export function EnterpriseAuditMonitoringDashboard() {
   // Notification state
   const [actionMessage, setActionMessage] = useState<string | null>(null);
 
+  // Print / PDF — a dedicated report of the active tab (not the dashboard DOM).
+  const handlePrintReport = () => {
+    void import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => {
+      let title = "Enterprise Audit Monitoring";
+      let columns: any[] = [];
+      let rows: any[] = [];
+      if (activeTab === "deleted") {
+        title = "Audit — Deleted Records";
+        rows = deletedRecords || [];
+        columns = [
+          { key: "entity_type", label: "Entity" },
+          { key: "reference_no", label: "Reference" },
+          { key: "deleted_by_name", label: "Deleted By" },
+          { key: "deleted_at", label: "Deleted At", format: "date" },
+          { key: "reason", label: "Reason" },
+        ];
+      } else if (activeTab === "users") {
+        title = "Audit — User Activity";
+        rows = userActivityData?.users || [];
+        columns = [
+          { key: "full_name", label: "User" },
+          { key: "email", label: "Email" },
+          { key: "total_actions", label: "Actions", align: "right", format: "number" },
+          { key: "last_active", label: "Last Active", format: "date" },
+        ];
+      } else if (activeTab === "daily") {
+        title = "Audit — Daily Branch Activity";
+        rows = dailyBranchData?.branches || [];
+        columns = [
+          { key: "branch_name", label: "Branch" },
+          { key: "country_name", label: "Country" },
+          { key: "entries", label: "Entries", align: "right", format: "number" },
+          { key: "edits", label: "Edits", align: "right", format: "number" },
+          { key: "deletions", label: "Deletions", align: "right", format: "number" },
+        ];
+      } else {
+        title = "Audit — Monthly Edit History";
+        rows = monthlyEdits?.records || monthlyEdits?.edits || [];
+        columns = [
+          { key: "entity_type", label: "Entity" },
+          { key: "reference_no", label: "Reference" },
+          { key: "edited_by_name", label: "Edited By" },
+          { key: "edited_at", label: "Edited At", format: "date" },
+          { key: "field_count", label: "Fields", align: "right", format: "number" },
+        ];
+      }
+      openGenericErpReport({
+        title, lang, orientation: "landscape", columns,
+        rows: rows as Record<string, unknown>[],
+        filters: [{ label: "Tab", value: activeTab }, { label: "Records", value: String(rows.length) }],
+      });
+    });
+  };
+
   useEffect(() => {
     fetchMonthlyEdits();
     fetchDeletedRecords();
@@ -205,7 +259,7 @@ export function EnterpriseAuditMonitoringDashboard() {
           <Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-300 dark:bg-sky-950/40">
             Immutable Audit Trail Active
           </Badge>
-          <Button variant="outline" size="sm" onClick={() => window.print()} className="gap-1">
+          <Button variant="outline" size="sm" onClick={handlePrintReport} className="gap-1">
             <Printer className="h-4 w-4" />
             Print Report
           </Button>

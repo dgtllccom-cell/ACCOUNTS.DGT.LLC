@@ -94,7 +94,31 @@ export function UniversalPartyDirectoryReport({
   }, [parties, search, affiliationFilter]);
 
   const handlePrint = () => {
-    window.print();
+    void import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => {
+      openGenericErpReport({
+        title: "Universal Party 360° Directory",
+        lang,
+        orientation: "landscape",
+        columns: [
+          { key: (r: Record<string, unknown>) => (r as any).customerCode || "-", label: "Customer Code" },
+          { key: (r: Record<string, unknown>) => transliterateProperNoun((r as any).customerName, lang), label: "Full Name" },
+          { key: (r: Record<string, unknown>) => (r as any).fatherName ? transliterateProperNoun((r as any).fatherName, lang) : "-", label: "Father Name" },
+          { key: (r: Record<string, unknown>) => (r as any).countryName || "-", label: "Country" },
+          { key: (r: Record<string, unknown>) => (r as any).cityName || "-", label: "City" },
+          { key: (r: Record<string, unknown>) => (r as any).address || "-", label: "Address" },
+          { key: (r: Record<string, unknown>) => ((r as any).companies || []).length, label: "Companies", align: "right", format: "number" },
+          { key: (r: Record<string, unknown>) => ((r as any).companies || []).map((c: any) => c.name).join(", ") || "-", label: "Company Names" },
+          { key: (r: Record<string, unknown>) => ((r as any).employees || []).map((e: any) => e.employeeCode).join(", ") || "-", label: "Employee Codes" },
+          { key: (r: Record<string, unknown>) => ((r as any).banks || []).length, label: "Banks", align: "right", format: "number" },
+        ],
+        rows: filteredParties as unknown as Record<string, unknown>[],
+        filters: [
+          { label: "Affiliation", value: affiliationFilter === "all" ? "All" : affiliationFilter },
+          ...(search ? [{ label: "Search", value: search }] : []),
+          { label: "Records", value: String(filteredParties.length) },
+        ],
+      });
+    });
   };
 
   const handleExportCSV = () => {

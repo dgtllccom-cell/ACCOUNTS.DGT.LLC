@@ -195,7 +195,39 @@ export function SmartCrmControlCenter() {
   }
 
   function handlePrint() {
-    window.print();
+    const items = dashboardData?.actionItems || [];
+    void import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => {
+      openGenericErpReport({
+        title: "CRM Smart Action List",
+        lang,
+        orientation: "landscape",
+        columns: [
+          { key: "item_type", label: "Type" },
+          { key: "due_date", label: "Due Date", format: "date" },
+          { key: "party_name", label: "Party / Account" },
+          { key: "module", label: "Source" },
+          { key: "reference_no", label: "Invoice / Bill No." },
+          { key: "amount", label: "Amount", align: "right", format: "currency" },
+          { key: "paid_amount", label: "Paid", align: "right", format: "currency" },
+          { key: "remaining_amount", label: "Remaining", align: "right", format: "currency" },
+          { key: "currency", label: "Currency" },
+          { key: "branch_name", label: "Branch" },
+          { key: "responsible_user_name", label: "Responsible" },
+          { key: "status", label: "Status", format: "status" },
+        ],
+        rows: items as Record<string, unknown>[],
+        filters: [
+          { label: "Tab", value: String(activeTab) },
+          { label: "Date", value: String(targetDate) },
+          { label: "Records", value: String(items.length) },
+        ],
+        totalsRow: {
+          amount: items.reduce((s: number, r: any) => s + (Number(r.amount) || 0), 0),
+          paid_amount: items.reduce((s: number, r: any) => s + (Number(r.paid_amount) || 0), 0),
+          remaining_amount: items.reduce((s: number, r: any) => s + (Number(r.remaining_amount) || 0), 0),
+        },
+      });
+    });
   }
 
   const kpis = dashboardData?.kpis || {
