@@ -52,23 +52,84 @@ async function ingestPdf(buffer: Buffer): Promise<{ pages: OcrPage[]; fullText: 
     if (isDigital) {
       return { pages: pages.length ? pages : [{ pageNumber: 1, text: fullText }], fullText, isDigital: true, ocrUsed: false, meanConfidence: null };
     }
-    // Scanned PDF (no text layer) → render each page to an image and OCR it.
+    // Scanned PDF (no text layer) → OCR each page.
     const maxPages = Number(process.env.DOC_INTAKE_MAX_PAGES || 60);
     const confs: number[] = [];
     const ocrPages: OcrPage[] = [];
-    let pageNo = 0;
-    while (pageNo < maxPages) {
-      pageNo += 1;
-      let shot: { buffer?: Buffer } | Buffer | null = null;
-      try {
-        shot = await (parser as any).getScreenshot({ pages: [pageNo], scale: 2.0 });
-      } catch { break; }
-      const imgBuf: Buffer | null = Buffer.isBuffer(shot) ? shot : (shot as any)?.pages?.[0]?.buffer ?? (shot as any)?.buffer ?? null;
-      if (!imgBuf) break;
-      const pre = await preprocessImage(imgBuf, "image/png");
-      const r = await ocrImage(pre);
+
+    // pdf-parse@2 image helpers return bytes on `.data` (Uint8Array) or `.buffer`,
+    // sometimes as a `data:` URL, sometimes a bare Buffer — accept every shape.
+    const toBuffer = (entry: any): Buffer | null => {
+      if (!entry) return null;
+      if (Buffer.isBuffer(entry)) return entry;
+      const raw = entry.data ?? entry.buffer ?? null;
+      if (raw) return Buffer.isBuffer(raw) ? raw : Buffer.from(raw);
+      if (typeof entry.dataUrl === "string") {
+        const b64 = entry.dataUrl.split(",")[1];
+        if (b64) return Buffer.from(b64, "base64");
+      }
+      return null;
+    };
+
+    // Discover the page count up front so we iterate an exact range.
+    let totalPages = 0;
+    try {
+      const info: any = await (parser as any).getInfo?.();
+      totalPages = Number(info?.total || info?.numpages || 0) || 0;
+    } catch { /* fall through */ }
+
+    // 1. Preferred source: the embedded full-page image that phone-scanner apps
+    //    (CamScanner, iOS Notes, Adobe Scan …) place on each page. It is the
+    //    original capture at native resolution — far better for OCR than a
+    //    re-rasterised page screenshot. Pick the largest image per page and
+    //    ignore small decorations (app watermark logos are ~240×90).
+    const embeddedByPage: Map<number, { buf: Buffer; width: number }> = new Map();
+    try {
+      const im: any = await (parser as any).getImage?.();
+      for (const pg of im?.pages ?? []) {
+        const imgs = (pg.images ?? [])
+          .map((x: any) => ({ buf: toBuffer(x), width: x.width ?? 0, area: (x.width ?? 0) * (x.height ?? 0) }))
+          .filter((x: any) => x.buf && x.area >= 200_000) // drop logos / rules
+          .sort((a: any, b: any) => b.area - a.area);
+        if (imgs[0]?.buf) embeddedByPage.set(Number(pg.pageNumber), { buf: imgs[0].buf, width: imgs[0].width });
+      }
+    } catch { /* no embedded images — fall back to screenshots */ }
+
+    const nonWs = (s: string) => s.replace(/\s/g, "").length;
+
+    const ocrOnePage = async (pageNo: number): Promise<boolean> => {
+      const embedded = embeddedByPage.get(pageNo);
+      let imgBuf = embedded?.buf ?? null;
+      // A large embedded image comes straight from a scanner app that already
+      // binarised / de-skewed it — OCR it as-is and only fall back to our own
+      // preprocessing if that comes back sparse.
+      const preferRaw = Boolean(embedded && embedded.width >= 1500);
+      if (!imgBuf) {
+        try {
+          const shot: any = await (parser as any).getScreenshot({ pages: [pageNo], scale: 3.0 });
+          const entry = Buffer.isBuffer(shot) ? shot : (shot?.pages?.[0] ?? shot);
+          imgBuf = toBuffer(entry);
+        } catch { return false; }
+      }
+      if (!imgBuf) return false;
+
+      let r = preferRaw ? await ocrImage(imgBuf) : await ocrImage(await preprocessImage(imgBuf, "image/png"));
+      if (nonWs(r.text) < 40) {
+        const alt = preferRaw
+          ? await ocrImage(await preprocessImage(imgBuf, "image/png"))
+          : await ocrImage(imgBuf);
+        if (nonWs(alt.text) > nonWs(r.text)) r = alt;
+      }
       confs.push(r.meanConfidence);
       ocrPages.push({ pageNumber: pageNo, text: r.text, wordBoxes: r.words });
+      return true;
+    };
+
+    const pageCount = totalPages > 0 ? Math.min(totalPages, maxPages)
+      : (embeddedByPage.size || maxPages);
+    for (let pageNo = 1; pageNo <= pageCount; pageNo += 1) {
+      const ok = await ocrOnePage(pageNo);
+      if (!ok && totalPages === 0 && embeddedByPage.size === 0) break;
     }
     if (ocrPages.length) {
       pages = ocrPages;
@@ -86,8 +147,12 @@ async function preprocessImage(buffer: Buffer, mime: string): Promise<Buffer> {
     const sharp = (await import("sharp")).default;
     let img = sharp(buffer, { failOn: "none" }).rotate(); // auto-orient from EXIF
     const meta = await img.metadata();
-    if ((meta.width ?? 0) < 1400) img = img.resize({ width: 1800, withoutEnlargement: false });
-    return await img.grayscale().normalise().sharpen().toFormat("png").toBuffer();
+    // Upscale genuinely small captures; never downscale a good scan.
+    if ((meta.width ?? 0) < 1600) img = img.resize({ width: 2000, withoutEnlargement: false });
+    // Grayscale + gentle contrast only. `sharpen()` / heavy `normalise()` on a
+    // photo-scanned document eats thin strokes and can leave OCR with nothing but
+    // crisp overlaid watermarks — see the CamScanner proforma-invoice UAT.
+    return await img.grayscale().normalise({ lower: 5, upper: 95 }).toFormat("png").toBuffer();
   } catch {
     return buffer;
   }
