@@ -2940,6 +2940,54 @@ export type UiKey =
   | "gmr.cat_textiles" | "gmr.cat_metals" | "gmr.cat_chemicals" | "gmr.cat_electronics"
   | "gmr.goods_name_desc" | "gmr.brand_name" | "gmr.sizes_specs" | "gmr.origin_country"
   | "gmr.active_item" | "gmr.save_item" | "gmr.register_title" | "gmr.delete_item_title" | "gmr.select_origin_ph"
+  | "gmr.master_parameters_btn"
+  | "gmr.structured_flow"
+  | "gmr.f_goods_name"
+  | "gmr.f_hs_code"
+  | "gmr.f_brand"
+  | "gmr.f_size"
+  | "gmr.f_variety"
+  | "gmr.f_extra"
+  | "gmr.f_category"
+  | "gmr.f_origin"
+  | "gmr.manage_brands"
+  | "gmr.manage_sizes"
+  | "gmr.manage_varieties"
+  | "gmr.manage_specs"
+  | "gmr.db_master_varieties"
+  | "gmr.preset_specs"
+  | "gmr.active_record"
+  | "gmr.pm_title"
+  | "gmr.pm_desc"
+  | "gmr.pm_tab_brands"
+  | "gmr.pm_tab_sizes"
+  | "gmr.pm_tab_varieties"
+  | "gmr.pm_tab_extra"
+  | "gmr.pm_add_ph"
+  | "gmr.pm_add_btn"
+  | "gmr.pm_col_value"
+  | "gmr.pm_no_records"
+  | "gmr.pm_edit_title"
+  | "gmr.pm_delete_title"
+  | "gmr.pm_close"
+  | "gmr.save"
+  | "gmr.confirm_delete_item"
+  | "gmr.confirm_delete_param"
+  | "gmr.fill_required"
+  | "gmr.err_save"
+  | "gmr.err_add_param"
+  | "gmr.err_update_param"
+  | "gmr.err_status"
+  | "gmr.err_delete_param"
+  | "gmr.err_delete_item"
+  | "gmr.ph_goods_name"
+  | "gmr.ph_hs_code"
+  | "gmr.ph_brand"
+  | "gmr.ph_size"
+  | "gmr.ph_variety"
+  | "gmr.ph_extra"
+  | "gmr.status_active"
+  | "gmr.status_inactive"
   | "lqm.type_country" | "lqm.type_state" | "lqm.type_district" | "lqm.type_city" | "lqm.type_area"
   | "lqm.save_country" | "lqm.save_state" | "lqm.save_district" | "lqm.save_city" | "lqm.save_area"
   | "lqm.new_word" | "lqm.missing_state" | "lqm.missing_district" | "lqm.missing_city" | "lqm.missing_area"
@@ -14451,6 +14499,54 @@ const en: Dict = {
   "hrm.recon_chk_not_posted": "Not Posted",
   "dintake.batch_open": "Open in Purchase Loading",
   "dintake.hi_request_opened": "A clearing customer order was opened from this handover — continue it in the Customer Order / BL workflow.",
+  "gmr.master_parameters_btn": "Master Parameters",
+  "gmr.structured_flow": "Structured flow: Goods Name → HS Code → Brand → Size → Variety → Extra Details",
+  "gmr.f_goods_name": "1. Goods Name",
+  "gmr.f_hs_code": "2. HS Code",
+  "gmr.f_brand": "3. Brand Name",
+  "gmr.f_size": "4. Size / Grade",
+  "gmr.f_variety": "5. Variety (Database Master Attribute)",
+  "gmr.f_extra": "6. Extra Details / Specification",
+  "gmr.f_category": "Category",
+  "gmr.f_origin": "Origin Country",
+  "gmr.manage_brands": "+ Manage Brands",
+  "gmr.manage_sizes": "+ Manage Sizes",
+  "gmr.manage_varieties": "+ Manage Varieties",
+  "gmr.manage_specs": "+ Manage Specs",
+  "gmr.db_master_varieties": "Database Master Varieties:",
+  "gmr.preset_specs": "Preset Specs:",
+  "gmr.active_record": "Active Goods Record",
+  "gmr.pm_title": "Goods Master Parameters Manager (Database-Driven)",
+  "gmr.pm_desc": "Add, Rename, Edit, or Deactivate Brands, Sizes, Varieties, and Extra Details in the live database.",
+  "gmr.pm_tab_brands": "1. Brands",
+  "gmr.pm_tab_sizes": "2. Sizes",
+  "gmr.pm_tab_varieties": "3. Varieties",
+  "gmr.pm_tab_extra": "4. Extra Details",
+  "gmr.pm_add_ph": "Add new master entry…",
+  "gmr.pm_add_btn": "Add Parameter",
+  "gmr.pm_col_value": "Parameter Value",
+  "gmr.pm_no_records": "No records found in database.",
+  "gmr.pm_edit_title": "Edit / Rename Parameter",
+  "gmr.pm_delete_title": "Delete Parameter",
+  "gmr.pm_close": "Close Manager",
+  "gmr.save": "Save",
+  "gmr.confirm_delete_item": "Delete this goods item?",
+  "gmr.confirm_delete_param": "Are you sure you want to delete this master parameter?",
+  "gmr.fill_required": "Please fill in HS Code and Goods Name.",
+  "gmr.err_save": "Failed to save",
+  "gmr.err_add_param": "Failed to add parameter",
+  "gmr.err_update_param": "Failed to update parameter",
+  "gmr.err_status": "Failed to update status",
+  "gmr.err_delete_param": "Failed to delete parameter",
+  "gmr.err_delete_item": "Failed to delete",
+  "gmr.ph_goods_name": "e.g. Almond Kernel / Basmati Rice",
+  "gmr.ph_hs_code": "e.g. 0802.12.0000",
+  "gmr.ph_brand": "e.g. Digital LLC / BG / Blue Diamond",
+  "gmr.ph_size": "e.g. 18/20 / 20/22 / 23/25",
+  "gmr.ph_variety": "e.g. Nonpareil / Carmel / Independence / Butte / Marcona",
+  "gmr.ph_extra": "Enter quality description, shell/nut characteristics, color, shape, moisture, surface grade, packing specification, etc.",
+  "gmr.status_active": "Active",
+  "gmr.status_inactive": "Inactive",
 };
 
 const ur: Dict = {
@@ -24536,6 +24632,54 @@ const ur: Dict = {
   "hrm.recon_chk_not_posted": "غیر پوسٹ شدہ",
   "dintake.batch_open": "پرچیز لوڈنگ میں کھولیں",
   "dintake.hi_request_opened": "اس ہینڈ اوور سے ایک کلیئرنگ کسٹمر آرڈر کھولا گیا — اسے کسٹمر آرڈر / بی ایل ورک فلو میں جاری رکھیں۔",
+  "gmr.master_parameters_btn": "ماسٹر پیرامیٹرز",
+  "gmr.structured_flow": "ترتیب وار بہاؤ: مال کا نام → ایچ ایس کوڈ → برانڈ → سائز → قسم → اضافی تفصیلات",
+  "gmr.f_goods_name": "1. مال کا نام",
+  "gmr.f_hs_code": "2. ایچ ایس کوڈ",
+  "gmr.f_brand": "3. برانڈ کا نام",
+  "gmr.f_size": "4. سائز / گریڈ",
+  "gmr.f_variety": "5. قسم (ڈیٹا بیس ماسٹر خصوصیت)",
+  "gmr.f_extra": "6. اضافی تفصیلات / خصوصیات",
+  "gmr.f_category": "زمرہ",
+  "gmr.f_origin": "اصل ملک",
+  "gmr.manage_brands": "+ برانڈز کا نظم",
+  "gmr.manage_sizes": "+ سائزز کا نظم",
+  "gmr.manage_varieties": "+ اقسام کا نظم",
+  "gmr.manage_specs": "+ خصوصیات کا نظم",
+  "gmr.db_master_varieties": "ڈیٹا بیس ماسٹر اقسام:",
+  "gmr.preset_specs": "پہلے سے طے شدہ خصوصیات:",
+  "gmr.active_record": "فعال مال ریکارڈ",
+  "gmr.pm_title": "گڈز ماسٹر پیرامیٹرز مینیجر (ڈیٹا بیس سے چلنے والا)",
+  "gmr.pm_desc": "لائیو ڈیٹا بیس میں برانڈز، سائزز، اقسام، اور اضافی تفصیلات شامل کریں، نام بدلیں، ترمیم کریں، یا غیر فعال کریں۔",
+  "gmr.pm_tab_brands": "1. برانڈز",
+  "gmr.pm_tab_sizes": "2. سائزز",
+  "gmr.pm_tab_varieties": "3. اقسام",
+  "gmr.pm_tab_extra": "4. اضافی تفصیلات",
+  "gmr.pm_add_ph": "نئی ماسٹر انٹری شامل کریں…",
+  "gmr.pm_add_btn": "پیرامیٹر شامل کریں",
+  "gmr.pm_col_value": "پیرامیٹر ویلیو",
+  "gmr.pm_no_records": "ڈیٹا بیس میں کوئی ریکارڈ نہیں ملا۔",
+  "gmr.pm_edit_title": "پیرامیٹر میں ترمیم / نام تبدیل کریں",
+  "gmr.pm_delete_title": "پیرامیٹر حذف کریں",
+  "gmr.pm_close": "مینیجر بند کریں",
+  "gmr.save": "محفوظ کریں",
+  "gmr.confirm_delete_item": "کیا یہ مال آئٹم حذف کریں؟",
+  "gmr.confirm_delete_param": "کیا آپ واقعی یہ ماسٹر پیرامیٹر حذف کرنا چاہتے ہیں؟",
+  "gmr.fill_required": "براہ کرم ایچ ایس کوڈ اور مال کا نام درج کریں۔",
+  "gmr.err_save": "محفوظ کرنے میں ناکام",
+  "gmr.err_add_param": "پیرامیٹر شامل کرنے میں ناکام",
+  "gmr.err_update_param": "پیرامیٹر اپ ڈیٹ کرنے میں ناکام",
+  "gmr.err_status": "حیثیت اپ ڈیٹ کرنے میں ناکام",
+  "gmr.err_delete_param": "پیرامیٹر حذف کرنے میں ناکام",
+  "gmr.err_delete_item": "حذف کرنے میں ناکام",
+  "gmr.ph_goods_name": "مثلاً بادام گری / باسمتی چاول",
+  "gmr.ph_hs_code": "مثلاً 0802.12.0000",
+  "gmr.ph_brand": "مثلاً Digital LLC / BG / Blue Diamond",
+  "gmr.ph_size": "مثلاً 18/20 / 20/22 / 23/25",
+  "gmr.ph_variety": "مثلاً Nonpareil / Carmel / Independence / Butte / Marcona",
+  "gmr.ph_extra": "معیار کی تفصیل، چھلکا/گری کی خصوصیات، رنگ، شکل، نمی، سطح کا گریڈ، پیکنگ کی خصوصیات، وغیرہ درج کریں۔",
+  "gmr.status_active": "فعال",
+  "gmr.status_inactive": "غیر فعال",
 };
 
 const ar: Dict = {
@@ -34623,6 +34767,54 @@ const ar: Dict = {
   "hrm.recon_chk_not_posted": "غير مُرحَّل",
   "dintake.batch_open": "افتح في تحميل المشتريات",
   "dintake.hi_request_opened": "تم فتح أمر عميل تخليص من هذا التسليم — تابعه في سير عمل أمر العميل / بوليصة الشحن.",
+  "gmr.master_parameters_btn": "المعايير الرئيسية",
+  "gmr.structured_flow": "تدفق منظم: اسم البضاعة ← رمز HS ← العلامة التجارية ← الحجم ← الصنف ← تفاصيل إضافية",
+  "gmr.f_goods_name": "1. اسم البضاعة",
+  "gmr.f_hs_code": "2. رمز HS",
+  "gmr.f_brand": "3. اسم العلامة التجارية",
+  "gmr.f_size": "4. الحجم / الدرجة",
+  "gmr.f_variety": "5. الصنف (سمة رئيسية في قاعدة البيانات)",
+  "gmr.f_extra": "6. تفاصيل إضافية / المواصفات",
+  "gmr.f_category": "الفئة",
+  "gmr.f_origin": "بلد المنشأ",
+  "gmr.manage_brands": "+ إدارة العلامات التجارية",
+  "gmr.manage_sizes": "+ إدارة الأحجام",
+  "gmr.manage_varieties": "+ إدارة الأصناف",
+  "gmr.manage_specs": "+ إدارة المواصفات",
+  "gmr.db_master_varieties": "الأصناف الرئيسية في قاعدة البيانات:",
+  "gmr.preset_specs": "المواصفات المحددة مسبقًا:",
+  "gmr.active_record": "سجل بضاعة نشط",
+  "gmr.pm_title": "مدير معايير سجل البضائع (مُدار بقاعدة البيانات)",
+  "gmr.pm_desc": "أضف أو أعد تسمية أو حرّر أو عطّل العلامات التجارية والأحجام والأصناف والتفاصيل الإضافية في قاعدة البيانات المباشرة.",
+  "gmr.pm_tab_brands": "1. العلامات التجارية",
+  "gmr.pm_tab_sizes": "2. الأحجام",
+  "gmr.pm_tab_varieties": "3. الأصناف",
+  "gmr.pm_tab_extra": "4. تفاصيل إضافية",
+  "gmr.pm_add_ph": "أضف إدخالًا رئيسيًا جديدًا…",
+  "gmr.pm_add_btn": "إضافة معيار",
+  "gmr.pm_col_value": "قيمة المعيار",
+  "gmr.pm_no_records": "لا توجد سجلات في قاعدة البيانات.",
+  "gmr.pm_edit_title": "تعديل / إعادة تسمية المعيار",
+  "gmr.pm_delete_title": "حذف المعيار",
+  "gmr.pm_close": "إغلاق المدير",
+  "gmr.save": "حفظ",
+  "gmr.confirm_delete_item": "هل تريد حذف هذا الصنف؟",
+  "gmr.confirm_delete_param": "هل أنت متأكد أنك تريد حذف هذا المعيار الرئيسي؟",
+  "gmr.fill_required": "يرجى إدخال رمز HS واسم البضاعة.",
+  "gmr.err_save": "فشل الحفظ",
+  "gmr.err_add_param": "فشل إضافة المعيار",
+  "gmr.err_update_param": "فشل تحديث المعيار",
+  "gmr.err_status": "فشل تحديث الحالة",
+  "gmr.err_delete_param": "فشل حذف المعيار",
+  "gmr.err_delete_item": "فشل الحذف",
+  "gmr.ph_goods_name": "مثال: لب اللوز / أرز بسمتي",
+  "gmr.ph_hs_code": "مثال: 0802.12.0000",
+  "gmr.ph_brand": "مثال: Digital LLC / BG / Blue Diamond",
+  "gmr.ph_size": "مثال: 18/20 / 20/22 / 23/25",
+  "gmr.ph_variety": "مثال: Nonpareil / Carmel / Independence / Butte / Marcona",
+  "gmr.ph_extra": "أدخل وصف الجودة، خصائص القشرة/اللب، اللون، الشكل، الرطوبة، درجة السطح، مواصفات التعبئة، إلخ.",
+  "gmr.status_active": "نشط",
+  "gmr.status_inactive": "غير نشط",
 };
 
 const fa: Dict = {
@@ -44709,6 +44901,54 @@ const fa: Dict = {
   "hrm.recon_chk_not_posted": "ثبت‌نشده",
   "dintake.batch_open": "در بارگیری خرید باز کن",
   "dintake.hi_request_opened": "یک سفارش مشتری ترخیص از این تحویل باز شد — آن را در گردش‌کار سفارش مشتری / بارنامه ادامه دهید.",
+  "gmr.master_parameters_btn": "پارامترهای اصلی",
+  "gmr.structured_flow": "جریان ساختارمند: نام کالا ← کد HS ← برند ← اندازه ← نوع ← جزئیات بیشتر",
+  "gmr.f_goods_name": "۱. نام کالا",
+  "gmr.f_hs_code": "۲. کد HS",
+  "gmr.f_brand": "۳. نام برند",
+  "gmr.f_size": "۴. اندازه / درجه",
+  "gmr.f_variety": "۵. نوع (ویژگی اصلی پایگاه داده)",
+  "gmr.f_extra": "۶. جزئیات بیشتر / مشخصات",
+  "gmr.f_category": "دسته‌بندی",
+  "gmr.f_origin": "کشور مبدأ",
+  "gmr.manage_brands": "+ مدیریت برندها",
+  "gmr.manage_sizes": "+ مدیریت اندازه‌ها",
+  "gmr.manage_varieties": "+ مدیریت انواع",
+  "gmr.manage_specs": "+ مدیریت مشخصات",
+  "gmr.db_master_varieties": "انواع اصلی پایگاه داده:",
+  "gmr.preset_specs": "مشخصات از پیش تعیین‌شده:",
+  "gmr.active_record": "رکورد کالای فعال",
+  "gmr.pm_title": "مدیر پارامترهای اصلی کالا (مبتنی بر پایگاه داده)",
+  "gmr.pm_desc": "برندها، اندازه‌ها، انواع و جزئیات بیشتر را در پایگاه داده زنده اضافه، تغییر نام، ویرایش یا غیرفعال کنید.",
+  "gmr.pm_tab_brands": "۱. برندها",
+  "gmr.pm_tab_sizes": "۲. اندازه‌ها",
+  "gmr.pm_tab_varieties": "۳. انواع",
+  "gmr.pm_tab_extra": "۴. جزئیات بیشتر",
+  "gmr.pm_add_ph": "افزودن ورودی اصلی جدید…",
+  "gmr.pm_add_btn": "افزودن پارامتر",
+  "gmr.pm_col_value": "مقدار پارامتر",
+  "gmr.pm_no_records": "هیچ رکوردی در پایگاه داده یافت نشد.",
+  "gmr.pm_edit_title": "ویرایش / تغییر نام پارامتر",
+  "gmr.pm_delete_title": "حذف پارامتر",
+  "gmr.pm_close": "بستن مدیر",
+  "gmr.save": "ذخیره",
+  "gmr.confirm_delete_item": "این قلم کالا حذف شود؟",
+  "gmr.confirm_delete_param": "آیا مطمئن هستید که می‌خواهید این پارامتر اصلی را حذف کنید؟",
+  "gmr.fill_required": "لطفاً کد HS و نام کالا را وارد کنید.",
+  "gmr.err_save": "ذخیره نشد",
+  "gmr.err_add_param": "افزودن پارامتر ناموفق بود",
+  "gmr.err_update_param": "به‌روزرسانی پارامتر ناموفق بود",
+  "gmr.err_status": "به‌روزرسانی وضعیت ناموفق بود",
+  "gmr.err_delete_param": "حذف پارامتر ناموفق بود",
+  "gmr.err_delete_item": "حذف ناموفق بود",
+  "gmr.ph_goods_name": "مثال: مغز بادام / برنج باسماتی",
+  "gmr.ph_hs_code": "مثال: 0802.12.0000",
+  "gmr.ph_brand": "مثال: Digital LLC / BG / Blue Diamond",
+  "gmr.ph_size": "مثال: 18/20 / 20/22 / 23/25",
+  "gmr.ph_variety": "مثال: Nonpareil / Carmel / Independence / Butte / Marcona",
+  "gmr.ph_extra": "شرح کیفیت، ویژگی‌های پوسته/مغز، رنگ، شکل، رطوبت، درجه سطح، مشخصات بسته‌بندی و غیره را وارد کنید.",
+  "gmr.status_active": "فعال",
+  "gmr.status_inactive": "غیرفعال",
 };
 
 const ps: Dict = {
@@ -54801,6 +55041,54 @@ const ps: Dict = {
   "hrm.recon_chk_not_posted": "نه ثبت شوی",
   "dintake.batch_open": "د پیرود بارولو کې پرانیزئ",
   "dintake.hi_request_opened": "له دې سپارنې څخه د ترخیص پیرودونکي امر پرانیستل شو — دا د پیرودونکي امر / BL کاري بهیر کې دوام ورکړئ.",
+  "gmr.master_parameters_btn": "اصلي پیرامیټرې",
+  "gmr.structured_flow": "منظم بهیر: د مال نوم → HS کوډ → برنډ → کچه → ډول → اضافي جزئیات",
+  "gmr.f_goods_name": "1. د مال نوم",
+  "gmr.f_hs_code": "2. HS کوډ",
+  "gmr.f_brand": "3. د برنډ نوم",
+  "gmr.f_size": "4. کچه / درجه",
+  "gmr.f_variety": "5. ډول (د ډیټابیس اصلي ځانګړنه)",
+  "gmr.f_extra": "6. اضافي جزئیات / مشخصات",
+  "gmr.f_category": "کټګوري",
+  "gmr.f_origin": "د اصل هېواد",
+  "gmr.manage_brands": "+ د برنډونو مدیریت",
+  "gmr.manage_sizes": "+ د کچو مدیریت",
+  "gmr.manage_varieties": "+ د ډولونو مدیریت",
+  "gmr.manage_specs": "+ د مشخصاتو مدیریت",
+  "gmr.db_master_varieties": "د ډیټابیس اصلي ډولونه:",
+  "gmr.preset_specs": "مخکې ټاکل شوي مشخصات:",
+  "gmr.active_record": "فعال د مال ریکارډ",
+  "gmr.pm_title": "د مال د ماسټر پیرامیټرو مدیر (د ډیټابیس پر بنسټ)",
+  "gmr.pm_desc": "په ژوندي ډیټابیس کې برنډونه، کچې، ډولونه او اضافي جزئیات اضافه، نوم بدلون، سمون یا غیرفعال کړئ.",
+  "gmr.pm_tab_brands": "1. برنډونه",
+  "gmr.pm_tab_sizes": "2. کچې",
+  "gmr.pm_tab_varieties": "3. ډولونه",
+  "gmr.pm_tab_extra": "4. اضافي جزئیات",
+  "gmr.pm_add_ph": "نوې ماسټر ننوتنه اضافه کړئ…",
+  "gmr.pm_add_btn": "پیرامیټر اضافه کړئ",
+  "gmr.pm_col_value": "د پیرامیټر ارزښت",
+  "gmr.pm_no_records": "په ډیټابیس کې هیڅ ریکارډ ونه موندل شو.",
+  "gmr.pm_edit_title": "پیرامیټر سمول / نوم بدلول",
+  "gmr.pm_delete_title": "پیرامیټر ړنګول",
+  "gmr.pm_close": "مدیر بند کړئ",
+  "gmr.save": "خوندي کړئ",
+  "gmr.confirm_delete_item": "دا د مال توکی ړنګ کړئ؟",
+  "gmr.confirm_delete_param": "ایا تاسو ډاډه یاست چې دا اصلي پیرامیټر ړنګ کړئ؟",
+  "gmr.fill_required": "مهرباني وکړئ د HS کوډ او د مال نوم ډک کړئ.",
+  "gmr.err_save": "خوندي کول ناکام شول",
+  "gmr.err_add_param": "د پیرامیټر اضافه کول ناکام شول",
+  "gmr.err_update_param": "د پیرامیټر تازه کول ناکام شول",
+  "gmr.err_status": "د حالت تازه کول ناکام شول",
+  "gmr.err_delete_param": "د پیرامیټر ړنګول ناکام شول",
+  "gmr.err_delete_item": "ړنګول ناکام شول",
+  "gmr.ph_goods_name": "لکه: د بادامو مغز / باسمتي وریجې",
+  "gmr.ph_hs_code": "لکه: 0802.12.0000",
+  "gmr.ph_brand": "لکه: Digital LLC / BG / Blue Diamond",
+  "gmr.ph_size": "لکه: 18/20 / 20/22 / 23/25",
+  "gmr.ph_variety": "لکه: Nonpareil / Carmel / Independence / Butte / Marcona",
+  "gmr.ph_extra": "د کیفیت تشریح، د پوستکي/مغز ځانګړنې، رنګ، بڼه، لندبل، د سطحې درجه، د بسته‌بندۍ مشخصات، او نور دننه کړئ.",
+  "gmr.status_active": "فعال",
+  "gmr.status_inactive": "غیرفعال",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

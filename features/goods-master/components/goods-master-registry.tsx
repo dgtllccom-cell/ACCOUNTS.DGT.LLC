@@ -150,19 +150,19 @@ export function GoodsMasterRegistry() {
   }, [searchQuery, goods]);
 
   async function handleDelete(id: string) {
-    if (!window.confirm("Delete this goods item?")) return;
+    if (!window.confirm(t(lang, "gmr.confirm_delete_item", "Delete this goods item?"))) return;
     try {
       await apiDelete(`/api/erp/goods-master/${id}`);
       loadGoods();
     } catch (err: any) {
-      alert(`Failed to delete: ${err.message}`);
+      alert(`${t(lang, "gmr.err_delete_item", "Failed to delete")}: ${err.message}`);
     }
   }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     if (!formData.name || !formData.chsCode) {
-      alert("Please fill in CHS Code and Item Name.");
+      alert(t(lang, "gmr.fill_required", "Please fill in HS Code and Goods Name."));
       return;
     }
     setSaving(true);
@@ -183,7 +183,7 @@ export function GoodsMasterRegistry() {
       loadGoods();
       loadMasterParameters("Almond");
     } catch (err: any) {
-      alert(`Failed to save: ${err.message}`);
+      alert(`${t(lang, "gmr.err_save", "Failed to save")}: ${err.message}`);
     } finally {
       setSaving(false);
     }
@@ -204,7 +204,7 @@ export function GoodsMasterRegistry() {
       setNewParamValue("");
       await loadMasterParameters("Almond");
     } catch (err: any) {
-      alert(`Failed to add parameter: ${err.message}`);
+      alert(`${t(lang, "gmr.err_add_param", "Failed to add parameter")}: ${err.message}`);
     } finally {
       setSavingParam(false);
     }
@@ -222,7 +222,7 @@ export function GoodsMasterRegistry() {
       setEditingParamValue("");
       await loadMasterParameters("Almond");
     } catch (err: any) {
-      alert(`Failed to update parameter: ${err.message}`);
+      alert(`${t(lang, "gmr.err_update_param", "Failed to update parameter")}: ${err.message}`);
     } finally {
       setSavingParam(false);
     }
@@ -236,17 +236,17 @@ export function GoodsMasterRegistry() {
       });
       await loadMasterParameters("Almond");
     } catch (err: any) {
-      alert(`Failed to update status: ${err.message}`);
+      alert(`${t(lang, "gmr.err_status", "Failed to update status")}: ${err.message}`);
     }
   }
 
   async function handleDeleteParameter(id: string) {
-    if (!window.confirm("Are you sure you want to delete this master parameter?")) return;
+    if (!window.confirm(t(lang, "gmr.confirm_delete_param", "Are you sure you want to delete this master parameter?"))) return;
     try {
       await apiDelete(`/api/erp/goods/parameters?id=${id}`);
       await loadMasterParameters("Almond");
     } catch (err: any) {
-      alert(`Failed to delete parameter: ${err.message}`);
+      alert(`${t(lang, "gmr.err_delete_param", "Failed to delete parameter")}: ${err.message}`);
     }
   }
 
@@ -288,7 +288,7 @@ export function GoodsMasterRegistry() {
         </div>
         <div className="flex gap-2">
           <Button onClick={() => setIsParamModalOpen(true)} size="sm" variant="outline" className="border-amber-300 text-amber-700 dark:text-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-950/40">
-            <Settings2 className="w-4 h-4 mr-1" /> Master Parameters
+            <Settings2 className="w-4 h-4 mr-1" /> {t(lang, "gmr.master_parameters_btn", "Master Parameters")}
           </Button>
           <Button onClick={() => setShowReport(true)} size="sm" variant="outline" className="border-slate-300 dark:border-slate-700">
             <Printer className="w-4 h-4 mr-1" /> {t(lang, "gmr.print_preview", "Print / PDF Report")}
@@ -397,10 +397,10 @@ export function GoodsMasterRegistry() {
             <div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <Settings2 className="w-5 h-5 text-amber-600" />
-                Goods Master Parameters Manager (Database-Driven)
+                {t(lang, "gmr.pm_title", "Goods Master Parameters Manager (Database-Driven)")}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Add, Rename, Edit, or Deactivate Brands, Sizes, Varieties, and Extra Details in the live database.
+                {t(lang, "gmr.pm_desc", "Add, Rename, Edit, or Deactivate Brands, Sizes, Varieties, and Extra Details in the live database.")}
               </p>
             </div>
             <button onClick={() => setIsParamModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg">
@@ -423,7 +423,7 @@ export function GoodsMasterRegistry() {
                       : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
                   )}
                 >
-                  {tab === "brand" ? "1. Brands" : tab === "size" ? "2. Sizes" : tab === "variety" ? "3. Varieties" : "4. Extra Details"}
+                  {tab === "brand" ? t(lang, "gmr.pm_tab_brands", "1. Brands") : tab === "size" ? t(lang, "gmr.pm_tab_sizes", "2. Sizes") : tab === "variety" ? t(lang, "gmr.pm_tab_varieties", "3. Varieties") : t(lang, "gmr.pm_tab_extra", "4. Extra Details")}
                 </button>
               ))}
             </div>
@@ -431,14 +431,14 @@ export function GoodsMasterRegistry() {
             {/* Add new parameter form */}
             <form onSubmit={handleAddParameter} className="flex gap-2 items-center bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
               <Input
-                placeholder={`Add new ${paramTab.replace("_", " ")} master entry...`}
+                placeholder={t(lang, "gmr.pm_add_ph", "Add new master entry…")}
                 value={newParamValue}
                 onChange={(e) => setNewParamValue(e.target.value)}
                 className="bg-white dark:bg-slate-900"
               />
               <Button type="submit" disabled={savingParam || !newParamValue.trim()} className="bg-amber-600 hover:bg-amber-700 text-white shrink-0 font-semibold">
                 {savingParam ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Plus className="w-4 h-4 mr-1" />}
-                Add Parameter
+                {t(lang, "gmr.pm_add_btn", "Add Parameter")}
               </Button>
             </form>
 
@@ -447,16 +447,16 @@ export function GoodsMasterRegistry() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300">
-                    <th className="p-3 text-left">#</th>
-                    <th className="p-3 text-left">Parameter Value</th>
-                    <th className="p-3 text-center">Status</th>
-                    <th className="p-3 text-center">Actions</th>
+                    <Th className="p-3 text-left">#</Th>
+                    <Th className="p-3 text-left">{t(lang, "gmr.pm_col_value", "Parameter Value")}</Th>
+                    <Th className="p-3 text-center">Status</Th>
+                    <Th className="p-3 text-center">Actions</Th>
                   </tr>
                 </thead>
                 <tbody>
                   {allDbParams.filter(p => p.param_type === paramTab).length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="p-6 text-center text-slate-400">No {paramTab} records found in database.</td>
+                      <td colSpan={4} className="p-6 text-center text-slate-400">{t(lang, "gmr.pm_no_records", "No records found in database.")}</td>
                     </tr>
                   ) : (
                     allDbParams.filter(p => p.param_type === paramTab).map((p, idx) => (
@@ -470,8 +470,8 @@ export function GoodsMasterRegistry() {
                                 onChange={(e) => setEditingParamValue(e.target.value)}
                                 className="h-8 text-xs"
                               />
-                              <Button size="sm" onClick={() => handleUpdateParameter(p.id)} className="h-8 bg-emerald-600 text-white">Save</Button>
-                              <Button size="sm" variant="ghost" onClick={() => setEditingParamId(null)} className="h-8">Cancel</Button>
+                              <Button size="sm" onClick={() => handleUpdateParameter(p.id)} className="h-8 bg-emerald-600 text-white">{t(lang, "gmr.save", "Save")}</Button>
+                              <Button size="sm" variant="ghost" onClick={() => setEditingParamId(null)} className="h-8">{t(lang, "common.cancel", "Cancel")}</Button>
                             </div>
                           ) : (
                             p.param_value
@@ -483,7 +483,7 @@ export function GoodsMasterRegistry() {
                             onClick={() => handleToggleParamStatus(p.id, p.is_active)}
                             className={cn("px-2 py-0.5 text-xs rounded-full font-semibold", p.is_active ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" : "bg-slate-200 text-slate-600")}
                           >
-                            {p.is_active ? "Active" : "Inactive"}
+                            {p.is_active ? t(lang, "gmr.status_active", "Active") : t(lang, "gmr.status_inactive", "Inactive")}
                           </button>
                         </td>
                         <td className="p-3 text-center flex justify-center gap-1">
@@ -491,7 +491,7 @@ export function GoodsMasterRegistry() {
                             type="button"
                             onClick={() => { setEditingParamId(p.id); setEditingParamValue(p.param_value); }}
                             className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-300"
-                            title="Edit / Rename Parameter"
+                            title={t(lang, "gmr.pm_edit_title", "Edit / Rename Parameter")}
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
@@ -499,7 +499,7 @@ export function GoodsMasterRegistry() {
                             type="button"
                             onClick={() => handleDeleteParameter(p.id)}
                             className="p-1 hover:bg-rose-100 text-rose-600 rounded"
-                            title="Delete Parameter"
+                            title={t(lang, "gmr.pm_delete_title", "Delete Parameter")}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -513,7 +513,7 @@ export function GoodsMasterRegistry() {
           </div>
 
           <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 flex justify-end">
-            <Button onClick={() => setIsParamModalOpen(false)} variant="outline">Close Manager</Button>
+            <Button onClick={() => setIsParamModalOpen(false)} variant="outline">{t(lang, "gmr.pm_close", "Close Manager")}</Button>
           </div>
         </div>
       </div>
@@ -530,7 +530,7 @@ export function GoodsMasterRegistry() {
                 {t(lang, "gmr.add_new_item", "ADD NEW GOODS MASTER ENTRY")}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Structured flow: Goods Name → HS Code → Brand → Size → Variety → Extra Details
+                {t(lang, "gmr.structured_flow", "Structured flow: Goods Name → HS Code → Brand → Size → Variety → Extra Details")}
               </p>
             </div>
             <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg">
@@ -543,10 +543,10 @@ export function GoodsMasterRegistry() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1 flex items-center gap-1">
-                  <Package className="w-3.5 h-3.5 text-blue-600" /> 1. GOODS NAME *
+                  <Package className="w-3.5 h-3.5 text-blue-600" /> {t(lang, "gmr.f_goods_name", "1. Goods Name")} *
                 </label>
                 <Input
-                  placeholder="e.g. Almond Kernel / Basmati Rice"
+                  placeholder={t(lang, "gmr.ph_goods_name", "e.g. Almond Kernel / Basmati Rice")}
                   value={formData.name}
                   onChange={(e) => handleGoodsNameChange(e.target.value)}
                   required
@@ -555,10 +555,10 @@ export function GoodsMasterRegistry() {
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1 flex items-center gap-1">
-                  <Tag className="w-3.5 h-3.5 text-blue-600" /> 2. HS CODE *
+                  <Tag className="w-3.5 h-3.5 text-blue-600" /> {t(lang, "gmr.f_hs_code", "2. HS Code")} *
                 </label>
                 <Input
-                  placeholder="e.g. 0802.12.0000"
+                  placeholder={t(lang, "gmr.ph_hs_code", "e.g. 0802.12.0000")}
                   value={formData.chsCode}
                   onChange={(e) => setFormData({ ...formData, chsCode: e.target.value.toUpperCase() })}
                   required
@@ -572,14 +572,14 @@ export function GoodsMasterRegistry() {
               <div>
                 <div className="flex justify-between items-center mb-1">
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1">
-                    <Layers className="w-3.5 h-3.5 text-blue-600" /> 3. BRAND NAME
+                    <Layers className="w-3.5 h-3.5 text-blue-600" /> {t(lang, "gmr.f_brand", "3. Brand Name")}
                   </label>
                   <button type="button" onClick={() => { setIsParamModalOpen(true); setParamTab("brand"); }} className="text-[11px] text-amber-600 hover:underline">
-                    + Manage Brands
+                    {t(lang, "gmr.manage_brands", "+ Manage Brands")}
                   </button>
                 </div>
                 <Input
-                  placeholder="e.g. Digital LLC / BG / Blue Diamond"
+                  placeholder={t(lang, "gmr.ph_brand", "e.g. Digital LLC / BG / Blue Diamond")}
                   value={formData.brand}
                   onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
                 />
@@ -604,14 +604,14 @@ export function GoodsMasterRegistry() {
               <div>
                 <div className="flex justify-between items-center mb-1">
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1">
-                    <Sparkles className="w-3.5 h-3.5 text-blue-600" /> 4. SIZE / GRADE
+                    <Sparkles className="w-3.5 h-3.5 text-blue-600" /> {t(lang, "gmr.f_size", "4. Size / Grade")}
                   </label>
                   <button type="button" onClick={() => { setIsParamModalOpen(true); setParamTab("size"); }} className="text-[11px] text-amber-600 hover:underline">
-                    + Manage Sizes
+                    {t(lang, "gmr.manage_sizes", "+ Manage Sizes")}
                   </button>
                 </div>
                 <Input
-                  placeholder="e.g. 18/20 / 20/22 / 23/25"
+                  placeholder={t(lang, "gmr.ph_size", "e.g. 18/20 / 20/22 / 23/25")}
                   value={formData.sizes}
                   onChange={(e) => setFormData({ ...formData, sizes: e.target.value })}
                 />
@@ -639,20 +639,20 @@ export function GoodsMasterRegistry() {
             <div>
               <div className="flex justify-between items-center mb-1">
                 <label className="block text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1">
-                  <Tag className="w-3.5 h-3.5 text-amber-600" /> 5. VARIETY (DATABASE MASTER ATTRIBUTE)
+                  <Tag className="w-3.5 h-3.5 text-amber-600" /> {t(lang, "gmr.f_variety", "5. Variety (Database Master Attribute)")}
                 </label>
                 <button type="button" onClick={() => { setIsParamModalOpen(true); setParamTab("variety"); }} className="text-[11px] text-amber-600 hover:underline font-semibold">
-                  + Manage Varieties
+                  {t(lang, "gmr.manage_varieties", "+ Manage Varieties")}
                 </button>
               </div>
               <Input
-                placeholder="e.g. Nonpareil / Carmel / Independence / Butte / Marcona"
+                placeholder={t(lang, "gmr.ph_variety", "e.g. Nonpareil / Carmel / Independence / Butte / Marcona")}
                 value={formData.variety}
                 onChange={(e) => setFormData({ ...formData, variety: e.target.value })}
                 className="border-amber-200 dark:border-amber-900/60 focus:ring-amber-500"
               />
               <div className="mt-2 flex flex-wrap gap-1.5">
-                <span className="text-[11px] font-semibold text-slate-400 py-0.5">Database Master Varieties:</span>
+                <span className="text-[11px] font-semibold text-slate-400 py-0.5">{t(lang, "gmr.db_master_varieties", "Database Master Varieties:")}</span>
                 {dbParameters.varieties.map((v) => (
                   <button
                     key={v}
@@ -675,22 +675,22 @@ export function GoodsMasterRegistry() {
             <div>
               <div className="flex justify-between items-center mb-1">
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1">
-                  <FileText className="w-3.5 h-3.5 text-blue-600" /> 6. EXTRA DETAILS / SPECIFICATION
+                  <FileText className="w-3.5 h-3.5 text-blue-600" /> {t(lang, "gmr.f_extra", "6. Extra Details / Specification")}
                 </label>
                 <button type="button" onClick={() => { setIsParamModalOpen(true); setParamTab("extra_details"); }} className="text-[11px] text-amber-600 hover:underline font-semibold">
-                  + Manage Specs
+                  {t(lang, "gmr.manage_specs", "+ Manage Specs")}
                 </button>
               </div>
               <textarea
                 rows={3}
-                placeholder="Enter quality description, shell/nut characteristics, color, shape, moisture, surface grade, packing specification, etc."
+                placeholder={t(lang, "gmr.ph_extra", "Enter quality description, shell/nut characteristics, color, shape, moisture, surface grade, packing specification, etc.")}
                 value={formData.extraDetails}
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, extraDetails: e.target.value })}
                 className="w-full px-3 py-2 border rounded-md bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
               {dbParameters.extraDetails.length > 0 && (
                 <div className="mt-1.5 flex flex-wrap gap-1">
-                  <span className="text-[11px] font-semibold text-slate-400 py-0.5">Preset Specs:</span>
+                  <span className="text-[11px] font-semibold text-slate-400 py-0.5">{t(lang, "gmr.preset_specs", "Preset Specs:")}</span>
                   {dbParameters.extraDetails.slice(0, 4).map((ex) => (
                     <button
                       key={ex}
@@ -709,22 +709,22 @@ export function GoodsMasterRegistry() {
             {/* Row 5: Category & Origin */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">CATEGORY</label>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">{t(lang, "gmr.f_category", "Category")}</label>
                 <select
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   className="w-full px-3 py-2 border rounded-md bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-sm"
                 >
-                  <option value="Agriculture & Food">Agriculture & Food</option>
-                  <option value="General Merchandise">General Merchandise</option>
-                  <option value="Textiles & Garments">Textiles & Garments</option>
-                  <option value="Metals & Minerals">Metals & Minerals</option>
-                  <option value="Chemicals & Fertilizers">Chemicals & Fertilizers</option>
-                  <option value="Electronics & Machinery">Electronics & Machinery</option>
+                  <option value="Agriculture & Food">{t(lang, "gmr.cat_agriculture", "Agriculture & Food")}</option>
+                  <option value="General Merchandise">{t(lang, "gmr.cat_general", "General Merchandise")}</option>
+                  <option value="Textiles & Garments">{t(lang, "gmr.cat_textiles", "Textiles & Garments")}</option>
+                  <option value="Metals & Minerals">{t(lang, "gmr.cat_metals", "Metals & Minerals")}</option>
+                  <option value="Chemicals & Fertilizers">{t(lang, "gmr.cat_chemicals", "Chemicals & Fertilizers")}</option>
+                  <option value="Electronics & Machinery">{t(lang, "gmr.cat_electronics", "Electronics & Machinery")}</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">ORIGIN COUNTRY</label>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">{t(lang, "gmr.f_origin", "Origin Country")}</label>
                 <SearchSelect
                   label=""
                   value={formData.originCountry}
@@ -743,7 +743,7 @@ export function GoodsMasterRegistry() {
                 onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                 className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
               />
-              <label htmlFor="goods_is_active" className="text-sm font-medium text-slate-700 dark:text-slate-300">Active Goods Record</label>
+              <label htmlFor="goods_is_active" className="text-sm font-medium text-slate-700 dark:text-slate-300">{t(lang, "gmr.active_record", "Active Goods Record")}</label>
             </div>
 
             <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
@@ -766,15 +766,15 @@ export function GoodsMasterRegistry() {
       title={t(lang, "gmr.register_title", "Goods Master & Product Catalog Report")}
       data={goods}
       columns={[
-        { key: "chs_code", label: "HS Code" },
-        { key: "name", label: "Goods Name" },
-        { key: "category", label: "Category" },
-        { key: "brand", label: "Brand" },
-        { key: "sizes", label: "Size" },
-        { key: "variety", label: "Variety" },
-        { key: "extra_details", label: "Extra Details / Specification" },
-        { key: "origin_country", label: "Origin" },
-        { key: "is_active", label: "Status", format: (v) => (v ? "Active" : "Inactive") }
+        { key: "chs_code", label: translateHeader(lang, "HS Code") },
+        { key: "name", label: translateHeader(lang, "Goods Name") },
+        { key: "category", label: translateHeader(lang, "Category") },
+        { key: "brand", label: translateHeader(lang, "Brand") },
+        { key: "sizes", label: translateHeader(lang, "Size") },
+        { key: "variety", label: translateHeader(lang, "Variety") },
+        { key: "extra_details", label: translateHeader(lang, "Extra Details / Specification") },
+        { key: "origin_country", label: translateHeader(lang, "Origin") },
+        { key: "is_active", label: translateHeader(lang, "Status"), format: (v) => (v ? t(lang, "gmr.status_active", "Active") : t(lang, "gmr.status_inactive", "Inactive")) }
       ]}
     />
     </>
