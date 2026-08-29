@@ -37,6 +37,9 @@ import { localizeTerm } from "@/lib/i18n/transliteration";
 import { getLabel } from "./translations";
 import { AccountLiveReportPanel } from "./account-live-report-panel";
 import { openAccountA4ReportWindow } from "@/lib/reports/open-account-a4-report-window";
+import { useErpScope } from "@/lib/hooks/use-erp-scope";
+import { LoginScopeBanner } from "@/components/layout/login-scope-banner";
+import { fetchBranding } from "@/lib/branding/client";
 
 type BranchType = "Main" | "City";
 
@@ -178,6 +181,21 @@ function selectClass() {
   return "flex h-10 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+// E.164-ish: optional +, 7–15 digits, allow spaces/dashes/parens for readability
+const PHONE_RE = /^\+?[0-9][0-9\s()\-]{6,20}[0-9]$/;
+
+/** Validate a single contact entry. Returns an error key or null. */
+function contactErrorKey(type: string, value: string): string | null {
+  const v = (value || "").trim();
+  if (!v) return null; // empty rows are ignored, not errors
+  if (type === "Email") return EMAIL_RE.test(v) ? null : "invalidEmail";
+  if (type === "Mobile" || type === "WhatsApp" || type === "Landline" || type === "Office") {
+    return PHONE_RE.test(v) ? null : "invalidPhone";
+  }
+  return null;
+}
+
 function selectedBranchName(rows: CountryBranchRow[], id: string) {
   const row = rows.find((item) => item.id === id);
   return row ? `${row.name} (${row.code})` : "-";
@@ -250,7 +268,18 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
   const [contacts, setContacts] = useState<Array<{ type: string; value: string }>>([{ type: "Mobile", value: "" }]);
   const [journalCounter, setJournalCounter] = useState(0);
   const [lastBranchCode, setLastBranchCode] = useState("");
-  const [simulateCityAdmin, setSimulateCityAdmin] = useState(false);
+
+  // Authenticated, server-resolved scope — the single source of truth for which
+  // country / branch this user may create accounts in. The create API enforces
+  // the same scope server-side (authorizeApiScope); this only pre-selects and
+  // locks the UI so the two can never disagree.
+  const erpScope = useErpScope();
+  const [scopePrefilled, setScopePrefilled] = useState(false);
+  const [brandCompanyName, setBrandCompanyName] = useState<string | null>(null);
+
+  // Lock levels the user's scope fixes (edit mode keeps the loaded record's values).
+  const countryLocked = !initialAccountId && !erpScope.isSuperAdmin && Boolean(erpScope.lockedCountryId);
+  const branchLocked = !initialAccountId && !erpScope.isSuperAdmin && erpScope.mode === "city_branch" && Boolean(erpScope.lockedCityBranchId);
   const [savedEntries, setSavedEntries] = useState<SavedEntry[]>([]);
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
@@ -389,7 +418,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
         }
       } catch (err) {
         console.error("Failed to load account details:", err);
-        setMessage("Failed to load account details.");
+        setMessage(getLabel("failedLoadAccount", lang));
       } finally {
         if (!cancelled) setLoadingAccount(false);
       }
@@ -522,9 +551,36 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
     let cancelled = false;
     listCountries()
       .then((rows) => { if (!cancelled) setCountries(rows); })
-      .catch(() => { if (!cancelled) setMessage("Could not load countries."); });
+      .catch(() => { if (!cancelled) setMessage(getLabel("couldNotLoadCountries", lang)); });
     return () => { cancelled = true; };
   }, []);
+
+  // Pre-select + lock country / branch from the authenticated scope (create mode only).
+  useEffect(() => {
+    if (initialAccountId || erpScope.loading || scopePrefilled) return;
+    if (!erpScope.isSuperAdmin) {
+      if (erpScope.lockedCountryId) setCountry(erpScope.lockedCountryId);
+      if (erpScope.mode === "city_branch" && erpScope.lockedCityBranchId) {
+        setBranchType("City");
+        setBranch(erpScope.lockedCityBranchId);
+      } else if (erpScope.mode === "main_branch" && erpScope.lockedCountryBranchId) {
+        setBranchType("Main");
+        setBranch(erpScope.lockedCountryBranchId);
+      }
+    }
+    setScopePrefilled(true);
+  }, [initialAccountId, erpScope.loading, erpScope.isSuperAdmin, erpScope.mode, erpScope.lockedCountryId, erpScope.lockedCountryBranchId, erpScope.lockedCityBranchId, scopePrefilled]);
+
+  // Resolve the operating company for the selected country from the branding
+  // master (country_company_profiles) — never a hard-coded "Damaan …".
+  useEffect(() => {
+    if (!country) { setBrandCompanyName(null); return; }
+    let cancelled = false;
+    fetchBranding(country)
+      .then((b) => { if (!cancelled) setBrandCompanyName(b?.companyName || b?.legalName || null); })
+      .catch(() => { if (!cancelled) setBrandCompanyName(null); });
+    return () => { cancelled = true; };
+  }, [country]);
 
   // Load Main Branches
   useEffect(() => {
@@ -541,7 +597,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
           }
         }
       })
-      .catch(() => { if (!cancelled) setMessage("Could not load main branches."); });
+      .catch(() => { if (!cancelled) setMessage(getLabel("couldNotLoadMainBranches", lang)); });
     return () => { cancelled = true; };
   }, [country, branchType, branch]);
 
@@ -561,45 +617,49 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
           }
         }
       })
-      .catch(() => { if (!cancelled) setMessage("Could not load city branches."); });
+      .catch(() => { if (!cancelled) setMessage(getLabel("couldNotLoadCityBranches", lang)); });
     return () => { cancelled = true; };
   }, [country, branchType, branch]);
 
   const selectedCountry = useMemo(() => countries.find((item) => item.id === country) ?? null, [countries, country]);
   const canonicalCountryId = selectedCountry?.id ?? "";
-  const branchOptions = branchType === "Main" ? mainBranches : branchType === "City" ? cityBranches : [];
+  const branchOptionsRaw = branchType === "Main" ? mainBranches : branchType === "City" ? cityBranches : [];
+  // Filter branch options to the user's authorized branches (super admin = all).
+  const branchOptions = useMemo(() => {
+    if (erpScope.isSuperAdmin || initialAccountId) return branchOptionsRaw;
+    if (branchType === "City" && erpScope.cityBranchIds.length > 0) {
+      return branchOptionsRaw.filter((b) => erpScope.cityBranchIds.includes(b.id));
+    }
+    if (branchType === "Main" && erpScope.countryBranchIds.length > 0) {
+      return branchOptionsRaw.filter((b) => erpScope.countryBranchIds.includes(b.id));
+    }
+    return branchOptionsRaw;
+  }, [branchOptionsRaw, branchType, erpScope.isSuperAdmin, erpScope.cityBranchIds, erpScope.countryBranchIds, initialAccountId]);
 
   const branchInfo = useMemo<BranchInfo | null>(() => {
     if (!selectedCountry || !branchType || !branch) return null;
+    const company = brandCompanyName || selectedCountry.name;
+    const fallbackCurrency = selectedCountry.currency_code || "USD";
+
     if (branchType === "Main") {
       const row = mainBranches.find((item) => item.id === branch);
+      // The branch list may still be loading or scope-filtered — when the id is
+      // the user's own locked main branch, resolve from the session so the
+      // Review screen is never blank.
+      if (!row && branchLocked === false && erpScope.lockedCountryBranchId === branch) {
+        return { company, code: "", city: erpScope.countryBranchName || selectedCountry.name, address: "-", phone: "-", email: "-", manager: "-", opening: "-", currency: fallbackCurrency };
+      }
       if (!row) return null;
-      return {
-        company: `Damaan ${selectedCountry.name}`,
-        code: row.code,
-        city: selectedCountry.name,
-        address: "-",
-        phone: "-",
-        email: "-",
-        manager: "-",
-        opening: "-",
-        currency: row.local_currency || selectedCountry.currency_code || "USD"
-      };
+      return { company, code: row.code, city: selectedCountry.name, address: "-", phone: "-", email: "-", manager: "-", opening: "-", currency: row.local_currency || fallbackCurrency };
     }
+
     const row = cityBranches.find((item) => item.id === branch);
+    if (!row && erpScope.lockedCityBranchId === branch) {
+      return { company, code: "", city: erpScope.cityBranchName || selectedCountry.name, address: "-", phone: "-", email: "-", manager: "-", opening: "-", currency: fallbackCurrency };
+    }
     if (!row) return null;
-    return {
-      company: `Damaan ${selectedCountry.name}`,
-      code: row.code,
-      city: row.city_name,
-      address: "-",
-      phone: "-",
-      email: "-",
-      manager: "-",
-      opening: "-",
-      currency: row.local_currency || selectedCountry.currency_code || "USD"
-    };
-  }, [branch, branchType, cityBranches, mainBranches, selectedCountry]);
+    return { company, code: row.code, city: row.city_name, address: "-", phone: "-", email: "-", manager: "-", opening: "-", currency: row.local_currency || fallbackCurrency };
+  }, [branch, branchType, cityBranches, mainBranches, selectedCountry, brandCompanyName, branchLocked, erpScope.lockedCountryBranchId, erpScope.lockedCityBranchId, erpScope.countryBranchName, erpScope.cityBranchName]);
 
   const branchCode = branchInfo?.code ?? "";
   const isEditMode = Boolean(initialAccountId);
@@ -635,8 +695,32 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
 
   // Create and save account on Step 6
   async function saveEntry() {
-    if (!readyToSave || !branchInfo || !accountTitle || !branchType) {
-      setMessage("Account details are incomplete. Please review steps.");
+    if (saving) return; // guard against double-submit
+    // Name the missing field instead of a generic "incomplete" — the mandate
+    // explicitly forbids hiding the real problem behind "please review steps".
+    const missing: string[] = [];
+    if (!country) missing.push(getLabel("country", lang));
+    if (!branchType) missing.push(getLabel("branchType", lang));
+    if (!branch) missing.push(getLabel("selectBranch", lang));
+    if (!accountTitle) missing.push(getLabel("accountTitle", lang));
+    const typeHasSubtypes = accountTitle && accountTitle !== "Personal" && (subTypes[accountTitle]?.length ?? 0) > 0;
+    if ((typeHasSubtypes || accountTitle === "Personal") && !subType) missing.push(getLabel("subType", lang));
+    if (!category) missing.push(getLabel("category", lang));
+    if (!accountName.trim()) missing.push(getLabel("accountName", lang));
+    if (missing.length > 0) {
+      setMessage(`${getLabel("missingFieldsPrefix", lang)}: ${missing.join(", ")}`);
+      return;
+    }
+    if (!branchInfo) {
+      setMessage(getLabel("branchDataNotResolved", lang));
+      return;
+    }
+    // Validate contacts (Mobile / WhatsApp / Email) before saving.
+    const badContact = contacts
+      .map((c) => ({ c, err: contactErrorKey(c.type, c.value) }))
+      .find((x) => x.err);
+    if (badContact) {
+      setMessage(`${getLabel(badContact.err!, lang)} (${badContact.c.type})`);
       return;
     }
     const issuedJournal = `SUPER-${nextNumber(journalCounter)}`;
@@ -672,7 +756,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
             if (accountCode) localStorage.setItem(`account_warehouse_${accountCode}`, whData);
           } catch (e) {}
         }
-        setMessage(`Updated account details successfully.`);
+        setMessage(getLabel("updatedAccountSuccess", lang));
         void fetchReport();
         setTimeout(() => {
           router.push(`/dashboard/accounts?accountId=${initialAccountId}`);
@@ -725,7 +809,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
             localStorage.setItem(`account_warehouse_${response.accountNumber}`, whData);
           } catch (e) {}
         }
-        setMessage(`Saved account ${response.accountNumber}.`);
+        setMessage(`${getLabel("savedAccountPrefix", lang)} ${response.accountNumber}`);
         void fetchReport();
         setTimeout(() => {
           router.push(`/dashboard/accounts?accountId=${response.accountId}&created=1`);
@@ -793,6 +877,9 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
           actionsPortal
         )}
       </div>
+
+      {/* ── Mandatory Logged-in Scope banner (server-resolved, not frontend-selected) ── */}
+      {!initialAccountId && <LoginScopeBanner scope={erpScope} />}
 
       {/* ── Steps Indicator Bar ────────────────────────────────────────────── */}
       <div className={`grid grid-cols-2 gap-2 text-xs font-semibold text-slate-500 md:grid-cols-${activeSteps.length}`}>
@@ -862,16 +949,27 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
               <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="country">{getLabel("country", lang)} *</Label>
-                  <select id="country" value={country} onChange={(event) => handleCountryChange(event.target.value)} className={selectClass()}>
+                  <select
+                    id="country"
+                    value={country}
+                    onChange={(event) => handleCountryChange(event.target.value)}
+                    disabled={countryLocked}
+                    className={selectClass()}
+                  >
                     <option value="">{getLabel("selectCountry", lang)}</option>
-                    {countries.map((item) => (
-                      <option key={item.id} value={item.id}>{localizeTerm(item.name, lang)} ({item.iso2 ?? "-"})</option>
-                    ))}
+                    {countries
+                      .filter((item) => erpScope.isSuperAdmin || erpScope.countryIds.length === 0 || erpScope.countryIds.includes(item.id))
+                      .map((item) => (
+                        <option key={item.id} value={item.id}>{localizeTerm(item.name, lang)} ({item.iso2 ?? "-"})</option>
+                      ))}
                   </select>
+                  {countryLocked && (
+                    <p className="text-[10px] font-semibold text-slate-500">{getLabel("scopeLockedCountry", lang)}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="branchType">{getLabel("branchType", lang)} *</Label>
-                  <select id="branchType" value={branchType} onChange={(event) => handleBranchTypeChange(event.target.value as BranchType)} disabled={!country} className={selectClass()}>
+                  <select id="branchType" value={branchType} onChange={(event) => handleBranchTypeChange(event.target.value as BranchType)} disabled={!country || branchLocked} className={selectClass()}>
                     <option value="">{getLabel("selectBranchType", lang)}</option>
                     <option value="Main">{getLabel("mainBranch", lang)}</option>
                     <option value="City">{getLabel("cityBranch", lang)}</option>
@@ -882,7 +980,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
               <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="branch">{getLabel("selectBranch", lang)} *</Label>
-                  <select id="branch" value={branch} onChange={(event) => { setBranch(event.target.value); setMessage(""); }} disabled={!country || !branchType} className={selectClass()}>
+                  <select id="branch" value={branch} onChange={(event) => { setBranch(event.target.value); setMessage(""); }} disabled={!country || !branchType || branchLocked} className={selectClass()}>
                     <option value="">{getLabel("selectBranch", lang)}</option>
                     {branchOptions.map((item) => {
                       const mainName = (item as CountryBranchRow).name;
@@ -1079,11 +1177,14 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                               contact.type === "Email"
                                 ? "email@example.com"
                                 : contact.type === "WhatsApp"
-                                ? "+92 300 1234567"
+                                ? "+00 000 0000000"
                                 : getLabel("contactNumber", lang)
                             }
-                            className="h-9 text-xs font-mono"
+                            className={`h-9 text-xs font-mono ${contactErrorKey(contact.type, contact.value) ? "border-rose-400 focus-visible:ring-rose-400" : ""}`}
                           />
+                          {contactErrorKey(contact.type, contact.value) && (
+                            <p className="text-[10px] font-semibold text-rose-500">{getLabel(contactErrorKey(contact.type, contact.value)!, lang)}</p>
+                          )}
                         </div>
                         {contacts.length > 1 && (
                           <Button
@@ -1109,29 +1210,27 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                 <Button
                   type="button"
                   onClick={() => {
-                    const activeCountry = canonicalCountryId || countries[0]?.id || "";
-                    const activeBranchType = branchType || "Main";
-                    const activeBranch = branch || (branchOptions.length > 0 ? branchOptions[0].id : "b-main-001");
-                    const activeTitle = accountTitle || "Company";
-                    const activeSubType = subType || "Trading Company";
-                    const activeCategory = category || "Sundry Debtors";
-
-                    if (!country && activeCountry) setCountry(activeCountry);
-                    if (!branchType) setBranchType(activeBranchType);
-                    if (!branch) setBranch(activeBranch);
-                    if (!accountTitle) setAccountTitle(activeTitle);
-                    if (!subType) setSubType(activeSubType);
-                    if (!category) setCategory(activeCategory);
-
-                    if (!activeCountry) {
-                      setMessage(getLabel("completeRequiredFields", lang));
-                    } else if (accountName || manualReferenceNumber) {
-                      if (!accountName && manualReferenceNumber) setAccountName(`Account ${manualReferenceNumber}`);
-                      setMessage("");
-                      setCurrentStep(nextStep);
-                    } else {
-                      setMessage(getLabel("completeRequiredFields", lang));
+                    // Step 1 requires real selections — no silent auto-fill of
+                    // Company / Trading Company / Sundry Debtors defaults.
+                    const step1Missing: string[] = [];
+                    if (!country) step1Missing.push(getLabel("country", lang));
+                    if (!branchType) step1Missing.push(getLabel("branchType", lang));
+                    if (!branch) step1Missing.push(getLabel("selectBranch", lang));
+                    if (!accountTitle) step1Missing.push(getLabel("accountTitle", lang));
+                    const needsSub = accountTitle && (accountTitle === "Personal" || (subTypes[accountTitle]?.length ?? 0) > 0);
+                    if (needsSub && !subType) step1Missing.push(getLabel("subType", lang));
+                    if (!category) step1Missing.push(getLabel("category", lang));
+                    // Name is only required here for types that don't link a master
+                    // record later (Personal / Expenses); the others inherit it from
+                    // the linked customer/company/bank on the next step.
+                    const linksMaster = ["Customer", "Company", "Bank", "Employee"].includes(accountTitle as string);
+                    if (!linksMaster && !accountName.trim()) step1Missing.push(getLabel("accountName", lang));
+                    if (step1Missing.length > 0) {
+                      setMessage(`${getLabel("missingFieldsPrefix", lang)}: ${step1Missing.join(", ")}`);
+                      return;
                     }
+                    setMessage("");
+                    setCurrentStep(nextStep);
                   }}
                   className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-10 px-6 shadow-sm rounded-xl flex items-center gap-2 border border-blue-700/20 cursor-pointer disabled:opacity-50"
                 >
@@ -1522,16 +1621,13 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
             }}
           />
           {currentStep === 6 && (
-            <div className="bg-white rounded-xl border border-slate-200 shadow p-5 mt-4 flex items-center justify-between sticky bottom-4 z-10">
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center space-x-2">
-                  <input type="checkbox" id="simCity" checked={simulateCityAdmin} onChange={e => setSimulateCityAdmin(e.target.checked)} className="rounded border-slate-300 accent-primary" />
-                  <label htmlFor="simCity" className="text-xs font-bold text-slate-600 cursor-pointer">{getLabel("simulateCityAdmin", lang)}</label>
-                </div>
-                {simulateCityAdmin && <p className="text-[10px] text-amber-600 font-semibold max-w-xs">{getLabel("pendingApprovalHint", lang)}</p>}
+            <div className="bg-white rounded-xl border border-slate-200 shadow p-5 mt-4 flex items-center justify-between sticky bottom-4 z-10 dark:bg-slate-900 dark:border-slate-800">
+              <div className="flex flex-col gap-1 text-[11px] font-semibold text-slate-500">
+                <span>{getLabel("country", lang)}: <b className="text-slate-800 dark:text-slate-200">{selectedCountry?.name || "-"}</b></span>
+                <span>{getLabel("branchName", lang)}: <b className="text-slate-800 dark:text-slate-200">{branchInfo?.city || (branchType === "Main" ? selectedBranchName(mainBranches, branch) : selectedCityBranchName(cityBranches, branch))}</b></span>
               </div>
               <Button type="button" size="default" onClick={saveEntry} disabled={!readyToSave || saving} className="bg-primary hover:bg-primary/90 text-white text-sm px-10 h-12 font-bold tracking-wider rounded-lg shadow-sm">
-                {saving ? getLabel("saving", lang) : simulateCityAdmin ? getLabel("submitForApproval", lang) : initialAccountId ? getLabel("updateAccount", lang) : getLabel("createSaveAccount", lang)}
+                {saving ? getLabel("saving", lang) : initialAccountId ? getLabel("updateAccount", lang) : getLabel("createSaveAccount", lang)}
               </Button>
             </div>
           )}

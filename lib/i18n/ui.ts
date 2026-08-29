@@ -14865,6 +14865,11 @@ const en: Dict = {
   "pdfprev.document_language": "Document Language",
   "tdoc.po_no": "Purchase Order No.",
   "tdoc.so_no": "Sales Order No.",
+  "scope.logged_in_scope": "Logged-in Scope",
+  "scope.all_countries": "All Countries",
+  "scope.all_branches": "All Branches",
+  "scope.country_wide": "Country-wide",
+  "scope.unassigned": "No scope assigned",
 };
 
 const ur: Dict = {
@@ -25300,6 +25305,11 @@ const ur: Dict = {
   "pdfprev.document_language": "دستاویز کی زبان",
   "tdoc.po_no": "پرچیز آرڈر نمبر",
   "tdoc.so_no": "سیلز آرڈر نمبر",
+  "scope.logged_in_scope": "لاگ اِن دائرہ کار",
+  "scope.all_countries": "تمام ممالک",
+  "scope.all_branches": "تمام برانچز",
+  "scope.country_wide": "ملک بھر",
+  "scope.unassigned": "کوئی دائرہ کار تفویض نہیں",
 };
 
 const ar: Dict = {
@@ -35737,6 +35747,11 @@ const ar: Dict = {
   "pdfprev.document_language": "لغة المستند",
   "tdoc.po_no": "رقم أمر الشراء",
   "tdoc.so_no": "رقم أمر البيع",
+  "scope.logged_in_scope": "نطاق تسجيل الدخول",
+  "scope.all_countries": "جميع الدول",
+  "scope.all_branches": "جميع الفروع",
+  "scope.country_wide": "على مستوى الدولة",
+  "scope.unassigned": "لم يُخصَّص نطاق",
 };
 
 const fa: Dict = {
@@ -46173,6 +46188,11 @@ const fa: Dict = {
   "pdfprev.document_language": "زبان سند",
   "tdoc.po_no": "شماره سفارش خرید",
   "tdoc.so_no": "شماره سفارش فروش",
+  "scope.logged_in_scope": "دامنه ورود",
+  "scope.all_countries": "همه کشورها",
+  "scope.all_branches": "همه شعبه‌ها",
+  "scope.country_wide": "سراسر کشور",
+  "scope.unassigned": "دامنه‌ای اختصاص نیافته",
 };
 
 const ps: Dict = {
@@ -56615,6 +56635,11 @@ const ps: Dict = {
   "pdfprev.document_language": "د سند ژبه",
   "tdoc.po_no": "د پیرود امر شمیره",
   "tdoc.so_no": "د پلور امر شمېره",
+  "scope.logged_in_scope": "د ننوتلو ساحه",
+  "scope.all_countries": "ټول هیوادونه",
+  "scope.all_branches": "ټولې څانګې",
+  "scope.country_wide": "د هیواد په کچه",
+  "scope.unassigned": "کومه ساحه نه ده ټاکل شوې",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
