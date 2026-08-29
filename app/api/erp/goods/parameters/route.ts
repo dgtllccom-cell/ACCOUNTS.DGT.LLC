@@ -35,9 +35,20 @@ export async function GET(request: NextRequest) {
       let targetGoodsId = goodsId;
 
       if (!targetGoodsId && goodsName) {
+        // Resolve the goods row by name. When more than one row matches (e.g. a
+        // legacy placeholder plus the canonical entry), prefer an exact name
+        // match, then the row that actually owns master parameters, then newest.
         const goodsMatch = await sql`
-          SELECT id FROM public.goods 
-          WHERE deleted_at IS NULL AND lower(goods_name) LIKE lower(${`%${goodsName}%`})
+          SELECT g.id
+          FROM public.goods g
+          LEFT JOIN public.goods_master_parameters p
+            ON p.goods_id = g.id AND p.deleted_at IS NULL
+          WHERE g.deleted_at IS NULL
+            AND lower(g.goods_name) LIKE lower(${`%${goodsName}%`})
+          GROUP BY g.id, g.goods_name, g.created_at
+          ORDER BY (lower(g.goods_name) = lower(${goodsName})) DESC,
+                   count(p.id) DESC,
+                   g.created_at DESC
           LIMIT 1
         `;
         targetGoodsId = (goodsMatch[0]?.id as string | undefined) ?? null;
@@ -98,8 +109,10 @@ export async function POST(request: NextRequest) {
       // Default to Almond Kernel if no goodsId supplied
       if (!goodsId) {
         const goodsRow = await sql`
-          SELECT id FROM public.goods 
-          WHERE chs_code = '0802.12.0000' OR lower(goods_name) LIKE '%almond%' 
+          SELECT id FROM public.goods
+          WHERE deleted_at IS NULL
+            AND (chs_code = '0802.12.0000' OR lower(goods_name) LIKE '%almond%')
+          ORDER BY (chs_code = '0802.12.0000') DESC, created_at DESC
           LIMIT 1
         `;
         goodsId = goodsRow[0]?.id as string | undefined;

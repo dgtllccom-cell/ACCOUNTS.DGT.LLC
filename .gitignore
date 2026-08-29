@@ -55,3 +55,6 @@ storage/document-intake/
 # tesseract.js cwd cache
 *.traineddata
 uat-samples/
+
+# Local verification scratch space (never commit — may contain session cookies / DB dumps)
+scratch/

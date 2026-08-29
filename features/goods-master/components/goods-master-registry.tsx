@@ -250,24 +250,28 @@ export function GoodsMasterRegistry() {
     }
   }
 
-  // Auto pre-fill Almond Kernel details if selected using DB-driven parameters
+  // Load the master parameters (Brand / Size / Variety / Extra Details) for the
+  // typed goods name straight from the database — no hard-coded goods-specific
+  // values or arrays. Prefill of the blank fields happens in the effect below
+  // once the DB parameters arrive.
   function handleGoodsNameChange(val: string) {
-    if (val.toLowerCase().includes("almond")) {
-      setFormData(prev => ({
-        ...prev,
-        name: val,
-        chsCode: prev.chsCode || "0802.12.0000",
-        category: "Agriculture & Food",
-        variety: prev.variety || dbParameters.varieties[0] || "Nonpareil",
-        sizes: prev.sizes || dbParameters.sizes[0] || "20/22",
-        brand: prev.brand || dbParameters.brands[0] || "Digital LLC",
-        extraDetails: prev.extraDetails || dbParameters.extraDetails[0] || "Nonpareil Type / Soft Shell / Light Color / Smooth Surface",
-        originCountry: prev.originCountry || "United States"
-      }));
-    } else {
-      setFormData(prev => ({ ...prev, name: val }));
-    }
+    setFormData(prev => ({ ...prev, name: val }));
+    const key = val.trim();
+    if (key.length >= 3) loadMasterParameters(key);
   }
+
+  // Prefill still-empty parameter fields from the database-driven values while
+  // the "Add New Goods Master" modal is open. Never injects literal fallbacks.
+  useEffect(() => {
+    if (!isModalOpen) return;
+    setFormData(prev => ({
+      ...prev,
+      brand: prev.brand || dbParameters.brands[0] || "",
+      sizes: prev.sizes || dbParameters.sizes[0] || "",
+      variety: prev.variety || dbParameters.varieties[0] || "",
+      extraDetails: prev.extraDetails || dbParameters.extraDetails[0] || "",
+    }));
+  }, [dbParameters, isModalOpen]);
 
   return (
     <>

@@ -66,9 +66,12 @@ const migrations = [
   { name: "20260929_document_intake_roznamcha", path: "supabase/migrations/20260929_document_intake_roznamcha.sql" },
   { name: "20260930_hr_leave_attendance_reconciliation", path: "supabase/migrations/20260930_hr_leave_attendance_reconciliation.sql" },
   { name: "20261001_multicurrency_purchase_payment_fix", path: "supabase/migrations/20261001_multicurrency_purchase_payment_fix.sql" },
+  { name: "20261002_goods_variety_and_extra_details", path: "supabase/migrations/20261002_goods_variety_and_extra_details.sql" },
   { name: "20261003_prod_reconcile_rls_hardening", path: "supabase/migrations/20261003_prod_reconcile_rls_hardening.sql" },
   { name: "20261004_prod_reconcile_functions", path: "supabase/migrations/20261004_prod_reconcile_functions.sql" },
-  { name: "20261005_prod_reconcile_missing_objects", path: "supabase/migrations/20261005_prod_reconcile_missing_objects.sql" }
+  { name: "20261005_prod_reconcile_missing_objects", path: "supabase/migrations/20261005_prod_reconcile_missing_objects.sql" },
+  { name: "20261006_almond_kernel_master_parameters", path: "supabase/migrations/20261006_almond_kernel_master_parameters.sql" },
+  { name: "20261007_goods_master_parameters_unique_guard", path: "supabase/migrations/20261007_goods_master_parameters_unique_guard.sql" }
 ];
 
 const sql = postgres(env.DATABASE_URL, { max: 1, prepare: false, connect_timeout: 60 });
