@@ -58,8 +58,8 @@ function goodsFrom(entries: AnyRec[]): TradeLineItem[] {
 
 function inferScope(form: AnyRec, rec: AnyRec): TradeScope {
   const shippingSignals = [
-    pick(form, "loadingPort", "portOfLoading", "loading_port", "loadingBorder"),
-    pick(form, "receivedPort", "portOfDischarge", "received_port", "exitPort"),
+    pick(form, "loadingPort", "portOfLoading", "loading_port", "loadingBorder", "loadingCountry"),
+    pick(form, "receivedPort", "receivingPort", "portOfDischarge", "received_port", "exitPort", "receivedCountry"),
     pick(form, "blNumber", "bl_number"),
     pick(form, "containerNumbers", "container_numbers", "containers"),
     pick(form, "shippingMode", "shipping_mode", "transportMode"),
@@ -83,13 +83,13 @@ export type MapOptions = {
 function baseFromForm(rec: AnyRec, kind: "purchase" | "sales", opts: MapOptions): TradeDocumentInput {
   const fd = rec.form_data || rec.formData || {};
   const form: AnyRec = fd.form || fd || {};
-  const entries: AnyRec[] = fd.goodsEntries || fd.goods || rec.goods || [];
+  const entries: AnyRec[] = form.goodsEntries || fd.goodsEntries || fd.goods || form.goods || rec.goods || [];
   const goods = goodsFrom(entries);
   const scope = inferScope(form, rec);
 
   const currency = pick(rec, "currency_code", "currency") || pick(form, "purchaseCurrency", "currencyCode", "currencyType", "currency") || "USD";
   const exchangeRate = n(pick(rec, "exchange_rate")) ?? n(pick(form, "exchangeRate")) ?? undefined;
-  const functionalCurrency = pick(form, "secondaryCurrency", "localCurrency", "functionalCurrency") || pick(rec, "local_currency");
+  const functionalCurrency = pick(form, "secondaryCurrency", "localCurrency", "functionalCurrency", "paymentCurrency") || pick(rec, "local_currency");
 
   const supplier = pick(form, "supplierName", "supplier_name") || rec.companies?.name || pick(rec, "supplier_name");
   const customer = pick(form, "customerName", "customer_name", "buyerName") || pick(rec, "customer_name");
@@ -124,7 +124,7 @@ function baseFromForm(rec: AnyRec, kind: "purchase" | "sales", opts: MapOptions)
     vessel: pick(form, "vesselName", "vessel"),
     portOfLoading: pick(form, "loadingPort", "loadingBorder", "airportName"),
     loadingCountry: pick(form, "loadingCountry"),
-    portOfDischarge: pick(form, "receivedPort", "receivedBorder", "exitPort"),
+    portOfDischarge: pick(form, "receivedPort", "receivingPort", "receivedBorder", "exitPort"),
     dischargeCountry: pick(form, "receivedCountry"),
     shippingLine: pick(form, "shippingLineName", "shippingLine"),
     blNumber: pick(form, "blNumber", "bl_number"),
@@ -157,7 +157,7 @@ function baseFromForm(rec: AnyRec, kind: "purchase" | "sales", opts: MapOptions)
     lang: opts.lang,
     branding: opts.branding,
     docNo: `${opts.docType === "commercial_invoice" ? "CI" : opts.docType === "packing_list" ? "PL" : "PFI"}-${refs.invoice || refs.contract || refs.po || refs.so || rec.id?.slice(0, 8) || "NEW"}`,
-    docDate: pick(rec, "created_at") || pick(form, "purchaseDate", "orderDate", "bookingDate") || new Date().toISOString(),
+    docDate: pick(form, "purchaseDate", "orderDate", "bookingDate", "invoiceDate") || pick(rec, "created_at") || new Date().toISOString(),
     referenceNos: refs,
     seller: { ...seller, ...(opts.overrides?.seller || {}) },
     buyer: { ...buyer, ...(opts.overrides?.buyer || {}) },
