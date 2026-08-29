@@ -576,3 +576,60 @@ are both permanently recorded.
 The UAT booking + advance postings were **reversed** after verification; ledger
 balances are back to their pre-UAT values. PO `AE-001-0022` and the linked intake
 job are retained as the UAT evidence (PO left `unposted` pending item 1).
+
+---
+
+## Multi-currency Purchase/Payment accounting — FIXED (2026-08-29, migration 20261001)
+
+The two defects the real-contract UAT surfaced are fixed and regression-tested.
+See `supabase/migrations/20261001_multicurrency_purchase_payment_fix.sql` for the
+canonical currency model. Commit `5684408`.
+
+### Canonical model
+- **Base / functional currency** = `countries.currency_code` of the order's
+  country (UAE → AED). The general ledger and every roznamcha line are in it.
+- `purchase_orders.currency_code` / `.purchase_currency` = the **purchase**
+  currency (USD). `.exchange_rate` = base per purchase unit. `.order_total`,
+  `.advance_paid`, `.remaining_paid`, `.credit_amount`, `.remaining_due` are all
+  in the **purchase** currency.
+- `purchase_order_payments`: `currency_code` = transaction currency;
+  `amount` = original amount in it; `exchange_rate` = **base per transaction unit,
+  frozen** (1 iff transaction ccy == base ccy); `base_currency_amount` =
+  `round(amount × exchange_rate, 4)` (**INVARIANT**); `original_currency_code` =
+  `currency_code`.
+
+### What changed
+| Function | Fix |
+|---|---|
+| `post_purchase_order_payment` | freezes the real FX rate (not 1); posts roznamcha lines in the base currency **labelled with the base currency** (a USD supplier ledger no longer shows an AED amount tagged "USD"); records the original ccy/amount/rate in the line + entry narration; handles txn ccy == base / == purchase / third currency |
+| `recalc_purchase_order_payment_totals` | no longer divides every payment by `exchange_rate` on a wrong assumption — contribution = `base_currency_amount / order-rate-to-base`, giving the purchase-currency amount; identical arithmetic for single-currency orders |
+| `payments/route.ts`, `payments/[paymentId]/route.ts` | pass raw payment facts to the RPC; balance validation done in the purchase currency; removed pre-conversion hacks |
+
+### Verification
+- `scratch/mc-regression.mts` — **79/79**: USD→AED, AED→AED, USD→USD, EUR→AED
+  (3rd currency), multiple partials, advance+final, over/under payment,
+  duplicate-booking block, cancellation/reversal. Every case: DR = CR,
+  base = amount × frozen rate, original ccy/amount preserved, rate frozen after
+  posting, recalc paid/remaining correct, lines labelled base currency.
+- `scratch/mc-hist-check.mts` — **30/30** historical POs with payments: recalc
+  produces identical values (no regression).
+- `scratch/uat2-real-contract.mjs` — **19/19**: the DSA2025-0908 contract re-run
+  against the **existing** `UAE-DUB-AC-0003` DALIAN SUNSHINE account.
+  **USD 220,500.00 × 3.675 = AED 810,337.50**; booking + advance (USD 20,050) +
+  final (USD 200,450) posted, recalc `advance_paid = 20,050 USD` (not 5,455),
+  `remaining_due 200,450 → 0`, `completed`; supplier-ledger lines labelled AED;
+  all three postings reversed after verification, ledger balances restored to
+  pre-UAT, PO `AE-001-0022` + linked job `DI-2026-00001` retained as evidence.
+- Gates: `tsc` 0 · `npm run build` exit 0 · `npx vitest run` **124 passed / 1
+  skipped** (new `posting-verification` multi-currency case) · `i18n:guard` +
+  `:changed` green · migrations idempotent.
+
+### Still an owner decision (metadata only — not a code defect, not blocking)
+The existing `UAE-DUB-AC-0003` "DALIAN SUNSHINE" ledger is tagged
+`ledgers.currency = 'USD'`, but this ERP's roznamcha engine balances every entry
+in one base currency, so that ledger has always effectively tracked AED (its
+history is a mix of 13 AED-labelled and 6 USD-labelled lines). Relabelling it
+`'AED'` is metadata only — **no balance or historical line changes** — and makes
+the metadata honest. Recommended, but left for explicit owner approval per the
+"no blind re-base" instruction. A proper multi-currency *ledger* (balance kept in
+the account's own currency + period-end revaluation) is a larger future feature.
