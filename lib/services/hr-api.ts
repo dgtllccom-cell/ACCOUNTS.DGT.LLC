@@ -43,8 +43,18 @@ export function hrScopeFromSession(session: ErpSession): HrScope {
   if (session.isSuperAdmin || session.roles?.includes("super_admin_reports")) {
     return { countryIds: null, cityBranchIds: null, countryBranchIds: null };
   }
+  // A real city/branch-admin assignment carries country_id + country_branch_id +
+  // city_branch_id, but getAssignmentRoots() only keeps the deepest level as the
+  // authority root — so session.countryIds can be empty for a branch admin whose
+  // own branch employees DO have a country_id. Recover the country context from
+  // the raw assignments so the country filter doesn't collapse to the
+  // "match nothing" sentinel and hide the admin's own branch.
+  const asgCountryIds = [...new Set((session.assignments ?? []).map((a) => a.countryId).filter((v): v is string => Boolean(v)))];
+  const countryIds = session.countryIds.length
+    ? session.countryIds
+    : (asgCountryIds.length ? asgCountryIds : ["00000000-0000-0000-0000-000000000000"]);
   return {
-    countryIds: session.countryIds.length ? session.countryIds : ["00000000-0000-0000-0000-000000000000"],
+    countryIds,
     cityBranchIds: session.cityBranchIds.length ? session.cityBranchIds : null,
     countryBranchIds: session.countryBranchIds.length ? session.countryBranchIds : null,
   };

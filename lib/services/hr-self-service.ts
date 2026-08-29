@@ -10,8 +10,17 @@ import type { ErpSession } from "@/lib/auth/session";
 
 export async function resolveSelfEmployeeId(session: ErpSession): Promise<string | null> {
   const email = (session.email || "").trim().toLowerCase();
-  if (!email) return null;
   return withLocalPg(async (sql) => {
+    // 1. the explicit Employee ↔ ERP User link (employees.user_id → profiles.id)
+    if (session.userId) {
+      const byUser = await sql`
+        SELECT id FROM public.employees
+        WHERE deleted_at IS NULL AND user_id = ${session.userId}
+        ORDER BY created_at DESC LIMIT 1`;
+      if (byUser?.[0]?.id) return byUser[0].id;
+    }
+    // 2. fall back to matching the Person Master email
+    if (!email) return null;
     const r = await sql`
       SELECT e.id
       FROM public.employees e
@@ -27,7 +36,7 @@ export async function selfServiceBundle(employeeId: string) {
     const profile = (await sql`
       SELECT e.employee_code, COALESCE(c.customer_name, c.company_name, e.employee_code) AS name,
              e.designation, e.department, e.category, e.employment_type, e.job_status, e.status,
-             e.joining_date, e.confirmation_date, e.probation_end_date,
+             e.joining_date, e.probation_end_date, e.probation_start_date,
              co.name AS country, cb.name AS main_branch, cib.name AS city_branch,
              public.hr_employee_currency(e.id) AS currency,
              e.basic_salary, e.monthly_salary, e.salary_payment_method,
