@@ -43,10 +43,17 @@ function normDate(raw: string): string | null {
     return `${y}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
   }
   const months = "jan feb mar apr may jun jul aug sep oct nov dec".split(" ");
+  // "8 September 2025" / "8-Sep-2025"
   m = s.match(/\b(\d{1,2})[ -]?([A-Za-z]{3,9})[ ,-]?(\d{4})\b/);
   if (m) {
     const mi = months.indexOf(m[2].toLowerCase().slice(0, 3));
     if (mi >= 0) return `${m[3]}-${String(mi + 1).padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+  }
+  // "September 8, 2025" / "September 8. 2025" / "Sept 8th 2025" (month first)
+  m = s.match(/\b([A-Za-z]{3,9})\.?\s+(\d{1,2})(?:st|nd|rd|th)?[.,]?\s+(\d{4})\b/);
+  if (m) {
+    const mi = months.indexOf(m[1].toLowerCase().slice(0, 3));
+    if (mi >= 0) return `${m[3]}-${String(mi + 1).padStart(2, "0")}-${m[2].padStart(2, "0")}`;
   }
   return null;
 }
@@ -57,29 +64,34 @@ type Rule = {
   patterns: RegExp[];
   kind?: "date" | "amount" | "currency" | "text" | "container" | "hs";
   required?: boolean;
+  // when set, the rule only runs for these doc-type codes (keeps e.g. cheque
+  // status off a purchase contract that merely mentions "cancel this contract")
+  onlyDocTypes?: string[];
 };
+
+const FINANCE_DOCS = ["cheque_image", "bank_transfer_advice", "payment_confirmation", "cash_receipt", "advance_receipt", "sales_receipt", "payment_confirmation"];
 
 // Ordered — earlier, more specific patterns win.
 const RULES: Rule[] = [
   { key: "invoice_number", label: "Invoice Number", patterns: [/invoice\s*(?:no\.?|number|#)\s*[:.\-]?\s*([A-Z0-9][A-Z0-9/\-.]{2,30})/i, /\binv[\s\-#:]*([A-Z0-9][A-Z0-9/\-.]{3,30})/i] },
-  { key: "contract_number", label: "Contract Number", patterns: [/contract\s*(?:no\.?|number|#|ref)\s*[:.\-]?\s*([A-Z0-9][A-Z0-9/\-.]{2,30})/i, /\bcon[\s\-#:]*([0-9]{3,10})/i] },
+  { key: "contract_number", label: "Contract Number", patterns: [/contract\s*(?:no\.?|number|#|ref)[:./_\s-]*\b([A-Z]{2,5}[-/]?\d{2,6}[-/]\d{2,6}|[A-Z]{2,5}-?\d{4,8})\b/i, /contract\s*(?:no\.?|number|#|ref)\s*[:.\-]?\s*([A-Z0-9][A-Z0-9/\-.]{2,30})/i, /\bcon[\s\-#:]*([0-9]{3,10})/i] },
   { key: "manual_contract_number", label: "Manual Contract / Bill Number", patterns: [/(?:manual|reference)\s*(?:contract|bill)\s*(?:no\.?)?\s*[:.\-]?\s*([A-Z0-9][A-Z0-9/\-.]{2,30})/i] },
   { key: "booking_number", label: "Booking Number", patterns: [/booking\s*(?:no\.?|number|ref|confirmation)\s*[:.\-]?\s*([A-Z0-9][A-Z0-9/\-.]{2,30})/i] },
   { key: "po_number", label: "Purchase Order Number", patterns: [/(?:purchase\s*order|p\.?o\.?)\s*(?:no\.?|number|#)\s*[:.\-]?\s*([A-Z0-9][A-Z0-9/\-.]{2,30})/i] },
   { key: "so_number", label: "Sales Order Number", patterns: [/(?:sales\s*order|s\.?o\.?)\s*(?:no\.?|number|#)\s*[:.\-]?\s*([A-Z0-9][A-Z0-9/\-.]{2,30})/i] },
   { key: "bl_number", label: "Bill of Lading Number", patterns: [/(?:b\/?l|bill\s*of\s*lading|awb|hbl|mbl)\s*(?:no\.?|number|#)\s*[:.\-]?\s*([A-Z0-9][A-Z0-9/\-.]{4,30})/i] },
   { key: "customs_reference", label: "Customs Reference / GD No", patterns: [/(?:gd|goods\s*declaration|bill\s*of\s*entry|customs\s*(?:ref|declaration))\s*(?:no\.?)?\s*[:.\-]?\s*([A-Z0-9][A-Z0-9/\-.]{3,30})/i] },
-  { key: "document_date", label: "Document Date", kind: "date", patterns: [/(?:date|dated|invoice\s*date|document\s*date)\s*[:.\-]?\s*([0-3]?\d[-/. ][A-Za-z0-9]{2,9}[-/. ]\d{2,4}|\d{4}[-/.]\d{1,2}[-/.]\d{1,2})/i] },
+  { key: "document_date", label: "Document Date", kind: "date", patterns: [/(?:date|dated|invoice\s*date|document\s*date)\s*[:.\-]?\s*([0-3]?\d[-/. ][A-Za-z0-9]{2,9}[-/. ]\d{2,4}|\d{4}[-/.]\d{1,2}[-/.]\d{1,2}|[A-Za-z]{3,9}\.?\s+[0-3]?\d(?:st|nd|rd|th)?[.,]?\s+\d{4})/i] },
   { key: "due_date", label: "Due Date", kind: "date", patterns: [/(?:due\s*date|payment\s*due|maturity)\s*[:.\-]?\s*([0-3]?\d[-/. ][A-Za-z0-9]{2,9}[-/. ]\d{2,4}|\d{4}[-/.]\d{1,2}[-/.]\d{1,2})/i] },
   { key: "eta", label: "ETA", kind: "date", patterns: [/\beta\b\s*[:.\-]?\s*([0-3]?\d[-/. ][A-Za-z0-9]{2,9}[-/. ]\d{2,4}|\d{4}[-/.]\d{1,2}[-/.]\d{1,2})/i] },
   { key: "etd", label: "ETD", kind: "date", patterns: [/\betd\b\s*[:.\-]?\s*([0-3]?\d[-/. ][A-Za-z0-9]{2,9}[-/. ]\d{2,4}|\d{4}[-/.]\d{1,2}[-/.]\d{1,2})/i] },
   { key: "currency", label: "Currency", kind: "currency", patterns: [/\b(USD|AED|PKR|AFN|INR|SAR|EUR|GBP|CNY|JPY|QAR|KWD|BHD|OMR|IRR|TRY)\b/] },
-  { key: "grand_total", label: "Grand Total", kind: "amount", patterns: [/(?:grand\s*total|total\s*amount|amount\s*due|invoice\s*total|total\s*payable|net\s*payable|amount\s*(?:transferred|paid|received)|transfer\s*amount)\s*[:.\-]?\s*(?:[A-Z]{3}|[$€£₹﷼])?\s*([0-9][0-9,.\s]{2,20})/i, /\bamount\s*[:.]\s*(?:[A-Z]{3}\s*)?([0-9][0-9,]{2,15}\.\d{2})/i] },
+  { key: "grand_total", label: "Grand Total", kind: "amount", patterns: [/(?:grand\s*total|total\s*amount|total\s*value|contract\s*(?:value|amount)|amount\s*due|invoice\s*total|total\s*payable|net\s*payable|amount\s*(?:transferred|paid|received)|transfer\s*(?:currency\s*&?\s*amount|amount))\s*[:.\-]?\s*(?:[A-Z]{3}|[$€£₹﷼])?\s*([0-9][0-9,]{2,15}(?:\.\d{2})?)/i, /\bamount\s*[:.]\s*(?:[A-Z]{3}\s*)?([0-9][0-9,]{2,15}\.\d{2})/i, /\b(?:USD|AED|PKR|AFN|INR|EUR|GBP|CNY)\s?([0-9]{1,3}(?:,[0-9]{3})+\.\d{2})\b/] },
   { key: "subtotal", label: "Subtotal", kind: "amount", patterns: [/(?:sub\s*total|sub-total|net\s*amount)\s*[:.\-]?\s*(?:[A-Z]{3}|[$€£₹﷼])?\s*([0-9][0-9,.\s]{2,20})/i] },
   { key: "freight_amount", label: "Freight", kind: "amount", patterns: [/(?:ocean\s*freight|freight\s*charges?|freight)\s*[:.\-]?\s*(?:[A-Z]{3}|[$€£₹﷼])?\s*([0-9][0-9,.\s]{2,20})/i] },
   { key: "insurance_amount", label: "Insurance", kind: "amount", patterns: [/(?:insurance|marine\s*insurance)\s*[:.\-]?\s*(?:[A-Z]{3}|[$€£₹﷼])?\s*([0-9][0-9,.\s]{2,20})/i] },
   { key: "tax_amount", label: "Tax / VAT", kind: "amount", patterns: [/(?:vat|tax|gst|sales\s*tax)\s*(?:@?\s*\d+%?)?\s*[:.\-]?\s*(?:[A-Z]{3}|[$€£₹﷼])?\s*([0-9][0-9,.\s]{2,20})/i] },
-  { key: "advance_amount", label: "Advance", kind: "amount", patterns: [/(?:advance\s*(?:payment|paid|amount)?)\s*[:.\-]?\s*(?:[A-Z]{3}|[$€£₹﷼])?\s*([0-9][0-9,.\s]{2,20})/i] },
+  { key: "advance_amount", label: "Advance / Deposit", kind: "amount", patterns: [/(?:advance\s*(?:payment|paid|amount)?|deposit|down\s*payment)\s*(?:of\s*)?(?:[A-Z]{3}|[$€£₹﷼])?\s*([0-9][0-9,]{2,15}(?:\.\d{2})?)/i, /\d{1,3}%\s*(?:deposit|advance)\s*(?:[A-Z]{3})?\s*([0-9][0-9,]{2,15}(?:\.\d{2})?)/i] },
   { key: "paid_amount", label: "Paid Amount", kind: "amount", patterns: [/(?:amount\s*paid|paid\s*amount|received)\s*[:.\-]?\s*(?:[A-Z]{3}|[$€£₹﷼])?\s*([0-9][0-9,.\s]{2,20})/i] },
   { key: "balance_amount", label: "Remaining Balance", kind: "amount", patterns: [/(?:balance\s*(?:due|amount)?|remaining|outstanding)\s*[:.\-]?\s*(?:[A-Z]{3}|[$€£₹﷼])?\s*([0-9][0-9,.\s]{2,20})/i] },
   { key: "exchange_rate", label: "Exchange Rate", kind: "amount", patterns: [/(?:exchange\s*rate|rate\s*of\s*exchange|fx\s*rate|conversion\s*rate)\s*[:.\-]?\s*([0-9]+\.?[0-9]*)/i] },
@@ -87,7 +99,7 @@ const RULES: Rule[] = [
   { key: "voyage", label: "Voyage", kind: "text", patterns: [/(?:voyage|voy\.?)\s*(?:no\.?)?\s*[:.\-]?\s*([A-Z0-9\-]{2,15})/i] },
   { key: "port_of_loading", label: "Port of Loading", kind: "text", patterns: [/(?:port\s*of\s*loading|pol|load\s*port)\s*[:.\-]?\s*([A-Za-z][A-Za-z ,.\-]{2,32}?)(?=\s{2,}|\s*(?:port\s*of|pod|$)|\n)/i] },
   { key: "port_of_discharge", label: "Port of Discharge", kind: "text", patterns: [/(?:port\s*of\s*discharge|pod|discharge\s*port|destination\s*port)\s*[:.\-]?\s*([A-Za-z][A-Za-z ,.\-]{2,32}?)(?=\s{2,}|\s*(?:vessel|voyage|$)|\n)/i] },
-  { key: "shipping_line", label: "Shipping Line", kind: "text", patterns: [/(?:shipping\s*line|carrier|line\s*name)\s*[:.\-]?\s*([A-Za-z0-9 .\-&]{3,40})/i] },
+  { key: "shipping_line", label: "Shipping Line", kind: "text", patterns: [/(?:shipping\s*line|carrier\s*(?:name|vessel)|line\s*name)\s*[:.\-]\s*([A-Za-z0-9][A-Za-z0-9 .\-&]{2,40})/i] },
   { key: "shipper", label: "Shipper", kind: "text", patterns: [/shipper\s*[:.\-]?\s*\n?\s*([A-Za-z0-9 .,&()\-]{4,60})/i] },
   { key: "consignee", label: "Consignee", kind: "text", patterns: [/consignee\s*[:.\-]?\s*\n?\s*([A-Za-z0-9 .,&()\-]{4,60})/i] },
   { key: "supplier_name", label: "Supplier / Seller", kind: "text", patterns: [/(?:supplier|seller|from|beneficiary|exporter)\s*[:.\-]?\s*\n?\s*([A-Za-z0-9 .,&()\-]{4,60})/i] },
@@ -96,9 +108,9 @@ const RULES: Rule[] = [
   { key: "delivery_terms", label: "Delivery Terms / Incoterm", kind: "text", patterns: [/\b(FOB|CIF|CFR|CPT|CIP|DAP|DDP|EXW|FCA|FAS)\b[ ,-]?([A-Za-z ]{0,25})/ ] },
   { key: "trn", label: "TRN / Tax Registration", kind: "text", patterns: [/(?:trn|tax\s*reg(?:istration)?\s*(?:no\.?)?|vat\s*no\.?|ntn|gst\s*no\.?)\s*[:.\-]?\s*([0-9A-Z\-]{5,20})/i] },
   { key: "payment_method", label: "Payment Method", kind: "text", patterns: [/\b(cash|bank\s*transfer|telegraphic\s*transfer|wire\s*transfer|cheque|check|online\s*transfer|card|pos)\b/i] },
-  { key: "cheque_number", label: "Cheque Number", kind: "text", patterns: [/(?:cheque|check)\s*(?:no\.?|number|#)\s*[:.\-]?\s*([0-9]{4,12})/i] },
-  { key: "cheque_status", label: "Cheque Status", kind: "text", patterns: [/\b(post\s*dated|pdc|cleared|honou?red|dishonou?red|bounced|returned|cancelled|stop\s*payment|pending)\b/i] },
-  { key: "bank_name", label: "Bank Name", kind: "text", patterns: [/\b([A-Z][A-Za-z& ]{2,40}\s+bank(?:\s+(?:ltd|limited|plc))?)\b/] },
+  { key: "cheque_number", label: "Cheque Number", kind: "text", onlyDocTypes: FINANCE_DOCS, patterns: [/(?:cheque|check)\s*(?:no\.?|number|#)\s*[:.\-]?\s*([0-9]{4,12})/i] },
+  { key: "cheque_status", label: "Cheque Status", kind: "text", onlyDocTypes: FINANCE_DOCS, patterns: [/\b(post\s*dated|pdc|cleared|honou?red|dishonou?red|bounced|returned|cancelled|stop\s*payment)\b/i] },
+  { key: "bank_name", label: "Bank Name", kind: "text", patterns: [/\b((?:[A-Z][A-Za-z]+\s+){1,4}Bank(?:\s+(?:Corp(?:oration)?|Ltd|Limited|PLC|Branch|[A-Z][a-z]+\s+Branch))?)\b/] },
   { key: "value_date", label: "Value Date", kind: "date", patterns: [/(?:value\s*date|settlement\s*date)\s*[:.\-]?\s*([0-3]?\d[-/. ][A-Za-z0-9]{2,9}[-/. ]\d{2,4}|\d{4}[-/.]\d{1,2}[-/.]\d{1,2})/i] },
 ];
 
@@ -116,6 +128,7 @@ export function extractFields(text: string, pages: OcrPage[], docTypeCode: strin
   };
 
   for (const rule of RULES) {
+    if (rule.onlyDocTypes && !rule.onlyDocTypes.includes(docTypeCode)) continue;
     for (const re of rule.patterns) {
       const m = text.match(re);
       if (!m) continue;
@@ -162,7 +175,12 @@ export function extractFields(text: string, pages: OcrPage[], docTypeCode: strin
   if (seals.length) {
     push({ key: "seal_numbers", label: "Seal Numbers", rawValue: seals.join(", "), normalizedValue: seals.join(","), confidence: 0.7, pageNumber: null, bbox: null, validationStatus: "amber", validationMessage: null });
   }
-  const hs = [...new Set([...text.matchAll(HS_RE)].map((m) => m[1].replace(/\./g, "")))].filter((x) => x.length >= 6 && x.length <= 10);
+  // Only trust HS codes that are dotted (4.6.8 form) or explicitly labelled — a
+  // bare 8-digit run is just as likely a phone/fax/account number.
+  const hsLabelled = /\b(?:h\.?s\.?\s*code|hs\s*code|tariff\s*(?:code|heading)|commodity\s*code)\b/i.test(text);
+  const hs = [...new Set([...text.matchAll(HS_RE)]
+    .filter((m) => m[0].includes(".") || hsLabelled)
+    .map((m) => m[1].replace(/\./g, "")))].filter((x) => x.length >= 6 && x.length <= 10);
   if (hs.length) {
     push({ key: "hs_codes", label: "HS Codes", rawValue: hs.join(", "), normalizedValue: hs.join(","), confidence: 0.62, pageNumber: null, bbox: null, validationStatus: "amber", validationMessage: null });
   }
@@ -184,6 +202,10 @@ export function extractLineItems(text: string, pages: OcrPage[]): LineItemCandid
     if (!m) continue;
     const desc = clean(m[1]);
     if (/total|subtotal|amount|balance|vat|tax|freight/i.test(desc)) continue;
+    // banking / contact lines end in digit groups too — not goods rows
+    if (/a[j\/]?c\s*(?:no|number)|account|beneficiary|swift|iban|routing|\bbank\b|\btel\b|\bfax\b|phone|mobile|licen[sc]e/i.test(desc)) continue;
+    // reject rows that are essentially a digit string (account/ref numbers)
+    if ((desc.replace(/[^0-9]/g, "").length / Math.max(desc.length, 1)) > 0.5) continue;
     lineNo += 1;
     rows.push({
       lineNo,

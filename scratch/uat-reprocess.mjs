@@ -1,0 +1,14 @@
+import fs from "node:fs";
+const BASE="http://localhost:3000";
+const COOKIE=fs.readFileSync("scratch/uat-cookies.txt","utf8").split(/\r?\n/).map(l=>l.replace(/^#HttpOnly_/,"")).filter(l=>l&&!l.startsWith("#")&&l.includes("\t")).map(l=>{const p=l.split("\t");return `${p[5]}=${p[6]}`}).join("; ");
+const H={cookie:COOKIE};
+const jobId=fs.readFileSync("scratch/uat-job-id.txt","utf8").trim();
+const j=async r=>{const t=await r.text();try{return JSON.parse(t)}catch{return{_raw:t.slice(0,300)}}};
+let r=await fetch(`${BASE}/api/erp/document-intelligence/${jobId}`,{method:"PATCH",headers:{...H,"content-type":"application/json"},body:JSON.stringify({action:"process"})});
+console.log("REPROCESS:",r.status,JSON.stringify(await j(r)).slice(0,200));
+r=await fetch(`${BASE}/api/erp/document-intelligence/${jobId}`,{headers:H});
+const d=(await j(r)).data;
+console.log("status:",d.job?.status,"| docType:",d.job?.doc_type_code,d.job?.doc_type_confidence,"| target:",d.job?.target_module,"| lang:",d.job?.language_detected);
+console.log("FIELDS:");
+for(const f of d.fields??[]) console.log(`  ${f.field_key} = "${(f.corrected_value??f.normalized_value??f.raw_value??'').toString().slice(0,60)}" [${f.validation_status} ${f.confidence}]`);
+console.log("LINE ITEMS:",(d.lineItems??[]).length, (d.lineItems??[]).map(li=>li.description).join(" | ").slice(0,120));
