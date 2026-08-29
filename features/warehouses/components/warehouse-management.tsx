@@ -184,6 +184,30 @@ export function WarehouseManagement() {
     setSubmitting(false);
   };
 
+  const printWarehouse = (warehouse: WarehouseRecord) => {
+    void import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => {
+      openGenericErpReport({
+        title: `Warehouse — ${warehouse.warehouse_name}`,
+        lang,
+        orientation: "portrait",
+        columns: [
+          { key: "field", label: "Field" },
+          { key: "value", label: "Value" },
+        ],
+        rows: [
+          { field: "Warehouse Name", value: warehouse.warehouse_name },
+          { field: "Type", value: warehouse.warehouse_type },
+          { field: "Owner", value: warehouse.owner_name || "-" },
+          { field: "Status", value: warehouse.status },
+          { field: "Country", value: locationMaps.countries.get(warehouse.country_id || "") || "-" },
+          { field: "City", value: locationMaps.cities.get(warehouse.city_id || "") || "-" },
+          { field: "Area", value: locationMaps.areas.get(warehouse.area_id || "") || "-" },
+          { field: "Address", value: warehouse.full_address || "-" },
+        ],
+      });
+    });
+  };
+
   const handleDelete = async (warehouse: WarehouseRecord) => {
     if (!window.confirm(`Delete warehouse "${warehouse.warehouse_name}"?`)) return;
     try {
@@ -407,7 +431,7 @@ export function WarehouseManagement() {
                               setModalMode("edit");
                               setEditingWarehouse(warehouse);
                             }}
-                            onPrint={() => window.print()}
+                            onPrint={() => printWarehouse(warehouse)}
                             onDelete={() => void handleDelete(warehouse)}
                           />
                         </td>

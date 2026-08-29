@@ -267,6 +267,34 @@ export function ShippingLineStagePage({
     document.body.removeChild(link);
   }
 
+  function printReport() {
+    void import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => {
+      openGenericErpReport({
+        title: "Shipment Tracking Report",
+        lang,
+        orientation: "landscape",
+        columns: [
+          { key: "bl_number", label: "B/L Number" },
+          { key: "shipping_line_name", label: "Shipping Line" },
+          { key: "vessel_name", label: "Vessel Name" },
+          { key: "voyage_number", label: "Voyage No" },
+          { key: "container_number", label: "Container No" },
+          { key: "loading_port", label: "Loading Port" },
+          { key: "discharge_port", label: "Discharge Port" },
+          { key: "eta", label: "ETA", format: "date" },
+          { key: "etd", label: "ETD", format: "date" },
+          { key: "shipment_status", label: "Status", format: "status" },
+          { key: (r: Record<string, unknown>) => (r as any).report_payload?.carrierRemarks ?? "-", label: "Carrier Remarks" },
+        ],
+        rows: records as unknown as Record<string, unknown>[],
+        filters: [
+          ...(query ? [{ label: "Search", value: query }] : []),
+          { label: "Records", value: String(records.length) },
+        ],
+      });
+    });
+  }
+
   return (
     <div className="mx-auto max-w-[1680px] space-y-6 text-foreground p-4 lg:p-6">
       
@@ -306,7 +334,7 @@ export function ShippingLineStagePage({
           {activeStage === "report" && (
             <>
               <Button
-                onClick={() => window.print()}
+                onClick={printReport}
                 variant="outline"
                 className="border-border/80 bg-card hover:bg-muted text-foreground h-9 rounded-xl shadow-sm"
               >
