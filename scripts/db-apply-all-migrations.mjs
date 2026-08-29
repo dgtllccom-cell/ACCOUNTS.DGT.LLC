@@ -71,10 +71,20 @@ const migrations = [
   { name: "20261004_prod_reconcile_functions", path: "supabase/migrations/20261004_prod_reconcile_functions.sql" },
   { name: "20261005_prod_reconcile_missing_objects", path: "supabase/migrations/20261005_prod_reconcile_missing_objects.sql" },
   { name: "20261006_almond_kernel_master_parameters", path: "supabase/migrations/20261006_almond_kernel_master_parameters.sql" },
-  { name: "20261007_goods_master_parameters_unique_guard", path: "supabase/migrations/20261007_goods_master_parameters_unique_guard.sql" }
+  { name: "20261007_goods_master_parameters_unique_guard", path: "supabase/migrations/20261007_goods_master_parameters_unique_guard.sql" },
+  { name: "20261008_cleanup_user_directory_master", path: "supabase/migrations/20261008_cleanup_user_directory_master.sql" }
 ];
 
 const sql = postgres(env.DATABASE_URL, { max: 1, prepare: false, connect_timeout: 60 });
+
+// Migrations that delete/reset real business or user data. These must NEVER run
+// automatically (CI / prod auto-deploy). Apply them by hand, per-environment,
+// with a verified backup, after explicit owner approval — set
+// ALLOW_DESTRUCTIVE_MIGRATIONS=1 for that one manual run.
+const DESTRUCTIVE_MANUAL_ONLY = new Set([
+  "20261008_cleanup_user_directory_master",
+]);
+const allowDestructive = process.env.ALLOW_DESTRUCTIVE_MIGRATIONS === "1";
 
 try {
   console.log("Connecting to Supabase Database:", env.NEXT_PUBLIC_SUPABASE_URL || "Postgres");
@@ -84,6 +94,11 @@ try {
     const existing = await sql`select name, status from erp_schema_migrations where name = ${mig.name}`;
     if (existing.length && existing[0].status === "applied") {
       console.log(`[SKIP] Migration already applied: ${mig.name}`);
+      continue;
+    }
+
+    if (DESTRUCTIVE_MANUAL_ONLY.has(mig.name) && !allowDestructive) {
+      console.log(`[BLOCKED] ${mig.name} is destructive (deletes user/business data) — skipped. Run manually with ALLOW_DESTRUCTIVE_MIGRATIONS=1 after a backup.`);
       continue;
     }
 
