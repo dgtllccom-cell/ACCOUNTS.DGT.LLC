@@ -108,8 +108,8 @@ export class PurchaseSalesIntakePreviewService {
       // ── DR / CR account: explicit selection, else AI suggestion ──────────
       const scopeLedger = (extra: any) => sql`
         l.deleted_at IS NULL AND l.is_active
-        AND (l.scope = 'global' OR l.country_id IS NOT DISTINCT FROM ${job.country_id} OR l.country_id IS NULL)
-        AND (${job.city_branch_id ? sql`l.city_branch_id IS NOT DISTINCT FROM ${job.city_branch_id} OR l.city_branch_id IS NULL` : sql`TRUE`})
+        AND (l.scope = 'super_admin' OR l.country_id IS NOT DISTINCT FROM ${job.country_id} OR l.country_id IS NULL)
+        AND (${job.city_branch_id ? sql`(l.city_branch_id IS NOT DISTINCT FROM ${job.city_branch_id} OR l.city_branch_id IS NULL)` : sql`TRUE`})
         ${extra}`;
 
       type LedgerPick = {
