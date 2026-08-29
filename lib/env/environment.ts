@@ -28,7 +28,15 @@ const DEFAULT_PROD_REF = "inmayhrxucimxqhgseqi";
 const DEFAULT_DEV_REF = "csesvyxxjivnkkozgopt";
 
 export function getAppEnvironment(): AppEnvironment {
-  const raw = (process.env.APP_ENV || process.env.NODE_ENV || "development").trim().toLowerCase();
+  // On the client only NEXT_PUBLIC_* vars exist; APP_ENV is server-only. Fall
+  // back to NEXT_PUBLIC_APP_ENV there so a dev/staging client bundle isn't
+  // misread as production just because NODE_ENV is "production" for every build.
+  const raw = (
+    process.env.APP_ENV ||
+    process.env.NEXT_PUBLIC_APP_ENV ||
+    (typeof window === "undefined" ? process.env.NODE_ENV : "") ||
+    "development"
+  ).trim().toLowerCase();
   return raw === "production" ? "production" : "development";
 }
 
@@ -93,19 +101,24 @@ export function assertEnvironmentIntegrity(): EnvironmentIntegrity {
   }
 
   // 2. In production, the active project MUST be the production project.
+  //    This is fatal on the SERVER (which actually opens DB connections). On the
+  //    client it degrades to a console error so a misconfigured bundle does not
+  //    white-screen the whole app — the server guard is the real protection.
+  const isServer = typeof window === "undefined";
   if (appEnv === "production") {
     if (!activeRef) {
-      throw new Error(
+      const msg =
         "[ENV GUARD] Running in production but no Supabase project is configured " +
-          "(NEXT_PUBLIC_SUPABASE_URL / DATABASE_URL are empty). Refusing to start."
-      );
-    }
-    if (activeRef !== prodRef) {
-      throw new Error(
+        "(NEXT_PUBLIC_SUPABASE_URL / DATABASE_URL are empty).";
+      if (isServer) throw new Error(msg + " Refusing to start.");
+      else console.error(msg);
+    } else if (activeRef !== prodRef) {
+      const msg =
         `[ENV GUARD] Production is pointed at Supabase project "${activeRef}", ` +
-          `but the production project is "${prodRef}". A production deploy must only ` +
-          `use the production database. Refusing to start.`
-      );
+        `but the production project is "${prodRef}". A production deploy must only ` +
+        `use the production database.`;
+      if (isServer) throw new Error(msg + " Refusing to start.");
+      else console.error(msg);
     }
   }
 
