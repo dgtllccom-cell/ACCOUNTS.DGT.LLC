@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     const p = request.nextUrl.searchParams;
     const from = p.get("from"); const to = p.get("to");
     const data = await withLocalPg(async (sql) => {
-      const scope = officeScopeWhere(sql, session);
+      const scope = officeScopeWhere(sql, session, "a");
       const rows = await sql`
         select a.*, e.employee_code,
                coalesce(nullif(trim(concat_ws(' ', cu.first_name, cu.last_name)), ''), cu.customer_name) employee_name,

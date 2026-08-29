@@ -17,13 +17,18 @@ export async function requireOfficeSession(write: boolean): Promise<ErpSession> 
  * Branch-scoped read filter: super admins see everything; everyone else sees records whose
  * country / city branch is within their assigned scope (or records they created).
  */
-export function officeScopeWhere(sql: any, session: ErpSession) {
+export function officeScopeWhere(sql: any, session: ErpSession, alias?: string) {
   if (session.isSuperAdmin) return sql`true`;
   const cids = session.countryIds || [];
   const ccids = session.cityBranchIds || [];
+  // qualify the columns when the caller's query joins other tables that also
+  // have country_id / city_branch_id / created_by (employees, customers …)
+  const co = alias ? sql(`${alias}.country_id`) : sql`country_id`;
+  const city = alias ? sql(`${alias}.city_branch_id`) : sql`city_branch_id`;
+  const cb = alias ? sql(`${alias}.created_by`) : sql`created_by`;
   return sql`(
-    (${cids.length > 0} and country_id = any(${cids}))
-    or (${ccids.length > 0} and city_branch_id = any(${ccids}))
-    or created_by = ${session.userId}
+    (${cids.length > 0} and ${co} = any(${cids}))
+    or (${ccids.length > 0} and ${city} = any(${ccids}))
+    or ${cb} = ${session.userId}
   )`;
 }

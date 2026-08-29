@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     const p = request.nextUrl.searchParams;
     const from = p.get("from"); const to = p.get("to");
     const data = await withLocalPg(async (sql) => {
-      const scope = officeScopeWhere(sql, session);
+      const scope = officeScopeWhere(sql, session, "l");
       // A leave overlaps the [from,to] window when its from_date <= window.to AND to_date >= window.from.
       const rows = await sql`
         select l.*, e.employee_code,
