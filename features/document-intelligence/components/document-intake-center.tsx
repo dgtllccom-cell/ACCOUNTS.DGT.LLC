@@ -283,11 +283,28 @@ function UploadDrawer({ s, onClose, onDone }: { s: ReturnType<typeof useErpScree
   );
 }
 
+// "What is this document for?" — the AI never decides silently; the user routes
+// the reviewed draft to one of the existing ERP module workflows. target keys
+// must match lib/document-intelligence/draft-mapping.ts DRAFTABLE_MODULES.
+const DOC_PURPOSES: Array<{ target: string; labelKey: string; label: string; group: string }> = [
+  { target: "purchase_orders", labelKey: "purpose_purchase", label: "Purchase (New / Existing)", group: "Trade" },
+  { target: "sales_orders", labelKey: "purpose_sales", label: "Sales (New / Existing)", group: "Trade" },
+  { target: "purchase_loading_records", labelKey: "purpose_loading", label: "Purchase Loading / Receiving", group: "Trade" },
+  { target: "roznamcha_entries", labelKey: "purpose_payment", label: "Payment / Cash / Bank Roznamcha", group: "Finance" },
+  { target: "shipping_bl_records", labelKey: "purpose_shipping", label: "Shipping / Bill of Lading", group: "Logistics" },
+  { target: "clearing_agent_custom_entries", labelKey: "purpose_clearing", label: "Clearing / Customs Entry", group: "Logistics" },
+  { target: "companies", labelKey: "purpose_company", label: "Company / Entity", group: "Masters" },
+  { target: "customers", labelKey: "purpose_customer", label: "Customer / Person KYC", group: "Masters" },
+  { target: "banks", labelKey: "purpose_bank", label: "Bank Account", group: "Masters" },
+  { target: "contracts", labelKey: "purpose_contract", label: "Contract / Agreement", group: "Masters" },
+];
+
 function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>; jobId: string; onBack: () => void }) {
   const [data, setData] = useState<{ job: Row; fields: Row[]; lineItems: Row[]; matches: Row[]; events: Row[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [purpose, setPurpose] = useState<string>("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -301,6 +318,10 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
     }
   }, [jobId]);
   useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    const tm = data?.job?.target_module;
+    if (tm && !purpose) setPurpose(tm);
+  }, [data?.job?.target_module, purpose]);
 
   const act = async (action: string, reason?: string) => {
     setBusy(true);
@@ -320,7 +341,8 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
   const prepareDraft = async (linkMode?: "new_record" | "append_existing") => {
     setBusy(true);
     setError(null);
-    try { await apiPatch(`/api/erp/document-intelligence/${jobId}`, { action: "confirm", linkMode }); await load(); }
+    const targetModule = purpose || data?.job?.target_module || undefined;
+    try { await apiPatch(`/api/erp/document-intelligence/${jobId}`, { action: "confirm", linkMode, targetModule }); await load(); }
     catch (e) { setError(e instanceof Error ? e.message : String(e)); }
     finally { setBusy(false); }
   };
@@ -378,8 +400,8 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
                 {["review", "qvc"].includes(job.status) ? (
                   <button type="button" disabled={busy} onClick={() => void act("process")} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"><RefreshCw className="h-3.5 w-3.5" />{s.t("reprocess", "Re-run")}</button>
                 ) : null}
-                {job.status === "review" && job.target_module ? (
-                  <button type="button" disabled={busy} onClick={() => void prepareDraft()} className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"><CheckCircle2 className="h-3.5 w-3.5" />{s.t("prepare_draft", "Prepare Reviewed Draft")}</button>
+                {["review", "qvc", "draft_ready"].includes(job.status) ? (
+                  <button type="button" disabled={busy || !(purpose || job.target_module)} onClick={() => void prepareDraft()} className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"><CheckCircle2 className="h-3.5 w-3.5" />{s.t("prepare_draft", "Prepare Reviewed Draft")}</button>
                 ) : null}
                 {["auto", "user"].includes(job.match_status) && job.matched_source_module === "purchase_orders" && !["linked", "cancelled"].includes(job.status) ? (
                   <button type="button" disabled={busy} onClick={() => void proposeBatch()} className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 px-3 py-2 text-xs font-bold text-blue-700 hover:bg-blue-50 dark:border-blue-900 dark:text-blue-300"><Package className="h-3.5 w-3.5" />{s.t("propose_batch", "Propose Loading Batch")}</button>
@@ -398,6 +420,39 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
 
             {error ? <p className="rounded-xl bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">{error}</p> : null}
             {job.qvc_reason ? <p className="rounded-xl bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"><ShieldAlert className="mr-1 inline h-3.5 w-3.5" />{job.qvc_reason}</p> : null}
+
+            {["review", "qvc", "draft_ready"].includes(job.status) ? (
+              <div className="rounded-2xl border border-blue-200 bg-blue-50/60 p-3.5 dark:border-blue-900/50 dark:bg-blue-950/20">
+                <p className="text-[11px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300">{s.t("purpose_title", "What is this document for?")}</p>
+                <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">{s.t("purpose_hint", "The AI never decides where a document is posted. Choose the ERP workflow this document should prepare a reviewed draft for — you complete and post it in that module.")}</p>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <select
+                    value={purpose}
+                    onChange={(e) => setPurpose(e.target.value)}
+                    className="h-9 min-w-[16rem] rounded-lg border border-slate-300 bg-white px-2 text-xs font-semibold text-slate-800 outline-none focus:ring-1 focus:ring-blue-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  >
+                    <option value="">{s.t("purpose_choose", "— Select document purpose —")}</option>
+                    {["Trade", "Finance", "Logistics", "Masters"].map((grp) => (
+                      <optgroup key={grp} label={grp}>
+                        {DOC_PURPOSES.filter((p) => p.group === grp).map((p) => (
+                          <option key={p.target} value={p.target}>{s.t(p.labelKey, p.label)}</option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                  {job.doc_type_code && job.target_module ? (
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                      {s.t("purpose_ai_suggest", "AI suggested")}: {s.t(`dt_${job.doc_type_code}`, job.doc_type_code)} ({Math.round((job.doc_type_confidence || 0) * 100)}%)
+                    </span>
+                  ) : null}
+                  {[job.country_name, job.city_branch_name || job.country_branch_name].filter(Boolean).length ? (
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                      · {[job.country_name, job.city_branch_name || job.country_branch_name].filter(Boolean).join(" / ")}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
             {rozPreview?.preview ? (
               <div className="rounded-2xl border border-slate-200 bg-white p-3 text-xs dark:border-slate-800 dark:bg-slate-900">
                 <p className="mb-2 text-[11px] font-black uppercase tracking-wider text-slate-400">{s.t("roz_preview_title", "Before Posting — Cash / Bank Roznamcha")}</p>

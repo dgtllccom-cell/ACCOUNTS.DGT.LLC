@@ -116,6 +116,56 @@ const MODULE_MAP: Record<string, Record<string, string>> = {
     document_date: "loadingDate",
     port_of_loading: "portOfLoading",
   },
+  // ── General Office masters — the AI prepares a reviewed draft; the human
+  //    opens the master's own form (Scan → Continue Saved Draft) and completes
+  //    Link-to-existing / Update / Create-new there. No master row is written here.
+  companies: {
+    company_name: "companyName",
+    company_type: "legalStructure",
+    nature_of_business: "natureOfBusiness",
+    registration_number: "registrationNumber",
+    trn: "taxRegistrationNumber",
+    incorporation_date: "incorporationDate",
+    owner_name: "ownerName",
+    phone: "phone",
+    email: "email",
+    website: "website",
+    address: "address",
+    currency: "baseCurrency",
+  },
+  customers: {
+    customer_name: "customerName",
+    company_name: "companyName",
+    father_name: "fatherName",
+    national_id: "nationalId",
+    trn: "trn",
+    phone: "phone",
+    email: "email",
+    address: "address",
+    document_date: "kycDate",
+  },
+  banks: {
+    bank_name: "bankName",
+    branch_name: "branchName",
+    account_number: "accountNumber",
+    account_title: "accountTitle",
+    iban: "iban",
+    swift_bic: "swiftCode",
+    currency: "currency",
+    address: "address",
+  },
+  contracts: {
+    contract_number: "contractNumber",
+    contract_parties: "counterpartyName",
+    supplier_name: "counterpartyName",
+    customer_name: "counterpartyName",
+    document_date: "contractDate",
+    contract_start_date: "startDate",
+    contract_end_date: "endDate",
+    grand_total: "contractValue",
+    currency: "currency",
+    payment_terms: "paymentTerms",
+  },
   // Cash / Bank Roznamcha — a reviewed draft + pre-post preview only. The AI
   // never posts; the human posts through the existing Roznamcha screen.
   roznamcha_entries: {
@@ -136,7 +186,7 @@ const MODULE_MAP: Record<string, Record<string, string>> = {
 
 const AMOUNT_KEYS = new Set([
   "grand_total", "subtotal", "freight_amount", "insurance_amount", "tax_amount",
-  "advance_amount", "paid_amount", "balance_amount", "exchange_rate",
+  "advance_amount", "paid_amount", "balance_amount", "exchange_rate", "contract_value",
 ]);
 
 function toNumber(s: string | null): number | null {

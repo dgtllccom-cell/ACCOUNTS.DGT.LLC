@@ -106,17 +106,48 @@ const RULES: Rule[] = [
   { key: "customer_name", label: "Customer / Buyer", kind: "text", patterns: [/(?:customer|buyer|bill\s*to|sold\s*to|consignee|importer)\s*[:.\-]?\s*\n?\s*([A-Za-z0-9 .,&()\-]{4,60})/i] },
   { key: "payment_terms", label: "Payment Terms", kind: "text", patterns: [/(?:payment\s*terms?|terms\s*of\s*payment)\s*[:.\-]?\s*([A-Za-z0-9 %,./\-]{3,60})/i] },
   { key: "delivery_terms", label: "Delivery Terms / Incoterm", kind: "text", patterns: [/\b(FOB|CIF|CFR|CPT|CIP|DAP|DDP|EXW|FCA|FAS)\b[ ,-]?([A-Za-z ]{0,25})/ ] },
-  { key: "trn", label: "TRN / Tax Registration", kind: "text", patterns: [/(?:trn|tax\s*reg(?:istration)?\s*(?:no\.?)?|vat\s*no\.?|ntn|gst\s*no\.?)\s*[:.\-]?\s*([0-9A-Z\-]{5,20})/i] },
+  { key: "trn", label: "TRN / Tax Registration", kind: "text", patterns: [
+      /\b(?:trn|tax\s*registration\s*(?:no\.?|number)?|vat\s*(?:reg\.?\s*)?no\.?|ntn|gst\s*(?:reg\.?\s*)?no\.?)\s*[:.\-#]*\s*([0-9][0-9\- ]{6,18}[0-9]|[0-9]{7,15})/i,
+    ] },
   { key: "payment_method", label: "Payment Method", kind: "text", patterns: [/\b(cash|bank\s*transfer|telegraphic\s*transfer|wire\s*transfer|cheque|check|online\s*transfer|card|pos)\b/i] },
   { key: "cheque_number", label: "Cheque Number", kind: "text", onlyDocTypes: FINANCE_DOCS, patterns: [/(?:cheque|check)\s*(?:no\.?|number|#)\s*[:.\-]?\s*([0-9]{4,12})/i] },
   { key: "cheque_status", label: "Cheque Status", kind: "text", onlyDocTypes: FINANCE_DOCS, patterns: [/\b(post\s*dated|pdc|cleared|honou?red|dishonou?red|bounced|returned|cancelled|stop\s*payment)\b/i] },
   { key: "bank_name", label: "Bank Name", kind: "text", patterns: [/\b((?:[A-Z][A-Za-z]+\s+){1,4}Bank(?:\s+(?:Corp(?:oration)?|Ltd|Limited|PLC|Branch|[A-Z][a-z]+\s+Branch))?)\b/] },
   { key: "value_date", label: "Value Date", kind: "date", patterns: [/(?:value\s*date|settlement\s*date)\s*[:.\-]?\s*([0-3]?\d[-/. ][A-Za-z0-9]{2,9}[-/. ]\d{2,4}|\d{4}[-/.]\d{1,2}[-/.]\d{1,2})/i] },
+
+  // ── master-data fields (Company / Customer / Bank / Contract intake) ──
+  { key: "company_name", label: "Company / Entity Name", kind: "text", patterns: [
+      /(?:company\s*name|legal\s*name|name\s*of\s*(?:company|entity|firm|establishment)|entity\s*name|registered\s*name)\s*[:.\-]?\s*\n?\s*([A-Za-z0-9][A-Za-z0-9 .,&()'\-]{3,70})/i,
+      /\b([A-Z][A-Za-z0-9 .,&()'\-]{3,60}\s(?:LLC|L\.L\.C\.|LLP|FZE|FZ-LLC|FZCO|PLC|Pvt\.?\s*Ltd\.?|Private\s*Limited|Limited|Inc\.?|Corporation|Trading|General\s*Trading|Est(?:ablishment)?\.?))\b/,
+    ] },
+  { key: "company_type", label: "Legal Structure", kind: "text", patterns: [/\b(LLC|L\.L\.C\.|LLP|FZE|FZ-LLC|FZCO|Free\s*Zone\s*(?:Company|Establishment)|Sole\s*Proprietor(?:ship)?|Partnership|Private\s*Limited|Public\s*Limited|Branch\s*Office|Establishment)\b/i] },
+  { key: "registration_number", label: "Registration / License No.", kind: "text", patterns: [
+      /(?:trade\s*licen[sc]e|licen[sc]e|commercial\s*registration|c\.?r\.?|cr\s*no|registration\s*(?:no\.?|number)|reg\.?\s*no|incorporation\s*(?:no\.?|number)|iec\s*(?:code|no)?)\s*[:.\-]?\s*([A-Z0-9][A-Z0-9/\-]{3,25})/i,
+    ] },
+  { key: "incorporation_date", label: "Incorporation / Issue Date", kind: "date", patterns: [/(?:incorporat(?:ion|ed)|date\s*of\s*(?:incorporation|establishment|issue|registration)|issue\s*date|establishment\s*date)\s*[:.\-]?\s*([0-3]?\d[-/. ][A-Za-z0-9]{2,9}[-/. ]\d{2,4}|\d{4}[-/.]\d{1,2}[-/.]\d{1,2}|[A-Za-z]{3,9}\.?\s+[0-3]?\d(?:st|nd|rd|th)?[.,]?\s+\d{4})/i] },
+  { key: "owner_name", label: "Owner / Proprietor / Manager", kind: "text", patterns: [/(?:owner|proprietor|manager|managing\s*director|authorized\s*signatory|partner|shareholder|director)\s*(?:name)?\s*[:.\-]?\s*\n?\s*([A-Za-z][A-Za-z .'\-]{4,50})/i] },
+  { key: "father_name", label: "Father / Guardian Name", kind: "text", patterns: [/(?:father(?:'s)?\s*name|s\/o|son\s*of|d\/o|daughter\s*of|guardian)\s*[:.\-]?\s*([A-Za-z][A-Za-z .'\-]{3,50})/i] },
+  { key: "national_id", label: "National ID / CNIC / Passport", kind: "text", patterns: [/(?:cnic|nic|national\s*id(?:entity)?(?:\s*card)?|emirates\s*id|passport\s*(?:no\.?|number)|id\s*card\s*no)\s*[:.\-]?\s*([0-9A-Z][0-9A-Z\-]{5,25})/i] },
+  { key: "phone", label: "Phone / Mobile", kind: "text", patterns: [/(?:phone|tel(?:ephone)?|mobile|cell|contact\s*(?:no\.?|number))\s*[:.\-]?\s*(\+?[0-9][0-9()\s\-]{6,20}[0-9])/i] },
+  { key: "email", label: "Email", kind: "text", patterns: [/(?:e-?mail)\s*[:.\-]?\s*([A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,})/i, /\b([A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,})\b/] },
+  { key: "website", label: "Website", kind: "text", patterns: [/(?:website|web|url)\s*[:.\-]?\s*((?:https?:\/\/)?(?:www\.)?[A-Za-z0-9.\-]+\.[A-Za-z]{2,}(?:\/\S*)?)/i, /\b((?:https?:\/\/)?www\.[A-Za-z0-9.\-]+\.[A-Za-z]{2,})\b/] },
+  { key: "address", label: "Address", kind: "text", patterns: [/(?:address|registered\s*office|office\s*address|located\s*at|p\.?o\.?\s*box)\s*[:.\-]?\s*\n?\s*([A-Za-z0-9][A-Za-z0-9 .,#/()\-]{8,90})/i] },
+  { key: "account_number", label: "Bank Account Number", kind: "text", patterns: [/(?:a\/?c\s*(?:no\.?|number)|account\s*(?:no\.?|number)|acct\s*no)\s*[:.\-]?\s*([0-9][0-9\- ]{6,28}[0-9])/i] },
+  { key: "account_title", label: "Account Title / Holder", kind: "text", patterns: [/(?:account\s*(?:title|holder|name)|title\s*of\s*account|a\/?c\s*(?:title|name))\s*[:.\-]?\s*\n?\s*([A-Za-z0-9][A-Za-z0-9 .,&()'\-]{3,60})/i] },
+  { key: "iban", label: "IBAN", kind: "text", patterns: [/\b(?:iban\s*[:.\-]?\s*)?([A-Z]{2}\d{2}[A-Z0-9]{10,30})\b/] },
+  { key: "swift_bic", label: "SWIFT / BIC", kind: "text", patterns: [/(?:swift(?:\s*code)?|bic)\s*[:.\-]?\s*([A-Z]{6}[A-Z0-9]{2}(?:[A-Z0-9]{3})?)/i] },
+  { key: "branch_name", label: "Bank Branch", kind: "text", patterns: [/(?:branch(?:\s*name)?|branch\s*office)\s*[:.\-]?\s*([A-Za-z0-9][A-Za-z0-9 .,&()\-]{3,45})/i] },
+  { key: "contract_start_date", label: "Contract Start / Effective Date", kind: "date", patterns: [/(?:effective\s*(?:date|from)|commencement\s*date|start\s*date|valid\s*from|w\.?e\.?f\.?|agreement\s*date)\s*[:.\-]?\s*([0-3]?\d[-/. ][A-Za-z0-9]{2,9}[-/. ]\d{2,4}|\d{4}[-/.]\d{1,2}[-/.]\d{1,2}|[A-Za-z]{3,9}\.?\s+[0-3]?\d(?:st|nd|rd|th)?[.,]?\s+\d{4})/i] },
+  { key: "contract_end_date", label: "Contract End / Expiry Date", kind: "date", patterns: [/(?:expiry\s*date|expiration|end\s*date|valid\s*(?:to|until|till)|termination\s*date|renewal\s*date)\s*[:.\-]?\s*([0-3]?\d[-/. ][A-Za-z0-9]{2,9}[-/. ]\d{2,4}|\d{4}[-/.]\d{1,2}[-/.]\d{1,2}|[A-Za-z]{3,9}\.?\s+[0-3]?\d(?:st|nd|rd|th)?[.,]?\s+\d{4})/i] },
+  { key: "contract_parties", label: "Contract Parties", kind: "text", patterns: [/(?:between)\s+([A-Za-z0-9][A-Za-z0-9 .,&()'\-]{3,60})\s+(?:and|&)\s+([A-Za-z0-9][A-Za-z0-9 .,&()'\-]{3,60})/i] },
 ];
 
 const CONTAINER_RE = /\b([A-Z]{4}\d{7})\b/g;
 const SEAL_RE = /\bseal\s*(?:no\.?)?\s*[:.\-]?\s*([A-Z0-9\-]{4,15})/gi;
-const HS_RE = /\b(\d{4}\.?\d{2}\.?\d{2,4})\b/g;
+// HS / tariff code: 4 digits, then a dot, then 2 digits, optionally a dot + 2-4
+// more. Must NOT be preceded by a digit/comma/currency (rules out amounts like
+// "250,000.00" / "USD 1234.56").
+const HS_RE = /(?<![\d.,]\s?)(?<!USD |AED |PKR |EUR |GBP |INR )\b(\d{4}\.\d{2}(?:\.\d{2,4})?)\b/g;
 
 export function extractFields(text: string, pages: OcrPage[], docTypeCode: string): FieldCandidate[] {
   const out: FieldCandidate[] = [];
