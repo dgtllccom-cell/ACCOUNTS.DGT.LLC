@@ -605,16 +605,14 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
         onClose={() => setShowNewEmployeeModal(false)}
         title={tt("uf.modal_title", "Register New Employee in HR Master")}
       >
-        <div className="p-4 max-h-[80vh] overflow-y-auto">
-          <EmployeeForm
-            lang="en"
-            onSave={() => {
-              setShowNewEmployeeModal(false);
-              fetchEmployees();
-            }}
-            onCancel={() => setShowNewEmployeeModal(false)}
-          />
-        </div>
+        <EmployeeForm
+          lang="en"
+          onSave={() => {
+            setShowNewEmployeeModal(false);
+            fetchEmployees();
+          }}
+          onCancel={() => setShowNewEmployeeModal(false)}
+        />
       </SimpleModal>
     </div>
   );

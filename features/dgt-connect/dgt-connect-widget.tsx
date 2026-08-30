@@ -64,7 +64,7 @@ export function DgtConnectWidget({ currentUserId }: { currentUserId: string }) {
   const active = useMemo(() => c.conversations.find((x) => x.id === c.activeId) ?? null, [c.conversations, c.activeId]);
 
   return (
-    <div dir={isRtl ? "rtl" : "ltr"} className={cn("fixed z-[9998] bottom-4", isRtl ? "left-4" : "right-4")}>
+    <div data-dgt-connect dir={isRtl ? "rtl" : "ltr"} className={cn("no-print fixed z-[9998] bottom-4", isRtl ? "left-4" : "right-4")}>
       {open && (
         <div className="mb-3 flex h-[70vh] max-h-[620px] w-[92vw] max-w-[380px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-950">
           {/* header */}

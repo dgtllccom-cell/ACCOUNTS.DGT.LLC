@@ -1859,7 +1859,7 @@ export function GeneralOfficeDashboardView() {
         <SimpleModal
           title={selectedEmployeeId ? t.edit : t.registerBtn}
           onClose={() => setShowFormModal(false)}
-          className="max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto"
+          className="max-w-6xl w-[95vw]"
         >
           <EmployeeForm
             lang={lang}

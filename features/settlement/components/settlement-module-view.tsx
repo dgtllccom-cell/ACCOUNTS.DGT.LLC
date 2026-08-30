@@ -1,11 +1,15 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { 
-  Search, Filter, Link2, Unlink, RefreshCw, AlertCircle, 
-  CheckCircle2, ArrowRight, ShieldCheck, DollarSign
+import React, { useMemo, useState, useEffect } from "react";
+import {
+  Search, Filter, Link2, Unlink, RefreshCw, AlertCircle,
+  CheckCircle2, ArrowRight, ShieldCheck, DollarSign, Printer
 } from "lucide-react";
 import type { SettlementTransaction, SettlementLink } from "../types/settlement";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { useErpScope } from "@/lib/hooks/use-erp-scope";
+import { openScopedGenericReport, type GenericReportColumn } from "@/lib/reports/open-scoped-report";
+import { DataEmptyState } from "@/components/ui/data-empty-state";
 
 interface SettlementModuleViewProps {
   title: string;
@@ -32,6 +36,54 @@ export function SettlementModuleView({
   const [linkRemarks, setLinkRemarks] = useState<string>("");
   const [linking, setLinking] = useState(false);
   const [linkMsg, setLinkMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
+
+  const lang = useActiveLanguage();
+  const scope = useErpScope();
+
+  const money = (v: number, ccy?: string) =>
+    `${ccy ? ccy + " " : ""}${Number(v || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  const reportColumns: GenericReportColumn[] = useMemo(() => ([
+    { key: (r: any) => r.source_reference_no || r.id?.slice(0, 8), label: "Date / Serial" },
+    { key: (r: any) => r.source_date ? new Date(r.source_date).toLocaleDateString("en-GB") : "", label: "Date" },
+    { key: (r: any) => [r.party_name, r.narration].filter(Boolean).join(" — "), label: "Party & Narration" },
+    { key: (r: any) => String(r.direction || "").toUpperCase(), label: "Dir", align: "center" },
+    { key: (r: any) => money(r.local_amount, r.local_currency), label: "Total", align: "right" },
+    { key: (r: any) => money(r.remaining_local, r.local_currency), label: "Remaining", align: "right" },
+    { key: (r: any) => String(r.settlement_status || "").replace(/_/g, " "), label: "Status", align: "center" },
+  ]), []);
+
+  function printReport() {
+    const rows = transactions as unknown as Record<string, unknown>[];
+    const totalCr = transactions.filter((t) => t.direction === "cr").reduce((s, t) => s + Number(t.local_amount || 0), 0);
+    const totalDr = transactions.filter((t) => t.direction === "dr").reduce((s, t) => s + Number(t.local_amount || 0), 0);
+    const totalRemaining = transactions.reduce((s, t) => s + Number(t.remaining_local || 0), 0);
+    void openScopedGenericReport({
+      title,
+      subtitle,
+      lang,
+      columns: reportColumns,
+      rows,
+      orientation: "landscape",
+      countryId: scope.lockedCountryId,
+      countryBranchId: scope.lockedCountryBranchId,
+      cityBranchId: scope.lockedCityBranchId,
+      countryName: scope.countryName,
+      branchName: scope.branchDisplayName,
+      printedBy: scope.userName,
+      filters: [
+        { label: "Status", value: statusFilter === "all" ? "All" : statusFilter.replace(/_/g, " ") },
+        ...(searchTerm ? [{ label: "Search", value: searchTerm }] : []),
+        { label: "Records", value: String(transactions.length) },
+      ],
+      summary: {
+        "Total CR": money(totalCr),
+        "Total DR": money(totalDr),
+        "Total Remaining": money(totalRemaining),
+        "Records": String(transactions.length),
+      },
+    });
+  }
 
   async function loadData() {
     setLoading(true);
@@ -167,6 +219,13 @@ export function SettlementModuleView({
             <option value="needs_review">Needs Review</option>
           </select>
           <button
+            onClick={printReport}
+            disabled={transactions.length === 0}
+            className="inline-flex items-center gap-1.5 p-2 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 text-xs font-semibold text-blue-600 disabled:opacity-40"
+          >
+            <Printer className="h-4 w-4" /> Print Report
+          </button>
+          <button
             onClick={loadData}
             className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 text-slate-600 dark:text-slate-300"
           >
@@ -202,8 +261,11 @@ export function SettlementModuleView({
                   </tr>
                 ) : transactions.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-12 text-center text-slate-400">
-                      No matching records found.
+                    <td colSpan={7}>
+                      <DataEmptyState
+                        title="No matching records found"
+                        hint={statusFilter !== "all" || searchTerm ? "No records match the selected filters. Adjust the status or search and try again." : "Settlement transactions appear here once entries are posted."}
+                      />
                     </td>
                   </tr>
                 ) : (
@@ -407,9 +469,12 @@ export function SettlementModuleView({
               )}
             </div>
           ) : (
-            <div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-800 p-8 text-center text-slate-400 text-xs">
-              <Link2 className="h-8 w-8 mx-auto mb-2 opacity-40" />
-              Select a transaction on the left to view linkage details, matching candidates, and FX analysis.
+            <div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-800">
+              <DataEmptyState
+                icon={Link2}
+                title="Transaction Linkage Details"
+                hint="Select a transaction on the left to view its linkage details, matching candidates, and FX analysis."
+              />
             </div>
           )}
         </div>

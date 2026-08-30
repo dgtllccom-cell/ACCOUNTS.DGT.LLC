@@ -18,8 +18,27 @@ export function printDomFragmentViaModal(
 ): boolean {
   if (typeof document === "undefined") return false;
   const el = document.getElementById(elementId);
-  const inner = el?.innerHTML;
-  if (!inner) return false;
+  if (!el) return false;
+
+  // Clone the target and strip application chrome so the A4 preview shows ONLY
+  // the report/voucher content — never the page-actions bar, breadcrumb, nav,
+  // filter toolbars, floating widgets, or export controls.
+  const clone = el.cloneNode(true) as HTMLElement;
+  const STRIP = [
+    "[data-erp-page-actions]",
+    "[data-print-exclude]",
+    ".no-print",
+    ".no-print-toolbar",
+    "nav",
+    "[role='navigation']",
+    "#erp-page-actions-slot",
+    "#erp-page-title-slot",
+    "[data-dgt-connect]",
+    "[data-radix-popper-content-wrapper]",
+  ].join(",");
+  clone.querySelectorAll(STRIP).forEach((n) => n.remove());
+  const inner = clone.innerHTML;
+  if (!inner || !inner.trim()) return false;
 
   const lang = opts.lang || (typeof document !== "undefined" ? document.documentElement.lang : "en") || "en";
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);

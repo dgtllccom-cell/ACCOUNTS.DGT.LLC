@@ -594,7 +594,7 @@ export function EmployeeManagementView() {
         <SimpleModal
           title={selectedEmployeeId ? t(lang, "hr.edit_profile_title", "Edit Employee Profile Setup") : t(lang, "hr.register_profile_title", "Register New Employee Profile")}
           onClose={() => setShowFormModal(false)}
-          className="max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto"
+          className="max-w-6xl w-[95vw]"
         >
           <EmployeeForm
             employeeId={selectedEmployeeId}

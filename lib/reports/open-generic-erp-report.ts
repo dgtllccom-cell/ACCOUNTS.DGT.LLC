@@ -165,7 +165,10 @@ export function buildGenericErpReportHtml(input: {
               </tr>`
                 )
                 .join("")
-            : `<tr><td colspan="${Math.max(columns.length, 1)}" style="text-align:center;padding:18px;">${escapeHtml(translateHeader(lang, "No records found"))}</td></tr>`
+            : `<tr><td colspan="${Math.max(columns.length, 1)}" style="text-align:center;padding:48px 18px;color:#64748b;">
+                 <div style="font-size:13px;font-weight:600;">${escapeHtml(translateHeader(lang, "No records found"))}</div>
+                 <div style="font-size:10px;margin-top:4px;color:#94a3b8;">${escapeHtml(translateHeader(lang, "No matching records for the selected filters"))}</div>
+               </td></tr>`
         }
         ${
           totalsRow

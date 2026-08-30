@@ -185,7 +185,7 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
   }
 
   return (
-    <section className="mb-2.5 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200/80 bg-white/95 px-3 py-1.5 shadow-xs transition-all dark:border-slate-800 dark:bg-slate-900/90">
+    <section data-erp-page-actions className="no-print mb-2.5 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200/80 bg-white/95 px-3 py-1.5 shadow-xs transition-all dark:border-slate-800 dark:bg-slate-900/90">
       <div className="flex min-w-0 items-center gap-2">
         <Button
           type="button"

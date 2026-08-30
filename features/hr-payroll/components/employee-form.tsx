@@ -701,11 +701,11 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
   }
 
   const stepsList = [
-    { number: 1, label: lang === "ur" ? "مرحلہ ۱: زمرہ اور شناخت" : lang === "ps" ? "۱ ګام: کټګوري او هویت" : lang === "fa" ? "مرحله ۱: دسته و هویت" : lang === "ar" ? "الخطوة ۱: الفئة والهوية" : "Step 1: Category & Identity", icon: <UserCheck className="h-4 w-4" /> },
-    { number: 2, label: lang === "ur" ? "مرحلہ ۲: لوکیشن اور برانچ" : lang === "ps" ? "۲ ګام: ځای او څانګه" : lang === "fa" ? "مرحله ۲: موقعیت و شعبه" : lang === "ar" ? "الخطوة ۲: الموقع والفرع" : "Step 2: Location & Branch", icon: <MapPin className="h-4 w-4" /> },
-    { number: 3, label: lang === "ur" ? "مرحلہ ۳: اوقات اور شفٹ" : lang === "ps" ? "۳ ګام: وخت او شفټ" : lang === "fa" ? "مرحله ۳: زمان و شیفت" : lang === "ar" ? "الخطوة ۳: الدوام والمناوبة" : "Step 3: Timelines & Shift", icon: <Clock className="h-4 w-4" /> },
-    { number: 4, label: lang === "ur" ? "مرحلہ ۴: تنخواہ اور کھاتہ" : lang === "ps" ? "۴ ګام: معاش او حساب" : lang === "fa" ? "مرحله ۴: حقوق و حساب" : lang === "ar" ? "الخطوة ۴: الراتب والحساب" : "Step 4: Salary & Accounts", icon: <BadgeDollarSign className="h-4 w-4" /> },
-    { number: 5, label: lang === "ur" ? "مرحلہ ۵: تصدیق اور رپورٹ" : lang === "ps" ? "۵ ګام: تایید او راپور" : lang === "fa" ? "مرحله ۵: تأیید و گزارش" : lang === "ar" ? "الخطوة ۵: التدقيق والتقرير" : "Step 5: Verification Report", icon: <FileText className="h-4 w-4" /> }
+    { number: 1, label: lang === "ur" ? "شناخت" : lang === "ps" ? "پېژندنه" : lang === "fa" ? "هویت" : lang === "ar" ? "الهوية" : "Identity", icon: <UserCheck className="h-4 w-4" /> },
+    { number: 2, label: lang === "ur" ? "برانچ" : lang === "ps" ? "څانګه" : lang === "fa" ? "شعبه" : lang === "ar" ? "الفرع" : "Branch", icon: <MapPin className="h-4 w-4" /> },
+    { number: 3, label: lang === "ur" ? "شفٹ" : lang === "ps" ? "شفټ" : lang === "fa" ? "شیفت" : lang === "ar" ? "المناوبة" : "Shift", icon: <Clock className="h-4 w-4" /> },
+    { number: 4, label: lang === "ur" ? "تنخواہ" : lang === "ps" ? "معاش" : lang === "fa" ? "حقوق" : lang === "ar" ? "الراتب" : "Salary", icon: <BadgeDollarSign className="h-4 w-4" /> },
+    { number: 5, label: lang === "ur" ? "جائزہ" : lang === "ps" ? "بیاکتنه" : lang === "fa" ? "بازبینی" : lang === "ar" ? "المراجعة" : "Review", icon: <FileText className="h-4 w-4" /> }
   ];
 
   return (
@@ -744,43 +744,44 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
         </div>
       ) : null}
 
-      {/* 5-Step Packets Bar */}
-      <div className="grid gap-2 sm:grid-cols-5">
-        {stepsList.map((s) => {
+      {/* Responsive horizontal progress stepper — numbered circles + connector */}
+      <nav aria-label="Progress" className="flex items-start">
+        {stepsList.map((s, idx) => {
           const isActive = activeStep === s.number;
           const isDone = activeStep > s.number;
-
           return (
-            <button
-              key={s.number}
-              type="button"
-              onClick={() => setActiveStep(s.number)}
-              className={`flex items-center gap-2.5 rounded-xl border p-3 text-start min-h-[52px] transition-all font-sans ${
-                isActive
-                  ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 shadow-sm ring-1 ring-emerald-500/30"
-                  : isDone
-                  ? "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 text-slate-700 dark:text-slate-300"
-                  : "border-slate-200 dark:border-slate-800 bg-card text-slate-500 hover:border-slate-300"
-              }`}
-            >
-              <div
-                className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg text-xs font-black transition-colors ${
-                  isActive
-                    ? "bg-emerald-600 text-white"
-                    : isDone
-                    ? "bg-slate-900 text-emerald-400 dark:bg-slate-800"
-                    : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+            <div key={s.number} className="flex flex-1 flex-col items-center">
+              <div className="flex w-full items-center">
+                <span className={`h-0.5 flex-1 ${idx === 0 ? "opacity-0" : isDone || isActive ? "bg-emerald-500" : "bg-slate-200 dark:bg-slate-700"}`} />
+                <button
+                  type="button"
+                  onClick={() => setActiveStep(s.number)}
+                  aria-current={isActive ? "step" : undefined}
+                  className={`grid h-8 w-8 shrink-0 place-items-center rounded-full border-2 text-xs font-black transition-colors ${
+                    isActive
+                      ? "border-emerald-600 bg-emerald-600 text-white"
+                      : isDone
+                      ? "border-emerald-500 bg-emerald-500 text-white"
+                      : "border-slate-300 bg-white text-slate-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-400"
+                  }`}
+                >
+                  {isDone ? <Check className="h-4 w-4" /> : s.number}
+                </button>
+                <span className={`h-0.5 flex-1 ${idx === stepsList.length - 1 ? "opacity-0" : isDone ? "bg-emerald-500" : "bg-slate-200 dark:bg-slate-700"}`} />
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveStep(s.number)}
+                className={`mt-1.5 max-w-full truncate px-1 text-[11px] font-bold ${
+                  isActive ? "text-emerald-700 dark:text-emerald-300" : isDone ? "text-slate-600 dark:text-slate-300" : "text-slate-400"
                 }`}
               >
-                {isDone ? <Check className="h-3.5 w-3.5" /> : s.number}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="text-xs font-bold leading-tight">{s.label}</div>
-              </div>
-            </button>
+                {s.label}
+              </button>
+            </div>
           );
         })}
-      </div>
+      </nav>
 
       {/* 2-Column Split for Steps 1-4, Full-Width for Step 5 */}
       {activeStep < 5 ? (

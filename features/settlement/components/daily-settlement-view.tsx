@@ -1,12 +1,51 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Clock, RefreshCw, Filter, CheckCircle2 } from "lucide-react";
+import { Clock, RefreshCw, Filter, CheckCircle2, Printer } from "lucide-react";
 import type { SettlementDailySummary } from "../types/settlement";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { useErpScope } from "@/lib/hooks/use-erp-scope";
+import { openScopedGenericReport, type GenericReportColumn } from "@/lib/reports/open-scoped-report";
+import { DataEmptyState } from "@/components/ui/data-empty-state";
 
 export function DailySettlementView() {
   const [dailyRows, setDailyRows] = useState<SettlementDailySummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const lang = useActiveLanguage();
+  const scope = useErpScope();
+
+  function printReport() {
+    const num = (v: number) => Number(v || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const columns: GenericReportColumn[] = [
+      { key: (r: any) => r.txn_date ? new Date(r.txn_date).toLocaleDateString("en-GB") : "", label: "Date" },
+      { key: (r: any) => [r.branch_name || r.city_branch_name || "Main Branch", r.country_name].filter(Boolean).join(" — "), label: "Country & Branch" },
+      { key: "total_entries", label: "Entries", align: "center" },
+      { key: (r: any) => `${r.local_currency || ""} ${num(r.total_cr_local)}`, label: "Total CR", align: "right" },
+      { key: (r: any) => `${r.local_currency || ""} ${num(r.total_dr_local)}`, label: "Total DR", align: "right" },
+      { key: (r: any) => `${r.local_currency || ""} ${num(r.remaining_cr_local || r.remaining_dr_local || 0)}`, label: "Open Balance", align: "right" },
+      { key: (r: any) => `${r.count_settled ?? 0} / ${r.count_unsettled ?? 0}`, label: "Settled / Open", align: "center" },
+      { key: (r: any) => `+$${Number(r.total_fx_gain_usd || 0).toFixed(2)}`, label: "FX Realized", align: "right" },
+    ];
+    void openScopedGenericReport({
+      title: "Daily Branch Settlement & Closing",
+      subtitle: "Day-by-day reconciliation summary per branch with status breakdown and realized FX",
+      lang,
+      columns,
+      rows: dailyRows as unknown as Record<string, unknown>[],
+      orientation: "landscape",
+      countryId: scope.lockedCountryId,
+      countryBranchId: scope.lockedCountryBranchId,
+      cityBranchId: scope.lockedCityBranchId,
+      countryName: scope.countryName,
+      branchName: scope.branchDisplayName,
+      printedBy: scope.userName,
+      filters: [{ label: "Rows", value: String(dailyRows.length) }],
+      summary: {
+        "Days": String(dailyRows.length),
+        "Total Entries": String(dailyRows.reduce((s, r) => s + Number(r.total_entries || 0), 0)),
+      },
+    });
+  }
 
   async function loadData() {
     setLoading(true);
@@ -34,12 +73,21 @@ export function DailySettlementView() {
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">Daily Branch Settlement & Closing</h1>
           <p className="text-xs text-slate-500">Day-by-day reconciliation summary per branch with status breakdown and realized FX</p>
         </div>
-        <button
-          onClick={loadData}
-          className="inline-flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold"
-        >
-          <RefreshCw className="h-4 w-4" /> Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={printReport}
+            disabled={dailyRows.length === 0}
+            className="inline-flex items-center gap-2 p-2 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-blue-600 disabled:opacity-40"
+          >
+            <Printer className="h-4 w-4" /> Print Report
+          </button>
+          <button
+            onClick={loadData}
+            className="inline-flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold"
+          >
+            <RefreshCw className="h-4 w-4" /> Refresh
+          </button>
+        </div>
       </div>
 
       <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
@@ -64,7 +112,9 @@ export function DailySettlementView() {
                 </tr>
               ) : dailyRows.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-slate-400">No daily settlement summaries found.</td>
+                  <td colSpan={8}>
+                    <DataEmptyState title="No daily settlement summaries found" hint="Settlement summaries appear here once branch entries are posted for a day." />
+                  </td>
                 </tr>
               ) : (
                 dailyRows.map((r, i) => (

@@ -336,8 +336,34 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
   }
 
   function printLedger() {
-    if (!account) return;
     const tr = (label: string) => translateHeader(activeLang, label);
+
+    // No account selected yet — still produce a proper (empty) statement so the
+    // Print action always gives feedback instead of silently doing nothing.
+    if (!account) {
+      openGenericErpReport({
+        title: tr("Account Ledger Statement"),
+        subtitle: tr("Select an account to view its ledger transactions"),
+        lang: activeLang,
+        orientation: "landscape",
+        filters: [
+          { label: tr("Country"), value: selectedCountry || tr("All Countries") },
+          { label: tr("Branch"), value: selectedBranch || tr("All Branches") },
+          { label: tr("Period"), value: `${fromDate || tr("Start")} → ${toDate || tr("Today")}` },
+        ],
+        columns: [
+          { key: "entryDate", label: tr("Date") },
+          { key: "referenceNo", label: tr("Roznamcha No.") },
+          { key: "description", label: tr("Details / Narration") },
+          { key: "debit", label: tr("Debit"), align: "right" },
+          { key: "credit", label: tr("Credit"), align: "right" },
+          { key: "runningBalance", label: tr("Balance"), align: "right" },
+        ],
+        rows: [],
+      });
+      return;
+    }
+
     const curr = account.ledgerCurrency || "AED";
 
     const openBal = openingBalance || 0;
