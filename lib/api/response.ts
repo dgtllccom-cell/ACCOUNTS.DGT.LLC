@@ -64,6 +64,9 @@ export function translateToUrdu(message: string): string {
   if (msg.includes("authentication is required")) {
     return "لاگ اِن ضروری ہے۔ براہِ کرم دوبارہ لاگ اِن کریں۔";
   }
+  if (msg.includes("shipping/clearing/agent branch and cannot be used for a business transaction")) {
+    return "یہ برانچ شپنگ/کلیئرنگ/ایجنٹ برانچ ہے اور اسے بزنس ٹرانزیکشن کے لیے استعمال نہیں کیا جا سکتا۔";
+  }
   if (msg.includes("not found")) {
     return `مطلوبہ record نہیں ملا: ${message}`;
   }

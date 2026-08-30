@@ -318,7 +318,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
     }
     async function loadCityBranches() {
       try {
-        const url = `/api/erp/locations/branches/city?countryId=${encodeURIComponent(countryId)}${countryBranchId ? `&countryBranchId=${encodeURIComponent(countryBranchId)}` : ""}`;
+        const url = `/api/erp/locations/branches/city?scope=all&countryId=${encodeURIComponent(countryId)}${countryBranchId ? `&countryBranchId=${encodeURIComponent(countryBranchId)}` : ""}`;
         const res: any = await apiGet(url);
         const list = Array.isArray(res?.data?.cityBranches) ? res.data.cityBranches : Array.isArray(res?.cityBranches) ? res.cityBranches : [];
         setCityBranches(list);

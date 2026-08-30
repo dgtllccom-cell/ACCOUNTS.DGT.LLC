@@ -119,7 +119,7 @@ export function AllEditVersionHistoryView() {
     try {
       const [cRes, bRes] = await Promise.allSettled([
         fetch("/api/erp/locations/countries").then(r => r.json()),
-        fetch("/api/erp/locations/branches/city").then(r => r.json())
+        fetch("/api/erp/locations/branches/city?scope=all").then(r => r.json())
       ]);
       if (cRes.status === "fulfilled" && cRes.value?.countries) {
         setCountriesList(cRes.value.countries);
