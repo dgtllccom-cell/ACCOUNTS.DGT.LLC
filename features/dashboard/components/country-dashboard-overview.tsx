@@ -106,8 +106,12 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const currency = data.currency || "USD";
   const [isDark, setIsDark] = useState(false);
+  // render recharts only after mount — a 0×0 ResponsiveContainer measure on the
+  // server/first paint otherwise leaves a permanently blank SVG.
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const updateTheme = () => {
       setIsDark(document.documentElement.classList.contains("dark"));
     };
@@ -226,7 +230,7 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
           </CardHeader>
           <CardContent>
             <div className="h-[200px] w-full">
-              {salesChartEmpty ? (
+              {!mounted ? null : salesChartEmpty ? (
                 <EmptyChartState message={tt("common.no_data", "No data available")} height={200} />
               ) : (
               <ResponsiveContainer width="100%" height="100%">
@@ -269,7 +273,7 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
           </CardHeader>
           <CardContent>
             <div className="h-[200px] w-full">
-              {purchasesChartEmpty ? (
+              {!mounted ? null : purchasesChartEmpty ? (
                 <EmptyChartState message={tt("common.no_data", "No data available")} height={200} />
               ) : (
               <ResponsiveContainer width="100%" height="100%">
@@ -312,7 +316,7 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
           </CardHeader>
           <CardContent className="flex flex-col items-center justify-center">
             <div className="h-[140px] w-full flex justify-center items-center relative">
-              {branchesPieData.every((b) => !b.value) ? (
+              {!mounted ? null : branchesPieData.every((b) => !b.value) ? (
                 <EmptyChartState message={tt("common.no_data", "No data available")} height={140} />
               ) : (
               <ResponsiveContainer width="100%" height="100%">
