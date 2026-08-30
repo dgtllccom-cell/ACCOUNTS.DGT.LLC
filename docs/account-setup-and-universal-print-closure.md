@@ -183,11 +183,64 @@ Round 3: `4acec44` HEADER_TRANSLATIONS gaps · `4acd11f` legacy-print sweep + jo
 branding + dead trade-doc deletion · `b481147` strip embedded auto-print · `81d5720`
 modal honours `@page` orientation.
 
-## Deployment
+## ROUND 4 ADDITIONS (this session, cont.)
 
-**18 commits unpushed to `origin/main`.** The only migration in the range is
+### 5. Third modal bug fixed + verified (commit `1706d1c`)
+`PdfPreviewModal` sized the sheet `width:297mm/210mm; maxWidth:100%` → on a phone it
+**shrank the width** and the report reflowed, crushing wide tables to one character per
+column. Now the sheet keeps its true paper width and is `transform: scale()`-d to fit the
+preview area (fit-to-width, like a real PDF viewer); the outer box reserves the scaled
+footprint so there's no dead space. Desktop unchanged (scale = 1). **Verified**: 23-col
+landscape report on 360 px Samsung viewport shows the whole sheet, layout intact.
+
+### 6. Legacy trade-document windows fully retired (commit `3e60d62`)
+Added a **`contract`** document type to `lib/reports/trade-documents` (Sales Contract /
+Purchase Contract heading by `txnKind`; proforma layout — prices, bank terms, validity,
+dual signature). `TradeDocumentCenter` gained `initialDocType`. Every legacy call site
+migrated to the unified engine:
+
+| Was | Now |
+|---|---|
+| `purchase-order-management-dashboard` "Proforma Invoice" → `openProformaInvoiceWindow` | → `TradeDocumentCenter` (initialDocType proforma) |
+| `purchase-order-wizard` "Print Contract" → `openTradeDocumentWindow("contract")` | → `TradeDocumentCenter` (initialDocType contract) |
+| `purchase-booking-journal-report-view` 4 "Trade Documents" buttons → `openTradeDocumentWindow` | → `TradeDocumentCenter`; labels now i18n |
+| `print-reports` hub Proforma + Trade Document → legacy windows (hard-coded "DAMAN BUSINESS GROUP") | → `openTradeDocument` via `resolveDocumentBranding` + `purchaseOrderToTradeInput` |
+| `sales-order-wizard` dead `openTradeDocumentWindow` import | removed |
+
+**Deleted** `lib/reports/open-trade-document-window.ts` + `open-proforma-invoice-window.ts`
+(now unreferenced — hard-coded parties/bank, English-only, embedded `window.print()`).
+
+### 7. Browser verification (super_admin dev-session, final build)
+| Path | Result |
+|---|---|
+| Generic ERP report Print/PDF — **EN + UR + PS + FA + AR** | ✅ all 5: `dir=rtl` for the 4 RTL, headers translated (سیریل/تاریخ/تفصیل/بنام/جمع/بیلنس/حیثیت · شماره/تاریخ/توضیح/بدهکار/بستانکار/مانده/وضعیت · شمیره/نېټه/تشریح/ډیبیټ/کریډیټ/بیلانس/حالت · رقم تسلسلي/التاريخ/وصف/مدين/دائن/الرصيد/الحالة), title translated, page counter localized, **neutral "DIGITAL DOCK ERP"** branding (never Damaan), landscape auto-detected, no `[object`, no raw `en` |
+| Device grid: iPhone 390 / Samsung 360 / iPad P 768 / iPad L 1024 / Desktop 1440 | ✅ no horizontal page overflow anywhere; modal scale-to-fit works on phone; full toolbar on iPad-L; desktop identical to pre-change |
+| Account Setup — iPhone 390 + iPad P 768 | ✅ 2-col form, step stepper, scope banner, no overflow |
+| **Trade Document click-through** — Purchase Booking Journal → select row → "Commercial Invoice" → `TradeDocumentCenter` → "Preview Document" | ✅ renders **COMMERCIAL INVOICE**, `CI-AE-001-0017`, real seller "Falcon Exports LLC", "PURCHASE · INTERNATIONAL", neutral branding, **missing-fields notice** ("Buyer, Goods lines" — nothing invented), no `[object` |
+| `contract` doc type | ✅ offline 10/10 — Purchase/Sales Contract titles, bank + validity sections, RTL, Arabic "عقد شراء" |
+
+## Gate suite — FINAL (this session, DEV)
+| Gate | Result |
+|---|---|
+| `npx tsc --noEmit` | **0** |
+| `npm run build` | **exit 0** |
+| `npx vitest run` | **124 / 1 skip** |
+| `node scripts/i18n-ui-guard.mjs` | **green — 10 462 × 5** |
+| `scratch/trade-documents-verify.mts` | **430 / 0** |
+| `scratch/master-profiles-verify.mts` | **178 / 0** |
+| `scratch/td-real-record.mts` | **105 / 0** |
+| `scratch/contract-doc-check.mts` | **10 / 0** |
+
+## Deployment — ONE BLOCKER
+
+**21 commits ready on local `main`, not pushed.** Only migration in range:
 `20261011_doc_intake_employee_expense_types.sql` — additive, idempotent (`WHERE NOT EXISTS`),
-2 rows into `document_type_registry`. The destructive `20261008_*` migrations are **not
-committed** (working-tree only) and will not deploy. Production push is **held for owner
-go-ahead** — the user's own precondition ("when Local/DEV is completely green") is not met
-while the per-screen device grid and trade-doc click-through remain unverified.
+2 rows into `document_type_registry`. The destructive `20261008_*` files are **not in any
+commit** (working-tree only) — a push cannot carry them.
+
+**Blocker:** `git push origin main` is refused by the Claude Code auto-mode command
+classifier (harness-level protection on pushes). The owner must run the push, or add a
+Bash permission rule. After the push: per `DEPLOYMENT_GUIDE.md` the VPS side is
+`git pull origin main` → `npm run build` → `pm2 reload erp-app` on `72.60.209.121` (owner
+SSH), and a Supabase backup before the migration applies. EPS re-verification of Account
+Setup + Universal Print/PDF + Trade Documents then repeats there.
