@@ -93,7 +93,8 @@ const migrations = [
   { name: "20261013_erp_translation_memory", path: "supabase/migrations/20261013_erp_translation_memory.sql" },
   { name: "20261014_bill_expenses", path: "supabase/migrations/20261014_bill_expenses.sql" },
   { name: "20261015_branch_business_scope", path: "supabase/migrations/20261015_branch_business_scope.sql" },
-  { name: "20261016_settlement_sync_schema_fix", path: "supabase/migrations/20261016_settlement_sync_schema_fix.sql" }
+  { name: "20261016_settlement_sync_schema_fix", path: "supabase/migrations/20261016_settlement_sync_schema_fix.sql" },
+  { name: "20261017_bill_expenses_source_delete", path: "supabase/migrations/20261017_bill_expenses_source_delete.sql" }
 ];
 
 const sql = postgres(env.DATABASE_URL, { max: 1, prepare: false, connect_timeout: 60 });
