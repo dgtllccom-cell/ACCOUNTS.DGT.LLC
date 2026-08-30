@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import type { SettlementTransaction, SettlementLink } from "../types/settlement";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { openScopedGenericReport, type GenericReportColumn } from "@/lib/reports/open-scoped-report";
 import { DataEmptyState } from "@/components/ui/data-empty-state";
@@ -210,7 +211,11 @@ export function SettlementModuleView({
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`text-xs rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              statusFilter !== "all"
+                ? "border-blue-400 bg-blue-50 text-blue-700 font-semibold dark:border-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
+                : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
+            }`}
           >
             <option value="all">All Statuses</option>
             <option value="unsettled">Unsettled Only</option>
@@ -218,9 +223,16 @@ export function SettlementModuleView({
             <option value="settled">Settled</option>
             <option value="needs_review">Needs Review</option>
           </select>
+          {(statusFilter !== "all" || searchTerm) && (
+            <button
+              onClick={() => { setStatusFilter("all"); setSearchTerm(""); setTimeout(loadData, 0); }}
+              className="inline-flex items-center gap-1.5 p-2 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 text-xs font-semibold text-slate-600 dark:text-slate-300"
+            >
+              <Unlink className="h-3.5 w-3.5" /> {t(lang, "common.clear_selection", "Clear Filters")}
+            </button>
+          )}
           <button
             onClick={printReport}
-            disabled={transactions.length === 0}
             className="inline-flex items-center gap-1.5 p-2 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 text-xs font-semibold text-blue-600 disabled:opacity-40"
           >
             <Printer className="h-4 w-4" /> Print Report

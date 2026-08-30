@@ -76,7 +76,6 @@ export function DailySettlementView() {
         <div className="flex items-center gap-2">
           <button
             onClick={printReport}
-            disabled={dailyRows.length === 0}
             className="inline-flex items-center gap-2 p-2 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-blue-600 disabled:opacity-40"
           >
             <Printer className="h-4 w-4" /> Print Report

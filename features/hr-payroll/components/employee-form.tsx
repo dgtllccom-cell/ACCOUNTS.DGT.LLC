@@ -20,7 +20,8 @@ import {
   Sparkles,
   UserPlus,
   Phone,
-  Mail
+  Mail,
+  AlertCircle
 } from "lucide-react";
 import { apiGet, apiPost, apiPatch } from "@/lib/api/client";
 import { PersonPicker } from "./person-picker";
@@ -188,6 +189,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [activeStep, setActiveStep] = useState<number>(1);
+  const [stepError, setStepError] = useState<string | null>(null);
 
   // AI Document Intake — reviewed draft from an ID / employment-contract document.
   // Identity fields (name / father / national id) are shown as a hint only: the
@@ -489,6 +491,44 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
   // Full name is always derived from the structured fields, falling back to the stored display name.
   const fullName = [firstName, lastName].filter(Boolean).join(" ").trim() || (selectedPersonObj?.customer_name || "");
 
+  // Drop the step-blocked message as soon as the user changes a gated field.
+  useEffect(() => {
+    if (stepError) setStepError(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [personMasterId, countryId, countryBranchId, cityBranchId, basicSalary]);
+
+  // Per-step required-field gate. Returns null when the step is valid,
+  // otherwise a translated message describing the first missing field.
+  function validateStep(step: number): string | null {
+    if (step >= 1 && !personMasterId) {
+      return t(lang, "hr.select_person_first", "Please select or add an Employee / Person Name first.");
+    }
+    if (step >= 2 && (!countryId || (!countryBranchId && !cityBranchId))) {
+      return t(lang, "hr.step_incomplete", "Please complete the required fields on this step before continuing.");
+    }
+    if (step >= 4 && !(Number(basicSalary) > 0)) {
+      return t(lang, "hr.step_incomplete", "Please complete the required fields on this step before continuing.");
+    }
+    return null;
+  }
+
+  // Navigate the wizard. Forward moves are blocked until every step up to the
+  // target passes its required-field gate; backward moves are always allowed.
+  function goToStep(target: number) {
+    if (target > activeStep) {
+      for (let s = activeStep; s < target; s++) {
+        const err = validateStep(s);
+        if (err) {
+          setStepError(err);
+          setActiveStep(s);
+          return;
+        }
+      }
+    }
+    setStepError(null);
+    setActiveStep(target);
+  }
+
   async function handleSubmit(e?: React.FormEvent) {
     if (e) e.preventDefault();
     if (!personMasterId) {
@@ -755,7 +795,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                 <span className={`h-0.5 flex-1 ${idx === 0 ? "opacity-0" : isDone || isActive ? "bg-emerald-500" : "bg-slate-200 dark:bg-slate-700"}`} />
                 <button
                   type="button"
-                  onClick={() => setActiveStep(s.number)}
+                  onClick={() => goToStep(s.number)}
                   aria-current={isActive ? "step" : undefined}
                   className={`grid h-8 w-8 shrink-0 place-items-center rounded-full border-2 text-xs font-black transition-colors ${
                     isActive
@@ -771,7 +811,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
               </div>
               <button
                 type="button"
-                onClick={() => setActiveStep(s.number)}
+                onClick={() => goToStep(s.number)}
                 className={`mt-1.5 max-w-full truncate px-1 text-[11px] font-bold ${
                   isActive ? "text-emerald-700 dark:text-emerald-300" : isDone ? "text-slate-600 dark:text-slate-300" : "text-slate-400"
                 }`}
@@ -782,6 +822,16 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
           );
         })}
       </nav>
+
+      {stepError && (
+        <div
+          role="alert"
+          className="flex items-center gap-2 rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300"
+        >
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>{stepError}</span>
+        </div>
+      )}
 
       {/* 2-Column Split for Steps 1-4, Full-Width for Step 5 */}
       {activeStep < 5 ? (
@@ -1039,7 +1089,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                         setDepartment(def.department);
                       }
                     }}
-                    className="flex h-10 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100 shadow-xs outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-sans"
+                    className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                   >
                     <optgroup label={lang === "ur" ? "ملازمین کے زمرے" : lang === "ar" ? "فئات الموظفين" : "Employee Categories"}>
                       <option value="Manager">{catLabel("Manager")}</option>
@@ -1171,7 +1221,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                     <select
                       value={countryId}
                       onChange={(e) => setCountryId(e.target.value)}
-                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                     >
                       <option value="">{t(lang, "hr.f_select_country", "Select Country")}</option>
                       {countries.map((c) => (
@@ -1185,7 +1235,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                       value={countryBranchId}
                       onChange={(e) => setCountryBranchId(e.target.value)}
                       disabled={!countryId}
-                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100 disabled:opacity-40"
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 disabled:opacity-40"
                     >
                       <option value="">{t(lang, "hr.f_select_main_branch", "Select Main Branch")}</option>
                       {branches.map((b) => (
@@ -1201,7 +1251,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                       value={cityBranchId}
                       onChange={(e) => setCityBranchId(e.target.value)}
                       disabled={!countryId}
-                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100 disabled:opacity-40"
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 disabled:opacity-40"
                     >
                       <option value="">{t(lang, "hr.f_select_city_branch", "Select City Branch")}</option>
                       {cityBranches.map((cb) => (
@@ -1219,7 +1269,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                     <select
                       value={reportingManagerId}
                       onChange={(e) => setReportingManagerId(e.target.value)}
-                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                     >
                       <option value="">{t(lang, "hr.f_select_manager", "Select Manager (Optional)")}</option>
                       {managers.map((m) => (
@@ -1274,7 +1324,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                     <select
                       value={employmentType}
                       onChange={(e) => setEmploymentType(e.target.value)}
-                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                     >
                       <option value="Full-time">{t(lang, "hr.f_full_time", "Full-time")}</option>
                       <option value="Part-time">{t(lang, "hr.f_part_time", "Part-time")}</option>
@@ -1344,7 +1394,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                     <select
                       value={salaryType}
                       onChange={(e) => setSalaryType(e.target.value)}
-                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                     >
                       <option value="Monthly">{t(lang, "hr.f_monthly", "Monthly")}</option>
                       <option value="Daily">{t(lang, "hr.f_daily", "Daily")}</option>
@@ -1441,7 +1491,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                     <select
                       value={salaryExpenseAccountId}
                       onChange={(e) => setSalaryExpenseAccountId(e.target.value)}
-                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-slate-100"
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                     >
                       <option value="">{t(lang, "hr.f_select_ledger", "Select Ledger")}</option>
                       {ledgers.map((l) => (
@@ -1455,7 +1505,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                     <select
                       value={employeePayableAccountId}
                       onChange={(e) => setEmployeePayableAccountId(e.target.value)}
-                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-slate-100"
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                     >
                       <option value="">{t(lang, "hr.f_select_ledger", "Select Ledger")}</option>
                       {ledgers.map((l) => (
@@ -1632,7 +1682,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
           {activeStep > 1 && (
             <Button
               type="button"
-              onClick={() => setActiveStep((s) => s - 1)}
+              onClick={() => goToStep(activeStep - 1)}
               variant="outline"
               className="text-xs font-semibold gap-1"
             >
@@ -1644,7 +1694,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
           {activeStep < 5 && (
             <Button
               type="button"
-              onClick={() => setActiveStep((s) => s + 1)}
+              onClick={() => goToStep(activeStep + 1)}
               className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 gap-1"
             >
               <span>{t(lang, "common.next_step", "Next Step")}</span>
