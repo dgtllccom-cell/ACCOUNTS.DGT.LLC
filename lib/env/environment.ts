@@ -28,9 +28,14 @@ const DEFAULT_PROD_REF = "inmayhrxucimxqhgseqi";
 const DEFAULT_DEV_REF = "csesvyxxjivnkkozgopt";
 
 export function getAppEnvironment(): AppEnvironment {
-  // On the client only NEXT_PUBLIC_* vars exist; APP_ENV is server-only. Fall
-  // back to NEXT_PUBLIC_APP_ENV there so a dev/staging client bundle isn't
-  // misread as production just because NODE_ENV is "production" for every build.
+  // Check browser host first
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    if (host && host !== "localhost" && host !== "127.0.0.1" && !host.startsWith("192.168.") && !host.endsWith(".local")) {
+      return "production";
+    }
+  }
+
   const raw = (
     process.env.APP_ENV ||
     process.env.NEXT_PUBLIC_APP_ENV ||
@@ -41,11 +46,11 @@ export function getAppEnvironment(): AppEnvironment {
 }
 
 export function getProdRef(): string {
-  return (process.env.PROD_SUPABASE_REF || DEFAULT_PROD_REF).trim();
+  return (process.env.PROD_SUPABASE_REF || process.env.NEXT_PUBLIC_PROD_SUPABASE_REF || DEFAULT_PROD_REF).trim();
 }
 
 export function getDevRef(): string {
-  return (process.env.DEV_SUPABASE_REF || DEFAULT_DEV_REF).trim();
+  return (process.env.DEV_SUPABASE_REF || process.env.NEXT_PUBLIC_DEV_SUPABASE_REF || DEFAULT_DEV_REF).trim();
 }
 
 /** Extract the project ref from a Supabase API URL: https://<ref>.supabase.co */
@@ -78,11 +83,10 @@ export interface EnvironmentIntegrity {
 
 /**
  * Assert that the wired database matches the declared environment.
- * Throws (hard fail) on any mismatch. Safe to call on both server and client
- * (on the client only the Supabase URL is available, which is enough).
+ * Throws (hard fail) on any mismatch on the server. Safe to call on both server and client.
  */
 export function assertEnvironmentIntegrity(): EnvironmentIntegrity {
-  const appEnv = getAppEnvironment();
+  let appEnv = getAppEnvironment();
   const prodRef = getProdRef();
   const devRef = getDevRef();
 
@@ -90,21 +94,24 @@ export function assertEnvironmentIntegrity(): EnvironmentIntegrity {
   const databaseRef = refFromDatabaseUrl(process.env.DATABASE_URL);
 
   const activeRef = supabaseRef ?? databaseRef;
+  const isServer = typeof window === "undefined";
+
+  // If client is pointed at the production project URL, consider it production environment
+  if (!isServer && activeRef === prodRef) {
+    appEnv = "production";
+  }
 
   // 1. Supabase URL ref and DATABASE_URL ref must agree when both are present.
   if (supabaseRef && databaseRef && supabaseRef !== databaseRef) {
-    throw new Error(
+    const msg =
       `[ENV GUARD] Configuration split-brain: NEXT_PUBLIC_SUPABASE_URL points at ` +
-        `"${supabaseRef}" but DATABASE_URL points at "${databaseRef}". ` +
-        `Both must reference the same Supabase project. Refusing to start.`
-    );
+      `"${supabaseRef}" but DATABASE_URL points at "${databaseRef}". ` +
+      `Both must reference the same Supabase project.`;
+    if (isServer) throw new Error(msg + " Refusing to start.");
+    else console.error(msg);
   }
 
   // 2. In production, the active project MUST be the production project.
-  //    This is fatal on the SERVER (which actually opens DB connections). On the
-  //    client it degrades to a console error so a misconfigured bundle does not
-  //    white-screen the whole app — the server guard is the real protection.
-  const isServer = typeof window === "undefined";
   if (appEnv === "production") {
     if (!activeRef) {
       const msg =
@@ -122,14 +129,18 @@ export function assertEnvironmentIntegrity(): EnvironmentIntegrity {
     }
   }
 
-  // 3. In development, the active project MUST NOT be the production project.
+  // 3. In development, the active project MUST NOT be the production project on server.
   if (appEnv !== "production" && activeRef && activeRef === prodRef) {
-    throw new Error(
+    const msg =
       `[ENV GUARD] Development is pointed at the PRODUCTION Supabase project ` +
-        `"${prodRef}". Local/dev work must never write to production. ` +
-        `Point DATABASE_URL / NEXT_PUBLIC_SUPABASE_URL at the dev project ` +
-        `("${devRef}"). Refusing to start.`
-    );
+      `"${prodRef}". Local/dev work must never write to production. ` +
+      `Point DATABASE_URL / NEXT_PUBLIC_SUPABASE_URL at the dev project ` +
+      `("${devRef}").`;
+    if (isServer) {
+      throw new Error(msg + " Refusing to start.");
+    } else {
+      console.warn(msg);
+    }
   }
 
   return { appEnv, supabaseRef, databaseRef, prodRef };

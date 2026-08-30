@@ -2919,3 +2919,47 @@ Error: Country scope is not allowed for this user. Required: 96ab1da1-12f6-470a-
     at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\accounts\route.js:102:7983)
     at async S (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\accounts\route.js:102:9105)
 2026-08-29T23:02:56.768Z - FORBIDDEN - Country scope is not allowed for this user. Required: 96ab1da1-12f6-470a-85d5-a681424559ab - {}
+
+[2026-08-30T09:01:40.904Z] Error: Country scope is not allowed for this user. Required: 96ab1da1-12f6-470a-85d5-a681424559ab
+Error: Country scope is not allowed for this user. Required: 96ab1da1-12f6-470a-85d5-a681424559ab
+    at j (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\99467.js:1:6490)
+    at f (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\account-types\route.js:1:10247)
+    at M (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\accounts\route.js:37:5655)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\accounts\route.js:102:6978)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\accounts\route.js:102:7981)
+    at async S (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\accounts\route.js:102:9103)
+2026-08-30T09:01:42.528Z - FORBIDDEN - Country scope is not allowed for this user. Required: 96ab1da1-12f6-470a-85d5-a681424559ab - {}
+
+[2026-08-30T09:01:54.773Z] k: insert or update on table "profiles" violates foreign key constraint "profiles_id_fkey"
+k: insert or update on table "profiles" violates foreign key constraint "profiles_id_fkey"
+    at U (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\49122.js:4:2009)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\49122.js:4:2964
+    at TLSSocket.aP (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\49122.js:4:2968)
+    at TLSSocket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:189:23)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\49122.js:1:706
+    at new j (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\49122.js:1:748)
+    at d (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\49122.js:21:8479)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\accounts\route.js:49:38
+2026-08-30T09:02:02.727Z - FK_VIOLATION - A related record is missing or still in use. - {}
+
+[2026-08-30T09:02:02.784Z] Error: Country scope is not allowed for this user. Required: 96ab1da1-12f6-470a-85d5-a681424559ab
+Error: Country scope is not allowed for this user. Required: 96ab1da1-12f6-470a-85d5-a681424559ab
+    at j (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\99467.js:1:6490)
+    at f (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\account-types\route.js:1:10247)
+    at M (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\accounts\route.js:37:5655)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\accounts\route.js:102:6978)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\accounts\route.js:102:7981)
+    at async S (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\accounts\route.js:102:9103)
+2026-08-30T09:02:03.222Z - FORBIDDEN - Country scope is not allowed for this user. Required: 96ab1da1-12f6-470a-85d5-a681424559ab - {}
