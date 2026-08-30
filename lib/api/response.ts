@@ -22,9 +22,11 @@ export type ApiErrorBody = {
 export class ApiClientError extends Error {
   status = 400;
   code = "BAD_REQUEST";
-  constructor(message: string) {
+  constructor(message: string, opts?: { status?: number; code?: string }) {
     super(message);
     this.name = "ApiClientError";
+    if (opts?.status) this.status = opts.status;
+    if (opts?.code) this.code = opts.code;
   }
 }
 

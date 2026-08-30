@@ -1,6 +1,6 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { allocateFormSerials } from "@/lib/services/form-serials";
-import { withLocalPg } from "@/lib/db/local-postgres";
+import { withLocalPg, getDbUrl } from "@/lib/db/local-postgres";
 import { searchRecordIdsByTranslation } from "@/lib/i18n/localize-records";
 
 export type CustomerRow = {
@@ -143,26 +143,33 @@ export class CustomersRepository {
     return { customers: (data ?? []) as CustomerRow[], limit };
   }
 
-  async getById(id: string) {
-    const viaPg = await withLocalPg(async (sql) => {
-      const rows = await sql`
-        SELECT 
-          c.id, c.country_id, c.state_province_id, c.district_id, c.city_id, c.area_location_id,
-          c.customer_name, c.first_name, c.last_name, c.father_name, c.gender, c.photo_url, c.person_code,
-          c.company_name, c.contact_person, c.mobile, c.whatsapp, c.email, c.address,
-          c.notes, c.original_language_code, c.is_active, c.created_at, c.updated_at,
-          cnt.name as country_name,
-          sp.name as state_province_name,
-          ct.name as city_name
-        FROM public.customers c
-        LEFT JOIN public.countries cnt ON c.country_id = cnt.id
-        LEFT JOIN public.states_provinces sp ON c.state_province_id = sp.id
-        LEFT JOIN public.cities ct ON c.city_id = ct.id
-        WHERE c.id = ${id}::uuid AND c.deleted_at IS NULL LIMIT 1
-      `;
-      return (rows[0] as unknown as CustomerRow) ?? null;
-    });
-    if (viaPg) return viaPg;
+  async getById(id: string): Promise<CustomerRow | null> {
+    // When a direct DB URL is configured the pg read is AUTHORITATIVE: a `null` result
+    // means "no such customer" (deleted / bad id / stale reference), NOT "pg unavailable".
+    // Previously `if (viaPg) return viaPg` treated that null as a fall-through and hit the
+    // Supabase `.single()` path, which throws "Cannot coerce the result to a single JSON
+    // object" on 0 rows and surfaced as a 500. Only fall back to Supabase when there is
+    // genuinely no DATABASE_URL.
+    if (getDbUrl()) {
+      return (await withLocalPg(async (sql) => {
+        const rows = await sql`
+          SELECT
+            c.id, c.country_id, c.state_province_id, c.district_id, c.city_id, c.area_location_id,
+            c.customer_name, c.first_name, c.last_name, c.father_name, c.gender, c.photo_url, c.person_code,
+            c.company_name, c.contact_person, c.mobile, c.whatsapp, c.email, c.address,
+            c.notes, c.original_language_code, c.is_active, c.created_at, c.updated_at,
+            cnt.name as country_name,
+            sp.name as state_province_name,
+            ct.name as city_name
+          FROM public.customers c
+          LEFT JOIN public.countries cnt ON c.country_id = cnt.id
+          LEFT JOIN public.states_provinces sp ON c.state_province_id = sp.id
+          LEFT JOIN public.cities ct ON c.city_id = ct.id
+          WHERE c.id = ${id}::uuid AND c.deleted_at IS NULL LIMIT 1
+        `;
+        return (rows[0] as unknown as CustomerRow) ?? null;
+      }));
+    }
 
     const supabase = createSupabaseAdminClient() as any;
     const { data, error } = await supabase
@@ -170,9 +177,9 @@ export class CustomersRepository {
       .select(CUSTOMER_COLUMNS.join(", "))
       .eq("id", id)
       .is("deleted_at", null)
-      .single();
+      .maybeSingle();
     if (error) throw new Error(error.message);
-    return data as CustomerRow;
+    return (data as CustomerRow) ?? null;
   }
 
   async getContacts(customerId: string) {

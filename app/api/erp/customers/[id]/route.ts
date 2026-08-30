@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { apiOk, handleApiError } from "@/lib/api/response";
+import { apiOk, handleApiError, ApiClientError } from "@/lib/api/response";
 import { auditApiAction } from "@/lib/api/audit";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
@@ -21,6 +21,9 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     });
 
     const data = await customersService.getById(id);
+    if (!data?.customer) {
+      throw new ApiClientError("Customer not found", { status: 404, code: "NOT_FOUND" });
+    }
     const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
     // Always resolve — even when lang === "en" — because the base column holds whatever
     // script the record was originally typed in. If that was Urdu/Arabic/etc, skipping

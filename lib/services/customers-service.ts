@@ -140,18 +140,20 @@ export class CustomersService {
       input.originalLanguage
     ) {
       const customer = await customersRepository.getById(id);
-      const resolvedLang = (input.originalLanguage ?? (customer.original_language_code as SupportedLanguage) ?? "en") as SupportedLanguage;
-      await translateMasterRecord(
-        "customers",
-        id,
-        {
-          customer_name: input.customerName ?? customer.customer_name,
-          company_name: input.companyName ?? customer.company_name,
-          contact_person: input.contactPerson ?? customer.contact_person
-        },
-        resolvedLang,
-        actorId ?? null
-      );
+      if (customer) {
+        const resolvedLang = (input.originalLanguage ?? (customer.original_language_code as SupportedLanguage) ?? "en") as SupportedLanguage;
+        await translateMasterRecord(
+          "customers",
+          id,
+          {
+            customer_name: input.customerName ?? customer.customer_name,
+            company_name: input.companyName ?? customer.company_name,
+            contact_person: input.contactPerson ?? customer.contact_person
+          },
+          resolvedLang,
+          actorId ?? null
+        );
+      }
     }
   }
 
