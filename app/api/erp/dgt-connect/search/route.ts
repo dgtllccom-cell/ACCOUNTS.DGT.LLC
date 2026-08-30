@@ -12,6 +12,6 @@ export async function GET(request: NextRequest) {
     const q = new URL(request.url).searchParams.get("q") || "";
     return apiOk({ results: await searchMessages(auth.session, q) });
   } catch (error) {
-    return dgtErrorResponse(error);
+    return dgtErrorResponse(error, { results: [] });
   }
 }

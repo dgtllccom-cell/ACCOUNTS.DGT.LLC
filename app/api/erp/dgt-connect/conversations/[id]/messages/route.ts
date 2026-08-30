@@ -24,7 +24,7 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ id: str
     });
     return apiOk({ messages });
   } catch (error) {
-    return dgtErrorResponse(error);
+    return dgtErrorResponse(error, { messages: [] });
   }
 }
 
