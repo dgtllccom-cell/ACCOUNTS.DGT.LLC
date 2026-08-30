@@ -4457,6 +4457,7 @@ export type UiKey =
   | "dgtc.open_record"
   | "dgtc.deleted_message"
   | "dgtc.unread_one"
+  | "dgtc.setup_pending"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -14973,6 +14974,7 @@ const en: Dict = {
   "dgtc.open_record": "Open record",
   "dgtc.deleted_message": "This message was deleted",
   "dgtc.unread_one": "1 unread",
+  "dgtc.setup_pending": "DGT Connect is being set up on this server. Check back shortly.",
 };
 
 const ur: Dict = {
@@ -25466,6 +25468,7 @@ const ur: Dict = {
   "dgtc.open_record": "ریکارڈ کھولیں",
   "dgtc.deleted_message": "یہ پیغام حذف کر دیا گیا",
   "dgtc.unread_one": "1 غیر پڑھا",
+  "dgtc.setup_pending": "ڈی جی ٹی کنیکٹ اس سرور پر ترتیب دیا جا رہا ہے۔ کچھ دیر بعد دوبارہ دیکھیں۔",
 };
 
 const ar: Dict = {
@@ -35961,6 +35964,7 @@ const ar: Dict = {
   "dgtc.open_record": "ریکارډ خلاص کړئ",
   "dgtc.deleted_message": "دا پیغام حذف شو",
   "dgtc.unread_one": "1 نالوستی",
+  "dgtc.setup_pending": "DGT کنیکټ پدې سرور کې تنظیمیږي. لږ وروسته بیا وګورئ.",
 };
 
 const fa: Dict = {
@@ -46455,6 +46459,7 @@ const fa: Dict = {
   "dgtc.open_record": "باز کردن رکورد",
   "dgtc.deleted_message": "این پیام حذف شد",
   "dgtc.unread_one": "۱ خوانده‌نشده",
+  "dgtc.setup_pending": "DGT کانکت روی این سرور در حال راه‌اندازی است. کمی بعد دوباره بررسی کنید.",
 };
 
 const ps: Dict = {
@@ -56955,6 +56960,7 @@ const ps: Dict = {
   "dgtc.open_record": "فتح السجل",
   "dgtc.deleted_message": "تم حذف هذه الرسالة",
   "dgtc.unread_one": "1 غير مقروء",
+  "dgtc.setup_pending": "يتم إعداد DGT كونكت على هذا الخادم. تحقق مرة أخرى قريبًا.",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

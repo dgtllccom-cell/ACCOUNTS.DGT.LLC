@@ -28,6 +28,7 @@ export function useDgtConnect(lang: SupportedLanguage, enabled: boolean, current
   const [messages, setMessages] = useState<DgtMessage[]>([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [setupPending, setSetupPending] = useState(false);
   const [translateView, setTranslateView] = useState(true);
 
   const activeIdRef = useRef<string | null>(null);
@@ -35,8 +36,9 @@ export function useDgtConnect(lang: SupportedLanguage, enabled: boolean, current
 
   const refreshConversations = useCallback(async () => {
     try {
-      const d = await api<{ conversations: DgtConversation[] }>("/api/erp/dgt-connect/conversations");
-      setConversations(d.conversations);
+      const d = await api<{ conversations: DgtConversation[]; setupPending?: boolean }>("/api/erp/dgt-connect/conversations");
+      setConversations(d.conversations || []);
+      setSetupPending(Boolean(d.setupPending));
     } catch (e) { setError((e as Error).message); }
   }, []);
 
@@ -193,7 +195,7 @@ export function useDgtConnect(lang: SupportedLanguage, enabled: boolean, current
 
   return {
     conversations, unreadTotal, unreadByConv, typingByConv, directory,
-    activeId, messages, loadingMessages, error, translateView,
+    activeId, messages, loadingMessages, error, setupPending, translateView,
     setTranslateView, setActiveId,
     refreshConversations, refreshUnread, loadDirectory,
     openConversation, openDirect, createGroup, send, notifyTyping, loadMessages,

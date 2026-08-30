@@ -160,6 +160,15 @@ async function loadBranchDashboardData(
 
     const todayStr = new Date().toISOString().split("T")[0];
 
+    // Each aggregate is resolved independently — one failing query (a lagging
+    // migration, a permission quirk on one table) must not blank the whole
+    // dashboard. A rejected/errored query contributes 0 for its own metric only.
+    const q = <T,>(p: PromiseLike<T>): Promise<{ data: any; count: number | null; error: any }> =>
+      Promise.resolve(p).then(
+        (r: any) => ({ data: r?.data ?? null, count: r?.count ?? null, error: r?.error ?? null }),
+        (e: any) => ({ data: null, count: null, error: e })
+      );
+
     const [
       todayPostings,
       usersRes,
@@ -171,22 +180,26 @@ async function loadBranchDashboardData(
       salesRows,
       productsCountRes
     ] = await Promise.all([
-      supabase.from("roznamcha_entries").select("id", { count: "exact", head: true }).eq(queryField, queryValue).eq("entry_date", todayStr).is("deleted_at", null),
-      supabase.from("user_role_assignments").select("user_id", { count: "exact", head: true }).eq(queryField, queryValue).eq("is_active", true).is("deleted_at", null),
-      supabase.from("customers").select("id", { count: "exact", head: true }).eq("country_id", countryId).is("deleted_at", null),
-      supabase.from("ledgers").select("id, name, code, current_balance, currency").eq(queryField, queryValue).is("deleted_at", null).order("code"),
-      supabase.from("customers").select("id, customer_name, company_name, mobile, email").eq("country_id", countryId).is("deleted_at", null).order("customer_name").limit(8),
-      supabase
+      q(supabase.from("roznamcha_entries").select("id", { count: "exact", head: true }).eq(queryField, queryValue).eq("entry_date", todayStr).is("deleted_at", null)),
+      q(supabase.from("user_role_assignments").select("user_id", { count: "exact", head: true }).eq(queryField, queryValue).eq("is_active", true).is("deleted_at", null)),
+      q(supabase.from("customers").select("id", { count: "exact", head: true }).eq("country_id", countryId).is("deleted_at", null)),
+      q(supabase.from("ledgers").select("id, name, code, current_balance, currency").eq(queryField, queryValue).is("deleted_at", null).order("code")),
+      q(supabase.from("customers").select("id, customer_name, company_name, mobile, email").eq("country_id", countryId).is("deleted_at", null).order("customer_name").limit(8)),
+      q(supabase
         .from("roznamcha_entries")
         .select("id, voucher_no, entry_date, type, status, created_at, narration")
         .eq(queryField, queryValue)
         .is("deleted_at", null)
         .order("created_at", { ascending: false })
-        .limit(8),
-      supabase.from("purchase_orders").select("order_total, payment_status, status").eq(queryField, queryValue).is("deleted_at", null),
-      supabase.from("sales_orders").select("order_total, payment_status, status").eq(queryField, queryValue).is("deleted_at", null),
-      supabase.from("products").select("id", { count: "exact", head: true }).eq("country_id", countryId).is("deleted_at", null)
+        .limit(8)),
+      q(supabase.from("purchase_orders").select("order_total, payment_status, status").eq(queryField, queryValue).is("deleted_at", null)),
+      q(supabase.from("sales_orders").select("order_total, payment_status, status").eq(queryField, queryValue).is("deleted_at", null)),
+      q(supabase.from("products").select("id", { count: "exact", head: true }).eq("country_id", countryId).is("deleted_at", null))
     ]);
+
+    for (const [label, r] of Object.entries({ todayPostings, usersRes, customersCountRes, ledgersRes, customersRes, recentRows, purchaseRows, salesRows, productsCountRes })) {
+      if ((r as any).error) console.warn(`[city dashboard] ${label} query failed:`, (r as any).error?.message ?? (r as any).error);
+    }
 
     const rawLedgers = ledgersRes.data ?? [];
     const purchaseTotal = (purchaseRows.data ?? []).reduce((sum: number, row: any) => sum + Number(row.order_total || 0), 0);

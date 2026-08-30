@@ -10,6 +10,6 @@ export async function GET() {
   try {
     return apiOk(await unreadSummary(auth.session));
   } catch (error) {
-    return dgtErrorResponse(error);
+    return dgtErrorResponse(error, { total: 0, byConversation: {}, typing: {} });
   }
 }

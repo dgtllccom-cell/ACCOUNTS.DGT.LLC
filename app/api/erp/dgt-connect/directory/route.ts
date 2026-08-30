@@ -11,6 +11,11 @@ export async function GET() {
     const directory = await dgtDirectory(auth.session);
     return apiOk(directory);
   } catch (error) {
-    return dgtErrorResponse(error);
+    return dgtErrorResponse(error, {
+      scopeLabel: "unknown",
+      self: { id: auth.session.userId, name: auth.session.fullName || "You", lang: auth.session.preferredLanguage || "en" },
+      globalUsers: [],
+      countries: [],
+    });
   }
 }

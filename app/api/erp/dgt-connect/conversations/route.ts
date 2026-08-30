@@ -12,7 +12,7 @@ export async function GET() {
   try {
     return apiOk({ conversations: await listConversations(auth.session) });
   } catch (error) {
-    return dgtErrorResponse(error);
+    return dgtErrorResponse(error, { conversations: [] });
   }
 }
 

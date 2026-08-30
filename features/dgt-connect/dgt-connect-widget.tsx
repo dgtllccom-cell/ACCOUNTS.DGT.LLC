@@ -105,6 +105,11 @@ export function DgtConnectWidget({ currentUserId }: { currentUserId: string }) {
               <button onClick={c.clearError} className="shrink-0"><X className="h-3 w-3" /></button>
             </div>
           )}
+          {c.setupPending && !c.error && (
+            <div className="bg-amber-50 px-3 py-1.5 text-[11px] font-semibold text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+              {tt("dgtc.setup_pending", "DGT Connect is being set up on this server. Check back shortly.")}
+            </div>
+          )}
 
           {view === "list" && (
             <>

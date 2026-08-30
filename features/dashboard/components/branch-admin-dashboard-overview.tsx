@@ -137,8 +137,12 @@ export function BranchAdminDashboardOverview({ data }: BranchDashboardOverviewPr
   const currency = data.currency || "USD";
   const profit = data.salesTotal - data.purchaseTotal;
   const [isDark, setIsDark] = useState(false);
+  // recharts' ResponsiveContainer measures its parent AFTER layout — render the
+  // charts only once mounted so a 0×0 first paint can never leave a blank SVG.
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const updateTheme = () => {
       setIsDark(document.documentElement.classList.contains("dark"));
     };
@@ -149,15 +153,27 @@ export function BranchAdminDashboardOverview({ data }: BranchDashboardOverviewPr
   }, []);
 
   // Real branch financials only — purchases, sales, cash & bank balances straight from the
-  // branch aggregates. No fabricated daily/weekly series; when everything is zero the charts
-  // render an empty state so cards, charts and tables reconcile on the same real numbers.
+  // branch aggregates (the SAME numbers as the KPI cards above, so they can never disagree).
+  // No fabricated series; when a series is genuinely zero the charts show a "No data" state.
   const financialData = useMemo(() => [
-    { name: tt("cdash.col_purchases", "Purchases"), value: data.purchaseTotal },
-    { name: tt("cdash.col_sales", "Sales"), value: data.salesTotal },
-    { name: tt("bdash.cash", "Cash"), value: data.cashBalance },
-    { name: tt("bdash.bank", "Bank"), value: data.bankBalance }
+    { name: tt("cdash.col_purchases", "Purchases"), value: Number(data.purchaseTotal) || 0 },
+    { name: tt("cdash.col_sales", "Sales"), value: Number(data.salesTotal) || 0 },
+    { name: tt("bdash.cash", "Cash"), value: Number(data.cashBalance) || 0 },
+    { name: tt("bdash.bank", "Bank"), value: Number(data.bankBalance) || 0 }
   ], [data.purchaseTotal, data.salesTotal, data.cashBalance, data.bankBalance, lang]);
-  const financialsEmpty = financialData.every((d) => !d.value);
+
+  // Bar chart: any non-zero series (positive OR negative — a negative cash/bank
+  // balance is real and must show).
+  const barData = useMemo(() => financialData.filter((d) => d.value !== 0), [financialData]);
+  const financialsEmpty = barData.length === 0;
+
+  // Pie ("Branch Mix"): a proportion of magnitudes — only positive values make
+  // sense; a negative balance has no slice.
+  const pieData = useMemo(
+    () => financialData.filter((d) => d.value > 0).map((d) => ({ ...d })),
+    [financialData]
+  );
+  const mixEmpty = pieData.length === 0;
 
   const quickActions = [
     { key: "bdash.qa_cash_entry", label: "Cash Entry", descKey: "bdash.qa_cash_entry_d", desc: "Post branch payment or receipt", href: "/dashboard/roznamcha/cash-entry", icon: ClipboardList },
@@ -214,11 +230,11 @@ export function BranchAdminDashboardOverview({ data }: BranchDashboardOverviewPr
             <p className="text-[9px] font-semibold text-muted-foreground uppercase">{tt("bdash.financials_sub", "Purchases, sales & balances")} · {currency}</p>
           </CardHeader>
           <CardContent>
-            <div className="h-[250px] w-full">
-              {financialsEmpty ? (
+            <div className="h-[250px] w-full" style={{ minHeight: 250 }}>
+              {!mounted ? null : financialsEmpty ? (
                 <EmptyChartState message={tt("common.no_data", "No data available")} height={250} />
               ) : (
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={220}>
                   <BarChart data={financialData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "hsl(var(--border))" : "#e2e8f0"} opacity={0.6} />
                     <XAxis dataKey="name" stroke="#94a3b8" tickLine={false} axisLine={false} style={{ fontSize: 9 }} />
@@ -246,14 +262,17 @@ export function BranchAdminDashboardOverview({ data }: BranchDashboardOverviewPr
             <p className="text-[9px] font-semibold text-muted-foreground uppercase">{tt("bdash.branch_mix_sub", "Spread of core account metrics")}</p>
           </CardHeader>
           <CardContent>
-            <div className="h-[180px] w-full flex items-center justify-center relative">
-              {financialsEmpty ? (
+            <div className="h-[180px] w-full flex items-center justify-center relative" style={{ minHeight: 180 }}>
+              {!mounted ? null : mixEmpty ? (
                 <EmptyChartState message={tt("common.no_data", "No data available")} height={180} />
               ) : (
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={150}>
                   <PieChart>
-                    <Pie data={financialData} dataKey="value" innerRadius={42} outerRadius={62} paddingAngle={4}>
-                      {financialData.map((entry, index) => <Cell key={entry.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />)}
+                    <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={42} outerRadius={62} paddingAngle={4}>
+                      {pieData.map((entry) => {
+                        const idx = financialData.findIndex((f) => f.name === entry.name);
+                        return <Cell key={entry.name} fill={CHART_COLORS[idx % CHART_COLORS.length]} />;
+                      })}
                     </Pie>
                     <Tooltip formatter={(value) => formatMoney(Number(value), currency)} contentStyle={{ background: isDark ? "hsl(var(--card))" : "#fff", border: isDark ? "1px solid hsl(var(--border))" : "1px solid #e2e8f0", borderRadius: 8, color: isDark ? "hsl(var(--card-foreground))" : "#0f172a", fontSize: 9 }} />
                   </PieChart>
@@ -262,7 +281,7 @@ export function BranchAdminDashboardOverview({ data }: BranchDashboardOverviewPr
             </div>
             <div className="grid grid-cols-2 gap-2 text-[10px] font-semibold text-muted-foreground mt-2">
               {financialData.map((entry, index) => (
-                <div key={entry.name} className="flex items-center gap-2">
+                <div key={entry.name} className={`flex items-center gap-2 ${entry.value > 0 ? "" : "opacity-40"}`}>
                   <span className="h-2 w-2 rounded-full" style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }} />
                   <span>{entry.name}</span>
                 </div>
