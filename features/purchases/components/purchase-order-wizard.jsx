@@ -47,7 +47,8 @@ import {
   SlidersHorizontal,
   ShoppingCart,
   Calendar,
-  MapPin
+  MapPin,
+  Clock
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -3945,643 +3946,635 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
           )}
 
           {activeTab !== "report" && (
-            activeTab === "reports_tab" ? (
-              <div className="w-full mt-4 animate-in fade-in duration-300">
-                <div className="mx-auto w-full space-y-4 print:max-w-none">
-                  {/* Step 4 Top Header Banner */}
-                  <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+            activeTab === "reports_tab" ? (() => {
+              const displayGoods = goodsEntries.length > 0 ? goodsEntries : [
+                {
+                  goodsName: form.goodsName || "Rice 1121 Steam",
+                  size: form.size || "5% Broken",
+                  brand: form.brand || "Al Baraka",
+                  hsCode: form.hsCode || "1006.30.90",
+                  origin: form.origin || form.originCountry || "United Arab Emirates",
+                  qtyNo: form.qtyNo || 50,
+                  qtyName: form.qtyName || "BAGS",
+                  coursePrice: form.coursePrice || form.price || 2515,
+                  totalAmount: (form.qtyNo || 50) * (form.coursePrice || form.price || 2515),
+                  exchangeRate: form.exchangeRate || 1.00000,
+                  finalAmount: (form.qtyNo || 50) * (form.coursePrice || form.price || 2515) * (form.exchangeRate || 1),
+                  grossWeight: (form.qtyNo || 50) * (form.qtyKgs || 25),
+                  netWeight: (form.qtyNo || 50) * ((form.qtyKgs || 25) - (form.emptyKgs || 0.2))
+                }
+              ];
+
+              const totalItemsCount = displayGoods.length;
+              const sumQty = displayGoods.reduce((acc, row) => acc + Number(row.qtyNo || 0), 0);
+              const sumGross = displayGoods.reduce((acc, row) => acc + Number(row.grossWeight || (Number(row.qtyNo || 0) * (Number(row.qtyKgs || 25)))), 0);
+              const sumNet = displayGoods.reduce((acc, row) => acc + Number(row.netWeight || (Number(row.qtyNo || 0) * ((Number(row.qtyKgs || 25)) - (Number(row.emptyKgs || 0.2))))), 0);
+              const sumAmount = displayGoods.reduce((acc, row) => acc + Number(row.totalAmount || row.amount || 0), 0);
+              const exRate = Number(form.exchangeRate || 1);
+              const sumFinal = displayGoods.reduce((acc, row) => acc + Number(row.finalAmount || (Number(row.totalAmount || row.amount || 0) * exRate)), 0);
+              const advPct = Number(form.advancePercent || 40);
+              const advAmt = (sumFinal * advPct) / 100;
+              const finBal = sumFinal - advAmt;
+              const primaryCurr = form.currencyType || form.purchaseCurrency || "AED";
+              const secondaryCurr = form.secondaryCurrency || "AED";
+
+              const summaryTotals = {
+                totalItems: totalItemsCount,
+                totalQtyStr: `${sumQty.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })} ${displayGoods[0]?.qtyName || "BAGS"}`,
+                grossWeightStr: `${(sumGross > 100 ? sumGross / 1000 : sumGross).toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })} MT`,
+                netWeightStr: `${(sumNet > 100 ? sumNet / 1000 : sumNet).toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })} MT`,
+                purchaseAmountStr: `${sumAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${primaryCurr}`,
+                exchangeRateStr: `${exRate.toFixed(5)}`,
+                finalAmountStr: `${sumFinal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${secondaryCurr}`,
+                advancePercent: advPct,
+                advanceAmountStr: `${advAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${secondaryCurr}`,
+                finalBalanceStr: `${finBal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${secondaryCurr}`
+              };
+
+              return (
+                <div className="w-full space-y-4 animate-in fade-in duration-200 mt-2">
+                  {/* 1. TOP HEADER BANNER (Dark Navy) */}
+                  <div className="bg-[#0B1528] text-white rounded-xl p-4 md:px-6 md:py-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-3.5">
-                      <div className="p-2.5 bg-blue-50 dark:bg-blue-950/50 border border-blue-100 dark:border-blue-900 rounded-xl text-blue-600 dark:text-blue-400">
-                        <FileText className="h-5 w-5" />
+                      <div className="p-2.5 bg-blue-600/20 border border-blue-500/30 rounded-xl text-blue-400">
+                        <FileText className="h-6 w-6" />
                       </div>
                       <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[9px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-full border border-blue-100 dark:border-blue-900">{t(lang, "purchase.step4_of5", "Step 4 of 5")}</span>
-                          <span className="text-[10px] font-semibold text-slate-400">{t(lang, "purchase.documentation_audit", "Documentation & Audit")}</span>
-                        </div>
-                        <h2 className="text-base sm:text-lg font-black uppercase tracking-tight text-slate-900 dark:text-slate-100 mt-0.5">{t(lang, "purchase.step4_title", "Step 4: Review Reports & Notes")}</h2>
-                        <p className="text-xs font-semibold text-slate-500 mt-0.5">
-                          {t(lang, "purchase.step4_verify_subtitle", "Verify printable document sections, account postings, goods manifest, payment terms, and loading schedules before final verification.")}
+                        <h1 className="text-base sm:text-lg font-black uppercase tracking-wider text-white">
+                          PURCHASE BOOKING VOUCHER
+                        </h1>
+                        <p className="text-[11px] text-slate-300 font-medium">
+                          Official Bill / Confirmation - Document backing for Goods, Shipping &amp; Payment
                         </p>
                       </div>
                     </div>
+
+                    <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs">
+                      <div>
+                        <span className="block text-[9px] uppercase font-bold text-slate-400">PC Number</span>
+                        <span className="font-mono font-black text-white">{form.purchaseContractNo || form.purchaseOrderNo || "PC-2026-1925"}</span>
+                      </div>
+                      <div>
+                        <span className="block text-[9px] uppercase font-bold text-slate-400">Booking Date:</span>
+                        <span className="inline-block bg-amber-400 text-slate-950 font-black px-2 py-0.5 rounded text-[11px]">
+                          {form.purchaseDate || "30/08/2026"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="block text-[9px] uppercase font-bold text-slate-400">Branch</span>
+                        <span className="font-bold text-white">{form.branchName || "Abu Dhabi City Branch"}</span>
+                      </div>
+                      <div>
+                        <span className="block text-[9px] uppercase font-bold text-slate-400">System</span>
+                        <span className="font-bold text-white">Global</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 2. BREADCRUMBS & TOP ACTIONS */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 px-1">
+                    <div className="flex items-center gap-1.5 text-xs text-slate-500 font-semibold">
+                      <span>Home</span>
+                      <span>&gt;</span>
+                      <span>Purchase</span>
+                      <span>&gt;</span>
+                      <span className="text-slate-800 dark:text-slate-200 font-bold">New Purchase Booking</span>
+                    </div>
+
                     <div className="flex items-center gap-2">
                       <Button
                         type="button"
                         variant="outline"
                         onClick={() => setActiveTab("shipping")}
-                        className="font-bold text-xs h-9 px-4 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                        className="h-8 text-xs font-bold px-3.5 border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg"
                       >
-                        <ChevronLeft className="h-4 w-4 mr-1" /> {t(lang, "common.back", "Back")}
+                        ← Back to Drafts
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => handlePrintA4Report(true)}
+                        className="h-8 text-xs font-bold px-3.5 border-slate-200 hover:bg-slate-50 text-slate-800 rounded-lg flex items-center gap-1.5"
+                      >
+                        <Eye className="h-3.5 w-3.5 text-blue-600" /> Preview
                       </Button>
                       <Button
                         type="button"
                         onClick={() => setActiveTab("report")}
-                        className="font-bold text-xs h-9 px-5 bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all flex items-center gap-1.5"
+                        className="h-8 text-xs font-bold px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-sm flex items-center gap-1"
                       >
-                        {t(lang, "purchase.next_step5_verify_print", "Next: Step 5 (Verify & Print)")} <ChevronRight className="h-4 w-4" />
+                        Next →
                       </Button>
                     </div>
                   </div>
 
-                  {/* 2-COLUMN WORKSPACE: LEFT = SUMMARY & NAVIGATION, RIGHT = REPORT VIEWER */}
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-                    {/* LEFT COLUMN: Option Buttons + Branch Info + Bill Info + Navigation */}
-                    <div className="lg:col-span-4 space-y-4 w-full">
-                      {/* View Mode Selector */}
-                      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-3 shadow-xs space-y-2">
-                        <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider block px-1">Select Report View</span>
-                        <button
-                          type="button"
-                          onClick={() => setStep4ViewMode("overview")}
-                          className={`w-full flex items-center justify-between p-3 rounded-xl text-left transition-all duration-200 cursor-pointer ${
-                            step4ViewMode === "overview"
-                              ? "bg-blue-50 dark:bg-blue-950/40 shadow-sm border-2 border-blue-600 text-blue-950 dark:text-blue-100"
-                              : "hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800"
-                          }`}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <div className={`p-2 rounded-lg ${step4ViewMode === "overview" ? "bg-blue-600 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"}`}>
-                              <FileSpreadsheet className="h-4 w-4" />
-                            </div>
-                            <div>
-                              <span className="text-[9px] font-black uppercase text-blue-600 dark:text-blue-400">Option 1</span>
-                              <h4 className="text-xs font-black text-slate-900 dark:text-slate-100">Overview & Manifest</h4>
-                            </div>
-                          </div>
-                          <span className="text-[10px] font-mono font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">{goodsEntries.length} Items</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setStep4ViewMode("reports")}
-                          className={`w-full flex items-center justify-between p-3 rounded-xl text-left transition-all duration-200 cursor-pointer ${
-                            step4ViewMode === "reports"
-                              ? "bg-blue-50 dark:bg-blue-950/40 shadow-sm border-2 border-blue-600 text-blue-950 dark:text-blue-100"
-                              : "hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800"
-                          }`}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <div className={`p-2 rounded-lg ${step4ViewMode === "reports" ? "bg-blue-600 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"}`}>
-                              <FileText className="h-4 w-4" />
-                            </div>
-                            <div>
-                              <span className="text-[9px] font-black uppercase text-blue-600 dark:text-blue-400">Option 2</span>
-                              <h4 className="text-xs font-black text-slate-900 dark:text-slate-100">Reports & Notes</h4>
-                            </div>
-                          </div>
-                          <span className="text-[10px] font-mono font-bold text-blue-600 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">{reportsList.length + 2} Notes</span>
-                        </button>
+                  {/* 3. ROW 1: 4-COLUMN CARDS */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Card 1: BRANCH & USER INFORMATION */}
+                    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs space-y-3">
+                      <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="h-5 w-5 rounded bg-blue-600 text-white text-[11px] font-black flex items-center justify-center">1</span>
+                          <h4 className="text-xs font-black uppercase text-slate-900 dark:text-slate-100 tracking-wider">Branch &amp; User Information</h4>
+                        </div>
+                        <span className="text-[9.5px] font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                          Active
+                        </span>
                       </div>
-
-                      {/* Branch & User Details Card */}
-                      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs space-y-3">
-                        <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-                          <Building2 className="h-4 w-4 text-blue-600" />
-                          <h4 className="text-xs font-black uppercase text-slate-900 dark:text-slate-100 tracking-wider">Branch & User Details</h4>
+                      <div className="space-y-1.5 text-xs">
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-[11px] text-slate-500 font-semibold">Branch Name</span>
+                          <span className="text-[11px] font-bold text-slate-900 dark:text-slate-100">{form.branchName || "Abu Dhabi City Branch"}</span>
                         </div>
-                        <div className="space-y-1.5 text-xs">
-                          <div className="flex justify-between py-0.5 border-b border-slate-50 dark:border-slate-800/50">
-                            <span className="text-[11px] text-slate-500 font-semibold">Branch Name:</span>
-                            <span className="text-[11px] font-bold text-slate-900 dark:text-slate-100">{form.branchName || "Sharjah City Branch"}</span>
-                          </div>
-                          <div className="flex justify-between py-0.5 border-b border-slate-50 dark:border-slate-800/50">
-                            <span className="text-[11px] text-slate-500 font-semibold">Branch Code:</span>
-                            <span className="text-[11px] font-mono font-bold text-blue-600">{form.branchCode || "ARE-SHJ-001"}</span>
-                          </div>
-                          <div className="flex justify-between py-0.5 border-b border-slate-50 dark:border-slate-800/50">
-                            <span className="text-[11px] text-slate-500 font-semibold">Country / City:</span>
-                            <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{form.branchCountry || "UAE"} / {form.branchCity || "Sharjah"}</span>
-                          </div>
-                          <div className="flex justify-between py-0.5 border-b border-slate-50 dark:border-slate-800/50">
-                            <span className="text-[11px] text-slate-500 font-semibold">User:</span>
-                            <span className="text-[11px] font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1">👤 {activeSession?.user?.name || "ADMIN"}</span>
-                          </div>
-                          <div className="flex justify-between py-0.5">
-                            <span className="text-[11px] text-slate-500 font-semibold">Role / Status:</span>
-                            <span className="text-[10px] font-black uppercase text-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">Active</span>
-                          </div>
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-[11px] text-slate-500 font-semibold">Branch Code</span>
+                          <span className="text-[11px] font-mono font-bold text-blue-600">{form.branchCode || "ARE-AUH-001"}</span>
                         </div>
-                      </div>
-
-                      {/* Bill Details Card */}
-                      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs space-y-3">
-                        <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-                          <Receipt className="h-4 w-4 text-emerald-600" />
-                          <h4 className="text-xs font-black uppercase text-slate-900 dark:text-slate-100 tracking-wider">Bill & Booking Details</h4>
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-[11px] text-slate-500 font-semibold">Branch Type</span>
+                          <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{form.branchType || "Main Branch"}</span>
                         </div>
-                        <div className="space-y-1.5 text-xs">
-                          <div className="flex justify-between py-0.5 border-b border-slate-50 dark:border-slate-800/50">
-                            <span className="text-[11px] text-slate-500 font-semibold">PO Number:</span>
-                            <span className="text-[11px] font-mono font-black text-slate-950 dark:text-slate-50">{form.purchaseOrderNo || "-"}</span>
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-[11px] text-slate-500 font-semibold">Parent Branch</span>
+                          <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">Global System</span>
+                        </div>
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-[11px] text-slate-500 font-semibold">Country</span>
+                          <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{form.branchCountry || "United Arab Emirates"}</span>
+                        </div>
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-[11px] text-slate-500 font-semibold">City</span>
+                          <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{form.branchCity || form.city || "Abu Dhabi"}</span>
+                        </div>
+                        <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1.5">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-[11px] text-slate-500 flex items-center gap-1 font-semibold"><User className="h-3 w-3 text-slate-400" /> User Name</span>
+                            <span className="text-[11px] font-bold uppercase text-slate-900 dark:text-slate-100">{form.userName || session?.fullName || "ADMIN"}</span>
                           </div>
-                          <div className="flex justify-between py-0.5 border-b border-slate-50 dark:border-slate-800/50">
-                            <span className="text-[11px] text-slate-500 font-semibold">Booking Date:</span>
-                            <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{form.purchaseDate || new Date().toISOString().slice(0, 10)}</span>
-                          </div>
-                          <div className="flex justify-between py-0.5 border-b border-slate-50 dark:border-slate-800/50">
-                            <span className="text-[11px] text-slate-500 font-semibold">Payment Type:</span>
-                            <span className="text-[11px] font-bold text-blue-600">{form.paymentType || "Advance Payment"}</span>
-                          </div>
-                          <div className="flex justify-between py-0.5 border-b border-slate-50 dark:border-slate-800/50">
-                            <span className="text-[11px] text-slate-500 font-semibold">Shipping Mode:</span>
-                            <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{form.shippingMode || "By Sea"}</span>
-                          </div>
-                          <div className="flex justify-between py-0.5">
-                            <span className="text-[11px] text-slate-500 font-semibold">Origin / Dest:</span>
-                            <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{form.loadingCountry || "China"} → {form.receivingCountry || "UAE"}</span>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-[11px] text-slate-500 flex items-center gap-1 font-semibold"><Clock className="h-3 w-3 text-slate-400" /> Role</span>
+                            <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Super Admin</span>
                           </div>
                         </div>
-                      </div>
-
-                      {/* Quick Navigation Buttons */}
-                      <div className="flex gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setActiveTab("shipping")}
-                          className="flex-1 font-bold text-xs h-10 rounded-xl border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
-                        >
-                          ← Back: Shipping
-                        </Button>
-                        <Button
-                          type="button"
-                          onClick={() => setActiveTab("report")}
-                          className="flex-1 font-bold text-xs h-10 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-md"
-                        >
-                          Next: Verify →
-                        </Button>
                       </div>
                     </div>
 
-                    {/* RIGHT COLUMN: Active Report Viewer */}
-                    <div className="lg:col-span-8 space-y-4 w-full">
-                      {/* Complete Report Summary Container */}
-                      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 md:p-6 shadow-sm space-y-6">
-                        <div className="flex flex-col gap-2 border-b border-slate-200 dark:border-slate-800 pb-4 md:flex-row md:items-end md:justify-between">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-[9px] font-black uppercase tracking-[0.28em] text-blue-600 bg-blue-50 dark:bg-blue-950/50 px-2.5 py-0.5 rounded border border-blue-100 dark:border-blue-900">
-                                {step4ViewMode === "overview" ? "Option 1: Manifest View" : "Option 2: Reports View"}
-                              </span>
-                              <span className="text-[9px] font-black uppercase tracking-[0.28em] text-slate-400">{t(lang, "purchase.professional_printable_report", "Professional Printable Report")}</span>
-                            </div>
-                            <h2 className="text-xl font-black uppercase tracking-[0.08em] text-slate-950 dark:text-slate-50 mt-1">
-                              {step4ViewMode === "overview" 
-                                ? t(lang, "purchase.opt1_summary_heading", "Purchase Booking Manifest & Accounts Summary")
-                                : t(lang, "purchase.opt2_summary_heading", "Purchase Booking Reports & Documentation")
-                              }
-                            </h2>
-                            <p className="text-xs font-semibold text-slate-500 mt-0.5">
-                              {step4ViewMode === "overview"
-                                ? t(lang, "purchase.opt1_summary_subheading", "Booking header, supplier/customer accounts, branch information, and complete itemized goods manifest.")
-                                : t(lang, "purchase.opt2_summary_subheading", "Payment condition notes, shipping route schedule, general transaction remarks, and custom dynamic reports.")
-                              }
-                            </p>
+                    {/* Card 2: BILL DETAILS */}
+                    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs space-y-3">
+                      <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="h-5 w-5 rounded bg-emerald-600 text-white text-[11px] font-black flex items-center justify-center">2</span>
+                          <h4 className="text-xs font-black uppercase text-slate-900 dark:text-slate-100 tracking-wider">Bill Details</h4>
+                        </div>
+                        <span className="text-[9.5px] font-bold text-amber-700 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-800">
+                          DRAFT
+                        </span>
+                      </div>
+                      <div className="space-y-1.5 text-xs">
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-[11px] text-slate-500 font-semibold">Booking Date</span>
+                          <span className="text-[11px] font-bold text-slate-900 dark:text-slate-100">{form.purchaseDate || "30/08/2026"}</span>
+                        </div>
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-[11px] text-slate-500 font-semibold">Fiscal Year</span>
+                          <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{form.fiscalYear || "2025-26"}</span>
+                        </div>
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-[11px] text-slate-500 font-semibold">Booking Branch</span>
+                          <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{form.branchName || "Abu Dhabi City Branch"}</span>
+                        </div>
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-[11px] text-slate-500 font-semibold">Bill / Contract No.</span>
+                          <span className="text-[11px] font-mono font-bold text-slate-900 dark:text-slate-100">{form.purchaseContractNo || form.purchaseOrderNo || "PC-2026-1925"}</span>
+                        </div>
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-[11px] text-slate-500 font-semibold">Payment Type</span>
+                          <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{form.paymentType || "Advance Payment"}</span>
+                        </div>
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-[11px] text-slate-500 font-semibold">Ship Type</span>
+                          <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{form.shippingMode || form.shipType || "By Sea"}</span>
+                        </div>
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-[11px] text-slate-500 font-semibold">Loading Mode</span>
+                          <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{form.loadingMode || form.shippingMode || "By Sea"}</span>
+                        </div>
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-[11px] text-slate-500 font-semibold">Origin Country</span>
+                          <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{form.originCountry || form.origin || "United Arab Emirates"}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card 3: PURCHASE ACCOUNT DETAILS */}
+                    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs space-y-3 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                          <span className="h-5 w-5 rounded bg-purple-600 text-white text-[11px] font-black flex items-center justify-center">3</span>
+                          <h4 className="text-xs font-black uppercase text-slate-900 dark:text-slate-100 tracking-wider">Purchase Account Details</h4>
+                        </div>
+                        <div className="space-y-1.5 text-xs mt-3">
+                          <div className="flex justify-between py-0.5">
+                            <span className="text-[11px] text-slate-500 font-semibold">Account Name</span>
+                            <span className="text-[11px] font-bold text-slate-900 dark:text-slate-100">{form.purchaseAccountName || "UAE Main Country Clearing Ledger"}</span>
                           </div>
-                          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-right text-xs font-bold text-slate-600 dark:text-slate-300 shadow-xs">
-                            <div className="text-[10px] uppercase text-slate-400">{t(lang, "purchase.po_number", "PO Number")}</div>
-                            <div className="text-sm font-black text-slate-950 dark:text-slate-50 font-mono">{form.purchaseOrderNo || "-"}</div>
-                            <div className="text-[9px] text-slate-400 font-normal mt-0.5">{t(lang, "purchase.generated_label", "Generated:")} {new Date().toLocaleString()}</div>
+                          <div className="flex justify-between py-0.5">
+                            <span className="text-[11px] text-slate-500 font-semibold">Account Code</span>
+                            <span className="text-[11px] font-mono font-bold text-blue-600">{form.purchaseAccountNo || "UAE-CORP-GEN-001"}</span>
+                          </div>
+                          <div className="flex justify-between py-0.5">
+                            <span className="text-[11px] text-slate-500 font-semibold">Company</span>
+                            <span className="text-[11px] font-medium text-slate-800 dark:text-slate-200">{form.purchaseCompanyName || "United Arab Emirates Main Country Clearing Ledger"}</span>
+                          </div>
+                          <div className="flex justify-between py-0.5">
+                            <span className="text-[11px] text-slate-500 font-semibold">Business Name</span>
+                            <span className="text-[11px] font-medium text-slate-800 dark:text-slate-200">{form.purchaseCompanyName || "UAE Main Country Clearing Ledger"}</span>
+                          </div>
+                          <div className="flex justify-between py-0.5">
+                            <span className="text-[11px] text-slate-500 font-semibold">Country</span>
+                            <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{form.branchCountry || "United Arab Emirates"}</span>
+                          </div>
+                          <div className="flex justify-between py-0.5">
+                            <span className="text-[11px] text-slate-500 font-semibold">City</span>
+                            <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{form.purchaseAccountCity || "Dubai"}</span>
+                          </div>
+                          <div className="flex justify-between py-0.5">
+                            <span className="text-[11px] text-slate-500 font-semibold">Branch</span>
+                            <span className="text-[11px] font-mono font-bold text-slate-800 dark:text-slate-200">{form.purchaseAccountBranch || "BR-DXB-001"}</span>
                           </div>
                         </div>
+                      </div>
+                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-center">
+                        <button type="button" onClick={() => setPreviewModalOpen(true)} className="text-[11px] font-bold text-slate-600 hover:text-blue-600 flex items-center justify-center gap-1 mx-auto">
+                          <Eye className="h-3.5 w-3.5" /> View Account Details
+                        </button>
+                      </div>
+                    </div>
 
-                        {/* ================= OPTION 1: BOOKING OVERVIEW & MANIFEST ================= */}
-                        {step4ViewMode === "overview" && (
-                          <div className="space-y-6 animate-in fade-in duration-200">
-                            <div className="grid grid-cols-1 xl:grid-cols-[1.35fr_0.85fr] gap-5">
-                              <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-                                <div className="bg-slate-950 text-white px-5 py-3.5 flex items-center justify-between gap-3">
-                                  <div className="flex items-center gap-2.5">
-                                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                                    <span className="font-mono text-sm font-black tracking-widest text-emerald-400">
-                                      {form.purchaseOrderNo || "PO-2026-XXXX"}
-                                    </span>
-                                  </div>
-                                  <span className="text-[10px] font-black uppercase tracking-wider bg-amber-400 text-slate-950 px-2.5 py-0.5 rounded-full shadow-xs">
-                                    {t(lang, "purchase.opt_draft", "Purchase Booking")}
-                                  </span>
-                                </div>
+                    {/* Card 4: SALES ACCOUNT DETAILS */}
+                    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs space-y-3 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                          <span className="h-5 w-5 rounded bg-amber-600 text-white text-[11px] font-black flex items-center justify-center">4</span>
+                          <h4 className="text-xs font-black uppercase text-slate-900 dark:text-slate-100 tracking-wider">Sales Account Details</h4>
+                        </div>
+                        <div className="space-y-1.5 text-xs mt-3">
+                          <div className="flex justify-between py-0.5">
+                            <span className="text-[11px] text-slate-500 font-semibold">Account Name</span>
+                            <span className="text-[11px] font-bold text-slate-900 dark:text-slate-100">{form.salesAccountName || "UAE Main Country Clearing Ledger"}</span>
+                          </div>
+                          <div className="flex justify-between py-0.5">
+                            <span className="text-[11px] text-slate-500 font-semibold">Account Code</span>
+                            <span className="text-[11px] font-mono font-bold text-emerald-600">{form.salesAccountNo || "UAE-CORP-GEN-001"}</span>
+                          </div>
+                          <div className="flex justify-between py-0.5">
+                            <span className="text-[11px] text-slate-500 font-semibold">Company</span>
+                            <span className="text-[11px] font-medium text-slate-800 dark:text-slate-200">{form.salesCompanyName || "United Arab Emirates Main Country Clearing Ledger"}</span>
+                          </div>
+                          <div className="flex justify-between py-0.5">
+                            <span className="text-[11px] text-slate-500 font-semibold">Business Name</span>
+                            <span className="text-[11px] font-medium text-slate-800 dark:text-slate-200">{form.salesCompanyName || "UAE Main Country Clearing Ledger"}</span>
+                          </div>
+                          <div className="flex justify-between py-0.5">
+                            <span className="text-[11px] text-slate-500 font-semibold">Country</span>
+                            <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{form.branchCountry || "United Arab Emirates"}</span>
+                          </div>
+                          <div className="flex justify-between py-0.5">
+                            <span className="text-[11px] text-slate-500 font-semibold">City</span>
+                            <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{form.salesAccountCity || "Dubai"}</span>
+                          </div>
+                          <div className="flex justify-between py-0.5">
+                            <span className="text-[11px] text-slate-500 font-semibold">Branch</span>
+                            <span className="text-[11px] font-mono font-bold text-slate-800 dark:text-slate-200">{form.salesAccountBranch || "BR-DXB-001"}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-center">
+                        <button type="button" onClick={() => setPreviewModalOpen(true)} className="text-[11px] font-bold text-slate-600 hover:text-blue-600 flex items-center justify-center gap-1 mx-auto">
+                          <Eye className="h-3.5 w-3.5" /> View Account Details
+                        </button>
+                      </div>
+                    </div>
+                  </div>
 
-                                <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 border-b border-slate-100 text-xs">
-                                  <div>
-                                    <div className="text-[9.5px] uppercase font-bold text-slate-400">{t(lang, "purchase.po_no_label", "PO No.")}</div>
-                                    <div className="font-mono font-bold text-slate-800">{form.purchaseOrderNo || "-"}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-[9.5px] uppercase font-bold text-slate-400">{t(lang, "purchase.th_country_serial", "Country Serial")}</div>
-                                    <div className="font-mono font-bold text-slate-800">{form.countrySerialNo || "-"}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-[9.5px] uppercase font-bold text-slate-400">{t(lang, "purchase.th_branch_serial", "Branch Serial")}</div>
-                                    <div className="font-mono font-bold text-slate-800">{form.branchSerialNo || "-"}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-[9.5px] uppercase font-bold text-slate-400">{t(lang, "purchase.booking_date_label", "Booking Date")}</div>
-                                    <div className="font-mono font-bold text-slate-800">{form.purchaseDate || "-"}</div>
-                                  </div>
-                                </div>
+                  {/* 4. ROW 2: GOODS OVERVIEW DETAILS */}
+                  <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs space-y-3">
+                    <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-lg bg-blue-600 text-white">
+                          <ShoppingCart className="h-3.5 w-3.5" />
+                        </div>
+                        <h4 className="text-xs font-black uppercase text-slate-900 dark:text-slate-100 tracking-wider">Goods Overview Details</h4>
+                      </div>
+                      <span className="text-xs font-bold text-slate-600 dark:text-slate-400">
+                        Total Items: {goodsEntries.length || 1}
+                      </span>
+                    </div>
 
-                                <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs bg-white">
-                                  <div>
-                                    <div className="text-[9.5px] uppercase font-bold text-slate-400">{t(lang, "purchase.contract_no_label", "Contract No")}</div>
-                                    <div className="font-mono font-bold text-slate-800">{form.purchaseContractNo || "-"}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-[9.5px] uppercase font-bold text-slate-400">{t(lang, "purchase.f_country", "Country")}</div>
-                                    <div className="font-semibold text-slate-800">{form.branchCountry || "United Arab Emirates"}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-[9.5px] uppercase font-bold text-slate-400">{t(lang, "purchase.branch_label", "Branch")}</div>
-                                    <div className="font-semibold text-slate-800">{form.branchName || "Main Branch"}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-[9.5px] uppercase font-bold text-slate-400">{t(lang, "purchase.th_currency", "Currency")}</div>
-                                    <div className="font-bold text-emerald-600">{form.currencyType || "USD"}</div>
-                                  </div>
-                                </div>
-                              </div>
+                    <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800">
+                      <table className="w-full text-xs text-left border-collapse">
+                        <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-[10px] uppercase font-bold text-slate-600 dark:text-slate-400">
+                          <tr>
+                            <Th className="p-2 text-center w-8">#</Th>
+                            <Th className="p-2">Goods Name</Th>
+                            <Th className="p-2 text-center">Size</Th>
+                            <Th className="p-2 text-center">Brand</Th>
+                            <Th className="p-2 text-center">HS Code</Th>
+                            <Th className="p-2 text-center">Origin Country</Th>
+                            <Th className="p-2 text-right">Qty</Th>
+                            <Th className="p-2 text-center">Unit</Th>
+                            <Th className="p-2 text-right">Price ({form.currencyType || "AED"})</Th>
+                            <Th className="p-2 text-right">Amount ({form.currencyType || "AED"})</Th>
+                            <Th className="p-2 text-center">Ex. Rate</Th>
+                            <Th className="p-2 text-right font-black">Final Amount ({form.secondaryCurrency || "AED"})</Th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {displayGoods.map((row, idx) => (
+                            <tr key={idx} className="border-b border-slate-100 dark:border-slate-800/60 hover:bg-slate-50/50">
+                              <td className="p-2 text-center font-bold text-slate-500">{idx + 1}</td>
+                              <td className="p-2 font-bold text-slate-900 dark:text-slate-100">{row.goodsName}</td>
+                              <td className="p-2 text-center text-slate-700 dark:text-slate-300">{row.size || "-"}</td>
+                              <td className="p-2 text-center text-slate-700 dark:text-slate-300">{row.brand || "-"}</td>
+                              <td className="p-2 text-center font-mono text-slate-600 dark:text-slate-400">{row.hsCode || "-"}</td>
+                              <td className="p-2 text-center text-slate-700 dark:text-slate-300">{row.origin || form.originCountry || "United Arab Emirates"}</td>
+                              <td className="p-2 text-right font-mono font-bold text-slate-900 dark:text-slate-100">{Number(row.qtyNo || 0).toLocaleString(undefined, { minimumFractionDigits: 3 })}</td>
+                              <td className="p-2 text-center font-semibold text-slate-600 dark:text-slate-400">{row.qtyName || "BAGS"}</td>
+                              <td className="p-2 text-right font-mono text-slate-800 dark:text-slate-200">{Number(row.coursePrice || row.price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                              <td className="p-2 text-right font-mono font-bold text-slate-900 dark:text-slate-100">{Number(row.totalAmount || row.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                              <td className="p-2 text-center font-mono text-slate-600 dark:text-slate-400">{Number(row.exchangeRate || form.exchangeRate || 1).toFixed(5)}</td>
+                              <td className="p-2 text-right font-mono font-black text-slate-900 dark:text-white">
+                                {Number(row.finalAmount || (Number(row.totalAmount || row.amount || 0) * Number(row.exchangeRate || form.exchangeRate || 1))).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
 
-                              {/* Transfer Status Notice */}
-                              <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-4 shadow-sm flex flex-col justify-between space-y-3">
-                                <div>
-                                  <div className="flex items-center gap-2 text-amber-900 font-black text-xs uppercase tracking-wider mb-1.5">
-                                    <span className="h-2 w-2 rounded-full bg-amber-500" />
-                                    {t(lang, "purchase.pending_transfer_status", "Pending Transfer Status")}
-                                  </div>
-                                  <p className="text-[11px] text-amber-900/80 leading-relaxed font-medium">
-                                    {t(lang, "purchase.pending_transfer_desc", "This Purchase Booking is saved as booking data only. No General Journal Ledger, Cash Book, Advance Payment Entry, or Stock posting is created at this stage. Accounting starts only after Transfer to Payment and final approval.")}
-                                  </p>
-                                </div>
-                                <div className="pt-2 border-t border-amber-200/60 flex items-center justify-between text-[11px] font-bold text-amber-950">
-                                  <span>{t(lang, "purchase.booking_status_label", "Booking Status:")}</span>
-                                  <span className="font-black uppercase bg-amber-200/80 text-amber-900 px-2 py-0.5 rounded text-[10px]">
-                                    {form.salesStatus || "Draft"}
-                                  </span>
-                                </div>
-                              </div>
+                    <div className="pt-2">
+                      <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1">Remarks / Notes (Goods)</label>
+                      <input
+                        type="text"
+                        value={form.goodsRemarks || ""}
+                        onChange={(e) => setValue("goodsRemarks", e.target.value)}
+                        placeholder="Type here..."
+                        className="w-full h-8 px-3 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 5. ROW 3: 3 GRID CARDS (Loading, Summary, Payment) */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    {/* Card 1: 1 LOADING (EXPORT / IMPORT) */}
+                    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs space-y-3 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                          <span className="h-5 w-5 rounded bg-blue-600 text-white text-[11px] font-black flex items-center justify-center">1</span>
+                          <Ship className="h-4 w-4 text-blue-600" />
+                          <h4 className="text-xs font-black uppercase text-slate-900 dark:text-slate-100 tracking-wider">Loading (Export / Import)</h4>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 mt-3">
+                          <div className="space-y-1.5 text-xs">
+                            <span className="text-[10px] font-black text-blue-600 uppercase tracking-wider block mb-1">Export / Loading</span>
+                            <div>
+                              <span className="text-[10px] text-slate-400 block font-semibold">From Country</span>
+                              <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">{form.loadingCountry || form.branchCountry || "United Arab Emirates"}</span>
                             </div>
-
-                            {/* Section 2: Account Reports (Debit / Credit Side by Side) */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                              {/* Debit Account Card */}
-                              <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-                                <div className="bg-slate-900 text-white px-4 py-2.5 flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
-                                    <span className="h-2 w-2 rounded-full bg-blue-400" />
-                                    <span className="text-[10.5px] font-black uppercase tracking-wider">{t(lang, "purchase.purchase_account_report", "Purchase Account Report")}</span>
-                                  </div>
-                                  <span className="text-[9px] font-black uppercase bg-blue-500/20 text-blue-300 border border-blue-400/30 px-2 py-0.5 rounded font-mono">DR</span>
-                                </div>
-                                <div className="p-4 space-y-3 text-xs">
-                                  <div className="grid grid-cols-2 gap-2 border-b border-slate-100 pb-3">
-                                    <div>
-                                      <div className="text-[9.5px] uppercase font-bold text-slate-400">{t(lang, "purchase.account_code_label", "Account Code")}</div>
-                                      <div className="font-mono font-black text-blue-600 text-sm mt-0.5">{form.purchaseAccountNo || "-"}</div>
-                                    </div>
-                                    <div>
-                                      <div className="text-[9.5px] uppercase font-bold text-slate-400">{t(lang, "purchase.manual_a_c_number", "Manual A/C No")}</div>
-                                      <div className="font-mono font-bold text-slate-700 mt-0.5">{form.purchaseAccountManualReferenceNumber || "-"}</div>
-                                    </div>
-                                  </div>
-                                  <div>
-                                    <div className="text-[9.5px] uppercase font-bold text-slate-400">{t(lang, "purchase.account_name_label", "Account Name")}</div>
-                                    <div className="font-black text-slate-900 text-sm mt-0.5">{form.purchaseAccountName || "-"}</div>
-                                    {form.purchaseCompanyName && (
-                                      <div className="text-[10px] text-slate-500 font-medium mt-0.5">({form.purchaseCompanyName})</div>
-                                    )}
-                                  </div>
-                                  <div className="grid grid-cols-2 gap-2 border-t border-slate-100 pt-3">
-                                    <div>
-                                      <div className="text-[9.5px] uppercase font-bold text-slate-400">{t(lang, "purchase.phone_number", "Phone / Contact")}</div>
-                                      <div className="font-semibold text-slate-700">{form.purchaseAccountPhone || "-"}</div>
-                                    </div>
-                                    <div>
-                                      <div className="text-[9.5px] uppercase font-bold text-slate-400">{t(lang, "purchase.f_email", "Email")}</div>
-                                      <div className="font-semibold text-slate-700 truncate">{form.purchaseAccountEmail || "-"}</div>
-                                    </div>
-                                  </div>
-                                  <div className="border-t border-slate-100 pt-2">
-                                    <div className="text-[9.5px] uppercase font-bold text-slate-400">{t(lang, "purchase.f_address", "Address")}</div>
-                                    <div className="font-medium text-slate-600 text-[11px] mt-0.5">{form.purchaseAccountAddress || "-"}</div>
-                                  </div>
-                                  <div className="border-t border-slate-100 pt-2 flex items-center justify-between text-[11px]">
-                                    <span className="text-slate-400 font-bold uppercase text-[9.5px]">{t(lang, "purchase.tax_tr_trn", "TAX / TRN")}</span>
-                                    <span className="font-mono font-bold text-slate-800">{form.purchaseAccountTrn || form.purchaseAccountTaxNumber || "-"}</span>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Credit Account Card */}
-                              <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-                                <div className="bg-slate-900 text-white px-4 py-2.5 flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
-                                    <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                                    <span className="text-[10.5px] font-black uppercase tracking-wider">{t(lang, "purchase.sales_account_report", "Sales Account Report")}</span>
-                                  </div>
-                                  <span className="text-[9px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2 py-0.5 rounded font-mono">CR</span>
-                                </div>
-                                <div className="p-4 space-y-3 text-xs">
-                                  <div className="grid grid-cols-2 gap-2 border-b border-slate-100 pb-3">
-                                    <div>
-                                      <div className="text-[9.5px] uppercase font-bold text-slate-400">{t(lang, "purchase.account_code_label", "Account Code")}</div>
-                                      <div className="font-mono font-black text-emerald-600 text-sm mt-0.5">{form.salesAccountNo || "-"}</div>
-                                    </div>
-                                    <div>
-                                      <div className="text-[9.5px] uppercase font-bold text-slate-400">{t(lang, "purchase.manual_a_c_number", "Manual A/C No")}</div>
-                                      <div className="font-mono font-bold text-slate-700 mt-0.5">{form.salesAccountManualReferenceNumber || "-"}</div>
-                                    </div>
-                                  </div>
-                                  <div>
-                                    <div className="text-[9.5px] uppercase font-bold text-slate-400">{t(lang, "purchase.account_name_label", "Account Name")}</div>
-                                    <div className="font-black text-slate-900 text-sm mt-0.5">{form.salesAccountName || "-"}</div>
-                                    {form.salesCompanyName && (
-                                      <div className="text-[10px] text-slate-500 font-medium mt-0.5">({form.salesCompanyName})</div>
-                                    )}
-                                  </div>
-                                  <div className="grid grid-cols-2 gap-2 border-t border-slate-100 pt-3">
-                                    <div>
-                                      <div className="text-[9.5px] uppercase font-bold text-slate-400">{t(lang, "purchase.phone_number", "Phone / Contact")}</div>
-                                      <div className="font-semibold text-slate-700">{form.salesAccountPhone || "-"}</div>
-                                    </div>
-                                    <div>
-                                      <div className="text-[9.5px] uppercase font-bold text-slate-400">{t(lang, "purchase.f_email", "Email")}</div>
-                                      <div className="font-semibold text-slate-700 truncate">{form.salesAccountEmail || "-"}</div>
-                                    </div>
-                                  </div>
-                                  <div className="border-t border-slate-100 pt-2">
-                                    <div className="text-[9.5px] uppercase font-bold text-slate-400">{t(lang, "purchase.f_address", "Address")}</div>
-                                    <div className="font-medium text-slate-600 text-[11px] mt-0.5">{form.salesAccountAddress || "-"}</div>
-                                  </div>
-                                  <div className="border-t border-slate-100 pt-2 flex items-center justify-between text-[11px]">
-                                    <span className="text-slate-400 font-bold uppercase text-[9.5px]">{t(lang, "purchase.tax_tr_trn", "TAX / TRN")}</span>
-                                    <span className="font-mono font-bold text-slate-800">{form.salesAccountTrn || form.salesAccountTaxNumber || "-"}</span>
-                                  </div>
-                                </div>
-                              </div>
+                            <div>
+                              <span className="text-[10px] text-slate-400 block font-semibold">From Port</span>
+                              <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">{form.loadingPort || "Jebel Ali Port"}</span>
                             </div>
-
-                            {/* Section 4: Full Goods Items Manifest */}
-                            <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-                              <div className="bg-slate-100 px-5 py-3 border-b border-slate-200 flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <Package className="h-4 w-4 text-blue-600" />
-                                  <span className="text-xs font-black uppercase tracking-wider text-slate-900">{t(lang, "purchase.goods_overview_manifest", "Goods Overview Manifest")}</span>
-                                </div>
-                                <span className="text-xs font-mono font-bold text-slate-500">{goodsEntries.length} {t(lang, "purchase.f_total_items", "Items Total")}</span>
-                              </div>
-
-                              <div className="overflow-x-auto">
-                                <table className="w-full text-xs text-left border-collapse whitespace-nowrap">
-                                  <thead>
-                                    <tr className="bg-slate-50/80 border-b border-slate-200 text-[10px] font-black uppercase text-slate-500 tracking-wider">
-                                      <th className="px-4 py-3 text-center w-10">#</th>
-                                      <th className="px-4 py-3">{t(lang, "purchase.th_goods_name", "Goods Name")}</th>
-                                      <th className="px-4 py-3 text-center">{t(lang, "purchase.th_size", "Size")}</th>
-                                      <th className="px-4 py-3 text-center">{t(lang, "purchase.th_brand", "Brand")}</th>
-                                      <th className="px-4 py-3 text-center">{t(lang, "purchase.variety_label", "Variety")}</th>
-                                      <th className="px-4 py-3 text-center">{t(lang, "purchase.th_origin", "Origin")}</th>
-                                      <th className="px-4 py-3 text-right">{t(lang, "purchase.th_qty", "Qty")}</th>
-                                      <th className="px-4 py-3 text-center">{t(lang, "purchase.th_unit", "Unit")}</th>
-                                      <th className="px-4 py-3 text-right">{t(lang, "purchase.th_price_currency", "Price ({currency})").replace("{currency}", form.currencyType || "USD")}</th>
-                                      <th className="px-4 py-3 text-right">{t(lang, "purchase.th_amount_currency", "Amount ({currency})").replace("{currency}", form.currencyType || "USD")}</th>
-                                      <th className="px-4 py-3 text-right bg-emerald-50 text-emerald-800">{t(lang, "purchase.th_final_currency", "Final ({currency})").replace("{currency}", form.secondaryCurrency || "AED")}</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody className="divide-y divide-slate-100">
-                                    {goodsEntries.length === 0 ? (
-                                      <tr>
-                                        <td colSpan={11} className="px-4 py-8 text-center text-slate-400 italic text-xs">
-                                          {t(lang, "purchase.goods_table_empty", "No goods added yet.")}
-                                        </td>
-                                      </tr>
-                                    ) : (
-                                      goodsEntries.map((row, index) => (
-                                        <tr key={index} className="hover:bg-slate-50/60 transition-colors">
-                                          <td className="px-4 py-3 text-center font-mono text-slate-400 font-bold">{index + 1}</td>
-                                          <td className="px-4 py-3 font-black text-slate-900">{row.goodsName}</td>
-                                          <td className="px-4 py-3 text-center font-semibold text-slate-700">{row.size || "-"}</td>
-                                          <td className="px-4 py-3 text-center font-semibold text-slate-700">{row.brand || "-"}</td>
-                                          <td className="px-4 py-3 text-center font-medium text-slate-600">{row.variety || "-"}</td>
-                                          <td className="px-4 py-3 text-center font-semibold text-slate-700">{row.origin || "-"}</td>
-                                          <td className="px-4 py-3 text-right font-mono font-bold text-slate-900">{Number(row.qtyNo || 0).toLocaleString()}</td>
-                                          <td className="px-4 py-3 text-center font-semibold text-slate-600">{row.qtyName || "-"}</td>
-                                          <td className="px-4 py-3 text-right font-mono font-semibold text-slate-700">{Number(row.coursePrice || row.price || 0).toFixed(2)}</td>
-                                          <td className="px-4 py-3 text-right font-mono font-black text-slate-950">{Number(row.totalAmount || row.amount || 0).toLocaleString()}</td>
-                                          <td className="px-4 py-3 text-right font-mono font-black text-emerald-600 bg-emerald-50/50">
-                                            {Number(row.finalAmount || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                          </td>
-                                        </tr>
-                                      ))
-                                    )}
-                                  </tbody>
-                                </table>
-                              </div>
+                            <div>
+                              <span className="text-[10px] text-slate-400 block font-semibold">Loading Date</span>
+                              <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">{form.loadingDate || "25/08/2026"}</span>
                             </div>
-
-                            {/* Section 5: Financial Totals Cards */}
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-xs">
-                                <div className="text-[10px] uppercase font-bold text-slate-400">{t(lang, "purchase.f_total_quantity", "Total Quantity")}</div>
-                                <div className="text-xl font-black text-slate-950 font-mono mt-1">
-                                  {goodsEntries.reduce((sum, item) => sum + Number(item.qtyNo || 0), 0).toLocaleString()}
-                                </div>
-                              </div>
-                              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-xs">
-                                <div className="text-[10px] uppercase font-bold text-slate-400">{t(lang, "purchase.f_total_amount", "Total Amount")} ({form.currencyType || "USD"})</div>
-                                <div className="text-xl font-black text-slate-950 font-mono mt-1">
-                                  {goodsEntries.reduce((sum, item) => sum + Number(item.totalAmount || item.amount || 0), 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </div>
-                              </div>
-                              <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 shadow-xs">
-                                <div className="text-[10px] uppercase font-bold text-emerald-800">{t(lang, "purchase.f_grand_total", "Final Total")} ({form.secondaryCurrency || "AED"})</div>
-                                <div className="text-xl font-black text-emerald-700 font-mono mt-1">
-                                  {goodsEntries.reduce((sum, item) => sum + Number(item.finalAmount || 0), 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </div>
-                              </div>
-                              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-xs">
-                                <div className="text-[10px] uppercase font-bold text-slate-400">{t(lang, "purchase.exchange_rate", "Exchange Rate")}</div>
-                                <div className="text-xl font-black text-slate-950 font-mono mt-1">
-                                  {form.operator || "*"} {form.exchangeRate || 1}
-                                </div>
-                              </div>
+                            <div>
+                              <span className="text-[10px] text-slate-400 block font-semibold">Shipping Line</span>
+                              <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">{form.shippingLine || "Maersk Line"}</span>
                             </div>
                           </div>
-                        )}
 
-                        {/* ================= OPTION 2: REPORTS & DOCUMENTATION ================= */}
-                        {step4ViewMode === "reports" && (
-                          <fieldset disabled={isTransferred && !session?.scopes?.isSuperAdmin} className="space-y-6 animate-in fade-in duration-200">
-                            {/* Report 1: Payment Details & Notes */}
-                            <div className="border border-slate-200 rounded-xl p-4 md:p-5 bg-white shadow-xs">
-                              <div className="border-b border-slate-100 pb-3 mb-4 flex items-center justify-between">
-                                <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
-                                  <CreditCard className="h-4 w-4 text-blue-600" /> {t(lang, "purchase.report1_payment_details_notes", "Report 1: Payment Details & Notes")}
-                                </h3>
-                              </div>
-
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-3 bg-slate-50/80 p-4 rounded-xl border border-slate-100 text-xs">
-                                  <div className="flex justify-between py-1 border-b border-slate-200/60">
-                                    <span className="text-slate-500 font-bold">{t(lang, "purchase.payment_type_label", "Payment Type:")}</span>
-                                    <span className="font-bold text-slate-800">{form.paymentType || "Advance Payment"}</span>
-                                  </div>
-                                  <div className="flex justify-between py-1 border-b border-slate-200/60">
-                                    <span className="text-slate-500 font-bold">{t(lang, "purchase.advance_percentage_label", "Advance %:")}</span>
-                                    <span className="font-mono font-bold text-slate-800">{form.advancePercent ? `${form.advancePercent}%` : "10%"}</span>
-                                  </div>
-                                  <div className="flex justify-between py-1 border-b border-slate-200/60">
-                                    <span className="text-slate-500 font-bold">{t(lang, "purchase.pricing_currency", "Currency:")}</span>
-                                    <span className="font-bold text-slate-800">{form.currencyType || "USD"}</span>
-                                  </div>
-                                  <div className="flex justify-between py-1 border-b border-slate-200/60">
-                                    <span className="text-slate-500 font-bold">{t(lang, "purchase.exchange_rate", "Exchange Rate:")}</span>
-                                    <span className="font-mono font-bold text-slate-800">{form.exchangeRate || 1}</span>
-                                  </div>
-                                  <div className="flex justify-between py-1 border-b border-slate-200/60">
-                                    <span className="text-slate-500 font-bold">{t(lang, "purchase.payment_bank_label", "Bank:")}</span>
-                                    <span className="font-bold text-slate-800">{form.bankName || "-"}</span>
-                                  </div>
-                                  <div className="flex justify-between py-1 border-b border-slate-200/60">
-                                    <span className="text-slate-500 font-bold">{t(lang, "purchase.payment_method_label", "Payment Method:")}</span>
-                                    <span className="font-bold text-slate-800">{form.paymentType || "Advance Payment"}</span>
-                                  </div>
-                                  <div className="flex justify-between py-1">
-                                    <span className="text-slate-500 font-bold">{t(lang, "purchase.payment_status_label", "Payment Status:")}</span>
-                                    <span className="font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">{t(lang, "purchase.pending_transfer_badge", "Pending Transfer")}</span>
-                                  </div>
-                                </div>
-
-                                <div className="flex flex-col justify-between space-y-4">
-                                  <div>
-                                    <label className="block text-xs font-bold text-slate-700 mb-1.5">{t(lang, "purchase.payment_report_notes_label", "Payment Report / Notes")}</label>
-                                    <textarea
-                                      rows={4}
-                                      value={form.paymentReportNotes || ""}
-                                      onChange={(e) => setValue("paymentReportNotes", e.target.value)}
-                                      placeholder={t(lang, "purchase.payment_report_notes_placeholder", "Write notes regarding payment terms, conditions, guarantees, or special payment instructions...")}
-                                      className="w-full bg-slate-50/50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-blue-500 resize-none leading-relaxed"
-                                    />
-                                  </div>
-                                </div>
-                              </div>
+                          <div className="space-y-1.5 text-xs">
+                            <span className="text-[10px] font-black text-blue-600 uppercase tracking-wider block mb-1">Import / Receiving</span>
+                            <div>
+                              <span className="text-[10px] text-slate-400 block font-semibold">To Country</span>
+                              <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">{form.receivingCountry || form.destinationCountry || "Saudi Arabia"}</span>
                             </div>
-
-                            {/* Report 2: Loading & Transit Details */}
-                            <div className="border border-slate-200 rounded-xl p-4 md:p-5 bg-white shadow-xs">
-                              <div className="border-b border-slate-100 pb-3 mb-4 flex items-center justify-between">
-                                <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
-                                  <Ship className="h-4 w-4 text-blue-600" /> {t(lang, "purchase.report2_loading_transit_details", "Report 2: Loading & Transit Details")}
-                                </h3>
-                              </div>
-
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-3 bg-slate-50/80 p-4 rounded-xl border border-slate-100 text-xs">
-                                  <div className="flex justify-between py-1 border-b border-slate-200/60">
-                                    <span className="text-slate-500 font-bold">{t(lang, "purchase.shipping_mode_label", "Shipping Mode:")}</span>
-                                    <span className="font-bold text-slate-800">{form.shippingMode || "By Sea"}</span>
-                                  </div>
-                                  <div className="flex justify-between py-1 border-b border-slate-200/60">
-                                    <span className="text-slate-500 font-bold">{t(lang, "purchase.shipping_line_label", "Shipping Line:")}</span>
-                                    <span className="font-bold text-slate-800">{form.shippingLine || "-"}</span>
-                                  </div>
-                                  <div className="flex justify-between py-1 border-b border-slate-200/60">
-                                    <span className="text-slate-500 font-bold">{t(lang, "purchase.loading_port_label", "Loading Port:")}</span>
-                                    <span className="font-bold text-slate-800">{form.loadingPort || "-"}</span>
-                                  </div>
-                                  <div className="flex justify-between py-1 border-b border-slate-200/60">
-                                    <span className="text-slate-500 font-bold">{t(lang, "purchase.destination_label", "Destination:")}</span>
-                                    <span className="font-bold text-slate-800">{form.receivingPort || form.destinationPort || "-"}</span>
-                                  </div>
-                                  <div className="flex justify-between py-1 border-b border-slate-200/60">
-                                    <span className="text-slate-500 font-bold">{t(lang, "purchase.loading_date_label", "Loading Date:")}</span>
-                                    <span className="font-mono text-slate-800">{form.loadingDate || "-"}</span>
-                                  </div>
-                                  <div className="flex justify-between py-1 border-b border-slate-200/60">
-                                    <span className="text-slate-500 font-bold">{t(lang, "purchase.receiving_date_label", "Received Date:")}</span>
-                                    <span className="font-mono text-slate-800">{form.receivedDate || "-"}</span>
-                                  </div>
-                                  <div className="flex justify-between py-1">
-                                    <span className="text-slate-500 font-bold">{t(lang, "purchase.container_numbers_label", "Container:")}</span>
-                                    <span className="font-mono font-bold text-slate-800">{form.containerNumbers || "-"}</span>
-                                  </div>
-                                </div>
-
-                                <div className="flex flex-col justify-between space-y-4">
-                                  <div>
-                                    <label className="block text-xs font-bold text-slate-700 mb-1.5">{t(lang, "purchase.loading_report_notes_label", "Loading Report / Notes")}</label>
-                                    <textarea
-                                      rows={4}
-                                      value={form.loadingReportNotes || ""}
-                                      onChange={(e) => setValue("loadingReportNotes", e.target.value)}
-                                      placeholder={t(lang, "purchase.loading_report_notes_placeholder", "Write notes regarding loading, transit, freight agents, or customs clearance...")}
-                                      className="w-full bg-slate-50/50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-blue-500 resize-none leading-relaxed"
-                                    />
-                                  </div>
-                                </div>
-                              </div>
+                            <div>
+                              <span className="text-[10px] text-slate-400 block font-semibold">To Port</span>
+                              <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">{form.receivingPort || form.destinationPort || "Dammam Port"}</span>
                             </div>
-
-                            {/* Section 3: Booking Remarks & Narration */}
-                            <div className="border border-slate-200 rounded-xl p-4 md:p-5 bg-white shadow-xs">
-                              <div className="border-b border-slate-100 pb-3 mb-4">
-                                <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
-                                  <MessageSquare className="h-4 w-4 text-blue-600" /> {t(lang, "purchase.booking_remarks_narration", "Booking Remarks & Narration")}
-                                </h3>
-                              </div>
-                              <textarea
-                                rows={3}
-                                value={form.remarks || ""}
-                                onChange={(e) => setValue("remarks", e.target.value)}
-                                placeholder={t(lang, "purchase.booking_remarks_narration_placeholder", "Write general transaction remarks and narration (Visible on Dashboard and Ledger Summaries)...")}
-                                className="w-full bg-slate-50/50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-blue-500 resize-none leading-relaxed"
-                              />
+                            <div>
+                              <span className="text-[10px] text-slate-400 block font-semibold">Receiving Date</span>
+                              <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">{form.receivedDate || "29/08/2026"}</span>
                             </div>
-
-                            {/* Dynamic Reports */}
-                            <div className="border border-slate-200 rounded-xl p-4 md:p-5 bg-white shadow-xs">
-                              <div className="border-b border-slate-100 pb-3 mb-4 flex items-center justify-between">
-                                <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
-                                  <FileText className="h-4 w-4 text-blue-600" /> {t(lang, "purchase.dynamic_reports_attachments", "Dynamic Reports & Attachments")}
-                                </h3>
-                                <Button
-                                  type="button"
-                                  onClick={handleOpenNewReportModal}
-                                  className="h-8 text-xs font-bold uppercase bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 rounded-lg shadow-sm flex items-center gap-1.5"
-                                >
-                                  <FileText className="h-3.5 w-3.5" /> + {t(lang, "purchase.add_new_report_btn", "Add New Report")}
-                                </Button>
-                              </div>
-
-                              <div className="space-y-3">
-                                {reportsList.length === 0 ? (
-                                  <div className="text-center py-8 text-muted-foreground text-xs italic bg-slate-50/80 rounded-xl border border-slate-200/80">
-                                    {t(lang, "purchase.no_custom_reports", 'No additional custom reports added yet. Click "+ Add New Report" to attach notes.')}
-                                  </div>
-                                ) : (
-                                  reportsList.map((report) => (
-                                    <div key={report.id} className="bg-slate-50/80 border border-slate-200 rounded-xl p-4 shadow-xs">
-                                      <div className="flex justify-between items-start mb-2 border-b border-slate-200/80 pb-2">
-                                        <div>
-                                          <h4 className="text-xs font-bold text-slate-900">{report.name}</h4>
-                                          {report.description && <p className="text-[10px] text-slate-500 mt-0.5">{report.description}</p>}
-                                        </div>
-                                        <div className="flex gap-2 items-center">
-                                          <span className="text-[9px] font-mono text-slate-400">{new Date(report.createdAt).toLocaleString()}</span>
-                                          <button type="button" onClick={() => handleDeleteReport(report.id)} className="text-red-500 hover:text-red-700 p-1" title={t(lang, "purchase.delete_report_title", "Delete Report")}><Trash2 className="h-3.5 w-3.5"/></button>
-                                        </div>
-                                      </div>
-                                      <div className="text-xs text-slate-800 whitespace-pre-wrap leading-relaxed">
-                                        {report.notes}
-                                      </div>
-                                    </div>
-                                  ))
-                                )}
-                              </div>
+                            <div>
+                              <span className="text-[10px] text-slate-400 block font-semibold">Final Destination</span>
+                              <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">{form.destinationPort || "Dammam Port"}</span>
                             </div>
-                          </fieldset>
-                        )}
+                            <div>
+                              <span className="text-[10px] text-slate-400 block font-semibold">Shipping Line</span>
+                              <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">{form.shippingLine || "Maersk Line"}</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
+
+                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                        <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1">Remarks / Notes (Loading)</label>
+                        <input
+                          type="text"
+                          value={form.loadingRemarks || ""}
+                          onChange={(e) => setValue("loadingRemarks", e.target.value)}
+                          placeholder="Type here..."
+                          className="w-full h-8 px-3 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Card 2: 2 GOODS SUMMARY */}
+                    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs space-y-3 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                          <span className="h-5 w-5 rounded bg-purple-600 text-white text-[11px] font-black flex items-center justify-center">2</span>
+                          <Package className="h-4 w-4 text-purple-600" />
+                          <h4 className="text-xs font-black uppercase text-slate-900 dark:text-slate-100 tracking-wider">Goods Summary</h4>
+                        </div>
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-3 text-xs">
+                          <div className="flex justify-between">
+                            <span className="text-slate-500 font-semibold">Total Items</span>
+                            <span className="font-black text-slate-900 dark:text-slate-100">{summaryTotals.totalItems}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500 font-semibold">Purchase Amount</span>
+                            <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{summaryTotals.purchaseAmountStr}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500 font-semibold">Total Quantity</span>
+                            <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{summaryTotals.totalQtyStr}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500 font-semibold">Exchange Rate</span>
+                            <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{summaryTotals.exchangeRateStr}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500 font-semibold">Gross Weight</span>
+                            <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{summaryTotals.grossWeightStr}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500 font-semibold">Final Amount</span>
+                            <span className="font-mono font-black text-slate-900 dark:text-white">{summaryTotals.finalAmountStr}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500 font-semibold">Net Weight</span>
+                            <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{summaryTotals.netWeightStr}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                        <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1">Remarks / Notes (Goods Summary)</label>
+                        <input
+                          type="text"
+                          value={form.goodsSummaryRemarks || ""}
+                          onChange={(e) => setValue("goodsSummaryRemarks", e.target.value)}
+                          placeholder="Type here..."
+                          className="w-full h-8 px-3 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Card 3: 3 PAYMENT & SETTLEMENT */}
+                    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs space-y-3 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                          <span className="h-5 w-5 rounded bg-emerald-600 text-white text-[11px] font-black flex items-center justify-center">3</span>
+                          <CreditCard className="h-4 w-4 text-emerald-600" />
+                          <h4 className="text-xs font-black uppercase text-slate-900 dark:text-slate-100 tracking-wider">Payment &amp; Settlement</h4>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                          <div className="space-y-1 text-xs">
+                            <div className="flex justify-between">
+                              <span className="text-[11px] text-slate-500 font-semibold">Payment Type</span>
+                              <span className="text-[11px] font-bold text-slate-900 dark:text-slate-100">{form.paymentType || "Advance Payment"}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-[11px] text-slate-500 font-semibold">Advance %</span>
+                              <span className="text-[11px] font-bold text-blue-600">{summaryTotals.advancePercent}%</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-[11px] text-slate-500 font-semibold">Advance Amount</span>
+                              <span className="text-[11px] font-mono font-bold text-slate-900 dark:text-slate-100">{summaryTotals.advanceAmountStr}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-[11px] text-slate-500 font-semibold">Advance Date</span>
+                              <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{form.advancePaymentDate || form.advanceDate || "30/08/2026"}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-[11px] text-slate-500 font-semibold">Final Payment Date</span>
+                              <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{form.paymentDate || form.dueDate || "30/08/2026"}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-[11px] text-slate-500 font-semibold">Settlement Currency</span>
+                              <span className="text-[11px] font-bold text-slate-900 dark:text-slate-100">{form.secondaryCurrency || "AED"}</span>
+                            </div>
+                          </div>
+
+                          {/* Right Sub-Card: TOTAL PURCHASE PAYMENT */}
+                          <div className="bg-blue-50/70 dark:bg-blue-950/40 rounded-xl p-3 border border-blue-100 dark:border-blue-900 space-y-1.5 text-xs flex flex-col justify-center">
+                            <span className="text-[10px] font-black uppercase text-blue-700 dark:text-blue-400 tracking-wider text-center block mb-1">
+                              Total Purchase Payment
+                            </span>
+                            <div className="flex justify-between">
+                              <span className="text-[11px] text-slate-500 font-medium">Advance Payment</span>
+                              <span className="text-[11px] font-mono font-bold text-slate-900 dark:text-slate-100">{summaryTotals.advanceAmountStr}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-[11px] text-slate-500 font-medium">Final Payment</span>
+                              <span className="text-[11px] font-mono font-bold text-slate-900 dark:text-slate-100">{summaryTotals.finalBalanceStr}</span>
+                            </div>
+                            <div className="pt-1 border-t border-blue-200/80 dark:border-blue-800 flex justify-between">
+                              <span className="text-[11px] font-black text-slate-900 dark:text-slate-100">Total Payment</span>
+                              <span className="text-[11px] font-mono font-black text-blue-700 dark:text-blue-400">{summaryTotals.finalAmountStr}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                        <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1">Remarks / Notes (Payment)</label>
+                        <input
+                          type="text"
+                          value={form.paymentRemarks || ""}
+                          onChange={(e) => setValue("paymentRemarks", e.target.value)}
+                          placeholder="Type here..."
+                          className="w-full h-8 px-3 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 6. ROW 4: 4 JOURNAL REPORT / NARRATION */}
+                  <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs space-y-2">
+                    <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                      <span className="h-5 w-5 rounded bg-amber-600 text-white text-[11px] font-black flex items-center justify-center">4</span>
+                      <h4 className="text-xs font-black uppercase text-slate-900 dark:text-slate-100 tracking-wider">Journal Report / Narration</h4>
+                    </div>
+                    <textarea
+                      value={form.remarks || ""}
+                      onChange={(e) => setValue("remarks", e.target.value)}
+                      placeholder="Type journal report / narration here..."
+                      rows={3}
+                      className="w-full p-3 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 font-medium"
+                    />
+                  </div>
+
+                  {/* 7. BOTTOM ACTION FOOTER */}
+                  <div className="flex flex-wrap items-center justify-between gap-4 pt-3 pb-2 border-t border-slate-200 dark:border-slate-800">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setActiveTab("shipping")}
+                      className="h-9 px-4 text-xs font-bold border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg"
+                    >
+                      Cancel / Back
+                    </Button>
+
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => handleSavePurchaseOrder(false)}
+                        disabled={savingOrder}
+                        className="h-9 px-4 text-xs font-bold border-slate-200 hover:bg-slate-50 text-slate-800 rounded-lg flex items-center gap-1.5"
+                      >
+                        <Save className="h-4 w-4" /> Save as Draft
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => handleOpenA4Report(false)}
+                        className="h-9 px-4 text-xs font-bold border-slate-200 hover:bg-slate-50 text-slate-800 rounded-lg flex items-center gap-1.5"
+                      >
+                        <Download className="h-4 w-4" /> Download PDF
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => handlePrintA4Report(true)}
+                        className="h-9 px-4 text-xs font-bold border-slate-200 hover:bg-slate-50 text-slate-800 rounded-lg flex items-center gap-1.5"
+                      >
+                        <Printer className="h-4 w-4 text-blue-600" /> Print Voucher
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => setActiveTab("report")}
+                        className="h-9 px-6 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-md flex items-center gap-1.5"
+                      >
+                        Next →
+                      </Button>
                     </div>
                   </div>
                 </div>

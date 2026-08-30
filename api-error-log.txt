@@ -2963,3 +2963,31 @@ Error: Country scope is not allowed for this user. Required: 96ab1da1-12f6-470a-
     at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\accounts\route.js:102:7981)
     at async S (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\accounts\route.js:102:9103)
 2026-08-30T09:02:03.222Z - FORBIDDEN - Country scope is not allowed for this user. Required: 96ab1da1-12f6-470a-85d5-a681424559ab - {}
+
+[2026-08-30T14:47:29.182Z] ApiClientError: This bill is outside your authorized scope.
+ApiClientError: This bill is outside your authorized scope.
+    at z (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\bill-expenses\[id]\route.js:32:1671)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\bill-expenses\[id]\route.js:32:4503)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\bill-expenses\[id]\route.js:32:5506)
+    at async F (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\bill-expenses\[id]\route.js:32:6628)
+    at async NextNodeServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async NextNodeServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+2026-08-30T14:47:29.738Z - FORBIDDEN - This bill is outside your authorized scope. - {}
+
+[2026-08-30T14:47:31.955Z] ApiClientError: This bill is outside your authorized scope.
+ApiClientError: This bill is outside your authorized scope.
+    at E (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\bill-expenses\[id]\lines\route.js:3:295)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\bill-expenses\[id]\lines\route.js:3:876
+    at async j (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\31303.js:15:6118)
+    at async G (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\bill-expenses\[id]\lines\route.js:3:852)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\bill-expenses\[id]\lines\route.js:32:3424)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\bill-expenses\[id]\lines\route.js:32:4427)
+2026-08-30T14:47:33.070Z - FORBIDDEN - This bill is outside your authorized scope. - {}
