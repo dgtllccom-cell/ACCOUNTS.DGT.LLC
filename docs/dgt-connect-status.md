@@ -39,6 +39,17 @@ Country-Branch scope with its own Postgres tables.
 - Group creation rejected when any member is outside the creator's scope.
 - `direct_key` guarantees one thread per pair regardless of who opens it.
 
+## Synchronization (2026-08-30)
+
+| | Value |
+|---|---|
+| Local `HEAD` | `bf3c976` (== `origin/main`, 0 ahead, working tree clean) |
+| `origin/main` | `bf3c976` — carries every DGT Connect commit (`b0fdc14`, `5bdcead`, `29efe6c`, `73d621a`) + the runner registration (`2c52be2`) |
+| Prod code | `https://api.dgt.llc/api/erp/dgt-connect/unread` → **HTTP 401** (route exists → code is deployed; 404 would mean not deployed) |
+| Migration `20261012` — DEV | **applied** (`erp_schema_migrations` row present; 6 tables exist) |
+| Migration `20261012` — PROD | **UNVERIFIED** — needs the deploy pipeline to have run `db-apply-all-migrations.mjs` after commit `2c52be2` (which registered it), OR a manual run. Cannot confirm without `PROD_DATABASE_URL` / VPS SSH. It is 100% additive (`CREATE TABLE IF NOT EXISTS` ×6 + realtime publication) so applying it cannot harm existing data. |
+| `20261008_*` (both variants) | tracked on `origin/main` but **not** in `db-apply-all-migrations.mjs` `migrations[]`; both listed in `DESTRUCTIVE_MANUAL_ONLY` → can never auto-apply. Prod profiles untouched. |
+
 ## Not done / remaining
 
 - Per-language browser screenshots of the widget in PS / FA / AR (EN + UR verified;
