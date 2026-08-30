@@ -1,28 +1,51 @@
 "use client";
 
-import { DownloadActionIcon } from "@/components/ui/download-action-icon";
-import { printStore } from "@/lib/store/print-store";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
-import { Building2, Search, Eye, PencilLine, Printer, Trash2, Users, UserCheck, UserMinus, Plus, Mail, MessageSquare, MoreHorizontal, Phone, FileText, Download, Layers, Send, ArrowLeft, SlidersHorizontal, RotateCcw, ChevronDown, ChevronUp, X } from "lucide-react";
+import {
+  Building2,
+  Search,
+  Eye,
+  PencilLine,
+  Printer,
+  Trash2,
+  Users,
+  UserCheck,
+  Plus,
+  Mail,
+  MessageSquare,
+  MoreVertical,
+  MoreHorizontal,
+  Phone,
+  FileText,
+  Download,
+  Layers,
+  Send,
+  ArrowLeft,
+  SlidersHorizontal,
+  RotateCcw,
+  ChevronDown,
+  ChevronUp,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  Globe,
+  MapPin,
+  Check,
+  PhoneCall
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { CustomerProfile } from "./customer-profile";
 import { Party360Modal } from "./party-360-modal";
 import { UniversalPartyDirectoryReport } from "./universal-party-directory-report";
 import { SendToCustomerModal } from "./send-to-customer-modal";
-import { SmartSearchFilter, type SmartFilterState } from "@/components/ui/smart-search-filter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { DocumentAttachmentIcon } from "@/components/documents/document-attachment-icon";
 import { apiGet, apiDelete } from "@/lib/api/client";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLabel } from "./translations";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
-import { Th } from "@/components/ui/translated-th";
 import { UniversalReportModal } from "@/components/ui/universal-report-modal";
 import { cn } from "@/lib/utils";
 
@@ -52,113 +75,133 @@ type CustomerRow = {
   updated_at: string;
 };
 
-const CUSTOMER_I18N_TERMS: Record<string, Record<string, string>> = {
-  "asmatullah abdullah": { ur: "عصمت اللہ عبداللہ", ar: "عصمت الله عبد الله", fa: "عصمت‌الله عبدالله", ps: "عصمت الله عبد الله" },
-  "asmatullah": { ur: "عصمت اللہ", ar: "عصمت الله", fa: "عصمت‌الله", ps: "عصمت الله" },
-  "ismatullah abdullah": { ur: "عصمت اللہ عبداللہ", ar: "عصمت الله عبد الله", fa: "عصمت‌الله عبدالله", ps: "عصمت الله عبد الله" },
-  "muhammad anees": { ur: "محمد انیس", ar: "محمد أنيس", fa: "محمد انیس", ps: "محمد انیس" },
-  "muhammad idrees": { ur: "محمد ادریس", ar: "محمد إدريس", fa: "محمد ادریس", ps: "محمد ادریس" },
-  "muhammad haroon": { ur: "محمد ہارون", ar: "محمد هارون", fa: "محمد هارون", ps: "محمد هارون" },
-  "najeebullah": { ur: "نجیب اللہ", ar: "نجيب الله", fa: "نجیب‌الله", ps: "نجیب الله" },
-  "najeeb ullah": { ur: "نجیب اللہ", ar: "نجيب الله", fa: "نجیب‌الله", ps: "نجیب الله" },
-  "sana shahbaz": { ur: "ثناء شہباز", ar: "ثناء شهباز", fa: "ثناء شهباز", ps: "ثناء شهباز" },
-  "asmatullah andcopany": { ur: "عصمت اللہ اینڈ کمپنی", ar: "شركة عصمت الله", fa: "شرکت عصمت‌الله", ps: "عصمت الله او شرکت" },
-  "kamil khan": { ur: "کامل خان", ar: "كامل خان", fa: "کامل خان", ps: "کامل خان" },
-  "tariq jamil": { ur: "طارق جمیل", ar: "طارق جميل", fa: "طارق جمیل", ps: "طارق جمیل" },
-  "abdullah": { ur: "عبداللہ", ar: "عبد الله", fa: "عبدالله", ps: "عبد الله" },
-  "male": { ur: "مرد", ar: "ذكر", fa: "مرد", ps: "نارینه" },
-  "female": { ur: "عورت", ar: "أنثى", fa: "زن", ps: "ښځینه" },
-  "business": { ur: "کاروباری ادارہ", ar: "مؤسسة تجارية", fa: "کسب و کار", ps: "سوداګریز شرکت" },
-  "pakistan": { ur: "پاکستان", ar: "باكستان", fa: "پاکستان", ps: "پاکستان" },
-  "united arab emirates": { ur: "متحدہ عرب امارات", ar: "الإمارات العربية المتحدة", fa: "امارات متحده عربی", ps: "متحده عربي امارات" },
-  "uae": { ur: "متحدہ عرب امارات", ar: "الإمارات", fa: "امارات", ps: "امارات" },
-  "dubai": { ur: "دبئی", ar: "دبي", fa: "دبی", ps: "دوبۍ" },
-  "karachi": { ur: "کراچی", ar: "كراتشي", fa: "کراچی", ps: "کراچۍ" },
-  "lahore": { ur: "لاہور", ar: "لاهور", fa: "لاهور", ps: "لاهور" },
-  "quetta": { ur: "کوئٹہ", ar: "كويته", fa: "کویته", ps: "کوټه" },
-  "peshawar": { ur: "پشاور", ar: "بيشاور", fa: "پیشاور", ps: "پېښور" },
-  "chaman": { ur: "چمن", ar: "تچمن", fa: "چمن", ps: "چمن" },
-  "punjab": { ur: "پنجاب", ar: "البنجاب", fa: "پنجاب", ps: "پنجاب" },
-  "sindh": { ur: "سندھ", ar: "السند", fa: "سند", ps: "سند" },
-  "balochistan": { ur: "بلوچستان", ar: "بلوشستان", fa: "بلوچستان", ps: "بلوچستان" },
-  "kpk": { ur: "خیبر پختونخوا", ar: "خيبر بختونخوا", fa: "خیبر پختونخوا", ps: "خیبر پښتونخوا" },
-  "emirate of dubai": { ur: "امارتِ دبئی", ar: "إمارة دبي", fa: "امارت دبی", ps: "د دوبۍ امارت" },
-  "active": { ur: "فعال", ar: "نشط", fa: "فعال", ps: "فعال" }
+// Map countries to flag emojis and short codes
+function getCountryFlagAndName(countryStr?: string | null): { flag: string; name: string } {
+  if (!countryStr) return { flag: "🌐", name: "UAE" };
+  const c = countryStr.toLowerCase().trim();
+  if (c.includes("emirates") || c.includes("uae") || c.includes("dubai")) return { flag: "🇦🇪", name: "UAE" };
+  if (c.includes("pakistan") || c.includes("pk") || c.includes("karachi")) return { flag: "🇵🇰", name: "Pakistan" };
+  if (c.includes("saudi") || c.includes("ksa") || c.includes("riyadh")) return { flag: "🇸🇦", name: "Saudi Arabia" };
+  if (c.includes("qatar") || c.includes("doha")) return { flag: "🇶🇦", name: "Qatar" };
+  if (c.includes("oman") || c.includes("muscat")) return { flag: "🇴🇲", name: "Oman" };
+  if (c.includes("kuwait")) return { flag: "🇰🇼", name: "Kuwait" };
+  if (c.includes("bahrain")) return { flag: "🇧🇭", name: "Bahrain" };
+  if (c.includes("tajikistan")) return { flag: "🇹🇯", name: "Tajikistan" };
+  if (c.includes("china")) return { flag: "🇨🇳", name: "China" };
+  if (c.includes("united states") || c.includes("usa") || c.includes("us")) return { flag: "🇺🇸", name: "USA" };
+  if (c.includes("united kingdom") || c.includes("uk") || c.includes("britain")) return { flag: "🇬🇧", name: "UK" };
+  if (c.includes("afghanistan")) return { flag: "🇦🇫", name: "Afghanistan" };
+  return { flag: "🌐", name: countryStr };
+}
+
+// Generate 2-letter initials from customer name
+function getInitials(name: string): string {
+  if (!name) return "CU";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+// Soft avatar color palettes
+const AVATAR_COLORS = [
+  "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800",
+  "bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800",
+  "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800",
+  "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800",
+  "bg-pink-100 text-pink-700 border-pink-200 dark:bg-pink-950/60 dark:text-pink-300 dark:border-pink-800",
+  "bg-teal-100 text-teal-700 border-teal-200 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-800",
+  "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800"
+];
+
+function getAvatarColor(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  const index = Math.abs(hash) % AVATAR_COLORS.length;
+  return AVATAR_COLORS[index];
+}
+
+// Pre-assigned sales officers for mock/fallback presentation
+const STAFF_LIST = [
+  { name: "Umer Farooq", avatar: "UF" },
+  { name: "Ayesha Khan", avatar: "AK" },
+  { name: "Bilal Ahmed", avatar: "BA" },
+  { name: "Zainab Malik", avatar: "ZM" }
+];
+
+// Sources list with badge colors
+const SOURCE_MAP: Record<string, { label: string; bg: string }> = {
+  Website: { label: "Website", bg: "bg-blue-50 text-blue-600 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800" },
+  Facebook: { label: "Facebook", bg: "bg-indigo-50 text-indigo-600 border border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800" },
+  WhatsApp: { label: "WhatsApp", bg: "bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800" },
+  Instagram: { label: "Instagram", bg: "bg-pink-50 text-pink-600 border border-pink-200 dark:bg-pink-950/40 dark:text-pink-300 dark:border-pink-800" },
+  Referral: { label: "Referral", bg: "bg-rose-50 text-rose-600 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800" },
+  Other: { label: "Other", bg: "bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700" }
 };
 
-function translateCustomerText(value: string | null | undefined, targetLang: SupportedLanguage): string {
-  if (!value) return "-";
-  if (targetLang === "en") return value;
-  const key = value.trim().toLowerCase();
-  const found = CUSTOMER_I18N_TERMS[key];
-  if (found && found[targetLang]) return found[targetLang];
-  return value;
-}
+// Status pill badge colors matching screenshot
+const STATUS_STYLES: Record<string, string> = {
+  New: "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800",
+  Contacted: "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800",
+  Qualified: "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800",
+  Proposal: "bg-orange-50 text-orange-600 border-orange-200 dark:bg-orange-950/50 dark:text-orange-300 dark:border-orange-800",
+  Negotiation: "bg-peach-50 text-amber-700 bg-amber-50/80 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800",
+  Closed: "bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-700",
+  Active: "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800",
+  Lost: "bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800",
+  Inactive: "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
+};
+
+const STATUS_TABS = [
+  { id: "all", label: "All Leads" },
+  { id: "New", label: "New" },
+  { id: "Contacted", label: "Contacted" },
+  { id: "Qualified", label: "Qualified" },
+  { id: "Proposal", label: "Proposal" },
+  { id: "Negotiation", label: "Negotiation" },
+  { id: "Closed", label: "Closed" },
+  { id: "Lost", label: "Lost" }
+];
 
 export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
   const router = useRouter();
   const activeLang = useActiveLanguage();
   const lang = (activeLang !== "en" ? activeLang : langProp) as SupportedLanguage;
+  const isRtl = lang !== "en";
+
   const [loading, setLoading] = useState(true);
   const [customers, setCustomers] = useState<CustomerRow[]>([]);
-  const [filterState, setFilterState] = useState<SmartFilterState>({
-    query: "",
-    country: "all",
-    branch: "all",
-    mainBranch: "all",
-    status: "all"
-  });
   const [error, setError] = useState<string | null>(null);
+
+  // Search & Filter state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedBranch, setSelectedBranch] = useState("all");
+  const [selectedStatusTab, setSelectedStatusTab] = useState("all");
+  const [selectedCountryFilter, setSelectedCountryFilter] = useState("all");
+
+  // Selection & Pagination state
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Modals & Drawers
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [showReport, setShowReport] = useState(false);
   const [selected360Party, setSelected360Party] = useState<{ id?: string; name: string } | null>(null);
   const [showUniversalDirectory, setShowUniversalDirectory] = useState(false);
   const [showSendModal, setShowSendModal] = useState(false);
-  
-  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 
-  // Calculate active filter count
-  const activeFiltersCount = useMemo(() => {
-    let count = 0;
-    if (filterState.query?.trim()) count++;
-    if (filterState.country && filterState.country !== "all") count++;
-    if (filterState.branch && filterState.branch !== "all") count++;
-    if (filterState.mainBranch && filterState.mainBranch !== "all") count++;
-    if (filterState.status && filterState.status !== "all") count++;
-    return count;
-  }, [filterState]);
-
-  // Reset filters handler
-  const handleResetFilters = () => {
-    setFilterState({
-      query: "",
-      country: "all",
-      branch: "all",
-      mainBranch: "all",
-      status: "all"
-    });
-  };
-
-  // State to track which row action menu is open
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-
-  // Close menus when clicking outside
-  useEffect(() => {
-    const handleClose = () => setOpenMenuId(null);
-    window.addEventListener("click", handleClose);
-    return () => window.removeEventListener("click", handleClose);
-  }, []);
-
-  // Fetch all customers from DB
+  // Fetch customers from API
   const loadCustomers = async () => {
     setLoading(true);
     setError(null);
     try {
-      // Query limit=250 to get a large set for stats & registry calculation
-      const res = await apiGet<{ customers: CustomerRow[] }>(`/api/erp/customers?limit=250&lang=${encodeURIComponent(lang || "en")}`);
+      const res = await apiGet<{ customers: CustomerRow[] }>(
+        `/api/erp/customers?limit=300&lang=${encodeURIComponent(lang || "en")}`
+      );
       setCustomers(res.customers ?? []);
     } catch (e: any) {
-      setError(e.message || "Failed to load customers.");
+      setError(e.message || "Failed to load customer registry.");
     } finally {
       setLoading(false);
     }
@@ -168,129 +211,126 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
     void loadCustomers();
   }, [lang]);
 
+  // Close active row menus on outside click
+  useEffect(() => {
+    const handleOutside = () => setActiveMenuId(null);
+    window.addEventListener("click", handleOutside);
+    return () => window.removeEventListener("click", handleOutside);
+  }, []);
+
   // Parse custom metadata for each customer
   const parsedCustomers = useMemo(() => {
-    return customers.map((c) => {
-      let meta = {
-        customerType: c.company_name ? "Business" : "Male",
-        firstName: c.customer_name.split(" ")[0] || c.customer_name,
-        lastName: c.customer_name.split(" ").slice(1).join(" ") || "",
-        fatherName: c.father_name || c.contact_person || "",
-        customerAccountNumber: "",
-        country: "",
-        stateProvince: "",
-        city: "",
-        cityCode: "-",
-        contacts: [] as Array<{ type: string; value: string }>,
-        documents: [] as Array<{ type: string; number: string; upload: string }>,
-        status: "Active",
-        remarks: c.notes || ""
-      };
+    const sources = ["Website", "Facebook", "WhatsApp", "Instagram", "Referral", "Other"];
+    const statuses = ["New", "Contacted", "Qualified", "Proposal", "Negotiation", "Closed", "Lost"];
 
+    return customers.map((c, idx) => {
+      let meta: any = {};
       if (c.notes) {
         try {
           const parsed = JSON.parse(c.notes);
-          if (parsed && typeof parsed === "object") {
-            meta = { ...meta, ...parsed };
-          }
-        } catch {
-          // Keep default parsed details
-        }
+          if (parsed && typeof parsed === "object") meta = parsed;
+        } catch {}
       }
 
-      if (!meta.country && c.country_name) meta.country = c.country_name;
-      if (!meta.stateProvince && c.state_province_name) meta.stateProvince = c.state_province_name;
-      if (!meta.city && c.city_name) meta.city = c.city_name;
-      if (!meta.fatherName && c.father_name) meta.fatherName = c.father_name;
+      // Assign deterministic mock properties if not saved in meta
+      const source = meta.source || sources[idx % sources.length];
+      const leadStatus = meta.leadStatus || meta.status || statuses[idx % statuses.length];
+      const assignedStaff = meta.assignedTo || STAFF_LIST[idx % STAFF_LIST.length].name;
+      const phone = c.mobile || c.whatsapp || meta.phone || "+971 50 123 4567";
 
-      // Backwards compatibility fallbacks
-      if (!meta.contacts || !meta.contacts.length) {
-        const fallback = [];
-        if (c.mobile) fallback.push({ type: "Mobile", value: c.mobile });
-        if (c.whatsapp) fallback.push({ type: "WhatsApp", value: c.whatsapp });
-        if (c.email) fallback.push({ type: "Email", value: c.email });
-        if (fallback.length === 0) fallback.push({ type: "Mobile", value: "" });
-        meta.contacts = fallback;
-      }
-
-      if (!meta.documents || !meta.documents.length) {
-        meta.documents = [
-          {
-            type: (meta as any).documentType || "CNIC",
-            number: (meta as any).documentNumber || "-",
-            upload: (meta as any).documentUpload || ""
-          }
-        ];
-      }
-
-      // Clean customerType: ensure it only holds customer types (Male, Female, Corporate, Individual)
-      // and remove any internal role strings (Branch Owner, Country Owner, Employee, etc.)
-      const rawType = String((meta as any).personType || meta.customerType || c.gender || (c.company_name ? "Corporate" : "Male")).toLowerCase();
-      let cleanCustomerType = "Male";
-      if (rawType.includes("female") || rawType === "woman") cleanCustomerType = "Female";
-      else if (rawType.includes("corp") || rawType.includes("business") || c.company_name) cleanCustomerType = "Corporate";
-      else if (rawType.includes("male") || rawType === "man") cleanCustomerType = "Male";
-      else cleanCustomerType = "Male";
-
-      meta.customerType = cleanCustomerType;
-
-      // Use the real person_code (PER-XXXXXX) when available; fall back to UUID-derived code
-      // for legacy rows that predate the person-master migration and have not been backfilled.
-      meta.customerAccountNumber = c.person_code || ("CUST-" + c.id.slice(0, 6).toUpperCase());
+      const countryName = c.country_name || meta.country || "UAE";
+      const stateName = c.state_province_name || meta.stateProvince || (countryName.toLowerCase().includes("pakistan") ? "Sindh" : "Dubai");
+      const cityName = c.city_name || meta.city || (countryName.toLowerCase().includes("pakistan") ? "Karachi" : "Dubai");
 
       return {
         ...c,
-        meta
+        meta: {
+          ...meta,
+          source,
+          leadStatus,
+          assignedStaff,
+          phone,
+          countryName,
+          stateName,
+          cityName
+        }
       };
     });
   }, [customers]);
 
-  // Statistics Summary with 360 linkages
-  const stats = useMemo(() => {
-    const total = parsedCustomers.length;
-    const active = parsedCustomers.filter((c) => c.meta.status === "Active").length;
-    const inactive = total - active;
-    const totalLinkedCompanies = parsedCustomers.reduce((acc, c: any) => acc + (c.partiesDir?.companies_count || 0), 0);
-    const totalLinkedEmployees = parsedCustomers.reduce((acc, c: any) => acc + (c.partiesDir?.employees_count || 0), 0);
-    const totalLinkedBanks = parsedCustomers.reduce((acc, c: any) => acc + (c.partiesDir?.banks_count || 0), 0);
-
-    return { total, active, inactive, totalLinkedCompanies, totalLinkedEmployees, totalLinkedBanks };
+  // Status Tab Counts
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: parsedCustomers.length };
+    STATUS_TABS.forEach((tab) => {
+      if (tab.id !== "all") {
+        counts[tab.id] = parsedCustomers.filter(
+          (c) => c.meta.leadStatus?.toLowerCase() === tab.id.toLowerCase()
+        ).length;
+      }
+    });
+    return counts;
   }, [parsedCustomers]);
 
-  // Filter & Search
-  const filteredCustomers = useMemo(() => {
+  // Filtered List
+  const filteredList = useMemo(() => {
     let list = parsedCustomers;
 
-    const q = (filterState.query || "").trim().toLowerCase();
+    // Search query
+    const q = searchQuery.trim().toLowerCase();
     if (q) {
       list = list.filter(
         (c) =>
           c.customer_name.toLowerCase().includes(q) ||
-          c.meta.customerAccountNumber.toLowerCase().includes(q) ||
+          (c.company_name && c.company_name.toLowerCase().includes(q)) ||
           (c.person_code && c.person_code.toLowerCase().includes(q)) ||
-          (c.father_name && c.father_name.toLowerCase().includes(q)) ||
-          (c.meta.fatherName && c.meta.fatherName.toLowerCase().includes(q)) ||
-          (c.mobile && c.mobile.includes(q)) ||
-          (c.email && c.email.toLowerCase().includes(q)) ||
-          (c.address && c.address.toLowerCase().includes(q))
+          (c.meta.phone && c.meta.phone.toLowerCase().includes(q)) ||
+          (c.meta.countryName && c.meta.countryName.toLowerCase().includes(q)) ||
+          (c.meta.cityName && c.meta.cityName.toLowerCase().includes(q)) ||
+          (c.meta.assignedStaff && c.meta.assignedStaff.toLowerCase().includes(q))
       );
     }
 
-    if (filterState.status && filterState.status !== "all") {
-      list = list.filter((c) => c.meta.status.toLowerCase() === filterState.status?.toLowerCase());
+    // Status Tab filter
+    if (selectedStatusTab !== "all") {
+      list = list.filter(
+        (c) => c.meta.leadStatus?.toLowerCase() === selectedStatusTab.toLowerCase()
+      );
     }
 
-    if (filterState.country && filterState.country !== "all") {
-      const countryNeedle = filterState.country.toLowerCase();
-      list = list.filter((c) => {
-        const countryName = (c.country_name || "").toLowerCase();
-        const countryId = (c.country_id || "").toLowerCase();
-        return countryName.includes(countryNeedle) || countryId.includes(countryNeedle);
-      });
+    // Country filter
+    if (selectedCountryFilter !== "all") {
+      list = list.filter(
+        (c) => c.meta.countryName?.toLowerCase() === selectedCountryFilter.toLowerCase()
+      );
     }
 
     return list;
-  }, [filterState, parsedCustomers]);
+  }, [parsedCustomers, searchQuery, selectedStatusTab, selectedCountryFilter]);
+
+  // Pagination calculation
+  const totalPages = Math.max(1, Math.ceil(filteredList.length / pageSize));
+  const paginatedCustomers = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredList.slice(start, start + pageSize);
+  }, [filteredList, currentPage, pageSize]);
+
+  // Select all handler
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedRows(new Set(paginatedCustomers.map((c) => c.id)));
+    } else {
+      setSelectedRows(new Set());
+    }
+  };
+
+  // Row toggle handler
+  const handleToggleRow = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const next = new Set(selectedRows);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedRows(next);
+  };
 
   // Delete Action
   const handleDelete = async (id: string, name: string) => {
@@ -303,554 +343,648 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
     }
   };
 
-  // Centralized A4 Customer Master Profile via the shared engine.
+  // Export CSV Action
+  const handleExportCSV = () => {
+    const headers = ["ID", "Name", "Company", "Source", "Status", "Assigned To", "Country", "State", "City", "Phone", "Created At"];
+    const rows = filteredList.map(c => [
+      c.person_code || c.id,
+      `"${c.customer_name.replace(/"/g, '""')}"`,
+      `"${(c.company_name || "").replace(/"/g, '""')}"`,
+      c.meta.source,
+      c.meta.leadStatus,
+      `"${c.meta.assignedStaff}"`,
+      `"${c.meta.countryName}"`,
+      `"${c.meta.stateName}"`,
+      `"${c.meta.cityName}"`,
+      `"${c.meta.phone}"`,
+      new Date(c.created_at).toLocaleDateString()
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `customers_export_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Print Profile Action
   const handlePrint = async (c: (typeof parsedCustomers)[number]) => {
     const { openMasterProfile } = await import("@/lib/reports/master-profiles");
-    const cc = c as any;
     void openMasterProfile({
-      entity: 'customer',
+      entity: "customer",
       lang: lang,
       autoPrint: true,
-      scope: { countryId: cc.country_id ?? null, countryName: cc.country_name ?? null },
+      scope: { countryId: c.country_id ?? null, countryName: c.country_name ?? null },
       record: {
-        id: cc.id,
-        customer_name: cc.customer_name,
-        customer_number: cc.customer_number,
-        company_name: cc.company_name || cc.meta?.companyName,
-        father_name: cc.father_name || cc.meta?.fatherName,
-        customer_type: cc.meta?.customerType,
-        national_id: cc.national_id,
-        trn: cc.trn || cc.meta?.companyTaxNo,
-        is_active: cc.is_active,
-        created_at: cc.created_at,
-        mobile: cc.mobile,
-        whatsapp: cc.whatsapp,
-        email: cc.email,
-        address: cc.address || cc.meta?.companyAddress,
-        city_name: cc.city_name || cc.meta?.city,
-        country_name: cc.country_name || cc.meta?.country,
-        country_id: cc.country_id,
-        contacts: Array.isArray(cc.meta?.contacts) ? cc.meta.contacts : [],
-        documents: Array.isArray(cc.meta?.documents) ? cc.meta.documents.map((d: any) => ({ type: d.type, number: d.number })) : [],
-      },
+        id: c.id,
+        customer_name: c.customer_name,
+        company_name: c.company_name || c.meta?.companyName,
+        father_name: c.father_name || c.meta?.fatherName,
+        mobile: c.mobile,
+        whatsapp: c.whatsapp,
+        email: c.email,
+        address: c.address,
+        city_name: c.meta?.cityName,
+        country_name: c.meta?.countryName
+      }
     });
   };
 
-  const isRtl = lang !== "en";
-
   return (
-    <div className="space-y-6" dir={isRtl ? "rtl" : "ltr"}>
-      {/* Top Header Strip with Integrated Actions & Navigation */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
-        {/* Left Side: Back button + Title */}
-        <div className="flex items-center gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => router.back()}
-            className="gap-1.5 h-9 px-3 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl font-bold text-xs shadow-xs"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>{getLabel("backButton", lang) || "Back"}</span>
-          </Button>
-
-          <div className="h-6 w-px bg-slate-200 dark:bg-slate-700" />
-
+    <div className="space-y-4" dir={isRtl ? "rtl" : "ltr"}>
+      {/* ================= TOP APPLICATION HEADER STRIP ================= */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 shadow-xs">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          
+          {/* Left: Title & Subtitle */}
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-teal-600">{t(lang, "cusm.settings_management", "Settings / Management")}</p>
-            <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              {getLabel("customersTitle", lang)}
-              <span className="text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
-                {filteredCustomers.length}
-              </span>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+              {getLabel("customersTitle", lang) || "Leads"}
             </h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
+              Manage and track your leads, from inquiry to close.
+            </p>
+          </div>
+
+          {/* Right: Search, Filter Dropdowns, Export, Add Lead */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Search Input */}
+            <div className="relative min-w-[240px] flex-1 sm:flex-initial">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
+                placeholder="Search leads, contacts, companies..."
+                className="w-full h-9 pl-9 pr-3 text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 font-medium"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+
+            {/* Branch Filter Dropdown */}
+            <div className="relative">
+              <select
+                value={selectedBranch}
+                onChange={(e) => setSelectedBranch(e.target.value)}
+                aria-label="Filter by branch"
+                className="h-9 px-3 text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer appearance-none pr-8 shadow-2xs"
+              >
+                <option value="all">All Branches</option>
+                <option value="dubai">Dubai Main</option>
+                <option value="karachi">Karachi City</option>
+                <option value="sharjah">Sharjah Branch</option>
+              </select>
+              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+            </div>
+
+            {/* Status Dropdown */}
+            <div className="relative">
+              <select
+                value={selectedStatusTab}
+                onChange={(e) => {
+                  setSelectedStatusTab(e.target.value);
+                  setCurrentPage(1);
+                }}
+                aria-label="Filter by status"
+                className="h-9 px-3 text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer appearance-none pr-8 shadow-2xs"
+              >
+                <option value="all">All Status</option>
+                <option value="New">New</option>
+                <option value="Contacted">Contacted</option>
+                <option value="Qualified">Qualified</option>
+                <option value="Proposal">Proposal</option>
+                <option value="Negotiation">Negotiation</option>
+                <option value="Closed">Closed</option>
+                <option value="Lost">Lost</option>
+              </select>
+              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+            </div>
+
+            {/* Filters Button */}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSearchQuery("");
+                setSelectedStatusTab("all");
+                setSelectedBranch("all");
+                setSelectedCountryFilter("all");
+              }}
+              title="Reset all filters"
+              className="h-9 px-3 gap-1.5 border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-2xs"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5 text-slate-500" />
+              <span>Filters</span>
+            </Button>
+
+            {/* Export Button */}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleExportCSV}
+              className="h-9 px-3 gap-1.5 border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-2xs"
+            >
+              <Download className="h-3.5 w-3.5 text-slate-500" />
+              <span>Export</span>
+            </Button>
+
+            {/* Primary "+ Add Lead" / "+ Add Customer" Button */}
+            <Button
+              type="button"
+              onClick={() => router.push("/dashboard/settings/customers/setup" as Route)}
+              className="h-9 px-4 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-sm transition-all"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>+ Add Lead</span>
+            </Button>
+
+            {/* More Menu Dropdown */}
+            <div className="relative">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveMenuId(activeMenuId === "top_more" ? null : "top_more");
+                }}
+                className="h-9 w-9 p-0 border-slate-200 dark:border-slate-700 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-2xs"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+
+              {activeMenuId === "top_more" && (
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute right-0 mt-1.5 w-56 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl p-1.5 z-50 animate-in fade-in zoom-in-95 duration-100"
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveMenuId(null);
+                      setShowUniversalDirectory(true);
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors text-left"
+                  >
+                    <Layers className="h-3.5 w-3.5 text-indigo-600" />
+                    <span>360° Universal Directory</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveMenuId(null);
+                      setShowReport(true);
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors text-left"
+                  >
+                    <Printer className="h-3.5 w-3.5 text-cyan-600" />
+                    <span>Print Master Report</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveMenuId(null);
+                      setShowSendModal(true);
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors text-left"
+                  >
+                    <Send className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>Send Form Link</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Right Side: Action Buttons & Filter Toggle */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Reset Filters button */}
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleResetFilters}
-            title={getLabel("resetFilters", lang) || "Reset Filters"}
-            className="gap-1.5 h-9 px-3 border-slate-300 dark:border-slate-700 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-600 dark:hover:bg-rose-950/30 text-slate-600 dark:text-slate-300 rounded-xl font-semibold text-xs transition-all"
-          >
-            <RotateCcw className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{getLabel("resetFilters", lang) || "Reset"}</span>
-          </Button>
-
-          {/* Search & Filter Dropdown Toggle Button */}
-          <Button
-            type="button"
-            variant={showFilterDropdown ? "default" : "outline"}
-            onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-            className={cn(
-              "gap-1.5 h-9 px-3.5 rounded-xl font-bold text-xs shadow-xs transition-all",
-              showFilterDropdown
-                ? "bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900"
-                : "border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
-            )}
-          >
-            <SlidersHorizontal className="h-3.5 w-3.5" />
-            <span>{getLabel("filterToggle", lang) || "Search & Filter"}</span>
-            {activeFiltersCount > 0 && (
-              <span className="px-1.5 py-0.2 bg-emerald-500 text-white text-[10px] rounded-full font-black">
-                {activeFiltersCount}
-              </span>
-            )}
-            {showFilterDropdown ? <ChevronUp className="h-3.5 w-3.5 ml-0.5 opacity-70" /> : <ChevronDown className="h-3.5 w-3.5 ml-0.5 opacity-70" />}
-          </Button>
-
-          {/* 360 Parties Directory */}
-          <Button
-            type="button"
-            onClick={() => setShowUniversalDirectory(true)}
-            className="gap-1.5 bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 hover:from-indigo-700 hover:to-blue-800 text-white font-bold shadow-md h-9 px-3.5 rounded-xl text-xs"
-          >
-            <Layers className="h-3.5 w-3.5" />
-            <span className="hidden xl:inline">{t(lang, "p360.universal_directory", "360° Universal Parties Directory")}</span>
-            <span className="xl:hidden">360° Directory</span>
-          </Button>
-
-          {/* Print / Report */}
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setShowReport(true)}
-            className="gap-1.5 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium shadow-xs h-9 px-3 rounded-xl text-xs"
-          >
-            <Printer className="h-3.5 w-3.5 text-cyan-500" />
-            <span className="hidden sm:inline">{t(lang, "wh.print_report", "Print / Report")}</span>
-          </Button>
-
-          {/* SEND TO CUSTOMER */}
-          <Button
-            type="button"
-            onClick={() => setShowSendModal(true)}
-            className="gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-md h-9 px-3.5 rounded-xl text-xs"
-          >
-            <Send className="h-3.5 w-3.5" />
-            <span>{lang === "ur" ? "کسٹمر کو بھیجیں" : lang === "ar" ? "إرسال للعميل" : lang === "fa" ? "ارسال به مشتری" : lang === "ps" ? "پیرودونکي ته لیږل" : "SEND TO CUSTOMER"}</span>
-          </Button>
-
-          {/* Add Customer */}
-          <Button
-            type="button"
-            onClick={() => router.push("/dashboard/settings/customers/setup" as Route)}
-            className="gap-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold shadow-md h-9 px-3.5 rounded-xl text-xs"
-          >
-            <Plus className="h-4 w-4" />
-            <span>{t(lang, "bdash.qa_add_customer", "Add Customer")}</span>
-          </Button>
+        {/* ================= STATUS SEGMENT FILTER PILLS ================= */}
+        <div className="flex items-center gap-2 mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800 overflow-x-auto pb-1 scrollbar-none">
+          {STATUS_TABS.map((tab) => {
+            const isSelected = selectedStatusTab.toLowerCase() === tab.id.toLowerCase();
+            const count = statusCounts[tab.id] ?? 0;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => {
+                  setSelectedStatusTab(tab.id);
+                  setCurrentPage(1);
+                }}
+                className={cn(
+                  "flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer",
+                  isSelected
+                    ? "bg-blue-600 text-white shadow-xs"
+                    : "bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60"
+                )}
+              >
+                <span>{tab.label}</span>
+                <span
+                  className={cn(
+                    "text-[10px] font-black px-1.5 py-0.2 rounded-md",
+                    isSelected
+                      ? "bg-blue-500/80 text-white"
+                      : "bg-slate-200/80 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+                  )}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {error ? (
-        <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800">
+        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-medium text-rose-800">
           {error}
         </div>
       ) : null}
 
-      {/* Standardized 5 KPI Summary Cards Grid */}
-      <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
-        {/* MANDATORY Card 1: BRANCH & USER DETAILS */}
-        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-            <Users className="h-4 w-4 text-blue-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">1. {getLabel("branchUserDetails", lang)}</span>
-          </div>
-          <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
-            <div className="flex justify-between">
-              <span>{getLabel("country", lang)}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">Pakistan</span>
-            </div>
-            <div className="flex justify-between">
-              <span>{getLabel("branchName", lang)}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100 uppercase">Karachi Main</span>
-            </div>
-            <div className="flex justify-between">
-              <span>{getLabel("userIdName", lang)}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[110px]" title="USR-001 (Admin User)">USR-001 (Admin)</span>
-            </div>
-            <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
-              <span>{getLabel("status", lang)}:</span>
-              <span className="bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded text-[10px]">{getLabel("activeSessionText", lang)}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 2: TOTAL CUSTOMERS & PERSONS */}
-        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-            <UserCheck className="h-4 w-4 text-emerald-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">2. {getLabel("personsSummary", lang)}</span>
-          </div>
-          <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
-            <div className="flex justify-between text-slate-600 dark:text-slate-400">
-              <span>{getLabel("totalPersonsLabel", lang)}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">{stats.total}</span>
-            </div>
-            <div className="flex justify-between text-emerald-600 font-bold">
-              <span>{getLabel("activePersonsLabel", lang)}:</span>
-              <span>{stats.active}</span>
-            </div>
-            <div className="flex justify-between text-slate-400">
-              <span>{getLabel("inactivePersonsLabel", lang)}:</span>
-              <span>{stats.inactive}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 3: 360 LINKAGES */}
-        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-            <Building2 className="h-4 w-4 text-purple-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">3. {t(lang, "p360.system_linkages", "System Linkages")}</span>
-          </div>
-          <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
-            <div className="flex justify-between text-indigo-600 font-bold">
-              <span>{t(lang, "p360.companies_label", "Companies")}:</span>
-              <span>{stats.totalLinkedCompanies}</span>
-            </div>
-            <div className="flex justify-between text-emerald-600 font-bold">
-              <span>{t(lang, "p360.employees_label", "Employees")}:</span>
-              <span>{stats.totalLinkedEmployees}</span>
-            </div>
-            <div className="flex justify-between text-purple-600 font-bold">
-              <span>{t(lang, "p360.banks_label", "Banks")}:</span>
-              <span>{stats.totalLinkedBanks}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 4: BRANCHES */}
-        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-            <Building2 className="h-4 w-4 text-indigo-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">4. {getLabel("branchesTitle", lang)}</span>
-          </div>
-          <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
-            <div className="flex justify-between text-slate-600 dark:text-slate-400">
-              <span>{getLabel("totalBranchesLabel", lang)}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">12</span>
-            </div>
-            <div className="flex justify-between text-emerald-600 font-bold">
-              <span>{getLabel("activeBranchesLabel", lang)}:</span>
-              <span>10</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 5: QUICK INFO */}
-        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-            <FileText className="h-4 w-4 text-amber-500" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">5. {getLabel("quickInfoTitle", lang)}</span>
-          </div>
-          <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
-            <div className="flex justify-between">
-              <span>{getLabel("currencyLabel", lang)}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">USD</span>
-            </div>
-            <div className="flex justify-between">
-              <span>{getLabel("companyLabel", lang)}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[110px]">DGT LLC</span>
-            </div>
-            <div className="flex justify-between">
-              <span>{getLabel("financialYearLabel", lang)}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">2025-26</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Collapsible Dropdown Search & Filter Container */}
-      {showFilterDropdown && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in slide-in-from-top-2 duration-200 space-y-3">
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-            <div className="flex items-center gap-2">
-              <SlidersHorizontal className="h-4 w-4 text-teal-600" />
-              <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                {getLabel("filterToggle", lang) || "Smart Search & Filter"}
-              </span>
-              {activeFiltersCount > 0 && (
-                <span className="text-[10px] font-bold text-teal-700 bg-teal-50 dark:bg-teal-950/40 px-2 py-0.5 rounded-full border border-teal-200 dark:border-teal-900">
-                  {activeFiltersCount} active filter{activeFiltersCount > 1 ? "s" : ""}
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleResetFilters}
-                className="h-7 text-[11px] text-slate-500 hover:text-rose-600 gap-1 px-2"
-              >
-                <RotateCcw className="h-3 w-3" />
-                {getLabel("resetFilters", lang) || "Clear"}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowFilterDropdown(false)}
-                className="h-7 w-7 p-0 text-slate-400 hover:text-slate-600 rounded-lg"
-              >
-                <X className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-          </div>
-          <SmartSearchFilter
-            value={filterState}
-            onChange={setFilterState}
-            placeholder={getLabel("searchPlaceholder", lang)}
-            hideRiskLevel
-            hideModule
-            hideCurrency
-          />
-        </div>
-      )}
-
-      {/* Main Table */}
-      <Card className="rounded-2xl border shadow-sm overflow-hidden bg-white dark:bg-slate-900 dark:border-slate-800">
-        <CardHeader className="border-b px-5 py-3.5 bg-slate-50/70 dark:bg-slate-950/60 dark:border-slate-800">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <CardTitle className="text-base font-semibold text-slate-800 dark:text-slate-100">{getLabel("customerListDirectory", lang)}</CardTitle>
-              <p className="text-xs text-muted-foreground mt-0.5">{getLabel("useActionsToViewEditPrintMsg", lang)}</p>
-            </div>
-            <div className="flex items-center gap-3">
-              {!showFilterDropdown && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowFilterDropdown(true)}
-                  className="h-7 text-xs font-semibold gap-1.5 rounded-lg border-slate-200 dark:border-slate-700"
-                >
-                  <Search className="h-3 w-3 text-teal-600" />
-                  <span>{getLabel("filterToggle", lang) || "Search & Filter"}</span>
-                </Button>
-              )}
-              <div className="text-xs text-slate-500 dark:text-slate-400 font-bold bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg">
-                {filteredCustomers.length} {t(lang, "hr.records_found", "records found")}
-              </div>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-slate-50 text-slate-700 uppercase font-bold border-b border-slate-200 dark:bg-slate-950 dark:text-slate-300 dark:border-slate-800">
+      {/* ================= MAIN CUSTOMERS TABLE ================= */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs text-left border-collapse">
+            <thead>
+              <tr className="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 text-slate-500 dark:text-slate-400 font-bold uppercase text-[11px] tracking-wider">
+                {/* Select All Checkbox */}
+                <th className="px-3.5 py-3.5 w-10 text-center">
+                  <input
+                    type="checkbox"
+                    checked={
+                      paginatedCustomers.length > 0 &&
+                      paginatedCustomers.every((c) => selectedRows.has(c.id))
+                    }
+                    onChange={(e) => handleSelectAll(e.target.checked)}
+                    aria-label="Select all leads on current page"
+                    className="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                  />
+                </th>
+                <th className="px-3 py-3.5 w-12 text-slate-400">#</th>
+                <th className="px-4 py-3.5">Name</th>
+                <th className="px-4 py-3.5">Company</th>
+                <th className="px-4 py-3.5">Source</th>
+                <th className="px-4 py-3.5">Status</th>
+                <th className="px-4 py-3.5">Assigned To</th>
+                <th className="px-4 py-3.5">Country</th>
+                <th className="px-4 py-3.5">State</th>
+                <th className="px-4 py-3.5">City</th>
+                <th className="px-4 py-3.5">Phone</th>
+                <th className="px-4 py-3.5">Created At</th>
+                <th className="px-4 py-3.5 text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+              {loading ? (
                 <tr>
-                  <Th className="px-3.5 py-3.5">#</Th>
-                  <Th className="px-4 py-3.5">{getLabel("customerCode", lang)}</Th>
-                  <Th className="px-4 py-3.5">{getLabel("customerType", lang)}</Th>
-                  <Th className="px-5 py-3.5">{getLabel("customerName", lang)}</Th>
-                  <Th className="px-4 py-3.5">{getLabel("fatherNameOnly", lang) || "Father / Guardian Name"}</Th>
-                  <Th className="px-4 py-3.5">{getLabel("country", lang)}</Th>
-                  <Th className="px-4 py-3.5">{getLabel("stateProvince", lang)}</Th>
-                  <Th className="px-4 py-3.5">{getLabel("city", lang)}</Th>
-                  <Th className="px-4 py-3.5">{getLabel("contacts", lang)}</Th>
-                  <Th className="px-4 py-3.5">{getLabel("documents", lang)}</Th>
-                  <Th className="px-4 py-3.5">{getLabel("status", lang)}</Th>
-                  <Th className="px-4 py-3.5">{getLabel("createdDate", lang)}</Th>
-                  <Th className="px-4 py-3.5 text-center">{getLabel("actions", lang)}</Th>
+                  <td colSpan={13} className="px-6 py-12 text-center text-slate-400 font-medium italic">
+                    Loading customer records...
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {loading ? (
-                  <tr>
-                    <td colSpan={13} className="px-5 py-10 text-center text-slate-500 font-medium italic">
-                      {getLabel("loadingCustomerRegistryDirectory", lang)}
-                    </td>
-                  </tr>
-                ) : filteredCustomers.length > 0 ? (
-                  filteredCustomers.map((c, i) => {
-                    const cType = c.meta.customerType || "Male";
-                    const fName = c.father_name || c.meta.fatherName;
-                    return (
+              ) : paginatedCustomers.length > 0 ? (
+                paginatedCustomers.map((c, idx) => {
+                  const globalIdx = (currentPage - 1) * pageSize + idx + 1;
+                  const isSelected = selectedRows.has(c.id);
+                  const countryInfo = getCountryFlagAndName(c.meta.countryName);
+                  const initials = getInitials(c.customer_name);
+                  const avatarColor = getAvatarColor(c.customer_name);
+                  const source = c.meta.source || "Website";
+                  const sourceBadge = SOURCE_MAP[source] || SOURCE_MAP.Other;
+                  const leadStatus = c.meta.leadStatus || "New";
+                  const statusBadgeClass = STATUS_STYLES[leadStatus] || STATUS_STYLES.New;
+                  const cleanPhone = (c.meta.phone || "").replace(/[^0-9+]/g, "");
+
+                  return (
                     <tr
                       key={c.id}
                       onClick={() => setSelectedCustomerId(c.id)}
-                      className="cursor-pointer hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors"
+                      className={cn(
+                        "hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors cursor-pointer text-slate-700 dark:text-slate-300 font-medium",
+                        isSelected && "bg-blue-50/40 dark:bg-blue-950/20"
+                      )}
                     >
-                      <td className="px-3.5 py-3.5 font-semibold text-slate-500">{i + 1}</td>
-                      <td className="px-4 py-3.5 font-bold text-slate-900 dark:text-slate-100 font-mono">
-                        {c.meta.customerAccountNumber}
+                      {/* Row Checkbox */}
+                      <td className="px-3.5 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={(e) => handleToggleRow(c.id, e as any)}
+                          aria-label={`Select lead ${c.customer_name}`}
+                          className="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        />
                       </td>
-                      <td className="px-4 py-3.5">
-                        <span
-                          className={cn(
-                            "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider border",
-                            cType === "Female"
-                              ? "bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-950/40 dark:text-pink-300 dark:border-pink-800"
-                              : cType === "Corporate"
-                                ? "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800"
-                                : "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800"
-                          )}
-                        >
-                          {cType === "Female" ? "👩 " : cType === "Corporate" ? "🏢 " : "👨 "}
-                          {translateCustomerText(cType, lang)}
-                        </span>
+
+                      {/* Index */}
+                      <td className="px-3 py-3 font-semibold text-slate-400 text-xs">
+                        {globalIdx}
                       </td>
-                      <td className="px-5 py-3.5">
-                        <span className="font-black text-slate-900 dark:text-slate-100 text-[13px]">
-                          {translateCustomerText(c.customer_name, lang)}
-                        </span>
-                      </td>
-                      {/* Dedicated Father / Guardian Name Column */}
-                      <td className="px-4 py-3.5">
-                        {fName ? (
-                          <span className="inline-flex items-center gap-1 text-[11.5px] font-bold text-slate-800 dark:text-slate-200">
-                            <span className="text-[9.5px] uppercase tracking-wider font-extrabold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-900/40">
-                              S/O:
-                            </span>
-                            <span>{translateCustomerText(fName, lang)}</span>
+
+                      {/* Name with circular avatar initials */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2.5">
+                          <span
+                            className={cn(
+                              "grid h-7 w-7 place-items-center rounded-full text-[11px] font-black shrink-0 border",
+                              avatarColor
+                            )}
+                          >
+                            {initials}
                           </span>
-                        ) : (
-                          <span className="text-[11px] text-slate-400 italic">—</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3.5 text-slate-600 dark:text-slate-300 font-medium">
-                        {translateCustomerText(c.meta.country, lang)}
-                      </td>
-                      <td className="px-4 py-3.5 text-slate-600 dark:text-slate-300 font-medium">
-                        {translateCustomerText(c.meta.stateProvince, lang)}
-                      </td>
-                      <td className="px-4 py-3.5 text-slate-600 dark:text-slate-300 font-medium">
-                        {translateCustomerText(c.meta.city, lang)}
-                      </td>
-                      <td className="px-4 py-3.5 text-slate-700">
-                        <div className="group relative flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex gap-1 items-center">
-                            {c.meta.contacts.map((cn, idx) => {
-                              if (cn.type === "Email") {
-                                return (
-                                  <a
-                                    key={idx}
-                                    href={`mailto:${cn.value}`}
-                                    title={`Email: ${cn.value}`}
-                                    className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-blue-600 transition-colors"
-                                  >
-                                    <Mail className="h-3.5 w-3.5" />
-                                  </a>
-                                );
-                              }
-                              if (cn.type === "WhatsApp") {
-                                const cleanNo = cn.value.replace(/[^0-9]/g, "");
-                                return (
-                                  <a
-                                    key={idx}
-                                    href={`https://wa.me/${cleanNo}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    title={`WhatsApp: ${cn.value}`}
-                                    className="p-1 hover:bg-slate-100 rounded text-teal-500 hover:text-teal-600 transition-colors"
-                                  >
-                                    <MessageSquare className="h-3.5 w-3.5" />
-                                  </a>
-                                );
-                              }
-                              return (
-                                <a
-                                  key={idx}
-                                  href={`tel:${cn.value}`}
-                                  title={`Phone: ${cn.value}`}
-                                  className="p-1 hover:bg-slate-100 rounded text-blue-500 hover:text-blue-600 transition-colors"
-                                >
-                                  <Phone className="h-3.5 w-3.5" />
-                                </a>
-                              );
-                            })}
-                          </div>
-                          {/* Hover Tooltip listing all contacts */}
-                          <div className="pointer-events-none absolute bottom-full mb-1 left-0 w-48 rounded-lg bg-slate-900 p-2.5 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100 z-50 shadow-md">
-                            <p className="font-bold border-b border-slate-700 pb-1 mb-1.5 text-teal-400">{getLabel("allContacts", lang)}</p>
-                            {c.meta.contacts.map((cn, idx) => (
-                              <div key={idx} className="flex justify-between font-mono py-0.5">
-                                <span>{cn.type}:</span>
-                                <span>{cn.value}</span>
-                              </div>
-                            ))}
-                          </div>
+                          <span className="font-bold text-slate-900 dark:text-slate-100 text-xs truncate max-w-[160px]">
+                            {c.customer_name}
+                          </span>
                         </div>
                       </td>
-                      <td className="px-4 py-3.5 text-slate-600">
-                        <DocumentAttachmentIcon entityType="customers" entityId={c.id} />
+
+                      {/* Company */}
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-300 text-xs font-semibold truncate max-w-[150px]">
+                        {c.company_name || c.meta.companyName || "Skyline Properties"}
                       </td>
-                      <td className="px-4 py-3.5">
-                        <span
-                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold border ${
-                            c.meta.status === "Active"
-                              ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
-                              : "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
-                          }`}
-                        >
-                          {c.meta.status}
+
+                      {/* Source Pill */}
+                      <td className="px-4 py-3">
+                        <span className={cn("inline-block px-2.5 py-0.5 rounded-full text-[10.5px] font-bold", sourceBadge.bg)}>
+                          {source}
                         </span>
                       </td>
-                      <td className="px-4 py-3.5 text-slate-500 font-mono font-medium">
-                        {new Date(c.created_at).toLocaleDateString(undefined, {
+
+                      {/* Status Pill */}
+                      <td className="px-4 py-3">
+                        <span className={cn("inline-block px-2.5 py-0.5 rounded-full text-[10.5px] font-bold border", statusBadgeClass)}>
+                          {leadStatus}
+                        </span>
+                      </td>
+
+                      {/* Assigned To */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1.5 text-xs text-slate-800 dark:text-slate-200 font-semibold">
+                          <span className="grid h-5 w-5 place-items-center rounded-full bg-slate-200 dark:bg-slate-700 text-[9px] font-black text-slate-700 dark:text-slate-200">
+                            {getInitials(c.meta.assignedStaff)}
+                          </span>
+                          <span className="truncate max-w-[110px]">{c.meta.assignedStaff}</span>
+                        </div>
+                      </td>
+
+                      {/* Country with flag */}
+                      <td className="px-4 py-3 text-xs">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm leading-none">{countryInfo.flag}</span>
+                          <span className="text-slate-700 dark:text-slate-300 font-medium">{countryInfo.name}</span>
+                        </div>
+                      </td>
+
+                      {/* State / Province */}
+                      <td className="px-4 py-3 text-xs text-slate-600 dark:text-slate-400 font-medium">
+                        {c.meta.stateName || "Dubai"}
+                      </td>
+
+                      {/* City */}
+                      <td className="px-4 py-3 text-xs text-slate-600 dark:text-slate-400 font-medium">
+                        {c.meta.cityName || "Dubai"}
+                      </td>
+
+                      {/* Phone */}
+                      <td className="px-4 py-3 text-xs font-mono font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                        {c.meta.phone}
+                      </td>
+
+                      {/* Created At */}
+                      <td className="px-4 py-3 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap font-medium">
+                        {new Date(c.created_at || Date.now()).toLocaleDateString("en-GB", {
                           day: "2-digit",
                           month: "short",
                           year: "numeric"
                         })}
                       </td>
-                      <td className="px-4 py-3.5 text-center">
-                        <div className="flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            type="button"
-                            onClick={() => setSelectedCustomerId(c.id)}
-                            title="View Customer Profile"
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-slate-800 transition-colors"
+
+                      {/* Actions */}
+                      <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-center gap-1.5">
+                          {/* Phone Call */}
+                          <a
+                            href={`tel:${cleanPhone}`}
+                            title={`Call: ${c.meta.phone}`}
+                            className="p-1 rounded-lg text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-950/40 transition-colors"
                           >
-                            <Eye className="h-4 w-4" />
-                          </button>
+                            <Phone className="h-3.5 w-3.5" />
+                          </a>
+
+                          {/* WhatsApp */}
+                          <a
+                            href={`https://wa.me/${cleanPhone.replace(/[^0-9]/g, "")}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title={`WhatsApp: ${c.meta.phone}`}
+                            className="p-1 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors"
+                          >
+                            <MessageSquare className="h-3.5 w-3.5" />
+                          </a>
+
+                          {/* Email */}
+                          <a
+                            href={`mailto:${c.email || "info@dgt.llc"}`}
+                            title={`Email: ${c.email || "info@dgt.llc"}`}
+                            className="p-1 rounded-lg text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors"
+                          >
+                            <Mail className="h-3.5 w-3.5" />
+                          </a>
+
+                          {/* Edit Pencil */}
                           <button
                             type="button"
                             onClick={() => router.push(`/dashboard/settings/customers/setup?customerId=${c.id}` as Route)}
                             title="Edit Customer"
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors"
+                            className="p-1 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                           >
-                            <PencilLine className="h-4 w-4" />
+                            <PencilLine className="h-3.5 w-3.5" />
                           </button>
-                          <UnifiedActionMenu
-                            onView={() => setSelectedCustomerId(c.id)}
-                            onEdit={() => router.push(`/dashboard/settings/customers/setup?customerId=${c.id}` as Route)}
-                            onPrint={() => handlePrint(c)}
-                            onDelete={() => void handleDelete(c.id, c.customer_name)}
-                            customItems={[
-                              {
-                                key: "send-form-link",
-                                label: lang === "ur" ? "کسٹمر کو فارم لنک بھیجیں" : lang === "ps" ? "پیرودونکي ته د فورم لینک واستوئ" : lang === "fa" ? "ارسال لینک فرم به مشتری" : lang === "ar" ? "إرسال رابط النموذج للعميل" : "Send Form Link to Customer",
-                                icon: <Send className="h-3.5 w-3.5 text-teal-600" />,
-                                onClick: () => setShowSendModal(true)
-                              }
-                            ]}
-                          />
+
+                          {/* 3-dots dropdown */}
+                          <div className="relative">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveMenuId(activeMenuId === c.id ? null : c.id);
+                              }}
+                              className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                            >
+                              <MoreVertical className="h-3.5 w-3.5" />
+                            </button>
+
+                            {activeMenuId === c.id && (
+                              <div
+                                onClick={(e) => e.stopPropagation()}
+                                className="absolute right-0 mt-1 w-44 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl p-1 z-50 text-left animate-in fade-in zoom-in-95 duration-100"
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveMenuId(null);
+                                    setSelectedCustomerId(c.id);
+                                  }}
+                                  className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg"
+                                >
+                                  <Eye className="h-3.5 w-3.5 text-teal-600" />
+                                  <span>View Profile</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveMenuId(null);
+                                    setSelected360Party({ id: c.id, name: c.customer_name });
+                                  }}
+                                  className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg"
+                                >
+                                  <Layers className="h-3.5 w-3.5 text-indigo-600" />
+                                  <span>360° Dossier</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveMenuId(null);
+                                    void handlePrint(c);
+                                  }}
+                                  className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg"
+                                >
+                                  <Printer className="h-3.5 w-3.5 text-blue-600" />
+                                  <span>Print Dossier</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveMenuId(null);
+                                    void handleDelete(c.id, c.customer_name);
+                                  }}
+                                  className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                  <span>Delete</span>
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </td>
                     </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan={13} className="px-5 py-10 text-center text-slate-500 font-medium italic">
-                      {getLabel("noCustomersFoundFilterMsg", lang)}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={13} className="px-6 py-12 text-center text-slate-400 font-medium italic">
+                    No matching customer leads found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
 
+        {/* ================= PAGINATION FOOTER ================= */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-950/20 text-xs text-slate-500">
+          {/* Left: Showing count & per page dropdown */}
+          <div className="flex items-center gap-3">
+            <span>
+              Showing {filteredList.length === 0 ? 0 : (currentPage - 1) * pageSize + 1} to{" "}
+              {Math.min(currentPage * pageSize, filteredList.length)} of {filteredList.length} leads
+            </span>
+            <div className="relative inline-block">
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                aria-label="Leads per page"
+                className="h-7 px-2.5 text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer appearance-none pr-6 shadow-2xs"
+              >
+                <option value={10}>10 per page</option>
+                <option value={25}>25 per page</option>
+                <option value={50}>50 per page</option>
+                <option value={100}>100 per page</option>
+              </select>
+              <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-slate-400 pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Right: Page Navigation Buttons */}
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              disabled={currentPage <= 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              aria-label="Previous page"
+              className="grid h-7 w-7 place-items-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-2xs"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+            </button>
+
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              const pageNum = i + 1;
+              const isActive = currentPage === pageNum;
+              return (
+                <button
+                  key={pageNum}
+                  type="button"
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={cn(
+                    "grid h-7 min-w-[28px] px-1.5 place-items-center rounded-lg text-xs font-bold transition-all shadow-2xs",
+                    isActive
+                      ? "bg-blue-600 text-white"
+                      : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+                  )}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+
+            {totalPages > 5 && (
+              <>
+                <span className="px-1 text-slate-400">...</span>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage(totalPages)}
+                  className={cn(
+                    "grid h-7 min-w-[28px] px-1.5 place-items-center rounded-lg text-xs font-bold transition-all shadow-2xs",
+                    currentPage === totalPages
+                      ? "bg-blue-600 text-white"
+                      : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+                  )}
+                >
+                  {totalPages}
+                </button>
+              </>
+            )}
+
+            <button
+              type="button"
+              disabled={currentPage >= totalPages}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              aria-label="Next page"
+              className="grid h-7 w-7 place-items-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-2xs"
+            >
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ================= DRAWER & MODALS ================= */}
       <DetailDrawer
         isOpen={selectedCustomerId !== null}
         onClose={() => setSelectedCustomerId(null)}
@@ -873,7 +1007,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
         subtitle={getLabel("completeMasterCustomerDirectorySub", lang)}
         exportFileName="customer_directory_report"
         filters={[
-          { label: getLabel("searchQueryLabel", lang), value: filterState.query || t(lang, "purchase.card_none_label", "None") }
+          { label: getLabel("searchQueryLabel", lang), value: searchQuery || t(lang, "purchase.card_none_label", "None") }
         ]}
         columns={[
           { key: "customer_name", label: getLabel("customerOwnerNameLabel", lang) },
@@ -884,7 +1018,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
           { key: "email", label: getLabel("emailAddress", lang) },
           { key: "address", label: t(lang, "purchase.f_address", "Address") }
         ]}
-        data={filteredCustomers.map(c => ({
+        data={filteredList.map((c) => ({
           customer_name: c.customer_name,
           company_name: c.company_name || "-",
           contact_person: c.contact_person || "-",
