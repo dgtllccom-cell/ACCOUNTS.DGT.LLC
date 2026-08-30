@@ -4407,6 +4407,9 @@ export type UiKey =
   | "pjt.receipt_system_generated_document"
   | "pjt.receipt_exchange_rate_applied"
   | "pjt.receipt_super_admin"
+  | "tdoc.t_contract"
+  | "tdoc.t_sales_contract"
+  | "tdoc.t_purchase_contract"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -14873,6 +14876,9 @@ const en: Dict = {
   "bgr.title": "Branch General Report",
   "transit.print_title": "Transit Entry",
   "sales.ster_report_title": "Sales Transfer — ERP Report",
+  "tdoc.t_contract": "Contract",
+  "tdoc.t_sales_contract": "Sales Contract",
+  "tdoc.t_purchase_contract": "Purchase Contract",
 };
 
 const ur: Dict = {
@@ -25316,6 +25322,9 @@ const ur: Dict = {
   "bgr.title": "برانچ جنرل رپورٹ",
   "transit.print_title": "ٹرانزٹ انٹری",
   "sales.ster_report_title": "سیلز ٹرانسفر — ای آر پی رپورٹ",
+  "tdoc.t_contract": "کنٹریکٹ",
+  "tdoc.t_sales_contract": "سیلز کنٹریکٹ",
+  "tdoc.t_purchase_contract": "پرچیز کنٹریکٹ",
 };
 
 const ar: Dict = {
@@ -35761,6 +35770,9 @@ const ar: Dict = {
   "bgr.title": "التقرير العام للفرع",
   "transit.print_title": "قيد العبور",
   "sales.ster_report_title": "تحويل المبيعات — تقرير ERP",
+  "tdoc.t_contract": "عقد",
+  "tdoc.t_sales_contract": "عقد بيع",
+  "tdoc.t_purchase_contract": "عقد شراء",
 };
 
 const fa: Dict = {
@@ -46205,6 +46217,9 @@ const fa: Dict = {
   "bgr.title": "گزارش عمومی شعبه",
   "transit.print_title": "ورودی ترانزیت",
   "sales.ster_report_title": "انتقال فروش — گزارش ERP",
+  "tdoc.t_contract": "قرارداد",
+  "tdoc.t_sales_contract": "قرارداد فروش",
+  "tdoc.t_purchase_contract": "قرارداد خرید",
 };
 
 const ps: Dict = {
@@ -56655,6 +56670,9 @@ const ps: Dict = {
   "bgr.title": "د څانګې عمومي راپور",
   "transit.print_title": "د ترانزیت ننوتنه",
   "sales.ster_report_title": "د پلور لېږد — د ERP راپور",
+  "tdoc.t_contract": "تړون",
+  "tdoc.t_sales_contract": "د پلور تړون",
+  "tdoc.t_purchase_contract": "د پیرود تړون",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

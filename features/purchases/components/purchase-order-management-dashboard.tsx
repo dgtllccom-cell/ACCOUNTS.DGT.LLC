@@ -45,7 +45,6 @@ import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
 import { openPurchaseA4ReportWindow } from "@/lib/reports/open-purchase-a4-report-window";
-import { openProformaInvoiceWindow } from "@/lib/reports/open-proforma-invoice-window";
 import { TradeDocumentCenter } from "@/features/reports/components/trade-document-center";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
@@ -2087,6 +2086,7 @@ export function PurchaseOrderManagementDashboard() {
   const [transferDropdownOpen, setTransferDropdownOpen] = useState(false);
   const [moreActionsDropdownOpen, setMoreActionsDropdownOpen] = useState(false);
   const [tradeDocsOpen, setTradeDocsOpen] = useState(false);
+  const [tradeDocsInitialType, setTradeDocsInitialType] = useState<"commercial_invoice" | "packing_list" | "proforma_invoice">("commercial_invoice");
   const [drawerReportType, setDrawerReportType] = useState<"branch" | "totaling" | "payment">("branch");
 
   useEffect(() => {
@@ -3185,6 +3185,7 @@ export function PurchaseOrderManagementDashboard() {
                         type="button"
                         onClick={() => {
                           setMoreActionsDropdownOpen(false);
+                          setTradeDocsInitialType("commercial_invoice");
                           setTradeDocsOpen(true);
                         }}
                         className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-900"
@@ -3196,7 +3197,8 @@ export function PurchaseOrderManagementDashboard() {
                         type="button"
                         onClick={() => {
                           setMoreActionsDropdownOpen(false);
-                          openProformaInvoiceWindow({ purchaseData: selected });
+                          setTradeDocsInitialType("proforma_invoice");
+                          setTradeDocsOpen(true);
                         }}
                         className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-900"
                       >
@@ -3900,6 +3902,7 @@ export function PurchaseOrderManagementDashboard() {
         <TradeDocumentCenter
           open={tradeDocsOpen}
           onClose={() => setTradeDocsOpen(false)}
+          initialDocType={tradeDocsInitialType}
           txnKind="purchase"
           record={selected as any}
           companyId={(selected as any).supplier_company_id || null}

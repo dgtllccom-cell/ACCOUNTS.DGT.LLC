@@ -49,7 +49,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SimpleModal } from "@/components/ui/simple-modal";
-import { openTradeDocumentWindow } from "@/lib/reports/open-trade-document-window";
 import { TradeDocumentCenter } from "@/features/reports/components/trade-document-center";
 import { openPurchaseA4ReportWindow } from "@/lib/reports/open-purchase-a4-report-window";
 import { PurchaseBookingJournalReportView } from "./purchase-booking-journal-report-view";
@@ -548,6 +547,7 @@ export function PurchaseOrderWizard({ session }) {
   const [draftPrefillRef, setDraftPrefillRef] = useState("");
   const [draftPrefillId, setDraftPrefillId] = useState("");
   const [tradeDocsOpen, setTradeDocsOpen] = useState(false);
+  const [tradeDocsInitialType, setTradeDocsInitialType] = useState("commercial_invoice");
   const draftConsumedRef = useRef(false);
 
   // Pre-fill from a reviewed AI Document Intake draft (Entry Method Selector →
@@ -3522,7 +3522,8 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
               type="button"
               onClick={() => {
                 setViewDropdownOpen(false);
-                openTradeDocumentWindow("contract", { form_data: { form, goodsEntries }, containerCount: form.containerCount });
+                setTradeDocsInitialType("contract");
+                setTradeDocsOpen(true);
               }}
               className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
             >
@@ -3533,6 +3534,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
               type="button"
               onClick={() => {
                 setViewDropdownOpen(false);
+                setTradeDocsInitialType("commercial_invoice");
                 setTradeDocsOpen(true);
               }}
               className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
@@ -7206,6 +7208,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
         <TradeDocumentCenter
           open={tradeDocsOpen}
           onClose={() => setTradeDocsOpen(false)}
+          initialDocType={tradeDocsInitialType}
           txnKind="purchase"
           source="purchase_order"
           record={{

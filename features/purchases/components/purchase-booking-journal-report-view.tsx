@@ -46,8 +46,8 @@ import { useRouter } from "next/navigation";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
 import { openPurchaseA4ReportWindow } from "@/lib/reports/open-purchase-a4-report-window";
-import { openProformaInvoiceWindow } from "@/lib/reports/open-proforma-invoice-window";
-import { openTradeDocumentWindow } from "@/lib/reports/open-trade-document-window";
+import { TradeDocumentCenter } from "@/features/reports/components/trade-document-center";
+import type { TradeDocType } from "@/lib/reports/trade-documents/types";
 import { OpenFullBillModal } from "@/components/invoices/open-full-bill-modal";
 import { cn } from "@/lib/utils";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -1384,6 +1384,8 @@ export function PurchaseBookingJournalReportView({
   const [scope, setScope] = useState<ReportScope | null>(null);
   const [selectedId, setSelectedId] = useState("");
   const [selectedBillForModal, setSelectedBillForModal] = useState<any | null>(null);
+  const [tradeDocsOpen, setTradeDocsOpen] = useState(false);
+  const [tradeDocsInitialType, setTradeDocsInitialType] = useState<TradeDocType>("commercial_invoice");
   const [activeTab, setActiveTab] = useState<DashboardTab>("purchase");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [transferring, setTransferring] = useState(false);
@@ -3159,34 +3161,34 @@ export function PurchaseBookingJournalReportView({
                     <span>👁️</span> PDF Preview
                   </button>
                   <div className="h-px bg-border my-1" />
-                  <div className="px-3 py-1 text-[9px] font-black uppercase tracking-wider text-slate-400">Trade Documents</div>
+                  <div className="px-3 py-1 text-[9px] font-black uppercase tracking-wider text-slate-400">{t(activeLang, "tdoc.center_title", "Commercial Document Center")}</div>
                   <button
                     type="button"
-                    onClick={() => selected && openTradeDocumentWindow("contract", selected)}
+                    onClick={() => { if (selected) { setTradeDocsInitialType("contract"); setTradeDocsOpen(true); } }}
                     className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-bold hover:bg-muted"
                   >
-                    <span>📄</span> Purchase Contract
+                    <span>📄</span> {t(activeLang, "tdoc.t_purchase_contract", "Purchase Contract")}
                   </button>
                   <button
                     type="button"
-                    onClick={() => selected && openTradeDocumentWindow("proforma", selected)}
+                    onClick={() => { if (selected) { setTradeDocsInitialType("proforma_invoice"); setTradeDocsOpen(true); } }}
                     className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-bold hover:bg-muted"
                   >
-                    <span>📑</span> Proforma Invoice
+                    <span>📑</span> {t(activeLang, "tdoc.t_proforma_invoice", "Proforma Invoice")}
                   </button>
                   <button
                     type="button"
-                    onClick={() => selected && openTradeDocumentWindow("commercial", selected)}
+                    onClick={() => { if (selected) { setTradeDocsInitialType("commercial_invoice"); setTradeDocsOpen(true); } }}
                     className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-bold hover:bg-muted"
                   >
-                    <span>🧾</span> Commercial Invoice
+                    <span>🧾</span> {t(activeLang, "tdoc.t_commercial_invoice", "Commercial Invoice")}
                   </button>
                   <button
                     type="button"
-                    onClick={() => selected && openTradeDocumentWindow("packing", selected)}
+                    onClick={() => { if (selected) { setTradeDocsInitialType("packing_list"); setTradeDocsOpen(true); } }}
                     className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-bold hover:bg-muted"
                   >
-                    <span>📦</span> Packing List
+                    <span>📦</span> {t(activeLang, "tdoc.t_packing_list", "Packing List")}
                   </button>
                 </div>
               </details>
@@ -3713,6 +3715,38 @@ export function PurchaseBookingJournalReportView({
             onClose={() => setSelectedBillForModal(null)}
             order={selectedBillForModal}
             lang={activeLang}
+          />
+        )}
+
+        {/* ── COMMERCIAL DOCUMENT CENTER (Contract / Proforma / Commercial Invoice / Packing List) ── */}
+        {tradeDocsOpen && selected && (
+          <TradeDocumentCenter
+            open={tradeDocsOpen}
+            onClose={() => setTradeDocsOpen(false)}
+            initialDocType={tradeDocsInitialType}
+            txnKind="purchase"
+            source="purchase_order"
+            record={{
+              id: selected.id,
+              purchase_order_no: selected.purchaseBookingOrderNumber,
+              purchase_contract_no: selected.purchaseContractNo,
+              currency_code: selected.currency || selected.finalCurrency,
+              exchange_rate: selected.exchange_rate,
+              country_id: selected.form_data?.form?.countryId ?? null,
+              country_branch_id: selected.form_data?.form?.countryBranchId ?? null,
+              city_branch_id: selected.form_data?.form?.cityBranchId ?? null,
+              country_name: selected.countryName,
+              branch_name: selected.branchName,
+              form_data: selected.form_data,
+            }}
+            companyId={selected.form_data?.form?.purchaseCompanyId || null}
+            scope={{
+              countryId: selected.form_data?.form?.countryId || null,
+              countryBranchId: selected.form_data?.form?.countryBranchId || null,
+              cityBranchId: selected.form_data?.form?.cityBranchId || null,
+              countryName: selected.countryName || null,
+              branchName: selected.branchName || null,
+            }}
           />
         )}
     </div>

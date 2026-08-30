@@ -46,11 +46,20 @@ function fmtDate(v: string | null | undefined): string {
   return Number.isNaN(d.getTime()) ? String(v) : d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-const DOC_TITLE_KEY: Record<TradeDocumentInput["docType"], [string, string]> = {
+const DOC_TITLE_KEY: Record<Exclude<TradeDocumentInput["docType"], "contract">, [string, string]> = {
   commercial_invoice: ["tdoc.t_commercial_invoice", "Commercial Invoice"],
   packing_list: ["tdoc.t_packing_list", "Packing List"],
   proforma_invoice: ["tdoc.t_proforma_invoice", "Proforma Invoice"],
 };
+
+function docTitleKeyFor(input: TradeDocumentInput): [string, string] {
+  if (input.docType === "contract") {
+    return input.txnKind === "sales"
+      ? ["tdoc.t_sales_contract", "Sales Contract"]
+      : ["tdoc.t_purchase_contract", "Purchase Contract"];
+  }
+  return DOC_TITLE_KEY[input.docType];
+}
 
 export function buildTradeDocumentHtml(input: TradeDocumentInput): string {
   const lang = (input.lang || "en") as SupportedLanguage;
@@ -62,13 +71,16 @@ export function buildTradeDocumentHtml(input: TradeDocumentInput): string {
   const b = input.branding;
   const brandName = isReal(b.entityName) ? b.entityName! : tt("tdoc.brand_fallback", "Digital Dock ERP");
   const brandLines = brandLinesFor(b);
+  const isContract = input.docType === "contract";
   const isPacking = input.docType === "packing_list";
-  const isProforma = input.docType === "proforma_invoice";
+  // A contract shares the proforma layout (prices, payment/bank terms, validity,
+  // dual signature) — only the heading differs.
+  const isProforma = input.docType === "proforma_invoice" || isContract;
   const showTransport = input.tradeScope === "international" && input.transport
     && Object.values(input.transport).some((v) => Array.isArray(v) ? v.length : isReal(v));
   const showBank = !!input.bank && (isReal(input.bank.bankName) || isReal(input.bank.iban) || isReal(input.bank.accountNumber));
 
-  const [titleKey, titleFb] = DOC_TITLE_KEY[input.docType];
+  const [titleKey, titleFb] = docTitleKeyFor(input);
   const docTitle = tt(titleKey, titleFb);
   const scopeLabel = input.tradeScope === "local"
     ? tt("tdoc.scope_local", "Local")
@@ -371,7 +383,7 @@ ${input.autoPrint ? `<script>window.addEventListener('load',function(){setTimeou
 
 export function openTradeDocument(input: TradeDocumentInput): void {
   if (typeof window === "undefined") return;
-  const [titleKey, titleFb] = DOC_TITLE_KEY[input.docType];
+  const [titleKey, titleFb] = docTitleKeyFor(input);
   const title = t((input.lang || "en") as SupportedLanguage, titleKey as never, titleFb);
   printStore.openPrint(buildTradeDocumentHtml(input), `${title} — ${input.docNo}`, {
     lang: input.lang || "en",

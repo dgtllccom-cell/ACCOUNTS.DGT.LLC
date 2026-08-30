@@ -26,8 +26,10 @@ import { openPurchaseBookingOrderPrintReport } from "@/lib/reports/open-purchase
 import { openRoznamchaVoucherPrintReport } from "@/lib/reports/open-roznamcha-voucher-print-report";
 import { openSalesA4ReportWindow } from "@/lib/reports/open-sales-a4-report-window";
 import { openAccountA4ReportWindow } from "@/lib/reports/open-account-a4-report-window";
-import { openProformaInvoiceWindow } from "@/lib/reports/open-proforma-invoice-window";
-import { openTradeDocumentWindow } from "@/lib/reports/open-trade-document-window";
+import { openTradeDocument } from "@/lib/reports/trade-documents/build-trade-document";
+import { purchaseOrderToTradeInput } from "@/lib/reports/trade-documents/from-transaction";
+import { resolveDocumentBranding } from "@/lib/reports/resolve-document-branding";
+import type { TradeDocType } from "@/lib/reports/trade-documents/types";
 import { openPurchaseA4ReportWindow } from "@/lib/reports/open-purchase-a4-report-window";
 import { openUserA4ReportWindow } from "@/lib/reports/open-user-a4-report-window";
 import { Th } from "@/components/ui/translated-th";
@@ -569,54 +571,30 @@ export default function PrintReportsHubPage() {
     });
   }, [accountsList, selectedCountry, selectedBranch]);
 
-  // 10. Proforma Invoice
-  const handlePrintProformaInvoice = useCallback(() => {
+  // 10. Proforma Invoice / 12. Trade Document — via the unified engine
+  const openTradeDoc = useCallback(async (docType: TradeDocType) => {
     const o = orders[0];
-    if (!o) { alert("No purchase data for proforma invoice."); return; }
-    const form = o.form_data?.form || {};
-    openProformaInvoiceWindow({
-      purchaseData: {
-        id: o.id,
-        purchaseBookingOrderNumber: o.purchase_order_no || "—",
-        purchaseDate: form.purchaseDate || o.order_date || "—",
-        bookingDate: o.created_at || "—",
-        purchaseAccountName: form.purchaseAccountName || "—",
-        purchaseAccountNumber: form.purchaseAccountNumber || "—",
-        salesAccountName: form.salesAccountName || "—",
-        salesAccountNumber: form.salesAccountNumber || "—",
-        supplierName: form.supplierName || "—",
-        buyerName: form.buyerName || "DAMAN BUSINESS GROUP",
-        productName: form.goodsName || form.productName || "—",
-        goodsDescription: form.goodsName || "—",
-        quantity: Number(form.quantity || 0),
-        unit: form.unit || "KGS",
-        totalWeight: Number(form.totalWeight || 0),
-        containerCount: Number(form.containerCount || 1),
-        purchaseRate: Number(form.purchaseRate || 0),
-        totalPurchaseAmount: Number(o.order_total || 0),
-        currency: form.currencyType || "USD",
-        status: o.order_status || "Draft",
-        paymentStatus: o.payment_status || "Pending",
-        branchName: o.branchName || "—",
-        countryName: o.countryName || "—",
-        createdAt: o.created_at || "—",
-        form_data: o.form_data,
-        audit: { userName: "Super Admin", userId: "system", branchCode: o.branchCode || "—" },
-      },
-    });
+    if (!o) { alert("No purchase orders available for trade documents."); return; }
+    const scope = {
+      countryId: o.country_id || o.countryId || null,
+      countryBranchId: o.country_branch_id || null,
+      cityBranchId: o.city_branch_id || null,
+      countryName: o.countryName || null,
+      branchName: o.branchName || null,
+    };
+    const branding = await resolveDocumentBranding(scope, "en");
+    const input = purchaseOrderToTradeInput(o, { docType, lang: "en", branding });
+    openTradeDocument(input);
   }, [orders]);
+  const handlePrintProformaInvoice = useCallback(() => { void openTradeDoc("proforma_invoice"); }, [openTradeDoc]);
 
   // 11. Expenses Bill
   const handlePrintExpenses = useCallback(() => {
     alert("Expenses Bill Report — Opens when expense data is available in the system.");
   }, []);
 
-  // 12. Trade Document
-  const handlePrintTradeDocument = useCallback(() => {
-    const o = orders[0];
-    if (!o) { alert("No purchase orders for trade document."); return; }
-    openTradeDocumentWindow("contract", o);
-  }, [orders]);
+  // 12. Trade Document (Purchase Contract)
+  const handlePrintTradeDocument = useCallback(() => { void openTradeDoc("contract"); }, [openTradeDoc]);
 
   // 13. Purchase A4 Full Report
   const handlePrintPurchaseA4 = useCallback(() => {

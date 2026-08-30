@@ -43,12 +43,15 @@ export type TradeDocumentCenterProps = {
   /** branding entity — used to look up the entity's own bank accounts */
   companyId?: string | null;
   scope?: BrandingScope;
+  /** pre-select a document type when the panel opens (defaults to commercial invoice) */
+  initialDocType?: TradeDocType;
 };
 
 const DOC_TYPES: Array<{ key: TradeDocType; labelKey: string; label: string; icon: typeof FileText }> = [
   { key: "commercial_invoice", labelKey: "tdoc.t_commercial_invoice", label: "Commercial Invoice", icon: FileText },
   { key: "packing_list", labelKey: "tdoc.t_packing_list", label: "Packing List", icon: Package },
   { key: "proforma_invoice", labelKey: "tdoc.t_proforma_invoice", label: "Proforma Invoice", icon: FileSpreadsheet },
+  { key: "contract", labelKey: "tdoc.t_contract", label: "Contract", icon: FileText },
 ];
 
 const LANGS: Array<{ code: "en" | "ur" | "ps" | "fa" | "ar"; label: string }> = [
@@ -63,7 +66,8 @@ export function TradeDocumentCenter(props: TradeDocumentCenterProps) {
   const activeLang = useActiveLanguage();
   const tt = (key: string, fallback: string) => t(activeLang, key as never, fallback);
 
-  const [docType, setDocType] = useState<TradeDocType>("commercial_invoice");
+  const [docType, setDocType] = useState<TradeDocType>(props.initialDocType ?? "commercial_invoice");
+  useEffect(() => { if (open && props.initialDocType) setDocType(props.initialDocType); }, [open, props.initialDocType]);
   const [lang, setLang] = useState<"en" | "ur" | "ps" | "fa" | "ar">(activeLang as never);
   const [orientation, setOrientation] = useState<"portrait" | "landscape">("portrait");
   const [banks, setBanks] = useState<BeneficiaryBank[]>([]);

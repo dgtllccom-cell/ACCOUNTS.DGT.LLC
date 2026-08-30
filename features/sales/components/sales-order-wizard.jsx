@@ -46,7 +46,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SimpleModal } from "@/components/ui/simple-modal";
-import { openTradeDocumentWindow } from "@/lib/reports/open-trade-document-window";
 import { TradeDocumentCenter } from "@/features/reports/components/trade-document-center";
 import { openSalesA4ReportWindow } from "@/lib/reports/open-sales-a4-report-window";
 import { resolveSalesBookingPaymentRoute } from "@/lib/services/sales-booking-routing";
