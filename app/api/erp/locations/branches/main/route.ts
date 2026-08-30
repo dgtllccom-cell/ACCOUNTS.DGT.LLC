@@ -46,6 +46,7 @@ export async function GET(request: Request) {
       }
     });
   } catch (error) {
+    if (typeof (error as any)?.digest === "string" && (error as any).digest.startsWith("NEXT_REDIRECT")) throw error;
     if (error instanceof ErpAuthError) {
       return NextResponse.json({ ok: false, error: { message: error.message } }, { status: error.status });
     }

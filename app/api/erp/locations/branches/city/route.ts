@@ -68,6 +68,9 @@ export async function GET(request: Request) {
       branches: cityBranches
     });
   } catch (error) {
+    // A Next redirect (unauthenticated → /auth/login) must propagate, not be
+    // swallowed into a 500.
+    if (typeof (error as any)?.digest === "string" && (error as any).digest.startsWith("NEXT_REDIRECT")) throw error;
     if (error instanceof ErpAuthError) {
       return NextResponse.json({ ok: false, error: { message: error.message } }, { status: error.status });
     }
