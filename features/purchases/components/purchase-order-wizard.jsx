@@ -43,7 +43,11 @@ import {
   Users,
   ShieldCheck,
   ArrowRight,
-  ArrowRightLeft
+  ArrowRightLeft,
+  SlidersHorizontal,
+  ShoppingCart,
+  Calendar,
+  MapPin
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -1052,18 +1056,21 @@ export function PurchaseOrderWizard({ session }) {
       purchaseIban: pComp.iban || pComp.ibanNo || "—",
       purchaseSwiftCode: pComp.swift_code || pComp.swiftCode || "—",
       purchaseCurrencyLabel: pComp.currency || (form.purchaseCurrency ? `${form.purchaseCurrency} - ${form.purchaseCurrency === "AED" ? "UAE Dirham" : form.purchaseCurrency === "USD" ? "US Dollar" : form.purchaseCurrency}` : "—"),
-      purchaseCurrencyCode: form.purchaseCurrency || "—",
+      purchaseCity: form.branchCity || "Dubai",
+      purchaseBusinessName: pComp.business_name || form.purchaseCompanyName || "UAE Main Country Clearing Ledger",
 
       // Sales Account
-      salesAccountName: form.salesAccountName || "—",
-      salesAccountCode: form.salesAccountNo || "—",
+      salesAccountName: form.salesAccountName || "United Arab Emirates Main Country Clearing Ledger",
+      salesAccountCode: form.salesAccountNo || "UAE-CORP-GEN-001",
       salesTotalCredit: typeof sCredit === "number" ? sCredit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : (sCredit || "0.00"),
       salesTotalDebit: typeof sDebit === "number" ? sDebit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : (sDebit || "0.00"),
       salesBalance: typeof sBal === "number" ? sBal.toLocaleString(undefined, { minimumFractionDigits: 2 }) : (sBal || "0.00"),
-      salesCompanyName: form.salesCompanyName || sComp.name || "—",
-      salesBranch: form.salesAccountBranch || form.branchName || "—",
-      salesCountry: form.branchCountry || "—",
-      salesCompanyCode: form.salesCompanyCode || sComp.code || "—",
+      salesCompanyName: form.salesCompanyName || sComp.name || "United Arab Emirates Main Country Clearing Ledger",
+      salesBranch: form.salesAccountBranch || form.branchCode || "BR-DXB-001",
+      salesCountry: form.branchCountry || "United Arab Emirates",
+      salesCity: form.branchCity || "Dubai",
+      salesBusinessName: sComp.business_name || form.salesCompanyName || "UAE Main Country Clearing Ledger",
+      salesCompanyCode: form.salesCompanyCode || sComp.code || "UAE-CORP-GEN-001",
       salesLegalType: sComp.legal_type || sComp.legalType || "—",
       salesLicenseNo: sComp.license_no || sComp.licenseNo || "—",
       salesTaxRegNo: sComp.tax_reg_no || sComp.taxRegistrationNumber || sComp.taxRegNo || "—",
@@ -1080,10 +1087,12 @@ export function PurchaseOrderWizard({ session }) {
       salesSwiftCode: sComp.swift_code || sComp.swiftCode || "—",
       salesCurrencyLabel: sComp.currency || (form.purchaseCurrency ? `${form.purchaseCurrency} - ${form.purchaseCurrency === "AED" ? "UAE Dirham" : form.purchaseCurrency === "USD" ? "US Dollar" : form.purchaseCurrency}` : "—"),
       salesCurrencyCode: form.purchaseCurrency || "—",
+      onViewPurchaseAccount: () => setViewCompanyModal(true),
+      onViewSalesAccount: () => setViewCompanyModal(true)
     };
 
     return (
-      <div className="w-full mb-4 animate-in fade-in duration-300">
+      <div className="w-full mb-3 animate-in fade-in duration-300">
         <PurchaseBookingReportGrid data={reportData} />
       </div>
     );
@@ -4766,1032 +4775,377 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                       onClick={() => setActiveTab("goods")}
                       className="font-bold text-xs h-10 px-8 border-slate-200 text-slate-700 hover:bg-slate-50"
                     >
-                      <ChevronLeft className="h-4 w-4 mr-1.5" /> {t(lang, "common.back", "Back")}
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={() => setActiveTab("reports_tab")}
-                      className="font-black text-xs h-10 px-8 bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all uppercase tracking-wider flex items-center gap-2"
-                    >
-                      {t(lang, "common.next", "Next")} <ChevronRight className="h-4 w-4 ml-1.5" />
-                    </Button>
-                  </div>
-                </fieldset>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start w-full">
-                <section className="lg:col-span-9 space-y-4 order-2 mt-4">
-                  {/* GOODS LIST TABLE */}
-                  {activeTab === "goods" && (
-                  <div className="mt-4">
-                    <div className="overflow-x-auto rounded-lg border border-border bg-background shadow-sm">
-                      <table className="w-full text-[9px] text-foreground border-collapse text-left whitespace-nowrap">
-                        <thead>
-                          <tr className="bg-muted/80 text-muted-foreground border-b border-border font-bold uppercase tracking-wider">
-                            <Th className="px-3 py-2.5 text-center w-8">{t(lang, "purchase.th_hash", "#")}</Th>
-                            <Th className="px-3 py-2.5">{t(lang, "purchase.th_goods_name", "Goods Name")}</Th>
-                            <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.th_size", "Size")}</Th>
-                            <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.th_brand", "Brand")}</Th>
-                            <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.th_hs_code", "HS Code")}</Th>
-                            <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.th_origin", "Origin")}</Th>
-                            <Th className="px-3 py-2.5 text-right">{t(lang, "purchase.th_qty", "Qty")}</Th>
-                            <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.th_unit", "Unit")}</Th>
-                            <Th className="px-3 py-2.5 text-right">{t(lang, "purchase.th_price_currency", "Price ({currency})").replace("{currency}", form.currencyType || "USD")}</Th>
-                            <Th className="px-3 py-2.5 text-right">{t(lang, "purchase.th_amount_currency", "Amount ({currency})").replace("{currency}", form.currencyType || "USD")}</Th>
-                            <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.th_ex_rate", "Ex. Rate")}</Th>
-                            <Th className="px-3 py-2.5 text-right bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">{t(lang, "purchase.th_final_currency", "Final ({currency})").replace("{currency}", form.secondaryCurrency || "PKR")}</Th>
-                            <Th className="px-3 py-2.5 text-center w-10">{t(lang, "purchase.th_action", "Action")}</Th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {goodsEntries.length === 0 ? (
-                            <tr>
-                              <td colSpan={13} className="px-3 py-6 text-center text-muted-foreground italic font-semibold text-[10px]">
-                                {t(lang, "purchase.goods_table_empty", "No goods added yet. Add an item above to see it here.")}
-                              </td>
-                            </tr>
-                          ) : (
-                            goodsEntries.map((row, index) => (
-                              <tr
-                                key={index}
-                                className={`border-t border-border transition ${
-                                  editingGoodsIndex === index
-                                    ? "bg-amber-500/15 border-l-4 border-l-amber-500 font-bold"
-                                    : "hover:bg-muted/50"
-                                }`}
+                                      if (val === "__ADD_NEW__") {
+                                        handleAddNewLocationItem("port", "receivingPort");
+                                      } else {
+                                        setValue("receivingPort", val);
+                                        setValue("destinationPort", val);
+                                        setValue("receivedPort", val);
+                                        if (form.shippingMode === "By Air") setValue("destinationAirportName", val);
+                                        if (form.shippingMode === "By Road") setValue("receivingBorder", val);
+                                      }
+                                    }}
+                                    options={currentReceivedPorts.map((p, idx) => ({ label: `${p.port_name} ${p.port_code ? `[${p.port_code}]` : ""}`, value: p.port_name }))}
+                                    placeholder={t(lang, "purchase.select_port_placeholder", "Select Port")}
+                                    addOptionLabel={t(lang, "purchase.add_new_port_label", "Add New Port")}
+                                    disabled={!(form.receivingCountry || form.destinationCountry || form.receivedCountry) && currentReceivedPorts.length === 0}
+                                  />
+                                </label>
+                                <label className="space-y-1">
+                                  <span className="block text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">{t(lang, "purchase.receiving_date_label", "3. Receiving Date")}</span>
+                                  <input
+                                    type="date"
+                                    value={form.receivedDate || ""}
+                                    onChange={(e) => setValue("receivedDate", e.target.value)}
+                                    className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-900 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                                  />
+                                </label>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Destination Branch (Country-to-Country Purchase) */}
+                        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+                          <div className="mb-3 flex items-center gap-2.5 border-b border-slate-100 pb-3 dark:border-slate-800">
+                            <div className="grid h-9 w-9 place-items-center rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300">
+                              <Globe2 className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <h4 className="text-xs font-black uppercase tracking-[0.18em] text-slate-900 dark:text-slate-100">{t(lang, "purchase.dest_branch_title", "Destination Branch (Country-to-Country Purchase)")}</h4>
+                              <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">{t(lang, "purchase.dest_branch_subtitle", "Optional. Set only when this purchase is being made on behalf of a different country/branch.")}</p>
+                            </div>
+                          </div>
+                          <div className="grid gap-3 sm:grid-cols-3">
+                            <label className="space-y-1">
+                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.dest_country_label", "Destination Country")}</span>
+                              <select
+                                value={form.destCountryId || ""}
+                                onChange={(e) => setForm(p => ({ ...p, destCountryId: e.target.value, destCountryBranchId: "", destCityBranchId: "" }))}
+                                className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-900 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
                               >
-                                <td className="px-3 py-2 text-center font-mono text-muted-foreground">{index + 1}</td>
-                                <td className="px-3 py-2 font-black text-primary">{row.goodsName}</td>
-                                <td className="px-3 py-2 text-center font-semibold">{row.size}</td>
-                                <td className="px-3 py-2 text-center font-semibold">{row.brand}</td>
-                                <td className="px-3 py-2 text-center font-mono text-muted-foreground">{row.hsCode}</td>
-                                <td className="px-3 py-2 text-center font-semibold">{row.origin}</td>
-                                <td className="px-3 py-2 text-right font-mono font-bold">{Number(row.qtyNo || 0).toLocaleString()}</td>
-                                <td className="px-3 py-2 text-center font-semibold">{row.qtyName}</td>
-                                <td className="px-3 py-2 text-right font-mono font-bold text-muted-foreground">{Number(row.coursePrice || row.price || 0).toFixed(2)}</td>
-                                <td className="px-3 py-2 text-right font-mono font-black text-yellow-600 dark:text-yellow-450">{Number(row.totalAmount || row.amount || 0).toLocaleString()}</td>
-                                <td className="px-3 py-2 text-center font-mono text-muted-foreground">{row.op || "*"} {row.exchangeRate}</td>
-                                <td className="px-3 py-2 text-right font-mono font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/5">
-                                  {Number(row.finalAmount || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </td>
-                                <td className="px-3 py-2 text-center">
-                                  <div className="flex items-center justify-center gap-1.5">
-                                    <button
-                                      type="button"
-                                      onClick={() => handleViewGoodsEntry(index)}
-                                      className="flex items-center gap-1 px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[9px] font-bold transition-colors"
-                                      title={t(lang, "common.view", "View")}
-                                    >
-                                      <Eye className="h-3 w-3" /> {t(lang, "common.view", "View")}
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleEditGoodsEntry(index)}
-                                      className="flex items-center gap-1 px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded text-[9px] font-bold transition-colors shadow-sm border border-blue-200"
-                                      title={t(lang, "common.edit", "Edit")}
-                                    >
-                                      <Edit3 className="h-3 w-3" /> {t(lang, "common.edit", "Edit")}
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => setGoodsEntries(prev => prev.filter((_, idx) => idx !== index))}
-                                      className="flex items-center gap-1 px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded text-[9px] font-bold transition-colors shadow-sm border border-red-100"
-                                      title={t(lang, "common.delete", "Delete")}
-                                    >
-                                      <Trash2 className="h-3 w-3" /> {t(lang, "common.delete", "Delete")}
-                                    </button>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                  )}
-            </section>
-
-            <main className="lg:col-span-3 space-y-0 flex flex-col order-1 mt-4">
-
-              {activeTab === "booking" && (
-                <fieldset disabled={isTransferred && !session?.scopes?.isSuperAdmin} className="space-y-4 order-2 w-full mt-4">
-                  <div className="border-b border-border pb-2 mb-3">
-                    <h3 className="text-xs font-black uppercase tracking-wider text-foreground">{t(lang, "purchase.booking_bill_info_title", "Purchase Booking / Bill Info")}</h3>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="relative" ref={purchaseDropdownRef}>
-                      <label className="block text-[10px] font-bold text-foreground mb-1">{t(lang, "purchase.purchase_account_dr_star", "Purchase Account (DR)*")}</label>
-                      <div className="relative flex items-center">
-                        <input
-                          type="text"
-                          placeholder={form.purchaseAccountName ? formatAccountDisplayLabel(form.purchaseAccountName, form.purchaseAccountNo, form.purchaseAccountManualReferenceNumber) : t(lang, "purchase.search_code_name_branch", "Search Code, Name, Branch, Manual A/C...")}
-                          value={purchaseDropdownOpen ? purchaseSearch : (form.purchaseAccountName ? formatAccountDisplayLabel(form.purchaseAccountName, form.purchaseAccountNo, form.purchaseAccountManualReferenceNumber) : form.purchaseAccountNo || "")}
-                          onChange={(e) => handleTextChange("purchase", e.target.value)}
-                          onFocus={() => {
-                            setPurchaseDropdownOpen(true);
-                            setPurchasePinDropdownOpen(false);
-                            setPurchaseSearch("");
-                          }}
-                          className="w-full bg-background border border-input rounded pl-2.5 pr-8 py-1.5 text-foreground font-semibold outline-none focus:border-primary text-xs h-9"
-                        />
-                        <button
-                          type="button"
-                          disabled={!form.supplierId}
-                          onClick={() => {
-                            setPurchasePinDropdownOpen(prev => !prev);
-                            setPurchaseDropdownOpen(false);
-                          }}
-                          className="absolute right-2 text-muted-foreground hover:text-primary transition-colors disabled:opacity-30"
-                        >
-                          <Pin className={`h-3.5 w-3.5 ${purchasePinDropdownOpen ? "text-primary rotate-45" : ""}`} />
-                        </button>
+                                <option value="">{t(lang, "purchase.dest_country_none", "None (same-country purchase)")}</option>
+                                {(allCountries.length ? allCountries : countries).map((c) => (
+                                  <option key={c.id} value={c.id}>{c.name}</option>
+                                ))}
+                              </select>
+                            </label>
+                            <label className="space-y-1">
+                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.dest_branch_label", "Destination Main Branch")}</span>
+                              <select
+                                value={form.destCountryBranchId || ""}
+                                onChange={(e) => setForm(p => ({ ...p, destCountryBranchId: e.target.value, destCityBranchId: "" }))}
+                                disabled={!form.destCountryId}
+                                className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-900 outline-none focus:border-blue-500 disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                              >
+                                <option value="">{t(lang, "purchase.select_branch_ellipsis", "Select Branch...")}</option>
+                                {destMainBranches.map((b) => (
+                                  <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
+                                ))}
+                              </select>
+                            </label>
+                            <label className="space-y-1">
+                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "branch.city_label", "City Branch")}</span>
+                              <select
+                                value={form.destCityBranchId || ""}
+                                onChange={(e) => setForm(p => ({ ...p, destCityBranchId: e.target.value }))}
+                                disabled={!form.destCountryId}
+                                className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-900 outline-none focus:border-blue-500 disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                              >
+                                <option value="">{t(lang, "purchase.select_city_branch_ellipsis", "Select City Branch...")}</option>
+                                {destCityBranches.map((b) => (
+                                  <option key={b.id} value={b.id}>{b.city_name || b.name} ({b.code || b.branch_code})</option>
+                                ))}
+                              </select>
+                            </label>
+                          </div>
+                        </div>
                       </div>
 
-                      {purchaseDropdownOpen && (
-                        <div className="absolute left-0 mt-1.5 w-full min-w-[290px] sm:min-w-[440px] md:min-w-[520px] rounded-2xl bg-card border-2 border-primary/40 shadow-2xl z-[80] p-2 overflow-hidden backdrop-blur-md">
-                          <div className="flex justify-between items-center px-2.5 py-1.5 bg-primary/5 rounded-lg mb-1.5 border border-primary/10">
-                            <span className="text-[10px] font-black uppercase text-primary tracking-wider">{t(lang, "purchase.select_purchase_account_dr_header", "Select Purchase Account (DR)")}</span>
-                            <span className="text-[9px] font-mono font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                              {t(lang, "purchase.found_count_suffix", "{n} found").replace("{n}", String(dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, purchaseSearch)).length))}
-                            </span>
+                      {/* RIGHT COLUMN: Advance & Payment Terms + Transport & Container Details + Remarks & Narration */}
+                      <div className="space-y-4">
+                        {/* SECTION 2: ADVANCE & PAYMENT TERMS */}
+                        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950 space-y-4">
+                          <div className="flex items-center gap-2 border-b border-slate-100 pb-3 dark:border-slate-800">
+                            <CreditCard className="h-4 w-4 text-blue-600" />
+                            <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">{t(lang, "purchase.advance_payment_terms_title", "Advance & Payment Terms")}</h4>
                           </div>
-                          <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
-                            {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, purchaseSearch)).map((acc) => {
-                              const compName = acc.companyName || acc.company_name || (acc.companyId && dbCompanies.find(c => c.id === acc.companyId)?.name) || dbCompanies[0]?.name || t(lang, "purchase.card_none_label", "None");
-                              return (
-                                <button
-                                  key={acc.accountCode}
-                                  type="button"
-                                  onClick={() => {
-                                    applyAccountMaster("purchase", acc);
-                                    setPurchaseDropdownOpen(false);
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-[10px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.payment_type_label", "Payment Type")}</label>
+                              <select
+                                value={form.paymentType || "Advance Payment"}
+                                onChange={(e) => setValue("paymentType", e.target.value)}
+                                className="w-full h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500"
+                              >
+                                {PAYMENT_TYPES.map((p) => <option key={p} value={p}>{translateOptionLabel(lang, p)}</option>)}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.advance_percentage_label", "Advance Percentage (%)")}</label>
+                              <input
+                                type="number"
+                                min="0"
+                                max="100"
+                                value={form.advancePercent ?? ""}
+                                onChange={(e) => setValue("advancePercent", e.target.value ? Number(e.target.value) : null)}
+                                placeholder={t(lang, "purchase.advance_pct_placeholder", "e.g. 20")}
+                                className="w-full h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 font-mono"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.advance_payment_date_label", "Advance Payment Date")}</label>
+                              <input
+                                type="date"
+                                value={form.advancePaymentDate || ""}
+                                onChange={(e) => setValue("advancePaymentDate", e.target.value)}
+                                className="w-full h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 text-xs font-semibold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.final_payment_date_label", "Final Payment Date")}</label>
+                              <input
+                                type="date"
+                                value={form.paymentDate || ""}
+                                onChange={(e) => setValue("paymentDate", e.target.value)}
+                                className="w-full h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 text-xs font-semibold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* SECTION 3: TRANSPORT & CONTAINER DETAILS */}
+                        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950 space-y-4">
+                          <div className="flex items-center gap-2 border-b border-slate-100 pb-3 dark:border-slate-800">
+                            <Truck className="h-4 w-4 text-blue-600" />
+                            <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">{t(lang, "purchase.transport_container_title", "Transport & Container Details")}</h4>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-[10px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.container_numbers_label", "Container Numbers")}</label>
+                              <input
+                                type="text"
+                                value={form.containerNumbers || ""}
+                                onChange={(e) => setValue("containerNumbers", e.target.value)}
+                                placeholder={t(lang, "purchase.container_numbers_placeholder", "e.g. ABCU1234567")}
+                                className="w-full h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 font-mono uppercase"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.container_size_type_label", "Container Size / Type")}</label>
+                              <select
+                                value={form.containerSize || ""}
+                                onChange={(e) => setValue("containerSize", e.target.value)}
+                                className="w-full h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500"
+                              >
+                                <option value="">{t(lang, "purchase.select_type_placeholder", "Select Type...")}</option>
+                                {CONTAINER_TYPES.map((t2) => <option key={t2} value={t2}>{translateOptionLabel(lang, t2)}</option>)}
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* SECTION 4: REMARKS & NARRATION */}
+                        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950 space-y-3">
+                          <div className="flex items-center gap-2 border-b border-slate-100 pb-2 dark:border-slate-800">
+                            <MessageSquare className="h-4 w-4 text-blue-600" />
+                            <label className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">{t(lang, "purchase.remarks_narration_title", "Remarks & Narration")}</label>
+                          </div>
+                          <textarea
+                            rows={3}
+                            value={form.remarks || ""}
+                            onChange={(e) => setValue("remarks", e.target.value)}
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 resize-none leading-relaxed"
+                            placeholder={t(lang, "purchase.others_remarks_placeholder", "Add any remarks or narration here...")}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 3 Action Navigation */}
+                    <div className="flex items-center justify-between gap-4 pt-4 border-t border-slate-200 mt-6">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setActiveTab("goods")}
+                        className="font-bold text-xs h-10 px-8 border-slate-200 text-slate-700 hover:bg-slate-50"
+                      >
+                        <ChevronLeft className="h-4 w-4 mr-1.5" /> {t(lang, "common.back", "Back")}
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => setActiveTab("reports_tab")}
+                        className="font-black text-xs h-10 px-8 bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all uppercase tracking-wider flex items-center gap-2"
+                      >
+                        {t(lang, "common.next", "Next")} <ChevronRight className="h-4 w-4 ml-1.5" />
+                      </Button>
+                    </div>
+                  </fieldset>
+                </div>
+              ) : (
+                <div className="w-full space-y-4 animate-in fade-in duration-200 mt-3">
+                  {/* ================= TOP COMPANY / COUNTRY CLEARING LEDGER BANNER ================= */}
+                  <div className="w-full bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex items-center gap-3.5">
+                      <div className="h-12 w-12 rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-100 dark:border-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+                        <Building2 className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight">
+                            {form.purchaseCompanyName || form.purchaseAccountName || "United Arab Emirates Main Country Clearing Ledger"}
+                          </h2>
+                          <span className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded">
+                            ({form.purchaseAccountNo || "UAE-CORP-GEN-001"})
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                          Business Name: {form.purchaseCompanyName || "UAE Main Country Clearing Ledger"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+                      <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
+                        <span className="text-base">🇦🇪</span>
+                        <span className="text-slate-400 font-semibold">Country</span>
+                        <span className="font-bold text-slate-800 dark:text-slate-200">{form.branchCountry || "United Arab Emirates"}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
+                        <MapPin className="h-4 w-4 text-blue-500" />
+                        <span className="text-slate-400 font-semibold">City</span>
+                        <span className="font-bold text-slate-800 dark:text-slate-200">{form.branchCity || "Dubai"}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setViewCompanyModal(true)}
+                        className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-2xs transition-colors cursor-pointer"
+                      >
+                        <Building2 className="h-3.5 w-3.5 text-slate-500" />
+                        <span>View Full Company Details</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* ================= MAIN 2-COLUMN WORKSPACE GRID ================= */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start w-full">
+                    {/* LEFT COLUMN: Form (Step 1 Booking or Step 2 Goods) */}
+                    <div className="lg:col-span-4 space-y-4 w-full">
+                      {activeTab === "booking" && (
+                        <fieldset disabled={isTransferred && !session?.scopes?.isSuperAdmin} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs space-y-4 w-full">
+                          <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2.5">
+                            <FileText className="h-4 w-4 text-blue-600" />
+                            <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">
+                              {t(lang, "purchase.booking_bill_info_title", "Purchase Booking / Bill Info")}
+                            </h3>
+                          </div>
+
+                          <div className="space-y-3">
+                            {/* Purchase Account (DR) */}
+                            <div className="relative" ref={purchaseDropdownRef}>
+                              <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.purchase_account_dr_star", "Purchase Account (DR)*")}</label>
+                              <div className="relative flex items-center">
+                                <input
+                                  type="text"
+                                  placeholder={form.purchaseAccountName ? formatAccountDisplayLabel(form.purchaseAccountName, form.purchaseAccountNo, form.purchaseAccountManualReferenceNumber) : t(lang, "purchase.search_code_name_branch", "Search Code, Name, Branch, Manual A/C...")}
+                                  value={purchaseDropdownOpen ? purchaseSearch : (form.purchaseAccountName ? formatAccountDisplayLabel(form.purchaseAccountName, form.purchaseAccountNo, form.purchaseAccountManualReferenceNumber) : form.purchaseAccountNo || "")}
+                                  onChange={(e) => handleTextChange("purchase", e.target.value)}
+                                  onFocus={() => {
+                                    setPurchaseDropdownOpen(true);
+                                    setPurchasePinDropdownOpen(false);
                                     setPurchaseSearch("");
                                   }}
-                                  className="w-full text-left p-3 rounded-xl border border-border/80 hover:border-primary hover:bg-primary/5 transition duration-150 group bg-card shadow-sm"
-                                >
-                                  <div className="flex flex-wrap justify-between items-start gap-1.5 mb-1.5">
-                                    <span className="font-black text-xs text-foreground group-hover:text-primary transition-colors">
-                                      {acc.accountName || t(lang, "purchase.wiz_unnamed_account", "Unnamed Account")}
-                                    </span>
-                                    <div className="flex flex-wrap items-center gap-1">
-                                      <span className="font-mono text-[9px] font-black bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 px-1.5 py-0.5 rounded">
-                                        {acc.accountCode}
-                                      </span>
-                                      {acc.manualReferenceNumber && (
-                                        <span className="font-mono text-[9px] font-black bg-violet-500/10 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 px-1.5 py-0.5 rounded">
-                                          Ref: {acc.manualReferenceNumber}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-                                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-[9.5px] text-muted-foreground border-t border-border/40 pt-1.5">
-                                    <div>
-                                      <span className="font-bold text-foreground/80">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> {acc.cityBranchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}
-                                    </div>
-                                    <div>
-                                      <span className="font-bold text-foreground/80">{t(lang, "purchase.curr_colon", "Curr:")}</span> <span className="font-black text-emerald-600 dark:text-emerald-400">{acc.ledgerCurrency || "USD"}</span>
-                                    </div>
-                                    {acc.contactPerson ? (
-                                      <div>
-                                        <span className="font-bold text-foreground/80">Owner:</span> <span className="font-bold text-emerald-700 dark:text-emerald-300">👤 {acc.contactPerson}</span>
-                                      </div>
-                                    ) : (
-                                      <div>
-                                        <span className="font-bold text-foreground/80">{t(lang, "purchase.card_company_colon", "Company:")}</span> <span className="truncate inline-block max-w-[120px] align-bottom font-medium">{compName}</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </button>
-                              );
-                            })}
-                            {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, purchaseSearch)).length === 0 && (
-                              <div className="p-4 text-center text-muted-foreground text-xs italic">
-                                {dbAccountsLoading
-                                  ? t(lang, "purchase.loading_accounts", "Loading accounts...")
-                                  : t(lang, "purchase.no_matching_accounts", "No matching accounts found. Try searching by Code, Name, Currency, or Phone.")}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="relative" ref={salesDropdownRef}>
-                      <label className="block text-[10px] font-bold text-foreground mb-1">{t(lang, "purchase.sales_account_cr_star", "Sales Account (CR)*")}</label>
-                      <div className="relative flex items-center">
-                        <input
-                          type="text"
-                          placeholder={form.salesAccountName ? formatAccountDisplayLabel(form.salesAccountName, form.salesAccountNo, form.salesAccountManualReferenceNumber) : t(lang, "purchase.search_code_name_branch", "Search Code, Name, Branch, Manual A/C...")}
-                          value={salesDropdownOpen ? salesSearch : (form.salesAccountName ? formatAccountDisplayLabel(form.salesAccountName, form.salesAccountNo, form.salesAccountManualReferenceNumber) : form.salesAccountNo || "")}
-                          onChange={(e) => handleTextChange("sales", e.target.value)}
-                          onFocus={() => {
-                            setSalesDropdownOpen(true);
-                            setSalesPinDropdownOpen(false);
-                            setSalesSearch("");
-                          }}
-                          className="w-full bg-background border border-input rounded pl-2.5 pr-8 py-1.5 text-foreground font-semibold outline-none focus:border-primary text-xs h-9"
-                        />
-                        <button
-                          type="button"
-                          disabled={!form.customerId}
-                          onClick={() => {
-                            setSalesPinDropdownOpen(prev => !prev);
-                            setSalesDropdownOpen(false);
-                          }}
-                          className="absolute right-2 text-muted-foreground hover:text-primary transition-colors disabled:opacity-30"
-                        >
-                          <Pin className={`h-3.5 w-3.5 ${salesPinDropdownOpen ? "text-primary rotate-45" : ""}`} />
-                        </button>
-                      </div>
-                      {salesDropdownOpen && (
-                        <div className="absolute left-0 mt-1.5 w-full min-w-[290px] sm:min-w-[440px] md:min-w-[520px] rounded-2xl bg-card border-2 border-primary/40 shadow-2xl z-[80] p-2 overflow-hidden backdrop-blur-md">
-                          <div className="flex justify-between items-center px-2.5 py-1.5 bg-primary/5 rounded-lg mb-1.5 border border-primary/10">
-                            <span className="text-[10px] font-black uppercase text-primary tracking-wider">{t(lang, "purchase.select_sales_account_cr_header", "Select Sales Account (CR)")}</span>
-                            <span className="text-[9px] font-mono font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                              {t(lang, "purchase.found_count_suffix", "{n} found").replace("{n}", String(dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).length))}
-                            </span>
-                          </div>
-                          <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
-                            {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).map((acc) => {
-                              const compName = acc.companyName || acc.company_name || (acc.companyId && dbCompanies.find(c => c.id === acc.companyId)?.name) || dbCompanies[0]?.name || t(lang, "purchase.card_none_label", "None");
-                              return (
+                                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg pl-2.5 pr-8 py-1.5 text-slate-900 dark:text-slate-100 font-semibold outline-none focus:border-blue-500 text-xs h-9"
+                                />
                                 <button
-                                  key={acc.accountCode}
                                   type="button"
+                                  disabled={!form.supplierId}
                                   onClick={() => {
-                                    applyAccountMaster("sales", acc);
-                                    setSalesDropdownOpen(false);
+                                    setPurchasePinDropdownOpen(prev => !prev);
+                                    setPurchaseDropdownOpen(false);
+                                  }}
+                                  className="absolute right-2 text-slate-400 hover:text-blue-600 transition-colors disabled:opacity-30"
+                                >
+                                  <Pin className={`h-3.5 w-3.5 ${purchasePinDropdownOpen ? "text-blue-600 rotate-45" : ""}`} />
+                                </button>
+                              </div>
+
+                              {purchaseDropdownOpen && (
+                                <div className="absolute left-0 mt-1.5 w-full min-w-[290px] sm:min-w-[440px] md:min-w-[520px] rounded-2xl bg-white dark:bg-slate-900 border-2 border-blue-500/40 shadow-2xl z-[80] p-2 overflow-hidden backdrop-blur-md">
+                                  <div className="flex justify-between items-center px-2.5 py-1.5 bg-blue-50 dark:bg-blue-950/40 rounded-lg mb-1.5 border border-blue-100 dark:border-blue-900">
+                                    <span className="text-[10px] font-black uppercase text-blue-600 dark:text-blue-400 tracking-wider">{t(lang, "purchase.select_purchase_account_dr_header", "Select Purchase Account (DR)")}</span>
+                                    <span className="text-[9px] font-mono font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                                      {t(lang, "purchase.found_count_suffix", "{n} found").replace("{n}", String(dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, purchaseSearch)).length))}
+                                    </span>
+                                  </div>
+                                  <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
+                                    {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, purchaseSearch)).map((acc) => {
+                                      const compName = acc.companyName || acc.company_name || (acc.companyId && dbCompanies.find(c => c.id === acc.companyId)?.name) || dbCompanies[0]?.name || t(lang, "purchase.card_none_label", "None");
+                                      return (
+                                        <button
+                                          key={acc.accountCode}
+                                          type="button"
+                                          onClick={() => {
+                                            applyAccountMaster("purchase", acc);
+                                            setPurchaseDropdownOpen(false);
+                                            setPurchaseSearch("");
+                                          }}
+                                          className="w-full text-left p-3 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/30 transition duration-150 group bg-white dark:bg-slate-900 shadow-2xs"
+                                        >
+                                          <div className="flex flex-wrap justify-between items-start gap-1.5 mb-1.5">
+                                            <span className="font-black text-xs text-slate-900 dark:text-slate-100 group-hover:text-blue-600 transition-colors">
+                                              {acc.accountName || t(lang, "purchase.wiz_unnamed_account", "Unnamed Account")}
+                                            </span>
+                                            <div className="flex flex-wrap items-center gap-1">
+                                              <span className="font-mono text-[9px] font-black bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200 dark:border-blue-800 px-1.5 py-0.5 rounded">
+                                                {acc.accountCode}
+                                              </span>
+                                              {acc.manualReferenceNumber && (
+                                                <span className="font-mono text-[9px] font-black bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200 dark:border-purple-800 px-1.5 py-0.5 rounded">
+                                                  Ref: {acc.manualReferenceNumber}
+                                                </span>
+                                              )}
+                                            </div>
+                                          </div>
+                                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-[9.5px] text-slate-500 border-t border-slate-100 dark:border-slate-800 pt-1.5">
+                                            <div>
+                                              <span className="font-bold text-slate-700 dark:text-slate-300">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> {acc.cityBranchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}
+                                            </div>
+                                            <div>
+                                              <span className="font-bold text-slate-700 dark:text-slate-300">{t(lang, "purchase.curr_colon", "Curr:")}</span> <span className="font-black text-emerald-600 dark:text-emerald-400">{acc.ledgerCurrency || "USD"}</span>
+                                            </div>
+                                            {acc.contactPerson ? (
+                                              <div>
+                                                <span className="font-bold text-slate-700 dark:text-slate-300">Owner:</span> <span className="font-bold text-emerald-700 dark:text-emerald-300">👤 {acc.contactPerson}</span>
+                                              </div>
+                                            ) : (
+                                              <div>
+                                                <span className="font-bold text-slate-700 dark:text-slate-300">{t(lang, "purchase.card_company_colon", "Company:")}</span> <span className="truncate inline-block max-w-[120px] align-bottom font-medium">{compName}</span>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Sales Account (CR) */}
+                            <div className="relative" ref={salesDropdownRef}>
+                              <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.sales_account_cr_star", "Sales Account (CR)*")}</label>
+                              <div className="relative flex items-center">
+                                <input
+                                  type="text"
+                                  placeholder={form.salesAccountName ? formatAccountDisplayLabel(form.salesAccountName, form.salesAccountNo, form.salesAccountManualReferenceNumber) : t(lang, "purchase.search_code_name_branch", "Search Code, Name, Branch, Manual A/C...")}
+                                  value={salesDropdownOpen ? salesSearch : (form.salesAccountName ? formatAccountDisplayLabel(form.salesAccountName, form.salesAccountNo, form.salesAccountManualReferenceNumber) : form.salesAccountNo || "")}
+                                  onChange={(e) => handleTextChange("sales", e.target.value)}
+                                  onFocus={() => {
+                                    setSalesDropdownOpen(true);
+                                    setSalesPinDropdownOpen(false);
                                     setSalesSearch("");
                                   }}
-                                  className="w-full text-left p-3 rounded-xl border border-border/80 hover:border-primary hover:bg-primary/5 transition duration-150 group bg-card shadow-sm"
-                                >
-                                  <div className="flex flex-wrap justify-between items-start gap-1.5 mb-1.5">
-                                    <span className="font-black text-xs text-foreground group-hover:text-primary transition-colors">
-                                      {acc.accountName || t(lang, "purchase.wiz_unnamed_account", "Unnamed Account")}
-                                    </span>
-                                    <div className="flex flex-wrap items-center gap-1">
-                                      <span className="font-mono text-[9px] font-black bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded">
-                                        {acc.accountCode}
-                                      </span>
-                                      {acc.manualReferenceNumber && (
-                                        <span className="font-mono text-[9px] font-black bg-violet-500/10 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 px-1.5 py-0.5 rounded">
-                                          Ref: {acc.manualReferenceNumber}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-                                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-[9.5px] text-muted-foreground border-t border-border/40 pt-1.5">
-                                    <div>
-                                      <span className="font-bold text-foreground/80">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> {acc.cityBranchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}
-                                    </div>
-                                    <div>
-                                      <span className="font-bold text-foreground/80">{t(lang, "purchase.curr_colon", "Curr:")}</span> <span className="font-black text-emerald-600 dark:text-emerald-400">{acc.ledgerCurrency || "USD"}</span>
-                                    </div>
-                                    {acc.contactPerson ? (
-                                      <div>
-                                        <span className="font-bold text-foreground/80">Owner:</span> <span className="font-bold text-emerald-700 dark:text-emerald-300">👤 {acc.contactPerson}</span>
-                                      </div>
-                                    ) : (
-                                      <div>
-                                        <span className="font-bold text-foreground/80">{t(lang, "purchase.card_company_colon", "Company:")}</span> <span className="truncate inline-block max-w-[120px] align-bottom font-medium">{compName}</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </button>
-                              );
-                            })}
-                            {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).length === 0 && (
-                              <div className="p-4 text-center text-muted-foreground text-xs italic">
-                                {dbAccountsLoading
-                                  ? t(lang, "purchase.loading_accounts", "Loading accounts...")
-                                  : t(lang, "purchase.no_matching_accounts", "No matching accounts found. Try searching by Code, Name, Currency, or Phone.")}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="rounded-lg border border-border bg-muted/20 p-3">
-                    <div className="grid grid-cols-1 gap-3">
-                      <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.contract_no_label", "Contract No")}</label>
-                        <input
-                          type="text"
-                          value={form.purchaseContractNo}
-                          onChange={(e) => setValue("purchaseContractNo", e.target.value)}
-                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8 font-mono"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.contract_booking_date_label", "Contract / Booking Date")}</label>
-                        <input
-                          type="date"
-                          value={form.purchaseDate}
-                          onChange={(e) => setValue("purchaseDate", e.target.value)}
-                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8 font-mono"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 mt-3">
-                      <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.invoice_payment_select_label", "Invoice / Payment Select")}</label>
-                        <select
-                          value={form.paymentType}
-                          onChange={(e) => setValue("paymentType", e.target.value)}
-                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8"
-                        >
-                          {PAYMENT_TYPES.map((type) => (
-                            <option key={type} value={type}>{translateOptionLabel(lang, type)}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.ship_option_label", "Ship Option")}</label>
-                        <select
-                          value={form.shippingMode}
-                          onChange={(e) => {
-                            const mode = e.target.value;
-                            setValue("shippingMode", mode);
-                            setValue("shipmentType", mode === "By Sea" ? "By Ship" : mode);
-                          }}
-                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8"
-                        >
-                          {LOADING_TYPES.map((type) => (
-                            <option key={type} value={type}>{translateOptionLabel(lang, type)}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.status_label_plain", "Status")}</label>
-                        <select
-                          value={form.salesStatus}
-                          onChange={(e) => setValue("salesStatus", e.target.value)}
-                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8"
-                        >
-                          <option value="Draft">{t(lang, "purchase.opt_draft", "Draft")}</option>
-                          <option value="Pending">{t(lang, "purchase.opt_pending", "Pending")}</option>
-                          <option value="Confirmed">{t(lang, "purchase.opt_confirmed", "Confirmed")}</option>
-                          <option value="Transferred">{t(lang, "purchase.opt_transferred", "Transferred")}</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div className="mt-3">
-                      <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.booking_remarks_terms_label", "Booking Remarks / Terms")}</label>
-                      <textarea
-                        rows={2}
-                        value={form.remarks}
-                        onChange={(e) => setValue("remarks", e.target.value)}
-                        placeholder={t(lang, "purchase.booking_remarks_placeholder", "Write booking terms, payment notes, invoice note, or shipping instruction...")}
-                        className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] resize-none"
-                      />
-                    </div>
-
-                    {/* Currency & Conversion Configuration */}
-                    <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3 mt-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] font-black uppercase text-emerald-700 dark:text-emerald-400 tracking-wider">
-                          {t(lang, "purchase.booking_currency_title", "Booking Currency & Conversion (USD → AED / Dirham)")}
-                        </span>
-                        <span className="text-[9px] font-mono font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                          {form.currencyType || "USD"} → {form.secondaryCurrency || "AED"}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-[10px]">
-                        <div>
-                          <label className="block text-[9.5px] font-bold text-foreground mb-1">
-                            {t(lang, "purchase.purchase_currency", "Purchase Currency (Invoice)")}
-                          </label>
-                          <select
-                            value={form.currencyType || "USD"}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setForm(prev => ({
-                                ...prev,
-                                currencyType: val,
-                                purchaseCurrency: val
-                              }));
-                            }}
-                            className="w-full bg-background border border-input rounded px-2 py-1 text-foreground font-bold h-8 text-xs outline-none focus:border-primary"
-                          >
-                            {CURRENCY_OPTIONS.map(c => (
-                              <option key={c} value={c}>{c} {c === "USD" ? "($ Dollar)" : c === "AED" ? "(Dirham)" : ""}</option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="block text-[9.5px] font-bold text-foreground mb-1">
-                            {t(lang, "purchase.final_currency", "Final / Settlement Currency")}
-                          </label>
-                          <select
-                            value={form.secondaryCurrency || "AED"}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setForm(prev => ({
-                                ...prev,
-                                secondaryCurrency: val,
-                                paymentCurrency: val
-                              }));
-                            }}
-                            className="w-full bg-background border border-input rounded px-2 py-1 text-foreground font-bold h-8 text-xs outline-none focus:border-primary"
-                          >
-                            {CURRENCY_OPTIONS.map(c => (
-                              <option key={c} value={c}>{c} {c === "AED" ? "(Dirham / DH)" : c === "USD" ? "($ Dollar)" : ""}</option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="block text-[9.5px] font-bold text-foreground mb-1">
-                            {t(lang, "purchase.exchange_rate", "Exchange Rate")} ({form.currencyType || "USD"} → {form.secondaryCurrency || "AED"})
-                          </label>
-                          <div className="flex gap-1">
-                            <input
-                              type="number"
-                              step="any"
-                              value={form.exchangeRate !== undefined ? form.exchangeRate : 1}
-                              onChange={(e) => setValue("exchangeRate", Number(e.target.value))}
-                              placeholder="3.6725"
-                              className="w-full bg-background border border-input rounded px-2 py-1 text-foreground font-mono font-bold h-8 text-xs outline-none focus:border-primary"
-                            />
-                            <select
-                              value={form.operator || "*"}
-                              onChange={(e) => setValue("operator", e.target.value)}
-                              className="w-10 bg-background border border-input rounded text-center text-xs font-black h-8 outline-none"
-                            >
-                              <option value="*">*</option>
-                              <option value="/">/</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex justify-end gap-2 pt-2 border-t border-border mt-2">
-                    <Button type="button" onClick={() => setActiveTab("goods")} className="font-bold text-[10px] h-8 px-10 bg-primary text-primary-foreground">{t(lang, "common.next", "Next")}</Button>
-                  </div>
-                </fieldset>
-              )}
-
-              {activeTab === "goods" && (
-                <fieldset disabled={isTransferred && !session?.scopes?.isSuperAdmin} className="space-y-4 order-2 w-full mt-4 animate-in fade-in zoom-in-95 duration-200">
-                  <div className="border-b border-border pb-2 mb-3">
-                    <h3 className="text-xs font-black uppercase tracking-wider text-foreground flex items-center gap-2">
-                      {t(lang, "purchase.goods_entry_title", "GOODS ENTRY")}
-                    </h3>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-3">
-                    {/* Manual Net KGs Input */}
-                    <div>
-                      <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.net_kgs_weight", "Net KGs (Weight)")}</label>
-                      <input
-                        type="number"
-                        value={form.netWeight !== undefined && form.netWeight !== "" ? form.netWeight : ""}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setValue("netWeight", val === "" ? "" : Number(val));
-                          setValue("manualTotalAmount", "");
-                          setValue("manualFinalAmount", "");
-                        }}
-                        className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono font-bold"
-                        placeholder="0.00"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.f_origin_country", "Origin Country")}</label>
-                      <select
-                        value={form.origin || ""}
-                        onChange={(e) => setValue("origin", e.target.value)}
-                        className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
-                      >
-                        <option value="">{t(lang, "purchase.select_origin", "Select Origin")}</option>
-                        {Array.from(new Set([
-                          "United Arab Emirates", "Iran", "USA", "Vietnam", "Pakistan", "India", "Afghanistan", "China", "Turkey",
-                          ...allCountries.map(c => c.name).filter(Boolean),
-                          ...transitCountryOptions.map(c => c.name).filter(Boolean),
-                          form.origin
-                        ].filter(Boolean))).sort().map(c => (
-                          <option key={c} value={c}>{c}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="relative">
-                      <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.goods_name_star", "Goods Name*")}</label>
-                      <SearchableSelect
-                        value={form.goodsName || ""}
-                        onChange={(val) => {
-                          if (val === "__ADD_NEW__") {
-                            setNewGoodForm({ goodsName: "", chsCode: "", size: "", brand: "", originCountryId: "" });
-                            setNewGoodError("");
-                            setNewGoodModal(true);
-                          } else {
-                            setValue("goodsName", val);
-                            const foundGood = dbGoods.find(g => (g.goods_name || g.goodsName) === val);
-                            if (foundGood) {
-                              const hs = foundGood.chs_code || foundGood.chsCode || "";
-                              const firstVar = foundGood.variations?.[0] || {};
-                              const br = firstVar.brand || foundGood.brand || "";
-                              const sz = firstVar.size || foundGood.size || "";
-                              const originId = foundGood.origin_country_id || foundGood.originCountryId;
-                              const originCountryObj = originId ? (allCountries.find(c => c.id === originId) || countries.find(c => c.id === originId) || transitCountryOptions.find(c => c.id === originId)) : null;
-                              const cName = originCountryObj?.name || foundGood.origin || "";
-
-                              setForm(prev => ({
-                                ...prev,
-                                goodsName: val,
-                                hsCode: hs || prev.hsCode,
-                                brand: br || prev.brand,
-                                size: sz || prev.size,
-                                origin: cName || prev.origin
-                              }));
-                            }
-                          }
-                        }}
-                        options={[
-                          ...dbGoods.map(g => ({ label: g.goods_name || g.goodsName, value: g.goods_name || g.goodsName })),
-                          ...GOODS_OPTIONS.filter(go => !dbGoods.some(g => (g.goods_name || g.goodsName) === go)).map(g => ({ label: g, value: g }))
-                        ]}
-                        placeholder={t(lang, "purchase.select_goods", "Select Goods")}
-                        addOptionLabel={t(lang, "purchase.add_new_good", "Add New Good")}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <label className="block text-[10px] text-muted-foreground">{t(lang, "purchase.th_hs_code", "HS Code")}</label>
-                          {form.goodsName && (() => {
-                            const selectedGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === form.goodsName.trim().toUpperCase());
-                            if (selectedGood && (selectedGood.chs_code || selectedGood.chsCode || "") !== (form.hsCode || "")) {
-                              return (
-                                <button
-                                  type="button"
-                                  onClick={handleUpdateHsCode}
-                                  className="text-[9px] bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground px-1.5 py-0.5 rounded transition-colors"
-                                >
-                                  {t(lang, "purchase.save_to_master", "Save to Master")}
-                                </button>
-                              );
-                            }
-                            return null;
-                          })()}
-                        </div>
-                        <input
-                          type="text"
-                          value={form.hsCode || ""}
-                          onChange={(e) => setValue("hsCode", e.target.value)}
-                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.allot_name_id", "Allot Name / ID")}</label>
-                        <input
-                          type="text"
-                          value={form.allotName || ""}
-                          onChange={(e) => setValue("allotName", e.target.value)}
-                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <label className="block text-[10px] text-muted-foreground">{t(lang, "purchase.th_brand", "Brand")}</label>
-                          {form.goodsName && form.brand && (() => {
-                            const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
-                            const masterBrands = selGood?.master_brands || (selGood?.variations || []).map(v => v.brand).filter(Boolean);
-                            if (selGood && !masterBrands.includes(form.brand)) {
-                              return (
-                                <button
-                                  type="button"
-                                  onClick={() => handleSaveParamToMaster("brand", form.brand)}
-                                  className="text-[9px] bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground px-1.5 py-0.5 rounded transition-colors"
-                                >
-                                  {t(lang, "purchase.save_to_master", "Save to Master")}
-                                </button>
-                              );
-                            }
-                            return null;
-                          })()}
-                        </div>
-                        <SearchableSelect
-                          value={form.brand || ""}
-                          onChange={(val) => {
-                            if (val === "__ADD_NEW__") {
-                              const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
-                              if (!selGood) {
-                                alert(t(lang, "purchase.select_good_first_brand", "Please select a Good first before adding a new Brand."));
-                                return;
-                              }
-                              const newB = window.prompt("Enter New Brand:");
-                              if (newB && newB.trim()) {
-                                setValue("brand", newB.trim());
-                                handleSaveParamToMaster("brand", newB.trim());
-                              }
-                            } else {
-                              setValue("brand", val);
-                            }
-                          }}
-                          options={(() => {
-                            const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
-                            const brands = Array.from(new Set([
-                              ...(selGood?.master_brands || []),
-                              ...(selGood?.variations || []).map(v => v.brand).filter(Boolean),
-                              ...BRAND_OPTIONS,
-                              ...dbGoods.flatMap(g => [...(g.master_brands || []), ...(g.variations || []).map(v => v.brand)]).filter(Boolean),
-                              form.brand
-                            ].filter(Boolean))).sort();
-                            return brands.map(b => ({ label: b, value: b }));
-                          })()}
-                          placeholder={t(lang, "purchase.select_brand", "Select Brand")}
-                          addOptionLabel={t(lang, "purchase.add_new_brand", "Add New Brand")}
-                        />
-                      </div>
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <label className="block text-[10px] text-muted-foreground">{t(lang, "purchase.th_size", "Size Specification")}</label>
-                          {form.goodsName && form.size && (() => {
-                            const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
-                            const masterSizes = selGood?.master_sizes || (selGood?.variations || []).map(v => v.size).filter(Boolean);
-                            if (selGood && !masterSizes.includes(form.size)) {
-                              return (
-                                <button
-                                  type="button"
-                                  onClick={() => handleSaveParamToMaster("size", form.size)}
-                                  className="text-[9px] bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground px-1.5 py-0.5 rounded transition-colors"
-                                >
-                                  {t(lang, "purchase.save_to_master", "Save to Master")}
-                                </button>
-                              );
-                            }
-                            return null;
-                          })()}
-                        </div>
-                        <SearchableSelect
-                          value={form.size || ""}
-                          onChange={(val) => {
-                            if (val === "__ADD_NEW__") {
-                              const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
-                              if (!selGood) {
-                                alert(t(lang, "purchase.select_good_first_size", "Please select a Good first before adding a new Size."));
-                                return;
-                              }
-                              const newS = window.prompt("Enter New Size:");
-                              if (newS && newS.trim()) {
-                                setValue("size", newS.trim());
-                                handleSaveParamToMaster("size", newS.trim());
-                              }
-                            } else {
-                              setValue("size", val);
-                            }
-                          }}
-                          options={(() => {
-                            const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
-                            const sizes = Array.from(new Set([
-                              ...(selGood?.master_sizes || []),
-                              ...(selGood?.variations || []).map(v => v.size).filter(Boolean),
-                              ...SIZE_OPTIONS,
-                              ...dbGoods.flatMap(g => [...(g.master_sizes || []), ...(g.variations || []).map(v => v.size)]).filter(Boolean),
-                              form.size
-                            ].filter(Boolean))).sort();
-                            return sizes.map(s => ({ label: s, value: s }));
-                          })()}
-                          placeholder={t(lang, "purchase.select_size", "Select Size")}
-                          addOptionLabel={t(lang, "purchase.add_new_size", "Add New Size")}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <label className="block text-[10px] text-muted-foreground">{t(lang, "purchase.variety_label", "Variety")}</label>
-                          {form.goodsName && form.variety && (() => {
-                            const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
-                            const masterVars = selGood?.master_varieties || [];
-                            if (selGood && !masterVars.includes(form.variety)) {
-                              return (
-                                <button
-                                  type="button"
-                                  onClick={() => handleSaveParamToMaster("variety", form.variety)}
-                                  className="text-[9px] bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500 hover:text-white px-1.5 py-0.5 rounded transition-colors"
-                                >
-                                  {t(lang, "purchase.save_to_master", "Save to Master")}
-                                </button>
-                              );
-                            }
-                            return null;
-                          })()}
-                        </div>
-                        <SearchableSelect
-                          value={form.variety || ""}
-                          onChange={(val) => {
-                            if (val === "__ADD_NEW__") {
-                              const newV = window.prompt("Enter New Variety:");
-                              if (newV && newV.trim()) {
-                                setValue("variety", newV.trim());
-                                handleSaveParamToMaster("variety", newV.trim());
-                              }
-                            } else {
-                              setValue("variety", val);
-                            }
-                          }}
-                          options={(() => {
-                            const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
-                            const varieties = Array.from(new Set([
-                              ...(selGood?.master_varieties || []),
-                              "Nonpareil", "Carmel", "Independence", "Butte", "Marcona", "Aldrich", "Fritz", "Monterey", "Padre", "Price", "Sonora", "Wood Colony",
-                              form.variety
-                            ].filter(Boolean))).sort();
-                            return varieties.map(v => ({ label: v, value: v }));
-                          })()}
-                          placeholder={t(lang, "purchase.select_variety", "Select Variety")}
-                          addOptionLabel={t(lang, "purchase.add_new_variety", "Add New Variety")}
-                        />
-                      </div>
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <label className="block text-[10px] text-muted-foreground">{t(lang, "purchase.extra_details_label", "Quality / Extra Details")}</label>
-                          {form.goodsName && form.extraDetails && (() => {
-                            const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
-                            const masterSpecs = selGood?.master_extra_details || [];
-                            if (selGood && !masterSpecs.includes(form.extraDetails)) {
-                              return (
-                                <button
-                                  type="button"
-                                  onClick={() => handleSaveParamToMaster("extra_details", form.extraDetails)}
-                                  className="text-[9px] bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500 hover:text-white px-1.5 py-0.5 rounded transition-colors"
-                                >
-                                  {t(lang, "purchase.save_to_master", "Save to Master")}
-                                </button>
-                              );
-                            }
-                            return null;
-                          })()}
-                        </div>
-                        <input
-                          type="text"
-                          value={form.extraDetails || ""}
-                          onChange={(e) => setValue("extraDetails", e.target.value)}
-                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
-                          placeholder={t(lang, "purchase.extra_details_placeholder", "e.g. Soft Shell / Light Color")}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.qty_name_label", "Qty Name")}</label>
-                        <SearchableSelect
-                          value={form.qtyName || "BAGS"}
-                          onChange={(val) => {
-                            if (val === "__ADD_NEW__") {
-                              const newQty = window.prompt(t(lang, "purchase.enter_new_qty_name_prompt", "Enter New Qty Name:"));
-                              if (newQty && newQty.trim()) {
-                                setValue("qtyName", newQty.trim());
-                                setCustomQtyNames(prev => [...prev, newQty.trim()]);
-                              }
-                            } else {
-                              setValue("qtyName", val);
-                            }
-                          }}
-                          options={Array.from(new Set([...QTY_TYPE_OPTIONS, ...customQtyNames, form.qtyName])).filter(Boolean).map(q => ({ label: q, value: q }))}
-                          placeholder={t(lang, "purchase.select_qty_name", "Select Qty Name")}
-                          addOptionLabel={t(lang, "purchase.add_new_qty_name", "Add New Qty Name")}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.quantity_no", "Quantity No")}</label>
-                        <input
-                          type="number"
-                          value={form.qtyNo || ""}
-                          onChange={(e) => {
-                            const val = Number(e.target.value);
-                            setValue("qtyNo", val);
-                            setValue("manualTotalAmount", "");
-                            setValue("manualFinalAmount", "");
-                            const qtyKgs = Number(form.qtyKgs || 0);
-                            const emptyKgs = Number(form.emptyKgs || 0);
-                            setValue("netWeight", val * qtyKgs - val * emptyKgs);
-                          }}
-                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.qty_kgs_1", "1 Qty KGS")}</label>
-                        <input
-                          type="number"
-                          value={form.qtyKgs || ""}
-                          onChange={(e) => {
-                            const val = Number(e.target.value);
-                            setValue("qtyKgs", val);
-                            setValue("manualTotalAmount", "");
-                            setValue("manualFinalAmount", "");
-                            const qtyNo = Number(form.qtyNo || 0);
-                            const emptyKgs = Number(form.emptyKgs || 0);
-                            setValue("netWeight", qtyNo * val - qtyNo * emptyKgs);
-                          }}
-                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.empty_kgs_1", "1 Empty KGS")}</label>
-                        <input
-                          type="number"
-                          value={form.emptyKgs || ""}
-                          onChange={(e) => {
-                            const val = Number(e.target.value);
-                            setValue("emptyKgs", val);
-                            setValue("manualTotalAmount", "");
-                            setValue("manualFinalAmount", "");
-                            const qtyNo = Number(form.qtyNo || 0);
-                            const qtyKgs = Number(form.qtyKgs || 0);
-                            setValue("netWeight", qtyNo * qtyKgs - qtyNo * val);
-                          }}
-                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.divide_type", "Divide Type")}</label>
-                        <select
-                          value={form.divideType || "D/KGs"}
-                          onChange={(e) => setValue("divideType", e.target.value)}
-                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
-                        >
-                          <option value="D/KGs">D/KGs</option>
-                          <option value="D/LBs">D/LBs</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.divide_weight_value", "Divide Weight / Value")}</label>
-                        <input
-                          type="number"
-                          value={form.divideWeight || 1}
-                          onChange={(e) => {
-                            setValue("divideWeight", Number(e.target.value));
-                            setValue("manualTotalAmount", "");
-                            setValue("manualFinalAmount", "");
-                          }}
-                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.price_type", "Price Type")}</label>
-                        <select
-                          value={form.priceType || "P/KGs"}
-                          onChange={(e) => setValue("priceType", e.target.value)}
-                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
-                        >
-                          <option value="P/KGs">P/KGs</option>
-                          <option value="P/LBs">P/LBs</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.price_rate_c1", "Price Rate (C1)")}</label>
-                        <input
-                          type="number"
-                          value={form.coursePrice || ""}
-                          onChange={(e) => {
-                            setValue("coursePrice", Number(e.target.value));
-                            setValue("manualTotalAmount", "");
-                            setValue("manualFinalAmount", "");
-                          }}
-                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.quality_report_reference", "Quality Report Reference")}</label>
-                      <input
-                        type="text"
-                        value={form.qualityReport || ""}
-                        onChange={(e) => setValue("qualityReport", e.target.value)}
-                        className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
-                        placeholder={t(lang, "purchase.quality_passed_placeholder", "Passed")}
-                      />
-                    </div>
-
-                    {editingGoodsIndex !== null && (
-                      <div className="bg-amber-500/10 border border-amber-500/30 p-2.5 rounded-lg flex items-center justify-between text-xs text-amber-700 dark:text-amber-300">
-                        <span className="font-bold flex items-center gap-1.5">
-                          <Edit3 className="h-3.5 w-3.5 text-amber-600" /> Editing Item #{editingGoodsIndex + 1}: {goodsEntries[editingGoodsIndex]?.goodsName || "Cargo Item"}
-                        </span>
-                        <button type="button" onClick={handleCancelEditGoodsEntry} className="text-[10px] font-bold text-amber-700 hover:text-amber-900 underline">
-                          ✕ Cancel Edit
-                        </button>
-                      </div>
-                    )}
-
-                    <div className="bg-emerald-50/50 dark:bg-emerald-950/20 p-3 rounded-lg border border-emerald-100 dark:border-emerald-900 mt-2">
-                      <h4 className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400 mb-2">{t(lang, "purchase.purchase_currency_conversion", "Purchase Currency & Conversion")}</h4>
-                      <div className="grid grid-cols-2 gap-3 mb-2">
-                        <div>
-                          <label className="block text-[9px] text-emerald-700 dark:text-emerald-500 mb-1 font-bold">{t(lang, "purchase.pricing_currency", "Pricing Currency")}</label>
-                          <select
-                            value={form.currencyType || "USD"}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setForm(prev => ({ ...prev, currencyType: val, purchaseCurrency: val }));
-                            }}
-                            className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
-                          >
-                            {CURRENCY_OPTIONS.map(c => <option key={c} value={c}>{c} {c === "USD" ? "($)" : c === "AED" ? "(Dirham)" : ""}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-[9px] text-emerald-700 dark:text-emerald-500 mb-1 font-bold">{t(lang, "purchase.exchange_rate_to", "Exchange Rate to")} {form.secondaryCurrency || "AED"}</label>
-                          <div className="flex gap-1.5">
-                            <input
-                              type="number"
-                              step="any"
-                              value={form.exchangeRate !== undefined ? form.exchangeRate : 1}
-                              onChange={(e) => {
-                                setValue("exchangeRate", Number(e.target.value));
-                                setValue("manualFinalAmount", "");
-                              }}
-                              className="flex-1 min-w-0 bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono h-8"
-                            />
-                            <select
-                              value={form.operator || "*"}
-                              onChange={(e) => {
-                                setValue("operator", e.target.value);
-                                setValue("manualFinalAmount", "");
-                              }}
-                              className="w-12 bg-background border border-input rounded text-center text-xs font-bold text-foreground outline-none focus:border-primary h-8"
-                            >
-                              <option value="*">*</option>
-                              <option value="/">/</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3 mt-2">
-                        <div>
-                          <label className="block text-[9px] text-emerald-700 dark:text-emerald-500 mb-1 font-bold">{t(lang, "purchase.th_amount", "Amount")} ({form.currencyType || "USD"})</label>
-                          <input
-                            type="number"
-                            value={form.manualTotalAmount !== undefined && form.manualTotalAmount !== "" ? form.manualTotalAmount : currentItemTotals.totalAmount}
-                            onChange={(e) => setValue("manualTotalAmount", e.target.value === "" ? "" : Number(e.target.value))}
-                            placeholder={(Number(currentItemTotals?.totalAmount) || 0).toFixed(2)}
-                            className="w-full bg-background border border-emerald-200 dark:border-emerald-800 rounded px-2.5 py-1.5 text-foreground outline-none focus:border-emerald-500 text-[10px] font-mono font-bold"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[9px] text-emerald-700 dark:text-emerald-500 mb-1 font-bold">{t(lang, "purchase.th_final", "Final")} ({form.secondaryCurrency || "AED"})</label>
-                          <input
-                            type="number"
-                            value={form.manualFinalAmount !== undefined && form.manualFinalAmount !== "" ? form.manualFinalAmount : currentItemTotals.finalAmount}
-                            onChange={(e) => setValue("manualFinalAmount", e.target.value === "" ? "" : Number(e.target.value))}
-                            placeholder={(Number(currentItemTotals?.finalAmount) || 0).toFixed(2)}
-                            className="w-full bg-background border border-emerald-200 dark:border-emerald-800 rounded px-2.5 py-1.5 text-foreground outline-none focus:border-emerald-500 text-[10px] font-mono font-black text-emerald-600 dark:text-emerald-400"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between gap-2 pt-4 border-t border-border mt-4">
-                    <Button type="button" variant="outline" onClick={() => setActiveTab("booking")} className="font-bold text-[10px] h-8 px-6 text-slate-600">{t(lang, "common.back", "Back")}</Button>
-                    <div className="flex gap-2">
-                      {editingGoodsIndex !== null ? (
-                        <>
-                          <Button type="button" onClick={handleCancelEditGoodsEntry} variant="outline" className="font-bold text-[10px] h-8 px-4 text-rose-600 border-rose-200 hover:bg-rose-50">
-                            ✕ Cancel
-                          </Button>
-                          <Button type="button" onClick={handleUpdateGoodsEntry} className="font-bold text-[10px] h-8 px-6 bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
-                            ✓ Update Item (Save Changes)
-                          </Button>
-                        </>
-                      ) : (
-                        <Button type="button" onClick={handleAddGoodsEntry} className="font-bold text-[10px] h-8 px-6 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm">
-                          {t(lang, "purchase.add_item_to_list", "+ Add Item to List")}
-                        </Button>
-                      )}
-                      <Button type="button" onClick={() => setActiveTab("others")} className="font-bold text-[10px] h-8 px-6 bg-primary text-primary-foreground">{t(lang, "purchase.next_other_details", "Next: Other Details")}</Button>
-                    </div>
-                  </div>
-                </fieldset>
-              )}
-
             </main>
           </div>
         )
