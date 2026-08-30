@@ -4880,6 +4880,23 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                           </div>
 
                           <div className="space-y-3">
+                            {/* Manual Net KGs Input */}
+                            <div>
+                              <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.net_kgs_weight", "Net KGs (Weight)")}</label>
+                              <input
+                                type="number"
+                                value={form.netWeight !== undefined && form.netWeight !== "" ? form.netWeight : ""}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setValue("netWeight", val === "" ? "" : Number(val));
+                                  setValue("manualTotalAmount", "");
+                                  setValue("manualFinalAmount", "");
+                                }}
+                                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 text-xs h-9 font-mono font-bold"
+                                placeholder="4990"
+                              />
+                            </div>
+
                             {/* Origin Country */}
                             <div>
                               <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.f_origin_country", "Origin Country")}</label>
@@ -4937,73 +4954,449 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                   ...dbGoods.map(g => ({ label: g.goods_name || g.goodsName, value: g.goods_name || g.goodsName })),
                                   ...GOODS_OPTIONS.filter(go => !dbGoods.some(g => (g.goods_name || g.goodsName) === go)).map(g => ({ label: g, value: g }))
                                 ]}
-                                placeholder={t(lang, "purchase.select_goods_name", "Select Goods Name")}
-                                addOptionLabel={t(lang, "purchase.add_new_goods_item", "Add New Goods Item")}
+                                placeholder={t(lang, "purchase.select_goods_name", "Select Goods")}
+                                addOptionLabel={t(lang, "purchase.add_new_goods_item", "Add New Good")}
                               />
                             </div>
 
-                            {/* Size & Brand (2 cols) */}
+                            {/* HS Code & Allot Name / ID */}
                             <div className="grid grid-cols-2 gap-2.5">
                               <div>
-                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.size_label", "Size")}</label>
-                                <SearchableSelect
-                                  value={form.size || ""}
-                                  onChange={(val) => setValue("size", val)}
-                                  options={SIZE_OPTIONS.map(s => ({ label: s, value: s }))}
-                                  placeholder={t(lang, "purchase.select_size", "Select Size")}
+                                <div className="flex items-center justify-between mb-1">
+                                  <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300">{t(lang, "purchase.th_hs_code", "HS Code")}</label>
+                                  {form.goodsName && (() => {
+                                    const selectedGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === form.goodsName.trim().toUpperCase());
+                                    if (selectedGood && (selectedGood.chs_code || selectedGood.chsCode || "") !== (form.hsCode || "")) {
+                                      return (
+                                        <button
+                                          type="button"
+                                          onClick={handleUpdateHsCode}
+                                          className="text-[8.5px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-1 py-0.5 rounded border border-blue-200 dark:border-blue-800 hover:bg-blue-100"
+                                        >
+                                          Save
+                                        </button>
+                                      );
+                                    }
+                                    return null;
+                                  })()}
+                                </div>
+                                <input
+                                  type="text"
+                                  value={form.hsCode || ""}
+                                  onChange={(e) => setValue("hsCode", e.target.value)}
+                                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 text-xs h-9 font-mono"
                                 />
                               </div>
                               <div>
-                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.brand_label", "Brand")}</label>
-                                <SearchableSelect
-                                  value={form.brand || ""}
-                                  onChange={(val) => setValue("brand", val)}
-                                  options={BRAND_OPTIONS.map(b => ({ label: b, value: b }))}
-                                  placeholder={t(lang, "purchase.select_brand", "Select Brand")}
+                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.allot_name_id", "Allot Name / ID")}</label>
+                                <input
+                                  type="text"
+                                  value={form.allotName || ""}
+                                  onChange={(e) => setValue("allotName", e.target.value)}
+                                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 text-xs h-9"
                                 />
                               </div>
                             </div>
 
-                            {/* Qty & Unit (2 cols) */}
+                            {/* Brand & Size */}
                             <div className="grid grid-cols-2 gap-2.5">
                               <div>
-                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.th_qty", "Quantity")}</label>
+                                <div className="flex items-center justify-between mb-1">
+                                  <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300">{t(lang, "purchase.brand_label", "Brand")}</label>
+                                  {form.goodsName && form.brand && (() => {
+                                    const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                                    const masterBrands = selGood?.master_brands || (selGood?.variations || []).map(v => v.brand).filter(Boolean);
+                                    if (selGood && !masterBrands.includes(form.brand)) {
+                                      return (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleSaveParamToMaster("brand", form.brand)}
+                                          className="text-[8.5px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-1 py-0.5 rounded border border-blue-200 dark:border-blue-800 hover:bg-blue-100"
+                                        >
+                                          Save
+                                        </button>
+                                      );
+                                    }
+                                    return null;
+                                  })()}
+                                </div>
+                                <SearchableSelect
+                                  value={form.brand || ""}
+                                  onChange={(val) => {
+                                    if (val === "__ADD_NEW__") {
+                                      const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                                      if (!selGood) {
+                                        alert(t(lang, "purchase.select_good_first_brand", "Please select a Good first before adding a new Brand."));
+                                        return;
+                                      }
+                                      const newB = window.prompt("Enter New Brand:");
+                                      if (newB && newB.trim()) {
+                                        setValue("brand", newB.trim());
+                                        handleSaveParamToMaster("brand", newB.trim());
+                                      }
+                                    } else {
+                                      setValue("brand", val);
+                                    }
+                                  }}
+                                  options={(() => {
+                                    const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                                    const brands = Array.from(new Set([
+                                      ...(selGood?.master_brands || []),
+                                      ...(selGood?.variations || []).map(v => v.brand).filter(Boolean),
+                                      ...BRAND_OPTIONS,
+                                      ...dbGoods.flatMap(g => [...(g.master_brands || []), ...(g.variations || []).map(v => v.brand)]).filter(Boolean),
+                                      form.brand
+                                    ].filter(Boolean))).sort();
+                                    return brands.map(b => ({ label: b, value: b }));
+                                  })()}
+                                  placeholder={t(lang, "purchase.select_brand", "Select Brand")}
+                                  addOptionLabel={t(lang, "purchase.add_new_brand", "Add New Brand")}
+                                />
+                              </div>
+                              <div>
+                                <div className="flex items-center justify-between mb-1">
+                                  <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300">{t(lang, "purchase.size_label", "Size")}</label>
+                                  {form.goodsName && form.size && (() => {
+                                    const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                                    const masterSizes = selGood?.master_sizes || (selGood?.variations || []).map(v => v.size).filter(Boolean);
+                                    if (selGood && !masterSizes.includes(form.size)) {
+                                      return (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleSaveParamToMaster("size", form.size)}
+                                          className="text-[8.5px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-1 py-0.5 rounded border border-blue-200 dark:border-blue-800 hover:bg-blue-100"
+                                        >
+                                          Save
+                                        </button>
+                                      );
+                                    }
+                                    return null;
+                                  })()}
+                                </div>
+                                <SearchableSelect
+                                  value={form.size || ""}
+                                  onChange={(val) => {
+                                    if (val === "__ADD_NEW__") {
+                                      const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                                      if (!selGood) {
+                                        alert(t(lang, "purchase.select_good_first_size", "Please select a Good first before adding a new Size."));
+                                        return;
+                                      }
+                                      const newS = window.prompt("Enter New Size:");
+                                      if (newS && newS.trim()) {
+                                        setValue("size", newS.trim());
+                                        handleSaveParamToMaster("size", newS.trim());
+                                      }
+                                    } else {
+                                      setValue("size", val);
+                                    }
+                                  }}
+                                  options={(() => {
+                                    const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                                    const sizes = Array.from(new Set([
+                                      ...(selGood?.master_sizes || []),
+                                      ...(selGood?.variations || []).map(v => v.size).filter(Boolean),
+                                      ...SIZE_OPTIONS,
+                                      ...dbGoods.flatMap(g => [...(g.master_sizes || []), ...(g.variations || []).map(v => v.size)]).filter(Boolean),
+                                      form.size
+                                    ].filter(Boolean))).sort();
+                                    return sizes.map(s => ({ label: s, value: s }));
+                                  })()}
+                                  placeholder={t(lang, "purchase.select_size", "Select Size")}
+                                  addOptionLabel={t(lang, "purchase.add_new_size", "Add New Size")}
+                                />
+                              </div>
+                            </div>
+
+                            {/* Variety & Quality / Extra Details */}
+                            <div className="grid grid-cols-2 gap-2.5">
+                              <div>
+                                <div className="flex items-center justify-between mb-1">
+                                  <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300">{t(lang, "purchase.variety_label", "Variety")}</label>
+                                  {form.goodsName && form.variety && (() => {
+                                    const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                                    const masterVars = selGood?.master_varieties || [];
+                                    if (selGood && !masterVars.includes(form.variety)) {
+                                      return (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleSaveParamToMaster("variety", form.variety)}
+                                          className="text-[8.5px] font-bold text-amber-600 bg-amber-50 px-1 py-0.5 rounded border border-amber-200 hover:bg-amber-100"
+                                        >
+                                          Save
+                                        </button>
+                                      );
+                                    }
+                                    return null;
+                                  })()}
+                                </div>
+                                <SearchableSelect
+                                  value={form.variety || ""}
+                                  onChange={(val) => {
+                                    if (val === "__ADD_NEW__") {
+                                      const newV = window.prompt("Enter New Variety:");
+                                      if (newV && newV.trim()) {
+                                        setValue("variety", newV.trim());
+                                        handleSaveParamToMaster("variety", newV.trim());
+                                      }
+                                    } else {
+                                      setValue("variety", val);
+                                    }
+                                  }}
+                                  options={(() => {
+                                    const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                                    const varieties = Array.from(new Set([
+                                      ...(selGood?.master_varieties || []),
+                                      "Nonpareil", "Carmel", "Independence", "Butte", "Marcona", "Aldrich", "Fritz", "Monterey", "Padre", "Price", "Sonora", "Wood Colony",
+                                      form.variety
+                                    ].filter(Boolean))).sort();
+                                    return varieties.map(v => ({ label: v, value: v }));
+                                  })()}
+                                  placeholder={t(lang, "purchase.select_variety", "Select Variety")}
+                                  addOptionLabel={t(lang, "purchase.add_new_variety", "Add New Variety")}
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.extra_details_label", "Quality / Extra Details")}</label>
+                                <input
+                                  type="text"
+                                  value={form.extraDetails || ""}
+                                  onChange={(e) => setValue("extraDetails", e.target.value)}
+                                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 text-xs h-9"
+                                  placeholder="e.g. Soft Shell / Light Color"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Qty Name & Quantity No */}
+                            <div className="grid grid-cols-2 gap-2.5">
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.qty_name_label", "Qty Name")}</label>
+                                <SearchableSelect
+                                  value={form.qtyName || "BAGS"}
+                                  onChange={(val) => {
+                                    if (val === "__ADD_NEW__") {
+                                      const newQty = window.prompt(t(lang, "purchase.enter_new_qty_name_prompt", "Enter New Qty Name:"));
+                                      if (newQty && newQty.trim()) {
+                                        setValue("qtyName", newQty.trim());
+                                        setCustomQtyNames(prev => [...prev, newQty.trim()]);
+                                      }
+                                    } else {
+                                      setValue("qtyName", val);
+                                    }
+                                  }}
+                                  options={Array.from(new Set([...QTY_TYPE_OPTIONS, ...customQtyNames, form.qtyName])).filter(Boolean).map(q => ({ label: q, value: q }))}
+                                  placeholder={t(lang, "purchase.select_qty_name", "Select Qty Name")}
+                                  addOptionLabel={t(lang, "purchase.add_new_qty_name", "Add New Qty Name")}
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.quantity_no", "Quantity No")}</label>
                                 <input
                                   type="number"
                                   value={form.qtyNo || ""}
-                                  onChange={(e) => setValue("qtyNo", Number(e.target.value))}
+                                  onChange={(e) => {
+                                    const val = Number(e.target.value);
+                                    setValue("qtyNo", val);
+                                    setValue("manualTotalAmount", "");
+                                    setValue("manualFinalAmount", "");
+                                    const qtyKgs = Number(form.qtyKgs || 0);
+                                    const emptyKgs = Number(form.emptyKgs || 0);
+                                    setValue("netWeight", val * qtyKgs - val * emptyKgs);
+                                  }}
                                   className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-slate-100 font-mono font-bold outline-none focus:border-blue-500 text-xs h-9"
-                                  placeholder="e.g. 500"
+                                  placeholder="100"
                                 />
-                              </div>
-                              <div>
-                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.th_unit", "Unit")}</label>
-                                <select
-                                  value={form.qtyName || "BAGS"}
-                                  onChange={(e) => setValue("qtyName", e.target.value)}
-                                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-slate-100 font-semibold outline-none focus:border-blue-500 text-xs h-9"
-                                >
-                                  {QTY_TYPE_OPTIONS.map(u => <option key={u} value={u}>{u}</option>)}
-                                </select>
                               </div>
                             </div>
 
-                            {/* Price */}
+                            {/* 1 Qty KGS & 1 Empty KGS */}
+                            <div className="grid grid-cols-2 gap-2.5">
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.qty_kgs_1", "1 Qty KGS")}</label>
+                                <input
+                                  type="number"
+                                  value={form.qtyKgs || ""}
+                                  onChange={(e) => {
+                                    const val = Number(e.target.value);
+                                    setValue("qtyKgs", val);
+                                    setValue("manualTotalAmount", "");
+                                    setValue("manualFinalAmount", "");
+                                    const qtyNo = Number(form.qtyNo || 0);
+                                    const emptyKgs = Number(form.emptyKgs || 0);
+                                    setValue("netWeight", qtyNo * val - qtyNo * emptyKgs);
+                                  }}
+                                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-slate-100 font-mono font-bold outline-none focus:border-blue-500 text-xs h-9"
+                                  placeholder="50"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.empty_kgs_1", "1 Empty KGS")}</label>
+                                <input
+                                  type="number"
+                                  value={form.emptyKgs || ""}
+                                  onChange={(e) => {
+                                    const val = Number(e.target.value);
+                                    setValue("emptyKgs", val);
+                                    setValue("manualTotalAmount", "");
+                                    setValue("manualFinalAmount", "");
+                                    const qtyNo = Number(form.qtyNo || 0);
+                                    const qtyKgs = Number(form.qtyKgs || 0);
+                                    setValue("netWeight", qtyNo * qtyKgs - qtyNo * val);
+                                  }}
+                                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-slate-100 font-mono font-bold outline-none focus:border-blue-500 text-xs h-9"
+                                  placeholder="0.1"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Divide Type & Divide Weight / Value */}
+                            <div className="grid grid-cols-2 gap-2.5">
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.divide_type", "Divide Type")}</label>
+                                <select
+                                  value={form.divideType || "D/KGs"}
+                                  onChange={(e) => setValue("divideType", e.target.value)}
+                                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-slate-100 font-semibold outline-none focus:border-blue-500 text-xs h-9"
+                                >
+                                  <option value="D/KGs">D/KGs</option>
+                                  <option value="D/LBs">D/LBs</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.divide_weight_value", "Divide Weight / Value")}</label>
+                                <input
+                                  type="number"
+                                  value={form.divideWeight || 1}
+                                  onChange={(e) => {
+                                    setValue("divideWeight", Number(e.target.value));
+                                    setValue("manualTotalAmount", "");
+                                    setValue("manualFinalAmount", "");
+                                  }}
+                                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-slate-100 font-mono font-bold outline-none focus:border-blue-500 text-xs h-9"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Price Type & Price Rate */}
+                            <div className="grid grid-cols-2 gap-2.5">
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.price_type", "Price Type")}</label>
+                                <select
+                                  value={form.priceType || "P/KGs"}
+                                  onChange={(e) => setValue("priceType", e.target.value)}
+                                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-slate-100 font-semibold outline-none focus:border-blue-500 text-xs h-9"
+                                >
+                                  <option value="P/KGs">P/KGs</option>
+                                  <option value="P/LBs">P/LBs</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                  {t(lang, "purchase.price_rate_c1", "Price Rate (C1)")} ({form.currencyType || "USD"})
+                                </label>
+                                <input
+                                  type="number"
+                                  value={form.coursePrice || ""}
+                                  onChange={(e) => {
+                                    setValue("coursePrice", Number(e.target.value));
+                                    setValue("manualTotalAmount", "");
+                                    setValue("manualFinalAmount", "");
+                                  }}
+                                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-slate-100 font-mono font-bold outline-none focus:border-blue-500 text-xs h-9"
+                                  placeholder="12.5"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Quality Report Reference */}
                             <div>
-                              <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                {t(lang, "purchase.price_rate_c1", "Price Rate")} ({form.currencyType || "USD"})
-                              </label>
+                              <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.quality_report_reference", "Quality Report Reference")}</label>
                               <input
-                                type="number"
-                                value={form.coursePrice || ""}
-                                onChange={(e) => {
-                                  setValue("coursePrice", Number(e.target.value));
-                                  setValue("manualTotalAmount", "");
-                                  setValue("manualFinalAmount", "");
-                                }}
-                                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-slate-100 font-mono font-bold outline-none focus:border-blue-500 text-xs h-9"
-                                placeholder="0.00"
+                                type="text"
+                                value={form.qualityReport || ""}
+                                onChange={(e) => setValue("qualityReport", e.target.value)}
+                                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 text-xs h-9"
+                                placeholder={t(lang, "purchase.quality_passed_placeholder", "Passed")}
                               />
+                            </div>
+
+                            {/* PURCHASE CURRENCY & CONVERSION Box */}
+                            <div className="rounded-xl border border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-950/20 p-3 space-y-2.5">
+                              <h4 className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
+                                {t(lang, "purchase.purchase_currency_conversion", "Purchase Currency & Conversion")}
+                              </h4>
+                              <div className="grid grid-cols-2 gap-2.5">
+                                <div>
+                                  <label className="block text-[9px] font-bold text-emerald-700 dark:text-emerald-400 mb-1">
+                                    {t(lang, "purchase.pricing_currency", "Pricing Currency")}
+                                  </label>
+                                  <select
+                                    value={form.currencyType || "USD"}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      setForm(prev => ({ ...prev, currencyType: val, purchaseCurrency: val }));
+                                    }}
+                                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-slate-900 dark:text-slate-100 font-bold text-xs h-8 outline-none focus:border-emerald-500"
+                                  >
+                                    {CURRENCY_OPTIONS.map(c => <option key={c} value={c}>{c} {c === "USD" ? "($)" : c === "AED" ? "(Dirham)" : ""}</option>)}
+                                  </select>
+                                </div>
+                                <div>
+                                  <label className="block text-[9px] font-bold text-emerald-700 dark:text-emerald-400 mb-1">
+                                    {t(lang, "purchase.exchange_rate_to", "Exchange Rate to")} {form.secondaryCurrency || "AED"}
+                                  </label>
+                                  <div className="flex gap-1">
+                                    <input
+                                      type="number"
+                                      step="any"
+                                      value={form.exchangeRate !== undefined ? form.exchangeRate : 1}
+                                      onChange={(e) => {
+                                        setValue("exchangeRate", Number(e.target.value));
+                                        setValue("manualFinalAmount", "");
+                                      }}
+                                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-slate-900 dark:text-slate-100 font-mono font-bold text-xs h-8 outline-none focus:border-emerald-500"
+                                    />
+                                    <select
+                                      value={form.operator || "*"}
+                                      onChange={(e) => {
+                                        setValue("operator", e.target.value);
+                                        setValue("manualFinalAmount", "");
+                                      }}
+                                      className="w-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-center text-xs font-black h-8 outline-none"
+                                    >
+                                      <option value="*">*</option>
+                                      <option value="/">/</option>
+                                    </select>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2.5">
+                                <div>
+                                  <label className="block text-[9px] font-bold text-emerald-700 dark:text-emerald-400 mb-1">
+                                    {t(lang, "purchase.th_amount", "Amount")} ({form.currencyType || "USD"})
+                                  </label>
+                                  <input
+                                    type="number"
+                                    value={form.manualTotalAmount !== undefined && form.manualTotalAmount !== "" ? form.manualTotalAmount : currentItemTotals.totalAmount}
+                                    onChange={(e) => setValue("manualTotalAmount", e.target.value === "" ? "" : Number(e.target.value))}
+                                    placeholder={(Number(currentItemTotals?.totalAmount) || 0).toFixed(2)}
+                                    className="w-full bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 rounded-lg px-2 py-1 text-slate-900 dark:text-slate-100 font-mono font-bold text-xs h-8 outline-none focus:border-emerald-500"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[9px] font-bold text-emerald-700 dark:text-emerald-400 mb-1">
+                                    {t(lang, "purchase.th_final", "Final")} ({form.secondaryCurrency || "AED"})
+                                  </label>
+                                  <input
+                                    type="number"
+                                    value={form.manualFinalAmount !== undefined && form.manualFinalAmount !== "" ? form.manualFinalAmount : currentItemTotals.finalAmount}
+                                    onChange={(e) => setValue("manualFinalAmount", e.target.value === "" ? "" : Number(e.target.value))}
+                                    placeholder={(Number(currentItemTotals?.finalAmount) || 0).toFixed(2)}
+                                    className="w-full bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 rounded-lg px-2 py-1 text-emerald-700 dark:text-emerald-400 font-mono font-black text-xs h-8 outline-none focus:border-emerald-500"
+                                  />
+                                </div>
+                              </div>
                             </div>
 
                             {/* Add / Update Item Button */}
@@ -5042,14 +5435,14 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                 onClick={() => setActiveTab("booking")}
                                 className="flex-1 h-9 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                               >
-                                ← Back: Booking
+                                Back
                               </button>
                               <button
                                 type="button"
                                 onClick={() => setActiveTab("shipping")}
-                                className="flex-1 h-9 rounded-xl bg-primary text-primary-foreground font-bold text-xs hover:opacity-90 transition-opacity"
+                                className="flex-1 h-9 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1 shadow-md shadow-orange-500/20 transition-all cursor-pointer"
                               >
-                                Next: Shipping →
+                                Next: Other Details →
                               </button>
                             </div>
                           </div>
