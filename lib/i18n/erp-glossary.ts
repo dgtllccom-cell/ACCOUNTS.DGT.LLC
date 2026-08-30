@@ -144,7 +144,7 @@ export const ERP_GLOSSARY: GlossaryEntry[] = [
   { en: "received", ur: "موصول", ar: "مستلم", fa: "دریافت شد", ps: "ترلاسه شو", domain: "general" },
   { en: "sent", ur: "بھیج دیا", ar: "مرسل", fa: "ارسال شد", ps: "ولېږل شو", domain: "general" },
   { en: "paid", ur: "ادا شدہ", ar: "مدفوع", fa: "پرداخت شد", ps: "ورکړل شو", domain: "accounting" },
-  { en: "confirmed", ur: "تصدیق شدہ", ar: "مؤكد", fa: "تأیید شد", ps: "تایید شو", domain: "general" },
+  { en: "confirm", ur: "تصدیق کریں", ar: "تأكيد", fa: "تأیید کنید", ps: "تایید کړئ", domain: "general", variants: ["confirmed", "confirmation"] },
   { en: "cancelled", ur: "منسوخ", ar: "ملغى", fa: "لغو شد", ps: "لغوه شو", domain: "general", variants: ["canceled"] },
   { en: "urgent", ur: "فوری", ar: "عاجل", fa: "فوری", ps: "بیړني", domain: "general" },
   { en: "please", ur: "براہ کرم", ar: "من فضلك", fa: "لطفاً", ps: "مهرباني وکړئ", domain: "general" },
