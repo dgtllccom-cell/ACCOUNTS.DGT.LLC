@@ -743,6 +743,45 @@ export const sidebarTree: SidebarNode[] = [
     roles: ["super_admin", "auditor_viewer", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
   },
   {
+    key: "user-tasks",
+    labelKey: "nav.user_tasks",
+    iconKey: "check-square",
+    href: "/dashboard/user-tasks" as Route,
+    children: [
+      { key: "ut-my", labelKey: "nav.my_tasks", iconKey: "clipboard-list", href: "/dashboard/user-tasks" as Route },
+      {
+        key: "ut-assign",
+        labelKey: "nav.assign_task",
+        iconKey: "list-plus",
+        href: "/dashboard/user-tasks/assign" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin"]
+      },
+      {
+        key: "ut-team",
+        labelKey: "nav.team_tasks",
+        iconKey: "users",
+        href: "/dashboard/user-tasks/team" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin"]
+      },
+      { key: "ut-overdue", labelKey: "nav.overdue_tasks", iconKey: "gantt", href: "/dashboard/user-tasks/overdue" as Route },
+      { key: "ut-completed", labelKey: "nav.completed_tasks", iconKey: "check-square", href: "/dashboard/user-tasks/completed" as Route },
+      {
+        key: "ut-performance",
+        labelKey: "nav.task_performance",
+        iconKey: "bar-chart-3",
+        href: "/dashboard/user-tasks/performance" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin"]
+      },
+      {
+        key: "ut-audit",
+        labelKey: "nav.task_audit",
+        iconKey: "scroll-text",
+        href: "/dashboard/user-tasks/audit" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin"]
+      }
+    ]
+  },
+  {
     key: "general-office",
     labelKey: "nav.general_office_management",
     iconKey: "users",
@@ -1456,6 +1495,7 @@ function impliedPermission(node: SidebarNode): PermissionRequirement | null {
   if (href.includes("/roznamcha/")) return { resource: "roznamcha", action: "read" };
 
   if (href.includes("/expenses/bill-expenses")) return { resource: "reports", action: "read" };
+  if (href.includes("/user-tasks")) return { resource: "reports", action: "read" };
   if (href.includes("/purchase/")) return { resource: "purchases", action: key.includes("report") ? "read" : "read" };
   if (href.includes("/sales/")) return { resource: "sales", action: "read" };
   if (href.includes("/reports")) return { resource: "reports", action: "read" };
