@@ -1,13 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
-  Receipt, RefreshCw, Printer, X, Plus, Trash2, Link2, FileText, Search, ChevronRight
+  FileText, Receipt, RefreshCw, Printer, Plus, Eye, Trash2, MoreHorizontal,
+  Link2, Building2, Calculator, BadgePercent, Search
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SimpleModal } from "@/components/ui/simple-modal";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { openScopedGenericReport, type GenericReportColumn } from "@/lib/reports/open-scoped-report";
-import { DataEmptyState } from "@/components/ui/data-empty-state";
+import { printStore } from "@/lib/store/print-store";
 
 type SourceModule = "purchase_booking" | "local_purchase" | "sales_booking" | "local_sales";
 
@@ -49,6 +54,9 @@ const EXPENSE_TYPES = ["shipping", "loading", "clearing", "transport", "customs"
 function money(n: number | null | undefined) {
   return Number(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
+function escapeHtml(v: unknown) {
+  return String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
 
 export function BillExpensesView({ lang: langProp }: { lang?: string }) {
   const s = useErpScreen("bexp", langProp);
@@ -60,9 +68,15 @@ export function BillExpensesView({ lang: langProp }: { lang?: string }) {
   const [moduleTab, setModuleTab] = useState<"all" | SourceModule>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "open" | "in_progress" | "closed">("all");
   const [search, setSearch] = useState("");
-  const [summary, setSummary] = useState<{ originalTotal: number; expenseTotal: number; withExpenses: number } | null>(null);
+  const [summary, setSummary] = useState<{ originalTotal: number; expenseTotal: number; withExpenses: number; byModule: Record<string, number> } | null>(null);
 
   const [openId, setOpenId] = useState<string | null>(null);
+  const [openFocusForm, setOpenFocusForm] = useState(false);
+
+  const [portalNode, setPortalNode] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    setPortalNode(document.getElementById("erp-page-actions-slot"));
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -88,16 +102,23 @@ export function BillExpensesView({ lang: langProp }: { lang?: string }) {
     load();
   }, [moduleTab, statusFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const moduleLabel = (m: SourceModule) =>
-    m === "purchase_booking" ? s.t("tab_purchase_booking", "Purchase Booking")
-    : m === "local_purchase" ? s.t("tab_local_purchase", "Local Purchase")
-    : m === "sales_booking" ? s.t("tab_sales_booking", "Sales Booking")
-    : s.t("tab_local_sales", "Local Sales");
+  const moduleLabel = useCallback(
+    (m: SourceModule) =>
+      m === "purchase_booking" ? s.t("tab_purchase_booking", "Purchase Booking")
+      : m === "local_purchase" ? s.t("tab_local_purchase", "Local Purchase")
+      : m === "sales_booking" ? s.t("tab_sales_booking", "Sales Booking")
+      : s.t("tab_local_sales", "Local Sales"),
+    [s]
+  );
 
-  const statusLabel = (st: BillRow["status"]) =>
-    st === "open" ? s.t("status_open", "Open")
-    : st === "in_progress" ? s.t("status_in_progress", "In Progress")
-    : s.t("status_closed", "Closed");
+  const statusLabel = useCallback(
+    (st: BillRow["status"] | "all") =>
+      st === "open" ? s.t("status_open", "Open")
+      : st === "in_progress" ? s.t("status_in_progress", "In Progress")
+      : st === "closed" ? s.t("status_closed", "Closed")
+      : "—",
+    [s]
+  );
 
   const reportColumns: GenericReportColumn[] = useMemo(
     () => [
@@ -113,10 +134,10 @@ export function BillExpensesView({ lang: langProp }: { lang?: string }) {
       { key: (r: any) => money(r.expenseTotal), label: s.t("col_expense_total", "Expense Total"), align: "right" },
       { key: (r: any) => statusLabel(r.status), label: s.t("col_status", "Status"), align: "center" }
     ],
-    [s, lang] // eslint-disable-line react-hooks/exhaustive-deps
+    [s, moduleLabel, statusLabel]
   );
 
-  function printReport() {
+  function printRegister() {
     void openScopedGenericReport({
       title: s.t("report_title", "Bill Expenses Register"),
       subtitle: s.t("subtitle", "Additional expenses recorded against submitted Purchase & Sales bills."),
@@ -132,7 +153,7 @@ export function BillExpensesView({ lang: langProp }: { lang?: string }) {
       printedBy: scope.userName,
       filters: [
         { label: s.t("col_source", "Source Module"), value: moduleTab === "all" ? s.t("tab_all", "All Bills") : moduleLabel(moduleTab) },
-        { label: s.t("col_status", "Status"), value: statusFilter === "all" ? "—" : statusLabel(statusFilter as any) },
+        { label: s.t("col_status", "Status"), value: statusLabel(statusFilter) },
         { label: s.t("summary_bills", "Bills"), value: String(rows.length) }
       ],
       summary: {
@@ -146,201 +167,301 @@ export function BillExpensesView({ lang: langProp }: { lang?: string }) {
 
   const filtersActive = moduleTab !== "all" || statusFilter !== "all" || !!search.trim();
 
+  const summaryCards = summary
+    ? [
+        { label: s.t("summary_bills", "Bills"), value: String(rows.length), accent: "border-t-indigo-500", icon: FileText },
+        { label: s.t("summary_original", "Original Total"), value: money(summary.originalTotal), accent: "border-t-blue-500", icon: Receipt },
+        { label: s.t("summary_expenses", "Expenses Total"), value: money(summary.expenseTotal), accent: "border-t-rose-500", icon: Calculator },
+        { label: s.t("summary_with_expenses", "Bills with Expenses"), value: String(summary.withExpenses), accent: "border-t-emerald-500", icon: BadgePercent },
+        {
+          label: s.t("tab_purchase_booking", "Purchase Booking"),
+          value: String(summary.byModule?.purchase_booking ?? 0),
+          sub: `${s.t("tab_sales_booking", "Sales Booking")}: ${summary.byModule?.sales_booking ?? 0}`,
+          accent: "border-t-amber-400",
+          icon: Building2
+        }
+      ]
+    : [];
+
   return (
-    <section dir={s.dir} className="space-y-5">
-      {/* Header */}
-      <div className="flex flex-col gap-3 border-b border-slate-200 pb-4 dark:border-slate-800 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-start gap-3">
-          <span className="mt-0.5 grid h-9 w-9 place-items-center rounded-xl bg-rose-100 text-rose-600 dark:bg-rose-950/50">
-            <Receipt className="h-5 w-5" />
-          </span>
-          <div>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-white">{s.t("title", "Bill Expenses")}</h1>
-            <p className="max-w-2xl text-xs text-slate-500">{s.t("subtitle", "Additional expenses recorded against submitted Purchase & Sales bills — the original bill is referenced, never re-entered.")}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={printReport}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-blue-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900"
-          >
-            <Printer className="h-4 w-4" /> {s.t("print_report", "Print Report")}
-          </button>
-          <button
-            onClick={load}
-            className="rounded-xl border border-slate-200 bg-white p-2 text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
-          >
-            <RefreshCw className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* Summary cards */}
-      {summary && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[
-            { label: s.t("summary_bills", "Bills"), value: String(rows.length) },
-            { label: s.t("summary_original", "Original Total"), value: money(summary.originalTotal) },
-            { label: s.t("summary_expenses", "Expenses Total"), value: money(summary.expenseTotal) },
-            { label: s.t("summary_with_expenses", "Bills with Expenses"), value: String(summary.withExpenses) }
-          ].map((c) => (
-            <div key={c.label} className="rounded-xl border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-900">
-              <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{c.label}</div>
-              <div className="mt-0.5 text-sm font-bold text-slate-900 dark:text-white">{c.value}</div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Tabs + filters */}
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-wrap gap-1.5">
-          {(["all", "purchase_booking", "local_purchase", "sales_booking", "local_sales"] as const).map((m) => (
-            <button
-              key={m}
-              onClick={() => setModuleTab(m)}
-              className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${
-                moduleTab === m
-                  ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
-              }`}
-            >
-              {m === "all" ? s.t("tab_all", "All Bills") : moduleLabel(m)}
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <Search className={`absolute top-2.5 h-3.5 w-3.5 text-slate-400 ${s.isRtl ? "right-2.5" : "left-2.5"}`} />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && load()}
-              placeholder={`${s.t("col_bill_no", "Bill No.")} / ${s.t("col_party", "Party / Account")}`}
-              className={`w-56 rounded-xl border border-slate-200 bg-white py-2 text-xs dark:border-slate-800 dark:bg-slate-900 ${s.isRtl ? "pr-8 pl-3" : "pl-8 pr-3"}`}
-            />
-          </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as any)}
-            className={`rounded-xl border px-2.5 py-2 text-xs ${
-              statusFilter !== "all"
-                ? "border-blue-400 bg-blue-50 font-semibold text-blue-700 dark:border-blue-700 dark:bg-blue-950/40"
-                : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
-            }`}
-          >
-            <option value="all">{s.t("col_status", "Status")}</option>
-            <option value="open">{s.t("status_open", "Open")}</option>
-            <option value="in_progress">{s.t("status_in_progress", "In Progress")}</option>
-            <option value="closed">{s.t("status_closed", "Closed")}</option>
-          </select>
-          {filtersActive && (
-            <button
-              onClick={() => { setModuleTab("all"); setStatusFilter("all"); setSearch(""); setTimeout(load, 0); }}
-              className="rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
-            >
-              {s.t("clear_filters", "Clear Filters")}
-            </button>
+    <div dir={s.dir} className="min-h-screen bg-slate-50 p-4 md:p-6 pb-24 text-sm font-sans dark:bg-slate-950">
+      <div className="print:hidden space-y-4">
+        {/* Page header — into the standard ERP page-actions slot */}
+        {portalNode &&
+          createPortal(
+            <div className="flex items-center gap-2">
+              <span className="mr-1 hidden items-center gap-1.5 text-xs font-bold text-slate-500 sm:flex">
+                <Receipt className="h-3.5 w-3.5 text-primary" />
+                {s.t("title", "Bill Expenses")}
+              </span>
+              <Button size="sm" onClick={load} variant="outline" className="h-7 text-xs shadow-sm">
+                <RefreshCw className="mr-1 h-3 w-3" /> {s.tGlobal("common.refresh", "Refresh")}
+              </Button>
+              <Button
+                size="sm"
+                onClick={printRegister}
+                className="h-7 bg-blue-600 text-xs text-white shadow-sm hover:bg-blue-700"
+              >
+                <Printer className="mr-1 h-3 w-3" /> {s.t("print_report", "Print Report")}
+              </Button>
+            </div>,
+            portalNode
           )}
-        </div>
-      </div>
 
-      {/* Register table */}
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead className="bg-slate-50 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800/50">
-              <tr>
-                <th className={`px-3 py-3 ${s.textStart}`}>{s.t("col_source", "Source Module")}</th>
-                <th className={`px-3 py-3 ${s.textStart}`}>{s.t("col_bill_no", "Bill No.")}</th>
-                <th className={`px-3 py-3 ${s.textStart}`}>{s.t("col_manual_bill", "Manual Bill / Contract")}</th>
-                <th className={`px-3 py-3 ${s.textStart}`}>{s.t("col_date", "Date")}</th>
-                <th className={`px-3 py-3 ${s.textStart}`}>{s.t("col_branch", "Branch")}</th>
-                <th className={`px-3 py-3 ${s.textStart}`}>{s.t("col_party", "Party / Account")}</th>
-                <th className="px-3 py-3 text-end">{s.t("col_original_amount", "Original Bill Amount")}</th>
-                <th className="px-3 py-3 text-end">{s.t("col_expense_total", "Expense Total")}</th>
-                <th className="px-3 py-3 text-center">{s.t("col_status", "Status")}</th>
-                <th className="px-3 py-3 text-center">{s.t("col_actions", "Actions")}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {loading ? (
-                <tr><td colSpan={10} className="py-10 text-center text-slate-400">
-                  <RefreshCw className="mx-auto mb-2 h-5 w-5 animate-spin text-slate-300" />
-                </td></tr>
-              ) : rows.length === 0 ? (
-                <tr><td colSpan={10}>
-                  <DataEmptyState
-                    icon={Link2}
-                    title={filtersActive ? s.t("empty_filtered", "No bills match the selected filters.") : s.t("empty", "No submitted bills yet.")}
-                    hint={filtersActive ? undefined : s.t("empty", "A Purchase or Sales bill appears here automatically once it is booked / confirmed.")}
-                  />
-                </td></tr>
-              ) : (
-                rows.map((r) => (
-                  <tr key={r.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
-                    <td className="px-3 py-3">
-                      <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                        {moduleLabel(r.sourceModule)}
-                      </span>
-                    </td>
-                    <td className="px-3 py-3 font-semibold text-slate-900 dark:text-white">{r.billNo || "—"}</td>
-                    <td className="px-3 py-3 text-slate-500">{r.manualBillNo || "—"}</td>
-                    <td className="px-3 py-3">{r.transactionDate ? new Date(r.transactionDate).toLocaleDateString("en-GB") : "—"}</td>
-                    <td className="px-3 py-3">{r.branchLabel}</td>
-                    <td className="px-3 py-3">
-                      <div className="font-medium text-slate-900 dark:text-white">{r.partyName || "—"}</div>
-                      <div className="text-[10px] text-slate-400">{r.partyAccountNo || ""}</div>
-                    </td>
-                    <td className="px-3 py-3 text-end font-medium">{r.currency} {money(r.originalBillAmount)}</td>
-                    <td className="px-3 py-3 text-end font-bold text-rose-600">{money(r.expenseTotal)}
-                      {r.expenseCount > 0 && <span className="ms-1 text-[10px] font-normal text-slate-400">({r.expenseCount})</span>}
-                    </td>
-                    <td className="px-3 py-3 text-center">
-                      {r.eligibility === "withdrawn" ? (
-                        <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold uppercase text-amber-700 dark:bg-amber-950 dark:text-amber-300">
-                          {s.t("eligibility_withdrawn", "Withdrawn")}
-                        </span>
-                      ) : (
-                        <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold uppercase text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                          {statusLabel(r.status)}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-3 py-3 text-center">
-                      <button
-                        onClick={() => setOpenId(r.id)}
-                        className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-2 py-1 text-[10px] font-bold text-white hover:bg-blue-700"
-                      >
-                        {s.t("open_detail", "Open")} <ChevronRight className={`h-3 w-3 ${s.isRtl ? "rotate-180" : ""}`} />
-                      </button>
+        <div>
+          <h2 className="flex items-center gap-2 text-base font-bold text-slate-800 dark:text-slate-100">
+            <Receipt className="h-4 w-4 text-primary" /> {s.t("title", "Bill Expenses")}
+          </h2>
+          <p className="mt-0.5 max-w-3xl text-xs text-slate-500">{s.t("subtitle", "Additional expenses recorded against submitted Purchase & Sales bills — the original bill is referenced, never re-entered.")}</p>
+        </div>
+
+        {/* Summary cards — colored top border, matching the Expenses Bill design family */}
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+          {summaryCards.map((c) => (
+            <Card key={c.label} className={`border-t-4 ${c.accent} shadow-sm opacity-90 transition-opacity hover:opacity-100`}>
+              <CardHeader className="border-b border-slate-100 bg-slate-50 px-3 py-2 dark:border-slate-800 dark:bg-slate-900/60">
+                <CardTitle className="flex items-center gap-1.5 text-[11px] font-bold uppercase text-slate-600 dark:text-slate-300">
+                  <c.icon className="h-3.5 w-3.5" /> {c.label}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-3">
+                <div className="font-mono text-lg font-black text-slate-800 dark:text-white">{c.value}</div>
+                {c.sub && <div className="mt-0.5 text-[10px] text-slate-400">{c.sub}</div>}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Filter bar */}
+        <Card className="shadow-sm">
+          <CardContent className="flex flex-col gap-3 p-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-wrap gap-1.5">
+              {(["all", "purchase_booking", "local_purchase", "sales_booking", "local_sales"] as const).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setModuleTab(m)}
+                  className={`rounded-md px-2.5 py-1.5 text-xs font-semibold transition ${
+                    moduleTab === m
+                      ? "bg-primary text-white shadow-sm"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+                  }`}
+                >
+                  {m === "all" ? s.t("tab_all", "All Bills") : moduleLabel(m)}
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative">
+                <Search className={`absolute top-2.5 h-3.5 w-3.5 text-slate-400 ${s.isRtl ? "right-2.5" : "left-2.5"}`} />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && load()}
+                  placeholder={`${s.t("col_bill_no", "Bill No.")} / ${s.t("col_party", "Party / Account")}`}
+                  className={`w-56 rounded-md border border-slate-200 bg-white py-2 text-xs dark:border-slate-800 dark:bg-slate-900 ${s.isRtl ? "pr-8 pl-3" : "pl-8 pr-3"}`}
+                />
+              </div>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as any)}
+                className={`rounded-md border px-2.5 py-2 text-xs ${
+                  statusFilter !== "all"
+                    ? "border-blue-400 bg-blue-50 font-semibold text-blue-700 dark:border-blue-700 dark:bg-blue-950/40"
+                    : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
+                }`}
+              >
+                <option value="all">{s.t("col_status", "Status")}</option>
+                <option value="open">{s.t("status_open", "Open")}</option>
+                <option value="in_progress">{s.t("status_in_progress", "In Progress")}</option>
+                <option value="closed">{s.t("status_closed", "Closed")}</option>
+              </select>
+              {filtersActive && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs"
+                  onClick={() => { setModuleTab("all"); setStatusFilter("all"); setSearch(""); setTimeout(load, 0); }}
+                >
+                  {s.t("clear_filters", "Clear Filters")}
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Register table */}
+        <Card className="overflow-hidden shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b bg-slate-50 text-xs uppercase text-slate-500 dark:bg-slate-900/60">
+                <tr>
+                  <th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_source", "Source Module")}</th>
+                  <th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_bill_no", "Bill No.")}</th>
+                  <th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_manual_bill", "Manual Bill / Contract")}</th>
+                  <th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_date", "Date")}</th>
+                  <th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_branch", "Branch")}</th>
+                  <th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_party", "Party / Account")}</th>
+                  <th className="px-4 py-3 text-right font-semibold">{s.t("col_original_amount", "Original Bill Amount")}</th>
+                  <th className="px-4 py-3 text-right font-black bg-slate-100 text-slate-800 dark:bg-slate-800">{s.t("col_expense_total", "Expense Total")}</th>
+                  <th className="px-4 py-3 text-center font-semibold">{s.t("col_status", "Status")}</th>
+                  <th className="px-4 py-3 text-center font-semibold w-24">{s.t("col_actions", "Actions")}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {loading ? (
+                  <tr>
+                    <td colSpan={10} className="px-4 py-10 text-center text-slate-400">
+                      <RefreshCw className="mx-auto mb-2 h-5 w-5 animate-spin text-slate-300" />
+                      {s.tGlobal("common.loading", "Loading…")}
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ) : rows.length === 0 ? (
+                  <tr>
+                    <td colSpan={10} className="px-4 py-12 text-center text-slate-500">
+                      <FileText className="mx-auto mb-3 h-8 w-8 opacity-20" />
+                      {filtersActive
+                        ? s.t("empty_filtered", "No bills match the selected filters.")
+                        : s.t("empty", "No submitted bills yet.")}
+                    </td>
+                  </tr>
+                ) : (
+                  rows.map((r) => (
+                    <BillExpenseRow
+                      key={r.id}
+                      r={r}
+                      s={s}
+                      moduleLabel={moduleLabel}
+                      statusLabel={statusLabel}
+                      onView={() => { setOpenId(r.id); setOpenFocusForm(false); }}
+                      onAdd={() => { setOpenId(r.id); setOpenFocusForm(true); }}
+                    />
+                  ))
+                )}
+              </tbody>
+              <tfoot className="border-t-2 border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800/60">
+                <tr>
+                  <td colSpan={6} className="px-4 py-3 text-end font-black text-slate-600 dark:text-slate-300">
+                    {s.t("summary_expenses", "Expenses Total")}
+                  </td>
+                  <td className="px-4 py-3 text-right font-mono text-slate-500">{money(summary?.originalTotal)}</td>
+                  <td className="px-4 py-3 text-right font-mono text-lg font-black text-primary">{money(summary?.expenseTotal)}</td>
+                  <td colSpan={2} />
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </Card>
       </div>
 
       {openId && (
-        <BillExpenseDetail
+        <BillExpenseDetailModal
           id={openId}
           s={s}
+          focusForm={openFocusForm}
           onClose={() => setOpenId(null)}
           onChanged={load}
         />
       )}
-    </section>
+    </div>
   );
 }
 
-/* ── Detail drawer: read-only source bill + additional expense lines + add form ── */
-function BillExpenseDetail({
-  id, s, onClose, onChanged
+/* ── Register row: matches the ExpensesBillRow pattern (Eye + MoreHorizontal menu) ── */
+function BillExpenseRow({
+  r, s, moduleLabel, statusLabel, onView, onAdd
+}: {
+  r: BillRow;
+  s: ReturnType<typeof useErpScreen>;
+  moduleLabel: (m: SourceModule) => string;
+  statusLabel: (st: BillRow["status"] | "all") => string;
+  onView: () => void;
+  onAdd: () => void;
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setMenuOpen(false); };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
+
+  return (
+    <tr className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/40">
+      <td className="px-4 py-3">
+        <span className="rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+          {moduleLabel(r.sourceModule)}
+        </span>
+      </td>
+      <td className="px-4 py-3 font-semibold text-slate-800 dark:text-white">{r.billNo || "—"}</td>
+      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{r.manualBillNo || "—"}</td>
+      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
+        {r.transactionDate ? new Date(r.transactionDate).toLocaleDateString("en-GB") : "—"}
+      </td>
+      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{r.branchLabel}</td>
+      <td className="px-4 py-3">
+        <div className="font-medium text-slate-800 dark:text-white">{r.partyName || "—"}</div>
+        {r.partyAccountNo && <div className="text-[10px] text-slate-400">{r.partyAccountNo}</div>}
+      </td>
+      <td className="px-4 py-3 text-right font-mono">
+        <span className="mr-1 text-xs font-normal text-slate-400">{r.currency}</span>
+        {money(r.originalBillAmount)}
+      </td>
+      <td className="bg-slate-50/50 px-4 py-3 text-right font-mono font-bold text-rose-600 dark:bg-slate-800/40">
+        {money(r.expenseTotal)}
+        {r.expenseCount > 0 && <span className="ml-1 text-[10px] font-normal text-slate-400">({r.expenseCount})</span>}
+      </td>
+      <td className="px-4 py-3 text-center">
+        {r.eligibility === "withdrawn" ? (
+          <span className="rounded border border-amber-200 bg-amber-50 px-2 py-0.5 text-[9px] font-bold uppercase text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300">
+            {s.t("eligibility_withdrawn", "Withdrawn")}
+          </span>
+        ) : (
+          <span className="rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-[9px] font-bold uppercase text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+            {statusLabel(r.status)}
+          </span>
+        )}
+      </td>
+      <td className="relative px-4 py-3 text-center">
+        <div className="flex items-center justify-center gap-1" ref={ref}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+            onClick={onView}
+            title={s.t("open_detail", "Open")}
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          <div className="relative">
+            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setMenuOpen(!menuOpen)}>
+              <MoreHorizontal className="h-4 w-4 text-slate-500" />
+            </Button>
+            {menuOpen && (
+              <div className={`absolute z-50 mt-1 w-44 overflow-hidden rounded-md border bg-white py-1 text-left text-sm shadow-lg dark:border-slate-700 dark:bg-slate-900 ${s.isRtl ? "left-0" : "right-0"}`}>
+                <button className="flex w-full items-center gap-2 px-3 py-2 text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800" onClick={() => { setMenuOpen(false); onView(); }}>
+                  <Eye className="h-4 w-4" /> {s.t("open_detail", "Open")}
+                </button>
+                {r.eligibility === "active" && (
+                  <button className="flex w-full items-center gap-2 px-3 py-2 text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800" onClick={() => { setMenuOpen(false); onAdd(); }}>
+                    <Plus className="h-4 w-4" /> {s.t("add_expense", "Add Expense")}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+/* ── Detail modal: Original Bill card + Additional Expenses table + Add form ── */
+function BillExpenseDetailModal({
+  id, s, focusForm, onClose, onChanged
 }: {
   id: string;
   s: ReturnType<typeof useErpScreen>;
+  focusForm: boolean;
   onClose: () => void;
   onChanged: () => void;
 }) {
@@ -348,8 +469,8 @@ function BillExpenseDetail({
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-
   const [form, setForm] = useState({ expenseType: "shipping", details: "", currency: "", amount: "", exchangeRate: "1", taxPct: "0" });
+  const formRef = useRef<HTMLDivElement>(null);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -366,6 +487,9 @@ function BillExpenseDetail({
   }, [id]);
 
   useEffect(() => { reload(); }, [reload]);
+  useEffect(() => {
+    if (focusForm && !loading && formRef.current) formRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [focusForm, loading]);
 
   const be = data?.billExpense;
   const lines: Line[] = data?.lines ?? [];
@@ -419,180 +543,229 @@ function BillExpenseDetail({
     }
   }
 
-  return (
-    <div dir={s.dir} className="fixed inset-0 z-[9990] flex justify-end bg-slate-950/60 backdrop-blur-xs">
-      <div className="flex h-full w-full max-w-2xl flex-col bg-white shadow-2xl dark:bg-slate-950">
-        {/* header */}
-        <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-5 py-3 dark:border-slate-800">
-          <div className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-blue-600" />
-            <div>
-              <div className="text-sm font-bold text-slate-900 dark:text-white">{be?.billNo || "—"}</div>
-              <div className="text-[10px] text-slate-400">{be?.branchLabel}</div>
-            </div>
-          </div>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+  function printBill() {
+    if (!be) return;
+    const rowsHtml = lines
+      .map(
+        (l, i) => `<tr>
+          <td style="text-align:center">${i + 1}</td>
+          <td>${escapeHtml(s.t(`et_${l.expenseType}`, l.expenseType))}</td>
+          <td>${escapeHtml(l.details || "-")}</td>
+          <td style="text-align:right">${escapeHtml(l.currency)} ${money(l.amount)}</td>
+          <td style="text-align:right">${l.exchangeRate}</td>
+          <td style="text-align:right">${money(l.localAmount)}</td>
+          <td style="text-align:right">${l.taxPct}%</td>
+          <td style="text-align:right;font-weight:bold">${money(l.grandAmount)}</td>
+        </tr>`
+      )
+      .join("");
+    const html = `<!doctype html><html dir="${s.dir}"><head><meta charset="utf-8"><style>
+      @page{size:A4;margin:14mm}
+      body{font-family:'Segoe UI',Tahoma,sans-serif;color:#0f172a;font-size:12px}
+      h1{font-size:16px;margin:0 0 2px}
+      .muted{color:#64748b;font-size:11px}
+      table{width:100%;border-collapse:collapse;margin-top:10px}
+      th,td{border:1px solid #cbd5e1;padding:6px 8px}
+      th{background:#f1f5f9;text-transform:uppercase;font-size:10px;text-align:${s.isRtl ? "right" : "left"}}
+      .grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 16px;margin-top:8px}
+      .grid div span{color:#64748b}
+      tfoot td{background:#f8fafc;font-weight:bold}
+    </style></head><body>
+      <h1>${escapeHtml(s.t("report_title", "Bill Expenses Register"))}</h1>
+      <div class="muted">${escapeHtml(be.branchLabel || "")}</div>
+      <div class="grid">
+        <div><span>${escapeHtml(s.t("col_bill_no", "Bill No."))}:</span> <b>${escapeHtml(be.billNo || "-")}</b></div>
+        <div><span>${escapeHtml(s.t("col_manual_bill", "Manual Bill / Contract"))}:</span> <b>${escapeHtml(be.manualBillNo || "-")}</b></div>
+        <div><span>${escapeHtml(s.t("col_date", "Date"))}:</span> ${be.transactionDate ? new Date(be.transactionDate).toLocaleDateString("en-GB") : "-"}</div>
+        <div><span>${escapeHtml(s.t("col_country", "Country"))}:</span> ${escapeHtml(be.countryName || "-")}</div>
+        <div><span>${escapeHtml(s.t("col_party", "Party / Account"))}:</span> ${escapeHtml(be.partyName || be.partyAccountNo || "-")}</div>
+        <div><span>${escapeHtml(s.t("col_original_amount", "Original Bill Amount"))}:</span> <b>${escapeHtml(be.currency || "")} ${money(be.originalBillAmount)}</b></div>
+      </div>
+      <table>
+        <thead><tr>
+          <th>#</th><th>${escapeHtml(s.t("expense_type", "Expense Type"))}</th><th>${escapeHtml(s.t("f_details", "Details / Narration"))}</th>
+          <th>${escapeHtml(s.t("f_amount", "Amount"))}</th><th>${escapeHtml(s.t("f_exchange_rate", "Exchange Rate"))}</th>
+          <th>${escapeHtml(s.t("f_local_amount", "Local Amount"))}</th><th>${escapeHtml(s.t("f_tax_pct", "Tax %"))}</th><th>${escapeHtml(s.t("f_grand_amount", "Grand Amount"))}</th>
+        </tr></thead>
+        <tbody>${rowsHtml || `<tr><td colspan="8" style="text-align:center;color:#94a3b8">${escapeHtml(s.t("no_lines", "No additional expenses recorded against this bill yet."))}</td></tr>`}</tbody>
+        <tfoot><tr><td colspan="7" style="text-align:${s.isRtl ? "left" : "right"}">${escapeHtml(s.t("f_grand_amount", "Grand Amount"))}</td><td style="text-align:right">${money(be.expenseTotal)}</td></tr></tfoot>
+      </table>
+    </body></html>`;
+    printStore.openPrint(html, `${s.t("report_title", "Bill Expenses Register")} — ${be.billNo ?? ""}`.trim(), { lang: s.lang });
+  }
 
-        <div className="flex-1 overflow-y-auto overscroll-contain p-5">
+  return (
+    <SimpleModal
+      onClose={onClose}
+      title={`${s.t("title", "Bill Expenses")} — ${be?.billNo ?? ""}`.trim()}
+      className="max-w-[1100px] w-[95vw]"
+    >
+      <div dir={s.dir} className="flex flex-col">
+        <div className="flex-1 space-y-4 overflow-y-auto overscroll-contain bg-slate-50 p-4 dark:bg-slate-950">
           {loading || !be ? (
-            <div className="py-10 text-center text-slate-400"><RefreshCw className="mx-auto h-5 w-5 animate-spin" /></div>
+            <div className="py-10 text-center text-slate-400">
+              <RefreshCw className="mx-auto h-5 w-5 animate-spin" />
+            </div>
           ) : (
             <>
-              {/* Original bill — read only, auto-filled */}
-              <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 dark:border-slate-800 dark:bg-slate-900/60">
-                <div className="mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-400">
-                  <Link2 className="h-3.5 w-3.5" /> {s.t("original_bill", "Original Bill (auto-filled — read only)")}
-                </div>
-                <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
-                  {[
-                    [s.t("col_bill_no", "Bill No."), be.billNo],
-                    [s.t("col_manual_bill", "Manual Bill / Contract"), be.manualBillNo],
-                    [s.t("col_date", "Date"), be.transactionDate ? new Date(be.transactionDate).toLocaleDateString("en-GB") : null],
-                    [s.t("col_country", "Country"), be.countryName],
-                    [s.t("col_party", "Party / Account"), be.partyName || be.partyAccountNo],
-                    [s.t("col_currency", "Currency"), be.currency],
-                    [s.t("col_original_amount", "Original Bill Amount"), `${be.currency ?? ""} ${money(be.originalBillAmount)}`],
-                    ...(src?.goods_name || src?.product_summary ? [["—", src.goods_name || src.product_summary]] : [])
-                  ].map(([k, v], i) => (
-                    <div key={i} className="flex flex-col">
-                      <dt className="text-[10px] uppercase text-slate-400">{k}</dt>
-                      <dd className="font-semibold text-slate-800 dark:text-slate-100">{v || "—"}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
+              {/* Original bill — read-only auto-fill card */}
+              <Card className="border-t-4 border-t-indigo-500 shadow-sm">
+                <CardHeader className="border-b border-slate-100 bg-slate-50 px-3 py-2 dark:border-slate-800 dark:bg-slate-900/60">
+                  <CardTitle className="flex items-center gap-1.5 text-[11px] font-bold uppercase text-slate-600 dark:text-slate-300">
+                    <Link2 className="h-3.5 w-3.5" /> {s.t("original_bill", "Original Bill (auto-filled — read only)")}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-3">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs md:grid-cols-3">
+                    {[
+                      [s.t("col_source", "Source Module"), be.sourceModule],
+                      [s.t("col_bill_no", "Bill No."), be.billNo],
+                      [s.t("col_manual_bill", "Manual Bill / Contract"), be.manualBillNo],
+                      [s.t("col_date", "Date"), be.transactionDate ? new Date(be.transactionDate).toLocaleDateString("en-GB") : null],
+                      [s.t("col_country", "Country"), be.countryName],
+                      [s.t("col_branch", "Branch"), be.branchLabel],
+                      [s.t("col_party", "Party / Account"), be.partyName || be.partyAccountNo],
+                      [s.t("col_currency", "Currency"), be.currency],
+                      [s.t("col_original_amount", "Original Bill Amount"), `${be.currency ?? ""} ${money(be.originalBillAmount)}`],
+                      ...(src?.goods_name || src?.product_summary ? [[s.t("f_details", "Details / Narration"), src.goods_name || src.product_summary]] : [])
+                    ].map(([k, v], i) => (
+                      <div key={i} className="flex flex-col">
+                        <span className="text-[10px] uppercase text-slate-400">{k}</span>
+                        <span className="font-semibold text-slate-800 dark:text-slate-100">{v || "—"}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
 
-              {/* Additional expenses */}
-              <div className="mt-5">
-                <div className="mb-2 flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">{s.t("additional_expenses", "Additional Expenses")}</h3>
-                  <span className="text-xs font-bold text-rose-600">{money(be.expenseTotal)}</span>
-                </div>
-                {lines.length === 0 ? (
-                  <p className="rounded-lg border border-dashed border-slate-200 py-4 text-center text-xs text-slate-400 dark:border-slate-800">
-                    {s.t("no_lines", "No additional expenses recorded against this bill yet.")}
-                  </p>
-                ) : (
-                  <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
-                    <table className="w-full text-xs">
-                      <thead className="bg-slate-50 text-[10px] uppercase text-slate-400 dark:bg-slate-800/50">
+              {/* Additional expenses table */}
+              <Card className="overflow-hidden shadow-sm">
+                <CardHeader className="flex-row items-center justify-between border-b border-slate-100 bg-slate-50 px-3 py-2 dark:border-slate-800 dark:bg-slate-900/60">
+                  <CardTitle className="flex items-center gap-1.5 text-[11px] font-bold uppercase text-slate-600 dark:text-slate-300">
+                    <Calculator className="h-3.5 w-3.5" /> {s.t("additional_expenses", "Additional Expenses")}
+                  </CardTitle>
+                  <span className="font-mono text-xs font-bold text-rose-600">{money(be.expenseTotal)}</span>
+                </CardHeader>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="border-b bg-slate-50 text-[10px] uppercase text-slate-500 dark:bg-slate-900/40">
+                      <tr>
+                        <th className="px-3 py-2 text-center font-semibold w-8">#</th>
+                        <th className={`px-3 py-2 font-semibold ${s.textStart}`}>{s.t("expense_type", "Expense Type")}</th>
+                        <th className={`px-3 py-2 font-semibold ${s.textStart}`}>{s.t("f_details", "Details / Narration")}</th>
+                        <th className="px-3 py-2 text-right font-semibold">{s.t("f_amount", "Amount")}</th>
+                        <th className="px-3 py-2 text-right font-semibold">{s.t("f_exchange_rate", "Exchange Rate")}</th>
+                        <th className="px-3 py-2 text-right font-semibold">{s.t("f_tax_pct", "Tax %")}</th>
+                        <th className="px-3 py-2 text-right font-black bg-slate-100 dark:bg-slate-800">{s.t("f_grand_amount", "Grand Amount")}</th>
+                        <th className="px-3 py-2 text-center font-semibold w-8">{s.t("col_actions", "Actions")}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {lines.length === 0 ? (
                         <tr>
-                          <th className={`px-2 py-2 ${s.textStart}`}>{s.t("expense_type", "Expense Type")}</th>
-                          <th className={`px-2 py-2 ${s.textStart}`}>{s.t("f_details", "Details / Narration")}</th>
-                          <th className="px-2 py-2 text-end">{s.t("f_grand_amount", "Grand Amount")}</th>
-                          <th className="px-2 py-2" />
+                          <td colSpan={8} className="px-3 py-10 text-center text-slate-400">
+                            <Calculator className="mx-auto mb-2 h-6 w-6 opacity-20" />
+                            {s.t("no_lines", "No additional expenses recorded against this bill yet.")}
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                        {lines.map((l) => (
-                          <tr key={l.id}>
-                            <td className="px-2 py-2 font-semibold">{s.t(`et_${l.expenseType}`, l.expenseType)}</td>
-                            <td className="px-2 py-2 text-slate-500">{l.details || "—"}</td>
-                            <td className="px-2 py-2 text-end font-bold">{l.currency} {money(l.grandAmount)}</td>
-                            <td className="px-2 py-2 text-center">
+                      ) : (
+                        lines.map((l) => (
+                          <tr key={l.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
+                            <td className="px-3 py-2 text-center font-bold text-slate-400">{l.rowSerial}</td>
+                            <td className="px-3 py-2 font-semibold">{s.t(`et_${l.expenseType}`, l.expenseType)}</td>
+                            <td className="px-3 py-2 text-slate-500">{l.details || "—"}</td>
+                            <td className="px-3 py-2 text-right font-mono">{l.currency} {money(l.amount)}</td>
+                            <td className="px-3 py-2 text-right font-mono">{Number(l.exchangeRate).toFixed(4)}</td>
+                            <td className="px-3 py-2 text-right font-mono">
+                              {l.taxPct > 0 ? (
+                                <span className="inline-flex items-center rounded bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-600">
+                                  <BadgePercent className="mr-0.5 h-3 w-3" /> {l.taxPct}%
+                                </span>
+                              ) : "—"}
+                            </td>
+                            <td className="bg-slate-50/50 px-3 py-2 text-right font-mono font-bold dark:bg-slate-800/40">{l.currency} {money(l.grandAmount)}</td>
+                            <td className="px-3 py-2 text-center">
                               {l.postingStatus !== "posted" && (
-                                <button onClick={() => removeLine(l.id)} disabled={busy} className="text-slate-400 hover:text-rose-600">
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </button>
+                                <Button variant="ghost" size="icon" className="h-6 w-6 text-red-400 hover:bg-red-50 hover:text-red-600" onClick={() => removeLine(l.id)} disabled={busy}>
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
                               )}
                             </td>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
 
-              {/* Add expense form */}
+              {/* Add-expense card */}
               {be.eligibility === "active" && (
-                <div className="mt-5 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
-                  <div className="mb-3 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-400">
-                    <Plus className="h-3.5 w-3.5" /> {s.t("add_expense", "Add Expense")}
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <label className="text-xs">
-                      <span className="mb-1 block font-semibold text-slate-500">{s.t("expense_type", "Expense Type")}</span>
-                      <select
-                        value={form.expenseType}
-                        onChange={(e) => setForm({ ...form, expenseType: e.target.value })}
-                        className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs dark:border-slate-700 dark:bg-slate-950"
-                      >
-                        {EXPENSE_TYPES.map((t) => (
-                          <option key={t} value={t}>{s.t(`et_${t}`, t)}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="text-xs">
-                      <span className="mb-1 block font-semibold text-slate-500">{s.t("col_currency", "Currency")}</span>
-                      <input
-                        value={form.currency}
-                        onChange={(e) => setForm({ ...form, currency: e.target.value })}
-                        className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs uppercase dark:border-slate-700 dark:bg-slate-950"
-                      />
-                    </label>
-                    <label className="col-span-2 text-xs">
-                      <span className="mb-1 block font-semibold text-slate-500">{s.t("f_details", "Details / Narration")}</span>
-                      <input
-                        value={form.details}
-                        onChange={(e) => setForm({ ...form, details: e.target.value })}
-                        className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs dark:border-slate-700 dark:bg-slate-950"
-                      />
-                    </label>
-                    <label className="text-xs">
-                      <span className="mb-1 block font-semibold text-slate-500">{s.t("f_amount", "Amount")}</span>
-                      <input
-                        type="number" inputMode="decimal" value={form.amount}
-                        onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                        className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs dark:border-slate-700 dark:bg-slate-950"
-                      />
-                    </label>
-                    <label className="text-xs">
-                      <span className="mb-1 block font-semibold text-slate-500">{s.t("f_exchange_rate", "Exchange Rate")}</span>
-                      <input
-                        type="number" inputMode="decimal" value={form.exchangeRate}
-                        onChange={(e) => setForm({ ...form, exchangeRate: e.target.value })}
-                        className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs dark:border-slate-700 dark:bg-slate-950"
-                      />
-                    </label>
-                    <label className="text-xs">
-                      <span className="mb-1 block font-semibold text-slate-500">{s.t("f_tax_pct", "Tax %")}</span>
-                      <input
-                        type="number" inputMode="decimal" value={form.taxPct}
-                        onChange={(e) => setForm({ ...form, taxPct: e.target.value })}
-                        className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs dark:border-slate-700 dark:bg-slate-950"
-                      />
-                    </label>
-                    <div className="text-xs">
-                      <span className="mb-1 block font-semibold text-slate-500">{s.t("f_grand_amount", "Grand Amount")}</span>
-                      <div className="rounded-lg bg-slate-100 px-2.5 py-2 font-bold text-slate-800 dark:bg-slate-800 dark:text-slate-100">
-                        {money(grand)}
+                <div ref={formRef}>
+                <Card className="border-t-4 border-t-amber-400 shadow-sm">
+                  <CardHeader className="border-b border-slate-100 bg-slate-50 px-3 py-2 dark:border-slate-800 dark:bg-slate-900/60">
+                    <CardTitle className="flex items-center gap-1.5 text-[11px] font-bold uppercase text-slate-600 dark:text-slate-300">
+                      <Plus className="h-3.5 w-3.5" /> {s.t("add_expense", "Add Expense")}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-3">
+                    <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+                      <label className="text-xs">
+                        <span className="mb-1 block font-semibold text-slate-500">{s.t("expense_type", "Expense Type")}</span>
+                        <select value={form.expenseType} onChange={(e) => setForm({ ...form, expenseType: e.target.value })} className="w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-xs dark:border-slate-700 dark:bg-slate-950">
+                          {EXPENSE_TYPES.map((t) => <option key={t} value={t}>{s.t(`et_${t}`, t)}</option>)}
+                        </select>
+                      </label>
+                      <label className="text-xs">
+                        <span className="mb-1 block font-semibold text-slate-500">{s.t("col_currency", "Currency")}</span>
+                        <input value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className="w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-xs uppercase dark:border-slate-700 dark:bg-slate-950" />
+                      </label>
+                      <label className="col-span-2 text-xs md:col-span-1">
+                        <span className="mb-1 block font-semibold text-slate-500">{s.t("f_details", "Details / Narration")}</span>
+                        <input value={form.details} onChange={(e) => setForm({ ...form, details: e.target.value })} className="w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-xs dark:border-slate-700 dark:bg-slate-950" />
+                      </label>
+                      <label className="text-xs">
+                        <span className="mb-1 block font-semibold text-slate-500">{s.t("f_amount", "Amount")}</span>
+                        <input type="number" inputMode="decimal" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-right font-mono text-xs dark:border-slate-700 dark:bg-slate-950" />
+                      </label>
+                      <label className="text-xs">
+                        <span className="mb-1 block font-semibold text-slate-500">{s.t("f_exchange_rate", "Exchange Rate")}</span>
+                        <input type="number" inputMode="decimal" value={form.exchangeRate} onChange={(e) => setForm({ ...form, exchangeRate: e.target.value })} className="w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-right font-mono text-xs dark:border-slate-700 dark:bg-slate-950" />
+                      </label>
+                      <label className="text-xs">
+                        <span className="mb-1 block font-semibold text-slate-500">{s.t("f_tax_pct", "Tax %")}</span>
+                        <input type="number" inputMode="decimal" value={form.taxPct} onChange={(e) => setForm({ ...form, taxPct: e.target.value })} className="w-full rounded-md border border-slate-300 bg-white px-2.5 py-2 text-right font-mono text-xs dark:border-slate-700 dark:bg-slate-950" />
+                      </label>
+                      <div className="col-span-2 text-xs md:col-span-1">
+                        <span className="mb-1 block font-semibold text-slate-500">{s.t("f_grand_amount", "Grand Amount")}</span>
+                        <div className="rounded-md bg-primary/5 px-2.5 py-2 text-right font-mono font-bold text-primary">{money(grand)}</div>
                       </div>
                     </div>
-                  </div>
-                  {err && <p className="mt-2 rounded-lg border border-rose-300 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300">{err}</p>}
-                  <button
-                    onClick={addExpense}
-                    disabled={busy}
-                    className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
-                  >
-                    <Plus className="h-3.5 w-3.5" /> {busy ? s.t("f_saving", "Saving…") : s.t("f_save", "Save Expense")}
-                  </button>
+                    {err && (
+                      <p className="mt-2 rounded-md border border-rose-300 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300">{err}</p>
+                    )}
+                    <div className="mt-3 flex justify-end">
+                      <Button onClick={addExpense} disabled={busy} className="px-6 font-bold shadow-md shadow-primary/20">
+                        {busy ? s.t("f_saving", "Saving…") : s.t("f_save", "Save Expense")}
+                        {!busy && <Plus className="ml-2 h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
                 </div>
               )}
             </>
           )}
         </div>
 
-        <div className="shrink-0 border-t border-slate-200 px-5 py-3 dark:border-slate-800">
-          <button onClick={onClose} className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800">
-            {s.t("close", "Close")}
-          </button>
+        {/* Footer — Close / Print PDF (mirrors the Expenses Bill view modal) */}
+        <div className="flex shrink-0 items-center justify-end gap-2 border-t bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900 print:hidden">
+          <Button variant="outline" onClick={onClose}>{s.t("close", "Close")}</Button>
+          <Button onClick={printBill} className="bg-blue-600 text-white shadow-sm hover:bg-blue-700">
+            <Printer className="mr-1.5 h-4 w-4" /> {s.t("print_report", "Print Report")}
+          </Button>
         </div>
       </div>
-    </div>
+    </SimpleModal>
   );
 }
