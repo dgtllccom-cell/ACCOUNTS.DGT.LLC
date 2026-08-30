@@ -127,10 +127,19 @@ export function useDgtConnect(lang: SupportedLanguage, enabled: boolean, current
   const send = useCallback(async (body: string, extra?: Partial<Pick<DgtMessage, "attachment" | "sharedRecord" | "replyToId">> & { conversationId?: string }) => {
     const conversationId = extra?.conversationId ?? activeIdRef.current;
     if (!conversationId) return;
+    // Tag the message with the language it is actually written in, not just the
+    // UI language — a user typing English while the ERP is in Urdu must still be
+    // tagged 'en' so the translated view for others is correct.
+    const arabicScript = (body.match(/[؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿]/g) || []).length;
+    const latin = (body.match(/[A-Za-z]/g) || []).length;
+    const rtl = ["ur", "ar", "fa", "ps"];
+    let bodyLang = lang;
+    if (arabicScript > latin && !rtl.includes(lang)) bodyLang = "ur";
+    else if (latin > arabicScript * 2 && rtl.includes(lang)) bodyLang = "en";
     try {
       const d = await api<{ message: DgtMessage }>(`/api/erp/dgt-connect/conversations/${conversationId}/messages`, {
         method: "POST",
-        body: JSON.stringify({ body, bodyLang: lang, attachment: extra?.attachment ?? null, sharedRecord: extra?.sharedRecord ?? null, replyToId: extra?.replyToId ?? null }),
+        body: JSON.stringify({ body, bodyLang, attachment: extra?.attachment ?? null, sharedRecord: extra?.sharedRecord ?? null, replyToId: extra?.replyToId ?? null }),
       });
       setMessages((prev) => (prev.some((m) => m.id === d.message.id) ? prev : [...prev, d.message]));
       void refreshConversations();
