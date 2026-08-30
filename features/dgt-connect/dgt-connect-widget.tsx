@@ -9,7 +9,8 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { cn } from "@/lib/utils";
 import { useDgtConnect } from "./use-dgt-connect";
-import type { DgtConversation, DgtDirectoryUser, DgtMessage } from "@/lib/dgt-connect/types";
+import { DGT_SHARE_EVENT } from "./share-bridge";
+import type { DgtConversation, DgtDirectoryUser, DgtMessage, DgtSharedRecord } from "@/lib/dgt-connect/types";
 
 const RTL = new Set(["ur", "ar", "fa", "ps"]);
 
@@ -30,7 +31,21 @@ export function DgtConnectWidget({ currentUserId }: { currentUserId: string }) {
   const c = useDgtConnect(lang, true, currentUserId);
 
   const [view, setView] = useState<"list" | "thread" | "new">("list");
+  const [pendingShare, setPendingShare] = useState<DgtSharedRecord | null>(null);
   const [search, setSearch] = useState("");
+
+  // any ERP screen can push a record in via shareToDgtConnect()
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const rec = (e as CustomEvent).detail as DgtSharedRecord;
+      if (!rec?.id) return;
+      setPendingShare(rec);
+      setOpen(true);
+      setView("list");
+    };
+    window.addEventListener(DGT_SHARE_EVENT, handler);
+    return () => window.removeEventListener(DGT_SHARE_EVENT, handler);
+  }, []);
   const [searchResults, setSearchResults] = useState<Array<{ conversationId: string; body: string; senderName: string; createdAt: string; displayName: string }>>([]);
 
   useEffect(() => {
@@ -92,12 +107,27 @@ export function DgtConnectWidget({ currentUserId }: { currentUserId: string }) {
           )}
 
           {view === "list" && (
-            <ConversationListView
-              conversations={c.conversations} unreadByConv={c.unreadByConv} typingByConv={c.typingByConv}
-              search={search} setSearch={setSearch} searchResults={searchResults}
-              onOpen={(id) => { c.openConversation(id); setView("thread"); setSearch(""); }}
-              tt={tt} isRtl={isRtl}
-            />
+            <>
+              {pendingShare && (
+                <div className="flex items-center justify-between gap-2 bg-blue-50 px-3 py-2 text-[11px] font-bold text-blue-800 dark:bg-blue-950/40 dark:text-blue-200">
+                  <span className="truncate">{tt("dgtc.share_record", "Share ERP record")}: {pendingShare.label} → …</span>
+                  <button onClick={() => setPendingShare(null)}><X className="h-3 w-3" /></button>
+                </div>
+              )}
+              <ConversationListView
+                conversations={c.conversations} unreadByConv={c.unreadByConv} typingByConv={c.typingByConv}
+                search={search} setSearch={setSearch} searchResults={searchResults}
+                onOpen={async (id) => {
+                  if (pendingShare) {
+                    await c.send("", { sharedRecord: pendingShare, conversationId: id });
+                    setPendingShare(null);
+                  }
+                  c.openConversation(id);
+                  setView("thread"); setSearch("");
+                }}
+                tt={tt} isRtl={isRtl}
+              />
+            </>
           )}
 
           {view === "new" && (

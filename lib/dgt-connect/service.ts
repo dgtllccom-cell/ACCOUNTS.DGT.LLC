@@ -11,6 +11,12 @@ function asLang(v: unknown): SupportedLanguage {
   return (["en", "ur", "ps", "fa", "ar"].includes(String(v)) ? v : "en") as SupportedLanguage;
 }
 
+function asJson<T>(v: unknown): T | null {
+  if (v == null) return null;
+  if (typeof v === "string") { try { return JSON.parse(v) as T; } catch { return null; } }
+  return v as T;
+}
+
 export class DgtAccessError extends Error {
   status = 403;
   constructor(message = "Not permitted") { super(message); }
@@ -207,8 +213,8 @@ export async function listMessages(
       kind: m.kind,
       body: m.deleted_at ? "" : m.body,
       bodyLang,
-      attachment: (m.attachment as DgtAttachment) ?? null,
-      sharedRecord: (m.shared_record as DgtSharedRecord) ?? null,
+      attachment: asJson<DgtAttachment>(m.attachment),
+      sharedRecord: asJson<DgtSharedRecord>(m.shared_record),
       replyToId: m.reply_to_id,
       createdAt: m.created_at,
       editedAt: m.edited_at,
@@ -244,8 +250,8 @@ export async function sendMessage(
       insert into public.dgt_messages (conversation_id, sender_id, kind, body, body_lang, attachment, shared_record, reply_to_id)
       values (
         ${conversationId}::uuid, ${session.userId}::uuid, ${kind}, ${body}, ${bodyLang},
-        ${input.attachment ? JSON.stringify(input.attachment) : null}::jsonb,
-        ${input.sharedRecord ? JSON.stringify(input.sharedRecord) : null}::jsonb,
+        ${input.attachment ? sql.json(input.attachment as any) : null},
+        ${input.sharedRecord ? sql.json(input.sharedRecord as any) : null},
         ${input.replyToId ?? null}
       )
       returning id, created_at

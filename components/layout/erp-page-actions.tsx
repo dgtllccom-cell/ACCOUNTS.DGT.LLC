@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   Edit3,
   Mail,
+  MessageCircle,
   MoreVertical,
   Printer,
   RefreshCw,
@@ -12,6 +13,7 @@ import {
   Share2,
   X
 } from "lucide-react";
+import { shareToDgtConnect } from "@/features/dgt-connect/share-bridge";
 import { usePathname, useRouter } from "next/navigation";
 import { DownloadActionIcon } from "@/components/ui/download-action-icon";
 import { Button } from "@/components/ui/button";
@@ -172,6 +174,16 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
     window.open(`https://wa.me/?text=${text}`, "_blank", "noopener,noreferrer");
   }
 
+  function shareToConnect() {
+    shareToDgtConnect({
+      module: (pathname || "/").split("/").filter(Boolean).slice(-2).join("/") || "page",
+      id: currentUrl(),
+      label: title,
+      route: typeof window !== "undefined" ? window.location.pathname + window.location.search : "",
+      summary: subtitle,
+    });
+  }
+
   return (
     <section className="mb-2.5 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200/80 bg-white/95 px-3 py-1.5 shadow-xs transition-all dark:border-slate-800 dark:bg-slate-900/90">
       <div className="flex min-w-0 items-center gap-2">
@@ -228,6 +240,10 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
               <button type="button" onClick={() => closeAndRun(whatsAppShare)} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
                 <Send className="h-4 w-4" aria-hidden />
                 {t(lang, "pa.whatsapp_share", "WhatsApp Share")}
+              </button>
+              <button type="button" onClick={() => closeAndRun(shareToConnect)} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
+                <MessageCircle className="h-4 w-4" aria-hidden />
+                {t(lang, "dgtc.title", "DGT Connect")}
               </button>
               <button type="button" onClick={() => closeAndRun(editCurrentRecord)} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
                 <Edit3 className="h-4 w-4" aria-hidden />

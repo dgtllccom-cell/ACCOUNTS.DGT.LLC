@@ -122,8 +122,8 @@ export function useDgtConnect(lang: SupportedLanguage, enabled: boolean, current
     } catch (e) { setError((e as Error).message); return null; }
   }, [refreshConversations, openConversation]);
 
-  const send = useCallback(async (body: string, extra?: Partial<Pick<DgtMessage, "attachment" | "sharedRecord" | "replyToId">>) => {
-    const conversationId = activeIdRef.current;
+  const send = useCallback(async (body: string, extra?: Partial<Pick<DgtMessage, "attachment" | "sharedRecord" | "replyToId">> & { conversationId?: string }) => {
+    const conversationId = extra?.conversationId ?? activeIdRef.current;
     if (!conversationId) return;
     try {
       const d = await api<{ message: DgtMessage }>(`/api/erp/dgt-connect/conversations/${conversationId}/messages`, {
