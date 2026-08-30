@@ -283,7 +283,7 @@ export function AllEditVersionHistoryView() {
       </header>
 
       {/* ── 6 KPI SUMMARY CARDS ── */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3.5">
+      <section className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-3.5">
         
         {/* KPI 1: Edits Today */}
         <Card className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs hover:shadow-md transition">

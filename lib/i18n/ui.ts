@@ -1,6 +1,9 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type UiKey =
+  | "crm.filter_tab"
+  | "crm.filter_date"
+  | "crm.filter_records"
   | "utask.filter_open"
   | "nav.user_tasks"
   | "nav.my_tasks"
@@ -15325,6 +15328,9 @@ const en: Dict = {
   "utask.mark_all_read": "Mark all read",
   "utask.filter_all": "All",
   "utask.filter_open": "Open / Active",
+  "crm.filter_tab": "View",
+  "crm.filter_date": "Date",
+  "crm.filter_records": "Records",
 };
 
 const ur: Dict = {
@@ -25994,6 +26000,9 @@ const ur: Dict = {
   "utask.mark_all_read": "سب پڑھا ہوا نشان زد کریں",
   "utask.filter_all": "سب",
   "utask.filter_open": "کھلا / فعال",
+  "crm.filter_tab": "منظر",
+  "crm.filter_date": "تاریخ",
+  "crm.filter_records": "ریکارڈز",
 };
 
 const ar: Dict = {
@@ -36665,6 +36674,9 @@ const ar: Dict = {
   "utask.mark_all_read": "تعليم الكل كمقروء",
   "utask.filter_all": "الكل",
   "utask.filter_open": "مفتوحة / نشطة",
+  "crm.filter_tab": "العرض",
+  "crm.filter_date": "التاريخ",
+  "crm.filter_records": "السجلات",
 };
 
 const fa: Dict = {
@@ -47335,6 +47347,9 @@ const fa: Dict = {
   "utask.mark_all_read": "علامت‌گذاری همه به‌عنوان خوانده‌شده",
   "utask.filter_all": "همه",
   "utask.filter_open": "باز / فعال",
+  "crm.filter_tab": "نما",
+  "crm.filter_date": "تاریخ",
+  "crm.filter_records": "رکوردها",
 };
 
 const ps: Dict = {
@@ -58011,6 +58026,9 @@ const ps: Dict = {
   "utask.mark_all_read": "ټول لوستل شوي په نښه کړئ",
   "utask.filter_all": "ټول",
   "utask.filter_open": "خلاص / فعال",
+  "crm.filter_tab": "لید",
+  "crm.filter_date": "نېټه",
+  "crm.filter_records": "ثبتونه",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

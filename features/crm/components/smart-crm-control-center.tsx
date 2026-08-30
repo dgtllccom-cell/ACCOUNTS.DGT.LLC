@@ -194,6 +194,17 @@ export function SmartCrmControlCenter() {
     downloadCsv(`crm_action_list_${activeTab}_${targetDate}.csv`, [headers, ...rows]);
   }
 
+  function tabLabel(tab: string): string {
+    switch (tab) {
+      case "today": return t(lang, "crm.tab_todays_action_list", "Today's Action List");
+      case "overdue": return t(lang, "crm.tab_overdue", "Overdue");
+      case "tomorrow": return t(lang, "crm.tab_tomorrow", "Tomorrow");
+      case "upcoming": return t(lang, "crm.tab_upcoming", "Upcoming");
+      case "completed": return t(lang, "crm.tab_completed", "Completed");
+      default: return tab.charAt(0).toUpperCase() + tab.slice(1);
+    }
+  }
+
   function handlePrint() {
     const items = dashboardData?.actionItems || [];
     void import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => {
@@ -217,9 +228,9 @@ export function SmartCrmControlCenter() {
         ],
         rows: items as Record<string, unknown>[],
         filters: [
-          { label: "Tab", value: String(activeTab) },
-          { label: "Date", value: String(targetDate) },
-          { label: "Records", value: String(items.length) },
+          { label: t(lang, "crm.filter_tab", "View"), value: tabLabel(activeTab) },
+          { label: t(lang, "crm.filter_date", "Date"), value: String(targetDate) },
+          { label: t(lang, "crm.filter_records", "Records"), value: String(items.length) },
         ],
         totalsRow: {
           amount: items.reduce((s: number, r: any) => s + (Number(r.amount) || 0), 0),
@@ -588,7 +599,7 @@ export function SmartCrmControlCenter() {
           </div>
 
           {/* ── 7 SUMMARY KPI CARDS ── */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-7 gap-2.5">
             
             {/* Card 1: Cheques to Deposit Today */}
             <Card className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs hover:shadow-md transition">

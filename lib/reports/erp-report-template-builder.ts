@@ -320,35 +320,39 @@ export function generateReportHtml(input: {
 
     .meta-col b { color: #0f172a; }
 
-    /* Filter Pills Bar */
+    /* Applied scope / filter summary — a clean caption strip, NOT form inputs */
     .filter-bar {
-      display: grid;
-      grid-template-columns: repeat(${Math.max(1, filters.length)}, 1fr);
-      gap: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 4px 14px;
       background: #f8fafc;
       border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      padding: 6px;
+      border-inline-start: 3px solid #3b82f6;
+      border-radius: 4px;
+      padding: 5px 10px;
       width: 100%;
     }
 
     .filter-pill {
-      background: #ffffff;
-      border: 1px solid #cbd5e1;
-      border-radius: 4px;
-      padding: 4px 8px;
+      display: inline-flex;
+      align-items: baseline;
+      gap: 4px;
+      white-space: nowrap;
     }
 
     .filter-pill-label {
-      font-size: 6.5px;
+      font-size: 7px;
       font-weight: 800;
       color: #64748b;
       text-transform: uppercase;
+      letter-spacing: 0.03em;
     }
+    .filter-pill-label::after { content: ":"; }
 
     .filter-pill-value {
       font-size: 8.5px;
-      font-weight: 800;
+      font-weight: 700;
       color: #0f172a;
     }
 
