@@ -728,6 +728,7 @@ export type UiKey =
   | "nav.payment_bill_entry"
   | "nav.purchase_sale"
   | "nav.purchase"
+  | "nav.bill_expenses"
   | "nav.purchase_transfer_payment"
   | "nav.purchase_order"
   | "nav.purchase_confirm"
@@ -4460,6 +4461,68 @@ export type UiKey =
   | "dgtc.setup_pending"
   | "hr.step_incomplete"
   | "pv.report_org_fallback"
+  | "bexp.title"
+  | "bexp.subtitle"
+  | "bexp.tab_all"
+  | "bexp.tab_purchase_booking"
+  | "bexp.tab_local_purchase"
+  | "bexp.tab_sales_booking"
+  | "bexp.tab_local_sales"
+  | "bexp.col_source"
+  | "bexp.col_bill_no"
+  | "bexp.col_manual_bill"
+  | "bexp.col_date"
+  | "bexp.col_country"
+  | "bexp.col_branch"
+  | "bexp.col_party"
+  | "bexp.col_currency"
+  | "bexp.col_original_amount"
+  | "bexp.col_expense_total"
+  | "bexp.col_status"
+  | "bexp.col_actions"
+  | "bexp.status_open"
+  | "bexp.status_in_progress"
+  | "bexp.status_closed"
+  | "bexp.eligibility_withdrawn"
+  | "bexp.open_detail"
+  | "bexp.add_expense"
+  | "bexp.original_bill"
+  | "bexp.additional_expenses"
+  | "bexp.expense_type"
+  | "bexp.et_shipping"
+  | "bexp.et_loading"
+  | "bexp.et_clearing"
+  | "bexp.et_transport"
+  | "bexp.et_customs"
+  | "bexp.et_handling"
+  | "bexp.et_storage"
+  | "bexp.et_insurance"
+  | "bexp.et_other"
+  | "bexp.f_details"
+  | "bexp.f_amount"
+  | "bexp.f_exchange_rate"
+  | "bexp.f_tax_pct"
+  | "bexp.f_local_amount"
+  | "bexp.f_grand_amount"
+  | "bexp.f_save"
+  | "bexp.f_saving"
+  | "bexp.v_amount_required"
+  | "bexp.v_currency_required"
+  | "bexp.v_rate_required"
+  | "bexp.toast_added"
+  | "bexp.toast_deleted"
+  | "bexp.toast_error"
+  | "bexp.empty"
+  | "bexp.empty_filtered"
+  | "bexp.no_lines"
+  | "bexp.print_report"
+  | "bexp.report_title"
+  | "bexp.summary_bills"
+  | "bexp.summary_original"
+  | "bexp.summary_expenses"
+  | "bexp.summary_with_expenses"
+  | "bexp.close"
+  | "bexp.clear_filters"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -7649,6 +7712,7 @@ const en: Dict = {
   "nav.final_payments": "Final Payments",
   "nav.final_payments_advance_nil": "Advance Payment Nil Receipt",
   "nav.purchase": "Purchase",
+  "nav.bill_expenses": "Bill Expenses",
   "nav.new_purchase_booking": "New Purchase Booking",
   "nav.purchase_transfer_payment": "Transfer & Payment",
   "nav.booking_purchase_confirmation": "Confirmation & Loading",
@@ -14979,6 +15043,68 @@ const en: Dict = {
   "dgtc.setup_pending": "DGT Connect is being set up on this server. Check back shortly.",
   "hr.step_incomplete": "Please complete the required fields on this step before continuing.",
   "pv.report_org_fallback": "Digital Dock ERP",
+  "bexp.title": "Bill Expenses",
+  "bexp.subtitle": "Additional expenses recorded against submitted Purchase & Sales bills — the original bill is referenced, never re-entered.",
+  "bexp.tab_all": "All Bills",
+  "bexp.tab_purchase_booking": "Purchase Booking",
+  "bexp.tab_local_purchase": "Local Purchase",
+  "bexp.tab_sales_booking": "Sales Booking",
+  "bexp.tab_local_sales": "Local Sales",
+  "bexp.col_source": "Source Module",
+  "bexp.col_bill_no": "Bill No.",
+  "bexp.col_manual_bill": "Manual Bill / Contract",
+  "bexp.col_date": "Date",
+  "bexp.col_country": "Country",
+  "bexp.col_branch": "Branch",
+  "bexp.col_party": "Party / Account",
+  "bexp.col_currency": "Currency",
+  "bexp.col_original_amount": "Original Bill Amount",
+  "bexp.col_expense_total": "Expense Total",
+  "bexp.col_status": "Status",
+  "bexp.col_actions": "Actions",
+  "bexp.status_open": "Open",
+  "bexp.status_in_progress": "In Progress",
+  "bexp.status_closed": "Closed",
+  "bexp.eligibility_withdrawn": "Withdrawn (source no longer posted)",
+  "bexp.open_detail": "Open",
+  "bexp.add_expense": "Add Expense",
+  "bexp.original_bill": "Original Bill (auto-filled — read only)",
+  "bexp.additional_expenses": "Additional Expenses",
+  "bexp.expense_type": "Expense Type",
+  "bexp.et_shipping": "Shipping",
+  "bexp.et_loading": "Loading",
+  "bexp.et_clearing": "Clearing",
+  "bexp.et_transport": "Transport",
+  "bexp.et_customs": "Customs",
+  "bexp.et_handling": "Handling",
+  "bexp.et_storage": "Storage",
+  "bexp.et_insurance": "Insurance",
+  "bexp.et_other": "Other",
+  "bexp.f_details": "Details / Narration",
+  "bexp.f_amount": "Amount",
+  "bexp.f_exchange_rate": "Exchange Rate",
+  "bexp.f_tax_pct": "Tax %",
+  "bexp.f_local_amount": "Local Amount",
+  "bexp.f_grand_amount": "Grand Amount",
+  "bexp.f_save": "Save Expense",
+  "bexp.f_saving": "Saving…",
+  "bexp.v_amount_required": "Enter an amount greater than zero.",
+  "bexp.v_currency_required": "Select a currency.",
+  "bexp.v_rate_required": "Exchange rate must be greater than zero.",
+  "bexp.toast_added": "Expense added to the bill.",
+  "bexp.toast_deleted": "Expense line removed.",
+  "bexp.toast_error": "Could not save the expense. Please try again.",
+  "bexp.empty": "No submitted bills yet. A Purchase or Sales bill appears here automatically once it is booked / confirmed.",
+  "bexp.empty_filtered": "No bills match the selected filters.",
+  "bexp.no_lines": "No additional expenses recorded against this bill yet.",
+  "bexp.print_report": "Print Report",
+  "bexp.report_title": "Bill Expenses Register",
+  "bexp.summary_bills": "Bills",
+  "bexp.summary_original": "Original Total",
+  "bexp.summary_expenses": "Expenses Total",
+  "bexp.summary_with_expenses": "Bills with Expenses",
+  "bexp.close": "Close",
+  "bexp.clear_filters": "Clear Filters",
 };
 
 const ur: Dict = {
@@ -19481,6 +19607,7 @@ const ur: Dict = {
   "nav.payment_bill_entry": "پیمنٹ بل انٹری",
   "nav.purchase_sale": "خرید و فروخت",
   "nav.purchase": "خرید",
+  "nav.bill_expenses": "بل اخراجات",
   "nav.purchase_transfer_payment": "خریداری ٹرانسفر ادائیگی",
   "nav.purchase_order": "پرچیز آرڈر",
   "nav.purchase_confirm": "پرچیز کنفرم",
@@ -25475,6 +25602,68 @@ const ur: Dict = {
   "dgtc.setup_pending": "ڈی جی ٹی کنیکٹ اس سرور پر ترتیب دیا جا رہا ہے۔ کچھ دیر بعد دوبارہ دیکھیں۔",
   "hr.step_incomplete": "براہ کرم آگے بڑھنے سے پہلے اس مرحلے کے لازمی خانے مکمل کریں۔",
   "pv.report_org_fallback": "ڈیجیٹل ڈاک ERP",
+  "bexp.title": "بل اخراجات",
+  "bexp.subtitle": "جمع شدہ خرید و فروخت بلوں کے خلاف درج اضافی اخراجات — اصل بل کا حوالہ دیا جاتا ہے، دوبارہ درج نہیں کیا جاتا۔",
+  "bexp.tab_all": "تمام بل",
+  "bexp.tab_purchase_booking": "خرید بکنگ",
+  "bexp.tab_local_purchase": "مقامی خرید",
+  "bexp.tab_sales_booking": "فروخت بکنگ",
+  "bexp.tab_local_sales": "مقامی فروخت",
+  "bexp.col_source": "ماخذ ماڈیول",
+  "bexp.col_bill_no": "بل نمبر",
+  "bexp.col_manual_bill": "دستی بل / معاہدہ",
+  "bexp.col_date": "تاریخ",
+  "bexp.col_country": "ملک",
+  "bexp.col_branch": "برانچ",
+  "bexp.col_party": "فریق / اکاؤنٹ",
+  "bexp.col_currency": "کرنسی",
+  "bexp.col_original_amount": "اصل بل رقم",
+  "bexp.col_expense_total": "اخراجات کل",
+  "bexp.col_status": "حیثیت",
+  "bexp.col_actions": "اعمال",
+  "bexp.status_open": "کھلا",
+  "bexp.status_in_progress": "جاری",
+  "bexp.status_closed": "بند",
+  "bexp.eligibility_withdrawn": "واپس لیا گیا (ماخذ اب پوسٹ نہیں)",
+  "bexp.open_detail": "کھولیں",
+  "bexp.add_expense": "اخراج شامل کریں",
+  "bexp.original_bill": "اصل بل (خودکار — صرف پڑھنے کے لیے)",
+  "bexp.additional_expenses": "اضافی اخراجات",
+  "bexp.expense_type": "اخراج کی قسم",
+  "bexp.et_shipping": "شپنگ",
+  "bexp.et_loading": "لوڈنگ",
+  "bexp.et_clearing": "کلیئرنگ",
+  "bexp.et_transport": "ٹرانسپورٹ",
+  "bexp.et_customs": "کسٹمز",
+  "bexp.et_handling": "ہینڈلنگ",
+  "bexp.et_storage": "اسٹوریج",
+  "bexp.et_insurance": "انشورنس",
+  "bexp.et_other": "دیگر",
+  "bexp.f_details": "تفصیل / بیان",
+  "bexp.f_amount": "رقم",
+  "bexp.f_exchange_rate": "شرح تبادلہ",
+  "bexp.f_tax_pct": "ٹیکس %",
+  "bexp.f_local_amount": "مقامی رقم",
+  "bexp.f_grand_amount": "کل رقم",
+  "bexp.f_save": "اخراج محفوظ کریں",
+  "bexp.f_saving": "محفوظ ہو رہا ہے…",
+  "bexp.v_amount_required": "صفر سے زیادہ رقم درج کریں۔",
+  "bexp.v_currency_required": "کرنسی منتخب کریں۔",
+  "bexp.v_rate_required": "شرح تبادلہ صفر سے زیادہ ہونی چاہیے۔",
+  "bexp.toast_added": "اخراج بل میں شامل ہو گیا۔",
+  "bexp.toast_deleted": "اخراج لائن ہٹا دی گئی۔",
+  "bexp.toast_error": "اخراج محفوظ نہیں ہو سکا۔ دوبارہ کوشش کریں۔",
+  "bexp.empty": "ابھی کوئی جمع شدہ بل نہیں۔ خرید یا فروخت کا بل بک/تصدیق ہوتے ہی یہاں خودبخود ظاہر ہوتا ہے۔",
+  "bexp.empty_filtered": "منتخب فلٹرز سے کوئی بل میل نہیں کھاتا۔",
+  "bexp.no_lines": "اس بل کے خلاف ابھی کوئی اضافی اخراج درج نہیں۔",
+  "bexp.print_report": "رپورٹ پرنٹ کریں",
+  "bexp.report_title": "بل اخراجات رجسٹر",
+  "bexp.summary_bills": "بل",
+  "bexp.summary_original": "اصل کل",
+  "bexp.summary_expenses": "اخراجات کل",
+  "bexp.summary_with_expenses": "اخراجات والے بل",
+  "bexp.close": "بند کریں",
+  "bexp.clear_filters": "فلٹر صاف کریں",
 };
 
 const ar: Dict = {
@@ -29975,6 +30164,7 @@ const ar: Dict = {
   "nav.payment_bill_entry": "إدخال فاتورة الدفع",
   "nav.purchase_sale": "المشتريات والمبيعات",
   "nav.purchase": "المشتريات",
+  "nav.bill_expenses": "مصروفات الفواتير",
   "nav.purchase_order": "أمر شراء",
   "nav.purchase_confirm": "تأكيد الشراء",
   "nav.purchase_loading_records": "سجلات تحميل الشراء",
@@ -35973,6 +36163,68 @@ const ar: Dict = {
   "dgtc.setup_pending": "يتم إعداد DGT كونكت على هذا الخادم. تحقق مرة أخرى قريبًا.",
   "hr.step_incomplete": "يرجى إكمال الحقول المطلوبة في هذه الخطوة قبل المتابعة.",
   "pv.report_org_fallback": "ديجيتال دوك ERP",
+  "bexp.title": "مصروفات الفواتير",
+  "bexp.subtitle": "المصروفات الإضافية المسجلة مقابل فواتير الشراء والبيع المُرسلة — تتم الإشارة إلى الفاتورة الأصلية ولا تُدخل من جديد.",
+  "bexp.tab_all": "كل الفواتير",
+  "bexp.tab_purchase_booking": "حجز الشراء",
+  "bexp.tab_local_purchase": "الشراء المحلي",
+  "bexp.tab_sales_booking": "حجز البيع",
+  "bexp.tab_local_sales": "المبيعات المحلية",
+  "bexp.col_source": "الوحدة المصدر",
+  "bexp.col_bill_no": "رقم الفاتورة",
+  "bexp.col_manual_bill": "الفاتورة اليدوية / العقد",
+  "bexp.col_date": "التاريخ",
+  "bexp.col_country": "الدولة",
+  "bexp.col_branch": "الفرع",
+  "bexp.col_party": "الطرف / الحساب",
+  "bexp.col_currency": "العملة",
+  "bexp.col_original_amount": "مبلغ الفاتورة الأصلي",
+  "bexp.col_expense_total": "إجمالي المصروفات",
+  "bexp.col_status": "الحالة",
+  "bexp.col_actions": "الإجراءات",
+  "bexp.status_open": "مفتوح",
+  "bexp.status_in_progress": "قيد التنفيذ",
+  "bexp.status_closed": "مغلق",
+  "bexp.eligibility_withdrawn": "مسحوب (المصدر لم يعد مُرحّلاً)",
+  "bexp.open_detail": "فتح",
+  "bexp.add_expense": "إضافة مصروف",
+  "bexp.original_bill": "الفاتورة الأصلية (تعبئة تلقائية — للقراءة فقط)",
+  "bexp.additional_expenses": "المصروفات الإضافية",
+  "bexp.expense_type": "نوع المصروف",
+  "bexp.et_shipping": "الشحن",
+  "bexp.et_loading": "التحميل",
+  "bexp.et_clearing": "التخليص",
+  "bexp.et_transport": "النقل",
+  "bexp.et_customs": "الجمارك",
+  "bexp.et_handling": "المناولة",
+  "bexp.et_storage": "التخزين",
+  "bexp.et_insurance": "التأمين",
+  "bexp.et_other": "أخرى",
+  "bexp.f_details": "التفاصيل / البيان",
+  "bexp.f_amount": "المبلغ",
+  "bexp.f_exchange_rate": "سعر الصرف",
+  "bexp.f_tax_pct": "الضريبة %",
+  "bexp.f_local_amount": "المبلغ المحلي",
+  "bexp.f_grand_amount": "المبلغ الإجمالي",
+  "bexp.f_save": "حفظ المصروف",
+  "bexp.f_saving": "جارٍ الحفظ…",
+  "bexp.v_amount_required": "أدخل مبلغًا أكبر من صفر.",
+  "bexp.v_currency_required": "اختر عملة.",
+  "bexp.v_rate_required": "يجب أن يكون سعر الصرف أكبر من صفر.",
+  "bexp.toast_added": "تمت إضافة المصروف إلى الفاتورة.",
+  "bexp.toast_deleted": "تمت إزالة سطر المصروف.",
+  "bexp.toast_error": "تعذّر حفظ المصروف. حاول مرة أخرى.",
+  "bexp.empty": "لا توجد فواتير مُرسلة بعد. تظهر فاتورة الشراء أو البيع هنا تلقائيًا بمجرد حجزها / تأكيدها.",
+  "bexp.empty_filtered": "لا توجد فواتير تطابق عوامل التصفية المحددة.",
+  "bexp.no_lines": "لم يتم تسجيل أي مصروفات إضافية مقابل هذه الفاتورة بعد.",
+  "bexp.print_report": "طباعة التقرير",
+  "bexp.report_title": "سجل مصروفات الفواتير",
+  "bexp.summary_bills": "الفواتير",
+  "bexp.summary_original": "الإجمالي الأصلي",
+  "bexp.summary_expenses": "إجمالي المصروفات",
+  "bexp.summary_with_expenses": "فواتير بها مصروفات",
+  "bexp.close": "إغلاق",
+  "bexp.clear_filters": "مسح عوامل التصفية",
 };
 
 const fa: Dict = {
@@ -40946,6 +41198,7 @@ const fa: Dict = {
   "nav.payroll_salary": "حقوق و دستمزد",
   "nav.profit_loss_report": "گزارش سود/زیان",
   "nav.purchase": "خرید",
+  "nav.bill_expenses": "هزینه‌های صورتحساب",
   "nav.purchase_booking_journal_report": "گزارش روزنامه رزرو خرید",
   "nav.purchase_booking_register": "دفتر رزرو خرید",
   "nav.purchase_confirm": "تأیید خرید",
@@ -46470,6 +46723,68 @@ const fa: Dict = {
   "dgtc.setup_pending": "DGT کانکت روی این سرور در حال راه‌اندازی است. کمی بعد دوباره بررسی کنید.",
   "hr.step_incomplete": "لطفاً پیش از ادامه، فیلدهای الزامی این مرحله را تکمیل کنید.",
   "pv.report_org_fallback": "دیجیتال داک ERP",
+  "bexp.title": "هزینه‌های صورتحساب",
+  "bexp.subtitle": "هزینه‌های اضافی ثبت‌شده در برابر صورتحساب‌های خرید و فروش ثبت‌شده — به صورتحساب اصلی ارجاع داده می‌شود و دوباره وارد نمی‌شود.",
+  "bexp.tab_all": "همه صورتحساب‌ها",
+  "bexp.tab_purchase_booking": "رزرو خرید",
+  "bexp.tab_local_purchase": "خرید محلی",
+  "bexp.tab_sales_booking": "رزرو فروش",
+  "bexp.tab_local_sales": "فروش محلی",
+  "bexp.col_source": "ماژول منبع",
+  "bexp.col_bill_no": "شماره صورتحساب",
+  "bexp.col_manual_bill": "صورتحساب دستی / قرارداد",
+  "bexp.col_date": "تاریخ",
+  "bexp.col_country": "کشور",
+  "bexp.col_branch": "شعبه",
+  "bexp.col_party": "طرف / حساب",
+  "bexp.col_currency": "ارز",
+  "bexp.col_original_amount": "مبلغ صورتحساب اصلی",
+  "bexp.col_expense_total": "مجموع هزینه",
+  "bexp.col_status": "وضعیت",
+  "bexp.col_actions": "اقدامات",
+  "bexp.status_open": "باز",
+  "bexp.status_in_progress": "در حال انجام",
+  "bexp.status_closed": "بسته",
+  "bexp.eligibility_withdrawn": "برداشته‌شده (منبع دیگر ثبت نیست)",
+  "bexp.open_detail": "باز کردن",
+  "bexp.add_expense": "افزودن هزینه",
+  "bexp.original_bill": "صورتحساب اصلی (تکمیل خودکار — فقط خواندنی)",
+  "bexp.additional_expenses": "هزینه‌های اضافی",
+  "bexp.expense_type": "نوع هزینه",
+  "bexp.et_shipping": "حمل و نقل دریایی",
+  "bexp.et_loading": "بارگیری",
+  "bexp.et_clearing": "ترخیص",
+  "bexp.et_transport": "حمل و نقل",
+  "bexp.et_customs": "گمرک",
+  "bexp.et_handling": "جابجایی",
+  "bexp.et_storage": "انبارداری",
+  "bexp.et_insurance": "بیمه",
+  "bexp.et_other": "سایر",
+  "bexp.f_details": "جزئیات / شرح",
+  "bexp.f_amount": "مبلغ",
+  "bexp.f_exchange_rate": "نرخ ارز",
+  "bexp.f_tax_pct": "مالیات %",
+  "bexp.f_local_amount": "مبلغ محلی",
+  "bexp.f_grand_amount": "مبلغ کل",
+  "bexp.f_save": "ذخیره هزینه",
+  "bexp.f_saving": "در حال ذخیره…",
+  "bexp.v_amount_required": "مبلغی بزرگ‌تر از صفر وارد کنید.",
+  "bexp.v_currency_required": "یک ارز انتخاب کنید.",
+  "bexp.v_rate_required": "نرخ ارز باید بزرگ‌تر از صفر باشد.",
+  "bexp.toast_added": "هزینه به صورتحساب افزوده شد.",
+  "bexp.toast_deleted": "خط هزینه حذف شد.",
+  "bexp.toast_error": "هزینه ذخیره نشد. دوباره تلاش کنید.",
+  "bexp.empty": "هنوز صورتحسابی ثبت نشده است. صورتحساب خرید یا فروش پس از رزرو / تأیید به‌طور خودکار اینجا ظاهر می‌شود.",
+  "bexp.empty_filtered": "هیچ صورتحسابی با فیلترهای انتخاب‌شده مطابقت ندارد.",
+  "bexp.no_lines": "هنوز هیچ هزینه اضافی برای این صورتحساب ثبت نشده است.",
+  "bexp.print_report": "چاپ گزارش",
+  "bexp.report_title": "دفتر هزینه‌های صورتحساب",
+  "bexp.summary_bills": "صورتحساب‌ها",
+  "bexp.summary_original": "مجموع اصلی",
+  "bexp.summary_expenses": "مجموع هزینه‌ها",
+  "bexp.summary_with_expenses": "صورتحساب‌های دارای هزینه",
+  "bexp.close": "بستن",
+  "bexp.clear_filters": "پاک کردن فیلترها",
 };
 
 const ps: Dict = {
@@ -51427,6 +51742,7 @@ const ps: Dict = {
   "nav.port_master": "د بندر / پولې اصلي معلومات",
   "nav.profit_loss_report": "د ګټې/زیان راپور",
   "nav.purchase": "اخیستل",
+  "nav.bill_expenses": "د بیلونو لګښتونه",
   "nav.purchase_booking_journal_report": "د اخیستلو بکنګ ژورنال راپور",
   "nav.purchase_booking_register": "د اخیستلو بکنګ ثبت",
   "nav.purchase_confirm": "د اخیستلو تایید",
@@ -56973,6 +57289,68 @@ const ps: Dict = {
   "dgtc.setup_pending": "DGT کنیکټ پدې سرور کې تنظیمیږي. لږ وروسته بیا وګورئ.",
   "hr.step_incomplete": "مهرباني وکړئ د دوام کولو دمخه پدې پړاو کې اړین ساحې بشپړ کړئ.",
   "pv.report_org_fallback": "ډیجیټل ډاک ERP",
+  "bexp.title": "د بیلونو لګښتونه",
+  "bexp.subtitle": "د سپارل شویو پیرود او پلور بیلونو په وړاندې ثبت شوي اضافي لګښتونه — اصلي بیل ته اشاره کیږي، بیا نه داخلیږي.",
+  "bexp.tab_all": "ټول بیلونه",
+  "bexp.tab_purchase_booking": "د پیرود بکنګ",
+  "bexp.tab_local_purchase": "محلي پیرود",
+  "bexp.tab_sales_booking": "د پلور بکنګ",
+  "bexp.tab_local_sales": "محلي پلور",
+  "bexp.col_source": "سرچینه ماډول",
+  "bexp.col_bill_no": "د بیل شمیره",
+  "bexp.col_manual_bill": "لاسي بیل / تړون",
+  "bexp.col_date": "نیټه",
+  "bexp.col_country": "هیواد",
+  "bexp.col_branch": "څانګه",
+  "bexp.col_party": "اړخ / حساب",
+  "bexp.col_currency": "اسعارو",
+  "bexp.col_original_amount": "د اصلي بیل اندازه",
+  "bexp.col_expense_total": "د لګښت ټول",
+  "bexp.col_status": "حالت",
+  "bexp.col_actions": "کړنې",
+  "bexp.status_open": "خلاص",
+  "bexp.status_in_progress": "روان",
+  "bexp.status_closed": "تړل شوی",
+  "bexp.eligibility_withdrawn": "بیرته اخیستل شوی (سرچینه نور نه ده ثبت شوې)",
+  "bexp.open_detail": "خلاص کړئ",
+  "bexp.add_expense": "لګښت اضافه کړئ",
+  "bexp.original_bill": "اصلي بیل (اتوماتیک ډک — یوازې لوستل)",
+  "bexp.additional_expenses": "اضافي لګښتونه",
+  "bexp.expense_type": "د لګښت ډول",
+  "bexp.et_shipping": "سمندري لیږد",
+  "bexp.et_loading": "بار اخیستل",
+  "bexp.et_clearing": "کلیرنس",
+  "bexp.et_transport": "ترانسپورت",
+  "bexp.et_customs": "ګمرک",
+  "bexp.et_handling": "سمبالښت",
+  "bexp.et_storage": "زېرمه",
+  "bexp.et_insurance": "بیمه",
+  "bexp.et_other": "نور",
+  "bexp.f_details": "تفصیلات / بیان",
+  "bexp.f_amount": "اندازه",
+  "bexp.f_exchange_rate": "د تبادلې نرخ",
+  "bexp.f_tax_pct": "مالیه %",
+  "bexp.f_local_amount": "محلي اندازه",
+  "bexp.f_grand_amount": "لوی مجموعه",
+  "bexp.f_save": "لګښت خوندي کړئ",
+  "bexp.f_saving": "خوندي کیږي…",
+  "bexp.v_amount_required": "له صفر څخه لوی اندازه دننه کړئ.",
+  "bexp.v_currency_required": "یو اسعار وټاکئ.",
+  "bexp.v_rate_required": "د تبادلې نرخ باید له صفر څخه لوی وي.",
+  "bexp.toast_added": "لګښت بیل ته اضافه شو.",
+  "bexp.toast_deleted": "د لګښت کرښه لرې شوه.",
+  "bexp.toast_error": "لګښت خوندي نشو. بیا هڅه وکړئ.",
+  "bexp.empty": "تر اوسه هیڅ سپارل شوی بیل نشته. د پیرود یا پلور بیل له بکنګ / تایید سره سمدلاسه دلته ښکاري.",
+  "bexp.empty_filtered": "هیڅ بیل د ټاکل شویو فلټرونو سره سمون نه خوري.",
+  "bexp.no_lines": "تر اوسه د دې بیل په وړاندې هیڅ اضافي لګښت نه دی ثبت شوی.",
+  "bexp.print_report": "راپور چاپ کړئ",
+  "bexp.report_title": "د بیلونو لګښتونو راجستر",
+  "bexp.summary_bills": "بیلونه",
+  "bexp.summary_original": "اصلي ټول",
+  "bexp.summary_expenses": "د لګښتونو ټول",
+  "bexp.summary_with_expenses": "د لګښتونو لرونکي بیلونه",
+  "bexp.close": "بند کړئ",
+  "bexp.clear_filters": "فلټرونه پاک کړئ",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

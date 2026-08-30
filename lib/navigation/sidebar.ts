@@ -456,6 +456,12 @@ export const sidebarTree: SidebarNode[] = [
         labelKey: "nav.purchase_order_tracking",
         iconKey: "gantt",
         href: "/dashboard/purchase/purchase-order-tracking" as Route
+      },
+      {
+        key: "bill-expenses",
+        labelKey: "nav.bill_expenses",
+        iconKey: "coins",
+        href: "/dashboard/expenses/bill-expenses" as Route
       }
     ]
   },
@@ -1449,6 +1455,7 @@ function impliedPermission(node: SidebarNode): PermissionRequirement | null {
   if (href.includes("/roznamcha/") && href.includes("/cash-entry")) return { resource: "roznamcha", action: "create" };
   if (href.includes("/roznamcha/")) return { resource: "roznamcha", action: "read" };
 
+  if (href.includes("/expenses/bill-expenses")) return { resource: "reports", action: "read" };
   if (href.includes("/purchase/")) return { resource: "purchases", action: key.includes("report") ? "read" : "read" };
   if (href.includes("/sales/")) return { resource: "sales", action: "read" };
   if (href.includes("/reports")) return { resource: "reports", action: "read" };
