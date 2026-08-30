@@ -122,6 +122,8 @@ chmod 600 .env.local .env
 echo "[VPS 3b/7] Installing Dependencies & Running Database Migration..."
 npm install --include=dev
 node scripts/db-apply-all-migrations.mjs || true
+echo "[VPS 3c/7] Seeding ERP translation memory (glossary + dictionary, idempotent)..."
+npx --yes tsx scripts/seed-erp-translation-memory.mts || echo "(translation-memory seed skipped — engine still works from the in-memory glossary)"
 
 echo "[VPS 4/7] Cleaning Stale Build Cache & Compiling Next.js..."
 rm -rf .next
