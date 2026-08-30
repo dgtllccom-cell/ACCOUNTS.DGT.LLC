@@ -4459,6 +4459,7 @@ export type UiKey =
   | "dgtc.unread_one"
   | "dgtc.setup_pending"
   | "hr.step_incomplete"
+  | "pv.report_org_fallback"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -14977,6 +14978,7 @@ const en: Dict = {
   "dgtc.unread_one": "1 unread",
   "dgtc.setup_pending": "DGT Connect is being set up on this server. Check back shortly.",
   "hr.step_incomplete": "Please complete the required fields on this step before continuing.",
+  "pv.report_org_fallback": "Digital Dock ERP",
 };
 
 const ur: Dict = {
@@ -25472,6 +25474,7 @@ const ur: Dict = {
   "dgtc.unread_one": "1 غیر پڑھا",
   "dgtc.setup_pending": "ڈی جی ٹی کنیکٹ اس سرور پر ترتیب دیا جا رہا ہے۔ کچھ دیر بعد دوبارہ دیکھیں۔",
   "hr.step_incomplete": "براہ کرم آگے بڑھنے سے پہلے اس مرحلے کے لازمی خانے مکمل کریں۔",
+  "pv.report_org_fallback": "ڈیجیٹل ڈاک ERP",
 };
 
 const ar: Dict = {
@@ -35969,6 +35972,7 @@ const ar: Dict = {
   "dgtc.unread_one": "1 غير مقروء",
   "dgtc.setup_pending": "يتم إعداد DGT كونكت على هذا الخادم. تحقق مرة أخرى قريبًا.",
   "hr.step_incomplete": "يرجى إكمال الحقول المطلوبة في هذه الخطوة قبل المتابعة.",
+  "pv.report_org_fallback": "ديجيتال دوك ERP",
 };
 
 const fa: Dict = {
@@ -46465,6 +46469,7 @@ const fa: Dict = {
   "dgtc.unread_one": "۱ خوانده‌نشده",
   "dgtc.setup_pending": "DGT کانکت روی این سرور در حال راه‌اندازی است. کمی بعد دوباره بررسی کنید.",
   "hr.step_incomplete": "لطفاً پیش از ادامه، فیلدهای الزامی این مرحله را تکمیل کنید.",
+  "pv.report_org_fallback": "دیجیتال داک ERP",
 };
 
 const ps: Dict = {
@@ -56967,6 +56972,7 @@ const ps: Dict = {
   "dgtc.unread_one": "1 نالوستی",
   "dgtc.setup_pending": "DGT کنیکټ پدې سرور کې تنظیمیږي. لږ وروسته بیا وګورئ.",
   "hr.step_incomplete": "مهرباني وکړئ د دوام کولو دمخه پدې پړاو کې اړین ساحې بشپړ کړئ.",
+  "pv.report_org_fallback": "ډیجیټل ډاک ERP",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

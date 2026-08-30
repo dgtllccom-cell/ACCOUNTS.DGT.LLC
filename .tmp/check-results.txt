@@ -1,0 +1,1 @@
+No TSX parse syntax errors found in purchase-loading-records-view.tsx!

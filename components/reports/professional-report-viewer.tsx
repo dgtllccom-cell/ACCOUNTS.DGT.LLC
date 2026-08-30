@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useRef } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import { 
   Printer, Download, FileSpreadsheet, FileText, 
   Mail, MessageCircle, ZoomIn, ZoomOut, 
@@ -13,6 +13,7 @@ import { getLanguageDirection, type SupportedLanguage } from "@/lib/i18n/languag
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
+import { fetchBranding, brandingName } from "@/lib/branding/client";
 
 export type ReportColumn<T = any> = {
   key: string;
@@ -41,6 +42,10 @@ export type ProfessionalReportViewerProps<T = any> = {
   filters?: Record<string, string>;
   rowsPerPage?: number;
   onClose?: () => void;
+  /** Dynamic branding — resolved from the record's country when omitted. */
+  countryId?: string | null;
+  companyName?: string | null;
+  logoUrl?: string | null;
 };
 
 export function ProfessionalReportViewer<T>({
@@ -52,11 +57,31 @@ export function ProfessionalReportViewer<T>({
   summary,
   filters,
   rowsPerPage = 25,
-  onClose
+  onClose,
+  countryId = null,
+  companyName: companyNameProp = null,
+  logoUrl: logoUrlProp = null
 }: ProfessionalReportViewerProps<T>) {
   const [zoom, setZoom] = useState(100);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLandscape, setIsLandscape] = useState(true);
+
+  // Resolve branding from the shared /api/erp/branding resolver (record country → session).
+  // Props win when provided; otherwise fall back to the neutral product name (never a hard-coded tenant).
+  const [brandName, setBrandName] = useState<string | null>(companyNameProp);
+  const [brandLogo, setBrandLogo] = useState<string | null>(logoUrlProp);
+  useEffect(() => {
+    if (companyNameProp) { setBrandName(companyNameProp); setBrandLogo(logoUrlProp); return; }
+    let alive = true;
+    fetchBranding(countryId).then((b) => {
+      if (!alive || !b) return;
+      setBrandName(brandingName(b, lang) || null);
+      if (b.logoUrl) setBrandLogo(b.logoUrl);
+    });
+    return () => { alive = false; };
+  }, [countryId, companyNameProp, logoUrlProp, lang]);
+  const headerName = brandName || t(lang, "pv.report_org_fallback", "Digital Dock ERP");
+  const headerLogo = brandLogo || "/logo.png";
 
   const dir = getLanguageDirection(lang);
   const printRef = useRef<HTMLDivElement>(null);
@@ -224,7 +249,7 @@ export function ProfessionalReportViewer<T>({
                 >
                   {/* WATERMARK */}
                   <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-5 select-none z-0">
-                    <img src="/logo.png" alt="" className="w-1/2 object-contain grayscale" />
+                    <img src={headerLogo} alt="" className="w-1/2 object-contain grayscale" />
                   </div>
 
                   {/* CONTENT (z-10 relative to stay above watermark) */}
@@ -232,9 +257,9 @@ export function ProfessionalReportViewer<T>({
                     {/* Header */}
                     <div className="flex justify-between items-start mb-4 border-b border-gray-300 pb-4">
                       <div className="flex items-center gap-3">
-                        <img src="/logo.png" alt="Logo" className="w-12 h-12 object-contain" />
+                        <img src={headerLogo} alt="Logo" className="w-12 h-12 object-contain" />
                         <div>
-                          <h2 className="text-xl font-bold uppercase tracking-wide text-gray-800">Damaan General Trading LLC</h2>
+                          <h2 className="text-xl font-bold uppercase tracking-wide text-gray-800">{headerName}</h2>
                           <p className="text-sm text-gray-500 uppercase font-semibold">{title}</p>
                           {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
                         </div>

@@ -7,6 +7,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { ledgerScopeSchema, supportedLanguageSchema, uuidSchema } from "@/lib/api/erp-validation";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { localizeRecordNames, getPhraseTranslator } from "@/lib/i18n/localize-records";
+import { getAppEnvironment } from "@/lib/env/environment";
 
 /**
  * Localize the free-form account NAME of a set of report rows through the single ERP
@@ -186,32 +187,39 @@ function isMissingPrivilegedSupabaseKey(error: unknown) {
 }
 
 async function ensureCoreMasterAccounts(sql: any) {
+  // Structural master data (country clearing ledgers, reference geography, the owner's
+  // known trade counterparties) is provisioned deliberately through the scoped Account
+  // Setup / Master UIs and the migration set — never auto-seeded from a report GET on a
+  // live database. This convenience bootstrap therefore runs in development only.
+  if (getAppEnvironment() === "production") return;
   try {
-    const countries = await sql`SELECT id, name, code FROM public.countries;`;
-    let uae = countries.find((c: any) => (c.name || "").toLowerCase().includes("emirates") || c.code === "AE" || c.code === "UAE");
-    let pak = countries.find((c: any) => (c.name || "").toLowerCase().includes("pakistan") || c.code === "PK" || c.code === "PAK");
-    let afg = countries.find((c: any) => (c.name || "").toLowerCase().includes("afghanistan") || c.code === "AF" || c.code === "AFG");
-    let chn = countries.find((c: any) => (c.name || "").toLowerCase().includes("china") || c.code === "CN" || c.code === "CHN");
-    let ind = countries.find((c: any) => (c.name || "").toLowerCase().includes("india") || c.code === "IN" || c.code === "IND");
+    // `public.countries` keys its ISO alpha-2 code in the `iso2` column (there is no `code`).
+    const countries = await sql`SELECT id, name, iso2 FROM public.countries;`;
+    const iso = (c: any) => String(c?.iso2 ?? "").toUpperCase();
+    let uae = countries.find((c: any) => (c.name || "").toLowerCase().includes("emirates") || iso(c) === "AE");
+    let pak = countries.find((c: any) => (c.name || "").toLowerCase().includes("pakistan") || iso(c) === "PK");
+    let afg = countries.find((c: any) => (c.name || "").toLowerCase().includes("afghanistan") || iso(c) === "AF");
+    let chn = countries.find((c: any) => (c.name || "").toLowerCase().includes("china") || iso(c) === "CN");
+    let ind = countries.find((c: any) => (c.name || "").toLowerCase().includes("india") || iso(c) === "IN");
 
     if (!ind) {
       const [insertedInd] = await sql`
-        INSERT INTO public.countries (name, code, is_active)
+        INSERT INTO public.countries (name, iso2, is_active)
         VALUES ('India', 'IN', true)
         ON CONFLICT DO NOTHING
-        RETURNING id, name, code;
+        RETURNING id, name, iso2;
       `;
-      ind = insertedInd || (await sql`SELECT id, name, code FROM public.countries WHERE code = 'IN' OR name ILIKE '%India%' LIMIT 1;`)[0];
+      ind = insertedInd || (await sql`SELECT id, name, iso2 FROM public.countries WHERE iso2 = 'IN' OR name ILIKE '%India%' LIMIT 1;`)[0];
     }
 
     if (!chn) {
       const [insertedChn] = await sql`
-        INSERT INTO public.countries (name, code, is_active)
+        INSERT INTO public.countries (name, iso2, is_active)
         VALUES ('China', 'CN', true)
         ON CONFLICT DO NOTHING
-        RETURNING id, name, code;
+        RETURNING id, name, iso2;
       `;
-      chn = insertedChn || (await sql`SELECT id, name, code FROM public.countries WHERE code = 'CN' OR name ILIKE '%China%' LIMIT 1;`)[0];
+      chn = insertedChn || (await sql`SELECT id, name, iso2 FROM public.countries WHERE iso2 = 'CN' OR name ILIKE '%China%' LIMIT 1;`)[0];
     }
 
     // 1. Ensure China Location Hierarchy (Liaoning Province -> Dalian City -> Ganjingzi District)
@@ -594,9 +602,11 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
     const accountIds = (rows as Array<any>).map((r) => r.id);
     const ledgerIds = (rows as Array<any>).map((r) => r.ledger_id).filter(Boolean);
 
-    const [rozLines, postingLines] = await Promise.all([
-      accountIds.length > 0
-        ? sql`
+    // NOTE: the local-pg pooler connection (max:1) does not pipeline — run sequentially,
+    // never Promise.all. Ledger movements come from `ledger_posting_lines` (there is no
+    // `posting_lines` table).
+    const rozLines = accountIds.length > 0
+      ? await sql`
             select rl.enterprise_account_id, rl.ledger_id, rl.debit, rl.credit, rl.currency, rl.usd_rate, rl.usd_amount,
                    re.voucher_no as reference_no, re.entry_date, re.created_at
             from public.roznamcha_lines rl
@@ -605,19 +615,18 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
             order by re.entry_date desc, re.created_at desc
             limit 1000;
           `
-        : [],
-      ledgerIds.length > 0
-        ? sql`
+      : [];
+    const postingLines = ledgerIds.length > 0
+      ? await sql`
             select pl.enterprise_account_id, pl.ledger_id, pl.debit, pl.credit, pl.currency, pl.usd_rate, pl.usd_amount,
                    pb.reference_no, pb.entry_date, pb.created_at
-            from public.posting_lines pl
+            from public.ledger_posting_lines pl
             join public.ledger_posting_batches pb on pb.id = pl.batch_id and pb.deleted_at is null
             where (pl.enterprise_account_id = any(${accountIds}) or pl.ledger_id = any(${ledgerIds}))
             order by pb.entry_date desc, pb.created_at desc
             limit 1000;
           `
-        : []
-    ]);
+      : [];
 
     const movementsByAccount = new Map<string, Array<any>>();
     const movementsByLedger = new Map<string, Array<any>>();
