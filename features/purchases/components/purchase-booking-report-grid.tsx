@@ -168,92 +168,93 @@ export function PurchaseBookingReportGrid({
   const userEmail = data.userEmail || "admin@dgt.llc";
   const userPhone = data.userPhone || "+971 50 123 4567";
   const userStatus = data.userStatus || "Active";
-  const userJoiningDate = data.userJoiningDate || "2020-01-01";
-  const userPasswordExpiry = data.userPasswordExpiry || "2026-12-31";
-  const userLastLogin = data.userLastLogin || `${data.bookingDate || "2026-08-27"} 10:25 AM English`;
+  const userJoiningDate = data.userJoiningDate || "—";
+  const userPasswordExpiry = data.userPasswordExpiry || "—";
+  const userLastLogin = data.userLastLogin || (data.bookingDate ? `${data.bookingDate} 10:25 AM English` : "—");
 
-  const bookingDate = data.bookingDate || "2026-08-27";
-  const fiscalYear = data.fiscalYear || "2025-26";
-  const bookingBranch = data.bookingBranch || "Global System";
+  const bookingDate = data.bookingDate || "—";
+  const fiscalYear = data.fiscalYear || "—";
+  const bookingBranch = data.bookingBranch || "—";
   const status = data.status || "DRAFT";
-  const systemSerialNo = data.systemSerialNo || "PO-2026-2837";
-  const countrySerialNo = data.countrySerialNo || "CS-1837";
-  const superAdminSerialNo = data.superAdminSerialNo || "SA-2026-5567";
-  const branchSerialNo = data.branchSerialNo || "DUBAI-25837";
-  const billContractNo = data.billContractNo || "052-25837";
-  const paymentType = data.paymentType || "Advance Payment";
-  const shipType = data.shipType || "Sea Freight";
-  const loadingMode = data.loadingMode || "By Sea";
-  const originCountry = data.originCountry || "China";
+  const systemSerialNo = data.systemSerialNo || "—";
+  const countrySerialNo = data.countrySerialNo || "—";
+  const superAdminSerialNo = data.superAdminSerialNo || "—";
+  const branchSerialNo = data.branchSerialNo || "—";
+  const billContractNo = data.billContractNo || "—";
+  const paymentType = data.paymentType || "—";
+  const shipType = data.shipType || "—";
+  const loadingMode = data.loadingMode || "—";
+  const originCountry = data.originCountry || "—";
 
-  const paymentTerms = data.paymentTerms || "45 Days After B/L Date";
-  const paymentMethod = data.paymentMethod || "Bank Transfer";
-  const paymentCurrency = data.paymentCurrency || "AED - UAE Dirham";
+  const paymentTerms = data.paymentTerms || "—";
+  const paymentMethod = data.paymentMethod || "—";
+  const paymentCurrency = data.paymentCurrency || "—";
 
-  const shippingMode = data.shippingMode || "By Sea";
-  const shippingLine = data.shippingLine || "WAN HAI LINES LTD.";
-  const loadingPort = data.loadingPort || "NINGBO PORT, CHINA";
-  const receivingPort = data.receivingPort || "JEBEL ALI PORT, DUBAI";
-  const containerInfo = data.containerInfo || "1x 40HQ (WHLU-982341-0)";
+  const shippingMode = data.shippingMode || "—";
+  const shippingLine = data.shippingLine || "—";
+  const loadingPort = data.loadingPort || "—";
+  const receivingPort = data.receivingPort || "—";
+  const containerInfo = data.containerInfo || "—";
 
   // Purchase Account
-  const purchaseAccountName = data.purchaseAccountName || "United Arab Emirates Main Country Clearing";
-  const purchaseAccountCode = data.purchaseAccountCode || "UAE-CORP-GEN-001";
-  const purchaseTotalCredit = data.purchaseTotalCredit !== undefined && data.purchaseTotalCredit !== "" ? (typeof data.purchaseTotalCredit === "number" ? data.purchaseTotalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : data.purchaseTotalCredit) : "125,000.00";
-  const purchaseTotalDebit = data.purchaseTotalDebit !== undefined && data.purchaseTotalDebit !== "" ? (typeof data.purchaseTotalDebit === "number" ? data.purchaseTotalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : data.purchaseTotalDebit) : "85,000.00";
-  const purchaseBalance = data.purchaseBalance !== undefined && data.purchaseBalance !== "" ? (typeof data.purchaseBalance === "number" ? data.purchaseBalance.toLocaleString(undefined, { minimumFractionDigits: 2 }) : data.purchaseBalance) : "40,000.00";
-  const purchaseCompanyName = data.purchaseCompanyName || "da Consolidated General Trading FZE";
-  const purchaseBranch = data.purchaseBranch || "Dubai Main Branch";
-  const purchaseCountry = data.purchaseCountry || "United Arab Emirates";
-  const purchaseCompanyCode = data.purchaseCompanyCode || "DA-CONSOLIDATED-001";
-  const purchaseLegalType = data.purchaseLegalType || "Free Zone Company";
-  const purchaseLicenseNo = data.purchaseLicenseNo || "1234567";
-  const purchaseTaxRegNo = data.purchaseTaxRegNo || "DA40225334449000003";
-  const purchaseVatRegNo = data.purchaseVatRegNo || "AE10022534449000003";
-  const purchaseCompanyEstDate = data.purchaseCompanyEstDate || "2018-05-12";
-  const purchaseCompanyEmail = data.purchaseCompanyEmail || "info@da-consolidated.ae";
-  const purchaseCompanyPhone = data.purchaseCompanyPhone || "+971 50 123 4567";
-  const purchaseCompanyWebsite = data.purchaseCompanyWebsite || "www.da-consolidated.ae";
-  const purchaseCompanyAddress = data.purchaseCompanyAddress || "SAIF Zone, PO BOX 12345, Sharjah, United Arab Emirates";
-  const purchaseBankName = data.purchaseBankName || "Emirates NBD";
-  const purchaseBankAccountName = data.purchaseBankAccountName || "da Consolidated FZE";
-  const purchaseBankAccountNo = data.purchaseBankAccountNo || "1012345678901";
-  const purchaseIban = data.purchaseIban || "AE020260001012345678901";
-  const purchaseSwiftCode = data.purchaseSwiftCode || "EBILAEAD";
+  const purchaseAccountName = data.purchaseAccountName || "—";
+  const purchaseAccountCode = data.purchaseAccountCode || "—";
+  const purchaseTotalCredit = data.purchaseTotalCredit !== undefined && data.purchaseTotalCredit !== "" ? (typeof data.purchaseTotalCredit === "number" ? data.purchaseTotalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : data.purchaseTotalCredit) : "0.00";
+  const purchaseTotalDebit = data.purchaseTotalDebit !== undefined && data.purchaseTotalDebit !== "" ? (typeof data.purchaseTotalDebit === "number" ? data.purchaseTotalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : data.purchaseTotalDebit) : "0.00";
+  const purchaseBalance = data.purchaseBalance !== undefined && data.purchaseBalance !== "" ? (typeof data.purchaseBalance === "number" ? data.purchaseBalance.toLocaleString(undefined, { minimumFractionDigits: 2 }) : data.purchaseBalance) : "0.00";
+  const purchaseCompanyName = data.purchaseCompanyName || "—";
+  const purchaseBranch = data.purchaseBranch || "—";
+  const purchaseCountry = data.purchaseCountry || "—";
+  const purchaseCompanyCode = data.purchaseCompanyCode || "—";
+  const purchaseLegalType = data.purchaseLegalType || "—";
+  const purchaseLicenseNo = data.purchaseLicenseNo || "—";
+  const purchaseTaxRegNo = data.purchaseTaxRegNo || "—";
+  const purchaseVatRegNo = data.purchaseVatRegNo || "—";
+  const purchaseCompanyEstDate = data.purchaseCompanyEstDate || "—";
+  const purchaseCompanyEmail = data.purchaseCompanyEmail || "—";
+  const purchaseCompanyPhone = data.purchaseCompanyPhone || "—";
+  const purchaseCompanyWebsite = data.purchaseCompanyWebsite || "—";
+  const purchaseCompanyAddress = data.purchaseCompanyAddress || "—";
+  const purchaseBankName = data.purchaseBankName || "—";
+  const purchaseBankAccountName = data.purchaseBankAccountName || "—";
+  const purchaseBankAccountNo = data.purchaseBankAccountNo || "—";
+  const purchaseIban = data.purchaseIban || "—";
+  const purchaseSwiftCode = data.purchaseSwiftCode || "—";
   const userLanguage = data.userLanguage || "English";
-  const purchaseCurrencyLabel = data.purchaseCurrencyLabel || "AED - UAE Dirham";
-  const purchaseCurrencyCode = data.purchaseCurrencyCode || (data.purchaseCurrencyLabel ? data.purchaseCurrencyLabel.split(" ")[0] : "AED");
+  const purchaseCurrencyLabel = data.purchaseCurrencyLabel || "—";
+  const purchaseCurrencyCode = data.purchaseCurrencyCode || (data.purchaseCurrencyLabel ? data.purchaseCurrencyLabel.split(" ")[0] : "");
 
   // Sales Account
-  const salesAccountName = data.salesAccountName || "United Arab Emirates Main Country Clearing Ledger";
-  const salesAccountCode = data.salesAccountCode || "UAE-CORP-GEN-001";
-  const salesTotalCredit = data.salesTotalCredit !== undefined && data.salesTotalCredit !== "" ? (typeof data.salesTotalCredit === "number" ? data.salesTotalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : data.salesTotalCredit) : "210,000.00";
-  const salesTotalDebit = data.salesTotalDebit !== undefined && data.salesTotalDebit !== "" ? (typeof data.salesTotalDebit === "number" ? data.salesTotalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : data.salesTotalDebit) : "150,000.00";
-  const salesBalance = data.salesBalance !== undefined && data.salesBalance !== "" ? (typeof data.salesBalance === "number" ? data.salesBalance.toLocaleString(undefined, { minimumFractionDigits: 2 }) : data.salesBalance) : "60,000.00";
-  const salesCompanyName = data.salesCompanyName || "da Consolidated General Trading FZE";
-  const salesBranch = data.salesBranch || "Dubai Main Branch";
-  const salesCountry = data.salesCountry || "United Arab Emirates";
-  const salesCompanyCode = data.salesCompanyCode || "DA-CONSOLIDATED-001";
-  const salesLegalType = data.salesLegalType || "Free Zone Company";
-  const salesLicenseNo = data.salesLicenseNo || "1234567";
-  const salesTaxRegNo = data.salesTaxRegNo || "DA40225334449000003";
-  const salesVatRegNo = data.salesVatRegNo || "AE10022534449000003";
-  const salesCompanyEstDate = data.salesCompanyEstDate || "2018-05-12";
-  const salesCompanyEmail = data.salesCompanyEmail || "info@da-consolidated.ae";
-  const salesCompanyPhone = data.salesCompanyPhone || "+971 50 123 4567";
-  const salesCompanyWebsite = data.salesCompanyWebsite || "www.da-consolidated.ae";
-  const salesCompanyAddress = data.salesCompanyAddress || "SAIF Zone, PO BOX 12345, Sharjah, United Arab Emirates";
-  const salesBankName = data.salesBankName || "Emirates NBD";
-  const salesBankAccountName = data.salesBankAccountName || "da Consolidated FZE";
-  const salesBankAccountNo = data.salesBankAccountNo || "1012345678901";
-  const salesIban = data.salesIban || "AE020260001012345678901";
-  const salesSwiftCode = data.salesSwiftCode || "EBILAEAD";
-  const salesCurrencyLabel = data.salesCurrencyLabel || "AED - UAE Dirham";
-  const salesCurrencyCode = data.salesCurrencyCode || (data.salesCurrencyLabel ? data.salesCurrencyLabel.split(" ")[0] : "AED");
+  const salesAccountName = data.salesAccountName || "—";
+  const salesAccountCode = data.salesAccountCode || "—";
+  const salesTotalCredit = data.salesTotalCredit !== undefined && data.salesTotalCredit !== "" ? (typeof data.salesTotalCredit === "number" ? data.salesTotalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : data.salesTotalCredit) : "0.00";
+  const salesTotalDebit = data.salesTotalDebit !== undefined && data.salesTotalDebit !== "" ? (typeof data.salesTotalDebit === "number" ? data.salesTotalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : data.salesTotalDebit) : "0.00";
+  const salesBalance = data.salesBalance !== undefined && data.salesBalance !== "" ? (typeof data.salesBalance === "number" ? data.salesBalance.toLocaleString(undefined, { minimumFractionDigits: 2 }) : data.salesBalance) : "0.00";
+  const salesCompanyName = data.salesCompanyName || "—";
+  const salesBranch = data.salesBranch || "—";
+  const salesCountry = data.salesCountry || "—";
+  const salesCompanyCode = data.salesCompanyCode || "—";
+  const salesLegalType = data.salesLegalType || "—";
+  const salesLicenseNo = data.salesLicenseNo || "—";
+  const salesTaxRegNo = data.salesTaxRegNo || "—";
+  const salesVatRegNo = data.salesVatRegNo || "—";
+  const salesCompanyEstDate = data.salesCompanyEstDate || "—";
+  const salesCompanyEmail = data.salesCompanyEmail || "—";
+  const salesCompanyPhone = data.salesCompanyPhone || "—";
+  const salesCompanyWebsite = data.salesCompanyWebsite || "—";
+  const salesCompanyAddress = data.salesCompanyAddress || "—";
+  const salesBankName = data.salesBankName || "—";
+  const salesBankAccountName = data.salesBankAccountName || "—";
+  const salesBankAccountNo = data.salesBankAccountNo || "—";
+  const salesIban = data.salesIban || "—";
+  const salesSwiftCode = data.salesSwiftCode || "—";
+  const salesCurrencyLabel = data.salesCurrencyLabel || "—";
+  const salesCurrencyCode = data.salesCurrencyCode || (data.salesCurrencyLabel ? data.salesCurrencyLabel.split(" ")[0] : "");
+  const showExtendedDetails = !isCompact;
 
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className={`w-full ${className}`}>
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-stretch">
         
         {/* ================= CARD 1: BRANCH & USER INFORMATION ================= */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm space-y-4 hover:shadow-md transition-shadow">
@@ -293,37 +294,13 @@ export function PurchaseBookingReportGrid({
                 <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "pbr.parent_branch", "PARENT BRANCH")}</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 text-right">{parentBranch}</span>
               </div>
-              <div className="flex flex-col gap-0.5 py-1 border-b border-slate-50 dark:border-slate-800/60">
-                <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "pbr.address", "ADDRESS")}</span>
-                <span className="text-[10px] font-medium text-slate-700 dark:text-slate-300 leading-snug">{branchAddress}</span>
-              </div>
               <div className="flex justify-between items-start gap-2 py-0.5 border-b border-slate-50 dark:border-slate-800/60">
                 <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "pbr.city", "CITY")}</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 text-right">{branchCity}</span>
               </div>
               <div className="flex justify-between items-start gap-2 py-0.5 border-b border-slate-50 dark:border-slate-800/60">
-                <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "pbr.state_emirate", "STATE / EMIRATE")}</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200 text-right">{branchState}</span>
-              </div>
-              <div className="flex justify-between items-start gap-2 py-0.5 border-b border-slate-50 dark:border-slate-800/60">
                 <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "pbr.country", "COUNTRY")}</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 text-right">{branchCountry}</span>
-              </div>
-              <div className="flex justify-between items-start gap-2 py-0.5 border-b border-slate-50 dark:border-slate-800/60">
-                <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "pbr.postal_code", "POSTAL CODE")}</span>
-                <span className="font-mono text-slate-700 dark:text-slate-300 text-right">{branchPostalCode}</span>
-              </div>
-              <div className="flex justify-between items-start gap-2 py-0.5 border-b border-slate-50 dark:border-slate-800/60">
-                <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "pbr.phone", "PHONE")}</span>
-                <span className="font-mono text-slate-800 dark:text-slate-200 text-right">{branchPhone}</span>
-              </div>
-              <div className="flex justify-between items-start gap-2 py-0.5 border-b border-slate-50 dark:border-slate-800/60">
-                <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "pbr.email", "EMAIL")}</span>
-                <span className="font-mono text-[9.5px] text-blue-600 dark:text-blue-400 text-right truncate max-w-[140px]" title={branchEmail}>{branchEmail}</span>
-              </div>
-              <div className="flex justify-between items-start gap-2 py-0.5 border-b border-slate-50 dark:border-slate-800/60">
-                <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "pbr.established_date", "ESTABLISHED DATE")}</span>
-                <span className="font-mono text-slate-700 dark:text-slate-300 text-right">{branchEstablishedDate}</span>
               </div>
               <div className="flex justify-between items-center gap-2 pt-1">
                 <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "pbr.status", "STATUS")}</span>
@@ -334,7 +311,7 @@ export function PurchaseBookingReportGrid({
             </div>
           </div>
 
-          {/* Section 1.2: User Details */}
+          {/* Section 1.2: User Details (Compact) */}
           <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
             <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
               <User className="h-3.5 w-3.5" />
@@ -352,43 +329,9 @@ export function PurchaseBookingReportGrid({
                 <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "pbr.user_code", "USER CODE")}</span>
                 <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-right">{userCode}</span>
               </div>
-              <div className="flex justify-between items-start gap-2 py-0.5 border-b border-slate-50 dark:border-slate-800/60">
+              <div className="flex justify-between items-start gap-2 pt-0.5">
                 <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "pbr.role", "ROLE")}</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 text-right">{userRole}</span>
-              </div>
-              <div className="flex justify-between items-start gap-2 py-0.5 border-b border-slate-50 dark:border-slate-800/60">
-                <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "pbr.department", "DEPARTMENT")}</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200 text-right">{userDepartment}</span>
-              </div>
-              <div className="flex justify-between items-start gap-2 py-0.5 border-b border-slate-50 dark:border-slate-800/60">
-                <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "pbr.email", "EMAIL")}</span>
-                <span className="font-mono text-[9.5px] text-blue-600 dark:text-blue-400 text-right truncate max-w-[140px]" title={userEmail}>{userEmail}</span>
-              </div>
-              <div className="flex justify-between items-start gap-2 py-0.5 border-b border-slate-50 dark:border-slate-800/60">
-                <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "pbr.phone_mobile", "PHONE / MOBILE")}</span>
-                <span className="font-mono text-slate-800 dark:text-slate-200 text-right">{userPhone}</span>
-              </div>
-              <div className="flex justify-between items-center gap-2 py-0.5 border-b border-slate-50 dark:border-slate-800/60">
-                <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "pbr.status", "STATUS")}</span>
-                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800">
-                  {userStatus}
-                </span>
-              </div>
-              <div className="flex justify-between items-start gap-2 py-0.5 border-b border-slate-50 dark:border-slate-800/60">
-                <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "pbr.joining_date", "JOINING DATE")}</span>
-                <span className="font-mono text-slate-700 dark:text-slate-300 text-right">{userJoiningDate}</span>
-              </div>
-              <div className="flex justify-between items-start gap-2 py-0.5 border-b border-slate-50 dark:border-slate-800/60">
-                <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "pbr.password_expiry", "PASSWORD EXPIRY")}</span>
-                <span className="font-mono text-slate-700 dark:text-slate-300 text-right">{userPasswordExpiry}</span>
-              </div>
-              <div className="flex justify-between items-start gap-2 py-0.5 border-b border-slate-50 dark:border-slate-800/60">
-                <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "pbr.last_login", "LAST LOGIN")}</span>
-                <span className="font-mono text-[9px] text-slate-600 dark:text-slate-400 text-right">{userLastLogin}</span>
-              </div>
-              <div className="flex justify-between items-start gap-2 pt-1">
-                <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "nav.language", "LANGUAGE")}</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200 text-right">{userLanguage}</span>
               </div>
             </div>
           </div>
@@ -464,65 +407,7 @@ export function PurchaseBookingReportGrid({
             </div>
           </div>
 
-          {/* Section 2.1: Payment Information */}
-          <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-            <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
-              <CreditCard className="h-3.5 w-3.5" />
-              <span className="text-[10px] font-black uppercase tracking-wider">
-                {t(lang, "pbr.payment_info", "PAYMENT INFORMATION")}
-              </span>
-            </div>
-            <div className="space-y-1 text-[10.5px]">
-              <div className="flex justify-between items-start gap-2 py-0.5 border-b border-slate-50 dark:border-slate-800/60">
-                <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "pbr.payment_type", "PAYMENT TYPE")}</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200 text-right">{paymentType}</span>
-              </div>
-              <div className="flex justify-between items-start gap-2 py-0.5 border-b border-slate-50 dark:border-slate-800/60">
-                <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "pbr.payment_terms", "PAYMENT TERMS")}</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200 text-right">{paymentTerms}</span>
-              </div>
-              <div className="flex justify-between items-start gap-2 py-0.5 border-b border-slate-50 dark:border-slate-800/60">
-                <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "pbr.payment_method", "PAYMENT METHOD")}</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200 text-right">{paymentMethod}</span>
-              </div>
-              <div className="flex justify-between items-start gap-2 pt-0.5">
-                <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "pbr.payment_currency", "PAYMENT CURRENCY")}</span>
-                <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-right">{paymentCurrency}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Section 2.2: Shipping Information */}
-          <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-            <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
-              <Truck className="h-3.5 w-3.5" />
-              <span className="text-[10px] font-black uppercase tracking-wider">
-                {t(lang, "pbr.shipping_info", "SHIPPING INFORMATION")}
-              </span>
-            </div>
-            <div className="space-y-1 text-[10.5px]">
-              <div className="flex justify-between items-start gap-2 py-0.5 border-b border-slate-50 dark:border-slate-800/60">
-                <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "pbr.shipping_mode", "SHIPPING MODE")}</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200 text-right">{shippingMode}</span>
-              </div>
-              <div className="flex justify-between items-start gap-2 py-0.5 border-b border-slate-50 dark:border-slate-800/60">
-                <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "pbr.shipping_line_agent", "SHIPPING LINE")}</span>
-                <span className="font-bold text-slate-800 dark:text-slate-200 text-right truncate max-w-[130px]" title={shippingLine}>{shippingLine}</span>
-              </div>
-              <div className="flex justify-between items-start gap-2 py-0.5 border-b border-slate-50 dark:border-slate-800/60">
-                <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "pbr.loading_port", "LOADING PORT")}</span>
-                <span className="font-medium text-slate-800 dark:text-slate-200 text-right truncate max-w-[130px]" title={loadingPort}>{loadingPort}</span>
-              </div>
-              <div className="flex justify-between items-start gap-2 py-0.5 border-b border-slate-50 dark:border-slate-800/60">
-                <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "pbr.receiving_port", "RECEIVING PORT")}</span>
-                <span className="font-medium text-slate-800 dark:text-slate-200 text-right truncate max-w-[130px]" title={receivingPort}>{receivingPort}</span>
-              </div>
-              <div className="flex justify-between items-start gap-2 pt-0.5">
-                <span className="text-[9.5px] font-bold uppercase text-slate-500">{t(lang, "pbr.container_count_no", "CONTAINER")}</span>
-                <span className="font-mono text-[9.5px] font-bold text-slate-800 dark:text-slate-200 text-right truncate max-w-[130px]" title={containerInfo}>{containerInfo}</span>
-              </div>
-            </div>
-          </div>
+          {/* Card 2 is kept compact and aligned with adjacent cards */}
         </div>
 
         {/* ================= CARD 3: PURCHASE ACCOUNT DETAILS ================= */}
@@ -586,89 +471,67 @@ export function PurchaseBookingReportGrid({
             </div>
           </div>
 
-          {/* Section 3.1: Company Complete Details */}
-          <div className="space-y-2 pt-1">
-            <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
-              <ShieldCheck className="h-3.5 w-3.5" />
-              <span className="text-[10px] font-black uppercase tracking-wider">
-                {t(lang, "pbr.company_complete_details", "COMPANY COMPLETE DETAILS")}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-1 text-[10px]">
-              {/* Left Column */}
-              <div className="space-y-1">
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.company_code", "COMPANY CODE")}</span>
-                  <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{purchaseCompanyCode}</span>
-                </div>
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.legal_type", "LEGAL TYPE")}</span>
-                  <span className="font-semibold text-slate-700 dark:text-slate-300">{purchaseLegalType}</span>
-                </div>
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.license_no", "LICENSE NO.")}</span>
-                  <span className="font-mono text-slate-800 dark:text-slate-200">{purchaseLicenseNo}</span>
-                </div>
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.tax_reg_no", "TAX REGISTRATION NO.")}</span>
-                  <span className="font-mono text-[9px] text-slate-800 dark:text-slate-200 truncate block" title={purchaseTaxRegNo}>{purchaseTaxRegNo}</span>
-                </div>
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.vat_reg_no", "VAT REGISTRATION NO.")}</span>
-                  <span className="font-mono text-[9px] text-slate-800 dark:text-slate-200 truncate block" title={purchaseVatRegNo}>{purchaseVatRegNo}</span>
-                </div>
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.established_date", "ESTABLISHED DATE")}</span>
-                  <span className="font-mono text-slate-700 dark:text-slate-300">{purchaseCompanyEstDate}</span>
-                </div>
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.registered_email", "REGISTERED EMAIL")}</span>
-                  <span className="font-mono text-[9px] text-blue-600 dark:text-blue-400 truncate block" title={purchaseCompanyEmail}>{purchaseCompanyEmail}</span>
-                </div>
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.phone_mobile", "PHONE / MOBILE")}</span>
-                  <span className="font-mono text-slate-800 dark:text-slate-200">{purchaseCompanyPhone}</span>
-                </div>
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.website", "WEBSITE")}</span>
-                  <span className="font-mono text-[9px] text-blue-600 dark:text-blue-400 truncate block" title={purchaseCompanyWebsite}>{purchaseCompanyWebsite}</span>
-                </div>
+          {showExtendedDetails && (
+            /* Section 3.1: Company Complete Details */
+            <div className="space-y-2 pt-1">
+              <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                <span className="text-[10px] font-black uppercase tracking-wider">
+                  {t(lang, "pbr.company_complete_details", "COMPANY COMPLETE DETAILS")}
+                </span>
               </div>
 
-              {/* Right Column */}
-              <div className="space-y-1">
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.registered_address", "REGISTERED ADDRESS")}</span>
-                  <span className="text-[9px] font-medium text-slate-700 dark:text-slate-300 leading-snug block">{purchaseCompanyAddress}</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-1 text-[10px]">
+                {/* Left Column */}
+                <div className="space-y-1">
+                  <div>
+                    <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.company_code", "COMPANY CODE")}</span>
+                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{purchaseCompanyCode}</span>
+                  </div>
+                  <div>
+                    <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.legal_type", "LEGAL TYPE")}</span>
+                    <span className="font-semibold text-slate-700 dark:text-slate-300">{purchaseLegalType}</span>
+                  </div>
+                  <div>
+                    <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.license_no", "LICENSE NO.")}</span>
+                    <span className="font-mono text-slate-800 dark:text-slate-200">{purchaseLicenseNo}</span>
+                  </div>
+                  <div>
+                    <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.tax_reg_no", "TAX REGISTRATION NO.")}</span>
+                    <span className="font-mono text-[9px] text-slate-800 dark:text-slate-200 truncate block" title={purchaseTaxRegNo}>{purchaseTaxRegNo}</span>
+                  </div>
+                  <div>
+                    <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.vat_reg_no", "VAT REGISTRATION NO.")}</span>
+                    <span className="font-mono text-[9px] text-slate-800 dark:text-slate-200 truncate block" title={purchaseVatRegNo}>{purchaseVatRegNo}</span>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.bank_name", "BANK NAME")}</span>
-                  <span className="font-bold text-slate-800 dark:text-slate-200">{purchaseBankName}</span>
-                </div>
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.bank_ac_name", "BANK A/C NAME")}</span>
-                  <span className="font-semibold text-slate-700 dark:text-slate-300 truncate block" title={purchaseBankAccountName}>{purchaseBankAccountName}</span>
-                </div>
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.bank_account_no", "BANK ACCOUNT NO.")}</span>
-                  <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{purchaseBankAccountNo}</span>
-                </div>
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.iban_no", "IBAN NO.")}</span>
-                  <span className="font-mono text-[9px] font-bold text-slate-800 dark:text-slate-200 truncate block" title={purchaseIban}>{purchaseIban}</span>
-                </div>
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.swift_code", "SWIFT CODE")}</span>
-                  <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{purchaseSwiftCode}</span>
-                </div>
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.currency", "CURRENCY")}</span>
-                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{purchaseCurrencyLabel}</span>
+
+                {/* Right Column */}
+                <div className="space-y-1">
+                  <div>
+                    <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.established_date", "ESTABLISHED DATE")}</span>
+                    <span className="font-mono text-slate-700 dark:text-slate-300">{purchaseCompanyEstDate}</span>
+                  </div>
+                  <div>
+                    <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.registered_address", "REGISTERED ADDRESS")}</span>
+                    <span className="text-[9px] font-medium text-slate-700 dark:text-slate-300 leading-snug block">{purchaseCompanyAddress}</span>
+                  </div>
+                  <div>
+                    <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.registered_email", "REGISTERED EMAIL")}</span>
+                    <span className="font-mono text-[9px] text-blue-600 dark:text-blue-400 truncate block" title={purchaseCompanyEmail}>{purchaseCompanyEmail}</span>
+                  </div>
+                  <div>
+                    <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.phone_mobile", "PHONE / MOBILE")}</span>
+                    <span className="font-mono text-slate-800 dark:text-slate-200">{purchaseCompanyPhone}</span>
+                  </div>
+                  <div>
+                    <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.website", "WEBSITE")}</span>
+                    <span className="font-mono text-[9px] text-blue-600 dark:text-blue-400 truncate block" title={purchaseCompanyWebsite}>{purchaseCompanyWebsite}</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* ================= CARD 4: SALES ACCOUNT DETAILS ================= */}
@@ -732,89 +595,67 @@ export function PurchaseBookingReportGrid({
             </div>
           </div>
 
-          {/* Section 4.1: Company Complete Details */}
-          <div className="space-y-2 pt-1">
-            <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
-              <ShieldCheck className="h-3.5 w-3.5" />
-              <span className="text-[10px] font-black uppercase tracking-wider">
-                {t(lang, "pbr.company_complete_details", "COMPANY COMPLETE DETAILS")}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-1 text-[10px]">
-              {/* Left Column */}
-              <div className="space-y-1">
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.company_code", "COMPANY CODE")}</span>
-                  <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{salesCompanyCode}</span>
-                </div>
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.legal_type", "LEGAL TYPE")}</span>
-                  <span className="font-semibold text-slate-700 dark:text-slate-300">{salesLegalType}</span>
-                </div>
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.license_no", "LICENSE NO.")}</span>
-                  <span className="font-mono text-slate-800 dark:text-slate-200">{salesLicenseNo}</span>
-                </div>
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.tax_reg_no", "TAX REGISTRATION NO.")}</span>
-                  <span className="font-mono text-[9px] text-slate-800 dark:text-slate-200 truncate block" title={salesTaxRegNo}>{salesTaxRegNo}</span>
-                </div>
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.vat_reg_no", "VAT REGISTRATION NO.")}</span>
-                  <span className="font-mono text-[9px] text-slate-800 dark:text-slate-200 truncate block" title={salesVatRegNo}>{salesVatRegNo}</span>
-                </div>
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.established_date", "ESTABLISHED DATE")}</span>
-                  <span className="font-mono text-slate-700 dark:text-slate-300">{salesCompanyEstDate}</span>
-                </div>
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.registered_email", "REGISTERED EMAIL")}</span>
-                  <span className="font-mono text-[9px] text-blue-600 dark:text-blue-400 truncate block" title={salesCompanyEmail}>{salesCompanyEmail}</span>
-                </div>
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.phone_mobile", "PHONE / MOBILE")}</span>
-                  <span className="font-mono text-slate-800 dark:text-slate-200">{salesCompanyPhone}</span>
-                </div>
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.website", "WEBSITE")}</span>
-                  <span className="font-mono text-[9px] text-blue-600 dark:text-blue-400 truncate block" title={salesCompanyWebsite}>{salesCompanyWebsite}</span>
-                </div>
+          {showExtendedDetails && (
+            /* Section 4.1: Company Complete Details */
+            <div className="space-y-2 pt-1">
+              <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                <span className="text-[10px] font-black uppercase tracking-wider">
+                  {t(lang, "pbr.company_complete_details", "COMPANY COMPLETE DETAILS")}
+                </span>
               </div>
 
-              {/* Right Column */}
-              <div className="space-y-1">
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.registered_address", "REGISTERED ADDRESS")}</span>
-                  <span className="text-[9px] font-medium text-slate-700 dark:text-slate-300 leading-snug block">{salesCompanyAddress}</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-1 text-[10px]">
+                {/* Left Column */}
+                <div className="space-y-1">
+                  <div>
+                    <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.company_code", "COMPANY CODE")}</span>
+                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{salesCompanyCode}</span>
+                  </div>
+                  <div>
+                    <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.legal_type", "LEGAL TYPE")}</span>
+                    <span className="font-semibold text-slate-700 dark:text-slate-300">{salesLegalType}</span>
+                  </div>
+                  <div>
+                    <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.license_no", "LICENSE NO.")}</span>
+                    <span className="font-mono text-slate-800 dark:text-slate-200">{salesLicenseNo}</span>
+                  </div>
+                  <div>
+                    <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.tax_reg_no", "TAX REGISTRATION NO.")}</span>
+                    <span className="font-mono text-[9px] text-slate-800 dark:text-slate-200 truncate block" title={salesTaxRegNo}>{salesTaxRegNo}</span>
+                  </div>
+                  <div>
+                    <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.vat_reg_no", "VAT REGISTRATION NO.")}</span>
+                    <span className="font-mono text-[9px] text-slate-800 dark:text-slate-200 truncate block" title={salesVatRegNo}>{salesVatRegNo}</span>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.bank_name", "BANK NAME")}</span>
-                  <span className="font-bold text-slate-800 dark:text-slate-200">{salesBankName}</span>
-                </div>
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.bank_ac_name", "BANK A/C NAME")}</span>
-                  <span className="font-semibold text-slate-700 dark:text-slate-300 truncate block" title={salesBankAccountName}>{salesBankAccountName}</span>
-                </div>
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.bank_account_no", "BANK ACCOUNT NO.")}</span>
-                  <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{salesBankAccountNo}</span>
-                </div>
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.iban_no", "IBAN NO.")}</span>
-                  <span className="font-mono text-[9px] font-bold text-slate-800 dark:text-slate-200 truncate block" title={salesIban}>{salesIban}</span>
-                </div>
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.swift_code", "SWIFT CODE")}</span>
-                  <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{salesSwiftCode}</span>
-                </div>
-                <div>
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.currency", "CURRENCY")}</span>
-                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{salesCurrencyLabel}</span>
+
+                {/* Right Column */}
+                <div className="space-y-1">
+                  <div>
+                    <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.established_date", "ESTABLISHED DATE")}</span>
+                    <span className="font-mono text-slate-700 dark:text-slate-300">{salesCompanyEstDate}</span>
+                  </div>
+                  <div>
+                    <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.registered_address", "REGISTERED ADDRESS")}</span>
+                    <span className="text-[9px] font-medium text-slate-700 dark:text-slate-300 leading-snug block">{salesCompanyAddress}</span>
+                  </div>
+                  <div>
+                    <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.registered_email", "REGISTERED EMAIL")}</span>
+                    <span className="font-mono text-[9px] text-blue-600 dark:text-blue-400 truncate block" title={salesCompanyEmail}>{salesCompanyEmail}</span>
+                  </div>
+                  <div>
+                    <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.phone_mobile", "PHONE / MOBILE")}</span>
+                    <span className="font-mono text-slate-800 dark:text-slate-200">{salesCompanyPhone}</span>
+                  </div>
+                  <div>
+                    <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{t(lang, "pbr.website", "WEBSITE")}</span>
+                    <span className="font-mono text-[9px] text-blue-600 dark:text-blue-400 truncate block" title={salesCompanyWebsite}>{salesCompanyWebsite}</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
       </div>

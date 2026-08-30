@@ -1,4 +1,4 @@
--- Migration: Cleanup and standardize User Directory to the 19 authentic operational users
+-- Migration: Cleanup and standardize User Directory to the 18 authentic operational users
 -- Dynamically reassigns FK audit references to SUPERADMIN and deletes test/demo users.
 
 DO $$
@@ -78,32 +78,6 @@ BEGIN
     
     -- Delete profiles
     DELETE FROM public.profiles WHERE id = ANY(v_ids_to_delete);
-  END IF;
-
-  -- 2. Ensure ARE-ADMIN profile exists if missing
-  IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE user_code = 'ARE-ADMIN') THEN
-    INSERT INTO public.profiles (id, full_name, user_code, preferred_language_code, created_at, updated_at)
-    VALUES (
-      '77777777-7777-4777-8777-777777777701'::uuid,
-      'United Arab Emirates Country Admin',
-      'ARE-ADMIN',
-      'en',
-      NOW(),
-      NOW()
-    ) ON CONFLICT (id) DO NOTHING;
-
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name = 'user_roles') THEN
-      INSERT INTO public.user_roles (user_id, role)
-      VALUES ('77777777-7777-4777-8777-777777777701'::uuid, 'country_admin')
-      ON CONFLICT (user_id, role) DO NOTHING;
-    END IF;
-
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name = 'user_scopes') THEN
-      INSERT INTO public.user_scopes (user_id, country_id)
-      SELECT '77777777-7777-4777-8777-777777777701'::uuid, id
-      FROM public.countries WHERE iso2 = 'AE' LIMIT 1
-      ON CONFLICT DO NOTHING;
-    END IF;
   END IF;
 
 END $$;

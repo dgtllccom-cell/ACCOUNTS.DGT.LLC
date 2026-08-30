@@ -4781,9 +4781,6 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start w-full">
                 <section className="lg:col-span-9 space-y-4 order-2 mt-4">
-                  {/* GLOBAL INFO CARDS (Always visible at top) */}
-                  {renderGlobalInfoCards()}
-
                   {/* GOODS LIST TABLE */}
                   {activeTab === "goods" && (
                   <div className="mt-4">
