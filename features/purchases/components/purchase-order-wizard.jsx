@@ -4951,10 +4951,611 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                     setSalesPinDropdownOpen(false);
                                     setSalesSearch("");
                                   }}
-            </main>
-          </div>
-        )
-      )}
+                                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg pl-2.5 pr-8 py-1.5 text-slate-900 dark:text-slate-100 font-semibold outline-none focus:border-blue-500 text-xs h-9"
+                                />
+                                <button
+                                  type="button"
+                                  disabled={!form.customerId}
+                                  onClick={() => {
+                                    setSalesPinDropdownOpen(prev => !prev);
+                                    setSalesDropdownOpen(false);
+                                  }}
+                                  className="absolute right-2 text-slate-400 hover:text-blue-600 transition-colors disabled:opacity-30"
+                                >
+                                  <Pin className={`h-3.5 w-3.5 ${salesPinDropdownOpen ? "text-blue-600 rotate-45" : ""}`} />
+                                </button>
+                              </div>
+
+                              {salesDropdownOpen && (
+                                <div className="absolute left-0 mt-1.5 w-full min-w-[290px] sm:min-w-[440px] md:min-w-[520px] rounded-2xl bg-white dark:bg-slate-900 border-2 border-blue-500/40 shadow-2xl z-[80] p-2 overflow-hidden backdrop-blur-md">
+                                  <div className="flex justify-between items-center px-2.5 py-1.5 bg-blue-50 dark:bg-blue-950/40 rounded-lg mb-1.5 border border-blue-100 dark:border-blue-900">
+                                    <span className="text-[10px] font-black uppercase text-blue-600 dark:text-blue-400 tracking-wider">{t(lang, "purchase.select_sales_account_cr_header", "Select Sales Account (CR)")}</span>
+                                    <span className="text-[9px] font-mono font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                                      {t(lang, "purchase.found_count_suffix", "{n} found").replace("{n}", String(dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).length))}
+                                    </span>
+                                  </div>
+                                  <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
+                                    {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).map((acc) => {
+                                      const compName = acc.companyName || acc.company_name || (acc.companyId && dbCompanies.find(c => c.id === acc.companyId)?.name) || dbCompanies[0]?.name || t(lang, "purchase.card_none_label", "None");
+                                      return (
+                                        <button
+                                          key={acc.accountCode}
+                                          type="button"
+                                          onClick={() => {
+                                            applyAccountMaster("sales", acc);
+                                            setSalesDropdownOpen(false);
+                                            setSalesSearch("");
+                                          }}
+                                          className="w-full text-left p-3 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/30 transition duration-150 group bg-white dark:bg-slate-900 shadow-2xs"
+                                        >
+                                          <div className="flex flex-wrap justify-between items-start gap-1.5 mb-1.5">
+                                            <span className="font-black text-xs text-slate-900 dark:text-slate-100 group-hover:text-blue-600 transition-colors">
+                                              {acc.accountName || t(lang, "purchase.wiz_unnamed_account", "Unnamed Account")}
+                                            </span>
+                                            <div className="flex flex-wrap items-center gap-1">
+                                              <span className="font-mono text-[9px] font-black bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded">
+                                                {acc.accountCode}
+                                              </span>
+                                              {acc.manualReferenceNumber && (
+                                                <span className="font-mono text-[9px] font-black bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200 dark:border-purple-800 px-1.5 py-0.5 rounded">
+                                                  Ref: {acc.manualReferenceNumber}
+                                                </span>
+                                              )}
+                                            </div>
+                                          </div>
+                                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-[9.5px] text-slate-500 border-t border-slate-100 dark:border-slate-800 pt-1.5">
+                                            <div>
+                                              <span className="font-bold text-slate-700 dark:text-slate-300">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> {acc.cityBranchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}
+                                            </div>
+                                            <div>
+                                              <span className="font-bold text-slate-700 dark:text-slate-300">{t(lang, "purchase.curr_colon", "Curr:")}</span> <span className="font-black text-emerald-600 dark:text-emerald-400">{acc.ledgerCurrency || "USD"}</span>
+                                            </div>
+                                            {acc.contactPerson ? (
+                                              <div>
+                                                <span className="font-bold text-slate-700 dark:text-slate-300">Owner:</span> <span className="font-bold text-emerald-700 dark:text-emerald-300">👤 {acc.contactPerson}</span>
+                                              </div>
+                                            ) : (
+                                              <div>
+                                                <span className="font-bold text-slate-700 dark:text-slate-300">{t(lang, "purchase.card_company_colon", "Company:")}</span> <span className="truncate inline-block max-w-[120px] align-bottom font-medium">{compName}</span>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Contract No */}
+                            <div>
+                              <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.contract_no_label", "Contract No")}</label>
+                              <input
+                                type="text"
+                                value={form.purchaseContractNo || "PC-2026-1925"}
+                                onChange={(e) => setValue("purchaseContractNo", e.target.value)}
+                                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-slate-100 font-mono font-bold outline-none focus:border-blue-500 text-xs h-9"
+                              />
+                            </div>
+
+                            {/* Contract / Booking Date */}
+                            <div>
+                              <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.contract_booking_date_label", "Contract / Booking Date *")}</label>
+                              <input
+                                type="date"
+                                value={form.purchaseDate || ""}
+                                onChange={(e) => setValue("purchaseDate", e.target.value)}
+                                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-slate-100 font-semibold outline-none focus:border-blue-500 text-xs h-9"
+                              />
+                            </div>
+
+                            {/* Invoice / Payment Select & Ship Option (2 cols) */}
+                            <div className="grid grid-cols-2 gap-2.5">
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.invoice_payment_select_label", "Invoice / Payment Select")}</label>
+                                <select
+                                  value={form.paymentType || "Advance Payment"}
+                                  onChange={(e) => setValue("paymentType", e.target.value)}
+                                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-slate-100 font-semibold outline-none focus:border-blue-500 text-xs h-9"
+                                >
+                                  {PAYMENT_TYPES.map((type) => (
+                                    <option key={type} value={type}>{translateOptionLabel(lang, type)}</option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.ship_option_label", "Ship Option")}</label>
+                                <select
+                                  value={form.shippingMode || "By Sea"}
+                                  onChange={(e) => {
+                                    const mode = e.target.value;
+                                    setValue("shippingMode", mode);
+                                    setValue("shipmentType", mode === "By Sea" ? "By Ship" : mode);
+                                  }}
+                                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-slate-100 font-semibold outline-none focus:border-blue-500 text-xs h-9"
+                                >
+                                  {LOADING_TYPES.map((type) => (
+                                    <option key={type} value={type}>{translateOptionLabel(lang, type)}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+
+                            {/* Status */}
+                            <div>
+                              <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.status_label_plain", "Status")}</label>
+                              <select
+                                value={form.salesStatus || "Draft"}
+                                onChange={(e) => setValue("salesStatus", e.target.value)}
+                                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-slate-100 font-semibold outline-none focus:border-blue-500 text-xs h-9"
+                              >
+                                <option value="Draft">{t(lang, "purchase.opt_draft", "Draft")}</option>
+                                <option value="Pending">{t(lang, "purchase.opt_pending", "Pending")}</option>
+                                <option value="Confirmed">{t(lang, "purchase.opt_confirmed", "Confirmed")}</option>
+                                <option value="Transferred">{t(lang, "purchase.opt_transferred", "Transferred")}</option>
+                              </select>
+                            </div>
+
+                            {/* Currency & Conversion Configuration */}
+                            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 p-3 space-y-2.5">
+                              <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                                <ArrowRightLeft className="h-3.5 w-3.5 text-blue-600" />
+                                <span className="text-[10px] font-black uppercase tracking-wider">
+                                  {t(lang, "purchase.booking_currency_title", "Booking Currency & Conversion")}
+                                </span>
+                              </div>
+
+                              <div className="grid grid-cols-1 gap-2 text-[10px]">
+                                <div>
+                                  <label className="block text-[9.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                                    {t(lang, "purchase.purchase_currency", "Purchase Currency (Invoice)")}
+                                  </label>
+                                  <select
+                                    value={form.currencyType || "USD"}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      setForm(prev => ({
+                                        ...prev,
+                                        currencyType: val,
+                                        purchaseCurrency: val
+                                      }));
+                                    }}
+                                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-slate-900 dark:text-slate-100 font-bold h-8 text-xs outline-none focus:border-blue-500"
+                                  >
+                                    {CURRENCY_OPTIONS.map(c => (
+                                      <option key={c} value={c}>{c} {c === "USD" ? "($)" : c === "AED" ? "(Dirham)" : ""}</option>
+                                    ))}
+                                  </select>
+                                </div>
+
+                                <div>
+                                  <label className="block text-[9.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                                    {t(lang, "purchase.final_currency", "Final / Settlement Currency")}
+                                  </label>
+                                  <select
+                                    value={form.secondaryCurrency || "AED"}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      setForm(prev => ({
+                                        ...prev,
+                                        secondaryCurrency: val,
+                                        paymentCurrency: val
+                                      }));
+                                    }}
+                                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-slate-900 dark:text-slate-100 font-bold h-8 text-xs outline-none focus:border-blue-500"
+                                  >
+                                    {CURRENCY_OPTIONS.map(c => (
+                                      <option key={c} value={c}>{c} {c === "AED" ? "(Dirham)" : c === "USD" ? "($ Dollar)" : ""}</option>
+                                    ))}
+                                  </select>
+                                </div>
+
+                                <div>
+                                  <label className="block text-[9.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                                    {t(lang, "purchase.exchange_rate", "Exchange Rate")} ({form.currencyType || "USD"} → {form.secondaryCurrency || "AED"})
+                                  </label>
+                                  <div className="flex gap-1">
+                                    <input
+                                      type="number"
+                                      step="any"
+                                      value={form.exchangeRate !== undefined ? form.exchangeRate : 3.6730}
+                                      onChange={(e) => setValue("exchangeRate", Number(e.target.value))}
+                                      placeholder="3.6730"
+                                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-slate-900 dark:text-slate-100 font-mono font-bold h-8 text-xs outline-none focus:border-blue-500"
+                                    />
+                                    <select
+                                      value={form.operator || "*"}
+                                      onChange={(e) => setValue("operator", e.target.value)}
+                                      className="w-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-center text-xs font-black h-8 outline-none"
+                                    >
+                                      <option value="*">*</option>
+                                      <option value="/">/</option>
+                                    </select>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Remarks / Terms */}
+                            <div>
+                              <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.booking_remarks_terms_label", "Booking Remarks / Terms")}</label>
+                              <textarea
+                                rows={2}
+                                value={form.remarks || ""}
+                                onChange={(e) => setValue("remarks", e.target.value)}
+                                placeholder={t(lang, "purchase.booking_remarks_placeholder", "Write booking terms, payment notes, invoice note, or shipping instruction...")}
+                                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 text-xs resize-none leading-relaxed"
+                              />
+                            </div>
+
+                            {/* Primary Next Button (Solid Orange) */}
+                            <div className="pt-2">
+                              <button
+                                type="button"
+                                onClick={() => setActiveTab("goods")}
+                                className="w-full h-10 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md shadow-orange-500/20 transition-all cursor-pointer"
+                              >
+                                <span>Next</span>
+                                <ArrowRight className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
+                        </fieldset>
+                      )}
+
+                      {activeTab === "goods" && (
+                        <fieldset disabled={isTransferred && !session?.scopes?.isSuperAdmin} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs space-y-4 w-full animate-in fade-in duration-200">
+                          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
+                            <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                              <Package className="h-4 w-4 text-blue-600" />
+                              {t(lang, "purchase.goods_entry_title", "GOODS ENTRY")}
+                            </h3>
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab("booking")}
+                              className="text-[10.5px] font-bold text-slate-500 hover:text-slate-800 underline"
+                            >
+                              ← Back to Booking
+                            </button>
+                          </div>
+
+                          <div className="space-y-3">
+                            {/* Origin Country */}
+                            <div>
+                              <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.f_origin_country", "Origin Country")}</label>
+                              <select
+                                value={form.origin || ""}
+                                onChange={(e) => setValue("origin", e.target.value)}
+                                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 text-xs h-9 font-semibold"
+                              >
+                                <option value="">{t(lang, "purchase.select_origin", "Select Origin")}</option>
+                                {Array.from(new Set([
+                                  "United Arab Emirates", "Iran", "USA", "Vietnam", "Pakistan", "India", "Afghanistan", "China", "Turkey",
+                                  ...allCountries.map(c => c.name).filter(Boolean),
+                                  ...transitCountryOptions.map(c => c.name).filter(Boolean),
+                                  form.origin
+                                ].filter(Boolean))).sort().map(c => (
+                                  <option key={c} value={c}>{c}</option>
+                                ))}
+                              </select>
+                            </div>
+
+                            {/* Goods Name */}
+                            <div className="relative">
+                              <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.goods_name_star", "Goods Name*")}</label>
+                              <SearchableSelect
+                                value={form.goodsName || ""}
+                                onChange={(val) => {
+                                  if (val === "__ADD_NEW__") {
+                                    setNewGoodForm({ goodsName: "", chsCode: "", size: "", brand: "", originCountryId: "" });
+                                    setNewGoodError("");
+                                    setNewGoodModal(true);
+                                  } else {
+                                    setValue("goodsName", val);
+                                    const foundGood = dbGoods.find(g => (g.goods_name || g.goodsName) === val);
+                                    if (foundGood) {
+                                      const hs = foundGood.chs_code || foundGood.chsCode || "";
+                                      const firstVar = foundGood.variations?.[0] || {};
+                                      const br = firstVar.brand || foundGood.brand || "";
+                                      const sz = firstVar.size || foundGood.size || "";
+                                      const originId = foundGood.origin_country_id || foundGood.originCountryId;
+                                      const originCountryObj = originId ? (allCountries.find(c => c.id === originId) || countries.find(c => c.id === originId) || transitCountryOptions.find(c => c.id === originId)) : null;
+                                      const cName = originCountryObj?.name || foundGood.origin || "";
+
+                                      setForm(prev => ({
+                                        ...prev,
+                                        goodsName: val,
+                                        hsCode: hs || prev.hsCode,
+                                        brand: br || prev.brand,
+                                        size: sz || prev.size,
+                                        origin: cName || prev.origin
+                                      }));
+                                    }
+                                  }
+                                }}
+                                options={[
+                                  ...dbGoods.map(g => ({ label: g.goods_name || g.goodsName, value: g.goods_name || g.goodsName })),
+                                  ...GOODS_OPTIONS.filter(go => !dbGoods.some(g => (g.goods_name || g.goodsName) === go)).map(g => ({ label: g, value: g }))
+                                ]}
+                                placeholder={t(lang, "purchase.select_goods_name", "Select Goods Name")}
+                                addOptionLabel={t(lang, "purchase.add_new_goods_item", "Add New Goods Item")}
+                              />
+                            </div>
+
+                            {/* Size & Brand (2 cols) */}
+                            <div className="grid grid-cols-2 gap-2.5">
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.size_label", "Size")}</label>
+                                <SearchableSelect
+                                  value={form.size || ""}
+                                  onChange={(val) => setValue("size", val)}
+                                  options={SIZE_OPTIONS.map(s => ({ label: s, value: s }))}
+                                  placeholder={t(lang, "purchase.select_size", "Select Size")}
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.brand_label", "Brand")}</label>
+                                <SearchableSelect
+                                  value={form.brand || ""}
+                                  onChange={(val) => setValue("brand", val)}
+                                  options={BRAND_OPTIONS.map(b => ({ label: b, value: b }))}
+                                  placeholder={t(lang, "purchase.select_brand", "Select Brand")}
+                                />
+                              </div>
+                            </div>
+
+                            {/* Qty & Unit (2 cols) */}
+                            <div className="grid grid-cols-2 gap-2.5">
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.th_qty", "Quantity")}</label>
+                                <input
+                                  type="number"
+                                  value={form.qtyNo || ""}
+                                  onChange={(e) => setValue("qtyNo", Number(e.target.value))}
+                                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-slate-100 font-mono font-bold outline-none focus:border-blue-500 text-xs h-9"
+                                  placeholder="e.g. 500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "purchase.th_unit", "Unit")}</label>
+                                <select
+                                  value={form.qtyName || "BAGS"}
+                                  onChange={(e) => setValue("qtyName", e.target.value)}
+                                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-slate-100 font-semibold outline-none focus:border-blue-500 text-xs h-9"
+                                >
+                                  {QTY_TYPE_OPTIONS.map(u => <option key={u} value={u}>{u}</option>)}
+                                </select>
+                              </div>
+                            </div>
+
+                            {/* Price */}
+                            <div>
+                              <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                {t(lang, "purchase.price_rate_c1", "Price Rate")} ({form.currencyType || "USD"})
+                              </label>
+                              <input
+                                type="number"
+                                value={form.coursePrice || ""}
+                                onChange={(e) => {
+                                  setValue("coursePrice", Number(e.target.value));
+                                  setValue("manualTotalAmount", "");
+                                  setValue("manualFinalAmount", "");
+                                }}
+                                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-900 dark:text-slate-100 font-mono font-bold outline-none focus:border-blue-500 text-xs h-9"
+                                placeholder="0.00"
+                              />
+                            </div>
+
+                            {/* Add / Update Item Button */}
+                            <div className="pt-2 flex gap-2">
+                              {editingGoodsIndex !== null ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={handleCancelEditGoodsEntry}
+                                    className="flex-1 h-9 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50"
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={handleUpdateGoodsEntry}
+                                    className="flex-1 h-9 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shadow-sm"
+                                  >
+                                    ✓ Update Item
+                                  </button>
+                                </>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={handleAddGoodsEntry}
+                                  className="w-full h-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider shadow-md shadow-emerald-600/20 flex items-center justify-center gap-1.5 cursor-pointer"
+                                >
+                                  {t(lang, "purchase.add_item_to_list", "+ Add Item to List")}
+                                </button>
+                              )}
+                            </div>
+
+                            <div className="pt-1">
+                              <button
+                                type="button"
+                                onClick={() => setActiveTab("others")}
+                                className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                              >
+                                {t(lang, "purchase.next_other_details", "Next: Other Details →")}
+                              </button>
+                            </div>
+                          </div>
+                        </fieldset>
+                      )}
+                    </div>
+
+                    {/* RIGHT COLUMN: 4 Report Cards (Top) + Purchase Booking Register Table (Bottom) */}
+                    <div className="lg:col-span-8 space-y-4 w-full">
+                      {/* 4 Report Cards */}
+                      {renderGlobalInfoCards()}
+
+                      {/* ================= PURCHASE BOOKING REGISTER CARD ================= */}
+                      <div className="w-full bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs space-y-3">
+                        {/* Register Header Toolbar */}
+                        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+                          <div className="flex items-center gap-2">
+                            <FileSpreadsheet className="h-4 w-4 text-blue-600" />
+                            <h3 className="text-xs font-black tracking-tight text-slate-900 dark:text-slate-100">
+                              Purchase Booking Register
+                            </h3>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-2 text-xs">
+                            <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-slate-700 dark:text-slate-300 font-medium text-[11px]">
+                              <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                              <span>01/08/2026 → 31/08/2026</span>
+                            </div>
+
+                            <select className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-[11px] font-medium text-slate-700 dark:text-slate-300 outline-none">
+                              <option>Branch: All Branches</option>
+                            </select>
+
+                            <select className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-[11px] font-medium text-slate-700 dark:text-slate-300 outline-none">
+                              <option>Status: All Status</option>
+                            </select>
+
+                            <div className="relative">
+                              <Search className="h-3.5 w-3.5 text-slate-400 absolute left-2.5 top-2" />
+                              <input
+                                type="text"
+                                placeholder="Search by Bill No, Contract No, Account..."
+                                className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg pl-8 pr-3 py-1 text-[11px] text-slate-700 dark:text-slate-300 outline-none w-48 sm:w-56 placeholder:text-slate-400"
+                              />
+                            </div>
+
+                            <button
+                              type="button"
+                              className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1 text-[11px] font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                            >
+                              <SlidersHorizontal className="h-3.5 w-3.5 text-slate-500" />
+                              <span>Filters</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Goods Table */}
+                        <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                          <table className="w-full text-[9px] text-slate-800 dark:text-slate-200 border-collapse text-left whitespace-nowrap">
+                            <thead>
+                              <tr className="bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 font-bold uppercase tracking-wider">
+                                <Th className="px-3 py-2 text-center w-8">#</Th>
+                                <Th className="px-3 py-2">GOODS NAME</Th>
+                                <Th className="px-3 py-2 text-center">SIZE</Th>
+                                <Th className="px-3 py-2 text-center">BRAND</Th>
+                                <Th className="px-3 py-2 text-center">HS CODE</Th>
+                                <Th className="px-3 py-2 text-center">ORIGIN</Th>
+                                <Th className="px-3 py-2 text-right">QTY</Th>
+                                <Th className="px-3 py-2 text-center">UNIT</Th>
+                                <Th className="px-3 py-2 text-right">PRICE ({form.currencyType || "USD"})</Th>
+                                <Th className="px-3 py-2 text-right">AMOUNT ({form.currencyType || "USD"})</Th>
+                                <Th className="px-3 py-2 text-center">EX. RATE</Th>
+                                <Th className="px-3 py-2 text-right text-emerald-700 dark:text-emerald-400 font-black bg-emerald-500/5">FINAL ({form.secondaryCurrency || "AED"})</Th>
+                                <Th className="px-3 py-2 text-center w-10">ACTION</Th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {goodsEntries.length === 0 ? (
+                                <tr>
+                                  <td colSpan={13} className="px-3 py-12 text-center">
+                                    <div className="flex flex-col items-center justify-center gap-2 text-slate-400">
+                                      <div className="h-12 w-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                                        <ShoppingCart className="h-6 w-6" />
+                                      </div>
+                                      <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                                        No goods added yet. Add an item above to see it here.
+                                      </span>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ) : (
+                                goodsEntries.map((row, index) => (
+                                  <tr
+                                    key={index}
+                                    className={`border-t border-slate-200 dark:border-slate-800 transition ${
+                                      editingGoodsIndex === index
+                                        ? "bg-amber-500/15 border-l-4 border-l-amber-500 font-bold"
+                                        : "hover:bg-slate-100/50 dark:hover:bg-slate-800/50"
+                                    }`}
+                                  >
+                                    <td className="px-3 py-2 text-center font-mono text-slate-400">{index + 1}</td>
+                                    <td className="px-3 py-2 font-black text-blue-600 dark:text-blue-400">{row.goodsName}</td>
+                                    <td className="px-3 py-2 text-center font-semibold">{row.size}</td>
+                                    <td className="px-3 py-2 text-center font-semibold">{row.brand}</td>
+                                    <td className="px-3 py-2 text-center font-mono text-slate-400">{row.hsCode}</td>
+                                    <td className="px-3 py-2 text-center font-semibold">{row.origin}</td>
+                                    <td className="px-3 py-2 text-right font-mono font-bold">{Number(row.qtyNo || 0).toLocaleString()}</td>
+                                    <td className="px-3 py-2 text-center font-semibold">{row.qtyName}</td>
+                                    <td className="px-3 py-2 text-right font-mono font-bold text-slate-600 dark:text-slate-300">{Number(row.coursePrice || row.price || 0).toFixed(2)}</td>
+                                    <td className="px-3 py-2 text-right font-mono font-black text-amber-600 dark:text-amber-400">{Number(row.totalAmount || row.amount || 0).toLocaleString()}</td>
+                                    <td className="px-3 py-2 text-center font-mono text-slate-400">{row.op || "*"} {row.exchangeRate}</td>
+                                    <td className="px-3 py-2 text-right font-mono font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/5">
+                                      {Number(row.finalAmount || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </td>
+                                    <td className="px-3 py-2 text-center">
+                                      <div className="flex items-center justify-center gap-1.5">
+                                        <button
+                                          type="button"
+                                          onClick={() => handleViewGoodsEntry(index)}
+                                          className="flex items-center gap-1 px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[9px] font-bold transition-colors"
+                                          title={t(lang, "common.view", "View")}
+                                        >
+                                          <Eye className="h-3 w-3" /> {t(lang, "common.view", "View")}
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleEditGoodsEntry(index)}
+                                          className="flex items-center gap-1 px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded text-[9px] font-bold transition-colors shadow-2xs border border-blue-200"
+                                          title={t(lang, "common.edit", "Edit")}
+                                        >
+                                          <Edit3 className="h-3 w-3" /> {t(lang, "common.edit", "Edit")}
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => setGoodsEntries(prev => prev.filter((_, idx) => idx !== index))}
+                                          className="flex items-center gap-1 px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded text-[9px] font-bold transition-colors shadow-2xs border border-red-100"
+                                          title={t(lang, "common.delete", "Delete")}
+                                        >
+                                          <Trash2 className="h-3 w-3" /> {t(lang, "common.delete", "Delete")}
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {/* Pagination Footer */}
+                        <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400 pt-2">
+                          <span>Showing 0 to {goodsEntries.length} of {goodsEntries.length} entries</span>
+                          <div className="flex items-center gap-2">
+                            <select className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-0.5 text-xs text-slate-700 dark:text-slate-300">
+                              <option>10</option>
+                              <option>25</option>
+                              <option>50</option>
+                            </select>
+                            <div className="flex items-center gap-1">
+                              <button type="button" className="px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 text-slate-600 dark:text-slate-300 disabled:opacity-40" disabled>«</button>
+                              <button type="button" className="px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 text-slate-600 dark:text-slate-300 disabled:opacity-40" disabled>&lt;</button>
+                              <button type="button" className="px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 text-slate-600 dark:text-slate-300 disabled:opacity-40" disabled>&gt;</button>
+                              <button type="button" className="px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 text-slate-600 dark:text-slate-300 disabled:opacity-40" disabled>»</button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            )}
 
       {activeTab === "report" && (
         <div className="w-full mt-4 animate-in fade-in duration-300">
