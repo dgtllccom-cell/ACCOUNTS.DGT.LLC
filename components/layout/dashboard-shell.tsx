@@ -3,11 +3,13 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { sidebarTree } from "@/lib/navigation/sidebar";
 import { DashboardFrame } from "@/components/layout/dashboard-frame";
 import { InstallAppBanner } from "@/components/layout/install-app-banner";
+import { DgtConnectWidget } from "@/features/dgt-connect/dgt-connect-widget";
 
 export function DashboardShell({
   children,
   userEmail,
   userName,
+  currentUserId,
   roles,
   permissions,
   lang
@@ -15,6 +17,7 @@ export function DashboardShell({
   children: React.ReactNode;
   userEmail: string;
   userName?: string | null;
+  currentUserId?: string | null;
   roles: EnterpriseRole[] | null;
   permissions?: string[] | null;
   lang: SupportedLanguage;
@@ -32,6 +35,7 @@ export function DashboardShell({
         ) : null}
         {children}
       </DashboardFrame>
+      {!isDemoMode && currentUserId ? <DgtConnectWidget currentUserId={currentUserId} /> : null}
     </div>
   );
 }

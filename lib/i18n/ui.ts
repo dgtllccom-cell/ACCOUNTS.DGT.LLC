@@ -4410,6 +4410,53 @@ export type UiKey =
   | "tdoc.t_contract"
   | "tdoc.t_sales_contract"
   | "tdoc.t_purchase_contract"
+  | "dgtc.title"
+  | "dgtc.subtitle"
+  | "dgtc.open"
+  | "dgtc.close"
+  | "dgtc.search_placeholder"
+  | "dgtc.new_chat"
+  | "dgtc.new_group"
+  | "dgtc.group_name"
+  | "dgtc.select_participants"
+  | "dgtc.create"
+  | "dgtc.cancel"
+  | "dgtc.send"
+  | "dgtc.message_placeholder"
+  | "dgtc.online"
+  | "dgtc.offline"
+  | "dgtc.away"
+  | "dgtc.typing"
+  | "dgtc.no_conversations"
+  | "dgtc.no_messages"
+  | "dgtc.delivered"
+  | "dgtc.read"
+  | "dgtc.sent"
+  | "dgtc.you"
+  | "dgtc.translate"
+  | "dgtc.show_original"
+  | "dgtc.translated"
+  | "dgtc.translation_unavailable"
+  | "dgtc.attach"
+  | "dgtc.attachment_too_large"
+  | "dgtc.share_record"
+  | "dgtc.reply"
+  | "dgtc.direct_message"
+  | "dgtc.group"
+  | "dgtc.participants"
+  | "dgtc.mark_all_read"
+  | "dgtc.load_more"
+  | "dgtc.no_results"
+  | "dgtc.messages"
+  | "dgtc.people"
+  | "dgtc.country"
+  | "dgtc.branch"
+  | "dgtc.start_conversation"
+  | "dgtc.scope_note"
+  | "dgtc.record_shared"
+  | "dgtc.open_record"
+  | "dgtc.deleted_message"
+  | "dgtc.unread_one"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -14879,6 +14926,53 @@ const en: Dict = {
   "tdoc.t_contract": "Contract",
   "tdoc.t_sales_contract": "Sales Contract",
   "tdoc.t_purchase_contract": "Purchase Contract",
+  "dgtc.title": "DGT Connect",
+  "dgtc.subtitle": "Internal ERP chat",
+  "dgtc.open": "Open chat",
+  "dgtc.close": "Close",
+  "dgtc.search_placeholder": "Search people and messages",
+  "dgtc.new_chat": "New chat",
+  "dgtc.new_group": "New group",
+  "dgtc.group_name": "Group name",
+  "dgtc.select_participants": "Select participants",
+  "dgtc.create": "Create",
+  "dgtc.cancel": "Cancel",
+  "dgtc.send": "Send",
+  "dgtc.message_placeholder": "Type a message",
+  "dgtc.online": "Online",
+  "dgtc.offline": "Offline",
+  "dgtc.away": "Away",
+  "dgtc.typing": "typing…",
+  "dgtc.no_conversations": "No conversations yet",
+  "dgtc.no_messages": "No messages yet",
+  "dgtc.delivered": "Delivered",
+  "dgtc.read": "Read",
+  "dgtc.sent": "Sent",
+  "dgtc.you": "You",
+  "dgtc.translate": "Translate",
+  "dgtc.show_original": "Show original",
+  "dgtc.translated": "Translated",
+  "dgtc.translation_unavailable": "Translation unavailable",
+  "dgtc.attach": "Attach file",
+  "dgtc.attachment_too_large": "File too large (max 15 MB)",
+  "dgtc.share_record": "Share ERP record",
+  "dgtc.reply": "Reply",
+  "dgtc.direct_message": "Direct message",
+  "dgtc.group": "Group",
+  "dgtc.participants": "Participants",
+  "dgtc.mark_all_read": "Mark all as read",
+  "dgtc.load_more": "Load earlier messages",
+  "dgtc.no_results": "No results",
+  "dgtc.messages": "Messages",
+  "dgtc.people": "People",
+  "dgtc.country": "Country",
+  "dgtc.branch": "Branch",
+  "dgtc.start_conversation": "Start conversation",
+  "dgtc.scope_note": "You can message users within your assigned scope.",
+  "dgtc.record_shared": "Shared a record",
+  "dgtc.open_record": "Open record",
+  "dgtc.deleted_message": "This message was deleted",
+  "dgtc.unread_one": "1 unread",
 };
 
 const ur: Dict = {
@@ -25325,6 +25419,53 @@ const ur: Dict = {
   "tdoc.t_contract": "کنٹریکٹ",
   "tdoc.t_sales_contract": "سیلز کنٹریکٹ",
   "tdoc.t_purchase_contract": "پرچیز کنٹریکٹ",
+  "dgtc.title": "ڈی جی ٹی کنیکٹ",
+  "dgtc.subtitle": "اندرونی ای آر پی چیٹ",
+  "dgtc.open": "چیٹ کھولیں",
+  "dgtc.close": "بند کریں",
+  "dgtc.search_placeholder": "لوگ اور پیغامات تلاش کریں",
+  "dgtc.new_chat": "نئی چیٹ",
+  "dgtc.new_group": "نیا گروپ",
+  "dgtc.group_name": "گروپ کا نام",
+  "dgtc.select_participants": "شرکاء منتخب کریں",
+  "dgtc.create": "بنائیں",
+  "dgtc.cancel": "منسوخ کریں",
+  "dgtc.send": "بھیجیں",
+  "dgtc.message_placeholder": "پیغام لکھیں",
+  "dgtc.online": "آن لائن",
+  "dgtc.offline": "آف لائن",
+  "dgtc.away": "دور",
+  "dgtc.typing": "لکھ رہا ہے…",
+  "dgtc.no_conversations": "ابھی کوئی گفتگو نہیں",
+  "dgtc.no_messages": "ابھی کوئی پیغام نہیں",
+  "dgtc.delivered": "پہنچ گیا",
+  "dgtc.read": "پڑھ لیا",
+  "dgtc.sent": "بھیج دیا",
+  "dgtc.you": "آپ",
+  "dgtc.translate": "ترجمہ کریں",
+  "dgtc.show_original": "اصل دکھائیں",
+  "dgtc.translated": "ترجمہ شدہ",
+  "dgtc.translation_unavailable": "ترجمہ دستیاب نہیں",
+  "dgtc.attach": "فائل منسلک کریں",
+  "dgtc.attachment_too_large": "فائل بہت بڑی ہے (زیادہ سے زیادہ 15 MB)",
+  "dgtc.share_record": "ای آر پی ریکارڈ شیئر کریں",
+  "dgtc.reply": "جواب دیں",
+  "dgtc.direct_message": "براہ راست پیغام",
+  "dgtc.group": "گروپ",
+  "dgtc.participants": "شرکاء",
+  "dgtc.mark_all_read": "سب کو پڑھا ہوا نشان زد کریں",
+  "dgtc.load_more": "پرانے پیغامات لوڈ کریں",
+  "dgtc.no_results": "کوئی نتیجہ نہیں",
+  "dgtc.messages": "پیغامات",
+  "dgtc.people": "لوگ",
+  "dgtc.country": "ملک",
+  "dgtc.branch": "برانچ",
+  "dgtc.start_conversation": "گفتگو شروع کریں",
+  "dgtc.scope_note": "آپ اپنے مقررہ دائرہ کار کے صارفین کو پیغام بھیج سکتے ہیں۔",
+  "dgtc.record_shared": "ایک ریکارڈ شیئر کیا",
+  "dgtc.open_record": "ریکارڈ کھولیں",
+  "dgtc.deleted_message": "یہ پیغام حذف کر دیا گیا",
+  "dgtc.unread_one": "1 غیر پڑھا",
 };
 
 const ar: Dict = {
@@ -35773,6 +35914,53 @@ const ar: Dict = {
   "tdoc.t_contract": "عقد",
   "tdoc.t_sales_contract": "عقد بيع",
   "tdoc.t_purchase_contract": "عقد شراء",
+  "dgtc.title": "DGT کنیکټ",
+  "dgtc.subtitle": "دننی ERP چیټ",
+  "dgtc.open": "چیټ خلاص کړئ",
+  "dgtc.close": "بند کړئ",
+  "dgtc.search_placeholder": "خلک او پیغامونه ولټوئ",
+  "dgtc.new_chat": "نوی چیټ",
+  "dgtc.new_group": "نوی ګروپ",
+  "dgtc.group_name": "د ګروپ نوم",
+  "dgtc.select_participants": "ګډونوال وټاکئ",
+  "dgtc.create": "جوړول",
+  "dgtc.cancel": "لغوه کول",
+  "dgtc.send": "لیږل",
+  "dgtc.message_placeholder": "پیغام ولیکئ",
+  "dgtc.online": "آنلاین",
+  "dgtc.offline": "آفلاین",
+  "dgtc.away": "لرې",
+  "dgtc.typing": "لیکي…",
+  "dgtc.no_conversations": "تر اوسه هیڅ خبرې اترې نشته",
+  "dgtc.no_messages": "تر اوسه هیڅ پیغام نشته",
+  "dgtc.delivered": "ورسېد",
+  "dgtc.read": "ولوستل شو",
+  "dgtc.sent": "ولیږل شو",
+  "dgtc.you": "تاسو",
+  "dgtc.translate": "ژباړل",
+  "dgtc.show_original": "اصل وښایاست",
+  "dgtc.translated": "ژباړل شوی",
+  "dgtc.translation_unavailable": "ژباړه شتون نلري",
+  "dgtc.attach": "فایل ضمیمه کړئ",
+  "dgtc.attachment_too_large": "فایل ډېر لوی دی (تر ټولو 15 MB)",
+  "dgtc.share_record": "د ERP ریکارډ شریک کړئ",
+  "dgtc.reply": "ځواب",
+  "dgtc.direct_message": "مستقیم پیغام",
+  "dgtc.group": "ګروپ",
+  "dgtc.participants": "ګډونوال",
+  "dgtc.mark_all_read": "ټول د لوستل شوي په توګه",
+  "dgtc.load_more": "پخواني پیغامونه بار کړئ",
+  "dgtc.no_results": "پایله نشته",
+  "dgtc.messages": "پیغامونه",
+  "dgtc.people": "خلک",
+  "dgtc.country": "هیواد",
+  "dgtc.branch": "څانګه",
+  "dgtc.start_conversation": "خبرې پیل کړئ",
+  "dgtc.scope_note": "تاسو کولی شئ خپل ټاکل شوي حوزې دننه کاروونکو ته پیغام واستوئ.",
+  "dgtc.record_shared": "یو ریکارډ شریک کړ",
+  "dgtc.open_record": "ریکارډ خلاص کړئ",
+  "dgtc.deleted_message": "دا پیغام حذف شو",
+  "dgtc.unread_one": "1 نالوستی",
 };
 
 const fa: Dict = {
@@ -46220,6 +46408,53 @@ const fa: Dict = {
   "tdoc.t_contract": "قرارداد",
   "tdoc.t_sales_contract": "قرارداد فروش",
   "tdoc.t_purchase_contract": "قرارداد خرید",
+  "dgtc.title": "DGT کانکت",
+  "dgtc.subtitle": "چت داخلی ERP",
+  "dgtc.open": "باز کردن گفتگو",
+  "dgtc.close": "بستن",
+  "dgtc.search_placeholder": "جستجوی افراد و پیام‌ها",
+  "dgtc.new_chat": "گفتگوی جدید",
+  "dgtc.new_group": "گروه جدید",
+  "dgtc.group_name": "نام گروه",
+  "dgtc.select_participants": "انتخاب شرکت‌کنندگان",
+  "dgtc.create": "ایجاد",
+  "dgtc.cancel": "لغو",
+  "dgtc.send": "ارسال",
+  "dgtc.message_placeholder": "پیام بنویسید",
+  "dgtc.online": "آنلاین",
+  "dgtc.offline": "آفلاین",
+  "dgtc.away": "غایب",
+  "dgtc.typing": "در حال نوشتن…",
+  "dgtc.no_conversations": "هنوز گفتگویی نیست",
+  "dgtc.no_messages": "هنوز پیامی نیست",
+  "dgtc.delivered": "تحویل شد",
+  "dgtc.read": "خوانده شد",
+  "dgtc.sent": "ارسال شد",
+  "dgtc.you": "شما",
+  "dgtc.translate": "ترجمه",
+  "dgtc.show_original": "نمایش اصل",
+  "dgtc.translated": "ترجمه‌شده",
+  "dgtc.translation_unavailable": "ترجمه در دسترس نیست",
+  "dgtc.attach": "پیوست فایل",
+  "dgtc.attachment_too_large": "فایل خیلی بزرگ است (حداکثر ۱۵ مگابایت)",
+  "dgtc.share_record": "اشتراک رکورد ERP",
+  "dgtc.reply": "پاسخ",
+  "dgtc.direct_message": "پیام مستقیم",
+  "dgtc.group": "گروه",
+  "dgtc.participants": "شرکت‌کنندگان",
+  "dgtc.mark_all_read": "علامت‌گذاری همه به‌عنوان خوانده‌شده",
+  "dgtc.load_more": "بارگذاری پیام‌های قبلی",
+  "dgtc.no_results": "نتیجه‌ای نیست",
+  "dgtc.messages": "پیام‌ها",
+  "dgtc.people": "افراد",
+  "dgtc.country": "کشور",
+  "dgtc.branch": "شعبه",
+  "dgtc.start_conversation": "شروع گفتگو",
+  "dgtc.scope_note": "شما می‌توانید به کاربران درون محدوده تعیین‌شده خود پیام دهید.",
+  "dgtc.record_shared": "یک رکورد به اشتراک گذاشت",
+  "dgtc.open_record": "باز کردن رکورد",
+  "dgtc.deleted_message": "این پیام حذف شد",
+  "dgtc.unread_one": "۱ خوانده‌نشده",
 };
 
 const ps: Dict = {
@@ -56673,6 +56908,53 @@ const ps: Dict = {
   "tdoc.t_contract": "تړون",
   "tdoc.t_sales_contract": "د پلور تړون",
   "tdoc.t_purchase_contract": "د پیرود تړون",
+  "dgtc.title": "DGT كونكت",
+  "dgtc.subtitle": "دردشة ERP الداخلية",
+  "dgtc.open": "فتح المحادثة",
+  "dgtc.close": "إغلاق",
+  "dgtc.search_placeholder": "ابحث عن الأشخاص والرسائل",
+  "dgtc.new_chat": "محادثة جديدة",
+  "dgtc.new_group": "مجموعة جديدة",
+  "dgtc.group_name": "اسم المجموعة",
+  "dgtc.select_participants": "اختر المشاركين",
+  "dgtc.create": "إنشاء",
+  "dgtc.cancel": "إلغاء",
+  "dgtc.send": "إرسال",
+  "dgtc.message_placeholder": "اكتب رسالة",
+  "dgtc.online": "متصل",
+  "dgtc.offline": "غير متصل",
+  "dgtc.away": "بعيد",
+  "dgtc.typing": "يكتب…",
+  "dgtc.no_conversations": "لا توجد محادثات بعد",
+  "dgtc.no_messages": "لا توجد رسائل بعد",
+  "dgtc.delivered": "تم التسليم",
+  "dgtc.read": "تمت القراءة",
+  "dgtc.sent": "تم الإرسال",
+  "dgtc.you": "أنت",
+  "dgtc.translate": "ترجمة",
+  "dgtc.show_original": "إظهار الأصلي",
+  "dgtc.translated": "مترجَم",
+  "dgtc.translation_unavailable": "الترجمة غير متاحة",
+  "dgtc.attach": "إرفاق ملف",
+  "dgtc.attachment_too_large": "الملف كبير جدًا (بحد أقصى 15 ميغابايت)",
+  "dgtc.share_record": "مشاركة سجل ERP",
+  "dgtc.reply": "رد",
+  "dgtc.direct_message": "رسالة مباشرة",
+  "dgtc.group": "مجموعة",
+  "dgtc.participants": "المشاركون",
+  "dgtc.mark_all_read": "وضع علامة مقروء على الكل",
+  "dgtc.load_more": "تحميل الرسائل السابقة",
+  "dgtc.no_results": "لا نتائج",
+  "dgtc.messages": "الرسائل",
+  "dgtc.people": "الأشخاص",
+  "dgtc.country": "الدولة",
+  "dgtc.branch": "الفرع",
+  "dgtc.start_conversation": "بدء المحادثة",
+  "dgtc.scope_note": "يمكنك مراسلة المستخدمين ضمن نطاقك المحدد.",
+  "dgtc.record_shared": "شارك سجلاً",
+  "dgtc.open_record": "فتح السجل",
+  "dgtc.deleted_message": "تم حذف هذه الرسالة",
+  "dgtc.unread_one": "1 غير مقروء",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

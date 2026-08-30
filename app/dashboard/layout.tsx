@@ -34,6 +34,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <DashboardShell
       userEmail={session.email ?? "User"}
       userName={session.fullName}
+      currentUserId={session.userId}
       roles={session.roles}
       permissions={session.permissions}
       lang={cookieLang ?? session.preferredLanguage ?? "en"}
