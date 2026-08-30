@@ -38,6 +38,24 @@ export function PdfPreviewModal() {
   const [currentPage, setCurrentPage] = useState(1);
   const [downloadMenuOpen, setDownloadMenuOpen] = useState(false);
 
+  // Scale the A4 sheet down to fit narrow screens (phone / small tablet) instead
+  // of shrinking its width — shrinking reflows the report and crushes wide
+  // tables to one character per line. transform: scale keeps the layout intact.
+  const previewAreaRef = useRef<HTMLDivElement>(null);
+  const [fitScale, setFitScale] = useState(1);
+  const paperWidthPx = orientation === "portrait" ? 794 : 1123; // 210mm / 297mm @ ~96dpi
+  const paperHeightPx = orientation === "portrait" ? 1123 : 794;
+  useEffect(() => {
+    if (!isOpen) return;
+    const recompute = () => {
+      const avail = (previewAreaRef.current?.clientWidth ?? window.innerWidth) - 24;
+      setFitScale(Math.min(1, Math.max(0.28, avail / paperWidthPx)));
+    };
+    recompute();
+    window.addEventListener("resize", recompute);
+    return () => window.removeEventListener("resize", recompute);
+  }, [isOpen, orientation, paperWidthPx]);
+
   useEffect(() => {
     if (isOpen && htmlContent) {
       // Estimate pages (very rough estimate based on sheet class if used, or just default to 1)
@@ -342,7 +360,7 @@ export function PdfPreviewModal() {
         </div>
 
         {/* Main Preview Area */}
-        <div className="flex-1 bg-[#1e293b] p-4 sm:p-8 overflow-auto flex justify-center custom-scrollbar">
+        <div ref={previewAreaRef} className="flex-1 bg-[#1e293b] p-4 sm:p-8 overflow-auto flex justify-center custom-scrollbar">
           {/* 
             FIX: Previously the parent div only had `minHeight` with the iframe using
             `absolute inset-0 h-full`. Per CSS spec, absolutely-positioned children
@@ -350,20 +368,32 @@ export function PdfPreviewModal() {
             height. This caused the iframe to collapse to 0px and appear blank.
             Solution: remove absolute positioning; give the iframe an explicit height.
           */}
-          <div 
-            className="shadow-2xl rounded-sm transition-all duration-300 ease-in-out overflow-hidden"
+          {/* Outer box reserves the *scaled* footprint so there is no dead space
+              below the sheet on small screens; inner box is the true-size sheet
+              that gets transform-scaled to fit. */}
+          <div
             style={{
-              width: orientation === "portrait" ? "210mm" : "297mm",
-              maxWidth: "100%",
+              width: paperWidthPx * fitScale,
+              height: paperHeightPx * fitScale,
+              flex: "0 0 auto",
             }}
           >
-             <iframe
-                ref={iframeRef}
-                srcDoc={injectedHtml}
-                className="w-full border-none block"
-                style={{ height: orientation === "portrait" ? "297mm" : "210mm" }}
-                title={tt("pdfprev.preview_title", "PDF Preview")}
-             />
+            <div
+              className="shadow-2xl rounded-sm transition-all duration-300 ease-in-out overflow-hidden"
+              style={{
+                width: orientation === "portrait" ? "210mm" : "297mm",
+                transform: `scale(${fitScale})`,
+                transformOrigin: "top left",
+              }}
+            >
+               <iframe
+                  ref={iframeRef}
+                  srcDoc={injectedHtml}
+                  className="w-full border-none block"
+                  style={{ height: orientation === "portrait" ? "297mm" : "210mm" }}
+                  title={tt("pdfprev.preview_title", "PDF Preview")}
+               />
+            </div>
           </div>
         </div>
       </div>
