@@ -140,6 +140,18 @@ export const ERP_GLOSSARY: GlossaryEntry[] = [
   { en: "expense", ur: "اخراجات", ar: "مصروف", fa: "هزینه", ps: "لګښت", domain: "accounting", variants: ["expenses"] },
   { en: "ready", ur: "تیار", ar: "جاهز", fa: "آماده", ps: "چمتو", domain: "general" },
   { en: "dispatch", ur: "روانگی", ar: "إرسال", fa: "ارسال", ps: "لېږل", domain: "shipping", variants: ["dispatched"] },
+  { en: "done", ur: "مکمل", ar: "تم", fa: "انجام شد", ps: "ترسره شو", domain: "general" },
+  { en: "received", ur: "موصول", ar: "مستلم", fa: "دریافت شد", ps: "ترلاسه شو", domain: "general" },
+  { en: "sent", ur: "بھیج دیا", ar: "مرسل", fa: "ارسال شد", ps: "ولېږل شو", domain: "general" },
+  { en: "paid", ur: "ادا شدہ", ar: "مدفوع", fa: "پرداخت شد", ps: "ورکړل شو", domain: "accounting" },
+  { en: "confirmed", ur: "تصدیق شدہ", ar: "مؤكد", fa: "تأیید شد", ps: "تایید شو", domain: "general" },
+  { en: "cancelled", ur: "منسوخ", ar: "ملغى", fa: "لغو شد", ps: "لغوه شو", domain: "general", variants: ["canceled"] },
+  { en: "urgent", ur: "فوری", ar: "عاجل", fa: "فوری", ps: "بیړني", domain: "general" },
+  { en: "please", ur: "براہ کرم", ar: "من فضلك", fa: "لطفاً", ps: "مهرباني وکړئ", domain: "general" },
+  { en: "thank you", ur: "شکریہ", ar: "شكرًا", fa: "متشکرم", ps: "مننه", domain: "general", variants: ["thanks"] },
+  { en: "tomorrow", ur: "کل", ar: "غدًا", fa: "فردا", ps: "سبا", domain: "general" },
+  { en: "today", ur: "آج", ar: "اليوم", fa: "امروز", ps: "نن", domain: "general" },
+  { en: "morning", ur: "صبح", ar: "الصباح", fa: "صبح", ps: "سهار", domain: "general" },
 ];
 
 /** Fast lookup: normalized source term (any language) -> entry. */
