@@ -39,6 +39,23 @@ Country-Branch scope with its own Postgres tables.
 - Group creation rejected when any member is outside the creator's scope.
 - `direct_key` guarantees one thread per pair regardless of who opens it.
 
+## EPS / PRODUCTION deployment (2026-08-30, via VPS SSH — key auth)
+
+| | Value |
+|---|---|
+| Prod `HEAD` | `ea0ddb58` (== `origin/main` == Local) · BUILD_ID `wJyFmKtq1_gGD0nBdprvp` · pm2 `dgt-nextjs` restarted, `✓ Ready in 770ms` |
+| Migration `20261012_dgt_connect` | **applied on prod** |
+| Migration `20261013_erp_translation_memory` | **applied on prod** |
+| Destructive `20261008_*` | **NOT applied** (`[BLOCKED]` by `DESTRUCTIVE_MANUAL_ONLY`; `erp_schema_migrations` has no `20261008%` row) |
+| Prod tables | all 8 present: `dgt_conversations`, `dgt_conversation_participants`, `dgt_messages`, `dgt_message_receipts`, `dgt_message_translations`, `dgt_presence`, `erp_translation_memory`, `erp_translation_memory_audit` |
+| Prod translation memory | **313 rows** (114 glossary + 199 machine); samples verified: Roznamcha/Ledger/Clearing/Settlement/Bank Transfer/Shipping correct in ur/ar/fa/ps |
+| Prod realtime publication | on `dgt_conversations`, `dgt_messages`, `dgt_message_receipts`, `dgt_presence` |
+| **DB integrity (prod, before == after)** | **profiles 72 total / 72 active — UNCHANGED**; user_role_assignments 68, customers 4, companies 6, ledgers 11, countries 13, city_branches 23 — all intact |
+| Prod backend E2E | **9 / 0** — translation-memory lookups + DGT membership guard (cross-country user excluded) + message/receipt write, test conversation cleaned up |
+| Prod routes | `/api/erp/i18n/translate` → 405 (POST-only, exists) · `/api/erp/dgt-connect/*` → 401 · `/dashboard/{city,country}` compiled |
+| **Remaining** | prod **browser** E2E (chart pixels, RTL layout, DGT widget UI, Print modal, mobile) — needs an authenticated session; identical code is exhaustively verified on Local. Owner: log into prod in Chrome-with-Claude-extension, then I run it. |
+| Pre-existing prod issue (not this work) | `accounting/reports/accounts/general/route.ts` "Auto-ensuring master accounts" logs `column "code" does not exist` — caught, non-fatal, separate round. |
+
 ## Synchronization (2026-08-30)
 
 | | Value |
