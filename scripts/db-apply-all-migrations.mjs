@@ -19,10 +19,23 @@ function loadEnv() {
 }
 
 const env = loadEnv();
-if (!env.DATABASE_URL) {
-  console.error("DATABASE_URL is not set in .env or .env.local");
+
+// Target selection: default = DATABASE_URL (the env the VPS/dev runs against).
+// `--target=prod` / `MIGRATE_TARGET=prod` uses PROD_DATABASE_URL so a maintainer
+// can apply the additive migrations to production from a trusted machine without
+// SSH. The destructive-migration guard below still applies to every target.
+const target = (process.argv.find((a) => a.startsWith("--target="))?.split("=")[1]
+  || process.env.MIGRATE_TARGET || "default").toLowerCase();
+const DB_URL =
+  target === "prod" ? (env.PROD_DATABASE_URL || process.env.PROD_DATABASE_URL) :
+  target === "dev"  ? (env.DEV_DATABASE_URL || process.env.DEV_DATABASE_URL || env.DATABASE_URL) :
+  env.DATABASE_URL;
+if (!DB_URL) {
+  console.error(`Connection URL not set for target "${target}" (need ${target === "prod" ? "PROD_DATABASE_URL" : "DATABASE_URL"} in .env.local)`);
   process.exit(1);
 }
+console.log(`[migrate] target: ${target}`);
+env.DATABASE_URL = DB_URL;
 
 const migrations = [
   { name: "20260812_roznamcha_posting_idempotency_and_category", path: "supabase/migrations/20260812_roznamcha_posting_idempotency_and_category.sql" },
