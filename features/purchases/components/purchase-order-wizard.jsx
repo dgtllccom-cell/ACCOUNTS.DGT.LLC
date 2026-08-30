@@ -4765,8 +4765,14 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                         />
                       </div>
                     </div>
-                  </div>
-
+                  {/* Step 3 Action Navigation */}
+                  <div className="flex items-center justify-between gap-4 pt-4 border-t border-slate-200 mt-6">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setActiveTab("goods")}
+                      className="font-bold text-xs h-10 px-8 border-slate-200 text-slate-700 hover:bg-slate-50"
+                    >
                       <ChevronLeft className="h-4 w-4 mr-1.5" /> {t(lang, "common.back", "Back")}
                     </Button>
                     <Button
