@@ -43,12 +43,41 @@ Country-Branch scope with its own Postgres tables.
 
 | | Value |
 |---|---|
-| Local `HEAD` | `bf3c976` (== `origin/main`, 0 ahead, working tree clean) |
-| `origin/main` | `bf3c976` — carries every DGT Connect commit (`b0fdc14`, `5bdcead`, `29efe6c`, `73d621a`) + the runner registration (`2c52be2`) |
-| Prod code | `https://api.dgt.llc/api/erp/dgt-connect/unread` → **HTTP 401** (route exists → code is deployed; 404 would mean not deployed) |
+| Local `HEAD` | `4d2640e` (== `origin/main`, 0 ahead, working tree clean) — **pushed** |
+| `origin/main` | `4d2640e` — every DGT Connect commit + the runner registration of `20261012` (`2c52be2`) + the chart / graceful-degrade fixes (`5e1764d`, `c79a407`, `4d2640e`) |
+| Prod code | `https://api.dgt.llc/api/erp/dgt-connect/unread` → **HTTP 401** (route exists → code deployed). Whether prod has pulled `4d2640e` yet is owner-verifiable only. |
 | Migration `20261012` — DEV | **applied** (`erp_schema_migrations` row present; 6 tables exist) |
-| Migration `20261012` — PROD | **UNVERIFIED** — needs the deploy pipeline to have run `db-apply-all-migrations.mjs` after commit `2c52be2` (which registered it), OR a manual run. Cannot confirm without `PROD_DATABASE_URL` / VPS SSH. It is 100% additive (`CREATE TABLE IF NOT EXISTS` ×6 + realtime publication) so applying it cannot harm existing data. |
-| `20261008_*` (both variants) | tracked on `origin/main` but **not** in `db-apply-all-migrations.mjs` `migrations[]`; both listed in `DESTRUCTIVE_MANUAL_ONLY` → can never auto-apply. Prod profiles untouched. |
+| Migration `20261012` — PROD | **NOT applied yet** — this is the `relation "public.dgt_conversations" does not exist` in the screenshot. Now registered in `db-apply-all-migrations.mjs`, so the next VPS deploy (`[VPS 3b/7] node scripts/db-apply-all-migrations.mjs`) creates the 6 tables. 100 % additive (`CREATE TABLE IF NOT EXISTS` ×6 + realtime publication) — cannot harm existing data. |
+| Runtime guard (until the migration runs) | `directory` / `conversations` / `unread` / `messages` / `search` now detect Postgres `42P01` and return a clean empty payload + `setupPending:true` (HTTP 200) — no raw SQL string, dashboard stays healthy, widget shows an amber "being set up" note. Non-schema errors → generic 503, never a driver message. |
+| `20261008_*` (both variants) | tracked on `origin/main` but **not** in `migrations[]`; both listed in `DESTRUCTIVE_MANUAL_ONLY` → can never auto-apply. Prod profiles untouched. |
+
+## Branch / Country dashboard charts (2026-08-30, commits `5e1764d`, `c79a407`)
+
+The "Branch Financials" / "Branch Mix" (and Country Sales/Purchase/Top-Branches)
+charts appearing blank was addressed end-to-end:
+
+- **KPI cards and charts already read the identical `data.*` aggregate** — they
+  cannot disagree. Kept.
+- Bar chart shows every non-zero series including a **negative** cash/bank balance
+  (that is real). "No data available" only when every series is genuinely 0.
+- Pie ("Branch Mix") charts **positive magnitudes only** — a negative balance has
+  no slice — and shows its own "No data" state when nothing is positive (this was
+  the blank-pie cause).
+- Charts render **only after mount** — recharts' `ResponsiveContainer` measures
+  its parent post-layout; a 0×0 first paint otherwise left a permanently blank
+  SVG. Same guard added to the country dashboard.
+- `app/dashboard/city/page.tsx`: **each aggregate query resolves independently** —
+  one failing / lagging query (a missing column, a permission quirk) no longer
+  zeroes the whole dashboard; it logs a per-query warning and contributes 0 for
+  its own metric only.
+
+**Browser-verified on Local (DEV) for all three roles:**
+
+| Role | Result |
+|---|---|
+| Branch Admin (Chaman city branch) | bar (Purchases 11,720 up · Cash −3,000 down · Sales/Bank 0) + pie render with real data |
+| Super Admin (branch switcher) | Chaman → charts render; Mumbai (all-zero branch) → both charts show "No data available" (inbox icon, not a blank SVG) |
+| Country Admin (Pakistan) | Purchase Overview area chart renders (~PKR 219k); Sales Overview + Top Branches → "No data available" |
 
 ## Not done / remaining
 
