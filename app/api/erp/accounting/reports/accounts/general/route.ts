@@ -186,22 +186,22 @@ function isMissingPrivilegedSupabaseKey(error: unknown) {
   return message.includes("SUPABASE_SECRET_KEY") || message.includes("SUPABASE_SERVICE_ROLE_KEY");
 }
 
-// The seven country-level clearing ledgers the ERP expects to exist. Reference geography,
-// trade counterparties and their banks are NOT seeded here — those are created through the
-// scoped Account Setup / Master UIs and the migration set. Each entry is inserted only when
-// its country already exists and the account/ledger is missing.
+// The country-level clearing ledgers the ERP expects to exist. Reference geography, trade
+// counterparties, their banks and the super-admin capital account are NOT seeded here —
+// those are created through the scoped Account Setup / Master UIs and the migration set.
+// Each entry is `scope='country'` (so `country_id` is required and branch ids stay null,
+// per enterprise_accounts_scope_chk) and is inserted only when its country already exists.
 const CORE_CLEARING_LEDGERS: Array<{
   iso2: string; nameNeedle: string; code: string; account_number: string; customer_number: string;
   account_serial_number: number; country_serial_number: number; branch_serial_number: number;
   branch_code: string; branch_account_sequence: number; manual_ref: string; name: string;
-  currency: string; scope: string; kind: string;
+  currency: string; kind: string;
 }> = [
-  { iso2: "AE", nameNeedle: "emirates", code: "SA-CAP-0001", account_number: "0000001", customer_number: "CUST-SA-0001", account_serial_number: 1, country_serial_number: 1, branch_serial_number: 1, branch_code: "BR-GLOBAL-001", branch_account_sequence: 1, manual_ref: "0000-SA-CAP", name: "Haji Abdullah Jan Accounts", currency: "USD", scope: "super_admin", kind: "equity" },
-  { iso2: "AE", nameNeedle: "emirates", code: "UAE-CORP-GEN-001", account_number: "1000001", customer_number: "CUST-UAE-0001", account_serial_number: 1000001, country_serial_number: 1000001, branch_serial_number: 1, branch_code: "BR-DXB-001", branch_account_sequence: 1, manual_ref: "0001-UAE-HUB", name: "United Arab Emirates Main Country Clearing Ledger", currency: "AED", scope: "country", kind: "asset" },
-  { iso2: "PK", nameNeedle: "pakistan", code: "PAK-CORP-GEN-001", account_number: "2000001", customer_number: "CUST-PAK-0001", account_serial_number: 2000001, country_serial_number: 2000001, branch_serial_number: 1, branch_code: "BR-KHI-001", branch_account_sequence: 1, manual_ref: "0002-PAK-HUB", name: "Pakistan National Central Clearing Ledger", currency: "PKR", scope: "country", kind: "asset" },
-  { iso2: "AF", nameNeedle: "afghanistan", code: "AFG-CORP-GEN-001", account_number: "3000001", customer_number: "CUST-AFG-0001", account_serial_number: 3000001, country_serial_number: 3000001, branch_serial_number: 1, branch_code: "BR-KBL-001", branch_account_sequence: 1, manual_ref: "0003-AFG-HUB", name: "Afghanistan National Central Clearing Ledger", currency: "AFN", scope: "country", kind: "asset" },
-  { iso2: "CN", nameNeedle: "china", code: "CHN-CORP-GEN-001", account_number: "4000001", customer_number: "CUST-CHN-0001", account_serial_number: 4000001, country_serial_number: 4000001, branch_serial_number: 1, branch_code: "BR-BJS-001", branch_account_sequence: 1, manual_ref: "0004-CHN-HUB", name: "China & International Trade Clearing Ledger", currency: "USD", scope: "country", kind: "asset" },
-  { iso2: "IN", nameNeedle: "india", code: "IND-CORP-GEN-001", account_number: "5000001", customer_number: "CUST-IND-0001", account_serial_number: 5000001, country_serial_number: 5000001, branch_serial_number: 1, branch_code: "BR-DEL-001", branch_account_sequence: 1, manual_ref: "0005-IND-HUB", name: "India National Central Clearing Ledger", currency: "INR", scope: "country", kind: "asset" },
+  { iso2: "AE", nameNeedle: "emirates", code: "UAE-CORP-GEN-001", account_number: "1000001", customer_number: "CUST-UAE-0001", account_serial_number: 1000001, country_serial_number: 1000001, branch_serial_number: 1, branch_code: "BR-DXB-001", branch_account_sequence: 1, manual_ref: "0001-UAE-HUB", name: "United Arab Emirates Main Country Clearing Ledger", currency: "AED", kind: "asset" },
+  { iso2: "PK", nameNeedle: "pakistan", code: "PAK-CORP-GEN-001", account_number: "2000001", customer_number: "CUST-PAK-0001", account_serial_number: 2000001, country_serial_number: 2000001, branch_serial_number: 1, branch_code: "BR-KHI-001", branch_account_sequence: 1, manual_ref: "0002-PAK-HUB", name: "Pakistan National Central Clearing Ledger", currency: "PKR", kind: "asset" },
+  { iso2: "AF", nameNeedle: "afghanistan", code: "AFG-CORP-GEN-001", account_number: "3000001", customer_number: "CUST-AFG-0001", account_serial_number: 3000001, country_serial_number: 3000001, branch_serial_number: 1, branch_code: "BR-KBL-001", branch_account_sequence: 1, manual_ref: "0003-AFG-HUB", name: "Afghanistan National Central Clearing Ledger", currency: "AFN", kind: "asset" },
+  { iso2: "CN", nameNeedle: "china", code: "CHN-CORP-GEN-001", account_number: "4000001", customer_number: "CUST-CHN-0001", account_serial_number: 4000001, country_serial_number: 4000001, branch_serial_number: 1, branch_code: "BR-BJS-001", branch_account_sequence: 1, manual_ref: "0004-CHN-HUB", name: "China & International Trade Clearing Ledger", currency: "USD", kind: "asset" },
+  { iso2: "IN", nameNeedle: "india", code: "IND-CORP-GEN-001", account_number: "5000001", customer_number: "CUST-IND-0001", account_serial_number: 5000001, country_serial_number: 5000001, branch_serial_number: 1, branch_code: "BR-DEL-001", branch_account_sequence: 1, manual_ref: "0005-IND-HUB", name: "India National Central Clearing Ledger", currency: "INR", kind: "asset" },
 ];
 
 async function ensureCoreMasterAccounts(sql: any) {
@@ -242,7 +242,7 @@ async function ensureCoreMasterAccounts(sql: any) {
           ${acc.account_serial_number}, ${acc.country_serial_number}, ${acc.branch_serial_number},
           ${acc.branch_code}, ${acc.branch_account_sequence}, NOW(),
           ${acc.manual_ref}, ${acc.currency}, ${country.id},
-          ${acc.scope}, ${acc.kind}, 'active', true, 0, 0
+          'country', ${acc.kind}, 'active', true, 0, 0
         ) RETURNING id;
       `;
       if (inserted?.id) {
@@ -250,7 +250,7 @@ async function ensureCoreMasterAccounts(sql: any) {
           INSERT INTO public.ledgers (
             enterprise_account_id, code, name, currency, scope, country_id, is_active
           ) VALUES (
-            ${inserted.id}, ${acc.code}, ${acc.name}, ${acc.currency}, ${acc.scope}, ${country.id}, true
+            ${inserted.id}, ${acc.code}, ${acc.name}, ${acc.currency}, 'country', ${country.id}, true
           ) ON CONFLICT DO NOTHING;
         `;
       }
