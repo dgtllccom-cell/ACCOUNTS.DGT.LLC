@@ -75,7 +75,8 @@ const migrations = [
   { name: "20261008_cleanup_user_directory_master", path: "supabase/migrations/20261008_cleanup_user_directory_master.sql" },
   { name: "20261009_doc_intake_master_document_types", path: "supabase/migrations/20261009_doc_intake_master_document_types.sql" },
   { name: "20261010_doc_intake_contract_route", path: "supabase/migrations/20261010_doc_intake_contract_route.sql" },
-  { name: "20261011_doc_intake_employee_expense_types", path: "supabase/migrations/20261011_doc_intake_employee_expense_types.sql" }
+  { name: "20261011_doc_intake_employee_expense_types", path: "supabase/migrations/20261011_doc_intake_employee_expense_types.sql" },
+  { name: "20261012_dgt_connect", path: "supabase/migrations/20261012_dgt_connect.sql" }
 ];
 
 const sql = postgres(env.DATABASE_URL, { max: 1, prepare: false, connect_timeout: 60 });
@@ -86,6 +87,10 @@ const sql = postgres(env.DATABASE_URL, { max: 1, prepare: false, connect_timeout
 // ALLOW_DESTRUCTIVE_MIGRATIONS=1 for that one manual run.
 const DESTRUCTIVE_MANUAL_ONLY = new Set([
   "20261008_cleanup_user_directory_master",
+  // Second cleanup variant — soft-deletes all profiles except an 18-user
+  // whitelist. Not in the migrations[] list above; listed here as defence in
+  // depth so it can never be auto-applied even if someone adds it later.
+  "20261008_cleanup_dev_users_directory",
 ]);
 const allowDestructive = process.env.ALLOW_DESTRUCTIVE_MIGRATIONS === "1";
 
