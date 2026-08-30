@@ -76,7 +76,7 @@ export function openJournalReportWindow(config: JournalReportConfig) {
       userName: config.createdBy || "ERP Accountant",
     },
     generalBrand: {
-      name: "DAMAAN GENERAL TRADING LLC",
+      name: (config as any).companyName || "",
       tagline: "UNIVERSAL JOURNAL & AUDIT REGISTER",
     },
     columns,

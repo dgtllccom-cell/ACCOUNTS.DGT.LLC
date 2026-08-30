@@ -8,6 +8,8 @@ export type ERPCompanyInfo = {
   website?: string;
   country?: string;
   branch?: string;
+  /** tax / registration number from the entity's branding record (never fabricated) */
+  taxNo?: string;
   printedBy?: string;
   printedDate?: string;
   financialYear?: string;

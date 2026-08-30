@@ -181,7 +181,8 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
   const resolvedCompanyName = ledgerSummary?.companyName || scope.company || companyInfo.name || generalBrand.name;
   const resolvedCountry = ledgerSummary?.countryName || scope.country || "Global Scope";
   const resolvedBranch = ledgerSummary?.cityBranch || ledgerSummary?.mainBranch || scope.branch || "Main Branch";
-  const resolvedTaxNo = ledgerSummary?.taxNo || (companyInfo as any).taxNo || generalBrand.taxNo || (resolvedCountry === "Pakistan" ? "NTN: Registered" : resolvedCountry === "United Arab Emirates" ? "TRN: 100458923400003" : "");
+  // Tax / registration number comes ONLY from the entity's branding record — never fabricated per country.
+  const resolvedTaxNo = String(ledgerSummary?.taxNo || (companyInfo as any).taxNo || generalBrand.taxNo || "").trim();
   // Ignore configuration-placeholder strings ("Configured contact", "N/A", "None", "-", …)
   // that occasionally get typed into the company/brand record.
   const realOrEmpty = (v: unknown): string => {
@@ -190,7 +191,7 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
     return s;
   };
   const resolvedAddress = realOrEmpty(ledgerSummary?.address) || realOrEmpty(companyInfo.address) || realOrEmpty(generalBrand.address) || `${resolvedBranch}, ${resolvedCountry}`;
-  const resolvedContact = realOrEmpty(companyInfo.email) || realOrEmpty((companyInfo as any).phone) || realOrEmpty(generalBrand.contact) || "accounts@dgt.llc";
+  const resolvedContact = realOrEmpty(companyInfo.email) || realOrEmpty((companyInfo as any).phone) || realOrEmpty(generalBrand.contact) || "";
 
   const brandName = resolvedCompanyName || (resolvedCountry !== "Global Scope" ? `${resolvedCountry.toUpperCase()} OPERATING ENTITY` : "ERP ACCOUNTING STATEMENT");
   const brandTagline = generalBrand.tagline || `${resolvedBranch.toUpperCase()} NETWORK • ${resolvedCountry.toUpperCase()}`;
@@ -569,7 +570,7 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
           <div class="brand-tagline">${escapeHtml(brandTagline)}</div>
           <div class="brand-meta">
             ${escapeHtml(resolvedAddress)}<br />
-            <strong>${escapeHtml(resolvedTaxNo)}</strong> | ${escapeHtml(resolvedContact)}<br />
+            ${[resolvedTaxNo ? `<strong>${escapeHtml(resolvedTaxNo)}</strong>` : "", escapeHtml(resolvedContact)].filter(Boolean).join(" | ")}${(resolvedTaxNo || resolvedContact) ? "<br />" : ""}
             <strong>${tr("Operating Entity")}:</strong> ${escapeHtml(entityName)}
           </div>
         </td>

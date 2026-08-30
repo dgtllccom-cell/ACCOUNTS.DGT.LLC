@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { openGenericErpReport, formatCellValue, getRowValue, type GenericReportColumn } from "@/lib/reports/open-generic-erp-report";
 import { openJournalReportWindow } from "@/lib/reports/open-journal-report-window";
 import { openOutstandingRecoveryPrintReport } from "@/lib/reports/open-outstanding-recovery-print-report";
+import { resolveDocumentBranding } from "@/lib/reports/resolve-document-branding";
 import { PrintableReportHeader } from "@/components/reports/printable-report-header";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
@@ -276,7 +277,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
     };
   });
 
-  function openReportPreview(autoPrint: boolean = false) {
+  async function openReportPreview(autoPrint: boolean = false) {
     const printRows = filtered.map((r, idx) => {
       const isOverdue = (r.daysOutstanding ?? 0) > overdueDays;
       const recStatus = r.outstanding === 0 ? "Cleared" : isOverdue ? "In Recovery" : "Pending";
@@ -301,6 +302,18 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
 
     const netOutstanding = (summary?.totalReceivable ?? 0) - (summary?.totalPayable ?? 0);
     const sessionActiveText = sessionInfo?.authenticated ? "Session Active" : "SESSION UNKNOWN";
+
+    const sc = sessionInfo?.scopes;
+    const brand = await resolveDocumentBranding(
+      {
+        countryId: sc?.countryIds?.[0] ?? null,
+        countryBranchId: sc?.countryBranchIds?.[0] ?? null,
+        cityBranchId: sc?.cityBranchIds?.[0] ?? null,
+        countryName: scopeSummary?.countryName ?? null,
+        branchName: scopeBranch,
+      },
+      activeLang,
+    );
 
     openOutstandingRecoveryPrintReport({
       rows: printRows,
@@ -329,9 +342,10 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
         dateRange: "Current Session (2026)",
       },
       companyInfo: {
-        name: "DAMAAN GENERAL TRADING LLC",
-        address: "Operating Address: Office 402, Business Bay, Dubai, United Arab Emirates",
-        email: "accounts@dgt.llc | support@dgt.llc",
+        name: brand.entityName || scopeSummary?.countryName || "",
+        address: brand.address || "",
+        email: brand.email || "",
+        taxNo: brand.taxNumber || brand.registrationNumber || "",
         printedBy: scopeUserName
       },
       autoPrint,
@@ -476,13 +490,13 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
             <RefreshCcw className={cn("h-3.5 w-3.5", loading && "animate-spin")} /> {tr("Refresh")}
           </button>
           <button
-            onClick={() => openReportPreview(false)}
+            onClick={() => { void openReportPreview(false); }}
             className="btn-print inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700 shadow-sm hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300"
           >
             <Printer className="h-3.5 w-3.5" /> {tr("Print")}
           </button>
           <button
-            onClick={() => openReportPreview(true)}
+            onClick={() => { void openReportPreview(true); }}
             className="btn-pdf inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700 shadow-sm hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-300"
           >
             <FileText className="h-3.5 w-3.5" /> {tr("PDF")}
@@ -786,13 +800,13 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
               {exportMenuOpen && (
                 <div className="absolute right-0 top-full z-30 mt-1 w-44 rounded-xl border border-slate-200 bg-white p-1 shadow-xl dark:border-slate-800 dark:bg-slate-900">
                   <button
-                    onClick={() => { setExportMenuOpen(false); openReportPreview(false); }}
+                    onClick={() => { setExportMenuOpen(false); void openReportPreview(false); }}
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                   >
                     <Printer className="h-3.5 w-3.5 text-blue-600" /> {t(lang, "acct.print_preview", "Print Preview")}
                   </button>
                   <button
-                    onClick={() => { setExportMenuOpen(false); openReportPreview(true); }}
+                    onClick={() => { setExportMenuOpen(false); void openReportPreview(true); }}
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                   >
                     <FileText className="h-3.5 w-3.5 text-rose-600" /> {t(lang, "ledger.lgrv_pdf_export", "PDF Export")}

@@ -69,6 +69,7 @@ export async function resolveLedgerBranding(
   if (countryName) companyInfo.country = countryName;
   if (resolvedBranch) companyInfo.branch = resolvedBranch;
   if (b.baseCurrency) companyInfo.currency = b.baseCurrency;
+  if (b.taxNumber || b.registrationNumber) companyInfo.taxNo = b.taxNumber || b.registrationNumber || undefined;
   const by = cleanName(printedBy);
   if (by) companyInfo.printedBy = by;
 

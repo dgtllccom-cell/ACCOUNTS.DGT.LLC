@@ -71,11 +71,11 @@ export function openOutstandingRecoveryPrintReport(input: OutstandingRecoveryPri
 
   const isRtl = ["ur", "ar", "fa", "ps"].includes(targetLang);
 
-  const orgName = companyInfo.name || "DAMAAN GENERAL TRADING LLC";
+  const orgName = companyInfo.name || "";
   const logoText = "DIGITAL DOCK ERP";
-  const address = companyInfo.address || "Office 402, Business Bay, Dubai, United Arab Emirates";
-  const trnNumber = (companyInfo as any).taxNo || "TRN: 100458923400003";
-  const emailContact = companyInfo.email || "accounts@dgt.llc | support@dgt.llc";
+  const address = companyInfo.address || "";
+  const trnNumber = (companyInfo as any).taxNo || "";
+  const emailContact = companyInfo.email || "";
 
   const printDate = new Date();
   const printDateFormatted = printDate.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
@@ -392,8 +392,8 @@ export function openOutstandingRecoveryPrintReport(input: OutstandingRecoveryPri
           <div class="brand-title">${escapeHtml(orgName)}</div>
           <div class="brand-sub">${escapeHtml(logoText)}</div>
           <div class="brand-meta">
-            ${escapeHtml(address)}<br />
-            <strong>${escapeHtml(trnNumber)}</strong> | ${escapeHtml(emailContact)}
+            ${address ? `${escapeHtml(address)}<br />` : ""}
+            ${[trnNumber ? `<strong>${escapeHtml(trnNumber)}</strong>` : "", escapeHtml(emailContact)].filter(Boolean).join(" | ")}
           </div>
         </td>
         <td style="width: 45%; vertical-align: top;" class="doc-title-block">
