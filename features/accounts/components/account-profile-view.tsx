@@ -274,10 +274,10 @@ export function AccountProfileView({
   }
 
   function handlePrint() {
-    if (!selectedRow) {
-      window.print();
-      return;
-    }
+    // The whole toolbar only renders once a row is resolved (see the `!selectedRow`
+    // early-return above), so this is a defensive guard — never a raw window.print()
+    // of the dashboard shell.
+    if (!selectedRow) return;
     // Professional A4 Account Master Profile via the shared engine (real record
     // data + dynamic branding for this account's country/branch).
     void openMasterProfile({
