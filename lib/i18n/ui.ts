@@ -1,6 +1,42 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type UiKey =
+  | "utask.ev_created"
+  | "utask.ev_assigned"
+  | "utask.ev_reassigned"
+  | "utask.ev_accepted"
+  | "utask.ev_started"
+  | "utask.ev_waiting"
+  | "utask.ev_progress_note"
+  | "utask.ev_comment"
+  | "utask.ev_attachment_added"
+  | "utask.ev_evidence_linked"
+  | "utask.ev_completed"
+  | "utask.ev_returned"
+  | "utask.ev_verified"
+  | "utask.ev_due_changed"
+  | "utask.ev_priority_changed"
+  | "utask.ev_cancelled"
+  | "utask.ev_note"
+  | "utask.ev_attachment"
+  | "utask.ev_updated"
+  | "utask.mod_purchases"
+  | "utask.mod_local_purchase"
+  | "utask.mod_sales"
+  | "utask.mod_local_sales"
+  | "utask.mod_accounting"
+  | "utask.mod_journal"
+  | "utask.mod_ledger"
+  | "utask.mod_roznamcha"
+  | "utask.mod_cash_bank"
+  | "utask.mod_bill_expenses"
+  | "utask.mod_settlement"
+  | "utask.mod_hrm"
+  | "utask.mod_documents"
+  | "utask.mod_shipping"
+  | "utask.mod_clearing"
+  | "utask.mod_reports"
+  | "utask.mod_other"
   | "crm.filter_tab"
   | "crm.filter_date"
   | "crm.filter_records"
@@ -15331,6 +15367,42 @@ const en: Dict = {
   "crm.filter_tab": "View",
   "crm.filter_date": "Date",
   "crm.filter_records": "Records",
+  "utask.mod_purchases": "Purchase",
+  "utask.mod_local_purchase": "Local Purchase",
+  "utask.mod_sales": "Sales",
+  "utask.mod_local_sales": "Local Sales",
+  "utask.mod_accounting": "Accounting",
+  "utask.mod_journal": "Journal",
+  "utask.mod_ledger": "Ledger",
+  "utask.mod_roznamcha": "Roznamcha",
+  "utask.mod_cash_bank": "Cash / Bank",
+  "utask.mod_bill_expenses": "Bill Expenses",
+  "utask.mod_settlement": "Settlement",
+  "utask.mod_hrm": "HR / Payroll",
+  "utask.mod_documents": "Documents",
+  "utask.mod_shipping": "Shipping",
+  "utask.mod_clearing": "Clearing",
+  "utask.mod_reports": "Reports",
+  "utask.mod_other": "Other",
+  "utask.ev_created": "Created",
+  "utask.ev_assigned": "Assigned",
+  "utask.ev_reassigned": "Reassigned",
+  "utask.ev_accepted": "Accepted",
+  "utask.ev_started": "Started",
+  "utask.ev_waiting": "On Hold",
+  "utask.ev_progress_note": "Progress Note",
+  "utask.ev_comment": "Comment",
+  "utask.ev_attachment_added": "Attachment Added",
+  "utask.ev_evidence_linked": "Evidence Linked",
+  "utask.ev_completed": "Completed",
+  "utask.ev_returned": "Returned",
+  "utask.ev_verified": "Verified",
+  "utask.ev_due_changed": "Due Date Changed",
+  "utask.ev_priority_changed": "Priority Changed",
+  "utask.ev_cancelled": "Cancelled",
+  "utask.ev_note": "Update",
+  "utask.ev_attachment": "Attachment",
+  "utask.ev_updated": "Updated",
 };
 
 const ur: Dict = {
@@ -26003,6 +26075,42 @@ const ur: Dict = {
   "crm.filter_tab": "منظر",
   "crm.filter_date": "تاریخ",
   "crm.filter_records": "ریکارڈز",
+  "utask.mod_purchases": "خرید",
+  "utask.mod_local_purchase": "مقامی خرید",
+  "utask.mod_sales": "فروخت",
+  "utask.mod_local_sales": "مقامی فروخت",
+  "utask.mod_accounting": "اکاؤنٹنگ",
+  "utask.mod_journal": "جرنل",
+  "utask.mod_ledger": "لیجر",
+  "utask.mod_roznamcha": "روزنامچہ",
+  "utask.mod_cash_bank": "نقد / بینک",
+  "utask.mod_bill_expenses": "بل اخراجات",
+  "utask.mod_settlement": "تصفیہ",
+  "utask.mod_hrm": "ایچ آر / پے رول",
+  "utask.mod_documents": "دستاویزات",
+  "utask.mod_shipping": "شپنگ",
+  "utask.mod_clearing": "کلیئرنگ",
+  "utask.mod_reports": "رپورٹس",
+  "utask.mod_other": "دیگر",
+  "utask.ev_created": "بنایا گیا",
+  "utask.ev_assigned": "تفویض کیا",
+  "utask.ev_reassigned": "دوبارہ تفویض",
+  "utask.ev_accepted": "قبول کیا",
+  "utask.ev_started": "شروع کیا",
+  "utask.ev_waiting": "روکا گیا",
+  "utask.ev_progress_note": "پیش رفت نوٹ",
+  "utask.ev_comment": "تبصرہ",
+  "utask.ev_attachment_added": "منسلک شامل",
+  "utask.ev_evidence_linked": "ثبوت منسلک",
+  "utask.ev_completed": "مکمل کیا",
+  "utask.ev_returned": "واپس کیا",
+  "utask.ev_verified": "تصدیق کیا",
+  "utask.ev_due_changed": "آخری تاریخ تبدیل",
+  "utask.ev_priority_changed": "ترجیح تبدیل",
+  "utask.ev_cancelled": "منسوخ کیا",
+  "utask.ev_note": "اپڈیٹ",
+  "utask.ev_attachment": "منسلک",
+  "utask.ev_updated": "تازہ کیا",
 };
 
 const ar: Dict = {
@@ -36677,6 +36785,42 @@ const ar: Dict = {
   "crm.filter_tab": "العرض",
   "crm.filter_date": "التاريخ",
   "crm.filter_records": "السجلات",
+  "utask.mod_purchases": "المشتريات",
+  "utask.mod_local_purchase": "شراء محلي",
+  "utask.mod_sales": "المبيعات",
+  "utask.mod_local_sales": "مبيعات محلية",
+  "utask.mod_accounting": "المحاسبة",
+  "utask.mod_journal": "اليومية",
+  "utask.mod_ledger": "دفتر الأستاذ",
+  "utask.mod_roznamcha": "الروزنامة",
+  "utask.mod_cash_bank": "النقد / البنك",
+  "utask.mod_bill_expenses": "مصروفات الفاتورة",
+  "utask.mod_settlement": "التسوية",
+  "utask.mod_hrm": "الموارد البشرية / الرواتب",
+  "utask.mod_documents": "المستندات",
+  "utask.mod_shipping": "الشحن",
+  "utask.mod_clearing": "التخليص",
+  "utask.mod_reports": "التقارير",
+  "utask.mod_other": "أخرى",
+  "utask.ev_created": "تم الإنشاء",
+  "utask.ev_assigned": "تم الإسناد",
+  "utask.ev_reassigned": "إعادة إسناد",
+  "utask.ev_accepted": "تم القبول",
+  "utask.ev_started": "تم البدء",
+  "utask.ev_waiting": "معلّقة",
+  "utask.ev_progress_note": "ملاحظة تقدّم",
+  "utask.ev_comment": "تعليق",
+  "utask.ev_attachment_added": "إضافة مرفق",
+  "utask.ev_evidence_linked": "ربط الدليل",
+  "utask.ev_completed": "تم الإكمال",
+  "utask.ev_returned": "تمت الإعادة",
+  "utask.ev_verified": "تم التحقّق",
+  "utask.ev_due_changed": "تغيّر تاريخ الاستحقاق",
+  "utask.ev_priority_changed": "تغيّرت الأولوية",
+  "utask.ev_cancelled": "تم الإلغاء",
+  "utask.ev_note": "تحديث",
+  "utask.ev_attachment": "مرفق",
+  "utask.ev_updated": "تم التحديث",
 };
 
 const fa: Dict = {
@@ -47350,6 +47494,42 @@ const fa: Dict = {
   "crm.filter_tab": "نما",
   "crm.filter_date": "تاریخ",
   "crm.filter_records": "رکوردها",
+  "utask.mod_purchases": "خرید",
+  "utask.mod_local_purchase": "خرید محلی",
+  "utask.mod_sales": "فروش",
+  "utask.mod_local_sales": "فروش محلی",
+  "utask.mod_accounting": "حسابداری",
+  "utask.mod_journal": "دفتر روزنامه",
+  "utask.mod_ledger": "دفتر کل",
+  "utask.mod_roznamcha": "روزنامچه",
+  "utask.mod_cash_bank": "نقد / بانک",
+  "utask.mod_bill_expenses": "هزینه‌های صورتحساب",
+  "utask.mod_settlement": "تسویه",
+  "utask.mod_hrm": "منابع انسانی / حقوق",
+  "utask.mod_documents": "اسناد",
+  "utask.mod_shipping": "حمل و نقل",
+  "utask.mod_clearing": "ترخیص",
+  "utask.mod_reports": "گزارش‌ها",
+  "utask.mod_other": "دیگر",
+  "utask.ev_created": "ایجاد شد",
+  "utask.ev_assigned": "واگذار شد",
+  "utask.ev_reassigned": "واگذاری مجدد",
+  "utask.ev_accepted": "پذیرفته شد",
+  "utask.ev_started": "شروع شد",
+  "utask.ev_waiting": "در انتظار",
+  "utask.ev_progress_note": "یادداشت پیشرفت",
+  "utask.ev_comment": "نظر",
+  "utask.ev_attachment_added": "پیوست افزوده شد",
+  "utask.ev_evidence_linked": "مدرک پیوند شد",
+  "utask.ev_completed": "تکمیل شد",
+  "utask.ev_returned": "بازگردانده شد",
+  "utask.ev_verified": "تأیید شد",
+  "utask.ev_due_changed": "تغییر سررسید",
+  "utask.ev_priority_changed": "تغییر اولویت",
+  "utask.ev_cancelled": "لغو شد",
+  "utask.ev_note": "به‌روزرسانی",
+  "utask.ev_attachment": "پیوست",
+  "utask.ev_updated": "به‌روزرسانی شد",
 };
 
 const ps: Dict = {
@@ -58029,6 +58209,42 @@ const ps: Dict = {
   "crm.filter_tab": "لید",
   "crm.filter_date": "نېټه",
   "crm.filter_records": "ثبتونه",
+  "utask.mod_purchases": "اخيستل",
+  "utask.mod_local_purchase": "محلي اخيستل",
+  "utask.mod_sales": "پلورل",
+  "utask.mod_local_sales": "محلي پلورل",
+  "utask.mod_accounting": "محاسبه",
+  "utask.mod_journal": "ژورنال",
+  "utask.mod_ledger": "لېجر",
+  "utask.mod_roznamcha": "روزنامچه",
+  "utask.mod_cash_bank": "نغدي / بانک",
+  "utask.mod_bill_expenses": "د بيل لګښتونه",
+  "utask.mod_settlement": "تصفيه",
+  "utask.mod_hrm": "بشري منابع / معاش",
+  "utask.mod_documents": "اسناد",
+  "utask.mod_shipping": "بارول",
+  "utask.mod_clearing": "کلیرنس",
+  "utask.mod_reports": "راپورونه",
+  "utask.mod_other": "نور",
+  "utask.ev_created": "جوړ شو",
+  "utask.ev_assigned": "وسپارل شو",
+  "utask.ev_reassigned": "بيا وسپارل شو",
+  "utask.ev_accepted": "ومنل شو",
+  "utask.ev_started": "پیل شو",
+  "utask.ev_waiting": "ودرول شو",
+  "utask.ev_progress_note": "د پرمختګ یادښت",
+  "utask.ev_comment": "نظر",
+  "utask.ev_attachment_added": "ضمیمه اضافه شوه",
+  "utask.ev_evidence_linked": "شواهد وتړل شول",
+  "utask.ev_completed": "بشپړ شو",
+  "utask.ev_returned": "بېرته شو",
+  "utask.ev_verified": "تصدیق شو",
+  "utask.ev_due_changed": "د نېټې بدلون",
+  "utask.ev_priority_changed": "لومړیتوب بدل شو",
+  "utask.ev_cancelled": "لغوه شو",
+  "utask.ev_note": "تازه معلومات",
+  "utask.ev_attachment": "ضمیمه",
+  "utask.ev_updated": "تازه شو",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

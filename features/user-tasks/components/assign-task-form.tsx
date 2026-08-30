@@ -122,7 +122,7 @@ export function AssignTaskForm({ s, onClose, onCreated }: { s: S; onClose: () =>
             <select className={inputCls} value={form.relatedModule} onChange={(e) => set("relatedModule", e.target.value)}>
               <option value="">—</option>
               {MODULES.map((m) => (
-                <option key={m} value={m}>{s.t(`k_${m}`, m.replace(/_/g, " "))}</option>
+                <option key={m} value={m}>{s.t(`mod_${m}`, m.replace(/_/g, " "))}</option>
               ))}
             </select>
           </div>

@@ -42,7 +42,7 @@ export function TaskAuditView({ lang: langProp }: { lang?: string }) {
       { key: (r: any) => fmtDateTime(r.created_at), label: s.t("col_updated", "When") },
       { key: (r: any) => r.task_no || "", label: s.t("col_task_no", "Task No") },
       { key: (r: any) => r.title || "", label: s.t("col_task", "Task") },
-      { key: (r: any) => s.t(`k_${r.event_type}`, r.event_type.replace(/_/g, " ")), label: "Event" },
+      { key: (r: any) => s.t(`ev_${r.event_type}`, r.event_type.replace(/_/g, " ")), label: "Event" },
       { key: (r: any) => [r.from_status, r.to_status].filter(Boolean).join(" → "), label: s.t("col_status", "Status") },
       { key: (r: any) => r.actor_name || "", label: "By" },
       { key: (r: any) => r.assignee_name || "", label: s.t("col_assignee", "Assignee") },
@@ -128,7 +128,7 @@ export function TaskAuditView({ lang: langProp }: { lang?: string }) {
                       <span className="font-medium text-slate-800">{r.title}</span>
                       <span className="ms-1 text-[11px] text-slate-400">{r.task_no}</span>
                     </td>
-                    <td className="px-3 py-2 text-xs font-semibold text-slate-700">{s.t(`k_${r.event_type}`, r.event_type.replace(/_/g, " "))}</td>
+                    <td className="px-3 py-2 text-xs font-semibold text-slate-700">{s.t(`ev_${r.event_type}`, r.event_type.replace(/_/g, " "))}</td>
                     <td className="px-3 py-2 text-xs text-slate-500">{[r.from_status, r.to_status].filter(Boolean).join(" → ") || "—"}</td>
                     <td className="px-3 py-2 text-xs text-slate-600">{r.actor_name || "—"}</td>
                     <td className="px-3 py-2 text-xs text-slate-600">{r.assignee_name || "—"}</td>

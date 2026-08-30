@@ -149,8 +149,11 @@ export function allowedTransitions(session: ErpSession, task: UserTaskRow): Task
     if (s === "waiting") out.add("resume");
   }
   if (isManager) {
-    if (s === "completed") { out.add("verify"); out.add("return"); }
-    if (s === "verified") out.add("reopen");
+    // Separation of duties: the person who did the work never verifies it themselves,
+    // even when they also hold a manager role for the scope. Another manager must verify.
+    if (s === "completed" && !isAssignee) out.add("verify");
+    if (s === "completed") out.add("return");
+    if (s === "verified" && !isAssignee) out.add("reopen");
     if (s !== "verified" && s !== "cancelled") out.add("cancel");
     // a manager can also nudge a stalled task back for rework
     if (s === "in_progress" || s === "waiting" || s === "accepted") out.add("return");

@@ -189,7 +189,7 @@ export function TaskDetailModal({
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-wrap items-center gap-x-6 gap-y-1 p-3">
-                  <Field label={s.t("col_module", "Module")}>{s.t(`k_${t.related_module}`, t.related_module.replace(/_/g, " "))}</Field>
+                  <Field label={s.t("col_module", "Module")}>{s.t(`mod_${t.related_module}`, t.related_module.replace(/_/g, " "))}</Field>
                   {t.related_record_label && <Field label={s.t("f_record", "Related Record / Entry")}>{t.related_record_label}</Field>}
                   {data?.relatedRecord?.ref_no && <Field label="Ref">{data.relatedRecord.ref_no}</Field>}
                   {data?.relatedRecord?.ref_amount != null && <Field label="Amount">{Number(data.relatedRecord.ref_amount).toLocaleString()}</Field>}
@@ -206,7 +206,7 @@ export function TaskDetailModal({
             {trans.length > 0 && (
               <Card className="border-t-4 border-t-amber-400 shadow-sm">
                 <CardHeader className="border-b border-slate-100 bg-slate-50 px-3 py-2">
-                  <CardTitle className="text-xs font-bold uppercase text-slate-600">{s.t("act_add_evidence", "Actions")}</CardTitle>
+                  <CardTitle className="text-xs font-bold uppercase text-slate-600">{s.t("col_actions", "Actions")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3 p-3">
                   {trans.includes("complete") && (
@@ -292,7 +292,7 @@ export function TaskDetailModal({
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-baseline gap-x-2">
                             <span className="text-xs font-semibold text-slate-700">
-                              {s.t(`k_${e.event_type}`, e.event_type.replace(/_/g, " "))}
+                              {s.t(`ev_${e.event_type}`, e.event_type.replace(/_/g, " "))}
                             </span>
                             {e.from_status && e.to_status && (
                               <span className="text-[11px] text-slate-400">{e.from_status} → {e.to_status}</span>

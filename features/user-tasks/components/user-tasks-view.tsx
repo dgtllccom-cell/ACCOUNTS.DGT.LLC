@@ -279,7 +279,7 @@ export function UserTasksView({ scope, lang: langProp }: { scope: Scope; lang?: 
                       </span>
                     </td>
                     <td className="px-3 py-2 text-xs text-slate-500">
-                      {r.related_module ? s.t(`k_${r.related_module}`, r.related_module.replace(/_/g, " ")) : "—"}
+                      {r.related_module ? s.t(`mod_${r.related_module}`, r.related_module.replace(/_/g, " ")) : "—"}
                     </td>
                     <td className="px-3 py-2 text-xs text-slate-500">{r.city_branch_name || r.country_branch_name || r.country_name || "—"}</td>
                     <td className="px-3 py-2 text-center">
@@ -342,7 +342,7 @@ function NotificationsPanel({
               <button onClick={() => onOpenTask(n.task_id)} className={`block w-full px-1 py-2 text-start ${n.is_read ? "opacity-60" : ""}`}>
                 <div className="flex items-center gap-1.5">
                   {!n.is_read && <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />}
-                  <span className="text-xs font-semibold text-slate-700">{s.t(`k_${n.kind}`, n.kind)}</span>
+                  <span className="text-xs font-semibold text-slate-700">{s.t(`ev_${n.kind}`, n.kind)}</span>
                   <span className="ms-auto text-[10px] text-slate-400">{fmtDateTime(n.created_at)}</span>
                 </div>
                 <p className="truncate text-xs text-slate-500">{n.title} · {n.task_no}</p>
