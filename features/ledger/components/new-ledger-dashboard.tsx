@@ -19,6 +19,7 @@ import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { openGenericErpReport } from "@/lib/reports/open-generic-erp-report";
 import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
+import { resolveLedgerBranding } from "@/lib/reports/resolve-ledger-branding";
 import {
   getLedgerStatement,
   listLedgerReportLedgers,
@@ -335,7 +336,7 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
     setError(null);
   }
 
-  function printLedger() {
+  async function printLedger() {
     const tr = (label: string) => translateHeader(activeLang, label);
 
     // No account selected yet — still produce a proper (empty) statement so the
@@ -371,6 +372,10 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
     const totCr = totals.credit || 0;
     const closeBal = totals.balance ?? (openBal + totDr - totCr);
 
+    const printedBy = session?.user?.fullName || session?.user?.email || "ERP User";
+    const brand = await resolveLedgerBranding(account as any, activeLang, printedBy);
+    const entity = brand.entityName || account.companyName || undefined;
+
     openUniversalPrintReport({
       title: tr("Account Ledger Statement"),
       subtitle: `${account.accountCode || account.ledgerCode || "Ledger"} · ${account.accountName || account.ledgerName || "Account Statement"}`,
@@ -379,17 +384,15 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
       orientation: "landscape",
       documentNo: account.accountCode || account.ledgerCode || "LEDGER-STMT",
       companyInfo: {
-        name: account.companyName || (account.countryName ? `${account.countryName} Operating Entity` : "Damaan General Trading LLC"),
-        address: account.address || `${account.cityBranchName || ""}, ${account.countryName || ""}`.replace(/^[\s,]+|[\s,]+$/g, ""),
-        email: "accounts@dgt.llc",
-        printedBy: session?.user?.fullName || session?.user?.email || "ERP User",
+        ...brand.companyInfo,
+        printedBy,
       },
       scope: {
         scopeLevel: "Account Ledger Statement",
-        userName: session?.user?.fullName || session?.user?.email || "ERP User",
-        company: account.companyName || (account.countryName ? `${account.countryName} Operating Entity` : undefined),
-        country: account.countryName || selectedCountry || "Global Scope",
-        branch: account.cityBranchName || account.countryBranchName || selectedBranch || "Main Branch",
+        userName: printedBy,
+        company: entity,
+        country: brand.countryName || account.countryName || selectedCountry || "Global Scope",
+        branch: brand.branchName || account.cityBranchName || account.countryBranchName || selectedBranch || "Main Branch",
         currency: curr,
         dateRange: `${fromDate || "Start"} → ${toDate || "Today"}`
       },
@@ -402,9 +405,9 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
         manualReference: account.manualReferenceNumber || undefined,
         customerReference: account.customerNumber || undefined,
         accountType: account.accountKind || "Standard Account",
-        taxNo: (account as any).taxNo || (account.countryName === 'Pakistan' ? 'NTN: Registered' : account.countryName === 'United Arab Emirates' ? 'TRN: 100458923400003' : ''),
-        companyName: account.companyName || (account.countryName ? `${account.countryName} Operating Entity` : undefined),
-        countryName: account.countryName || selectedCountry || "Global Scope",
+        taxNo: (account as any).taxNo || brand.taxNumber || brand.registrationNumber || "",
+        companyName: entity,
+        countryName: brand.countryName || account.countryName || selectedCountry || "Global Scope",
         mainBranch: account.countryBranchName || "Main Branch",
         cityBranch: account.cityBranchName || selectedBranch || "City Branch",
         branchCode: account.cityBranchId || account.countryBranchId || "-",
@@ -671,13 +674,13 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
             </Button>
             {actionsOpen ? (
               <div className="absolute right-0 top-full z-30 mt-2 w-48 overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-xl">
-                <button type="button" className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-muted" onClick={printLedger}>
+                <button type="button" className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-muted" onClick={() => { void printLedger(); }}>
                   <Printer className="h-4 w-4" /> {t(activeLang, "report.builder_print", "Print")}
                 </button>
                 <button type="button" className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-muted" onClick={downloadCsv}>
                   <DownloadActionIcon className="h-4 w-4" /> {t(activeLang, "report.builder_export_csv", "Export CSV")}
                 </button>
-                <button type="button" className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-muted" onClick={printLedger}>
+                <button type="button" className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-muted" onClick={() => { void printLedger(); }}>
                   <FileText className="h-4 w-4" /> PDF
                 </button>
               </div>

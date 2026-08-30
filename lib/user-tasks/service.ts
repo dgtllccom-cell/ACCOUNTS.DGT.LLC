@@ -515,6 +515,26 @@ export async function addAttachment(
   }))!;
 }
 
+/** Attachment row (scope-checked) for the download route to resolve its stored file. */
+export async function getAttachmentForDownload(
+  session: ErpSession,
+  id: string,
+  attachmentId: string,
+): Promise<{ file: unknown; name: string; mime: string | null } | null> {
+  return withLocalPg(async (sql) => {
+    const rows = (await sql`
+      select a.file, a.name, a.mime,
+             t.assigned_to, t.created_by, t.country_id, t.country_branch_id, t.city_branch_id
+      from public.user_task_attachments a join public.user_tasks t on t.id = a.task_id
+      where a.id = ${attachmentId}::uuid and a.task_id = ${id}::uuid and a.deleted_at is null limit 1
+    `) as unknown as any[];
+    const row = rows[0];
+    if (!row) return null;
+    if (!canViewTask(session, { ...row } as UserTaskRow)) return null;
+    return { file: row.file, name: row.name, mime: row.mime };
+  });
+}
+
 export async function deleteAttachment(session: ErpSession, id: string, attachmentId: string): Promise<void> {
   await withLocalPg(async (sql) => {
     const rows = (await sql`
@@ -528,6 +548,15 @@ export async function deleteAttachment(session: ErpSession, id: string, attachme
     const isMgr = isTaskManager(session, att as any);
     if (!isOwner && !isMgr) throw new ApiClientError("Not allowed.", { status: 403, code: "FORBIDDEN" });
     await sql`update public.user_task_attachments set deleted_at = now() where id = ${attachmentId}::uuid`;
+    const storageKey = (att.file as any)?.storageKey as string | undefined;
+    if (storageKey) {
+      try {
+        const { deleteDocumentBlob } = await import("@/lib/documents/document-storage");
+        await deleteDocumentBlob(storageKey);
+      } catch {
+        /* best-effort — the row is already soft-deleted */
+      }
+    }
   });
 }
 

@@ -1125,37 +1125,44 @@ export function SmartCrmControlCenter() {
                     />
                   </div>
                   <div className="grid grid-cols-7 gap-1 text-[9.5px] font-bold text-slate-400 mb-1">
-                    <span>{lang === "ur" ? "پیر" : "Mon"}</span>
-                    <span>{lang === "ur" ? "منگل" : "Tue"}</span>
-                    <span>{lang === "ur" ? "بدھ" : "Wed"}</span>
-                    <span>{lang === "ur" ? "جمعرات" : "Thu"}</span>
-                    <span>{lang === "ur" ? "جمعہ" : "Fri"}</span>
-                    <span>{lang === "ur" ? "ہفتہ" : "Sat"}</span>
-                    <span>{lang === "ur" ? "اتوار" : "Sun"}</span>
+                    {(lang === "ur"
+                      ? ["پیر", "منگل", "بدھ", "جمعرات", "جمعہ", "ہفتہ", "اتوار"]
+                      : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+                    ).map((d) => (
+                      <span key={d} className="flex items-center justify-center py-0.5">{d}</span>
+                    ))}
                   </div>
                   <div className="grid grid-cols-7 gap-1 text-[10px]">
                     {Array.from({ length: calendarInfo.startOffset }).map((_, idx) => (
-                      <span key={`empty-${idx}`} className="p-0.5 text-slate-300"></span>
+                      <span key={`empty-${idx}`} className="aspect-square" aria-hidden></span>
                     ))}
                     {Array.from({ length: calendarInfo.daysInMonth }).map((_, idx) => {
                       const day = idx + 1;
                       const isSelected = day === calendarInfo.selectedDay;
+                      const now = new Date();
+                      const isToday =
+                        day === now.getDate() &&
+                        calendarInfo.month === now.getMonth() &&
+                        calendarInfo.year === now.getFullYear();
                       return (
-                        <span
+                        <button
+                          type="button"
                           key={day}
                           onClick={() => {
                             const d = new Date(calendarInfo.year, calendarInfo.month, day);
                             setTargetDate(d.toISOString().split("T")[0]);
                           }}
                           className={cn(
-                            "p-0.5 rounded-full cursor-pointer transition text-xs font-semibold",
+                            "flex aspect-square items-center justify-center rounded-full text-xs font-semibold transition tabular-nums",
                             isSelected
-                              ? "bg-blue-600 text-white font-black shadow-xs"
-                              : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                              ? "bg-blue-600 text-white font-black shadow-sm"
+                              : isToday
+                                ? "ring-2 ring-blue-500 ring-offset-1 text-blue-700 font-black dark:text-blue-300 dark:ring-offset-slate-900"
+                                : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
                           )}
                         >
                           {day}
-                        </span>
+                        </button>
                       );
                     })}
                   </div>
@@ -1330,25 +1337,30 @@ export function SmartCrmControlCenter() {
               </div>
 
               {/* Important Notes */}
-              <div className="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 text-[10.5px] text-slate-500 space-y-1">
-                <span className="font-bold text-slate-700 dark:text-slate-300 block">{t(lang, "crm.important_notes", "Important Notes")}</span>
-                {lang === "ur" ? (
-                  <>
-                    <p>• تمام اعداد و شمار حقیقی ڈیٹا سے ملائے جاتے ہیں۔</p>
-                    <p>• ہر ٹرانزیکشن اپنے ماخذ ریکارڈ سے منسلک ہے۔</p>
-                    <p>• صرف مجاز صارفین کو اپنے دائرہ کار کا ڈیٹا نظر آئے گا۔</p>
-                    <p>• تمام رپورٹس اور پرنٹ ERP کی منتخب زبان میں ہوں گی۔</p>
-                    <p className="font-bold text-slate-700 dark:text-slate-300">• DR = بنام ، CR = جمع</p>
-                  </>
-                ) : (
-                  <>
-                    <p>• All figures and balances are synchronized with live accounting records.</p>
-                    <p>• Each transaction is directly linked to its primary source voucher.</p>
-                    <p>• Authorized users only see records within their assigned branch scope.</p>
-                    <p>• All reports and prints are generated in the active system language.</p>
-                    <p className="font-bold text-slate-700 dark:text-slate-300">• DR = Debit (Receivable) , CR = Credit (Payable)</p>
-                  </>
-                )}
+              <div className="mt-3 rounded-lg border border-slate-100 bg-slate-50/60 p-3 dark:border-slate-800 dark:bg-slate-800/30">
+                <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">{t(lang, "crm.important_notes", "Important Notes")}</span>
+                <div className="space-y-1.5 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+                  {(lang === "ur"
+                    ? [
+                        "تمام اعداد و شمار حقیقی ڈیٹا سے ملائے جاتے ہیں۔",
+                        "ہر ٹرانزیکشن اپنے ماخذ ریکارڈ سے منسلک ہے۔",
+                        "صرف مجاز صارفین کو اپنے دائرہ کار کا ڈیٹا نظر آئے گا۔",
+                        "تمام رپورٹس اور پرنٹ ERP کی منتخب زبان میں ہوں گی۔",
+                      ]
+                    : [
+                        "All figures and balances are synchronized with live accounting records.",
+                        "Each transaction is directly linked to its primary source voucher.",
+                        "Authorized users only see records within their assigned branch scope.",
+                        "All reports and prints are generated in the active system language.",
+                      ]
+                  ).map((note, i) => (
+                    <p key={i} className="flex gap-1.5"><span className="text-slate-400">•</span><span>{note}</span></p>
+                  ))}
+                  <p className="flex gap-1.5 pt-0.5 font-bold text-slate-700 dark:text-slate-300">
+                    <span className="text-slate-400">•</span>
+                    <span>{lang === "ur" ? "DR = بنام ، CR = جمع" : "DR = Debit (Receivable) , CR = Credit (Payable)"}</span>
+                  </p>
+                </div>
               </div>
             </div>
 

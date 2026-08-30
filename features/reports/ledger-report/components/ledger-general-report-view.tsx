@@ -183,7 +183,7 @@ function normalizeForSearch(value: string) {
 
 function buildLedgerOption(row: LedgerLookupRow): SearchSelectOption {
   const branch = row.cityBranchName || row.countryBranchName || row.countryName || "";
-  const label = `${row.accountCode || row.ledgerCode} Â· ${row.accountName || row.ledgerName}${branch ? ` Â· ${branch}` : ""}`;
+  const label = `${row.accountCode || row.ledgerCode} · ${row.accountName || row.ledgerName}${branch ? ` · ${branch}` : ""}`;
   const keywords = [
     row.ledgerCode,
     row.ledgerName,
@@ -548,9 +548,9 @@ export function LedgerReportView({
     >();
 
     for (const row of displayRows) {
-      const countryName = row.countryName || "United Arab Emirates";
-      const branchName = row.cityBranchName || row.countryBranchName || row.branch || "Main Branch";
-      const currency = row.ledgerCurrency || "AED";
+      const countryName = row.countryName || "—";
+      const branchName = row.cityBranchName || row.countryBranchName || row.branch || "—";
+      const currency = row.ledgerCurrency || "";
 
       if (!map.has(countryName)) {
         map.set(countryName, {
@@ -608,7 +608,9 @@ export function LedgerReportView({
       scope: {
         scopeLevel: tt("prof.ledger_report", "Ledger General Report"),
         dateRange: `${fromDate} → ${toDate}`,
-        userName: "ERP User",
+        userName: sessionInfo?.user?.fullName || sessionInfo?.user?.email || "",
+        country: (sessionInfo as any)?.scopes?.summary?.countryName || "",
+        branch: (sessionInfo as any)?.scopes?.summary?.branchDisplayName || (sessionInfo as any)?.scopes?.summary?.branchName || "",
       },
       kpis: [
         { label: tt("jrn.entry_count", "Total Entries"), value: summary?.entries ?? 0, color: "blue" },
@@ -1018,23 +1020,23 @@ export function LedgerReportView({
           <div className="p-4 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
               <span>{th("COUNTRY:")}</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200">{(sessionInfo as any)?.scopes?.summary?.countryName || "United Arab Emirates"}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">{(sessionInfo as any)?.scopes?.summary?.countryName || "—"}</span>
             </div>
             <div className="flex justify-between items-center">
               <span>{th("BRANCH NAME:")}</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{(sessionInfo as any)?.scopes?.summary?.branchDisplayName || (sessionInfo as any)?.scopes?.summary?.branchName || "UNITED ARAB EMIRATES MAIN BRANCH"}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{(sessionInfo as any)?.scopes?.summary?.branchDisplayName || (sessionInfo as any)?.scopes?.summary?.branchName || "—"}</span>
             </div>
             <div className="flex justify-between items-center">
               <span>{th("USER ID:")}</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase text-[9px] font-mono">{sessionInfo?.user?.id || "9B9D24D9-5532-47A1-B612-3E95F2285AB6"}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase text-[9px] font-mono">{sessionInfo?.user?.id || "—"}</span>
             </div>
             <div className="flex justify-between items-center">
               <span>{th("USER NAME:")}</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{sessionInfo?.user?.fullName || sessionInfo?.user?.email || "SUPER ADMIN"}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{sessionInfo?.user?.fullName || sessionInfo?.user?.email || "—"}</span>
             </div>
             <div className="flex justify-between items-center">
               <span>{th("ROLE:")}</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{(sessionInfo as any)?.roles?.[0]?.replace(/_/g, " ") || "SUPER ADMIN"}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{(sessionInfo as any)?.roles?.[0]?.replace(/_/g, " ") || "—"}</span>
             </div>
             <div className="flex justify-between items-center">
               <span>{th("DATE & TIME:")}</span>

@@ -64,7 +64,7 @@ export function openCustomerLedgerPrintReport(input: {
     orientation: "landscape",
     companyInfo,
     scope: {
-      company: companyInfo?.name || "Damaan General Trading LLC",
+      company: companyInfo?.name || undefined,
       country: r.country,
       branch: r.branch,
       currency: baseCurr,

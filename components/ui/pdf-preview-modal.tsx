@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { usePrintStore } from "@/lib/store/print-store";
 import { Button } from "@/components/ui/button";
 import { X, Printer, Download, Mail, Share2, Menu, FileText, LayoutList } from "lucide-react";
@@ -21,6 +22,18 @@ export function PdfPreviewModal() {
 
   const [orientation, setOrientation] = useState<"portrait" | "landscape">("portrait");
   const [previewLang, setPreviewLang] = useState<string>(docLang || "en");
+
+  // The print store is a module singleton — its open state survives client-side
+  // navigation. Close the preview whenever the route changes so a report preview
+  // can never bleed on top of a different page (e.g. an interactive wizard).
+  const pathname = usePathname();
+  const firstPath = useRef(pathname);
+  useEffect(() => {
+    if (pathname !== firstPath.current) {
+      firstPath.current = pathname;
+      if (isOpen) closePrint();
+    }
+  }, [pathname, isOpen, closePrint]);
 
   useEffect(() => { setPreviewLang(docLang || "en"); }, [docLang, isOpen]);
 

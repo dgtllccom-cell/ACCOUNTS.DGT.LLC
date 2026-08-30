@@ -45,6 +45,7 @@ export function TaskDetailModal({
   const [completionNote, setCompletionNote] = useState("");
   const [evidenceRef, setEvidenceRef] = useState("");
   const [returnReason, setReturnReason] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [toast, setToast] = useState<{ text: string; ok: boolean } | null>(null);
 
   const load = useCallback(async () => {
@@ -90,6 +91,34 @@ export function TaskDetailModal({
       flash(s.t("toast_error", "Something went wrong."), false);
     } finally {
       setBusy(null);
+    }
+  }
+
+  async function uploadFile(file: File, kind: "instruction" | "evidence") {
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("kind", kind);
+      const r = await fetch(`/api/erp/user-tasks/${taskId}/attachments`, { method: "POST", credentials: "include", body: fd });
+      const j = await r.json();
+      if (j.ok) { flash(s.t("toast_saved", "Saved.")); await load(); onChanged(); }
+      else flash(j.error?.message || s.t("toast_error", "Something went wrong."), false);
+    } catch {
+      flash(s.t("toast_error", "Something went wrong."), false);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function removeAttachment(attachmentId: string) {
+    try {
+      const r = await fetch(`/api/erp/user-tasks/${taskId}/attachments?attachmentId=${attachmentId}`, { method: "DELETE", credentials: "include" });
+      const j = await r.json();
+      if (j.ok) { await load(); onChanged(); }
+      else flash(j.error?.message || s.t("toast_error", "Something went wrong."), false);
+    } catch {
+      flash(s.t("toast_error", "Something went wrong."), false);
     }
   }
 
@@ -253,6 +282,54 @@ export function TaskDetailModal({
                 </CardContent>
               </Card>
             )}
+
+            {/* attachments / evidence files */}
+            <Card className="shadow-sm">
+              <CardHeader className="border-b border-slate-100 bg-slate-50 px-3 py-2">
+                <CardTitle className="flex items-center gap-1.5 text-xs font-bold uppercase text-slate-600">
+                  <Paperclip className="h-3.5 w-3.5" /> {s.t("f_attachments", "Attachments")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 p-3">
+                {(!data?.attachments || data.attachments.length === 0) && (
+                  <p className="py-2 text-center text-xs text-slate-400">{s.t("no_evidence", "No evidence submitted yet.")}</p>
+                )}
+                {(data?.attachments ?? []).map((a) => (
+                  <div key={a.id} className="flex items-center gap-2 rounded border border-slate-200 px-2 py-1.5 text-xs">
+                    <FileText className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                    <a
+                      href={`/api/erp/user-tasks/${taskId}/attachments/${a.id}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="min-w-0 flex-1 truncate font-medium text-indigo-600 hover:underline"
+                    >
+                      {a.name}
+                    </a>
+                    <span className="shrink-0 text-[10px] text-slate-400">
+                      {a.kind === "instruction" ? s.t("f_instructions", "Instructions") : s.t("evidence", "Work Evidence")}
+                      {a.size_bytes ? ` · ${Math.max(1, Math.round(a.size_bytes / 1024))} KB` : ""}
+                    </span>
+                    <button
+                      onClick={() => removeAttachment(a.id)}
+                      aria-label="Delete"
+                      className="shrink-0 rounded p-0.5 text-slate-300 hover:bg-rose-50 hover:text-rose-500"
+                    >
+                      <XCircle className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+                <label className="mt-1 flex cursor-pointer items-center justify-center gap-1.5 rounded-md border border-dashed border-slate-300 px-3 py-2 text-xs font-semibold text-slate-500 hover:border-indigo-300 hover:text-indigo-600">
+                  {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Paperclip className="h-3.5 w-3.5" />}
+                  {uploading ? s.t("saving", "Saving…") : s.t("act_add_evidence", "Add Evidence")}
+                  <input
+                    type="file"
+                    className="hidden"
+                    disabled={uploading}
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFile(f, perm?.isManager ? "instruction" : "evidence"); e.target.value = ""; }}
+                  />
+                </label>
+              </CardContent>
+            </Card>
 
             {/* progress note */}
             <Card className="shadow-sm">

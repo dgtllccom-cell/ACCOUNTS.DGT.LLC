@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
+import { resolveLedgerBranding } from "@/lib/reports/resolve-ledger-branding";
 import {
   getLedgerStatement,
   listLedgerReportLedgers,
@@ -277,11 +278,13 @@ export function SuperAdminDetailedLedgerView() {
     };
   }, [lines, filterType, filterValue, header]);
 
-  function printDetailedStatement() {
+  async function printDetailedStatement() {
     const openBal = (header as any)?.openingBalance || 0;
     const totalDr = calculatedTotals.sumDr;
     const totalCr = calculatedTotals.sumCr;
     const closingBal = openBal + totalDr - totalCr;
+
+    const brand = await resolveLedgerBranding(header, lang);
 
     openUniversalPrintReport({
       title: `Account Ledger Statement - ${header?.accountName || "Account"}`,
@@ -289,11 +292,12 @@ export function SuperAdminDetailedLedgerView() {
       lang,
       moduleType: "ledger",
       orientation: "landscape",
+      companyInfo: brand.companyInfo,
       scope: {
         scopeLevel: "Super Admin Detailed Statement",
-        company: header?.accountName || "Damaan General Trading LLC",
-        country: header?.countryName || "",
-        branch: (header as any)?.branchName || (header as any)?.cityBranchName || "",
+        company: brand.entityName || undefined,
+        country: brand.countryName || header?.countryName || "",
+        branch: brand.branchName || (header as any)?.branchName || (header as any)?.cityBranchName || "",
         currency: header?.ledgerCurrency || "AED",
         dateRange: `${fromDate || ""} → ${toDate || ""}`,
       },
@@ -399,7 +403,7 @@ export function SuperAdminDetailedLedgerView() {
               type="button"
               variant="outline"
               size="sm"
-              onClick={printDetailedStatement}
+              onClick={() => { void printDetailedStatement(); }}
               className="h-8 gap-1.5 rounded-lg px-2.5 text-xs font-bold shadow-xs"
             >
               <Printer className="h-3.5 w-3.5" />

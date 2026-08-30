@@ -33,6 +33,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { openJournalReportWindow } from "@/lib/reports/open-journal-report-window";
 import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
+import { resolveLedgerBranding } from "@/lib/reports/resolve-ledger-branding";
 
 export type RoznamchaEntryCategory = "business" | "bank" | "cash" | "invoice" | "transfer";
 
@@ -414,9 +415,22 @@ export function RoznamchaTypeReportView({
     downloadTextFile(`roznamcha-${selectedCategory}-${todayIso()}.csv`, csvContent, "text/csv");
   }
 
-  function printReport() {
+  async function printReport() {
     const totDr = data?.totalDebit ?? rows.reduce((s, r) => s + Number(primaryLine(r)?.debit || 0), 0);
     const totCr = data?.totalCredit ?? rows.reduce((s, r) => s + Number(primaryLine(r)?.credit || 0), 0);
+
+    const sc = sessionInfo?.scopes;
+    const brand = await resolveLedgerBranding(
+      {
+        countryId: sc?.countryIds?.[0] ?? null,
+        countryBranchId: sc?.countryBranchIds?.[0] ?? null,
+        cityBranchId: sc?.cityBranchIds?.[0] ?? null,
+        countryName: sc?.summary?.countryName ?? null,
+        cityBranchName: sc?.summary?.branchDisplayName ?? sc?.summary?.branchName ?? null,
+      },
+      currentLang,
+      sessionInfo?.user?.fullName,
+    );
 
     openUniversalPrintReport({
       title: localizedPageTitle,
@@ -424,11 +438,12 @@ export function RoznamchaTypeReportView({
       lang: currentLang,
       moduleType: "roznamcha",
       orientation: "landscape",
+      companyInfo: brand.companyInfo,
       scope: {
-        company: sessionInfo?.scopes?.summary?.countryName ? `${sessionInfo.scopes.summary.countryName} Operating Entity` : "Damaan General Trading LLC",
-        country: sessionInfo?.scopes?.summary?.countryName || "United Arab Emirates",
-        branch: sessionInfo?.scopes?.summary?.branchDisplayName || sessionInfo?.scopes?.summary?.branchName || "Main Branch",
-        currency: "AED",
+        company: brand.entityName || undefined,
+        country: brand.countryName || sessionInfo?.scopes?.summary?.countryName || "",
+        branch: brand.branchName || sessionInfo?.scopes?.summary?.branchDisplayName || sessionInfo?.scopes?.summary?.branchName || "Main Branch",
+        currency: brand.companyInfo.currency || "",
         dateRange: `${fromDate || "Start"} → ${toDate || "Today"}`,
         userName: sessionInfo?.user?.fullName || "ERP User",
       },
@@ -571,7 +586,7 @@ export function RoznamchaTypeReportView({
                   type="button"
                   onClick={() => {
                     setActionsMenuOpen(false);
-                    printReport();
+                    void printReport();
                   }}
                   className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-start text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 cursor-pointer"
                 >
@@ -611,7 +626,7 @@ export function RoznamchaTypeReportView({
             <div className="flex justify-between items-center">
               <span>{tt("rozrep.country_label", "COUNTRY:")}</span>
               <span className="font-black text-slate-800 dark:text-slate-200">
-                {sessionInfo?.scopes?.summary?.countryName ?? "United Arab Emirates"}
+                {sessionInfo?.scopes?.summary?.countryName ?? "—"}
               </span>
             </div>
             <div className="flex justify-between items-center">
