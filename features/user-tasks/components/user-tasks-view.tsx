@@ -20,7 +20,7 @@ import { AssignTaskForm } from "./assign-task-form";
 
 type Scope = "my" | "team" | "overdue" | "completed";
 
-export function UserTasksView({ scope, lang: langProp }: { scope: Scope; lang?: string }) {
+export function UserTasksView({ scope, lang: langProp, autoAssign = false }: { scope: Scope; lang?: string; autoAssign?: boolean }) {
   const s = useErpScreen("utask", langProp);
   const erpScope = useErpScope();
 
@@ -31,7 +31,7 @@ export function UserTasksView({ scope, lang: langProp }: { scope: Scope; lang?: 
   const [priorityFilter, setPriorityFilter] = useState<"all" | string>("all");
   const [search, setSearch] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
-  const [showAssign, setShowAssign] = useState(false);
+  const [showAssign, setShowAssign] = useState(autoAssign);
   const [summary, setSummary] = useState<any>(null);
   const [showNotif, setShowNotif] = useState(false);
 
