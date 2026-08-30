@@ -18,7 +18,7 @@ async function api<T>(url: string, init?: RequestInit): Promise<T> {
 
 export type DgtConnectState = ReturnType<typeof useDgtConnect>;
 
-export function useDgtConnect(lang: SupportedLanguage, enabled: boolean) {
+export function useDgtConnect(lang: SupportedLanguage, enabled: boolean, currentUserId: string) {
   const [conversations, setConversations] = useState<DgtConversation[]>([]);
   const [unreadTotal, setUnreadTotal] = useState(0);
   const [unreadByConv, setUnreadByConv] = useState<Record<string, number>>({});
@@ -67,6 +67,33 @@ export function useDgtConnect(lang: SupportedLanguage, enabled: boolean) {
     finally { setLoadingMessages(false); }
   }, [lang, translateView, refreshUnread, refreshConversations]);
 
+  // Lightweight poll of the open thread — merges by id, does not reset scroll or
+  // re-mark-read. Used as the live fallback when realtime is unavailable.
+  const pollActiveMessages = useCallback(async (conversationId: string) => {
+    try {
+      const qs = new URLSearchParams({ lang, translate: translateView ? "1" : "0", limit: "40" });
+      const d = await api<{ messages: DgtMessage[] }>(`/api/erp/dgt-connect/conversations/${conversationId}/messages?${qs}`);
+      setMessages((prev) => {
+        const byId = new Map(prev.map((m) => [m.id, m]));
+        let changed = prev.length !== d.messages.length;
+        for (const m of d.messages) {
+          const old = byId.get(m.id);
+          if (!old || old.readCount !== m.readCount || old.deliveredCount !== m.deliveredCount || old.deletedAt !== m.deletedAt) changed = true;
+          byId.set(m.id, m);
+        }
+        if (!changed) return prev;
+        return d.messages.map((m) => byId.get(m.id)!);
+      });
+      const hasIncoming = d.messages.some((m) => m.senderId !== currentUserId);
+      if (hasIncoming) {
+        await api(`/api/erp/dgt-connect/conversations/${conversationId}/read`, { method: "POST" }).catch(() => {});
+        void refreshUnread();
+      }
+    } catch { /* silent */ }
+  }, [lang, translateView, refreshUnread, currentUserId]);
+  const pollRef = useRef(pollActiveMessages);
+  pollRef.current = pollActiveMessages;
+
   const openConversation = useCallback((conversationId: string) => {
     setActiveId(conversationId);
     setMessages([]);
@@ -103,10 +130,11 @@ export function useDgtConnect(lang: SupportedLanguage, enabled: boolean) {
         method: "POST",
         body: JSON.stringify({ body, bodyLang: lang, attachment: extra?.attachment ?? null, sharedRecord: extra?.sharedRecord ?? null, replyToId: extra?.replyToId ?? null }),
       });
-      setMessages((prev) => [...prev.filter((m) => m.id !== d.message.id), d.message]);
+      setMessages((prev) => (prev.some((m) => m.id === d.message.id) ? prev : [...prev, d.message]));
       void refreshConversations();
+      void refreshUnread();
     } catch (e) { setError((e as Error).message); }
-  }, [lang, refreshConversations]);
+  }, [lang, refreshConversations, refreshUnread]);
 
   const notifyTyping = useCallback(async () => {
     const conversationId = activeIdRef.current;
@@ -129,7 +157,13 @@ export function useDgtConnect(lang: SupportedLanguage, enabled: boolean) {
     void refreshUnread();
     const hb = setInterval(beat, 30_000);
     const up = setInterval(() => { void refreshUnread(); }, 15_000);
-    return () => { alive = false; clearInterval(hb); clearInterval(up); };
+    // Fallback poll for the OPEN thread — keeps the chat live even when the
+    // Supabase realtime websocket is unavailable.
+    const tp = setInterval(() => {
+      const id = activeIdRef.current;
+      if (id) void pollRef.current?.(id);
+    }, 6_000);
+    return () => { alive = false; clearInterval(hb); clearInterval(up); clearInterval(tp); };
   }, [enabled, refreshConversations, refreshUnread]);
 
   // realtime: any change → refetch the relevant slice

@@ -36,6 +36,38 @@ type AssignmentRow = {
   city_branch_id: string | null;
 };
 
+/**
+ * A login's scope arrays are sometimes only partially populated (e.g. a
+ * city-branch login may carry `cityBranchIds` but not the parent
+ * `countryBranchIds` / `countryIds`). Expand them from the branch hierarchy so
+ * the reachability rules see the whole picture.
+ */
+async function expandScope(session: ErpSession): Promise<{
+  countryIds: Set<string>; countryBranchIds: Set<string>; cityBranchIds: Set<string>;
+}> {
+  const countryIds = new Set(session.countryIds);
+  const countryBranchIds = new Set(session.countryBranchIds);
+  const cityBranchIds = new Set(session.cityBranchIds);
+
+  const rows = await withLocalPg(async (sql) => {
+    const cb = cityBranchIds.size
+      ? await sql`select id, country_id, country_branch_id from public.city_branches where id = any(${[...cityBranchIds]}::uuid[])`
+      : [];
+    const cbr = countryBranchIds.size
+      ? await sql`select id, country_id from public.country_branches where id = any(${[...countryBranchIds]}::uuid[])`
+      : [];
+    return { cb, cbr };
+  });
+  for (const r of (rows?.cb ?? []) as any[]) {
+    if (r.country_id) countryIds.add(r.country_id);
+    if (r.country_branch_id) countryBranchIds.add(r.country_branch_id);
+  }
+  for (const r of (rows?.cbr ?? []) as any[]) {
+    if (r.country_id) countryIds.add(r.country_id);
+  }
+  return { countryIds, countryBranchIds, cityBranchIds };
+}
+
 async function loadActiveAssignments(): Promise<AssignmentRow[]> {
   const rows = await withLocalPg(async (sql) => {
     return (await sql`
@@ -86,9 +118,7 @@ export async function dgtReachableUserIds(session: ErpSession): Promise<Set<stri
     return out;
   }
 
-  const myCountries = new Set(session.countryIds);
-  const myCountryBranches = new Set(session.countryBranchIds);
-  const myCityBranches = new Set(session.cityBranchIds);
+  const { countryIds: myCountries, countryBranchIds: myCountryBranches, cityBranchIds: myCityBranches } = await expandScope(session);
 
   for (const a of assignments) {
     if (a.user_id === session.userId) continue;
@@ -179,10 +209,11 @@ export async function dgtDirectory(session: ErpSession): Promise<DgtDirectory> {
   };
   const cityBranchIds = new Set((cityBranches as any[]).map((r) => r.id));
 
+  const globalUsers: DgtDirectoryUser[] = [];
   for (const u of byUser.values()) {
     const branchId = u.cityBranchId || u.countryBranchId;
     const cid = u.countryId || (branchId ? branchCountry.get(branchId) : null);
-    if (!cid) continue;
+    if (!cid) { globalUsers.push(u); continue; }
     const country = ensureCountry(cid);
     if (branchId) {
       if (!country.branches.has(branchId)) country.branches.set(branchId, []);
@@ -196,6 +227,7 @@ export async function dgtDirectory(session: ErpSession): Promise<DgtDirectory> {
   return {
     scopeLabel: dgtScopeKind(session),
     self: { id: session.userId, name: session.fullName || "You", lang: (session.preferredLanguage || "en") as SupportedLanguage },
+    globalUsers: globalUsers.sort((a, b) => a.name.localeCompare(b.name)),
     countries: [...countryMap.values()]
       .map((c) => ({
         id: c.id,

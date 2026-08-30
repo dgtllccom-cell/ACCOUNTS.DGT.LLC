@@ -27,7 +27,7 @@ export function DgtConnectWidget({ currentUserId }: { currentUserId: string }) {
   const isRtl = RTL.has(lang);
   const tt = (k: string, f: string) => t(lang, k as never, f);
   const [open, setOpen] = useState(false);
-  const c = useDgtConnect(lang, true);
+  const c = useDgtConnect(lang, true, currentUserId);
 
   const [view, setView] = useState<"list" | "thread" | "new">("list");
   const [search, setSearch] = useState("");
@@ -233,6 +233,10 @@ function NewConversationView({
     | { type: "branch"; label: string }
     | { type: "user"; u: DgtDirectoryUser };
   const rows: Row[] = [];
+  if (directory?.globalUsers?.length) {
+    rows.push({ type: "country", label: "—" });
+    for (const u of directory.globalUsers) rows.push({ type: "user", u });
+  }
   for (const country of directory?.countries ?? []) {
     rows.push({ type: "country", label: country.name });
     for (const u of country.countryUsers) rows.push({ type: "user", u });

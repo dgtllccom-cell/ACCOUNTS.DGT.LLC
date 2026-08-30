@@ -36,6 +36,8 @@ export type DgtDirectory = {
   scopeLabel: string;
   self: { id: string; name: string; lang: SupportedLanguage };
   countries: DgtDirectoryCountry[];
+  /** reachable users with no country assignment (e.g. global super-admins) */
+  globalUsers: DgtDirectoryUser[];
 };
 
 export type DgtMessageKind = "text" | "attachment" | "record_share" | "system";
