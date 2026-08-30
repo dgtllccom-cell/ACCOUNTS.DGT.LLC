@@ -5,7 +5,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { companyCreateSchema } from "@/lib/api/erp-validation";
 import { companiesService } from "@/lib/services/companies-service";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
-import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import { localizeRecordFields } from "@/lib/i18n/localize-records";
 
 export async function GET(request: NextRequest) {
   try {
@@ -37,12 +37,15 @@ export async function GET(request: NextRequest) {
 
     let companies: any[] = (result as any).companies ?? [];
     if (Array.isArray(companies) && companies.length > 0) {
-      companies = await localizeRecordNames<any>(companies, "companies", "name", lang, { phraseFallback: true });
-      companies = await localizeRecordNames<any>(companies, "companies", "legal_name", lang, { phraseFallback: true });
-      companies = await localizeRecordNames<any>(companies, "companies", "owner_name", lang, { phraseFallback: true });
-      companies = await localizeRecordNames<any>(companies, "companies", "country_name", lang, { phraseFallback: true });
-      companies = await localizeRecordNames<any>(companies, "companies", "state_name", lang, { phraseFallback: true });
-      companies = await localizeRecordNames<any>(companies, "companies", "city_name", lang, { phraseFallback: true });
+      // One batched call (one connection, one translations query) instead of six —
+      // the per-field variant reconnected to the pooler each time (~12 s total).
+      companies = await localizeRecordFields<any>(
+        companies,
+        "companies",
+        ["name", "legal_name", "owner_name", "country_name", "state_name", "city_name"],
+        lang,
+        { phraseFallback: true }
+      );
     }
 
     return apiOk({ ...(result as any), companies });

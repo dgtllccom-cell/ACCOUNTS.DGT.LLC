@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { ensureEmployeesTable } from "@/lib/services/ensure-employees-table";
-import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import { localizeRecordGroups } from "@/lib/i18n/localize-records";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { withLocalPg } from "@/lib/db/local-postgres";
@@ -112,48 +112,43 @@ export async function GET(request: NextRequest) {
     // same localized values. This keeps the table from mixing raw English company/branch/country
     // names with translated employee/person fields.
     if (employees.length > 0 && lang) {
-      employees = await localizeRecordNames(employees, "employees", "full_name", lang);
+      // One shared DB connection for every related record set instead of six separate
+      // connect/query/disconnect cycles against the remote pooler (~2 s each).
+      const [locEmp, locPersons, locCountries, locCountryBranches, locCityBranches] = await localizeRecordGroups(
+        [
+          { records: employees, table: "employees", fields: ["full_name"] },
+          {
+            records: employees.map((e: any) => e.person).filter(Boolean),
+            table: "customers",
+            fields: ["customer_name", "company_name"]
+          },
+          { records: employees.map((e: any) => e.country).filter(Boolean), table: "countries", fields: ["name"] },
+          {
+            records: employees.map((e: any) => e.country_branch).filter(Boolean),
+            table: "country_branches",
+            fields: ["name"]
+          },
+          {
+            records: employees.map((e: any) => e.city_branch).filter(Boolean),
+            table: "city_branches",
+            fields: ["name"]
+          }
+        ],
+        lang
+      );
 
-      const personRows = employees.map((e: any) => e.person).filter(Boolean);
-      if (personRows.length > 0) {
-        let localizedPersons = await localizeRecordNames(personRows, "customers", "customer_name", lang);
-        localizedPersons = await localizeRecordNames(localizedPersons, "customers", "company_name", lang);
-        const personMap = new Map(localizedPersons.map((p: any) => [p.id, p]));
-        employees = employees.map((e: any) => ({
-          ...e,
-          person: e.person ? (personMap.get(e.person.id) || e.person) : e.person
-        }));
-      }
+      const personMap = new Map(locPersons.map((p: any) => [p.id, p]));
+      const countryMap = new Map(locCountries.map((c: any) => [c.id, c]));
+      const countryBranchMap = new Map(locCountryBranches.map((b: any) => [b.id, b]));
+      const cityBranchMap = new Map(locCityBranches.map((b: any) => [b.id, b]));
 
-      const countryRows = employees.map((e: any) => e.country).filter(Boolean);
-      if (countryRows.length > 0) {
-        const localizedCountries = await localizeRecordNames(countryRows, "countries", "name", lang);
-        const countryMap = new Map(localizedCountries.map((c: any) => [c.id, c]));
-        employees = employees.map((e: any) => ({
-          ...e,
-          country: e.country ? (countryMap.get(e.country.id) || e.country) : e.country
-        }));
-      }
-
-      const countryBranchRows = employees.map((e: any) => e.country_branch).filter(Boolean);
-      if (countryBranchRows.length > 0) {
-        const localizedCountryBranches = await localizeRecordNames(countryBranchRows, "country_branches", "name", lang);
-        const branchMap = new Map(localizedCountryBranches.map((b: any) => [b.id, b]));
-        employees = employees.map((e: any) => ({
-          ...e,
-          country_branch: e.country_branch ? (branchMap.get(e.country_branch.id) || e.country_branch) : e.country_branch
-        }));
-      }
-
-      const cityBranchRows = employees.map((e: any) => e.city_branch).filter(Boolean);
-      if (cityBranchRows.length > 0) {
-        const localizedCityBranches = await localizeRecordNames(cityBranchRows, "city_branches", "name", lang);
-        const cityMap = new Map(localizedCityBranches.map((b: any) => [b.id, b]));
-        employees = employees.map((e: any) => ({
-          ...e,
-          city_branch: e.city_branch ? (cityMap.get(e.city_branch.id) || e.city_branch) : e.city_branch
-        }));
-      }
+      employees = locEmp.map((e: any) => ({
+        ...e,
+        person: e.person ? personMap.get(e.person.id) || e.person : e.person,
+        country: e.country ? countryMap.get(e.country.id) || e.country : e.country,
+        country_branch: e.country_branch ? countryBranchMap.get(e.country_branch.id) || e.country_branch : e.country_branch,
+        city_branch: e.city_branch ? cityBranchMap.get(e.city_branch.id) || e.city_branch : e.city_branch
+      }));
     }
 
     // Filter by search terms across all visible fields if provided.

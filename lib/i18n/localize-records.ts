@@ -1,4 +1,5 @@
 import postgres from "postgres";
+import { getSharedPg } from "@/lib/db/local-postgres";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 /**
@@ -133,11 +134,11 @@ export async function getPhraseTranslator(lang: SupportedLanguage): Promise<(val
   if (!dbUrl) return identity;
   let dict = dictCache;
   if (!dict || Date.now() - dictLoadedAt >= DICT_TTL_MS) {
-    const sql = postgres(dbUrl, { max: 1, prepare: false, idle_timeout: 5, connect_timeout: 8 });
+    const sql = getSharedPg()!;
     try {
       dict = await loadDictionary(sql);
     } finally {
-      await sql.end({ timeout: 2 }).catch(() => undefined);
+      /* shared process-lifetime pool — deliberately not closed */ void 0;
     }
   }
   const d = dict;
@@ -176,11 +177,11 @@ export async function lookupApprovedDictionary(
 
   let dict = dictCache;
   if (!dict || Date.now() - dictLoadedAt >= DICT_TTL_MS) {
-    const sql = postgres(dbUrl, { max: 1, prepare: false, idle_timeout: 5, connect_timeout: 8 });
+    const sql = getSharedPg()!;
     try {
       dict = await loadDictionary(sql);
     } finally {
-      await sql.end({ timeout: 2 }).catch(() => undefined);
+      /* shared process-lifetime pool — deliberately not closed */ void 0;
     }
   }
   const d = dict.get(raw.toLowerCase());
@@ -215,7 +216,7 @@ export async function localizeRecordNames<T extends { id: string }>(
   // (whole approved terms only) is safe there too — it only ever replaces known business terms.
   const useDictionary = !PROPER_NAME_TABLES.has(table) || Boolean(options?.phraseFallback);
 
-  const sql = postgres(dbUrl, { max: 1, prepare: false, idle_timeout: 5, connect_timeout: 8 });
+  const sql = getSharedPg()!;
   try {
     // Tier 1: this record's own translations.
     const rows = await sql.unsafe(
@@ -263,7 +264,170 @@ export async function localizeRecordNames<T extends { id: string }>(
       return record;
     });
   } finally {
-    await sql.end({ timeout: 2 }).catch(() => undefined);
+    /* shared process-lifetime pool — deliberately not closed */ void 0;
+  }
+}
+
+/**
+ * Batched multi-field variant of {@link localizeRecordNames}. Resolves SEVERAL fields of
+ * the same record set in ONE database connection + ONE `record_translations` query,
+ * instead of calling `localizeRecordNames` once per field (which opened, authenticated
+ * and closed a fresh pooled connection every time — ~2 s each against the remote pooler,
+ * so a 6-field route spent ~12 s just on connection churn). Same 3-tier resolution.
+ */
+export async function localizeRecordFields<T extends { id: string }>(
+  records: T[],
+  table: string,
+  fields: (keyof T & string)[],
+  lang: SupportedLanguage,
+  options?: { phraseFallback?: boolean }
+): Promise<T[]> {
+  if (!records?.length || !fields.length) return records;
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) return records;
+  const ids = records.map((r) => r.id).filter(Boolean);
+  if (ids.length === 0) return records;
+
+  const isEn = lang === "en";
+  const targetCol = LANG_COL[lang] || "english_text";
+  const useDictionary = !PROPER_NAME_TABLES.has(table) || Boolean(options?.phraseFallback);
+
+  const sql = getSharedPg()!;
+  try {
+    const rows = await sql.unsafe(
+      `select record_id, field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text
+       from record_translations
+       where record_table = $1 and field_name = any($2::text[]) and deleted_at is null
+         and record_id = any($3::uuid[])`,
+      [table, fields, ids]
+    ).catch(() => [] as any[]);
+    const byIdField = new Map<string, DictRow>();
+    for (const r of rows as any[]) byIdField.set(`${r.record_id}::${r.field_name}`, r);
+
+    const dict = useDictionary ? await loadDictionary(sql) : null;
+
+    return records.map((record) => {
+      let next: T | null = null;
+      for (const field of fields) {
+        const rawValue = String(record[field] ?? "").trim();
+        if (!rawValue) continue;
+        const trans = byIdField.get(`${record.id}::${field}`);
+        const englishVal = (trans?.english_text || "").trim();
+        let resolved: string | null = null;
+
+        const targetText = trans ? (trans[targetCol as keyof DictRow] as string) : null;
+        resolved = genuine(targetText, rawValue, englishVal, isEn);
+
+        if (!resolved && dict) {
+          const d = dict.get(rawValue.toLowerCase());
+          if (d) resolved = genuine(d[targetCol as keyof DictRow] as string, rawValue, (d.english_text || "").trim(), isEn);
+          if (!resolved && (options?.phraseFallback || !isEn)) {
+            const phrase = phraseTranslate(dict, rawValue, lang);
+            if (phrase) resolved = phrase;
+          }
+        }
+        if (!resolved && isEn && englishVal && englishVal !== rawValue) resolved = englishVal;
+
+        if (resolved && resolved !== rawValue) {
+          next = { ...(next ?? record), [field]: resolved };
+        }
+      }
+      return next ?? record;
+    });
+  } finally {
+    /* shared process-lifetime pool — deliberately not closed */ void 0;
+  }
+}
+
+export type LocalizeGroup<T extends { id: string } = { id: string }> = {
+  records: T[];
+  table: string;
+  fields: (keyof T & string)[];
+  phraseFallback?: boolean;
+};
+
+/**
+ * Localize SEVERAL unrelated record sets (different tables) in ONE database connection.
+ * A route that localizes employees + persons + countries + branches used to call
+ * {@link localizeRecordNames} once per (table, field) pair — each opening, authenticating
+ * and closing a fresh pooled connection (~2 s against the remote pooler), so a 6-call
+ * route spent ~12 s purely on connection churn. This runs one translations query per
+ * group over a single shared connection. Returns arrays parallel to `groups` (same order),
+ * each the localized copy of that group's records.
+ */
+export async function localizeRecordGroups(
+  groups: LocalizeGroup<any>[],
+  lang: SupportedLanguage
+): Promise<any[][]> {
+  const active = groups.map((g) => ({
+    ...g,
+    ids: (g.records || []).map((r) => r.id).filter(Boolean)
+  }));
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl || active.every((g) => !g.records?.length || !g.fields?.length || !g.ids.length)) {
+    return groups.map((g) => g.records);
+  }
+
+  const isEn = lang === "en";
+  const targetCol = LANG_COL[lang] || "english_text";
+  const sql = getSharedPg()!;
+  try {
+    const needDict = active.some(
+      (g) => g.records?.length && g.fields?.length && g.ids.length && (!PROPER_NAME_TABLES.has(g.table) || g.phraseFallback)
+    );
+    const dict = needDict ? await loadDictionary(sql) : null;
+
+    const out: any[][] = [];
+    for (const g of active) {
+      if (!g.records?.length || !g.fields?.length || !g.ids.length) {
+        out.push(g.records);
+        continue;
+      }
+      const useDictionary = !PROPER_NAME_TABLES.has(g.table) || Boolean(g.phraseFallback);
+      const rows = await sql
+        .unsafe(
+          `select record_id, field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text
+           from record_translations
+           where record_table = $1 and field_name = any($2::text[]) and deleted_at is null
+             and record_id = any($3::uuid[])`,
+          [g.table, g.fields, g.ids]
+        )
+        .catch(() => [] as any[]);
+      const byIdField = new Map<string, DictRow>();
+      for (const r of rows as any[]) byIdField.set(`${r.record_id}::${r.field_name}`, r);
+
+      out.push(
+        g.records.map((record: any) => {
+          let next: any = null;
+          for (const field of g.fields) {
+            const rawValue = String(record[field] ?? "").trim();
+            if (!rawValue) continue;
+            const trans = byIdField.get(`${record.id}::${field}`);
+            const englishVal = (trans?.english_text || "").trim();
+            let resolved: string | null = genuine(
+              trans ? (trans[targetCol as keyof DictRow] as string) : null,
+              rawValue,
+              englishVal,
+              isEn
+            );
+            if (!resolved && useDictionary && dict) {
+              const d = dict.get(rawValue.toLowerCase());
+              if (d) resolved = genuine(d[targetCol as keyof DictRow] as string, rawValue, (d.english_text || "").trim(), isEn);
+              if (!resolved && (g.phraseFallback || !isEn)) {
+                const phrase = phraseTranslate(dict, rawValue, lang);
+                if (phrase) resolved = phrase;
+              }
+            }
+            if (!resolved && isEn && englishVal && englishVal !== rawValue) resolved = englishVal;
+            if (resolved && resolved !== rawValue) next = { ...(next ?? record), [field]: resolved };
+          }
+          return next ?? record;
+        })
+      );
+    }
+    return out;
+  } finally {
+    /* shared process-lifetime pool — deliberately not closed */ void 0;
   }
 }
 
@@ -291,7 +455,7 @@ export async function searchRecordIdsByTranslation(
   const dbUrl = process.env.DATABASE_URL;
   if (!dbUrl) return [];
 
-  const sql = postgres(dbUrl, { max: 1, prepare: false, idle_timeout: 5, connect_timeout: 8 });
+  const sql = getSharedPg()!;
   try {
     const like = `%${term}%`;
     const rows = await sql.unsafe(
@@ -308,6 +472,6 @@ export async function searchRecordIdsByTranslation(
     // Search-widening is a nice-to-have; a lookup failure should never break the base search.
     return [];
   } finally {
-    await sql.end({ timeout: 2 }).catch(() => undefined);
+    /* shared process-lifetime pool — deliberately not closed */ void 0;
   }
 }

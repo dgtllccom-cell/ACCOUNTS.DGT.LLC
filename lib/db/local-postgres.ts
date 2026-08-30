@@ -36,6 +36,30 @@ export function getDbUrl(): string {
 }
 
 /**
+ * Process-lifetime shared direct-Postgres pool (DATABASE_URL). Unlike {@link withLocalPg},
+ * this is created once and never closed, so callers pay the pooler connect cost (~2 s
+ * against a remote Supabase pooler) at most once instead of on every call. Use ONLY for
+ * fast read-only lookups that run many times per request (e.g. the i18n record localizer,
+ * which previously opened/closed a fresh connection per field — ~12 s for a 6-field route).
+ * Anything transactional or write-heavy should keep using {@link withLocalPg}.
+ */
+let _sharedPg: ReturnType<typeof postgres> | null = null;
+export function getSharedPg(): ReturnType<typeof postgres> | null {
+  const url = getDbUrl();
+  if (!url) return null;
+  if (_sharedPg) return _sharedPg;
+  const isLocal = /@(localhost|127\.0\.0\.1|\[::1\])[:/]/i.test(url);
+  _sharedPg = postgres(url, {
+    max: 4,
+    prepare: false,
+    idle_timeout: 60,
+    connect_timeout: 15,
+    ssl: isLocal ? false : "require"
+  });
+  return _sharedPg;
+}
+
+/**
  * Runs `fn` with a short-lived direct-Postgres connection when DATABASE_URL is configured,
  * always closing the connection afterward. Returns null if DATABASE_URL isn't set, so
  * callers can fall back to the Supabase client path.
