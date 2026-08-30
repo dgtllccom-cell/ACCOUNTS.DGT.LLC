@@ -5,6 +5,7 @@ import { z } from "zod";
 import { apiCreated, apiOk, handleApiError, apiError } from "@/lib/api/response";
 import { purchaseOrderCreateSchema, uuidSchema } from "@/lib/api/erp-validation";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { assertBusinessCityBranch } from "@/lib/api/branch-scope-guard";
 import { requireErpSession } from "@/lib/auth/session";
 import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -458,6 +459,9 @@ export async function POST(request: NextRequest) {
       countryBranchId: effective.countryBranchId,
       cityBranchId: effective.cityBranchId
     });
+    // Business transaction — reject shipping/clearing/agent branches even if the id was
+    // passed directly (bypassing the server-filtered selector).
+    await assertBusinessCityBranch(effective.cityBranchId);
 
     const hasLocalPg = Boolean(getDbUrl());
     const supabase = hasLocalPg ? null : await createApiSupabaseClient();

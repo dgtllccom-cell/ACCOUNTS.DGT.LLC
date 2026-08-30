@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { assertBusinessCityBranch } from "@/lib/api/branch-scope-guard";
 import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { optionalUuidSchema, supportedLanguageSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
@@ -318,6 +319,8 @@ export async function POST(request: NextRequest) {
       countryBranchId: effective.countryBranchId,
       cityBranchId: effective.cityBranchId
     });
+    // Business transaction — reject shipping/clearing/agent branches passed directly.
+    await assertBusinessCityBranch(effective.cityBranchId);
 
     const supabase = await createApiSupabaseClient();
     const admin = createSupabaseAdminClient() as any;

@@ -4578,8 +4578,8 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                     </div>
                   </div>
                 </div>
-              </div>
-            ) : (
+              );
+            })() : (
                 <div className="w-full space-y-4 animate-in fade-in duration-200 mt-3">
                   {/* ================= TOP COMPANY / COUNTRY CLEARING LEDGER BANNER ================= */}
                   <div className="w-full bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs flex flex-wrap items-center justify-between gap-4">

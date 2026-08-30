@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { assertBusinessCityBranch } from "@/lib/api/branch-scope-guard";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { deriveLocalPurchasePostingState } from "@/lib/services/local-purchase-posting-state";
@@ -198,6 +199,8 @@ export async function POST(request: NextRequest) {
       countryBranchId: payload.countryBranchId,
       cityBranchId: payload.cityBranchId ?? null,
     });
+    // Business transaction — reject shipping/clearing/agent branches passed directly.
+    await assertBusinessCityBranch(payload.cityBranchId ?? null);
 
     const insertedViaPg = await withLocalPg(async (sql) => {
       const rows = await sql`

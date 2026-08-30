@@ -3,7 +3,7 @@ import { ErpAuthError, requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const selectColumns =
-  "id,country_id,country_branch_id,city_name,name,code,local_currency,status,state_province_id,district_id,city_id,area_location_id,address,phone,email,whatsapp_number,company_id,owner_name,contacts,documents,created_at,updated_at";
+  "id,country_id,country_branch_id,city_name,name,code,local_currency,status,is_business_branch,state_province_id,district_id,city_id,area_location_id,address,phone,email,whatsapp_number,company_id,owner_name,contacts,documents,created_at,updated_at";
 
 export async function GET(request: Request) {
   try {
@@ -11,6 +11,8 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const countryId = url.searchParams.get("countryId");
     const countryBranchId = url.searchParams.get("countryBranchId");
+    // scope: business (default — hides agent/shipping branches), agent, or all (admin views).
+    const scope = (url.searchParams.get("scope") || "business").toLowerCase();
 
     const supabase = createSupabaseAdminClient() as any;
     let query = supabase
@@ -18,6 +20,13 @@ export async function GET(request: Request) {
       .select(selectColumns)
       .is("deleted_at", null)
       .order("created_at", { ascending: true });
+
+    if (scope === "business") {
+      query = query.neq("is_business_branch", false);
+    } else if (scope === "agent") {
+      query = query.eq("is_business_branch", false);
+    }
+    // scope === "all" → no branch-type filter
 
     if (countryId) {
       if (!session.isSuperAdmin && !session.countryIds.includes(countryId)) {
@@ -45,7 +54,8 @@ export async function GET(request: Request) {
       countryId: branch.country_id,
       countryBranchId: branch.country_branch_id,
       cityName: branch.city_name,
-      localCurrency: branch.local_currency
+      localCurrency: branch.local_currency,
+      isBusinessBranch: branch.is_business_branch !== false
     }));
 
     return NextResponse.json({
