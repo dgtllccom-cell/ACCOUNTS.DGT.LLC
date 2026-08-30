@@ -127,6 +127,19 @@ export const ERP_GLOSSARY: GlossaryEntry[] = [
   { en: "Transferred", ur: "منتقل شدہ", ar: "محوّل", fa: "منتقل‌شده", ps: "لېږدول شوی", domain: "general" },
   { en: "Date", ur: "تاریخ", ar: "التاريخ", fa: "تاریخ", ps: "نېټه", domain: "general" },
   { en: "Total", ur: "کل", ar: "الإجمالي", fa: "مجموع", ps: "ټول", domain: "general" },
+
+  // ── common connective words (help sentence-level substitution read naturally) ──
+  { en: "and", ur: "اور", ar: "و", fa: "و", ps: "او", domain: "general" },
+  { en: "for", ur: "کے لیے", ar: "لأجل", fa: "برای", ps: "لپاره", domain: "general" },
+  { en: "to", ur: "کو", ar: "إلى", fa: "به", ps: "ته", domain: "general" },
+  { en: "from", ur: "سے", ar: "من", fa: "از", ps: "له", domain: "general" },
+  { en: "of", ur: "کا", ar: "من", fa: "از", ps: "د", domain: "general" },
+  { en: "with", ur: "کے ساتھ", ar: "مع", fa: "با", ps: "سره", domain: "general" },
+  { en: "against", ur: "کے عوض", ar: "مقابل", fa: "در برابر", ps: "په مقابل کې", domain: "accounting" },
+  { en: "charges", ur: "چارجز", ar: "رسوم", fa: "هزینه‌ها", ps: "لګښتونه", domain: "general" },
+  { en: "expense", ur: "اخراجات", ar: "مصروف", fa: "هزینه", ps: "لګښت", domain: "accounting", variants: ["expenses"] },
+  { en: "ready", ur: "تیار", ar: "جاهز", fa: "آماده", ps: "چمتو", domain: "general" },
+  { en: "dispatch", ur: "روانگی", ar: "إرسال", fa: "ارسال", ps: "لېږل", domain: "shipping", variants: ["dispatched"] },
 ];
 
 /** Fast lookup: normalized source term (any language) -> entry. */

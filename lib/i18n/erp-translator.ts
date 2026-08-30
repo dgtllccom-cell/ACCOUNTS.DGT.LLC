@@ -63,6 +63,54 @@ function glossaryExact(text: string, targetLang: SupportedLanguage): string | nu
   return e ? glossaryValue(e, targetLang) : null;
 }
 
+// Glossary terms sorted longest-first, for greedy multi-word substitution.
+let GLOSSARY_TERMS_SORTED: Array<{ norm: string; entry: (typeof ERP_GLOSSARY)[number] }> | null = null;
+function glossaryTermsSorted() {
+  if (!GLOSSARY_TERMS_SORTED) {
+    const seen = new Set<string>();
+    const list: Array<{ norm: string; entry: (typeof ERP_GLOSSARY)[number] }> = [];
+    for (const [k, entry] of glossaryIndex()) {
+      if (!seen.has(k)) { seen.add(k); list.push({ norm: k, entry }); }
+    }
+    list.sort((a, b) => b.norm.length - a.norm.length);
+    GLOSSARY_TERMS_SORTED = list;
+  }
+  return GLOSSARY_TERMS_SORTED;
+}
+
+function escapeRe(s: string) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+const LATIN_RE = /[a-z]/i;
+
+/**
+ * Contextual phrase substitution using the curated ERP glossary — replaces every
+ * recognised business term/phrase (longest match first) with its target-language
+ * rendering. Returns the rewritten string and a 0..1 coverage score (how much of
+ * the meaningful source it could translate).
+ */
+function glossaryPhraseSubstitute(
+  text: string,
+  targetLang: SupportedLanguage,
+): { result: string; coverage: number } {
+  let work = text;
+  const workLower = normalizeForMatch(text);
+  let covered = 0;
+  const totalLen = workLower.replace(/[^\p{L}\p{N}]/gu, "").length || 1;
+
+  for (const { norm, entry } of glossaryTermsSorted()) {
+    if (norm.length < 2) continue;
+    if (!workLower.includes(norm)) continue;
+    const target = glossaryValue(entry, targetLang);
+    if (!target) continue;
+    // word-boundary for latin terms; loose contains for RTL scripts
+    const isLatin = LATIN_RE.test(norm);
+    const re = new RegExp(isLatin ? `\\b${escapeRe(norm)}\\b` : escapeRe(norm), isLatin ? "gi" : "g");
+    let matched = false;
+    work = work.replace(re, () => { matched = true; return target; });
+    if (matched) covered += norm.replace(/[^\p{L}\p{N}]/gu, "").length;
+  }
+  return { result: work, coverage: Math.min(1, covered / totalLen) };
+}
+
 // ── translation-memory row shape ────────────────────────────────────────────
 type TmRow = {
   id: string; source_lang: string; source_norm: string; source_text: string;
@@ -156,17 +204,39 @@ export async function translateErp(
   const gx = glossaryExact(trimmed, targetLang);
   if (gx) return { text: gx, lang: targetLang, engine: "glossary", confidence: 0.97 };
 
-  // 4) local phrase / contextual engine (dictionary substitution + transliteration)
+  const residualLatin = (s: string) => (s.match(/\p{Lu}?[a-z]{2,}/giu) || []).length;
+
+  // 3.5) contextual glossary phrase substitution on the raw source.
+  const subRaw = glossaryPhraseSubstitute(trimmed, targetLang);
+  if (subRaw.coverage >= 0.85 && residualLatin(subRaw.result) === 0) {
+    return { text: subRaw.result, lang: targetLang, engine: "local-phrase", confidence: 0.8 };
+  }
+
+  // 4) local phrase engine (dictionary substitution + transliteration), then a
+  // second glossary pass to fill any ERP term it left in English.
   let localText: string | null = null;
+  let localResidual = Infinity;
   try {
     const five = autoTranslate5Languages(trimmed, sourceLang);
-    const candidate = five?.[targetLang]?.trim() || "";
-    // reject a no-op (engine couldn't do anything) so we fall through to MT
-    if (candidate && normalizeForMatch(candidate) !== norm) localText = candidate;
+    let candidate = (five?.[targetLang]?.trim() || "");
+    if (candidate) candidate = glossaryPhraseSubstitute(candidate, targetLang).result.trim();
+    if (candidate && normalizeForMatch(candidate) !== norm) {
+      localText = candidate;
+      localResidual = residualLatin(candidate);
+    }
   } catch { /* ignore */ }
 
-  // 5) external MT — only when local produced nothing useful
-  if (!localText && (opts.allowExternal ?? true)) {
+  // prefer whichever local rendering has the least leftover English
+  const subResidual = residualLatin(subRaw.result);
+  if (subRaw.coverage >= 0.4 && normalizeForMatch(subRaw.result) !== norm && subResidual <= localResidual) {
+    localText = subRaw.result;
+    localResidual = subResidual;
+  }
+
+  const localIsClean = localText != null && localResidual === 0;
+
+  // 5) external MT — only when the local engine left English behind or produced nothing
+  if ((!localText || !localIsClean) && (opts.allowExternal ?? true)) {
     const mt = await translateViaMachineTranslation(trimmed, sourceLang, targetLang);
     if (mt && mt.trim() && normalizeForMatch(mt) !== norm) {
       if (opts.learn ?? true) {
@@ -177,10 +247,11 @@ export async function translateErp(
   }
 
   if (localText) {
-    if (opts.learn ?? true) {
+    // only learn a clean rendering (no residual English) — never cache a transliteration
+    if ((opts.learn ?? true) && localIsClean) {
       void tmUpsertMachine(sourceLang, trimmed, { [sourceLang]: trimmed, [targetLang]: localText } as any, "local", opts.domain ?? "general");
     }
-    return { text: localText, lang: targetLang, engine: "local-phrase", confidence: 0.55 };
+    return { text: localText, lang: targetLang, engine: "local-phrase", confidence: localIsClean ? 0.6 : 0.4 };
   }
 
   // give back the original untranslated — never fabricate

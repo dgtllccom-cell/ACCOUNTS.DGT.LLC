@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiOk, apiError } from "@/lib/api/response";
 import { getCurrentErpSession } from "@/lib/auth/session";
-import { translateErp, translateErpAll, ERP_LANGS } from "@/lib/i18n/erp-translator";
+import { translateErp, translateErpAll } from "@/lib/i18n/erp-translator";
 
 export const dynamic = "force-dynamic";
 
@@ -43,4 +43,3 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export { ERP_LANGS };
