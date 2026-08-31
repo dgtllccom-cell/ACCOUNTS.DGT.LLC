@@ -110,74 +110,25 @@ async function resolveUsdAmount(admin: any, input: {
     return { usdRate: 1, usdAmount: Math.round(amount * 10000) / 10000 };
   }
 
-  // Fetch the Super Admin daily USD rates for this country and entryDate.
-  // Daily USD rates are stored as: how many units of local currency (e.g. PKR, AED) equals 1 USD.
-  // debit_rate is for money received (debit), credit_rate is for money paid (credit).
+  // Resolve the applicable Daily Exchange Rate. daily_usd_rates stores "units of local
+  // currency (PKR, AED, …) = 1 USD"; debit_rate applies to debit lines, credit_rate to
+  // credit lines. get_daily_rate() picks the rate EFFECTIVE at the transaction instant:
+  // for today's postings that is now() (so an intraday rate change is picked up); for a
+  // back-dated entry it is the end of that day. It also does the "latest rate on or
+  // before" fallback, and prefers a branch-specific rate over the country-level one.
+  // The resolved rate is then frozen onto the roznamcha line and never recomputed.
   let usdRate = 1;
   if (input.countryId) {
-    // 1. Try to find the rate on the specific entry date
-    let query = admin
-      .from("daily_usd_rates")
-      .select("buying_rate, selling_rate, credit_rate, debit_rate, country_branch_id")
-      .eq("country_id", input.countryId)
-      .eq("rate_date", input.entryDate)
-      .is("deleted_at", null);
-
-    if (input.countryBranchId) {
-      query = query.or(`country_branch_id.eq.${input.countryBranchId},country_branch_id.is.null`);
-    } else {
-      query = query.is("country_branch_id", null);
-    }
-
-    const { data: rows, error: rowError } = await query;
-
-    if (!rowError && Array.isArray(rows) && rows.length > 0) {
-      // Sort so that branch-specific rate comes first
-      rows.sort((a: any, b: any) => {
-        if (a.country_branch_id && !b.country_branch_id) return -1;
-        if (!a.country_branch_id && b.country_branch_id) return 1;
-        return 0;
-      });
-      const row = rows[0];
-      if (input.isDebit) {
-        usdRate = toNumber(row.debit_rate || row.buying_rate || row.selling_rate || 1);
-      } else {
-        usdRate = toNumber(row.credit_rate || row.selling_rate || row.buying_rate || 1);
-      }
-    } else {
-      // 2. Try to find the latest rate as fallback
-      let fallbackQuery = admin
-        .from("daily_usd_rates")
-        .select("buying_rate, selling_rate, credit_rate, debit_rate, country_branch_id, rate_date")
-        .eq("country_id", input.countryId)
-        .is("deleted_at", null)
-        .order("rate_date", { ascending: false })
-        .order("updated_at", { ascending: false })
-        .limit(10);
-
-      if (input.countryBranchId) {
-        fallbackQuery = fallbackQuery.or(`country_branch_id.eq.${input.countryBranchId},country_branch_id.is.null`);
-      } else {
-        fallbackQuery = fallbackQuery.is("country_branch_id", null);
-      }
-
-      const { data: latestRows, error: latestError } = await fallbackQuery;
-
-      if (!latestError && Array.isArray(latestRows) && latestRows.length > 0) {
-        latestRows.sort((a: any, b: any) => {
-          const dateComp = b.rate_date.localeCompare(a.rate_date);
-          if (dateComp !== 0) return dateComp;
-          if (a.country_branch_id && !b.country_branch_id) return -1;
-          if (!a.country_branch_id && b.country_branch_id) return 1;
-          return 0;
-        });
-        const row = latestRows[0];
-        if (input.isDebit) {
-          usdRate = toNumber(row.debit_rate || row.buying_rate || row.selling_rate || 1);
-        } else {
-          usdRate = toNumber(row.credit_rate || row.selling_rate || row.buying_rate || 1);
-        }
-      }
+    const { data, error } = await admin.rpc("get_daily_rate", {
+      p_country_id: input.countryId,
+      p_country_branch_id: input.countryBranchId || null,
+      p_date: input.entryDate,
+    });
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!error && row) {
+      usdRate = input.isDebit
+        ? toNumber(row.debit_rate || row.buying_rate || row.selling_rate || 1)
+        : toNumber(row.credit_rate || row.selling_rate || row.buying_rate || 1);
     }
   }
 
@@ -508,49 +459,18 @@ async function resolveUsdAmountPg(sql: any, input: {
     return { usdRate: 1, usdAmount: Math.round(amount * 10000) / 10000 };
   }
 
+  // Rate effective AT the transaction instant (intraday-aware) — see resolveUsdAmount().
   let usdRate = 1;
   if (input.countryId) {
     const rows = await sql`
-      select buying_rate, selling_rate, credit_rate, debit_rate, country_branch_id
-      from public.daily_usd_rates
-      where country_id = ${input.countryId}
-        and rate_date = ${input.entryDate}
-        and deleted_at is null
-        and (${input.countryBranchId ? sql`country_branch_id = ${input.countryBranchId} or country_branch_id is null` : sql`country_branch_id is null`})
+      select buying_rate, selling_rate, credit_rate, debit_rate
+      from get_daily_rate(${input.countryId}::uuid, ${input.countryBranchId || null}::uuid, ${input.entryDate}::text)
     `;
-    if (rows.length > 0) {
-      rows.sort((a: any, b: any) => {
-        if (a.country_branch_id && !b.country_branch_id) return -1;
-        if (!a.country_branch_id && b.country_branch_id) return 1;
-        return 0;
-      });
-      const row = rows[0];
+    const row = rows[0];
+    if (row) {
       usdRate = input.isDebit
         ? toNumber(row.debit_rate || row.buying_rate || row.selling_rate || 1)
         : toNumber(row.credit_rate || row.selling_rate || row.buying_rate || 1);
-    } else {
-      const latestRows = await sql`
-        select buying_rate, selling_rate, credit_rate, debit_rate, country_branch_id, rate_date
-        from public.daily_usd_rates
-        where country_id = ${input.countryId}
-          and deleted_at is null
-          and (${input.countryBranchId ? sql`country_branch_id = ${input.countryBranchId} or country_branch_id is null` : sql`country_branch_id is null`})
-        order by rate_date desc, updated_at desc
-        limit 10
-      `;
-      if (latestRows.length > 0) {
-        latestRows.sort((a: any, b: any) => {
-          const dateComp = String(b.rate_date).localeCompare(String(a.rate_date));
-          if (dateComp !== 0) return dateComp;
-          if (a.country_branch_id && !b.country_branch_id) return -1;
-          if (!a.country_branch_id && b.country_branch_id) return 1;
-          return 0;
-        });
-        const row = latestRows[0];
-        usdRate = input.isDebit
-          ? toNumber(row.debit_rate || row.buying_rate || row.selling_rate || 1)
-          : toNumber(row.credit_rate || row.selling_rate || row.buying_rate || 1);
-      }
     }
   }
 

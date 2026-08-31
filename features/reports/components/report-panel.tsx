@@ -181,6 +181,9 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
   const [density, setDensity] = useState<"compact" | "comfortable">("comfortable");
   const [visibleColumnKeys, setVisibleColumnKeys] = useState<string[]>([]);
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
+  const [columnPrefsLoaded, setColumnPrefsLoaded] = useState(false);
+  const [savedViews, setSavedViews] = useState<Record<string, { visible: string[]; order: string[] }>>({});
+  const [newViewName, setNewViewName] = useState("");
   const [selectedRow, setSelectedRow] = useState<Record<string, any> | null>(null);
   
   // Filter drawer & column picker state
@@ -384,11 +387,15 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
     });
   }, [appliedReportType, lang, baseColumns]);
 
+  const columnStorageKey = `erp-report-columns:${viewerId || "anonymous"}:${appliedReportType}`;
+  const viewsStorageKey = `erp-report-views:${viewerId || "anonymous"}:${appliedReportType}`;
+
+  // Load the last-used column layout + any named saved views for this report/user.
   useEffect(() => {
     if (!reportResult || typeof window === "undefined") return;
-    const storageKey = `erp-report-columns:${viewerId || "anonymous"}:${appliedReportType}`;
+    setColumnPrefsLoaded(false);
     try {
-      const saved = JSON.parse(window.localStorage.getItem(storageKey) || "null");
+      const saved = JSON.parse(window.localStorage.getItem(columnStorageKey) || "null");
       if (saved && Array.isArray(saved.visible) && Array.isArray(saved.order)) {
         const allowed = new Set(baseColumns.map((column) => column.key));
         const visible = saved.visible.filter((key: string) => allowed.has(key));
@@ -402,7 +409,65 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
     } catch {
       // Ignore
     }
+    try {
+      const v = JSON.parse(window.localStorage.getItem(viewsStorageKey) || "null");
+      setSavedViews(v && typeof v === "object" ? v : {});
+    } catch {
+      setSavedViews({});
+    }
+    setColumnPrefsLoaded(true);
   }, [appliedReportType, reportResult, viewerId, baseColumns]);
+
+  // Persist the working column layout whenever the user changes it.
+  useEffect(() => {
+    if (!columnPrefsLoaded || typeof window === "undefined" || !visibleColumnKeys.length) return;
+    try {
+      window.localStorage.setItem(columnStorageKey, JSON.stringify({ visible: visibleColumnKeys, order: columnOrder }));
+    } catch {
+      // storage disabled / full — the layout still works for this session
+    }
+  }, [visibleColumnKeys, columnOrder, columnPrefsLoaded, columnStorageKey]);
+
+  const resetColumnsToDefault = () => {
+    const all = baseColumns.map((c) => c.key);
+    setColumnOrder(all);
+    setVisibleColumnKeys(all);
+  };
+
+  const applySavedView = (name: string) => {
+    const v = savedViews[name];
+    if (!v) return;
+    const allowed = new Set(baseColumns.map((c) => c.key));
+    const all = baseColumns.map((c) => c.key);
+    const order = [...v.order.filter((k) => allowed.has(k)), ...all.filter((k) => !v.order.includes(k))];
+    const visible = v.visible.filter((k) => allowed.has(k));
+    setColumnOrder(order);
+    setVisibleColumnKeys(visible.length ? visible : all);
+  };
+
+  const saveCurrentView = (name: string) => {
+    const clean = name.trim();
+    if (!clean) return;
+    const next = { ...savedViews, [clean]: { visible: visibleColumnKeys, order: columnOrder } };
+    setSavedViews(next);
+    setNewViewName("");
+    try {
+      window.localStorage.setItem(viewsStorageKey, JSON.stringify(next));
+    } catch {
+      // ignore
+    }
+  };
+
+  const deleteSavedView = (name: string) => {
+    const next = { ...savedViews };
+    delete next[name];
+    setSavedViews(next);
+    try {
+      window.localStorage.setItem(viewsStorageKey, JSON.stringify(next));
+    } catch {
+      // ignore
+    }
+  };
 
   const orderedColumns = columnOrder.map((key) => baseColumns.find((column) => column.key === key)).filter(Boolean) as typeof baseColumns;
   const visibleColumns = orderedColumns.filter((column) => visibleColumnKeys.includes(column.key));
@@ -627,7 +692,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
             </Button>
             {showColumnsModal && (
               <div
-                className="absolute left-0 top-full z-50 mt-1.5 w-64 rounded-xl border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in zoom-in-95"
+                className="absolute left-0 top-full z-50 mt-1.5 w-72 rounded-xl border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in zoom-in-95"
                 onMouseLeave={() => setShowColumnsModal(false)}
               >
                 <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800 mb-2">
@@ -636,7 +701,43 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
                     <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
-                <div className="max-h-60 overflow-y-auto space-y-1 pr-1">
+
+                {/* Saved layout views */}
+                <div className="mb-2 space-y-1.5">
+                  <div className="flex flex-wrap gap-1">
+                    <button
+                      type="button"
+                      onClick={resetColumnsToDefault}
+                      className="rounded-md border border-slate-200 dark:border-slate-700 px-2 py-0.5 text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                    >
+                      {_("report.reset_default", "Reset to Default")}
+                    </button>
+                    {Object.keys(savedViews).map((name) => (
+                      <span key={name} className="inline-flex items-center rounded-md border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 text-[10px] font-bold text-blue-700 dark:text-blue-300">
+                        <button type="button" onClick={() => applySavedView(name)} className="px-1.5 py-0.5 hover:underline">{name}</button>
+                        <button type="button" onClick={() => deleteSavedView(name)} className="px-1 text-blue-400 hover:text-red-500" aria-label="delete view">×</button>
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex gap-1">
+                    <input
+                      value={newViewName}
+                      onChange={(e) => setNewViewName(e.target.value)}
+                      placeholder={_("report.save_view_name", "Save current as…")}
+                      className="flex-1 min-w-0 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-2 py-1 text-[11px] text-slate-700 dark:text-slate-200 outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => saveCurrentView(newViewName)}
+                      disabled={!newViewName.trim()}
+                      className="rounded-md bg-blue-600 px-2 py-1 text-[10px] font-bold text-white disabled:opacity-40"
+                    >
+                      {_("report.save_view", "Save")}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="max-h-60 overflow-y-auto space-y-1 pr-1 border-t border-slate-100 dark:border-slate-800 pt-2">
                   {orderedColumns.map((col, idx) => {
                     const isVisible = visibleColumnKeys.includes(col.key);
                     return (

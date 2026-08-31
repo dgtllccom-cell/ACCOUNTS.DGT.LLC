@@ -1487,7 +1487,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "hr.f_salary_expense_acc", "Salary Expense Account")}</label>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "hr.f_salary_expense_acc", "Branch Employee Expense Account (DR)")}</label>
                     <select
                       value={salaryExpenseAccountId}
                       onChange={(e) => setSalaryExpenseAccountId(e.target.value)}
@@ -1501,7 +1501,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "hr.f_payable_acc", "Employee Payable Account")}</label>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "hr.f_payable_acc", "Employee Own Account / Ledger (CR)")}</label>
                     <select
                       value={employeePayableAccountId}
                       onChange={(e) => setEmployeePayableAccountId(e.target.value)}
@@ -1514,6 +1514,9 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                     </select>
                   </div>
                 </div>
+                <p className="text-[10.5px] leading-relaxed text-slate-500 dark:text-slate-400 pt-1">
+                  {t(lang, "hr.f_payroll_acc_hint", "On salary posting the entry is: DR the Branch Employee Expense account, CR the Employee account (e.g. salary 5,000 → DR 5,000 / CR 5,000). Both accounts are chosen from your permitted scope — nothing is auto-created.")}
+                </p>
               </div>
             )}
           </div>

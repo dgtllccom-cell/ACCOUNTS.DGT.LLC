@@ -5,15 +5,38 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-declare global {
-  var __daily_exchange_rates_store__: any[] | undefined;
-}
+/**
+ * Daily Exchange Rate register — backed by the real `daily_usd_rates` table
+ * (the same table Cash Entry / Roznamcha posting reads for FX resolution).
+ *
+ * A rate is stored as: how many units of the local currency (PKR, AED, …) = 1 USD.
+ * Rates are APPENDED, never overwritten — each save is a new row with its own
+ * `effective_from` instant, so the same country/branch can have several rates in
+ * one day and every historical transaction keeps the rate it was posted against.
+ */
 
-function getStore(): any[] {
-  if (!globalThis.__daily_exchange_rates_store__) {
-    globalThis.__daily_exchange_rates_store__ = [];
-  }
-  return globalThis.__daily_exchange_rates_store__;
+function mapRow(row: any) {
+  return {
+    id: row.id,
+    country_id: row.country_id,
+    country_branch_id: row.country_branch_id ?? null,
+    rate_date: row.rate_date,
+    rate_time: row.rate_time ?? null,
+    effective_from: row.effective_from ?? null,
+    superseded_at: row.superseded_at ?? null,
+    currency_code: row.currency_code ?? row.countries?.currency_code ?? null,
+    buying_rate: row.buying_rate != null ? Number(row.buying_rate) : null,
+    selling_rate: row.selling_rate != null ? Number(row.selling_rate) : null,
+    credit_rate: row.credit_rate != null ? Number(row.credit_rate) : null,
+    debit_rate: row.debit_rate != null ? Number(row.debit_rate) : null,
+    user_name: row.user_name ?? null,
+    branch_name: row.branch_name ?? null,
+    entered_by: row.entered_by ?? null,
+    approved_by: row.approved_by ?? null,
+    approved_at: row.approved_at ?? null,
+    created_at: row.created_at ?? null,
+    countries: row.countries ?? null,
+  };
 }
 
 export async function GET(req: NextRequest) {
@@ -21,82 +44,69 @@ export async function GET(req: NextRequest) {
     const session = await requireErpSession();
     const { searchParams } = new URL(req.url);
     const countryId = searchParams.get("countryId");
+    const countryBranchId = searchParams.get("countryBranchId");
     const branchName = searchParams.get("branchName");
     const query = searchParams.get("query")?.toLowerCase().trim();
     const dateFrom = searchParams.get("dateFrom");
     const dateTo = searchParams.get("dateTo");
 
-    try {
-      const supabase = createSupabaseAdminClient() as any;
-      const { data, error } = await supabase
-        .from("daily_exchange_rates")
-        .select("*, countries(name, currency_code, iso2)")
-        .order("created_at", { ascending: false });
+    const supabase = createSupabaseAdminClient() as any;
+    let q = supabase
+      .from("daily_usd_rates")
+      .select("*, countries(name, currency_code, iso2)")
+      .is("deleted_at", null)
+      .order("effective_from", { ascending: false })
+      .limit(1000);
 
-      if (!error && Array.isArray(data)) {
-        let dbResults = data;
-
-        if (!session.isSuperAdmin && session.countryIds.length > 0) {
-          dbResults = dbResults.filter((row: any) => session.countryIds.includes(row.country_id));
-        }
-        if (countryId && countryId !== "all") {
-          dbResults = dbResults.filter((row: any) => row.country_id === countryId);
-        }
-        if (branchName && branchName !== "all") {
-          dbResults = dbResults.filter((row: any) => row.branch_name?.toLowerCase().includes(branchName.toLowerCase()));
-        }
-        if (dateFrom) {
-          dbResults = dbResults.filter((row: any) => row.rate_date >= dateFrom);
-        }
-        if (dateTo) {
-          dbResults = dbResults.filter((row: any) => row.rate_date <= dateTo);
-        }
-        if (query) {
-          dbResults = dbResults.filter(
-            (row: any) =>
-              row.user_name?.toLowerCase().includes(query) ||
-              row.branch_name?.toLowerCase().includes(query) ||
-              row.countries?.name?.toLowerCase().includes(query) ||
-              row.countries?.currency_code?.toLowerCase().includes(query)
-          );
-        }
-
-        return NextResponse.json({ ok: true, data: dbResults, rates: dbResults });
-      }
-    } catch {
-      // Fall back to local process memory for local/dev workflows.
+    // Backend scope: non-super-admin only sees their assigned countries.
+    if (!session.isSuperAdmin && Array.isArray(session.countryIds) && session.countryIds.length > 0) {
+      q = q.in("country_id", session.countryIds);
     }
+    if (countryId && countryId !== "all") q = q.eq("country_id", countryId);
+    if (countryBranchId && countryBranchId !== "all") q = q.eq("country_branch_id", countryBranchId);
+    if (dateFrom) q = q.gte("rate_date", dateFrom);
+    if (dateTo) q = q.lte("rate_date", dateTo);
 
-    let results = [...getStore()];
-    if (!session.isSuperAdmin && session.countryIds.length > 0) {
-      results = results.filter((row) => session.countryIds.includes(row.country_id));
-    }
-    if (countryId && countryId !== "all") {
-      results = results.filter((row) => row.country_id === countryId);
-    }
+    const { data, error } = await q;
+    if (error) throw new Error(error.message);
+
+    let rows = (Array.isArray(data) ? data : []).map(mapRow);
     if (branchName && branchName !== "all") {
-      results = results.filter((row) => row.branch_name?.toLowerCase().includes(branchName.toLowerCase()));
-    }
-    if (dateFrom) {
-      results = results.filter((row) => row.rate_date >= dateFrom);
-    }
-    if (dateTo) {
-      results = results.filter((row) => row.rate_date <= dateTo);
+      rows = rows.filter((r) => (r.branch_name || "").toLowerCase().includes(branchName.toLowerCase()));
     }
     if (query) {
-      results = results.filter(
-        (row) =>
-          row.user_name?.toLowerCase().includes(query) ||
-          row.branch_name?.toLowerCase().includes(query) ||
-          row.countries?.name?.toLowerCase().includes(query) ||
-          row.countries?.currency_code?.toLowerCase().includes(query)
+      rows = rows.filter(
+        (r) =>
+          (r.user_name || "").toLowerCase().includes(query) ||
+          (r.branch_name || "").toLowerCase().includes(query) ||
+          (r.countries?.name || "").toLowerCase().includes(query) ||
+          (r.currency_code || "").toLowerCase().includes(query)
       );
     }
 
-    return NextResponse.json({ ok: true, data: results, rates: results });
+    return NextResponse.json({ ok: true, data: rows, rates: rows });
   } catch (error: any) {
     return NextResponse.json({ ok: false, error: error?.message || "Failed to load exchange rates" }, { status: 500 });
   }
+}
+
+function parseEffectiveFrom(rateDate: string, rateTime: string | undefined | null): string {
+  const date = rateDate || new Date().toISOString().slice(0, 10);
+  const raw = String(rateTime || "").trim();
+  // "02:00 PM" / "14:00" / "2:00 pm"
+  const m = raw.match(/^(\d{1,2}):(\d{2})\s*([AaPp][Mm])?$/);
+  if (m) {
+    let h = Number(m[1]);
+    const min = Number(m[2]);
+    const ap = m[3]?.toUpperCase();
+    if (ap === "PM" && h < 12) h += 12;
+    if (ap === "AM" && h === 12) h = 0;
+    const hh = String(h).padStart(2, "0");
+    const mm = String(min).padStart(2, "0");
+    return `${date}T${hh}:${mm}:00`;
+  }
+  // no parseable time — use "now" so an intraday save takes effect immediately
+  return new Date().toISOString();
 }
 
 export async function POST(req: NextRequest) {
@@ -105,69 +115,87 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const {
       countryId,
+      countryBranchId,
       rateDate,
       rateTime,
       buyingRate,
       sellingRate,
       creditRate,
       debitRate,
-      countryName,
       currencyCode,
-      iso2,
       userName,
-      branchName
+      branchName,
     } = body;
 
-    if (!session.isSuperAdmin && session.countryIds.length > 0 && countryId && !session.countryIds.includes(countryId)) {
+    if (!countryId) {
+      return NextResponse.json({ ok: false, error: "countryId is required." }, { status: 400 });
+    }
+    // Backend scope guard — a country/branch user may only maintain rates for its own scope.
+    if (!session.isSuperAdmin && Array.isArray(session.countryIds) && session.countryIds.length > 0 && !session.countryIds.includes(countryId)) {
       return NextResponse.json({ ok: false, error: "Country scope is not allowed for this user." }, { status: 403 });
     }
 
-    const newRate = {
-      id: `rate-${Date.now()}`,
-      country_id: countryId,
-      user_name: userName || session.fullName || session.email || "ERP USER",
-      branch_name: branchName || "Scope Assigned",
-      rate_date: rateDate || new Date().toISOString().slice(0, 10),
-      rate_time: rateTime || new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      buying_rate: Number(buyingRate),
-      selling_rate: Number(sellingRate),
-      credit_rate: Number(creditRate || sellingRate),
-      debit_rate: Number(debitRate || buyingRate),
-      updated_at: new Date().toISOString(),
-      countries: {
-        name: countryName || "Country",
-        currency_code: currencyCode || "USD",
-        iso2: iso2 || null
-      }
-    };
-
-    try {
-      const supabase = createSupabaseAdminClient() as any;
-      await supabase.from("daily_exchange_rates").insert({
-        country_id: countryId,
-        user_name: newRate.user_name,
-        branch_name: newRate.branch_name,
-        rate_date: newRate.rate_date,
-        rate_time: newRate.rate_time,
-        credit_rate: newRate.credit_rate,
-        debit_rate: newRate.debit_rate,
-        buying_rate: newRate.buying_rate,
-        selling_rate: newRate.selling_rate
-      });
-    } catch {
-      // Local/dev should continue even if the backing table is unavailable.
+    const credit = Number(creditRate ?? sellingRate);
+    const debit = Number(debitRate ?? buyingRate);
+    if (!(credit > 0) || !(debit > 0)) {
+      return NextResponse.json({ ok: false, error: "Credit and Debit rates must both be greater than zero." }, { status: 400 });
     }
 
-    const store = getStore();
-    const existingIndex = store.findIndex((row) => row.country_id === countryId && row.rate_date === newRate.rate_date);
-    if (existingIndex >= 0) store[existingIndex] = newRate;
-    else store.unshift(newRate);
+    const supabase = createSupabaseAdminClient() as any;
 
-    return NextResponse.json({
-      ok: true,
-      data: newRate,
-      rates: [...store]
-    });
+    // resolve currency + branch name if not supplied
+    let currency = currencyCode ? String(currencyCode).toUpperCase() : null;
+    if (!currency) {
+      const { data: c } = await supabase.from("countries").select("currency_code").eq("id", countryId).maybeSingle();
+      currency = c?.currency_code ? String(c.currency_code).toUpperCase() : null;
+    }
+    let resolvedBranchName = branchName || null;
+    if (!resolvedBranchName && countryBranchId) {
+      const { data: b } = await supabase.from("country_branches").select("name").eq("id", countryBranchId).maybeSingle();
+      resolvedBranchName = b?.name || null;
+    }
+
+    const effectiveFrom = parseEffectiveFrom(rateDate, rateTime);
+
+    // APPEND a new rate row (never overwrite an existing one → same-day history preserved).
+    const insertRow = {
+      country_id: countryId,
+      country_branch_id: countryBranchId || null,
+      rate_date: rateDate || new Date().toISOString().slice(0, 10),
+      rate_time: rateTime || null,
+      effective_from: effectiveFrom,
+      currency_code: currency,
+      buying_rate: Number(buyingRate ?? debit),
+      selling_rate: Number(sellingRate ?? credit),
+      credit_rate: credit,
+      debit_rate: debit,
+      entered_by: session.userId || null,
+      user_name: userName || session.fullName || session.email || "ERP USER",
+      branch_name: resolvedBranchName || "Country level",
+    };
+
+    const { data: inserted, error } = await supabase
+      .from("daily_usd_rates")
+      .insert(insertRow)
+      .select("*, countries(name, currency_code, iso2)")
+      .single();
+
+    if (error) {
+      // unique (country, branch, effective_from) collision → bump by a second and retry once
+      if (String(error.message).toLowerCase().includes("duplicate")) {
+        const bumped = new Date(new Date(effectiveFrom).getTime() + 1000).toISOString();
+        const retry = await supabase
+          .from("daily_usd_rates")
+          .insert({ ...insertRow, effective_from: bumped })
+          .select("*, countries(name, currency_code, iso2)")
+          .single();
+        if (retry.error) throw new Error(retry.error.message);
+        return NextResponse.json({ ok: true, data: mapRow(retry.data) });
+      }
+      throw new Error(error.message);
+    }
+
+    return NextResponse.json({ ok: true, data: mapRow(inserted) });
   } catch (error: any) {
     return NextResponse.json({ ok: false, error: error?.message || "Failed to save rate" }, { status: 400 });
   }

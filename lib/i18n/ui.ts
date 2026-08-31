@@ -2930,6 +2930,7 @@ export type UiKey =
   | "hr.f_general_deduction"
   | "hr.f_salary_expense_acc"
   | "hr.f_payable_acc"
+  | "hr.f_payroll_acc_hint"
   | "hr.f_net_payroll_estimate"
   | "hr.f_master_report_card"
   | "hr.f_loading_details"
@@ -4672,6 +4673,9 @@ export type UiKey =
   | "bexp.summary_with_expenses"
   | "bexp.close"
   | "bexp.clear_filters"
+  | "report.reset_default"
+  | "report.save_view"
+  | "report.save_view_name"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -7040,8 +7044,8 @@ const en: Dict = {
   "hr.f_mobile_utility": "Mobile / Utility",
   "hr.f_tax_social": "Tax / Social Security",
   "hr.f_general_deduction": "General Monthly Deduction",
-  "hr.f_salary_expense_acc": "Salary Expense Account",
-  "hr.f_payable_acc": "Employee Payable Account",
+  "hr.f_salary_expense_acc": "Branch Employee Expense Account (DR)",
+  "hr.f_payable_acc": "Employee Own Account / Ledger (CR)",
   "hr.f_net_payroll_estimate": "Net Payroll Estimate",
   "hr.f_master_report_card": "Employee Master Report Card",
   "hr.f_loading_details": "Loading employee details...",
@@ -15403,6 +15407,10 @@ const en: Dict = {
   "utask.ev_note": "Update",
   "utask.ev_attachment": "Attachment",
   "utask.ev_updated": "Updated",
+  "hr.f_payroll_acc_hint": "On salary posting the entry is: DR the Branch Employee Expense account, CR the Employee account (e.g. salary 5,000 → DR 5,000 / CR 5,000). Both accounts are chosen from your permitted scope — nothing is auto-created.",
+  "report.reset_default": "Reset to Default",
+  "report.save_view": "Save",
+  "report.save_view_name": "Save current as…",
 };
 
 const ur: Dict = {
@@ -18748,8 +18756,8 @@ const ur: Dict = {
   "hr.f_mobile_utility": "موبائل / یوٹیلیٹی",
   "hr.f_tax_social": "ٹیکس / سماجی تحفظ",
   "hr.f_general_deduction": "عمومی ماہانہ کٹوتی",
-  "hr.f_salary_expense_acc": "تنخواہ اخراجات اکاؤنٹ",
-  "hr.f_payable_acc": "ملازم قابل ادائیگی اکاؤنٹ",
+  "hr.f_salary_expense_acc": "برانچ ملازم اخراجات اکاؤنٹ (ڈیبٹ)",
+  "hr.f_payable_acc": "ملازم کا اپنا اکاؤنٹ / لیجر (کریڈٹ)",
   "hr.f_net_payroll_estimate": "خالص تنخواہ کا تخمینہ",
   "hr.f_master_report_card": "ملازم ماسٹر رپورٹ کارڈ",
   "hr.f_loading_details": "ملازم کی تفصیلات لوڈ ہو رہی ہیں...",
@@ -26111,6 +26119,10 @@ const ur: Dict = {
   "utask.ev_note": "اپڈیٹ",
   "utask.ev_attachment": "منسلک",
   "utask.ev_updated": "تازہ کیا",
+  "hr.f_payroll_acc_hint": "تنخواہ پوسٹ کرنے پر اندراج یہ ہوتا ہے: برانچ ملازم اخراجات اکاؤنٹ ڈیبٹ، ملازم اکاؤنٹ کریڈٹ (مثلاً تنخواہ 5,000 → ڈیبٹ 5,000 / کریڈٹ 5,000)۔ دونوں اکاؤنٹ آپ کے مجاز دائرہ کار سے منتخب ہوتے ہیں — خودکار کچھ نہیں بنتا۔",
+  "report.reset_default": "ڈیفالٹ پر بحال کریں",
+  "report.save_view": "محفوظ کریں",
+  "report.save_view_name": "موجودہ کو محفوظ کریں…",
 };
 
 const ar: Dict = {
@@ -29461,8 +29473,8 @@ const ar: Dict = {
   "hr.f_mobile_utility": "الهاتف / المرافق",
   "hr.f_tax_social": "الضريبة / الضمان الاجتماعي",
   "hr.f_general_deduction": "الخصم الشهري العام",
-  "hr.f_salary_expense_acc": "حساب مصروف الرواتب",
-  "hr.f_payable_acc": "حساب مستحقات الموظف",
+  "hr.f_salary_expense_acc": "حساب مصروفات موظف الفرع (مدين)",
+  "hr.f_payable_acc": "حساب الموظف الخاص / دفتر الأستاذ (دائن)",
   "hr.f_net_payroll_estimate": "تقدير صافي الراتب",
   "hr.f_master_report_card": "بطاقة تقرير الموظف الرئيسية",
   "hr.f_loading_details": "جارٍ تحميل تفاصيل الموظف...",
@@ -36821,6 +36833,10 @@ const ar: Dict = {
   "utask.ev_note": "تحديث",
   "utask.ev_attachment": "مرفق",
   "utask.ev_updated": "تم التحديث",
+  "hr.f_payroll_acc_hint": "عند ترحيل الراتب يكون القيد: مدين حساب مصروفات موظف الفرع، دائن حساب الموظف (مثال: راتب 5,000 ← مدين 5,000 / دائن 5,000). يُختار الحسابان من نطاق صلاحياتك — لا يُنشأ شيء تلقائياً.",
+  "report.reset_default": "إعادة التعيين إلى الافتراضي",
+  "report.save_view": "حفظ",
+  "report.save_view_name": "احفظ الحالي باسم…",
 };
 
 const fa: Dict = {
@@ -40171,8 +40187,8 @@ const fa: Dict = {
   "hr.f_mobile_utility": "موبایل / خدمات",
   "hr.f_tax_social": "مالیات / تأمین اجتماعی",
   "hr.f_general_deduction": "کسر ماهانه عمومی",
-  "hr.f_salary_expense_acc": "حساب هزینه حقوق",
-  "hr.f_payable_acc": "حساب پرداختنی کارمند",
+  "hr.f_salary_expense_acc": "حساب هزینه کارمند شعبه (بدهکار)",
+  "hr.f_payable_acc": "حساب شخصی کارمند / دفتر کل (بستانکار)",
   "hr.f_net_payroll_estimate": "برآورد خالص حقوق",
   "hr.f_master_report_card": "کارت گزارش اصلی کارمند",
   "hr.f_loading_details": "در حال بارگذاری جزئیات کارمند...",
@@ -47530,6 +47546,10 @@ const fa: Dict = {
   "utask.ev_note": "به‌روزرسانی",
   "utask.ev_attachment": "پیوست",
   "utask.ev_updated": "به‌روزرسانی شد",
+  "hr.f_payroll_acc_hint": "هنگام ثبت حقوق، سند این‌گونه است: بدهکار حساب هزینه کارمند شعبه، بستانکار حساب کارمند (مثلاً حقوق 5,000 ← بدهکار 5,000 / بستانکار 5,000). هر دو حساب از محدوده مجاز شما انتخاب می‌شوند — چیزی به‌طور خودکار ساخته نمی‌شود.",
+  "report.reset_default": "بازنشانی به پیش‌فرض",
+  "report.save_view": "ذخیره",
+  "report.save_view_name": "ذخیره فعلی به‌عنوان…",
 };
 
 const ps: Dict = {
@@ -50875,8 +50895,8 @@ const ps: Dict = {
   "hr.f_mobile_utility": "موبایل / اسانتیاوې",
   "hr.f_tax_social": "مالیه / ټولنیز خوندیتوب",
   "hr.f_general_deduction": "عمومي میاشتنی کمښت",
-  "hr.f_salary_expense_acc": "د معاش لګښت حساب",
-  "hr.f_payable_acc": "د کارمند د ورکړې حساب",
+  "hr.f_salary_expense_acc": "د څانګې د کارمند لګښت حساب (ډیبټ)",
+  "hr.f_payable_acc": "د کارمند خپل حساب / لیجر (کریډیټ)",
   "hr.f_net_payroll_estimate": "د خالص معاش اټکل",
   "hr.f_master_report_card": "د کارمند ماسټر راپور کارت",
   "hr.f_loading_details": "د کارمند تفصیلات بارول کیږي...",
@@ -58245,6 +58265,10 @@ const ps: Dict = {
   "utask.ev_note": "تازه معلومات",
   "utask.ev_attachment": "ضمیمه",
   "utask.ev_updated": "تازه شو",
+  "hr.f_payroll_acc_hint": "د معاش د ثبتولو پر مهال ثبت داسې دی: د څانګې د کارمند لګښت حساب ډیبټ، د کارمند حساب کریډیټ (لکه معاش 5,000 → ډیبټ 5,000 / کریډیټ 5,000). دواړه حسابونه ستاسو له مجاز ساحې څخه ټاکل کیږي — په اتوماتيک ډول هیڅ نه جوړیږي.",
+  "report.reset_default": "بیا تنظیمول",
+  "report.save_view": "خوندي کول",
+  "report.save_view_name": "اوسنی د دې په نوم خوندي کړئ…",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

@@ -19,10 +19,14 @@ import { translateHeader } from "@/lib/i18n/table-headers";
 type CountryRate = {
   id: string;
   country_id: string;
+  country_branch_id?: string | null;
   user_name?: string;
   branch_name?: string;
   rate_date: string;
   rate_time?: string;
+  effective_from?: string | null;
+  superseded_at?: string | null;
+  currency_code?: string | null;
   buying_rate: number;
   selling_rate: number;
   credit_rate: number;
@@ -260,8 +264,9 @@ export function DailyExchangeRateManager() {
       }
     };
 
-    // 1. Immediately update local component state so table renders record instantly!
-    setRates(prev => [newRateEntry, ...prev.filter(r => r.country_id !== selectedCountryId || r.rate_date !== newRateEntry.rate_date)]);
+    // 1. Immediately show the new rate. Rates are APPENDED — an earlier same-day rate is
+    //    kept in the register (historical transactions were posted against it).
+    setRates(prev => [newRateEntry, ...prev]);
     
     // Clear search filters so nothing hides the new record
     setFilterCountryId("all");
@@ -312,30 +317,31 @@ export function DailyExchangeRateManager() {
   function handlePrintTable() {
     const reportRows = rates.map((rate) => ({
       date: rate.rate_date,
+      effective: (rate as any).effective_from
+        ? new Date((rate as any).effective_from).toLocaleString()
+        : `${rate.rate_date}${rate.rate_time ? " " + rate.rate_time : ""}`,
       country: rate.countries?.name || countries.find((country) => country.id === rate.country_id)?.name || "-",
       branch: rate.branch_name || "-",
+      currency: (rate as any).currency_code || rate.countries?.currency_code || rate.countries?.iso2 || "-",
       user: rate.user_name || "-",
-      buyingRate: rate.buying_rate,
-      sellingRate: rate.selling_rate,
-      creditRate: rate.credit_rate,
       debitRate: rate.debit_rate,
-      currency: rate.countries?.currency_code || rate.countries?.iso2 || "-"
+      creditRate: rate.credit_rate,
+      status: (rate as any).superseded_at ? "Superseded" : "Active",
     }));
 
     openGenericErpReport({
-      title: "EXCHANGE RATE REPORT",
-      subtitle: "Daily exchange rate management and branch-level updates",
-      lang: "en",
+      title: "DAILY EXCHANGE RATE — HISTORY & AUDIT",
+      subtitle: "Every rate entered, with effective time and who entered it. Superseded rates are retained — historical transactions keep the rate they were posted against.",
+      lang,
       columns: [
-        { key: "date", label: "Date", format: "date" },
+        { key: "effective", label: "Effective From (Date / Time)" },
         { key: "country", label: "Country" },
         { key: "branch", label: "Branch" },
-        { key: "user", label: "User" },
-        { key: "buyingRate", label: "Buying Rate (Local/$)", format: "number", align: "right" },
-        { key: "sellingRate", label: "Selling Rate (Local/$)", format: "number", align: "right" },
-        { key: "creditRate", label: "Credit Rate (Local/$)", format: "number", align: "right" },
+        { key: "currency", label: "Currency", align: "center" },
         { key: "debitRate", label: "Debit Rate (Local/$)", format: "number", align: "right" },
-        { key: "currency", label: "Currency", align: "center" }
+        { key: "creditRate", label: "Credit Rate (Local/$)", format: "number", align: "right" },
+        { key: "user", label: "Entered By" },
+        { key: "status", label: "Status", format: "status", align: "center" },
       ],
       rows: reportRows,
       summary: {
