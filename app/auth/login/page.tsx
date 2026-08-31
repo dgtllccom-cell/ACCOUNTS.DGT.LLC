@@ -7,8 +7,8 @@ import { getRequestLanguage } from "@/lib/i18n/server";
 import { AuthPortalShell } from "@/features/auth/components/auth-portal-shell";
 
 export const metadata = {
-  title: "ERP Access Portal | Damaan Business Group",
-  description: "Choose your ERP access path and sign in to the Damaan Business Group system.",
+  title: "ERP Access Portal | Digital Dock ERP",
+  description: "Choose your ERP access path and sign in to the Digital Dock ERP system.",
 };
 
 export const dynamic = "force-dynamic";

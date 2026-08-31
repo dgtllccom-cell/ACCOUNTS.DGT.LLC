@@ -1010,7 +1010,7 @@ export default function JournalReport({
                 {/* Header Logo/TRN row */}
                 <div className="flex justify-between items-start border-b-2 border-slate-900 dark:border-slate-700 pb-3">
                   <div className="text-left">
-                    <h1 className="text-xs md:text-sm font-black tracking-wide text-slate-900 dark:text-white uppercase">{t(lang, "purchase.damaan_business_group", "Damaan Business Group")}</h1>
+                    <h1 className="text-xs md:text-sm font-black tracking-wide text-slate-900 dark:text-white uppercase">{t(lang, "purchase.damaan_business_group", "Digital Dock ERP")}</h1>
                     <p className="text-[8px] uppercase tracking-widest text-slate-500 font-bold mt-0.5">{t(lang, "jr.jr_enterprise_logistics_system", "Enterprise List & Logistics System")}</p>
                   </div>
                   <div className="text-right">
@@ -1658,7 +1658,7 @@ export default function JournalReport({
           {/* Header Section */}
           <div className="flex justify-between items-start border-b-2 border-slate-950 pb-3">
             <div className="text-left">
-              <h1 className="text-xs font-black tracking-wide text-slate-900 uppercase">{t(lang, "purchase.damaan_business_group", "Damaan Business Group")}</h1>
+              <h1 className="text-xs font-black tracking-wide text-slate-900 uppercase">{t(lang, "purchase.damaan_business_group", "Digital Dock ERP")}</h1>
               <p className="text-[8px] uppercase tracking-widest text-slate-500 font-bold mt-0.5">{t(lang, "jr.jr_enterprise_logistics_system", "Enterprise List & Logistics System")}</p>
             </div>
             <div className="text-right">

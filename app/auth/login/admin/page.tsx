@@ -4,7 +4,7 @@ import { getRequestLanguage } from "@/lib/i18n/server";
 import { RoleLoginPortal } from "@/features/auth/components/role-login-portal";
 
 export const metadata: Metadata = {
-  title: "Super Admin Login | Damaan Business Group ERP",
+  title: "Super Admin Login | Digital Dock ERP",
   description: "Global ERP control with audit, configuration, and cross-country visibility.",
 };
 

@@ -211,11 +211,10 @@ export function DailyExchangeRateManager() {
       if (existingRate.user_name) setOperatorUser(existingRate.user_name);
       if (existingRate.branch_name) setOperatorBranch(existingRate.branch_name);
     } else {
-      if (selectedCountry.currency_code === "AFN") { setCreditPrice("67.00"); setDebitPrice("68.00"); }
-      else if (selectedCountry.currency_code === "PKR") { setCreditPrice("280.00"); setDebitPrice("278.50"); }
-      else if (selectedCountry.currency_code === "AED") { setCreditPrice("3.68"); setDebitPrice("3.67"); }
-      else if (selectedCountry.currency_code === "SAR") { setCreditPrice("3.76"); setDebitPrice("3.75"); }
-      else { setCreditPrice(""); setDebitPrice(""); }
+      // No rate on file yet for this scope — the operator enters the real rate.
+      // Never pre-fill a hard-coded placeholder rate.
+      setCreditPrice("");
+      setDebitPrice("");
       setRateTime(currentTimeString());
     }
   }, [rates, selectedCountry, selectedCountryId]);

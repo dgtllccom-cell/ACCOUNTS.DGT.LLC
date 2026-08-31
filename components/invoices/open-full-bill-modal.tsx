@@ -134,7 +134,7 @@ export function OpenFullBillModal({
   // Seller & Buyer
   const supplierName = String(order.supplierName || form.purchaseAccountName || form.supplierName || form.partyName || "M/S ARYAN GLOBAL COMMODITIES FZE");
   const purchaseAccountNo = String(order.purchaseAccountNumber || form.purchaseAccountNo || "AEG-ALMIN-001");
-  const buyerName = String(order.buyerName || form.salesAccountName || form.customerName || "DAMAAN GENERAL TRADING LLC");
+  const buyerName = String(order.buyerName || form.salesAccountName || form.customerName || "—");
   const salesAccountNo = String(order.salesAccountNumber || form.salesAccountNo || "AEG-ALMIN-001");
 
   // Totals

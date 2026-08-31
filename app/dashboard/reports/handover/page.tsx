@@ -292,7 +292,7 @@ export default function HandoverReportPage() {
 
       return matchesSearch && matchesRole && matchesCountry;
     });
-  }, [accessSearch, roleFilter, countryFilter]);
+  }, [accessRegister, accessSearch, roleFilter, countryFilter]);
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">

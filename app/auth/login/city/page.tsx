@@ -4,7 +4,7 @@ import { getRequestLanguage } from "@/lib/i18n/server";
 import { RoleLoginPortal } from "@/features/auth/components/role-login-portal";
 
 export const metadata: Metadata = {
-  title: "City Branch Login | Damaan Business Group ERP",
+  title: "City Branch Login | Digital Dock ERP",
   description: "Operational access for city branch users with localized ERP workflows.",
 };
 
