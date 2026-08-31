@@ -1241,6 +1241,14 @@ export const sidebarTree: SidebarNode[] = [
         href: "/dashboard/reports/shipping" as Route,
         roles: ["super_admin", "super_admin_reports", "country_admin", "agent_user", "staff_user", "main_branch_admin", "city_branch_admin"],
         permission: { resource: "reports", action: "read" }
+      },
+      {
+        key: "reports-system-documentation",
+        labelKey: "nav.system_report" as UiKey,
+        iconKey: "file-text",
+        href: "/dashboard/system-report" as Route,
+        roles: ["super_admin"],
+        permission: { resource: "reports", action: "read" }
       }
     ]
   },

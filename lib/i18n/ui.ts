@@ -4796,6 +4796,7 @@ export type UiKey =
   | "cinq.appr_not_required"
   | "cinq.appr_approve"
   | "cinq.appr_decline"
+  | "nav.system_report"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -15651,6 +15652,7 @@ const en: Dict = {
   "cinq.appr_not_required": "Not Required",
   "cinq.appr_approve": "Approved",
   "cinq.appr_decline": "Declined",
+  "nav.system_report": "System Documentation Report",
 };
 
 const ur: Dict = {
@@ -26483,6 +26485,7 @@ const ur: Dict = {
   "cinq.appr_not_required": "ضروری نہیں",
   "cinq.appr_approve": "منظور شدہ",
   "cinq.appr_decline": "مسترد",
+  "nav.system_report": "سسٹم دستاویزی رپورٹ",
 };
 
 const ar: Dict = {
@@ -37317,6 +37320,7 @@ const ar: Dict = {
   "cinq.appr_not_required": "غير مطلوب",
   "cinq.appr_approve": "موافق عليه",
   "cinq.appr_decline": "مرفوض",
+  "nav.system_report": "تقرير توثيق النظام",
 };
 
 const fa: Dict = {
@@ -48150,6 +48154,7 @@ const fa: Dict = {
   "cinq.appr_not_required": "لازم نیست",
   "cinq.appr_approve": "تأیید شده",
   "cinq.appr_decline": "رد شده",
+  "nav.system_report": "گزارش مستندسازی سیستم",
 };
 
 const ps: Dict = {
@@ -58989,6 +58994,7 @@ const ps: Dict = {
   "cinq.appr_not_required": "اړین نه دی",
   "cinq.appr_approve": "تصویب شوی",
   "cinq.appr_decline": "رد شوی",
+  "nav.system_report": "د سیسټم اسنادو راپور",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
