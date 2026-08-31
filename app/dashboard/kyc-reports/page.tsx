@@ -43,7 +43,8 @@ import { BranchOwnerPicker } from "@/features/branches/components/branch-owner-p
 import { cn } from "@/lib/utils";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
-import { openJournalReportWindow } from "@/lib/reports/open-journal-report-window";
+import { openGenericErpReport } from "@/lib/reports/open-generic-erp-report";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { Th } from "@/components/ui/translated-th";
 
@@ -358,17 +359,14 @@ export default function KycReportsPage() {
 
   function handleKycPrint() {
     const tt = (key: string, fallback: string) => t(activeLang, key as never, fallback);
-    openJournalReportWindow({
+    // KYC is a compliance register, NOT an accounting statement — use the generic
+    // report engine so it does not inherit journal/ledger framing (FC-LC footer,
+    // "Universal Journal & Audit Register" header, Account-Code meta bar).
+    openGenericErpReport({
       lang: activeLang,
-      autoPrint: true,
       title: tt("nav.kyc_reports", "KYC Compliance Report"),
-      subtitle: tt("jrn.roznamcha_journal", "Compliance Audit Report"),
-      overviewLabel: tt("jrn.overview", "Report Overview"),
-      scopeName: tt("nav.kyc_reports", "KYC Compliance Report"),
-      reportIdPrefix: "KYC",
-      reportIdValue: "audit",
-      chips: [{ label: tt("jrn.entry_count", "Total Records"), value: String(filteredItems.length) }],
-      kpis: [],
+      subtitle: translateHeader(activeLang, "KYC Completeness & Pending Verification"),
+      filters: [{ label: tt("jrn.entry_count", "Total Records"), value: String(filteredItems.length) }],
       columns: [
         { key: "sno", label: tt("rozrep.sno", "S.No") },
         { key: "code", label: tt("acct.account_code", "Code") },
