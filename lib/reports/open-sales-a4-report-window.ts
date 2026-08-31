@@ -340,7 +340,7 @@ export function openSalesA4ReportWindow(input: {
 
       <div class="footer">
         <div>Registered User: ${escapeHtml(b.audit.userName)} (Code: ${escapeHtml(b.audit.branchCode)})</div>
-        <div>Generated via Damaan ERP: ${formatDate(now.toISOString())} • ${stampTime}</div>
+        <div>Generated via Digital Dock ERP: ${formatDate(now.toISOString())} • ${stampTime}</div>
       </div>
     </body>
     </html>

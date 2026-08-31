@@ -253,10 +253,10 @@ export default function KycReportsPage() {
       .then((json: any) => {
         if (!active || !json?.user) return;
         setSessionCtx({
-          userName: json.user.fullName || json.user.email || "Super Admin",
+          userName: json.user.fullName || json.user.email || "—",
           userEmail: json.user.email || "",
           userId: json.user.id || "",
-          countryName: json.scopes?.summary?.countryName || "United Arab Emirates",
+          countryName: json.scopes?.summary?.countryName || "",
           branchName: json.scopes?.summary?.branchDisplayName || "DUBAI HEAD OFFICE",
           isSuperAdmin: !!json.scopes?.isSuperAdmin,
           roles: json.roles || []
@@ -779,7 +779,7 @@ export default function KycReportsPage() {
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-muted-foreground">
             <div className="flex justify-between">
               <span>{tUI("lbl_country")}</span>
-              <span className="font-bold text-foreground">{sessionCtx?.countryName || "United Arab Emirates"}</span>
+              <span className="font-bold text-foreground">{sessionCtx?.countryName || "—"}</span>
             </div>
             <div className="flex justify-between">
               <span>{tUI("lbl_branch_name")}</span>
@@ -787,7 +787,7 @@ export default function KycReportsPage() {
             </div>
             <div className="flex justify-between">
               <span>{tUI("lbl_user_id_name")}</span>
-              <span className="font-bold text-foreground truncate max-w-[120px]">{sessionCtx?.userName || "Super Admin"}</span>
+              <span className="font-bold text-foreground truncate max-w-[120px]">{sessionCtx?.userName || "—"}</span>
             </div>
             <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
               <span>{tUI("lbl_status")}</span>

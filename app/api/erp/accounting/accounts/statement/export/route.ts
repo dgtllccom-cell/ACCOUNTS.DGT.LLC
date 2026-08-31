@@ -10,6 +10,7 @@ import {
   reportLayoutToCsv,
   reportLayoutToExcelHtml,
 } from "@/lib/reports/professional-report-generator";
+import { ledgerReportService } from "@/lib/services/ledger-report-service";
 
 const querySchema = z.object({
   accountId: uuidSchema,
@@ -46,58 +47,25 @@ export async function GET(request: NextRequest) {
     const fromDate = query.fromDate ?? monthStartIso();
     const toDate = query.toDate ?? todayIso();
 
-    // Placeholder: In real implementation, would fetch from database
-    const mockAccountData = {
-      accountCode: "PKR-AC-001",
-      accountName: "Petty Cash - Karachi",
-      accountType: "Asset",
-      currency: "PKR",
-      openingBalance: 50000,
-    };
+    // Real account statement — resolved from the ledger report service (scope-enforced).
+    const { header, lines, openingBalance = 0 } = await ledgerReportService.getLedgerStatement({
+      session,
+      ledgerId: [query.accountId],
+      fromDate,
+      toDate,
+      limit: 5000,
+      language: "en",
+    });
 
-    // Mock transaction data
-    const mockTransactions = [
-      {
-        date: fromDate,
-        description: "Opening Balance",
-        reference: "OPEN",
-        debit: 50000,
-        credit: 0,
-        balance: 50000,
-      },
-      {
-        date: new Date(new Date(fromDate).getTime() + 86400000).toISOString().slice(0, 10),
-        description: "Office Expense Reimbursement",
-        reference: "EXP-001",
-        debit: 0,
-        credit: 2500,
-        balance: 47500,
-      },
-      {
-        date: new Date(new Date(fromDate).getTime() + 172800000).toISOString().slice(0, 10),
-        description: "Cash Deposit - Customer Payment",
-        reference: "DEP-001",
-        debit: 15000,
-        credit: 0,
-        balance: 62500,
-      },
-    ];
+    const totalDebit = lines.reduce((t, l) => t + Number(l.debit || 0), 0);
+    const totalCredit = lines.reduce((t, l) => t + Number(l.credit || 0), 0);
+    const closingBalance = lines.length
+      ? Number(lines[lines.length - 1]!.runningBalance || 0)
+      : openingBalance;
 
-    // Calculate summary
-    const summary = mockTransactions.reduce(
-      (acc, txn) => {
-        acc.transactions += 1;
-        acc.totalDebit += txn.debit;
-        acc.totalCredit += txn.credit;
-        return acc;
-      },
-      { transactions: 0, totalDebit: 0, totalCredit: 0 }
-    );
-
-    const closingBalance =
-      mockAccountData.openingBalance +
-      summary.totalDebit -
-      summary.totalCredit;
+    const accountCode = header?.accountCode || "—";
+    const accountName = header?.accountName || header?.ledgerName || "—";
+    const brandCompany = header?.companyName || header?.countryName || "";
 
     // Build report layout
     const report = buildProfessionalReportLayout(
@@ -111,29 +79,29 @@ export async function GET(request: NextRequest) {
           "Credit",
           "Balance",
         ],
-        rows: mockTransactions.map((txn) => [
-          txn.date,
-          txn.description,
-          txn.reference,
-          txn.debit.toFixed(2),
-          txn.credit.toFixed(2),
-          txn.balance.toFixed(2),
+        rows: lines.map((l) => [
+          String(l.entryDate || "").slice(0, 10),
+          l.description || "—",
+          l.referenceNo || "—",
+          Number(l.debit || 0).toFixed(2),
+          Number(l.credit || 0).toFixed(2),
+          Number(l.runningBalance || 0).toFixed(2),
         ]),
         summary: {
-          "Account Code": mockAccountData.accountCode,
-          "Account Name": mockAccountData.accountName,
-          "Opening Balance": mockAccountData.openingBalance.toFixed(2),
-          "Total Transactions": summary.transactions,
-          "Total Debit": summary.totalDebit.toFixed(2),
-          "Total Credit": summary.totalCredit.toFixed(2),
+          "Account Code": accountCode,
+          "Account Name": accountName,
+          "Opening Balance": openingBalance.toFixed(2),
+          "Total Transactions": lines.length,
+          "Total Debit": totalDebit.toFixed(2),
+          "Total Credit": totalCredit.toFixed(2),
           "Closing Balance": closingBalance.toFixed(2),
         },
       },
       session,
       {
         dateRange: { from: fromDate, to: toDate },
-        company: "DAMAAN Business Group",
-        subtitle: `${mockAccountData.accountCode} - ${mockAccountData.accountName}`,
+        company: brandCompany,
+        subtitle: `${accountCode} - ${accountName}`,
       }
     );
 

@@ -133,7 +133,7 @@ function handlePrintReceipt(payment: any, orderRow: any, ledgers: any[], localCu
   const re = payment.roznamcha_entries || {};
   const form = orderRow?.form_data?.form || {};
 
-  const companyName = "DAMAAN BUSINESS GROUP";
+  const companyName = form.purchaseCompanyName || form.companyName || form.purchaseAccountName || orderRow?.company_name || "";
   const receiptTitle = rt("receipt_payment_receipt");
   const receiptNo = payment.reference_no || re.super_admin_serial_number || "N/A";
   const printDate = new Date().toLocaleString();
@@ -207,7 +207,7 @@ function handlePrintReceipt(payment: any, orderRow: any, ledgers: any[], localCu
       <div class="container">
         <div class="header">
           <div class="header-left">
-            <h1>${companyName}</h1>
+            ${companyName ? `<h1>${companyName}</h1>` : ""}
             <p>${rt("receipt_purchase_payment_receipt")}</p>
           </div>
           <div class="header-right">
@@ -478,22 +478,13 @@ function rowOfficeCurrency(row: PurchaseOrderRow): string {
   return "USD";
 }
 
-const USD_EXCHANGE: Record<string, number> = {
-  "USD": 1.0,
-  "AED": 1 / 3.6725,
-  "PKR": 1 / 278.5,
-  "AFN": 1 / 70.5,
-  "INR": 1 / 83.5,
-  "IRR": 1 / 42000
-};
-
 function getUsdExchangeRate(cur: string, row: any, liveRates: any[] = []) {
   if (cur === "USD") return 1.0;
   const match = liveRates.find((r) => r.currency_code === cur);
   if (match && Number(match.exchange_rate || 0) > 0) return Number(match.exchange_rate);
-  const staticRate = USD_EXCHANGE[cur];
-  if (staticRate !== undefined) return staticRate;
-  
+
+  // No live rate: fall back only to the transaction's own frozen exchange rate —
+  // never a hard-coded placeholder rate.
   const form = row?.form_data?.form || {};
   const rowRate = row?.exchange_rate || form.exchangeRate || 1;
   if (rowRate > 1) {
@@ -645,8 +636,8 @@ function getDashboardSummaryData(rows: PurchaseOrderRow[], session: any, mode: s
   if (!rows || rows.length === 0) return null;
 
   const firstRow = rows[0];
-  const country = rowCountryName(firstRow) || session?.countryName || "Unknown";
-  const branchName = rowBranchName(firstRow) || session?.branchName || "Main Branch";
+  const country = rowCountryName(firstRow) || session?.countryName || "—";
+  const branchName = rowBranchName(firstRow) || session?.branchName || "—";
   
   const localCur = (country.toUpperCase().includes("PAKISTAN")) ? "PKR" : 
                    (country.toUpperCase().includes("EMIRATES") || country.toUpperCase().includes("UAE") || country.toUpperCase().includes("DUBAI")) ? "AED" : 
@@ -660,7 +651,7 @@ function getDashboardSummaryData(rows: PurchaseOrderRow[], session: any, mode: s
     branchName,
     userName: session?.name || session?.username || session?.user?.fullName || "SUPER ADMIN",
     userId: session?.userId || session?.user?.id || "SA001",
-    role: session?.role || "Super Admin",
+    role: session?.role || "—",
     
     totalTransactions: rows.length,
     localCurrency: localCur,
@@ -1527,9 +1518,11 @@ function DashboardSummaryHeader({
   const getUsdRate = (currency: string, baseCurrency: string, rowRate: number) => {
     const cur = currency.toUpperCase();
     const base = baseCurrency.toUpperCase();
-    if (USD_EXCHANGE[cur] !== undefined) return USD_EXCHANGE[cur];
-    if (base === "AED") return rowRate / 3.6725;
-    if (base === "PKR") return rowRate / 278.5;
+    if (cur === base || cur === "USD") return 1.0;
+    // Use only the transaction's own frozen exchange rate — never a hard-coded placeholder.
+    const r = Number(rowRate || 0);
+    if (r > 1) return 1 / r;
+    if (r > 0) return r;
     return 1.0;
   };
 
@@ -2189,10 +2182,10 @@ function DashboardSummaryHeader({
     return '';
   };
   
-  const adminCountry = selectedCountryForSummary || summary.country || session?.countryName || "UAE";
-  const adminBranch = (summary.branchName && summary.branchName !== "All Branches") ? summary.branchName : (session?.branchName || "BR-01");
-  const adminUserName = summary.userName || session?.name || session?.username || "Admin User";
-  const adminRole = session?.role || summary.role || "Super Admin";
+  const adminCountry = selectedCountryForSummary || summary.country || session?.countryName || "—";
+  const adminBranch = (summary.branchName && summary.branchName !== "All Branches") ? summary.branchName : (session?.branchName || "—");
+  const adminUserName = summary.userName || session?.name || session?.username || "—";
+  const adminRole = session?.role || summary.role || "—";
 
   // Calculate Date Range from actual rows
   const dates = (rows || [])
@@ -2204,10 +2197,10 @@ function DashboardSummaryHeader({
 
   const minDateStr = dates.length > 0
     ? dates[0].toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
-    : "09-May-2025";
+    : "—";
   const maxDateStr = dates.length > 0
     ? dates[dates.length - 1].toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
-    : "20-Jun-2025";
+    : "—";
 
   // Currency breakdown for 6 columns in Row 2 Left Panel
   const currencyTotals: Record<string, number> = {
@@ -2235,11 +2228,11 @@ function DashboardSummaryHeader({
     const map: Record<string, { branchCode: string; countryCode: string; finalCurrency: string; totalEntries: number; finalAmount: number; finalAdvanceAmount: number }> = {};
 
     (rows || []).forEach((r) => {
-      const bName = rowBranchName(r) || "BR-01";
-      const cName = rowCountryName(r) || "UAE";
-      const bCode = (r.audit?.branchCode || r.form_data?.form?.branchCode || (bName.includes("0") ? bName : "BR-01")).toUpperCase();
+      const bName = rowBranchName(r) || "—";
+      const cName = rowCountryName(r) || "—";
+      const bCode = (r.audit?.branchCode || r.form_data?.form?.branchCode || (bName || "—")).toUpperCase();
       const cCode = getCountryCode(cName) || cName.toUpperCase();
-      const fCur = rowOfficeCurrency(r) || "AED";
+      const fCur = rowOfficeCurrency(r) || "";
       const calcs = resolvePurchaseCalculations(r);
 
       const key = `${bCode}::${cCode}::${fCur}`;
@@ -2258,20 +2251,7 @@ function DashboardSummaryHeader({
       map[key].finalAdvanceAmount += calcs.advanceAmountLC;
     });
 
-    const list = Object.values(map);
-    if (list.length === 0) {
-      return [
-        {
-          branchCode: "BR-01",
-          countryCode: "UAE",
-          finalCurrency: "AED",
-          totalEntries: (rows || []).length || 6,
-          finalAmount: 301012.13,
-          finalAdvanceAmount: 4444.18
-        }
-      ];
-    }
-    return list;
+    return Object.values(map);
   }, [rows]);
 
   const totalBranchEntries = branchSummaries.reduce((sum, b) => sum + b.totalEntries, 0);
@@ -4068,10 +4048,10 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
 
     const billNo = row.purchase_order_no ? `P#${row.purchase_order_no}` : (form.billNo || form.contractNo || `P#${index + 1}`);
     const type = form.orderType || form.type || "B";
-    const branchName = rowBranchName(row) || "BR-01";
-    const branchCode = (row.audit?.branchCode || form.branchCode || (branchName.includes("0") ? branchName : "BR-01")).toUpperCase();
-    const countryName = rowCountryName(row) || "UAE";
-    const countryCode = (getCountryCode(countryName) || countryName || "UAE").toUpperCase();
+    const branchName = rowBranchName(row) || "—";
+    const branchCode = (row.audit?.branchCode || form.branchCode || (branchName || "—")).toUpperCase();
+    const countryName = rowCountryName(row) || "—";
+    const countryCode = (getCountryCode(countryName) || countryName || "").toUpperCase();
 
     const rawDate = form.purchaseDate || form.bookingDate || row.created_at;
     const dateStr = rawDate
@@ -4083,15 +4063,15 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
 
     const totalQty = goods.length > 0
       ? goods.reduce((sum: number, g: any) => sum + Number(g.qtyNo || g.quantity || g.qty || 0), 0)
-      : Number(form.quantity || 4400);
+      : Number(form.quantity || 0);
 
     const grossWeight = goods.length > 0
       ? goods.reduce((sum: number, g: any) => sum + Number(g.qtyKgs || g.grossWeight || g.grossWt || 0), 0)
-      : Number(form.grossWeight || 44440);
+      : Number(form.grossWeight || 0);
 
     const netWeight = goods.length > 0
       ? goods.reduce((sum: number, g: any) => sum + Number(g.netKgs || g.netWeight || g.netWt || 0), 0)
-      : Number(form.netWeight || 43200);
+      : Number(form.netWeight || 0);
 
     const rawDueDate = form.advancePaymentDate || form.paymentDueDate || form.loadingDate;
     const dueDateStr = rawDueDate
@@ -4735,7 +4715,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
               };
             });
 
-            const statTotalPaidFC = historyWithBalance.reduce((sum, p) => sum + p.amtUSD, 0) || (paidAdvanceBC || 22635);
+            const statTotalPaidFC = historyWithBalance.reduce((sum, p) => sum + p.amtUSD, 0) || (paidAdvanceBC || 0);
             const statTotalPaidLC = statTotalPaidFC * exRate;
             const statRemainingFC = Math.max(0, statementPurchaseForeign - statTotalPaidFC);
             const statRemainingLC = statRemainingFC * exRate;

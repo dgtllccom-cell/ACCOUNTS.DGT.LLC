@@ -111,7 +111,7 @@ export function openPurchaseBookingOrderPrintReport(input: {
         <table style="width: 100%; font-size: 7.5px;">
           <tr><td style="color: #64748b;">${tr("Supplier Name")}:</td><td style="font-weight: 800;">${escapeHtml(tr(o.supplierName))}</td></tr>
           <tr><td style="color: #64748b;">${tr("Contact")}:</td><td>${escapeHtml(o.supplierContact || "-")}</td></tr>
-          <tr><td style="color: #64748b;">${tr("Buyer Name")}:</td><td style="font-weight: 700;">${escapeHtml(tr(o.buyerName || companyInfo.name || "DGT LLC"))}</td></tr>
+          <tr><td style="color: #64748b;">${tr("Buyer Name")}:</td><td style="font-weight: 700;">${escapeHtml(tr(o.buyerName || companyInfo.name || "—"))}</td></tr>
           <tr><td style="color: #64748b;">${tr("Country / Branch")}:</td><td style="font-weight: 800;">${escapeHtml(tr(o.countryName))} / ${escapeHtml(tr(o.branchName))}</td></tr>
           <tr><td style="color: #64748b;">${tr("Order Status")}:</td><td><span class="badge badge-green">${escapeHtml(tr(o.status))}</span></td></tr>
         </table>

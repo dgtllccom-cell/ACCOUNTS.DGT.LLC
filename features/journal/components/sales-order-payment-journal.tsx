@@ -140,7 +140,7 @@ function handlePrintReceipt(payment: any, orderRow: any, ledgers: any[], localCu
   const th = (label: string) => translateHeader(lang, label);
   const isRtl = rtlLanguages.includes(lang);
 
-  const companyName = "DAMAAN BUSINESS GROUP"; // brand name — kept in English per policy
+  const companyName = form.salesCompanyName || form.companyName || form.salesAccountName || orderRow?.company_name || "";
   const receiptTitle = th("Payment Receipt");
   const receiptNo = payment.reference_no || re.super_admin_serial_number || "N/A";
   const printDate = new Date().toLocaleString();
@@ -218,7 +218,7 @@ function handlePrintReceipt(payment: any, orderRow: any, ledgers: any[], localCu
       <div class="container">
         <div class="header">
           <div class="header-left">
-            <h1>${companyName}</h1>
+            ${companyName ? `<h1>${companyName}</h1>` : ""}
             <p>${th("Purchase Payment Receipt")}</p>
           </div>
           <div class="header-right">
@@ -485,22 +485,12 @@ function rowOfficeCurrency(row: PurchaseOrderRow): string {
   return "USD";
 }
 
-const USD_EXCHANGE: Record<string, number> = {
-  "USD": 1.0,
-  "AED": 1 / 3.6725,
-  "PKR": 1 / 278.5,
-  "AFN": 1 / 70.5,
-  "INR": 1 / 83.5,
-  "IRR": 1 / 42000
-};
-
 function getUsdExchangeRate(cur: string, row: any, liveRates: any[] = []) {
   if (cur === "USD") return 1.0;
   const match = liveRates.find((r) => r.currency_code === cur);
   if (match && Number(match.exchange_rate || 0) > 0) return Number(match.exchange_rate);
-  const staticRate = USD_EXCHANGE[cur];
-  if (staticRate !== undefined) return staticRate;
-  
+
+  // No live rate: fall back only to the transaction's own frozen exchange rate.
   const form = row?.form_data?.form || {};
   const rowRate = row?.exchange_rate || form.exchangeRate || 1;
   if (rowRate > 1) {
@@ -667,7 +657,7 @@ function getDashboardSummaryData(rows: PurchaseOrderRow[], session: any, mode: s
     branchName,
     userName: session?.name || session?.username || session?.user?.fullName || "SUPER ADMIN",
     userId: session?.userId || session?.user?.id || "SA001",
-    role: session?.role || "Super Admin",
+    role: session?.role || "—",
     
     totalTransactions: rows.length,
     localCurrency: localCur,
@@ -1485,9 +1475,11 @@ function DashboardSummaryHeader({
   const getUsdRate = (currency: string, baseCurrency: string, rowRate: number) => {
     const cur = currency.toUpperCase();
     const base = baseCurrency.toUpperCase();
-    if (USD_EXCHANGE[cur] !== undefined) return USD_EXCHANGE[cur];
-    if (base === "AED") return rowRate / 3.6725;
-    if (base === "PKR") return rowRate / 278.5;
+    if (cur === base || cur === "USD") return 1.0;
+    // Use only the transaction's own frozen exchange rate — never a hard-coded placeholder.
+    const r = Number(rowRate || 0);
+    if (r > 1) return 1 / r;
+    if (r > 0) return r;
     return 1.0;
   };
 
@@ -2152,10 +2144,10 @@ function DashboardSummaryHeader({
   };
   const th = (label: string) => translateHeader(lang, label);
 
-  const adminCountry = selectedCountryForSummary || summary.country || session?.countryName || "UAE";
-  const adminBranch = (summary.branchName && summary.branchName !== "All Branches") ? summary.branchName : (session?.branchName || "BR-01");
-  const adminUserName = summary.userName || session?.name || session?.username || "Admin User";
-  const adminRole = session?.role || summary.role || "Super Admin";
+  const adminCountry = selectedCountryForSummary || summary.country || session?.countryName || "—";
+  const adminBranch = (summary.branchName && summary.branchName !== "All Branches") ? summary.branchName : (session?.branchName || "—");
+  const adminUserName = summary.userName || session?.name || session?.username || "—";
+  const adminRole = session?.role || summary.role || "—";
 
   // Calculate Date Range from actual rows
   const dates = (rows || [])
@@ -2167,10 +2159,10 @@ function DashboardSummaryHeader({
 
   const minDateStr = dates.length > 0
     ? dates[0].toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
-    : "09-May-2025";
+    : "—";
   const maxDateStr = dates.length > 0
     ? dates[dates.length - 1].toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
-    : "20-Jun-2025";
+    : "—";
 
   // Currency breakdown for 6 columns in Row 2 Left Panel
   const currencyTotals: Record<string, number> = {
@@ -2198,9 +2190,9 @@ function DashboardSummaryHeader({
     const map: Record<string, { branchCode: string; countryCode: string; finalCurrency: string; totalEntries: number; finalAmount: number; finalAdvanceAmount: number }> = {};
 
     (rows || []).forEach((r) => {
-      const bName = rowBranchName(r) || "BR-01";
-      const cName = rowCountryName(r) || "UAE";
-      const bCode = (r.audit?.branchCode || r.form_data?.form?.branchCode || (bName.includes("0") ? bName : "BR-01")).toUpperCase();
+      const bName = rowBranchName(r) || "—";
+      const cName = rowCountryName(r) || "—";
+      const bCode = (r.audit?.branchCode || r.form_data?.form?.branchCode || (bName || "—")).toUpperCase();
       const cCode = getCountryCode(cName) || cName.toUpperCase();
       const fCur = rowOfficeCurrency(r) || "AED";
       const calcs = resolvePurchaseCalculations(r);
@@ -2221,20 +2213,7 @@ function DashboardSummaryHeader({
       map[key].finalAdvanceAmount += calcs.advanceAmountLC;
     });
 
-    const list = Object.values(map);
-    if (list.length === 0) {
-      return [
-        {
-          branchCode: "BR-01",
-          countryCode: "UAE",
-          finalCurrency: "AED",
-          totalEntries: (rows || []).length || 6,
-          finalAmount: 301012.13,
-          finalAdvanceAmount: 4444.18
-        }
-      ];
-    }
-    return list;
+    return Object.values(map);
   }, [rows]);
 
   const totalBranchEntries = branchSummaries.reduce((sum, b) => sum + b.totalEntries, 0);
@@ -3829,9 +3808,9 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
 
     const billNo = row.sales_order_no ? `S#${row.sales_order_no}` : (form.billNo || form.contractNo || `S#${index + 1}`);
     const type = form.orderType || form.type || "B";
-    const branchName = rowBranchName(row) || "BR-01";
-    const branchCode = (row.audit?.branchCode || form.branchCode || (branchName.includes("0") ? branchName : "BR-01")).toUpperCase();
-    const countryName = rowCountryName(row) || "UAE";
+    const branchName = rowBranchName(row) || "—";
+    const branchCode = (row.audit?.branchCode || form.branchCode || (branchName || "—")).toUpperCase();
+    const countryName = rowCountryName(row) || "—";
     const countryCode = (getCountryCode(countryName) || countryName || "").toUpperCase();
 
     const rawDate = form.saleDate || form.purchaseDate || form.bookingDate || row.created_at;
@@ -3844,15 +3823,15 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
 
     const totalQty = goods.length > 0
       ? goods.reduce((sum: number, g: any) => sum + Number(g.qtyNo || g.quantity || g.qty || 0), 0)
-      : Number(form.quantity || 4400);
+      : Number(form.quantity || 0);
 
     const grossWeight = goods.length > 0
       ? goods.reduce((sum: number, g: any) => sum + Number(g.qtyKgs || g.grossWeight || g.grossWt || 0), 0)
-      : Number(form.grossWeight || 44440);
+      : Number(form.grossWeight || 0);
 
     const netWeight = goods.length > 0
       ? goods.reduce((sum: number, g: any) => sum + Number(g.netKgs || g.netWeight || g.netWt || 0), 0)
-      : Number(form.netWeight || 43200);
+      : Number(form.netWeight || 0);
 
     const rawDueDate = form.advancePaymentDate || form.paymentDueDate || form.loadingDate;
     const dueDateStr = rawDueDate

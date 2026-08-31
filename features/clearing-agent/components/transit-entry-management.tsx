@@ -92,43 +92,40 @@ export interface TransitEntryData {
 }
 
 const DEFAULT_ENTRY: TransitEntryData = {
-  super_agent: "SA-0001",
-  super_agent_name: "Global Cargo Logistics",
-  country: "PK - Pakistan",
-  country_name: "Pakistan",
-  branch: "CHM - Chaman",
-  branch_name: "Chaman",
-  entry_serial: "TE-0001234",
-  
-  invoice_no: "INV-2024-000567",
-  invoice_date: "2025-08-18",
-  supplier_no: "SUP-000789",
-  supplier_date: "2025-08-15",
-  python_no: "PYT-001234",
-  python_date: "2025-08-12",
-  transit_no: "TRN-009876",
-  transit_date: "2025-08-19",
-  
-  goods_name: "LED TV 42 Inch",
-  quantity: 100,
-  unit: "PCS",
-  gross_weight: "1,200.000",
-  net_weight: "1,050.000",
-  price_per_unit: "25,000.00",
-  total_amount: "2,500,000.00",
-  
-  created_by: "Ali Khan",
-  delivered_to: "Ahmed Shah",
-  
-  export_company: "ABC Exporters Ltd.",
-  import_company: "XYZ Importers Pvt. Ltd.",
-  notify_party: "M/S Bright Traders, Karachi",
-  
-  documents: [
-    { id: "doc-1", name: "Invoice_INV-2024-000567.pdf", size: "245 KB" },
-    { id: "doc-2", name: "PackingList_PYT-001234.pdf", size: "128 KB" }
-  ],
-  notes: "Transit shipment cleared at Chaman border customs point."
+  super_agent: "",
+  super_agent_name: "",
+  country: "",
+  country_name: "",
+  branch: "",
+  branch_name: "",
+  entry_serial: "",
+
+  invoice_no: "",
+  invoice_date: "",
+  supplier_no: "",
+  supplier_date: "",
+  python_no: "",
+  python_date: "",
+  transit_no: "",
+  transit_date: "",
+
+  goods_name: "",
+  quantity: 0,
+  unit: "",
+  gross_weight: "",
+  net_weight: "",
+  price_per_unit: "",
+  total_amount: "",
+
+  created_by: "",
+  delivered_to: "",
+
+  export_company: "",
+  import_company: "",
+  notify_party: "",
+
+  documents: [],
+  notes: ""
 };
 
 export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: SupportedLanguage }) {

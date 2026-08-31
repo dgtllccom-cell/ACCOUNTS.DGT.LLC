@@ -104,61 +104,6 @@ type JournalRow = {
   companyName?: string;
 };
 
-const sampleRows: JournalRow[] = [
-  {
-    id: "sample-1",
-    voucherNo: "JV-0001",
-    accountNumber: "AC-0001",
-    accountName: "Construction Material",
-    date: "2026-06-01",
-    endDate: "2026-08-16",
-    country: "Pakistan",
-    city: "Quetta",
-    branch: "Quetta Main Branch",
-    branchCode: "QTA-MAIN",
-    project: "Warehouse Expansion",
-    site: "Site A",
-    contractor: "Damaan Contractors",
-    voucherType: "Material Journal",
-    txType: "Debit",
-    account: "Construction Material",
-    narration: "Steel and cement material posting",
-    currency: "PKR",
-    debit: 250000,
-    credit: 0,
-    balance: 250000,
-    trend: "Increase",
-    status: "Active",
-    entries: 10
-  },
-  {
-    id: "sample-2",
-    voucherNo: "JV-0002",
-    accountNumber: "AC-0002",
-    accountName: "Labour Cost",
-    date: "2026-06-02",
-    endDate: "2026-08-16",
-    country: "Pakistan",
-    city: "Chaman",
-    branch: "Chaman City Branch",
-    branchCode: "CH-CITY",
-    project: "Cold Storage",
-    site: "Site B",
-    contractor: "Asmat Builders",
-    voucherType: "Labour Journal",
-    txType: "Debit",
-    account: "Labour Cost",
-    narration: "Weekly labour payment",
-    currency: "PKR",
-    debit: 85000,
-    credit: 20000,
-    balance: 65000,
-    trend: "Increase",
-    status: "Active",
-    entries: 5
-  }
-];
-
 function fmt(value: number) {
   return Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
@@ -225,8 +170,8 @@ function mapApiRows(rows: ApiRow[], scope: JournalScope): JournalRow[] {
       city,
       branch: row.cityBranchName || row.countryBranchName || "-",
       branchCode,
-      project: scope === "construction" ? row.companyName || "General Project" : "-",
-      site: scope === "construction" ? row.cityBranchName || row.countryBranchName || "Main Site" : "-",
+      project: scope === "construction" ? row.companyName || "—" : "-",
+      site: scope === "construction" ? row.cityBranchName || row.countryBranchName || "—" : "-",
       contractor: scope === "construction" ? row.accountName || row.ledgerName || "-" : "-",
       voucherType: scope === "construction" ? "Cost Center Journal" : row.scope || "Journal Voucher",
       txType,
@@ -311,13 +256,13 @@ function AstraJournalReportViewContent({ lang: langProp, scope }: { lang: Suppor
       const body = (await response.json().catch(() => ({}))) as ApiResponse;
       if (!response.ok) throw new Error("Journal report API could not be loaded.");
       const mapped = mapApiRows(body.rows ?? [], scope);
-      setRows(mapped.length ? mapped : sampleRows);
+      setRows(mapped);
       setGeneratedAt(body.generatedAt || new Date().toISOString());
-      if (!mapped.length) setMessage("No live journal vouchers found. Showing preview rows until entries are posted.");
+      if (!mapped.length) setMessage("No journal vouchers found for the selected filters.");
     } catch (error) {
-      setRows(sampleRows);
+      setRows([]);
       setGeneratedAt(new Date().toISOString());
-      setMessage(error instanceof Error ? error.message : "Journal report API unavailable. Showing preview rows.");
+      setMessage(error instanceof Error ? error.message : "Journal report could not be loaded.");
     } finally {
       setLoading(false);
     }

@@ -15,6 +15,12 @@ export interface PrintableReportHeaderProps {
   dateRange?: string;
   userName?: string;
   filtersSummary?: string;
+  /** Resolved branding — no hard-coded company identity. */
+  companyName?: string;
+  productName?: string;
+  companyAddress?: string;
+  companyTaxNo?: string;
+  companyContact?: string;
 }
 
 export function PrintableReportHeader({
@@ -22,11 +28,16 @@ export function PrintableReportHeader({
   documentSubtitle,
   documentNo,
   scopeCountry = "All Countries",
-  scopeBranch = "ALL BRANCHES",
-  scopeCurrency = "AED",
+  scopeBranch = "All Branches",
+  scopeCurrency = "",
   dateRange = "All Available Records",
-  userName = "ERP USER (Super Admin)",
-  filtersSummary
+  userName = "—",
+  filtersSummary,
+  companyName = "",
+  productName = "Digital Dock ERP",
+  companyAddress = "",
+  companyTaxNo = "",
+  companyContact = ""
 }: PrintableReportHeaderProps) {
   const lang = useActiveLanguage() as "en" | "ur" | "ar" | "fa" | "ps";
   const tr = (str: string) => {
@@ -45,16 +56,22 @@ export function PrintableReportHeader({
       <div className="flex justify-between items-start">
         {/* Company Branding Left */}
         <div className="w-[55%]">
-          <div className="text-lg font-black text-slate-950 uppercase tracking-tight">
-            DAMAAN GENERAL TRADING LLC
-          </div>
-          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-            DIGITAL DOCK ERP
-          </div>
-          <div className="text-[9px] text-slate-600 mt-1 leading-tight">
-            Operating Address: Office 402, Business Bay, Dubai, United Arab Emirates<br />
-            <strong>TRN: 100458923400003</strong> | accounts@dgt.llc | support@dgt.llc
-          </div>
+          {companyName && (
+            <div className="text-lg font-black text-slate-950 uppercase tracking-tight">
+              {companyName}
+            </div>
+          )}
+          {productName && (
+            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+              {productName}
+            </div>
+          )}
+          {(companyAddress || companyTaxNo || companyContact) && (
+            <div className="text-[9px] text-slate-600 mt-1 leading-tight">
+              {companyAddress && <>{companyAddress}<br /></>}
+              {[companyTaxNo, companyContact].filter(Boolean).join(" | ")}
+            </div>
+          )}
         </div>
 
         {/* Document Title & Scope Right */}

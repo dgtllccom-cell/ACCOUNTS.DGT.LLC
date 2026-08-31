@@ -121,6 +121,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const [headerBrand, setHeaderBrand] = useState<{ name: string; address: string; taxNo: string; contact: string; currency: string }>({ name: "", address: "", taxNo: "", contact: "", currency: "" });
 
   const scopeSummary = sessionInfo?.scopes?.summary ?? null;
   const scopeCountry = scopeSummary?.countryName || "All Countries";
@@ -136,6 +137,34 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
       .then((info) => setSessionInfo(info))
       .catch(() => null);
   }, []);
+
+  useEffect(() => {
+    const sc = sessionInfo?.scopes;
+    if (!sc) return;
+    let cancelled = false;
+    resolveDocumentBranding(
+      {
+        countryId: sc?.countryIds?.[0] ?? null,
+        countryBranchId: sc?.countryBranchIds?.[0] ?? null,
+        cityBranchId: sc?.cityBranchIds?.[0] ?? null,
+        countryName: sc?.summary?.countryName ?? null,
+        branchName: sc?.summary?.branchDisplayName ?? sc?.summary?.branchName ?? null,
+      },
+      activeLang,
+    )
+      .then((b) => {
+        if (cancelled) return;
+        setHeaderBrand({
+          name: b.entityName || sc?.summary?.countryName || "",
+          address: b.address || "",
+          taxNo: b.taxNumber ? `Tax/TRN: ${b.taxNumber}` : (b.registrationNumber ? `Reg: ${b.registrationNumber}` : ""),
+          contact: [b.phone, b.email, b.website].filter(Boolean).join(" | "),
+          currency: b.baseCurrency || "",
+        });
+      })
+      .catch(() => null);
+    return () => { cancelled = true; };
+  }, [sessionInfo, activeLang]);
 
   async function load() {
     setLoading(true);
@@ -323,23 +352,23 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
         totalPayable: summary?.totalPayable ?? 0,
         netOutstanding: netOutstanding,
         overdue10Count: summary?.overdue10 ?? 0,
-        totalEntries: filtered.length * 2 || 64,
-        clearedEntries: Math.floor(filtered.length * 1.5) || 48,
-        remainingEntries: Math.ceil(filtered.length * 0.5) || 16,
-        activeCountriesCount: 1,
-        totalBranchesCount: 1,
+        totalEntries: filtered.length,
+        clearedEntries: filtered.filter((r: any) => Number(r.remaining ?? r.balance ?? 0) === 0).length,
+        remainingEntries: filtered.filter((r: any) => Number(r.remaining ?? r.balance ?? 0) !== 0).length,
+        activeCountriesCount: scopeSummary?.countryName ? 1 : 0,
+        totalBranchesCount: scopeBranch && scopeBranch !== "All Branches" ? 1 : 0,
         statusText: sessionActiveText,
-        coverageText: "Global Network"
+        coverageText: scopeSummary?.countryName || ""
       },
       scope: {
         country: scopeCountry,
         branch: scopeBranch,
-        currency: "AED",
+        currency: brand.baseCurrency || "",
         userName: scopeUserName,
         role: scopeRole,
         sessionStatus: sessionActiveText,
         filterType: tab === "all" ? "All Outstanding Records" : tab === "receivable" ? "Receivables Only" : tab === "payable" ? "Payables Only" : "Overdue >10 Days",
-        dateRange: "Current Session (2026)",
+        dateRange: "",
       },
       companyInfo: {
         name: brand.entityName || scopeSummary?.countryName || "",
@@ -516,9 +545,13 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
         documentSubtitle={t(lang, "ledger.orlv_subtitle", "Account-wise remaining balances, aging & recovery")}
         scopeCountry={scopeCountry}
         scopeBranch={scopeBranch}
-        scopeCurrency="AED"
+        scopeCurrency={headerBrand.currency}
         userName={scopeUserName}
         dateRange="Current Financial Session"
+        companyName={headerBrand.name}
+        companyAddress={headerBrand.address}
+        companyTaxNo={headerBrand.taxNo}
+        companyContact={headerBrand.contact}
       />
 
       {/* 4 Primary Summary Panels Grid */}

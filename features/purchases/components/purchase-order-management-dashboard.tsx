@@ -183,7 +183,7 @@ function getDashboardSummaryData(rows: PurchaseReport[], session: any): Dashboar
 
   const firstRow = rows[0];
   const country = firstRow.countryName || session?.countryName || "Unknown";
-  const branchName = session?.branchName || "Main Branch";
+  const branchName = session?.branchName || "—";
 
   let baseCurrencyFallback = firstRow?.form_data?.form?.secondaryCurrency?.split(" ")?.[0];
   if (!baseCurrencyFallback) {
@@ -352,7 +352,7 @@ function openReportWindow(report: PurchaseReport, autoPrint: boolean, lang: Supp
     scope: {
       scopeLevel: "Purchase Order Document",
       country: report.countryName || "All Countries",
-      branch: report.branchName || "Main Branch",
+      branch: report.branchName || "",
       currency: report.currency || "USD",
       userName: report.audit?.userName || "Admin User",
     },
@@ -798,7 +798,7 @@ function DashboardSummaryHeader({
     rows.forEach(row => {
       const rawCountry = row.countryName || row.form_data?.form?.countryName || "Unknown Country";
       const country = normalizeCountryName(rawCountry);
-      const branch = row.branchName || "Main Branch";
+      const branch = row.branchName || "—";
       const purchaseCurrency = String(row.currency || row.form_data?.form?.currencyType || row.form_data?.form?.purchaseCurrency || "USD").toUpperCase();
 
       const purchaseAmt = parseNumber(row.totalPurchaseAmount || row.purchaseAmount || 0);
@@ -2966,11 +2966,11 @@ export function PurchaseOrderManagementDashboard() {
                       </div>
                     </div>
                     <div className="text-right text-[8px] font-bold text-slate-600 uppercase">
-                      <div>BRANCH : {selected.branchName || "Main Branch"}</div>
-                      <div>COUNTRY : {selected.countryName || ""}</div>
-                      <div>ADDRESS : {selected.branchName || "Branch Address"}</div>
-                      <div>PHONE : +93 700 000 000</div>
-                      <div>EMAIL : info@demitrading.com</div>
+                      <div>BRANCH : {selected.branchName || "—"}</div>
+                      <div>COUNTRY : {(selected as any).countryName || "—"}</div>
+                      <div>ADDRESS : {(selected as any).branchAddress || selected.form_data?.form?.branchAddress || "—"}</div>
+                      <div>PHONE : {(selected as any).branchPhone || selected.form_data?.form?.branchPhone || "—"}</div>
+                      <div>EMAIL : {(selected as any).supplierEmail || selected.form_data?.form?.supplierEmail || "—"}</div>
                     </div>
                   </div>
 
@@ -3011,8 +3011,8 @@ export function PurchaseOrderManagementDashboard() {
                       <table className="w-full text-[8px] font-semibold text-slate-600">
                         <tbody>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Supplier Name:</td><td className="px-2 py-1 font-bold text-slate-800 truncate max-w-[100px]">{localizedReportValue(selected, "supplierName", activeLang, selected.supplierName)}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Contact Person:</td><td className="px-2 py-1 text-slate-800">{selected.form_data?.form?.purchaseContactPerson || selected.form_data?.form?.supplierContactPerson || "Mr. Ahmad Shah"}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Mobile Number:</td><td className="px-2 py-1 text-slate-800 font-mono">{selected.form_data?.form?.purchaseContact || selected.form_data?.form?.supplierMobile || "+93 700 000 000"}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Contact Person:</td><td className="px-2 py-1 text-slate-800">{selected.form_data?.form?.purchaseContactPerson || selected.form_data?.form?.supplierContactPerson || "—"}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Mobile Number:</td><td className="px-2 py-1 text-slate-800 font-mono">{selected.form_data?.form?.purchaseContact || selected.form_data?.form?.supplierMobile || "—"}</td></tr>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Email Address:</td><td className="px-2 py-1 text-slate-800 truncate max-w-[100px]">{selected.form_data?.form?.supplierEmail || "supplier@globalfoods.com"}</td></tr>
                           <tr><td className="px-2 py-1 text-slate-400">Country:</td><td className="px-2 py-1 text-slate-800">{selected.countryName}</td></tr>
                         </tbody>
@@ -3027,10 +3027,10 @@ export function PurchaseOrderManagementDashboard() {
                       <table className="w-full text-[8px] font-semibold text-slate-600">
                         <tbody>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Buyer Name:</td><td className="px-2 py-1 font-bold text-slate-800 truncate max-w-[100px]">{localizedReportValue(selected, "buyerName", activeLang, selected.buyerName)}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Contact Person:</td><td className="px-2 py-1 text-slate-800">Mr. Imran Hassan</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Mobile Number:</td><td className="px-2 py-1 text-slate-800 font-mono">+92 300 1234567</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Email Address:</td><td className="px-2 py-1 text-slate-800 truncate max-w-[100px]">info@demitrading.com</td></tr>
-                          <tr><td className="px-2 py-1 text-slate-400">Country:</td><td className="px-2 py-1 text-slate-800">Afghanistan</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Contact Person:</td><td className="px-2 py-1 text-slate-800">{(selected as any).buyerContactPerson || "—"}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Mobile Number:</td><td className="px-2 py-1 text-slate-800 font-mono">{(selected as any).buyerPhone || (selected as any).buyerMobile || "—"}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Email Address:</td><td className="px-2 py-1 text-slate-800 truncate max-w-[100px]">{(selected as any).buyerEmail || "—"}</td></tr>
+                          <tr><td className="px-2 py-1 text-slate-400">Country:</td><td className="px-2 py-1 text-slate-800">{(selected as any).buyerCountry || (selected as any).countryName || "—"}</td></tr>
                         </tbody>
                       </table>
                     </div>
@@ -3177,7 +3177,7 @@ export function PurchaseOrderManagementDashboard() {
                       <tbody>
                         <tr className="border-b border-slate-100">
                           <td className="px-2 py-1 text-slate-400 w-[20%]">Loading Country:</td>
-                          <td className="px-2 py-1 text-slate-800 font-bold w-[30%]">{selected.countryName || "Afghanistan"}</td>
+                          <td className="px-2 py-1 text-slate-800 font-bold w-[30%]">{selected.countryName || "—"}</td>
                           <td className="px-2 py-1 text-slate-400 w-[20%]">Receiving Country:</td>
                           <td className="px-2 py-1 text-slate-800 font-bold w-[30%]">{selected.form_data?.form?.receivedCountry || selected.buyerName || "Pakistan"}</td>
                         </tr>

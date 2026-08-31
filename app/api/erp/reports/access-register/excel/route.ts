@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { COUNTRY_BRANCH_ACCESS_REGISTER } from "@/lib/repositories/access-register-repository";
+import { getAccessRegisterData } from "@/lib/repositories/access-register-repository";
 
 export async function GET(request: NextRequest) {
   try {
+    const COUNTRY_BRANCH_ACCESS_REGISTER = await getAccessRegisterData();
     const headers = [
       "Country",
       "Main Branch",

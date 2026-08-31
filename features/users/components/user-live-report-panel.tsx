@@ -77,16 +77,16 @@ export function UserLiveReportPanel({
   role,
   userCode,
   status = "Active",
-  selectedCountryName = "Pakistan",
-  selectedCountryCode = "PK",
-  selectedBranchName = "Quetta - CHAMAN City Branch",
-  selectedBranchCode = "CHN-QUETTA-001",
-  selectedBranchType = "City Branch",
-  selectedCityName = "Quetta",
+  selectedCountryName = "",
+  selectedCountryCode = "",
+  selectedBranchName = "",
+  selectedBranchCode = "",
+  selectedBranchType = "",
+  selectedCityName = "",
   selectedPermissions = [],
-  activityCounts = { logins: 6, transactions: 0, purchases: 0, payments: 0, accounts: 0, edits: 0, approvals: 0, roznamcha: 0 },
+  activityCounts = { logins: 0, transactions: 0, purchases: 0, payments: 0, accounts: 0, edits: 0, approvals: 0, roznamcha: 0 },
   lastActivityDate,
-  lastActivityAction = "auth.login.success",
+  lastActivityAction = null,
   onBack,
   onPrint,
   onPdf,
@@ -117,7 +117,7 @@ export function UserLiveReportPanel({
 
   const activeStatus = status || "Active";
   const initials = useMemo(() => {
-    return (fullName || "User")
+    return (fullName || "—")
       .split(/\s+/)
       .filter(Boolean)
       .slice(0, 2)
@@ -127,12 +127,12 @@ export function UserLiveReportPanel({
   }, [fullName]);
 
   // Fallbacks and smart defaults for display
-  const displayCountry = selectedCountryName || "Pakistan";
-  const displayBranch = selectedBranchName || "Global";
+  const displayCountry = selectedCountryName || "";
+  const displayBranch = selectedBranchName || "—";
   const displayBranchCode = selectedBranchCode || "-";
   const displayBranchType = selectedBranchType || "-";
-  const displayRegNo = accountRegNo || "REG-00000";
-  const displayUserCode = userCode || "PK-QUETTA-0531";
+  const displayRegNo = accountRegNo || "—";
+  const displayUserCode = userCode || "—";
 
   // Derive dynamic currency and address values
   const currency = useMemo(() => {
@@ -144,46 +144,11 @@ export function UserLiveReportPanel({
     return "PKR";
   }, [displayCountry]);
 
-  const contactInfo = useMemo(() => {
-    const c = displayCountry.toLowerCase();
-    let phone = "+92 300 1234567";
-    let altPhone = "+92 333 7654321";
-    let state = "Balochistan";
-    let zip = "87300";
-    let addr = `Street 12, City Branch Area, ${selectedCityName || "Quetta"}, Balochistan, Pakistan`;
-
-    if (c.includes("uae") || c.includes("emirates")) {
-      phone = "+971 50 123 4567";
-      altPhone = "+971 55 765 4321";
-      state = "Dubai";
-      zip = "00000";
-      addr = `Sheikh Zayed Road, Main Branch Area, Dubai, UAE`;
-    } else if (c.includes("afghanistan")) {
-      phone = "+93 70 123 4567";
-      altPhone = "+93 79 765 4321";
-      state = "Kabul";
-      zip = "1001";
-      addr = `Shahr-e-Naw, Kabul, Afghanistan`;
-    } else if (c.includes("iran")) {
-      phone = "+98 21 1234 5678";
-      altPhone = "+98 912 765 4321";
-      state = "Tehran";
-      zip = "11111";
-      addr = `Valiasr Street, Tehran, Iran`;
-    } else if (c.includes("bangladesh")) {
-      phone = "+880 17 1234 5678";
-      altPhone = "+880 18 7654 3210";
-      state = "Dhaka";
-      zip = "1212";
-      addr = `Gulshan Area, Dhaka, Bangladesh`;
-    } else {
-      state = selectedCityName === "Karachi" ? "Sindh" : selectedCityName === "Lahore" ? "Punjab" : selectedCityName === "Peshawar" ? "Khyber Pakhtunkhwa" : "Balochistan";
-      zip = selectedCityName === "Quetta" ? "87300" : selectedCityName === "Chaman" ? "86000" : "87300";
-      addr = `Street 12, ${displayBranchType} Area, ${selectedCityName || "Quetta"}, ${state}, Pakistan`;
-    }
-
-    return { phone, altPhone, state, zip, addr };
-  }, [displayCountry, selectedCityName, displayBranchType]);
+  // This panel is not passed the user's real contact details — never fabricate them.
+  const contactInfo = useMemo(
+    () => ({ phone: "—", altPhone: "—", state: "—", zip: "—", addr: "—" }),
+    [],
+  );
 
   // Derive dynamic designation and department based on role
   const { designation, department } = useMemo(() => {
@@ -235,11 +200,11 @@ export function UserLiveReportPanel({
 
   const displayLastLogin = useMemo(() => {
     const date = new Date(lastActivityDate || new Date());
-    return Number.isNaN(date.getTime()) ? "Just Now" : date.toLocaleString();
+    return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString();
   }, [lastActivityDate]);
 
   const email = useMemo(() => {
-    return `${displayUserCode.toLowerCase()}@damaan.com`;
+    return "";
   }, [displayUserCode]);
 
   // Package UserReportData for Print Utility
@@ -247,7 +212,7 @@ export function UserLiveReportPanel({
     return {
       userId: displayRegNo,
       userCode: displayUserCode,
-      fullName: fullName || "Quetta City Test User",
+      fullName: fullName || "—",
       countryName: displayCountry,
       branchName: displayBranch,
       branchCode: displayBranchCode,
@@ -363,7 +328,7 @@ export function UserLiveReportPanel({
             {initials}
           </div>
           <div>
-            <h1 className="text-base font-black tracking-tight leading-none text-slate-900">{fullName || "Quetta City Test User"}</h1>
+            <h1 className="text-base font-black tracking-tight leading-none text-slate-900">{fullName || "—"}</h1>
             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-1.5 flex items-center gap-2">
               Role: <span className="text-blue-600 font-extrabold">{role ? role.replace(/_/g, " ") : "city_branch_admin"}</span>
             </p>

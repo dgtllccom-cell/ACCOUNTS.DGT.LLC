@@ -1,3 +1,5 @@
+import { withLocalPg } from "@/lib/db/local-postgres";
+
 export interface AccessRegisterEntry {
   id: string;
   country: string;
@@ -18,275 +20,102 @@ export interface AccessRegisterEntry {
   notes: string;
 }
 
-export const COUNTRY_BRANCH_ACCESS_REGISTER: AccessRegisterEntry[] = [
-  {
-    id: "ACC-001",
-    country: "Global (All Countries)",
-    countryCode: "GLB",
-    mainBranch: "Global Corporate HQ",
-    mainBranchCode: "HQ-001",
-    cityBranch: "Executive Central",
-    cityBranchCode: "HQ-CENTRAL",
-    responsiblePerson: "ASMATULLAH (Super Admin)",
-    role: "Super Admin",
-    loginUrl: "/login",
-    username: "superadmin@damaan.com",
-    email: "superadmin@damaan.com",
-    status: "Active",
-    assignedPermissions: "Full System Control, Global Consolidations, User & Role Setup, Database Migrations, Master Configurations",
-    passwordVaultRef: "VAULT-DGT-AUTH-SA001",
-    lastUpdated: "2026-08-14",
-    notes: "Primary root enterprise governance account."
-  },
-  {
-    id: "ACC-002",
-    country: "Global (All Countries)",
-    countryCode: "GLB",
-    mainBranch: "Global Operations Hub",
-    mainBranchCode: "HQ-OPS-001",
-    cityBranch: "Operations & Audit",
-    cityBranchCode: "HQ-OPS",
-    responsiblePerson: "Asmat DGT (System Admin)",
-    role: "Super Admin",
-    loginUrl: "/login",
-    username: "asmatdgtllc@users.damaan.local",
-    email: "asmatdgtllc@users.damaan.local",
-    status: "Active",
-    assignedPermissions: "System Administration, Technical Audits, Roznamcha Review, Master Data Operations",
-    passwordVaultRef: "VAULT-DGT-AUTH-SA002",
-    lastUpdated: "2026-08-14",
-    notes: "Administrative technical and operations manager."
-  },
-  {
-    id: "ACC-003",
-    country: "United Arab Emirates",
-    countryCode: "ARE",
-    mainBranch: "United Arab Emirates Main Branch",
-    mainBranchCode: "ARE-MAIN-001",
-    cityBranch: "Dubai Country Head Office",
-    cityBranchCode: "ARE-DXB-001",
-    responsiblePerson: "Tariq Mahmood (UAE Country Director)",
-    role: "Country Admin",
-    loginUrl: "/login",
-    username: "uae.director@damaan.ae",
-    email: "uae.director@damaan.ae",
-    status: "Active",
-    assignedPermissions: "UAE Country Consolidations, UAE Country Branches Setup, Bank & Company Management (AED)",
-    passwordVaultRef: "VAULT-DGT-ARE-CA001",
-    lastUpdated: "2026-08-14",
-    notes: "Supervises all UAE mainland and freezone activities."
-  },
-  {
-    id: "ACC-004",
-    country: "United Arab Emirates",
-    countryCode: "ARE",
-    mainBranch: "United Arab Emirates Main Branch",
-    mainBranchCode: "ARE-MAIN-001",
-    cityBranch: "Al Ras Wholesale Market",
-    cityBranchCode: "ARE-ALRAS-001",
-    responsiblePerson: "Muhammad Bilal (Branch Manager)",
-    role: "Main Branch Admin",
-    loginUrl: "/login",
-    username: "alras.manager@damaan.ae",
-    email: "alras.manager@damaan.ae",
-    status: "Active",
-    assignedPermissions: "Al Ras Branch Daily Roznamcha, Cash Payment Postings, Purchase Booking Approvals, Warehouse Stock Move",
-    passwordVaultRef: "VAULT-DGT-ARE-MBA001",
-    lastUpdated: "2026-08-14",
-    notes: "Responsible for Deira / Al Ras trading branch."
-  },
-  {
-    id: "ACC-005",
-    country: "United Arab Emirates",
-    countryCode: "ARE",
-    mainBranch: "United Arab Emirates Main Branch",
-    mainBranchCode: "ARE-MAIN-001",
-    cityBranch: "Jebel Ali Freezone (JAFZA)",
-    cityBranchCode: "ARE-JAFZA-001",
-    responsiblePerson: "Sultan Al-Nuaimi (Customs Agent)",
-    role: "Clearing Agent",
-    loginUrl: "/login",
-    username: "jafza.customs@clearing.damaan.ae",
-    email: "jafza.customs@clearing.damaan.ae",
-    status: "Active",
-    assignedPermissions: "Shipping Line BL Entry, Port Container Clearance, Customs Duty Invoicing, Logistics Reports",
-    passwordVaultRef: "VAULT-DGT-ARE-CLA001",
-    lastUpdated: "2026-08-14",
-    notes: "Clearing agent for Jebel Ali port and container terminals."
-  },
-  {
-    id: "ACC-006",
-    country: "Pakistan",
-    countryCode: "PAK",
-    mainBranch: "Pakistan Main Branch",
-    mainBranchCode: "PAK-MAIN-001",
-    cityBranch: "Karachi Corporate Head Office",
-    cityBranchCode: "PAK-KHI-001",
-    responsiblePerson: "Shahid Khan (Pakistan Country Admin)",
-    role: "Country Admin",
-    loginUrl: "/login",
-    username: "pak.admin@damaan.pk",
-    email: "pak.admin@damaan.pk",
-    status: "Active",
-    assignedPermissions: "Pakistan Country Ledger (PKR), City Branch Scoping, Tax & Border Regulatory Reports",
-    passwordVaultRef: "VAULT-DGT-PAK-CA001",
-    lastUpdated: "2026-08-14",
-    notes: "Directs Karachi, Quetta, Chaman, and Lahore operations."
-  },
-  {
-    id: "ACC-007",
-    country: "Pakistan",
-    countryCode: "PAK",
-    mainBranch: "Pakistan Main Branch",
-    mainBranchCode: "PAK-MAIN-001",
-    cityBranch: "Quetta City Branch",
-    cityBranchCode: "PAK-QUETTA-001",
-    responsiblePerson: "Abdul Qadir (Quetta Branch Manager)",
-    role: "Main Branch Admin",
-    loginUrl: "/login",
-    username: "quetta.branch@damaan.pk",
-    email: "quetta.branch@damaan.pk",
-    status: "Active",
-    assignedPermissions: "Quetta Roznamcha, Cash Voucher Entry, Local Purchasing, Goods Warehouse Management",
-    passwordVaultRef: "VAULT-DGT-PAK-MBA001",
-    lastUpdated: "2026-08-14",
-    notes: "Hub for regional distribution across Balochistan."
-  },
-  {
-    id: "ACC-008",
-    country: "Pakistan",
-    countryCode: "PAK",
-    mainBranch: "Pakistan Main Branch",
-    mainBranchCode: "PAK-MAIN-001",
-    cityBranch: "Chaman Border Terminal",
-    cityBranchCode: "PAK-CHAMAN-001",
-    responsiblePerson: "Naimatullah Achakzai (Border Agent)",
-    role: "Clearing Agent",
-    loginUrl: "/login",
-    username: "chaman.customs@clearing.damaan.pk",
-    email: "chaman.customs@clearing.damaan.pk",
-    status: "Active",
-    assignedPermissions: "Chaman Border Gate Pass, Cross-Border Transit Declarations, Goods Loading/Unloading Reports",
-    passwordVaultRef: "VAULT-DGT-PAK-CLA001",
-    lastUpdated: "2026-08-14",
-    notes: "Dedicated transit clearing officer at Pak-Afghan border."
-  },
-  {
-    id: "ACC-009",
-    country: "Afghanistan",
-    countryCode: "AFN",
-    mainBranch: "Afghanistan Main Branch",
-    mainBranchCode: "AFG-MAIN-001",
-    cityBranch: "Kabul National Office",
-    cityBranchCode: "AFG-KBL-001",
-    responsiblePerson: "Ahmadullah Afghan (Afghanistan Admin)",
-    role: "Country Admin",
-    loginUrl: "/login",
-    username: "afg-country-admin@users.damaan.local",
-    email: "afg-country-admin@users.damaan.local",
-    status: "Active",
-    assignedPermissions: "Afghanistan National Ledger (AFN), Sarafi & Exchange Rate Rates, Regional Branch Setup",
-    passwordVaultRef: "VAULT-DGT-AFG-CA001",
-    lastUpdated: "2026-08-14",
-    notes: "Supervises Kabul, Kandahar, and Herat trading centers."
-  },
-  {
-    id: "ACC-010",
-    country: "Afghanistan",
-    countryCode: "AFN",
-    mainBranch: "Afghanistan Main Branch",
-    mainBranchCode: "AFG-MAIN-001",
-    cityBranch: "Kandahar Wholesale Market",
-    cityBranchCode: "AFG-KANDAHAR-001",
-    responsiblePerson: "Gulistan Durrani (Branch Accountant)",
-    role: "City Branch User",
-    loginUrl: "/login",
-    username: "kandahar.trade@damaan.af",
-    email: "kandahar.trade@damaan.af",
-    status: "Active",
-    assignedPermissions: "Kandahar Cash In/Out Entry, Daily Sarafi Exchange Log, Stock In/Out Verification",
-    passwordVaultRef: "VAULT-DGT-AFG-CBU001",
-    lastUpdated: "2026-08-14",
-    notes: "Local user for Kandahar transit storage."
-  },
-  {
-    id: "ACC-011",
-    country: "Afghanistan",
-    countryCode: "AFN",
-    mainBranch: "Afghanistan Main Branch",
-    mainBranchCode: "AFG-MAIN-001",
-    cityBranch: "Spin Boldak Customs Port",
-    cityBranchCode: "AFG-BOLDAK-001",
-    responsiblePerson: "Hikmatullah (Customs Clearing Agent)",
-    role: "Clearing Agent",
-    loginUrl: "/login",
-    username: "boldak.customs@clearing.damaan.af",
-    email: "boldak.customs@clearing.damaan.af",
-    status: "Active",
-    assignedPermissions: "Border Clearance, Truck Manifest Registration, Customs Receipt Verification",
-    passwordVaultRef: "VAULT-DGT-AFG-CLA001",
-    lastUpdated: "2026-08-14",
-    notes: "Customs agent for Spin Boldak dry port."
-  },
-  {
-    id: "ACC-012",
-    country: "India",
-    countryCode: "IND",
-    mainBranch: "India Main Branch",
-    mainBranchCode: "IND-MAIN-001",
-    cityBranch: "Mumbai / Washi Mandi",
-    cityBranchCode: "IND-MUMBAI-001",
-    responsiblePerson: "Rajesh Sharma (India Branch Admin)",
-    role: "Country Admin",
-    loginUrl: "/login",
-    username: "india.admin@damaan.in",
-    email: "india.admin@damaan.in",
-    status: "Active",
-    assignedPermissions: "India Operations (INR), APMC Washi Mandi Trading, GST/Tax Compliance Postings",
-    passwordVaultRef: "VAULT-DGT-IND-CA001",
-    lastUpdated: "2026-08-14",
-    notes: "Manages Indian import market deliveries and distribution."
-  },
-  {
-    id: "ACC-013",
-    country: "India",
-    countryCode: "IND",
-    mainBranch: "India Main Branch",
-    mainBranchCode: "IND-MAIN-001",
-    cityBranch: "Nhava Sheva (JNPT Port)",
-    cityBranchCode: "IND-JNPT-001",
-    responsiblePerson: "Amit Patel (Maritime Clearing Agent)",
-    role: "Clearing Agent",
-    loginUrl: "/login",
-    username: "jnpt.customs@clearing.damaan.in",
-    email: "jnpt.customs@clearing.damaan.in",
-    status: "Active",
-    assignedPermissions: "JNPT Container Port Clearance, Shipping Line BL Receiving, Customs Examination Entry",
-    passwordVaultRef: "VAULT-DGT-IND-CLA001",
-    lastUpdated: "2026-08-14",
-    notes: "Maritime port clearance agent for container shipments."
-  },
-  {
-    id: "ACC-014",
-    country: "Iran",
-    countryCode: "IRN",
-    mainBranch: "Iran Main Branch",
-    mainBranchCode: "IRN-MAIN-001",
-    cityBranch: "Bandar Abbas Port Terminal",
-    cityBranchCode: "IRN-BND-001",
-    responsiblePerson: "Reza Hosseini (Customs Clearing Agent)",
-    role: "Clearing Agent",
-    loginUrl: "/login",
-    username: "bandar.customs@clearing.damaan.ir",
-    email: "bandar.customs@clearing.damaan.ir",
-    status: "Active",
-    assignedPermissions: "Bandar Abbas Transit Clearance, Iranian Border Crossings, Cargo Transport Manifests",
-    passwordVaultRef: "VAULT-DGT-IRN-CLA001",
-    lastUpdated: "2026-08-14",
-    notes: "Transit and maritime clearing officer for Bandar Abbas."
-  }
-];
+const ROLE_LABELS: Record<string, AccessRegisterEntry["role"]> = {
+  super_admin: "Super Admin",
+  country_admin: "Country Admin",
+  country_user: "Country Admin",
+  main_branch_admin: "Main Branch Admin",
+  city_branch_admin: "City Branch User",
+  city_branch_user: "City Branch User",
+  clearing_agent: "Clearing Agent",
+  accountant: "Accountant",
+  auditor: "Auditor",
+};
 
+function roleLabel(role: string | null): AccessRegisterEntry["role"] {
+  if (!role) return "City Branch User";
+  return ROLE_LABELS[role] ?? "City Branch User";
+}
+
+function statusLabel(active: boolean | null): AccessRegisterEntry["status"] {
+  return active === false ? "Inactive" : "Active";
+}
+
+interface AccessRow {
+  id: string;
+  role: string | null;
+  is_active: boolean | null;
+  updated_at: string | null;
+  full_name: string | null;
+  user_code: string | null;
+  country_name: string | null;
+  country_iso: string | null;
+  main_branch_name: string | null;
+  main_branch_code: string | null;
+  city_branch_name: string | null;
+  city_branch_code: string | null;
+  permissions: unknown;
+}
+
+/**
+ * Real branch-login / access register — built from `user_role_assignments` joined to
+ * profiles, countries and branch masters. No hard-coded users, credentials or branches.
+ * Returns an empty array when the datasource is unavailable (callers render a "no data" state).
+ */
 export async function getAccessRegisterData(): Promise<AccessRegisterEntry[]> {
-  return COUNTRY_BRANCH_ACCESS_REGISTER;
+  const rows = await withLocalPg<AccessRow[]>(async (sql) => {
+    return (await sql`
+      SELECT
+        ura.id::text                         AS id,
+        ura.role                             AS role,
+        ura.is_active                        AS is_active,
+        to_char(ura.updated_at, 'YYYY-MM-DD') AS updated_at,
+        p.full_name                          AS full_name,
+        p.user_code                          AS user_code,
+        c.name                               AS country_name,
+        c.iso2                               AS country_iso,
+        cb.name                              AS main_branch_name,
+        cb.code                              AS main_branch_code,
+        ctb.name                             AS city_branch_name,
+        ctb.code                             AS city_branch_code,
+        ups.permissions                      AS permissions
+      FROM user_role_assignments ura
+      LEFT JOIN profiles p           ON p.id = ura.user_id AND p.deleted_at IS NULL
+      LEFT JOIN countries c          ON c.id = ura.country_id AND c.deleted_at IS NULL
+      LEFT JOIN country_branches cb  ON cb.id = ura.country_branch_id AND cb.deleted_at IS NULL
+      LEFT JOIN city_branches ctb    ON ctb.id = ura.city_branch_id AND ctb.deleted_at IS NULL
+      LEFT JOIN user_permission_sets ups ON ups.user_id = ura.user_id
+      WHERE ura.deleted_at IS NULL
+      ORDER BY c.name NULLS FIRST, cb.name NULLS FIRST, ctb.name NULLS FIRST, p.full_name
+    `) as unknown as AccessRow[];
+  });
+
+  if (!rows || rows.length === 0) return [];
+
+  return rows.map((r) => {
+    const perms = Array.isArray(r.permissions)
+      ? (r.permissions as string[]).join(", ")
+      : typeof r.permissions === "string"
+        ? r.permissions
+        : "";
+    return {
+      id: r.id,
+      country: r.country_name || "—",
+      countryCode: (r.country_iso || "").toUpperCase(),
+      mainBranch: r.main_branch_name || "—",
+      mainBranchCode: r.main_branch_code || "—",
+      cityBranch: r.city_branch_name || "—",
+      cityBranchCode: r.city_branch_code || "—",
+      responsiblePerson: r.full_name || "—",
+      role: roleLabel(r.role),
+      loginUrl: "/login",
+      username: r.user_code || "—",
+      email: "",
+      status: statusLabel(r.is_active),
+      assignedPermissions: perms,
+      passwordVaultRef: r.user_code ? `VAULT-${r.user_code}` : "—",
+      lastUpdated: r.updated_at || "—",
+      notes: "",
+    };
+  });
 }

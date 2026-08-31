@@ -236,7 +236,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
       const source = meta.source || sources[idx % sources.length];
       const leadStatus = meta.leadStatus || meta.status || statuses[idx % statuses.length];
       const assignedStaff = meta.assignedTo || STAFF_LIST[idx % STAFF_LIST.length].name;
-      const phone = c.mobile || c.whatsapp || meta.phone || "+971 50 123 4567";
+      const phone = c.mobile || c.whatsapp || meta.phone || "—";
 
       const countryName = c.country_name || meta.country || "UAE";
       const stateName = c.state_province_name || meta.stateProvince || (countryName.toLowerCase().includes("pakistan") ? "Sindh" : "Dubai");

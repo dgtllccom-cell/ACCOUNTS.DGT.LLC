@@ -61,10 +61,14 @@ export function SmartCrmControlCenter() {
   const router = useRouter();
 
   // Filters State
-  const [selectedBrand, setSelectedBrand] = useState("DEG");
-  const [selectedCountry, setSelectedCountry] = useState("pk");
-  const [selectedMainBranch, setSelectedMainBranch] = useState("khi_main");
-  const [selectedCityBranch, setSelectedCityBranch] = useState("khi_city");
+  const [selectedCountry, setSelectedCountry] = useState("all");
+  const [selectedMainBranch, setSelectedMainBranch] = useState("all");
+  const [selectedCityBranch, setSelectedCityBranch] = useState("all");
+
+  // Scope dropdown data — loaded from real, session-scoped ERP master data
+  const [countryOptions, setCountryOptions] = useState<{ id: string; name: string }[]>([]);
+  const [mainBranchOptions, setMainBranchOptions] = useState<{ id: string; name: string; country_id?: string }[]>([]);
+  const [cityBranchOptions, setCityBranchOptions] = useState<{ id: string; name: string; country_id?: string }[]>([]);
   const [targetDate, setTargetDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [activeTab, setActiveTab] = useState<"today" | "overdue" | "tomorrow" | "upcoming" | "completed">("today");
   const [searchQuery, setSearchQuery] = useState("");
@@ -101,17 +105,49 @@ export function SmartCrmControlCenter() {
 
   useEffect(() => {
     fetchDashboardData();
-  }, [selectedCountry, selectedCityBranch, targetDate, activeTab]);
+  }, [selectedCountry, selectedMainBranch, selectedCityBranch, targetDate, activeTab]);
+
+  // Load real scope master data (countries + branches), scoped to the session on the API side
+  useEffect(() => {
+    let cancelled = false;
+    async function loadScopeMeta() {
+      try {
+        const [cRes, mRes, bRes] = await Promise.all([
+          fetch("/api/branch-management/countries"),
+          fetch("/api/branch-management/country-branches?limit=500"),
+          fetch("/api/branch-management/city-branches?limit=500"),
+        ]);
+        if (cancelled) return;
+        if (cRes.ok) {
+          const d = await cRes.json();
+          setCountryOptions((d.countries ?? []).map((c: any) => ({ id: c.id, name: c.name })));
+        }
+        if (mRes.ok) {
+          const d = await mRes.json();
+          setMainBranchOptions((d.countryBranches ?? []).map((b: any) => ({ id: b.id, name: b.name, country_id: b.country_id })));
+        }
+        if (bRes.ok) {
+          const d = await bRes.json();
+          setCityBranchOptions((d.cityBranches ?? []).map((b: any) => ({ id: b.id, name: b.name, country_id: b.country_id })));
+        }
+      } catch {
+        /* selectors simply stay at "All" — never fall back to fabricated options */
+      }
+    }
+    loadScopeMeta();
+    return () => { cancelled = true; };
+  }, []);
 
   async function fetchDashboardData() {
     setLoading(true);
     try {
       const qp = new URLSearchParams({
-        countryId: selectedCountry,
-        cityBranchId: selectedCityBranch,
         targetDate: targetDate,
         tab: activeTab
       });
+      if (selectedCountry && selectedCountry !== "all") qp.set("countryId", selectedCountry);
+      if (selectedMainBranch && selectedMainBranch !== "all") qp.set("countryBranchId", selectedMainBranch);
+      if (selectedCityBranch && selectedCityBranch !== "all") qp.set("cityBranchId", selectedCityBranch);
       if (searchQuery.trim()) qp.set("search", searchQuery.trim());
 
       const res = await fetch(`/api/erp/crm/dashboard?${qp.toString()}`);
@@ -186,9 +222,9 @@ export function SmartCrmControlCenter() {
       String(r.amount || 0),
       String(r.paid_amount || 0),
       String(r.remaining_amount || 0),
-      String(r.currency || "USD"),
-      String(r.branch_name || "Karachi City"),
-      String(r.responsible_user_name || "Admin"),
+      String(r.currency || ""),
+      String(r.branch_name || "—"),
+      String(r.responsible_user_name || "—"),
       String(r.status || "")
     ]);
     downloadCsv(`crm_action_list_${activeTab}_${targetDate}.csv`, [headers, ...rows]);
@@ -285,10 +321,9 @@ export function SmartCrmControlCenter() {
         {/* ── LEFT CRM SUB-NAVIGATION SIDEBAR ── */}
         <aside className="w-56 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 shrink-0 hidden xl:flex flex-col justify-between p-3.5 border-r border-slate-200 dark:border-slate-800 shadow-xs">
           <div className="space-y-4">
-            {/* DEG Brand Header */}
+            {/* CRM Header */}
             <div className="flex flex-col items-center justify-center p-2.5 border-b border-slate-100 dark:border-slate-800 text-center">
-              <span className="text-xl font-black tracking-widest text-slate-900 dark:text-white">DEG CRM</span>
-              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">Damaan Enterprise Group</span>
+              <span className="text-lg font-black tracking-wide text-slate-900 dark:text-white">{t(lang, "crm.title", "Smart CRM & Due")}</span>
             </div>
 
             {/* Sub-Nav Menu Items */}
@@ -504,22 +539,7 @@ export function SmartCrmControlCenter() {
           </div>
 
           {/* ── CASCADE SCOPE SELECTOR BAR ── */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs text-xs">
-            {/* General Brand */}
-            <div>
-              <label className="block text-[10.5px] font-bold text-slate-500 mb-1">
-                {t(lang, "crm.brand", "General Brand")}
-              </label>
-              <select
-                value={selectedBrand}
-                onChange={(e) => setSelectedBrand(e.target.value)}
-                className="w-full h-8.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800 px-2 text-xs font-semibold"
-              >
-                <option value="DEG">Damaan Enterprise Group</option>
-                <option value="GLOBAL">Global Clearing Brand</option>
-              </select>
-            </div>
-
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs text-xs">
             {/* Country */}
             <div>
               <label className="block text-[10.5px] font-bold text-slate-500 mb-1">
@@ -531,12 +551,9 @@ export function SmartCrmControlCenter() {
                 className="w-full h-8.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800 px-2 text-xs font-semibold"
               >
                 <option value="all">{t(lang, "common.all_countries", "All Countries")}</option>
-                <option value="pk">Pakistan 🇵🇰</option>
-                <option value="ae">UAE 🇦🇪</option>
-                <option value="af">Afghanistan 🇦🇫</option>
-                <option value="in">India 🇮🇳</option>
-                <option value="cn">China 🇨🇳</option>
-                <option value="ir">Iran 🇮🇷</option>
+                {countryOptions.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
               </select>
             </div>
 
@@ -550,9 +567,12 @@ export function SmartCrmControlCenter() {
                 onChange={(e) => setSelectedMainBranch(e.target.value)}
                 className="w-full h-8.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800 px-2 text-xs font-semibold"
               >
-                <option value="khi_main">Karachi Main Branch</option>
-                <option value="dxb_main">Dubai Main Branch</option>
-                <option value="kbl_main">Kabul Main Branch</option>
+                <option value="all">{t(lang, "common.all_branches", "All Branches")}</option>
+                {mainBranchOptions
+                  .filter((b) => selectedCountry === "all" || !b.country_id || b.country_id === selectedCountry)
+                  .map((b) => (
+                    <option key={b.id} value={b.id}>{b.name}</option>
+                  ))}
               </select>
             </div>
 
@@ -566,9 +586,12 @@ export function SmartCrmControlCenter() {
                 onChange={(e) => setSelectedCityBranch(e.target.value)}
                 className="w-full h-8.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800 px-2 text-xs font-semibold"
               >
-                <option value="khi_city">Karachi City Branch</option>
-                <option value="qta_city">Quetta City Branch</option>
-                <option value="psh_city">Peshawar City Branch</option>
+                <option value="all">{t(lang, "common.all_branches", "All Branches")}</option>
+                {cityBranchOptions
+                  .filter((b) => selectedCountry === "all" || !b.country_id || b.country_id === selectedCountry)
+                  .map((b) => (
+                    <option key={b.id} value={b.id}>{b.name}</option>
+                  ))}
               </select>
             </div>
 
@@ -901,18 +924,18 @@ export function SmartCrmControlCenter() {
 
                           {/* Branch */}
                           <td className="py-2 px-3 text-slate-600 dark:text-slate-400">
-                            {item.branch_name || "Karachi City"}
+                            {item.branch_name || "—"}
                           </td>
 
                           {/* Responsible */}
                           <td className="py-2 px-3 text-slate-700 dark:text-slate-300 font-medium">
-                            {item.responsible_user_name || "Ali Raza"}
+                            {item.responsible_user_name || "—"}
                           </td>
 
                           {/* Status */}
                           <td className="py-2 px-3 text-center">
                             <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-50 text-blue-700 border border-blue-200">
-                              {item.status || "Due Today"}
+                              {item.status || "—"}
                             </span>
                           </td>
 
@@ -1401,11 +1424,11 @@ export function SmartCrmControlCenter() {
         </div>
 
         <div>
-          <span>© {new Date().getFullYear()} Damaan Enterprise Group - All Rights Reserved</span>
+          <span>{t(lang, "go.go_copyright_footer", "© 2026 Digital Dock ERP (Pvt) Ltd. All rights reserved.")}</span>
         </div>
 
         <div className="flex items-center gap-2">
-          <span>{t(lang, "crm.powered_by", "Powered by")} <strong>Damaan ERP</strong></span>
+          <span>{t(lang, "crm.powered_by", "Powered by")} <strong>Digital Dock ERP</strong></span>
           <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 text-[10px] font-black">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
             <span>{t(lang, "crm.live", "Live")}</span>

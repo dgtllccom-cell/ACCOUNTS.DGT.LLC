@@ -159,7 +159,7 @@ export function openPurchaseA4ReportWindow(input: {
     // Fallback if goods entries list is empty
     const defaultPurchCurr = b.currency || form.purchaseCurrency || form.currencyType || "USD";
     const defaultFinalCurr = b.finalCurrency || form.purchaseAccountCurrency || form.salesAccountCurrency || "PKR";
-    const fallbackExRate = Number(form.exchangeRate || 280.00);
+    const fallbackExRate = Number(form.exchangeRate || 0);
     const fallbackAmountUsd = b.totalPurchaseAmount || 0;
 
     items = [{
@@ -199,7 +199,7 @@ export function openPurchaseA4ReportWindow(input: {
   const avgRateKg = items.length > 0 ? items.reduce((sum, item) => sum + (item.rateKg || 0), 0) / items.length : 0;
   const avgRateTon = avgRateKg * 1000;
 
-  const exRateVal = Number(form.exchangeRate || items[0]?.exRate || 280.00);
+  const exRateVal = Number(form.exchangeRate || items[0]?.exRate || 0);
   const advancePercentVal = Number(form.advancePercent || 10);
   const advanceUsd = (totalAmountUsd * advancePercentVal) / 100;
   const advancePkr = (totalAmountPkr * advancePercentVal) / 100;
@@ -212,7 +212,7 @@ export function openPurchaseA4ReportWindow(input: {
       <div class="box-header">🏢 Branch Details & User Session</div>
       <div class="session-grid">
         <div class="session-item"><span>User ID:</span><span>${escapeHtml(b.audit?.userId || "USR-1001")}</span></div>
-        <div class="session-item"><span>Branch Name:</span><span>${escapeHtml(b.branchName || "QUETTA MAIN BRANCH")}</span></div>
+        <div class="session-item"><span>Branch Name:</span><span>${escapeHtml(b.branchName || "—")}</span></div>
         <div class="session-item"><span>Date:</span><span>${formatDate(b.bookingDate || b.purchaseDate)}</span></div>
         <div class="session-item"><span>User Name:</span><span>${escapeHtml(b.audit?.userName || "SUPER ADMIN")}</span></div>
         <div class="session-item"><span>Branch Code:</span><span>${escapeHtml(b.audit?.branchCode || "QTA-01")}</span></div>
@@ -498,7 +498,7 @@ export function openPurchaseA4ReportWindow(input: {
               </svg>
             </div>
             <div>
-              <div class="brand-name">DAMAN BUSINESS GROUP</div>
+              ${(b.companyName || b.purchaseCompanyName || b.countryName) ? `<div class="brand-name">${escapeHtml(b.companyName || b.purchaseCompanyName || b.countryName)}</div>` : ""}
               <div class="brand-tagline">Enterprise ERP / Logistics Platform</div>
             </div>
           </div>
@@ -685,8 +685,8 @@ export function openPurchaseA4ReportWindow(input: {
                 <td style="font-weight: bold; color: #2563eb;">DEBIT (DR)</td>
                 <td style="font-family: monospace; font-weight: bold;">${escapeHtml(b.purchaseAccountNumber || "AE-AC-0001")}</td>
                 <td>
-                  <strong>${escapeHtml(b.purchaseAccountName || "Dubai Purchase Account")} (DR)</strong>
-                  <span style="font-size: 6.5px; color: #64748b; display: block;">${escapeHtml(b.branchName || "Kabul Main Branch")}</span>
+                  <strong>${escapeHtml(b.purchaseAccountName || "—")} (DR)</strong>
+                  <span style="font-size: 6.5px; color: #64748b; display: block;">${escapeHtml(b.branchName || "—")}</span>
                 </td>
                 <td style="text-align: right; font-family: monospace; font-weight: bold; color: #2563eb;">${formatMoney(totalAmountPkr)}</td>
                 <td style="text-align: right; color: #94a3b8;">-</td>
@@ -696,8 +696,8 @@ export function openPurchaseA4ReportWindow(input: {
                 <td style="font-weight: bold; color: #059669;">CREDIT (CR)</td>
                 <td style="font-family: monospace; font-weight: bold;">${escapeHtml(b.salesAccountNumber || "SA-2001")}</td>
                 <td>
-                  <strong>${escapeHtml(b.salesAccountName || "Damaan Sales Account")} (CR)</strong>
-                  <span style="font-size: 6.5px; color: #64748b; display: block;">${escapeHtml(b.branchName || "Kabul Main Branch")}</span>
+                  <strong>${escapeHtml(b.salesAccountName || "—")} (CR)</strong>
+                  <span style="font-size: 6.5px; color: #64748b; display: block;">${escapeHtml(b.branchName || "—")}</span>
                 </td>
                 <td style="text-align: right; color: #94a3b8;">-</td>
                 <td style="text-align: right; font-family: monospace; font-weight: bold; color: #059669;">${formatMoney(totalAmountPkr)}</td>
@@ -800,8 +800,8 @@ export function openPurchaseA4ReportWindow(input: {
                 <td style="font-weight: bold; color: #2563eb;">DEBIT (DR)</td>
                 <td style="font-family: monospace; font-weight: bold;">${escapeHtml(b.purchaseAccountNumber || "AE-AC-0001")}</td>
                 <td>
-                  <strong>${escapeHtml(b.purchaseAccountName || "Dubai Purchase Account")} (DR)</strong>
-                  <span style="font-size: 6.5px; color: #64748b; display: block;">${escapeHtml(b.branchName || "Kabul Main Branch")}</span>
+                  <strong>${escapeHtml(b.purchaseAccountName || "—")} (DR)</strong>
+                  <span style="font-size: 6.5px; color: #64748b; display: block;">${escapeHtml(b.branchName || "—")}</span>
                 </td>
                 <td style="text-align: right; font-family: monospace; font-weight: bold; color: #2563eb;">${formatMoney(totalAmountPkr)}</td>
                 <td style="text-align: right; color: #94a3b8;">-</td>
@@ -811,8 +811,8 @@ export function openPurchaseA4ReportWindow(input: {
                 <td style="font-weight: bold; color: #059669;">CREDIT (CR)</td>
                 <td style="font-family: monospace; font-weight: bold;">${escapeHtml(b.salesAccountNumber || "SA-2001")}</td>
                 <td>
-                  <strong>${escapeHtml(b.salesAccountName || "Damaan Sales Account")} (CR)</strong>
-                  <span style="font-size: 6.5px; color: #64748b; display: block;">${escapeHtml(b.branchName || "Kabul Main Branch")}</span>
+                  <strong>${escapeHtml(b.salesAccountName || "—")} (CR)</strong>
+                  <span style="font-size: 6.5px; color: #64748b; display: block;">${escapeHtml(b.branchName || "—")}</span>
                 </td>
                 <td style="text-align: right; color: #94a3b8;">-</td>
                 <td style="text-align: right; font-family: monospace; font-weight: bold; color: #059669;">${formatMoney(totalAmountPkr)}</td>

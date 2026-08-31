@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
-import { COUNTRY_BRANCH_ACCESS_REGISTER } from "@/lib/repositories/access-register-repository";
+import { getAccessRegisterData } from "@/lib/repositories/access-register-repository";
 
 export async function GET(request: NextRequest) {
   try {
+    const COUNTRY_BRANCH_ACCESS_REGISTER = await getAccessRegisterData();
     const candidatePaths = [
       path.join(process.cwd(), "public", "reports", "COMPLETE_ERP_SYSTEM_HANDOVER_REPORT.pdf"),
       path.join(process.cwd(), "public", "COMPLETE_ERP_SYSTEM_HANDOVER_REPORT.pdf"),

@@ -97,7 +97,7 @@ function escapeHtml(value: string) {
 export function resolveCountryEmailConfig(country: CountryEmailRecord | null | undefined, branch: BranchEmailContext = {}): ResolvedCountryEmailConfig {
   const defaults = defaultForCountry(country);
   const settings = (country?.email_server_settings ?? {}) as Record<string, unknown>;
-  const officeName = String(settings.officeName ?? settings.office_name ?? defaults?.officeName ?? country?.name ?? "DAMAAN Business Group ERP");
+  const officeName = String(settings.officeName ?? settings.office_name ?? defaults?.officeName ?? country?.name ?? "Digital Dock ERP");
   // Priority: per-country/branch DB config  ->  global temporary default.
   // (The legacy hardcoded country map is intentionally bypassed so that the
   //  single global default applies uniformly until DB config is set.)

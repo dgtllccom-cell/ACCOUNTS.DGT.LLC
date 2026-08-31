@@ -34,10 +34,10 @@ export function AuthPortalShell({
                 </div>
                 <div>
                   <div className="text-lg font-black tracking-[0.16em] text-[#06122d] dark:text-white sm:text-xl sm:tracking-[0.2em]">
-                    DAMAAN
+                    Digital Dock
                   </div>
                   <div className="text-[8px] font-bold uppercase tracking-[0.3em] text-slate-400 sm:text-[9px] sm:tracking-[0.34em]">
-                    Business Group
+                    ERP
                   </div>
                 </div>
               </div>
@@ -52,7 +52,7 @@ export function AuthPortalShell({
             <div className="my-auto mx-auto w-full max-w-[460px] py-6">{children}</div>
 
             <div className="flex flex-col items-center justify-between gap-2 border-t border-slate-100 pt-4 text-[10px] font-semibold text-slate-400 sm:flex-row dark:border-slate-900">
-              <span>© 2026 DAMAAN BUSINESS GROUP</span>
+              <span>{tt("go.go_copyright_footer", "© 2026 Digital Dock ERP (Pvt) Ltd. All rights reserved.")}</span>
               <div className="flex gap-4">
                 <a href="#" className="transition-colors hover:text-slate-600 dark:hover:text-slate-300">
                   {tt("mbl.privacy_policy", "Privacy Policy")}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   BarChart3,
   MessageSquare,
@@ -29,20 +29,44 @@ export function CommunicationReportsView({ lang }: Props) {
   const _ = (key: UiKey, fallback?: string) => t(lang, key, fallback);
   const isRTL = ["ar", "ur", "fa", "ps"].includes(lang);
 
-  const kpis = [
-    { label: _("crv.total_msgs", "Total Messages"), value: "1,420", icon: <MessageSquare className="h-4 w-4" />, color: "text-indigo-600 bg-indigo-50 border-indigo-200" },
-    { label: _("crv.wa_delivered", "WhatsApp Delivered"), value: "982", icon: <MessageSquare className="h-4 w-4" />, color: "text-emerald-600 bg-emerald-50 border-emerald-200" },
-    { label: _("crv.email_delivered", "Emails Delivered"), value: "438", icon: <Mail className="h-4 w-4" />, color: "text-blue-600 bg-blue-50 border-blue-200" },
-    { label: _("crv.ai_drafted", "AI Replies Drafted"), value: "1,105", icon: <Sparkles className="h-4 w-4" />, color: "text-amber-600 bg-amber-50 border-amber-200" },
-    { label: _("crv.reminders_sent", "Reminders Sent"), value: "312", icon: <Clock className="h-4 w-4" />, color: "text-purple-600 bg-purple-50 border-purple-200" },
-    { label: _("crv.avg_response", "Avg Response Time"), value: "1.4 min", icon: <CheckCircle2 className="h-4 w-4" />, color: "text-teal-600 bg-teal-50 border-teal-200" }
-  ];
+  const [metrics, setMetrics] = useState<Record<string, number>>({});
+  const [auditLogs, setAuditLogs] = useState<Array<{ id: string; date: string; user: string; action: string; channel: string; recipient: string; status: string }>>([]);
+  const [loading, setLoading] = useState(true);
 
-  const mockAuditLogs = [
-    { id: "log-1", date: new Date().toISOString(), user: "Super Admin", action: "Approved AI Reply", channel: "WhatsApp", recipient: "+92 300 1234567", status: "Delivered" },
-    { id: "log-2", date: new Date().toISOString(), user: "Country Admin (PK)", action: "Payment Reminder Sent", channel: "Email", recipient: "billing@supplier.com", status: "Sent" },
-    { id: "log-3", date: new Date().toISOString(), user: "Branch Accountant", action: "Manual Reply", channel: "WhatsApp", recipient: "+971 50 9876543", status: "Delivered" }
-  ];
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/erp/communication-center/overview", { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled) return;
+        const body = d?.data ?? d ?? {};
+        setMetrics(body.metrics ?? {});
+        setAuditLogs(
+          (body.recentMessages ?? []).map((m: any) => ({
+            id: String(m.id),
+            date: m.created_at ?? "",
+            user: m.sender_name || "—",
+            action: [m.linked_module, m.linked_document_no].filter(Boolean).join(" ") || m.subject || (m.direction === "outgoing" ? "Outgoing message" : "Incoming message"),
+            channel: m.channel || "—",
+            recipient: m.recipient_to || "—",
+            status: m.delivery_status || m.read_status || "—",
+          })),
+        );
+      })
+      .catch(() => { if (!cancelled) { setMetrics({}); setAuditLogs([]); } })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const num = (v: number | undefined) => (typeof v === "number" ? v.toLocaleString() : "0");
+  const kpis = useMemo(() => [
+    { label: _("crv.email_delivered", "Emails Sent"), value: num(metrics.emailsSent), icon: <Mail className="h-4 w-4" />, color: "text-blue-600 bg-blue-50 border-blue-200" },
+    { label: _("crv.wa_delivered", "WhatsApp Sent"), value: num(metrics.whatsappsSent), icon: <MessageSquare className="h-4 w-4" />, color: "text-emerald-600 bg-emerald-50 border-emerald-200" },
+    { label: _("crv.total_msgs", "Open Leads"), value: num(metrics.openLeads), icon: <BarChart3 className="h-4 w-4" />, color: "text-indigo-600 bg-indigo-50 border-indigo-200" },
+    { label: _("crv.reminders_sent", "Due Follow-ups"), value: num(metrics.dueFollowups), icon: <Clock className="h-4 w-4" />, color: "text-purple-600 bg-purple-50 border-purple-200" },
+    { label: _("crv.ai_drafted", "Campaigns"), value: num(metrics.campaigns), icon: <Sparkles className="h-4 w-4" />, color: "text-amber-600 bg-amber-50 border-amber-200" },
+    { label: _("crv.avg_response", "Failed Messages"), value: num(metrics.failedMessages), icon: <AlertCircle className="h-4 w-4" />, color: "text-rose-600 bg-rose-50 border-rose-200" }
+  ], [metrics, lang]);
 
   const handlePrint = () => {
     void import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => {
@@ -58,15 +82,15 @@ export function CommunicationReportsView({ lang }: Props) {
           { key: "recipient", label: "Recipient" },
           { key: "status", label: "Status", format: "status" },
         ],
-        rows: mockAuditLogs as unknown as Record<string, unknown>[],
-        filters: [{ label: "Records", value: String(mockAuditLogs.length) }],
+        rows: auditLogs as unknown as Record<string, unknown>[],
+        filters: [{ label: "Records", value: String(auditLogs.length) }],
       });
     });
   };
 
   const handleExportCsv = () => {
     const headers = "ID,Date,User,Action,Channel,Recipient,Status\n";
-    const rows = mockAuditLogs.map((l) => `${l.id},${l.date},${l.user},${l.action},${l.channel},${l.recipient},${l.status}`).join("\n");
+    const rows = auditLogs.map((l) => `${l.id},${l.date},${l.user},${l.action},${l.channel},${l.recipient},${l.status}`).join("\n");
     const blob = new Blob([headers + rows], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -132,7 +156,14 @@ export function CommunicationReportsView({ lang }: Props) {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-            {mockAuditLogs.map((log) => (
+            {(loading || auditLogs.length === 0) && (
+              <tr>
+                <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
+                  {loading ? _("common.loading", "Loading…") : _("common.no_records", "No records found.")}
+                </td>
+              </tr>
+            )}
+            {auditLogs.map((log) => (
               <tr key={log.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                 <td className="px-4 py-3 font-mono text-slate-500">{new Date(log.date).toLocaleString()}</td>
                 <td className="px-4 py-3 font-bold text-slate-900 dark:text-white">{log.user}</td>

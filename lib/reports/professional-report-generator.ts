@@ -79,7 +79,7 @@ export function buildProfessionalReportLayout(
     title,
     subtitle: options.subtitle,
     company: {
-      name: options.company || "DAMAAN Business Group",
+      name: options.company || "",
       branchCode: options.branchCode,
     },
     scope: {
@@ -231,7 +231,7 @@ export function reportLayoutToHtml(report: ProfessionalReportLayout): string {
 
       <div class="footer">
         <p>Report Page ${report.pageInfo?.currentPage || 1}${report.pageInfo?.totalPages ? ` of ${report.pageInfo.totalPages}` : ""}</p>
-        <p>© 2026 DAMAAN Business Group - Confidential</p>
+        <p>${report.company?.name ? report.company.name + " - " : ""}Confidential</p>
       </div>
     </body>
     </html>

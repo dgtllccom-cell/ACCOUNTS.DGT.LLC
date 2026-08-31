@@ -86,112 +86,19 @@ function rolePermissions(role: EnterpriseRole) {
   return enterpriseRolePermissions[role] ?? [];
 }
 
-function demoJournalRows(session: ErpSession, reason: string) {
-  const now = new Date().toISOString();
-  const seedRows = [
-    {
-      userId: "temp-super-admin",
-      userCode: "SUPERADMIN",
-      fullName: "Super Admin",
-      email: "superadmin@damaan.com",
-      countryId: null,
-      countryName: "Global",
-      branchId: null,
-      branchName: "Global",
-      role: "super_admin" as EnterpriseRole,
-      registrationDate: now,
-      lastActivityAction: "auth.login.success"
-    },
-    {
-      userId: "temp-pakistan-country-admin",
-      userCode: "PK-COUNTRY-0531",
-      fullName: "Pakistan Country Test Admin",
-      email: "pkadmin@damaan.com",
-      countryId: "dec26827-2ba2-4517-97cb-2d85729511a2",
-      countryName: "Pakistan",
-      branchId: "04723132-7910-413b-a3ea-48b78f73e071",
-      branchName: "Pakistan Main Branch",
-      role: "country_admin" as EnterpriseRole,
-      registrationDate: now,
-      lastActivityAction: "auth.login.success"
-    },
-    {
-      userId: "temp-quetta-city-admin",
-      userCode: "PK-QUETTA-0531",
-      fullName: "Quetta City Test User",
-      email: "pkquetta@damaan.com",
-      countryId: "dec26827-2ba2-4517-97cb-2d85729511a2",
-      countryName: "Pakistan",
-      branchId: "b3d606be-1d37-44a3-a740-d8685f6fc158",
-      branchName: "Quetta - CHAMAN City Branch",
-      role: "city_branch_admin" as EnterpriseRole,
-      registrationDate: now,
-      lastActivityAction: "auth.login.success"
-    }
-  ];
-
-  const sessionRole = session.roles[0] ?? "staff_user";
-  const sessionRow = {
-    userId: session.userId,
-    userCode: session.userId.slice(0, 14).toUpperCase(),
-    fullName: session.fullName ?? session.email ?? "Current User",
-    email: session.email ?? "user@damaan.com",
-    countryId: session.countryIds[0] ?? null,
-    countryName: session.countryIds.length ? "Assigned Country" : "Global",
-    branchId: session.cityBranchIds[0] ?? session.countryBranchIds[0] ?? null,
-    branchName: session.cityBranchIds.length ? "Assigned City Branch" : session.countryBranchIds.length ? "Assigned Main Branch" : "Global",
-    role: sessionRole,
-    registrationDate: now,
-    lastActivityAction: reason
-  };
-
-  const rowsById = new Map([...seedRows, sessionRow].map((row) => [row.userId, row]));
-  return [...rowsById.values()].map((row) => ({
-    ...row,
-    branchType: branchTypeFromRole(row.role),
-    status: "active" as const,
-    permissions: row.userId === session.userId ? session.permissions : rolePermissions(row.role),
-    lastActivity: now,
-    activityCounts: {
-      logins: row.lastActivityAction?.startsWith("auth.login") ? 1 : 0,
-      transactions: 0,
-      roznamcha: 0,
-      purchases: 0,
-      payments: 0,
-      accounts: 0,
-      approvals: 0,
-      edits: 0
-    },
-    rawPassword: "••••••••"
-  }));
-}
-
-function fallbackReport(session: ErpSession, reason: string) {
-  const rows = demoJournalRows(session, reason);
-  const now = new Date().toISOString();
-
+function emptyReport(reason: string) {
   return {
     summary: {
-      totalUsers: rows.length,
-      activeUsers: rows.filter((row) => row.status === "active").length,
-      countryUsers: rows.filter((row) => row.branchType === "Country").length,
-      branchUsers: rows.filter((row) => ["Main Branch", "City Branch", "Branch"].includes(row.branchType)).length,
-      adminUsers: rows.filter((row) => ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin"].includes(row.role)).length,
-      recentLogins: rows.reduce((sum, row) => sum + row.activityCounts.logins, 0)
+      totalUsers: 0,
+      activeUsers: 0,
+      countryUsers: 0,
+      branchUsers: 0,
+      adminUsers: 0,
+      recentLogins: 0
     },
-    filters: {
-      countries: unique(rows.map((row) => row.countryId)).map((id) => {
-        const row = rows.find((item) => item.countryId === id);
-        return { value: String(id), label: row?.countryName ?? id, keywords: row?.countryName ?? id };
-      }),
-      branches: unique(rows.map((row) => row.branchId)).map((id) => {
-        const row = rows.find((item) => item.branchId === id);
-        return { value: String(id), label: row?.branchName ?? id, keywords: row?.branchName ?? id };
-      }),
-      roles: unique(rows.map((row) => row.role)).map((role) => ({ value: role, label: roleLabel(role as EnterpriseRole), keywords: role }))
-    },
-    rows,
-    generatedAt: now,
+    filters: { countries: [], branches: [], roles: [] },
+    rows: [] as unknown[],
+    generatedAt: new Date().toISOString(),
     warning: reason
   };
 }
@@ -267,14 +174,6 @@ function normalizeRole(role: string): EnterpriseRole | null {
     : null;
 }
 
-function branchTypeFromRole(role: EnterpriseRole) {
-  if (role === "super_admin") return "Global";
-  if (role === "country_admin" || role === "country_user") return "Country";
-  if (role === "main_branch_admin") return "Main Branch";
-  if (role === "city_branch_admin") return "City Branch";
-  return "Branch";
-}
-
 function roleLabel(role: EnterpriseRole) {
   return role
     .split("_")
@@ -321,7 +220,7 @@ export async function GET(request: NextRequest) {
     try {
       admin = createSupabaseAdminClient() as any;
     } catch (error) {
-      return apiOk(fallbackReport(session, error instanceof Error ? error.message : "Supabase admin client unavailable"));
+      return apiOk(emptyReport(error instanceof Error ? error.message : "Supabase admin client unavailable"));
     }
 
     const [profilesRes, assignmentsRes, permissionsRes, authUsersRes] = await Promise.all([
@@ -360,7 +259,7 @@ export async function GET(request: NextRequest) {
     ]);
 
     if (profilesRes.error || assignmentsRes.error) {
-      return apiOk(fallbackReport(session, profilesRes.error?.message ?? assignmentsRes.error?.message ?? "User journal data source unavailable"));
+      return apiOk(emptyReport(profilesRes.error?.message ?? assignmentsRes.error?.message ?? "User journal data source unavailable"));
     }
 
     const profiles = (profilesRes.data ?? []) as ProfileRow[];
@@ -376,7 +275,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (!profiles.length) {
-      return apiOk(fallbackReport(session, "No user profile records found"));
+      return apiOk(emptyReport("No user profile records found"));
     }
 
     const userIds = profiles.map((profile) => profile.id);

@@ -134,7 +134,7 @@ function PurchaseTransferErpReportViewContent({
   const branchName = d?.branchName || form.branchName || "AL.RAS Branch";
   const branchCode = d?.branchCode || form.branchCode || "ARE-DXB-001";
 
-  const exchangeRate = Number(d?.exchange_rate || form.exchangeRate || 3.6725);
+  const exchangeRate = Number(d?.exchange_rate || form.exchangeRate || 0);
   const currencyFc = d?.currency || form.currencyType || "USD";
   const currencyLc = form.secondaryCurrency || "AED";
 

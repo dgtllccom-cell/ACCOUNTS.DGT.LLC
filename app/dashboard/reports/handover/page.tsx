@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { 
   FileText, 
   Download, 
@@ -26,7 +26,7 @@ import {
   ShieldAlert
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { COUNTRY_BRANCH_ACCESS_REGISTER, AccessRegisterEntry } from "@/lib/repositories/access-register-repository";
+import type { AccessRegisterEntry } from "@/lib/repositories/access-register-repository";
 import { openGenericErpReport } from "@/lib/reports/open-generic-erp-report";
 
 interface DailyLog {
@@ -196,6 +196,18 @@ export default function HandoverReportPage() {
   const [accessSearch, setAccessSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [countryFilter, setCountryFilter] = useState("all");
+  const [accessRegister, setAccessRegister] = useState<AccessRegisterEntry[]>([]);
+  const [accessRegisterLoading, setAccessRegisterLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/erp/reports/access-register", { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => { if (!cancelled) setAccessRegister(Array.isArray(d?.rows) ? d.rows : []); })
+      .catch(() => { if (!cancelled) setAccessRegister([]); })
+      .finally(() => { if (!cancelled) setAccessRegisterLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
 
   const handleDownloadPdf = () => {
     setIsDownloading(true);
@@ -249,9 +261,9 @@ export default function HandoverReportPage() {
         { key: "passwordVaultRef", label: "Vault Ref / Credential ID" },
         { key: "status", label: "Status", format: "status" }
       ],
-      rows: COUNTRY_BRANCH_ACCESS_REGISTER as any,
+      rows: accessRegister as any,
       summary: {
-        totalLogins: COUNTRY_BRANCH_ACCESS_REGISTER.length,
+        totalLogins: accessRegister.length,
         verifiedTables: 33,
         databaseTranslations: 11154,
         productionStatus: "100% PASS"
@@ -266,7 +278,7 @@ export default function HandoverReportPage() {
   };
 
   const filteredAccessEntries = useMemo(() => {
-    return COUNTRY_BRANCH_ACCESS_REGISTER.filter(entry => {
+    return accessRegister.filter(entry => {
       const matchesSearch = accessSearch === "" ||
         entry.country.toLowerCase().includes(accessSearch.toLowerCase()) ||
         entry.mainBranch.toLowerCase().includes(accessSearch.toLowerCase()) ||
@@ -446,6 +458,13 @@ export default function HandoverReportPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {(accessRegisterLoading || filteredAccessEntries.length === 0) && (
+                    <tr>
+                      <td colSpan={9} className="p-8 text-center text-slate-400 text-xs">
+                        {accessRegisterLoading ? "Loading access register…" : "No access-register records found."}
+                      </td>
+                    </tr>
+                  )}
                   {filteredAccessEntries.map((entry) => {
                     let roleBadge = "bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800 dark:text-slate-300";
                     if (entry.role === "Super Admin") roleBadge = "bg-red-100 text-red-800 border-red-200 dark:bg-red-950/60 dark:text-red-300";

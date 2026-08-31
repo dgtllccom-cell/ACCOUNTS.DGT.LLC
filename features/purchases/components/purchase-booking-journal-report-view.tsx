@@ -249,7 +249,7 @@ function getDashboardSummaryData(rows: PurchaseReport[], session: any): Dashboar
 
   const firstRow = rows[0];
   const country = firstRow.countryName || session?.countryName || "Unknown";
-  const branchName = session?.branchName || "Main Branch";
+  const branchName = session?.branchName || "—";
   
   let baseCurrencyFallback = firstRow?.form_data?.form?.secondaryCurrency?.split(" ")?.[0];
   if (!baseCurrencyFallback) {
@@ -413,7 +413,7 @@ function makeContainers(report: PurchaseReport | null): ContainerRow[] {
       blNo: isConfirmed ? `BL-${1001 + index}` : "-",
       truckNo: isConfirmed ? (index % 2 ? "XYZ-888" : "ABC-123") : "-",
       sealNo: isConfirmed ? `S-00123${index + 4}` : "-",
-      loadingCountry: report.countryName || "Afghanistan",
+      loadingCountry: report.countryName || "",
       receivingCountry: report.branchName || "Dubai",
       loadingDate: isConfirmed ? report.purchaseDate : "-",
       receivingDate: isConfirmed ? report.purchaseDate : "-",
@@ -602,7 +602,7 @@ function openReportWindow(report: PurchaseReport, autoPrint: boolean, lang: Supp
     scope: {
       scopeLevel: "Purchase Booking Journal",
       country: report.countryName || "All Countries",
-      branch: report.branchName || "Main Branch",
+      branch: report.branchName || "",
       currency: report.currency || "USD",
       userName: report.audit?.userName || "Admin User",
     },
@@ -1088,7 +1088,7 @@ function SuperAdminPurchaseSummary({
   // Data for Report #1
   const firstRow = rows[0];
   const country = firstRow.countryName || session?.countryName || "All Countries";
-  const branchName = session?.branchName || "Main Branch";
+  const branchName = session?.branchName || "—";
   const userName = session?.name || session?.username || session?.user?.fullName || "SUPER ADMIN";
   const userId = session?.userId || session?.user?.id || "SA001";
   const role = session?.role || "Super Admin";
@@ -2197,7 +2197,7 @@ export function PurchaseBookingJournalReportView({
                   advanceFc: Number(f.advanceAmountFc || 20000),
                   remainingFc: Number(f.remainingAmountFc || 29400),
                   currencyFc: r.currency || "USD",
-                  exchangeRate: Number(f.exchangeRate || 3.6725),
+                  exchangeRate: Number(f.exchangeRate || 0),
                   finalAmountLc: Number(r.finalAmount || 181560.5),
                   finalAdvanceLc: Number(f.advanceAmountLc || 73450),
                   finalRemainingLc: Number(f.remainingAmountLc || 108110.5),
@@ -2654,7 +2654,7 @@ export function PurchaseBookingJournalReportView({
                                     rateKg: Number(g.coursePrice || report.purchaseRate || 0),
                                     amountFc: Number(g.totalAmount || report.totalPurchaseAmount || 0),
                                     currencyFc: g.purchaseCurrency || report.currency || "USD",
-                                    exchangeRate: Number(g.exchangeRate || f.exchangeRate || 3.6725),
+                                    exchangeRate: Number(g.exchangeRate || f.exchangeRate || 0),
                                     amountLc: Number(g.finalAmount || report.finalAmount || 0),
                                     currencyLc: report.finalCurrency || "AED"
                                   })),
@@ -2736,7 +2736,7 @@ export function PurchaseBookingJournalReportView({
                                     rateKg: Number(g.coursePrice || report.purchaseRate || 0),
                                     amountFc: Number(g.totalAmount || report.totalPurchaseAmount || 0),
                                     currencyFc: g.purchaseCurrency || report.currency || "USD",
-                                    exchangeRate: Number(g.exchangeRate || f.exchangeRate || 3.6725),
+                                    exchangeRate: Number(g.exchangeRate || f.exchangeRate || 0),
                                     amountLc: Number(g.finalAmount || report.finalAmount || 0),
                                     currencyLc: report.finalCurrency || "AED"
                                   })),
@@ -2806,7 +2806,7 @@ export function PurchaseBookingJournalReportView({
                                       advanceFc: Number(f.advanceAmountFc || 20000),
                                       remainingFc: Number(f.remainingAmountFc || 29400),
                                       currencyFc: report.currency || "USD",
-                                      exchangeRate: Number(f.exchangeRate || 3.6725),
+                                      exchangeRate: Number(f.exchangeRate || 0),
                                       finalAmountLc: Number(report.finalAmount || 181560.5),
                                       finalAdvanceLc: Number(f.advanceAmountLc || 73450),
                                       finalRemainingLc: Number(f.remainingAmountLc || 108110.5),
@@ -3003,7 +3003,7 @@ export function PurchaseBookingJournalReportView({
                                 rateKg: Number(g.coursePrice || report.purchaseRate || 0),
                                 amountFc: Number(g.totalAmount || report.totalPurchaseAmount || 0),
                                 currencyFc: g.purchaseCurrency || report.currency || "USD",
-                                exchangeRate: Number(g.exchangeRate || f.exchangeRate || 3.6725),
+                                exchangeRate: Number(g.exchangeRate || f.exchangeRate || 0),
                                 amountLc: Number(g.finalAmount || report.finalAmount || 0),
                                 currencyLc: report.finalCurrency || "AED"
                               })),
@@ -3073,7 +3073,7 @@ export function PurchaseBookingJournalReportView({
                                   advanceFc: Number(f.advanceAmountFc || 20000),
                                   remainingFc: Number(f.remainingAmountFc || 29400),
                                   currencyFc: report.currency || "USD",
-                                  exchangeRate: Number(f.exchangeRate || 3.6725),
+                                  exchangeRate: Number(f.exchangeRate || 0),
                                   finalAmountLc: Number(report.finalAmount || 181560.5),
                                   finalAdvanceLc: Number(f.advanceAmountLc || 73450),
                                   finalRemainingLc: Number(f.remainingAmountLc || 108110.5),
@@ -3229,7 +3229,7 @@ export function PurchaseBookingJournalReportView({
                 netWeight: selected.totalNetWeight || selected.totalWeight || 0,
                 coursePrice: selected.purchaseRate || 0,
                 totalAmount: selected.totalPurchaseAmount || 0,
-                exchangeRate: selected.exchange_rate || 280,
+                exchangeRate: selected.exchange_rate || 0,
                   finalAmount: selected.finalAmount || (selected.totalPurchaseAmount * 280) || 0
               }
             ];
@@ -3238,7 +3238,7 @@ export function PurchaseBookingJournalReportView({
             const totalGross = goodsEntries.reduce((sum: number, item: any) => sum + Number(item.grossWeight || 0), 0);
             const totalNet = goodsEntries.reduce((sum: number, item: any) => sum + Number(item.netWeight || 0), 0);
             
-            const exRate = goodsEntries[0]?.exchangeRate || selected.exchange_rate || 280;
+            const exRate = goodsEntries[0]?.exchangeRate || selected.exchange_rate || 0;
 
             const totalUSDVal = goodsEntries.reduce((sum: number, item: any) => {
               const qtyNo = Number(item.qtyNo || 0);
@@ -3352,11 +3352,11 @@ export function PurchaseBookingJournalReportView({
                       </div>
                     </div>
                     <div className="text-right text-[8px] font-bold text-slate-650 uppercase">
-                      <div>BRANCH : {selected.branchName || "Main Branch"}</div>
-                      <div>COUNTRY : {selected.countryName || ""}</div>
-                      <div>ADDRESS : {selected.branchName || "Branch Address"}</div>
-                      <div>PHONE : +93 700 000 000</div>
-                      <div>EMAIL : info@demitrading.com</div>
+                      <div>BRANCH : {selected.branchName || "—"}</div>
+                      <div>COUNTRY : {selected.countryName || "—"}</div>
+                      <div>ADDRESS : {(selected as any).branchAddress || selected.form_data?.form?.branchAddress || "—"}</div>
+                      <div>PHONE : {(selected as any).branchPhone || selected.form_data?.form?.branchPhone || "—"}</div>
+                      <div>EMAIL : {(selected as any).supplierEmail || selected.form_data?.form?.supplierEmail || "—"}</div>
                     </div>
                   </div>
 
@@ -3426,8 +3426,8 @@ export function PurchaseBookingJournalReportView({
                       <table className="w-full text-[8px] font-semibold text-slate-600">
                         <tbody>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Supplier Name:</td><td className="px-2 py-1 font-bold text-slate-800 truncate max-w-[100px]">{trField(selected, "supplierName", selected.supplierName)}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Contact Person:</td><td className="px-2 py-1 text-slate-800">{selected.form_data?.form?.purchaseContactPerson || selected.form_data?.form?.supplierContactPerson || "Mr. Ahmad Shah"}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Mobile Number:</td><td className="px-2 py-1 text-slate-800 font-mono">{selected.form_data?.form?.purchaseContact || selected.form_data?.form?.supplierContact || "+93 700 000 000"}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Contact Person:</td><td className="px-2 py-1 text-slate-800">{selected.form_data?.form?.purchaseContactPerson || selected.form_data?.form?.supplierContactPerson || "—"}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Mobile Number:</td><td className="px-2 py-1 text-slate-800 font-mono">{selected.form_data?.form?.purchaseContact || selected.form_data?.form?.supplierContact || "—"}</td></tr>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Email Address:</td><td className="px-2 py-1 text-slate-800 truncate max-w-[100px]">{selected.form_data?.form?.supplierEmail || "supplier@globalfoods.com"}</td></tr>
                           <tr><td className="px-2 py-1 text-slate-400">Country:</td><td className="px-2 py-1 text-slate-800">{selected.countryName}</td></tr>
                         </tbody>
@@ -3442,10 +3442,10 @@ export function PurchaseBookingJournalReportView({
                       <table className="w-full text-[8px] font-semibold text-slate-600">
                         <tbody>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Buyer Name:</td><td className="px-2 py-1 font-bold text-slate-800 truncate max-w-[100px]">{trField(selected, "buyerName", selected.buyerName)}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Contact Person:</td><td className="px-2 py-1 text-slate-800">Mr. Imran Hassan</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Mobile Number:</td><td className="px-2 py-1 text-slate-800 font-mono">+92 300 1234567</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Email Address:</td><td className="px-2 py-1 text-slate-800 truncate max-w-[100px]">info@demitrading.com</td></tr>
-                          <tr><td className="px-2 py-1 text-slate-400">Country:</td><td className="px-2 py-1 text-slate-800">Afghanistan</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Contact Person:</td><td className="px-2 py-1 text-slate-800">{(selected as any).buyerContactPerson || "—"}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Mobile Number:</td><td className="px-2 py-1 text-slate-800 font-mono">{(selected as any).buyerPhone || (selected as any).buyerMobile || "—"}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Email Address:</td><td className="px-2 py-1 text-slate-800 truncate max-w-[100px]">{(selected as any).buyerEmail || "—"}</td></tr>
+                          <tr><td className="px-2 py-1 text-slate-400">Country:</td><td className="px-2 py-1 text-slate-800">{(selected as any).buyerCountry || selected.countryName || "—"}</td></tr>
                         </tbody>
                       </table>
                     </div>
@@ -3537,7 +3537,7 @@ export function PurchaseBookingJournalReportView({
                       <tbody>
                         <tr className="border-b border-slate-100">
                           <td className="px-2 py-1 text-slate-400 w-[20%]">Loading Country:</td>
-                          <td className="px-2 py-1 text-slate-800 font-bold w-[30%]">{selected.countryName || "Afghanistan"}</td>
+                          <td className="px-2 py-1 text-slate-800 font-bold w-[30%]">{selected.countryName || "—"}</td>
                           <td className="px-2 py-1 text-slate-400 w-[20%]">Receiving Country:</td>
                           <td className="px-2 py-1 text-slate-800 font-bold w-[30%]">{selected.form_data?.form?.receivedCountry || selected.buyerName || "Pakistan"}</td>
                         </tr>

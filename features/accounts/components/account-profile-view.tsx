@@ -369,12 +369,12 @@ export function AccountProfileView({
       fields: [
         { label: "Customer Account Code", value: selectedRow.accountCode, highlight: true, icon: CreditCard },
         { label: "Date of Birth / Est.", value: fmtDate(selectedRow.createdAt), icon: Calendar },
-        { label: "Customer Type / Gender", value: selectedRow.subType || "Corporate / General", icon: User },
-        { label: "Nationality / Origin", value: selectedRow.countryName || "United Arab Emirates", icon: Globe },
+        { label: "Customer Type / Gender", value: selectedRow.subType || "—", icon: User },
+        { label: "Nationality / Origin", value: selectedRow.countryName || "—", icon: Globe },
         { label: "Full Name", value: selectedRow.accountName, highlight: true, icon: User },
-        { label: "Account Category", value: selectedRow.accountCategory || "Active Account", icon: Briefcase },
-        { label: "Father Name / Representative", value: selectedRow.companyOwner || selectedRow.customerName || "ABDULLAH", icon: Users },
-        { label: "Language Preference", value: "English / Urdu / Arabic", icon: Globe }
+        { label: "Account Category", value: selectedRow.accountCategory || "—", icon: Briefcase },
+        { label: "Father Name / Representative", value: selectedRow.companyOwner || selectedRow.customerName || "—", icon: Users },
+        { label: "Language Preference", value: (selectedRow as any).languagePreference || "—", icon: Globe }
       ]
     },
     {
@@ -389,13 +389,13 @@ export function AccountProfileView({
       contentHeader: "Branch geographic location and territorial details",
       fields: [
         { label: "Country Name", value: `${selectedRow.countryName} (${selectedRow.countryCode})`, highlight: true, icon: Globe },
-        { label: "Country Serial No.", value: selectedRow.countrySerialNumber || "CS-000001", icon: Hash },
-        { label: "State / Emirate", value: selectedRow.stateName || selectedRow.cityName || "Dubai", icon: MapPin },
-        { label: "City Region", value: selectedRow.cityName || "Dubai", icon: Landmark },
+        { label: "Country Serial No.", value: selectedRow.countrySerialNumber || "—", icon: Hash },
+        { label: "State / Emirate", value: selectedRow.stateName || selectedRow.cityName || "—", icon: MapPin },
+        { label: "City Region", value: selectedRow.cityName || "—", icon: Landmark },
         { label: "Assigned Branch Name", value: selectedRow.branchName, highlight: true, icon: Building2 },
         { label: "Branch Code", value: selectedRow.branchCode, icon: Hash },
-        { label: "Branch Type / Scope", value: selectedRow.branchType || "Main Branch", icon: Layers },
-        { label: "Branch Serial ID", value: selectedRow.branchSerialNumber || "BS-000001", icon: Hash }
+        { label: "Branch Type / Scope", value: selectedRow.branchType || "—", icon: Layers },
+        { label: "Branch Serial ID", value: selectedRow.branchSerialNumber || "—", icon: Hash }
       ]
     },
     {
@@ -409,14 +409,14 @@ export function AccountProfileView({
       activeText: "text-amber-600",
       contentHeader: "Registered company, owner director & bank clearing info",
       fields: [
-        { label: "Registered Company", value: selectedRow.companyName || "da Consolidated General Trading FZE", highlight: true, icon: Building2 },
-        { label: "Company Code", value: selectedRow.companyCode || "DA-CORP-001", icon: Hash },
-        { label: "Company Owner / Director", value: selectedRow.companyOwner || selectedRow.customerName || "Asmatullah Abdullah", icon: User },
-        { label: "Operational Currency", value: `${selectedRow.currency} (Local Currency)`, highlight: true, icon: Coins },
-        { label: "Registered Bank Name", value: selectedRow.bankName || "Emirates NBD Bank", icon: Landmark },
-        { label: "Bank Account Title", value: selectedRow.companyName || selectedRow.accountName, icon: CreditCard },
-        { label: "Contact Phone / Mobile", value: "+971 50 123 4567", icon: Phone },
-        { label: "Official Email Address", value: "info@dgt.llc", icon: Mail }
+        { label: "Registered Company", value: selectedRow.companyName || "—", highlight: true, icon: Building2 },
+        { label: "Company Code", value: selectedRow.companyCode || "—", icon: Hash },
+        { label: "Company Owner / Director", value: selectedRow.companyOwner || selectedRow.customerName || "—", icon: User },
+        { label: "Operational Currency", value: selectedRow.currency ? `${selectedRow.currency} (Local Currency)` : "—", highlight: true, icon: Coins },
+        { label: "Registered Bank Name", value: selectedRow.bankName || "—", icon: Landmark },
+        { label: "Bank Account Title", value: selectedRow.companyName || selectedRow.accountName || "—", icon: CreditCard },
+        { label: "Contact Phone / Mobile", value: (selectedRow as any).contactPhone || (selectedRow as any).phone || "—", icon: Phone },
+        { label: "Official Email Address", value: (selectedRow as any).contactEmail || (selectedRow as any).email || "—", icon: Mail }
       ]
     },
     {
@@ -430,8 +430,8 @@ export function AccountProfileView({
       activeText: "text-purple-600",
       contentHeader: "Master ledger specifications and financial audit identity",
       fields: [
-        { label: "Linked Ledger Name", value: selectedRow.ledgerName || "Main Country Clearing Ledger", highlight: true, icon: BookOpen },
-        { label: "Journal Code", value: selectedRow.journalCode || "JRN-001", icon: Hash },
+        { label: "Linked Ledger Name", value: selectedRow.ledgerName || "—", highlight: true, icon: BookOpen },
+        { label: "Journal Code", value: selectedRow.journalCode || "—", icon: Hash },
         { label: "Ledger Currency", value: selectedRow.ledgerCurrency || selectedRow.currency, icon: Coins },
         { label: "Ledger Operational Status", value: selectedRow.ledgerStatus === "active" ? "Active (Posted)" : "Verified", icon: CheckCircle2 },
         { label: "Opening Balance", value: `${fmtNumber(selectedRow.openingBalance)} ${selectedRow.currency}`, icon: Activity },
@@ -584,7 +584,7 @@ export function AccountProfileView({
             <div className="flex items-center gap-3 text-xs font-bold text-slate-500 dark:text-slate-400">
               <span>Generated On: <strong className="text-slate-800 dark:text-slate-200">{fmtDate(new Date().toISOString())}</strong></span>
               <span className="text-slate-300 dark:text-slate-700">|</span>
-              <span>Ref: <strong className="font-mono text-blue-600 dark:text-blue-400">{selectedRow.accountCode || "CPR-000002"}</strong></span>
+              <span>Ref: <strong className="font-mono text-blue-600 dark:text-blue-400">{selectedRow.accountCode || "—"}</strong></span>
             </div>
           </div>
 

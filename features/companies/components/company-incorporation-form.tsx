@@ -834,7 +834,7 @@ export function CompanyIncorporationForm({
                         {lang === "ur" ? "موبائل / واٹس ایپ" : "Mobile / WhatsApp"}
                       </span>
                       <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono text-[11px]" dir="ltr">
-                        {phone || ownerProfile?.mobile || "+971 50 123 4567"}
+                        {phone || ownerProfile?.mobile || "—"}
                       </span>
                     </div>
 
@@ -1382,7 +1382,7 @@ export function CompanyIncorporationForm({
                       <Input
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        placeholder="+971 50 123 4567"
+                        placeholder=""
                         className="bg-white dark:bg-slate-950 border-slate-200 text-xs h-10 font-mono"
                         dir="ltr"
                       />
@@ -1421,7 +1421,7 @@ export function CompanyIncorporationForm({
                     <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
                       <div>
                         <h3 className="text-base font-black text-blue-700 dark:text-blue-400">
-                          {companyName || "DAMAAN Trading Company LLC"}
+                          {companyName || "—"}
                         </h3>
                         <p className="text-xs text-slate-500 font-bold">
                           {companyNameUrdu && `${companyNameUrdu} • `}{legalStructure} · {natureOfBusiness} · {baseCurrency}

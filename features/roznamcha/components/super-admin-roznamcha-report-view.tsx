@@ -2445,7 +2445,7 @@ function SuperAdminRoznamchaReportViewContent({
             mobileNumber: "",
             companyName: "DGT LLC",
             companyAddress: "123 Business Street, Trade Center, Dubai",
-            companyPhone: "+971 50 123 4567",
+            companyPhone: "",
             companyEmail: "info@dgtllc.com",
             companyWebsite: "www.dgtllc.com",
             type: activeDrawerEntry.debit > 0 ? "payment" : "receipt"
