@@ -730,9 +730,6 @@ export default function JournalStockReportDashboard({
                   </span>
                 </div>
               ))}
-              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-[9px] font-extrabold text-amber-600 dark:text-amber-400">
-                <span>{showAllCountries ? `${t(lang, "report.hide_report_details", "HIDE REPORT DETAILS")} ↑` : `${t(lang, "report.show_report_details", "SHOW REPORT DETAILS")} ↓`}</span>
-              </div>
             </div>
           </div>
         </div>

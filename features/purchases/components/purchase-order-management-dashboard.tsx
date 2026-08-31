@@ -1482,11 +1482,6 @@ function DashboardSummaryHeader({
                      <span className="bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded shadow-sm text-[9px] whitespace-nowrap">{r.branches.length} {tr("BRANCHES")}</span>
                    </div>
                 ))}
-
-                <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800">
-                  {!showAllCountries && <span className="text-orange-600 dark:text-orange-500 font-bold uppercase text-[10px]">{tr("SHOW REPORT DETAILS")}</span>}
-                  {showAllCountries && <span className="text-orange-600 dark:text-orange-500 font-bold uppercase text-[10px]">{tr("HIDE REPORT DETAILS")}</span>}
-                </div>
               </div>
             </div>
           </div>

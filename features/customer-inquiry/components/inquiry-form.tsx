@@ -265,7 +265,12 @@ export function InquiryForm({
             <Button type="button" variant="ghost" size="sm" onClick={onCancel} className="ms-auto">
               {s.t("cancel", "Cancel")}
             </Button>
-            <Button type="button" onClick={save} disabled={saving} className="gap-2">
+            <Button
+              type="button"
+              onClick={save}
+              disabled={saving}
+              className="gap-2 !bg-blue-600 !text-white hover:!bg-blue-700 border border-blue-700 shadow-sm disabled:opacity-60"
+            >
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
               {mode === "ai" ? s.t("confirm_save", "Confirm & Save") : s.t("save", "Save Inquiry")}
             </Button>

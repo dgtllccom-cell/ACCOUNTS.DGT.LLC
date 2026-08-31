@@ -688,9 +688,6 @@ export default function JournalReport({
                     </span>
                   </div>
                 ))}
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-[9px] font-extrabold text-amber-600 dark:text-amber-400">
-                  <span>{showAllCountries ? `${tr("HIDE REPORT DETAILS")} ↑` : `${tr("SHOW REPORT DETAILS")} ↓`}</span>
-                </div>
               </div>
             </div>
           </div>
@@ -937,7 +934,7 @@ export default function JournalReport({
             {/* Pagination / Total count bar */}
             <div className="border-t border-slate-150 dark:border-slate-850 p-4 flex items-center justify-between text-[11px] text-slate-400 font-bold bg-slate-50/20 dark:bg-slate-900/10">
               <span>{tr("Showing")} 1 {tr("to")} {records.length} {tr("of")} {records.length} {tr("entries")}</span>
-              <span className="font-mono text-[10px]">Falcon ERP v5.2</span>
+              <span className="font-mono text-[10px]">Digital Dock ERP</span>
             </div>
           </div>
         </div>
