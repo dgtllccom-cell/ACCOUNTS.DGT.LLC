@@ -34,7 +34,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
 export async function PATCH(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    await requireErpSession().catch(() => null);
+    await requireErpSession();
     const params = await context.params;
     const id = uuidSchema.parse(params.id);
     const body = await request.json();

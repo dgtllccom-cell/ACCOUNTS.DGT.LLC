@@ -6,7 +6,8 @@ export const metadata = { title: "Shipping Line — Bl Entry" };
 
 
 export default async function ShippingBlEntryPage() {
-  const session = await requireErpSession().catch(() => null);
+  // requireErpSession() redirects unauthenticated users to /auth/login — let it.
+  const session = await requireErpSession();
   return (
     <EntryMethodSelector targetModule="shipping_bl_records" domain="shipping" lang={session?.preferredLanguage ?? "en"}>
       <BlEntryView context="shipping" />

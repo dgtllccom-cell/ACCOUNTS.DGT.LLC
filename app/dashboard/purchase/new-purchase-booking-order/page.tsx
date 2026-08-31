@@ -7,11 +7,7 @@ export const metadata = { title: "Purchase — New Purchase Booking Order" };
 export const dynamic = "force-dynamic";
 
 export default async function NewPurchaseBookingOrderPage() {
-  let session = null;
-  try {
-    session = await requireErpSession();
-  } catch {
-    session = null;
-  }
+  // requireErpSession() redirects unauthenticated users to /auth/login — let it.
+  const session = await requireErpSession();
   return <NewPurchaseBookingEntry session={session} lang={session?.preferredLanguage ?? "en"} />;
 }

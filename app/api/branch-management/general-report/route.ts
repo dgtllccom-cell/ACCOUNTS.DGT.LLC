@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireErpSession, type ErpSession } from "@/lib/auth/session";
+import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import postgres from "postgres";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
@@ -214,22 +214,9 @@ async function resolveAccessibleCountryIds(admin: AdminClient, session: Awaited<
 
 export async function GET() {
   try {
-    const session = await requireErpSession().catch(() => ({
-      userId: "super_admin_system",
-      email: "admin@damaan.com",
-      fullName: "Super Admin",
-      preferredLanguage: "en" as const,
-      roles: ["super_admin" as const],
-      permissions: ["*:*"],
-      assignments: [],
-      countryIds: [],
-      countryBranchIds: [],
-      cityBranchIds: [],
-      isSuperAdmin: true,
-      clearingAgentIds: [],
-      ledgerVisibility: "full" as const,
-      isShippingScoped: false
-    } as unknown as ErpSession));
+    // Never fabricate a super-admin identity: requireErpSession() redirects an
+    // unauthenticated caller. Scope is then resolved from the real session below.
+    const session = await requireErpSession();
     const admin = createSupabaseAdminClient();
 
     const accessibleCountryIds = await resolveAccessibleCountryIds(admin, session);

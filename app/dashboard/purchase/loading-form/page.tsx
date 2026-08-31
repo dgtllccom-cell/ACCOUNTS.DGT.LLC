@@ -8,7 +8,8 @@ export const metadata = { title: "Purchase — Loading Form" };
 export const dynamic = "force-dynamic";
 
 export default async function PurchaseLoadingFormPage() {
-  const session = await requireErpSession().catch(() => null);
+  // requireErpSession() redirects unauthenticated users to /auth/login — let it.
+  const session = await requireErpSession();
   return (
     <EntryMethodSelector targetModule="purchase_loading_records" domain="business" lang={session?.preferredLanguage ?? "en"}>
       <PurchaseLoadingFormView />
