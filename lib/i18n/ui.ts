@@ -4797,6 +4797,52 @@ export type UiKey =
   | "cinq.appr_approve"
   | "cinq.appr_decline"
   | "nav.system_report"
+  | "sett.dash_title"
+  | "sett.dash_sub"
+  | "sett.download_pdf"
+  | "sett.sync_erp"
+  | "sett.syncing"
+  | "sett.sync_ok"
+  | "sett.sync_failed"
+  | "sett.sync_error"
+  | "sett.total_cr"
+  | "sett.total_dr"
+  | "sett.remaining"
+  | "sett.settled_pct"
+  | "sett.status_counts"
+  | "sett.settled"
+  | "sett.partial"
+  | "sett.unsettled"
+  | "sett.net_fx"
+  | "sett.gain"
+  | "sett.loss"
+  | "sett.submodules"
+  | "sett.m_daily"
+  | "sett.m_cash"
+  | "sett.m_bank"
+  | "sett.m_party"
+  | "sett.m_purchase"
+  | "sett.m_sales"
+  | "sett.m_payments"
+  | "sett.m_expenses"
+  | "sett.m_fx"
+  | "sett.m_unsettled"
+  | "sett.m_reports"
+  | "sett.m_audit"
+  | "sett.open"
+  | "sett.recent_title"
+  | "sett.recent_sub"
+  | "sett.view_all_open"
+  | "sett.c_date_ref"
+  | "sett.c_module_type"
+  | "sett.c_party"
+  | "sett.c_dir"
+  | "sett.c_local_amount"
+  | "sett.c_usd_amount"
+  | "sett.c_remaining"
+  | "sett.c_status"
+  | "sett.loading"
+  | "sett.empty"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -15653,6 +15699,52 @@ const en: Dict = {
   "cinq.appr_approve": "Approved",
   "cinq.appr_decline": "Declined",
   "nav.system_report": "System Documentation Report",
+  "sett.dash_title": "Settlement & Reconciliation Control Center",
+  "sett.dash_sub": "System-wide multi-currency transaction reconciliation, CR/DR matching, and historical FX audit",
+  "sett.download_pdf": "Download System PDF Report",
+  "sett.sync_erp": "Sync ERP Records",
+  "sett.syncing": "Syncing ERP…",
+  "sett.sync_ok": "Sync completed successfully!",
+  "sett.sync_failed": "Sync failed",
+  "sett.sync_error": "Sync error",
+  "sett.total_cr": "Total Credit (CR)",
+  "sett.total_dr": "Total Debit (DR)",
+  "sett.remaining": "Remaining",
+  "sett.settled_pct": "Settled",
+  "sett.status_counts": "Status Counts",
+  "sett.settled": "Settled",
+  "sett.partial": "Partial",
+  "sett.unsettled": "Unsettled",
+  "sett.net_fx": "Net FX Realized",
+  "sett.gain": "Gain",
+  "sett.loss": "Loss",
+  "sett.submodules": "Settlement Control Center Sub-Modules",
+  "sett.m_daily": "Daily Settlement",
+  "sett.m_cash": "Cash / Roznamcha",
+  "sett.m_bank": "Bank Settlement",
+  "sett.m_party": "Party / Accounts",
+  "sett.m_purchase": "Purchase Settlement",
+  "sett.m_sales": "Sales Settlement",
+  "sett.m_payments": "Payments",
+  "sett.m_expenses": "Expenses",
+  "sett.m_fx": "Multi-Currency / FX",
+  "sett.m_unsettled": "Unsettled List",
+  "sett.m_reports": "Reports Hub",
+  "sett.m_audit": "Audit Trail",
+  "sett.open": "open",
+  "sett.recent_title": "Recent Settlement Registry Records",
+  "sett.recent_sub": "Live transaction feed linked from Roznamcha, Purchase, Sales, and Banks",
+  "sett.view_all_open": "View All Open Entries",
+  "sett.c_date_ref": "Date / Ref",
+  "sett.c_module_type": "Module / Type",
+  "sett.c_party": "Party Name",
+  "sett.c_dir": "Dir",
+  "sett.c_local_amount": "Local Amount",
+  "sett.c_usd_amount": "USD Amount",
+  "sett.c_remaining": "Remaining",
+  "sett.c_status": "Status",
+  "sett.loading": "Loading settlement records…",
+  "sett.empty": "No settlement records found. Click Sync ERP Records above to populate from existing transactions.",
 };
 
 const ur: Dict = {
@@ -26486,6 +26578,52 @@ const ur: Dict = {
   "cinq.appr_approve": "منظور شدہ",
   "cinq.appr_decline": "مسترد",
   "nav.system_report": "سسٹم دستاویزی رپورٹ",
+  "sett.dash_title": "تصفیہ و مطابقت کنٹرول سینٹر",
+  "sett.dash_sub": "نظام بھر میں کثیر کرنسی لین دین کی مطابقت، کریڈٹ/ڈیبٹ ملاپ، اور تاریخی زرمبادلہ آڈٹ",
+  "sett.download_pdf": "سسٹم PDF رپورٹ ڈاؤن لوڈ کریں",
+  "sett.sync_erp": "ERP ریکارڈز ہم آہنگ کریں",
+  "sett.syncing": "ERP ہم آہنگ ہو رہا ہے…",
+  "sett.sync_ok": "ہم آہنگی کامیابی سے مکمل ہوئی!",
+  "sett.sync_failed": "ہم آہنگی ناکام",
+  "sett.sync_error": "ہم آہنگی میں خرابی",
+  "sett.total_cr": "کل کریڈٹ (CR)",
+  "sett.total_dr": "کل ڈیبٹ (DR)",
+  "sett.remaining": "باقی",
+  "sett.settled_pct": "طے شدہ",
+  "sett.status_counts": "اسٹیٹس گنتی",
+  "sett.settled": "طے شدہ",
+  "sett.partial": "جزوی",
+  "sett.unsettled": "غیر طے شدہ",
+  "sett.net_fx": "خالص زرمبادلہ منافع/نقصان",
+  "sett.gain": "منافع",
+  "sett.loss": "نقصان",
+  "sett.submodules": "تصفیہ کنٹرول سینٹر ذیلی ماڈیولز",
+  "sett.m_daily": "روزانہ تصفیہ",
+  "sett.m_cash": "نقد / روزنامچہ",
+  "sett.m_bank": "بینک تصفیہ",
+  "sett.m_party": "فریق / اکاؤنٹس",
+  "sett.m_purchase": "خریداری تصفیہ",
+  "sett.m_sales": "فروخت تصفیہ",
+  "sett.m_payments": "ادائیگیاں",
+  "sett.m_expenses": "اخراجات",
+  "sett.m_fx": "کثیر کرنسی / زرمبادلہ",
+  "sett.m_unsettled": "غیر طے شدہ فہرست",
+  "sett.m_reports": "رپورٹس ہب",
+  "sett.m_audit": "آڈٹ ٹریل",
+  "sett.open": "کھلے",
+  "sett.recent_title": "حالیہ تصفیہ رجسٹری ریکارڈز",
+  "sett.recent_sub": "روزنامچہ، خریداری، فروخت اور بینکوں سے منسلک لائیو لین دین فیڈ",
+  "sett.view_all_open": "تمام کھلی اندراجات دیکھیں",
+  "sett.c_date_ref": "تاریخ / حوالہ",
+  "sett.c_module_type": "ماڈیول / قسم",
+  "sett.c_party": "فریق کا نام",
+  "sett.c_dir": "سمت",
+  "sett.c_local_amount": "مقامی رقم",
+  "sett.c_usd_amount": "ڈالر رقم",
+  "sett.c_remaining": "باقی",
+  "sett.c_status": "اسٹیٹس",
+  "sett.loading": "تصفیہ ریکارڈز لوڈ ہو رہے ہیں…",
+  "sett.empty": "کوئی تصفیہ ریکارڈ نہیں ملا۔ موجودہ لین دین سے بھرنے کے لیے اوپر Sync ERP Records پر کلک کریں۔",
 };
 
 const ar: Dict = {
@@ -37321,6 +37459,52 @@ const ar: Dict = {
   "cinq.appr_approve": "موافق عليه",
   "cinq.appr_decline": "مرفوض",
   "nav.system_report": "تقرير توثيق النظام",
+  "sett.dash_title": "مركز التحكم في التسوية والمطابقة",
+  "sett.dash_sub": "مطابقة معاملات متعددة العملات على مستوى النظام، ومطابقة الدائن/المدين، وتدقيق فروق الصرف التاريخية",
+  "sett.download_pdf": "تنزيل تقرير النظام PDF",
+  "sett.sync_erp": "مزامنة سجلات ERP",
+  "sett.syncing": "جارٍ مزامنة ERP…",
+  "sett.sync_ok": "تمت المزامنة بنجاح!",
+  "sett.sync_failed": "فشلت المزامنة",
+  "sett.sync_error": "خطأ في المزامنة",
+  "sett.total_cr": "إجمالي الدائن (دائن)",
+  "sett.total_dr": "إجمالي المدين (مدين)",
+  "sett.remaining": "المتبقي",
+  "sett.settled_pct": "مُسوّى",
+  "sett.status_counts": "أعداد الحالة",
+  "sett.settled": "مُسوّى",
+  "sett.partial": "جزئي",
+  "sett.unsettled": "غير مُسوّى",
+  "sett.net_fx": "صافي فروق الصرف المحققة",
+  "sett.gain": "ربح",
+  "sett.loss": "خسارة",
+  "sett.submodules": "الوحدات الفرعية لمركز التحكم في التسوية",
+  "sett.m_daily": "التسوية اليومية",
+  "sett.m_cash": "النقد / روزنامچه",
+  "sett.m_bank": "تسوية البنك",
+  "sett.m_party": "الطرف / الحسابات",
+  "sett.m_purchase": "تسوية المشتريات",
+  "sett.m_sales": "تسوية المبيعات",
+  "sett.m_payments": "المدفوعات",
+  "sett.m_expenses": "المصروفات",
+  "sett.m_fx": "متعدد العملات / الصرف",
+  "sett.m_unsettled": "قائمة غير المُسوّاة",
+  "sett.m_reports": "مركز التقارير",
+  "sett.m_audit": "سجل التدقيق",
+  "sett.open": "مفتوح",
+  "sett.recent_title": "سجلات دفتر التسوية الأخيرة",
+  "sett.recent_sub": "تغذية معاملات مباشرة مرتبطة من روزنامچه والمشتريات والمبيعات والبنوك",
+  "sett.view_all_open": "عرض جميع القيود المفتوحة",
+  "sett.c_date_ref": "التاريخ / المرجع",
+  "sett.c_module_type": "الوحدة / النوع",
+  "sett.c_party": "اسم الطرف",
+  "sett.c_dir": "الاتجاه",
+  "sett.c_local_amount": "المبلغ المحلي",
+  "sett.c_usd_amount": "المبلغ بالدولار",
+  "sett.c_remaining": "المتبقي",
+  "sett.c_status": "الحالة",
+  "sett.loading": "جارٍ تحميل سجلات التسوية…",
+  "sett.empty": "لم يتم العثور على سجلات تسوية. انقر على مزامنة سجلات ERP أعلاه للتعبئة من المعاملات الحالية.",
 };
 
 const fa: Dict = {
@@ -48155,6 +48339,52 @@ const fa: Dict = {
   "cinq.appr_approve": "تأیید شده",
   "cinq.appr_decline": "رد شده",
   "nav.system_report": "گزارش مستندسازی سیستم",
+  "sett.dash_title": "مرکز کنترل تسویه و مغایرت‌گیری",
+  "sett.dash_sub": "مغایرت‌گیری تراکنش‌های چند ارزی در کل سیستم، تطبیق بستانکار/بدهکار و حسابرسی تاریخی تسعیر ارز",
+  "sett.download_pdf": "دانلود گزارش PDF سیستم",
+  "sett.sync_erp": "همگام‌سازی سوابق ERP",
+  "sett.syncing": "در حال همگام‌سازی ERP…",
+  "sett.sync_ok": "همگام‌سازی با موفقیت انجام شد!",
+  "sett.sync_failed": "همگام‌سازی ناموفق بود",
+  "sett.sync_error": "خطای همگام‌سازی",
+  "sett.total_cr": "مجموع بستانکار (CR)",
+  "sett.total_dr": "مجموع بدهکار (DR)",
+  "sett.remaining": "باقی‌مانده",
+  "sett.settled_pct": "تسویه‌شده",
+  "sett.status_counts": "شمارش وضعیت",
+  "sett.settled": "تسویه‌شده",
+  "sett.partial": "جزئی",
+  "sett.unsettled": "تسویه‌نشده",
+  "sett.net_fx": "خالص تفاوت ارز محقق‌شده",
+  "sett.gain": "سود",
+  "sett.loss": "زیان",
+  "sett.submodules": "زیرماژول‌های مرکز کنترل تسویه",
+  "sett.m_daily": "تسویه روزانه",
+  "sett.m_cash": "نقد / روزنامچه",
+  "sett.m_bank": "تسویه بانکی",
+  "sett.m_party": "طرف / حساب‌ها",
+  "sett.m_purchase": "تسویه خرید",
+  "sett.m_sales": "تسویه فروش",
+  "sett.m_payments": "پرداخت‌ها",
+  "sett.m_expenses": "هزینه‌ها",
+  "sett.m_fx": "چند ارزی / تسعیر ارز",
+  "sett.m_unsettled": "فهرست تسویه‌نشده‌ها",
+  "sett.m_reports": "مرکز گزارش‌ها",
+  "sett.m_audit": "رد پای حسابرسی",
+  "sett.open": "باز",
+  "sett.recent_title": "رکوردهای اخیر دفتر ثبت تسویه",
+  "sett.recent_sub": "خوراک تراکنش زنده متصل از روزنامچه، خرید، فروش و بانک‌ها",
+  "sett.view_all_open": "مشاهده همه ورودی‌های باز",
+  "sett.c_date_ref": "تاریخ / مرجع",
+  "sett.c_module_type": "ماژول / نوع",
+  "sett.c_party": "نام طرف",
+  "sett.c_dir": "جهت",
+  "sett.c_local_amount": "مبلغ محلی",
+  "sett.c_usd_amount": "مبلغ دلاری",
+  "sett.c_remaining": "باقی‌مانده",
+  "sett.c_status": "وضعیت",
+  "sett.loading": "در حال بارگذاری سوابق تسویه…",
+  "sett.empty": "هیچ سابقه تسویه‌ای یافت نشد. برای پر کردن از تراکنش‌های موجود، روی همگام‌سازی سوابق ERP در بالا کلیک کنید.",
 };
 
 const ps: Dict = {
@@ -58995,6 +59225,52 @@ const ps: Dict = {
   "cinq.appr_approve": "تصویب شوی",
   "cinq.appr_decline": "رد شوی",
   "nav.system_report": "د سیسټم اسنادو راپور",
+  "sett.dash_title": "د تصفیې او سمون د کنټرول مرکز",
+  "sett.dash_sub": "د سیسټم په کچه د څو اسعاره راکړې ورکړې سمون، د کریډیټ/ډیبیټ سمون، او د FX تاریخي پلټنه",
+  "sett.download_pdf": "د سیسټم PDF راپور ښکته کړئ",
+  "sett.sync_erp": "د ERP ریکارډونه همغږي کړئ",
+  "sett.syncing": "د ERP همغږي کول…",
+  "sett.sync_ok": "همغږي کول په بریالیتوب سره بشپړ شو!",
+  "sett.sync_failed": "همغږي کول ناکام شو",
+  "sett.sync_error": "د همغږۍ تېروتنه",
+  "sett.total_cr": "ټول کریډیټ (CR)",
+  "sett.total_dr": "ټول ډیبیټ (DR)",
+  "sett.remaining": "پاتې",
+  "sett.settled_pct": "تصفیه‌شوی",
+  "sett.status_counts": "د حالت شمېر",
+  "sett.settled": "تصفیه‌شوی",
+  "sett.partial": "جزوي",
+  "sett.unsettled": "ناتصفیه‌شوی",
+  "sett.net_fx": "خالص تحقق‌شوی FX",
+  "sett.gain": "ګټه",
+  "sett.loss": "زیان",
+  "sett.submodules": "د تصفیې د کنټرول مرکز فرعي ماډلونه",
+  "sett.m_daily": "ورځنۍ تصفیه",
+  "sett.m_cash": "نغدي / روزنامچه",
+  "sett.m_bank": "بانکي تصفیه",
+  "sett.m_party": "اړخ / حسابونه",
+  "sett.m_purchase": "د پیرودنې تصفیه",
+  "sett.m_sales": "د پلور تصفیه",
+  "sett.m_payments": "تادیات",
+  "sett.m_expenses": "لګښتونه",
+  "sett.m_fx": "څو اسعاره / FX",
+  "sett.m_unsettled": "د ناتصفیه‌شوو لیست",
+  "sett.m_reports": "د راپورونو مرکز",
+  "sett.m_audit": "د پلټنې لړۍ",
+  "sett.open": "خلاص",
+  "sett.recent_title": "د تصفیې د راجستر وروستي ریکارډونه",
+  "sett.recent_sub": "د روزنامچې، پیرودنې، پلور او بانکونو څخه تړل شوی ژوندی د راکړې ورکړې فید",
+  "sett.view_all_open": "ټول خلاص ننوتنې وګورئ",
+  "sett.c_date_ref": "نېټه / حواله",
+  "sett.c_module_type": "ماډل / ډول",
+  "sett.c_party": "د اړخ نوم",
+  "sett.c_dir": "لوري",
+  "sett.c_local_amount": "محلي مقدار",
+  "sett.c_usd_amount": "د ډالرو مقدار",
+  "sett.c_remaining": "پاتې",
+  "sett.c_status": "حالت",
+  "sett.loading": "د تصفیې ریکارډونه بارول کیږي…",
+  "sett.empty": "د تصفیې هیڅ ریکارډ ونه موندل شو. د موجوده راکړو ورکړو څخه د ډکولو لپاره پورته Sync ERP Records کلیک کړئ.",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

@@ -2,15 +2,17 @@
 
 import React, { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { 
-  TrendingUp, TrendingDown, CheckCircle2, Clock, 
-  AlertTriangle, RefreshCw, Layers, DollarSign, 
+import {
+  TrendingUp, TrendingDown, CheckCircle2, Clock,
+  AlertTriangle, RefreshCw, Layers, DollarSign,
   ArrowRight, ShieldCheck, Scale, ArrowUpRight,
   Filter, Search, ExternalLink, Link2, Unlink
 } from "lucide-react";
 import type { SettlementKPIs, SettlementTransaction } from "../types/settlement";
+import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 
 export function SettlementDashboardView() {
+  const s = useErpScreen("sett");
   const [kpis, setKpis] = useState<SettlementKPIs | null>(null);
   const [recentTransactions, setRecentTransactions] = useState<SettlementTransaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,13 +58,13 @@ export function SettlementDashboardView() {
       });
       const data = await res.json();
       if (res.ok) {
-        setSyncMsg(data.message || "Sync completed successfully!");
+        setSyncMsg(data.message || s.t("sync_ok","Sync completed successfully!"));
         loadData();
       } else {
-        setSyncMsg("Sync failed: " + (data.error || "Unknown error"));
+        setSyncMsg(s.t("sync_failed","Sync failed") + ": " + (data.error || s.t("sync_error","Unknown error")));
       }
     } catch (e) {
-      setSyncMsg("Sync error");
+      setSyncMsg(s.t("sync_error","Sync error"));
     } finally {
       setSyncing(false);
     }
@@ -72,7 +74,7 @@ export function SettlementDashboardView() {
   const isFxGain = netFx >= 0;
 
   return (
-    <div className="space-y-6">
+    <div dir={s.dir} className="space-y-6">
       {/* Top Header Card */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 p-6 text-white shadow-xl border border-slate-700/60">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -83,10 +85,10 @@ export function SettlementDashboardView() {
               </span>
               <div>
                 <h1 className="text-2xl font-bold tracking-tight text-white">
-                  Settlement & Reconciliation Control Center
+                  {s.t("dash_title","Settlement & Reconciliation Control Center")}
                 </h1>
                 <p className="text-sm text-slate-300">
-                  System-wide multi-currency transaction reconciliation, CR/DR matching, and historical FX audit
+                  {s.t("dash_sub","System-wide multi-currency transaction reconciliation, CR/DR matching, and historical FX audit")}
                 </p>
               </div>
             </div>
@@ -100,7 +102,7 @@ export function SettlementDashboardView() {
               className="inline-flex items-center gap-2 rounded-xl bg-emerald-600/90 hover:bg-emerald-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-md transition-all"
             >
               <ExternalLink className="h-4 w-4" />
-              Download System PDF Report
+              {s.t("download_pdf","Download System PDF Report")}
             </a>
             <button
               onClick={handleSync}
@@ -108,7 +110,7 @@ export function SettlementDashboardView() {
               className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:from-blue-500 hover:to-indigo-500 transition-all disabled:opacity-50"
             >
               <RefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
-              {syncing ? "Syncing ERP..." : "Sync ERP Records"}
+              {syncing ? s.t("syncing","Syncing ERP…") : s.t("sync_erp","Sync ERP Records")}
             </button>
             <button
               onClick={loadData}
@@ -131,7 +133,7 @@ export function SettlementDashboardView() {
         {/* Card 1: Total CR vs Settled */}
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Credit (CR)</span>
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{s.t("total_cr","Total Credit (CR)")}</span>
             <span className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
               <TrendingUp className="h-4 w-4" />
             </span>
@@ -141,9 +143,9 @@ export function SettlementDashboardView() {
               ${kpis?.totalCrUsd ? kpis.totalCrUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
             </div>
             <div className="mt-1 flex items-center justify-between text-xs text-slate-500">
-              <span>Remaining: ${kpis?.remainingCrUsd?.toLocaleString() ?? "0.00"}</span>
+              <span>{s.t("remaining","Remaining")}: ${kpis?.remainingCrUsd?.toLocaleString() ?? "0.00"}</span>
               <span className="font-medium text-emerald-600">
-                {kpis?.totalCrUsd ? Math.round(((kpis.totalCrUsd - (kpis.remainingCrUsd || 0)) / kpis.totalCrUsd) * 100) : 0}% Settled
+                {kpis?.totalCrUsd ? Math.round(((kpis.totalCrUsd - (kpis.remainingCrUsd || 0)) / kpis.totalCrUsd) * 100) : 0}% {s.t("settled_pct","Settled")}
               </span>
             </div>
           </div>
@@ -152,7 +154,7 @@ export function SettlementDashboardView() {
         {/* Card 2: Total DR vs Settled */}
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Debit (DR)</span>
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{s.t("total_dr","Total Debit (DR)")}</span>
             <span className="p-2 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400">
               <TrendingDown className="h-4 w-4" />
             </span>
@@ -162,9 +164,9 @@ export function SettlementDashboardView() {
               ${kpis?.totalDrUsd ? kpis.totalDrUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
             </div>
             <div className="mt-1 flex items-center justify-between text-xs text-slate-500">
-              <span>Remaining: ${kpis?.remainingDrUsd?.toLocaleString() ?? "0.00"}</span>
+              <span>{s.t("remaining","Remaining")}: ${kpis?.remainingDrUsd?.toLocaleString() ?? "0.00"}</span>
               <span className="font-medium text-rose-600">
-                {kpis?.totalDrUsd ? Math.round(((kpis.totalDrUsd - (kpis.remainingDrUsd || 0)) / kpis.totalDrUsd) * 100) : 0}% Settled
+                {kpis?.totalDrUsd ? Math.round(((kpis.totalDrUsd - (kpis.remainingDrUsd || 0)) / kpis.totalDrUsd) * 100) : 0}% {s.t("settled_pct","Settled")}
               </span>
             </div>
           </div>
@@ -173,7 +175,7 @@ export function SettlementDashboardView() {
         {/* Card 3: Status Summary */}
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Status Counts</span>
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{s.t("status_counts","Status Counts")}</span>
             <span className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
               <Layers className="h-4 w-4" />
             </span>
@@ -181,15 +183,15 @@ export function SettlementDashboardView() {
           <div className="mt-3 flex items-center justify-between gap-2">
             <div className="text-center flex-1">
               <div className="text-lg font-bold text-emerald-600">{kpis?.countSettled ?? 0}</div>
-              <div className="text-[10px] text-slate-400 uppercase">Settled</div>
+              <div className="text-[10px] text-slate-400 uppercase">{s.t("settled","Settled")}</div>
             </div>
             <div className="text-center flex-1 border-x border-slate-100 dark:border-slate-800">
               <div className="text-lg font-bold text-amber-600">{kpis?.countPartial ?? 0}</div>
-              <div className="text-[10px] text-slate-400 uppercase">Partial</div>
+              <div className="text-[10px] text-slate-400 uppercase">{s.t("partial","Partial")}</div>
             </div>
             <div className="text-center flex-1">
               <div className="text-lg font-bold text-rose-600">{kpis?.countUnsettled ?? 0}</div>
-              <div className="text-[10px] text-slate-400 uppercase">Unsettled</div>
+              <div className="text-[10px] text-slate-400 uppercase">{s.t("unsettled","Unsettled")}</div>
             </div>
           </div>
         </div>
@@ -201,7 +203,7 @@ export function SettlementDashboardView() {
             : "border-rose-200 dark:border-rose-800/50 bg-rose-50/40 dark:bg-rose-950/20"
         }`}>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Net FX Realized</span>
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">{s.t("net_fx","Net FX Realized")}</span>
             <span className={`p-2 rounded-lg ${isFxGain ? "bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300" : "bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300"}`}>
               <DollarSign className="h-4 w-4" />
             </span>
@@ -211,8 +213,8 @@ export function SettlementDashboardView() {
               {isFxGain ? "+" : ""}${Math.abs(netFx).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
             <div className="mt-1 flex items-center justify-between text-xs text-slate-500">
-              <span>Gain: +${kpis?.totalFxGainUsd?.toLocaleString() ?? "0.00"}</span>
-              <span>Loss: -${kpis?.totalFxLossUsd?.toLocaleString() ?? "0.00"}</span>
+              <span>{s.t("gain","Gain")}: +${kpis?.totalFxGainUsd?.toLocaleString() ?? "0.00"}</span>
+              <span>{s.t("loss","Loss")}: -${kpis?.totalFxLossUsd?.toLocaleString() ?? "0.00"}</span>
             </div>
           </div>
         </div>
@@ -221,22 +223,22 @@ export function SettlementDashboardView() {
       {/* Module Navigation Grid */}
       <div>
         <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-3">
-          Settlement Control Center Sub-Modules
+          {s.t("submodules","Settlement Control Center Sub-Modules")}
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
           {[
-            { label: "Daily Settlement", href: "/dashboard/settlement/daily", icon: Clock, count: null, color: "text-blue-500" },
-            { label: "Cash / Roznamcha", href: "/dashboard/settlement/cash", icon: Layers, count: null, color: "text-emerald-500" },
-            { label: "Bank Settlement", href: "/dashboard/settlement/bank", icon: Scale, count: null, color: "text-cyan-500" },
-            { label: "Party / Accounts", href: "/dashboard/settlement/party", icon: DollarSign, count: null, color: "text-indigo-500" },
-            { label: "Purchase Settle", href: "/dashboard/settlement/purchase", icon: TrendingDown, count: null, color: "text-rose-500" },
-            { label: "Sales Settle", href: "/dashboard/settlement/sales", icon: TrendingUp, count: null, color: "text-amber-500" },
-            { label: "Payments", href: "/dashboard/settlement/payment", icon: CheckCircle2, count: null, color: "text-purple-500" },
-            { label: "Expenses", href: "/dashboard/settlement/expense", icon: AlertTriangle, count: null, color: "text-orange-500" },
-            { label: "Multi-Currency / FX", href: "/dashboard/settlement/fx", icon: DollarSign, count: null, color: "text-teal-500" },
-            { label: "Unsettled List", href: "/dashboard/settlement/unsettled", icon: AlertTriangle, count: kpis?.countUnsettled, color: "text-red-500" },
-            { label: "Reports Hub", href: "/dashboard/settlement/reports", icon: ArrowRight, count: null, color: "text-slate-500" },
-            { label: "Audit Trail", href: "/dashboard/settlement/audit", icon: ShieldCheck, count: null, color: "text-blue-600" }
+            { label: s.t("m_daily","Daily Settlement"), href: "/dashboard/settlement/daily", icon: Clock, count: null, color: "text-blue-500" },
+            { label: s.t("m_cash","Cash / Roznamcha"), href: "/dashboard/settlement/cash", icon: Layers, count: null, color: "text-emerald-500" },
+            { label: s.t("m_bank","Bank Settlement"), href: "/dashboard/settlement/bank", icon: Scale, count: null, color: "text-cyan-500" },
+            { label: s.t("m_party","Party / Accounts"), href: "/dashboard/settlement/party", icon: DollarSign, count: null, color: "text-indigo-500" },
+            { label: s.t("m_purchase","Purchase Settlement"), href: "/dashboard/settlement/purchase", icon: TrendingDown, count: null, color: "text-rose-500" },
+            { label: s.t("m_sales","Sales Settlement"), href: "/dashboard/settlement/sales", icon: TrendingUp, count: null, color: "text-amber-500" },
+            { label: s.t("m_payments","Payments"), href: "/dashboard/settlement/payment", icon: CheckCircle2, count: null, color: "text-purple-500" },
+            { label: s.t("m_expenses","Expenses"), href: "/dashboard/settlement/expense", icon: AlertTriangle, count: null, color: "text-orange-500" },
+            { label: s.t("m_fx","Multi-Currency / FX"), href: "/dashboard/settlement/fx", icon: DollarSign, count: null, color: "text-teal-500" },
+            { label: s.t("m_unsettled","Unsettled List"), href: "/dashboard/settlement/unsettled", icon: AlertTriangle, count: kpis?.countUnsettled, color: "text-red-500" },
+            { label: s.t("m_reports","Reports Hub"), href: "/dashboard/settlement/reports", icon: ArrowRight, count: null, color: "text-slate-500" },
+            { label: s.t("m_audit","Audit Trail"), href: "/dashboard/settlement/audit", icon: ShieldCheck, count: null, color: "text-blue-600" }
           ].map((item, idx) => {
             const Icon = item.icon;
             return (
@@ -253,7 +255,7 @@ export function SettlementDashboardView() {
                 </span>
                 {item.count !== null && item.count !== undefined && item.count > 0 && (
                   <span className="mt-1 rounded-full bg-rose-500/10 text-rose-600 px-2 py-0.5 text-[10px] font-bold">
-                    {item.count} open
+                    {item.count} {s.t("open","open")}
                   </span>
                 )}
               </Link>
@@ -267,17 +269,17 @@ export function SettlementDashboardView() {
         <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800">
           <div>
             <h2 className="text-base font-bold text-slate-900 dark:text-white">
-              Recent Settlement Registry Records
+              {s.t("recent_title","Recent Settlement Registry Records")}
             </h2>
             <p className="text-xs text-slate-500">
-              Live transaction feed linked from Roznamcha, Purchase, Sales, and Banks
+              {s.t("recent_sub","Live transaction feed linked from Roznamcha, Purchase, Sales, and Banks")}
             </p>
           </div>
           <Link
             href="/dashboard/settlement/unsettled"
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400"
           >
-            View All Open Entries <ArrowRight className="h-3.5 w-3.5" />
+            {s.t("view_all_open","View All Open Entries")} <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
 
@@ -285,14 +287,14 @@ export function SettlementDashboardView() {
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800 uppercase tracking-wider text-[10px]">
               <tr>
-                <th className="py-3 px-4">Date / Ref</th>
-                <th className="py-3 px-4">Module / Type</th>
-                <th className="py-3 px-4">Party Name</th>
-                <th className="py-3 px-4">Dir</th>
-                <th className="py-3 px-4 text-right">Local Amount</th>
-                <th className="py-3 px-4 text-right">USD Amount</th>
-                <th className="py-3 px-4 text-right">Remaining</th>
-                <th className="py-3 px-4 text-center">Status</th>
+                <th className="py-3 px-4">{s.t("c_date_ref","Date / Ref")}</th>
+                <th className="py-3 px-4">{s.t("c_module_type","Module / Type")}</th>
+                <th className="py-3 px-4">{s.t("c_party","Party Name")}</th>
+                <th className="py-3 px-4">{s.t("c_dir","Dir")}</th>
+                <th className="py-3 px-4 text-right">{s.t("c_local_amount","Local Amount")}</th>
+                <th className="py-3 px-4 text-right">{s.t("c_usd_amount","USD Amount")}</th>
+                <th className="py-3 px-4 text-right">{s.t("c_remaining","Remaining")}</th>
+                <th className="py-3 px-4 text-center">{s.t("c_status","Status")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -300,13 +302,13 @@ export function SettlementDashboardView() {
                 <tr>
                   <td colSpan={8} className="py-8 text-center text-slate-400">
                     <RefreshCw className="h-5 w-5 animate-spin mx-auto mb-2 text-slate-300" />
-                    Loading settlement records...
+                    {s.t("loading","Loading settlement records…")}
                   </td>
                 </tr>
               ) : recentTransactions.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="py-8 text-center text-slate-400">
-                    No settlement records found. Click <strong>"Sync ERP Records"</strong> above to populate from existing transactions.
+                    {s.t("empty", "No settlement records found. Click Sync ERP Records above to populate from existing transactions.")}
                   </td>
                 </tr>
               ) : (
