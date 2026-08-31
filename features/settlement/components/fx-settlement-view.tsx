@@ -2,8 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import { DollarSign, TrendingUp, TrendingDown, RefreshCw, Calendar, Globe } from "lucide-react";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader as th } from "@/lib/i18n/table-headers";
+import { getLanguageDirection } from "@/lib/i18n/languages";
 
 export function FxSettlementView() {
+  const lang = useActiveLanguage();
+  const T = (s: string) => th(lang, s);
   const [fxList, setFxList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,35 +42,35 @@ export function FxSettlementView() {
   const netFx = totalGain - totalLoss;
 
   return (
-    <div className="space-y-6">
+    <div dir={getLanguageDirection(lang)} className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-white">Multi-Currency & FX Gain/Loss Center</h1>
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white">{T("Multi-Currency & FX Gain/Loss Center")}</h1>
           <p className="text-xs text-slate-500">
-            Historical exchange rate preservation and directional currency profit/loss audit
+            {T("Historical exchange rate preservation and directional currency profit/loss audit")}
           </p>
         </div>
         <button
           onClick={loadData}
           className="inline-flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold"
         >
-          <RefreshCw className="h-4 w-4" /> Refresh FX Data
+          <RefreshCw className="h-4 w-4" /> {T("Refresh")}
         </button>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-5">
-          <div className="text-xs font-semibold text-emerald-800 uppercase">Realized FX Gains</div>
+          <div className="text-xs font-semibold text-emerald-800 uppercase">{T("FX Gain")}</div>
           <div className="text-2xl font-bold text-emerald-700 mt-2">+${totalGain.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
         </div>
         <div className="rounded-xl border border-rose-200 bg-rose-50/50 p-5">
-          <div className="text-xs font-semibold text-rose-800 uppercase">Realized FX Losses</div>
+          <div className="text-xs font-semibold text-rose-800 uppercase">{T("FX Loss")}</div>
           <div className="text-2xl font-bold text-rose-700 mt-2">-${totalLoss.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
         </div>
         <div className={`rounded-xl border p-5 ${netFx >= 0 ? "border-emerald-300 bg-emerald-100/40" : "border-rose-300 bg-rose-100/40"}`}>
-          <div className="text-xs font-semibold text-slate-700 uppercase">Net Realized FX Impact</div>
+          <div className="text-xs font-semibold text-slate-700 uppercase">{T("Net FX Realized")}</div>
           <div className={`text-2xl font-bold mt-2 ${netFx >= 0 ? "text-emerald-800" : "text-rose-800"}`}>
             {netFx >= 0 ? "+" : ""}${netFx.toLocaleString(undefined, { minimumFractionDigits: 2 })}
           </div>
@@ -75,30 +80,30 @@ export function FxSettlementView() {
       {/* Table */}
       <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 font-bold text-sm">
-          Settled Transaction FX Difference Log
+          {T("FX Realization Breakdown")}
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-semibold uppercase text-[10px]">
               <tr>
-                <th className="py-3 px-4">Date</th>
-                <th className="py-3 px-4">CR Side (Source)</th>
-                <th className="py-3 px-4">DR Side (Target)</th>
-                <th className="py-3 px-4 text-right">Linked Local</th>
-                <th className="py-3 px-4 text-right">CR Rate</th>
-                <th className="py-3 px-4 text-right">DR Rate</th>
-                <th className="py-3 px-4 text-right">FX Diff (USD)</th>
-                <th className="py-3 px-4 text-center">Direction</th>
+                <th className="py-3 px-4">{T("Date")}</th>
+                <th className="py-3 px-4">{T("CR Side (Source)")}</th>
+                <th className="py-3 px-4">{T("DR Side (Target)")}</th>
+                <th className="py-3 px-4 text-right">{T("Linked Local")}</th>
+                <th className="py-3 px-4 text-right">{T("CR Rate")}</th>
+                <th className="py-3 px-4 text-right">{T("DR Rate")}</th>
+                <th className="py-3 px-4 text-right">{T("FX Diff (USD)")}</th>
+                <th className="py-3 px-4 text-center">{T("Direction")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-slate-400">Loading FX data...</td>
+                  <td colSpan={8} className="py-8 text-center text-slate-400">{T("Loading settlement records…")}</td>
                 </tr>
               ) : fxList.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-slate-400">No settlement links with FX rates recorded yet.</td>
+                  <td colSpan={8} className="py-8 text-center text-slate-400">{T("No settlement records found. Click Sync ERP Records above to populate from existing transactions.")}</td>
                 </tr>
               ) : (
                 fxList.map((r) => (
