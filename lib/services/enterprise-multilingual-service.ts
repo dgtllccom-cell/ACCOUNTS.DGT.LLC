@@ -261,15 +261,18 @@ export async function saveVerifiedEnterpriseRecordTranslations(
     }
 
     // ── PRIMARY machine tier: OUR OWN Local Translator + central 5-language ERP
-    //    business dictionary (lib/i18n/erp-translator.ts). Pipeline, in order:
+    //    business dictionary + AI tier (lib/i18n/erp-translator.ts). Pipeline:
     //      approved translation memory  →  curated ERP glossary (whole phrase)
-    //      →  contextual glossary phrase substitution  →  local phrase engine.
+    //      →  contextual glossary phrase substitution  →  AI translator (only if
+    //      AI_TRANSLATE_PROVIDER + key configured; never overrides approved/glossary)
+    //      →  local phrase engine.
     //    Every clean rendering it produces is written back to erp_translation_memory
-    //    so the term is served locally, consistently, everywhere from then on.
+    //    so the term is served consistently everywhere from then on.
     //    NEVER Google / browser MT (allowExternal:false). Only for mode "translate"
     //    (free text — narration/remarks/description/notes); proper nouns keep the
     //    no-guess transliteration policy.
     let usedLocalTranslator = false;
+    let usedAiTranslator = false;
     if (field.mode === "translate") {
       const stillMissing = LANG_KEYS.some((lng) => !verified.translations[lng]?.trim());
       if (stillMissing) {
@@ -281,6 +284,7 @@ export async function saveVerifiedEnterpriseRecordTranslations(
             const r = await translateErp(originalText, originalLanguage, {
               targetLang: lng,
               allowExternal: false,
+              allowAI: true, // AI tier is self-gated on AI_TRANSLATE_PROVIDER + key
               learn: true,
               domain,
             });
@@ -290,7 +294,8 @@ export async function saveVerifiedEnterpriseRecordTranslations(
             const clean = r.engine !== "identity" && !leftoverEnglish;
             if (clean && r.text.trim()) {
               verified.translations[lng] = r.text.trim();
-              usedLocalTranslator = true;
+              if (r.engine === "ai") usedAiTranslator = true;
+              else usedLocalTranslator = true;
             }
           }
         } catch {
@@ -343,9 +348,11 @@ export async function saveVerifiedEnterpriseRecordTranslations(
         ? "auto_unverified"
         : usedMachineTranslation
           ? "machine_translation"
-          : usedLocalTranslator
-            ? "local_translator"
-            : "local_dictionary";
+          : usedAiTranslator
+            ? "ai_translator"
+            : usedLocalTranslator
+              ? "local_translator"
+              : "local_dictionary";
 
     await upsertRecordTranslationRpc({
       recordTable: input.recordTable,

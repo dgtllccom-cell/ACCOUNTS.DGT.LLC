@@ -4,6 +4,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { TRANSLATABLE_FIELDS } from "@/lib/i18n/translatable-fields";
 import { sidebarTree } from "@/lib/navigation/sidebar";
+import { aiTranslatorConfigured } from "@/lib/i18n/ai-translation-client";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -106,6 +107,9 @@ export async function GET(_request: NextRequest) {
           translation_memory_by_status: tmByStatus,
           registered_translatable_tables: Object.keys(TRANSLATABLE_FIELDS).length,
           recursive_or_per_module_junk_tables: recursiveJunk[0]?.n ?? 0,
+          external_mt_enabled: process.env.ERP_ALLOW_EXTERNAL_MT === "1" && Boolean(process.env.GOOGLE_TRANSLATE_API_KEY),
+          ai_translator_provider: (process.env.AI_TRANSLATE_PROVIDER || "disabled"),
+          ai_translator_configured: aiTranslatorConfigured(),
         },
         org: { countries, country_branches, city_branches, roles, permissions, profiles },
       };

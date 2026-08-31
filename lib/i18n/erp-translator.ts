@@ -3,6 +3,7 @@ import { withLocalPg } from "@/lib/db/local-postgres";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
 import { translateViaMachineTranslation } from "@/lib/i18n/machine-translation-client";
+import { aiTranslate, aiTranslatorConfigured } from "@/lib/i18n/ai-translation-client";
 import { ERP_GLOSSARY, buildGlossaryIndex, glossaryValue, type GlossaryDomain } from "@/lib/i18n/erp-glossary";
 
 /**
@@ -24,7 +25,7 @@ import { ERP_GLOSSARY, buildGlossaryIndex, glossaryValue, type GlossaryDomain } 
 export const ERP_LANGS: SupportedLanguage[] = ["en", "ur", "ar", "fa", "ps"];
 
 export type TranslationEngine =
-  | "approved" | "glossary" | "memory" | "local-phrase" | "machine" | "identity";
+  | "approved" | "glossary" | "memory" | "local-phrase" | "machine" | "ai" | "identity";
 
 export type ErpTranslation = {
   text: string;
@@ -169,6 +170,10 @@ export type TranslateOpts = {
   domain?: GlossaryDomain;
   /** allow the external MT tier (Google). Default true. */
   allowExternal?: boolean;
+  /** allow the AI translation tier (Anthropic / OpenAI / Gemini) when configured.
+   *  Default: follows allowExternal. The AI tier NEVER overrides an approved or
+   *  glossary result — it only fills free-text gaps the deterministic tiers miss. */
+  allowAI?: boolean;
   /** persist an external/local machine result back to the TM. Default true. */
   learn?: boolean;
 };
@@ -210,6 +215,23 @@ export async function translateErp(
   const subRaw = glossaryPhraseSubstitute(trimmed, targetLang);
   if (subRaw.coverage >= 0.85 && residualLatin(subRaw.result) === 0) {
     return { text: subRaw.result, lang: targetLang, engine: "local-phrase", confidence: 0.8 };
+  }
+
+  // 3.7) AI translation tier — only when configured (AI_TRANSLATE_PROVIDER + key)
+  //      and only for genuine free text the deterministic tiers above did not
+  //      already resolve. Approved / glossary results (tiers 1–2) have already
+  //      returned, so the AI can never overwrite approved terminology; its own
+  //      output is stored as engine:'ai' / status:'machine' (a human can still
+  //      promote it to 'approved').
+  const allowAI = opts.allowAI ?? opts.allowExternal ?? true;
+  if (allowAI && aiTranslatorConfigured()) {
+    const ai = await aiTranslate(trimmed, sourceLang, targetLang, { domain: opts.domain });
+    if (ai && ai.trim() && normalizeForMatch(ai) !== norm && residualLatin(ai) === 0) {
+      if (opts.learn ?? true) {
+        void tmUpsertMachine(sourceLang, trimmed, { [sourceLang]: trimmed, [targetLang]: ai.trim() } as any, "ai", opts.domain ?? "general");
+      }
+      return { text: ai.trim(), lang: targetLang, engine: "ai", confidence: 0.88 };
+    }
   }
 
   // 4) local phrase engine (dictionary substitution + transliteration), then a
