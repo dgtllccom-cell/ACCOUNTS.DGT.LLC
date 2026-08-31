@@ -81,7 +81,16 @@ export function printDomFragmentViaModal(
 
   const lang = opts.lang || (typeof document !== "undefined" ? document.documentElement.lang : "en") || "en";
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
-  const orientation = opts.orientation || "portrait";
+  // A wide data table (7+ columns) does not fit A4 portrait — default to landscape
+  // so columns are not clipped (the modal still lets the user flip it back).
+  const widestTableCols = Math.max(
+    0,
+    ...Array.from(clone.querySelectorAll("table")).map((t) => {
+      const hr = (t as HTMLTableElement).tHead?.rows?.[0] || (t as HTMLTableElement).rows?.[0];
+      return hr ? hr.cells.length : 0;
+    }),
+  );
+  const orientation = opts.orientation || (widestTableCols >= 7 ? "landscape" : "portrait");
 
   // Pull the page's stylesheets so Tailwind utility classes still resolve, but
   // override them below to guarantee a light, ink-friendly document.
@@ -112,9 +121,10 @@ ${styleLinks}
   #__frag [class*="bg-slate-9"], #__frag [class*="bg-gray-9"], #__frag [class*="bg-neutral-9"],
   #__frag [class*="bg-zinc-9"], #__frag [class*="bg-black"], #__frag [class*="from-slate"],
   #__frag [class*="to-indigo"], #__frag [class*="via-slate"] { background: #f8fafc !important; }
-  #__frag table { width: 100%; border-collapse: collapse; }
-  #__frag th, #__frag td { border: 1px solid #d1d5db !important; padding: 4px 6px !important; text-align: ${isRtl ? "right" : "left"}; }
+  #__frag table { width: 100%; border-collapse: collapse; table-layout: auto; }
+  #__frag th, #__frag td { border: 1px solid #d1d5db !important; padding: 3px 5px !important; text-align: ${isRtl ? "right" : "left"}; font-size: ${widestTableCols >= 9 ? "9px" : "10px"}; word-break: break-word; overflow-wrap: anywhere; }
   #__frag thead th { background: #f1f5f9 !important; font-weight: 700; }
+  #__frag .overflow-x-auto, #__frag [class*="overflow-x"] { overflow: visible !important; }
   #__frag img, #__frag svg { max-width: 100%; }
   #__frag button, #__frag input, #__frag select, #__frag textarea { display: none !important; }
   .no-print, .no-print-toolbar { display: none !important; }
