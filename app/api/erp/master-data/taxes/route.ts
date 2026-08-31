@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 export async function GET() {
   try {
@@ -29,6 +30,7 @@ export async function GET() {
 
     return NextResponse.json(formatted);
   } catch (err: any) {
+    rethrowIfNextControlFlow(err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
@@ -66,6 +68,7 @@ export async function POST(req: Request) {
       countryName: data.country_name,
     });
   } catch (err: any) {
+    rethrowIfNextControlFlow(err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

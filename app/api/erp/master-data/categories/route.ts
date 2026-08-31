@@ -3,6 +3,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 /**
  * Product Categories master — list + create (secure-by-default).
@@ -37,6 +38,7 @@ export async function GET() {
     }));
     return NextResponse.json({ categories: formatted });
   } catch (err: any) {
+    rethrowIfNextControlFlow(err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
@@ -80,6 +82,7 @@ export async function POST(req: Request) {
       isActive: data.is_active,
     });
   } catch (err: any) {
+    rethrowIfNextControlFlow(err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

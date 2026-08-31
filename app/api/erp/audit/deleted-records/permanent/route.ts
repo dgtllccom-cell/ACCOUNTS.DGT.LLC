@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { recordAuditEvent } from "@/lib/audit/enterprise-audit-service";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 // In-memory rate limiting for brute-force protection
 const failedAttempts = new Map<string, { count: number; lockedUntil: number }>();
@@ -107,6 +108,7 @@ export async function POST(request: NextRequest) {
           WHERE id::text = ${entityId} OR code = ${entityId};
         `);
       } catch (e: any) {
+        rethrowIfNextControlFlow(e);
         console.warn(`[permanentDelete] Warning during hard delete on ${entityType}:`, e.message);
       }
     });
@@ -117,6 +119,7 @@ export async function POST(request: NextRequest) {
       auditEventId: event?.id ?? null
     });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ error: error.message || "Failed to execute permanent deletion." }, { status: 500 });
   }
 }

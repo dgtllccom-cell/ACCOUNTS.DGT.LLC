@@ -3,6 +3,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 /**
  * Product Units master — list + create.
@@ -34,6 +35,7 @@ export async function GET() {
     }));
     return NextResponse.json({ units: formatted });
   } catch (err: any) {
+    rethrowIfNextControlFlow(err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
@@ -82,6 +84,7 @@ export async function POST(req: Request) {
       isActive: data.is_active,
     });
   } catch (err: any) {
+    rethrowIfNextControlFlow(err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

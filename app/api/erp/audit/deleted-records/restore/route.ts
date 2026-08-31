@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { restoreDeletedRecord } from "@/lib/audit/enterprise-audit-service";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,6 +31,7 @@ export async function POST(request: NextRequest) {
       ...result
     });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ error: error.message || "Failed to restore record." }, { status: 500 });
   }
 }

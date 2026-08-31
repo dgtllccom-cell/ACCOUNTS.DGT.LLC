@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,6 +35,7 @@ export async function POST(request: NextRequest) {
       message: "Action item successfully marked as completed."
     });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ error: error.message || "Failed to complete item." }, { status: 500 });
   }
 }

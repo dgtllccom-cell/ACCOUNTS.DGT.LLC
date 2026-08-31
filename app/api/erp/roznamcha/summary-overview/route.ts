@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -230,6 +231,7 @@ export async function GET(request: NextRequest) {
       countries: filteredResult
     });
   } catch (err: any) {
+    rethrowIfNextControlFlow(err);
     console.error("Error in country-cash-summary GET:", err);
     return NextResponse.json({ error: err.message || "Failed to fetch summary overview" }, { status: 500 });
   }

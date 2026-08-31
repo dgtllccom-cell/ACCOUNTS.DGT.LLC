@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireErpSession, type ErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import postgres from "postgres";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 type CountryRow = {
   id: string;
@@ -286,6 +287,7 @@ export async function GET() {
         cityBranches = citRows as any;
         assignments = assignRows as any;
       } catch (e: any) {
+        rethrowIfNextControlFlow(e);
         console.error("Postgres fallback error:", e);
       }
     } else if (countryBranches.length) {
@@ -533,6 +535,7 @@ export async function GET() {
       { status: 200 }
     );
   } catch (error) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ error: error instanceof Error ? error.message : "Server error" }, { status: 500 });
   }
 }

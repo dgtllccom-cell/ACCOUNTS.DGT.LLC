@@ -4,6 +4,7 @@ import { db } from "@/lib/db/client";
 import { savedReports, reportAutoEmailConfigs } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { sendBranchEmail } from "@/lib/email/titan-smtp-service";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ success: true, data: rows[0] ?? null });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -77,6 +79,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, data: row });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -122,6 +125,7 @@ export async function PATCH(req: Request) {
 
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

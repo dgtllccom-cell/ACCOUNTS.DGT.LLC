@@ -8,6 +8,7 @@ import {
   buildDocumentFolderPath,
   normalizeDocumentSearch
 } from "@/lib/documents/document-filing";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -220,6 +221,7 @@ export async function GET(request: NextRequest) {
     // means no documents have been uploaded for this scope yet.
     return NextResponse.json({ documents: resolvedDocs });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -439,6 +441,7 @@ export async function POST(request: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ success: true, document: newDoc });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -548,6 +551,7 @@ export async function PATCH(request: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ success: true, document: updatedDoc });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -612,6 +616,7 @@ export async function DELETE(request: NextRequest) {
     await deleteDocumentBlob(existingDoc?.storage_key ?? null);
     return NextResponse.json({ success: true });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

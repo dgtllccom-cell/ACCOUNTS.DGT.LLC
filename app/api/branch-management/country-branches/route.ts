@@ -5,7 +5,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { auditApiAction } from "@/lib/api/audit";
 import { allPermissionGroupKeys } from "@/lib/permissions/catalog";
 import { linkEmailAccount } from "@/lib/api/email-link";
-import { translateToUrdu } from "@/lib/api/response";
+import { translateToUrdu, rethrowIfNextControlFlow } from "@/lib/api/response";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
@@ -141,6 +141,7 @@ export async function GET(request: Request) {
     countryBranches = await localizeRecordNames(countryBranches, "country_branches", "name", lang);
     return NextResponse.json({ countryBranches }, { status: 200 });
   } catch (error) {
+    rethrowIfNextControlFlow(error);
     if (error instanceof ErpAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
@@ -260,6 +261,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ id: data?.id }, { status: 201 });
   } catch (error) {
+    rethrowIfNextControlFlow(error);
     if (error instanceof ErpAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
@@ -387,6 +389,7 @@ export async function PUT(request: Request) {
 
     return NextResponse.json({ id: data?.id ?? id }, { status: 200 });
   } catch (error) {
+    rethrowIfNextControlFlow(error);
     if (error instanceof ErpAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }

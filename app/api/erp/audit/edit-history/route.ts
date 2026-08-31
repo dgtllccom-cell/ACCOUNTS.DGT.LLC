@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { getEditHistoryRecords } from "@/lib/audit/enterprise-audit-service";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 export async function GET(request: NextRequest) {
   try {
@@ -48,6 +49,7 @@ export async function GET(request: NextRequest) {
       ...result
     });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ error: error.message || "Failed to fetch edit history." }, { status: 500 });
   }
 }

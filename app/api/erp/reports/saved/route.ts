@@ -3,6 +3,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
 import { savedReports } from "@/lib/db/schema";
 import { eq, and, or } from "drizzle-orm";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +33,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ success: true, data: reports });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     console.error("Failed to fetch saved reports:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -60,6 +62,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, data: newReport });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     console.error("Failed to save report:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

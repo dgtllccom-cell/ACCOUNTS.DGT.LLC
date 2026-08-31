@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { sendBranchEmail, getBranchEmailLogs } from "@/lib/email/titan-smtp-service";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 export async function POST(request: Request) {
   try {
@@ -96,6 +97,7 @@ export async function POST(request: Request) {
       senderEmail: branchEmail
     });
   } catch (err: any) {
+    rethrowIfNextControlFlow(err);
     console.error("[Send Branch Email API Error]:", err);
     return NextResponse.json({ error: err?.message || "Internal server error." }, { status: 500 });
   }
@@ -122,6 +124,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ logs });
   } catch (err: any) {
+    rethrowIfNextControlFlow(err);
     console.error("[Get Branch Email Logs API Error]:", err);
     return NextResponse.json({ error: err?.message || "Internal server error." }, { status: 500 });
   }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { getSmartCrmDashboardData } from "@/lib/crm/smart-crm-service";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -38,6 +39,7 @@ export async function GET(request: NextRequest) {
       ...payload
     });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json(
       { error: error.message || "Failed to fetch CRM dashboard data." },
       { status: 500 }

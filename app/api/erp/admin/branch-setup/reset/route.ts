@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { ErpAuthError, requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { locationsRepository } from "@/lib/repositories/locations-repository";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 type SeedCity = {
   name: string;
@@ -173,6 +174,7 @@ async function seedCountryLocations(countryId: string, states: SeedState[]) {
           seededCities.push({ state: state.name, name: city.name, code: city.code, zip: city.zip });
         }
       } catch (error) {
+        rethrowIfNextControlFlow(error);
         const message = error instanceof Error ? error.message : String(error);
         if (/duplicate|exists/i.test(message)) {
           const admin = createSupabaseAdminClient() as any;
@@ -434,6 +436,7 @@ export async function POST() {
       { status: 200 }
     );
   } catch (error) {
+    rethrowIfNextControlFlow(error);
     if (error instanceof ErpAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }

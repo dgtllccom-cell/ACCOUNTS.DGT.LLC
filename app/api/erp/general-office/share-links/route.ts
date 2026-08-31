@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 export const dynamic = "force-dynamic";
 
@@ -62,6 +63,7 @@ export async function GET(request: NextRequest) {
 
     return ok({ links: processed });
   } catch (e: any) {
+    rethrowIfNextControlFlow(e);
     console.error("[Share Links GET]", e);
     return err(e?.message ?? "Server error", 500);
   }
@@ -134,6 +136,7 @@ export async function POST(request: NextRequest) {
 
     return ok({ link, publicUrl }, 201);
   } catch (e: any) {
+    rethrowIfNextControlFlow(e);
     console.error("[Share Links POST]", e);
     return err(e?.message ?? "Failed to create link", 500);
   }
@@ -166,6 +169,7 @@ export async function DELETE(request: NextRequest) {
 
     return ok({ revoked: true });
   } catch (e: any) {
+    rethrowIfNextControlFlow(e);
     console.error("[Share Links DELETE]", e);
     return err(e?.message ?? "Failed to revoke link", 500);
   }

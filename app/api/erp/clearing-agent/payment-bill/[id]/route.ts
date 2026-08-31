@@ -3,6 +3,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
@@ -66,6 +67,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
 
     return NextResponse.json({ success: true, data });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
@@ -84,6 +86,7 @@ export async function DELETE(_req: Request, context: { params: Promise<{ id: str
     });
     return NextResponse.json({ success: true });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

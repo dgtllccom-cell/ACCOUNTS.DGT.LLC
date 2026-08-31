@@ -4,6 +4,7 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 /**
  * Truck Registration master (Settings -> Truck Management).
@@ -55,6 +56,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ trucks: rows || [] });
   } catch (err: any) {
+    rethrowIfNextControlFlow(err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
@@ -130,6 +132,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ truck: data });
   } catch (err: any) {
+    rethrowIfNextControlFlow(err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

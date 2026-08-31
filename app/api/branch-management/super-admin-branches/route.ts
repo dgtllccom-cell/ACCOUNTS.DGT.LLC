@@ -3,6 +3,7 @@ import { createSuperAdminBranchSchema } from "@/features/branch-management/valid
 import { ErpAuthError, requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { auditApiAction } from "@/lib/api/audit";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -37,6 +38,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ superAdminBranches: data ?? [] }, { status: 200 });
   } catch (error) {
+    rethrowIfNextControlFlow(error);
     if (error instanceof ErpAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
@@ -92,6 +94,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ id: data?.id }, { status: 201 });
   } catch (error) {
+    rethrowIfNextControlFlow(error);
     if (error instanceof ErpAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
@@ -160,6 +163,7 @@ export async function PUT(request: Request) {
 
     return NextResponse.json({ id: data?.id ?? id }, { status: 200 });
   } catch (error) {
+    rethrowIfNextControlFlow(error);
     if (error instanceof ErpAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }

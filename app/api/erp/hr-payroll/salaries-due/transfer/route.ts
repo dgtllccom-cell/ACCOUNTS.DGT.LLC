@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireErpSession } from "@/lib/auth/session";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 export const dynamic = "force-dynamic";
 
@@ -230,6 +231,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ record: updatedRecord, success: true });
   } catch (err: any) {
+    rethrowIfNextControlFlow(err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

@@ -149,6 +149,25 @@ async function logApiErrorForSuperAdmin(code: string, message: string, details?:
   return { isSuperAdmin };
 }
 
+/**
+ * Next.js control-flow signals (redirect / notFound) are thrown as errors with a
+ * `digest` string. A route's own `try/catch` must let them propagate, otherwise an
+ * expired session turns `requireErpSession()`'s redirect into a bogus HTTP 500
+ * `{ error: "NEXT_REDIRECT" }`. Call this as the FIRST line of any hand-rolled
+ * catch block that does not delegate to `handleApiError`.
+ */
+export function rethrowIfNextControlFlow(error: unknown): void {
+  const digest = (error as { digest?: unknown })?.digest;
+  const message = (error as { message?: unknown })?.message;
+  if (
+    (typeof digest === "string" && (digest.startsWith("NEXT_REDIRECT") || digest === "NEXT_NOT_FOUND" || digest.startsWith("NEXT_HTTP_ERROR_FALLBACK"))) ||
+    message === "NEXT_REDIRECT" ||
+    message === "NEXT_NOT_FOUND"
+  ) {
+    throw error;
+  }
+}
+
 export async function handleApiError(error: unknown) {
   if ((error as any)?.digest?.startsWith("NEXT_REDIRECT") || (error as any)?.message === "NEXT_REDIRECT") {
     throw error;

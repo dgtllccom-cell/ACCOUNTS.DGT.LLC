@@ -7,7 +7,7 @@ import { allPermissionGroupKeys, constrainChildPermissions } from "@/lib/permiss
 import { linkEmailAccount } from "@/lib/api/email-link";
 import { linkWhatsAppAccount } from "@/lib/api/whatsapp-link";
 import { encrypt } from "@/lib/crypto";
-import { translateToUrdu } from "@/lib/api/response";
+import { translateToUrdu, rethrowIfNextControlFlow } from "@/lib/api/response";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
@@ -161,6 +161,7 @@ export async function GET(request: Request) {
     cityBranches = await localizeRecordNames(cityBranches, "city_branches", "name", lang);
     return NextResponse.json({ cityBranches }, { status: 200 });
   } catch (error) {
+    rethrowIfNextControlFlow(error);
     if (error instanceof ErpAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
@@ -411,6 +412,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ id: insertedId }, { status: 201 });
   } catch (error) {
+    rethrowIfNextControlFlow(error);
     if (error instanceof ErpAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
@@ -665,6 +667,7 @@ export async function PUT(request: Request) {
 
     return NextResponse.json({ id: updatedId || id }, { status: 200 });
   } catch (error) {
+    rethrowIfNextControlFlow(error);
     if (error instanceof ErpAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }

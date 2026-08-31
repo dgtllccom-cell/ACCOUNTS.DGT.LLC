@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { getDeletedRecordDetail } from "@/lib/audit/enterprise-audit-service";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 export async function GET(
   request: NextRequest,
@@ -20,6 +21,7 @@ export async function GET(
       data: detail
     });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ error: error.message || "Failed to fetch deleted record details." }, { status: 500 });
   }
 }

@@ -4,6 +4,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { auditApiAction } from "@/lib/api/audit";
 import { authorize, resolveReportScope } from "@/lib/permissions/middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 type KycEntityType = "country_branch" | "city_branch" | "user_account" | "new_account";
 
@@ -430,6 +431,7 @@ export async function GET(request: Request) {
       }
     }, { status: 200 });
   } catch (error) {
+    rethrowIfNextControlFlow(error);
     if (error instanceof ErpAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
@@ -493,6 +495,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true, message: "KYC records updated successfully!" }, { status: 200 });
   } catch (error) {
+    rethrowIfNextControlFlow(error);
     if (error instanceof ErpAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }

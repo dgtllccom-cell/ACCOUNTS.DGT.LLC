@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 export async function DELETE(
   req: Request,
@@ -23,6 +24,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
+    rethrowIfNextControlFlow(err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

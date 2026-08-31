@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { getMonthlyEditSummary } from "@/lib/audit/enterprise-audit-service";
 import { canAccessCountry, canAccessCityBranch } from "@/lib/permissions/middleware";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 export async function GET(request: NextRequest) {
   try {
@@ -35,6 +36,7 @@ export async function GET(request: NextRequest) {
       ...summary
     });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ error: error.message || "Failed to fetch monthly edit summary." }, { status: 500 });
   }
 }

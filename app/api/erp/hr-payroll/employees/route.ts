@@ -6,6 +6,7 @@ import { localizeRecordGroups } from "@/lib/i18n/localize-records";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 export const dynamic = "force-dynamic";
 
@@ -65,6 +66,7 @@ export async function GET(request: NextRequest) {
         }
       });
     } catch (syncErr) {
+      rethrowIfNextControlFlow(syncErr);
       console.warn("[EMPLOYEES] Auto-sync unlinked persons warning:", syncErr);
     }
 
@@ -180,6 +182,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ employees: filtered });
   } catch (err: any) {
+    rethrowIfNextControlFlow(err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
@@ -345,6 +348,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ employee: newEmployee });
   } catch (err: any) {
+    rethrowIfNextControlFlow(err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

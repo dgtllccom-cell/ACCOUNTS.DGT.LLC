@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { apiError, apiOk } from "@/lib/api/response";
+import { apiError, apiOk, rethrowIfNextControlFlow } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
 
@@ -397,6 +397,7 @@ export async function GET() {
 
     return apiError("DATABASE_UNAVAILABLE", "Development database connection is not configured.", 503);
   } catch (error) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ error: error instanceof Error ? error.message : "Server error" }, { status: 500 });
   }
 }

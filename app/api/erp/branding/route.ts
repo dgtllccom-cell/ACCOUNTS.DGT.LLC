@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 /**
  * Branding resolver — returns the correct company branding for a country, from
@@ -107,6 +108,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ branding });
   } catch (err: any) {
+    rethrowIfNextControlFlow(err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

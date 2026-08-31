@@ -4,6 +4,7 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 /**
  * Clearing Agent — Import Loading (secure, scoped CRUD). Table: import_truck_loadings.
@@ -48,6 +49,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ records: rows || [] });
   } catch (err: any) {
+    rethrowIfNextControlFlow(err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
@@ -112,6 +114,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ record: data });
   } catch (err: any) {
+    rethrowIfNextControlFlow(err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

@@ -3,6 +3,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 // withLocalPg, not the RLS-gated Supabase admin client — createSupabaseAdminClient() has no
 // real service-role key configured on DEV (falls back to the anon key), so inserts into a
@@ -32,6 +33,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ success: true, data: rows || [] });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ success: false, error: error.message || "Failed to load custom entries" }, { status: 500 });
   }
 }
@@ -89,6 +91,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, data });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

@@ -5,6 +5,7 @@ import { z } from "zod";
 import { requireErpSession } from "@/lib/auth/session";
 import { isDestinationScopeUser, authorizeApiScope } from "@/lib/api/scope-middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 const paramsSchema = z.object({ id: z.string().uuid() });
 
@@ -183,6 +184,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
 
     return NextResponse.json({ ok: true, data: result });
   } catch (error) {
+    rethrowIfNextControlFlow(error);
     const message = error instanceof Error ? error.message : "Failed to confirm receiving.";
     return NextResponse.json({ ok: false, error: { message } }, { status: 400 });
   }

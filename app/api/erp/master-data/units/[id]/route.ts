@@ -3,6 +3,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 /** Product Units master — update + soft-delete. */
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
@@ -45,6 +46,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
       isActive: data.is_active,
     });
   } catch (err: any) {
+    rethrowIfNextControlFlow(err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
@@ -64,6 +66,7 @@ export async function DELETE(_req: Request, context: { params: Promise<{ id: str
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ ok: true });
   } catch (err: any) {
+    rethrowIfNextControlFlow(err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

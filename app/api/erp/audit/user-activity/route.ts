@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 /**
  * User-activity report. There is no `users` table — identity lives in
@@ -155,6 +156,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ success: true, ...data });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json(
       { error: error?.message || "Failed to fetch user activity." },
       { status: 500 },

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { getEntityVersionTimeline } from "@/lib/audit/enterprise-audit-service";
 import { canAccessCountry, canAccessCityBranch } from "@/lib/permissions/middleware";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 export async function GET(request: NextRequest) {
   try {
@@ -36,6 +37,7 @@ export async function GET(request: NextRequest) {
       timeline: timeline ?? []
     });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ error: error.message || "Failed to fetch version timeline." }, { status: 500 });
   }
 }

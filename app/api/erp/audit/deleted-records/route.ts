@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { getDeletedRecords, recordAuditEvent } from "@/lib/audit/enterprise-audit-service";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 export async function GET(request: NextRequest) {
   try {
@@ -49,6 +50,7 @@ export async function GET(request: NextRequest) {
       ...result
     });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ error: error.message || "Failed to fetch deleted records." }, { status: 500 });
   }
 }
@@ -108,6 +110,7 @@ export async function POST(request: NextRequest) {
           WHERE id::text = ${entityId} OR code = ${entityId};
         `);
       } catch (e) {
+        rethrowIfNextControlFlow(e);
         try {
           await sql.unsafe(`
             UPDATE ${sql(entityType)} 
@@ -124,6 +127,7 @@ export async function POST(request: NextRequest) {
       auditEventId: event?.id ?? null
     });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ error: error.message || "Failed to soft delete record." }, { status: 500 });
   }
 }

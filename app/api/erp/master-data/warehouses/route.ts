@@ -7,6 +7,7 @@ import { translateMasterRecord } from "@/lib/services/translation-trigger-servic
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 /**
  * Warehouses master — list + create (secure-by-default).
@@ -43,6 +44,7 @@ export async function GET(request: NextRequest) {
     data = await localizeRecordNames(data, "warehouses", "owner_name", lang);
     return NextResponse.json({ warehouses: data || [] });
   } catch (err: any) {
+    rethrowIfNextControlFlow(err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
@@ -99,6 +101,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ warehouse: data });
   } catch (err: any) {
+    rethrowIfNextControlFlow(err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

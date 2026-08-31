@@ -3,6 +3,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 // withLocalPg, not the RLS-gated Supabase admin client — see ../route.ts for the root cause.
 
@@ -60,6 +61,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
 
     return NextResponse.json({ record: data });
   } catch (err: any) {
+    rethrowIfNextControlFlow(err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
@@ -78,6 +80,7 @@ export async function DELETE(_req: Request, context: { params: Promise<{ id: str
     });
     return NextResponse.json({ ok: true });
   } catch (err: any) {
+    rethrowIfNextControlFlow(err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

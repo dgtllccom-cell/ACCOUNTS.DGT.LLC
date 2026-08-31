@@ -3,6 +3,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
 import { savedReports } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
     return NextResponse.json({ success: true, data: updatedReport });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     console.error("Failed to update saved report:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -58,6 +60,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     console.error("Failed to delete saved report:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

@@ -3,6 +3,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 // withLocalPg, not the RLS-gated Supabase admin client — see agent-custom-entry/route.ts for
 // the root cause (no real service-role key on DEV, so RLS rejects the admin-client insert).
@@ -30,6 +31,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ success: true, data: rows || [] });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ success: false, error: error.message || "Failed to load payment bills" }, { status: 500 });
   }
 }
@@ -92,6 +94,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, data });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
