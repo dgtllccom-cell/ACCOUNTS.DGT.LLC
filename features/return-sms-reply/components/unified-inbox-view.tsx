@@ -709,45 +709,17 @@ export function UnifiedInboxView({ lang }: Props) {
                 <select
                   value={selectedBranchScope}
                   onChange={(e) => {
-                    const val = e.target.value;
-                    setSelectedBranchScope(val);
-                    if (val === "karachi") {
-                      setWhatsappConfig({
-                        ...whatsappConfig,
-                        officialNumber: "+92 300 9876543",
-                        adminNumber: "+92 300 1112233",
-                        accountName: "Karachi Main Branch WhatsApp"
-                      });
-                    } else if (val === "kabul") {
-                      setWhatsappConfig({
-                        ...whatsappConfig,
-                        officialNumber: "+93 70 1234567",
-                        adminNumber: "+93 70 2223344",
-                        accountName: "Kabul Central Branch WhatsApp"
-                      });
-                    } else if (val === "dubai") {
-                      setWhatsappConfig({
-                        ...whatsappConfig,
-                        officialNumber: "+971 50 1234567",
-                        adminNumber: "+971 50 3334455",
-                        accountName: "Dubai Branch WhatsApp"
-                      });
-                    } else {
-                      setWhatsappConfig({
-                        ...whatsappConfig,
-                        officialNumber: "+92 300 1234567",
-                        adminNumber: "+92 300 9876543",
-                        accountName: "Super Admin Main WhatsApp"
-                      });
-                    }
+                    // Only record the chosen scope — WhatsApp numbers come from
+                    // /api/erp/whatsapp/accounts (verified DB records), never presets.
+                    setSelectedBranchScope(e.target.value);
                   }}
                   className="w-full font-bold p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 outline-none"
                 >
                   <option value="global">🌐 Super Admin Main Line (Global Oversight)</option>
-                  <option value="karachi">🇵🇰 Pakistan — Karachi Main Branch (+92 300 9876543)</option>
-                  <option value="kabul">🇦🇫 Afghanistan — Kabul Central Branch (+93 70 1234567)</option>
-                  <option value="dubai">🇦🇪 UAE — Dubai Branch (+971 50 1234567)</option>
-                  <option value="tehran">🇮🇷 Iran — Tehran Branch (+98 912 1234567)</option>
+                  <option value="karachi">🇵🇰 Pakistan — Karachi Main Branch</option>
+                  <option value="kabul">🇦🇫 Afghanistan — Kabul Central Branch</option>
+                  <option value="dubai">🇦🇪 UAE — Dubai Branch</option>
+                  <option value="tehran">🇮🇷 Iran — Tehran Branch</option>
                 </select>
               </div>
 

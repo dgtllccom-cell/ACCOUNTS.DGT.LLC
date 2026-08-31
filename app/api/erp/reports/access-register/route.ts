@@ -12,7 +12,10 @@ export async function GET() {
     const rows = await getAccessRegisterData();
     return NextResponse.json({ rows, generatedAt: new Date().toISOString() });
   } catch (error: any) {
-    const status = error?.status ?? 500;
+    // Let Next.js auth redirects / not-found propagate instead of swallowing them.
+    if (typeof error?.digest === "string" && error.digest.startsWith("NEXT_")) throw error;
+    if (error?.message === "NEXT_REDIRECT" || error?.message === "NEXT_NOT_FOUND") throw error;
+    const status = typeof error?.status === "number" ? error.status : 500;
     return NextResponse.json({ error: error?.message ?? "Failed to load access register", rows: [] }, { status });
   }
 }
