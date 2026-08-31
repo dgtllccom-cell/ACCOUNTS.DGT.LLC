@@ -14,7 +14,6 @@
 
 import { t } from "@/lib/i18n/ui";
 import { numberToWords } from "@/lib/utils/number-to-words";
-import { printStore } from "@/lib/store/print-store";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { brandLinesFor } from "@/lib/reports/resolve-document-branding";
 import type { TradeDocumentInput, TradeParty, TradeLineItem } from "./types";
@@ -53,7 +52,7 @@ const DOC_TITLE_KEY: Record<Exclude<TradeDocumentInput["docType"], "contract">, 
   proforma_invoice: ["tdoc.t_proforma_invoice", "Proforma Invoice"],
 };
 
-function docTitleKeyFor(input: TradeDocumentInput): [string, string] {
+export function docTitleKeyFor(input: TradeDocumentInput): [string, string] {
   if (input.docType === "contract") {
     return input.txnKind === "sales"
       ? ["tdoc.t_sales_contract", "Sales Contract"]
@@ -380,16 +379,4 @@ export function buildTradeDocumentHtml(input: TradeDocumentInput): string {
 ${input.autoPrint ? `<script>window.addEventListener('load',function(){setTimeout(function(){window.print();},400);});</script>` : ""}
 </body>
 </html>`;
-}
-
-export function openTradeDocument(input: TradeDocumentInput): void {
-  if (typeof window === "undefined") return;
-  const [titleKey, titleFb] = docTitleKeyFor(input);
-  const title = t((input.lang || "en") as SupportedLanguage, titleKey as never, titleFb);
-  printStore.openPrint(buildTradeDocumentHtml(input), `${title} — ${input.docNo}`, {
-    lang: input.lang || "en",
-    // in-preview language / orientation switch rebuilds from the same source input
-    rebuild: ({ lang, orientation }) =>
-      buildTradeDocumentHtml({ ...input, lang: lang as SupportedLanguage, orientation }),
-  });
 }

@@ -1,4 +1,5 @@
-export { buildTradeDocumentHtml, openTradeDocument } from "./build-trade-document";
+export { buildTradeDocumentHtml, docTitleKeyFor } from "./build-trade-document";
+export { openTradeDocument } from "./open-trade-document";
 export {
   purchaseOrderToTradeInput,
   salesOrderToTradeInput,

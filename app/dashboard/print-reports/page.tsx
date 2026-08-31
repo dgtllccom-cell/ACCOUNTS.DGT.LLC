@@ -26,7 +26,7 @@ import { openPurchaseBookingOrderPrintReport } from "@/lib/reports/open-purchase
 import { openRoznamchaVoucherPrintReport } from "@/lib/reports/open-roznamcha-voucher-print-report";
 import { openSalesA4ReportWindow } from "@/lib/reports/open-sales-a4-report-window";
 import { openAccountA4ReportWindow } from "@/lib/reports/open-account-a4-report-window";
-import { openTradeDocument } from "@/lib/reports/trade-documents/build-trade-document";
+import { openTradeDocument } from "@/lib/reports/trade-documents/open-trade-document";
 import { purchaseOrderToTradeInput } from "@/lib/reports/trade-documents/from-transaction";
 import { resolveDocumentBranding } from "@/lib/reports/resolve-document-branding";
 import type { TradeDocType } from "@/lib/reports/trade-documents/types";
