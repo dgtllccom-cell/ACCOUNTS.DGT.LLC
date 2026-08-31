@@ -4,7 +4,7 @@ import { TruckRecreationWizard } from "@/features/clearing-agent/components/truc
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export const metadata: Metadata = {
-  title: "Truck New Recreation — Clearing Agent ERP",
+  title: "Truck Registration — Clearing Agent ERP",
   description: "5-Step, 5-language truck creation wizard with real-time live report summary.",
 };
 

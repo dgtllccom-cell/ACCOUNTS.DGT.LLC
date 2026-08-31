@@ -11335,7 +11335,7 @@ const en: Dict = {
   "common.unit_cost": "Unit Cost",
   "common.ref_no": "Reference No",
   // ── Truck Recreation Wizard (trk.*) ──
-  "trk.title": "TRUCK NEW RECREATION",
+  "trk.title": "TRUCK REGISTRATION",
   "trk.subtitle": "Create complete truck record with all details and documents",
   "trk.step1": "Truck Information",
   "trk.step1_sub": "Enter truck and registration details",

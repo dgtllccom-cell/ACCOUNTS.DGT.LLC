@@ -552,8 +552,12 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
 </head>
 <body>
 
-  <!-- Screen Only Toolbar -->
-  <div class="toolbar no-print">
+  <!-- Screen-only toolbar — only for the standalone window.open() fallback.
+       Inside PdfPreviewModal (an iframe) the modal already provides Print /
+       orientation / Close, so this one is hidden to avoid a duplicate bar. -->
+  <script>try{if(window.self!==window.top){document.documentElement.classList.add('in-modal');}}catch(e){document.documentElement.classList.add('in-modal');}</script>
+  <style>.in-modal .toolbar{display:none !important;}</style>
+  <div class="toolbar no-print no-print-toolbar">
     <div style="font-weight: 800; font-size: 12px; display: flex; align-items: center; gap: 6px;">
       <span>🖨️</span> ${escapeHtml(title)} [<span id="orient-label">${effectiveOrientation.toUpperCase()}</span>]
     </div>

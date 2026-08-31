@@ -160,7 +160,7 @@ export function ShippingHandoverInbox({ lang }: { lang?: string }) {
         <header className="flex flex-wrap items-start justify-between gap-3">
           <div className={s.textStart}>
             <h1 className="inline-flex items-center gap-2 text-lg font-black text-slate-900 dark:text-slate-50"><Inbox className="h-5 w-5 text-slate-400" />{s.t("hi_title", "Shipping Handover Inbox")}</h1>
-            <p className="mt-0.5 max-w-2xl text-xs text-slate-500">{s.t("hi_blurb", "Handovers a business team has authorised to your agency. Accept one to bring it into the shipment / BL workflow.")}</p>
+            <p className="mt-0.5 max-w-2xl text-xs text-slate-500">{s.t("hi_blurb", "Handovers that a business team has authorized to your agency. Accept one to bring it into the shipment / BL workflow.")}</p>
           </div>
           <button type="button" onClick={() => void load()} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
             <RefreshCw className="h-3.5 w-3.5" />{s.t("refresh", "Refresh")}
