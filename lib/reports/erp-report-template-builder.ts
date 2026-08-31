@@ -91,10 +91,11 @@ export function generateReportHtml(input: {
 
   const compName = realOrEmpty(companyInfo.name) || "DIGITAL DOCK ERP";
   const compTagline = realOrEmpty(companyInfo.tagline) || "ERP Reporting System";
-  const compAddress = realOrEmpty(companyInfo.address) || "Main Commercial Hub, Business District";
-  const compPhone = realOrEmpty(companyInfo.phone) || "+971 4 000 0000 / +92 42 000 0000";
-  const compEmail = realOrEmpty(companyInfo.email) || "info@dgt.llc";
-  const compWebsite = realOrEmpty(companyInfo.website) || "www.dgt.llc";
+  // Contact fields come ONLY from the entity's branding record — never fabricated.
+  const compAddress = realOrEmpty(companyInfo.address);
+  const compPhone = realOrEmpty(companyInfo.phone);
+  const compEmail = realOrEmpty(companyInfo.email);
+  const compWebsite = realOrEmpty(companyInfo.website);
   const printedBy = realOrEmpty(companyInfo.printedBy)
     || (typeof window !== "undefined" ? realOrEmpty((window as unknown as { __ERP_USER_NAME__?: string }).__ERP_USER_NAME__) : "");
   const printedDate = companyInfo.printedDate || new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
@@ -881,8 +882,12 @@ export function generateReportHtml(input: {
               <div class="brand-name">${escapeHtml(compName)}</div>
               <div class="brand-tagline">${escapeHtml(compTagline)}</div>
               <div class="brand-contact">
-                📍 ${escapeHtml(compAddress)}<br />
-                📞 Phone: ${escapeHtml(compPhone)} | ✉️ Email: ${escapeHtml(compEmail)} | 🌐 Website: ${escapeHtml(compWebsite)}
+                ${compAddress ? `📍 ${escapeHtml(compAddress)}<br />` : ""}
+                ${[
+                  compPhone ? `📞 ${escapeHtml(compPhone)}` : "",
+                  compEmail ? `✉️ ${escapeHtml(compEmail)}` : "",
+                  compWebsite ? `🌐 ${escapeHtml(compWebsite)}` : "",
+                ].filter(Boolean).join(" | ")}
               </div>
             </div>
           </div>
@@ -962,8 +967,7 @@ export function generateReportHtml(input: {
             <div class="footer-box text-right">
               ${legendHtml || `
                 <b>REPORT STATUS:</b><br />
-                Official ERP System Generated Sheet<br />
-                Page 1 of 1
+                Official ERP System Generated Sheet
               `}
             </div>
           </div>
