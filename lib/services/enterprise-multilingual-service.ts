@@ -10,6 +10,23 @@ import { translateToAllLanguages } from "@/lib/i18n/machine-translation-client";
 
 const LANG_KEYS: SupportedLanguage[] = ["en", "ur", "ar", "fa", "ps"];
 
+/** Route a record_translations table to the closest ERP glossary domain (for the Local Translator). */
+type TrDomain = "accounting" | "shipping" | "clearing" | "banking" | "tax" | "hr" | "crm" | "purchase" | "sales" | "inventory" | "general";
+function domainForTable(table: string): TrDomain {
+  const t = (table || "").toLowerCase();
+  if (/roznamcha|ledger|journal|account|expense|bill|settlement|voucher/.test(t)) return "accounting";
+  if (/bank/.test(t)) return "banking";
+  if (/tax|vat|fbr|zakat/.test(t)) return "tax";
+  if (/clearing|customs|agent_custom|transit/.test(t)) return "clearing";
+  if (/shipping|shipment|loading|receiving|vessel|container|port/.test(t)) return "shipping";
+  if (/employee|payroll|hr_|attendance|leave|salary|department|designation/.test(t)) return "hr";
+  if (/inquir|lead|crm|customer|company|contact/.test(t)) return "crm";
+  if (/purchase|supplier|vendor/.test(t)) return "purchase";
+  if (/sales|customer_order|quotation|invoice/.test(t)) return "sales";
+  if (/warehouse|goods|product|stock|inventory|brand|categor|unit/.test(t)) return "inventory";
+  return "general";
+}
+
 export type UpsertRecordTranslationArgs = {
   recordTable: string;
   recordId: string;
@@ -243,16 +260,50 @@ export async function saveVerifiedEnterpriseRecordTranslations(
       if (dictVal) verified.translations[lng] = dictVal;
     }
 
-    // Machine-translation tier: for genuinely free text (mode "translate" — narration,
-    // remarks, descriptions), any language still missing after the dictionary gets a real
-    // translation from the configured MT provider (lib/i18n/machine-translation-client.ts),
-    // not a word-substitution guess. This is qualitatively different from the crude fallback
-    // below — a real MT engine understands grammar/context — so a fully-resolved field is
-    // marked "complete", not "needs_review". Never used for mode "transliterate" (proper
-    // nouns: company/person/place names) — translating a name is wrong regardless of engine
-    // quality, so those keep the existing no-guess/needs_review policy untouched.
-    let usedMachineTranslation = false;
+    // ── PRIMARY machine tier: OUR OWN Local Translator + central 5-language ERP
+    //    business dictionary (lib/i18n/erp-translator.ts). Pipeline, in order:
+    //      approved translation memory  →  curated ERP glossary (whole phrase)
+    //      →  contextual glossary phrase substitution  →  local phrase engine.
+    //    Every clean rendering it produces is written back to erp_translation_memory
+    //    so the term is served locally, consistently, everywhere from then on.
+    //    NEVER Google / browser MT (allowExternal:false). Only for mode "translate"
+    //    (free text — narration/remarks/description/notes); proper nouns keep the
+    //    no-guess transliteration policy.
+    let usedLocalTranslator = false;
     if (field.mode === "translate") {
+      const stillMissing = LANG_KEYS.some((lng) => !verified.translations[lng]?.trim());
+      if (stillMissing) {
+        try {
+          const { translateErp } = await import("@/lib/i18n/erp-translator");
+          const domain = domainForTable(input.recordTable);
+          for (const lng of LANG_KEYS) {
+            if (verified.translations[lng]?.trim()) continue;
+            const r = await translateErp(originalText, originalLanguage, {
+              targetLang: lng,
+              allowExternal: false,
+              learn: true,
+              domain,
+            });
+            // accept only a genuine translation. For non-English targets, reject any
+            // leftover Latin (untranslated English); English target is allowed Latin.
+            const leftoverEnglish = lng !== "en" && /\p{Lu}?[a-z]{2,}/u.test(r.text);
+            const clean = r.engine !== "identity" && !leftoverEnglish;
+            if (clean && r.text.trim()) {
+              verified.translations[lng] = r.text.trim();
+              usedLocalTranslator = true;
+            }
+          }
+        } catch {
+          /* engine unavailable — the crude fallback below still runs */
+        }
+      }
+    }
+
+    // Optional external MT tier — DISABLED by default. The ERP does not depend on
+    // Google / browser translation; this only runs if an operator explicitly opts
+    // in with ERP_ALLOW_EXTERNAL_MT=1 AND a provider key is configured.
+    let usedMachineTranslation = false;
+    if (field.mode === "translate" && process.env.ERP_ALLOW_EXTERNAL_MT === "1") {
       const stillMissing = LANG_KEYS.some((lng) => !verified.translations[lng]?.trim());
       if (stillMissing) {
         const mtResults = await translateToAllLanguages(originalText, originalLanguage);
@@ -269,11 +320,17 @@ export async function saveVerifiedEnterpriseRecordTranslations(
     // Last resort: autoTranslate5Languages is an UNVERIFIED word-substitution guess (no
     // dictionary hit, no MT result, no human input), so any field that still needed it after
     // MT gets flagged needs_review rather than silently marked complete.
+    // Guard against MIXED-SCRIPT output (half Urdu / half English) — the owner's
+    // explicit "no mixed data" rule: if the guess for a non-English language still
+    // contains Latin words, keep the ORIGINAL text verbatim instead (clean and
+    // honest) and flag needs_review for a human/glossary pass.
     let usedUnverifiedFallback = false;
     const auto5 = autoTranslate5Languages(originalText, originalLanguage);
     for (const lng of LANG_KEYS) {
       if (!verified.translations[lng]?.trim()) {
-        verified.translations[lng] = auto5[lng] || originalText;
+        const guess = auto5[lng]?.trim();
+        const mixed = lng !== "en" && !!guess && /\p{Lu}?[a-z]{2,}/u.test(guess);
+        verified.translations[lng] = guess && !mixed ? guess : originalText;
         usedUnverifiedFallback = true;
       }
     }
@@ -286,7 +343,9 @@ export async function saveVerifiedEnterpriseRecordTranslations(
         ? "auto_unverified"
         : usedMachineTranslation
           ? "machine_translation"
-          : "local_dictionary";
+          : usedLocalTranslator
+            ? "local_translator"
+            : "local_dictionary";
 
     await upsertRecordTranslationRpc({
       recordTable: input.recordTable,
