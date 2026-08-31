@@ -4,7 +4,7 @@ import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { uuidSchema } from "@/lib/api/erp-validation";
 import { authorizeApiScope, getScopeFromSearchParams } from "@/lib/api/scope-middleware";
-import { requireErpSession, getCurrentErpSession, type ErpSession } from "@/lib/auth/session";
+import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { EnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { enterpriseRolePermissions } from "@/lib/permissions/enterprise-roles";
@@ -82,10 +82,6 @@ async function withTimeout<T>(query: PromiseLike<QueryResult<T>>, label: string,
   }
 }
 
-function rolePermissions(role: EnterpriseRole) {
-  return enterpriseRolePermissions[role] ?? [];
-}
-
 function emptyReport(reason: string) {
   return {
     summary: {
@@ -103,55 +99,11 @@ function emptyReport(reason: string) {
   };
 }
 
-function hasAnySessionCookie(request: NextRequest) {
-  return request.cookies.getAll().some(({ name }) => name === "erp_session" || (name.startsWith("sb-") && name.includes("auth-token")));
-}
-
-async function requireJournalSession(request: NextRequest) {
-  const session = await getCurrentErpSession();
-  if (session) return session;
-
-  if (hasAnySessionCookie(request)) {
-    const role: EnterpriseRole = "super_admin";
-    const permissions = [...new Set(rolePermissions(role))];
-    return {
-      userId: "local-journal-super-admin",
-      email: "superadmin@damaan.com",
-      fullName: "Super Admin",
-      preferredLanguage: "en",
-      roles: [role],
-      permissions: ["*:*", ...permissions],
-      assignments: [],
-      countryIds: [],
-      countryBranchIds: [],
-      cityBranchIds: [],
-      isSuperAdmin: true,
-      clearingAgentIds: [],
-      ledgerVisibility: "full",
-      isShippingScoped: false
-    } as ErpSession;
-  }
-
-  return fallbackReportSession();
-}
-
-function fallbackReportSession(): ErpSession {
-  return {
-    userId: "local-journal-super-admin",
-    email: "superadmin@damaan.com",
-    fullName: "Super Admin",
-    preferredLanguage: "en",
-    roles: ["super_admin"],
-    permissions: ["*:*"],
-    assignments: [],
-    countryIds: [],
-    countryBranchIds: [],
-    cityBranchIds: [],
-    isSuperAdmin: true,
-    clearingAgentIds: [],
-    ledgerVisibility: "full",
-    isShippingScoped: false
-  };
+async function requireJournalSession(_request: NextRequest) {
+  // A real, validated session only — never fabricate a super-admin identity.
+  // requireErpSession() redirects an unauthenticated caller to /auth/login;
+  // authorizeApiScope() below still enforces the caller's real scope.
+  return requireErpSession();
 }
 
 function normalizeForSearch(value: string) {
