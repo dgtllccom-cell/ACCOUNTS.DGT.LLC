@@ -177,6 +177,7 @@ export function openLoadingRecordsPrintReport(input: {
   const csvData = [csvHeaders.join(","), ...csvRows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))].join("\n");
 
   const html = generateReportHtml({
+    reportKind: "accounting",
     title: "PURCHASE LOADING RECORDS REPORT",
     orientation: "landscape",
     companyInfo,

@@ -70,8 +70,13 @@ export function generateReportHtml(input: {
   legendHtml?: string;
   lang?: string;
   csvData?: string;
+  /** "accounting" adds the FC/LC + double-entry footer note and the Financial Year
+   *  line. Non-accounting reports (registers, HR, tasks, CRM, shipping) default to
+   *  "generic" and get neither. */
+  reportKind?: "accounting" | "generic";
 }): string {
-  const { title, orientation, companyInfo = {}, filters = [], kpis = [], mainTableHtml, footerNotesHtml, legendHtml, lang = "en", csvData = "" } = input;
+  const { title, orientation, companyInfo = {}, filters = [], kpis = [], mainTableHtml, footerNotesHtml, legendHtml, lang = "en", csvData = "", reportKind = "generic" } = input;
+  const isAccounting = reportKind === "accounting";
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
 
   // Treat configuration placeholder strings ("Configured contact", "Configured email",
@@ -90,9 +95,10 @@ export function generateReportHtml(input: {
   const compPhone = realOrEmpty(companyInfo.phone) || "+971 4 000 0000 / +92 42 000 0000";
   const compEmail = realOrEmpty(companyInfo.email) || "info@dgt.llc";
   const compWebsite = realOrEmpty(companyInfo.website) || "www.dgt.llc";
-  const printedBy = companyInfo.printedBy || "ERP User";
+  const printedBy = realOrEmpty(companyInfo.printedBy)
+    || (typeof window !== "undefined" ? realOrEmpty((window as unknown as { __ERP_USER_NAME__?: string }).__ERP_USER_NAME__) : "");
   const printedDate = companyInfo.printedDate || new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
-  const financialYear = companyInfo.financialYear || "Current Financial Year";
+  const financialYear = realOrEmpty(companyInfo.financialYear);
   const reportPeriod = companyInfo.reportPeriod || formatDate(new Date().toISOString());
   const compLogo = companyInfo.logoUrl || "";
   // QR verification payload: company + report + date, so a printed sheet is verifiable.
@@ -887,9 +893,9 @@ export function generateReportHtml(input: {
           </div>
 
           <div class="meta-col">
-            <div>Printed By: <b>${escapeHtml(printedBy)}</b></div>
+            ${printedBy ? `<div>Printed By: <b>${escapeHtml(printedBy)}</b></div>` : ""}
             <div>Printed Date: <b>${escapeHtml(printedDate)}</b></div>
-            <div>Financial Year: <b>${escapeHtml(financialYear)}</b></div>
+            ${isAccounting && financialYear ? `<div>Financial Year: <b>${escapeHtml(financialYear)}</b></div>` : ""}
             <div>Report Period: <b>${escapeHtml(reportPeriod)}</b></div>
           </div>
         </div>
@@ -906,12 +912,7 @@ export function generateReportHtml(input: {
         </div>
         ` : ""}
 
-        <!-- Main Data Table Wrapper -->
-        <div class="report-table-wrapper density-compact">
-          ${mainTableHtml}
-        </div>
-
-        <!-- KPI Summary Cards Grid -->
+        <!-- KPI Summary Cards Grid (above the table so the reader sees the headline first) -->
         ${kpis.length > 0 ? `
         <div class="kpi-grid">
           ${kpis.map(k => `
@@ -923,17 +924,22 @@ export function generateReportHtml(input: {
         </div>
         ` : ""}
 
+        <!-- Main Data Table Wrapper -->
+        <div class="report-table-wrapper density-compact">
+          ${mainTableHtml}
+        </div>
+
         <!-- Sheet Footer & Signatures -->
         <div class="sheet-footer">
           <div class="footer-content-grid">
             <!-- Left Notes -->
             <div class="footer-box">
-              ${footerNotesHtml || `
+              ${footerNotesHtml || (isAccounting ? `
                 <b>NOTE:</b><br />
                 &bull; FC = Foreign Currency, LC = Local Currency<br />
                 &bull; Double-entry transaction postings verified.<br />
                 &bull; All amounts in selected currencies.
-              `}
+              ` : "")}
             </div>
 
             <!-- Signatures -->

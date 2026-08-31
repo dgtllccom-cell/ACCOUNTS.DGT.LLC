@@ -131,6 +131,7 @@ export function openEntryTypePrintReport(input: {
   const csvData = [csvHeaders.join(","), ...csvRows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))].join("\n");
 
   const html = generateReportHtml({
+    reportKind: "accounting",
     title: meta.title,
     orientation: mode === "cash" ? "portrait" : "landscape",
     companyInfo,

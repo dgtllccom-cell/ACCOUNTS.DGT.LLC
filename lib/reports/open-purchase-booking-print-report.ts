@@ -242,6 +242,7 @@ export function openPurchaseBookingOrderPrintReport(input: {
   ];
 
   const html = generateReportHtml({
+    reportKind: "accounting",
     title: "PURCHASE BOOKING ORDER DOCUMENT",
     orientation: "portrait",
     companyInfo,

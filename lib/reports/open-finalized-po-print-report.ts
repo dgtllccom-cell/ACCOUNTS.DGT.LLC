@@ -144,6 +144,7 @@ export function openFinalizedPOPrintReport(input: {
   const csvData = [csvHeaders.join(","), ...csvRows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))].join("\n");
 
   const html = generateReportHtml({
+    reportKind: "accounting",
     title: "FINALIZED PURCHASE ORDERS REPORT",
     orientation: "landscape",
     companyInfo,

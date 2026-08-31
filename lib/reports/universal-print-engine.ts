@@ -158,6 +158,13 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
   } = input;
 
   const isLedger = moduleType === "ledger";
+  // Only ledger / journal / roznamcha / invoice / procurement reports get the
+  // accounting framing (account-meta bar, Dr/Cr balance strip, FC-LC + double-entry
+  // footer). Registers, lists, HR, shipping, CRM, tasks, inquiries etc. must NOT
+  // inherit that accounting boilerplate.
+  const isFinancial =
+    ["ledger", "journal", "roznamcha", "sales_invoice", "purchase_procurement"].includes(moduleType) ||
+    Boolean(ledgerSummary && (ledgerSummary.accountCode || ledgerSummary.openingBalance != null || ledgerSummary.closingBalance != null));
 
   // Auto-detect orientation
   const effectiveOrientation: "portrait" | "landscape" =
@@ -193,7 +200,8 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
   const resolvedAddress = realOrEmpty(ledgerSummary?.address) || realOrEmpty(companyInfo.address) || realOrEmpty(generalBrand.address) || `${resolvedBranch}, ${resolvedCountry}`;
   const resolvedContact = realOrEmpty(companyInfo.email) || realOrEmpty((companyInfo as any).phone) || realOrEmpty(generalBrand.contact) || "";
 
-  const brandName = resolvedCompanyName || (resolvedCountry !== "Global Scope" ? `${resolvedCountry.toUpperCase()} OPERATING ENTITY` : "ERP ACCOUNTING STATEMENT");
+  const brandName = resolvedCompanyName
+    || (resolvedCountry !== "Global Scope" ? `${resolvedCountry.toUpperCase()} OPERATING ENTITY` : (isFinancial ? "ERP ACCOUNTING STATEMENT" : "DIGITAL DOCK ERP"));
   const brandTagline = generalBrand.tagline || `${resolvedBranch.toUpperCase()} NETWORK • ${resolvedCountry.toUpperCase()}`;
   const entityName = resolvedCompanyName || brandName;
   const baseCurrency = ledgerSummary?.currency || scope.currency || "AED";
@@ -203,7 +211,9 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
   const printDateFormatted = printDate.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
   const printTimeFormatted = printDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true });
   const fullDateTime = `${printDateFormatted}, ${printTimeFormatted}`;
-  const userName = scope.userName || companyInfo.printedBy || "ERP User";
+  const userName = scope.userName || companyInfo.printedBy
+    || (typeof window !== "undefined" ? (window as unknown as { __ERP_USER_NAME__?: string }).__ERP_USER_NAME__ : "")
+    || tr("ERP User");
 
   // Financial summary calculations for Ledgers
   const openBal = ledgerSummary?.openingBalance ?? Number(totals?.openingBalance ?? 0);
@@ -578,12 +588,14 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
           <div style="display: inline-flex; align-items: center; gap: 6px;">
             <div>
               <div class="doc-title">${escapeHtml(title)}</div>
-              <div class="doc-subtitle">${escapeHtml(ledgerSummary?.accountName || partyDetails?.name || subtitle || "Account Statement")}</div>
+              <div class="doc-subtitle">${escapeHtml(ledgerSummary?.accountName || partyDetails?.name || subtitle || (isFinancial ? "Account Statement" : ""))}</div>
             </div>
             <img class="qr-badge" src="${qrUrl}" alt="QR Verification" />
           </div>
           <div class="doc-meta">
-            <strong>${tr("Account Code")}:</strong> ${escapeHtml(ledgerSummary?.accountCode || partyDetails?.code || documentNo || "LEDGER")}<br />
+            ${(ledgerSummary?.accountCode || partyDetails?.code || documentNo)
+              ? `<strong>${tr(isFinancial ? "Account Code" : "Reference")}:</strong> ${escapeHtml(ledgerSummary?.accountCode || partyDetails?.code || documentNo || "")}<br />`
+              : ""}
             <strong>${tr("Country / Branch")}:</strong> ${escapeHtml(resolvedCountry)} • ${escapeHtml(resolvedBranch)}<br />
             <strong>${tr("Currency / Period")}:</strong> ${escapeHtml(baseCurrency)} | ${escapeHtml(dateRange)}<br />
             <strong>${tr("Generated")}:</strong> ${escapeHtml(fullDateTime)} (${escapeHtml(userName)})
@@ -592,7 +604,8 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
       </tr>
     </table>
 
-    <!-- ── 2. FULL SELECTED LEDGER REAL METADATA BAR ──────────── -->
+    <!-- ── 2. FULL SELECTED LEDGER REAL METADATA BAR (accounting reports only) -->
+    ${isFinancial ? `
     <div class="account-meta-box">
       <div class="account-meta-grid">
         <div class="meta-item"><strong>${tr("Account Code")}:</strong> <span>${escapeHtml(ledgerSummary?.accountCode || partyDetails?.code || "-")}</span></div>
@@ -608,9 +621,10 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
         <div class="meta-item"><strong>${tr("City Branch")}:</strong> <span>${escapeHtml(ledgerSummary?.cityBranch || resolvedBranch)}</span></div>
         <div class="meta-item"><strong>${tr("Branch Code")}:</strong> <span>${escapeHtml(ledgerSummary?.branchCode || "-")}</span></div>
       </div>
-    </div>
+    </div>` : ""}
 
-    <!-- ── 3. FINANCIAL SUMMARY STRIP (4-COLUMN BOX) ──────────── -->
+    <!-- ── 3. FINANCIAL SUMMARY STRIP (4-COLUMN BOX, accounting reports only) -->
+    ${isFinancial ? `
     <div class="financial-summary-strip">
       <div class="summary-box">
         <div class="summary-box-label">${tr("Opening Balance")}</div>
@@ -628,9 +642,9 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
         <div class="summary-box-label">${tr("Closing / Net Balance")}</div>
         <div class="summary-box-val net-text">${formatMoney(Math.abs(closeBal))} <span class="dc-badge ${closeDc === 'Dr' ? 'dr-text' : 'cr-text'}">${closeDc}</span></div>
       </div>
-    </div>
+    </div>` : ""}
 
-    <!-- ── 4. ACCOUNTING LEDGER DATA TABLE ──────────────────── -->
+    <!-- ── 4. MAIN DATA TABLE ──────────────────────────────── -->
     <table class="report-table">
       <thead>
         <tr>
@@ -738,8 +752,8 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
 
     <!-- ── 7. COMPACT PAGE FOOTER ────────────────────────── -->
     <div class="page-footer">
-      <div>${escapeHtml(brandName)} • ${escapeHtml(title)} • ${escapeHtml(fullDateTime)} • Ref: ${escapeHtml(documentNo || ledgerSummary?.accountCode || "LEDGER")}</div>
-      <div>${tr("Page")} 1 of 1 — <strong>${tr("Confidential Enterprise Statement")}</strong></div>
+      <div>${escapeHtml(brandName)} • ${escapeHtml(title)} • ${escapeHtml(fullDateTime)}${(documentNo || ledgerSummary?.accountCode) ? ` • ${tr("Ref")}: ${escapeHtml(documentNo || ledgerSummary?.accountCode || "")}` : ""}</div>
+      <div><strong>${tr(isFinancial ? "Confidential Enterprise Statement" : "Confidential")}</strong></div>
     </div>
 
   </div>

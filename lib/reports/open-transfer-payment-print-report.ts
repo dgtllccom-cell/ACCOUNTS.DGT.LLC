@@ -134,6 +134,7 @@ export function openTransferPaymentPrintReport(input: {
   ];
 
   const html = generateReportHtml({
+    reportKind: "accounting",
     title: "PURCHASE TRANSFER PAYMENT VOUCHER",
     orientation: "portrait",
     companyInfo,
