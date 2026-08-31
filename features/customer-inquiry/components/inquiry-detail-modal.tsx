@@ -171,7 +171,7 @@ export function InquiryDetailModal({
               <div>
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 flex items-center gap-1"><Paperclip className="h-3 w-3" />{s.t("attachments", "Attachments")} ({inq.attachments?.length ?? 0})</span>
-                  {data.canEdit && (
+                  {inq.canEdit && (
                     <>
                       <input ref={fileRef} type="file" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadFile(f); e.currentTarget.value = ""; }} />
                       <Button type="button" size="sm" variant="outline" className="h-6 text-[10px]" onClick={() => fileRef.current?.click()} disabled={busy}>{s.t("upload", "Upload")}</Button>
@@ -185,7 +185,7 @@ export function InquiryDetailModal({
                         <Download className="h-3 w-3" /> {a.name}
                       </a>
                       <span className="text-slate-400 ms-auto">{a.uploader_name || ""}</span>
-                      {data.canEdit && (
+                      {inq.canEdit && (
                         <button type="button" className="text-slate-400 hover:text-rose-500" onClick={() => act(`/attachments?attachmentId=${a.id}`, null, "DELETE")}><Trash2 className="h-3 w-3" /></button>
                       )}
                     </div>
@@ -194,11 +194,11 @@ export function InquiryDetailModal({
               </div>
 
               {/* workflow actions */}
-              {data.canEdit && (
+              {inq.canEdit && (
                 <div className="space-y-2 rounded-xl border border-slate-200 dark:border-slate-800 p-3">
                   <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400">{s.t("workflow", "Workflow")}</span>
                   <div className="flex flex-wrap gap-1.5">
-                    {(data.allowedNextStatuses ?? []).map((st: string) => (
+                    {(inq.allowedNextStatuses ?? []).map((st: string) => (
                       <Button key={st} type="button" size="sm" variant="outline" className="h-7 text-[11px]" disabled={busy}
                         onClick={() => act("/status", { to: st, ...(st === "lost" ? { lostReason: window.prompt(s.t("lost_reason", "Reason for lost inquiry?")) || "" } : {}) })}>
                         {s.t(`to_${st}`, `→ ${st}`)}
@@ -241,7 +241,7 @@ export function InquiryDetailModal({
                   </div>
 
                   {/* follow-up task */}
-                  {!inq.linked_task_id && data.isManager && (
+                  {!inq.linked_task_id && inq.isManager && (
                     <div className="flex items-center gap-1.5 pt-1">
                       <select id="ci-fu-assignee" className="flex-1 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-2 py-1 text-[11px]">
                         {assignees.map((a) => <option key={a.userId} value={a.userId}>{a.name || a.userId.slice(0, 8)}</option>)}
