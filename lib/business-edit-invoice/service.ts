@@ -370,11 +370,25 @@ export async function updateInvoice(session: ErpSession, id: string, patch: any)
       h = res[0];
     }
 
-    // line edits
+    // line edits — the ORIGINAL (frozen) unit price / amount are NEVER taken from
+    // the client: they are preserved from the pre-edit row at the same position.
     if (Array.isArray(patch.lines)) {
+      const prevLines = (await sql`select * from public.business_edit_invoice_lines where invoice_id = ${id}::uuid order by sort_order`) as any[];
       await sql`delete from public.business_edit_invoice_lines where invoice_id = ${id}::uuid`;
       let sort = 0;
       for (const l of patch.lines) {
+        const prev = prevLines[sort] ?? null;
+        const dQty = l.quantity == null || l.quantity === "" ? null : Number(l.quantity);
+        const dPrice = l.documentUnitPrice == null || l.documentUnitPrice === "" ? null : Number(l.documentUnitPrice);
+        // server is authoritative: document_amount = document unit price × quantity whenever
+        // both are known — a stale client-sent documentAmount is never trusted.
+        const dAmount = dPrice != null && dQty != null
+          ? Number((dPrice * dQty).toFixed(4))
+          : (l.documentAmount == null || l.documentAmount === "" ? null : Number(l.documentAmount));
+        // frozen originals come ONLY from the pre-edit row; a line the user adds for
+        // the document has no "original" price (null) — the client can never set it.
+        const origPrice = prev ? prev.original_unit_price : null;
+        const origAmount = prev ? prev.original_amount : null;
         await sql`
           insert into public.business_edit_invoice_lines (
             invoice_id, sort_order, goods_name, description, hs_code, brand, size, packing,
@@ -383,10 +397,10 @@ export async function updateInvoice(session: ErpSession, id: string, patch: any)
           ) values (
             ${id}::uuid, ${sort++}, ${l.goodsName ?? null}, ${l.description ?? null}, ${l.hsCode ?? null},
             ${l.brand ?? null}, ${l.size ?? null}, ${l.packing ?? null},
-            ${l.packages ?? null}, ${l.quantity ?? null}, ${l.unit ?? null}, ${l.netWeight ?? null}, ${l.grossWeight ?? null},
-            ${l.originalUnitPrice ?? null}, ${l.originalAmount ?? null},
-            ${l.documentUnitPrice ?? null},
-            ${l.documentAmount ?? (l.documentUnitPrice != null && l.quantity != null ? Number(l.documentUnitPrice) * Number(l.quantity) : null)}
+            ${l.packages ?? null}, ${dQty}, ${l.unit ?? null}, ${l.netWeight ?? null}, ${l.grossWeight ?? null},
+            ${origPrice}, ${origAmount},
+            ${dPrice},
+            ${dAmount}
           )
         `;
       }
