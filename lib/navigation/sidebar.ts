@@ -462,6 +462,14 @@ export const sidebarTree: SidebarNode[] = [
         labelKey: "nav.bill_expenses",
         iconKey: "coins",
         href: "/dashboard/expenses/bill-expenses" as Route
+      },
+      {
+        key: "business-edit-invoice",
+        labelKey: "nav.business_edit_invoice" as UiKey,
+        iconKey: "file-spreadsheet",
+        href: "/dashboard/business-edit-invoice" as Route,
+        roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "cashier", "staff_user"],
+        permission: { resource: "reports", action: "read" }
       }
     ]
   },

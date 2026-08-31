@@ -97,6 +97,12 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "meeting_notes", mode: "translate" },
     { field: "requirements", mode: "translate" },
   ],
+  business_edit_invoices: [
+    { field: "party_name", mode: "transliterate" },
+    { field: "destination", mode: "translate" },
+    { field: "notes", mode: "translate" },
+    { field: "signature_name", mode: "transliterate" },
+  ],
   branches: [
     { field: "name", mode: "transliterate" },
     { field: "owner_name", mode: "transliterate" },

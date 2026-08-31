@@ -1,7 +1,7 @@
 import type { DocumentBranding } from "@/lib/reports/resolve-document-branding";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
-export type TradeDocType = "commercial_invoice" | "packing_list" | "proforma_invoice" | "contract";
+export type TradeDocType = "commercial_invoice" | "export_invoice" | "packing_list" | "proforma_invoice" | "contract";
 export type TradeTxnKind = "purchase" | "sales";
 export type TradeScope = "international" | "local";
 

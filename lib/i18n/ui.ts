@@ -4843,6 +4843,76 @@ export type UiKey =
   | "sett.c_status"
   | "sett.loading"
   | "sett.empty"
+  | "tdoc.t_export_invoice"
+  | "nav.business_edit_invoice"
+  | "bei.title"
+  | "bei.blurb"
+  | "bei.new_from_bill"
+  | "bei.available_bills"
+  | "bei.register"
+  | "bei.invoice_no"
+  | "bei.doc_type"
+  | "bei.commercial_invoice"
+  | "bei.proforma_invoice"
+  | "bei.export_invoice"
+  | "bei.packing_list"
+  | "bei.source_module"
+  | "bei.m_purchase_booking"
+  | "bei.m_sales_booking"
+  | "bei.m_local_purchase"
+  | "bei.m_local_sales"
+  | "bei.original_bill_no"
+  | "bei.original_value"
+  | "bei.document_value"
+  | "bei.original_unit_price"
+  | "bei.document_unit_price"
+  | "bei.party"
+  | "bei.supplier"
+  | "bei.customer"
+  | "bei.consignee"
+  | "bei.notify_party"
+  | "bei.destination"
+  | "bei.incoterms"
+  | "bei.payment_terms"
+  | "bei.notes"
+  | "bei.validity"
+  | "bei.signature_name"
+  | "bei.goods"
+  | "bei.description"
+  | "bei.hs_code"
+  | "bei.quantity"
+  | "bei.unit"
+  | "bei.net_weight"
+  | "bei.gross_weight"
+  | "bei.packing"
+  | "bei.amount"
+  | "bei.currency"
+  | "bei.document_date"
+  | "bei.document_no_field"
+  | "bei.status"
+  | "bei.draft"
+  | "bei.finalized"
+  | "bei.void"
+  | "bei.finalize"
+  | "bei.reopen"
+  | "bei.save"
+  | "bei.preview"
+  | "bei.print_pdf"
+  | "bei.version_history"
+  | "bei.version"
+  | "bei.audit_trail"
+  | "bei.created_by"
+  | "bei.created_at"
+  | "bei.accounting_note"
+  | "bei.no_invoices"
+  | "bei.no_bills"
+  | "bei.select_bill"
+  | "bei.create"
+  | "bei.branch_company"
+  | "bei.loading"
+  | "bei.edit"
+  | "bei.setup_pending"
+  | "bei.access_denied"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -15208,6 +15278,7 @@ const en: Dict = {
   "pdoc.employee_report_subtitle": "Employee Profile & Payroll Summary",
   "pdoc.employee_overview": "Employee Profile Overview",
   "tdoc.t_commercial_invoice": "Commercial Invoice",
+  "tdoc.t_export_invoice": "Export Invoice",
   "tdoc.t_packing_list": "Packing List",
   "tdoc.t_proforma_invoice": "Proforma Invoice",
   "tdoc.brand_fallback": "Digital Dock ERP",
@@ -15745,6 +15816,75 @@ const en: Dict = {
   "sett.c_status": "Status",
   "sett.loading": "Loading settlement records…",
   "sett.empty": "No settlement records found. Click Sync ERP Records above to populate from existing transactions.",
+  "nav.business_edit_invoice": "Business Edit Invoice",
+  "bei.title": "Business Edit Invoice",
+  "bei.blurb": "Generate a separate editable business / document invoice from a finalized Purchase Booking, Sales Booking, Local Purchase or Local Sales bill. The original transaction, journal, ledger, roznamcha, stock cost and postings are never changed.",
+  "bei.new_from_bill": "New from Bill",
+  "bei.available_bills": "Available Finalized Bills",
+  "bei.register": "Business Edit Invoice Register",
+  "bei.invoice_no": "Invoice No",
+  "bei.doc_type": "Document Type",
+  "bei.commercial_invoice": "Commercial Invoice",
+  "bei.proforma_invoice": "Proforma Invoice",
+  "bei.export_invoice": "Export Invoice",
+  "bei.packing_list": "Packing List",
+  "bei.source_module": "Source",
+  "bei.m_purchase_booking": "Purchase Booking",
+  "bei.m_sales_booking": "Sales Booking",
+  "bei.m_local_purchase": "Local Purchase",
+  "bei.m_local_sales": "Local Sales",
+  "bei.original_bill_no": "Original Bill No",
+  "bei.original_value": "Original Value",
+  "bei.document_value": "Document Value",
+  "bei.original_unit_price": "Original Unit Price",
+  "bei.document_unit_price": "Document Unit Price",
+  "bei.party": "Party",
+  "bei.supplier": "Supplier",
+  "bei.customer": "Customer",
+  "bei.consignee": "Consignee",
+  "bei.notify_party": "Notify Party",
+  "bei.destination": "Destination",
+  "bei.incoterms": "Incoterms",
+  "bei.payment_terms": "Payment Terms",
+  "bei.notes": "Notes",
+  "bei.validity": "Validity",
+  "bei.signature_name": "Authorized Signatory",
+  "bei.goods": "Goods",
+  "bei.description": "Description",
+  "bei.hs_code": "HS Code",
+  "bei.quantity": "Quantity",
+  "bei.unit": "Unit",
+  "bei.net_weight": "Net Weight",
+  "bei.gross_weight": "Gross Weight",
+  "bei.packing": "Packing",
+  "bei.amount": "Amount",
+  "bei.currency": "Currency",
+  "bei.document_date": "Document Date",
+  "bei.document_no_field": "Document / Invoice No",
+  "bei.status": "Status",
+  "bei.draft": "Draft",
+  "bei.finalized": "Finalized",
+  "bei.void": "Void",
+  "bei.finalize": "Finalize",
+  "bei.reopen": "Reopen",
+  "bei.save": "Save",
+  "bei.preview": "Preview",
+  "bei.print_pdf": "Print / PDF",
+  "bei.version_history": "Version History",
+  "bei.version": "Version",
+  "bei.audit_trail": "Audit Trail",
+  "bei.created_by": "Created By",
+  "bei.created_at": "Date / Time",
+  "bei.accounting_note": "The original accounting record (Debit/Credit, Journal, Ledger, Roznamcha, Stock Cost, Payment, Outstanding) is NOT affected by this document.",
+  "bei.no_invoices": "No business edit invoices yet. Click \"New from Bill\" to create one from a finalized bill.",
+  "bei.no_bills": "No finalized bills available in your scope.",
+  "bei.select_bill": "Select the original bill",
+  "bei.create": "Create Editable Invoice",
+  "bei.branch_company": "Branch / Company",
+  "bei.loading": "Loading…",
+  "bei.edit": "Edit",
+  "bei.setup_pending": "Business Edit Invoice is not set up on this database yet. Run migration 20261023.",
+  "bei.access_denied": "You do not have access to Business Edit Invoice.",
 };
 
 const ur: Dict = {
@@ -26087,6 +26227,7 @@ const ur: Dict = {
   "pdoc.employee_report_subtitle": "ملازم پروفائل اور پے رول خلاصہ",
   "pdoc.employee_overview": "ملازم پروفائل کا جائزہ",
   "tdoc.t_commercial_invoice": "کمرشل انوائس",
+  "tdoc.t_export_invoice": "ایکسپورٹ انوائس",
   "tdoc.t_packing_list": "پیکنگ لسٹ",
   "tdoc.t_proforma_invoice": "پروفارما انوائس",
   "tdoc.brand_fallback": "ڈیجیٹل ڈاک ERP",
@@ -26624,6 +26765,75 @@ const ur: Dict = {
   "sett.c_status": "اسٹیٹس",
   "sett.loading": "تصفیہ ریکارڈز لوڈ ہو رہے ہیں…",
   "sett.empty": "کوئی تصفیہ ریکارڈ نہیں ملا۔ موجودہ لین دین سے بھرنے کے لیے اوپر Sync ERP Records پر کلک کریں۔",
+  "nav.business_edit_invoice": "بزنس ایڈٹ انوائس",
+  "bei.title": "بزنس ایڈٹ انوائس",
+  "bei.blurb": "کسی مکمل شدہ خریداری بکنگ، سیلز بکنگ، مقامی خریداری یا مقامی سیلز بل سے علیحدہ قابلِ ترمیم بزنس/دستاویزی انوائس بنائیں۔ اصل ٹرانزیکشن، جرنل، لیجر، روزنامچہ، اسٹاک کاسٹ اور پوسٹنگز کبھی تبدیل نہیں ہوتیں۔",
+  "bei.new_from_bill": "بل سے نیا",
+  "bei.available_bills": "دستیاب مکمل شدہ بلز",
+  "bei.register": "بزنس ایڈٹ انوائس رجسٹر",
+  "bei.invoice_no": "انوائس نمبر",
+  "bei.doc_type": "دستاویز کی قسم",
+  "bei.commercial_invoice": "کمرشل انوائس",
+  "bei.proforma_invoice": "پروفارما انوائس",
+  "bei.export_invoice": "ایکسپورٹ انوائس",
+  "bei.packing_list": "پیکنگ لسٹ",
+  "bei.source_module": "ماخذ",
+  "bei.m_purchase_booking": "خریداری بکنگ",
+  "bei.m_sales_booking": "سیلز بکنگ",
+  "bei.m_local_purchase": "مقامی خریداری",
+  "bei.m_local_sales": "مقامی سیلز",
+  "bei.original_bill_no": "اصل بل نمبر",
+  "bei.original_value": "اصل ویلیو",
+  "bei.document_value": "دستاویزی ویلیو",
+  "bei.original_unit_price": "اصل یونٹ قیمت",
+  "bei.document_unit_price": "دستاویزی یونٹ قیمت",
+  "bei.party": "فریق",
+  "bei.supplier": "سپلائر",
+  "bei.customer": "کسٹمر",
+  "bei.consignee": "کنسائنی",
+  "bei.notify_party": "نوٹیفائی پارٹی",
+  "bei.destination": "منزل",
+  "bei.incoterms": "انکوٹرمز",
+  "bei.payment_terms": "ادائیگی کی شرائط",
+  "bei.notes": "نوٹس",
+  "bei.validity": "معیاد",
+  "bei.signature_name": "مجاز دستخط کنندہ",
+  "bei.goods": "سامان",
+  "bei.description": "تفصیل",
+  "bei.hs_code": "ایچ ایس کوڈ",
+  "bei.quantity": "مقدار",
+  "bei.unit": "یونٹ",
+  "bei.net_weight": "نیٹ وزن",
+  "bei.gross_weight": "مجموعی وزن",
+  "bei.packing": "پیکنگ",
+  "bei.amount": "رقم",
+  "bei.currency": "کرنسی",
+  "bei.document_date": "دستاویز کی تاریخ",
+  "bei.document_no_field": "دستاویز / انوائس نمبر",
+  "bei.status": "اسٹیٹس",
+  "bei.draft": "ڈرافٹ",
+  "bei.finalized": "حتمی",
+  "bei.void": "منسوخ",
+  "bei.finalize": "حتمی کریں",
+  "bei.reopen": "دوبارہ کھولیں",
+  "bei.save": "محفوظ کریں",
+  "bei.preview": "پیش نظارہ",
+  "bei.print_pdf": "پرنٹ / PDF",
+  "bei.version_history": "ورژن ہسٹری",
+  "bei.version": "ورژن",
+  "bei.audit_trail": "آڈٹ ٹریل",
+  "bei.created_by": "تخلیق کردہ",
+  "bei.created_at": "تاریخ / وقت",
+  "bei.accounting_note": "اصل اکاؤنٹنگ ریکارڈ (ڈیبٹ/کریڈٹ، جرنل، لیجر، روزنامچہ، اسٹاک کاسٹ، ادائیگی، بقایا) اس دستاویز سے متاثر نہیں ہوتا۔",
+  "bei.no_invoices": "ابھی کوئی بزنس ایڈٹ انوائس نہیں۔ کسی مکمل شدہ بل سے بنانے کے لیے \"بل سے نیا\" پر کلک کریں۔",
+  "bei.no_bills": "آپ کے دائرہ کار میں کوئی مکمل شدہ بل دستیاب نہیں۔",
+  "bei.select_bill": "اصل بل منتخب کریں",
+  "bei.create": "قابلِ ترمیم انوائس بنائیں",
+  "bei.branch_company": "برانچ / کمپنی",
+  "bei.loading": "لوڈ ہو رہا ہے…",
+  "bei.edit": "ترمیم",
+  "bei.setup_pending": "بزنس ایڈٹ انوائس ابھی اس ڈیٹابیس پر سیٹ اپ نہیں ہے۔ مائیگریشن 20261023 چلائیں۔",
+  "bei.access_denied": "آپ کو بزنس ایڈٹ انوائس تک رسائی حاصل نہیں ہے۔",
 };
 
 const ar: Dict = {
@@ -36968,6 +37178,7 @@ const ar: Dict = {
   "pdoc.employee_report_subtitle": "ملخص ملف الموظف وكشوف المرتبات",
   "pdoc.employee_overview": "نظرة عامة على ملف الموظف",
   "tdoc.t_commercial_invoice": "فاتورة تجارية",
+  "tdoc.t_export_invoice": "فاتورة تصدير",
   "tdoc.t_packing_list": "قائمة التعبئة",
   "tdoc.t_proforma_invoice": "فاتورة مبدئية",
   "tdoc.brand_fallback": "ديجيتال دوك ERP",
@@ -37505,6 +37716,75 @@ const ar: Dict = {
   "sett.c_status": "الحالة",
   "sett.loading": "جارٍ تحميل سجلات التسوية…",
   "sett.empty": "لم يتم العثور على سجلات تسوية. انقر على مزامنة سجلات ERP أعلاه للتعبئة من المعاملات الحالية.",
+  "nav.business_edit_invoice": "فاتورة تحرير الأعمال",
+  "bei.title": "فاتورة تحرير الأعمال",
+  "bei.blurb": "أنشئ فاتورة أعمال/مستند قابلة للتحرير منفصلة من فاتورة حجز شراء أو حجز مبيعات أو شراء محلي أو مبيعات محلية مكتملة. لا يتم تغيير المعاملة الأصلية أو دفتر اليومية أو دفتر الأستاذ أو روزنامچه أو تكلفة المخزون أو القيود أبداً.",
+  "bei.new_from_bill": "جديد من فاتورة",
+  "bei.available_bills": "الفواتير المكتملة المتاحة",
+  "bei.register": "سجل فواتير تحرير الأعمال",
+  "bei.invoice_no": "رقم الفاتورة",
+  "bei.doc_type": "نوع المستند",
+  "bei.commercial_invoice": "فاتورة تجارية",
+  "bei.proforma_invoice": "فاتورة مبدئية",
+  "bei.export_invoice": "فاتورة تصدير",
+  "bei.packing_list": "قائمة التعبئة",
+  "bei.source_module": "المصدر",
+  "bei.m_purchase_booking": "حجز شراء",
+  "bei.m_sales_booking": "حجز مبيعات",
+  "bei.m_local_purchase": "شراء محلي",
+  "bei.m_local_sales": "مبيعات محلية",
+  "bei.original_bill_no": "رقم الفاتورة الأصلية",
+  "bei.original_value": "القيمة الأصلية",
+  "bei.document_value": "قيمة المستند",
+  "bei.original_unit_price": "سعر الوحدة الأصلي",
+  "bei.document_unit_price": "سعر وحدة المستند",
+  "bei.party": "الطرف",
+  "bei.supplier": "المورد",
+  "bei.customer": "العميل",
+  "bei.consignee": "المرسل إليه",
+  "bei.notify_party": "الطرف المُخطَر",
+  "bei.destination": "الوجهة",
+  "bei.incoterms": "شروط التسليم",
+  "bei.payment_terms": "شروط الدفع",
+  "bei.notes": "ملاحظات",
+  "bei.validity": "الصلاحية",
+  "bei.signature_name": "الموقّع المفوّض",
+  "bei.goods": "البضائع",
+  "bei.description": "الوصف",
+  "bei.hs_code": "رمز HS",
+  "bei.quantity": "الكمية",
+  "bei.unit": "الوحدة",
+  "bei.net_weight": "الوزن الصافي",
+  "bei.gross_weight": "الوزن الإجمالي",
+  "bei.packing": "التعبئة",
+  "bei.amount": "المبلغ",
+  "bei.currency": "العملة",
+  "bei.document_date": "تاريخ المستند",
+  "bei.document_no_field": "رقم المستند / الفاتورة",
+  "bei.status": "الحالة",
+  "bei.draft": "مسودة",
+  "bei.finalized": "نهائي",
+  "bei.void": "ملغى",
+  "bei.finalize": "إنهاء",
+  "bei.reopen": "إعادة فتح",
+  "bei.save": "حفظ",
+  "bei.preview": "معاينة",
+  "bei.print_pdf": "طباعة / PDF",
+  "bei.version_history": "سجل الإصدارات",
+  "bei.version": "الإصدار",
+  "bei.audit_trail": "سجل التدقيق",
+  "bei.created_by": "أنشئ بواسطة",
+  "bei.created_at": "التاريخ / الوقت",
+  "bei.accounting_note": "السجل المحاسبي الأصلي (مدين/دائن، دفتر اليومية، دفتر الأستاذ، روزنامچه، تكلفة المخزون، الدفع، المستحقات) لا يتأثر بهذا المستند.",
+  "bei.no_invoices": "لا توجد فواتير تحرير أعمال بعد. انقر \"جديد من فاتورة\" لإنشاء واحدة من فاتورة مكتملة.",
+  "bei.no_bills": "لا توجد فواتير مكتملة متاحة في نطاقك.",
+  "bei.select_bill": "اختر الفاتورة الأصلية",
+  "bei.create": "إنشاء فاتورة قابلة للتحرير",
+  "bei.branch_company": "الفرع / الشركة",
+  "bei.loading": "جارٍ التحميل…",
+  "bei.edit": "تعديل",
+  "bei.setup_pending": "لم يتم إعداد فاتورة تعديل الأعمال في قاعدة البيانات هذه بعد. شغّل الترحيل 20261023.",
+  "bei.access_denied": "ليس لديك حق الوصول إلى فاتورة تعديل الأعمال.",
 };
 
 const fa: Dict = {
@@ -47848,6 +48128,7 @@ const fa: Dict = {
   "pdoc.employee_report_subtitle": "خلاصه پروفایل و حقوق کارمند",
   "pdoc.employee_overview": "نمای کلی پروفایل کارمند",
   "tdoc.t_commercial_invoice": "فاکتور تجاری",
+  "tdoc.t_export_invoice": "فاکتور صادرات",
   "tdoc.t_packing_list": "فهرست بسته‌بندی",
   "tdoc.t_proforma_invoice": "پیش‌فاکتور",
   "tdoc.brand_fallback": "دیجیتال داک ERP",
@@ -48385,6 +48666,75 @@ const fa: Dict = {
   "sett.c_status": "وضعیت",
   "sett.loading": "در حال بارگذاری سوابق تسویه…",
   "sett.empty": "هیچ سابقه تسویه‌ای یافت نشد. برای پر کردن از تراکنش‌های موجود، روی همگام‌سازی سوابق ERP در بالا کلیک کنید.",
+  "nav.business_edit_invoice": "فاکتور ویرایش کسب‌وکار",
+  "bei.title": "فاکتور ویرایش کسب‌وکار",
+  "bei.blurb": "یک فاکتور کسب‌وکار/سند قابل ویرایش جداگانه از یک فاکتور نهایی‌شده رزرو خرید، رزرو فروش، خرید محلی یا فروش محلی ایجاد کنید. تراکنش اصلی، دفتر روزنامه، دفتر کل، روزنامچه، بهای تمام‌شده و ثبت‌ها هرگز تغییر نمی‌کنند.",
+  "bei.new_from_bill": "جدید از فاکتور",
+  "bei.available_bills": "فاکتورهای نهایی‌شده موجود",
+  "bei.register": "دفتر ثبت فاکتور ویرایش کسب‌وکار",
+  "bei.invoice_no": "شماره فاکتور",
+  "bei.doc_type": "نوع سند",
+  "bei.commercial_invoice": "فاکتور تجاری",
+  "bei.proforma_invoice": "پیش‌فاکتور",
+  "bei.export_invoice": "فاکتور صادرات",
+  "bei.packing_list": "فهرست بسته‌بندی",
+  "bei.source_module": "منبع",
+  "bei.m_purchase_booking": "رزرو خرید",
+  "bei.m_sales_booking": "رزرو فروش",
+  "bei.m_local_purchase": "خرید محلی",
+  "bei.m_local_sales": "فروش محلی",
+  "bei.original_bill_no": "شماره فاکتور اصلی",
+  "bei.original_value": "ارزش اصلی",
+  "bei.document_value": "ارزش سند",
+  "bei.original_unit_price": "قیمت واحد اصلی",
+  "bei.document_unit_price": "قیمت واحد سند",
+  "bei.party": "طرف",
+  "bei.supplier": "تأمین‌کننده",
+  "bei.customer": "مشتری",
+  "bei.consignee": "گیرنده",
+  "bei.notify_party": "طرف مطلع‌شونده",
+  "bei.destination": "مقصد",
+  "bei.incoterms": "اینکوترمز",
+  "bei.payment_terms": "شرایط پرداخت",
+  "bei.notes": "یادداشت‌ها",
+  "bei.validity": "اعتبار",
+  "bei.signature_name": "امضاکننده مجاز",
+  "bei.goods": "کالاها",
+  "bei.description": "شرح",
+  "bei.hs_code": "کد HS",
+  "bei.quantity": "مقدار",
+  "bei.unit": "واحد",
+  "bei.net_weight": "وزن خالص",
+  "bei.gross_weight": "وزن ناخالص",
+  "bei.packing": "بسته‌بندی",
+  "bei.amount": "مبلغ",
+  "bei.currency": "ارز",
+  "bei.document_date": "تاریخ سند",
+  "bei.document_no_field": "شماره سند / فاکتور",
+  "bei.status": "وضعیت",
+  "bei.draft": "پیش‌نویس",
+  "bei.finalized": "نهایی‌شده",
+  "bei.void": "باطل",
+  "bei.finalize": "نهایی کردن",
+  "bei.reopen": "بازگشایی",
+  "bei.save": "ذخیره",
+  "bei.preview": "پیش‌نمایش",
+  "bei.print_pdf": "چاپ / PDF",
+  "bei.version_history": "تاریخچه نسخه‌ها",
+  "bei.version": "نسخه",
+  "bei.audit_trail": "رد پای حسابرسی",
+  "bei.created_by": "ایجادشده توسط",
+  "bei.created_at": "تاریخ / زمان",
+  "bei.accounting_note": "سابقه حسابداری اصلی (بدهکار/بستانکار، دفتر روزنامه، دفتر کل، روزنامچه، بهای تمام‌شده، پرداخت، مانده) تحت تأثیر این سند قرار نمی‌گیرد.",
+  "bei.no_invoices": "هنوز هیچ فاکتور ویرایش کسب‌وکاری وجود ندارد. برای ایجاد از یک فاکتور نهایی‌شده روی \"جدید از فاکتور\" کلیک کنید.",
+  "bei.no_bills": "هیچ فاکتور نهایی‌شده‌ای در محدوده شما موجود نیست.",
+  "bei.select_bill": "فاکتور اصلی را انتخاب کنید",
+  "bei.create": "ایجاد فاکتور قابل ویرایش",
+  "bei.branch_company": "شعبه / شرکت",
+  "bei.loading": "در حال بارگذاری…",
+  "bei.edit": "ویرایش",
+  "bei.setup_pending": "فاکتور ویرایش تجاری هنوز روی این پایگاه داده تنظیم نشده است. مهاجرت 20261023 را اجرا کنید.",
+  "bei.access_denied": "شما به فاکتور ویرایش تجاری دسترسی ندارید.",
 };
 
 const ps: Dict = {
@@ -58734,6 +59084,7 @@ const ps: Dict = {
   "pdoc.employee_report_subtitle": "د کارمند پروفایل او معاش لنډیز",
   "pdoc.employee_overview": "د کارمند پروفایل کتنه",
   "tdoc.t_commercial_invoice": "سوداګریز انوایس",
+  "tdoc.t_export_invoice": "د صادراتو انوایس",
   "tdoc.t_packing_list": "د بسته بندۍ لیست",
   "tdoc.t_proforma_invoice": "پروفارما انوائس",
   "tdoc.brand_fallback": "ډیجیټل ډاک ERP",
@@ -59271,6 +59622,75 @@ const ps: Dict = {
   "sett.c_status": "حالت",
   "sett.loading": "د تصفیې ریکارډونه بارول کیږي…",
   "sett.empty": "د تصفیې هیڅ ریکارډ ونه موندل شو. د موجوده راکړو ورکړو څخه د ډکولو لپاره پورته Sync ERP Records کلیک کړئ.",
+  "nav.business_edit_invoice": "د سوداګرۍ د سمون انوایس",
+  "bei.title": "د سوداګرۍ د سمون انوایس",
+  "bei.blurb": "د بشپړ شوي پیرودنې بکنګ، پلور بکنګ، محلي پیرودنې یا محلي پلور بیل څخه جلا د سمون وړ سوداګریز/سندي انوایس جوړ کړئ. اصلي راکړه ورکړه، جورنال، لیجر، روزنامچه، د ذخیرې لګښت او پوسټونه هیڅکله نه بدلیږي.",
+  "bei.new_from_bill": "له بیل څخه نوی",
+  "bei.available_bills": "شته بشپړ شوي بیلونه",
+  "bei.register": "د سوداګرۍ د سمون انوایس راجستر",
+  "bei.invoice_no": "د انوایس شمېره",
+  "bei.doc_type": "د سند ډول",
+  "bei.commercial_invoice": "سوداګریز انوایس",
+  "bei.proforma_invoice": "پروفارما انوایس",
+  "bei.export_invoice": "د صادراتو انوایس",
+  "bei.packing_list": "د بسته بندۍ لیست",
+  "bei.source_module": "سرچینه",
+  "bei.m_purchase_booking": "د پیرودنې بکنګ",
+  "bei.m_sales_booking": "د پلور بکنګ",
+  "bei.m_local_purchase": "محلي پیرودنه",
+  "bei.m_local_sales": "محلي پلور",
+  "bei.original_bill_no": "اصلي بیل شمېره",
+  "bei.original_value": "اصلي ارزښت",
+  "bei.document_value": "د سند ارزښت",
+  "bei.original_unit_price": "اصلي واحد بیه",
+  "bei.document_unit_price": "د سند واحد بیه",
+  "bei.party": "اړخ",
+  "bei.supplier": "عرضه کوونکی",
+  "bei.customer": "پیرودونکی",
+  "bei.consignee": "ترلاسه کوونکی",
+  "bei.notify_party": "خبرول کیدونکی اړخ",
+  "bei.destination": "منزل",
+  "bei.incoterms": "انکوترمز",
+  "bei.payment_terms": "د تادیې شرایط",
+  "bei.notes": "یادښتونه",
+  "bei.validity": "اعتبار",
+  "bei.signature_name": "مجاز لاسلیک کوونکی",
+  "bei.goods": "توکي",
+  "bei.description": "تشریح",
+  "bei.hs_code": "د HS کوډ",
+  "bei.quantity": "مقدار",
+  "bei.unit": "واحد",
+  "bei.net_weight": "خالص وزن",
+  "bei.gross_weight": "ناخالص وزن",
+  "bei.packing": "بسته بندي",
+  "bei.amount": "مقدار",
+  "bei.currency": "اسعارو",
+  "bei.document_date": "د سند نېټه",
+  "bei.document_no_field": "د سند / انوایس شمېره",
+  "bei.status": "حالت",
+  "bei.draft": "مسوده",
+  "bei.finalized": "وروستی",
+  "bei.void": "باطل",
+  "bei.finalize": "وروستی کول",
+  "bei.reopen": "بیا پرانیستل",
+  "bei.save": "خوندي کول",
+  "bei.preview": "مخکتنه",
+  "bei.print_pdf": "چاپ / PDF",
+  "bei.version_history": "د نسخې تاریخ",
+  "bei.version": "نسخه",
+  "bei.audit_trail": "د پلټنې لړۍ",
+  "bei.created_by": "جوړوونکی",
+  "bei.created_at": "نېټه / وخت",
+  "bei.accounting_note": "اصلي محاسبوي ریکارډ (ډیبیټ/کریډیټ، جورنال، لیجر، روزنامچه، د ذخیرې لګښت، تادیه، پاتې) د دې سند لخوا نه اغیزمن کیږي.",
+  "bei.no_invoices": "تر اوسه د سوداګرۍ د سمون انوایس نشته. د بشپړ شوي بیل څخه د جوړولو لپاره \"له بیل څخه نوی\" کلیک کړئ.",
+  "bei.no_bills": "ستاسو په ساحه کې هیڅ بشپړ شوی بیل شتون نلري.",
+  "bei.select_bill": "اصلي بیل وټاکئ",
+  "bei.create": "د سمون وړ انوایس جوړ کړئ",
+  "bei.branch_company": "څانګه / شرکت",
+  "bei.loading": "بارول کیږي…",
+  "bei.edit": "سمون",
+  "bei.setup_pending": "د سوداګرۍ د سمون رسيد لا تر اوسه پدې ډېټابیس کې نه دی تنظیم شوی. د 20261023 مهاجرت پرمخ بوځئ.",
+  "bei.access_denied": "تاسو د سوداګرۍ د سمون رسيد ته لاسرسی نه لرئ.",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

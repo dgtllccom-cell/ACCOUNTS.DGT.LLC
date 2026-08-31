@@ -48,6 +48,7 @@ function fmtDate(v: string | null | undefined): string {
 
 const DOC_TITLE_KEY: Record<Exclude<TradeDocumentInput["docType"], "contract">, [string, string]> = {
   commercial_invoice: ["tdoc.t_commercial_invoice", "Commercial Invoice"],
+  export_invoice: ["tdoc.t_export_invoice", "Export Invoice"],
   packing_list: ["tdoc.t_packing_list", "Packing List"],
   proforma_invoice: ["tdoc.t_proforma_invoice", "Proforma Invoice"],
 };
