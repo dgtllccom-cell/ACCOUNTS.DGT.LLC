@@ -59,6 +59,7 @@ export const RELATED_MODULES = [
   "shipping",
   "clearing",
   "reports",
+  "customer_inquiry",
   "other",
 ] as const;
 export type RelatedModule = (typeof RELATED_MODULES)[number];

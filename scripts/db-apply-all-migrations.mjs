@@ -97,7 +97,8 @@ const migrations = [
   { name: "20261017_bill_expenses_source_delete", path: "supabase/migrations/20261017_bill_expenses_source_delete.sql" },
   { name: "20261018_user_tasks", path: "supabase/migrations/20261018_user_tasks.sql" },
   { name: "20261019_daily_fx_intraday", path: "supabase/migrations/20261019_daily_fx_intraday.sql" },
-  { name: "20261020_daily_fx_get_rate_dedupe", path: "supabase/migrations/20261020_daily_fx_get_rate_dedupe.sql" }
+  { name: "20261020_daily_fx_get_rate_dedupe", path: "supabase/migrations/20261020_daily_fx_get_rate_dedupe.sql" },
+  { name: "20261021_customer_inquiries", path: "supabase/migrations/20261021_customer_inquiries.sql" }
 ];
 
 const sql = postgres(env.DATABASE_URL, { max: 1, prepare: false, connect_timeout: 60 });

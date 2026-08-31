@@ -782,6 +782,16 @@ export const sidebarTree: SidebarNode[] = [
     ]
   },
   {
+    key: "customer-inquiries",
+    labelKey: "nav.customer_inquiries",
+    iconKey: "message-square",
+    href: "/dashboard/customer-inquiries" as Route,
+    children: [
+      { key: "ci-register", labelKey: "nav.inquiry_register", iconKey: "message-square", href: "/dashboard/customer-inquiries" as Route },
+      { key: "ci-followups", labelKey: "nav.inquiry_follow_ups", iconKey: "clock", href: "/dashboard/customer-inquiries/follow-ups" as Route },
+    ]
+  },
+  {
     key: "general-office",
     labelKey: "nav.general_office_management",
     iconKey: "users",

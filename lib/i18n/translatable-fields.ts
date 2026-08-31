@@ -85,6 +85,18 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "company_name", mode: "transliterate" },
     { field: "contact_person", mode: "transliterate" },
   ],
+  // ── Online Customer Inquiry / Meeting Record ──
+  // ONE original row; these free-text fields get translated views via record_translations.
+  // "View Original" bypasses localisation. Names transliterate, content translates.
+  customer_inquiries: [
+    { field: "customer_name", mode: "transliterate" },
+    { field: "company_name", mode: "transliterate" },
+    { field: "contact_person", mode: "transliterate" },
+    { field: "business_type", mode: "translate" },
+    { field: "inquiry_summary", mode: "translate" },
+    { field: "meeting_notes", mode: "translate" },
+    { field: "requirements", mode: "translate" },
+  ],
   branches: [
     { field: "name", mode: "transliterate" },
     { field: "owner_name", mode: "transliterate" },
