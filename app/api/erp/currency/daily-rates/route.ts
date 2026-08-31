@@ -86,7 +86,9 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ ok: true, data: rows, rates: rows });
   } catch (error: any) {
-    return NextResponse.json({ ok: false, error: error?.message || "Failed to load exchange rates" }, { status: 500 });
+    if (typeof error?.digest === "string" && error.digest.startsWith("NEXT_")) throw error;
+    if (error?.message === "NEXT_REDIRECT" || error?.message === "NEXT_NOT_FOUND") throw error;
+    return NextResponse.json({ ok: false, error: error?.message || "Failed to load exchange rates" }, { status: error?.status ?? 500 });
   }
 }
 
@@ -197,6 +199,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, data: mapRow(inserted) });
   } catch (error: any) {
-    return NextResponse.json({ ok: false, error: error?.message || "Failed to save rate" }, { status: 400 });
+    if (typeof error?.digest === "string" && error.digest.startsWith("NEXT_")) throw error;
+    if (error?.message === "NEXT_REDIRECT" || error?.message === "NEXT_NOT_FOUND") throw error;
+    return NextResponse.json({ ok: false, error: error?.message || "Failed to save rate" }, { status: error?.status ?? 400 });
   }
 }
