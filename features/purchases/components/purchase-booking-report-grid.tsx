@@ -93,49 +93,49 @@ export function PurchaseBookingReportGrid({
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
 
   // Card 1 Defaults
-  const branchName = data.branchName || "Abu Dhabi City Branch";
-  const branchCode = data.branchCode || "ARE-AUH-001";
-  const branchType = data.branchType || "Main Branch";
-  const parentBranch = data.parentBranch || "Global System";
-  const branchCountry = data.branchCountry || "United Arab Emirates";
-  const branchCity = data.branchCity || "Abu Dhabi";
+  const branchName = data.branchName || "—";
+  const branchCode = data.branchCode || "—";
+  const branchType = data.branchType || "—";
+  const parentBranch = data.parentBranch || "—";
+  const branchCountry = data.branchCountry || "—";
+  const branchCity = data.branchCity || "—";
 
-  const userName = data.userName || "ADMIN";
-  const userRole = data.userRole || "super admin";
-  const userStatus = data.userStatus || "Active";
+  const userName = data.userName || "—";
+  const userRole = data.userRole || "—";
+  const userStatus = data.userStatus || "—";
 
   // Card 2 Defaults
-  const bookingDate = data.bookingDate || "30/08/2026";
-  const fiscalYear = data.fiscalYear || "2025-26";
-  const bookingBranch = data.bookingBranch || "Global System";
-  const status = data.status || "DRAFT";
-  const systemSerialNo = data.systemSerialNo || "PO-2026-1925";
-  const countrySerialNo = data.countrySerialNo || "CS-1925";
-  const superAdminSerialNo = data.superAdminSerialNo || "SA-2026-1925";
-  const branchSerialNo = data.branchSerialNo || "ABU-1925";
-  const billContractNo = data.billContractNo || "PC-2026-1925";
-  const paymentType = data.paymentType || "Advance Payment";
-  const shipType = data.shipType || "By Sea";
-  const loadingMode = data.loadingMode || "By Sea";
-  const originCountry = data.originCountry || "United Arab Emirates";
+  const bookingDate = data.bookingDate || "—";
+  const fiscalYear = data.fiscalYear || "—";
+  const bookingBranch = data.bookingBranch || "—";
+  const status = data.status || "—";
+  const systemSerialNo = data.systemSerialNo || "—";
+  const countrySerialNo = data.countrySerialNo || "—";
+  const superAdminSerialNo = data.superAdminSerialNo || "—";
+  const branchSerialNo = data.branchSerialNo || "—";
+  const billContractNo = data.billContractNo || "—";
+  const paymentType = data.paymentType || "—";
+  const shipType = data.shipType || "—";
+  const loadingMode = data.loadingMode || "—";
+  const originCountry = data.originCountry || "—";
 
   // Card 3 Defaults
-  const purchaseAccountName = data.purchaseAccountName || "United Arab Emirates Main Country Clearing Ledger";
-  const purchaseAccountCode = data.purchaseAccountCode || "UAE-CORP-GEN-001";
-  const purchaseCompanyName = data.purchaseCompanyName || "United Arab Emirates Main Country Clearing Ledger";
-  const purchaseBusinessName = data.purchaseBusinessName || "UAE Main Country Clearing Ledger";
-  const purchaseCountry = data.purchaseCountry || "United Arab Emirates";
-  const purchaseCity = data.purchaseCity || "Dubai";
-  const purchaseBranch = data.purchaseBranch || "BR-DXB-001";
+  const purchaseAccountName = data.purchaseAccountName || "—";
+  const purchaseAccountCode = data.purchaseAccountCode || "—";
+  const purchaseCompanyName = data.purchaseCompanyName || "—";
+  const purchaseBusinessName = data.purchaseBusinessName || "—";
+  const purchaseCountry = data.purchaseCountry || "—";
+  const purchaseCity = data.purchaseCity || "—";
+  const purchaseBranch = data.purchaseBranch || "—";
 
   // Card 4 Defaults
-  const salesAccountName = data.salesAccountName || "United Arab Emirates Main Country Clearing Ledger";
-  const salesAccountCode = data.salesAccountCode || "UAE-CORP-GEN-001";
-  const salesCompanyName = data.salesCompanyName || "United Arab Emirates Main Country Clearing Ledger";
-  const salesBusinessName = data.salesBusinessName || "UAE Main Country Clearing Ledger";
-  const salesCountry = data.salesCountry || "United Arab Emirates";
-  const salesCity = data.salesCity || "Dubai";
-  const salesBranch = data.salesBranch || "BR-DXB-001";
+  const salesAccountName = data.salesAccountName || "—";
+  const salesAccountCode = data.salesAccountCode || "—";
+  const salesCompanyName = data.salesCompanyName || "—";
+  const salesBusinessName = data.salesBusinessName || "—";
+  const salesCountry = data.salesCountry || "—";
+  const salesCity = data.salesCity || "—";
+  const salesBranch = data.salesBranch || "—";
 
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className={`w-full ${className}`}>

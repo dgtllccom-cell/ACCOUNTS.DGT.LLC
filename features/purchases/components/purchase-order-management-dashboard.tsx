@@ -290,429 +290,6 @@ const getFlag = (country: string) => {
   return "";
 };
 
-const sampleReports: PurchaseReport[] = [
-  {
-    id: "sample-po-1",
-    purchaseBookingOrderNumber: "PO-20260612-1CIDED",
-    purchaseDate: "2026-06-13",
-    bookingDate: "2026-06-13",
-    purchaseAccountName: "Kabul Dry Fruits Purchase Account",
-    purchaseAccountNumber: "PA-1001",
-    salesAccountName: "Damaan Sales Account",
-    salesAccountNumber: "SA-2001",
-    supplierName: "Kabul Dry Fruits Wholesale",
-    buyerName: "Damaan Trading LLC",
-    productName: "PISTACHIOS KERNEL / Large / Pack 25 KG",
-    goodsDescription: "PISTACHIOS KERNEL / Large / Pack 25 KG",
-    quantity: 350,
-    unit: "BAGS",
-    totalWeight: 11099,
-    totalGrossWeight: 11134,
-    totalNetWeight: 11099,
-    containerCount: 6,
-    purchaseRate: 298.925,
-    totalPurchaseAmount: 104623.75,
-    purchaseAmount: 104623.75,
-    finalAmount: 29294650.00,
-    currency: "USD",
-    status: "BOOKING CONFIRMED",
-    paymentStatus: "PAID",
-    branchName: "Kabul Branch",
-    countryName: "Iran",
-    createdAt: "2026-06-13T10:00:00.000Z",
-    supplier_company_id: "dgt-co",
-    audit: { userName: "ADMIN", userId: "USR-001", branchCode: "BR-KBL-001" },
-    form_data: {
-      form: {
-        salesOrderNo: "SO-2826-0001",
-        companyCode: "COM-DGT",
-        branchCode: "BR-KBL-001",
-        loadingDate: "2026-06-20",
-        loadingPort: "Bandar Abbas",
-        receivedCountry: "Pakistan",
-        receivedPort: "Karachi Port",
-        exitPort: "Karachi Port"
-      },
-      goodsEntries: [
-        {
-          goodsName: "PISTACHIOS KERNEL",
-          qtyNo: 350,
-          qtyName: "BAGS",
-          qtyKgs: 25,
-          grossWeight: 11134,
-          netWeight: 11099,
-          coursePrice: 298.925,
-          totalAmount: 104623.75,
-          exchangeRate: 280,
-          finalAmount: 29294650.00,
-          origin: "Iran",
-          brand: "Large / Pack 25 KG"
-        }
-      ]
-    }
-  },
-  {
-    id: "sample-po-2",
-    purchaseBookingOrderNumber: "PO-20260612-FCFAA9",
-    purchaseDate: "2026-06-12",
-    bookingDate: "2026-06-12",
-    purchaseAccountName: "Kabul Dry Fruits Purchase Account",
-    purchaseAccountNumber: "PA-1001",
-    salesAccountName: "Damaan Sales Account",
-    salesAccountNumber: "SA-2001",
-    supplierName: "Kabul Dry Fruits Wholesale",
-    buyerName: "Damaan Trading LLC",
-    productName: "PISTACHIOS KERNEL / Large / Pack 25 KG",
-    goodsDescription: "PISTACHIOS KERNEL / Large / Pack 25 KG",
-    quantity: 450,
-    unit: "BAGS",
-    totalWeight: 16089,
-    totalGrossWeight: 16134,
-    totalNetWeight: 16089,
-    containerCount: 0,
-    purchaseRate: 371.108,
-    totalPurchaseAmount: 166998.75,
-    purchaseAmount: 166998.75,
-    finalAmount: 46758650.00,
-    currency: "USD",
-    status: "PENDING",
-    paymentStatus: "PAID",
-    branchName: "Kabul Branch",
-    countryName: "Iran",
-    createdAt: "2026-06-12T10:00:00.000Z",
-    supplier_company_id: "dgt-co",
-    audit: { userName: "ADMIN", userId: "USR-001", branchCode: "BR-KBL-001" },
-    form_data: {
-      form: {
-        salesOrderNo: "SO-2826-0001",
-        companyCode: "COM-DGT",
-        branchCode: "BR-KBL-001",
-        loadingDate: "2026-06-22",
-        loadingPort: "Bandar Abbas",
-        receivedCountry: "Pakistan",
-        receivedPort: "Karachi Port",
-        exitPort: "Karachi Port"
-      },
-      goodsEntries: [
-        {
-          goodsName: "PISTACHIOS KERNEL",
-          qtyNo: 450,
-          qtyName: "BAGS",
-          qtyKgs: 25,
-          grossWeight: 16134,
-          netWeight: 16089,
-          coursePrice: 371.108,
-          totalAmount: 166998.75,
-          exchangeRate: 280,
-          finalAmount: 46758650.00,
-          origin: "Iran",
-          brand: "Large / Pack 25 KG"
-        }
-      ]
-    }
-  },
-  {
-    id: "sample-po-3",
-    purchaseBookingOrderNumber: "PO-20260612-ESFDBF",
-    purchaseDate: "2026-06-12",
-    bookingDate: "2026-06-12",
-    purchaseAccountName: "Kabul Dry Fruits Purchase Account",
-    purchaseAccountNumber: "PA-1001",
-    salesAccountName: "Damaan Sales Account",
-    salesAccountNumber: "SA-2001",
-    supplierName: "Kabul Dry Fruits Wholesale",
-    buyerName: "Damaan Trading LLC",
-    productName: "PISTACHIOS KERNEL / Large / Pack 25 KG",
-    goodsDescription: "PISTACHIOS KERNEL / Large / Pack 25 KG",
-    quantity: 350,
-    unit: "BAGS",
-    totalWeight: 11099,
-    totalGrossWeight: 11134,
-    totalNetWeight: 11099,
-    containerCount: 0,
-    purchaseRate: 298.925,
-    totalPurchaseAmount: 104623.75,
-    purchaseAmount: 104623.75,
-    finalAmount: 29294650.00,
-    currency: "USD",
-    status: "PENDING",
-    paymentStatus: "PENDING",
-    branchName: "Kabul Branch",
-    countryName: "Iran",
-    createdAt: "2026-06-12T10:00:00.000Z",
-    supplier_company_id: "dgt-co",
-    audit: { userName: "ADMIN", userId: "USR-001", branchCode: "BR-KBL-001" },
-    form_data: {
-      form: {
-        salesOrderNo: "SO-2826-0001",
-        companyCode: "COM-DGT",
-        branchCode: "BR-KBL-001",
-        loadingDate: "-",
-        loadingPort: "-",
-        receivedCountry: "-",
-        receivedPort: "-",
-        exitPort: "-"
-      },
-      goodsEntries: [
-        {
-          goodsName: "PISTACHIOS KERNEL",
-          qtyNo: 350,
-          qtyName: "BAGS",
-          qtyKgs: 25,
-          grossWeight: 11134,
-          netWeight: 11099,
-          coursePrice: 298.925,
-          totalAmount: 104623.75,
-          exchangeRate: 280,
-          finalAmount: 29294650.00,
-          origin: "Iran",
-          brand: "Large / Pack 25 KG"
-        }
-      ]
-    }
-  },
-  {
-    id: "sample-po-4",
-    purchaseBookingOrderNumber: "PO-20260612-8BECF5",
-    purchaseDate: "2026-06-12",
-    bookingDate: "2026-06-12",
-    purchaseAccountName: "Kabul Dry Fruits Purchase Account",
-    purchaseAccountNumber: "PA-1001",
-    salesAccountName: "Damaan Sales Account",
-    salesAccountNumber: "SA-2001",
-    supplierName: "Kabul Dry Fruits Wholesale",
-    buyerName: "Damaan Trading LLC",
-    productName: "PISTACHIOS KERNEL / Large / Pack 25 KG",
-    goodsDescription: "PISTACHIOS KERNEL / Large / Pack 25 KG",
-    quantity: 350,
-    unit: "BAGS",
-    totalWeight: 11099,
-    totalGrossWeight: 11134,
-    totalNetWeight: 11099,
-    containerCount: 0,
-    purchaseRate: 298.925,
-    totalPurchaseAmount: 104623.75,
-    purchaseAmount: 104623.75,
-    finalAmount: 29294650.00,
-    currency: "USD",
-    status: "PENDING",
-    paymentStatus: "PENDING",
-    branchName: "Kabul Branch",
-    countryName: "Iran",
-    createdAt: "2026-06-12T10:00:00.000Z",
-    supplier_company_id: "dgt-co",
-    audit: { userName: "ADMIN", userId: "USR-001", branchCode: "BR-KBL-001" },
-    form_data: {
-      form: {
-        salesOrderNo: "SO-2826-0001",
-        companyCode: "COM-DGT",
-        branchCode: "BR-KBL-001",
-        loadingDate: "-",
-        loadingPort: "-",
-        receivedCountry: "-",
-        receivedPort: "-",
-        exitPort: "-"
-      },
-      goodsEntries: [
-        {
-          goodsName: "PISTACHIOS KERNEL",
-          qtyNo: 350,
-          qtyName: "BAGS",
-          qtyKgs: 25,
-          grossWeight: 11134,
-          netWeight: 11099,
-          coursePrice: 298.925,
-          totalAmount: 104623.75,
-          exchangeRate: 280,
-          finalAmount: 29294650.00,
-          origin: "Iran",
-          brand: "Large / Pack 25 KG"
-        }
-      ]
-    }
-  },
-  {
-    id: "sample-po-5",
-    purchaseBookingOrderNumber: "PO-20260612-E8B36C",
-    purchaseDate: "2026-06-12",
-    bookingDate: "2026-06-12",
-    purchaseAccountName: "Kabul Dry Fruits Purchase Account",
-    purchaseAccountNumber: "PA-1001",
-    salesAccountName: "Damaan Sales Account",
-    salesAccountNumber: "SA-2001",
-    supplierName: "Kabul Dry Fruits Wholesale",
-    buyerName: "Damaan Trading LLC",
-    productName: "PISTACHIOS KERNEL / Large / Pack 25 KG",
-    goodsDescription: "PISTACHIOS KERNEL / Large / Pack 25 KG",
-    quantity: 350,
-    unit: "BAGS",
-    totalWeight: 11099,
-    totalGrossWeight: 11134,
-    totalNetWeight: 11099,
-    containerCount: 0,
-    purchaseRate: 298.925,
-    totalPurchaseAmount: 104623.75,
-    purchaseAmount: 104623.75,
-    finalAmount: 29294650.00,
-    currency: "USD",
-    status: "PENDING",
-    paymentStatus: "PENDING",
-    branchName: "Kabul Branch",
-    countryName: "Iran",
-    createdAt: "2026-06-12T10:00:00.000Z",
-    supplier_company_id: "dgt-co",
-    audit: { userName: "ADMIN", userId: "USR-001", branchCode: "BR-KBL-001" },
-    form_data: {
-      form: {
-        salesOrderNo: "SO-2826-0001",
-        companyCode: "COM-DGT",
-        branchCode: "BR-KBL-001",
-        loadingDate: "-",
-        loadingPort: "-",
-        receivedCountry: "-",
-        receivedPort: "-",
-        exitPort: "-"
-      },
-      goodsEntries: [
-        {
-          goodsName: "PISTACHIOS KERNEL",
-          qtyNo: 350,
-          qtyName: "BAGS",
-          qtyKgs: 25,
-          grossWeight: 11134,
-          netWeight: 11099,
-          coursePrice: 298.925,
-          totalAmount: 104623.75,
-          exchangeRate: 280,
-          finalAmount: 29294650.00,
-          origin: "Iran",
-          brand: "Large / Pack 25 KG"
-        }
-      ]
-    }
-  },
-  {
-    id: "sample-po-6",
-    purchaseBookingOrderNumber: "PO-20260612-88C16A",
-    purchaseDate: "2026-06-12",
-    bookingDate: "2026-06-12",
-    purchaseAccountName: "Kabul Dry Fruits Purchase Account",
-    purchaseAccountNumber: "PA-1001",
-    salesAccountName: "Damaan Sales Account",
-    salesAccountNumber: "SA-2001",
-    supplierName: "Kabul Dry Fruits Wholesale",
-    buyerName: "Damaan Trading LLC",
-    productName: "PISTACHIOS KERNEL / Large / Pack 25 KG",
-    goodsDescription: "PISTACHIOS KERNEL / Large / Pack 25 KG",
-    quantity: 350,
-    unit: "BAGS",
-    totalWeight: 11099,
-    totalGrossWeight: 11134,
-    totalNetWeight: 11099,
-    containerCount: 0,
-    purchaseRate: 298.925,
-    totalPurchaseAmount: 104623.75,
-    purchaseAmount: 104623.75,
-    finalAmount: 29294650.00,
-    currency: "USD",
-    status: "PENDING",
-    paymentStatus: "PENDING",
-    branchName: "Kabul Branch",
-    countryName: "Iran",
-    createdAt: "2026-06-12T10:00:00.000Z",
-    supplier_company_id: "dgt-co",
-    audit: { userName: "ADMIN", userId: "USR-001", branchCode: "BR-KBL-001" },
-    form_data: {
-      form: {
-        salesOrderNo: "SO-2826-0001",
-        companyCode: "COM-DGT",
-        branchCode: "BR-KBL-001",
-        loadingDate: "-",
-        loadingPort: "-",
-        receivedCountry: "-",
-        receivedPort: "-",
-        exitPort: "-"
-      },
-      goodsEntries: [
-        {
-          goodsName: "PISTACHIOS KERNEL",
-          qtyNo: 350,
-          qtyName: "BAGS",
-          qtyKgs: 25,
-          grossWeight: 11134,
-          netWeight: 11099,
-          coursePrice: 298.925,
-          totalAmount: 104623.75,
-          exchangeRate: 280,
-          finalAmount: 29294650.00,
-          origin: "Iran",
-          brand: "Large / Pack 25 KG"
-        }
-      ]
-    }
-  },
-  {
-    id: "sample-po-7",
-    purchaseBookingOrderNumber: "PO-20260612-88BC67",
-    purchaseDate: "2026-06-12",
-    bookingDate: "2026-06-12",
-    purchaseAccountName: "Kabul Dry Fruits Purchase Account",
-    purchaseAccountNumber: "PA-1001",
-    salesAccountName: "Damaan Sales Account",
-    salesAccountNumber: "SA-2001",
-    supplierName: "Kabul Dry Fruits Wholesale",
-    buyerName: "Damaan Trading LLC",
-    productName: "PISTACHIOS KERNEL / Large / Pack 25 KG",
-    goodsDescription: "PISTACHIOS KERNEL / Large / Pack 25 KG",
-    quantity: 350,
-    unit: "BAGS",
-    totalWeight: 11099,
-    totalGrossWeight: 11134,
-    totalNetWeight: 11099,
-    containerCount: 0,
-    purchaseRate: 298.925,
-    totalPurchaseAmount: 104623.75,
-    purchaseAmount: 104623.75,
-    finalAmount: 29294650.00,
-    currency: "USD",
-    status: "PENDING",
-    paymentStatus: "PENDING",
-    branchName: "Kabul Branch",
-    countryName: "Iran",
-    createdAt: "2026-06-12T10:00:00.000Z",
-    supplier_company_id: "dgt-co",
-    audit: { userName: "ADMIN", userId: "USR-001", branchCode: "BR-KBL-001" },
-    form_data: {
-      form: {
-        salesOrderNo: "SO-2826-0001",
-        companyCode: "COM-DGT",
-        branchCode: "BR-KBL-001",
-        loadingDate: "-",
-        loadingPort: "-",
-        receivedCountry: "-",
-        receivedPort: "-",
-        exitPort: "-"
-      },
-      goodsEntries: [
-        {
-          goodsName: "PISTACHIOS KERNEL",
-          qtyNo: 350,
-          qtyName: "BAGS",
-          qtyKgs: 25,
-          grossWeight: 11134,
-          netWeight: 11099,
-          coursePrice: 298.925,
-          totalAmount: 104623.75,
-          exchangeRate: 280,
-          finalAmount: 29294650.00,
-          origin: "Iran",
-          brand: "Large / Pack 25 KG"
-        }
-      ]
-    }
-  }
-];
-
 const workflowSteps = [
   "Booking Purchase Order",
   "Booking Confirm",
@@ -893,19 +470,20 @@ function stockStage(row: PurchaseReport) {
   return "Booking Stock";
 }
 
-function remainingPayment(row: PurchaseReport) {
-  const paid = row.paymentStatus.toLowerCase().includes("full")
-    ? row.totalPurchaseAmount
-    : row.paymentStatus.toLowerCase().includes("advance")
-      ? row.totalPurchaseAmount * 0.3
-      : 0;
-  return Math.max(0, row.totalPurchaseAmount - paid);
+function advancePayment(row: PurchaseReport) {
+  const real = Number(row.advancePaid ?? row.advance_paid ?? row.advanceAmount ?? 0)
+    + Number(row.remaining_paid ?? row.remainingPaid ?? 0);
+  if (real) return real;
+  if (row.paymentStatus?.toLowerCase().includes("full") || row.paymentStatus?.toLowerCase().includes("paid")) {
+    return row.totalPurchaseAmount;
+  }
+  return 0;
 }
 
-function advancePayment(row: PurchaseReport) {
-  if (row.paymentStatus.toLowerCase().includes("full")) return row.totalPurchaseAmount;
-  if (row.paymentStatus.toLowerCase().includes("advance")) return row.totalPurchaseAmount * 0.3;
-  return 0;
+function remainingPayment(row: PurchaseReport) {
+  const real = Number(row.remaining_due ?? row.remainingDue ?? row.remainingBalance ?? NaN);
+  if (!Number.isNaN(real)) return Math.max(0, real);
+  return Math.max(0, Number(row.totalPurchaseAmount || 0) - advancePayment(row));
 }
 
 function makeContainers(row: PurchaseReport) {
@@ -2360,44 +1938,38 @@ export function PurchaseOrderManagementDashboard() {
     setFilters({ country: lockedCountryName || "all", branch: lockedBranchName || "all", supplier: "all", poStatus: "all", paymentStatus: "all", shipmentStatus: "all", containerStatus: "all", dateRange: "all" });
   }
 
-  const isMockupData = useMemo(() => {
-    return filtered.length === 7 && filtered[0]?.purchaseBookingOrderNumber === "PO-20260612-1CIDED";
-  }, [filtered]);
+  const rowLocalAmount = (row: any) => {
+    const direct = Number(row.finalAmount || 0);
+    if (direct) return direct;
+    const rate = Number(row.exchangeRate || row.exchange_rate || 0);
+    return rate ? Number(row.totalPurchaseAmount || row.order_total || 0) * rate : 0;
+  };
 
   const totalAmountPKR = useMemo(() => {
-    if (isMockupData) return 222527550.00;
-    return filtered.reduce((sum, row) => sum + Number(row.finalAmount || row.totalPurchaseAmount * 280 || 0), 0);
-  }, [filtered, isMockupData]);
+    return filtered.reduce((sum, row) => sum + rowLocalAmount(row), 0);
+  }, [filtered]);
 
+  // Realised sales revenue against these bookings — from the record, never a markup guess.
   const totalRevenuePKR = useMemo(() => {
-    if (isMockupData) return 249230856.00;
-    return totalAmountPKR * 1.12;
-  }, [totalAmountPKR, isMockupData]);
+    return filtered.reduce((sum, row) => sum + Number((row as any).salesRevenue || (row as any).revenueAmount || 0), 0);
+  }, [filtered]);
 
   const totalPaidPKR = useMemo(() => {
-    if (isMockupData) return 8788395.00;
     return filtered.reduce((sum, row) => {
+      const paid = Number((row as any).finalAdvancePaid ?? (row as any).advancePaid ?? (row as any).paidAmount ?? 0);
+      if (paid) return sum + paid;
       const isPaid = String(row.paymentStatus || "").toUpperCase() === "PAID";
-      const isConfirmed = String(row.status || "").toUpperCase() === "BOOKING CONFIRMED";
-      const amt = Number(row.finalAmount || row.totalPurchaseAmount * 280 || 0);
-      if (isConfirmed && isPaid) {
-        return sum + amt * 0.3;
-      } else if (isPaid) {
-        return sum + amt;
-      }
-      return sum;
+      return isPaid ? sum + rowLocalAmount(row) : sum;
     }, 0);
-  }, [filtered, isMockupData]);
+  }, [filtered]);
 
   const remainingDuePKR = useMemo(() => {
-    if (isMockupData) return 213739155.00;
     return Math.max(0, totalAmountPKR - totalPaidPKR);
-  }, [totalAmountPKR, totalPaidPKR, isMockupData]);
+  }, [totalAmountPKR, totalPaidPKR]);
 
   const totalUSD = useMemo(() => {
-    if (isMockupData) return 836495.00;
     return filtered.reduce((sum, row) => sum + Number(row.purchaseAmount || row.totalPurchaseAmount || 0), 0);
-  }, [filtered, isMockupData]);
+  }, [filtered]);
 
   const pendingBookingsCount = useMemo(() => {
     return filtered.filter(row => String(row.status || "").toUpperCase() === "PENDING").length;
@@ -3269,8 +2841,8 @@ export function PurchaseOrderManagementDashboard() {
                 netWeight: selected.totalNetWeight || selected.totalWeight || 0,
                 coursePrice: selected.purchaseRate || 0,
                 totalAmount: selected.totalPurchaseAmount || 0,
-                exchangeRate: selected.exchange_rate || 280,
-                finalAmount: selected.finalAmount || (selected.totalPurchaseAmount * 280) || 0
+                exchangeRate: selected.exchange_rate || 0,
+                finalAmount: selected.finalAmount || (selected.exchange_rate ? selected.totalPurchaseAmount * selected.exchange_rate : 0) || 0
               }
             ];
 
@@ -3278,7 +2850,7 @@ export function PurchaseOrderManagementDashboard() {
             const totalGross = goodsEntries.reduce((sum: number, item: any) => sum + Number(item.grossWeight || 0), 0);
             const totalNet = goodsEntries.reduce((sum: number, item: any) => sum + Number(item.netWeight || 0), 0);
 
-            const exRate = goodsEntries[0]?.exchangeRate || selected.exchange_rate || 280;
+            const exRate = Number(goodsEntries[0]?.exchangeRate || selected.exchange_rate || 0);
 
             const totalUSDVal = goodsEntries.reduce((sum: number, item: any) => {
               const qtyNo = Number(item.qtyNo || 0);

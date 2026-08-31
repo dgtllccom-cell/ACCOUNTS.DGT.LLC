@@ -714,7 +714,7 @@ export function AccountProfileView({
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Prepared By</p>
                 <p className="text-xs font-black text-slate-900 dark:text-white mt-0.5">
-                  {data?.workspace.companyOwner || "Super Admin"}
+                  {data?.workspace.companyOwner || "—"}
                 </p>
               </div>
             </div>
@@ -729,7 +729,7 @@ export function AccountProfileView({
                 <div className="flex items-center gap-2 mt-0.5">
                   {/* Handwritten-like digital signature mark */}
                   <span className="font-serif italic font-black text-blue-700 dark:text-blue-300 text-sm tracking-wide">
-                    {data?.workspace.companyOwner || "Super Admin"}
+                    {data?.workspace.companyOwner || "—"}
                   </span>
                   <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[8px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-200">
                     Verified

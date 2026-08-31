@@ -490,7 +490,7 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
                         userFullName: session.fullName || session.email || "SUPER ADMIN"
                       },
                       companyInfo: {
-                        name: "DIGITAL DOCK ERP",
+                        name: "",
                         branch: session.branchName || "MAIN BRANCH",
                         printedBy: session.fullName || session.email || "SUPER ADMIN"
                       }

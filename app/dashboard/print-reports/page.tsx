@@ -141,6 +141,14 @@ export default function PrintReportsHubPage() {
   const [roznamchaEntries, setRoznamchaEntries] = useState<any[]>([]);
   const [accountsList, setAccountsList] = useState<any[]>([]);
   const [ledgersList, setLedgersList] = useState<any[]>([]);
+  const [sessionInfo, setSessionInfo] = useState<any>(null);
+
+  useEffect(() => {
+    fetch("/api/erp/auth/session", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => setSessionInfo(j))
+      .catch(() => setSessionInfo(null));
+  }, []);
 
   const toggleRowExpand = (id: string) => {
     setExpandedRowIds(prev => {
@@ -233,289 +241,304 @@ export default function PrintReportsHubPage() {
      REPORT PRINT HANDLERS
      ────────────────────────────────────────────────────────────── */
   
-  // 1. Customer Ledger Report
+  const scopeCountry = selectedCountry === "All Countries" ? "" : selectedCountry;
+  const scopeBranch = selectedBranch === "All Branches" ? "" : selectedBranch;
+  const noData = (label: string) => alert(`No ${label} records available for this report.`);
+
+  // 1. Customer Ledger Report — real roznamcha lines only
   const handlePrintCustomerLedger = useCallback(() => {
-    const rows = roznamchaEntries.slice(0, 10).map((r, i) => ({
-      srNo: i + 1,
-      date: r.entry_date || new Date().toISOString().slice(0, 10),
-      branchEntryNo: r.super_admin_serial_number || `SA-${202600 + i}`,
-      userName: "Super Admin",
-      branchName: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch,
-      roznamachaNameAndNo: `Roznamcha / ${r.voucher_no || `V-${100 + i}`}`,
-      remarks: r.narration || "Customer transaction settlement",
-      debit: Number(r.total_debit || 50000),
-      credit: Number(r.total_credit || 0),
-      balance: 50000 + (i * 10000),
-      dcType: "Dr" as const,
-    }));
+    if (!roznamchaEntries.length) return noData("customer ledger");
+    let running = 0;
+    const rows = roznamchaEntries.slice(0, 25).map((r, i) => {
+      const debit = Number(r.total_debit || 0);
+      const credit = Number(r.total_credit || 0);
+      running += debit - credit;
+      return {
+        srNo: i + 1,
+        date: r.entry_date || "",
+        branchEntryNo: r.super_admin_serial_number || r.voucher_no || "—",
+        userName: r.created_by_name || "—",
+        branchName: r.branch_name || scopeBranch || "—",
+        roznamachaNameAndNo: r.voucher_no ? `Roznamcha / ${r.voucher_no}` : "—",
+        remarks: r.narration || "",
+        debit,
+        credit,
+        balance: running,
+        dcType: (running >= 0 ? "Dr" : "Cr") as "Dr" | "Cr",
+      };
+    });
+    const totalDebit = rows.reduce((s, r) => s + r.debit, 0);
+    const totalCredit = rows.reduce((s, r) => s + r.credit, 0);
 
     openCustomerLedgerPrintReport({
       report: {
-        customerName: "All Active Cargo & Transit Customers",
-        customerCode: "CUST-ALL-001",
-        openingBalance: 100000,
+        customerName: "",
+        customerCode: "",
+        openingBalance: 0,
         openingDcType: "Dr",
-        totalDebit: rows.reduce((s, r) => s + (r.debit || 0), 0),
-        totalCredit: rows.reduce((s, r) => s + (r.credit || 0), 0),
-        closingBalance: 150000,
-        closingDcType: "Dr",
-        country: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
-        branch: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch,
-        currency: "PKR",
-        salesAccount: "1010",
-        customerAccount: "2010",
-        roznamachaName: "Main Cash Roznamcha",
-        roznamachaNo: "RN-001",
-        rows
+        totalDebit,
+        totalCredit,
+        closingBalance: totalDebit - totalCredit,
+        closingDcType: totalDebit - totalCredit >= 0 ? "Dr" : "Cr",
+        country: scopeCountry,
+        branch: scopeBranch,
+        currency: roznamchaEntries[0]?.currency || "",
+        salesAccount: "",
+        customerAccount: "",
+        roznamachaName: "",
+        roznamachaNo: "",
+        rows,
       },
-      companyInfo: {
-        name: "DGT LLC Accounts ERP"
-      }
+      companyInfo: {},
     });
-  }, [roznamchaEntries, selectedBranch, selectedCountry]);
+  }, [roznamchaEntries, scopeBranch, scopeCountry]);
 
-  // 2. Loading Records Report
+  // 2. Loading Records Report — real records only
   const handlePrintLoadingRecords = useCallback(() => {
-    const rows: PurchaseLoadingReportRow[] = loadingRecords.slice(0, 10).map((lr, i) => {
+    if (!loadingRecords.length) return noData("loading");
+    const rows: PurchaseLoadingReportRow[] = loadingRecords.slice(0, 50).map((lr, i) => {
       const payload = lr.report_payload || {};
+      const contractQty = Number(lr.contract_qty || payload.contractQty || 0);
+      const loadedQty = Number(lr.loaded_qty || payload.loadedQty || 0);
+      const fcAmount = Number(lr.fc_amount || payload.fcAmount || 0);
+      const lcAmount = Number(lr.lc_amount || payload.lcAmount || 0);
       return {
-        id: lr.id || `LR-${i+1}`,
-        country: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
-        branch: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch,
-        purchaseBookingNo: lr.po_no || payload.poNo || `PO-2026-000${i+1}`,
-        salesAccount: "1010",
-        purchaseAccount: "2010",
-        goods: lr.goods_name || payload.goodsName || "Almonds / Dry Fruits",
-        contractQty: Number(lr.contract_qty || payload.contractQty || 25000),
-        grossWeight: Number(lr.gross_weight || payload.grossWeight || 25000),
-        tareWeight: Number(lr.tare_weight || payload.tareWeight || 2200),
-        netWeight: Number(lr.net_weight || payload.netWeight || 22800),
-        purchasePriceRate: Number(lr.fc_rate || payload.fcRate || 3.5),
-        totalPurchaseFc: Number(lr.fc_amount || payload.fcAmount || 79800),
+        id: lr.id || `LR-${i + 1}`,
+        country: lr.country_name || scopeCountry || "—",
+        branch: lr.branch_name || scopeBranch || "—",
+        purchaseBookingNo: lr.po_no || payload.poNo || "—",
+        salesAccount: lr.sales_account_no || "",
+        purchaseAccount: lr.purchase_account_no || "",
+        goods: lr.goods_name || payload.goodsName || "—",
+        contractQty,
+        grossWeight: Number(lr.gross_weight || payload.grossWeight || 0),
+        tareWeight: Number(lr.tare_weight || payload.tareWeight || 0),
+        netWeight: Number(lr.net_weight || payload.netWeight || 0),
+        purchasePriceRate: Number(lr.fc_rate || payload.fcRate || 0),
+        totalPurchaseFc: fcAmount,
         advanceFc: 0,
-        remainingFc: Number(lr.fc_amount || payload.fcAmount || 79800),
-        currencyFc: lr.currency || payload.currency || "USD",
-        exchangeRate: Number(lr.lc_rate || payload.lcRate || 280),
-        finalAmountLc: Number(lr.lc_amount || payload.lcAmount || 6384000),
+        remainingFc: fcAmount,
+        currencyFc: lr.currency || payload.currency || "",
+        exchangeRate: Number(lr.lc_rate || payload.lcRate || 0),
+        finalAmountLc: lcAmount,
         finalAdvanceLc: 0,
-        finalRemainingLc: Number(lr.lc_amount || payload.lcAmount || 6384000),
-        currencyLc: "PKR",
-        loadedQty: Number(lr.loaded_qty || payload.loadedQty || 22800),
-        remainingToLoad: Math.max(0, Number(lr.contract_qty || 25000) - Number(lr.loaded_qty || 22800)),
-        loadingStatus: lr.status || payload.status || "Completed"
+        finalRemainingLc: lcAmount,
+        currencyLc: lr.local_currency || "",
+        loadedQty,
+        remainingToLoad: Math.max(0, contractQty - loadedQty),
+        loadingStatus: lr.status || payload.status || "—",
       };
     });
 
     openLoadingRecordsPrintReport({
       rows,
-      companyInfo: {
-        name: "DGT LLC Accounts ERP",
-        country: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
-        branch: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch
-      }
+      companyInfo: { country: scopeCountry, branch: scopeBranch },
     });
-  }, [loadingRecords, selectedBranch, selectedCountry]);
+  }, [loadingRecords, scopeBranch, scopeCountry]);
 
-  // 3. Finalized PO Report
+  // 3. Finalized PO Report — real purchase orders only
   const handlePrintFinalizedPO = useCallback(() => {
-    const rows: FinalizedPORow[] = orders.slice(0, 10).map((o, i) => {
+    if (!orders.length) return noData("purchase order");
+    const rows: FinalizedPORow[] = orders.slice(0, 50).map((o, i) => {
       const form = o.form_data?.form || {};
+      const rate = Number(o.exchange_rate || form.exchangeRate || 0);
+      const totalFc = Number(o.order_total || form.totalAmount || 0);
       return {
-        id: o.id || `PO-${i+1}`,
-        poNumber: o.purchase_order_no || `PO-2026-000${i+1}`,
-        country: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
-        branch: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch,
-        supplier: form.supplierName || "Al-Futtaim Trading UAE",
-        goods: form.goodsName || form.productName || "Dry Fruits Transit",
-        contractQty: Number(form.quantity || 25000),
-        grossWeight: Number(form.totalWeight || 45000),
-        netWeight: Number(form.totalWeight || 45000),
-        purchaseRate: Number(form.purchaseRate || 3.4),
-        totalPurchaseFc: Number(o.order_total || 85000),
-        advanceFc: 0,
-        remainingFc: Number(o.order_total || 85000),
-        currencyFc: form.currencyType || "USD",
-        exchangeRate: 280,
-        finalAmountLc: Number(o.order_total || 85000) * 280,
+        id: o.id || `PO-${i + 1}`,
+        poNumber: o.purchase_order_no || "—",
+        country: o.countryName || scopeCountry || "—",
+        branch: o.branchName || scopeBranch || "—",
+        supplier: form.supplierName || "—",
+        goods: form.goodsName || form.productName || "—",
+        contractQty: Number(form.quantity || 0),
+        grossWeight: Number(form.totalWeight || 0),
+        netWeight: Number(form.totalWeight || 0),
+        purchaseRate: Number(form.purchaseRate || 0),
+        totalPurchaseFc: totalFc,
+        advanceFc: Number(o.advance_paid || 0),
+        remainingFc: Number(o.remaining_due || totalFc),
+        currencyFc: o.currency_code || form.currencyType || "",
+        exchangeRate: rate,
+        finalAmountLc: rate ? totalFc * rate : 0,
         finalAdvanceLc: 0,
-        finalRemainingLc: Number(o.order_total || 85000) * 280,
-        currencyLc: "PKR",
-        status: o.order_status || "Finalized",
-        createdAt: o.order_date || o.created_at?.slice(0, 10) || "2026-06-12"
+        finalRemainingLc: rate ? totalFc * rate : 0,
+        currencyLc: "",
+        status: o.status || o.order_status || "—",
+        createdAt: o.order_date || o.created_at?.slice(0, 10) || "",
       };
     });
 
     openFinalizedPOPrintReport({
       rows,
-      companyInfo: {
-        name: "DGT LLC Accounts ERP",
-        country: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
-        branch: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch
-      }
+      companyInfo: { country: scopeCountry, branch: scopeBranch },
     });
-  }, [orders, selectedBranch, selectedCountry]);
+  }, [orders, scopeBranch, scopeCountry]);
 
-  // 4. Transfer Payment Voucher
+  // 4. Transfer Payment Voucher — from a real posted purchase order
   const handlePrintTransferPayment = useCallback(() => {
+    const o = orders.find((x) => Number(x.advance_paid || x.remaining_paid || 0) > 0) || orders[0];
+    if (!o) return noData("payment / transfer");
+    const form = o.form_data?.form || {};
+    const rate = Number(o.exchange_rate || form.exchangeRate || 0);
+    const amountFc = Number(o.advance_paid || o.remaining_paid || o.order_total || 0);
     openTransferPaymentPrintReport({
       record: {
-        id: "VP-2026-902",
-        voucherNo: "VP-2026-902",
-        billNo: "PO-2026-0001",
-        transferDate: new Date().toISOString().slice(0, 10),
-        supplierName: "Al-Futtaim Trading UAE",
-        branchName: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch,
-        countryName: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
-        goodsName: "Cargo Container Shipment",
-        paymentMode: "Bank Transfer",
-        bankOrCashAccount: "1010 - Cash in Hand Vault",
-        amountFc: 85000,
-        currencyFc: "USD",
-        exchangeRate: 280,
-        amountLc: 23800000,
-        currencyLc: "PKR",
-        amountInWords: "Eighty-Five Thousand US Dollars Only",
-        purchaseAccountNo: "2010 - Accounts Payable Supplier",
-        narration: "Transfer payment for cargo container shipment loading #PO-2026-0001"
+        id: o.id,
+        voucherNo: o.purchase_order_no || "—",
+        billNo: o.purchase_contract_no || form.manualBillNumber || "—",
+        transferDate: o.order_date || o.created_at?.slice(0, 10) || "",
+        supplierName: form.supplierName || "—",
+        branchName: o.branchName || scopeBranch || "—",
+        countryName: o.countryName || scopeCountry || "—",
+        goodsName: form.goodsName || "—",
+        paymentMode: form.paymentMode || "—",
+        bankOrCashAccount: form.bankAccountName || form.cashAccountName || "—",
+        amountFc,
+        currencyFc: o.currency_code || form.currencyType || "",
+        exchangeRate: rate,
+        amountLc: rate ? amountFc * rate : 0,
+        currencyLc: "",
+        amountInWords: "",
+        purchaseAccountNo: form.purchaseAccountName || "—",
+        narration: form.narration || "",
       },
-      companyInfo: {
-        name: "DGT LLC Accounts ERP"
-      }
+      companyInfo: {},
     });
-  }, [selectedBranch, selectedCountry]);
+  }, [orders, scopeBranch, scopeCountry]);
 
-  // 5. Recent Cash Entries
+  // 5. Recent Cash Entries — real roznamcha entries only
   const handlePrintCashEntries = useCallback(() => {
-    const lines: CashEntryLine[] = roznamchaEntries.slice(0, 10).map((r, i) => ({
-      id: r.id || `CASH-${i+1}`,
-      voucherNo: r.voucher_no || `V-${100 + i}`,
-      entryDate: r.entry_date || "2026-06-12",
-      accountCode: r.account_code || "1010",
-      accountTitle: r.account_title || "Cash in Hand Vault",
-      narration: r.narration || "Daily cash entry transaction",
-      user: "Super Admin",
-      branch: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch,
-      debit: Number(r.total_debit || 50000),
+    if (!roznamchaEntries.length) return noData("cash entry");
+    const lines: CashEntryLine[] = roznamchaEntries.slice(0, 25).map((r, i) => ({
+      id: r.id || `CASH-${i + 1}`,
+      voucherNo: r.voucher_no || "—",
+      entryDate: r.entry_date || "",
+      accountCode: r.account_code || r.debit_account_code || "—",
+      accountTitle: r.account_title || r.narration || "—",
+      narration: r.narration || "",
+      user: r.created_by_name || "—",
+      branch: r.branch_name || scopeBranch || "—",
+      debit: Number(r.total_debit || 0),
       credit: Number(r.total_credit || 0),
-      currency: r.currency || "PKR",
+      currency: r.currency || "",
     }));
 
-    openRecentCashEntriesPrintReport({
-      entries: lines,
-      companyInfo: {
-        name: "DGT LLC Accounts ERP"
-      }
-    });
-  }, [roznamchaEntries, selectedBranch, selectedCountry]);
+    openRecentCashEntriesPrintReport({ entries: lines, companyInfo: {} });
+  }, [roznamchaEntries, scopeBranch]);
 
   // 5b. Entry-type prints (Bank / Business Roznamcha / Invoice) — shared branded builder.
   const buildEntryLines = useCallback((): EntryLine[] => {
     return roznamchaEntries.slice(0, 25).map((r: any, i: number) => ({
       id: r.id || `E-${i}`,
-      voucherNo: r.voucher_no || `V-${100 + i}`,
-      entryDate: r.entry_date || "2026-06-12",
-      accountCode: r.account_code || r.debit_account_code || "1010",
-      accountTitle: r.account_title || r.narration || "Ledger Account",
+      voucherNo: r.voucher_no || "—",
+      entryDate: r.entry_date || "",
+      accountCode: r.account_code || r.debit_account_code || "—",
+      accountTitle: r.account_title || r.narration || "—",
       debit: Number(r.total_debit || 0),
       credit: Number(r.total_credit || 0),
-      currency: r.currency || "PKR",
+      currency: r.currency || "",
       narration: r.narration || "",
-      user: r.created_by_name || "Super Admin",
-      branch: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch,
+      user: r.created_by_name || "—",
+      branch: r.branch_name || scopeBranch || "—",
       entryType: r.entry_type || r.category || undefined,
       bankName: r.bank_name || undefined,
       instrumentNo: r.instrument_no || r.cheque_no || undefined,
       invoiceNo: r.invoice_no || undefined,
       party: r.party_name || r.counterparty || undefined,
     }));
-  }, [roznamchaEntries, selectedBranch]);
+  }, [roznamchaEntries, scopeBranch]);
 
   const companyInfoForPrint = useCallback(() => ({
-    country: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
-    branch: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch,
-  }), [selectedCountry, selectedBranch]);
+    country: scopeCountry,
+    branch: scopeBranch,
+  }), [scopeCountry, scopeBranch]);
 
   const handlePrintBankEntries = useCallback(() => {
+    if (!roznamchaEntries.length) return noData("bank entry");
     openEntryTypePrintReport({ mode: "bank", entries: buildEntryLines(), companyInfo: companyInfoForPrint(), filterByType: false });
-  }, [buildEntryLines, companyInfoForPrint]);
+  }, [roznamchaEntries, buildEntryLines, companyInfoForPrint]);
 
   const handlePrintBusinessRoznamcha = useCallback(() => {
+    if (!roznamchaEntries.length) return noData("roznamcha");
     openEntryTypePrintReport({ mode: "business", entries: buildEntryLines(), companyInfo: companyInfoForPrint(), filterByType: false });
-  }, [buildEntryLines, companyInfoForPrint]);
+  }, [roznamchaEntries, buildEntryLines, companyInfoForPrint]);
 
   const handlePrintInvoiceEntries = useCallback(() => {
+    if (!roznamchaEntries.length) return noData("invoice entry");
     openEntryTypePrintReport({ mode: "invoice", entries: buildEntryLines(), companyInfo: companyInfoForPrint(), filterByType: false });
-  }, [buildEntryLines, companyInfoForPrint]);
+  }, [roznamchaEntries, buildEntryLines, companyInfoForPrint]);
 
-  // 6. Purchase Booking Order
+  // 6. Purchase Booking Order — from a real purchase order
   const handlePrintPurchaseBooking = useCallback(() => {
     const po = orders[0];
-    const form = po?.form_data?.form || {};
+    if (!po) return noData("purchase order");
+    const form = po.form_data?.form || {};
+    const rate = Number(po.exchange_rate || form.exchangeRate || 0);
+    const totalFc = Number(po.order_total || form.totalAmount || 0);
     openPurchaseBookingOrderPrintReport({
       order: {
-        id: po?.id || "PO-001",
-        systemBillNo: po?.purchase_order_no || "PO-2026-0001",
-        bookingDate: po?.created_at || "2026-06-12",
-        supplierName: form.supplierName || "Al-Futtaim Trading UAE",
-        purchaseAccountNo: "2010",
-        purchaseAccountName: "Supplier Account",
-        salesAccountNo: "1010",
-        salesAccountName: "Sales Customer Account",
-        countryName: po?.countryName || (selectedCountry === "All Countries" ? "Pakistan" : selectedCountry),
-        branchName: po?.branchName || (selectedBranch === "All Branches" ? "Main Branch" : selectedBranch),
+        id: po.id,
+        systemBillNo: po.purchase_order_no || "—",
+        bookingDate: po.order_date || po.created_at || "",
+        supplierName: form.supplierName || "—",
+        purchaseAccountNo: form.purchaseAccountNo || "",
+        purchaseAccountName: form.purchaseAccountName || "—",
+        salesAccountNo: form.salesAccountNo || "",
+        salesAccountName: form.salesAccountName || "—",
+        countryName: po.countryName || scopeCountry || "—",
+        branchName: po.branchName || scopeBranch || "—",
         goodsItems: [
           {
             srNo: 1,
-            goodsName: form.goodsName || form.productName || "Almonds / Dry Fruits",
-            quantity: Number(form.quantity || 25000),
-            grossWeight: Number(form.totalWeight || 25000),
-            netWeight: Number(form.totalWeight || 25000),
-            rateKg: Number(form.purchaseRate || 3.4),
-            amountFc: Number(po?.order_total || 85000),
-            currencyFc: form.currencyType || "USD",
-            exchangeRate: 280,
-            amountLc: Number(po?.order_total || 85000) * 280,
-            currencyLc: "PKR"
-          }
+            goodsName: form.goodsName || form.productName || "—",
+            quantity: Number(form.quantity || 0),
+            grossWeight: Number(form.totalWeight || 0),
+            netWeight: Number(form.totalWeight || 0),
+            rateKg: Number(form.purchaseRate || 0),
+            amountFc: totalFc,
+            currencyFc: po.currency_code || form.currencyType || "",
+            exchangeRate: rate,
+            amountLc: rate ? totalFc * rate : 0,
+            currencyLc: "",
+          },
         ],
-        totalPurchaseFc: Number(po?.order_total || 85000),
-        currencyFc: form.currencyType || "USD",
-        totalPurchaseLc: Number(po?.order_total || 85000) * 280,
-        currencyLc: "PKR",
-        status: po?.order_status || "Active"
+        totalPurchaseFc: totalFc,
+        currencyFc: po.currency_code || form.currencyType || "",
+        totalPurchaseLc: rate ? totalFc * rate : 0,
+        currencyLc: "",
+        status: po.status || po.order_status || "—",
       },
-      companyInfo: {
-        name: "DGT LLC Accounts ERP"
-      }
+      companyInfo: {},
     });
-  }, [orders, selectedBranch, selectedCountry]);
+  }, [orders, scopeBranch, scopeCountry]);
 
-  // 7. Roznamcha Voucher
+  // 7. Roznamcha Voucher — from a real roznamcha entry
   const handlePrintRoznamchaVoucher = useCallback(() => {
     const r = roznamchaEntries[0];
+    if (!r) return noData("roznamcha voucher");
     openRoznamchaVoucherPrintReport({
       data: {
-        receiptNo: r?.voucher_no || "V-102",
-        voucherNo: r?.voucher_no || "V-102",
-        date: r?.entry_date || "2026-06-12",
-        accountNo: "1010",
-        accountName: "1010 - Cash in Hand Vault",
-        amount: Number(r?.total_debit || 500000),
-        currency: r?.currency || "PKR",
-        narration: r?.narration || "Opening cash load Pakistan Main Branch",
+        receiptNo: r.voucher_no || "—",
+        voucherNo: r.voucher_no || "—",
+        date: r.entry_date || "",
+        accountNo: r.account_code || "",
+        accountName: r.account_title || "—",
+        amount: Number(r.total_debit || r.total_credit || 0),
+        currency: r.currency || "",
+        narration: r.narration || "",
         type: "receipt",
-        branchName: selectedBranch === "All Branches" ? "Pakistan Main Branch" : selectedBranch,
-        countryName: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
-        createdByName: "Super Admin"
+        branchName: r.branch_name || scopeBranch || "—",
+        countryName: r.country_name || scopeCountry || "—",
+        createdByName: r.created_by_name || "—",
       },
-      companyInfo: { name: "DIGITAL DOCK ERP" }
+      companyInfo: {},
     });
-  }, [roznamchaEntries, selectedBranch, selectedCountry]);
+  }, [roznamchaEntries, scopeBranch, scopeCountry]);
 
   // 8. Sales Order Report
   const handlePrintSalesOrder = useCallback(() => {
     const so = salesOrders[0] || orders[0];
-    if (!so) { alert("No sales orders available."); return; }
+    if (!so) return noData("sales order");
     const form = so.form_data?.form || {};
     openSalesA4ReportWindow({
       title: "Sales Order Report",
@@ -533,19 +556,19 @@ export default function PrintReportsHubPage() {
         productName: form.goodsName || form.productName || so.product_summary || "—",
         goodsDescription: form.goodsName || "—",
         quantity: Number(form.quantity || so.quantity || 0),
-        unit: form.unit || "KGS",
+        unit: form.unit || "",
         totalWeight: Number(form.totalWeight || so.total_weight || 0),
-        containerCount: Number(form.containerCount || 1),
+        containerCount: Number(form.containerCount || 0),
         salesRate: Number(form.salesRate || form.purchaseRate || 0),
         totalSalesAmount: Number(so.order_total || 0),
-        currency: form.currencyType || so.currency_code || "USD",
-        status: so.sales_status || so.order_status || "Draft",
-        paymentStatus: so.payment_status || "Pending",
+        currency: form.currencyType || so.currency_code || so.original_currency_code || "",
+        status: so.sales_status || so.status || so.order_status || "—",
+        paymentStatus: so.payment_status || "—",
         branchName: so.branchName || form.branchName || "—",
         countryName: so.countryName || form.countryName || "—",
-        createdAt: so.created_at || "—",
+        createdAt: so.created_at || "",
         form_data: so.form_data,
-        audit: { userName: "Super Admin", userId: "system", branchCode: so.branchCode || "—" },
+        audit: { userName: so.created_by_name || "—", userId: so.created_by || "", branchCode: so.branchCode || "—" },
       },
     });
   }, [salesOrders, orders]);
@@ -553,28 +576,28 @@ export default function PrintReportsHubPage() {
   // 9. Account Statement
   const handlePrintAccountStatement = useCallback(() => {
     const acc = accountsList[0];
-    if (!acc) { alert("No account data available."); return; }
+    if (!acc) return noData("account");
     openAccountA4ReportWindow({
       title: "Account Statement Report",
       accountData: {
         accountName: acc.contacts?.accountTitle || acc.account_number || "—",
         accountCode: acc.account_number || "—",
         accountTitle: acc.contacts?.accountTitle || "—",
-        subType: acc.sub_type || "General",
-        category: acc.category || "Asset",
-        currency: acc.currency_code || "AED",
-        status: acc.status || "Active",
-        selectedCountryName: selectedCountry === "All Countries" ? "—" : selectedCountry,
-        selectedBranchName: selectedBranch === "All Branches" ? "—" : selectedBranch,
-        createdBy: "Super Admin",
+        subType: acc.sub_type || "—",
+        category: acc.category || acc.kind || "—",
+        currency: acc.currency_code || "",
+        status: acc.status || "—",
+        selectedCountryName: acc.country_name || scopeCountry || "—",
+        selectedBranchName: acc.branch_name || scopeBranch || "—",
+        createdBy: acc.created_by_name || "—",
       },
     });
-  }, [accountsList, selectedCountry, selectedBranch]);
+  }, [accountsList, scopeCountry, scopeBranch]);
 
   // 10. Proforma Invoice / 12. Trade Document — via the unified engine
   const openTradeDoc = useCallback(async (docType: TradeDocType) => {
     const o = orders[0];
-    if (!o) { alert("No purchase orders available for trade documents."); return; }
+    if (!o) return noData("purchase order (trade document)");
     const scope = {
       countryId: o.country_id || o.countryId || null,
       countryBranchId: o.country_branch_id || null,
@@ -596,60 +619,62 @@ export default function PrintReportsHubPage() {
   // 12. Trade Document (Purchase Contract)
   const handlePrintTradeDocument = useCallback(() => { void openTradeDoc("contract"); }, [openTradeDoc]);
 
-  // 13. Purchase A4 Full Report
+  // 13. Purchase A4 Full Report — from a real purchase order
   const handlePrintPurchaseA4 = useCallback(() => {
     const o = orders[0];
-    if (!o) { alert("No purchase data available."); return; }
+    if (!o) return noData("purchase");
     const form = o.form_data?.form || {};
     openPurchaseA4ReportWindow({
       title: "Purchase Booking Order Report",
       purchaseData: {
         id: o.id,
         purchaseBookingOrderNumber: o.purchase_order_no || "—",
-        purchaseDate: form.purchaseDate || o.order_date || "—",
-        bookingDate: o.created_at || "—",
+        purchaseDate: form.purchaseDate || o.order_date || "",
+        bookingDate: o.created_at || "",
         purchaseAccountName: form.purchaseAccountName || "—",
-        purchaseAccountNumber: form.purchaseAccountNumber || "—",
+        purchaseAccountNumber: form.purchaseAccountNumber || "",
         salesAccountName: form.salesAccountName || "—",
-        salesAccountNumber: form.salesAccountNumber || "—",
+        salesAccountNumber: form.salesAccountNumber || "",
         supplierName: form.supplierName || "—",
-        buyerName: form.buyerName || "DAMAN BUSINESS GROUP",
+        buyerName: form.buyerName || "—",
         productName: form.goodsName || form.productName || "—",
         goodsDescription: form.goodsName || "—",
         quantity: Number(form.quantity || 0),
-        unit: form.unit || "KGS",
+        unit: form.unit || "",
         totalWeight: Number(form.totalWeight || 0),
-        containerCount: Number(form.containerCount || 1),
+        containerCount: Number(form.containerCount || 0),
         purchaseRate: Number(form.purchaseRate || 0),
         totalPurchaseAmount: Number(o.order_total || 0),
-        currency: form.currencyType || "USD",
-        status: o.order_status || "Draft",
-        paymentStatus: o.payment_status || "Pending",
+        currency: o.currency_code || form.currencyType || "",
+        status: o.status || o.order_status || "—",
+        paymentStatus: o.payment_status || "—",
         branchName: o.branchName || "—",
         countryName: o.countryName || "—",
-        createdAt: o.created_at || "—",
+        createdAt: o.created_at || "",
         form_data: o.form_data,
-        audit: { userName: "Super Admin", userId: "system", branchCode: o.branchCode || "—" },
+        audit: { userName: o.created_by_name || "—", userId: o.created_by || "", branchCode: o.branchCode || "—" },
       },
     });
   }, [orders]);
 
-  // 14. User Activity Report
+  // 14. User Activity Report — the logged-in user's real audit counts from live data
   const handlePrintUserActivity = useCallback(() => {
+    const u = sessionInfo?.user;
+    if (!u?.id) return noData("user session");
     openUserA4ReportWindow({
       title: "User Activity Report",
       subtitle: "ERP User Audit Trail",
       userData: {
-        userId: "super-admin",
-        userCode: "SA-001",
-        fullName: "Super Admin",
-        countryName: selectedCountry === "All Countries" ? "ALL" : selectedCountry,
-        branchName: selectedBranch === "All Branches" ? "ALL" : selectedBranch,
-        branchType: "super_admin",
-        role: "Super Admin",
-        registrationDate: "2026-01-01",
-        status: "Active",
-        permissions: ["Full Access"],
+        userId: u.id,
+        userCode: u.userCode || u.user_code || "—",
+        fullName: u.fullName || u.email || "—",
+        countryName: scopeCountry || (sessionInfo?.scopes?.summary?.countryName ?? "—"),
+        branchName: scopeBranch || (sessionInfo?.scopes?.summary?.branchDisplayName ?? "—"),
+        branchType: sessionInfo?.roles?.[0] || "—",
+        role: (sessionInfo?.roles?.[0] || "—").replace(/_/g, " "),
+        registrationDate: "",
+        status: sessionInfo?.authenticated ? "Active" : "—",
+        permissions: [],
         lastActivity: new Date().toISOString(),
         lastActivityAction: "Viewed Print Reports",
         activityCounts: {
@@ -662,7 +687,7 @@ export default function PrintReportsHubPage() {
         },
       },
     });
-  }, [roznamchaEntries, orders, accountsList, selectedCountry, selectedBranch]);
+  }, [sessionInfo, roznamchaEntries, orders, accountsList, scopeCountry, scopeBranch]);
 
   // 15. Daily Roznamcha Summary
   const handlePrintDailyRoznamcha = useCallback(() => {
@@ -680,26 +705,53 @@ export default function PrintReportsHubPage() {
       title: "Ledger Balance Report",
       subtitle: "Complete Ledger Balance Summary",
       accountData: {
-        accountName: acc.contacts?.accountTitle || acc.account_number || "Ledger Report",
+        accountName: acc.contacts?.accountTitle || acc.account_number || "—",
         accountCode: acc.account_number || "—",
         accountTitle: acc.contacts?.accountTitle || "—",
         subType: "Ledger",
         category: "Financial",
-        currency: acc.currency_code || "AED",
-        status: "Active",
-        selectedCountryName: selectedCountry === "All Countries" ? "—" : selectedCountry,
-        selectedBranchName: selectedBranch === "All Branches" ? "—" : selectedBranch,
-        createdBy: "Super Admin",
+        currency: acc.currency_code || "",
+        status: acc.status || "—",
+        selectedCountryName: acc.country_name || scopeCountry || "—",
+        selectedBranchName: acc.branch_name || scopeBranch || "—",
+        createdBy: acc.created_by_name || "—",
       },
     });
-  }, [ledgersList, accountsList, selectedCountry, selectedBranch]);
+  }, [ledgersList, accountsList, scopeCountry, scopeBranch]);
 
   // 17. Purchase Transfer Verification
   const handlePrintTransferVerification = useCallback(() => {
     handlePrintTransferPayment();
   }, [handlePrintTransferPayment]);
 
-  /* ── EXTENDED REPORT CARDS REGISTRY WITH OPERATIONAL METADATA ── */
+  /* Real operational metadata shared by every card — derived from the live
+     activity-summary API + the logged-in session's own scope. No demo values. */
+  const cardMeta = useMemo(() => {
+    const gt = activityData?.grandTotal;
+    const summary = sessionInfo?.scopes?.summary;
+    const branches = (activityData?.branches || []).filter((b) => b.isActive);
+    return {
+      countryName: scopeCountry || summary?.countryName || "—",
+      branchName: scopeBranch || summary?.branchDisplayName || summary?.branchName || "—",
+      branchCode: summary?.branchCode || "—",
+      periodFrom: "",
+      periodTo: "",
+      lastActiveTime: fmtDateTime(gt?.lastActivity ?? activityData?.generatedAt ?? null),
+      activeUsersCount: gt?.activeBranches ?? branches.length,
+      processPercent: null as number | null,
+      processTimeRemaining: "",
+      subBranches: branches.slice(0, 8).map((b) => ({
+        name: b.branchName,
+        code: b.branchCode || "—",
+        status: b.isActive ? "Active" : "Inactive",
+        users: 0,
+        lastTime: fmtDateTime(b.lastActivity),
+        progress: 0,
+      })),
+    };
+  }, [activityData, sessionInfo, scopeCountry, scopeBranch]);
+
+  /* ── REPORT CARDS REGISTRY ── */
   const reportCards = useMemo(() => [
     {
       id: "customer-ledger",
@@ -713,19 +765,7 @@ export default function PrintReportsHubPage() {
       onPrint: handlePrintCustomerLedger,
       category: "Accounting",
       dataCount: roznamchaEntries.length,
-      countryName: selectedCountry === "All Countries" ? "Pakistan (All)" : selectedCountry,
-      branchName: selectedBranch === "All Branches" ? "Quetta City Branch" : selectedBranch,
-      branchCode: "CHN-QUETTA-001",
-      periodFrom: "2026-06-01 09:00 AM",
-      periodTo: "2026-06-12 06:00 PM",
-      lastActiveTime: "2026-06-12 05:45 PM",
-      activeUsersCount: 5,
-      processPercent: 85,
-      processTimeRemaining: "15 Mins Remaining",
-      subBranches: [
-        { name: "Quetta City Branch", code: "CHN-QUETTA-001", status: "Active", users: 3, lastTime: "05:45 PM", progress: 90 },
-        { name: "Karachi Main HQ", code: "PK-KHI-MAIN", status: "Active", users: 2, lastTime: "04:30 PM", progress: 80 }
-      ]
+      ...cardMeta
     },
     {
       id: "loading-records",
@@ -739,19 +779,7 @@ export default function PrintReportsHubPage() {
       onPrint: handlePrintLoadingRecords,
       category: "Purchase",
       dataCount: loadingRecords.length || orders.length,
-      countryName: selectedCountry === "All Countries" ? "UAE (Dubai)" : selectedCountry,
-      branchName: selectedBranch === "All Branches" ? "Dubai Main Branch" : selectedBranch,
-      branchCode: "DXB-MAIN-001",
-      periodFrom: "2026-06-01 08:30 AM",
-      periodTo: "2026-06-12 07:15 PM",
-      lastActiveTime: "2026-06-12 07:00 PM",
-      activeUsersCount: 8,
-      processPercent: 92,
-      processTimeRemaining: "8 Mins Remaining",
-      subBranches: [
-        { name: "Dubai Corporate Center", code: "DXB-001", status: "Active", users: 5, lastTime: "07:00 PM", progress: 95 },
-        { name: "Al-Ras Trade Center", code: "DXB-RAS-002", status: "Active", users: 3, lastTime: "06:15 PM", progress: 88 }
-      ]
+      ...cardMeta
     },
     {
       id: "finalized-po",
@@ -765,18 +793,7 @@ export default function PrintReportsHubPage() {
       onPrint: handlePrintFinalizedPO,
       category: "Purchase",
       dataCount: orders.length,
-      countryName: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
-      branchName: selectedBranch === "All Branches" ? "Karachi Main HQ" : selectedBranch,
-      branchCode: "PK-KHI-MAIN",
-      periodFrom: "2026-05-15 09:00 AM",
-      periodTo: "2026-06-12 06:00 PM",
-      lastActiveTime: "2026-06-12 04:30 PM",
-      activeUsersCount: 4,
-      processPercent: 100,
-      processTimeRemaining: "Completed",
-      subBranches: [
-        { name: "Karachi Main HQ", code: "PK-KHI-MAIN", status: "Completed", users: 4, lastTime: "04:30 PM", progress: 100 }
-      ]
+      ...cardMeta
     },
     {
       id: "transfer-payment",
@@ -790,18 +807,7 @@ export default function PrintReportsHubPage() {
       onPrint: handlePrintTransferPayment,
       category: "Payment",
       dataCount: orders.length,
-      countryName: selectedCountry === "All Countries" ? "Afghanistan" : selectedCountry,
-      branchName: selectedBranch === "All Branches" ? "Kabul Transit Station" : selectedBranch,
-      branchCode: "AF-KBL-001",
-      periodFrom: "2026-06-01 08:00 AM",
-      periodTo: "2026-06-12 05:00 PM",
-      lastActiveTime: "2026-06-12 03:15 PM",
-      activeUsersCount: 3,
-      processPercent: 78,
-      processTimeRemaining: "22 Mins Remaining",
-      subBranches: [
-        { name: "Kabul Transit Station", code: "AF-KBL-001", status: "Active", users: 3, lastTime: "03:15 PM", progress: 78 }
-      ]
+      ...cardMeta
     },
     {
       id: "cash-entries",
@@ -815,19 +821,7 @@ export default function PrintReportsHubPage() {
       onPrint: handlePrintCashEntries,
       category: "Cash",
       dataCount: roznamchaEntries.length,
-      countryName: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
-      branchName: selectedBranch === "All Branches" ? "Quetta City Branch" : selectedBranch,
-      branchCode: "CHN-QUETTA-001",
-      periodFrom: "2026-06-12 08:00 AM",
-      periodTo: "2026-06-12 09:00 PM",
-      lastActiveTime: "2026-06-12 08:45 PM",
-      activeUsersCount: 6,
-      processPercent: 95,
-      processTimeRemaining: "5 Mins Remaining",
-      subBranches: [
-        { name: "Quetta City Branch", code: "CHN-QUETTA-001", status: "Active", users: 4, lastTime: "08:45 PM", progress: 98 },
-        { name: "Lahore Main Branch", code: "PK-LHR-002", status: "Active", users: 2, lastTime: "07:20 PM", progress: 90 }
-      ]
+      ...cardMeta
     },
     {
       id: "bank-entries",
@@ -841,87 +835,7 @@ export default function PrintReportsHubPage() {
       onPrint: handlePrintBankEntries,
       category: "Bank",
       dataCount: roznamchaEntries.length,
-      countryName: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
-      branchName: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch,
-      branchCode: "PK-MAIN-001",
-      periodFrom: "2026-06-12 08:00 AM",
-      periodTo: "2026-06-12 09:00 PM",
-      lastActiveTime: "2026-06-12 08:45 PM",
-      activeUsersCount: 5,
-      processPercent: 95,
-      processTimeRemaining: "5 Mins Remaining",
-      subBranches: []
-    },
-    {
-      id: "business-roznamcha",
-      title: "Business Roznamcha Print",
-      subtitle: "Business Journal Only",
-      description: "Business journal (roznamcha) transactions with party, account code/title, debit/credit, balanced status, branded header/footer and QR.",
-      format: "A4 Landscape",
-      icon: Receipt,
-      color: "from-emerald-600 to-teal-700",
-      badgeColor: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
-      onPrint: handlePrintBusinessRoznamcha,
-      category: "Journal",
-      dataCount: roznamchaEntries.length,
-      countryName: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
-      branchName: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch,
-      branchCode: "PK-MAIN-001",
-      periodFrom: "2026-06-12 08:00 AM",
-      periodTo: "2026-06-12 09:00 PM",
-      lastActiveTime: "2026-06-12 08:45 PM",
-      activeUsersCount: 5,
-      processPercent: 95,
-      processTimeRemaining: "5 Mins Remaining",
-      subBranches: []
-    },
-    {
-      id: "invoice-entries",
-      title: "Invoice Print",
-      subtitle: "Invoice Transactions Only",
-      description: "Invoice-related transactions with invoice number, party, account, debit/credit totals, branded letterhead, footer and QR verification.",
-      format: "A4 Landscape",
-      icon: FileText,
-      color: "from-rose-600 to-pink-700",
-      badgeColor: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300",
-      onPrint: handlePrintInvoiceEntries,
-      category: "Invoice",
-      dataCount: roznamchaEntries.length,
-      countryName: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
-      branchName: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch,
-      branchCode: "PK-MAIN-001",
-      periodFrom: "2026-06-12 08:00 AM",
-      periodTo: "2026-06-12 09:00 PM",
-      lastActiveTime: "2026-06-12 08:45 PM",
-      activeUsersCount: 5,
-      processPercent: 95,
-      processTimeRemaining: "5 Mins Remaining",
-      subBranches: []
-    },
-    {
-      id: "purchase-booking",
-      title: "New Purchase Booking Order Document",
-      subtitle: "Order Confirmation Sheet",
-      description: "Full purchase order document containing supplier/buyer cards, goods breakdown, payment terms schedule, and GL postings.",
-      format: "A4 Portrait",
-      icon: FileText,
-      color: "from-rose-600 to-red-700",
-      badgeColor: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300",
-      onPrint: handlePrintPurchaseBooking,
-      category: "Purchase",
-      dataCount: orders.length,
-      countryName: selectedCountry === "All Countries" ? "UAE" : selectedCountry,
-      branchName: selectedBranch === "All Branches" ? "Dubai Main HQ" : selectedBranch,
-      branchCode: "UAE-DXB-001",
-      periodFrom: "2026-06-01 09:00 AM",
-      periodTo: "2026-06-12 06:00 PM",
-      lastActiveTime: "2026-06-12 05:20 PM",
-      activeUsersCount: 7,
-      processPercent: 88,
-      processTimeRemaining: "12 Mins Remaining",
-      subBranches: [
-        { name: "Dubai Corporate HQ", code: "UAE-DXB-001", status: "Active", users: 7, lastTime: "05:20 PM", progress: 88 }
-      ]
+      ...cardMeta
     },
     {
       id: "roznamcha-voucher",
@@ -935,18 +849,7 @@ export default function PrintReportsHubPage() {
       onPrint: handlePrintRoznamchaVoucher,
       category: "Cash",
       dataCount: roznamchaEntries.length,
-      countryName: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
-      branchName: selectedBranch === "All Branches" ? "Lahore Main Branch" : selectedBranch,
-      branchCode: "PK-LHR-002",
-      periodFrom: "2026-06-10 09:00 AM",
-      periodTo: "2026-06-12 06:00 PM",
-      lastActiveTime: "2026-06-12 04:10 PM",
-      activeUsersCount: 4,
-      processPercent: 82,
-      processTimeRemaining: "18 Mins Remaining",
-      subBranches: [
-        { name: "Lahore Main Branch", code: "PK-LHR-002", status: "Active", users: 4, lastTime: "04:10 PM", progress: 82 }
-      ]
+      ...cardMeta
     },
     {
       id: "sales-order",
@@ -960,18 +863,7 @@ export default function PrintReportsHubPage() {
       onPrint: handlePrintSalesOrder,
       category: "Sales",
       dataCount: salesOrders.length,
-      countryName: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
-      branchName: selectedBranch === "All Branches" ? "Peshawar Branch" : selectedBranch,
-      branchCode: "PK-PSW-003",
-      periodFrom: "2026-06-01 09:00 AM",
-      periodTo: "2026-06-12 06:00 PM",
-      lastActiveTime: "2026-06-12 03:50 PM",
-      activeUsersCount: 3,
-      processPercent: 70,
-      processTimeRemaining: "30 Mins Remaining",
-      subBranches: [
-        { name: "Peshawar Branch", code: "PK-PSW-003", status: "Active", users: 3, lastTime: "03:50 PM", progress: 70 }
-      ]
+      ...cardMeta
     },
     {
       id: "account-statement",
@@ -985,18 +877,7 @@ export default function PrintReportsHubPage() {
       onPrint: handlePrintAccountStatement,
       category: "Accounting",
       dataCount: accountsList.length,
-      countryName: selectedCountry === "All Countries" ? "Global" : selectedCountry,
-      branchName: selectedBranch === "All Branches" ? "Main HQ" : selectedBranch,
-      branchCode: "GLB-HQ-001",
-      periodFrom: "2026-01-01 00:00 AM",
-      periodTo: "2026-06-12 11:59 PM",
-      lastActiveTime: "2026-06-12 06:30 PM",
-      activeUsersCount: 9,
-      processPercent: 96,
-      processTimeRemaining: "4 Mins Remaining",
-      subBranches: [
-        { name: "Global Main HQ", code: "GLB-HQ-001", status: "Active", users: 9, lastTime: "06:30 PM", progress: 96 }
-      ]
+      ...cardMeta
     },
     {
       id: "proforma-invoice",
@@ -1010,18 +891,7 @@ export default function PrintReportsHubPage() {
       onPrint: handlePrintProformaInvoice,
       category: "Trade",
       dataCount: orders.length,
-      countryName: selectedCountry === "All Countries" ? "UAE" : selectedCountry,
-      branchName: selectedBranch === "All Branches" ? "Dubai Trade Branch" : selectedBranch,
-      branchCode: "UAE-DXB-002",
-      periodFrom: "2026-06-01 09:00 AM",
-      periodTo: "2026-06-12 06:00 PM",
-      lastActiveTime: "2026-06-12 02:45 PM",
-      activeUsersCount: 4,
-      processPercent: 65,
-      processTimeRemaining: "35 Mins Remaining",
-      subBranches: [
-        { name: "Dubai Trade Branch", code: "UAE-DXB-002", status: "Active", users: 4, lastTime: "02:45 PM", progress: 65 }
-      ]
+      ...cardMeta
     },
     {
       id: "expenses-bill",
@@ -1034,19 +904,8 @@ export default function PrintReportsHubPage() {
       badgeColor: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300",
       onPrint: handlePrintExpenses,
       category: "Expenses",
-      dataCount: 12,
-      countryName: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
-      branchName: selectedBranch === "All Branches" ? "Islamabad HQ" : selectedBranch,
-      branchCode: "PK-ISB-001",
-      periodFrom: "2026-06-01 09:00 AM",
-      periodTo: "2026-06-12 06:00 PM",
-      lastActiveTime: "2026-06-12 05:10 PM",
-      activeUsersCount: 2,
-      processPercent: 90,
-      processTimeRemaining: "10 Mins Remaining",
-      subBranches: [
-        { name: "Islamabad HQ", code: "PK-ISB-001", status: "Active", users: 2, lastTime: "05:10 PM", progress: 90 }
-      ]
+      dataCount: 0,
+      ...cardMeta
     },
     {
       id: "trade-document",
@@ -1060,18 +919,7 @@ export default function PrintReportsHubPage() {
       onPrint: handlePrintTradeDocument,
       category: "Trade",
       dataCount: orders.length,
-      countryName: selectedCountry === "All Countries" ? "Afghanistan" : selectedCountry,
-      branchName: selectedBranch === "All Branches" ? "Kabul Transit Station" : selectedBranch,
-      branchCode: "AF-KBL-001",
-      periodFrom: "2026-05-20 09:00 AM",
-      periodTo: "2026-06-12 06:00 PM",
-      lastActiveTime: "2026-06-12 01:30 PM",
-      activeUsersCount: 5,
-      processPercent: 80,
-      processTimeRemaining: "20 Mins Remaining",
-      subBranches: [
-        { name: "Kabul Transit Station", code: "AF-KBL-001", status: "Active", users: 5, lastTime: "01:30 PM", progress: 80 }
-      ]
+      ...cardMeta
     },
     {
       id: "purchase-a4",
@@ -1085,18 +933,7 @@ export default function PrintReportsHubPage() {
       onPrint: handlePrintPurchaseA4,
       category: "Purchase",
       dataCount: orders.length,
-      countryName: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
-      branchName: selectedBranch === "All Branches" ? "Quetta City Branch" : selectedBranch,
-      branchCode: "CHN-QUETTA-001",
-      periodFrom: "2026-06-01 09:00 AM",
-      periodTo: "2026-06-12 06:00 PM",
-      lastActiveTime: "2026-06-12 04:00 PM",
-      activeUsersCount: 6,
-      processPercent: 94,
-      processTimeRemaining: "6 Mins Remaining",
-      subBranches: [
-        { name: "Quetta City Branch", code: "CHN-QUETTA-001", status: "Active", users: 6, lastTime: "04:00 PM", progress: 94 }
-      ]
+      ...cardMeta
     },
     {
       id: "user-activity",
@@ -1109,19 +946,8 @@ export default function PrintReportsHubPage() {
       badgeColor: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300",
       onPrint: handlePrintUserActivity,
       category: "Audit",
-      dataCount: 18,
-      countryName: selectedCountry === "All Countries" ? "Global" : selectedCountry,
-      branchName: selectedBranch === "All Branches" ? "Enterprise Wide" : selectedBranch,
-      branchCode: "GLB-ALL",
-      periodFrom: "2026-06-01 00:00 AM",
-      periodTo: "2026-06-12 11:59 PM",
-      lastActiveTime: "2026-06-12 08:30 PM",
-      activeUsersCount: 14,
-      processPercent: 99,
-      processTimeRemaining: "1 Min Remaining",
-      subBranches: [
-        { name: "Global Enterprise Wide", code: "GLB-ALL", status: "Active", users: 14, lastTime: "08:30 PM", progress: 99 }
-      ]
+      dataCount: roznamchaEntries.length + orders.length + accountsList.length,
+      ...cardMeta
     },
     {
       id: "daily-roznamcha",
@@ -1135,18 +961,7 @@ export default function PrintReportsHubPage() {
       onPrint: handlePrintDailyRoznamcha,
       category: "Cash",
       dataCount: roznamchaEntries.length,
-      countryName: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
-      branchName: selectedBranch === "All Branches" ? "Quetta City Branch" : selectedBranch,
-      branchCode: "CHN-QUETTA-001",
-      periodFrom: "2026-06-12 08:00 AM",
-      periodTo: "2026-06-12 08:00 PM",
-      lastActiveTime: "2026-06-12 07:45 PM",
-      activeUsersCount: 4,
-      processPercent: 87,
-      processTimeRemaining: "13 Mins Remaining",
-      subBranches: [
-        { name: "Quetta City Branch", code: "CHN-QUETTA-001", status: "Active", users: 4, lastTime: "07:45 PM", progress: 87 }
-      ]
+      ...cardMeta
     },
     {
       id: "ledger-balance",
@@ -1160,18 +975,7 @@ export default function PrintReportsHubPage() {
       onPrint: handlePrintLedgerBalance,
       category: "Accounting",
       dataCount: ledgersList.length,
-      countryName: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
-      branchName: selectedBranch === "All Branches" ? "Karachi Main HQ" : selectedBranch,
-      branchCode: "PK-KHI-MAIN",
-      periodFrom: "2026-01-01 09:00 AM",
-      periodTo: "2026-06-12 06:00 PM",
-      lastActiveTime: "2026-06-12 05:00 PM",
-      activeUsersCount: 8,
-      processPercent: 91,
-      processTimeRemaining: "9 Mins Remaining",
-      subBranches: [
-        { name: "Karachi Main HQ", code: "PK-KHI-MAIN", status: "Active", users: 8, lastTime: "05:00 PM", progress: 91 }
-      ]
+      ...cardMeta
     },
     {
       id: "transfer-verification",
@@ -1185,18 +989,7 @@ export default function PrintReportsHubPage() {
       onPrint: handlePrintTransferVerification,
       category: "Purchase",
       dataCount: orders.length,
-      countryName: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
-      branchName: selectedBranch === "All Branches" ? "Main HQ Branch" : selectedBranch,
-      branchCode: "PK-MAIN-001",
-      periodFrom: "2026-06-01 09:00 AM",
-      periodTo: "2026-06-12 06:00 PM",
-      lastActiveTime: "2026-06-12 06:15 PM",
-      activeUsersCount: 5,
-      processPercent: 97,
-      processTimeRemaining: "3 Mins Remaining",
-      subBranches: [
-        { name: "Main HQ Branch", code: "PK-MAIN-001", status: "Active", users: 5, lastTime: "06:15 PM", progress: 97 }
-      ]
+      ...cardMeta
     },
   ], [handlePrintCustomerLedger, handlePrintLoadingRecords, handlePrintFinalizedPO, handlePrintTransferPayment, handlePrintCashEntries, handlePrintPurchaseBooking, handlePrintRoznamchaVoucher, handlePrintSalesOrder, handlePrintAccountStatement, handlePrintProformaInvoice, handlePrintExpenses, handlePrintTradeDocument, handlePrintPurchaseA4, handlePrintUserActivity, handlePrintDailyRoznamcha, handlePrintLedgerBalance, handlePrintTransferVerification, roznamchaEntries, loadingRecords, orders, salesOrders, accountsList, ledgersList, selectedCountry, selectedBranch]);
 
@@ -1368,7 +1161,7 @@ export default function PrintReportsHubPage() {
                   <Th className="px-4 py-3 min-w-[200px]">Report / Form Name</Th>
                   <Th className="px-3 py-3">Assigned Country</Th>
                   <Th className="px-3 py-3 min-w-[140px]">Branch Name & Code</Th>
-                  <Th className="px-3 py-3 min-w-[180px]">Activity Period (From — To)</Th>
+                  <Th className="px-3 py-3 min-w-[140px]">Records in Scope</Th>
                   <Th className="px-3 py-3 min-w-[130px]">Last Active Time</Th>
                   <Th className="px-3 py-3 text-center">Active Users</Th>
                   <Th className="px-3 py-3 text-center w-12">Actions (•••)</Th>
@@ -1426,13 +1219,12 @@ export default function PrintReportsHubPage() {
                           <div className="text-[10px] font-mono text-blue-600 dark:text-blue-400 font-bold">{card.branchCode}</div>
                         </td>
 
-                        {/* Activity Period (From - To) */}
+                        {/* Records in scope */}
                         <td className="px-3 py-3">
-                          <div className="flex items-center gap-1 text-[11px] font-medium text-slate-700 dark:text-slate-300">
+                          <div className="flex items-center gap-1 text-[11px] font-bold text-slate-700 dark:text-slate-300">
                             <Clock className="h-3 w-3 text-slate-400 shrink-0" />
-                            <span>{card.periodFrom}</span>
+                            <span>{card.dataCount > 0 ? `${card.dataCount} record${card.dataCount === 1 ? "" : "s"}` : "No data"}</span>
                           </div>
-                          <div className="text-[10px] text-slate-400 pl-4 font-mono">To: {card.periodTo}</div>
                         </td>
 
                         {/* Last Active Time */}
@@ -1501,41 +1293,31 @@ export default function PrintReportsHubPage() {
                         <tr className="bg-slate-50/90 dark:bg-slate-950/60 border-b border-slate-200 dark:border-slate-800">
                           <td colSpan={8} className="p-4">
                             <div className="rounded-xl border border-blue-200/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-4">
-                              
-                              {/* 1. Process Duration & Remaining Time Progress Bar */}
-                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-blue-50/60 dark:bg-blue-950/40 p-3 rounded-lg border border-blue-100 dark:border-blue-900/40">
-                                <div className="flex items-center gap-2.5">
-                                  <div className="p-1.5 rounded-lg bg-blue-600 text-white"><Timer className="h-4 w-4 animate-spin" /></div>
-                                  <div>
-                                    <span className="text-xs font-extrabold text-slate-900 dark:text-white block">
-                                      Process Progress & Processing Time Remaining
-                                    </span>
-                                    <span className="text-[10px] text-slate-500 font-semibold">
-                                      Estimated Completion: {card.processTimeRemaining} ({card.processPercent}% Completed)
-                                    </span>
-                                  </div>
-                                </div>
 
-                                {/* Animated Progress Bar Strip */}
-                                <div className="w-full sm:w-64 space-y-1">
-                                  <div className="flex justify-between text-[10px] font-extrabold text-blue-700 dark:text-blue-300">
-                                    <span>Progress</span>
-                                    <span>{card.processPercent}%</span>
-                                  </div>
-                                  <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
-                                    <div
-                                      className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 transition-all duration-500 rounded-full"
-                                      style={{ width: `${card.processPercent}%` }}
-                                    />
-                                  </div>
+                              {/* Live report status */}
+                              <div className="flex items-center gap-2.5 bg-blue-50/60 dark:bg-blue-950/40 p-3 rounded-lg border border-blue-100 dark:border-blue-900/40">
+                                <div className="p-1.5 rounded-lg bg-blue-600 text-white"><Timer className="h-4 w-4" /></div>
+                                <div>
+                                  <span className="text-xs font-extrabold text-slate-900 dark:text-white block">
+                                    {card.dataCount > 0 ? `${card.dataCount} live record${card.dataCount === 1 ? "" : "s"} ready for this report` : "Waiting for data — this report will populate once records exist in scope"}
+                                  </span>
+                                  <span className="text-[10px] text-slate-500 font-semibold">
+                                    Last activity: {card.lastActiveTime}
+                                  </span>
                                 </div>
                               </div>
 
-                              {/* 2. Sub-Branches Table Tree Under Country */}
+                              {/* Active branches in scope (from the live activity summary) */}
                               <div>
                                 <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1">
-                                  <Building2 className="h-3 w-3 text-blue-500" /> Active Branches Under {card.countryName}
+                                  <Building2 className="h-3 w-3 text-blue-500" /> Active Branches {card.countryName !== "—" ? `— ${card.countryName}` : ""}
                                 </div>
+                                {card.subBranches.length === 0 && (
+                                  <div className="rounded-lg border border-dashed border-slate-200 dark:border-slate-800 px-3 py-4 text-center text-[11px] text-slate-400">
+                                    No active branch activity in the current scope.
+                                  </div>
+                                )}
+                                {card.subBranches.length > 0 && (
                                 <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800">
                                   <table className="w-full text-left text-xs border-collapse">
                                     <thead>
@@ -1576,6 +1358,7 @@ export default function PrintReportsHubPage() {
                                     </tbody>
                                   </table>
                                 </div>
+                                )}
                               </div>
 
                             </div>

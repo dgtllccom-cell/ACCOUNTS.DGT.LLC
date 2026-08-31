@@ -844,7 +844,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
         selectedCountryCode: (selectedCountry?.iso2 || selectedCountry?.iso3 || undefined),
         selectedBranchName: branchType === "Main" ? selectedBranchName(mainBranches, branch) : selectedCityBranchName(cityBranches, branch),
         selectedBranchCode: branchInfo?.code,
-        createdBy: "Super Admin"
+        createdBy: ""
       }
     });
   }

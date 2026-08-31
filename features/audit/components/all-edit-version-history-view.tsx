@@ -86,12 +86,12 @@ export function AllEditVersionHistoryView() {
   // Data & Pagination
   const [records, setRecords] = useState<EditHistoryRow[]>([]);
   const [kpis, setKpis] = useState({
-    editsToday: 142,
-    pendingApprovals: 28,
-    highRiskChanges: 35,
-    expiredAccess: 12,
-    totalCountries: 5,
-    totalBranches: 9
+    editsToday: 0,
+    pendingApprovals: 0,
+    highRiskChanges: 0,
+    expiredAccess: 0,
+    totalCountries: 0,
+    totalBranches: 0
   });
   const [totalCount, setTotalCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -705,7 +705,7 @@ export function AllEditVersionHistoryView() {
 
                       {/* Last Edited By */}
                       <td className="py-2.5 px-3 font-medium text-slate-700 dark:text-slate-300">
-                        {row.user_name || "Super Admin"}
+                        {row.user_name || "—"}
                       </td>
 
                       {/* Risk Level */}

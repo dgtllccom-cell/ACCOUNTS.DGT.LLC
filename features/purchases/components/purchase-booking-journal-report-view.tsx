@@ -2211,9 +2211,9 @@ export function PurchaseBookingJournalReportView({
               openLoadingRecordsPrintReport({
                 rows: mappedRows,
                 companyInfo: {
-                  name: "DIGITAL DOCK ERP",
-                  branch: "ALL BRANCHES",
-                  printedBy: session?.fullName || session?.email || "Country Admin"
+                  name: "",
+                  branch: "",
+                  printedBy: session?.fullName || session?.email || "—"
                 }
               });
             }}
@@ -2629,7 +2629,7 @@ export function PurchaseBookingJournalReportView({
                                   bookingDate: report.bookingDate || report.purchaseDate || new Date().toISOString(),
                                   supplierName: report.supplierName || f.purchaseAccountName || "SUPPLIER ACCOUNT",
                                   supplierContact: f.supplierContact,
-                                  buyerName: report.buyerName || f.customerName || "DAMAN GROUP",
+                                  buyerName: report.buyerName || f.customerName || "—",
                                   purchaseAccountNo: report.purchaseAccountNumber || f.purchaseAccountNo || "UAE-DET-AC-0003",
                                   purchaseAccountName: report.purchaseAccountName || f.purchaseAccountName || "Purchase Account",
                                   salesAccountNo: report.salesAccountNumber || f.salesAccountNo || "UAE-DET-AC-0003",
@@ -2675,7 +2675,7 @@ export function PurchaseBookingJournalReportView({
                                   userName: report.audit?.userName || "ADMIN"
                                 },
                                 companyInfo: {
-                                  name: "DIGITAL DOCK ERP",
+                                  name: "",
                                   branch: report.branchName || "AL_RAS",
                                   printedBy: session?.fullName || session?.email || "SUPER ADMIN"
                                 },
@@ -2711,7 +2711,7 @@ export function PurchaseBookingJournalReportView({
                                   bookingDate: report.bookingDate || report.purchaseDate || new Date().toISOString(),
                                   supplierName: report.supplierName || f.purchaseAccountName || "SUPPLIER ACCOUNT",
                                   supplierContact: f.supplierContact,
-                                  buyerName: report.buyerName || f.customerName || "DAMAN GROUP",
+                                  buyerName: report.buyerName || f.customerName || "—",
                                   purchaseAccountNo: report.purchaseAccountNumber || f.purchaseAccountNo || "UAE-DET-AC-0003",
                                   purchaseAccountName: report.purchaseAccountName || f.purchaseAccountName || "Purchase Account",
                                   salesAccountNo: report.salesAccountNumber || f.salesAccountNo || "UAE-DET-AC-0003",
@@ -2757,7 +2757,7 @@ export function PurchaseBookingJournalReportView({
                                   userName: report.audit?.userName || "ADMIN"
                                 },
                                 companyInfo: {
-                                  name: "DIGITAL DOCK ERP",
+                                  name: "",
                                   branch: report.branchName || "AL_RAS",
                                   printedBy: session?.fullName || session?.email || "SUPER ADMIN"
                                 }
@@ -2816,9 +2816,9 @@ export function PurchaseBookingJournalReportView({
                                       loadingStatus: report.status === "Accepted" ? "Partially Loaded" : report.status === "Transferred" ? "Almost Complete" : report.status === "Completed" ? "Completed" : "Not Loaded"
                                     }],
                                     companyInfo: {
-                                      name: "DIGITAL DOCK ERP",
+                                      name: "",
                                       branch: report.branchName || "AL_RAS",
-                                      printedBy: session?.fullName || session?.email || "Country Admin"
+                                      printedBy: session?.fullName || session?.email || "—"
                                     }
                                   });
                                 }
@@ -2978,7 +2978,7 @@ export function PurchaseBookingJournalReportView({
                               bookingDate: report.bookingDate || report.purchaseDate || new Date().toISOString(),
                               supplierName: report.supplierName || f.purchaseAccountName || "SUPPLIER ACCOUNT",
                               supplierContact: f.supplierContact,
-                              buyerName: report.buyerName || f.customerName || "DAMAN GROUP",
+                              buyerName: report.buyerName || f.customerName || "—",
                               purchaseAccountNo: report.purchaseAccountNumber || f.purchaseAccountNo || "UAE-DET-AC-0003",
                               purchaseAccountName: report.purchaseAccountName || f.purchaseAccountName || "Purchase Account",
                               salesAccountNo: report.salesAccountNumber || f.salesAccountNo || "UAE-DET-AC-0003",
@@ -3024,7 +3024,7 @@ export function PurchaseBookingJournalReportView({
                               userName: report.audit?.userName || "ADMIN"
                             },
                             companyInfo: {
-                              name: "DIGITAL DOCK ERP",
+                              name: "",
                               branch: report.branchName || "AL_RAS",
                               printedBy: session?.fullName || session?.email || "SUPER ADMIN"
                             }
@@ -3083,9 +3083,9 @@ export function PurchaseBookingJournalReportView({
                                   loadingStatus: report.status === "Accepted" ? "Partially Loaded" : report.status === "Transferred" ? "Almost Complete" : report.status === "Completed" ? "Completed" : "Not Loaded"
                                 }],
                                 companyInfo: {
-                                  name: "DIGITAL DOCK ERP",
+                                  name: "",
                                   branch: report.branchName || "AL_RAS",
-                                  printedBy: session?.fullName || session?.email || "Country Admin"
+                                  printedBy: session?.fullName || session?.email || "—"
                                 }
                               });
                             }

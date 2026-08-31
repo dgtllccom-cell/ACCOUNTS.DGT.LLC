@@ -238,7 +238,7 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
             {new Date(rec.created_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
           </div>
           <div className="text-[10px] text-slate-400 mt-0.5 font-medium">
-            by {rec.user_name || "Super Admin"}
+            by {rec.user_name || "—"}
           </div>
         </div>
 
@@ -263,7 +263,7 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
             <span>Deleted By</span>
           </div>
           <div className="font-bold text-slate-900 dark:text-white text-[11px] truncate">
-            {rec.user_name || "Super Admin"}
+            {rec.user_name || "—"}
           </div>
           <div className="text-[10px] text-slate-400 mt-0.5 font-mono">
             @{rec.user_id || "superadmin"}
@@ -277,7 +277,7 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
             <span>User Role</span>
           </div>
           <div className="font-bold text-slate-900 dark:text-white text-[11px]">
-            {rec.user_role || "Super Admin"}
+            {rec.user_role || "—"}
           </div>
           <div className="text-[10px] text-slate-400 mt-0.5">
             System Role
@@ -487,7 +487,7 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
 
             <div>
               <span className="block text-[10px] font-bold text-slate-400">Deleted By</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200">{rec.user_name || "Super Admin"}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">{rec.user_name || "—"}</span>
             </div>
             <div>
               <span className="block text-[10px] font-bold text-slate-400">IP Address</span>
@@ -516,7 +516,7 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
 
             <div>
               <span className="block text-[10px] font-bold text-slate-400">Role</span>
-              <span className="font-medium text-slate-700 dark:text-slate-300">{rec.user_role || "Super Admin"}</span>
+              <span className="font-medium text-slate-700 dark:text-slate-300">{rec.user_role || "—"}</span>
             </div>
             <div>
               <span className="block text-[10px] font-bold text-slate-400">Approval Reference</span>
@@ -606,7 +606,7 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
                       {new Date(v.created_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
                     </td>
                     <td className="py-2.5 px-3 font-medium text-slate-800 dark:text-slate-200">
-                      {v.user_name || "Super Admin"}
+                      {v.user_name || "—"}
                     </td>
                     <td className="py-2.5 px-3 text-slate-500">
                       {v.user_role || "Admin"}

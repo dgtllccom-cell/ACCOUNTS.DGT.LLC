@@ -265,7 +265,7 @@ export function DocumentManager() {
       .then((json: any) => {
         if (!active || !json?.user) return;
         setSessionCtx({
-          userName: json.user.fullName || json.user.email || "Super Admin",
+          userName: json.user.fullName || json.user.email || "—",
           userEmail: json.user.email || "",
           userId: json.user.id || "",
           countryName: json.scopes?.summary?.countryName || "United Arab Emirates",
@@ -1396,7 +1396,7 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
             </div>
             <div className="flex justify-between">
               <span>{t("user_id_name", "User ID / Name")}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[120px]">{sessionCtx?.userName || "Super Admin"}</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[120px]">{sessionCtx?.userName || "—"}</span>
             </div>
             <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
               <span>{t("status", "Status")}:</span>

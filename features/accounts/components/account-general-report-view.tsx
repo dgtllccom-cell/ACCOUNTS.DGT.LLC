@@ -1634,7 +1634,7 @@ export function AccountGeneralReportView({
             <div className="flex justify-between items-center">
               <span>{tr("USER NAME:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">
-                {(session as any)?.fullName || (session as any)?.user?.fullName || (session as any)?.email || "Super Admin"}
+                {(session as any)?.fullName || (session as any)?.user?.fullName || (session as any)?.email || "—"}
               </span>
             </div>
             <div className="flex justify-between items-center">

@@ -629,7 +629,7 @@ export function SuperAdminDetailedLedgerView() {
             <div className="flex justify-between gap-2">
               <span className="text-slate-400 font-medium">{tr("Super Admin")}:</span>
               <span className="font-bold text-emerald-700 dark:text-emerald-400">
-                {sessionInfo?.user?.fullName || "Super Admin"}
+                {sessionInfo?.user?.fullName || "—"}
               </span>
             </div>
             <div className="flex justify-between gap-2">

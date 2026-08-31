@@ -196,13 +196,6 @@ export default function JournalReport({
           const bData = await bRes.json();
           setBranches((bData.cityBranches as DropdownItem[]) ?? []);
         }
-        // Fallback list of salesmen based on profile IDs
-        setSalesmen([
-          { id: "7719341b-bfcb-4a31-b852-0f67e8062e95", name: "Ahmad Khan" },
-          { id: "724319b1-cf66-4179-8365-1cd3ce20955b", name: "Usman Ali" },
-          { id: "ae8b517e-d822-465f-88e9-5c6afa74b65e", name: "Zain Abbas" },
-          { id: "3b7f6a85-6201-43fb-a3ce-f1312a5f3e82", name: "Faisal Mahmood" }
-        ]);
       } catch { /* silent */ }
     }
     loadMeta();
@@ -229,13 +222,16 @@ export default function JournalReport({
       const fetchedRecords = body.data.records ?? [];
       setRecords(fetchedRecords);
 
-      // Default select the JS-2026-00003 record if it exists, otherwise first record
-      if (fetchedRecords.length > 0) {
-        const matchingIndex = fetchedRecords.find((r: JournalBillRecord) => r.journal_no === "JS-2026-00003");
-        setSelectedId(matchingIndex ? matchingIndex.id : fetchedRecords[0].id);
-      } else {
-        setSelectedId(null);
+      // Derive the salesman filter list from the actual records — no hard-coded people.
+      const seen = new Map<string, string>();
+      for (const r of fetchedRecords as any[]) {
+        const id = r.salesmanId || r.created_by;
+        const name = r.salesman || r.created_by_name;
+        if (id && name && !seen.has(id)) seen.set(id, name);
       }
+      if (seen.size) setSalesmen([...seen].map(([id, name]) => ({ id, name })));
+
+      setSelectedId(fetchedRecords.length > 0 ? fetchedRecords[0].id : null);
     } catch {
       // Ignore error for visual state
     } finally {

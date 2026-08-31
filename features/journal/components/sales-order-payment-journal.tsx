@@ -265,7 +265,7 @@ function handlePrintReceipt(payment: any, orderRow: any, ledgers: any[], localCu
           </tr>
           <tr>
             <th>${th("Payment Date")}</th><td>${paymentDate}</td>
-            <th>${th("Posted By")}</th><td>${re.profiles?.full_name ? re.profiles.full_name.toUpperCase() : tGlobal(lang, "role.super_admin", "Super Admin")}</td>
+            <th>${th("Posted By")}</th><td>${re.profiles?.full_name ? re.profiles.full_name.toUpperCase() : "—"}</td>
           </tr>
           <tr>
             <th>${th("Reference No")}</th><td>${payment.reference_no || "-"}</td>
@@ -2665,10 +2665,10 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       purchaseBookingOrderNumber: row.sales_order_no,
       purchaseDate: form.purchaseDate || row.created_at || "",
       bookingDate: form.bookingDate || form.purchaseDate || row.created_at || "",
-      purchaseAccountName: form.purchaseAccountName || "Dubai Purchase Account",
-      purchaseAccountNumber: form.purchaseAccountNo || "AE-AC-0001",
-      salesAccountName: form.salesAccountName || "Damaan Sales Account",
-      salesAccountNumber: form.salesAccountNo || "SA-2001",
+      purchaseAccountName: form.purchaseAccountName || "—",
+      purchaseAccountNumber: form.purchaseAccountNo || "",
+      salesAccountName: form.salesAccountName || "—",
+      salesAccountNumber: form.salesAccountNo || "",
       supplierName: form.salesAccountName || "N/A",
       buyerName: form.purchaseAccountName || "N/A",
       productName: goods.map((g: any) => g.goodsName).filter(Boolean).join(", ") || form.goodsName || "N/A",
@@ -2682,7 +2682,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       currency: row.currency_code || "USD",
       status: row.payment_status || "Pending",
       paymentStatus: row.payment_status || "Pending",
-      branchName: rowBranchName(row) || form.purchaseAccountBranch || "Kabul Main Branch",
+      branchName: rowBranchName(row) || form.purchaseAccountBranch || "—",
       countryName: rowCountryName(row) || form.loadingCountry || "N/A",
       createdAt: row.created_at || "",
       form_data: row.form_data || {},
@@ -3832,15 +3832,15 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
     const branchName = rowBranchName(row) || "BR-01";
     const branchCode = (row.audit?.branchCode || form.branchCode || (branchName.includes("0") ? branchName : "BR-01")).toUpperCase();
     const countryName = rowCountryName(row) || "UAE";
-    const countryCode = (getCountryCode(countryName) || countryName || "UAE").toUpperCase();
+    const countryCode = (getCountryCode(countryName) || countryName || "").toUpperCase();
 
     const rawDate = form.saleDate || form.purchaseDate || form.bookingDate || row.created_at;
     const dateStr = rawDate
       ? new Date(rawDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" })
-      : "09-May-25";
+      : "—";
 
-    const partyName = form.customerName || form.salesAccountName || form.salesCompanyName || form.partyName || "ALI (DALIAN COMPANY)";
-    const goodsName = goods.map((g: any) => g.goodsName || g.name).filter(Boolean).join(", ") || form.goodsName || "WALNUT KERNELS";
+    const partyName = form.customerName || form.salesAccountName || form.salesCompanyName || form.partyName || "—";
+    const goodsName = goods.map((g: any) => g.goodsName || g.name).filter(Boolean).join(", ") || form.goodsName || "—";
 
     const totalQty = goods.length > 0
       ? goods.reduce((sum: number, g: any) => sum + Number(g.qtyNo || g.quantity || g.qty || 0), 0)

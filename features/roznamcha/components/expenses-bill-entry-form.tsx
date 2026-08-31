@@ -1505,7 +1505,7 @@ export function ExpensesBillEntryForm({
                     const countryName = b.city_branches?.countries?.name || "-";
                     const currencyCode = b.city_branches?.countries?.currency_code || "";
                     const branchName = b.city_branches?.name || b.branch_id;
-                    const userName = b.profiles?.full_name || "Super Admin";
+                    const userName = b.profiles?.full_name || "—";
 
                     return (
                       <ExpensesBillRow 

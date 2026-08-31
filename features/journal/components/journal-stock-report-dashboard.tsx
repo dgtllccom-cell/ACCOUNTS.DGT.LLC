@@ -172,13 +172,6 @@ export default function JournalStockReportDashboard({
           const bData = await bRes.json();
           setBranches((bData.cityBranches as DropdownItem[]) ?? []);
         }
-        // Fallback list of salesmen based on profile IDs
-        setSalesmen([
-          { id: "7719341b-bfcb-4a31-b852-0f67e8062e95", name: "Ahmad Khan" },
-          { id: "724319b1-cf66-4179-8365-1cd3ce20955b", name: "Usman Ali" },
-          { id: "ae8b517e-d822-465f-88e9-5c6afa74b65e", name: "Zain Abbas" },
-          { id: "3b7f6a85-6201-43fb-a3ce-f1312a5f3e82", name: "Faisal Mahmood" }
-        ]);
       } catch { /* silent */ }
     }
     loadMeta();
@@ -198,8 +191,19 @@ export default function JournalStockReportDashboard({
       const res = await fetch(`/api/erp/reports/stock-reports?${params.toString()}`);
       const body = await res.json();
       if (!res.ok || !body?.ok) throw new Error(body?.error?.message ?? "Failed to fetch stock reports");
-      setRecords(body.data.records ?? []);
+      const recs = body.data.records ?? [];
+      setRecords(recs);
       setSummary(body.data.summary ?? null);
+      // Derive the salesman filter list from the actual report data — no hard-coded people.
+      const seen = new Map<string, string>();
+      for (const r of recs) {
+        if (r.salesmanId && r.salesman && !seen.has(r.salesmanId)) seen.set(r.salesmanId, r.salesman);
+      }
+      setSalesmen((prev) => {
+        const merged = new Map(prev.map((p) => [p.id, p.name]));
+        for (const [id, name] of seen) merged.set(id, name);
+        return [...merged].map(([id, name]) => ({ id, name }));
+      });
     } catch {
       // Ignore error for visual dashboard state
     } finally {

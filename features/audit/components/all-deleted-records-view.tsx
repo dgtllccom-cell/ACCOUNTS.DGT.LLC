@@ -80,12 +80,12 @@ export function AllDeletedRecordsView() {
   // Data & Pagination
   const [records, setRecords] = useState<DeletedRecordRow[]>([]);
   const [kpis, setKpis] = useState({
-    deletedToday: 308,
-    pendingReview: 156,
-    highRiskDeletions: 42,
-    restoredRecords: 77,
-    totalCountries: 5,
-    totalBranches: 9
+    deletedToday: 0,
+    pendingReview: 0,
+    highRiskDeletions: 0,
+    restoredRecords: 0,
+    totalCountries: 0,
+    totalBranches: 0
   });
   const [totalCount, setTotalCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -698,7 +698,7 @@ export function AllDeletedRecordsView() {
 
                       {/* Deleted By */}
                       <td className="py-2.5 px-3 font-medium text-slate-700 dark:text-slate-300">
-                        {row.user_name || "Super Admin"}
+                        {row.user_name || "—"}
                       </td>
 
                       {/* User Role */}

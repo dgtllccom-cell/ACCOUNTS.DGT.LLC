@@ -140,7 +140,7 @@ export function DeletedRecordDetailDialog({
                 {tt("aud.deleted_by", "Deleted By User")}
               </div>
               <div className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
-                {record.user_name || "Super Admin"} ({record.user_role || "Admin"})
+                {record.user_name || "—"} ({record.user_role || "Admin"})
               </div>
             </div>
 

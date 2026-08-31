@@ -352,7 +352,7 @@ export function DailyExchangeRateManager() {
         { label: "Search", value: searchQuery || "No search filter" }
       ],
       companyInfo: {
-        name: "DIGITAL DOCK ERP",
+        name: "",
         printedBy: operatorUser || sessionInfo?.user?.fullName || sessionInfo?.user?.email || "ERP User",
         country: filterCountryId === "all" ? "All Countries" : selectedCountry?.name || countries.find((country) => country.id === filterCountryId)?.name || "Selected Country",
         branch: filterBranch === "all" ? "All Branches" : filterBranch,

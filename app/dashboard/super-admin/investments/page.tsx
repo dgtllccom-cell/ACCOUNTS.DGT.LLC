@@ -498,7 +498,7 @@ export default function SuperAdminInvestmentsPage() {
                         ${Number(re.base_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                       </td>
                       <td className="py-2.5 px-4 text-muted-foreground">{re.description || "-"}</td>
-                      <td className="py-2.5 px-4">{re.posted_by_name || "Super Admin"}</td>
+                      <td className="py-2.5 px-4">{re.posted_by_name || "—"}</td>
                       <td className="py-2.5 px-4 text-muted-foreground">
                         {new Date(re.created_at).toLocaleDateString()}
                       </td>

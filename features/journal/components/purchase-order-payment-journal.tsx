@@ -254,7 +254,7 @@ function handlePrintReceipt(payment: any, orderRow: any, ledgers: any[], localCu
           </tr>
           <tr>
             <Th>${rt("payment_date")}</Th><td>${paymentDate}</td>
-            <Th>${rt("receipt_posted_by")}</Th><td>${re.profiles?.full_name ? re.profiles.full_name.toUpperCase() : rt("receipt_super_admin")}</td>
+            <Th>${rt("receipt_posted_by")}</Th><td>${re.profiles?.full_name ? re.profiles.full_name.toUpperCase() : "—"}</td>
           </tr>
           <tr>
             <Th>${rt("reference_no")}</Th><td>${payment.reference_no || "-"}</td>
@@ -2727,10 +2727,10 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
       purchaseBookingOrderNumber: row.purchase_order_no,
       purchaseDate: form.purchaseDate || row.created_at || "",
       bookingDate: form.bookingDate || form.purchaseDate || row.created_at || "",
-      purchaseAccountName: form.purchaseAccountName || "Dubai Purchase Account",
-      purchaseAccountNumber: form.purchaseAccountNo || "AE-AC-0001",
-      salesAccountName: form.salesAccountName || "Damaan Sales Account",
-      salesAccountNumber: form.salesAccountNo || "SA-2001",
+      purchaseAccountName: form.purchaseAccountName || "—",
+      purchaseAccountNumber: form.purchaseAccountNo || "",
+      salesAccountName: form.salesAccountName || "—",
+      salesAccountNumber: form.salesAccountNo || "",
       supplierName: form.salesAccountName || "N/A",
       buyerName: form.purchaseAccountName || "N/A",
       productName: goods.map((g: any) => g.goodsName).filter(Boolean).join(", ") || form.goodsName || "N/A",
@@ -2744,8 +2744,8 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
       currency: row.currency_code || "USD",
       status: row.payment_status || "Pending",
       paymentStatus: row.payment_status || "Pending",
-      branchName: rowBranchName(row) || form.purchaseAccountBranch || "Kabul Main Branch",
-      countryName: rowCountryName(row) || form.loadingCountry || "N/A",
+      branchName: rowBranchName(row) || form.purchaseAccountBranch || "—",
+      countryName: rowCountryName(row) || form.loadingCountry || "—",
       createdAt: row.created_at || "",
       form_data: row.form_data || {},
       paymentHistory,
@@ -4076,10 +4076,10 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
     const rawDate = form.purchaseDate || form.bookingDate || row.created_at;
     const dateStr = rawDate
       ? new Date(rawDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" })
-      : "09-May-25";
+      : "—";
 
-    const partyName = form.supplierName || form.salesAccountName || form.salesCompanyName || form.partyName || "ALI (DALIAN COMPANY)";
-    const goodsName = goods.map((g: any) => g.goodsName || g.name).filter(Boolean).join(", ") || form.goodsName || "WALNUT KERNELS";
+    const partyName = form.supplierName || form.salesAccountName || form.salesCompanyName || form.partyName || "—";
+    const goodsName = goods.map((g: any) => g.goodsName || g.name).filter(Boolean).join(", ") || form.goodsName || "—";
 
     const totalQty = goods.length > 0
       ? goods.reduce((sum: number, g: any) => sum + Number(g.qtyNo || g.quantity || g.qty || 0), 0)
@@ -4670,34 +4670,36 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
             const goods = selected.form_data?.goodsEntries || [];
             const transport = (selected.form_data?.transportDetails || selected.form_data?.transport || {}) as any;
             const poCurrencyHeader = String(form.currencyType || form.currency || selected.currency_code || "USD").toUpperCase();
-            const exRateHeader = Number(selected.exchange_rate || form.exchangeRate || 1) || 3.6725;
-            const purchaseTotalHeader = Number(selected.order_total || form.totalAmount || goods.reduce((sum: number, g: any) => sum + Number(g.totalAmount || 0), 0)) || 220000;
-            const advancePercent = Number(form.advancePercent || 0) || 30;
+            const exRateHeader = Number(selected.exchange_rate || form.exchangeRate || 1);
+            const purchaseTotalHeader = Number(selected.order_total || form.totalAmount || goods.reduce((sum: number, g: any) => sum + Number(g.totalAmount || 0), 0));
+            const advancePercent = Number(form.advancePercent || 0);
             const requiredAdvanceBC = (purchaseTotalHeader * advancePercent) / 100;
             const paidAdvanceBC = Number(selected.advance_paid || 0);
             const remainingAdvanceBC = Math.max(0, requiredAdvanceBC - paidAdvanceBC);
-            const exRate = Number(selected.exchange_rate || form.exchangeRate || 1) || 3.6725;
+            const exRate = Number(selected.exchange_rate || form.exchangeRate || 1);
             const statementPurchaseForeign = purchaseTotalHeader;
             const statementPurchaseLocal = statementPurchaseForeign * exRate;
 
-            // Form data mappings
-            const countryName = rowCountryName(selected) || form.countryName || "China";
-            const branchName = rowBranchName(selected) || form.branchName || "UAE-1";
-            const userName = selected.audit?.userName || "Admin User";
-            const supplierHeader = form.salesAccountName || form.supplierName || form.salesCompanyName || "ALI(DALIANCOMPANY)";
-            const supplierCompany = form.salesCompanyName || "DALIAN GOODUCK AGRICULTURAL";
+            // Form data mappings — real transaction/master values only, else empty/—
+            const countryName = rowCountryName(selected) || form.countryName || "—";
+            const branchName = rowBranchName(selected) || form.branchName || "—";
+            const _sel = selected as any;
+            const userName = selected.audit?.userName || _sel.created_by_name || "—";
+            const userRoleLabel = String((selected.audit as any)?.userRole || _sel.created_by_role || "").replace(/_/g, " ") || "—";
+            const supplierHeader = form.salesAccountName || form.supplierName || form.salesCompanyName || "—";
+            const supplierCompany = form.salesCompanyName || "";
             const purchaseCompany = form.purchaseCompanyName || form.companyName || form.purchaseAccountName || "";
-            const debitAccountName = form.purchaseAccountName || form.purchaseAccountId || "dp2 (Account)";
-            const creditAccountName = form.salesAccountId || form.salesAccountName || "dc55 (Sales)";
-            const salesCurrency = String(form.salesCurrency || "CNY").toUpperCase();
-            const totalQtyDisplay = form.totalQuantity || (goods.length ? goods.reduce((acc: number, g: any) => acc + Number(g.qtyNo || g.quantity || 0), 0) : 1100);
+            const debitAccountName = form.purchaseAccountName || form.purchaseAccountId || "—";
+            const creditAccountName = form.salesAccountName || form.salesAccountId || "—";
+            const salesCurrency = String(form.salesCurrency || form.currencyType || baseCurrency || "").toUpperCase();
+            const totalQtyDisplay = form.totalQuantity || (goods.length ? goods.reduce((acc: number, g: any) => acc + Number(g.qtyNo || g.quantity || 0), 0) : 0);
 
-            // Transport details
-            const loadingCountry = transport.loadingCountry || form.loadingCountry || "Iran";
-            const loadingDate = transport.loadingDate || form.loadingDate || "2026-08-10";
-            const receivingCountry = transport.receivingCountry || form.receivingCountry || "United Arab Emirates";
-            const receivedDate = transport.receivedDate || form.receivedDate || "2026-08-18";
-            const paymentCondition = form.paymentCondition || (activeMode === "advance" ? "Advance Payment" : "Advance Payment");
+            // Transport details — from the record, else empty
+            const loadingCountry = transport.loadingCountry || form.loadingCountry || "";
+            const loadingDate = transport.loadingDate || form.loadingDate || "";
+            const receivingCountry = transport.receivingCountry || form.receivingCountry || "";
+            const receivedDate = transport.receivedDate || form.receivedDate || "";
+            const paymentCondition = form.paymentCondition || (activeMode === "advance" ? "Advance Payment" : "");
 
             // Payment calculations
             const displayPayments = selectedOrderPayments.filter((p: any) => p.kind !== "booking");
@@ -4747,49 +4749,12 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
 
             const paymentMethodDisplay = typeDetails.method || typeDetails.bankName || paymentType?.toUpperCase() || "Bank";
 
-            // Fallback sample goods if none recorded yet
-            const displayGoods = goods.length > 0 ? goods : [
-              {
-                id: "g-1",
-                name: "WALNUT KERNELS",
-                size: "JN22",
-                brand: "NO",
-                origin: "CHAIN",
-                qtyNo: 4400,
-                unit: "CTAN",
-                qtyKgs: 44440,
-                emptyKgs: 440,
-                netKgs: 44000,
-                coursePrice: 5,
-                priceType: "P/TON",
-                totalAmount: purchaseTotalHeader
-              }
-            ];
+            // Real goods lines only — no demo row.
+            const displayGoods = goods;
 
-            // Sample Roznamcha / Advance / Endorsement entries matching the design
-            const displayAdvanceTx = historyWithBalance.filter(p => p.kind === "advance").length > 0
-              ? historyWithBalance.filter(p => p.kind === "advance")
-              : [
-                  {
-                    id: "adv-1",
-                    date: date(selected.created_at) || "09-May-25",
-                    rozNo: "1",
-                    rName: "1",
-                    method: "Bank",
-                    dr: "db7",
-                    cr: "dc55",
-                    details: `22000 USD x ${exRate.toFixed(2)} = 80740.00 AED | Bank me TT mashreq bank me WALNUT KERNELS`,
-                    amountAED: 80740
-                  }
-                ];
-
-            const displayEndorsement = historyWithBalance.length > 0
-              ? historyWithBalance
-              : [
-                  { id: "e1", date: "08-May-25", rozNo: "1", rName: "1", method: "Bank", dr: "db7", cr: "dc55", details: "22000 USD x 3.67 = 80740.00 AED | Bank me TT mashreq bank me WALNUT KERNELS", amountAED: 80740 },
-                  { id: "e2", date: "20-May-25", rozNo: "1", rName: "2", method: "Bank", dr: "db7", cr: "dc55", details: "30000 USD x 3.67 = 110100.00 AED | Bank me TT mashreq bank me WALNUT KERNELS", amountAED: 110100 },
-                  { id: "e3", date: "25-May-25", rozNo: "1", rName: "3", method: "Bank", dr: "db7", cr: "dc55", details: "25000 USD x 3.67 = 91750.00 AED | Bank me TT mashreq bank me WALNUT KERNELS", amountAED: 91750 }
-                ];
+            // Real advance / endorsement (payment history) entries only — no demo rows.
+            const displayAdvanceTx = historyWithBalance.filter(p => p.kind === "advance");
+            const displayEndorsement = historyWithBalance;
 
             return (
               <div className="flex flex-col h-full overflow-y-auto bg-slate-100 dark:bg-[#070e20] text-slate-900 dark:text-slate-100 p-4 space-y-3 font-sans transition-colors">
@@ -4804,7 +4769,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                     <div>
                       <span className="block text-[9px] font-bold uppercase text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "User")}</span>
                       <span className="font-bold text-slate-800 dark:text-slate-200">{userName}</span>
-                      <span className="block text-[9px] text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "Super Admin")}</span>
+                      <span className="block text-[9px] text-slate-500 dark:text-slate-400">{userRoleLabel}</span>
                     </div>
                     <div>
                       <span className="block text-[9px] font-bold uppercase text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "Date")}</span>
@@ -4864,7 +4829,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                       <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Country")}</span><span className="text-right font-bold">{countryName}</span></div>
                       <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Branch")}</span><span className="text-right font-bold">{branchName}</span></div>
                       <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "User")}</span><span className="text-right font-bold">{userName}</span></div>
-                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "User Role")}</span><span className="text-right">{translateHeader(currentLanguage, "Super Admin")}</span></div>
+                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "User Role")}</span><span className="text-right">{userRoleLabel}</span></div>
                       <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Entry Date")}</span><span className="text-right font-mono text-[11px]">{date(selected.created_at)}</span></div>
                     </div>
                   </div>
@@ -5066,21 +5031,24 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-semibold text-slate-800 dark:text-slate-200">
+                        {displayGoods.length === 0 && (
+                          <tr><td colSpan={9} className="px-3 py-6 text-center text-slate-400 font-normal">{translateHeader(currentLanguage, "No records found")}</td></tr>
+                        )}
                         {displayGoods.map((g: any, idx: number) => {
-                          const itemQty = Number(g.qtyNo || g.quantity || 4400);
-                          const itemGross = Number(g.qtyKgs || g.grossWeight || 44440);
-                          const itemNet = Number(g.netKgs || g.netWeight || 44000);
-                          const itemPrice = Number(g.coursePrice || g.price || 5);
-                          const itemAmount = Number(g.totalAmount || statementPurchaseForeign);
+                          const itemQty = Number(g.qtyNo || g.quantity || 0);
+                          const itemGross = Number(g.qtyKgs || g.grossWeight || 0);
+                          const itemNet = Number(g.netKgs || g.netWeight || 0);
+                          const itemPrice = Number(g.coursePrice || g.price || 0);
+                          const itemAmount = Number(g.totalAmount || 0);
                           const itemFinalAED = itemAmount * exRate;
 
                           return (
                             <tr key={g.id || idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
                               <td className="px-3 py-2 text-center font-mono text-slate-500 dark:text-slate-400">{idx + 1}</td>
                               <td className="px-3 py-2 text-blue-600 dark:text-blue-400 font-bold">
-                                {g.goodsName || g.name || "WALNUT KERNELS"} / {g.size || "JN22"} / {g.brand || "NO"} / {g.origin || "CHAIN"}
+                                {[g.goodsName || g.name, g.size, g.brand, g.origin].filter(Boolean).join(" / ") || "—"}
                               </td>
-                              <td className="px-3 py-2 text-center font-mono">{itemQty.toLocaleString()} {g.unit || "CTAN"}</td>
+                              <td className="px-3 py-2 text-center font-mono">{itemQty.toLocaleString()} {g.unit || ""}</td>
                               <td className="px-3 py-2 text-right font-mono">{itemGross.toLocaleString()}</td>
                               <td className="px-3 py-2 text-right font-mono">{itemNet.toLocaleString()} (TON)</td>
                               <td className="px-3 py-2 text-right font-mono">{itemNet.toLocaleString()}</td>
@@ -5118,21 +5086,29 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-semibold text-slate-800 dark:text-slate-200">
-                        <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
-                          <td className="px-3 py-2 text-center font-mono text-slate-500 dark:text-slate-400">1</td>
-                          <td className="px-3 py-2 whitespace-nowrap font-medium text-slate-700 dark:text-slate-300">15-May-25</td>
-                          <td className="px-3 py-2 text-slate-800 dark:text-slate-200">{translateHeader(currentLanguage, "Admin")}</td>
-                          <td className="px-3 py-2 text-slate-700 dark:text-slate-300">UAE-1</td>
-                          <td className="px-3 py-2 font-mono font-bold text-purple-600 dark:text-purple-400">48P-B</td>
-                          <td className="px-3 py-2 text-right font-mono font-bold">{statementPurchaseLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                          <td className="px-3 py-2 text-center font-mono text-amber-600 dark:text-amber-400 font-bold">10%</td>
-                          <td className="px-3 py-2 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">{(statementPurchaseLocal * 0.1).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                          <td className="px-3 py-2 text-right font-mono font-bold text-rose-600 dark:text-rose-400">{(statementPurchaseLocal * 0.9).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                          <td className="px-3 py-2 text-right font-mono font-black text-slate-900 dark:text-white">{statementPurchaseLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                          <td className="px-3 py-2 text-center">
-                            <span className="font-bold text-emerald-600 dark:text-emerald-400">{translateHeader(currentLanguage, "Yes")}</span>
-                          </td>
-                        </tr>
+                        {(() => {
+                          const advPct = advancePercent || 0;
+                          const advAmt = advPct > 0 ? statementPurchaseLocal * (advPct / 100) : Number(selected.advance_paid || 0) * exRateHeader;
+                          const balAmt = Math.max(0, statementPurchaseLocal - advAmt);
+                          const isTransferred = String(selected.ledger_posting_status || "").toLowerCase() === "posted";
+                          return (
+                            <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
+                              <td className="px-3 py-2 text-center font-mono text-slate-500 dark:text-slate-400">1</td>
+                              <td className="px-3 py-2 whitespace-nowrap font-medium text-slate-700 dark:text-slate-300">{date(_sel.order_date || selected.created_at) || "—"}</td>
+                              <td className="px-3 py-2 text-slate-800 dark:text-slate-200">{userName}</td>
+                              <td className="px-3 py-2 text-slate-700 dark:text-slate-300">{branchName}</td>
+                              <td className="px-3 py-2 font-mono font-bold text-purple-600 dark:text-purple-400">{_sel.journal_no || selected.purchase_order_no || "—"}</td>
+                              <td className="px-3 py-2 text-right font-mono font-bold">{statementPurchaseLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                              <td className="px-3 py-2 text-center font-mono text-amber-600 dark:text-amber-400 font-bold">{advPct > 0 ? `${advPct}%` : "—"}</td>
+                              <td className="px-3 py-2 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">{advAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                              <td className="px-3 py-2 text-right font-mono font-bold text-rose-600 dark:text-rose-400">{balAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                              <td className="px-3 py-2 text-right font-mono font-black text-slate-900 dark:text-white">{statementPurchaseLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                              <td className="px-3 py-2 text-center">
+                                <span className={`font-bold ${isTransferred ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400"}`}>{translateHeader(currentLanguage, isTransferred ? "Yes" : "No")}</span>
+                              </td>
+                            </tr>
+                          );
+                        })()}
                       </tbody>
                     </table>
                   </div>
@@ -5161,17 +5137,20 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-semibold text-slate-800 dark:text-slate-200">
+                        {displayAdvanceTx.length === 0 && (
+                          <tr><td colSpan={10} className="px-3 py-6 text-center text-slate-400 font-normal">{translateHeader(currentLanguage, "No records found")}</td></tr>
+                        )}
                         {displayAdvanceTx.map((tx: any, idx: number) => (
                           <tr key={tx.id || idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
                             <td className="px-3 py-2 text-center font-mono text-slate-500 dark:text-slate-400">{idx + 1}</td>
-                            <td className="px-3 py-2 whitespace-nowrap text-slate-700 dark:text-slate-300 font-medium">{tx.date || date(tx.entry_date || tx.created_at)}</td>
-                            <td className="px-3 py-2 text-center font-mono">{tx.rozNo || "1"}</td>
-                            <td className="px-3 py-2 text-center font-mono">{tx.rName || "1"}</td>
-                            <td className="px-3 py-2 text-center font-mono">{tx.method || "Bank"}</td>
-                            <td className="px-3 py-2 text-emerald-600 dark:text-emerald-400 font-bold">{tx.dr || "db7"}</td>
-                            <td className="px-3 py-2 text-blue-600 dark:text-blue-400 font-bold">{tx.cr || "dc55"}</td>
-                            <td className="px-3 py-2 text-slate-600 dark:text-slate-300 font-normal">{tx.details || `${tx.amtUSD || 22000} USD x ${exRate.toFixed(2)} = ${tx.amountAED || 80740} AED | Bank me TT mashreq bank me WALNUT KERNELS`}</td>
-                            <td className="px-3 py-2 text-right font-mono font-black text-slate-900 dark:text-white">{Number(tx.amountAED || (tx.amtAED || 80740)).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                            <td className="px-3 py-2 whitespace-nowrap text-slate-700 dark:text-slate-300 font-medium">{tx.date || date(tx.entry_date || tx.created_at) || "—"}</td>
+                            <td className="px-3 py-2 text-center font-mono">{tx.journal_no || tx.rozNo || "—"}</td>
+                            <td className="px-3 py-2 text-center font-mono">{tx.voucher_no || tx.rName || "—"}</td>
+                            <td className="px-3 py-2 text-center font-mono">{tx.payment_method || tx.method || "—"}</td>
+                            <td className="px-3 py-2 text-emerald-600 dark:text-emerald-400 font-bold">{tx.debit_account_name || tx.dr || "—"}</td>
+                            <td className="px-3 py-2 text-blue-600 dark:text-blue-400 font-bold">{tx.credit_account_name || tx.cr || "—"}</td>
+                            <td className="px-3 py-2 text-slate-600 dark:text-slate-300 font-normal">{tx.details || tx.narration || "—"}</td>
+                            <td className="px-3 py-2 text-right font-mono font-black text-slate-900 dark:text-white">{Number(tx.amountAED ?? tx.amtAED ?? tx.amount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                             <td className="px-3 py-2 text-center whitespace-nowrap">
                               <button
                                 type="button"
@@ -5216,17 +5195,20 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-semibold text-slate-800 dark:text-slate-200">
+                        {displayEndorsement.length === 0 && (
+                          <tr><td colSpan={10} className="px-3 py-6 text-center text-slate-400 font-normal">{translateHeader(currentLanguage, "No records found")}</td></tr>
+                        )}
                         {displayEndorsement.map((tx: any, idx: number) => (
                           <tr key={tx.id || idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
                             <td className="px-3 py-2 text-center font-mono text-slate-500 dark:text-slate-400">{idx + 1}</td>
-                            <td className="px-3 py-2 whitespace-nowrap text-slate-700 dark:text-slate-300 font-medium">{tx.date || date(tx.entry_date || tx.created_at)}</td>
-                            <td className="px-3 py-2 text-center font-mono">{tx.rozNo || "1"}</td>
-                            <td className="px-3 py-2 text-center font-mono">{tx.rName || String(idx + 1)}</td>
-                            <td className="px-3 py-2 text-center font-mono text-emerald-600 dark:text-emerald-400 font-bold">{tx.method || "Bank"}</td>
-                            <td className="px-3 py-2 text-rose-600 dark:text-rose-400 font-bold">{tx.dr || "db7"}</td>
-                            <td className="px-3 py-2 text-blue-600 dark:text-blue-400 font-bold">{tx.cr || "dc55"}</td>
-                            <td className="px-3 py-2 text-slate-600 dark:text-slate-300 font-normal">{tx.details || `${tx.amtUSD || 22000} USD x ${exRate.toFixed(2)} = ${tx.amountAED || 80740} AED | Bank me TT mashreq bank me WALNUT KERNELS`}</td>
-                            <td className="px-3 py-2 text-right font-mono font-black text-slate-900 dark:text-white">{Number(tx.amountAED || (tx.amtAED || 80740)).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                            <td className="px-3 py-2 whitespace-nowrap text-slate-700 dark:text-slate-300 font-medium">{tx.date || date(tx.entry_date || tx.created_at) || "—"}</td>
+                            <td className="px-3 py-2 text-center font-mono">{tx.journal_no || tx.rozNo || "—"}</td>
+                            <td className="px-3 py-2 text-center font-mono">{tx.voucher_no || tx.rName || "—"}</td>
+                            <td className="px-3 py-2 text-center font-mono text-emerald-600 dark:text-emerald-400 font-bold">{tx.payment_method || tx.method || "—"}</td>
+                            <td className="px-3 py-2 text-rose-600 dark:text-rose-400 font-bold">{tx.debit_account_name || tx.dr || "—"}</td>
+                            <td className="px-3 py-2 text-blue-600 dark:text-blue-400 font-bold">{tx.credit_account_name || tx.cr || "—"}</td>
+                            <td className="px-3 py-2 text-slate-600 dark:text-slate-300 font-normal">{tx.details || tx.narration || "—"}</td>
+                            <td className="px-3 py-2 text-right font-mono font-black text-slate-900 dark:text-white">{Number(tx.amountAED ?? tx.amtAED ?? tx.amount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                             <td className="px-3 py-2 text-center whitespace-nowrap">
                               <button
                                 type="button"

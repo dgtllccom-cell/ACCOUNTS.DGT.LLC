@@ -122,21 +122,7 @@ function SummaryCard({
   );
 }
 
-const MOCK_STOCK_UTILIZATION: Record<string, Array<{ customer: string; date: string; quantity: number; weight: number; reference: string }>> = {
-  "SO-2026-3028": [
-    { customer: "Sharjah Supply A/C", date: "2026-07-16", quantity: 2000, weight: 20000, reference: "SO-2026-3101" },
-    { customer: "Kharadar Customer A/C", date: "2026-07-18", quantity: 1500, weight: 15000, reference: "SO-2026-3205" }
-  ],
-  "SO-2026-8256": [
-    { customer: "Dubai Customer A/C", date: "2026-07-15", quantity: 200, weight: 9980, reference: "SO-2026-8311" }
-  ],
-  "SO-2026-6156": [
-    { customer: "Kabul Trading A/C", date: "2026-07-17", quantity: 100, weight: 4990, reference: "SO-2026-6204" }
-  ],
-  "SO-2026-9313": [
-    { customer: "Dubai Customer A/C", date: "2026-07-16", quantity: 150, weight: 7485, reference: "SO-2026-9412" }
-  ]
-};
+const STOCK_UTILIZATION: Record<string, Array<{ customer: string; date: string; quantity: number; weight: number; reference: string }>> = {};
 
 /* ─────────────────────────────────────────────
    Main Component
@@ -537,7 +523,7 @@ export function JournalBookingStockDashboard({ session }: { session: any }) {
                     const globalIdx = (page - 1) * limit + idx + 1;
                     const isEven = idx % 2 === 1;
                     const isExpanded = expandedBillNo === row.billNumber;
-                    const deductions = MOCK_STOCK_UTILIZATION[row.billNumber] || [];
+                    const deductions = STOCK_UTILIZATION[row.billNumber] || [];
                     const totalDeductedQty = deductions.reduce((sum, d) => sum + d.quantity, 0);
                     const totalDeductedWeight = deductions.reduce((sum, d) => sum + d.weight, 0);
                     const originalQty = row.quantity + totalDeductedQty;

@@ -242,38 +242,38 @@ export function SmartCrmControlCenter() {
   }
 
   const kpis = dashboardData?.kpis || {
-    chequesDepositCount: 12,
-    chequesDepositAmount: 4560000,
-    chequesPayCount: 8,
-    chequesPayAmount: 2850000,
-    chequesCollectCount: 15,
-    chequesCollectAmount: 6750000,
-    purchaseDueCount: 23,
-    purchaseDueAmount: 145230,
-    salesRecoveryCount: 31,
-    salesRecoveryAmount: 212540,
-    shippingDueCount: 17,
-    shippingDueAmount: 58300,
-    overdueCount: 26,
-    overdueAmount: 9320000
+    chequesDepositCount: 0,
+    chequesDepositAmount: 0,
+    chequesPayCount: 0,
+    chequesPayAmount: 0,
+    chequesCollectCount: 0,
+    chequesCollectAmount: 0,
+    purchaseDueCount: 0,
+    purchaseDueAmount: 0,
+    salesRecoveryCount: 0,
+    salesRecoveryAmount: 0,
+    shippingDueCount: 0,
+    shippingDueAmount: 0,
+    overdueCount: 0,
+    overdueAmount: 0
   };
 
   const actionItems = dashboardData?.actionItems || [];
   const overdueFollowUps = dashboardData?.overdueFollowUps || [];
   const upcomingImportant = dashboardData?.upcomingImportant || [];
   const financialSummary = dashboardData?.financialSummary || {
-    totalReceivable: 15420000,
-    totalPayable: 12850000,
-    cashInHand: 2150000,
-    bankBalance: 8750000,
-    netPosition: 4470000
+    totalReceivable: 0,
+    totalPayable: 0,
+    cashInHand: 0,
+    bankBalance: 0,
+    netPosition: 0
   };
   const erpSerials = dashboardData?.erpSerials || {
-    globalSerial: "2025-05-21-0001",
-    countrySerial: "PK-2025-05-21-0001",
-    branchSerial: "KHI-2025-05-21-0001",
-    entrySerial: "00012345",
-    userCode: "MU-001"
+    globalSerial: "—",
+    countrySerial: "—",
+    branchSerial: "—",
+    entrySerial: "—",
+    userCode: "—"
   };
 
   return (
