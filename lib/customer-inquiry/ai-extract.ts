@@ -145,12 +145,23 @@ function extractRequirements(text: string): string | null {
   return lbl;
 }
 
+const NAME_STOPWORDS = new Set(["from", "of", "at", "is", "the", "and", "for", "with", "to", "who", "he", "she", "they", "we", "regarding", "about", "wants", "needs", "said", "called", "was", "will"]);
+
+function trimNameStopwords(name: string): string {
+  const parts = clean(name).split(/\s+/);
+  while (parts.length > 1 && NAME_STOPWORDS.has(parts[parts.length - 1].toLowerCase())) parts.pop();
+  return parts.join(" ");
+}
+
 function extractPersonName(text: string): string | null {
   const lbl = labelledValue(text, ["name", "customer name", "customer", "client", "contact person", "contact"]);
-  if (lbl) return lbl;
-  // "met with Mr Ahmed Khan" / "Met Ahmed Khan from ..." / "spoke to Ali"
-  const m = text.match(/\b(?:met|meeting|spoke|speaking|talked|call from|called by|inquiry from|visit(?:ed)?(?: by)?)\s+(?:with\s+|to\s+|by\s+)?(?:mr\.?\s+|ms\.?\s+|mrs\.?\s+|dr\.?\s+|haji\s+|hajji\s+|engr\.?\s+)?([A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+){0,2})/i);
-  return m ? clean(m[1]) : null;
+  if (lbl) return trimNameStopwords(lbl);
+  // "Met Mr Ahmed Khan" / "met with Ahmed Khan from ..." / "spoke to Ali Raza"
+  // The cue words are case-insensitive; the captured name stays case-sensitive (Title Case).
+  const cue = "(?:[Mm]et|[Mm]eeting|[Ss]poke|[Ss]peaking|[Tt]alked|[Cc]all(?:ed)? (?:from|by)|[Ii]nquiry from|[Vv]isit(?:ed)?(?: by)?)";
+  const honor = "(?:[Mm]r\\.?\\s+|[Mm]s\\.?\\s+|[Mm]rs\\.?\\s+|[Dd]r\\.?\\s+|[Hh]aji\\s+|[Hh]ajji\\s+|[Ee]ngr\\.?\\s+)?";
+  const m = text.match(new RegExp(`\\b${cue}\\s+(?:with\\s+|to\\s+|by\\s+)?${honor}([A-Z][a-z]+(?:\\s+[A-Z][a-z]+){0,2})`));
+  return m ? trimNameStopwords(m[1]) : null;
 }
 
 function extractCompany(text: string): string | null {
