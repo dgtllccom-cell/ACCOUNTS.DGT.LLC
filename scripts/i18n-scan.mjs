@@ -79,6 +79,8 @@ try {
       and t.table_type = 'BASE TABLE'
       and c.data_type in ('text','character varying','character','citext')
       and c.table_name not like '%translation%'
+      and c.table_name not like 'zz\_bak%'   -- dated backup snapshots, not live schema
+      and c.table_name not like '%\_backup'
       and c.table_name not in ('translation_keys','translation_values','translation_field_registry')
     order by c.table_name, c.column_name`;
 

@@ -18,11 +18,31 @@ import { usePathname, useRouter } from "next/navigation";
 import { DownloadActionIcon } from "@/components/ui/download-action-icon";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { t } from "@/lib/i18n/ui";
+import { t, type UiKey } from "@/lib/i18n/ui";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { sidebarTree, type SidebarNode } from "@/lib/navigation/sidebar";
+
+// Route → nav labelKey, so the page header reuses the fully-translated (and
+// i18n-guard-enforced) `nav.*` dictionary instead of a humanised URL segment.
+const NAV_LABEL_BY_HREF: Map<string, UiKey> = (() => {
+  const map = new Map<string, UiKey>();
+  const walk = (nodes: SidebarNode[]) => {
+    for (const n of nodes) {
+      if (n.href && !map.has(n.href)) map.set(n.href, n.labelKey);
+      if (n.children?.length) walk(n.children);
+    }
+  };
+  walk(sidebarTree);
+  return map;
+})();
 
 function titleFromPath(pathname: string, lang: string) {
+  // Prefer the route's own nav labelKey — a complete, guard-enforced translation.
+  const cleanPath = pathname.replace(/\?.*$/, "");
+  const navKey = NAV_LABEL_BY_HREF.get(cleanPath);
+  if (navKey) return t(lang, navKey, undefined);
+
   const lastSegment = pathname
     .split("/")
     .filter(Boolean)

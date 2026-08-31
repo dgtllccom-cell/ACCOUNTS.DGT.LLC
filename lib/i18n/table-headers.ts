@@ -4,6 +4,9 @@ import { translationPendingLabel } from "@/lib/i18n/verified-record-translations
 type Row = { ur: string; ar: string; fa: string; ps: string };
 
 export const HEADER_TRANSLATIONS: Record<string, Row> = {
+  "CUSTOMER INQUIRIES": { ur: "کسٹمر انکوائریاں", ar: "استفسارات العملاء", fa: "استعلامات مشتری", ps: "د پیرودونکو پوښتنې" },
+  "CUSTOMER INQUIRY": { ur: "کسٹمر انکوائری", ar: "استفسار العميل", fa: "استعلام مشتری", ps: "د پیرودونکي پوښتنه" },
+  "FOLLOW UPS": { ur: "فالو اپس", ar: "المتابعات", fa: "پیگیری‌ها", ps: "تعقیبونه" },
   "CONTRACT & DATE": { ur: "کنٹریکٹ اور تاریخ", ar: "العقد والتاريخ", fa: "قرارداد و تاریخ", ps: "تړون او نېټه" },
   "CUSTOMER ACCOUNT": { ur: "کسٹمر اکاؤنٹ", ar: "حساب العميل", fa: "حساب مشتری", ps: "د پیرودونکي حساب" },
   "PAID DETAILS": { ur: "ادائیگی کی تفصیلات", ar: "تفاصيل الدفع", fa: "جزئیات پرداخت", ps: "د تادیې توضیحات" },
