@@ -78,7 +78,9 @@ export function buildTradeDocumentHtml(input: TradeDocumentInput): string {
   const isProforma = input.docType === "proforma_invoice" || isContract;
   const showTransport = input.tradeScope === "international" && input.transport
     && Object.values(input.transport).some((v) => Array.isArray(v) ? v.length : isReal(v));
-  const showBank = !!input.bank && (isReal(input.bank.bankName) || isReal(input.bank.iban) || isReal(input.bank.accountNumber));
+  // A Packing List never carries payment/bank details — it is a shipment-contents
+  // document only.
+  const showBank = !isPacking && !!input.bank && (isReal(input.bank.bankName) || isReal(input.bank.iban) || isReal(input.bank.accountNumber));
 
   const [titleKey, titleFb] = docTitleKeyFor(input);
   const docTitle = tt(titleKey, titleFb);

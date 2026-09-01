@@ -28,7 +28,7 @@ const QUIET = ARGS.includes("--quiet");
 const CHANGED_ARG = ARGS.find((a) => a === "--changed" || a.startsWith("--changed="));
 const UI_FILE = "lib/i18n/ui.ts";
 const LANGS = ["en", "ur", "ar", "fa", "ps"];
-const CODE_GLOBS = ['"features/**/*.tsx"', '"features/**/*.ts"', '"app/**/*.tsx"', '"app/**/*.ts"', '"components/**/*.tsx"'];
+const CODE_GLOBS = ['"features/**/*.tsx"', '"features/**/*.ts"', '"app/**/*.tsx"', '"app/**/*.ts"', '"components/**/*.tsx"', '"lib/reports/**/*.ts"', '"lib/reports/**/*.tsx"'];
 
 const log = (...a) => { if (!QUIET) console.log(...a); };
 const fail = [];
