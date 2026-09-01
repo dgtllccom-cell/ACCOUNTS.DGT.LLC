@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireErpSession } from "@/lib/auth/session";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 import {
   deleteCustomerOrder,
   getCustomerOrderById,
@@ -20,6 +22,7 @@ async function resolveOrderId(req: NextRequest, params: Promise<{ id: string }> 
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    await requireErpSession();
     const id = await resolveOrderId(req, params);
     if (!id) {
       return NextResponse.json({ success: false, error: "Customer order id is required" }, { status: 400 });
@@ -30,12 +33,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     }
     return NextResponse.json({ success: true, data: order });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    await requireErpSession();
     const id = await resolveOrderId(req, params);
     if (!id) {
       return NextResponse.json({ success: false, error: "Customer order id is required" }, { status: 400 });
@@ -93,12 +98,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     return NextResponse.json({ success: true, data: result.order, party_links: result.partyLinks });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    await requireErpSession();
     const id = await resolveOrderId(req, params);
     if (!id) {
       return NextResponse.json({ success: false, error: "Customer order id is required" }, { status: 400 });
@@ -106,6 +113,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     const deleted = await deleteCustomerOrder(id);
     return NextResponse.json({ success: true, data: deleted });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

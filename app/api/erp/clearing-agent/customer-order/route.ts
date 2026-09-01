@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireErpSession } from "@/lib/auth/session";
+import { rethrowIfNextControlFlow } from "@/lib/api/response";
 import {
   getCustomerOrderById,
   listCustomerOrders,
@@ -7,6 +9,7 @@ import {
 
 export async function GET(req: NextRequest) {
   try {
+    await requireErpSession();
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
     const orderId = searchParams.get("id");
@@ -22,12 +25,14 @@ export async function GET(req: NextRequest) {
     const data = await listCustomerOrders(status);
     return NextResponse.json({ success: true, data });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
+    await requireErpSession();
     const body = await req.json();
     const result = await saveCustomerOrder({
       customerId: body.customer_id ?? body.customerId ?? null,
@@ -81,6 +86,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, data: result.order, party_links: result.partyLinks });
   } catch (error: any) {
+    rethrowIfNextControlFlow(error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
