@@ -685,7 +685,7 @@ export function DashboardFrame({
           </div>
         </header>
 
-        <main className="w-full flex-1 p-4 lg:p-6 bg-background">
+        <main data-erp-content className="w-full min-w-0 flex-1 overflow-x-hidden p-3 sm:p-4 lg:p-6 bg-background">
           <ErpPageActions />
           {children}
         </main>

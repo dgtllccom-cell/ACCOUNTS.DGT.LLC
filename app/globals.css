@@ -433,6 +433,27 @@ html, body {
   .erp-table-wrap .erp-hide-mobile {
     display: none;
   }
+
+  /* Catch-all: any dashboard table that is NOT already inside a scroll wrapper
+     becomes its own horizontal-scroll container on phones/tablets, so a wide
+     table scrolls instead of being clipped by body{overflow-x:hidden} or
+     blowing out the page. Print + login are unaffected (scoped to [data-erp-content]). */
+  [data-erp-content] table:not(.erp-table-wrap table):not(.data-table):not(.report-table) {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  [data-erp-content] table:not(.erp-table-wrap table) th,
+  [data-erp-content] table:not(.erp-table-wrap table) td {
+    white-space: nowrap;
+  }
+}
+
+@media print {
+  /* the mobile catch-all must never apply to a printed sheet */
+  [data-erp-content] table { display: table !important; overflow: visible !important; }
 }
 
 /* ── Responsive Form Grid ── */
