@@ -1,152 +1,92 @@
-# AI Receptionist / Calling — Architecture & Owner Action
+# AI Receptionist / Calling — Architecture, ERP-side build, Owner Action
 
-Status: **DESIGN ONLY — not built.** This is the one ERP-improvement area with no existing
-implementation (confirmed by audit 2026-09-01: no telephony code, no call tables, no
-provider SDK anywhere in the repo). Every other improvement area — Barcode & Stock Control,
-Low-Stock / Re-order, VAT/Tax, Backup & Recovery, Document AI, CRM AI — already exists and
-was audited/extended in place.
+## Status
 
-Building an AI receptionist requires a **paid external telephony provider plus API
-credentials plus at least one phone number**, none of which can be created or paid for from
-this environment. So the work stops at a verified design + a precise Owner Action list.
+**ERP side: BUILT and tested (DEV E2E 39/0). Telephony side: DORMANT — one Owner Action.**
 
----
+The call spine, dialogue policy, provider adapter, webhook, register UI, 5-language
+strings and DB schema are all in the repo and deployed. Nothing accepts a real call
+until the owner supplies a telephony provider + credentials (below). Until then every
+`ai_call*` table stays empty and the webhook returns `503`.
 
-## What "AI Receptionist / Calling" means here
+It **reuses** the existing Customer / CRM / AI / Translator systems — it does not add a
+second one:
 
-Two capabilities, sharing one call spine:
-
-1. **Inbound AI Receptionist** — a caller dials the company number; an AI agent answers in
-   the caller's language (EN/UR/PS/FA/AR), identifies the caller against the Customer
-   Master, answers routine questions (order status, outstanding balance, office hours,
-   branch address), captures a message or a callback request, and files it as a
-   **Customer Inquiry** (existing module, `features/customer-inquiry/`) + optionally a
-   **User Task** follow-up (existing module, migration 20261018).
-
-2. **Outbound Calling** — staff or a scheduled job triggers a call (payment reminder,
-   delivery confirmation, KYC-document chase). The AI places the call, speaks a script
-   filled from real ERP data, records the outcome, and writes it back to the same
-   Customer Inquiry / User Task / Ledger-note surface.
-
-Everything the AI says is **read from the ERP** and everything it hears is **written back
-into existing modules** — no new parallel CRM, matching the golden rule (reuse, don't
-duplicate).
-
----
-
-## Reuse map (what already exists and will be wired, not rebuilt)
-
-| Need | Existing ERP asset |
+| Call output | Existing module reused |
 |---|---|
-| Caller ↔ customer identity | `customers` master + `customers-repository` phone search |
-| "What's my balance / order status" | `/api/erp/parties/360-summary`, ledger + outstanding-recovery services |
-| Message / meeting capture | **Customer Inquiry module** (`features/customer-inquiry/`, migration 20261021) — already has local voice/text extractor + 5-lang translated views |
-| Follow-up action | **User Tasks / Work Order module** (migration 20261018) |
-| Language + RTL | central i18n (`lib/i18n/ui.ts`), `translateErp()` pipeline |
-| Transcription → structured fields | existing local extractor in `ai-voice-text-entry.tsx` (no LLM key needed) |
-| Permissions / scope | `requireErpSession`, `authorizeApiScope`, Country/Branch scope middleware |
-| Audit | `auditApiAction` |
+| Caller identity | `public.customers` — matched by mobile/whatsapp digits, never duplicated (`matchCustomerByPhone`) |
+| Message / requirement | `public.customer_inquiries` — `source='phone'`, `entry_mode='ai_voice'`, `ai_raw_input=transcript`, status `ai_draft` |
+| Translated views of the inquiry | central `translateMasterRecord()` → `record_translations` (same as every other module) |
+| Follow-up | `public.user_tasks` (`task_id` link) |
+| Scope / visibility | resolved country/branch on the call row, filtered by the caller's `ErpSession` scope |
 
-New surface required: a **call log** (`ai_calls`, `ai_call_events`) and a thin
-**provider adapter** — that is the entire net-new footprint.
+## What is in the repo
+
+| Piece | File |
+|---|---|
+| DB schema (`ai_calls`, `ai_call_events`, `ai_call_number_map`) | `supabase/migrations/20261026_ai_calls.sql` — applied DEV + PROD |
+| Env gating (dormant until keyed, never hard-codes secrets) | `lib/ai-receptionist/config.ts` |
+| Deterministic 5-language dialogue policy (intent router: order / balance / hours / address / message / callback / agent) | `lib/ai-receptionist/dialogue.ts` — spoken phrases in `recept.*` (all 5 languages) |
+| Provider-agnostic adapter + Twilio implementation (TwiML, `<Gather>`, `<Dial>` handoff, per-language voice locale, signature check) | `lib/ai-receptionist/provider.ts` |
+| Call lifecycle service (open / event / finalize→inquiry / list / summary / number map) | `lib/ai-receptionist/service.ts` |
+| Webhook (public, dormant, verifies signature, orchestrates dialogue) | `app/api/erp/ai-calls/webhook/route.ts` |
+| Scoped read APIs | `app/api/erp/ai-calls/route.ts`, `app/api/erp/ai-calls/[id]/route.ts` |
+| Owner number-map config API (Super Admin only) | `app/api/erp/ai-calls/number-map/route.ts` |
+| Register UI (KPIs, dormant banner with the exact Owner Action, 5-language, RTL) | `features/ai-receptionist/components/ai-calls-register-view.tsx` → `/dashboard/customer-inquiries/calls` (nav: Customer Inquiries → **AI Calls**) |
+| E2E | `scratch/ai-receptionist-e2e.mts` — 39/0 on DEV |
+
+### Flow
+
+```
+ caller → telephony provider → POST /api/erp/ai-calls/webhook
+    ├─ verify provider signature
+    ├─ openInboundCall()  → ai_calls row, resolve number→country/branch, match caller→customer
+    ├─ greet (recept.greeting, caller's language) + <Gather speech>
+    ├─ each turn: detectIntent() → nextTurn() → provider markup
+    │     • agent  → <Dial> AI_CALL_HANDOFF_NUMBER, mark handed_off
+    │     • hours/address → answer from branch data, no inquiry
+    │     • order/balance → safe answer, decline to disclose balance by phone
+    │     • message/other → gather, then …
+    └─ completed → finalizeCall()
+          → customer_inquiries row (source=phone, ai_voice) assigned to the number's ERP user
+          → central translation registration
+          → ai_calls.status + recording_url + duration + inquiry_id
+```
+
+### LLM tier (optional)
+
+With `AI_CALL_LLM_PROVIDER` + `AI_CALL_LLM_API_KEY` the dialogue can fall through to an
+LLM turn for open-ended questions. Without it, it runs as a structured multilingual IVR
++ message-taker (fully functional). Same self-gating pattern as `lib/i18n/ai-translation-client.ts`.
 
 ---
 
-## Proposed architecture (provider-agnostic)
+## OWNER ACTION (the only thing left)
 
-```
-                inbound PSTN / outbound trigger
-                              │
-                    ┌─────────▼──────────┐
-                    │  Telephony provider │  (Twilio / Vonage / Telnyx / Plivo)
-                    │  – SIP/PSTN number  │
-                    │  – media streaming  │
-                    │  – STT + TTS        │
-                    └─────────┬──────────┘
-                     webhook (signed)   media (WS)
-                              │
-              ┌───────────────▼─────────────────┐
-              │  app/api/erp/ai-calls/webhook    │  Next.js route
-              │  – verify provider signature     │
-              │  – load/create ai_calls row      │
-              │  – resolve caller → customer     │
-              │  – dialogue policy (per lang)    │
-              │  – tool calls into ERP services  │
-              └───────────────┬─────────────────┘
-                              │
-        ┌─────────────────────┼──────────────────────┐
-        ▼                     ▼                      ▼
-  customer_inquiries     user_tasks            ai_calls / ai_call_events
-  (message, transcript)  (callback follow-up)  (recording url, outcome, cost)
-```
-
-- **Dialogue policy**: deterministic intent router first (order-status / balance /
-  hours / address / "speak to a person" / leave-message). Falls through to an LLM turn
-  **only if** an AI provider key is configured — same self-gating pattern as
-  `lib/i18n/ai-translation-client.ts` (`aiTranslate` returns null when unconfigured).
-  With no LLM key the receptionist still works as a structured IVR + message taker.
-- **STT/TTS**: use the telephony provider's built-in speech (Twilio `<Gather>` speech /
-  Vonage ASR) so no second vendor is required for a v1.
-- **Secrets**: `AI_CALL_PROVIDER`, `AI_CALL_ACCOUNT_SID`, `AI_CALL_AUTH_TOKEN`,
-  `AI_CALL_NUMBER`, `AI_CALL_SIGNING_SECRET` — read from env only, never hard-coded,
-  never logged. Route is inert (returns 503 "calling not configured") until all are set,
-  mirroring the translator's dormant-until-keyed design.
-- **Scope**: each `ai_calls` row stamped with `country_id` / `country_branch_id` from the
-  dialed number's mapping, so call logs obey the same Country/Branch visibility as every
-  other record.
-
-### New migration (only when the owner green-lights the provider)
-
-```
-ai_call_number_map (id, phone_e164, country_id, country_branch_id, city_branch_id, purpose)
-ai_calls           (id, direction, provider, provider_call_id, from_e164, to_e164,
-                    customer_id, country_id, country_branch_id, language_code,
-                    status, outcome, recording_url, transcript, duration_seconds,
-                    cost_amount, cost_currency, inquiry_id, task_id, created_by, created_at)
-ai_call_events     (id, call_id, at, kind, detail jsonb)          -- ring, answer, intent, handoff, hangup
-```
-
-Additive only. No change to any existing table. Recording URLs stored as provider
-references; media itself stays with the provider (or is copied to the existing
-`erp-documents` Supabase bucket if the owner wants retention in-house).
-
----
-
-## OWNER ACTION (required before any code is written)
-
-1. **Choose a telephony provider.** Recommended: **Twilio** (best multi-language speech,
-   Programmable Voice + Media Streams, pay-as-you-go). Alternatives: Vonage, Telnyx, Plivo.
-2. **Create the account and buy number(s).** One number per country/branch that should
-   answer calls (e.g. one UAE number, one Pakistan number). Expect ~USD 1–5 / number /
-   month + ~USD 0.01–0.04 / minute.
-3. **Provide these values** (send them for the VPS `.env`, do **not** put them in chat if
-   avoidable — load via the server env file):
+1. **Choose a provider.** Recommended **Twilio** (best multi-language `<Gather>` speech).
+   Adapter interface is provider-agnostic — Vonage/Telnyx/Plivo can be added behind it.
+2. **Create the account, buy number(s)** — one per country/branch that should answer
+   (e.g. a UAE number, a Pakistan number). ~USD 1–5/number/month + ~USD 0.01–0.04/min.
+3. **Set on the VPS `.env` (never in chat, never in code):**
    - `AI_CALL_PROVIDER=twilio`
    - `AI_CALL_ACCOUNT_SID=…`
    - `AI_CALL_AUTH_TOKEN=…`
-   - `AI_CALL_NUMBER=+971…` (and any additional numbers → they map in `ai_call_number_map`)
-   - `AI_CALL_SIGNING_SECRET=…` (Twilio request-validation / webhook signing)
-4. **(Optional) LLM for free-form answers.** If you want the receptionist to handle
-   open-ended questions beyond the fixed intents, also provide `AI_CALL_LLM_PROVIDER` +
-   `AI_CALL_LLM_API_KEY` (Anthropic / OpenAI / Gemini). Without this it runs as a
-   structured multilingual IVR + message taker.
-5. **Confirm call-recording consent policy** per country (some jurisdictions require an
-   announced "this call is recorded"). The greeting script will include it where you say so.
-6. **Confirm data retention**: keep recordings at the provider, or copy into the ERP
-   `erp-documents` bucket.
+   - `AI_CALL_NUMBER=+971…`
+   - `AI_CALL_SIGNING_SECRET=…`  (Twilio request-validation)
+   - `AI_CALL_HANDOFF_NUMBER=+971…`  (rings a human on "speak to an agent")
+   - optional: `AI_CALL_LLM_PROVIDER` + `AI_CALL_LLM_API_KEY`
+4. **Point the provider's Voice webhook** at `https://api.dgt.llc/api/erp/ai-calls/webhook`.
+5. In the ERP: **Customer Inquiries → AI Calls** → (Super Admin) add each number to the
+   **Answering Numbers** map (country/branch, default language, greeting, assigned user,
+   recording announcement).
+6. Confirm call-recording consent wording per country; confirm recording retention
+   (keep at provider, or copy into the `erp-documents` bucket).
 
-Once 1–3 are supplied, implementation is: 1 migration + 1 webhook route + 1 provider
-adapter + dialogue policy + a "Calls" tab on the Customer Inquiry module + i18n keys ×5 +
-E2E harness. Estimated ~2–3 working days after credentials land.
-
----
+Once 1–4 are set the webhook goes live automatically — no code change.
 
 ## Until then
 
-- Inbound messages are already handled by the **Customer Inquiry** module (staff enter
-  them; the local extractor structures them; 5-language translated views exist).
-- Outbound reminders are already handled by **User Tasks** + the **Outstanding Recovery**
-  report + the client-side `mailto:` / `wa.me` share hand-off in the print/PDF modal.
-
-No functionality is missing for day-to-day operation — the AI receptionist is an
-automation layer on top of surfaces that already work.
+Inbound messages: staff enter them in **Customer Inquiries** (local voice/text
+extractor structures them, 5-language translated views). Outbound reminders: **User
+Tasks** + **Outstanding Recovery** + the `mailto:` / `wa.me` share hand-off. Nothing is
+blocked for day-to-day operation.

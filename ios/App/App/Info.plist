@@ -47,5 +47,17 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Digital Dock ERP uses the camera so you can photograph invoices, contracts and other documents for AI Document Intake.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Digital Dock ERP needs photo library access so you can attach existing document images to ERP records.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Digital Dock ERP can save exported reports and documents to your photo library.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>

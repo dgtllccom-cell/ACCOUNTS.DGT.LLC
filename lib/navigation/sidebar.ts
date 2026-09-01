@@ -38,6 +38,7 @@ export type SidebarIconKey =
   | "calculator"
   | "file-spreadsheet"
   | "scale"
+  | "phone"
   | "credit-card";
 
 export type SidebarNode = {
@@ -797,6 +798,7 @@ export const sidebarTree: SidebarNode[] = [
     children: [
       { key: "ci-register", labelKey: "nav.inquiry_register", iconKey: "message-square", href: "/dashboard/customer-inquiries" as Route },
       { key: "ci-followups", labelKey: "nav.inquiry_follow_ups", iconKey: "clock", href: "/dashboard/customer-inquiries/follow-ups" as Route },
+      { key: "ci-calls", labelKey: "nav.ai_calls", iconKey: "phone", href: "/dashboard/customer-inquiries/calls" as Route },
     ]
   },
   {

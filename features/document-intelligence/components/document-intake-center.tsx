@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Loader2, UploadCloud, RefreshCw, FileText, ShieldAlert, CheckCircle2, X, ChevronLeft, Play, Ban, Link2, AlertTriangle, Package, Receipt,
+  Loader2, UploadCloud, RefreshCw, FileText, ShieldAlert, CheckCircle2, X, ChevronLeft, Play, Ban, Link2, AlertTriangle, Package, Receipt, Camera,
 } from "lucide-react";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
+import { isNativeApp, captureDocumentPhoto } from "@/lib/mobile/native-bridge";
 import { apiGet, apiPost, apiPatch } from "@/lib/api/client";
 import { Th } from "@/components/ui/translated-th";
 
@@ -201,6 +202,14 @@ function Kpi({ label, value, tone, icon: Icon }: { label: string; value: number;
 function UploadDrawer({ s, onClose, onDone }: { s: ReturnType<typeof useErpScreen>; onClose: () => void; onDone: (id: string) => void }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [native, setNative] = useState(false);
+  useEffect(() => {
+    setNative(isNativeApp());
+  }, []);
+  const takePhoto = async () => {
+    const captured = await captureDocumentPhoto({ source: "PROMPT" });
+    if (captured) setFile(captured);
+  };
   const [domain, setDomain] = useState<"business" | "shipping">("business");
   const [contractRef, setContractRef] = useState("");
   const [blRef, setBlRef] = useState("");
@@ -253,6 +262,16 @@ function UploadDrawer({ s, onClose, onDone }: { s: ReturnType<typeof useErpScree
             {file ? <span className="font-bold text-slate-700 dark:text-slate-200">{file.name}</span> : s.t("drop", "Click to choose a PDF / JPG / PNG (max 25 MB, 60 pages)")}
             <input ref={fileRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.tif,.tiff,application/pdf,image/*" className="hidden" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
           </div>
+          {native ? (
+            <button
+              type="button"
+              onClick={takePhoto}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300"
+            >
+              <Camera className="h-4 w-4" />
+              {s.t("take_photo", "Take / choose a photo")}
+            </button>
+          ) : null}
           <L label={s.t("domain", "Operational Domain")}>
             <select value={domain} onChange={(e) => setDomain(e.target.value as never)} className={INP}>
               <option value="business">{s.t("domain_business", "Business ERP")}</option>
@@ -286,21 +305,21 @@ function UploadDrawer({ s, onClose, onDone }: { s: ReturnType<typeof useErpScree
 // "What is this document for?" — the AI never decides silently; the user routes
 // the reviewed draft to one of the existing ERP module workflows. target keys
 // must match lib/document-intelligence/draft-mapping.ts DRAFTABLE_MODULES.
-const DOC_PURPOSES: Array<{ target: string; labelKey: string; label: string; group: string }> = [
-  { target: "purchase_orders", labelKey: "purpose_purchase", label: "Purchase (New / Existing)", group: "Trade" },
-  { target: "sales_orders", labelKey: "purpose_sales", label: "Sales (New / Existing)", group: "Trade" },
-  { target: "purchase_loading_records", labelKey: "purpose_loading", label: "Purchase Loading / Receiving", group: "Trade" },
-  { target: "roznamcha_entries", labelKey: "purpose_payment", label: "Payment / Cash / Bank Roznamcha", group: "Finance" },
-  { target: "expenses", labelKey: "purpose_expense", label: "Expense Bill", group: "Finance" },
-  { target: "shipping_bl_records", labelKey: "purpose_shipping", label: "Shipping / Bill of Lading", group: "Logistics" },
-  { target: "clearing_agent_custom_entries", labelKey: "purpose_clearing", label: "Clearing / Customs Entry", group: "Logistics" },
-  { target: "companies", labelKey: "purpose_company", label: "Company / Entity", group: "Masters" },
-  { target: "customers", labelKey: "purpose_customer", label: "Customer / Person KYC", group: "Masters" },
-  { target: "employees", labelKey: "purpose_employee", label: "Employee / HR Record", group: "Masters" },
-  { target: "banks", labelKey: "purpose_bank", label: "Bank Account", group: "Masters" },
+const DOC_PURPOSES: Array<{ target: string; labelKey: string; fallback: string; group: string }> = [
+  { target: "purchase_orders", labelKey: "purpose_purchase", fallback: "Purchase (New / Existing)", group: "Trade" },
+  { target: "sales_orders", labelKey: "purpose_sales", fallback: "Sales (New / Existing)", group: "Trade" },
+  { target: "purchase_loading_records", labelKey: "purpose_loading", fallback: "Purchase Loading / Receiving", group: "Trade" },
+  { target: "roznamcha_entries", labelKey: "purpose_payment", fallback: "Payment / Cash / Bank Roznamcha", group: "Finance" },
+  { target: "expenses", labelKey: "purpose_expense", fallback: "Expense Bill", group: "Finance" },
+  { target: "shipping_bl_records", labelKey: "purpose_shipping", fallback: "Shipping / Bill of Lading", group: "Logistics" },
+  { target: "clearing_agent_custom_entries", labelKey: "purpose_clearing", fallback: "Clearing / Customs Entry", group: "Logistics" },
+  { target: "companies", labelKey: "purpose_company", fallback: "Company / Entity", group: "Masters" },
+  { target: "customers", labelKey: "purpose_customer", fallback: "Customer / Person KYC", group: "Masters" },
+  { target: "employees", labelKey: "purpose_employee", fallback: "Employee / HR Record", group: "Masters" },
+  { target: "banks", labelKey: "purpose_bank", fallback: "Bank Account", group: "Masters" },
   // A contract/agreement between the entity and a supplier → Purchase workflow.
-  { target: "purchase_orders", labelKey: "purpose_contract_purchase", label: "Contract / Agreement (Purchase side)", group: "Masters" },
-  { target: "sales_orders", labelKey: "purpose_contract_sales", label: "Contract / Agreement (Sales side)", group: "Masters" },
+  { target: "purchase_orders", labelKey: "purpose_contract_purchase", fallback: "Contract / Agreement (Purchase side)", group: "Masters" },
+  { target: "sales_orders", labelKey: "purpose_contract_sales", fallback: "Contract / Agreement (Sales side)", group: "Masters" },
 ];
 
 function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>; jobId: string; onBack: () => void }) {
@@ -457,7 +476,7 @@ function ReviewPanel({ s, jobId, onBack }: { s: ReturnType<typeof useErpScreen>;
                     {["Trade", "Finance", "Logistics", "Masters"].map((grp) => (
                       <optgroup key={grp} label={grp}>
                         {DOC_PURPOSES.filter((p) => p.group === grp).map((p) => (
-                          <option key={p.labelKey} value={p.target}>{s.t(p.labelKey, p.label)}</option>
+                          <option key={p.labelKey} value={p.target}>{s.t(p.labelKey, p.fallback)}</option>
                         ))}
                       </optgroup>
                     ))}

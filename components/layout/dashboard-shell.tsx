@@ -4,6 +4,7 @@ import { sidebarTree } from "@/lib/navigation/sidebar";
 import { DashboardFrame } from "@/components/layout/dashboard-frame";
 import { InstallAppBanner } from "@/components/layout/install-app-banner";
 import { DgtConnectWidget } from "@/features/dgt-connect/dgt-connect-widget";
+import { NativeAppShell } from "@/components/layout/native-app-shell";
 
 export function DashboardShell({
   children,
@@ -36,6 +37,7 @@ export function DashboardShell({
         {children}
       </DashboardFrame>
       {!isDemoMode && currentUserId ? <DgtConnectWidget currentUserId={currentUserId} /> : null}
+      <NativeAppShell />
     </div>
   );
 }
