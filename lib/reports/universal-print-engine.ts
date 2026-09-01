@@ -128,7 +128,25 @@ export type UniversalPrintInput = {
 
 export function openUniversalPrintReport(input: UniversalPrintInput) {
   if (typeof window === "undefined") return;
+  const html = buildUniversalPrintHtml(input);
 
+  // Prefer in-app PDF Preview Modal for seamless UX with zero popup blocker issues
+  try {
+    printStore.openPrint(html, input.title || "Account Ledger Statement");
+    return;
+  } catch (e) {
+    console.warn("Could not open in printStore, falling back to window.open", e);
+  }
+  const printWindow = window.open("", "_blank");
+  if (printWindow) {
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+  }
+}
+
+/** Pure HTML builder — safe to call server-side / in tests (no window access). */
+export function buildUniversalPrintHtml(input: UniversalPrintInput): string {
   const {
     moduleType = "custom",
     title,
@@ -174,7 +192,7 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
       ? "landscape"
       : "portrait";
 
-  const targetLang = (lang || (typeof document !== "undefined" ? (localStorage.getItem("erp_lang") || document.documentElement.lang || "en") : "en")) as "en" | "ur" | "ar" | "fa" | "ps";
+  const targetLang = (lang || (typeof document !== "undefined" ? ((typeof localStorage !== "undefined" && localStorage.getItem("erp_lang")) || document.documentElement.lang || "en") : "en")) as "en" | "ur" | "ar" | "fa" | "ps";
   
   const tr = (str: string) => {
     if (!str || str === "-") return str;
@@ -211,9 +229,27 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
   const printDateFormatted = printDate.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
   const printTimeFormatted = printDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true });
   const fullDateTime = `${printDateFormatted}, ${printTimeFormatted}`;
-  const userName = scope.userName || companyInfo.printedBy
-    || (typeof window !== "undefined" ? (window as unknown as { __ERP_USER_NAME__?: string }).__ERP_USER_NAME__ : "")
-    || tr("ERP User");
+  const userName = realOrEmpty(scope.userName) || realOrEmpty(companyInfo.printedBy)
+    || (typeof window !== "undefined" ? realOrEmpty((window as unknown as { __ERP_USER_NAME__?: string }).__ERP_USER_NAME__) : "")
+    || "";
+
+  // ── presentation-layer value normalisation (QA: raw ISO dates, snake_case
+  //    transaction types, lowercase currency codes shown to users) ──────────
+  const CURRENCY_RE = /^[a-z]{3}$/;
+  const ISO_DT_RE = /^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2})?(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?)?$/;
+  const humanizeToken = (s: string) =>
+    s.replace(/[_\s]+/g, " ")
+      .replace(/\b(\w)(\w*)/g, (_m, a: string, b: string) => a.toUpperCase() + b)
+      .replace(/\b(Po|So|Grn|Kyc|Fx|Trn|Iban|Vat|Hs)\b/g, (m) => m.toUpperCase());
+  const normalizeCell = (raw: unknown, col: UniversalPrintColumn): string => {
+    let s = String(raw ?? "").trim();
+    if (!s || s === "-") return s || "-";
+    if (col.format === "currency" || col.format === "number" || col.format === "date" || col.format === "badge") return s;
+    if (CURRENCY_RE.test(s)) return s.toUpperCase();                                  // usd -> USD
+    if (ISO_DT_RE.test(s)) { const d = formatDate(s); if (d && d !== s) return d; }    // 2025-10-15T00:00:00Z -> 15 Oct 2025
+    if (/^[a-z]+(?:_[a-z0-9]+){1,}$/i.test(s) && /_/.test(s)) return humanizeToken(s); // purchase_order_advance_payment -> Purchase Order Advance Payment
+    return s;
+  };
 
   // Financial summary calculations for Ledgers
   const openBal = ledgerSummary?.openingBalance ?? Number(totals?.openingBalance ?? 0);
@@ -434,6 +470,54 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
       font-weight: 800;
     }
 
+    /* ── 2b. KPI SUMMARY CARDS (print-safe: light border, no bg dependency) ── */
+    .kpi-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 5px;
+      margin-bottom: 6px;
+    }
+    .kpi-card {
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      padding: 4px 8px;
+      background: #f8fafc;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .kpi-card-label {
+      font-size: 5.8pt;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      color: #64748b;
+    }
+    .kpi-card-val {
+      font-size: 11pt;
+      font-weight: 900;
+      color: #0f172a;
+      line-height: 1.1;
+      margin-top: 1px;
+    }
+    .kpi-card.b { border-inline-start: 3px solid #2563eb; }
+    .kpi-card.emerald { border-inline-start: 3px solid #059669; }
+    .kpi-card.amber { border-inline-start: 3px solid #d97706; }
+    .kpi-card.red { border-inline-start: 3px solid #dc2626; }
+    .kpi-card.purple { border-inline-start: 3px solid #7c3aed; }
+    .kpi-card.slate { border-inline-start: 3px solid #475569; }
+    .filter-strip {
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 3px 8px;
+      margin-bottom: 6px;
+      font-size: 6.4pt;
+      color: #475569;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 14px;
+    }
+    .filter-strip strong { color: #0f172a; font-weight: 800; }
+
     /* ── 3. FINANCIAL SUMMARY STRIP (4-COLUMN COMPACT) ──── */
     .financial-summary-strip {
       display: grid;
@@ -602,11 +686,28 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
               : ""}
             <strong>${tr("Country / Branch")}:</strong> ${escapeHtml(resolvedCountry)} • ${escapeHtml(resolvedBranch)}<br />
             <strong>${tr("Currency / Period")}:</strong> ${escapeHtml(baseCurrency)} | ${escapeHtml(dateRange)}<br />
-            <strong>${tr("Generated")}:</strong> ${escapeHtml(fullDateTime)} (${escapeHtml(userName)})
+            <strong>${tr("Generated")}:</strong> ${escapeHtml(fullDateTime)}${userName ? ` (${escapeHtml(userName)})` : ""}
           </div>
         </td>
       </tr>
     </table>
+
+    <!-- ── 2a. KPI SUMMARY CARDS (all report types) ─────────── -->
+    ${kpis.length > 0 ? `
+    <div class="kpi-strip">
+      ${kpis.map(k => `
+        <div class="kpi-card ${k.color === 'blue' ? 'b' : (k.color || 'slate')}">
+          <div class="kpi-card-label">${escapeHtml(tr(String(k.label)))}</div>
+          <div class="kpi-card-val">${escapeHtml(String(k.value))}</div>
+        </div>
+      `).join("")}
+    </div>` : ""}
+
+    <!-- ── 2b. ACTIVE FILTERS (all report types) ─────────────── -->
+    ${filters.length > 0 ? `
+    <div class="filter-strip">
+      ${filters.map(f => `<span><strong>${escapeHtml(tr(String(f.label)))}:</strong> ${escapeHtml(String(f.value))}</span>`).join("")}
+    </div>` : ""}
 
     <!-- ── 2. FULL SELECTED LEDGER REAL METADATA BAR (accounting reports only) -->
     ${isFinancial ? `
@@ -681,6 +782,8 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
                 displayVal = formatDate(val);
               } else if (val === null || val === undefined) {
                 displayVal = "-";
+              } else {
+                displayVal = normalizeCell(val, c);
               }
 
               const isDebitCol = c.key.toLowerCase().includes("debit") || c.key === "dr";
@@ -701,8 +804,8 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
           </tr>
         `).join("") : `
           <tr>
-            <td colspan="${columns.length}" class="text-center" style="padding: 14px; color: #64748b;">
-              ${tr("No ledger transactions found for the selected period.")}
+            <td colspan="${columns.length}" class="text-center" style="padding: 18px 14px; color: #64748b; font-weight: 700;">
+              ${tr(isFinancial ? "No transactions found for the selected period." : "No records found for the selected filters.")}
             </td>
           </tr>
         `}
@@ -795,20 +898,5 @@ export function openUniversalPrintReport(input: UniversalPrintInput) {
 </body>
 </html>`;
 
-  // Prefer in-app PDF Preview Modal for seamless UX with zero popup blocker issues
-  try {
-    printStore.openPrint(html, title || "Account Ledger Statement");
-    return;
-  } catch (e) {
-    console.warn("Could not open in printStore, falling back to window.open", e);
-  }
-
-  // Fallback: Try window.open
-  const printWindow = window.open("", "_blank");
-  if (printWindow) {
-    printWindow.document.open();
-    printWindow.document.write(html);
-    printWindow.document.close();
-    return;
-  }
+  return html;
 }
