@@ -200,7 +200,21 @@ const AUTHENTIC_NAMES_DICT: Record<string, Record<string, string>> = {
   "al ras": { ur: "الراس", ar: "الراس", fa: "الراس", ps: "الراس" },
   "ras": { ur: "راس", ar: "رأس", fa: "راس", ps: "راس" },
   "aind": { ur: "اینڈ", ar: "و", fa: "و", ps: "او" },
-  "and": { ur: "اینڈ", ar: "و", fa: "و", ps: "او" }
+  "and": { ur: "اینڈ", ar: "و", fa: "و", ps: "او" },
+
+  // ── Countries the ERP operates in / trades with (verified renderings) ─────
+  "pakistan": { ur: "پاکستان", ar: "باكستان", fa: "پاکستان", ps: "پاکستان" },
+  "afghanistan": { ur: "افغانستان", ar: "أفغانستان", fa: "افغانستان", ps: "افغانستان" },
+  "india": { ur: "بھارت", ar: "الهند", fa: "هند", ps: "هند" },
+  "china": { ur: "چین", ar: "الصين", fa: "چین", ps: "چین" },
+  "iran": { ur: "ایران", ar: "إيران", fa: "ایران", ps: "ایران" },
+  "russia": { ur: "روس", ar: "روسيا", fa: "روسیه", ps: "روسیه" },
+  "kazakhstan": { ur: "قازقستان", ar: "كازاخستان", fa: "قزاقستان", ps: "قزاقستان" },
+  "tajikistan": { ur: "تاجکستان", ar: "طاجيكستان", fa: "تاجیکستان", ps: "تاجکستان" },
+  "turkmenistan": { ur: "ترکمانستان", ar: "تركمانستان", fa: "ترکمنستان", ps: "ترکمنستان" },
+  "uzbekistan": { ur: "ازبکستان", ar: "أوزبكستان", fa: "ازبکستان", ps: "ازبکستان" },
+  "turkiye": { ur: "ترکیہ", ar: "تركيا", fa: "ترکیه", ps: "ترکیه" },
+  "turkey": { ur: "ترکی", ar: "تركيا", fa: "ترکیه", ps: "ترکیه" }
 };
 
 function romanizeToArabicSkeleton(word: string): string {
