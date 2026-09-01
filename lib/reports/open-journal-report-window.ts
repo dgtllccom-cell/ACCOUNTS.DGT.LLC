@@ -73,7 +73,7 @@ export function openJournalReportWindow(config: JournalReportConfig) {
     reportType: "register",
     scope: {
       scopeLevel: config.scopeName || "Universal Journal Register",
-      userName: config.createdBy || "ERP Accountant",
+      userName: config.createdBy || "",
     },
     generalBrand: {
       name: (config as any).companyName || "",

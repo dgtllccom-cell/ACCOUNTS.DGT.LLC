@@ -394,8 +394,8 @@ export function openA4ReportWindow(input: {
             <div class="avatar-box">👤</div>
             <div style="flex-1;">
               <div style="font-size: 11px; font-weight: 800; color: #0f172a;">${escapeHtml(b.ownerName || "-")}</div>
-              <div style="font-size: 9px; color: #64748b; font-weight: 600; margin-top: 2px;">Owner Code: ${escapeHtml(b.ownerCode || "OWN-0001")}</div>
-              <div style="font-size: 9px; color: #64748b; font-weight: 600; margin-top: 1px;">Designation: ${escapeHtml(b.designation || "Super Administrator")}</div>
+              ${b.ownerCode ? `<div style="font-size: 9px; color: #64748b; font-weight: 600; margin-top: 2px;">Owner Code: ${escapeHtml(b.ownerCode)}</div>` : ""}
+              ${b.designation ? `<div style="font-size: 9px; color: #64748b; font-weight: 600; margin-top: 1px;">Designation: ${escapeHtml(b.designation)}</div>` : ""}
             </div>
           </div>
           <table class="info-table" style="margin-top: 8px;">

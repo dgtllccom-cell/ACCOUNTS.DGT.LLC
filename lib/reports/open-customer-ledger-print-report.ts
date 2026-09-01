@@ -68,7 +68,7 @@ export function openCustomerLedgerPrintReport(input: {
       country: r.country,
       branch: r.branch,
       currency: baseCurr,
-      userName: companyInfo?.printedBy || "ERP User",
+      userName: companyInfo?.printedBy || "",
     },
     ledgerSummary: {
       accountName: r.customerName,
