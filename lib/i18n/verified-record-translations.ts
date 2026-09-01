@@ -65,6 +65,10 @@ export async function buildVerifiedTranslationSet(input: {
       : "";
     const candidate = manual || generatedCandidate;
     if (!candidate || sameText(candidate, value)) continue;
+    // Owner rule — no mixed-language data: a non-English candidate that still
+    // carries Latin words (partial word-by-word render) is rejected; the field
+    // stays original and is flagged for review rather than shipped half-English.
+    if (!manual && language !== "en" && /\p{Lu}?[a-z]{2,}/u.test(candidate)) continue;
     translations[language] = candidate;
     usedManual ||= Boolean(manual);
     usedGenerated ||= !manual;

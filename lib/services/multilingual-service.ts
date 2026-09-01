@@ -297,7 +297,40 @@ const TRANSLATION_DICTIONARY: Record<string, { en: string; ur: string; ar: strin
     ar: "شاهدرة",
     fa: "شاهدره",
     ps: "شاهدره"
-  }
+  },
+
+  // ── Cities / places the ERP operates branches in (verified renderings) ────
+  "karachi": { en: "Karachi", ur: "کراچی", ar: "كراتشي", fa: "کراچی", ps: "کراچۍ" },
+  "islamabad": { en: "Islamabad", ur: "اسلام آباد", ar: "إسلام آباد", fa: "اسلام‌آباد", ps: "اسلام اباد" },
+  "peshawar": { en: "Peshawar", ur: "پشاور", ar: "بيشاور", fa: "پیشاور", ps: "پېښور" },
+  "quetta": { en: "Quetta", ur: "کوئٹہ", ar: "كويتا", fa: "کویته", ps: "کوټه" },
+  "gwadar": { en: "Gwadar", ur: "گوادر", ar: "جوادر", fa: "گوادر", ps: "ګوادر" },
+  "chaman": { en: "Chaman", ur: "چمن", ar: "تشمن", fa: "چمن", ps: "چمن" },
+  "kabul": { en: "Kabul", ur: "کابل", ar: "كابول", fa: "کابل", ps: "کابل" },
+  "kandahar": { en: "Kandahar", ur: "قندھار", ar: "قندهار", fa: "قندهار", ps: "کندهار" },
+  "herat": { en: "Herat", ur: "ہرات", ar: "هرات", fa: "هرات", ps: "هرات" },
+  "mazar-i-sharif": { en: "Mazar-i-Sharif", ur: "مزار شریف", ar: "مزار شريف", fa: "مزار شریف", ps: "مزار شریف" },
+  "abu dhabi": { en: "Abu Dhabi", ur: "ابوظہبی", ar: "أبوظبي", fa: "ابوظبی", ps: "ابوظبۍ" },
+  "sharjah": { en: "Sharjah", ur: "شارجہ", ar: "الشارقة", fa: "شارجه", ps: "شارجه" },
+  "jebel ali": { en: "Jebel Ali", ur: "جبل علی", ar: "جبل علي", fa: "جبل علی", ps: "جبل علي" },
+  "mumbai": { en: "Mumbai", ur: "ممبئی", ar: "مومباي", fa: "بمبئی", ps: "ممبۍ" },
+  "new delhi": { en: "New Delhi", ur: "نئی دہلی", ar: "نيودلهي", fa: "دهلی نو", ps: "نوی ډیلي" },
+  "delhi": { en: "Delhi", ur: "دہلی", ar: "دلهي", fa: "دهلی", ps: "ډیلي" },
+  "shanghai": { en: "Shanghai", ur: "شنگھائی", ar: "شنغهاي", fa: "شانگهای", ps: "شانګهای" },
+  "beijing": { en: "Beijing", ur: "بیجنگ", ar: "بكين", fa: "پکن", ps: "بیجینګ" },
+
+  // ── Branch / location word components (assembled word-by-word) ────────────
+  "city branch": { en: "City Branch", ur: "سٹی برانچ", ar: "فرع المدينة", fa: "شعبه شهر", ps: "د ښار څانګه" },
+  "main branch": { en: "Main Branch", ur: "مین برانچ", ar: "الفرع الرئيسي", fa: "شعبه اصلی", ps: "اصلي څانګه" },
+  "port branch": { en: "Port Branch", ur: "پورٹ برانچ", ar: "فرع الميناء", fa: "شعبه بندر", ps: "د بندر څانګه" },
+  "border branch": { en: "Border Branch", ur: "بارڈر برانچ", ar: "فرع الحدود", fa: "شعبه مرزی", ps: "د پولې څانګه" },
+  "branch": { en: "Branch", ur: "برانچ", ar: "فرع", fa: "شعبه", ps: "څانګه" },
+  "city": { en: "City", ur: "سٹی", ar: "مدينة", fa: "شهر", ps: "ښار" },
+  "main": { en: "Main", ur: "مین", ar: "الرئيسي", fa: "اصلی", ps: "اصلي" },
+  "border": { en: "Border", ur: "بارڈر", ar: "حدود", fa: "مرز", ps: "پوله" },
+  "port": { en: "Port", ur: "پورٹ", ar: "ميناء", fa: "بندر", ps: "بندر" },
+  "airport": { en: "Airport", ur: "ایئرپورٹ", ar: "مطار", fa: "فرودگاه", ps: "هوايي ډګر" },
+  "dry port": { en: "Dry Port", ur: "ڈرائی پورٹ", ar: "ميناء جاف", fa: "بندر خشک", ps: "وچ بندر" }
 };
 
 // Build reverse lookup index maps
