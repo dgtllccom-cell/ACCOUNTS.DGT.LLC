@@ -21,6 +21,8 @@ type ProductRow = {
   city_branch_id: string | null;
   product_name: string;
   product_specifications: Record<string, unknown> | null;
+  min_stock_level: number | null;
+  reorder_level: number | null;
   is_active: boolean;
   translated_name: string | null;
   translated_category: string | null;
@@ -114,6 +116,16 @@ function productUnit(row: ProductRow) {
 
 function stockQty(row: ProductRow) {
   return specNumber(row.product_specifications, ["stockQty", "stock_qty", "quantity", "qty"]);
+}
+
+// A product is "low" only when it has a configured re-order / min-stock level and the
+// on-hand quantity is at/below it. No hard-coded magic threshold — a product with no
+// threshold configured is never flagged (see migration 20261025).
+function isLowStock(row: ProductRow) {
+  const threshold =
+    row.reorder_level != null ? Number(row.reorder_level) : row.min_stock_level != null ? Number(row.min_stock_level) : null;
+  if (threshold == null || !Number.isFinite(threshold)) return false;
+  return stockQty(row) <= threshold;
 }
 
 function costPrice(row: ProductRow) {
@@ -259,7 +271,7 @@ export function CountryProductsDashboard() {
       productCategories: new Set(filteredProducts.map((row) => productCategory(row, lang))).size,
       totalStock,
       inventoryValue: totalValue,
-      lowStockProducts: filteredProducts.filter((row) => stockQty(row) > 0 && stockQty(row) <= 10).length,
+      lowStockProducts: filteredProducts.filter((row) => isLowStock(row)).length,
       topSellingProducts: filteredProducts.filter((row) => salePrice(row) > 0).length
     };
   }, [filteredProducts, lang]);

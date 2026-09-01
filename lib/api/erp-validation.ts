@@ -474,6 +474,10 @@ export const productCreateSchema = scopeSchema.extend({
   size: z.string().trim().max(120).nullable().optional(),
   originCountryId: optionalUuidSchema,
   imageUrl: z.string().trim().url().nullable().optional(),
+  minStockLevel: z.coerce.number().min(0).max(9_999_999_999).nullable().optional(),
+  reorderLevel: z.coerce.number().min(0).max(9_999_999_999).nullable().optional(),
+  barcode: z.string().trim().max(64).nullable().optional(),
+  barcodeType: z.enum(["CODE128", "EAN13", "UPC", "QR"]).optional(),
   originalLanguage: supportedLanguageSchema.default("en"),
   translations: z.array(productTranslationInputSchema).default([])
 });

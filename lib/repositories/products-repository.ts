@@ -66,6 +66,10 @@ export type ProductRow = {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  min_stock_level: number | null;
+  reorder_level: number | null;
+  barcode: string | null;
+  barcode_type: string | null;
 };
 
 export type ProductListRow = ProductRow & {
@@ -120,6 +124,7 @@ export class ProductsRepository {
           "id, product_code, sku, country_id, state_province_id, city_id, country_branch_id, city_branch_id",
           "category_id, brand_id, unit_id, product_name, product_description, product_specifications",
           "hs_code, size, origin_country_id, image_url, original_language_code, is_active, created_at, updated_at",
+          "min_stock_level, reorder_level, barcode, barcode_type",
           "product_categories(category_name)",
           "product_brands(brand_name)",
           "product_units(unit_code, unit_name)"
@@ -188,6 +193,19 @@ export class ProductsRepository {
     return { products, limit, languageCode: lang };
   }
 
+  /** Unscoped raw row fetch — used server-side for validation (geo hierarchy) only. */
+  async getByIdRaw(id: string): Promise<{ country_id: string | null; state_province_id: string | null; city_id: string | null } | null> {
+    const supabase = createSupabaseAdminClient() as any;
+    const { data, error } = await supabase
+      .from("products")
+      .select("country_id, state_province_id, city_id")
+      .eq("id", id)
+      .is("deleted_at", null)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return (data as any) ?? null;
+  }
+
   async getById(id: string, session: ErpSession, languageCode?: string | null) {
     const result = await this.search({ session, languageCode, limit: 1 });
     const product = result.products.find((row) => row.id === id);
@@ -224,6 +242,10 @@ export class ProductsRepository {
     size?: string | null;
     originCountryId?: string | null;
     imageUrl?: string | null;
+    minStockLevel?: number | null;
+    reorderLevel?: number | null;
+    barcode?: string | null;
+    barcodeType?: string | null;
     originalLanguageCode: string;
     actorId?: string | null;
     manualTranslations?: ProductTranslationInput[];
@@ -249,6 +271,10 @@ export class ProductsRepository {
         size: input.size ?? null,
         origin_country_id: input.originCountryId ?? null,
         image_url: input.imageUrl ?? null,
+        min_stock_level: input.minStockLevel ?? null,
+        reorder_level: input.reorderLevel ?? null,
+        barcode: input.barcode?.trim() ? input.barcode.trim() : null,
+        ...(input.barcodeType ? { barcode_type: input.barcodeType } : {}),
         original_language_code: input.originalLanguageCode,
         created_by: input.actorId ?? null
       })
@@ -294,6 +320,10 @@ export class ProductsRepository {
       size: string | null;
       originCountryId: string | null;
       imageUrl: string | null;
+      minStockLevel: number | null;
+      reorderLevel: number | null;
+      barcode: string | null;
+      barcodeType: string | null;
       originalLanguageCode: string;
       isActive: boolean;
       manualTranslations: ProductTranslationInput[];
@@ -319,6 +349,10 @@ export class ProductsRepository {
     if (input.size !== undefined) patch.size = input.size;
     if (input.originCountryId !== undefined) patch.origin_country_id = input.originCountryId;
     if (input.imageUrl !== undefined) patch.image_url = input.imageUrl;
+    if (input.minStockLevel !== undefined) patch.min_stock_level = input.minStockLevel;
+    if (input.reorderLevel !== undefined) patch.reorder_level = input.reorderLevel;
+    if (input.barcode !== undefined) patch.barcode = input.barcode?.trim() ? input.barcode.trim() : null;
+    if (input.barcodeType !== undefined && input.barcodeType) patch.barcode_type = input.barcodeType;
     if (input.originalLanguageCode !== undefined) patch.original_language_code = input.originalLanguageCode;
     if (input.isActive !== undefined) patch.is_active = input.isActive;
 

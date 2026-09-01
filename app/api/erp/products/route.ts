@@ -74,6 +74,10 @@ export async function POST(request: NextRequest) {
         size: body.size ?? null,
         originCountryId: body.originCountryId ?? null,
         imageUrl: body.imageUrl ?? null,
+        minStockLevel: body.minStockLevel ?? null,
+        reorderLevel: body.reorderLevel ?? null,
+        barcode: body.barcode ?? null,
+        barcodeType: body.barcodeType ?? null,
         originalLanguage: body.originalLanguage,
         translations: body.translations
       },

@@ -52,6 +52,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         size: body.size,
         originCountryId: body.originCountryId,
         imageUrl: body.imageUrl,
+        minStockLevel: body.minStockLevel,
+        reorderLevel: body.reorderLevel,
+        barcode: body.barcode,
+        barcodeType: body.barcodeType,
         originalLanguage: body.originalLanguage,
         translations: body.translations
       },
