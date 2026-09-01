@@ -38,6 +38,7 @@ import { SmartSearchFilter, type SmartFilterState } from "@/components/ui/smart-
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import type { ClearingCustomerOrderRow, PartyLinkInput, PartyRoleKey } from "@/lib/services/clearing-customer-order-service";
+import { TruckEntryPicker, type TruckEntryValue } from "@/features/clearing-agent/components/truck-entry-picker";
 
 type TransportMode = "by_sea" | "by_road" | "by_truck" | "by_air";
 type MovementType = "import" | "export" | "domestic" | "up_transit";
@@ -126,7 +127,15 @@ const EMPTY_FORM = {
   cargo_details: "",
   expected_loading_date: new Date().toISOString().split("T")[0],
   remarks: "",
-  order_no: ""
+  order_no: "",
+  // By Road truck
+  truck_registration_type: "registered" as "registered" | "temporary",
+  truck_id: "",
+  truck_number: "",
+  truck_driver_name: "",
+  truck_driver_mobile: "",
+  truck_owner_name: "",
+  truck_transport_company: ""
 };
 
 function emptyPartySelection(): PartySelection {
@@ -766,7 +775,14 @@ export function CustomerOrderManagementView() {
       cargo_details: order.cargo_details || "",
       expected_loading_date: order.expected_loading_date ? order.expected_loading_date.split("T")[0] : new Date().toISOString().split("T")[0],
       remarks: order.remarks || "",
-      order_no: order.order_no || ""
+      order_no: order.order_no || "",
+      truck_registration_type: ((order as Record<string, unknown>).truck_registration_type as "registered" | "temporary") || "registered",
+      truck_id: ((order as Record<string, unknown>).truck_id as string) || "",
+      truck_number: ((order as Record<string, unknown>).truck_number as string) || "",
+      truck_driver_name: ((order as Record<string, unknown>).truck_driver_name as string) || "",
+      truck_driver_mobile: ((order as Record<string, unknown>).truck_driver_mobile as string) || "",
+      truck_owner_name: ((order as Record<string, unknown>).truck_owner_name as string) || "",
+      truck_transport_company: ((order as Record<string, unknown>).truck_transport_company as string) || ""
     });
 
     const nextState = emptyPartyState();
@@ -1559,6 +1575,23 @@ export function CustomerOrderManagementView() {
                   className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-1.5 text-xs text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 font-sans"
                 />
               </div>
+
+              {(formData.transport_mode === "by_road" || formData.transport_mode === "by_truck") && (
+                <TruckEntryPicker
+                  langProp={lang}
+                  disabled={saving}
+                  value={{
+                    truck_registration_type: formData.truck_registration_type,
+                    truck_id: formData.truck_id,
+                    truck_number: formData.truck_number,
+                    truck_driver_name: formData.truck_driver_name,
+                    truck_driver_mobile: formData.truck_driver_mobile,
+                    truck_owner_name: formData.truck_owner_name,
+                    truck_transport_company: formData.truck_transport_company,
+                  }}
+                  onChange={(next: TruckEntryValue) => setFormData((current) => ({ ...current, ...next }))}
+                />
+              )}
 
               <div>
                 <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">{tt("remarks", "Remarks")}</label>

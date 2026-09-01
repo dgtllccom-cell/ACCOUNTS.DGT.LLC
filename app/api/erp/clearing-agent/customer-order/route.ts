@@ -68,7 +68,15 @@ export async function POST(req: NextRequest) {
       originalLanguage: body.original_language ?? body.originalLanguage ?? "en",
       countryId: body.country_id ?? body.countryId ?? null,
       countryBranchId: body.country_branch_id ?? body.countryBranchId ?? null,
-      cityBranchId: body.city_branch_id ?? body.cityBranchId ?? null
+      cityBranchId: body.city_branch_id ?? body.cityBranchId ?? null,
+      truckId: body.truck_id ?? body.truckId ?? null,
+      truckRegistrationType: body.truck_registration_type ?? body.truckRegistrationType ?? null,
+      truckNumber: body.truck_number ?? body.truckNumber ?? null,
+      truckDriverName: body.truck_driver_name ?? body.truckDriverName ?? null,
+      truckDriverMobile: body.truck_driver_mobile ?? body.truckDriverMobile ?? null,
+      truckOwnerName: body.truck_owner_name ?? body.truckOwnerName ?? null,
+      truckTransportCompany: body.truck_transport_company ?? body.truckTransportCompany ?? null,
+      truckDetails: body.truck_details ?? body.truckDetails ?? null
     });
 
     return NextResponse.json({ success: true, data: result.order, party_links: result.partyLinks });

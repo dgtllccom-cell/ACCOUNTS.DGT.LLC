@@ -30,11 +30,17 @@ export async function GET(req: Request) {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "shipping_records", action: "read" });
     const { searchParams } = new URL(req.url);
-    const search = (searchParams.get("search") || "").trim();
+    const search = (searchParams.get("search") || searchParams.get("q") || "").trim();
     const status = (searchParams.get("status") || "").trim();
     const selectable = searchParams.get("selectable") === "true";
+    const limit = Math.min(Math.max(Number(searchParams.get("limit") || (selectable ? 50 : 500)), 1), 1000);
     const searchLike = search ? `%${search}%` : null;
+    const prefixLike = search ? `${search}%` : null;
 
+    // Truck Registration is a CENTRAL ERP-WIDE master (owner requirement): any
+    // user with shipping_records:read may search and reuse ANY registered truck,
+    // regardless of the country/branch it was registered from. The
+    // `authorizeApiScope` check above is the access gate; no per-country filter here.
     const rows = await withLocalPg(async (sql) => {
       return sql`
         select id, country_id, country_branch_id, city_branch_id, super_admin_serial, country_serial,
@@ -47,10 +53,10 @@ export async function GET(req: Request) {
                created_at, updated_at
         from public.trucks
         where deleted_at is null
-          and (${session.isSuperAdmin ? sql`true` : sql`(country_id = any(${session.countryIds}) or country_id is null)`})
           and (${selectable ? sql`status = 'active'` : status ? sql`status = ${status}` : sql`true`})
           and (${searchLike ? sql`(truck_number ilike ${searchLike} or registration_number ilike ${searchLike} or owner_name ilike ${searchLike} or driver_name ilike ${searchLike} or transport_company ilike ${searchLike})` : sql`true`})
-        order by truck_number asc
+        order by ${prefixLike ? sql`(lower(truck_number) like lower(${prefixLike})) desc,` : sql``} truck_number asc
+        limit ${limit}
       `;
     });
 
@@ -69,6 +75,26 @@ export async function POST(req: Request) {
 
     const truckNumber = typeof body.truck_number === "string" ? body.truck_number.trim() : "";
     if (!truckNumber) return NextResponse.json({ error: "truck_number is required" }, { status: 400 });
+
+    // Central master — one vehicle, one record. If this number is already
+    // registered anywhere in the ERP, return the existing truck (409) so the
+    // caller can reuse it instead of creating a duplicate.
+    const existing = await withLocalPg(async (sql) => {
+      const r = await sql`
+        select id, country_id, truck_number, registration_number, truck_type, capacity,
+               owner_name, owner_mobile, transport_company, driver_name, driver_mobile,
+               driver_cnic_passport, status, registration_expiry_date, insurance_expiry_date
+        from public.trucks
+        where deleted_at is null and lower(btrim(truck_number)) = lower(${truckNumber})
+        limit 1`;
+      return r[0] ?? null;
+    });
+    if (existing) {
+      return NextResponse.json(
+        { error: "A truck with this number is already registered.", duplicate: true, truck: existing },
+        { status: 409 },
+      );
+    }
 
     const row: Record<string, unknown> = {
       country_id: body.country_id ?? (session.isSuperAdmin ? null : session.countryIds?.[0] ?? null),

@@ -55,6 +55,15 @@ export type ClearingCustomerOrderInput = {
   countryId?: string | null;
   countryBranchId?: string | null;
   cityBranchId?: string | null;
+  // By Road truck (either a registered/permanent truck or a temporary one)
+  truckId?: string | null;
+  truckRegistrationType?: "registered" | "temporary" | null;
+  truckNumber?: string | null;
+  truckDriverName?: string | null;
+  truckDriverMobile?: string | null;
+  truckOwnerName?: string | null;
+  truckTransportCompany?: string | null;
+  truckDetails?: Record<string, unknown> | null;
 };
 
 export type ClearingCustomerOrderPartyRow = {
@@ -253,6 +262,26 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
         updated_at: now
       };
 
+      // By Road truck linkage — only kept for road/truck transport modes.
+      const isRoad = ["by_road", "by_truck"].includes(orderPayload.transport_mode);
+      const regType = input.truckRegistrationType === "registered" || input.truckRegistrationType === "temporary"
+        ? input.truckRegistrationType : null;
+      const truckPayload = isRoad ? {
+        truck_id: regType === "registered" ? (trimOrNull(input.truckId) as string | null) : null,
+        truck_registration_type: regType,
+        truck_number: trimOrNull(input.truckNumber),
+        truck_driver_name: trimOrNull(input.truckDriverName),
+        truck_driver_mobile: trimOrNull(input.truckDriverMobile),
+        truck_owner_name: trimOrNull(input.truckOwnerName),
+        truck_transport_company: trimOrNull(input.truckTransportCompany),
+        // pass the object through — the postgres driver serialises it to jsonb.
+        // (JSON.stringify + ::jsonb double-encodes into a jsonb *string*.)
+        truck_details: input.truckDetails && Object.keys(input.truckDetails).length ? input.truckDetails : null,
+      } : {
+        truck_id: null, truck_registration_type: null, truck_number: null, truck_driver_name: null,
+        truck_driver_mobile: null, truck_owner_name: null, truck_transport_company: null, truck_details: null,
+      };
+
       let orderRow: Record<string, any>;
       if (orderId) {
         const [updated] = await tx`
@@ -290,6 +319,14 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
               expected_loading_date = ${orderPayload.expected_loading_date},
               remarks = ${orderPayload.remarks},
               status = ${orderPayload.status},
+              truck_id = ${truckPayload.truck_id},
+              truck_registration_type = ${truckPayload.truck_registration_type},
+              truck_number = ${truckPayload.truck_number},
+              truck_driver_name = ${truckPayload.truck_driver_name},
+              truck_driver_mobile = ${truckPayload.truck_driver_mobile},
+              truck_owner_name = ${truckPayload.truck_owner_name},
+              truck_transport_company = ${truckPayload.truck_transport_company},
+              truck_details = ${truckPayload.truck_details}::jsonb,
               updated_at = ${now}
           where id = ${orderId}::uuid and deleted_at is null
           returning *
@@ -311,7 +348,10 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
             loading_source, loading_source_name, loading_country_id, loading_country_name,
             receiving_country_id, receiving_country_name, loading_port_id, loading_port_name,
             destination_port_id, destination_port_name, cargo_details, expected_loading_date, remarks,
-            status, created_at, updated_at
+            status,
+            truck_id, truck_registration_type, truck_number, truck_driver_name, truck_driver_mobile,
+            truck_owner_name, truck_transport_company, truck_details,
+            created_at, updated_at
           ) values (
             ${orderPayload.order_no}, ${orderPayload.customer_id}, ${orderPayload.customer_name}, ${orderPayload.goods_id},
             ${orderPayload.goods_variation_id}, ${orderPayload.goods_name}, ${orderPayload.goods_chs_code},
@@ -324,7 +364,11 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
             ${orderPayload.receiving_country_id}, ${orderPayload.receiving_country_name}, ${orderPayload.loading_port_id},
             ${orderPayload.loading_port_name}, ${orderPayload.destination_port_id}, ${orderPayload.destination_port_name},
             ${orderPayload.cargo_details}, ${orderPayload.expected_loading_date}, ${orderPayload.remarks},
-            ${orderPayload.status}, ${now}, ${now}
+            ${orderPayload.status},
+            ${truckPayload.truck_id}, ${truckPayload.truck_registration_type}, ${truckPayload.truck_number},
+            ${truckPayload.truck_driver_name}, ${truckPayload.truck_driver_mobile}, ${truckPayload.truck_owner_name},
+            ${truckPayload.truck_transport_company}, ${truckPayload.truck_details}::jsonb,
+            ${now}, ${now}
           )
           returning *
         `;
