@@ -330,7 +330,23 @@ const TRANSLATION_DICTIONARY: Record<string, { en: string; ur: string; ar: strin
   "border": { en: "Border", ur: "بارڈر", ar: "حدود", fa: "مرز", ps: "پوله" },
   "port": { en: "Port", ur: "پورٹ", ar: "ميناء", fa: "بندر", ps: "بندر" },
   "airport": { en: "Airport", ur: "ایئرپورٹ", ar: "مطار", fa: "فرودگاه", ps: "هوايي ډګر" },
-  "dry port": { en: "Dry Port", ur: "ڈرائی پورٹ", ar: "ميناء جاف", fa: "بندر خشک", ps: "وچ بندر" }
+  "dry port": { en: "Dry Port", ur: "ڈرائی پورٹ", ar: "ميناء جاف", fa: "بندر خشک", ps: "وچ بندر" },
+
+  // ── ERP business phrases seen in ledger / clearing master names ──────────
+  "national central clearing ledger": { en: "National Central Clearing Ledger", ur: "قومی مرکزی کلیئرنگ لیجر", ar: "دفتر المقاصة المركزي الوطني", fa: "دفتر تسویه مرکزی ملی", ps: "ملي مرکزي کلیرنګ لیجر" },
+  "main country clearing ledger": { en: "Main Country Clearing Ledger", ur: "مرکزی ملکی کلیئرنگ لیجر", ar: "دفتر المقاصة الرئيسي للدولة", fa: "دفتر تسویه اصلی کشور", ps: "د هېواد اصلي کلیرنګ لیجر" },
+  "central clearing ledger": { en: "Central Clearing Ledger", ur: "مرکزی کلیئرنگ لیجر", ar: "دفتر المقاصة المركزي", fa: "دفتر تسویه مرکزی", ps: "مرکزي کلیرنګ لیجر" },
+  "clearing ledger": { en: "Clearing Ledger", ur: "کلیئرنگ لیجر", ar: "دفتر المقاصة", fa: "دفتر تسویه", ps: "کلیرنګ لیجر" },
+  "purchase sales accounts": { en: "Purchase Sales Accounts", ur: "خرید و فروخت کے اکاؤنٹس", ar: "حسابات الشراء والبيع", fa: "حساب‌های خرید و فروش", ps: "د پیرود او پلور حسابونه" },
+  "warehouse": { en: "Warehouse", ur: "گودام", ar: "مستودع", fa: "انبار", ps: "ګدام" },
+  "walnut kernels": { en: "Walnut Kernels", ur: "اخروٹ کی گری", ar: "لب الجوز", fa: "مغز گردو", ps: "د چهارمغزو مغز" },
+  "almond kernels": { en: "Almond Kernels", ur: "بادام کی گری", ar: "لب اللوز", fa: "مغز بادام", ps: "د بادامو مغز" },
+  "province": { en: "Province", ur: "صوبہ", ar: "مقاطعة", fa: "استان", ps: "ولايت" },
+  "emirate of": { en: "Emirate of", ur: "امارت", ar: "إمارة", fa: "امارت", ps: "امارت" },
+  "capital territory": { en: "Capital Territory", ur: "دارالحکومت علاقہ", ar: "إقليم العاصمة", fa: "قلمرو پایتخت", ps: "د پلازمېنې سیمه" },
+  "khyber pakhtunkhwa": { en: "Khyber Pakhtunkhwa", ur: "خیبر پختونخوا", ar: "خيبر بختونخوا", fa: "خیبرپختونخوا", ps: "خیبر پښتونخوا" },
+  "balkh": { en: "Balkh", ur: "بلخ", ar: "بلخ", fa: "بلخ", ps: "بلخ" },
+  "nangarhar": { en: "Nangarhar", ur: "ننگرہار", ar: "ننغرهار", fa: "ننگرهار", ps: "ننګرهار" }
 };
 
 // Build reverse lookup index maps
