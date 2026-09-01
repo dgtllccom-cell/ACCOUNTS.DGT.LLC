@@ -29,6 +29,10 @@ export type GoodsRow = {
   created_by: string | null;
   created_at: string;
   updated_at: string;
+  min_stock_level?: number | null;
+  reorder_level?: number | null;
+  barcode?: string | null;
+  barcode_type?: string | null;
   total_origins: number;
   total_sizes: number;
   total_brands: number;
@@ -36,7 +40,7 @@ export type GoodsRow = {
   variations: GoodsVariationRow[];
 };
 
-const GOODS_COLUMNS = ["id", "chs_code", "goods_name", "origin_country_id", "original_language_code", "category", "variety", "extra_details", "is_active", "created_by", "created_at", "updated_at"];
+const GOODS_COLUMNS = ["id", "chs_code", "goods_name", "origin_country_id", "original_language_code", "category", "variety", "extra_details", "is_active", "created_by", "created_at", "updated_at", "min_stock_level", "reorder_level", "barcode", "barcode_type"];
 const VARIATION_COLUMNS = ["id", "goods_id", "size", "brand", "variety", "extra_details", "is_active", "created_by", "created_at", "updated_at"];
 
 function cleanQuery(value: string) {
@@ -191,8 +195,12 @@ export class GoodsRepository {
     originCountryId?: string | null;
     originalLanguageCode?: string;
     createdBy?: string | null;
+    minStockLevel?: number | null;
+    reorderLevel?: number | null;
+    barcode?: string | null;
+    barcodeType?: string | null;
   }) {
-    const insertRow = {
+    const insertRow: Record<string, unknown> = {
       chs_code: input.chsCode.trim(),
       goods_name: input.goodsName.trim(),
       origin_country_id: input.originCountryId || null,
@@ -200,6 +208,10 @@ export class GoodsRepository {
       is_active: true,
       created_by: input.createdBy || null
     };
+    if (input.minStockLevel !== undefined) insertRow.min_stock_level = input.minStockLevel;
+    if (input.reorderLevel !== undefined) insertRow.reorder_level = input.reorderLevel;
+    if (input.barcode !== undefined) insertRow.barcode = input.barcode?.trim() ? input.barcode.trim() : null;
+    if (input.barcodeType) insertRow.barcode_type = input.barcodeType;
 
     let goodsId: string;
     const viaPg = await withLocalPg(async (sql) => {
@@ -245,6 +257,10 @@ export class GoodsRepository {
       isActive?: boolean;
       originalLanguageCode?: string;
       updatedBy?: string | null;
+      minStockLevel?: number | null;
+      reorderLevel?: number | null;
+      barcode?: string | null;
+      barcodeType?: string | null;
     }
   ) {
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
@@ -252,6 +268,23 @@ export class GoodsRepository {
     if (input.goodsName !== undefined) patch.goods_name = input.goodsName.trim();
     if (input.originCountryId !== undefined) patch.origin_country_id = input.originCountryId;
     if (input.isActive !== undefined) patch.is_active = input.isActive;
+    if (input.minStockLevel !== undefined) patch.min_stock_level = input.minStockLevel;
+    if (input.reorderLevel !== undefined) patch.reorder_level = input.reorderLevel;
+    if (input.barcode !== undefined) patch.barcode = input.barcode?.trim() ? input.barcode.trim() : null;
+    if (input.barcodeType !== undefined && input.barcodeType) patch.barcode_type = input.barcodeType;
+
+    // Mirror the re-order / barcode config onto the products shadow row (if it already
+    // exists) so product_low_stock_v — which keys on `products` — sees the threshold
+    // even before the next stock receive.
+    const shadowKeys = ["min_stock_level", "reorder_level", "barcode", "barcode_type"].filter((k) => k in patch);
+    if (shadowKeys.length) {
+      const shadowPatch: Record<string, unknown> = {};
+      for (const k of shadowKeys) shadowPatch[k] = (patch as any)[k];
+      await withLocalPg(async (sql) => {
+        await sql`UPDATE public.products SET ${sql(shadowPatch)} WHERE id = ${id}::uuid`;
+        return true;
+      });
+    }
 
     const viaPg = await withLocalPg(async (sql) => {
       await sql`UPDATE public.goods SET ${sql(patch)} WHERE id = ${id}::uuid AND deleted_at IS NULL`;

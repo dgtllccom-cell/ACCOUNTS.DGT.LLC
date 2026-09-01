@@ -48,7 +48,11 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
         goodsName: body.goodsName,
         originCountryId: body.originCountryId,
         isActive: body.isActive,
-        originalLanguage: body.originalLanguage
+        originalLanguage: body.originalLanguage,
+        minStockLevel: body.minStockLevel,
+        reorderLevel: body.reorderLevel,
+        barcode: body.barcode,
+        barcodeType: body.barcodeType
       },
       session.userId
     );

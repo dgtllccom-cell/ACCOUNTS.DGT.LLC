@@ -415,6 +415,10 @@ export const goodsCreateSchema = z.object({
   goodsName: z.string().trim().min(2).max(200),
   originCountryId: uuidSchema.nullable().optional(),
   originalLanguage: supportedLanguageSchema.default("en"),
+  minStockLevel: z.coerce.number().min(0).max(9_999_999_999).nullable().optional(),
+  reorderLevel: z.coerce.number().min(0).max(9_999_999_999).nullable().optional(),
+  barcode: z.string().trim().max(64).nullable().optional(),
+  barcodeType: z.enum(["CODE128", "EAN13", "UPC", "QR"]).optional(),
   initialVariation: z.object({
     size: z.string().trim().min(1).max(100),
     brand: z.string().trim().min(1).max(100)

@@ -8,6 +8,10 @@ export type GoodsMasterInput = {
   goodsName: string;
   originCountryId?: string | null;
   originalLanguage: SupportedLanguage;
+  minStockLevel?: number | null;
+  reorderLevel?: number | null;
+  barcode?: string | null;
+  barcodeType?: string | null;
   initialVariation?: {
     size: string;
     brand: string;
@@ -44,7 +48,11 @@ export class GoodsService {
       goodsName: input.goodsName,
       originCountryId: input.originCountryId,
       originalLanguageCode: input.originalLanguage,
-      createdBy: actorId
+      createdBy: actorId,
+      minStockLevel: input.minStockLevel,
+      reorderLevel: input.reorderLevel,
+      barcode: input.barcode,
+      barcodeType: input.barcodeType
     });
 
     await this.upsertMasterTranslations(goodsId, input.goodsName, input.originalLanguage, actorId ?? null);
@@ -82,6 +90,10 @@ export class GoodsService {
       originCountryId?: string | null;
       isActive?: boolean;
       originalLanguage?: SupportedLanguage;
+      minStockLevel?: number | null;
+      reorderLevel?: number | null;
+      barcode?: string | null;
+      barcodeType?: string | null;
     },
     actorId?: string | null
   ) {
@@ -97,7 +109,11 @@ export class GoodsService {
       chsCode: input.chsCode,
       goodsName: input.goodsName,
       originCountryId: input.originCountryId,
-      isActive: input.isActive
+      isActive: input.isActive,
+      minStockLevel: input.minStockLevel,
+      reorderLevel: input.reorderLevel,
+      barcode: input.barcode,
+      barcodeType: input.barcodeType
     });
     const after = await goodsRepository.getById(id);
 
