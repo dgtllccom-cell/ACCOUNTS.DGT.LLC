@@ -106,6 +106,23 @@ export function generateReportHtml(input: {
   const qrPayload = `ERP|${compName}|${title}|${printedDate}|${reportPeriod}`;
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(qrPayload)}`;
 
+  // Table density from the real column count so a normal report reads at a comfortable
+  // size and only genuinely wide tables (>12 cols) get squeezed. (Was hard-coded
+  // "density-compact" — 6.5px — which made every printed table hard to read.)
+  const colCount = (() => {
+    const m = mainTableHtml.match(/<thead[\s\S]*?<\/thead>/i)?.[0] ?? mainTableHtml.slice(0, 4000);
+    return (m.match(/<th\b/gi) || []).length;
+  })();
+  const tableDensityClass = colCount > 16 ? "density-dense" : colCount > 11 ? "density-compact" : "density-normal";
+
+  // Left footer note — empty for a plain (non-accounting) report, so we render a
+  // layout spacer instead of an empty bordered box (the "empty placeholder pill").
+  const leftFooterHtml = (footerNotesHtml && footerNotesHtml.trim())
+    ? footerNotesHtml
+    : (isAccounting
+      ? "<b>NOTE:</b><br />&bull; FC = Foreign Currency, LC = Local Currency<br />&bull; Double-entry transaction postings verified.<br />&bull; All amounts in selected currencies."
+      : "");
+
   return `<!doctype html>
 <html lang="${lang}" dir="${isRtl ? "rtl" : "ltr"}">
 <head>
@@ -503,6 +520,9 @@ export function generateReportHtml(input: {
       font-size: 7px;
       line-height: 1.4;
     }
+    /* keeps the 3-column footer grid balanced when the left note is empty,
+       without drawing an empty bordered box */
+    .footer-box-spacer { border: none; background: transparent; }
 
     .signatures-row {
       display: flex;
@@ -693,6 +713,16 @@ export function generateReportHtml(input: {
         size: A4 ${orientation};
         margin: 6mm;
       }
+      /* readable print typography — the on-screen sizes are px-tuned for the modal
+         preview and come out too small once the sheet is scaled to a real A4 page */
+      .sheet { font-size: 9pt !important; }
+      .report-table-wrapper.density-normal table.data-table { font-size: 8pt !important; }
+      .report-table-wrapper.density-normal table.data-table th { font-size: 7.5pt !important; padding: 5px 6px !important; }
+      .report-table-wrapper.density-compact table.data-table { font-size: 7.2pt !important; }
+      .report-table-wrapper.density-compact table.data-table th { font-size: 6.8pt !important; padding: 4px 4px !important; }
+      .report-table-wrapper.density-dense table.data-table { font-size: 6.2pt !important; }
+      .kpi-value { font-size: 11pt !important; }
+      .kpi-label { font-size: 6.5pt !important; }
     }
   </style>
   <script>
@@ -788,11 +818,7 @@ export function generateReportHtml(input: {
 
     function resetDefaultColumns() {
       selectAllColumns(true);
-      changeFontDensity('compact');
-      const select = document.getElementById('fontDensitySelect');
-      if (select) select.value = 'compact';
-      const toolbarSelect = document.getElementById('toolbarFontDensitySelect');
-      if (toolbarSelect) toolbarSelect.value = 'compact';
+      changeFontDensity('${tableDensityClass.replace("density-", "")}');
     }
 
     function changeFontDensity(mode) {
@@ -830,9 +856,9 @@ export function generateReportHtml(input: {
       <div class="zoom-controls" style="margin-right:8px;">
         <span style="font-size:10.5px; font-weight:700; color:#94a3b8; margin-right:4px;">Density:</span>
         <select id="toolbarFontDensitySelect" onchange="changeFontDensity(this.value)" class="density-select">
-          <option value="normal">Standard (7.5px)</option>
-          <option value="compact" selected>Compact (6.5px)</option>
-          <option value="dense">Dense (5.5px)</option>
+          <option value="normal"${tableDensityClass === "density-normal" ? " selected" : ""}>Standard (7.5px)</option>
+          <option value="compact"${tableDensityClass === "density-compact" ? " selected" : ""}>Compact (6.5px)</option>
+          <option value="dense"${tableDensityClass === "density-dense" ? " selected" : ""}>Dense (5.5px)</option>
         </select>
       </div>
 
@@ -860,9 +886,9 @@ export function generateReportHtml(input: {
           <button class="btn-xs btn-amber-xs" onclick="resetDefaultColumns()">Reset Default</button>
           <span style="margin-left:auto; font-weight:700;">Font Density:</span>
           <select id="fontDensitySelect" onchange="changeFontDensity(this.value)" class="density-select">
-            <option value="normal">Standard (7.5px)</option>
-            <option value="compact" selected>Compact Auto-Fit (6.5px)</option>
-            <option value="dense">Dense Fit (5.5px)</option>
+            <option value="normal"${tableDensityClass === "density-normal" ? " selected" : ""}>Standard (7.5px)</option>
+            <option value="compact"${tableDensityClass === "density-compact" ? " selected" : ""}>Compact Auto-Fit (6.5px)</option>
+            <option value="dense"${tableDensityClass === "density-dense" ? " selected" : ""}>Dense Fit (5.5px)</option>
           </select>
         </div>
         <div id="columnCheckboxesGrid" class="checkbox-grid"></div>
@@ -894,7 +920,7 @@ export function generateReportHtml(input: {
 
           <div class="title-col">
             <h1 class="report-title-text">${escapeHtml(title)}</h1>
-            <div style="margin-top:6px;"><img src="${qrSrc}" alt="QR verify" style="width:48px;height:48px;" /><div style="font-size:6px;color:#64748b;">Scan to verify</div></div>
+            <div style="margin-top:6px;"><img src="${qrSrc}" alt="QR verify" style="width:48px;height:48px;display:block;" /><div style="font-size:6px;color:#64748b;margin-top:3px;">Scan to verify</div></div>
           </div>
 
           <div class="meta-col">
@@ -929,23 +955,16 @@ export function generateReportHtml(input: {
         </div>
         ` : ""}
 
-        <!-- Main Data Table Wrapper -->
-        <div class="report-table-wrapper density-compact">
+        <!-- Main Data Table Wrapper — density chosen by column count (compact only for very wide tables) -->
+        <div class="report-table-wrapper ${tableDensityClass}">
           ${mainTableHtml}
         </div>
 
         <!-- Sheet Footer & Signatures -->
         <div class="sheet-footer">
           <div class="footer-content-grid">
-            <!-- Left Notes -->
-            <div class="footer-box">
-              ${footerNotesHtml || (isAccounting ? `
-                <b>NOTE:</b><br />
-                &bull; FC = Foreign Currency, LC = Local Currency<br />
-                &bull; Double-entry transaction postings verified.<br />
-                &bull; All amounts in selected currencies.
-              ` : "")}
-            </div>
+            <!-- Left Notes (only rendered when there is something to say — no empty placeholder box) -->
+            ${leftFooterHtml ? `<div class="footer-box">${leftFooterHtml}</div>` : `<div class="footer-box-spacer"></div>`}
 
             <!-- Signatures -->
             <div class="signatures-row">

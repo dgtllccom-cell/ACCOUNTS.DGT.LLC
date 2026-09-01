@@ -39,7 +39,6 @@ export function DailySettlementView() {
       countryName: scope.countryName,
       branchName: scope.branchDisplayName,
       printedBy: scope.userName,
-      filters: [{ label: "Rows", value: String(dailyRows.length) }],
       summary: {
         "Days": String(dailyRows.length),
         "Total Entries": String(dailyRows.reduce((s, r) => s + Number(r.total_entries || 0), 0)),
