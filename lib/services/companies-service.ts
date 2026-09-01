@@ -2,6 +2,7 @@ import { companiesRepository, type CompanyContact, type CompanyRegistration } fr
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 import { writeRecordChangeHistory } from "@/lib/api/record-change-history";
+import { assertGeoHierarchy } from "@/lib/services/geo-hierarchy-validator";
 
 export type CompanyInput = {
   name: string;
@@ -42,6 +43,13 @@ export class CompaniesService {
   }
 
   async create(input: CompanyInput, actorId?: string | null) {
+    await assertGeoHierarchy({
+      countryId: input.countryId,
+      stateProvinceId: input.stateProvinceId,
+      districtId: input.districtId,
+      cityId: input.cityId,
+      areaLocationId: input.areaLocationId,
+    });
     const companyId = await companiesRepository.create({
       name: input.name,
       legalName: input.legalName ?? null,
@@ -106,6 +114,13 @@ export class CompaniesService {
     actorId?: string | null
   ) {
     const before = await companiesRepository.getById(id);
+    await assertGeoHierarchy({
+      countryId: "countryId" in input ? input.countryId : before?.country_id ?? null,
+      stateProvinceId: "stateProvinceId" in input ? input.stateProvinceId : before?.state_province_id ?? null,
+      districtId: "districtId" in input ? input.districtId : before?.district_id ?? null,
+      cityId: "cityId" in input ? input.cityId : before?.city_id ?? null,
+      areaLocationId: "areaLocationId" in input ? input.areaLocationId : before?.area_location_id ?? null,
+    });
     await companiesRepository.update(id, input);
     const after = await companiesRepository.getById(id);
 

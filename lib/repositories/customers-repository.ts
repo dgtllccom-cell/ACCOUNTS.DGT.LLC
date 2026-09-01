@@ -12,7 +12,9 @@ export type CustomerRow = {
   area_location_id: string | null;
   country_name?: string | null;
   state_province_name?: string | null;
+  district_name?: string | null;
   city_name?: string | null;
+  created_by_name?: string | null;
   customer_name: string;
   first_name: string | null;
   last_name: string | null;
@@ -160,11 +162,15 @@ export class CustomersRepository {
             c.notes, c.original_language_code, c.is_active, c.created_at, c.updated_at,
             cnt.name as country_name,
             sp.name as state_province_name,
-            ct.name as city_name
+            di.name as district_name,
+            ct.name as city_name,
+            p.full_name as created_by_name
           FROM public.customers c
           LEFT JOIN public.countries cnt ON c.country_id = cnt.id
           LEFT JOIN public.states_provinces sp ON c.state_province_id = sp.id
+          LEFT JOIN public.districts di ON c.district_id = di.id
           LEFT JOIN public.cities ct ON c.city_id = ct.id
+          LEFT JOIN public.profiles p ON c.created_by = p.id
           WHERE c.id = ${id}::uuid AND c.deleted_at IS NULL LIMIT 1
         `;
         return (rows[0] as unknown as CustomerRow) ?? null;

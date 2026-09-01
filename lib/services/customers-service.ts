@@ -2,6 +2,7 @@ import { customersRepository } from "@/lib/repositories/customers-repository";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 import { writeRecordChangeHistory } from "@/lib/api/record-change-history";
+import { assertGeoHierarchy } from "@/lib/services/geo-hierarchy-validator";
 
 export type CustomerInput = {
   countryId: string;
@@ -40,6 +41,13 @@ export class CustomersService {
   }
 
   async create(input: CustomerInput, actorId?: string | null) {
+    await assertGeoHierarchy({
+      countryId: input.countryId,
+      stateProvinceId: input.stateProvinceId,
+      districtId: input.districtId,
+      cityId: input.cityId,
+      areaLocationId: input.areaLocationId,
+    });
     const customerId = await customersRepository.create({
       countryId: input.countryId,
       stateProvinceId: input.stateProvinceId ?? null,
@@ -98,26 +106,40 @@ export class CustomersService {
     actorId?: string | null
   ) {
     const before = await customersRepository.getById(id);
-    await customersRepository.update(id, {
-      stateProvinceId: "stateProvinceId" in input ? input.stateProvinceId ?? null : undefined,
-      districtId: "districtId" in input ? input.districtId ?? null : undefined,
-      cityId: "cityId" in input ? input.cityId ?? null : undefined,
-      areaLocationId: "areaLocationId" in input ? input.areaLocationId ?? null : undefined,
-      customerName: "customerName" in input ? input.customerName ?? "" : undefined,
-      firstName: "firstName" in input ? input.firstName ?? null : undefined,
-      lastName: "lastName" in input ? input.lastName ?? null : undefined,
-      fatherName: "fatherName" in input ? input.fatherName ?? null : undefined,
-      gender: "gender" in input ? input.gender ?? null : undefined,
-      photoUrl: "photoUrl" in input ? input.photoUrl ?? null : undefined,
-      companyName: "companyName" in input ? input.companyName ?? null : undefined,
-      contactPerson: "contactPerson" in input ? input.contactPerson ?? null : undefined,
-      mobile: "mobile" in input ? input.mobile ?? null : undefined,
-      whatsapp: "whatsapp" in input ? input.whatsapp ?? null : undefined,
-      email: "email" in input ? input.email ?? null : undefined,
-      address: "address" in input ? input.address ?? null : undefined,
-      notes: "notes" in input ? input.notes ?? null : undefined,
-      originalLanguageCode: "originalLanguage" in input ? (input.originalLanguage ?? "en") : undefined
+    await assertGeoHierarchy({
+      countryId: "countryId" in input ? input.countryId : before?.country_id ?? null,
+      stateProvinceId: "stateProvinceId" in input ? input.stateProvinceId : before?.state_province_id ?? null,
+      districtId: "districtId" in input ? input.districtId : before?.district_id ?? null,
+      cityId: "cityId" in input ? input.cityId : before?.city_id ?? null,
+      areaLocationId: "areaLocationId" in input ? input.areaLocationId : before?.area_location_id ?? null,
     });
+    // Build the patch with ONLY the keys the caller actually supplied. The previous version
+    // always emitted every key (assigning JS `undefined` when a field was absent) — an object
+    // literal keeps a key once written, even when its value is `undefined`, so the repository's
+    // own `"key" in input` guard saw every field as "present" and forwarded `undefined` into
+    // the `postgres` tag, which throws "UNDEFINED_VALUE: Undefined values are not allowed".
+    // That crashed any update that legitimately omitted a field (e.g. editing only the
+    // address, without first/last name in the request body).
+    const patch: Record<string, unknown> = {};
+    if ("stateProvinceId" in input) patch.stateProvinceId = input.stateProvinceId ?? null;
+    if ("districtId" in input) patch.districtId = input.districtId ?? null;
+    if ("cityId" in input) patch.cityId = input.cityId ?? null;
+    if ("areaLocationId" in input) patch.areaLocationId = input.areaLocationId ?? null;
+    if ("customerName" in input) patch.customerName = input.customerName ?? "";
+    if ("firstName" in input) patch.firstName = input.firstName ?? null;
+    if ("lastName" in input) patch.lastName = input.lastName ?? null;
+    if ("fatherName" in input) patch.fatherName = input.fatherName ?? null;
+    if ("gender" in input) patch.gender = input.gender ?? null;
+    if ("photoUrl" in input) patch.photoUrl = input.photoUrl ?? null;
+    if ("companyName" in input) patch.companyName = input.companyName ?? null;
+    if ("contactPerson" in input) patch.contactPerson = input.contactPerson ?? null;
+    if ("mobile" in input) patch.mobile = input.mobile ?? null;
+    if ("whatsapp" in input) patch.whatsapp = input.whatsapp ?? null;
+    if ("email" in input) patch.email = input.email ?? null;
+    if ("address" in input) patch.address = input.address ?? null;
+    if ("notes" in input) patch.notes = input.notes ?? null;
+    if ("originalLanguage" in input) patch.originalLanguageCode = input.originalLanguage ?? "en";
+    await customersRepository.update(id, patch);
     const after = await customersRepository.getById(id);
 
     await writeRecordChangeHistory({

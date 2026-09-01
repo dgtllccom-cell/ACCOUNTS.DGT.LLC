@@ -27,10 +27,15 @@ export type CustomerProfileRecord = {
   kyc_date?: string | null;
   is_active?: boolean | null;
   created_at?: string | null;
+  updated_at?: string | null;
+  created_by_name?: string | null;
+  notes?: string | null;
   mobile?: string | null;
   whatsapp?: string | null;
   email?: string | null;
   address?: string | null;
+  state_province_name?: string | null;
+  district_name?: string | null;
   city_name?: string | null;
   country_name?: string | null;
   country_id?: string | null;
@@ -78,15 +83,22 @@ export function buildCustomerProfileConfig(
     }),
     section(tt("pdoc.sec_location", "Location & Branch"), (rows) => {
       pushRow(rows, tt("pdoc.address", "Address"), r.address);
-      pushRow(rows, tt("pdoc.city", "City"), r.city_name);
       pushRow(rows, tt("pdoc.country", "Country"), r.country_name || branding.countryName);
+      pushRow(rows, tt("pdoc.state_province", "State / Province"), r.state_province_name);
+      pushRow(rows, tt("pdoc.district", "District"), r.district_name);
+      pushRow(rows, tt("pdoc.city", "City"), r.city_name);
       pushRow(rows, tt("pdoc.branch", "Branch"), r.branch_name || branding.branchName);
     }),
     section(tt("pdoc.sec_relationship", "Business Relationship"), (rows) => {
       pushRow(rows, tt("pdoc.relationship", "Relationship"), r.businessRelationship);
     }),
+    section(tt("pdoc.sec_remarks", "Remarks / Notes"), (rows) => {
+      pushRow(rows, tt("pdoc.remarks", "Remarks"), r.notes);
+    }),
     section(tt("pdoc.sec_audit", "System / Audit"), (rows) => {
       pushRow(rows, tt("pdoc.created_on", "Created On"), fmtDateTime(r.created_at));
+      pushRow(rows, tt("pdoc.updated_on", "Last Updated"), fmtDateTime(r.updated_at));
+      pushRow(rows, tt("pdoc.created_by", "Created By"), r.created_by_name);
       pushRow(rows, tt("pdoc.reference_no", "Reference No."), r.customer_number);
     }),
   ]);
