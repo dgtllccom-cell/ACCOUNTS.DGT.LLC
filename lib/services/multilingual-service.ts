@@ -152,6 +152,48 @@ const TRANSLATION_DICTIONARY: Record<string, { en: string; ur: string; ar: strin
     fa: "پاکستان",
     ps: "پاکستان"
   },
+  "russia": {
+    en: "Russia",
+    ur: "روس",
+    ar: "روسيا",
+    fa: "روسیه",
+    ps: "روسیه"
+  },
+  "kazakhstan": {
+    en: "Kazakhstan",
+    ur: "قازقستان",
+    ar: "كازاخستان",
+    fa: "قزاقستان",
+    ps: "قزاقستان"
+  },
+  "tajikistan": {
+    en: "Tajikistan",
+    ur: "تاجکستان",
+    ar: "طاجيكستان",
+    fa: "تاجیکستان",
+    ps: "تاجکستان"
+  },
+  "turkmenistan": {
+    en: "Turkmenistan",
+    ur: "ترکمانستان",
+    ar: "تركمانستان",
+    fa: "ترکمنستان",
+    ps: "ترکمنستان"
+  },
+  "uzbekistan": {
+    en: "Uzbekistan",
+    ur: "ازبکستان",
+    ar: "أوزبكستان",
+    fa: "ازبکستان",
+    ps: "ازبکستان"
+  },
+  "turkiye": {
+    en: "Turkiye",
+    ur: "ترکیہ",
+    ar: "تركيا",
+    fa: "ترکیه",
+    ps: "ترکیه"
+  },
   "uae": {
     en: "UAE",
     ur: "متحدہ عرب امارات",

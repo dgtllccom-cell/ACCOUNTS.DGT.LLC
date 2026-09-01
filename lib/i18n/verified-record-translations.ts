@@ -55,7 +55,14 @@ export async function buildVerifiedTranslationSet(input: {
   for (const language of languageCodes) {
     if (language === input.originalLanguage) continue;
     const manual = clean(input.supplied?.[language]);
-    const generatedCandidate = canUseGenerated ? clean((generated as TranslationMap)[language]) : "";
+    // Prefer the curated Business Dictionary value; the algorithmic generator is
+    // only a fallback for languages the dictionary does not cover. (A dictionary
+    // hit gates use of the generator, but its spellings must not override the
+    // approved dictionary term — root cause of e.g. "China" → چینا.)
+    const dictCandidate = clean((dictionary as TranslationMap)[language]);
+    const generatedCandidate = canUseGenerated
+      ? (dictCandidate && !sameText(dictCandidate, value) ? dictCandidate : clean((generated as TranslationMap)[language]))
+      : "";
     const candidate = manual || generatedCandidate;
     if (!candidate || sameText(candidate, value)) continue;
     translations[language] = candidate;
