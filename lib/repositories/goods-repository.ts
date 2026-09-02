@@ -102,7 +102,7 @@ export class GoodsRepository {
       const goodsRows = await sql`
         SELECT ${sql(GOODS_COLUMNS)} FROM public.goods
         WHERE deleted_at IS NULL
-          AND (${like ? sql`(chs_code ILIKE ${like} OR goods_name ILIKE ${like} OR id IN (SELECT goods_id FROM public.goods_variations WHERE deleted_at IS NULL AND (size ILIKE ${like} OR brand ILIKE ${like})) OR id = ANY(${translatedMatchIds}::uuid[]))` : sql`true`})
+          AND (${like ? sql`(chs_code ILIKE ${like} OR goods_name ILIKE ${like} OR barcode ILIKE ${like} OR id IN (SELECT goods_id FROM public.goods_variations WHERE deleted_at IS NULL AND (size ILIKE ${like} OR brand ILIKE ${like})) OR id = ANY(${translatedMatchIds}::uuid[]))` : sql`true`})
         ORDER BY goods_name ASC
         LIMIT ${limit}
       `;
@@ -135,9 +135,9 @@ export class GoodsRepository {
       for (const id of translatedMatchIds) matchedIds.add(id);
       if (matchedIds.size > 0) {
         const idList = [...matchedIds].map((id) => `"${id}"`).join(",");
-        query = query.or(`chs_code.ilike.${likeSql},goods_name.ilike.${likeSql},id.in.(${idList})`);
+        query = query.or(`chs_code.ilike.${likeSql},goods_name.ilike.${likeSql},barcode.ilike.${likeSql},id.in.(${idList})`);
       } else {
-        query = query.or(`chs_code.ilike.${likeSql},goods_name.ilike.${likeSql}`);
+        query = query.or(`chs_code.ilike.${likeSql},goods_name.ilike.${likeSql},barcode.ilike.${likeSql}`);
       }
     }
 

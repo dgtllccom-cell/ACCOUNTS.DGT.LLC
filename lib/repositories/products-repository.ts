@@ -148,7 +148,8 @@ export class ProductsRepository {
           `product_name.ilike.${like}`,
           `product_code.ilike.${like}`,
           `sku.ilike.${like}`,
-          `hs_code.ilike.${like}`
+          `hs_code.ilike.${like}`,
+          `barcode.ilike.${like}`
         ].join(",") + idList
       );
     }

@@ -1024,7 +1024,7 @@ export const sidebarTree: SidebarNode[] = [
     children: [
       {
         key: "crm-dashboard",
-        labelKey: "crm.menu_dashboard" as any,
+        labelKey: "crm.menu_dashboard",
         iconKey: "layout-dashboard",
         href: "/dashboard/crm" as Route,
         roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "cashier", "agent_user"]
@@ -1101,7 +1101,7 @@ export const sidebarTree: SidebarNode[] = [
       },
       {
         key: "audit-deleted-records",
-        labelKey: "nav.deleted_records" as any,
+        labelKey: "nav.deleted_records",
         href: "/dashboard/audit/deleted-records" as Route,
         roles: ["super_admin", "country_admin", "main_branch_admin"]
       },
@@ -1164,7 +1164,7 @@ export const sidebarTree: SidebarNode[] = [
       },
       {
         key: "sa-deleted-records",
-        labelKey: "nav.deleted_records_vault" as any,
+        labelKey: "nav.deleted_records_vault",
         iconKey: "clipboard-list",
         href: "/dashboard/audit-monitoring?tab=deleted" as Route,
         roles: ["super_admin", "super_admin_reports"]

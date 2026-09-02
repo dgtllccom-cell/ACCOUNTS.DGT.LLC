@@ -10,6 +10,9 @@ import { Th } from "@/components/ui/translated-th";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { supportedLanguages } from "@/lib/i18n/languages";
 import { Barcode } from "@/components/ui/barcode";
+import { QrCode } from "@/components/ui/qr-code";
+import { BarcodeScanButton } from "@/components/ui/barcode-scan-button";
+import { openBarcodeLabelPrint } from "@/lib/reports/open-barcode-label-print";
 
 type SessionLike = {
   preferredLanguage?: string | null;
@@ -486,12 +489,15 @@ export default function ProductMasterClient({ session }: { session: SessionLike 
 
               <label className="grid gap-1">
                 <span className="text-xs font-semibold text-muted-foreground">{s.t("barcode", "Barcode")}</span>
-                <input
-                  value={form.barcode}
-                  onChange={(event) => updateForm({ barcode: event.target.value })}
-                  className={inputClass()}
-                  placeholder={s.t("optional", "Optional")}
-                />
+                <div className="flex items-center gap-1.5">
+                  <input
+                    value={form.barcode}
+                    onChange={(event) => updateForm({ barcode: event.target.value })}
+                    className={`${inputClass()} flex-1`}
+                    placeholder={s.t("optional", "Optional")}
+                  />
+                  <BarcodeScanButton onScan={(code) => updateForm({ barcode: code })} />
+                </div>
               </label>
 
               <label className="grid gap-1">
@@ -509,8 +515,22 @@ export default function ProductMasterClient({ session }: { session: SessionLike 
 
             {form.barcode.trim() ? (
               <div className="mt-3 rounded-lg border border-border bg-white p-3" dir="ltr">
-                <div className="mb-1 text-xs font-semibold text-muted-foreground">{s.t("barcode_preview", "Barcode Preview")}</div>
-                <Barcode value={form.barcode.trim()} />
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="text-xs font-semibold text-muted-foreground">{s.t("barcode_preview", "Barcode Preview")}</span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      openBarcodeLabelPrint(
+                        [{ code: form.barcode.trim(), name: form.productName || form.productCode, reference: form.productCode, type: form.barcodeType as any, copies: 6 }],
+                        { lang: s.lang },
+                      )
+                    }
+                    className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-[11px] font-semibold text-primary"
+                  >
+                    {s.tGlobal("prodm.print_label", "Print Label")}
+                  </button>
+                </div>
+                {form.barcodeType === "QR" ? <QrCode value={form.barcode.trim()} size={120} /> : <Barcode value={form.barcode.trim()} />}
               </div>
             ) : null}
 
