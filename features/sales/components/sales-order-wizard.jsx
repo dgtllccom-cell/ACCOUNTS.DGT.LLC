@@ -52,6 +52,7 @@ import { resolveSalesBookingPaymentRoute } from "@/lib/services/sales-booking-ro
 import { SalesBookingJournalReportView } from "./sales-booking-journal-report-view";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateOptionLabel } from "@/lib/i18n/option-labels";
 import { t } from "@/lib/i18n/ui";
 
 // --- Non-location constants (static values, not from master forms) ---
@@ -59,17 +60,7 @@ const CURRENCY_OPTIONS = ["USD", "AED", "EUR", "GBP", "PKR", "AFN", "INR", "CNY"
 const PAYMENT_TYPES = ["Advance Payment", "Invoice", "Final Payment", "Credit"];
 const LOADING_TYPES = ["By Sea", "By Road", "By Air"];
 const CONTAINER_TYPES = ["20 FT", "40 FT", "20 FT Reefer", "40 FT Reefer", "Reefer Container", "Non Reefer", "Open Top", "Flat Rack", "LCL / Bulk"];
-const QTY_TYPE_OPTIONS = ["BAGS", "CARTONS", "Loose", "KGS", "Ton"];
-const SIZE_OPTIONS = ["Large", "Medium", "Standard", "Small"];
-const BRAND_OPTIONS = ["Premium", "Choice", "Organic", "Standard"];
-const GOODS_OPTIONS = ["PISTACHIOS KERNEL", "CASHEW NUTS (W320)", "WALNUTS INSHELL", "ALMONDS", "HAZELNUTS"];
-const GOODS_HS_CODES = {
-  "PISTACHIOS KERNEL": "0802.51",
-  "CASHEW NUTS (W320)": "0801.32",
-  "WALNUTS INSHELL": "0802.31",
-  "ALMONDS": "0802.12",
-  "HAZELNUTS": "0802.22"
-};
+const QTY_TYPE_OPTIONS = ["BAGS", "CARTONS", "Loose", "KGS", "Ton", "PCS", "Dozen", "Box", "Pallet"];
 
 const SALE_SOURCE_OPTIONS = [
   { value: "booking", label: "Booking Sale", description: "Create a fresh sales booking from this order.", icon: FileText },
@@ -108,16 +99,6 @@ const MOCK_LOT_DEDUCTIONS = {
   ]
 };
 // NOTE: COUNTRY_OPTIONS and ORIGIN_OPTIONS removed — countries now come from Location Master.
-
-const MOCK_ACCOUNTS = [
-  { accountCode: "AE-AC-0001", accountName: "Dubai Customer Account", cityBranchName: "Dubai Main Branch", ledgerCurrency: "AED" },
-  { accountCode: "SA-2001", accountName: "Damaan Sales Account", cityBranchName: "Dubai Sales Branch", ledgerCurrency: "AED" },
-  { accountCode: "US-AC-1002", accountName: "US Vendor Ledger Account", cityBranchName: "New York Branch", ledgerCurrency: "USD" },
-  { accountCode: "PK-AC-3001", accountName: "Kharadar Customer Account", cityBranchName: "Karachi Central Branch", ledgerCurrency: "PKR" },
-  { accountCode: "AF-AC-4001", accountName: "Kabul Trading Account", cityBranchName: "Kabul Main Branch", ledgerCurrency: "AFN" },
-  { accountCode: "AE-AC-0002", accountName: "Sharjah Supply Account", cityBranchName: "Sharjah Branch", ledgerCurrency: "AED" },
-  { accountCode: "IN-AC-5001", accountName: "Mumbai Import Account", cityBranchName: "Mumbai Port Branch", ledgerCurrency: "INR" }
-];
 
 // API Helpers
 async function lookupAccountMaster(query, countryId, countryBranchId, cityBranchId, isSuperAdmin) {
@@ -277,77 +258,6 @@ const DEFAULT_FORM = {
 };
 
 // Seeded rows matching user's mock screenshots
-const SEEDED_GOODS = [
-  {
-    allotName: "ALT-4421",
-    goodsName: "PISTACHIOS KERNEL",
-    size: "Large",
-    brand: "Premium",
-    origin: "Iran",
-    hsCode: "0802.51",
-    qtyName: "BAGS",
-    qtyNo: 100,
-    qtyKgs: 50.00,
-    grossWeight: 5000.00,
-    emptyKgs: 0.10,
-    netWeight: 4990.00,
-    priceType: "P/KGs",
-    divideType: "D/KGs",
-    divideWeight: 1,
-    coursePrice: 12.50,
-    currencyType: "USD",
-    exchangeRate: 280.00,
-    totalAmount: 62375.00,
-    op: "*",
-    finalAmount: 17465000.00
-  },
-  {
-    allotName: "ALT-4422",
-    goodsName: "CASHEW NUTS (W320)",
-    size: "Medium",
-    brand: "Choice",
-    origin: "Vietnam",
-    hsCode: "0801.32",
-    qtyName: "CARTONS",
-    qtyNo: 50,
-    qtyKgs: 22.68,
-    grossWeight: 1134.00,
-    emptyKgs: 0.10,
-    netWeight: 1129.00,
-    priceType: "P/KGs",
-    divideType: "D/KGs",
-    divideWeight: 1,
-    coursePrice: 8.75,
-    currencyType: "USD",
-    exchangeRate: 280.00,
-    totalAmount: 9878.75,
-    op: "*",
-    finalAmount: 2766050.00
-  },
-  {
-    allotName: "ALT-4423",
-    goodsName: "WALNUTS INSHELL",
-    size: "Standard",
-    brand: "Organic",
-    origin: "USA",
-    hsCode: "0802.31",
-    qtyName: "BAGS",
-    qtyNo: 200,
-    qtyKgs: 25.00,
-    grossWeight: 5000.00,
-    emptyKgs: 0.10,
-    netWeight: 4980.00,
-    priceType: "P/KGs",
-    divideType: "D/KGs",
-    divideWeight: 1,
-    coursePrice: 6.50,
-    currencyType: "USD",
-    exchangeRate: 280.00,
-    totalAmount: 32370.00,
-    op: "*",
-    finalAmount: 9063600.00
-  }
-];
 
 function calculateItemTotals(form) {
   const qtyNo = Number(form.qtyNo || 0);
@@ -591,7 +501,7 @@ export function SalesOrderWizard({ session }) {
         allotName: g.allotName || "N/A",
         grade: g.size || "N/A",
         origin: g.origin || "N/A",
-        quantity: `${qtyNo.toLocaleString()} ${g.qtyName || "BAGS"}`,
+        quantity: `${qtyNo.toLocaleString()} ${translateOptionLabel(lang, g.qtyName || "BAGS")}`,
         packing: `${qtyKgs} KG / ${emptyKgs} KG`,
         grossWt,
         netWt,
@@ -602,7 +512,7 @@ export function SalesOrderWizard({ session }) {
         finalAmountPkr
       };
     });
-  }, [goodsEntries]);
+  }, [goodsEntries, lang]);
 
   const avgRateKg = useMemo(() => {
     return goodsEntries.length > 0
@@ -1142,7 +1052,7 @@ export function SalesOrderWizard({ session }) {
     }
     async function initGoods() {
       try {
-        const response = await fetch("/api/erp/goods?limit=500");
+        const response = await fetch(`/api/erp/goods?limit=500&lang=${lang}`);
         const res = await response.json();
         const goodsData = res?.data?.goods || res?.goods;
         if (!cancelled && goodsData) {
@@ -1600,7 +1510,7 @@ export function SalesOrderWizard({ session }) {
 
   const handleOpenA4Report = (autoPrint = false) => {
     const firstGoodName = goodsEntries[0]?.goodsName || "Cargo";
-    const firstQtyUnit = goodsEntries[0]?.qtyName || "BAGS";
+    const firstQtyUnit = translateOptionLabel(lang, goodsEntries[0]?.qtyName || "BAGS");
     const rawRemarks = form.remarks || form.orderReportRemarks || "";
 
     const reportData = {
@@ -1733,7 +1643,7 @@ export function SalesOrderWizard({ session }) {
         }).then(res => res.json())
           .then(data => {
             if (data.ok) {
-              fetch("/api/erp/goods?limit=500")
+              fetch(`/api/erp/goods?limit=500&lang=${lang}`)
                 .then(r => r.json())
                 .then(reloadRes => {
                   const goodsData = reloadRes?.data?.goods || reloadRes?.goods;
@@ -1920,7 +1830,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
       if (!response.ok || !payload.ok) {
         throw new Error(payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_create_good", "Failed to create good."));
       }
-      const reloadRes = await fetch("/api/erp/goods?limit=500").then(r => r.json()).catch(() => ({}));
+      const reloadRes = await fetch(`/api/erp/goods?limit=500&lang=${lang}`).then(r => r.json()).catch(() => ({}));
       const goodsData = reloadRes?.data?.goods || reloadRes?.goods;
       if (goodsData) setDbGoods(goodsData);
       setValue("goodsName", goodsName.trim().toUpperCase());
@@ -2038,7 +1948,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.ok) throw new Error(data?.error || data?.error?.message || "Failed to save parameter to master.");
 
-      const reloadRes = await fetch("/api/erp/goods?limit=500").then(r => r.json()).catch(() => ({}));
+      const reloadRes = await fetch(`/api/erp/goods?limit=500&lang=${lang}`).then(r => r.json()).catch(() => ({}));
       const goodsData = reloadRes?.data?.goods || reloadRes?.goods;
       if (goodsData) setDbGoods(goodsData);
 
@@ -2190,7 +2100,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
     }
 
     try {
-      const reloadRes = await fetch("/api/erp/goods?limit=500").then(r => r.json()).catch(() => ({}));
+      const reloadRes = await fetch(`/api/erp/goods?limit=500&lang=${lang}`).then(r => r.json()).catch(() => ({}));
       const goodsData = reloadRes?.data?.goods || reloadRes?.goods;
       if (goodsData) {
         setDbGoods(goodsData);
@@ -2230,7 +2140,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.ok) throw new Error(data?.error || data?.error?.message || t(lang, "purchase.wiz_err_update_hs_code", "Failed to update HS Code."));
       
-      const reloadRes = await fetch("/api/erp/goods?limit=500").then(r => r.json()).catch(() => ({}));
+      const reloadRes = await fetch(`/api/erp/goods?limit=500&lang=${lang}`).then(r => r.json()).catch(() => ({}));
       const goodsData = reloadRes?.data?.goods || reloadRes?.goods;
       if (goodsData) setDbGoods(goodsData);
       
@@ -2271,7 +2181,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
         throw new Error(payload?.error?.message || payload?.error || `Failed to save ${type}.`);
       }
       
-      const reloadRes = await fetch("/api/erp/goods?limit=500").then(r => r.json()).catch(() => ({}));
+      const reloadRes = await fetch(`/api/erp/goods?limit=500&lang=${lang}`).then(r => r.json()).catch(() => ({}));
       const goodsData = reloadRes?.data?.goods || reloadRes?.goods;
       if (goodsData) setDbGoods(goodsData);
       
@@ -3472,7 +3382,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                     {lot.goodsName}
                                     <div className="text-[9px] font-semibold text-muted-foreground">{lot.brand} / {lot.size} / {lot.origin}</div>
                                   </td>
-                                  <td className="px-3 py-2.5 text-right font-black">{Number(lot.availableQty || 0).toLocaleString()} {lot.qtyName}</td>
+                                  <td className="px-3 py-2.5 text-right font-black">{Number(lot.availableQty || 0).toLocaleString()} {translateOptionLabel(lang, lot.qtyName)}</td>
                                   <td className="px-3 py-2.5 text-right font-mono font-bold">{Number(lot.netWeight || 0).toLocaleString()}</td>
                                   <td className="px-3 py-2.5 text-muted-foreground">{lot.location}</td>
                                   <td className="px-3 py-2.5"><span className="rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-black text-emerald-700">{lot.status}</span></td>
@@ -3510,7 +3420,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                             Stock Utilization History & Balance for {lot.lotNo}
                                           </h5>
                                           <div className="text-[9px] font-bold text-slate-500">
-                                            {t(lang, "sales.original_capacity_colon", "Original Capacity:")}<span className="font-mono text-slate-800">{originalQty.toLocaleString()} {lot.qtyName}</span> ({originalWeight.toLocaleString()} KG)
+                                            {t(lang, "sales.original_capacity_colon", "Original Capacity:")}<span className="font-mono text-slate-800">{originalQty.toLocaleString()} {translateOptionLabel(lang, lot.qtyName)}</span> ({originalWeight.toLocaleString()} KG)
                                           </div>
                                         </div>
 
@@ -3553,7 +3463,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                               {deductions.length > 0 && (
                                                 <tr className="bg-slate-50/50 border-t border-slate-150 font-bold">
                                                   <td colSpan={3} className="px-3 py-1.5 text-right text-slate-500 uppercase tracking-wider text-[8px]">{t(lang, "sales.total_outward_deductions_colon", "Total Outward Deductions:")}</td>
-                                                  <td className="px-3 py-1.5 text-right font-mono text-red-600 font-black">-{totalDeductedQty.toLocaleString()} {lot.qtyName}</td>
+                                                  <td className="px-3 py-1.5 text-right font-mono text-red-600 font-black">-{totalDeductedQty.toLocaleString()} {translateOptionLabel(lang, lot.qtyName)}</td>
                                                   <td className="px-3 py-1.5 text-right font-mono text-red-600 font-black">-{totalDeductedWeight.toLocaleString()} KG</td>
                                                   <td className="px-3 py-1.5 text-slate-400 font-semibold">—</td>
                                                 </tr>
@@ -3562,7 +3472,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                               {/* Net Remaining Balance row */}
                                               <tr className="bg-sky-50 border-t border-slate-200 font-black text-sky-950">
                                                 <td colSpan={3} className="px-3 py-1.5 text-right uppercase tracking-wider text-[8px]">{t(lang, "sales.net_available_balance_colon", "Net Available Balance:")}</td>
-                                                <td className="px-3 py-1.5 text-right font-mono text-[10px] font-black text-sky-700">{lot.availableQty.toLocaleString()} {lot.qtyName}</td>
+                                                <td className="px-3 py-1.5 text-right font-mono text-[10px] font-black text-sky-700">{lot.availableQty.toLocaleString()} {translateOptionLabel(lang, lot.qtyName)}</td>
                                                 <td className="px-3 py-1.5 text-right font-mono text-[10px] font-black text-sky-700">{lot.netWeight.toLocaleString()} KG</td>
                                                 <td className="px-3 py-1.5"><span className="text-[8px] font-black uppercase bg-sky-200 text-sky-800 px-1 py-0.5 rounded animate-pulse">{t(lang, "sales.live_stock_title", "Live Stock")}</span></td>
                                               </tr>
@@ -3628,7 +3538,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                 <td className="px-3 py-2 text-center font-mono text-muted-foreground">{row.hsCode}</td>
                                 <td className="px-3 py-2 text-center font-semibold">{row.origin}</td>
                                 <td className="px-3 py-2 text-right font-mono font-bold">{row.qtyNo.toLocaleString()}</td>
-                                <td className="px-3 py-2 text-center font-semibold">{row.qtyName}</td>
+                                <td className="px-3 py-2 text-center font-semibold">{translateOptionLabel(lang, row.qtyName)}</td>
                                 <td className="px-3 py-2 text-right font-mono font-bold text-muted-foreground">{row.coursePrice.toFixed(2)}</td>
                                 <td className="px-3 py-2 text-right font-mono font-black text-yellow-600 dark:text-yellow-450">{row.totalAmount.toLocaleString()}</td>
                                 <td className="px-3 py-2 text-center font-mono text-muted-foreground">{row.op || "*"} {row.exchangeRate}</td>
@@ -3975,7 +3885,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         </div>
                         <div className="flex justify-between">
                           <span className="text-emerald-700 font-semibold">{t(lang, "sales.available_qty_colon", "Available Qty:")}</span>
-                          <span className="font-black text-foreground font-mono">{Number(selectedSaleLot.availableQty || 0).toLocaleString()} {selectedSaleLot.qtyName}</span>
+                          <span className="font-black text-foreground font-mono">{Number(selectedSaleLot.availableQty || 0).toLocaleString()} {translateOptionLabel(lang, selectedSaleLot.qtyName)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-emerald-700 font-semibold">{t(lang, "tl.net_weight_colon", "Net Weight:")}</span>
@@ -4065,7 +3975,6 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         }}
                         options={[
                           ...dbGoods.map(g => ({ label: g.goods_name || g.goodsName, value: g.goods_name || g.goodsName })),
-                          ...GOODS_OPTIONS.filter(go => !dbGoods.some(g => (g.goods_name || g.goodsName) === go)).map(g => ({ label: g, value: g }))
                         ]}
                         placeholder={t(lang, "sales.select_goods_ph", "Select Goods")}
                         addOptionLabel="Add New Good"
@@ -4192,7 +4101,6 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             const brands = Array.from(new Set([
                               ...(selGood?.master_brands || []),
                               ...(selGood?.variations || []).map(v => v.brand).filter(Boolean),
-                              ...BRAND_OPTIONS,
                               ...dbGoods.flatMap(g => [...(g.master_brands || []), ...(g.variations || []).map(v => v.brand)]).filter(Boolean),
                               form.brand
                             ].filter(Boolean))).sort();
@@ -4245,7 +4153,6 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             const sizes = Array.from(new Set([
                               ...(selGood?.master_sizes || []),
                               ...(selGood?.variations || []).map(v => v.size).filter(Boolean),
-                              ...SIZE_OPTIONS,
                               ...dbGoods.flatMap(g => [...(g.master_sizes || []), ...(g.variations || []).map(v => v.size)]).filter(Boolean),
                               form.size
                             ].filter(Boolean))).sort();
@@ -4295,7 +4202,8 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
                             const varieties = Array.from(new Set([
                               ...(selGood?.master_varieties || []),
-                              "Nonpareil", "Carmel", "Independence", "Butte", "Marcona", "Aldrich", "Fritz", "Monterey", "Padre", "Price", "Sonora", "Wood Colony",
+                              ...(selGood?.variations || []).map(v => v.variety).filter(Boolean),
+                              ...dbGoods.flatMap(g => (g.variations || []).map(v => v.variety)).filter(Boolean),
                               form.variety
                             ].filter(Boolean))).sort();
                             return varieties.map(v => ({ label: v, value: v }));
@@ -4350,7 +4258,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                               setValue("qtyName", val);
                             }
                           }}
-                          options={Array.from(new Set([...QTY_TYPE_OPTIONS, ...customQtyNames, form.qtyName])).filter(Boolean).map(q => ({ label: q, value: q }))}
+                          options={Array.from(new Set([...QTY_TYPE_OPTIONS, ...customQtyNames, form.qtyName])).filter(Boolean).map(q => ({ label: translateOptionLabel(lang, q), value: q }))}
                           placeholder={t(lang, "sales.select_qty_name_ph", "Select Qty Name")}
                           addOptionLabel="Add New Qty Name"
                         />
@@ -4774,7 +4682,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       <td className="p-2 font-bold border-r border-slate-200">{row.goodsName}</td>
                       <td className="p-2 border-r border-slate-200">{row.brand}</td>
                       <td className="p-2 border-r border-slate-200">{row.origin}</td>
-                      <td className="p-2 text-right border-r border-slate-200 font-mono font-bold">{row.qtyNo.toLocaleString()} {row.qtyName}</td>
+                      <td className="p-2 text-right border-r border-slate-200 font-mono font-bold">{row.qtyNo.toLocaleString()} {translateOptionLabel(lang, row.qtyName)}</td>
                       <td className="p-2 text-right border-r border-slate-200 font-mono">{row.grossWeight.toFixed(2)}</td>
                       <td className="p-2 text-right border-r border-slate-200 font-mono font-bold">{row.netWeight.toFixed(2)}</td>
                       <td className="p-2 text-right border-r border-slate-200 font-mono">{row.coursePrice.toFixed(2)}</td>
@@ -5029,7 +4937,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             <td className="border-r border-slate-200 p-1.5 text-center">{g.hsCode}</td>
                             <td className="border-r border-slate-200 p-1.5 text-center">{g.origin}</td>
                             <td className="border-r border-slate-200 p-1.5 text-right font-bold">{g.qtyNo.toLocaleString()}</td>
-                            <td className="border-r border-slate-200 p-1.5 text-center">{g.qtyName}</td>
+                            <td className="border-r border-slate-200 p-1.5 text-center">{translateOptionLabel(lang, g.qtyName)}</td>
                             <td className="border-r border-slate-200 p-1.5 text-right">{g.coursePrice}</td>
                             <td className="border-r border-slate-200 p-1.5 text-center">{g.exchangeRate}</td>
                             <td className="p-1.5 text-right font-bold">{g.finalAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
@@ -5768,7 +5676,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       </div>
                       <div className="flex justify-between py-1 border-b border-slate-50">
                         <span className="text-slate-500 font-medium">{t(lang, "sales.available_quantity_colon", "Available Quantity:")}</span>
-                        <span className="font-black text-emerald-600">{Number(lot.availableQty).toLocaleString()} {lot.qtyName}</span>
+                        <span className="font-black text-emerald-600">{Number(lot.availableQty).toLocaleString()} {translateOptionLabel(lang, lot.qtyName)}</span>
                       </div>
                       <div className="flex justify-between py-1 border-b border-slate-50">
                         <span className="text-slate-500 font-medium">{t(lang, "tl.net_weight_colon", "Net Weight:")}</span>

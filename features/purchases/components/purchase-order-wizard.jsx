@@ -65,6 +65,7 @@ import { buildPurchaseBookingTransferUrl } from "@/lib/services/purchase-booking
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { translationPendingLabel } from "@/lib/i18n/purchase-order-translations";
 import { readDraftPrefill, clearDraftPrefill } from "@/features/document-intelligence/components/entry-method-selector";
+import { translateOptionLabel } from "@/lib/i18n/option-labels";
 
 // --- Non-location constants (static values, not from master forms) ---
 const CURRENCY_OPTIONS = ["USD", "AED", "EUR", "GBP", "PKR", "AFN", "INR", "CNY", "SAR"];
@@ -72,53 +73,9 @@ const PAYMENT_TYPES = ["Advance Payment", "Invoice", "Final Payment", "Credit"];
 const LOADING_TYPES = ["By Sea", "By Road", "By Air"];
 const CONTAINER_TYPES = ["20 FT", "40 FT", "20 FT Reefer", "40 FT Reefer", "Reefer Container", "Non Reefer", "Open Top", "Flat Rack", "LCL / Bulk"];
 
-// Canonical English value -> translation key, for PAYMENT_TYPES/LOADING_TYPES/CONTAINER_TYPES
-// <option> labels. The stored/submitted `value` stays the canonical English string (form.paymentType
-// etc. are compared against these constants elsewhere); only the visible label is translated.
-const OPTION_LABEL_KEYS = {
-  "Advance Payment": "purchase.opt_advance_payment",
-  "Invoice": "purchase.opt_invoice",
-  "Final Payment": "purchase.opt_final_payment",
-  "Credit": "purchase.opt_credit",
-  "By Sea": "purchase.opt_by_sea",
-  "By Road": "purchase.opt_by_road",
-  "By Air": "purchase.opt_by_air",
-  "20 FT": "purchase.opt_container_20ft",
-  "40 FT": "purchase.opt_container_40ft",
-  "20 FT Reefer": "purchase.opt_container_20ft_reefer",
-  "40 FT Reefer": "purchase.opt_container_40ft_reefer",
-  "Reefer Container": "purchase.opt_container_reefer",
-  "Non Reefer": "purchase.opt_container_non_reefer",
-  "Open Top": "purchase.opt_container_open_top",
-  "Flat Rack": "purchase.opt_container_flat_rack",
-  "LCL / Bulk": "purchase.opt_container_lcl_bulk"
-};
-function translateOptionLabel(lang, value) {
-  const key = OPTION_LABEL_KEYS[value];
-  return key ? t(lang, key, value) : value;
-}
-const QTY_TYPE_OPTIONS = ["BAGS", "CARTONS", "Loose", "KGS", "Ton"];
-const SIZE_OPTIONS = ["Large", "Medium", "Standard", "Small"];
-const BRAND_OPTIONS = ["Premium", "Choice", "Organic", "Standard"];
-const GOODS_OPTIONS = ["PISTACHIOS KERNEL", "CASHEW NUTS (W320)", "WALNUTS INSHELL", "ALMONDS", "HAZELNUTS"];
-const GOODS_HS_CODES = {
-  "PISTACHIOS KERNEL": "0802.51",
-  "CASHEW NUTS (W320)": "0801.32",
-  "WALNUTS INSHELL": "0802.31",
-  "ALMONDS": "0802.12",
-  "HAZELNUTS": "0802.22"
-};
+const QTY_TYPE_OPTIONS = ["BAGS", "CARTONS", "Loose", "KGS", "Ton", "PCS", "Dozen", "Box", "Pallet"];
 // NOTE: COUNTRY_OPTIONS and ORIGIN_OPTIONS removed — countries now come from Location Master.
 
-const MOCK_ACCOUNTS = [
-  { accountCode: "AE-AC-0001", accountName: "Dubai Purchase Account", cityBranchName: "Dubai Main Branch", ledgerCurrency: "AED" },
-  { accountCode: "SA-2001", accountName: "Damaan Sales Account", cityBranchName: "Dubai Sales Branch", ledgerCurrency: "AED" },
-  { accountCode: "US-AC-1002", accountName: "US Vendor Ledger Account", cityBranchName: "New York Branch", ledgerCurrency: "USD" },
-  { accountCode: "PK-AC-3001", accountName: "Kharadar Purchase Account", cityBranchName: "Karachi Central Branch", ledgerCurrency: "PKR" },
-  { accountCode: "AF-AC-4001", accountName: "Kabul Trading Account", cityBranchName: "Kabul Main Branch", ledgerCurrency: "AFN" },
-  { accountCode: "AE-AC-0002", accountName: "Sharjah Supply Account", cityBranchName: "Sharjah Branch", ledgerCurrency: "AED" },
-  { accountCode: "IN-AC-5001", accountName: "Mumbai Import Account", cityBranchName: "Mumbai Port Branch", ledgerCurrency: "INR" }
-];
 
 // API Helpers
 async function lookupAccountMaster(query, countryId, countryBranchId, cityBranchId, isSuperAdmin) {
@@ -281,77 +238,6 @@ const DEFAULT_FORM = {
 };
 
 // Seeded rows matching user's mock screenshots
-const SEEDED_GOODS = [
-  {
-    allotName: "ALT-4421",
-    goodsName: "PISTACHIOS KERNEL",
-    size: "Large",
-    brand: "Premium",
-    origin: "Iran",
-    hsCode: "0802.51",
-    qtyName: "BAGS",
-    qtyNo: 100,
-    qtyKgs: 50.00,
-    grossWeight: 5000.00,
-    emptyKgs: 0.10,
-    netWeight: 4990.00,
-    priceType: "P/KGs",
-    divideType: "D/KGs",
-    divideWeight: 1,
-    coursePrice: 12.50,
-    currencyType: "USD",
-    exchangeRate: 280.00,
-    totalAmount: 62375.00,
-    op: "*",
-    finalAmount: 17465000.00
-  },
-  {
-    allotName: "ALT-4422",
-    goodsName: "CASHEW NUTS (W320)",
-    size: "Medium",
-    brand: "Choice",
-    origin: "Vietnam",
-    hsCode: "0801.32",
-    qtyName: "CARTONS",
-    qtyNo: 50,
-    qtyKgs: 22.68,
-    grossWeight: 1134.00,
-    emptyKgs: 0.10,
-    netWeight: 1129.00,
-    priceType: "P/KGs",
-    divideType: "D/KGs",
-    divideWeight: 1,
-    coursePrice: 8.75,
-    currencyType: "USD",
-    exchangeRate: 280.00,
-    totalAmount: 9878.75,
-    op: "*",
-    finalAmount: 2766050.00
-  },
-  {
-    allotName: "ALT-4423",
-    goodsName: "WALNUTS INSHELL",
-    size: "Standard",
-    brand: "Organic",
-    origin: "USA",
-    hsCode: "0802.31",
-    qtyName: "BAGS",
-    qtyNo: 200,
-    qtyKgs: 25.00,
-    grossWeight: 5000.00,
-    emptyKgs: 0.10,
-    netWeight: 4980.00,
-    priceType: "P/KGs",
-    divideType: "D/KGs",
-    divideWeight: 1,
-    coursePrice: 6.50,
-    currencyType: "USD",
-    exchangeRate: 280.00,
-    totalAmount: 32370.00,
-    op: "*",
-    finalAmount: 9063600.00
-  }
-];
 
 function calculateItemTotals(form) {
   const qtyNo = Number(form.qtyNo || 0);
@@ -633,7 +519,7 @@ export function PurchaseOrderWizard({ session }) {
         allotName: g.allotName || "N/A",
         grade: g.size || "N/A",
         origin: g.origin || "N/A",
-        quantity: `${qtyNo.toLocaleString()} ${g.qtyName || "BAGS"}`,
+        quantity: `${qtyNo.toLocaleString()} ${translateOptionLabel(lang, g.qtyName) || translateOptionLabel(lang, "BAGS")}`,
         packing: `${qtyKgs} KG / ${emptyKgs} KG`,
         grossWt,
         netWt,
@@ -1158,7 +1044,7 @@ export function PurchaseOrderWizard({ session }) {
     }
     async function initGoods() {
       try {
-        const response = await fetch("/api/erp/goods?limit=500");
+        const response = await fetch(`/api/erp/goods?limit=500&lang=${lang}`);
         const res = await response.json();
         const goodsData = res?.data?.goods || res?.goods;
         if (!cancelled && goodsData) {
@@ -2072,7 +1958,7 @@ export function PurchaseOrderWizard({ session }) {
         }).then(res => res.json())
           .then(data => {
             if (data.ok) {
-              fetch("/api/erp/goods?limit=500")
+              fetch(`/api/erp/goods?limit=500&lang=${lang}`)
                 .then(r => r.json())
                 .then(reloadRes => {
                   const goodsData = reloadRes?.data?.goods || reloadRes?.goods;
@@ -2264,7 +2150,7 @@ Goods: ${row.goodsName}
 Brand: ${row.brand}
 Size: ${row.size}
 Origin: ${row.origin}
-Qty: ${row.qtyNo} ${row.qtyName}
+Qty: ${row.qtyNo} ${translateOptionLabel(lang, row.qtyName)}
 Price: ${row.coursePrice} ${row.currencyType}
 Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || ""}`);
   };
@@ -2844,7 +2730,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
         throw new Error(payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_create_good", "Failed to create good."));
       }
       // Refresh goods list and auto-select the new good
-      const reloadRes = await fetch("/api/erp/goods?limit=500").then(r => r.json()).catch(() => ({}));
+      const reloadRes = await fetch(`/api/erp/goods?limit=500&lang=${lang}`).then(r => r.json()).catch(() => ({}));
       const goodsData = reloadRes?.data?.goods || reloadRes?.goods;
       if (goodsData) setDbGoods(goodsData);
       setValue("goodsName", goodsName.trim().toUpperCase());
@@ -3111,7 +2997,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
 
     try {
 
-      const reloadRes = await fetch("/api/erp/goods?limit=500").then(r => r.json()).catch(() => ({}));
+      const reloadRes = await fetch(`/api/erp/goods?limit=500&lang=${lang}`).then(r => r.json()).catch(() => ({}));
       const goodsData = reloadRes?.data?.goods || reloadRes?.goods;
       if (goodsData) {
         setDbGoods(goodsData);
@@ -3151,7 +3037,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.ok) throw new Error(data?.error || data?.error?.message || t(lang, "purchase.wiz_err_update_hs_code", "Failed to update HS Code."));
       
-      const reloadRes = await fetch("/api/erp/goods?limit=500").then(r => r.json()).catch(() => ({}));
+      const reloadRes = await fetch(`/api/erp/goods?limit=500&lang=${lang}`).then(r => r.json()).catch(() => ({}));
       const goodsData = reloadRes?.data?.goods || reloadRes?.goods;
       if (goodsData) setDbGoods(goodsData);
       
@@ -3185,7 +3071,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.ok) throw new Error(data?.error || data?.error?.message || "Failed to save parameter to master.");
 
-      const reloadRes = await fetch("/api/erp/goods?limit=500").then(r => r.json()).catch(() => ({}));
+      const reloadRes = await fetch(`/api/erp/goods?limit=500&lang=${lang}`).then(r => r.json()).catch(() => ({}));
       const goodsData = reloadRes?.data?.goods || reloadRes?.goods;
       if (goodsData) setDbGoods(goodsData);
 
@@ -3226,7 +3112,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
         throw new Error(payload?.error?.message || payload?.error || `Failed to save ${type}.`);
       }
       
-      const reloadRes = await fetch("/api/erp/goods?limit=500").then(r => r.json()).catch(() => ({}));
+      const reloadRes = await fetch(`/api/erp/goods?limit=500&lang=${lang}`).then(r => r.json()).catch(() => ({}));
       const goodsData = reloadRes?.data?.goods || reloadRes?.goods;
       if (goodsData) setDbGoods(goodsData);
       
@@ -3651,12 +3537,12 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
         const emptyKgs = Number(g.emptyKgs || 0);
         const gross = qtyNo * qtyKgs;
         const net = qtyNo * (qtyKgs - emptyKgs);
-        return `  ${idx + 1}. ${g.goodsName || "N/A"} | Grade: ${g.size || "N/A"} | Brand: ${g.brand || g.allotName || "N/A"} | Qty: ${qtyNo.toLocaleString()} ${g.qtyName || "Bags"} | Gross: ${gross.toLocaleString()} KG | Net: ${net.toLocaleString()} KG | Rate: ${g.coursePrice || 0} | Amount: ${Number(g.totalAmount || 0).toLocaleString()}`;
+        return `  ${idx + 1}. ${g.goodsName || "N/A"} | Grade: ${g.size || "N/A"} | Brand: ${g.brand || g.allotName || "N/A"} | Qty: ${qtyNo.toLocaleString()} ${translateOptionLabel(lang, g.qtyName) || translateOptionLabel(lang, "Bags")} | Gross: ${gross.toLocaleString()} KG | Net: ${net.toLocaleString()} KG | Rate: ${g.coursePrice || 0} | Amount: ${Number(g.totalAmount || 0).toLocaleString()}`;
       }).join("\n");
 
       notes = `=== ${t(lang, "purchase.rpt_goods_header", "GOODS & CARGO WEIGHT SPECIFICATION")} ===\n` +
         `• ${t(lang, "purchase.rpt_total_items", "Total Goods Lots")}: ${goodsEntries.length} Item(s)\n` +
-        `• ${t(lang, "purchase.rpt_total_qty", "Total Quantity")}: ${Number(reportTotals.totalQty || 0).toLocaleString()} ${goodsEntries[0]?.qtyName || "Units"}\n` +
+        `• ${t(lang, "purchase.rpt_total_qty", "Total Quantity")}: ${Number(reportTotals.totalQty || 0).toLocaleString()} ${translateOptionLabel(lang, goodsEntries[0]?.qtyName) || t(lang, "uom.units", "Units")}\n` +
         `• ${t(lang, "purchase.rpt_total_gross", "Total Gross Weight")}: ${Number(reportTotals.totalGross || 0).toLocaleString()} KGS\n` +
         `• ${t(lang, "purchase.rpt_total_net", "Total Net Weight")}: ${Number(reportTotals.totalNet || 0).toLocaleString()} KGS\n` +
         `• ${t(lang, "purchase.rpt_total_empty", "Total Deductions (Empty)")}: ${Number(reportTotals.totalDeductions || 0).toLocaleString()} KGS\n` +
@@ -3980,7 +3866,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
 
               const summaryTotals = {
                 totalItems: totalItemsCount,
-                totalQtyStr: `${sumQty.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })} ${displayGoods[0]?.qtyName || "BAGS"}`,
+                totalQtyStr: `${sumQty.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })} ${translateOptionLabel(lang, displayGoods[0]?.qtyName) || translateOptionLabel(lang, "BAGS")}`,
                 grossWeightStr: `${(sumGross > 100 ? sumGross / 1000 : sumGross).toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })} MT`,
                 netWeightStr: `${(sumNet > 100 ? sumNet / 1000 : sumNet).toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })} MT`,
                 purchaseAmountStr: `${sumAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${primaryCurr}`,
@@ -4299,7 +4185,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                               <td className="p-2 text-center font-mono text-slate-600 dark:text-slate-400">{row.hsCode || "-"}</td>
                               <td className="p-2 text-center text-slate-700 dark:text-slate-300">{row.origin || form.originCountry || "United Arab Emirates"}</td>
                               <td className="p-2 text-right font-mono font-bold text-slate-900 dark:text-slate-100">{Number(row.qtyNo || 0).toLocaleString(undefined, { minimumFractionDigits: 3 })}</td>
-                              <td className="p-2 text-center font-semibold text-slate-600 dark:text-slate-400">{row.qtyName || "BAGS"}</td>
+                              <td className="p-2 text-center font-semibold text-slate-600 dark:text-slate-400">{translateOptionLabel(lang, row.qtyName) || translateOptionLabel(lang, "BAGS")}</td>
                               <td className="p-2 text-right font-mono text-slate-800 dark:text-slate-200">{Number(row.coursePrice || row.price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                               <td className="p-2 text-right font-mono font-bold text-slate-900 dark:text-slate-100">{Number(row.totalAmount || row.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                               <td className="p-2 text-center font-mono text-slate-600 dark:text-slate-400">{Number(row.exchangeRate || form.exchangeRate || 1).toFixed(5)}</td>
@@ -5083,10 +4969,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                     }
                                   }
                                 }}
-                                options={[
-                                  ...dbGoods.map(g => ({ label: g.goods_name || g.goodsName, value: g.goods_name || g.goodsName })),
-                                  ...GOODS_OPTIONS.filter(go => !dbGoods.some(g => (g.goods_name || g.goodsName) === go)).map(g => ({ label: g, value: g }))
-                                ]}
+                                options={dbGoods.map(g => ({ label: g.goods_name || g.goodsName, value: g.goods_name || g.goodsName }))}
                                 placeholder={t(lang, "purchase.select_goods_name", "Select Goods")}
                                 addOptionLabel={t(lang, "purchase.add_new_goods_item", "Add New Good")}
                               />
@@ -5176,7 +5059,6 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                     const brands = Array.from(new Set([
                                       ...(selGood?.master_brands || []),
                                       ...(selGood?.variations || []).map(v => v.brand).filter(Boolean),
-                                      ...BRAND_OPTIONS,
                                       ...dbGoods.flatMap(g => [...(g.master_brands || []), ...(g.variations || []).map(v => v.brand)]).filter(Boolean),
                                       form.brand
                                     ].filter(Boolean))).sort();
@@ -5229,7 +5111,6 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                     const sizes = Array.from(new Set([
                                       ...(selGood?.master_sizes || []),
                                       ...(selGood?.variations || []).map(v => v.size).filter(Boolean),
-                                      ...SIZE_OPTIONS,
                                       ...dbGoods.flatMap(g => [...(g.master_sizes || []), ...(g.variations || []).map(v => v.size)]).filter(Boolean),
                                       form.size
                                     ].filter(Boolean))).sort();
@@ -5280,7 +5161,8 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                     const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
                                     const varieties = Array.from(new Set([
                                       ...(selGood?.master_varieties || []),
-                                      "Nonpareil", "Carmel", "Independence", "Butte", "Marcona", "Aldrich", "Fritz", "Monterey", "Padre", "Price", "Sonora", "Wood Colony",
+                                      ...(selGood?.variations || []).map(v => v.variety).filter(Boolean),
+                                      ...dbGoods.flatMap(g => (g.variations || []).map(v => v.variety)).filter(Boolean),
                                       form.variety
                                     ].filter(Boolean))).sort();
                                     return varieties.map(v => ({ label: v, value: v }));
@@ -5318,7 +5200,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                       setValue("qtyName", val);
                                     }
                                   }}
-                                  options={Array.from(new Set([...QTY_TYPE_OPTIONS, ...customQtyNames, form.qtyName])).filter(Boolean).map(q => ({ label: q, value: q }))}
+                                  options={Array.from(new Set([...QTY_TYPE_OPTIONS, ...customQtyNames, form.qtyName])).filter(Boolean).map(q => ({ label: translateOptionLabel(lang, q), value: q }))}
                                   placeholder={t(lang, "purchase.select_qty_name", "Select Qty Name")}
                                   addOptionLabel={t(lang, "purchase.add_new_qty_name", "Add New Qty Name")}
                                 />
@@ -5951,7 +5833,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                     <td className="px-3 py-2 text-center font-mono text-slate-400">{row.hsCode}</td>
                                     <td className="px-3 py-2 text-center font-semibold">{row.origin}</td>
                                     <td className="px-3 py-2 text-right font-mono font-bold">{Number(row.qtyNo || 0).toLocaleString()}</td>
-                                    <td className="px-3 py-2 text-center font-semibold">{row.qtyName}</td>
+                                    <td className="px-3 py-2 text-center font-semibold">{translateOptionLabel(lang, row.qtyName)}</td>
                                     <td className="px-3 py-2 text-right font-mono font-bold text-slate-600 dark:text-slate-300">{Number(row.coursePrice || row.price || 0).toFixed(2)}</td>
                                     <td className="px-3 py-2 text-right font-mono font-black text-amber-600 dark:text-amber-400">{Number(row.totalAmount || row.amount || 0).toLocaleString()}</td>
                                     <td className="px-3 py-2 text-center font-mono text-slate-400">{row.op || "*"} {row.exchangeRate}</td>
@@ -6213,7 +6095,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                         <td className="p-2.5 font-bold text-slate-900 border-r border-slate-200">{row.goodsName}</td>
                         <td className="p-2.5 border-r border-slate-200 text-slate-700">{row.brand}</td>
                         <td className="p-2.5 border-r border-slate-200 text-center text-slate-700">{row.origin}</td>
-                        <td className="p-2.5 text-right border-r border-slate-200 font-mono font-bold text-slate-900">{Number(row.qtyNo || 0).toLocaleString()} {row.qtyName || ""}</td>
+                        <td className="p-2.5 text-right border-r border-slate-200 font-mono font-bold text-slate-900">{Number(row.qtyNo || 0).toLocaleString()} {translateOptionLabel(lang, row.qtyName) || ""}</td>
                         <td className="p-2.5 text-right border-r border-slate-200 font-mono text-slate-700">{Number(row.grossWeight || (Number(row.qtyNo || 0) * Number(row.qtyKgs || 0)) || 0).toFixed(2)}</td>
                         <td className="p-2.5 text-right border-r border-slate-200 font-mono font-bold text-slate-800">{Number(row.netWeight || (Number(row.qtyNo || 0) * (Number(row.qtyKgs || 0) - Number(row.emptyKgs || 0))) || 0).toFixed(2)}</td>
                         <td className="p-2.5 text-right border-r border-slate-200 font-mono text-slate-700">{Number(row.coursePrice || row.price || 0).toFixed(2)}</td>

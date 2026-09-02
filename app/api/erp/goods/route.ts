@@ -5,8 +5,8 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { goodsCreateSchema } from "@/lib/api/erp-validation";
 import { goodsService } from "@/lib/services/goods-service";
-import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
-import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import { localizeRecordNames, localizeRecordFields } from "@/lib/i18n/localize-records";
+import { getRequestLanguage } from "@/lib/i18n/server";
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,18 +19,65 @@ export async function GET(request: NextRequest) {
 
     const query = request.nextUrl.searchParams.get("q");
     const limit = request.nextUrl.searchParams.get("limit");
-    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
+    // Prefer an explicit ?lang= / ?language=, else the erp_lang cookie — NEVER a bare "en"
+    // default, which is what left goods dropdowns in English when a caller forgot the param.
+    const lang = await getRequestLanguage(
+      request.nextUrl.searchParams.get("lang") || request.nextUrl.searchParams.get("language"),
+    );
 
     const result = await goodsService.search({
       query,
       limit: limit ? Number(limit) : 50
     });
 
-    // Always resolve — see customers/[id]/route.ts for why skipping lang === "en" would leak
-    // non-English source text into the English view.
+    // Localise DISPLAY text for the active language (so the Goods registry, which
+    // renders `goods_name` / variation values directly, follows the language) —
+    // while PRESERVING the canonical value under `*_original`, which the Purchase /
+    // Sales / Local wizards use as the stable identity to store + match on. Skipping
+    // lang === "en" would leak non-English source text into the English view
+    // (see customers/[id]/route.ts), so we always resolve.
     let goods: any[] = (result as any).goods ?? [];
     if (Array.isArray(goods) && goods.length > 0) {
-      goods = await localizeRecordNames<any>(goods, "goods", "goods_name", lang);
+      // snapshot canonical values before any mutation
+      const orig = goods.map((g: any) => ({
+        id: g.id,
+        goods_name: g.goods_name,
+        variations: (g.variations || []).map((v: any) => ({ id: v.id, size: v.size, brand: v.brand, variety: v.variety })),
+      }));
+      const origById = new Map(orig.map((g) => [g.id, g]));
+      const origVarById = new Map<string, any>();
+      for (const g of orig) for (const v of g.variations) origVarById.set(v.id, v);
+
+      goods = await localizeRecordNames<any>(goods, "goods", "goods_name", lang).catch(() => goods);
+
+      const variationRows = goods.flatMap((g: any) =>
+        Array.isArray(g.variations) ? g.variations.map((v: any) => ({ id: v.id, size: v.size, brand: v.brand, variety: v.variety })) : [],
+      );
+      const locVarById = new Map<string, any>();
+      if (variationRows.length) {
+        const localizedVars = await localizeRecordFields(variationRows, "goods_variations", ["size", "brand", "variety"], lang, { phraseFallback: true }).catch(() => variationRows);
+        for (const v of localizedVars as any[]) locVarById.set(v.id, v);
+      }
+
+      goods = goods.map((g: any) => ({
+        ...g,
+        goods_name_original: origById.get(g.id)?.goods_name ?? g.goods_name,
+        variations: Array.isArray(g.variations)
+          ? g.variations.map((v: any) => {
+              const lv = locVarById.get(v.id);
+              const ov = origVarById.get(v.id);
+              return {
+                ...v,
+                size: lv?.size ?? v.size,
+                brand: lv?.brand ?? v.brand,
+                variety: lv?.variety ?? v.variety,
+                size_original: ov?.size ?? v.size,
+                brand_original: ov?.brand ?? v.brand,
+                variety_original: ov?.variety ?? v.variety,
+              };
+            })
+          : g.variations,
+      }));
     }
 
     return apiOk({ ...(result as any), goods });

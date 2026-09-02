@@ -97,6 +97,12 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "meeting_notes", mode: "translate" },
     { field: "requirements", mode: "translate" },
   ],
+  // ── Consignment Stock & Sales Register (tracking only) ──
+  consignment: [
+    { field: "party_name", mode: "transliterate" },
+    { field: "title", mode: "translate" },
+    { field: "notes", mode: "translate" },
+  ],
   business_edit_invoices: [
     { field: "party_name", mode: "transliterate" },
     { field: "destination", mode: "translate" },
