@@ -670,7 +670,7 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
         subtitle={channelLabels[channel].subtitle}
         actions={
           <>
-            <Button type="button" className="h-9 rounded-lg px-3" onClick={openCompose}>
+            <Button type="button" className="h-9 rounded-lg bg-blue-600 px-3 text-white shadow-sm hover:bg-blue-700" onClick={openCompose}>
               <Plus className="mr-2 h-4 w-4" aria-hidden />
               {tt("email_mgmt.compose", "Compose")}
             </Button>
@@ -849,15 +849,15 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                     type="button"
                     onClick={() => onSelectedFolder(folder.key)}
                     className={cn(
-                      "flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left text-sm transition",
+                      "flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 text-left text-sm transition",
                       active ? "border-primary bg-primary/10 text-primary" : "border-transparent hover:bg-muted/60"
                     )}
                   >
-                    <span className="flex items-center gap-2">
-                      <Icon className="h-4 w-4" aria-hidden />
-                      {folder.label}
+                    <span className="flex min-w-0 items-center gap-2">
+                      <Icon className="h-4 w-4 shrink-0" aria-hidden />
+                      <span className="truncate">{folder.label}</span>
                     </span>
-                    <span className="rounded-full bg-muted px-2 py-0.5 text-xs tabular-nums">{folder.count}</span>
+                    <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs tabular-nums">{folder.count}</span>
                   </button>
                 );
               })}
@@ -866,15 +866,15 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                 type="button"
                 onClick={() => onSelectedFolder("dashboard")}
                 className={cn(
-                  "flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left text-sm transition",
+                  "flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 text-left text-sm transition",
                   selectedFolder === "dashboard" ? "border-primary bg-primary/10 text-primary" : "border-transparent hover:bg-muted/60"
                 )}
               >
-                <span className="flex items-center gap-2">
-                  <Globe2 className="h-4 w-4" aria-hidden />
-                  {tt("email_mgmt.branch_settings", "Branch Settings")}
+                <span className="flex min-w-0 items-center gap-2">
+                  <Globe2 className="h-4 w-4 shrink-0" aria-hidden />
+                  <span className="truncate">{tt("email_mgmt.branch_settings", "Branch Settings")}</span>
                 </span>
-                <span className="rounded bg-muted px-2 py-0.5 text-[10px] font-bold text-foreground uppercase tracking-wider">{tt("email_mgmt.dashboard_label", "Dashboard")}</span>
+                <span className="shrink-0 rounded bg-muted px-2 py-0.5 text-[10px] font-bold text-foreground uppercase tracking-wider">{tt("email_mgmt.dashboard_label", "Dashboard")}</span>
               </button>
             </div>
 
@@ -1536,8 +1536,8 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                   <Send className="mr-2 h-4 w-4" aria-hidden />
                   {saving ? tt("email_mgmt.sending", "Sending...") : tt("email_mgmt.send_email", "Send Email")}
                 </Button>
-                <Button type="button" variant="outline" className="w-full" disabled={saving || configLoading} onClick={() => saveCompose("draft")}>
-                  <Pencil className="mr-2 h-4 w-4" aria-hidden />
+                <Button type="button" variant="outline" className="h-10 w-full leading-none" disabled={saving || configLoading} onClick={() => saveCompose("draft")}>
+                  <Pencil className="mr-2 h-4 w-4 shrink-0" aria-hidden />
                   {tt("email_mgmt.save_draft", "Save Draft")}
                 </Button>
               </div>
