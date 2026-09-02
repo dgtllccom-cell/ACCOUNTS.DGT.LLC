@@ -158,6 +158,18 @@ function monthStartIso() {
   return d.toISOString().slice(0, 10);
 }
 
+/**
+ * Default lookback for the general report. "This month" is too narrow — early in a
+ * month (or when bookkeeping is a few days behind) it yields zero rows, which
+ * disables Print Preview and makes the report look broken. A 120-day window
+ * reliably contains recent activity while staying performant.
+ */
+function defaultReportFromIso() {
+  const d = new Date();
+  d.setDate(d.getDate() - 120);
+  return d.toISOString().slice(0, 10);
+}
+
 function yesterdayIso() {
   const d = new Date();
   d.setDate(d.getDate() - 1);
@@ -276,7 +288,7 @@ export function LedgerReportView({
   const [datePreset, setDatePreset] = useState<"today" | "yesterday" | "this_week" | "this_month" | "custom">(
     initialFromDate || initialToDate ? "custom" : "this_month"
   );
-  const [fromDate, setFromDate] = useState(initialFromDate ?? monthStartIso());
+  const [fromDate, setFromDate] = useState(initialFromDate ?? defaultReportFromIso());
   const [toDate, setToDate] = useState(initialToDate ?? todayIso());
   const [ledgerId, setLedgerId] = useState(initialLedgerId ?? "");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -308,7 +320,7 @@ export function LedgerReportView({
       }
     }
     const list = Array.from(seen.entries()).map(([value, label]) => ({ value, label }));
-    return [{ value: "", label: "All Countries" }, ...list];
+    return [{ value: "", label: t(effectiveLang, "lgr.all_countries", "All Countries") }, ...list];
   }, [rows]);
 
   const branchOptions = useMemo(() => {
@@ -321,7 +333,7 @@ export function LedgerReportView({
       }
     }
     const list = Array.from(seen.entries()).map(([value, label]) => ({ value, label }));
-    return [{ value: "", label: "All Branches" }, ...list];
+    return [{ value: "", label: t(effectiveLang, "lgr.all_branches", "All Branches") }, ...list];
   }, [rows]);
 
   const userOptions = useMemo(() => {
@@ -332,7 +344,7 @@ export function LedgerReportView({
       }
     }
     const list = Array.from(seen).map((u) => ({ value: u, label: u }));
-    return [{ value: "", label: "All Users" }, ...list];
+    return [{ value: "", label: t(effectiveLang, "lgr.all_users", "All Users") }, ...list];
   }, [statement?.lines]);
 
   const filteredLedgers = useMemo(() => {
@@ -838,9 +850,9 @@ export function LedgerReportView({
                 value={statusFilter}
                 placeholder={t(lang, "common.all_statuses", "All Statuses")}
                 options={[
-                  { value: "all", label: "All Statuses" },
-                  { value: "active", label: "Active" },
-                  { value: "inactive", label: "Inactive" }
+                  { value: "all", label: t(effectiveLang, "lgr.all_statuses", "All Statuses") },
+                  { value: "active", label: t(effectiveLang, "lgr.active", "Active") },
+                  { value: "inactive", label: t(effectiveLang, "lgr.inactive", "Inactive") }
                 ]}
                 onValueChange={(value) => {
                   setStatusFilter(value as "all" | "active" | "inactive");
@@ -1258,12 +1270,13 @@ export function LedgerReportView({
               <div className="text-xs text-muted-foreground dark:text-slate-500">
                 {t(effectiveLang, "ledger.rows")}: <b className="text-foreground dark:text-slate-200">{tableRows.length}</b>
               </div>
-              <Button 
-                type="button" 
-                variant="outline" 
-                size="sm" 
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
                 disabled={tableRows.length === 0 || loading}
-                className="gap-2 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:text-blue-800 dark:bg-blue-900/20 dark:border-blue-800/50 dark:text-blue-300 dark:hover:bg-blue-900/40 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer" 
+                title={tableRows.length === 0 ? t(effectiveLang, "ledger.print_needs_data", "Load ledger data for a date range that has entries, then print.") : undefined}
+                className="gap-2 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:text-blue-800 dark:bg-blue-900/20 dark:border-blue-800/50 dark:text-blue-300 dark:hover:bg-blue-900/40 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 onClick={() => setPrintMode(true)}
               >
                 <Printer className="h-4 w-4" />
@@ -1276,16 +1289,16 @@ export function LedgerReportView({
           {(() => {
             const columns: ReportColumn<GeneralReportRow>[] = [
               { key: "index", header: "SR#", width: "40px", align: "center", render: (_, idx) => (page - 1) * pageSize + idx + 1 },
-              { key: "startDate", header: "Starting Date", align: "center", render: () => formatDateString(fromDate) },
-              { key: "lastDate", header: "Last Date", align: "center", render: () => formatDateString(toDate) },
-              { key: "countryName", header: "Country", render: (r) => r.countryName || "-" },
-              { key: "branch", header: "Branch", render: (r) => buildBranchLabel(r) },
-              { key: "accountCode", header: "Account No", render: (r) => r.accountCode || r.ledgerCode },
-              { key: "accountName", header: "Account Name", render: (r) => r.accountName || r.ledgerName },
-              { key: "entries", header: "Entries", align: "right" },
+              { key: "startDate", header: t(effectiveLang, "lgr.start_date", "Starting Date"), align: "center", render: () => formatDateString(fromDate) },
+              { key: "lastDate", header: t(effectiveLang, "lgr.last_date", "Last Date"), align: "center", render: () => formatDateString(toDate) },
+              { key: "countryName", header: t(effectiveLang, "lgr.country", "Country"), render: (r) => r.countryName || "-" },
+              { key: "branch", header: t(effectiveLang, "lgr.branch", "Branch"), render: (r) => buildBranchLabel(r) },
+              { key: "accountCode", header: t(effectiveLang, "lgr.account_no", "Account No"), render: (r) => r.accountCode || r.ledgerCode },
+              { key: "accountName", header: t(effectiveLang, "lgr.account_name", "Account Name"), render: (r) => r.accountName || r.ledgerName },
+              { key: "entries", header: t(effectiveLang, "lgr.entries", "Entries"), align: "right" },
               {
                 key: "credit",
-                header: "Credit",
+                header: t(effectiveLang, "lgr.credit", "Credit"),
                 align: "right",
                 render: (r) => (
                   <span className={cn("font-medium whitespace-nowrap", r.credit > 0 ? "text-emerald-600 dark:text-emerald-400" : "")}>
@@ -1295,7 +1308,7 @@ export function LedgerReportView({
               },
               {
                 key: "debit",
-                header: "Debit",
+                header: t(effectiveLang, "lgr.debit", "Debit"),
                 align: "right",
                 render: (r) => (
                   <span className={cn("font-medium whitespace-nowrap", r.debit > 0 ? "text-rose-500" : "")}>
@@ -1305,7 +1318,7 @@ export function LedgerReportView({
               },
               {
                 key: "balance",
-                header: "Balance",
+                header: t(effectiveLang, "lgr.balance", "Balance"),
                 align: "right",
                 render: (r) => (
                   <span className={cn("font-bold whitespace-nowrap", r.balance !== 0 ? "text-blue-600 dark:text-blue-400" : "")}>
@@ -1316,7 +1329,7 @@ export function LedgerReportView({
               ...(canViewConversionColumns ? ([
                 {
                   key: "usdCredit",
-                  header: "Credit (USD)",
+                  header: t(effectiveLang, "lgr.credit_usd", "Credit (USD)"),
                   align: "right",
                   render: (r: GeneralReportRow) => (
                     <span className={cn("font-medium whitespace-nowrap", r.usdCredit && r.usdCredit > 0 ? "text-emerald-600 dark:text-emerald-400" : "")}>
@@ -1326,7 +1339,7 @@ export function LedgerReportView({
                 },
                 {
                   key: "usdDebit",
-                  header: "Debit (USD)",
+                  header: t(effectiveLang, "lgr.debit_usd", "Debit (USD)"),
                   align: "right",
                   render: (r: GeneralReportRow) => (
                     <span className={cn("font-medium whitespace-nowrap", r.usdDebit && r.usdDebit > 0 ? "text-rose-500" : "")}>
@@ -1336,7 +1349,7 @@ export function LedgerReportView({
                 },
                 {
                   key: "usdBalance",
-                  header: "Balance (USD)",
+                  header: t(effectiveLang, "lgr.balance_usd", "Balance (USD)"),
                   align: "right",
                   render: (r: GeneralReportRow) => (
                     <span className={cn("font-bold whitespace-nowrap", r.usdBalance !== 0 ? "text-blue-600 dark:text-blue-400" : "")}>
@@ -1347,7 +1360,7 @@ export function LedgerReportView({
               ] as ReportColumn<GeneralReportRow>[]) : []),
               {
                 key: "action",
-                header: "Action",
+                header: t(effectiveLang, "lgr.action", "Action"),
                 align: "center",
                 render: (row) => (
                   <Button

@@ -64,6 +64,13 @@ function monthStartIso() {
   return d.toISOString().slice(0, 10);
 }
 
+/** 120-day lookback — "this month" is too narrow and often yields an empty statement. */
+function defaultStatementFromIso() {
+  const d = new Date();
+  d.setDate(d.getDate() - 120);
+  return d.toISOString().slice(0, 10);
+}
+
 function weekStartIso() {
   const d = new Date();
   const day = d.getDay(); // 0=Sun
@@ -167,7 +174,7 @@ export function LedgerReportView({
 
   const [accountNoFilter, setAccountNoFilter] = useState("");
   const [branchFilter, setBranchFilter] = useState<"all" | string>("all");
-  const [fromDate, setFromDate] = useState(initialFromDate ?? monthStartIso());
+  const [fromDate, setFromDate] = useState(initialFromDate ?? defaultStatementFromIso());
   const [toDate, setToDate] = useState(initialToDate ?? todayIso());
   const [datePreset, setDatePreset] = useState<DatePresetKey>(
     initialFromDate || initialToDate ? "custom" : "this_month"
@@ -617,17 +624,17 @@ export function LedgerReportView({
           <div className="flex items-center gap-2">
             <JournalPrintButton
               title={pageTitle}
-              subtitle={`Ledger Code: ${header?.ledgerCode || ""} | ${fromDate} to ${toDate}`}
+              subtitle={`${t(lang, "lgr.account_no", "Account No")}: ${header?.ledgerCode || ""} | ${fromDate} — ${toDate}`}
               columns={[
-                { key: "date", label: "Date", format: "date" },
-                { key: "voucherNo", label: "Voucher No" },
-                { key: "type", label: "Type", format: "status" },
-                { key: "description", label: "Description" },
-                { key: "debit", label: "Debit (FC)", format: "currency" },
-                { key: "credit", label: "Credit (FC)", format: "currency" },
-                { key: "debitLc", label: "Debit (LC)", format: "currency" },
-                { key: "creditLc", label: "Credit (LC)", format: "currency" },
-                { key: "balanceLc", label: "Balance (LC)", format: "currency" },
+                { key: "date", label: t(lang, "lgr.date", "Date"), format: "date" },
+                { key: "voucherNo", label: t(lang, "lgr.voucher_no", "Voucher No.") },
+                { key: "type", label: t(lang, "lgr.type", "Type"), format: "status" },
+                { key: "description", label: t(lang, "lgr.description", "Description") },
+                { key: "debit", label: t(lang, "lgr.debit_fc", "Debit (FC)"), format: "currency" },
+                { key: "credit", label: t(lang, "lgr.credit_fc", "Credit (FC)"), format: "currency" },
+                { key: "debitLc", label: t(lang, "lgr.debit_lc", "Debit (LC)"), format: "currency" },
+                { key: "creditLc", label: t(lang, "lgr.credit_lc", "Credit (LC)"), format: "currency" },
+                { key: "balanceLc", label: t(lang, "lgr.balance_lc", "Balance (LC)"), format: "currency" },
               ]}
               rows={filteredLines as unknown as Record<string, unknown>[]}
               summary={{
@@ -862,26 +869,26 @@ export function LedgerReportView({
 
         const columns: ReportColumn<LedgerStatementLine>[] = [
           { key: "index", header: "SR#", width: "40px", align: "center", render: (_, idx) => (page - 1) * pageSize + idx + 1 },
-          { key: "entryDate", header: "Date", align: "center", width: "80px" },
-          { key: "sourceId", header: "Voucher No.", align: "center", render: (r) => r.sourceId.slice(0, 8) },
-          { key: "referenceNo", header: "Manual Bill No.", align: "center", render: (r) => safeText(r.referenceNo) },
-          { key: "sourceTable", header: "System Bill No.", align: "center", render: (r) => r.sourceTable === "roznamcha_entries" ? "ROZ" : "LED" },
-          { key: "createdByName", header: "User", align: "center", render: (r) => safeText(r.createdByName || (r.createdById ? r.createdById.slice(0, 8) : "-")) },
-          { key: "description", header: "Narration / Description", render: (r) => safeText(r.description) },
-          { key: "currency", header: "Currency", align: "center", render: (r) => r.currency || ledgerCurrency },
-          { key: "debit", header: "Debit", align: "right", render: (r) => r.debit > 0 ? fmtNumber(r.debit) : "-" },
-          { key: "credit", header: "Credit", align: "right", render: (r) => r.credit > 0 ? fmtNumber(r.credit) : "-" },
-          { key: "runningBalance", header: "Balance", align: "right", render: (r) => fmtNumber(r.runningBalance) },
+          { key: "entryDate", header: t(lang, "lgr.date", "Date"), align: "center", width: "80px" },
+          { key: "sourceId", header: t(lang, "lgr.voucher_no", "Voucher No."), align: "center", render: (r) => r.sourceId.slice(0, 8) },
+          { key: "referenceNo", header: t(lang, "lgr.manual_bill_no", "Manual Bill No."), align: "center", render: (r) => safeText(r.referenceNo) },
+          { key: "sourceTable", header: t(lang, "lgr.system_bill_no", "System Bill No."), align: "center", render: (r) => r.sourceTable === "roznamcha_entries" ? "ROZ" : "LED" },
+          { key: "createdByName", header: t(lang, "lgr.user", "User"), align: "center", render: (r) => safeText(r.createdByName || (r.createdById ? r.createdById.slice(0, 8) : "-")) },
+          { key: "description", header: t(lang, "lgr.narration", "Narration / Description"), render: (r) => safeText(r.description) },
+          { key: "currency", header: t(lang, "lgr.currency", "Currency"), align: "center", render: (r) => r.currency || ledgerCurrency },
+          { key: "debit", header: t(lang, "lgr.debit", "Debit"), align: "right", render: (r) => r.debit > 0 ? fmtNumber(r.debit) : "-" },
+          { key: "credit", header: t(lang, "lgr.credit", "Credit"), align: "right", render: (r) => r.credit > 0 ? fmtNumber(r.credit) : "-" },
+          { key: "runningBalance", header: t(lang, "lgr.balance", "Balance"), align: "right", render: (r) => fmtNumber(r.runningBalance) },
           ...(canViewConversionColumns ? ([
             {
               key: "usdRate",
-              header: "Exchange Rate",
+              header: t(lang, "lgr.exchange_rate", "Exchange Rate"),
               align: "right",
               render: (r: LedgerStatementLine) => fmtRate(effectiveUsdRateForDisplay ?? (r.usdRate || 1))
             },
             {
               key: "finalAmount",
-              header: "Final Amount",
+              header: t(lang, "lgr.final_amount", "Final Amount"),
               align: "right",
               render: (r: LedgerStatementLine) => {
                 const rate = effectiveUsdRateForDisplay ?? (r.usdRate || 1);
