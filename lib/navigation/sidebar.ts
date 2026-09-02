@@ -802,6 +802,12 @@ export const sidebarTree: SidebarNode[] = [
     ]
   },
   {
+    key: "consignment",
+    labelKey: "nav.consignment_register",
+    iconKey: "package",
+    href: "/dashboard/consignment" as Route,
+  },
+  {
     key: "general-office",
     labelKey: "nav.general_office_management",
     iconKey: "users",
