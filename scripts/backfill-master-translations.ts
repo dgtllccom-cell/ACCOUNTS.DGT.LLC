@@ -96,6 +96,13 @@ const TARGETS: Array<[string, string, Mode]> = ([
   ["products", "product_name", "translate"],
   ["products", "product_description", "translate"],
   ["goods_variations", "brand", "translate"],
+  // Goods master + variation size/variety: CREATE path registered goods_name/variety but
+  // most existing rows have only a transliteration (or nothing) in the non-EN columns, so
+  // a language switch on Purchase/Sales/Local dropdowns fell through to English / mangled
+  // phrase output. Backfill genuine 5-language values.
+  ["goods", "goods_name", "translate"],
+  ["goods_variations", "size", "translate"],
+  ["goods_variations", "variety", "translate"],
   ["expenses_bills", "bill_title", "translate"]
 ] as Array<[string, string, Mode]>).filter(
   ([table, field]) => (!onlyTable || table === onlyTable) && (!onlyField || field === onlyField)

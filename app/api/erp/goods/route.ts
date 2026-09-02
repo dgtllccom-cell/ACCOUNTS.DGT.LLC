@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
       );
       const locVarById = new Map<string, any>();
       if (variationRows.length) {
-        const localizedVars = await localizeRecordFields(variationRows, "goods_variations", ["size", "brand", "variety"], lang, { phraseFallback: true }).catch(() => variationRows);
+        const localizedVars = await localizeRecordFields(variationRows, "goods_variations", ["size", "brand", "variety"], lang, { noPhrase: true }).catch(() => variationRows);
         for (const v of localizedVars as any[]) locVarById.set(v.id, v);
       }
 

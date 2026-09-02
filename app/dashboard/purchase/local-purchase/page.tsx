@@ -70,7 +70,7 @@ export default async function LocalPurchasePage() {
           "goods_variations",
           ["size", "brand", "variety"],
           lang,
-          { phraseFallback: true },
+          { noPhrase: true },
         );
         const byId = new Map(locVars.map((v: any) => [v.id, v]));
         goodsList = goodsList.map((g: any) => ({

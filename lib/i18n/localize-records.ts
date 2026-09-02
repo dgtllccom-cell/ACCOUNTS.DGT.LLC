@@ -280,7 +280,16 @@ export async function localizeRecordFields<T extends { id: string }>(
   table: string,
   fields: (keyof T & string)[],
   lang: SupportedLanguage,
-  options?: { phraseFallback?: boolean }
+  options?: {
+    phraseFallback?: boolean;
+    /**
+     * Disable Tier-2b phrase substitution entirely (even for non-English). Use for
+     * short proper-name-ish fields (brand / variety / size codes) where the token-level
+     * dictionary rewrite does more harm than good — a genuine record translation still
+     * applies, otherwise the raw value is kept untouched instead of being mangled.
+     */
+    noPhrase?: boolean;
+  }
 ): Promise<T[]> {
   if (!records?.length || !fields.length) return records;
   const dbUrl = process.env.DATABASE_URL;
@@ -321,7 +330,7 @@ export async function localizeRecordFields<T extends { id: string }>(
         if (!resolved && dict) {
           const d = dict.get(rawValue.toLowerCase());
           if (d) resolved = genuine(d[targetCol as keyof DictRow] as string, rawValue, (d.english_text || "").trim(), isEn);
-          if (!resolved && (options?.phraseFallback || !isEn)) {
+          if (!resolved && !options?.noPhrase && (options?.phraseFallback || !isEn)) {
             const phrase = phraseTranslate(dict, rawValue, lang);
             if (phrase) resolved = phrase;
           }
