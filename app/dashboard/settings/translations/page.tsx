@@ -256,7 +256,7 @@ export default function TranslationsManagementPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button onClick={handleOpenAddModal} className="flex items-center gap-2">
+          <Button onClick={handleOpenAddModal} className="flex items-center gap-2 bg-blue-600 text-white shadow-sm hover:bg-blue-700">
             <Plus className="h-4 w-4" /> Add Translation Key
           </Button>
           <Button variant="outline" onClick={handleExportJson} className="flex items-center gap-2">

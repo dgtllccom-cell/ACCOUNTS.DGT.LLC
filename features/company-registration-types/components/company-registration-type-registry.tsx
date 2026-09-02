@@ -109,9 +109,9 @@ export function CompanyRegistrationTypeRegistry() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4 pt-4">
-        <div className="flex gap-2">
-          <Input placeholder={t(lang, "creg.crtr_search_placeholder", "Search registration types...")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="max-w-md" />
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)} className="px-3 py-2 border rounded-md bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-sm">
+        <div className="flex items-center gap-2">
+          <Input placeholder={t(lang, "creg.crtr_search_placeholder", "Search registration types...")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="h-9 max-w-md" />
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)} className="h-9 shrink-0 rounded-md border bg-white px-3 text-sm dark:bg-slate-950 border-slate-200 dark:border-slate-800">
             <option value="all">{t(lang, "acct.status_all", "All Status")}</option>
             <option value="Active">{t(lang, "acct.active_only", "Active Only")}</option>
             <option value="Inactive">{t(lang, "acct.inactive_only", "Inactive Only")}</option>

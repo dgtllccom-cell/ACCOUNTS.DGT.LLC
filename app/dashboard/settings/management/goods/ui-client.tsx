@@ -389,7 +389,7 @@ export default function GoodsManagementClient({ session }: { session: { preferre
 
           <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t pt-2">
             <div className="text-[11px] text-muted-foreground">{s.t("hint_unique", "Goods records require a unique CHS Code and a Name. Variations are added below.")}</div>
-            <Button type="button" className="h-8 rounded-md text-xs font-bold px-4" onClick={createGoods} disabled={busy}>
+            <Button type="button" className="h-8 rounded-md bg-blue-600 px-4 text-xs font-bold text-white shadow-sm hover:bg-blue-700" onClick={createGoods} disabled={busy}>
               {busy ? (
                 s.t("saving", "Saving…")
               ) : (

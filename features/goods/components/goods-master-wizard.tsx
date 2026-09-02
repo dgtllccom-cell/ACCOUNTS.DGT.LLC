@@ -108,7 +108,7 @@ export function GoodsMasterWizard({
             type="button"
             onClick={handleSave}
             disabled={loading}
-            className="px-4 py-2 text-xs rounded bg-primary text-primary-foreground font-bold hover:opacity-90 transition-opacity disabled:opacity-60"
+            className="px-4 py-2 text-xs rounded bg-blue-600 text-white font-bold shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-60"
           >
             {loading ? tr("goods_wizard.saving", "Saving...") : tr("goods_wizard.save", "Save Goods Master")}
           </button>

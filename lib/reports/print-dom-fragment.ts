@@ -62,6 +62,13 @@ export function printDomFragmentViaModal(
     const card = h.closest("section,article,div");
     (card && card !== clone ? card : h).remove();
   });
+  // Screen-only readiness / status pills ("Ready", "Beta", "New", "Coming soon")
+  // on navigation launchers are not report content.
+  clone.querySelectorAll("span,[class*='badge' i],[class*='pill' i]").forEach((n) => {
+    if (n.children.length === 0 && /^\s*(ready|beta|new|soon|coming soon|wip)\s*$/i.test(n.textContent || "")) {
+      n.remove();
+    }
+  });
   // Scope / filter pill rows: a container whose visible text is only a run of
   // "Word (CODE)" chips or whose label reads "… SCOPE:" / "… FILTERS".
   clone.querySelectorAll("div,section,ul").forEach((n) => {

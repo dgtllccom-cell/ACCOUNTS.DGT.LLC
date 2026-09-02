@@ -314,7 +314,7 @@ export function EmailAccountsManagement() {
             <RefreshCw className={cn("mr-2 h-3.5 w-3.5", loading && "animate-spin")} />
             {tt("common.refresh", "Refresh")}
           </Button>
-          <Button size="sm" onClick={openCreate}>
+          <Button size="sm" onClick={openCreate} className="bg-blue-600 text-white shadow-sm hover:bg-blue-700">
             <Plus className="mr-2 h-3.5 w-3.5" />
             {tt("email_acct.create", "Create Email Account")}
           </Button>

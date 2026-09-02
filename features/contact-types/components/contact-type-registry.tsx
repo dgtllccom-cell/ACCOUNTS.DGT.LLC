@@ -89,14 +89,15 @@ export function ContactTypeRegistry() {
           <Button variant="outline" onClick={() => setShowReport(true)}>
             <Printer className="w-4 h-4 mr-1" /> {tt("common.print", "Print")}
           </Button>
-          <Button onClick={() => router.push("/dashboard/settings/contact-type/new")}>
+          <Button onClick={() => router.push("/dashboard/settings/contact-type/new")} className="bg-blue-600 text-white shadow-sm hover:bg-blue-700">
             <Plus className="w-4 h-4 mr-1" /> {tt("ct.new", "New Type")}
           </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <Input
+            className="h-9"
             placeholder={tt("common.search", "Search by name or code...")}
             value={searchQuery}
             onChange={(e) => {
@@ -107,7 +108,7 @@ export function ContactTypeRegistry() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="px-3 py-2 border rounded-md"
+            className="h-9 shrink-0 rounded-md border px-3 text-sm"
           >
             <option value="all">{tt("common.all", "All")}</option>
             <option value="Active">{tt("common.active", "Active")}</option>
