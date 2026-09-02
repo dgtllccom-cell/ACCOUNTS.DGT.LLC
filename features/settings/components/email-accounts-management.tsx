@@ -323,10 +323,10 @@ export function EmailAccountsManagement() {
 
       {/* Summary Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <SummaryCard icon={Mail} label={tt("email_acct.no_accounts", "Total Accounts")} value={summary.total} color="text-blue-600 bg-blue-50 dark:bg-blue-950/30" />
+        <SummaryCard icon={Mail} label={tt("email_acct.total_accounts", "Total Accounts")} value={summary.total} color="text-blue-600 bg-blue-50 dark:bg-blue-950/30" />
         <SummaryCard icon={Zap} label={tt("common.active", "Active")} value={summary.active} color="text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30" />
-        <SummaryCard icon={Wifi} label={tt("email_acct.smtp_status", "Connected")} value={summary.connected} color="text-green-600 bg-green-50 dark:bg-green-950/30" />
-        <SummaryCard icon={WifiOff} label={tt("email_acct.email_status", "Failed / Incomplete")} value={summary.failed} color="text-red-600 bg-red-50 dark:bg-red-950/30" />
+        <SummaryCard icon={Wifi} label={tt("email_acct.connected", "Connected")} value={summary.connected} color="text-green-600 bg-green-50 dark:bg-green-950/30" />
+        <SummaryCard icon={WifiOff} label={tt("email_acct.failed_incomplete", "Failed / Incomplete")} value={summary.failed} color="text-red-600 bg-red-50 dark:bg-red-950/30" />
       </div>
 
       {/* Filters Row */}

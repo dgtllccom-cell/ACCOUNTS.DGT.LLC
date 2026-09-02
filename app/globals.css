@@ -137,63 +137,76 @@
     --ring: 190 83% 40%;
   }
 
-  /* Template Color Variants (applies to both light and dark via CSS variables). */
+  /* Template Color Variants (applies to both light and dark via CSS variables).
+     Each variant MUST also declare --primary-foreground so a primary-filled
+     button/badge always keeps a readable label — light primaries (gold, green)
+     pair with dark ink, dark primaries with white. */
   :root.theme-purple {
     --primary: 262 83% 58%;
+    --primary-foreground: 0 0% 100%;
     --ring: 262 83% 58%;
     --accent: 38 92% 50%;
   }
 
   :root.theme-blue {
     --primary: 221 83% 53%;
+    --primary-foreground: 0 0% 100%;
     --ring: 221 83% 53%;
     --accent: 38 92% 50%;
   }
 
   :root.theme-green {
-    --primary: 142 71% 45%;
-    --ring: 142 71% 45%;
+    --primary: 142 71% 32%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 142 71% 32%;
     --accent: 38 92% 50%;
   }
 
   :root.theme-gold {
     --primary: 38 92% 50%;
+    --primary-foreground: 30 40% 12%;
     --ring: 38 92% 50%;
     --accent: 262 83% 58%;
   }
 
   :root.theme-cyan {
-    --primary: 190 83% 40%;
-    --ring: 190 83% 40%;
+    --primary: 190 83% 34%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 190 83% 34%;
     --accent: 38 92% 50%;
   }
 
   .dark.theme-purple {
     --primary: 262 83% 70%;
+    --primary-foreground: 222 47% 11%;
     --ring: 262 83% 70%;
     --accent: 38 92% 55%;
   }
 
   .dark.theme-blue {
     --primary: 221 83% 68%;
+    --primary-foreground: 222 47% 11%;
     --ring: 221 83% 68%;
     --accent: 38 92% 55%;
   }
 
   .dark.theme-green {
     --primary: 142 71% 58%;
+    --primary-foreground: 222 47% 11%;
     --ring: 142 71% 58%;
     --accent: 38 92% 55%;
   }
 
   .dark.theme-gold {
     --primary: 38 92% 55%;
+    --primary-foreground: 30 40% 12%;
     --ring: 38 92% 55%;
     --accent: 262 83% 70%;
   }
 
   .dark.theme-cyan {
     --primary: 190 83% 55%;
+    --primary-foreground: 222 47% 11%;
     --ring: 190 83% 55%;
     --accent: 38 92% 55%;
   }

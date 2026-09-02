@@ -282,7 +282,7 @@ export function EnterpriseAuditMonitoringDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{monthlyEdits?.stats?.total_created || "—"}</div>
+            <div className="text-2xl font-bold">{monthlyEdits ? (monthlyEdits.stats?.total_created ?? 0) : "—"}</div>
             <p className="text-xs text-muted-foreground">{tt("eaud.this_month", "This Month")}</p>
           </CardContent>
         </Card>
@@ -294,7 +294,7 @@ export function EnterpriseAuditMonitoringDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{monthlyEdits?.stats?.total_edits || "0"}</div>
+            <div className="text-2xl font-bold">{monthlyEdits ? (monthlyEdits.stats?.total_edits ?? 0) : "—"}</div>
             <p className="text-xs text-muted-foreground">{monthlyEdits?.stats?.unique_entities_edited || 0} unique records</p>
           </CardContent>
         </Card>
@@ -306,7 +306,7 @@ export function EnterpriseAuditMonitoringDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-rose-600">{monthlyEdits?.stats?.total_deleted || "0"}</div>
+            <div className="text-2xl font-bold text-rose-600">{monthlyEdits ? (monthlyEdits.stats?.total_deleted ?? 0) : "—"}</div>
             <p className="text-xs text-muted-foreground">{monthlyEdits?.stats?.total_restored || 0} restored</p>
           </CardContent>
         </Card>
@@ -318,7 +318,7 @@ export function EnterpriseAuditMonitoringDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-700">{dailyBranchData?.totals?.totalBranches || "—"}</div>
+            <div className="text-2xl font-bold text-emerald-700">{dailyBranchData ? (dailyBranchData.totals?.totalBranches ?? 0) : "—"}</div>
             <p className="text-xs text-muted-foreground">Live Global Feed</p>
           </CardContent>
         </Card>
@@ -326,21 +326,21 @@ export function EnterpriseAuditMonitoringDashboard() {
 
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:w-[650px]">
-          <TabsTrigger value="edits" className="gap-1.5">
-            <History className="h-4 w-4" />
+        <TabsList className="flex h-auto w-full flex-wrap items-stretch justify-start gap-1">
+          <TabsTrigger value="edits" className="min-w-[160px] flex-1 gap-1.5 whitespace-normal py-2 text-center leading-tight">
+            <History className="h-4 w-4 shrink-0" />
             {tt("eaud.monthly_tab", "Edit History")}
           </TabsTrigger>
-          <TabsTrigger value="deleted" className="gap-1.5">
-            <Trash2 className="h-4 w-4" />
+          <TabsTrigger value="deleted" className="min-w-[160px] flex-1 gap-1.5 whitespace-normal py-2 text-center leading-tight">
+            <Trash2 className="h-4 w-4 shrink-0" />
             {tt("eaud.entries_deleted", "Deleted Records")}
           </TabsTrigger>
-          <TabsTrigger value="daily" className="gap-1.5">
-            <Building2 className="h-4 w-4" />
+          <TabsTrigger value="daily" className="min-w-[160px] flex-1 gap-1.5 whitespace-normal py-2 text-center leading-tight">
+            <Building2 className="h-4 w-4 shrink-0" />
             {tt("eaud.daily_tab", "Daily Activity")}
           </TabsTrigger>
-          <TabsTrigger value="users" className="gap-1.5">
-            <Users className="h-4 w-4" />
+          <TabsTrigger value="users" className="min-w-[160px] flex-1 gap-1.5 whitespace-normal py-2 text-center leading-tight">
+            <Users className="h-4 w-4 shrink-0" />
             {tt("eaud.title", "User Productivity")}
           </TabsTrigger>
         </TabsList>

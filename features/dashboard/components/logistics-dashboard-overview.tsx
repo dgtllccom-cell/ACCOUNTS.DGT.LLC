@@ -349,10 +349,20 @@ export function LogisticsDashboardOverview({ data, canCreateShipment = false }: 
         {/* Shipment operations */}
         <Card className="border-border bg-card text-card-foreground shadow-lg">
           <CardHeader className="pb-2 border-b border-border">
-            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
-              <Ship className="h-4 w-4 text-emerald-500" />
-              {tt("log.shipment_operations", "Shipment Operations")}
-            </CardTitle>
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+                <Ship className="h-4 w-4 text-emerald-500" />
+                {tt("log.shipment_operations", "Shipment Operations")}
+              </CardTitle>
+              {canCreateShipment && (
+                <Link
+                  href="/dashboard/shipping-line/shipment-details"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 transition-colors"
+                >
+                  <span className="text-sm leading-none">+</span> {tt("log.create_shipment", "Create Shipment")}
+                </Link>
+              )}
+            </div>
           </CardHeader>
           <div className="overflow-x-auto">
             <table className="w-full text-[11px] text-start">

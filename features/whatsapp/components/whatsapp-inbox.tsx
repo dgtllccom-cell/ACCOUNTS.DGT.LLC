@@ -94,11 +94,11 @@ export function WhatsAppInbox({ session }: Props) {
   const activeConversation = conversations.find((c) => c.id === activeConversationId) ?? null;
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden bg-[hsl(var(--background))]">
+    <div className="flex h-[calc(100vh-8rem)] min-h-[520px] overflow-hidden rounded-lg border border-border/50 bg-[hsl(var(--background))]">
       {/* ── Left Panel: Conversation List ── */}
       <div className="flex w-[320px] flex-shrink-0 flex-col border-e border-border/50 bg-card/80 backdrop-blur-sm">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-border/50 px-4 py-3">
+        <div className="flex items-center justify-between gap-2 border-b border-border/50 px-4 py-3">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#25D366]/15">
               <MessageSquare className="h-4 w-4 text-[#25D366]" />

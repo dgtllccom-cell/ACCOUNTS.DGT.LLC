@@ -20,8 +20,10 @@ export default async function WhatsAppInboxPage() {
   }
 
   return (
-    // -m-4 md:-m-6 cancels the standard page padding so the inbox fills the full width
-    <div className="-mx-4 -my-4 md:-mx-6 md:-my-6">
+    // Cancel the horizontal + bottom page padding so the inbox fills the width,
+    // but keep the top gap so the 3-panel layout never collides with the page
+    // actions / breadcrumb bar rendered above it.
+    <div className="-mx-4 -mb-4 md:-mx-6 md:-mb-6">
       <WhatsAppInbox session={session} />
     </div>
   );

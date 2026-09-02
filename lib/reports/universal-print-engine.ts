@@ -608,8 +608,8 @@ export function buildUniversalPrintHtml(input: UniversalPrintInput): string {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 14px;
-      margin-top: 10px;
-      margin-bottom: 6px;
+      margin-top: 14px;
+      margin-bottom: 18px;
     }
     .signature-block {
       text-align: center;
@@ -628,8 +628,8 @@ export function buildUniversalPrintHtml(input: UniversalPrintInput): string {
 
     .page-footer {
       border-top: 1px solid #cbd5e1;
-      padding-top: 3px;
-      margin-top: 4px;
+      padding-top: 6px;
+      margin-top: 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;

@@ -3779,6 +3779,7 @@ export type UiKey =
   | "email_acct.scope" | "email_acct.super_admin_global" | "email_acct.security_notice"
   | "email_acct.new_password" | "email_acct.change_password" | "email_acct.reset_password"
   | "email_acct.test_smtp" | "email_acct.scope_city_branch" | "email_acct.scope_country_branch" | "email_acct.scope_country" | "email_acct.scope_super_admin" | "email_acct.new_password_ph"
+  | "email_acct.total_accounts" | "email_acct.connected" | "email_acct.failed_incomplete"
   | "email_mgmt.channel_email_title" | "email_mgmt.channel_email_subtitle"
   | "email_mgmt.channel_whatsapp_title" | "email_mgmt.channel_whatsapp_subtitle"
   | "email_mgmt.channel_internal_title" | "email_mgmt.channel_internal_subtitle"
@@ -8472,7 +8473,7 @@ const en: Dict = {
   "nav.customers_form": "Customers Form",
   "nav.employee_management": "Employee Management",
   "nav.contract_type": "Contract Type",
-  "nav.company_registration_type": "Company Registration No Type",
+  "nav.company_registration_type": "Company Registration Types",
   "nav.bank_form": "Bank Form",
   "nav.contact_type": "Contact Type",
   "nav.document_type": "Document Type",
@@ -16744,6 +16745,9 @@ const en: Dict = {
   "purchase.showing_entries": "Showing {from} to {to} of {total} entries",
   "crm.menu_dashboard": "CRM Dashboard",
   "nav.deleted_records": "Deleted Records",
+  "email_acct.total_accounts": "Total Accounts",
+  "email_acct.connected": "Connected",
+  "email_acct.failed_incomplete": "Failed / Incomplete",
 };
 
 const ur: Dict = {
@@ -21307,7 +21311,7 @@ const ur: Dict = {
   "nav.customers_form": "کسٹمر فارم",
   "nav.employee_management": "ملازمین کی رجسٹریشن",
   "nav.contract_type": "کانٹریکٹ ٹائپ",
-  "nav.company_registration_type": "کمپنی رجسٹریشن نمبر ٹائپ",
+  "nav.company_registration_type": "کمپنی رجسٹریشن کی اقسام",
   "nav.bank_form": "بینک فارم",
   "nav.contact_type": "کانٹیکٹ ٹائپ",
   "nav.document_type": "ڈاکومنٹ ٹائپ",
@@ -28547,6 +28551,9 @@ const ur: Dict = {
   "purchase.showing_entries": "{total} میں سے {from} تا {to} اندراجات دکھائے جا رہے ہیں",
   "crm.menu_dashboard": "CRM ڈیش بورڈ",
   "nav.deleted_records": "حذف شدہ ریکارڈز",
+  "email_acct.total_accounts": "کل اکاؤنٹس",
+  "email_acct.connected": "منسلک",
+  "email_acct.failed_incomplete": "ناکام / نامکمل",
 };
 
 const ar: Dict = {
@@ -33108,7 +33115,7 @@ const ar: Dict = {
   "nav.customers_form": "نموذج العملاء",
   "nav.employee_management": "إدارة الموظفين",
   "nav.contract_type": "نوع العقد",
-  "nav.company_registration_type": "نوع رقم تسجيل الشركة",
+  "nav.company_registration_type": "أنواع تسجيل الشركات",
   "nav.bank_form": "نموذج البنك",
   "nav.contact_type": "نوع الاتصال",
   "nav.document_type": "نوع الوثيقة",
@@ -40352,6 +40359,9 @@ const ar: Dict = {
   "purchase.showing_entries": "عرض {from} إلى {to} من {total} إدخالات",
   "crm.menu_dashboard": "لوحة معلومات CRM",
   "nav.deleted_records": "السجلات المحذوفة",
+  "email_acct.total_accounts": "إجمالي الحسابات",
+  "email_acct.connected": "متصل",
+  "email_acct.failed_incomplete": "فشل / غير مكتمل",
 };
 
 const fa: Dict = {
@@ -45326,7 +45336,7 @@ const fa: Dict = {
   "nav.branch_report": "گزارش شعبه",
   "nav.clearing_bill_entry": "ثبت صورتحساب",
   "nav.company_form": "فرم شرکت",
-  "nav.company_registration_type": "نوع شماره ثبت شرکت",
+  "nav.company_registration_type": "انواع ثبت شرکت",
   "nav.contact_type": "نوع مخاطب",
   "nav.contract_type": "نوع قرارداد",
   "nav.country_ledger_report": "گزارش دفتر کشور",
@@ -52156,6 +52166,9 @@ const fa: Dict = {
   "purchase.showing_entries": "نمایش {from} تا {to} از {total} ورودی",
   "crm.menu_dashboard": "داشبورد CRM",
   "nav.deleted_records": "رکوردهای حذف‌شده",
+  "email_acct.total_accounts": "مجموع حساب‌ها",
+  "email_acct.connected": "متصل",
+  "email_acct.failed_incomplete": "ناموفق / ناقص",
 };
 
 const ps: Dict = {
@@ -57111,7 +57124,7 @@ const ps: Dict = {
   "nav.clearing_agent": "د کلیرنس استازی",
   "nav.clearing_bill_entry": "د بل ثبت",
   "nav.company_form": "د شرکت فورمه",
-  "nav.company_registration_type": "د شرکت د ثبت شمېرې ډول",
+  "nav.company_registration_type": "د شرکت د راجستر ډولونه",
   "nav.contact_type": "د اړیکې ډول",
   "nav.contract_type": "د تړون ډول",
   "nav.country_ledger_report": "د هېواد لیجر راپور",
@@ -63966,6 +63979,9 @@ const ps: Dict = {
   "purchase.showing_entries": "د {total} څخه {from} تر {to} ننوتنې ښودل کیږي",
   "crm.menu_dashboard": "د CRM ډشبورډ",
   "nav.deleted_records": "ړنګ شوي ریکارډونه",
+  "email_acct.total_accounts": "ټول حسابونه",
+  "email_acct.connected": "نښلول شوی",
+  "email_acct.failed_incomplete": "ناکام / نیمګړی",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

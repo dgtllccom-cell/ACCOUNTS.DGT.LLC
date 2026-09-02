@@ -31,6 +31,7 @@ export function printDomFragmentViaModal(
   const STRIP = [
     // app chrome
     "[data-erp-page-actions]", "[data-print-exclude]", ".no-print", ".no-print-toolbar",
+    ".screen-only", ".erp-no-print",
     "nav", "[role='navigation']", "#erp-page-actions-slot", "#erp-page-title-slot",
     "[data-dgt-connect]", "[data-radix-popper-content-wrapper]", "[data-floating-widget]",
     "[data-sonner-toaster]", "script", "style[data-emotion]",
@@ -42,7 +43,7 @@ export function printDomFragmentViaModal(
     // common class-name signatures for filter bars / search / pagination / actions
     ".pagination", "[aria-label*='pagination' i]", "[class*='paginat' i]",
     "[class*='filter-bar' i]", "[class*='toolbar' i]", "[data-search-filter]",
-    "[data-table-actions]", "[data-row-actions]",
+    "[data-table-actions]", "[data-row-actions]", "[data-scope-bar]", "[data-quick-access]",
   ];
   for (const sel of STRIP) {
     try {
@@ -51,6 +52,35 @@ export function printDomFragmentViaModal(
       /* selector unsupported in this engine — skip it */
     }
   }
+
+  // ── 1b) Remove screen-only widgets identified by their heading text ────────
+  //   "Quick Access" / "Quick Actions" launcher cards and interactive scope /
+  //   filter pill bars are navigation, not report content.
+  const NAV_HEADINGS = /^\s*(quick access|quick actions|quick links|fast (branch )?operations|common (logistics )?workflows)\s*$/i;
+  clone.querySelectorAll("h1,h2,h3,h4,h5,h6,[class*='uppercase']").forEach((h) => {
+    if (!NAV_HEADINGS.test(h.textContent || "")) return;
+    const card = h.closest("section,article,div");
+    (card && card !== clone ? card : h).remove();
+  });
+  // Scope / filter pill rows: a container whose visible text is only a run of
+  // "Word (CODE)" chips or whose label reads "… SCOPE:" / "… FILTERS".
+  clone.querySelectorAll("div,section,ul").forEach((n) => {
+    const txt = (n.textContent || "").replace(/\s+/g, " ").trim();
+    if (!txt || txt.length > 600) return;
+    if (/\b(country|city|branch|directory)\s*(scope|filters?)\s*:?/i.test(txt) &&
+        (n.querySelectorAll("button,a").length >= 3 || /\([A-Z]{2,4}\)/.test(txt))) {
+      n.remove();
+    }
+  });
+  // Empty chart frames (axes + "No data" message) are noise in a printed report —
+  // drop the whole chart card when it has no plotted data.
+  clone.querySelectorAll("svg,canvas,[class*='recharts' i],[class*='chart' i]").forEach((g) => {
+    const box = g.closest("div,section,article") || g;
+    const t = (box.textContent || "").toLowerCase();
+    if (/no (records?|data|results?)\b|no data available/.test(t) && t.replace(/no (records?|data|results?)[^a-z]*(found|available)?/gi, "").trim().length < 40) {
+      (box !== clone ? box : g).remove();
+    }
+  });
 
   // ── 2) Drop the "Actions" column from data tables (header + each row cell) ──
   clone.querySelectorAll("table").forEach((table) => {
@@ -122,11 +152,37 @@ ${styleLinks}
   #__frag [class*="bg-zinc-9"], #__frag [class*="bg-black"], #__frag [class*="from-slate"],
   #__frag [class*="to-indigo"], #__frag [class*="via-slate"] { background: #f8fafc !important; }
   #__frag table { width: 100%; border-collapse: collapse; table-layout: auto; }
-  #__frag th, #__frag td { border: 1px solid #d1d5db !important; padding: 3px 5px !important; text-align: ${isRtl ? "right" : "left"}; font-size: ${widestTableCols >= 9 ? "9px" : "10px"}; word-break: break-word; overflow-wrap: anywhere; }
+  #__frag th, #__frag td { border: 1px solid #d1d5db !important; padding: 3px 5px !important; text-align: ${isRtl ? "right" : "left"}; font-size: ${widestTableCols >= 9 ? "9px" : "10px"}; }
+  /* headers keep whole words — never fragment "COUNTRY" into "COU / NTR / Y" */
+  #__frag th { white-space: nowrap; overflow-wrap: normal; word-break: keep-all; }
+  /* cells wrap only at natural break points, and only break long unbroken tokens */
+  #__frag td { overflow-wrap: break-word; word-break: normal; }
   #__frag thead th { background: #f1f5f9 !important; font-weight: 700; }
-  #__frag .overflow-x-auto, #__frag [class*="overflow-x"] { overflow: visible !important; }
+  #__frag thead { display: table-header-group; }
+  #__frag tr { page-break-inside: avoid; break-inside: avoid; }
+  #__frag .overflow-x-auto, #__frag [class*="overflow-x"],
+  #__frag [class*="overflow-y"], #__frag [class*="overflow-auto"], #__frag [class*="overflow-scroll"] {
+    overflow: visible !important; max-height: none !important; height: auto !important;
+  }
   #__frag img, #__frag svg { max-width: 100%; }
+  /* Headings: scale to the print column and wrap at a balanced point rather than
+     leaving a single orphan word ("… Communication / Centre") on its own line */
+  #__frag h1 { font-size: 19px !important; line-height: 1.25 !important; }
+  #__frag h2 { font-size: 15px !important; line-height: 1.3 !important; }
+  #__frag h1, #__frag h2, #__frag h3 { text-wrap: balance; overflow-wrap: break-word; }
   #__frag button, #__frag input, #__frag select, #__frag textarea { display: none !important; }
+  /* Keep whole cards / widgets together across page breaks */
+  #__frag [class*="rounded-xl"], #__frag [class*="rounded-2xl"],
+  #__frag [class*="rounded-lg"][class*="border"], #__frag [data-card] {
+    page-break-inside: avoid; break-inside: avoid;
+  }
+  /* KPI / stat card rows: keep a compact single band instead of a tall 3x2 grid */
+  #__frag [class*="grid-cols-"] { gap: 6px !important; }
+  #__frag [class*="md:grid-cols-4"], #__frag [class*="lg:grid-cols-4"],
+  #__frag [class*="md:grid-cols-6"], #__frag [class*="lg:grid-cols-6"],
+  #__frag [class*="sm:grid-cols-6"], #__frag [class*="xl:grid-cols-6"] {
+    display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
   .no-print, .no-print-toolbar { display: none !important; }
   #__frag { padding: 4mm; }
   @media print { #__frag { padding: 0; } }

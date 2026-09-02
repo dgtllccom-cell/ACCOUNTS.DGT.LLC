@@ -1,4 +1,5 @@
 import { qrCodeSvgMarkup } from "@/components/ui/qr-code";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 export type ERPCompanyInfo = {
   name?: string;
@@ -502,11 +503,14 @@ export function generateReportHtml(input: {
       margin-top: auto;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      padding-top: 10px;
+      gap: 18px;
+      padding-top: 12px;
+      padding-bottom: 6px;
       border-top: 1.5px solid #cbd5e1;
       width: 100%;
     }
+    .sheet-footer .footer-content-grid { margin-bottom: 6px; }
+    .sheet-footer .signatures-row { padding-bottom: 8px; }
 
     .footer-content-grid {
       display: grid;
@@ -924,7 +928,7 @@ export function generateReportHtml(input: {
 
           <div class="title-col">
             <h1 class="report-title-text">${escapeHtml(title)}</h1>
-            <div style="margin-top:6px;"><div style="width:48px;height:48px;display:block;">${qrSvg}</div><div style="font-size:6px;color:#64748b;margin-top:3px;">Scan to verify</div></div>
+            <div style="margin-top:6px;"><div style="width:52px;height:52px;display:block;">${qrSvg}</div><div style="font-size:8.5px;line-height:1.2;color:#475569;margin-top:3px;white-space:nowrap;">${escapeHtml(translateHeader(lang, "Scan to verify"))}</div></div>
           </div>
 
           <div class="meta-col">
@@ -974,15 +978,15 @@ export function generateReportHtml(input: {
             <div class="signatures-row">
               <div class="sign-field">
                 <div class="sign-line"></div>
-                <div class="sign-title">Prepared By</div>
+                <div class="sign-title">${escapeHtml(translateHeader(lang, "Prepared By"))}</div>
               </div>
               <div class="sign-field">
                 <div class="sign-line"></div>
-                <div class="sign-title">Checked By</div>
+                <div class="sign-title">${escapeHtml(translateHeader(lang, "Checked By"))}</div>
               </div>
               <div class="sign-field">
                 <div class="sign-line"></div>
-                <div class="sign-title">Approved By</div>
+                <div class="sign-title">${escapeHtml(translateHeader(lang, "Approved By"))}</div>
               </div>
             </div>
 

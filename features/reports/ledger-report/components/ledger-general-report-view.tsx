@@ -1072,33 +1072,33 @@ export function LedgerReportView({
             </h4>
           </div>
           <div className="p-4 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
-            <div className="flex justify-between items-center">
-              <span>{th("COUNTRY:")}</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200">{(sessionInfo as any)?.scopes?.summary?.countryName || "—"}</span>
+            <div className="flex justify-between items-start gap-3">
+              <span className="shrink-0">{th("COUNTRY:")}</span>
+              <span className="min-w-0 text-right font-bold text-slate-800 dark:text-slate-200 break-words">{(sessionInfo as any)?.scopes?.summary?.countryName || "—"}</span>
             </div>
-            <div className="flex justify-between items-center">
-              <span>{th("BRANCH NAME:")}</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{(sessionInfo as any)?.scopes?.summary?.branchDisplayName || (sessionInfo as any)?.scopes?.summary?.branchName || "—"}</span>
+            <div className="flex justify-between items-start gap-3">
+              <span className="shrink-0">{th("BRANCH NAME:")}</span>
+              <span className="min-w-0 text-right font-bold text-slate-800 dark:text-slate-200 uppercase break-words">{(sessionInfo as any)?.scopes?.summary?.branchDisplayName || (sessionInfo as any)?.scopes?.summary?.branchName || "—"}</span>
             </div>
-            <div className="flex justify-between items-center">
-              <span>{th("USER ID:")}</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase text-[9px] font-mono">{sessionInfo?.user?.id || "—"}</span>
+            <div className="flex justify-between items-start gap-3">
+              <span className="shrink-0">{th("USER ID:")}</span>
+              <span className="min-w-0 text-right font-bold text-slate-800 dark:text-slate-200 uppercase text-[9px] font-mono break-all no-underline">{sessionInfo?.user?.id || "—"}</span>
             </div>
-            <div className="flex justify-between items-center">
-              <span>{th("USER NAME:")}</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{sessionInfo?.user?.fullName || sessionInfo?.user?.email || "—"}</span>
+            <div className="flex justify-between items-start gap-3">
+              <span className="shrink-0">{th("USER NAME:")}</span>
+              <span className="min-w-0 text-right font-bold text-slate-800 dark:text-slate-200 uppercase break-words">{sessionInfo?.user?.fullName || sessionInfo?.user?.email || "—"}</span>
             </div>
-            <div className="flex justify-between items-center">
-              <span>{th("ROLE:")}</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{(sessionInfo as any)?.roles?.[0]?.replace(/_/g, " ") || "—"}</span>
+            <div className="flex justify-between items-start gap-3">
+              <span className="shrink-0">{th("ROLE:")}</span>
+              <span className="min-w-0 text-right font-bold text-slate-800 dark:text-slate-200 uppercase break-words">{(sessionInfo as any)?.roles?.[0]?.replace(/_/g, " ") || "—"}</span>
             </div>
-            <div className="flex justify-between items-center">
-              <span>{th("DATE & TIME:")}</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200">{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}, {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}</span>
+            <div className="flex justify-between items-start gap-3">
+              <span className="shrink-0">{th("DATE & TIME:")}</span>
+              <span className="min-w-0 text-right font-bold text-slate-800 dark:text-slate-200">{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}, {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}</span>
             </div>
-            <div className="flex justify-between items-center mt-auto pt-1">
-              <span>{th("STATUS:")}</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">{th("ACTIVE")}</span>
+            <div className="flex justify-between items-center gap-3 mt-auto pt-1">
+              <span className="shrink-0">{th("STATUS:")}</span>
+              <span className="shrink-0 font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">{th("ACTIVE")}</span>
             </div>
           </div>
         </div>
@@ -1135,12 +1135,12 @@ export function LedgerReportView({
                   <span className="font-black text-slate-800 dark:text-slate-200">{totEntries}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>{cLabel(t(effectiveLang, "lgr.total_credit", "Total Credit"))}</span>
-                  <span className="font-black text-emerald-600 dark:text-emerald-400 font-mono">{fmtNumber(totCredit)}</span>
+                  <span className={Number(totCredit) ? "text-emerald-600 dark:text-emerald-400" : ""}>{cLabel(t(effectiveLang, "lgr.total_credit", "Total Credit"))}</span>
+                  <span className={`font-black font-mono ${Number(totCredit) ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400"}`}>{fmtNumber(totCredit)}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-rose-600 dark:text-rose-400">{cLabel(t(effectiveLang, "lgr.total_debit", "Total Debit"))}</span>
-                  <span className="font-black text-rose-600 dark:text-rose-400 font-mono">{fmtNumber(totDebit)}</span>
+                  <span className={Number(totDebit) ? "text-rose-600 dark:text-rose-400" : ""}>{cLabel(t(effectiveLang, "lgr.total_debit", "Total Debit"))}</span>
+                  <span className={`font-black font-mono ${Number(totDebit) ? "text-rose-600 dark:text-rose-400" : "text-slate-500 dark:text-slate-400"}`}>{fmtNumber(totDebit)}</span>
                 </div>
                 <div className="flex justify-between items-center pt-1.5 border-t border-slate-100 dark:border-slate-800">
                   <span className="text-slate-700 dark:text-slate-300 font-bold">{cLabel(t(effectiveLang, "lgr.balance", "Balance"))}</span>

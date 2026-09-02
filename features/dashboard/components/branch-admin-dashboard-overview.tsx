@@ -21,7 +21,9 @@ import {
   ClipboardList,
   Inbox,
   Landmark,
+  Mail,
   PackageOpen,
+  Phone,
   ReceiptText,
   ShoppingCart,
   TrendingUp,
@@ -95,9 +97,9 @@ function EmptyChartState({ message, height }: { message: string; height: number 
   return (
     <div
       className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/20 text-center"
-      style={{ height }}
+      style={{ height: Math.min(height, 116) }}
     >
-      <Inbox className="h-6 w-6 text-muted-foreground" />
+      <Inbox className="h-5 w-5 text-muted-foreground/50" />
       <p className="px-4 text-[11px] font-semibold text-muted-foreground">{message}</p>
     </div>
   );
@@ -404,9 +406,9 @@ export function BranchAdminDashboardOverview({ data }: BranchDashboardOverviewPr
               <p className="text-lg font-black text-foreground mt-1 leading-none">{data.customersCount}</p>
             </div>
             <div className="rounded-xl border border-border p-3 bg-muted/40">
-              <Banknote className="mb-2 h-4.5 w-4.5 text-emerald-500" />
+              <Banknote className={`mb-2 h-4.5 w-4.5 ${profit > 0 ? "text-emerald-500" : profit < 0 ? "text-rose-500" : "text-muted-foreground/50"}`} />
               <p className="text-[9px] font-bold uppercase text-muted-foreground">{tt("bdash.profit", "Profit")}</p>
-              <p className="text-lg font-black text-emerald-600 dark:text-emerald-400 mt-1 leading-none">{formatMoney(profit, currency)}</p>
+              <p className={`text-lg font-black mt-1 leading-none ${profit > 0 ? "text-emerald-600 dark:text-emerald-400" : profit < 0 ? "text-rose-600 dark:text-rose-400" : "text-foreground"}`}>{formatMoney(profit, currency)}</p>
             </div>
           </CardContent>
         </Card>
@@ -422,11 +424,17 @@ export function BranchAdminDashboardOverview({ data }: BranchDashboardOverviewPr
           <CardContent className="grid gap-2 grid-cols-2">
             {data.customers.length ? data.customers.slice(0, 4).map((customer) => (
               <div key={customer.id} className="rounded-xl border border-border p-3 bg-muted/20">
-                <p className="text-[11px] font-black text-foreground/90">{customer.customer_name}</p>
-                <p className="mt-0.5 text-[9px] font-bold text-blue-500 dark:text-blue-400">{customer.company_name || tt("bdash.customer", "Customer")}</p>
-                <div className="mt-2.5 flex flex-col gap-0.5 text-[9px] text-muted-foreground">
-                  <span className="truncate">{customer.mobile || tt("bdash.no_mobile", "No mobile")}</span>
-                  <span className="truncate">{customer.email || tt("bdash.no_email", "No email")}</span>
+                <p className="truncate text-[11px] font-black text-foreground/90">{customer.customer_name}</p>
+                <p className="mt-0.5 truncate text-[9px] font-bold text-blue-500 dark:text-blue-400">{customer.company_name || tt("bdash.customer", "Customer")}</p>
+                <div className="mt-2.5 flex flex-col gap-1 text-[9px] text-muted-foreground">
+                  <span className="flex items-center gap-1.5 truncate">
+                    <Phone className="h-3 w-3 shrink-0 text-muted-foreground/50" />
+                    <span className="truncate">{customer.mobile || tt("bdash.no_mobile", "No mobile")}</span>
+                  </span>
+                  <span className="flex items-center gap-1.5 truncate">
+                    <Mail className="h-3 w-3 shrink-0 text-muted-foreground/50" />
+                    <span className="truncate">{customer.email || tt("bdash.no_email", "No email")}</span>
+                  </span>
                 </div>
               </div>
             )) : <p className="col-span-2 py-6 text-center text-muted-foreground">{tt("bdash.no_customers", "No customers registered in this branch scope.")}</p>}

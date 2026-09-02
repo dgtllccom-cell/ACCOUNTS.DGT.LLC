@@ -221,9 +221,9 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
         </Button>
         <style>{`#erp-page-title-slot:not(:empty) ~ .default-title { display: none !important; }`}</style>
         <div id="erp-page-title-slot" className="min-w-0 empty:hidden" />
-        <div className="min-w-0 default-title">
-          <h1 className="truncate text-xs font-black tracking-tight text-slate-900 dark:text-slate-100 sm:text-sm">{title}</h1>
-          <p className="hidden text-[9.5px] font-medium text-slate-400 sm:block">{subtitle}</p>
+        <div className="flex min-w-0 flex-col justify-center leading-tight default-title">
+          <h1 className="truncate text-xs font-black leading-tight tracking-tight text-slate-900 dark:text-slate-100 sm:text-sm">{title}</h1>
+          <p className="mt-0.5 hidden truncate text-[9.5px] font-medium leading-tight text-slate-400 sm:block">{subtitle}</p>
         </div>
       </div>
 

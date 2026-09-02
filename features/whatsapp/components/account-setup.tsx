@@ -67,13 +67,15 @@ export function AccountSetup({ accounts, onRefresh, onAdd, onEdit }: Props) {
           <h2 className="text-sm font-semibold text-foreground">{tt("wa.acct_title", "Connected WhatsApp Accounts")}</h2>
           <p className="text-xs text-muted-foreground">{tt("wa.acct_subtitle", "Manage WhatsApp Business numbers linked to this ERP")}</p>
         </div>
-        <button
-          onClick={onAdd}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-[#25D366] px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-[#20ba59] transition-colors"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          {tt("wa.connect_account", "Connect Account")}
-        </button>
+        {accounts.length > 0 && (
+          <button
+            onClick={onAdd}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[#25D366] px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-[#20ba59] transition-colors"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            {tt("wa.connect_account", "Connect Account")}
+          </button>
+        )}
       </div>
 
       {/* Official API notice */}

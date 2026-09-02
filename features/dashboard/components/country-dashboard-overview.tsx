@@ -33,12 +33,14 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 const CHART_COLORS = ["#2563eb", "#3b82f6", "#06b6d4", "#f59e0b", "#10b981", "#6366f1"];
 
 function EmptyChartState({ message, height }: { message: string; height: number }) {
+  // The empty state only needs room for the icon + label — never the full chart
+  // height, which just leaves a large hollow frame on the page.
   return (
     <div
       className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/20 text-center"
-      style={{ height }}
+      style={{ height: Math.min(height, 116) }}
     >
-      <Inbox className="h-6 w-6 text-muted-foreground" />
+      <Inbox className="h-5 w-5 text-muted-foreground/50" />
       <p className="px-4 text-[11px] font-semibold text-muted-foreground">{message}</p>
     </div>
   );

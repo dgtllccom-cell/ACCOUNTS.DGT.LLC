@@ -35,7 +35,14 @@ function compact(value: number) {
 }
 
 function EmptyChart({ lang }: { lang: string }) {
-  return <div className="absolute inset-0 z-10 grid place-items-center text-sm font-semibold text-muted-foreground">{t(lang, "common.no_records", "No Records Found")}</div>;
+  return (
+    <div className="grid h-full w-full place-items-center rounded-lg border border-dashed border-border bg-muted/20 text-center">
+      <div className="flex flex-col items-center gap-1.5 py-6">
+        <BarChart3 className="h-6 w-6 text-muted-foreground/40" />
+        <span className="text-xs font-semibold text-muted-foreground">{t(lang, "common.no_records", "No Records Found")}</span>
+      </div>
+    </div>
+  );
 }
 
 export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }: Props) {
@@ -62,7 +69,7 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
           <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-sm font-bold"><BarChart3 className="h-4 w-4 text-emerald-500" />{t(lang, "dash.sales_vs_purchase", "Sales vs Purchase")}</CardTitle></CardHeader>
           <CardContent>
             <div className="relative h-[250px] w-full">
-              {!hasFinancialRecords && <EmptyChart lang={lang} />}
+              {!hasFinancialRecords ? <EmptyChart lang={lang} /> : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} margin={{ top: 15, right: 5, left: -25, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={gridColor} opacity={0.6} />
@@ -74,6 +81,7 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
                   <Bar dataKey="Purchase" fill="#0f62fe" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -84,7 +92,7 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
           <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-sm font-bold"><TrendingUp className="h-4 w-4 text-purple-500" />{t(lang, "dash.profit_trend", "Profit Trend")}</CardTitle></CardHeader>
           <CardContent>
             <div className="relative h-[250px] w-full">
-              {!hasFinancialRecords && <EmptyChart lang={lang} />}
+              {!hasFinancialRecords ? <EmptyChart lang={lang} /> : (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={profitData} margin={{ top: 15, right: 5, left: -25, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={gridColor} opacity={0.6} />
@@ -94,6 +102,7 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
                   <Line type="monotone" dataKey="Profit" stroke="#8b5cf6" strokeWidth={3} dot={{ fill: "#8b5cf6", r: 4 }} />
                 </LineChart>
               </ResponsiveContainer>
+              )}
             </div>
           </CardContent>
         </Card>
