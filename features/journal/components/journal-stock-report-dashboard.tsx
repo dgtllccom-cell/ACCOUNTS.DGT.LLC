@@ -304,7 +304,7 @@ export default function JournalStockReportDashboard({
         map[formattedCountry].transferred += r.purchasePayment || r.invoicePayment || 0;
         map[formattedCountry].remaining += r.remainingPayment || 0;
 
-        const bName = r.branch ? r.branch.toUpperCase() : "MAIN BRANCH";
+        const bName = r.branch ? r.branch.toUpperCase() : "—";
         if (!map[formattedCountry].branches[bName]) {
           map[formattedCountry].branches[bName] = { branch: bName, purchase: 0, transferred: 0, remaining: 0 };
         }
@@ -606,7 +606,7 @@ export default function JournalStockReportDashboard({
               </div>
               <div className="flex justify-between items-center">
                 <span>{t(lang, "ledger.branch_name", "BRANCH NAME")}:</span>
-                <span className="font-extrabold text-slate-800 dark:text-slate-200 uppercase">{session?.branchName || "MAIN BRANCH"}</span>
+                <span className="font-extrabold text-slate-800 dark:text-slate-200 uppercase">{session?.branchName || "—"}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span>{t(lang, "form.user_id", "USER ID")}:</span>
@@ -616,7 +616,7 @@ export default function JournalStockReportDashboard({
               </div>
               <div className="flex justify-between items-center">
                 <span>{t(lang, "form.user_name", "USER NAME")}:</span>
-                <span className="font-extrabold text-slate-800 dark:text-slate-200 uppercase">{session?.fullName || "SUPER ADMIN"}</span>
+                <span className="font-extrabold text-slate-800 dark:text-slate-200 uppercase">{session?.fullName || "—"}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span>{t(lang, "form.role", "ROLE")}:</span>

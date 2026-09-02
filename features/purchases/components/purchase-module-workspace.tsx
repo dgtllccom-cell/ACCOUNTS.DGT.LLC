@@ -460,7 +460,7 @@ export function PurchaseModuleWorkspace({
                         companyInfo: {
                           name: "DIGITAL DOCK ERP",
                           branch: rows[0] ? branch(rows[0]) : "ALL BRANCHES",
-                          printedBy: "SUPER ADMIN"
+                          printedBy: ""
                         }
                       });
                     }}

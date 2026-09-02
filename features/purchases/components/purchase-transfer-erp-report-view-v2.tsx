@@ -556,7 +556,7 @@ function PurchaseTransferErpReportViewContent({
                 <div>{tt("pterv2.booking_ref_lbl","Booking Reference")}: <b className="font-mono text-blue-800">{bookingRef}</b></div>
                 <div>{tt("pterv2.purchase_date","Purchase Date")}: <span>{fmtDate(d.purchaseDate || d.createdAt)}</span></div>
                 <div>{tt("pterv2.booking_date","Booking Date")}: <span>{fmtDate(d.bookingDate || d.createdAt)}</span></div>
-                <div>{tt("pterv2.audited_by","Audited By")}: <b className="uppercase">{d.audit?.userName || "ADMIN"}</b></div>
+                <div>{tt("pterv2.audited_by","Audited By")}: <b className="uppercase">{d.audit?.userName || "—"}</b></div>
               </div>
 
               {/* Supplier & Credit Account Entity */}

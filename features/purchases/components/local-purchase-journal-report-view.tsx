@@ -230,7 +230,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
 
     postedPurchases.forEach(p => {
       const cName = p.countryName || p.country_name || "PAKISTAN";
-      const bName = p.branchName || p.branch_name || "MAIN BRANCH";
+      const bName = p.branchName || p.branch_name || "—";
       const curr = p.localCurrency || p.local_currency || (cName.toUpperCase().includes("UAE") ? "AED" : cName.toUpperCase().includes("AFG") ? "AFN" : "PKR");
       const cost = Number(p.finalCost || p.final_cost || p.purchaseCost || p.purchase_cost || 0);
       const tax = Number(p.taxAmount || p.tax_amount || 0);
@@ -290,7 +290,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-slate-400">{th("USER NAME")}:</span>
-          <span className="text-slate-900 dark:text-white font-extrabold">{session.fullName || session.email || "SUPER ADMIN"}</span>
+          <span className="text-slate-900 dark:text-white font-extrabold">{session.fullName || session.email || "—"}</span>
         </div>
         <div className="flex items-center gap-3 font-mono" suppressHydrationWarning>
           <div>DATE: <span className="text-slate-800 dark:text-slate-200 font-bold">{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase()}</span></div>
@@ -402,8 +402,8 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
             <div className="flex justify-between"><span className="text-slate-400">{th("COUNTRY")}:</span> <span className="font-bold text-slate-800 dark:text-slate-200">PK PAKISTAN</span></div>
             <div className="flex justify-between"><span className="text-slate-400">{th("BRANCH NAME")}:</span> <span className="font-bold text-slate-800 dark:text-slate-200">MAIN BRANCH</span></div>
             <div className="flex justify-between"><span className="text-slate-400">{th("CITY BRANCH")}:</span> <span className="font-bold text-blue-600">CHAMAN CITY BRANCH</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">{th("USER NAME")}:</span> <span className="font-black text-slate-900 dark:text-white uppercase">{session.fullName || session.email || "SUPER ADMIN"}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">{th("ROLE")}:</span> <span className="font-black text-purple-600 uppercase">{session.role || "SUPER ADMIN"}</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{th("USER NAME")}:</span> <span className="font-black text-slate-900 dark:text-white uppercase">{session.fullName || session.email || "—"}</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{th("ROLE")}:</span> <span className="font-black text-purple-600 uppercase">{session.role || "—"}</span></div>
             <div className="flex justify-between" suppressHydrationWarning><span className="text-slate-400">{th("DATE & TIME")}:</span> <span className="font-mono text-[10px] text-slate-700 dark:text-slate-300">20 JUL 2026, 09:35 PM</span></div>
             <div className="flex justify-between items-center"><span className="text-slate-400">{th("STATUS")}:</span> <span className="bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded text-[8px] uppercase">{th("ACTIVE")}</span></div>
           </CardContent>
@@ -771,7 +771,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                 const officePhone = _row.branding_phone || _row.phone || "";
                 const officeEmail = _row.branding_email || _row.email || "";
                 const trnNumber = _row.tax_number || _row.trn || "";
-                const supplierName = selectedRowForVoucher.supplierName || selectedRowForVoucher.supplier_name || "Local Vendor";
+                const supplierName = selectedRowForVoucher.supplierName || selectedRowForVoucher.supplier_name || "—";
                 const paymentMethod = selectedRowForVoucher.paymentMode || selectedRowForVoucher.payment_mode || "Cash";
                 const shippingMode = selectedRowForVoucher.shippingMode || selectedRowForVoucher.shipping_mode || "Local Purchase";
                 const goodsName = selectedRowForVoucher.goodsName || selectedRowForVoucher.goods_name || "Local Purchase Goods";

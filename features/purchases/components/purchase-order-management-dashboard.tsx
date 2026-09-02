@@ -200,7 +200,7 @@ function getDashboardSummaryData(rows: PurchaseReport[], session: any): Dashboar
   const summary: DashboardSummaryData = {
     country,
     branchName,
-    userName: session?.name || session?.username || session?.user?.fullName || "SUPER ADMIN",
+    userName: session?.name || session?.username || session?.user?.fullName || "—",
     userId: session?.userId || session?.user?.id || "SA001",
     role: session?.role || "Super Admin",
 
@@ -2140,7 +2140,7 @@ export function PurchaseOrderManagementDashboard() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-slate-400">{tr("User Name")}:</span>
-                <span className="text-slate-800 dark:text-slate-200 font-bold">{session?.user?.fullName || "SUPER ADMIN"}</span>
+                <span className="text-slate-800 dark:text-slate-200 font-bold">{session?.user?.fullName || "—"}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-slate-400">{tr("Date")}:</span>
@@ -2993,7 +2993,7 @@ export function PurchaseOrderManagementDashboard() {
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Booking Reference:")}</td><td className="px-2 py-1 font-bold text-slate-800 font-mono">{selected.purchaseBookingOrderNumber}</td></tr>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Purchase Date:")}</td><td className="px-2 py-1 text-slate-800">{date(selected.purchaseDate)}</td></tr>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Booking Date:")}</td><td className="px-2 py-1 text-slate-800">{reportDate}</td></tr>
-                          <tr><td className="px-2 py-1 text-slate-400">{tr("Booking User:")}</td><td className="px-2 py-1 font-bold text-slate-800 uppercase">{selected.audit?.userName || "ADMIN"}</td></tr>
+                          <tr><td className="px-2 py-1 text-slate-400">{tr("Booking User:")}</td><td className="px-2 py-1 font-bold text-slate-800 uppercase">{selected.audit?.userName || "—"}</td></tr>
                         </tbody>
                       </table>
                     </div>
@@ -3335,11 +3335,11 @@ export function PurchaseOrderManagementDashboard() {
                         <path d="M85 50 A35 35 0 0 1 50 85" fill="none" stroke="currentColor" strokeWidth="1.5" />
                         <text x="50" y="42" textAnchor="middle" fontSize="6.5" fontWeight="900" fill="currentColor" letterSpacing="0.3">DEMI TRADING</text>
                         <text x="50" y="52" textAnchor="middle" fontSize="6" fontWeight="bold" fill="currentColor">★ STAMP ★</text>
-                        <text x="50" y="62" textAnchor="middle" fontSize="5.5" fontWeight="900" fill="currentColor" letterSpacing="0.3">{(selected.branchName || "MAIN BRANCH").toUpperCase()}</text>
+                        <text x="50" y="62" textAnchor="middle" fontSize="5.5" fontWeight="900" fill="currentColor" letterSpacing="0.3">{(selected.branchName || "—").toUpperCase()}</text>
                       </svg>
                     </div>
                     <div className="w-[18%] text-center border-t border-slate-300 pt-1">
-                      <div className="font-bold text-slate-800 text-[8px] italic leading-none">{selected.audit?.userName || "ADMIN"}</div>
+                      <div className="font-bold text-slate-800 text-[8px] italic leading-none">{selected.audit?.userName || "—"}</div>
                       <div className="font-bold text-slate-400 text-[6.5px] mt-1">PREPARED BY</div>
                     </div>
                     <div className="w-[18%] text-center border-t border-slate-300 pt-1">

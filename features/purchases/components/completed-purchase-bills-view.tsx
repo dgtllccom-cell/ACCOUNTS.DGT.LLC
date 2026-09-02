@@ -101,7 +101,7 @@ export function CompletedPurchaseBillsView({ sessionInfo }: { sessionInfo?: { us
     const totalPaidLC = purchaseAmountLC;
 
     const completedAt = workflow.completedAt ? new Date(workflow.completedAt).toLocaleDateString("en-GB") : new Date(row.updated_at || row.created_at).toLocaleDateString("en-GB");
-    const completedBy = workflow.completedByName || "SUPER ADMIN";
+    const completedBy = workflow.completedByName || "—";
 
     return {
       manualBillNo,

@@ -271,7 +271,7 @@ export default function JournalReport({
     if (records.length > 0) {
       const map: Record<string, { country: string; currency: string; purchase: number; transferred: number; remaining: number; branches: Record<string, { branch: string; purchase: number; transferred: number; remaining: number }> }> = {};
       records.forEach(r => {
-        const firstBranch = r.journey?.[0]?.branch || "Pakistan Main Branch";
+        const firstBranch = r.journey?.[0]?.branch || "";
         const isUAE = firstBranch.toUpperCase().includes("UAE") || firstBranch.toUpperCase().includes("EMIRATES") || (r.branchCode && r.branchCode.includes("UAE"));
         const formattedCountry = isUAE ? "AE UNITED ARAB EMIRATES" : "PK PAKISTAN";
 
@@ -367,8 +367,8 @@ export default function JournalReport({
       orientation: "landscape",
       scope: {
         scopeLevel: tr(currentLevel === "country" ? "Country Summary" : currentLevel === "branch" ? "Branch Summary" : "Salesman Summary"),
-        userName: session?.fullName || "SUPER ADMIN",
-        branch: session?.branchName || "MAIN BRANCH",
+        userName: session?.fullName || "—",
+        branch: session?.branchName || "—",
       },
       columns: [
         { key: "journal_no", label: tr("Journal / Bill #"), width: "12%" },
@@ -489,7 +489,7 @@ export default function JournalReport({
                         className="h-8 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-2.5 text-xs outline-none focus:border-blue-500" />
                     </div>
                     <div className="flex flex-col gap-1">
-                      <label className="text-[9px] font-bold uppercase text-slate-400">Date To</label>
+                      <label className="text-[9px] font-bold uppercase text-slate-400">{translateHeader(lang, "Date To")}</label>
                       <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
                         className="h-8 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-2.5 text-xs outline-none focus:border-blue-500" />
                     </div>
@@ -566,7 +566,7 @@ export default function JournalReport({
                 </div>
                 <div className="flex justify-between items-center">
                   <span>{tr("BRANCH NAME")}:</span>
-                  <span className="font-extrabold text-slate-800 dark:text-slate-200 uppercase">{session?.branchName || "MAIN BRANCH"}</span>
+                  <span className="font-extrabold text-slate-800 dark:text-slate-200 uppercase">{session?.branchName || "—"}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span>{tr("USER ID")}:</span>
@@ -574,7 +574,7 @@ export default function JournalReport({
                 </div>
                 <div className="flex justify-between items-center">
                   <span>{tr("USER NAME")}:</span>
-                  <span className="font-extrabold text-slate-800 dark:text-slate-200 uppercase">{session?.fullName || "SUPER ADMIN"}</span>
+                  <span className="font-extrabold text-slate-800 dark:text-slate-200 uppercase">{session?.fullName || "—"}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span>{tr("ROLE")}:</span>
@@ -934,7 +934,7 @@ export default function JournalReport({
             {/* Pagination / Total count bar */}
             <div className="border-t border-slate-150 dark:border-slate-850 p-4 flex items-center justify-between text-[11px] text-slate-400 font-bold bg-slate-50/20 dark:bg-slate-900/10">
               <span>{tr("Showing")} 1 {tr("to")} {records.length} {tr("of")} {records.length} {tr("entries")}</span>
-              <span className="font-mono text-[10px]">Digital Dock ERP</span>
+              <span className="font-mono text-[10px]">{translateHeader(lang, "Digital Dock ERP")}</span>
             </div>
           </div>
         </div>
@@ -1145,14 +1145,7 @@ export default function JournalReport({
                               {t(lang, "jr.jr_verification_checkpoints", "VERIFICATION CHECKPOINTS")}
                             </h4>
                             <div className="space-y-1.5 pt-1">
-                              {(selectedRecord.journey && selectedRecord.journey.length > 0 ? selectedRecord.journey : [
-                                { name: "BOOKING CREATED", status: "completed", dateTime: "20/JUL/2026 09:15 AM", operator: "Super Admin", branch: "Pakistan Main Branch" },
-                                { name: "ACCEPTED", status: "completed", dateTime: "20/JUL/2026 10:30 AM", operator: "Super Admin", branch: "Pakistan Main Branch" },
-                                { name: "TRANSFERRED", status: "completed", dateTime: "20/JUL/2026 11:45 AM", operator: "Super Admin", branch: "Pakistan Main Branch" },
-                                { name: "IN TRANSIT (EXPORT)", status: "active", dateTime: "21/JUL/2026 02:20 PM", operator: "Specialist Transport Dept", branch: "Pakistan Main Branch" },
-                                { name: "CUSTOMS CLEARANCE", status: "pending", dateTime: "Pending", operator: "Customs Clearance Post", branch: "Pending" },
-                                { name: "DELIVERED / COMPLETED", status: "pending", dateTime: "Pending", operator: "Destination Terminal", branch: "Pending" },
-                              ]).map((step: any, sIdx: number) => (
+                              {(selectedRecord.journey || []).map((step: any, sIdx: number) => (
                                 <div key={sIdx} className="flex items-start gap-2 text-[8.5px] leading-tight">
                                   <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-black flex-shrink-0 mt-0.5 ${
                                     step.status === "completed" ? "bg-emerald-600 text-white" : step.status === "active" ? "bg-blue-600 text-white animate-pulse" : "bg-slate-200 dark:bg-slate-800 text-slate-400"
@@ -1187,7 +1180,7 @@ export default function JournalReport({
                               {/* Supplier Details */}
                               <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 bg-slate-50/20 text-[8.5px] space-y-1">
                                 <h5 className="font-black uppercase text-blue-900 dark:text-blue-400 text-[8px] tracking-wider mb-1">SUPPLIER DETAILS</h5>
-                                <div className="flex justify-between"><span className="text-slate-400">{t(lang, "hr.f_lbl_name", "Name:")}</span><span className="font-bold text-slate-800 dark:text-white truncate max-w-[90px]">Asian Exports</span></div>
+                                <div className="flex justify-between"><span className="text-slate-400">{t(lang, "hr.f_lbl_name", "Name:")}</span><span className="font-bold text-slate-800 dark:text-white truncate max-w-[90px]">{selectedRecord.party || "—"}</span></div>
                                 <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_postal_contact_colon", "Postal / Contact:")}</span><span className="font-bold text-slate-800 dark:text-white">{t(lang, "jr.jr_registered_office", "Registered Office")}</span></div>
                                 <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_tax_registration_colon", "Tax Registration:")}</span><span className="font-mono font-bold text-emerald-600">{t(lang, "god.active", "Active")}</span></div>
                               </div>
@@ -1195,9 +1188,9 @@ export default function JournalReport({
                               {/* Buyer Details */}
                               <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 bg-slate-50/20 text-[8.5px] space-y-1">
                                 <h5 className="font-black uppercase text-blue-900 dark:text-blue-400 text-[8px] tracking-wider mb-1">BUYER DETAILS</h5>
-                                <div className="flex justify-between"><span className="text-slate-400">{t(lang, "hr.f_lbl_name", "Name:")}</span><span className="font-bold text-slate-800 dark:text-white truncate max-w-[90px]">International Export Sales A/C</span></div>
-                                <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_postal_contact_colon", "Postal / Contact:")}</span><span className="font-bold text-slate-800 dark:text-white">Central Warehouse</span></div>
-                                <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_tax_code_colon", "Tax Code:")}</span><span className="font-mono font-bold text-slate-800 dark:text-white">DGT-PAK-2026</span></div>
+                                <div className="flex justify-between"><span className="text-slate-400">{t(lang, "hr.f_lbl_name", "Name:")}</span><span className="font-bold text-slate-800 dark:text-white truncate max-w-[90px]">{selectedRecord.salesAccount || "—"}</span></div>
+                                <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_postal_contact_colon", "Postal / Contact:")}</span><span className="font-bold text-slate-800 dark:text-white">{selectedRecord.buyerDetails || "—"}</span></div>
+                                <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_tax_code_colon", "Tax Code:")}</span><span className="font-mono font-bold text-slate-800 dark:text-white">{selectedRecord.countrySerialNo || "—"}</span></div>
                               </div>
 
                             </div>
@@ -1213,8 +1206,8 @@ export default function JournalReport({
                               <div className="space-y-1 pl-3 border-l border-slate-200 dark:border-slate-800">
                                 <h5 className="font-black uppercase text-slate-600 dark:text-slate-300 text-[8px] tracking-wider mb-1">{t(lang, "jr.jr_loading_transit_details", "LOADING & TRANSIT DETAILS")}</h5>
                                 <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_shipping_order_mode_colon", "Shipping Order / Mode:")}</span><span className="font-bold text-slate-800 dark:text-white">{t(lang, "common.export", "Export")}</span></div>
-                                <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_port_loading_origin_colon", "Port of Loading / Origin:")}</span><span className="font-bold text-slate-800 dark:text-white">Torkham / Chaman Border</span></div>
-                                <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_destination_terminal_colon", "Destination Terminal:")}</span><span className="font-bold text-slate-800 dark:text-white">Central Storage Complex</span></div>
+                                <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_port_loading_origin_colon", "Port of Loading / Origin:")}</span><span className="font-bold text-slate-800 dark:text-white">{selectedRecord.journey?.[0]?.branch || "—"}</span></div>
+                                <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_destination_terminal_colon", "Destination Terminal:")}</span><span className="font-bold text-slate-800 dark:text-white">{selectedRecord.journey?.[selectedRecord.journey.length-1]?.branch || "—"}</span></div>
                               </div>
                             </div>
 
@@ -1255,7 +1248,7 @@ export default function JournalReport({
                                   <td className="py-2 px-2 text-right font-mono">10,000.00</td>
                                   <td className="py-2 px-2 text-right font-mono">277.5000</td>
                                   <td className="py-2 px-2 text-center font-bold">PKR</td>
-                                  <td className="py-2 px-2 text-right font-mono font-black text-emerald-600">2,775,000.00</td>
+                                  <td className="py-2 px-2 text-right font-mono font-black text-emerald-600">{fmtNum(selectedRecord.amount || 0, 2)}</td>
                                 </tr>
                               </tbody>
                             </table>
@@ -1264,7 +1257,7 @@ export default function JournalReport({
                           {/* IN WORDS (PKR) Bar */}
                           <div className="bg-slate-50 dark:bg-slate-850 p-2 rounded-xl border border-slate-200 dark:border-slate-800 text-[8.5px] font-bold">
                             <span className="text-slate-400 uppercase">{t(lang, "jr.jr_in_words_pkr", "IN WORDS (PKR):")}</span>
-                            <span className="text-slate-800 dark:text-white font-extrabold uppercase">Two Million Seven Hundred Seventy-Five Thousand Rupees Only</span>
+                            <span className="text-slate-800 dark:text-white font-extrabold uppercase">{numberToWords(Math.round(selectedRecord.amount || 0))} {selectedRecord.purchaseCurrency || selectedRecord.paymentCurrency || "PKR"}</span>
                           </div>
                         </div>
 
@@ -1294,7 +1287,7 @@ export default function JournalReport({
                             <div className="flex justify-between text-slate-400"><span>{t(lang, "jr.jr_source_type_colon", "Source Type:")}</span><span className="text-slate-800 dark:text-white">{t(lang, "jr.jr_sales_invoice_caps", "SALES INVOICE")}</span></div>
                             <div className="flex justify-between text-slate-400"><span>{t(lang, "jr.jr_invoice_no_colon", "Invoice No:")}</span><span className="text-slate-800 dark:text-white font-mono">{selectedRecord.journal_no}</span></div>
                             <div className="flex justify-between text-slate-400"><span>{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span><span className="text-slate-800 dark:text-white font-mono">1101-002</span></div>
-                            <div className="flex justify-between text-slate-400"><span>{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span><span className="text-slate-800 dark:text-white uppercase truncate max-w-[120px]" title={selectedRecord.salesAccount}>{selectedRecord.salesAccount || "INTERNATIONAL EXPORT SALES A/C"}</span></div>
+                            <div className="flex justify-between text-slate-400"><span>{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span><span className="text-slate-800 dark:text-white uppercase truncate max-w-[120px]" title={selectedRecord.salesAccount}>{selectedRecord.salesAccount || "—"}</span></div>
                           </div>
                         </div>
 
@@ -1307,7 +1300,7 @@ export default function JournalReport({
                             <div className="flex justify-between text-slate-400"><span>{t(lang, "jr.jr_source_type_colon", "Source Type:")}</span><span className="text-slate-800 dark:text-white">{t(lang, "jr.jr_purchase_invoice_caps", "PURCHASE INVOICE")}</span></div>
                             <div className="flex justify-between text-slate-400"><span>{t(lang, "jr.jr_invoice_no_colon", "Invoice No:")}</span><span className="text-slate-800 dark:text-white font-mono">{selectedRecord.journal_no}</span></div>
                             <div className="flex justify-between text-slate-400"><span>{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span><span className="text-slate-800 dark:text-white font-mono">5001-001</span></div>
-                            <div className="flex justify-between text-slate-400"><span>{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span><span className="text-slate-800 dark:text-white uppercase truncate max-w-[120px]" title={selectedRecord.purchaseAccount}>{selectedRecord.purchaseAccount || "ASIAN EXPORTS A/C (DEEB)"}</span></div>
+                            <div className="flex justify-between text-slate-400"><span>{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span><span className="text-slate-800 dark:text-white uppercase truncate max-w-[120px]" title={selectedRecord.purchaseAccount}>{selectedRecord.purchaseAccount || "—"}</span></div>
                           </div>
                         </div>
 
@@ -1390,25 +1383,25 @@ export default function JournalReport({
                             <tr>
                               <td className="py-1.5 px-2 font-mono font-bold">{selectedRecord.journal_no}</td>
                               <td className="py-1.5 px-2">{fmtDate(selectedRecord.date)}</td>
-                              <td className="py-1.5 px-2 font-bold uppercase">{selectedRecord.purchaseAccount || "ASIAN EXPORTS A/C (DEEB)"}</td>
-                              <td className="py-1.5 px-2 text-slate-500">Purchase of Red Onions Premium 10,000 Kgs</td>
-                              <td className="py-1.5 px-2 text-right font-mono font-bold text-emerald-600">2,775,000.00</td>
+                              <td className="py-1.5 px-2 font-bold uppercase">{selectedRecord.purchaseAccount || "—"}</td>
+                              <td className="py-1.5 px-2 text-slate-500">{selectedRecord.goods?.[0]?.name ? `Purchase — ${selectedRecord.goods[0].name}` : "—"}</td>
+                              <td className="py-1.5 px-2 text-right font-mono font-bold text-emerald-600">{fmtNum(selectedRecord.amount || 0, 2)}</td>
                               <td className="py-1.5 px-2 text-right text-slate-400">-</td>
                               <td className="py-1.5 px-2 text-center font-bold">PKR</td>
                               <td className="py-1.5 px-2">{t(lang, "purchase.pmw_super_admin", "Super Admin")}</td>
-                              <td className="py-1.5 px-2">Pakistan Main Branch</td>
+                              <td className="py-1.5 px-2">{selectedRecord.journey?.[0]?.branch || "—"}</td>
                               <td className="py-1.5 px-2">{t(lang, "creg.country_pakistan", "Pakistan")}</td>
                             </tr>
                             <tr>
                               <td className="py-1.5 px-2 font-mono font-bold">{selectedRecord.journal_no}</td>
                               <td className="py-1.5 px-2">{fmtDate(selectedRecord.date)}</td>
-                              <td className="py-1.5 px-2 font-bold uppercase">{selectedRecord.salesAccount || "INTERNATIONAL EXPORT SALES A/C"}</td>
-                              <td className="py-1.5 px-2 text-slate-500">Goods invoiced to International Export Sales A/C</td>
+                              <td className="py-1.5 px-2 font-bold uppercase">{selectedRecord.salesAccount || "—"}</td>
+                              <td className="py-1.5 px-2 text-slate-500">{selectedRecord.salesAccount ? `Invoiced to ${selectedRecord.salesAccount}` : "—"}</td>
                               <td className="py-1.5 px-2 text-right text-slate-400">-</td>
-                              <td className="py-1.5 px-2 text-right font-mono font-bold text-emerald-600">2,775,000.00</td>
+                              <td className="py-1.5 px-2 text-right font-mono font-bold text-emerald-600">{fmtNum(selectedRecord.amount || 0, 2)}</td>
                               <td className="py-1.5 px-2 text-center font-bold">PKR</td>
                               <td className="py-1.5 px-2">{t(lang, "purchase.pmw_super_admin", "Super Admin")}</td>
-                              <td className="py-1.5 px-2">Pakistan Main Branch</td>
+                              <td className="py-1.5 px-2">{selectedRecord.journey?.[0]?.branch || "—"}</td>
                               <td className="py-1.5 px-2">{t(lang, "creg.country_pakistan", "Pakistan")}</td>
                             </tr>
                           </tbody>
@@ -1457,26 +1450,26 @@ export default function JournalReport({
                             </tr>
                             <tr className="hover:bg-slate-50 dark:hover:bg-slate-850/30">
                               <td className="py-2 px-2.5 text-center font-bold text-slate-400">1</td>
-                              <td className="py-2 px-2 text-slate-500">Pakistan Main Branch</td>
+                              <td className="py-2 px-2 text-slate-500">{selectedRecord.journey?.[0]?.branch || "—"}</td>
                               <td className="py-2 px-2 text-slate-500">{t(lang, "purchase.pmw_super_admin", "Super Admin")}</td>
                               <td className="py-2 px-2">{fmtDate(selectedRecord.date)}</td>
                               <td className="py-2 px-2 uppercase text-[8px]">{t(lang, "nav.purchase_invoice", "Purchase Invoice")}</td>
                               <td className="py-2 px-2 font-mono font-bold text-slate-800 dark:text-white">PO: {selectedRecord.journal_no}</td>
                               <td className="py-2 px-2.5 font-normal text-slate-500 leading-normal max-w-[200px] truncate">
-                                Debit for Purchase Invoice - Red Onions Premium 10,000 Kgs from India
+                                {t(lang, "jr.narr_debit_purchase_invoice", "Debit for Purchase Invoice")}{selectedRecord.goods?.[0]?.name ? " — " + selectedRecord.goods[0].name : ""}
                               </td>
                               <td className="py-2 px-2 font-mono text-[8px]">5001-001</td>
-                              <td className="py-2 px-2 uppercase font-bold text-blue-600 dark:text-blue-400">ASIAN EXPORTS A/C (DEEB)</td>
+                              <td className="py-2 px-2 uppercase font-bold text-blue-600 dark:text-blue-400">{selectedRecord.purchaseAccount || "—"}</td>
                               <td className="py-2 px-2 text-center font-bold">PKR</td>
-                              <td className="py-2 px-2 text-right font-mono font-extrabold text-blue-900 dark:text-blue-400">2,775,000.00</td>
+                              <td className="py-2 px-2 text-right font-mono font-extrabold text-blue-900 dark:text-blue-400">{fmtNum(selectedRecord.amount || 0, 2)}</td>
                               <td className="py-2 px-2 text-right text-slate-400">-</td>
-                              <td className="py-2 px-2 text-right font-mono font-bold">2,775,000.00</td>
+                              <td className="py-2 px-2 text-right font-mono font-bold">{fmtNum(selectedRecord.amount || 0, 2)}</td>
                             </tr>
                             <tr className="bg-slate-50/40 dark:bg-slate-900/20 text-slate-500 font-extrabold text-[8px] uppercase tracking-wide">
                               <td colSpan={10} className="py-1 px-2.5 text-right text-[#1e3a8a] dark:text-blue-400 font-black">{t(lang, "jr.jr_total_debit_entries_prefix", "TOTAL DEBIT ENTRIES:")} 1</td>
-                              <td className="py-1 px-2 text-right font-mono text-slate-800 dark:text-white">2,775,000.00</td>
+                              <td className="py-1 px-2 text-right font-mono text-slate-800 dark:text-white">{fmtNum(selectedRecord.amount || 0, 2)}</td>
                               <td className="py-1 px-2 text-right">-</td>
-                              <td className="py-1 px-2 text-right font-mono text-slate-800 dark:text-white">2,775,000.00</td>
+                              <td className="py-1 px-2 text-right font-mono text-slate-800 dark:text-white">{fmtNum(selectedRecord.amount || 0, 2)}</td>
                             </tr>
 
                             {/* 2. CREDIT ENTRY (SALES SIDE) */}
@@ -1485,48 +1478,43 @@ export default function JournalReport({
                             </tr>
                             <tr className="hover:bg-slate-50 dark:hover:bg-slate-850/30">
                               <td className="py-2 px-2.5 text-center font-bold text-slate-400">2</td>
-                              <td className="py-2 px-2 text-slate-500">Pakistan Main Branch</td>
+                              <td className="py-2 px-2 text-slate-500">{selectedRecord.journey?.[0]?.branch || "—"}</td>
                               <td className="py-2 px-2 text-slate-500">{t(lang, "purchase.pmw_super_admin", "Super Admin")}</td>
                               <td className="py-2 px-2">{fmtDate(selectedRecord.date)}</td>
                               <td className="py-2 px-2 uppercase text-[8px]">{t(lang, "jr.jr_sales_invoice_word", "Sales Invoice")}</td>
                               <td className="py-2 px-2 font-mono font-bold text-slate-800 dark:text-white">INV: {selectedRecord.journal_no}</td>
                               <td className="py-2 px-2.5 font-normal text-slate-500 leading-normal max-w-[200px] truncate">
-                                Credit for Sales Invoice - Red Onions Premium 10,000 Kgs
+                                {t(lang, "jr.narr_credit_sales_invoice", "Credit for Sales Invoice")}{selectedRecord.goods?.[0]?.name ? " — " + selectedRecord.goods[0].name : ""}
                               </td>
-                              <td className="py-2 px-2 font-mono text-[8px]">1101-002</td>
-                              <td className="py-2 px-2 uppercase font-bold text-emerald-600 dark:text-emerald-450">INTERNATIONAL EXPORT SALES A/C</td>
+                              <td className="py-2 px-2 font-mono text-[8px]">—</td>
+                              <td className="py-2 px-2 uppercase font-bold text-emerald-600 dark:text-emerald-450">{selectedRecord.salesAccount || "—"}</td>
                               <td className="py-2 px-2 text-center font-bold">PKR</td>
                               <td className="py-2 px-2 text-right text-slate-400">-</td>
-                              <td className="py-2 px-2 text-right font-mono font-extrabold text-emerald-600 dark:text-emerald-400">2,775,000.00</td>
-                              <td className="py-2 px-2 text-right font-mono font-bold">2,775,000.00</td>
+                              <td className="py-2 px-2 text-right font-mono font-extrabold text-emerald-600 dark:text-emerald-400">{fmtNum(selectedRecord.amount || 0, 2)}</td>
+                              <td className="py-2 px-2 text-right font-mono font-bold">{fmtNum(selectedRecord.amount || 0, 2)}</td>
                             </tr>
                             <tr className="bg-slate-50/40 dark:bg-slate-900/20 text-slate-500 font-extrabold text-[8px] uppercase tracking-wide">
                               <td colSpan={10} className="py-1 px-2.5 text-right text-emerald-700 dark:text-emerald-400 font-black">{t(lang, "jr.jr_total_credit_entries_prefix", "TOTAL CREDIT ENTRIES:")} 1</td>
                               <td className="py-1 px-2 text-right">-</td>
-                              <td className="py-1 px-2 text-right font-mono text-slate-800 dark:text-white">2,775,000.00</td>
-                              <td className="py-1 px-2 text-right font-mono text-slate-800 dark:text-white">2,775,000.00</td>
+                              <td className="py-1 px-2 text-right font-mono text-slate-800 dark:text-white">{fmtNum(selectedRecord.amount || 0, 2)}</td>
+                              <td className="py-1 px-2 text-right font-mono text-slate-800 dark:text-white">{fmtNum(selectedRecord.amount || 0, 2)}</td>
                             </tr>
 
                             {/* 3. INDORESE ENTRY (ENDORSEMENT / TRANSFER) */}
                             <tr className="bg-slate-100/50 dark:bg-slate-900/40 text-blue-800 dark:text-blue-400 font-black text-[8px] uppercase tracking-wider">
                               <td colSpan={13} className="py-1.5 px-2.5">3. INDORESE ENTRY (ENDORSEMENT / TRANSFER)</td>
                             </tr>
-                            {[
-                              { no: 3, ref: "IND-001", details: "Indorsement to Bank - Part 1", amount: 700000.00 },
-                              { no: 4, ref: "IND-002", details: "Indorsement to Bank - Part 2", amount: 800000.00 },
-                              { no: 5, ref: "IND-003", details: "Indorsement to Bank - Part 3", amount: 600000.00 },
-                              { no: 6, ref: "IND-004", details: "Indorsement to Bank - Part 4", amount: 675000.00 },
-                            ].map((indRow, iIdx) => (
+                            {(selectedRecord.payments || []).map((p, i) => ({ no: i + 3, ref: p.method ? p.method + "-" + (i + 1) : "PMT-" + (i + 1), details: (p.type ? p.type + " — " : "") + (p.method || t(lang, "jr.narr_endorsement_payment", "Endorsement / Payment")), amount: Number(p.amount) || 0 })).map((indRow, iIdx) => (
                               <tr key={iIdx} className="hover:bg-slate-50 dark:hover:bg-slate-850/30">
                                 <td className="py-2 px-2.5 text-center font-bold text-slate-400">{indRow.no}</td>
-                                <td className="py-2 px-2 text-slate-500">Pakistan Main Branch</td>
+                                <td className="py-2 px-2 text-slate-500">{selectedRecord.journey?.[0]?.branch || "—"}</td>
                                 <td className="py-2 px-2 text-slate-500">{t(lang, "purchase.pmw_super_admin", "Super Admin")}</td>
-                                <td className="py-2 px-2">21 JUL 2026</td>
+                                <td className="py-2 px-2">{fmtDate(selectedRecord.date)}</td>
                                 <td className="py-2 px-2 uppercase text-[8px]">{t(lang, "jr.jr_indorsement_word", "Indorsement")}</td>
                                 <td className="py-2 px-2 font-mono font-bold text-slate-800 dark:text-white">{indRow.ref}</td>
                                 <td className="py-2 px-2.5 font-normal text-slate-500">{indRow.details}</td>
-                                <td className="py-2 px-2 font-mono text-[8px]">1101-002</td>
-                                <td className="py-2 px-2 uppercase font-bold text-slate-800 dark:text-white">INTERNATIONAL EXPORT SALES A/C</td>
+                                <td className="py-2 px-2 font-mono text-[8px]">—</td>
+                                <td className="py-2 px-2 uppercase font-bold text-slate-800 dark:text-white">{selectedRecord.salesAccount || "—"}</td>
                                 <td className="py-2 px-2 text-center font-bold">PKR</td>
                                 <td className="py-2 px-2 text-right text-slate-400">-</td>
                                 <td className="py-2 px-2 text-right font-mono font-bold text-slate-800 dark:text-white">{fmtNum(indRow.amount, 2)}</td>
@@ -1536,8 +1524,8 @@ export default function JournalReport({
                             <tr className="bg-slate-50/40 dark:bg-slate-900/20 text-slate-500 font-extrabold text-[8px] uppercase tracking-wide">
                               <td colSpan={10} className="py-1 px-2.5 text-right text-blue-750 dark:text-blue-400 font-black">{t(lang, "jr.jr_total_indorese_entries_prefix", "TOTAL INDORESE ENTRIES:")} 4</td>
                               <td className="py-1 px-2 text-right">-</td>
-                              <td className="py-1 px-2 text-right font-mono text-slate-800 dark:text-white">2,775,000.00</td>
-                              <td className="py-1 px-2 text-right font-mono text-slate-800 dark:text-white">2,775,000.00</td>
+                              <td className="py-1 px-2 text-right font-mono text-slate-800 dark:text-white">{fmtNum(selectedRecord.amount || 0, 2)}</td>
+                              <td className="py-1 px-2 text-right font-mono text-slate-800 dark:text-white">{fmtNum(selectedRecord.amount || 0, 2)}</td>
                             </tr>
 
                             {/* 4. REMAINING BALANCE ENTRY (OUTSTANDING) */}
@@ -1546,14 +1534,14 @@ export default function JournalReport({
                             </tr>
                             <tr className="hover:bg-slate-50 dark:hover:bg-slate-850/30">
                               <td className="py-2 px-2.5 text-center font-bold text-slate-400">7</td>
-                              <td className="py-2 px-2 text-slate-500">Pakistan Main Branch</td>
+                              <td className="py-2 px-2 text-slate-500">{selectedRecord.journey?.[0]?.branch || "—"}</td>
                               <td className="py-2 px-2 text-slate-500">{t(lang, "purchase.pmw_super_admin", "Super Admin")}</td>
-                              <td className="py-2 px-2">21 JUL 2026</td>
+                              <td className="py-2 px-2">{fmtDate(selectedRecord.date)}</td>
                               <td className="py-2 px-2 uppercase text-[8px]">{t(lang, "report.col_outstanding", "Outstanding")}</td>
-                              <td className="py-2 px-2 font-mono font-bold text-slate-800 dark:text-white">RB-001</td>
-                              <td className="py-2 px-2.5 font-normal text-slate-500">Remaining Balance After Indorsement to Bank</td>
-                              <td className="py-2 px-2 font-mono text-[8px]">1101-002</td>
-                              <td className="py-2 px-2 uppercase font-bold text-purple-650 dark:text-purple-400">INTERNATIONAL EXPORT SALES A/C</td>
+                              <td className="py-2 px-2 font-mono font-bold text-slate-800 dark:text-white">{selectedRecord.branchSerialNo || "—"}</td>
+                              <td className="py-2 px-2.5 font-normal text-slate-500">{t(lang, "jr.narr_remaining_balance_after_endorsement", "Remaining Balance After Endorsement to Bank")}</td>
+                              <td className="py-2 px-2 font-mono text-[8px]">—</td>
+                              <td className="py-2 px-2 uppercase font-bold text-purple-650 dark:text-purple-400">{selectedRecord.salesAccount || "—"}</td>
                               <td className="py-2 px-2 text-center font-bold">PKR</td>
                               <td className="py-2 px-2 text-right text-slate-400">-</td>
                               <td className="py-2 px-2 text-right text-slate-400">-</td>
@@ -1574,15 +1562,15 @@ export default function JournalReport({
                       <div className="grid grid-cols-5 border border-slate-200 dark:border-slate-800 rounded-xl text-center divide-x divide-slate-200 dark:divide-slate-800 font-bold bg-[#1e3a8a] text-white overflow-hidden">
                         <div className="p-2">
                           <p className="text-slate-350 uppercase text-[7px]">{t(lang, "jr.jr_total_debit_pkr_caps", "TOTAL DEBIT (PKR)")}</p>
-                          <p className="font-mono font-extrabold text-[10px] mt-0.5">PKR 2,775,000.00</p>
+                          <p className="font-mono font-extrabold text-[10px] mt-0.5">{selectedRecord.purchaseCurrency || selectedRecord.paymentCurrency || "PKR"} {fmtNum(selectedRecord.amount || 0, 2)}</p>
                         </div>
                         <div className="p-2">
                           <p className="text-slate-350 uppercase text-[7px]">{t(lang, "jr.jr_total_credit_pkr_caps", "TOTAL CREDIT (PKR)")}</p>
-                          <p className="font-mono font-extrabold text-[10px] mt-0.5">PKR 2,775,000.00</p>
+                          <p className="font-mono font-extrabold text-[10px] mt-0.5">{selectedRecord.purchaseCurrency || selectedRecord.paymentCurrency || "PKR"} {fmtNum(selectedRecord.amount || 0, 2)}</p>
                         </div>
                         <div className="p-2">
                           <p className="text-slate-350 uppercase text-[7px]">{t(lang, "jr.jr_total_indorese_pkr_caps", "TOTAL INDORESE (PKR)")}</p>
-                          <p className="font-mono font-extrabold text-[10px] mt-0.5">PKR 2,775,000.00</p>
+                          <p className="font-mono font-extrabold text-[10px] mt-0.5">{selectedRecord.purchaseCurrency || selectedRecord.paymentCurrency || "PKR"} {fmtNum(selectedRecord.amount || 0, 2)}</p>
                         </div>
                         <div className="p-2">
                           <p className="text-slate-350 uppercase text-[7px]">{t(lang, "jr.jr_total_remaining_pkr_caps", "TOTAL REMAINING (PKR)")}</p>
@@ -1607,7 +1595,7 @@ export default function JournalReport({
                         </h4>
                         <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-[9px] leading-tight font-bold">
                           <div className="space-y-1.5">
-                            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "purchase.f_payment_terms", "Payment Terms:")}</span><span className="text-slate-800 dark:text-white uppercase">{selectedRecord.paymentCondition || "CREDIT (30 DAYS)"}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "purchase.f_payment_terms", "Payment Terms:")}</span><span className="text-slate-800 dark:text-white uppercase">{selectedRecord.paymentCondition || "—"}</span></div>
                             <div className="flex justify-between"><span className="text-slate-400">{t(lang, "purchase.f_exchange_rate", "Exchange Rate:")}</span><span className="text-slate-850 dark:text-white font-mono">{fmtNum(selectedRecord.exchangeRate || 1, 4)}</span></div>
                             <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_total_invoice_usd_colon", "Total Invoice (USD):")}</span><span className="text-slate-850 dark:text-white">USD {fmtNum(selectedRecord.amount / (selectedRecord.exchangeRate || 1), 2)}</span></div>
                             <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_total_invoice_pkr_colon", "Total Invoice (PKR):")}</span><span className="text-slate-850 dark:text-white">PKR {fmtNum(selectedRecord.amount, 2)}</span></div>
@@ -1746,7 +1734,7 @@ export default function JournalReport({
                   <div className="flex justify-between text-slate-500"><span>{t(lang, "jr.jr_source_type_colon", "Source Type:")}</span><span className="text-slate-900">{t(lang, "jr.jr_sales_invoice_caps", "SALES INVOICE")}</span></div>
                   <div className="flex justify-between text-slate-500"><span>{t(lang, "jr.jr_invoice_no_colon", "Invoice No:")}</span><span className="text-slate-900 font-mono">{selectedRecord.journal_no}</span></div>
                   <div className="flex justify-between text-slate-500"><span>{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span><span className="text-slate-900 font-mono">1101-002</span></div>
-                  <div className="flex justify-between text-slate-500"><span>{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span><span className="text-slate-900 uppercase truncate max-w-[100px]" title={selectedRecord.salesAccount}>{selectedRecord.salesAccount || "INTERNATIONAL EXPORT SALES A/C"}</span></div>
+                  <div className="flex justify-between text-slate-500"><span>{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span><span className="text-slate-900 uppercase truncate max-w-[100px]" title={selectedRecord.salesAccount}>{selectedRecord.salesAccount || "—"}</span></div>
                 </div>
               </div>
 
@@ -1759,7 +1747,7 @@ export default function JournalReport({
                   <div className="flex justify-between text-slate-500"><span>{t(lang, "jr.jr_source_type_colon", "Source Type:")}</span><span className="text-slate-900">{t(lang, "jr.jr_purchase_invoice_caps", "PURCHASE INVOICE")}</span></div>
                   <div className="flex justify-between text-slate-500"><span>{t(lang, "jr.jr_invoice_no_colon", "Invoice No:")}</span><span className="text-slate-900 font-mono">{selectedRecord.journal_no}</span></div>
                   <div className="flex justify-between text-slate-500"><span>{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span><span className="text-slate-900 font-mono">5001-001</span></div>
-                  <div className="flex justify-between text-slate-500"><span>{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span><span className="text-slate-900 uppercase truncate max-w-[100px]" title={selectedRecord.purchaseAccount}>{selectedRecord.purchaseAccount || "ASIAN EXPORTS A/C (DEEB)"}</span></div>
+                  <div className="flex justify-between text-slate-500"><span>{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span><span className="text-slate-900 uppercase truncate max-w-[100px]" title={selectedRecord.purchaseAccount}>{selectedRecord.purchaseAccount || "—"}</span></div>
                 </div>
               </div>
 
@@ -1838,16 +1826,16 @@ export default function JournalReport({
                     {/* Debit Row */}
                     <tr className="hover:bg-slate-50">
                       <td className="py-2 px-2.5 text-center font-bold text-slate-400">1</td>
-                      <td className="py-2 px-2 text-slate-500">{selectedRecord.journey?.[0]?.branch || "Pakistan Main Branch"}</td>
+                      <td className="py-2 px-2 text-slate-500">{selectedRecord.journey?.[0]?.branch || "—"}</td>
                       <td className="py-2 px-2 text-slate-500">{t(lang, "purchase.pmw_super_admin", "Super Admin")}</td>
                       <td className="py-2 px-2">{fmtDate(selectedRecord.date)}</td>
                       <td className="py-2 px-2 uppercase text-[8px]">{t(lang, "nav.purchase_invoice", "Purchase Invoice")}</td>
                       <td className="py-2 px-2 font-mono font-bold">PO: {selectedRecord.journal_no}</td>
-                      <td className="py-2 px-2.5 font-normal text-slate-500 leading-normal max-w-[200px] truncate" title={`Debit for Purchase Invoice - ${selectedRecord.goods?.[0]?.name || "Goods"} from ${selectedRecord.goods?.[0]?.origin || "Origin"}`}>
-                        Debit for Purchase Invoice - {selectedRecord.goods?.[0]?.name || "Goods"} {fmtNum(selectedRecord.totalQuantity || selectedRecord.goods?.[0]?.quantity || 0, 0)} {selectedRecord.qtyUnit || selectedRecord.goods?.[0]?.qtyName || "Bags"} from {selectedRecord.goods?.[0]?.origin || "Origin"}
+                      <td className="py-2 px-2.5 font-normal text-slate-500 leading-normal max-w-[200px] truncate" title={`Debit for Purchase Invoice - ${selectedRecord.goods?.[0]?.name || "—"}`}>
+                        Debit for Purchase Invoice - {selectedRecord.goods?.[0]?.name || "—"} {fmtNum(selectedRecord.totalQuantity || selectedRecord.goods?.[0]?.quantity || 0, 0)} {selectedRecord.qtyUnit || selectedRecord.goods?.[0]?.qtyName || ""} from {selectedRecord.goods?.[0]?.origin || "—"}
                       </td>
                       <td className="py-2 px-2 font-mono text-[8px]">5001-001</td>
-                      <td className="py-2 px-2 uppercase font-bold text-blue-800">{selectedRecord.purchaseAccount || "ASIAN EXPORTS A/C (DEEB)"}</td>
+                      <td className="py-2 px-2 uppercase font-bold text-blue-800">{selectedRecord.purchaseAccount || "—"}</td>
                       <td className="py-2 px-2 text-center font-bold">PKR</td>
                       <td className="py-2 px-2 text-right font-mono font-extrabold text-blue-900 bg-slate-50/50">PKR {fmtNum(selectedRecord.amount, 2)}</td>
                       <td className="py-2 px-2 text-right text-slate-450">-</td>
@@ -1870,16 +1858,16 @@ export default function JournalReport({
                     {/* Credit Row */}
                     <tr className="hover:bg-slate-50">
                       <td className="py-2 px-2.5 text-center font-bold text-slate-400">2</td>
-                      <td className="py-2 px-2 text-slate-500">{selectedRecord.journey?.[0]?.branch || "Pakistan Main Branch"}</td>
+                      <td className="py-2 px-2 text-slate-500">{selectedRecord.journey?.[0]?.branch || "—"}</td>
                       <td className="py-2 px-2 text-slate-500">{t(lang, "purchase.pmw_super_admin", "Super Admin")}</td>
                       <td className="py-2 px-2">{fmtDate(selectedRecord.date)}</td>
                       <td className="py-2 px-2 uppercase text-[8px]">{t(lang, "jr.jr_sales_invoice_word", "Sales Invoice")}</td>
                       <td className="py-2 px-2 font-mono font-bold">INV: {selectedRecord.journal_no}</td>
-                      <td className="py-2 px-2.5 font-normal text-slate-500 leading-normal max-w-[200px] truncate" title={`Credit for Sales Invoice - ${selectedRecord.goods?.[0]?.name || "Goods"}`}>
-                        Credit for Sales Invoice - {selectedRecord.goods?.[0]?.name || "Goods"} {fmtNum(selectedRecord.totalQuantity || selectedRecord.goods?.[0]?.quantity || 0, 0)} {selectedRecord.qtyUnit || selectedRecord.goods?.[0]?.qtyName || "Bags"}
+                      <td className="py-2 px-2.5 font-normal text-slate-500 leading-normal max-w-[200px] truncate" title={`Credit for Sales Invoice - ${selectedRecord.goods?.[0]?.name || "—"}`}>
+                        Credit for Sales Invoice - {selectedRecord.goods?.[0]?.name || "—"} {fmtNum(selectedRecord.totalQuantity || selectedRecord.goods?.[0]?.quantity || 0, 0)} {selectedRecord.qtyUnit || selectedRecord.goods?.[0]?.qtyName || ""}
                       </td>
-                      <td className="py-2 px-2 font-mono text-[8px]">1101-002</td>
-                      <td className="py-2 px-2 uppercase font-bold text-emerald-700">{selectedRecord.salesAccount || "INTERNATIONAL EXPORT SALES A/C"}</td>
+                      <td className="py-2 px-2 font-mono text-[8px]">—</td>
+                      <td className="py-2 px-2 uppercase font-bold text-emerald-700">{selectedRecord.salesAccount || "—"}</td>
                       <td className="py-2 px-2 text-center font-bold">PKR</td>
                       <td className="py-2 px-2 text-right text-slate-450">-</td>
                       <td className="py-2 px-2 text-right font-mono font-extrabold text-emerald-750 bg-slate-50/50">PKR {fmtNum(selectedRecord.amount, 2)}</td>
@@ -1904,14 +1892,14 @@ export default function JournalReport({
                       selectedRecord.payments.map((p, idx) => (
                         <tr key={idx} className="hover:bg-slate-50">
                           <td className="py-2 px-2.5 text-center font-bold text-slate-400">{3 + idx}</td>
-                          <td className="py-2 px-2 text-slate-500">{selectedRecord.journey?.[0]?.branch || "Pakistan Main Branch"}</td>
+                          <td className="py-2 px-2 text-slate-500">{selectedRecord.journey?.[0]?.branch || "—"}</td>
                           <td className="py-2 px-2 text-slate-500">{t(lang, "purchase.pmw_super_admin", "Super Admin")}</td>
                           <td className="py-2 px-2">{fmtDate(p.date)}</td>
                           <td className="py-2 px-2 uppercase text-[8px]">{t(lang, "jr.jr_indorsement_word", "Indorsement")}</td>
                           <td className="py-2 px-2 font-mono font-bold">IND-{String(idx + 1).padStart(3, '0')}</td>
-                          <td className="py-2 px-2.5 font-normal text-slate-500 max-w-[200px] truncate">Indorsement to Bank - Part {idx + 1} ({p.method})</td>
-                          <td className="py-2 px-2 font-mono text-[8px]">1101-002</td>
-                          <td className="py-2 px-2 uppercase font-bold text-slate-800">{selectedRecord.salesAccount || "INTERNATIONAL EXPORT SALES A/C"}</td>
+                          <td className="py-2 px-2.5 font-normal text-slate-500 max-w-[200px] truncate">{t(lang, "jr.narr_endorsement_to_bank_part", "Endorsement to Bank - Part")} {idx + 1} ({p.method})</td>
+                          <td className="py-2 px-2 font-mono text-[8px]">—</td>
+                          <td className="py-2 px-2 uppercase font-bold text-slate-800">{selectedRecord.salesAccount || "—"}</td>
                           <td className="py-2 px-2 text-center font-bold">PKR</td>
                           <td className="py-2 px-2 text-right text-slate-450">-</td>
                           <td className="py-2 px-2 text-right font-mono font-bold text-slate-800">PKR {fmtNum(p.localAmount, 2)}</td>
@@ -1922,14 +1910,14 @@ export default function JournalReport({
                       selectedRecord.paidAmount > 0 ? (
                         <tr className="hover:bg-slate-50">
                           <td className="py-2 px-2.5 text-center font-bold text-slate-400">3</td>
-                          <td className="py-2 px-2 text-slate-500">{selectedRecord.journey?.[0]?.branch || "Pakistan Main Branch"}</td>
+                          <td className="py-2 px-2 text-slate-500">{selectedRecord.journey?.[0]?.branch || "—"}</td>
                           <td className="py-2 px-2 text-slate-500">{t(lang, "purchase.pmw_super_admin", "Super Admin")}</td>
                           <td className="py-2 px-2">{fmtDate(selectedRecord.date)}</td>
                           <td className="py-2 px-2 uppercase text-[8px]">{t(lang, "jr.jr_indorsement_word", "Indorsement")}</td>
-                          <td className="py-2 px-2 font-mono font-bold">IND-001</td>
-                          <td className="py-2 px-2.5 font-normal text-slate-500">Indorsement to Bank - Initial Payment</td>
-                          <td className="py-2 px-2 font-mono text-[8px]">1101-002</td>
-                          <td className="py-2 px-2 uppercase font-bold text-slate-800">{selectedRecord.salesAccount || "INTERNATIONAL EXPORT SALES A/C"}</td>
+                          <td className="py-2 px-2 font-mono font-bold">{selectedRecord.payments?.[0]?.method || "—"}</td>
+                          <td className="py-2 px-2.5 font-normal text-slate-500">{t(lang, "jr.narr_endorsement_initial_payment", "Endorsement to Bank - Initial Payment")}</td>
+                          <td className="py-2 px-2 font-mono text-[8px]">—</td>
+                          <td className="py-2 px-2 uppercase font-bold text-slate-800">{selectedRecord.salesAccount || "—"}</td>
                           <td className="py-2 px-2 text-center font-bold">PKR</td>
                           <td className="py-2 px-2 text-right text-slate-450">-</td>
                           <td className="py-2 px-2 text-right font-mono font-bold text-slate-800">PKR {fmtNum(selectedRecord.paidAmount, 2)}</td>
@@ -1962,14 +1950,14 @@ export default function JournalReport({
                       <td className="py-2 px-2.5 text-center font-bold text-slate-400">
                         {3 + (selectedRecord.payments?.length || (selectedRecord.paidAmount > 0 ? 1 : 0))}
                       </td>
-                      <td className="py-2 px-2 text-slate-500">{selectedRecord.journey?.[0]?.branch || "Pakistan Main Branch"}</td>
+                      <td className="py-2 px-2 text-slate-500">{selectedRecord.journey?.[0]?.branch || "—"}</td>
                       <td className="py-2 px-2 text-slate-500">{t(lang, "purchase.pmw_super_admin", "Super Admin")}</td>
                       <td className="py-2 px-2">{fmtDate(selectedRecord.date)}</td>
                       <td className="py-2 px-2 uppercase text-[8px]">{t(lang, "report.col_outstanding", "Outstanding")}</td>
-                      <td className="py-2 px-2 font-mono font-bold">RB-001</td>
-                      <td className="py-2 px-2.5 font-normal text-slate-500 leading-normal max-w-[200px] truncate">Remaining Balance After Indorsement to Bank</td>
-                      <td className="py-2 px-2 font-mono text-[8px]">1101-002</td>
-                      <td className="py-2 px-2 uppercase font-bold text-purple-700">{selectedRecord.salesAccount || "INTERNATIONAL EXPORT SALES A/C"}</td>
+                      <td className="py-2 px-2 font-mono font-bold">{selectedRecord.branchSerialNo || "—"}</td>
+                      <td className="py-2 px-2.5 font-normal text-slate-500 leading-normal max-w-[200px] truncate">{t(lang, "jr.narr_remaining_balance_after_endorsement", "Remaining Balance After Endorsement to Bank")}</td>
+                      <td className="py-2 px-2 font-mono text-[8px]">—</td>
+                      <td className="py-2 px-2 uppercase font-bold text-purple-700">{selectedRecord.salesAccount || "—"}</td>
                       <td className="py-2 px-2 text-center font-bold">PKR</td>
                       <td className="py-2 px-2 text-right text-slate-450">-</td>
                       <td className="py-2 px-2 text-right text-slate-450">-</td>
@@ -2026,7 +2014,7 @@ export default function JournalReport({
               </h4>
               <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-[9px] leading-tight font-bold">
                 <div className="space-y-1.5">
-                  <div className="flex justify-between"><span className="text-slate-400">{t(lang, "purchase.f_payment_terms", "Payment Terms:")}</span><span className="text-slate-800 uppercase">{selectedRecord.paymentCondition || "CREDIT (30 DAYS)"}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-400">{t(lang, "purchase.f_payment_terms", "Payment Terms:")}</span><span className="text-slate-800 uppercase">{selectedRecord.paymentCondition || "—"}</span></div>
                   <div className="flex justify-between"><span className="text-slate-400">{t(lang, "purchase.f_exchange_rate", "Exchange Rate:")}</span><span className="text-slate-850 font-mono">{fmtNum(selectedRecord.exchangeRate || 1, 4)}</span></div>
                   <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_total_invoice_usd_colon", "Total Invoice (USD):")}</span><span className="text-slate-850">USD {fmtNum(selectedRecord.amount / (selectedRecord.exchangeRate || 1), 2)}</span></div>
                   <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_total_invoice_pkr_colon", "Total Invoice (PKR):")}</span><span className="text-slate-850">PKR {fmtNum(selectedRecord.amount, 2)}</span></div>

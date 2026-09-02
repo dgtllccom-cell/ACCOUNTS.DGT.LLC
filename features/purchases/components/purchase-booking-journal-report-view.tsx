@@ -266,7 +266,7 @@ function getDashboardSummaryData(rows: PurchaseReport[], session: any): Dashboar
   const summary: DashboardSummaryData = {
     country,
     branchName,
-    userName: session?.name || session?.username || session?.user?.fullName || "SUPER ADMIN",
+    userName: session?.name || session?.username || session?.user?.fullName || "—",
     userId: session?.userId || session?.user?.id || "SA001",
     role: session?.role || "Super Admin",
     
@@ -1089,7 +1089,7 @@ function SuperAdminPurchaseSummary({
   const firstRow = rows[0];
   const country = firstRow.countryName || session?.countryName || "All Countries";
   const branchName = session?.branchName || "—";
-  const userName = session?.name || session?.username || session?.user?.fullName || "SUPER ADMIN";
+  const userName = session?.name || session?.username || session?.user?.fullName || "—";
   const userId = session?.userId || session?.user?.id || "SA001";
   const role = session?.role || "Super Admin";
 
@@ -2555,7 +2555,7 @@ export function PurchaseBookingJournalReportView({
                     rowTextColor = "text-slate-900 font-bold dark:text-slate-100";
                   }
 
-                  const userName = report.audit?.userName || (report as any).createdByName || "ADMIN";
+                  const userName = report.audit?.userName || (report as any).createdByName || "—";
 
                   return (
                     <tr
@@ -2672,12 +2672,12 @@ export function PurchaseBookingJournalReportView({
                                   paymentType: f.paymentType || report.paymentStatus || "Advance Payment",
                                   status: report.status || "Accepted",
                                   remarks: f.orderReportRemarks || report.goodsDescription || "",
-                                  userName: report.audit?.userName || "ADMIN"
+                                  userName: report.audit?.userName || "—"
                                 },
                                 companyInfo: {
                                   name: "",
                                   branch: report.branchName || "AL_RAS",
-                                  printedBy: session?.fullName || session?.email || "SUPER ADMIN"
+                                  printedBy: session?.fullName || session?.email || "—"
                                 },
                                 lang: activeLang
                               });
@@ -2754,12 +2754,12 @@ export function PurchaseBookingJournalReportView({
                                   paymentType: f.paymentType || report.paymentStatus || "Advance Payment",
                                   status: report.status || "Accepted",
                                   remarks: f.orderReportRemarks || report.goodsDescription || "",
-                                  userName: report.audit?.userName || "ADMIN"
+                                  userName: report.audit?.userName || "—"
                                 },
                                 companyInfo: {
                                   name: "",
                                   branch: report.branchName || "AL_RAS",
-                                  printedBy: session?.fullName || session?.email || "SUPER ADMIN"
+                                  printedBy: session?.fullName || session?.email || "—"
                                 }
                               });
                             }}
@@ -2926,7 +2926,7 @@ export function PurchaseBookingJournalReportView({
                     <Td className={cn("text-[10px] font-semibold whitespace-nowrap", rowTextColor)}>{trField(report, "countryName", ctyName)}</Td>
                     <Td className={cn("text-[10px] font-semibold whitespace-nowrap", rowTextColor)}>{trField(report, "branchName", brName)}</Td>
                     <Td center className={cn("text-[10px] whitespace-nowrap", rowTextColor)}>{dateStr}</Td>
-                    <Td className={cn("text-[10px] font-semibold whitespace-nowrap", rowTextColor)}>{report.audit?.userName || "ADMIN"}</Td>
+                    <Td className={cn("text-[10px] font-semibold whitespace-nowrap", rowTextColor)}>{report.audit?.userName || "—"}</Td>
                     <Td className={cn("text-[10px] max-w-[200px] truncate", rowTextColor)} title={goodsName}>{goodsName}</Td>
                     <Td center className={cn("text-[10px]", rowTextColor)}>{trField(report, "items.0.brand", g0?.brand || "Standard")}</Td>
                     <Td center className={cn("text-[10px]", rowTextColor)}>{trField(report, "items.0.origin", g0?.origin || ctyName)}</Td>
@@ -3021,12 +3021,12 @@ export function PurchaseBookingJournalReportView({
                               paymentType: f.paymentType || report.paymentStatus || "Advance Payment",
                               status: report.status || "Accepted",
                               remarks: f.orderReportRemarks || report.goodsDescription || "",
-                              userName: report.audit?.userName || "ADMIN"
+                              userName: report.audit?.userName || "—"
                             },
                             companyInfo: {
                               name: "",
                               branch: report.branchName || "AL_RAS",
-                              printedBy: session?.fullName || session?.email || "SUPER ADMIN"
+                              printedBy: session?.fullName || session?.email || "—"
                             }
                           });
                         }}
@@ -3413,7 +3413,7 @@ export function PurchaseBookingJournalReportView({
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{trUi("Booking Reference:")}</td><td className="px-2 py-1 font-bold text-slate-800 font-mono">{selected.purchaseBookingOrderNumber}</td></tr>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{trUi("Purchase Date:")}</td><td className="px-2 py-1 text-slate-800">{date(selected.purchaseDate)}</td></tr>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{trUi("Booking Date:")}</td><td className="px-2 py-1 text-slate-800">{reportDate}</td></tr>
-                          <tr><td className="px-2 py-1 text-slate-400">{trUi("Booking User:")}</td><td className="px-2 py-1 font-bold text-slate-800 uppercase">{selected.audit?.userName || "ADMIN"}</td></tr>
+                          <tr><td className="px-2 py-1 text-slate-400">{trUi("Booking User:")}</td><td className="px-2 py-1 font-bold text-slate-800 uppercase">{selected.audit?.userName || "—"}</td></tr>
                         </tbody>
                       </table>
                     </div>
@@ -3686,7 +3686,7 @@ export function PurchaseBookingJournalReportView({
                       </svg>
                     </div>
                     <div className="w-[18%] text-center border-t border-slate-300 pt-1">
-                      <div className="font-bold text-slate-800 text-[8px] italic leading-none">{selected.audit?.userName || "ADMIN"}</div>
+                      <div className="font-bold text-slate-800 text-[8px] italic leading-none">{selected.audit?.userName || "—"}</div>
                       <div className="font-bold text-slate-400 text-[6.5px] mt-1">{trUi("PREPARED BY")}</div>
                     </div>
                     <div className="w-[18%] text-center border-t border-slate-300 pt-1">

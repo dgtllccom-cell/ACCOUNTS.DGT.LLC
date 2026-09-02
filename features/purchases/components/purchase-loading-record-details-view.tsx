@@ -17,6 +17,7 @@ import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 function PurchaseLoadingRecordDetailsViewContent({ recordId }: { recordId: string }) {
+  const lang = useActiveLanguage();
   const searchParams = useSearchParams();
   const shouldPrint = searchParams.get("print") === "true";
 
@@ -47,11 +48,11 @@ function PurchaseLoadingRecordDetailsViewContent({ recordId }: { recordId: strin
   }, [loading, record, shouldPrint]);
 
   if (loading) {
-    return <div className="flex h-[400px] items-center justify-center text-muted-foreground">Loading details...</div>;
+    return <div className="flex h-[400px] items-center justify-center text-muted-foreground">{t(lang, "plrd.loading_details", "Loading details…")}</div>;
   }
 
   if (!record) {
-    return <div className="flex h-[400px] items-center justify-center text-destructive">Record not found.</div>;
+    return <div className="flex h-[400px] items-center justify-center text-destructive">{t(lang, "plrd.record_not_found", "Record not found.")}</div>;
   }
 
   const poData = (Array.isArray(record.purchase_orders) ? record.purchase_orders[0] : record.purchase_orders)?.form_data || {};
@@ -118,7 +119,6 @@ function PurchaseLoadingRecordDetailsViewContent({ recordId }: { recordId: strin
     remarks: record.remarks || form.remarks || "We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct."
   };
 
-  const lang = useActiveLanguage();
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
 
@@ -359,8 +359,9 @@ function PurchaseLoadingRecordDetailsViewContent({ recordId }: { recordId: strin
 }
 
 export function PurchaseLoadingRecordDetailsView(props: { recordId: string }) {
+  const lang = useActiveLanguage();
   return (
-    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">Loading Loading Record Details...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">{t(lang, "plrd.loading_record_details", "Loading Loading Record Details…")}</div>}>
       <PurchaseLoadingRecordDetailsViewContent {...props} />
     </Suspense>
   );

@@ -649,7 +649,7 @@ function getDashboardSummaryData(rows: PurchaseOrderRow[], session: any, mode: s
   const summary: DashboardSummaryData = {
     country,
     branchName,
-    userName: session?.name || session?.username || session?.user?.fullName || "SUPER ADMIN",
+    userName: session?.name || session?.username || session?.user?.fullName || "—",
     userId: session?.userId || session?.user?.id || "SA001",
     role: session?.role || "â",
     
@@ -2733,7 +2733,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
       paymentHistory,
       finalCurrency: rowOfficeCurrency(row),
       audit: {
-        userName: row.audit?.userName || session?.name || session?.username || "SUPER ADMIN",
+        userName: row.audit?.userName || session?.name || session?.username || "—",
         userId: row.audit?.userId || session?.id || "USR-1001",
         branchCode: row.audit?.branchCode || form.branchCode || "QTA-01"
       }

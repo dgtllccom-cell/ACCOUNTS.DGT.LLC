@@ -205,7 +205,7 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
         </div>
         <div className="flex items-center gap-2">
           <span className="text-slate-400">{tt("common.user","USER NAME")}:</span>
-          <span className="text-slate-900 dark:text-white font-extrabold">{session.fullName || session.email || "SUPER ADMIN"}</span>
+          <span className="text-slate-900 dark:text-white font-extrabold">{session.fullName || session.email || "—"}</span>
         </div>
         <div className="flex items-center gap-3 font-mono" suppressHydrationWarning>
           <div>{tt("common.date","DATE")}: <span className="text-slate-800 dark:text-slate-200 font-bold">{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase()}</span></div>
@@ -477,7 +477,7 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
                         billNo: row.serialNo || row.serial_no || row.billNo || row.bill_no || `LP-${row.id.slice(0, 6).toUpperCase()}`,
                         transferDate: row.createdAt || row.created_at || new Date().toISOString(),
                         supplierName: row.supplierName || row.supplier_name || "LOCAL SUPPLIER",
-                        branchName: row.branchName || row.branch_name || session.branchName || "MAIN BRANCH",
+                        branchName: row.branchName || row.branch_name || session.branchName || "—",
                         countryName: row.countryName || row.country_name || "UNITED ARAB EMIRATES",
                         goodsName: row.goodsName || row.goods_name || "COMMODITY GOODS",
                         paymentMode: row.paymentMode || row.payment_mode || "CASH / BANK TRANSFER",
@@ -487,12 +487,12 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
                         amountInWords: amountToWordsEn(Number(row.finalCost || row.final_cost || row.purchaseCost || row.purchase_cost || 0), row.localCurrency || "AED"),
                         purchaseAccountNo: row.purchaseAccountNo || row.purchase_account_no || "PURCHASE-AC-001",
                         salesAccountNo: row.salesAccountNo || row.sales_account_no || "CASH-SETTLEMENT-001",
-                        userFullName: session.fullName || session.email || "SUPER ADMIN"
+                        userFullName: session.fullName || session.email || "—"
                       },
                       companyInfo: {
                         name: "",
-                        branch: session.branchName || "MAIN BRANCH",
-                        printedBy: session.fullName || session.email || "SUPER ADMIN"
+                        branch: session.branchName || "—",
+                        printedBy: session.fullName || session.email || "—"
                       }
                     });
                   }}
@@ -536,7 +536,7 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
                 const officePhone = _row.branding_phone || _row.phone || "";
                 const officeEmail = _row.branding_email || _row.email || "";
                 const trnNumber = _row.tax_number || _row.trn || "";
-                const supplierName = selectedRowForVoucher.supplierName || selectedRowForVoucher.supplier_name || "Local Vendor";
+                const supplierName = selectedRowForVoucher.supplierName || selectedRowForVoucher.supplier_name || "—";
                 const paymentMethod = selectedRowForVoucher.paymentMode || selectedRowForVoucher.payment_mode || "Cash";
                 const shippingMode = selectedRowForVoucher.shippingMode || selectedRowForVoucher.shipping_mode || "Local Purchase";
                 const goodsName = selectedRowForVoucher.goodsName || selectedRowForVoucher.goods_name || "Local Purchase Goods";
