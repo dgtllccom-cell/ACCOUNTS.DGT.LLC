@@ -1014,7 +1014,7 @@ function NestedRowActions({ payment, row, ledgers, localCurrency }: any) {
   }
   return (
     <details className="relative">
-      <summary className="flex h-7 w-8 cursor-pointer list-none items-center justify-center rounded border border-indigo-200 bg-indigo-50 text-indigo-600 transition hover:bg-indigo-100 [&::-webkit-details-marker]:hidden mx-auto" aria-label="Payment actions" title="Actions">
+      <summary className="flex h-7 w-8 cursor-pointer list-none items-center justify-center rounded border border-indigo-200 bg-indigo-50 text-indigo-600 transition hover:bg-indigo-100 [&::-webkit-details-marker]:hidden mx-auto" aria-label={translateHeader(currentLanguage, "Payment actions")} title={translateHeader(currentLanguage, "Actions")}>
         <MoreVertical className="h-4 w-4" />
       </summary>
       <div className="absolute right-0 z-30 mt-1 w-40 rounded-xl border border-border bg-popover p-1 text-sm text-popover-foreground shadow-xl">
@@ -1226,20 +1226,20 @@ function NestedPaymentHistory({
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-500 font-semibold">Total Purchase Amount:</span>
+                <span className="text-slate-500 font-semibold">{translateHeader(currentLanguage, "Total Purchase Amount:")}</span>
                 <span className="font-mono font-black text-slate-800 dark:text-slate-200">{money(calcs.totalPurchaseFC, calcs.purchCurr)}</span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-500 font-semibold">Invoice / Advance %:</span>
+                <span className="text-slate-500 font-semibold">{translateHeader(currentLanguage, "Invoice / Advance %:")}</span>
                 <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-mono font-black dark:bg-blue-950/40 dark:text-blue-400">{calcs.advancePercent}%</span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-500 font-semibold">Invoice / Advance Amount:</span>
+                <span className="text-slate-500 font-semibold">{translateHeader(currentLanguage, "Invoice / Advance Amount:")}</span>
                 <span className="font-mono font-black text-emerald-600 dark:text-emerald-400">{money(calcs.advanceAmountFC, calcs.purchCurr)}</span>
               </div>
               {Number(calcs.advancePercent) > 0 && form?.advancePaymentDate && (
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-500 font-semibold">Advance Payment Due Date:</span>
+                  <span className="text-slate-500 font-semibold">{translateHeader(currentLanguage, "Advance Payment Due Date:")}</span>
                   <span className="bg-amber-50 text-amber-700 px-2 py-0.5 rounded text-[10px] font-mono font-black dark:bg-amber-950/40 dark:text-amber-400">
                     {String(form.advancePaymentDate)}
                   </span>
@@ -1247,7 +1247,7 @@ function NestedPaymentHistory({
               )}
               <div className="border-t border-dashed border-slate-100 dark:border-slate-800/60 my-1"></div>
               <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-800 dark:text-slate-200 font-bold">Remaining Purchase Balance:</span>
+                <span className="text-slate-800 dark:text-slate-200 font-bold">{translateHeader(currentLanguage, "Remaining Purchase Balance:")}</span>
                 <span className="font-mono font-black text-rose-600 dark:text-rose-400">{money(calcs.remainingPurchaseFC, calcs.purchCurr)}</span>
               </div>
             </div>
@@ -1318,7 +1318,7 @@ function NestedPaymentHistory({
               <tr className="bg-slate-100 dark:bg-slate-900 border-b font-bold text-slate-600 uppercase text-[10px] tracking-wider">
                 <Th className="px-3 py-2.5 border-r">{translateHeader(currentLanguage, "General Serial / Date")}</Th>
                 <Th className="px-3 py-2.5 border-r">{translateHeader(currentLanguage, "Reference / User")}</Th>
-                <Th className="px-3 py-2.5 border-r">Debit & Credit Ledger Account</Th>
+                <Th className="px-3 py-2.5 border-r">{translateHeader(currentLanguage, "Debit & Credit Ledger Account")}</Th>
                 <Th className="px-3 py-2.5 text-right border-r">Advance Required ({purchaseCurrency})</Th>
                 <Th className="px-3 py-2.5 text-right border-r">Received ({purchaseCurrency})</Th>
                 <Th className="px-3 py-2.5 text-right border-r">Balance ({purchaseCurrency})</Th>
@@ -1351,9 +1351,9 @@ function NestedPaymentHistory({
                 return (
                   <tr key={p.id} className="border-b border-indigo-100/50 hover:bg-indigo-50/40 transition">
                     <td className="px-3 py-2.5 border-r font-mono text-slate-900 dark:text-slate-100 text-[10px] align-top space-y-1 whitespace-nowrap">
-                      <div><span className="text-muted-foreground font-semibold">General:</span> <span className="font-bold">{journalSerial}</span></div>
-                      <div><span className="text-muted-foreground font-semibold">Country:</span> <span className="font-bold">{countrySerial}</span></div>
-                      <div><span className="text-muted-foreground font-semibold">Branch:</span> <span className="font-bold">{branchSerial}</span></div>
+                      <div><span className="text-muted-foreground font-semibold">{translateHeader(currentLanguage, "General:")}</span> <span className="font-bold">{journalSerial}</span></div>
+                      <div><span className="text-muted-foreground font-semibold">{translateHeader(currentLanguage, "Country:")}</span> <span className="font-bold">{countrySerial}</span></div>
+                      <div><span className="text-muted-foreground font-semibold">{translateHeader(currentLanguage, "Branch:")}</span> <span className="font-bold">{branchSerial}</span></div>
                       <div className="pt-1 text-slate-500">{date(p.entry_date || p.created_at)}</div>
                     </td>
                     <td className="px-3 py-2.5 border-r text-xs align-top space-y-1 min-w-[160px]">
@@ -1498,6 +1498,7 @@ function DashboardSummaryHeader({
   lang?: LanguageCode;
   session?: any;
 }) {
+  const currentLanguage = useActiveLanguage() as LanguageCode;
   const [activeStep, setActiveStep] = useState<1 | 2 | 3 | 4>(1);
   const [expandedSummaryCountries, setExpandedSummaryCountries] = useState<Record<string, boolean>>({});
   const [showAllCountries, setShowAllCountries] = useState(false);
@@ -1815,11 +1816,11 @@ function DashboardSummaryHeader({
     const body = (
       <div className="flex flex-col gap-4 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
         <div className="flex justify-between items-center">
-          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-slate-400"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg></div> Total Transactions:</span>
+          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-slate-400"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg></div> {translateHeader(currentLanguage, "Total Transactions:")}</span>
           <span className="font-black text-slate-800 dark:text-slate-200">{summary.totalTransactions}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-slate-400"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div> Purchase Currencies:</span>
+          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-slate-400"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div> {translateHeader(currentLanguage, "Purchase Currencies:")}</span>
           <span className="font-black text-slate-800 dark:text-slate-200">{numCurrencies}</span>
         </div>
         <div className="flex justify-between items-center mt-2">
@@ -1835,7 +1836,7 @@ function DashboardSummaryHeader({
           <span className="font-black text-rose-600 dark:text-rose-400 font-mono">{summary.totalAllFC.remainingBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-rose-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div> % Not Transferred:</span>
+          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-rose-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div> {translateHeader(currentLanguage, "% Not Transferred:")}</span>
           <span className="font-black text-rose-600 dark:text-rose-400">{summary.totalAllFC.totalPurchase > 0 ? ((summary.totalAllFC.remainingBalance / summary.totalAllFC.totalPurchase) * 100).toFixed(2) : "0.00"}%</span>
         </div>
       </div>
@@ -1874,7 +1875,7 @@ function DashboardSummaryHeader({
           <span className="font-black text-rose-600 dark:text-rose-400 font-mono">{summary.remainingBalanceLC.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-rose-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div> % Not Transferred:</span>
+          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-rose-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div> {translateHeader(currentLanguage, "% Not Transferred:")}</span>
           <span className="font-black text-rose-600 dark:text-rose-400">{notTransferredPercentLC.toFixed(2)}%</span>
         </div>
       </div>
@@ -2237,6 +2238,7 @@ function DashboardSummaryHeader({
 
       const key = `${bCode}::${cCode}::${fCur}`;
       if (!map[key]) {
+  const currentLanguage = useActiveLanguage() as LanguageCode;
         map[key] = {
           branchCode: bCode,
           countryCode: cCode,
@@ -4790,7 +4792,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                     <button
                       type="button"
                       className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                      title="Locked"
+                      title={translateHeader(currentLanguage, "Locked")}
                     >
                       <Lock className="h-4 w-4" />
                     </button>
@@ -4883,15 +4885,15 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                     </div>
                     <div className="space-y-2 mt-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
                       <div>
-                        <span className="text-[9.5px] text-slate-500 dark:text-slate-400 block font-normal">Sales Payment Amount (Final Currency) :</span>
+                        <span className="text-[9.5px] text-slate-500 dark:text-slate-400 block font-normal">{translateHeader(currentLanguage, "Sales Payment Amount (Final Currency) :")}</span>
                         <span className="font-mono text-slate-900 dark:text-slate-200 font-bold">USD 122,475.50 + AED 448,931.61</span>
                       </div>
                       <div>
-                        <span className="text-[9.5px] text-slate-500 dark:text-slate-400 block font-normal">Purchase Payment Amount (Final Currency) :</span>
+                        <span className="text-[9.5px] text-slate-500 dark:text-slate-400 block font-normal">{translateHeader(currentLanguage, "Purchase Payment Amount (Final Currency) :")}</span>
                         <span className="font-mono text-slate-900 dark:text-slate-200 font-bold">USD {statementPurchaseForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })} + AED {statementPurchaseLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                       </div>
                       <div>
-                        <span className="text-[9.5px] text-slate-500 dark:text-slate-400 block font-normal">Total Paid Payment (Final Currency) :</span>
+                        <span className="text-[9.5px] text-slate-500 dark:text-slate-400 block font-normal">{translateHeader(currentLanguage, "Total Paid Payment (Final Currency) :")}</span>
                         <span className="font-mono text-emerald-600 dark:text-emerald-400 font-black">USD {statTotalPaidFC.toLocaleString(undefined, { minimumFractionDigits: 2 })} + AED {statTotalPaidLC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                       </div>
                     </div>
@@ -4904,11 +4906,11 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                       <span>{t("sec_currency_conversion_payment_summary", currentLanguage)}</span>
                     </div>
                     <div className="space-y-1.5 mt-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
-                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">Purchase Payment Currency :</span><span className="font-mono font-bold">USD {statementPurchaseForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
-                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">Final Payment Currency :</span><span className="font-mono font-bold">AED {statementPurchaseLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
-                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">Total Purchase Payment (FC) :</span><span className="font-mono font-bold">USD {statementPurchaseForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
-                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">Payment Exchange Rate :</span><span className="font-mono font-bold">1 USD = {exRate.toFixed(4)} AED</span></div>
-                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">Final Converted Payment :</span><span className="font-mono font-black text-emerald-600 dark:text-emerald-400">AED {statementPurchaseLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Purchase Payment Currency :")}</span><span className="font-mono font-bold">USD {statementPurchaseForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Final Payment Currency :")}</span><span className="font-mono font-bold">AED {statementPurchaseLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Total Purchase Payment (FC) :")}</span><span className="font-mono font-bold">USD {statementPurchaseForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Payment Exchange Rate :")}</span><span className="font-mono font-bold">1 USD = {exRate.toFixed(4)} AED</span></div>
+                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Final Converted Payment :")}</span><span className="font-mono font-black text-emerald-600 dark:text-emerald-400">AED {statementPurchaseLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
                     </div>
                   </div>
 
@@ -4922,14 +4924,14 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                       <div>
                         <span className="text-[9.5px] font-bold uppercase text-emerald-600 dark:text-emerald-400 block">Advance Payment Summary ({advancePercent}%)</span>
                         <div className="space-y-0.5 text-slate-700 dark:text-slate-300 text-[10.5px]">
-                          <div><span className="text-slate-500 dark:text-slate-400">Required: </span><span className="font-mono font-bold">USD {requiredAdvanceBC.toLocaleString(undefined, { minimumFractionDigits: 2 })} + AED {(requiredAdvanceBC * exRate).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
-                          <div><span className="text-slate-500 dark:text-slate-400">Paid: </span><span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">USD {statTotalPaidFC.toLocaleString(undefined, { minimumFractionDigits: 2 })} + AED {statTotalPaidLC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
-                          <div><span className="text-slate-500 dark:text-slate-400">Pending: </span><span className="font-mono text-rose-600 dark:text-rose-400 font-bold">USD {Math.max(0, requiredAdvanceBC - statTotalPaidFC).toLocaleString(undefined, { minimumFractionDigits: 2 })} + AED {(Math.max(0, requiredAdvanceBC - statTotalPaidFC) * exRate).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+                          <div><span className="text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "Required:")} </span><span className="font-mono font-bold">USD {requiredAdvanceBC.toLocaleString(undefined, { minimumFractionDigits: 2 })} + AED {(requiredAdvanceBC * exRate).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+                          <div><span className="text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "Paid:")} </span><span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">USD {statTotalPaidFC.toLocaleString(undefined, { minimumFractionDigits: 2 })} + AED {statTotalPaidLC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+                          <div><span className="text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "Pending:")} </span><span className="font-mono text-rose-600 dark:text-rose-400 font-bold">USD {Math.max(0, requiredAdvanceBC - statTotalPaidFC).toLocaleString(undefined, { minimumFractionDigits: 2 })} + AED {(Math.max(0, requiredAdvanceBC - statTotalPaidFC) * exRate).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
                         </div>
                       </div>
 
                       <div className="border-t border-slate-200 dark:border-slate-800/80 pt-1.5">
-                        <span className="text-[9.5px] font-bold uppercase text-cyan-600 dark:text-cyan-400 block mb-1">Payment Schedule & Installment Plan</span>
+                        <span className="text-[9.5px] font-bold uppercase text-cyan-600 dark:text-cyan-400 block mb-1">{translateHeader(currentLanguage, "Payment Schedule & Installment Plan")}</span>
                         <table className="w-full text-left text-[9px] border-collapse">
                           <thead>
                             <tr className="text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
@@ -4972,17 +4974,17 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                     </div>
                     <div className="space-y-2 mt-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
                       <div>
-                        <span className="text-[9.5px] text-slate-500 dark:text-slate-400 block font-normal">Total Payment :</span>
+                        <span className="text-[9.5px] text-slate-500 dark:text-slate-400 block font-normal">{translateHeader(currentLanguage, "Total Payment :")}</span>
                         <span className="font-mono font-black text-sm text-slate-900 dark:text-white">USD {statementPurchaseForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                         <div className="font-mono text-[11px] text-slate-600 dark:text-slate-300">AED {statementPurchaseLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                       </div>
                       <div>
-                        <span className="text-[9.5px] text-slate-500 dark:text-slate-400 block font-normal">Total Paid Payment :</span>
+                        <span className="text-[9.5px] text-slate-500 dark:text-slate-400 block font-normal">{translateHeader(currentLanguage, "Total Paid Payment :")}</span>
                         <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">USD {statTotalPaidFC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                         <div className="font-mono text-[11px] text-emerald-600/90 dark:text-emerald-400/80">AED {statTotalPaidLC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                       </div>
                       <div>
-                        <span className="text-[9.5px] text-rose-600 dark:text-rose-400 block font-normal">Remaining Payment Balance :</span>
+                        <span className="text-[9.5px] text-rose-600 dark:text-rose-400 block font-normal">{translateHeader(currentLanguage, "Remaining Payment Balance :")}</span>
                         <span className="font-mono font-black text-sm text-rose-600 dark:text-rose-400">USD {statRemainingFC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                         <div className="font-mono text-[11px] text-rose-600/90 dark:text-rose-400/90">AED {statRemainingLC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                       </div>
@@ -5056,7 +5058,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                           <th className="px-3 py-2">{translateHeader(currentLanguage, "Date")}</th>
                           <th className="px-3 py-2">{translateHeader(currentLanguage, "User")}</th>
                           <th className="px-3 py-2">{translateHeader(currentLanguage, "Branch")}</th>
-                          <th className="px-3 py-2">Roz #</th>
+                          <th className="px-3 py-2">{translateHeader(currentLanguage, "Roz #")}</th>
                           <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Total Amount (AED)")}</th>
                           <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Percent")}</th>
                           <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Advance (AED)")}</th>
@@ -5105,7 +5107,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                         <tr className="bg-slate-100 dark:bg-[#0b1329] text-slate-600 dark:text-slate-400 text-[9px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
                           <th className="px-3 py-2 text-center w-10">#</th>
                           <th className="px-3 py-2">{translateHeader(currentLanguage, "Date")}</th>
-                          <th className="px-3 py-2 text-center">Roz #</th>
+                          <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Roz #")}</th>
                           <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "R Name")}</th>
                           <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "No.")}</th>
                           <th className="px-3 py-2 text-emerald-600 dark:text-emerald-400 font-bold">{translateHeader(currentLanguage, "Type")}</th>
@@ -5163,7 +5165,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                         <tr className="bg-slate-100 dark:bg-[#0b1329] text-slate-600 dark:text-slate-400 text-[9px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
                           <th className="px-3 py-2 text-center w-10">#</th>
                           <th className="px-3 py-2">{translateHeader(currentLanguage, "Date")}</th>
-                          <th className="px-3 py-2 text-center">Roz #</th>
+                          <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Roz #")}</th>
                           <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "R Name")}</th>
                           <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "No.")}</th>
                           <th className="px-3 py-2 text-emerald-600 dark:text-emerald-400 font-bold">{translateHeader(currentLanguage, "Type")}</th>
@@ -5318,11 +5320,11 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                             value={paymentType}
                             onChange={(e) => setPaymentType(e.target.value as any)}
                           >
-                            <option value="">- Select Type -</option>
-                            <option value="bank">Bank Transfer / TT</option>
-                            <option value="cash">Cash in Hand</option>
-                            <option value="business">Business / Custom Method</option>
-                            <option value="transfer">Inter-branch Transfer</option>
+                            <option value="">{translateHeader(currentLanguage, "- Select Type -")}</option>
+                            <option value="bank">{translateHeader(currentLanguage, "Bank Transfer / TT")}</option>
+                            <option value="cash">{translateHeader(currentLanguage, "Cash in Hand")}</option>
+                            <option value="business">{translateHeader(currentLanguage, "Business / Custom Method")}</option>
+                            <option value="transfer">{translateHeader(currentLanguage, "Inter-branch Transfer")}</option>
                           </select>
                         </FieldBlock>
                       </div>
@@ -5353,7 +5355,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                           <FieldBlock label="Bank Account / IBAN / Ref No.">
                             <Input
                               className="h-8 text-xs font-mono bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100"
-                              placeholder="Account / IBAN..."
+                              placeholder={translateHeader(currentLanguage, "Account / IBAN...")}
                               value={typeDetails.refNo || ""}
                               onChange={(e) => setTypeDetails((p) => ({ ...p, refNo: e.target.value }))}
                             />
@@ -5362,7 +5364,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                           <FieldBlock label="Cheque / Transaction ID">
                             <Input
                               className="h-8 text-xs font-mono bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100"
-                              placeholder="Cheque No. / TT Slip ID..."
+                              placeholder={translateHeader(currentLanguage, "Cheque No. / TT Slip ID...")}
                               value={typeDetails.chequeNo || ""}
                               onChange={(e) => setTypeDetails((p) => ({ ...p, chequeNo: e.target.value }))}
                             />
@@ -5379,10 +5381,10 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                                 value={typeDetails.method || ""}
                                 onChange={(e) => setTypeDetails((p) => ({ ...p, method: e.target.value }))}
                               >
-                                <option value="">- Select Method -</option>
-                                <option value="EasyPaisa">EasyPaisa</option>
-                                <option value="JazzCash">JazzCash</option>
-                                <option value="Hawala / Hundi">Hawala / Hundi</option>
+                                <option value="">{translateHeader(currentLanguage, "- Select Method -")}</option>
+                                <option value="EasyPaisa">{translateHeader(currentLanguage, "EasyPaisa")}</option>
+                                <option value="JazzCash">{translateHeader(currentLanguage, "JazzCash")}</option>
+                                <option value="Hawala / Hundi">{translateHeader(currentLanguage, "Hawala / Hundi")}</option>
                                 {savedMethods.map((m) => <option key={m} value={m}>{m}</option>)}
                               </select>
                               <Button
@@ -5400,7 +5402,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                           <FieldBlock label="Channel Reference / Agent Name">
                             <Input
                               className="h-8 text-xs bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100"
-                              placeholder="Agent name / Reference..."
+                              placeholder={translateHeader(currentLanguage, "Agent name / Reference...")}
                               value={typeDetails.agentName || ""}
                               onChange={(e) => setTypeDetails((p) => ({ ...p, agentName: e.target.value }))}
                             />
@@ -5454,7 +5456,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                           <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-2.5 space-y-2">
                             <div className="flex items-center gap-1.5 text-[11px] font-bold text-blue-600 dark:text-blue-400">
                               <Calculator className="h-3.5 w-3.5" />
-                              <span>Currency Rate & Conversion Helper</span>
+                              <span>{translateHeader(currentLanguage, "Currency Rate & Conversion Helper")}</span>
                             </div>
                             <div className="grid grid-cols-3 gap-2">
                               <FieldBlock label="Foreign Amount">
@@ -5482,7 +5484,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                                   onChange={(e) => setCalcOp(e.target.value as any)}
                                 >
                                   <option value="mul">Multiply (*)</option>
-                                  <option value="div">Divide (/)</option>
+                                  <option value="div">{translateHeader(currentLanguage, "Divide (/)")}</option>
                                 </select>
                               </FieldBlock>
                             </div>
@@ -5567,7 +5569,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                           {/* Balanced Live Status Pill */}
                           <div className="rounded-xl border border-indigo-200 dark:border-indigo-900/40 bg-indigo-50/60 dark:bg-indigo-950/30 p-3 text-indigo-900 dark:text-indigo-200 text-xs">
                             <div className="font-bold flex items-center justify-between">
-                              <span>âï¸ Double-Entry Live Status</span>
+                              <span>{translateHeader(currentLanguage, "Double-Entry Live Status")}</span>
                               <span className="font-black text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded-full">{translateHeader(currentLanguage, "BALANCED")}</span>
                             </div>
                             <div className="text-[10.5px] mt-1 font-semibold text-indigo-700 dark:text-indigo-300 truncate">
@@ -5624,11 +5626,11 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                 {/* Footer Metadata */}
                 <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-200 dark:border-slate-800/80">
                   <div>
-                    <span>Created By: </span>
+                    <span>{translateHeader(currentLanguage, "Created By:")} </span>
                     <strong className="text-slate-800 dark:text-slate-200 font-bold">{userName}</strong>
                   </div>
                   <div>
-                    <span>Created On: </span>
+                    <span>{translateHeader(currentLanguage, "Created On:")} </span>
                     <strong className="text-slate-800 dark:text-slate-200 font-bold">{date(selected.created_at)}</strong>
                   </div>
                 </div>
@@ -5669,7 +5671,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
           {addOptionType === "bank" ? (
             <div className="space-y-3">
               <div className="space-y-1">
-                <Label className="text-xs font-black">Bank Name</Label>
+                <Label className="text-xs font-black">{translateHeader(currentLanguage, "Bank Name")}</Label>
                 <Input
                   className="text-xs font-semibold"
                   value={addOptionValue}
@@ -5678,13 +5680,13 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs font-black">Bank Address</Label>
+                <Label className="text-xs font-black">{translateHeader(currentLanguage, "Bank Address")}</Label>
                 <textarea
                   rows={2}
                   className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-xs font-semibold focus-visible:outline-none"
                   value={addOptionAddress}
                   onChange={(e) => setAddOptionAddress(e.target.value)}
-                  placeholder="Enter bank physical branch address..."
+                  placeholder={translateHeader(currentLanguage, "Enter bank physical branch address...")}
                 />
               </div>
               <div className="flex justify-end gap-2 pt-2 border-t">
@@ -5699,7 +5701,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
           ) : (
             <div className="space-y-4">
               <div className="space-y-2 pb-3 border-b">
-                <Label className="text-xs font-black">Add New Payment Method</Label>
+                <Label className="text-xs font-black">{translateHeader(currentLanguage, "Add New Payment Method")}</Label>
                 <div className="flex gap-2">
                   <Input
                     className="text-xs font-semibold"
@@ -5715,7 +5717,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
 
               {savedMethods.length > 0 ? (
                 <div className="space-y-2">
-                  <Label className="text-xs font-black">Custom Methods List (Click text to rename, or Blur to save)</Label>
+                  <Label className="text-xs font-black">{translateHeader(currentLanguage, "Custom Methods List (Click text to rename, or Blur to save)")}</Label>
                   <div className="max-h-[180px] overflow-y-auto space-y-2 pr-1">
                     {savedMethods.map((m) => (
                       <div key={m} className="flex items-center gap-2">
@@ -5835,11 +5837,12 @@ function Metric({ label, value, sublabel, icon, tone }: KpiCard) {
 }
 
 function MiniFilter({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (value: string) => void }) {
+  const currentLanguage = useActiveLanguage() as LanguageCode;
   return (
     <label className="block">
       <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</span>
       <select value={value} onChange={(event) => onChange(event.target.value)} className="h-9 w-full rounded-lg border border-input bg-background px-3 text-xs text-foreground outline-none focus:border-primary">
-        <option value="">All</option>
+        <option value="">{translateHeader(currentLanguage, "All")}</option>
         {options.map((option) => <option key={option} value={option.toLowerCase()}>{option}</option>)}
       </select>
     </label>
@@ -5847,6 +5850,7 @@ function MiniFilter({ label, value, options, onChange }: { label: string; value:
 }
 
 function ReportActions({ rows, mode }: { rows: PurchaseOrderRow[]; mode: PaymentMode }) {
+  const currentLanguage = useActiveLanguage() as LanguageCode;
   function handleReportAction(fn: () => void) {
     fn();
     const details = document.activeElement?.closest("details");
@@ -5854,7 +5858,7 @@ function ReportActions({ rows, mode }: { rows: PurchaseOrderRow[]; mode: Payment
   }
   return (
     <details className="relative">
-      <summary className="flex h-9 w-10 cursor-pointer list-none items-center justify-center rounded-lg border border-input bg-background text-foreground transition hover:bg-muted [&::-webkit-details-marker]:hidden" aria-label="Payment report actions" title="Payment report actions">
+      <summary className="flex h-9 w-10 cursor-pointer list-none items-center justify-center rounded-lg border border-input bg-background text-foreground transition hover:bg-muted [&::-webkit-details-marker]:hidden" aria-label={translateHeader(currentLanguage, "Payment report actions")} title={translateHeader(currentLanguage, "Payment report actions")}>
         <MoreVertical className="h-4 w-4" />
       </summary>
       <div className="absolute right-0 z-30 mt-2 w-52 rounded-xl border border-border bg-popover p-1 text-sm text-popover-foreground shadow-xl">
@@ -5903,6 +5907,7 @@ function ReportActions({ rows, mode }: { rows: PurchaseOrderRow[]; mode: Payment
 }
 
 function RowActions({ onSelect, rowId }: { onSelect: () => void; rowId: string }) {
+  const currentLanguage = useActiveLanguage() as LanguageCode;
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: 0, left: 0 });
   const btnRef = React.useRef<HTMLButtonElement>(null);
@@ -5943,7 +5948,7 @@ function RowActions({ onSelect, rowId }: { onSelect: () => void; rowId: string }
         }}
         onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#f1f5f9"; }}
         onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#fff"; }}
-        aria-label="Row actions"
+        aria-label={translateHeader(currentLanguage, "Row actions")}
       >
         <MoreVertical style={{ width: 15, height: 15 }} />
       </button>

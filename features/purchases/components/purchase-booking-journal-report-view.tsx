@@ -2683,7 +2683,7 @@ export function PurchaseBookingJournalReportView({
                               });
                             }}
                             className="inline-flex h-7 w-7 items-center justify-center rounded border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition shadow-sm"
-                            title="Print Full A4 Bill"
+                            title={trUi("Print Full A4 Bill")}
                           >
                             <Printer className="h-3.5 w-3.5" />
                           </button>
@@ -3142,7 +3142,7 @@ export function PurchaseBookingJournalReportView({
               />}
               <details className="relative">
                 <summary className="flex items-center gap-1.5 cursor-pointer list-none rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-2.5 py-1.5 transition-all h-8 [&::-webkit-details-marker]:hidden">
-                  <span>Print & Documents</span>
+                  <span>{trUi("Print & Documents")}</span>
                   <span className="text-[8px]">▼</span>
                 </summary>
                 <div className="absolute right-0 mt-1 w-56 rounded-xl bg-card border border-border shadow-2xl z-50 p-1 space-y-0.5 animate-in fade-in slide-in-from-top-2 duration-150 text-foreground">
@@ -3348,7 +3348,7 @@ export function PurchaseBookingJournalReportView({
                         <div className="text-sm font-black tracking-widest text-blue-900 uppercase leading-none">
                           DEMI TRADING CO.
                         </div>
-                        <div className="text-[7.5px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">Global Trade, Trusted Partner</div>
+                        
                       </div>
                     </div>
                     <div className="text-right text-[8px] font-bold text-slate-650 uppercase">
@@ -3362,41 +3362,41 @@ export function PurchaseBookingJournalReportView({
 
                   {/* Document Title Bar */}
                   <div className="bg-[#0f2942] text-white text-[8.5px] font-bold px-3 py-1 flex justify-between rounded-sm items-center">
-                    <span>Report No: {reportNo}</span>
-                    <span className="text-xs tracking-widest uppercase font-black">Purchase Transfer Verification Report</span>
+                    <span>{trUi("Report No")}: {reportNo}</span>
+                    <span className="text-xs tracking-widest uppercase font-black">{trUi("Purchase Transfer Verification Report")}</span>
                     <div className="flex gap-4">
-                      <span>Report Date: {reportDate}</span>
-                      <span>Time: 10:30 AM</span>
+                      <span>{trUi("Report Date")}: {reportDate}</span>
+                      <span>{new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}</span>
                     </div>
                   </div>
 
                   {/* Transfer Status Panel */}
                   <div className="flex gap-3">
                     <div className="w-[38%] bg-emerald-500/5 border border-emerald-500/10 rounded p-2.5 flex flex-col justify-center">
-                      <span className="text-[7.5px] text-emerald-600 uppercase font-black tracking-wider block">Transfer Status</span>
+                      <span className="text-[7.5px] text-emerald-600 uppercase font-black tracking-wider block">{trUi("Transfer Status")}</span>
                       <span className="text-xs font-black text-emerald-700 block mt-1 mb-1.5">
                         ● {selected.status === "Posted" || (selected as any).ledgerPostingStatus === "Posted" ? "Fully Transferred & Posted" : "Approved & Ready for Transfer"}
                       </span>
                       {(selected.status === "Posted" || (selected as any).ledgerPostingStatus === "Posted") && selected.form_data?.form?.transferAudit && (
                         <div className="text-[7.5px] text-emerald-800/80 bg-emerald-500/10 p-1.5 rounded-sm border border-emerald-500/20 leading-snug font-semibold mt-0.5">
                           <div className="flex items-center gap-1 mb-0.5">
-                            <span className="font-black uppercase tracking-wider text-emerald-700">Transferred By:</span> {selected.form_data.form.transferAudit.userName}
+                            <span className="font-black uppercase tracking-wider text-emerald-700">{trUi("Transferred By:")}</span> {selected.form_data.form.transferAudit.userName}
                           </div>
                           <div className="flex items-center gap-1 mb-0.5">
-                            <span className="font-black uppercase tracking-wider text-emerald-700">Date/Time:</span> {new Date(selected.form_data.form.transferAudit.transferDate).toLocaleString("en-US")}
+                            <span className="font-black uppercase tracking-wider text-emerald-700">{trUi("Date/Time:")}</span> {new Date(selected.form_data.form.transferAudit.transferDate).toLocaleString("en-US")}
                           </div>
                           <div className="flex items-center gap-1">
-                            <span className="font-black uppercase tracking-wider text-emerald-700">Transfer ID:</span> <span className="font-mono font-bold text-emerald-900">{selected.form_data.form.transferAudit.transferId}</span>
+                            <span className="font-black uppercase tracking-wider text-emerald-700">{trUi("Transfer ID:")}</span> <span className="font-mono font-bold text-emerald-900">{selected.form_data.form.transferAudit.transferId}</span>
                           </div>
                         </div>
                       )}
                     </div>
                     <div className="w-[62%] bg-emerald-500/5 border border-emerald-500/10 rounded p-2.5 text-[8.5px] text-slate-655 leading-relaxed font-semibold">
-                      <span className="text-[7.5px] text-emerald-650 uppercase font-black tracking-wider block mb-1">Transferred To (Destination Accounts)</span>
+                      <span className="text-[7.5px] text-emerald-650 uppercase font-black tracking-wider block mb-1">{trUi("Transferred To (Destination Accounts)")}</span>
                       <ul className="list-disc pl-3.5 space-y-0.5">
-                        <li>General Ledger Debit Account: <strong className="text-slate-800 font-mono">{selected.form_data?.form?.purchaseAccountNo || selected.purchaseAccountNumber} - {trField(selected, "purchaseAccountName", selected.form_data?.form?.purchaseAccountName || selected.purchaseAccountName)}</strong> & Credit Account: <strong className="text-slate-800 font-mono">{selected.form_data?.form?.salesAccountNo || selected.salesAccountNumber} - {trField(selected, "salesAccountName", selected.form_data?.form?.salesAccountName || selected.salesAccountName)}</strong></li>
-                        <li>Internal Voucher Entry No: <strong className="text-slate-800 font-mono">{selected.status === "Posted" || (selected as any).ledgerPostingStatus === "Posted" ? `JV-${selected.purchaseBookingOrderNumber.slice(-6)}` : `Pending Posting`}</strong></li>
-                        <li>Logistics cargo loading module (<strong className="text-slate-800">{containerCount} Container</strong>)</li>
+                        <li>{trUi("General Ledger Debit Account:")} <strong className="text-slate-800 font-mono">{selected.form_data?.form?.purchaseAccountNo || selected.purchaseAccountNumber} - {trField(selected, "purchaseAccountName", selected.form_data?.form?.purchaseAccountName || selected.purchaseAccountName)}</strong> {trUi("& Credit Account:")} <strong className="text-slate-800 font-mono">{selected.form_data?.form?.salesAccountNo || selected.salesAccountNumber} - {trField(selected, "salesAccountName", selected.form_data?.form?.salesAccountName || selected.salesAccountName)}</strong></li>
+                        <li>{trUi("Internal Voucher Entry No:")} <strong className="text-slate-800 font-mono">{selected.status === "Posted" || (selected as any).ledgerPostingStatus === "Posted" ? `JV-${selected.purchaseBookingOrderNumber.slice(-6)}` : trUi("Pending Posting")}</strong></li>
+                        <li>{trUi("Logistics cargo loading module")} (<strong className="text-slate-800">{containerCount} {trUi("Container")}</strong>)</li>
                       </ul>
                     </div>
                   </div>
@@ -3410,10 +3410,10 @@ export function PurchaseBookingJournalReportView({
                       </div>
                       <table className="w-full text-[8px] font-semibold text-slate-600">
                         <tbody>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Booking Reference:</td><td className="px-2 py-1 font-bold text-slate-800 font-mono">{selected.purchaseBookingOrderNumber}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Purchase Date:</td><td className="px-2 py-1 text-slate-800">{date(selected.purchaseDate)}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Booking Date:</td><td className="px-2 py-1 text-slate-800">{reportDate}</td></tr>
-                          <tr><td className="px-2 py-1 text-slate-400">Booking User:</td><td className="px-2 py-1 font-bold text-slate-800 uppercase">{selected.audit?.userName || "ADMIN"}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{trUi("Booking Reference:")}</td><td className="px-2 py-1 font-bold text-slate-800 font-mono">{selected.purchaseBookingOrderNumber}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{trUi("Purchase Date:")}</td><td className="px-2 py-1 text-slate-800">{date(selected.purchaseDate)}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{trUi("Booking Date:")}</td><td className="px-2 py-1 text-slate-800">{reportDate}</td></tr>
+                          <tr><td className="px-2 py-1 text-slate-400">{trUi("Booking User:")}</td><td className="px-2 py-1 font-bold text-slate-800 uppercase">{selected.audit?.userName || "ADMIN"}</td></tr>
                         </tbody>
                       </table>
                     </div>
@@ -3425,11 +3425,11 @@ export function PurchaseBookingJournalReportView({
                       </div>
                       <table className="w-full text-[8px] font-semibold text-slate-600">
                         <tbody>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Supplier Name:</td><td className="px-2 py-1 font-bold text-slate-800 truncate max-w-[100px]">{trField(selected, "supplierName", selected.supplierName)}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Contact Person:</td><td className="px-2 py-1 text-slate-800">{selected.form_data?.form?.purchaseContactPerson || selected.form_data?.form?.supplierContactPerson || "—"}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Mobile Number:</td><td className="px-2 py-1 text-slate-800 font-mono">{selected.form_data?.form?.purchaseContact || selected.form_data?.form?.supplierContact || "—"}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Email Address:</td><td className="px-2 py-1 text-slate-800 truncate max-w-[100px]">{selected.form_data?.form?.supplierEmail || "supplier@globalfoods.com"}</td></tr>
-                          <tr><td className="px-2 py-1 text-slate-400">Country:</td><td className="px-2 py-1 text-slate-800">{selected.countryName}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{trUi("Supplier Name:")}</td><td className="px-2 py-1 font-bold text-slate-800 truncate max-w-[100px]">{trField(selected, "supplierName", selected.supplierName)}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{trUi("Contact Person:")}</td><td className="px-2 py-1 text-slate-800">{selected.form_data?.form?.purchaseContactPerson || selected.form_data?.form?.supplierContactPerson || "—"}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{trUi("Mobile Number:")}</td><td className="px-2 py-1 text-slate-800 font-mono">{selected.form_data?.form?.purchaseContact || selected.form_data?.form?.supplierContact || "—"}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{trUi("Email Address:")}</td><td className="px-2 py-1 text-slate-800 truncate max-w-[100px]">{selected.form_data?.form?.supplierEmail || "supplier@globalfoods.com"}</td></tr>
+                          <tr><td className="px-2 py-1 text-slate-400">{trUi("Country:")}</td><td className="px-2 py-1 text-slate-800">{selected.countryName}</td></tr>
                         </tbody>
                       </table>
                     </div>
@@ -3441,11 +3441,11 @@ export function PurchaseBookingJournalReportView({
                       </div>
                       <table className="w-full text-[8px] font-semibold text-slate-600">
                         <tbody>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Buyer Name:</td><td className="px-2 py-1 font-bold text-slate-800 truncate max-w-[100px]">{trField(selected, "buyerName", selected.buyerName)}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Contact Person:</td><td className="px-2 py-1 text-slate-800">{(selected as any).buyerContactPerson || "—"}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Mobile Number:</td><td className="px-2 py-1 text-slate-800 font-mono">{(selected as any).buyerPhone || (selected as any).buyerMobile || "—"}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Email Address:</td><td className="px-2 py-1 text-slate-800 truncate max-w-[100px]">{(selected as any).buyerEmail || "—"}</td></tr>
-                          <tr><td className="px-2 py-1 text-slate-400">Country:</td><td className="px-2 py-1 text-slate-800">{(selected as any).buyerCountry || selected.countryName || "—"}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{trUi("Buyer Name:")}</td><td className="px-2 py-1 font-bold text-slate-800 truncate max-w-[100px]">{trField(selected, "buyerName", selected.buyerName)}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{trUi("Contact Person:")}</td><td className="px-2 py-1 text-slate-800">{(selected as any).buyerContactPerson || "—"}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{trUi("Mobile Number:")}</td><td className="px-2 py-1 text-slate-800 font-mono">{(selected as any).buyerPhone || (selected as any).buyerMobile || "—"}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{trUi("Email Address:")}</td><td className="px-2 py-1 text-slate-800 truncate max-w-[100px]">{(selected as any).buyerEmail || "—"}</td></tr>
+                          <tr><td className="px-2 py-1 text-slate-400">{trUi("Country:")}</td><td className="px-2 py-1 text-slate-800">{(selected as any).buyerCountry || selected.countryName || "—"}</td></tr>
                         </tbody>
                       </table>
                     </div>
@@ -3509,7 +3509,7 @@ export function PurchaseBookingJournalReportView({
                       </tbody>
                       <tfoot className="border-t-[1.5px] border-slate-350 bg-slate-50 font-bold text-[8px]">
                         <tr className="text-slate-800">
-                          <td colSpan={5} className="p-1 text-right text-slate-500 font-extrabold uppercase text-[7.5px]">Totals:</td>
+                          <td colSpan={5} className="p-1 text-right text-slate-500 font-extrabold uppercase text-[7.5px]">{trUi("Totals:")}</td>
                           <td className="p-1 text-right text-slate-900 font-black">{totalQty.toLocaleString()} {goodsEntries[0]?.qtyName || "Units"}</td>
                           <td className="p-1"></td>
                           <td className="p-1 text-right text-slate-950 font-bold">{totalGross.toLocaleString()} kg</td>
@@ -3520,9 +3520,9 @@ export function PurchaseBookingJournalReportView({
                           <td className="p-1 text-right text-emerald-600 font-black">{totalPKRVal.toLocaleString(undefined, { minimumFractionDigits: 2 })} {displayCurrencySymbol}</td>
                         </tr>
                         <tr className="text-[7.5px] text-slate-550 border-t border-slate-200/60 font-semibold">
-                          <td colSpan={5} className="p-1 text-right uppercase text-[7px]">Containers & Dues:</td>
+                          <td colSpan={5} className="p-1 text-right uppercase text-[7px]">{trUi("Containers & Dues:")}</td>
                           <td colSpan={3} className="p-1 text-left">FCL: <span className="font-bold text-slate-800">{containerCount}</span></td>
-                          <td colSpan={5} className="p-1 text-left">Avg Rate/Ton: <span className="font-bold text-slate-800">{purchaseCurrencySymbol}{avgRateTon.toFixed(2)}</span></td>
+                          <td colSpan={5} className="p-1 text-left">{trUi("Avg Rate/Ton:")} <span className="font-bold text-slate-800">{purchaseCurrencySymbol}{avgRateTon.toFixed(2)}</span></td>
                         </tr>
                       </tfoot>
                     </table>
@@ -3536,27 +3536,27 @@ export function PurchaseBookingJournalReportView({
                     <table className="w-full text-[8px] font-semibold text-slate-600">
                       <tbody>
                         <tr className="border-b border-slate-100">
-                          <td className="px-2 py-1 text-slate-400 w-[20%]">Loading Country:</td>
+                          <td className="px-2 py-1 text-slate-400 w-[20%]">{trUi("Loading Country:")}</td>
                           <td className="px-2 py-1 text-slate-800 font-bold w-[30%]">{selected.countryName || "—"}</td>
-                          <td className="px-2 py-1 text-slate-400 w-[20%]">Receiving Country:</td>
+                          <td className="px-2 py-1 text-slate-400 w-[20%]">{trUi("Receiving Country:")}</td>
                           <td className="px-2 py-1 text-slate-800 font-bold w-[30%]">{selected.form_data?.form?.receivedCountry || selected.buyerName || "Pakistan"}</td>
                         </tr>
                         <tr className="border-b border-slate-100">
-                          <td className="px-2 py-1 text-slate-400">Loading Port:</td>
+                          <td className="px-2 py-1 text-slate-400">{trUi("Loading Port:")}</td>
                           <td className="px-2 py-1 text-slate-800">{loadingPortText}</td>
-                          <td className="px-2 py-1 text-slate-400">Receiving Port:</td>
+                          <td className="px-2 py-1 text-slate-400">{trUi("Receiving Port:")}</td>
                           <td className="px-2 py-1 text-slate-800">{destinationPortText}</td>
                         </tr>
                         <tr className="border-b border-slate-100">
-                          <td className="px-2 py-1 text-slate-400">Loading Date:</td>
+                          <td className="px-2 py-1 text-slate-400">{trUi("Loading Date:")}</td>
                           <td className="px-2 py-1 text-slate-800 font-mono font-bold text-blue-750">{expectedLoadingDate}</td>
-                          <td className="px-2 py-1 text-slate-400">Received Date at Port:</td>
+                          <td className="px-2 py-1 text-slate-400">{trUi("Received Date at Port:")}</td>
                           <td className="px-2 py-1 text-slate-800 font-mono font-bold text-blue-750">{selected.form_data?.form?.receivedDate || "-"}</td>
                         </tr>
                         <tr>
-                          <td className="px-2 py-1 text-slate-400">Containers:</td>
+                          <td className="px-2 py-1 text-slate-400">{trUi("Containers:")}</td>
                           <td className="px-2 py-1 text-slate-800 font-bold">{containerCount} Containers</td>
-                          <td className="px-2 py-1 text-slate-400">Container Numbers & BL:</td>
+                          <td className="px-2 py-1 text-slate-400">{trUi("Container Numbers & BL:")}</td>
                           <td className="px-2 py-1 text-slate-800 font-mono truncate max-w-[200px]">{containerNumbersText} {billNumberText !== "-" && `/ BL: ${billNumberText}`}</td>
                         </tr>
                       </tbody>
@@ -3572,13 +3572,13 @@ export function PurchaseBookingJournalReportView({
                       </div>
                       <table className="w-full text-[8px] font-semibold text-slate-650">
                         <tbody>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Payment Condition:</td><td className="px-2 py-1 text-slate-800 font-bold">{paymentConditionText}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Advance Percent / Due:</td><td className="px-2 py-1 text-slate-800">{advancePercent}% / <span className="font-bold text-blue-700">{advanceDueDateText}</span></td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Advance Amount:</td><td className="px-2 py-1 font-bold text-emerald-600 font-mono">{purchaseCurrencySymbol}{advanceAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} {purchaseCurrency !== displayCurrency && `/ ${displayCurrencySymbol}${advanceAmountFinal.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Remaining Balance / Due:</td><td className="px-2 py-1 text-slate-800">{remainingPercent}% / <span className="font-bold text-rose-600">{finalPaymentDueDateText}</span></td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Remaining Amount:</td><td className="px-2 py-1 text-slate-800 font-mono">{purchaseCurrencySymbol}{remainingAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} {purchaseCurrency !== displayCurrency && `/ ${displayCurrencySymbol}${remainingAmountFinal.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{trUi("Payment Condition:")}</td><td className="px-2 py-1 text-slate-800 font-bold">{paymentConditionText}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{trUi("Advance Percent / Due:")}</td><td className="px-2 py-1 text-slate-800">{advancePercent}% / <span className="font-bold text-blue-700">{advanceDueDateText}</span></td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{trUi("Advance Amount:")}</td><td className="px-2 py-1 font-bold text-emerald-600 font-mono">{purchaseCurrencySymbol}{advanceAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} {purchaseCurrency !== displayCurrency && `/ ${displayCurrencySymbol}${advanceAmountFinal.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{trUi("Remaining Balance / Due:")}</td><td className="px-2 py-1 text-slate-800">{remainingPercent}% / <span className="font-bold text-rose-600">{finalPaymentDueDateText}</span></td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{trUi("Remaining Amount:")}</td><td className="px-2 py-1 text-slate-800 font-mono">{purchaseCurrencySymbol}{remainingAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} {purchaseCurrency !== displayCurrency && `/ ${displayCurrencySymbol}${remainingAmountFinal.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}</td></tr>
                           <tr>
-                            <td className="px-2 py-1 text-slate-400">Payment Status:</td>
+                            <td className="px-2 py-1 text-slate-400">{trUi("Payment Status:")}</td>
                             <td className="px-2 py-1">
                               <span className={`inline-block px-1.5 py-0.5 rounded text-[7px] font-black uppercase text-white ${
                                 paymentStatusLabel === "PAID" || paymentStatusLabel === "FULL PAYMENT" || paymentStatusLabel === "ADVANCE PAID" ? "bg-emerald-600" : "bg-rose-600"
@@ -3598,9 +3598,9 @@ export function PurchaseBookingJournalReportView({
                       </div>
                       <table className="w-full text-[8px] font-semibold text-slate-600">
                         <tbody>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Journal Entry Number:</td><td className="px-2 py-1 text-slate-800 font-mono font-bold">{journalEntryNumberText}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{trUi("Journal Entry Number:")}</td><td className="px-2 py-1 text-slate-800 font-mono font-bold">{journalEntryNumberText}</td></tr>
                           <tr className="border-b border-slate-100">
-                            <td className="px-2 py-1 text-slate-400">Debit Account:</td>
+                            <td className="px-2 py-1 text-slate-400">{trUi("Debit Account:")}</td>
                             <td className="px-2 py-1 text-slate-800 font-mono">
                               {selected.form_data?.form?.purchaseAccountNo || selected.purchaseAccountNumber || "-"} 
                               <span className="ml-1 text-slate-500 font-sans font-semibold">
@@ -3609,7 +3609,7 @@ export function PurchaseBookingJournalReportView({
                             </td>
                           </tr>
                           <tr className="border-b border-slate-100">
-                            <td className="px-2 py-1 text-slate-400">Debit Amount:</td>
+                            <td className="px-2 py-1 text-slate-400">{trUi("Debit Amount:")}</td>
                             <td className="px-2 py-1 text-slate-800 font-mono font-bold text-emerald-600">
                               {totalUSDVal.toLocaleString(undefined, { minimumFractionDigits: 2 })} {purchaseCurrency} 
                               <span className="text-slate-400 font-medium px-1.5">@</span> 
@@ -3619,7 +3619,7 @@ export function PurchaseBookingJournalReportView({
                             </td>
                           </tr>
                           <tr className="border-b border-slate-100">
-                            <td className="px-2 py-1 text-slate-400">Credit Account:</td>
+                            <td className="px-2 py-1 text-slate-400">{trUi("Credit Account:")}</td>
                             <td className="px-2 py-1 text-slate-800 font-mono">
                               {selected.form_data?.form?.salesAccountNo || selected.salesAccountNumber || "-"} 
                               <span className="ml-1 text-slate-500 font-sans font-semibold">
@@ -3628,7 +3628,7 @@ export function PurchaseBookingJournalReportView({
                             </td>
                           </tr>
                           <tr className="border-b border-slate-100">
-                            <td className="px-2 py-1 text-slate-400">Credit Amount:</td>
+                            <td className="px-2 py-1 text-slate-400">{trUi("Credit Amount:")}</td>
                             <td className="px-2 py-1 text-slate-800 font-mono font-bold text-emerald-600">
                               {totalUSDVal.toLocaleString(undefined, { minimumFractionDigits: 2 })} {purchaseCurrency} 
                               <span className="text-slate-400 font-medium px-1.5">@</span> 
@@ -3638,15 +3638,15 @@ export function PurchaseBookingJournalReportView({
                             </td>
                           </tr>
                           <tr className="border-b border-slate-100">
-                            <td className="px-2 py-1 text-slate-400">Total Quantity:</td>
+                            <td className="px-2 py-1 text-slate-400">{trUi("Total Quantity:")}</td>
                             <td className="px-2 py-1 text-slate-800 font-bold">{totalQty.toLocaleString()} {goodsEntries[0]?.qtyName || "Units"}</td>
                           </tr>
                           <tr className="border-b border-slate-100">
-                            <td className="px-2 py-1 text-slate-400">Net Weight:</td>
+                            <td className="px-2 py-1 text-slate-400">{trUi("Net Weight:")}</td>
                             <td className="px-2 py-1 text-slate-800 font-mono">{totalNet.toLocaleString()} kg</td>
                           </tr>
                           <tr>
-                            <td className="px-2 py-1 text-slate-400">Gross Weight:</td>
+                            <td className="px-2 py-1 text-slate-400">{trUi("Gross Weight:")}</td>
                             <td className="px-2 py-1 text-slate-800 font-mono">{totalGross.toLocaleString()} kg</td>
                           </tr>
                         </tbody>
@@ -3680,18 +3680,18 @@ export function PurchaseBookingJournalReportView({
                         <path d="M15 50 A35 35 0 0 1 50 15" fill="none" stroke="currentColor" strokeWidth="1.5" />
                         <path d="M50 85 A35 35 0 0 1 15 50" fill="none" stroke="currentColor" strokeWidth="1.5" />
                         <path d="M85 50 A35 35 0 0 1 50 85" fill="none" stroke="currentColor" strokeWidth="1.5" />
-                        <text x="50" y="42" textAnchor="middle" fontSize="6.5" fontWeight="900" fill="currentColor" letterSpacing="0.3">DEMI TRADING</text>
+                        <text x="50" y="42" textAnchor="middle" fontSize="6.5" fontWeight="900" fill="currentColor" letterSpacing="0.3">{(selected.branchName || "").toUpperCase()}</text>
                         <text x="50" y="52" textAnchor="middle" fontSize="6" fontWeight="bold" fill="currentColor">★ STAMP ★</text>
-                        <text x="50" y="62" textAnchor="middle" fontSize="5.5" fontWeight="900" fill="currentColor" letterSpacing="0.3">{(selected.branchName || "MAIN BRANCH").toUpperCase()}</text>
+                        <text x="50" y="62" textAnchor="middle" fontSize="5.5" fontWeight="900" fill="currentColor" letterSpacing="0.3">{(selected.branchName || "").toUpperCase()}</text>
                       </svg>
                     </div>
                     <div className="w-[18%] text-center border-t border-slate-300 pt-1">
                       <div className="font-bold text-slate-800 text-[8px] italic leading-none">{selected.audit?.userName || "ADMIN"}</div>
-                      <div className="font-bold text-slate-400 text-[6.5px] mt-1">PREPARED BY</div>
+                      <div className="font-bold text-slate-400 text-[6.5px] mt-1">{trUi("PREPARED BY")}</div>
                     </div>
                     <div className="w-[18%] text-center border-t border-slate-300 pt-1">
-                      <div className="font-bold text-slate-800 text-[8px] italic leading-none">Branch Manager</div>
-                      <div className="font-bold text-slate-400 text-[6.5px] mt-1">AUTHORIZED BY</div>
+                      <div className="font-bold text-slate-800 text-[8px] italic leading-none">{trUi("Branch Manager")}</div>
+                      <div className="font-bold text-slate-400 text-[6.5px] mt-1">{trUi("AUTHORIZED BY")}</div>
                     </div>
                   </div>
 
@@ -3811,10 +3811,11 @@ function DarkSelect({ label, value, options, placeholder, onChange, disabled }: 
 }
 
 function FilterActions({ onApply, onReset }: { onApply: () => void; onReset: () => void }) {
+  const lang = useActiveLanguage();
   return (
     <div className="flex items-end gap-2">
-      <Button type="button" size="sm" onClick={onApply} className="h-9 bg-blue-600 px-4 text-white hover:bg-blue-500">Apply</Button>
-      <Button type="button" size="sm" variant="outline" onClick={onReset} className="h-9 px-4">Reset</Button>
+      <Button type="button" size="sm" onClick={onApply} className="h-9 bg-blue-600 px-4 text-white hover:bg-blue-500">{translateHeader(lang, "Apply")}</Button>
+      <Button type="button" size="sm" variant="outline" onClick={onReset} className="h-9 px-4">{translateHeader(lang, "Reset")}</Button>
     </div>
   );
 }
