@@ -569,6 +569,9 @@ export function LedgerReportView({
         debit: number;
         credit: number;
         balance: number;
+        usdDebit: number;
+        usdCredit: number;
+        usdBalance: number;
         branches: Set<string>;
         branchData: Map<string, { name: string; entries: number; debit: number; credit: number; balance: number }>;
       }
@@ -588,6 +591,9 @@ export function LedgerReportView({
           debit: 0,
           credit: 0,
           balance: 0,
+          usdDebit: 0,
+          usdCredit: 0,
+          usdBalance: 0,
           branches: new Set(),
           branchData: new Map()
         });
@@ -599,6 +605,9 @@ export function LedgerReportView({
       cData.debit += row.debit || 0;
       cData.credit += row.credit || 0;
       cData.balance += row.balance || 0;
+      cData.usdDebit += (row as any).usdDebit || 0;
+      cData.usdCredit += (row as any).usdCredit || 0;
+      cData.usdBalance += (row as any).usdBalance || 0;
       cData.branches.add(branchName);
 
       if (!cData.branchData.has(branchName)) {
@@ -1229,12 +1238,12 @@ export function LedgerReportView({
               <span className="font-black text-slate-800 dark:text-slate-200">{countryDashboardData.reduce((acc, c) => acc + c.entries, 0)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>{th("TOTAL CREDIT (AED):")}</span>
-              <span className="font-black text-emerald-600 dark:text-emerald-400 font-mono">{fmtNumber(countryDashboardData.reduce((acc, c) => acc + c.credit, 0))}</span>
+              <span>{`${t(effectiveLang, "lgr.total_credit", "Total Credit")} (${reportScope === "super_admin" ? "USD" : (summary?.displayCurrency || "")})`}</span>
+              <span className="font-black text-emerald-600 dark:text-emerald-400 font-mono">{fmtNumber(countryDashboardData.reduce((acc, c) => acc + (reportScope === "super_admin" ? c.usdCredit : c.credit), 0))}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-rose-600 dark:text-rose-400">{th("TOTAL DEBIT (AED):")}</span>
-              <span className="font-black text-rose-600 dark:text-rose-400 font-mono">{fmtNumber(countryDashboardData.reduce((acc, c) => acc + c.debit, 0))}</span>
+              <span className="text-rose-600 dark:text-rose-400">{`${t(effectiveLang, "lgr.total_debit", "Total Debit")} (${reportScope === "super_admin" ? "USD" : (summary?.displayCurrency || "")})`}</span>
+              <span className="font-black text-rose-600 dark:text-rose-400 font-mono">{fmtNumber(countryDashboardData.reduce((acc, c) => acc + (reportScope === "super_admin" ? c.usdDebit : c.debit), 0))}</span>
             </div>
             <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800">
               <button
@@ -1282,6 +1291,12 @@ export function LedgerReportView({
                       <span className="text-xs font-bold text-slate-500 uppercase">{th("BALANCE")}</span>
                       <span className="text-lg font-black text-slate-900 dark:text-slate-100">{fmtNumber(item.balance)}</span>
                     </div>
+                    {reportScope === "super_admin" ? (
+                      <div className="flex justify-between items-center text-[10px] text-slate-400">
+                        <span className="font-semibold">{t(effectiveLang, "lgr.balance_usd", "Balance (USD)")}</span>
+                        <span className="font-bold font-mono">{fmtNumber(item.usdBalance)}</span>
+                      </div>
+                    ) : null}
                     <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px]">
                       <span className="font-semibold text-slate-500">{item.activeAccounts} {th("ACTIVE ACCOUNTS")}</span>
                       <span className="font-semibold text-slate-500">{item.branches.size} {th("BRANCHES")}</span>

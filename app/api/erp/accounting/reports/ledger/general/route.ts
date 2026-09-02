@@ -321,8 +321,16 @@ export async function GET(request: NextRequest) {
     // (only the USD bucket is safe to sum across currencies).
     const daily = { entries: 0, debit: 0, credit: 0, usdDebit: 0, usdCredit: 0 };
     const dailyLocalByCcy = new Map<string, { debit: number; credit: number }>();
-    function addDaily(entryDate: string | null, deb: number, cre: number, usdDeb: number, usdCre: number, ccy: string) {
-      if (!entryDate || String(entryDate).slice(0, 10) !== dailyDate) return;
+    function toIsoDay(v: unknown): string {
+      if (!v) return "";
+      if (v instanceof Date) return v.toISOString().slice(0, 10);
+      const s = String(v);
+      // "2026-08-13" | "2026-08-13T00:00:00Z" | "2026-08-13 00:00:00+00"
+      const m = /(\d{4}-\d{2}-\d{2})/.exec(s);
+      return m ? m[1] : s.slice(0, 10);
+    }
+    function addDaily(entryDate: unknown, deb: number, cre: number, usdDeb: number, usdCre: number, ccy: string) {
+      if (!entryDate || toIsoDay(entryDate) !== dailyDate) return;
       daily.entries += 1;
       daily.debit += deb;
       daily.credit += cre;
