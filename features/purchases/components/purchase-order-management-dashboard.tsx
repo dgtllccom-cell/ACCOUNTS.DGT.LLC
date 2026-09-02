@@ -1025,7 +1025,7 @@ function DashboardSummaryHeader({
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-[10px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-900/20 p-3.5 rounded-xl border border-slate-150 dark:border-slate-800/50 mb-4 shadow-sm">
       <div className="flex justify-between items-center gap-2 border-b border-slate-100 dark:border-slate-800/40 md:border-b-0 pb-1.5 md:pb-0">
         <span className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-slate-450">
-          <Globe className="h-3.5 w-3.5 text-slate-455" /> Country:
+          <Globe className="h-3.5 w-3.5 text-slate-455" /> {tr("Country:")}
         </span>
         <div className="flex items-center gap-1 font-extrabold text-[11px] text-slate-800 dark:text-slate-200">
           {getFlag(summary.country)}
@@ -1059,7 +1059,7 @@ function DashboardSummaryHeader({
             )}
           </div>
         ) : (
-          <span className="font-extrabold text-[11px] text-slate-400">Global All</span>
+          <span className="font-extrabold text-[11px] text-slate-400">{tr("Global All")}</span>
         )}
       </div>
 
@@ -1220,15 +1220,15 @@ function DashboardSummaryHeader({
         <div className="border border-slate-100 dark:border-slate-800 rounded-xl bg-slate-50/30 dark:bg-slate-900/30 p-2.5">
           <div className="flex items-center gap-1.5 font-black uppercase text-purple-700 dark:text-purple-400 mb-2 border-b border-slate-100 dark:border-slate-850/60 pb-1 flex-wrap">
             <span className="text-[7.5px] bg-purple-600 text-white font-extrabold px-1 rounded">P1</span>
-            <span>Purchase Summary</span>
+            <span>{tr("Purchase Summary")}</span>
           </div>
           <div className="space-y-1 text-slate-500 dark:text-slate-400 font-semibold">
             <div className="flex justify-between items-center">
-              <span>Currencies:</span>
+              <span>{tr("Currencies:")}</span>
               <span className="font-extrabold text-slate-850 dark:text-slate-200">{numCurrencies} Currencies</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Total Purchase (FC):</span>
+              <span>{tr("Total Purchase (FC):")}</span>
               <span className="font-extrabold text-slate-850 dark:text-slate-200 font-sans tabular-nums">{summary.totalAllFC.totalPurchase.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
             </div>
             <div className="flex justify-between items-center">
@@ -1236,7 +1236,7 @@ function DashboardSummaryHeader({
               <span className="font-extrabold text-slate-850 dark:text-slate-200 font-sans tabular-nums">{summary.totalPurchaseLC.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Avg Rate:</span>
+              <span>{tr("Avg Rate:")}</span>
               <span className="font-extrabold text-slate-800 dark:text-slate-200 font-sans tabular-nums">{avgPurchaseRate}</span>
             </div>
           </div>
@@ -1246,11 +1246,11 @@ function DashboardSummaryHeader({
         <div className="border border-slate-100 dark:border-slate-800 rounded-xl bg-slate-50/30 dark:bg-slate-900/30 p-2.5">
           <div className="flex items-center gap-1.5 font-black uppercase text-blue-700 dark:text-blue-400 mb-2 border-b border-slate-100 dark:border-slate-850/60 pb-1 flex-wrap">
             <span className="text-[7.5px] bg-blue-600 text-white font-extrabold px-1 rounded">P2</span>
-            <span>Transferred Summary</span>
+            <span>{tr("Transferred Summary")}</span>
           </div>
           <div className="space-y-1 text-slate-500 dark:text-slate-400 font-semibold">
             <div className="flex justify-between items-center">
-              <span>Total Transferred (FC):</span>
+              <span>{tr("Total Transferred (FC):")}</span>
               <span className="font-extrabold text-slate-850 dark:text-slate-200 font-sans tabular-nums">{summary.totalAllFC.advancePaid.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
             </div>
             <div className="flex justify-between items-center">
@@ -1258,7 +1258,7 @@ function DashboardSummaryHeader({
               <span className="font-extrabold text-slate-850 dark:text-slate-200 font-sans tabular-nums">{summary.advancePaidLC.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Avg Rate:</span>
+              <span>{tr("Avg Rate:")}</span>
               <span className="font-extrabold text-slate-800 dark:text-slate-200 font-sans tabular-nums">{avgAdvanceRate}</span>
             </div>
           </div>
@@ -1268,11 +1268,11 @@ function DashboardSummaryHeader({
         <div className="border border-slate-100 dark:border-slate-800 rounded-xl bg-slate-50/30 dark:bg-slate-900/30 p-2.5">
           <div className="flex items-center gap-1.5 font-black uppercase text-emerald-700 dark:text-emerald-455 mb-2 border-b border-slate-100 dark:border-slate-850/60 pb-1 flex-wrap">
             <span className="text-[7.5px] bg-emerald-600 text-white font-extrabold px-1 rounded">P3</span>
-            <span>Transferred Value</span>
+            <span>{tr("Transferred Value")}</span>
           </div>
           <div className="space-y-1 text-slate-500 dark:text-slate-400 font-semibold">
             <div className="flex justify-between items-center">
-              <span>Transferred (FC):</span>
+              <span>{tr("Transferred (FC):")}</span>
               <span className="font-extrabold text-emerald-600 dark:text-emerald-455 font-sans tabular-nums">{summary.totalAllFC.advancePaid.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
             </div>
             <div className="flex justify-between items-center">
@@ -1280,7 +1280,7 @@ function DashboardSummaryHeader({
               <span className="font-extrabold text-emerald-600 dark:text-emerald-455 font-sans tabular-nums">{summary.advancePaidLC.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Transferred Records:</span>
+              <span>{tr("Transferred Records:")}</span>
               <span className="font-extrabold text-slate-800 dark:text-slate-200">{summary.totalTransactions} Records</span>
             </div>
           </div>
@@ -1290,11 +1290,11 @@ function DashboardSummaryHeader({
         <div className="border border-slate-100 dark:border-slate-800 rounded-xl bg-slate-50/30 dark:bg-slate-900/30 p-2.5">
           <div className="flex items-center gap-1.5 font-black uppercase text-rose-700 dark:text-rose-400 mb-2 border-b border-slate-100 dark:border-slate-850/60 pb-1 flex-wrap">
             <span className="text-[7.5px] bg-rose-600 text-white font-extrabold px-1 rounded">P4</span>
-            <span>Pending Balance</span>
+            <span>{tr("Pending Balance")}</span>
           </div>
           <div className="space-y-1 text-slate-500 dark:text-slate-400 font-semibold">
             <div className="flex justify-between items-center">
-              <span>Pending (FC):</span>
+              <span>{tr("Pending (FC):")}</span>
               <span className="font-extrabold text-rose-600 dark:text-rose-400 font-sans tabular-nums">{summary.totalAllFC.remainingBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
             </div>
             <div className="flex justify-between items-center">
@@ -1302,7 +1302,7 @@ function DashboardSummaryHeader({
               <span className="font-extrabold text-rose-600 dark:text-rose-400 font-sans tabular-nums">{summary.remainingBalanceLC.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Pending Ratio:</span>
+              <span>{tr("Pending Ratio:")}</span>
               <span className="font-extrabold text-rose-600 dark:text-rose-400">{notTransferredPercentLC.toFixed(2)}%</span>
             </div>
           </div>
@@ -1317,7 +1317,7 @@ function DashboardSummaryHeader({
         <div className="bg-blue-600 p-1 rounded-full text-white">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         </div>
-        <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">Booking Summary Stats</h4>
+        <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">{tr("Booking Summary Stats")}</h4>
       </div>
       <div className="p-3 flex-1 overflow-y-auto max-h-[600px] scrollbar-thin">
         {renderAllStepsContent()}
@@ -2100,7 +2100,7 @@ export function PurchaseOrderManagementDashboard() {
       {/* Calendar Date/Time Indicator */}
       <div className="flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400">
         <CalendarDays className="h-4 w-4 text-slate-400" />
-        <span>17 Jun 2026, 08:54 PM</span>
+        <span suppressHydrationWarning>{new Date().toLocaleString(undefined, { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
       </div>
 
       {/* New Booking Button */}
@@ -2649,7 +2649,7 @@ export function PurchaseOrderManagementDashboard() {
             <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
             <path d="M2 12h20" />
           </svg>
-          <span>DAMAN BUSINESS GROUP</span>
+          <span>{tr("Digital Dock ERP")}</span>
         </div>
         <div className="flex items-center gap-2">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
@@ -2658,7 +2658,7 @@ export function PurchaseOrderManagementDashboard() {
             <line x1="12" y1="12" x2="22" y2="8.5" />
             <line x1="12" y1="12" x2="2" y2="8.5" />
           </svg>
-          <span>Daman Business Group, Trusted Partner</span>
+          <span>{tr("Digital Dock ERP")}</span>
         </div>
         <div className="flex items-center gap-2">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
@@ -2666,7 +2666,7 @@ export function PurchaseOrderManagementDashboard() {
             <line x1="2" y1="12" x2="22" y2="12" />
             <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
           </svg>
-          <span>www.damanbusinessgroup.com</span>
+          <span>{tr("Enterprise ERP / FMS")}</span>
         </div>
       </footer>
 
@@ -2957,7 +2957,7 @@ export function PurchaseOrderManagementDashboard() {
                         <div className="text-sm font-black tracking-widest text-blue-900 uppercase leading-none">
                           DEMI TRADING CO.
                         </div>
-                        <div className="text-[7.5px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">Global Trade, Trusted Partner</div>
+                        
                       </div>
                     </div>
                     <div className="text-right text-[8px] font-bold text-slate-600 uppercase">
@@ -2975,7 +2975,7 @@ export function PurchaseOrderManagementDashboard() {
                     <span className="text-xs tracking-widest uppercase font-black">{tr("Purchase Transfer Verification Report")}</span>
                     <div className="flex gap-4">
                       <span>Report Date: {reportDate}</span>
-                      <span>Time: 10:30 AM</span>
+                      <span>{new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}</span>
                     </div>
                   </div>
 
@@ -2986,14 +2986,14 @@ export function PurchaseOrderManagementDashboard() {
                     {/* Booking Information */}
                     <div className="border border-slate-200 rounded overflow-hidden">
                       <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[8px] font-black uppercase text-blue-900 flex items-center gap-1">
-                        <span>Booking Information</span>
+                        <span>{tr("Booking Information")}</span>
                       </div>
                       <table className="w-full text-[8px] font-semibold text-slate-600">
                         <tbody>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Booking Reference:</td><td className="px-2 py-1 font-bold text-slate-800 font-mono">{selected.purchaseBookingOrderNumber}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Purchase Date:</td><td className="px-2 py-1 text-slate-800">{date(selected.purchaseDate)}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Booking Date:</td><td className="px-2 py-1 text-slate-800">{reportDate}</td></tr>
-                          <tr><td className="px-2 py-1 text-slate-400">Booking User:</td><td className="px-2 py-1 font-bold text-slate-800 uppercase">{selected.audit?.userName || "ADMIN"}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Booking Reference:")}</td><td className="px-2 py-1 font-bold text-slate-800 font-mono">{selected.purchaseBookingOrderNumber}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Purchase Date:")}</td><td className="px-2 py-1 text-slate-800">{date(selected.purchaseDate)}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Booking Date:")}</td><td className="px-2 py-1 text-slate-800">{reportDate}</td></tr>
+                          <tr><td className="px-2 py-1 text-slate-400">{tr("Booking User:")}</td><td className="px-2 py-1 font-bold text-slate-800 uppercase">{selected.audit?.userName || "ADMIN"}</td></tr>
                         </tbody>
                       </table>
                     </div>
@@ -3001,15 +3001,15 @@ export function PurchaseOrderManagementDashboard() {
                     {/* Supplier Information */}
                     <div className="border border-slate-200 rounded overflow-hidden">
                       <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[8px] font-black uppercase text-blue-900 flex items-center gap-1">
-                        <span>Supplier Information</span>
+                        <span>{tr("Supplier Information")}</span>
                       </div>
                       <table className="w-full text-[8px] font-semibold text-slate-600">
                         <tbody>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Supplier Name:</td><td className="px-2 py-1 font-bold text-slate-800 truncate max-w-[100px]">{localizedReportValue(selected, "supplierName", activeLang, selected.supplierName)}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Contact Person:</td><td className="px-2 py-1 text-slate-800">{selected.form_data?.form?.purchaseContactPerson || selected.form_data?.form?.supplierContactPerson || "—"}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Mobile Number:</td><td className="px-2 py-1 text-slate-800 font-mono">{selected.form_data?.form?.purchaseContact || selected.form_data?.form?.supplierMobile || "—"}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Email Address:</td><td className="px-2 py-1 text-slate-800 truncate max-w-[100px]">{selected.form_data?.form?.supplierEmail || "supplier@globalfoods.com"}</td></tr>
-                          <tr><td className="px-2 py-1 text-slate-400">Country:</td><td className="px-2 py-1 text-slate-800">{selected.countryName}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Supplier Name:")}</td><td className="px-2 py-1 font-bold text-slate-800 truncate max-w-[100px]">{localizedReportValue(selected, "supplierName", activeLang, selected.supplierName)}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Contact Person:")}</td><td className="px-2 py-1 text-slate-800">{selected.form_data?.form?.purchaseContactPerson || selected.form_data?.form?.supplierContactPerson || "—"}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Mobile Number:")}</td><td className="px-2 py-1 text-slate-800 font-mono">{selected.form_data?.form?.purchaseContact || selected.form_data?.form?.supplierMobile || "—"}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Email Address:")}</td><td className="px-2 py-1 text-slate-800 truncate max-w-[100px]">{selected.form_data?.form?.supplierEmail || "supplier@globalfoods.com"}</td></tr>
+                          <tr><td className="px-2 py-1 text-slate-400">{tr("Country:")}</td><td className="px-2 py-1 text-slate-800">{selected.countryName}</td></tr>
                         </tbody>
                       </table>
                     </div>
@@ -3017,15 +3017,15 @@ export function PurchaseOrderManagementDashboard() {
                     {/* Buyer Information */}
                     <div className="border border-slate-200 rounded overflow-hidden">
                       <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[8px] font-black uppercase text-blue-900 flex items-center gap-1">
-                        <span>Buyer Information</span>
+                        <span>{tr("Buyer Information")}</span>
                       </div>
                       <table className="w-full text-[8px] font-semibold text-slate-600">
                         <tbody>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Buyer Name:</td><td className="px-2 py-1 font-bold text-slate-800 truncate max-w-[100px]">{localizedReportValue(selected, "buyerName", activeLang, selected.buyerName)}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Contact Person:</td><td className="px-2 py-1 text-slate-800">{(selected as any).buyerContactPerson || "—"}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Mobile Number:</td><td className="px-2 py-1 text-slate-800 font-mono">{(selected as any).buyerPhone || (selected as any).buyerMobile || "—"}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Email Address:</td><td className="px-2 py-1 text-slate-800 truncate max-w-[100px]">{(selected as any).buyerEmail || "—"}</td></tr>
-                          <tr><td className="px-2 py-1 text-slate-400">Country:</td><td className="px-2 py-1 text-slate-800">{(selected as any).buyerCountry || (selected as any).countryName || "—"}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Buyer Name:")}</td><td className="px-2 py-1 font-bold text-slate-800 truncate max-w-[100px]">{localizedReportValue(selected, "buyerName", activeLang, selected.buyerName)}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Contact Person:")}</td><td className="px-2 py-1 text-slate-800">{(selected as any).buyerContactPerson || "—"}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Mobile Number:")}</td><td className="px-2 py-1 text-slate-800 font-mono">{(selected as any).buyerPhone || (selected as any).buyerMobile || "—"}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Email Address:")}</td><td className="px-2 py-1 text-slate-800 truncate max-w-[100px]">{(selected as any).buyerEmail || "—"}</td></tr>
+                          <tr><td className="px-2 py-1 text-slate-400">{tr("Country:")}</td><td className="px-2 py-1 text-slate-800">{(selected as any).buyerCountry || (selected as any).countryName || "—"}</td></tr>
                         </tbody>
                       </table>
                     </div>
@@ -3034,7 +3034,7 @@ export function PurchaseOrderManagementDashboard() {
                   {/* Accounting / Ledger Impact Preview */}
                   <div className="border border-slate-200 rounded overflow-hidden mt-2.5">
                     <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[8px] font-black uppercase text-blue-900 flex items-center gap-1">
-                      <span>Accounting / Ledger Impact Preview</span>
+                      <span>{tr("Accounting / Ledger Impact Preview")}</span>
                     </div>
                     <table className="w-full text-[8px] text-left border-collapse font-semibold text-slate-700">
                       <thead>
@@ -3073,7 +3073,7 @@ export function PurchaseOrderManagementDashboard() {
                       </tbody>
                       <tfoot>
                         <tr className="bg-slate-50 font-bold border-t-[1.5px] border-slate-300">
-                          <td colSpan={2} className="px-2 py-1.5 text-right uppercase text-[7.5px] text-slate-500">Total Balanced Entry:</td>
+                          <td colSpan={2} className="px-2 py-1.5 text-right uppercase text-[7.5px] text-slate-500">{tr("Total Balanced Entry:")}</td>
                           <td className="px-2 py-1.5 text-right font-mono text-slate-900 border-double border-b-2 border-slate-400">
                             {totalUSDVal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                           </td>
@@ -3144,7 +3144,7 @@ export function PurchaseOrderManagementDashboard() {
                       </tbody>
                       <tfoot className="border-t-[1.5px] border-slate-350 bg-slate-50 font-bold text-[8px]">
                         <tr className="text-slate-800">
-                          <td colSpan={5} className="p-1 text-right text-slate-500 font-extrabold uppercase text-[7.5px]">Totals:</td>
+                          <td colSpan={5} className="p-1 text-right text-slate-500 font-extrabold uppercase text-[7.5px]">{tr("Totals:")}</td>
                           <td className="p-1 text-right text-slate-900 font-black">{totalQty.toLocaleString()} {goodsEntries[0]?.qtyName || "Units"}</td>
                           <td className="p-1"></td>
                           <td className="p-1 text-right text-slate-950 font-bold">{totalGross.toLocaleString()} kg</td>
@@ -3155,9 +3155,9 @@ export function PurchaseOrderManagementDashboard() {
                           <td className="p-1 text-right text-emerald-600 font-black">{totalPKRVal.toLocaleString(undefined, { minimumFractionDigits: 2 })} {displayCurrencySymbol}</td>
                         </tr>
                         <tr className="text-[7.5px] text-slate-550 border-t border-slate-200/60 font-semibold">
-                          <td colSpan={5} className="p-1 text-right uppercase text-[7px]">Containers & Dues:</td>
+                          <td colSpan={5} className="p-1 text-right uppercase text-[7px]">{tr("Containers & Dues:")}</td>
                           <td colSpan={3} className="p-1 text-left">FCL: <span className="font-bold text-slate-800">{containerCount}</span></td>
-                          <td colSpan={5} className="p-1 text-left">Avg Rate/Ton: <span className="font-bold text-slate-800">{purchaseCurrencySymbol}{avgRateTon.toFixed(2)}</span></td>
+                          <td colSpan={5} className="p-1 text-left">{tr("Avg Rate/Ton:")} <span className="font-bold text-slate-800">{purchaseCurrencySymbol}{avgRateTon.toFixed(2)}</span></td>
                         </tr>
                       </tfoot>
                     </table>
@@ -3166,32 +3166,32 @@ export function PurchaseOrderManagementDashboard() {
                   {/* Loading & Transit Information */}
                   <div className="border border-slate-200 rounded overflow-hidden">
                     <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[8px] font-black uppercase text-blue-900 flex items-center gap-1">
-                      <span>Loading & Transit Information</span>
+                      <span>{tr("Loading & Transit Information")}</span>
                     </div>
                     <table className="w-full text-[8px] font-semibold text-slate-600">
                       <tbody>
                         <tr className="border-b border-slate-100">
-                          <td className="px-2 py-1 text-slate-400 w-[20%]">Loading Country:</td>
+                          <td className="px-2 py-1 text-slate-400 w-[20%]">{tr("Loading Country:")}</td>
                           <td className="px-2 py-1 text-slate-800 font-bold w-[30%]">{selected.countryName || "—"}</td>
-                          <td className="px-2 py-1 text-slate-400 w-[20%]">Receiving Country:</td>
+                          <td className="px-2 py-1 text-slate-400 w-[20%]">{tr("Receiving Country:")}</td>
                           <td className="px-2 py-1 text-slate-800 font-bold w-[30%]">{selected.form_data?.form?.receivedCountry || selected.buyerName || "Pakistan"}</td>
                         </tr>
                         <tr className="border-b border-slate-100">
-                          <td className="px-2 py-1 text-slate-400">Loading Port:</td>
+                          <td className="px-2 py-1 text-slate-400">{tr("Loading Port:")}</td>
                           <td className="px-2 py-1 text-slate-800">{loadingPortText}</td>
-                          <td className="px-2 py-1 text-slate-400">Receiving Port:</td>
+                          <td className="px-2 py-1 text-slate-400">{tr("Receiving Port:")}</td>
                           <td className="px-2 py-1 text-slate-800">{destinationPortText}</td>
                         </tr>
                         <tr className="border-b border-slate-100">
-                          <td className="px-2 py-1 text-slate-400">Loading Date:</td>
+                          <td className="px-2 py-1 text-slate-400">{tr("Loading Date:")}</td>
                           <td className="px-2 py-1 text-slate-800 font-mono font-bold text-blue-750">{expectedLoadingDate}</td>
-                          <td className="px-2 py-1 text-slate-400">Received Date at Port:</td>
+                          <td className="px-2 py-1 text-slate-400">{tr("Received Date at Port:")}</td>
                           <td className="px-2 py-1 text-slate-800 font-mono font-bold text-blue-750">{selected.form_data?.form?.receivedDate || "-"}</td>
                         </tr>
                         <tr>
-                          <td className="px-2 py-1 text-slate-400">Containers:</td>
+                          <td className="px-2 py-1 text-slate-400">{tr("Containers:")}</td>
                           <td className="px-2 py-1 text-slate-800 font-bold">{containerCount} Containers</td>
-                          <td className="px-2 py-1 text-slate-400">Container Numbers & BL:</td>
+                          <td className="px-2 py-1 text-slate-400">{tr("Container Numbers & BL:")}</td>
                           <td className="px-2 py-1 text-slate-800 font-mono truncate max-w-[200px]">{containerNumbersText} {billNumberText !== "-" && `/ BL: ${billNumberText}`}</td>
                         </tr>
                       </tbody>
@@ -3207,13 +3207,13 @@ export function PurchaseOrderManagementDashboard() {
                       </div>
                       <table className="w-full text-[8px] font-semibold text-slate-600">
                         <tbody>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Payment Condition:</td><td className="px-2 py-1 text-slate-800 font-bold">{paymentConditionText}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Advance Percent / Due:</td><td className="px-2 py-1 text-slate-800">{advancePercent}% / <span className="font-bold text-blue-700">{advanceDueDateText}</span></td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Advance Amount:</td><td className="px-2 py-1 font-bold text-emerald-600 font-mono">{purchaseCurrencySymbol}{advanceAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Remaining Balance / Due:</td><td className="px-2 py-1 text-slate-800">{remainingPercent}% / <span className="font-bold text-rose-600">{finalPaymentDueDateText}</span></td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Remaining Amount:</td><td className="px-2 py-1 text-slate-800 font-mono">{purchaseCurrencySymbol}{remainingAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Payment Condition:")}</td><td className="px-2 py-1 text-slate-800 font-bold">{paymentConditionText}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Advance Percent / Due:")}</td><td className="px-2 py-1 text-slate-800">{advancePercent}% / <span className="font-bold text-blue-700">{advanceDueDateText}</span></td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Advance Amount:")}</td><td className="px-2 py-1 font-bold text-emerald-600 font-mono">{purchaseCurrencySymbol}{advanceAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Remaining Balance / Due:")}</td><td className="px-2 py-1 text-slate-800">{remainingPercent}% / <span className="font-bold text-rose-600">{finalPaymentDueDateText}</span></td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Remaining Amount:")}</td><td className="px-2 py-1 text-slate-800 font-mono">{purchaseCurrencySymbol}{remainingAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td></tr>
                           <tr>
-                            <td className="px-2 py-1 text-slate-400">Payment Status:</td>
+                            <td className="px-2 py-1 text-slate-400">{tr("Payment Status:")}</td>
                             <td className="px-2 py-1">
                               <span className={`inline-block px-1.5 py-0.5 rounded text-[7px] font-black uppercase text-white ${
                                 paymentStatusLabel === "PAID" || paymentStatusLabel === "FULL PAYMENT" || paymentStatusLabel === "ADVANCE PAID" ? "bg-emerald-600" : "bg-rose-600"
@@ -3236,13 +3236,13 @@ export function PurchaseOrderManagementDashboard() {
                       </div>
                       <table className="w-full text-[8px] font-semibold text-slate-600">
                         <tbody>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Business Roznamcha S/N:</td><td className="px-2 py-1 text-blue-700 font-mono font-bold">{journalEntryNumberText}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Super Admin S/N:</td><td className="px-2 py-1 text-slate-800 font-mono font-bold">{selected.superAdminSerialNo || selected.super_admin_serial_number || `GBL-PB-${selected.purchaseBookingOrderNumber}`}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Country S/N:</td><td className="px-2 py-1 text-slate-800 font-mono font-bold">{selected.computedCountrySerial || selected.country_transaction_serial_number || `CTY-PB-${selected.purchaseBookingOrderNumber}`}</td></tr>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Branch S/N:</td><td className="px-2 py-1 text-slate-800 font-mono font-bold">{selected.computedBranchSerial || selected.branch_transaction_serial_number || `BR-PB-${selected.purchaseBookingOrderNumber}`}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Business Roznamcha S/N:")}</td><td className="px-2 py-1 text-blue-700 font-mono font-bold">{journalEntryNumberText}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Super Admin S/N:")}</td><td className="px-2 py-1 text-slate-800 font-mono font-bold">{selected.superAdminSerialNo || selected.super_admin_serial_number || `GBL-PB-${selected.purchaseBookingOrderNumber}`}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Country S/N:")}</td><td className="px-2 py-1 text-slate-800 font-mono font-bold">{selected.computedCountrySerial || selected.country_transaction_serial_number || `CTY-PB-${selected.purchaseBookingOrderNumber}`}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">{tr("Branch S/N:")}</td><td className="px-2 py-1 text-slate-800 font-mono font-bold">{selected.computedBranchSerial || selected.branch_transaction_serial_number || `BR-PB-${selected.purchaseBookingOrderNumber}`}</td></tr>
 
                           <tr className="border-b border-slate-100 bg-blue-50/40">
-                            <td className="px-2 py-1 text-slate-500 font-bold">Debit Account (DR):</td>
+                            <td className="px-2 py-1 text-slate-500 font-bold">{tr("Debit Account (DR):")}</td>
                             <td className="px-2 py-1 text-blue-900 font-mono">
                               {selected.form_data?.form?.purchaseAccountNo || selected.purchaseAccountNumber || "1001"}
                               <span className="ml-1 text-slate-600 font-sans font-semibold">
@@ -3252,7 +3252,7 @@ export function PurchaseOrderManagementDashboard() {
                             </td>
                           </tr>
                           <tr className="border-b border-slate-100 bg-blue-50/40">
-                            <td className="px-2 py-1 text-slate-400">Debit Amount:</td>
+                            <td className="px-2 py-1 text-slate-400">{tr("Debit Amount:")}</td>
                             <td className="px-2 py-1 text-slate-800 font-mono font-bold text-blue-700">
                               {totalUSDVal.toLocaleString(undefined, { minimumFractionDigits: 2 })} {selected.currency || "USD"}
                               <span className="text-slate-400 font-medium px-1.5">@</span>
@@ -3263,7 +3263,7 @@ export function PurchaseOrderManagementDashboard() {
                           </tr>
 
                           <tr className="border-b border-slate-100 bg-emerald-50/40">
-                            <td className="px-2 py-1 text-slate-500 font-bold">Credit Account (CR):</td>
+                            <td className="px-2 py-1 text-slate-500 font-bold">{tr("Credit Account (CR):")}</td>
                             <td className="px-2 py-1 text-emerald-900 font-mono">
                               {selected.form_data?.form?.salesAccountNo || selected.salesAccountNumber || "2001"}
                               <span className="ml-1 text-slate-600 font-sans font-semibold">
@@ -3273,7 +3273,7 @@ export function PurchaseOrderManagementDashboard() {
                             </td>
                           </tr>
                           <tr className="border-b border-slate-100 bg-emerald-50/40">
-                            <td className="px-2 py-1 text-slate-400">Credit Amount:</td>
+                            <td className="px-2 py-1 text-slate-400">{tr("Credit Amount:")}</td>
                             <td className="px-2 py-1 text-slate-800 font-mono font-bold text-emerald-700">
                               {totalUSDVal.toLocaleString(undefined, { minimumFractionDigits: 2 })} {selected.currency || "USD"}
                               <span className="text-slate-400 font-medium px-1.5">@</span>
@@ -3284,22 +3284,22 @@ export function PurchaseOrderManagementDashboard() {
                           </tr>
 
                           <tr className="border-b border-slate-100 bg-amber-50/70">
-                            <td className="px-2 py-1 text-amber-900 font-extrabold">Advance Form Destination:</td>
+                            <td className="px-2 py-1 text-amber-900 font-extrabold">{tr("Advance Form Destination:")}</td>
                             <td className="px-2 py-1 text-slate-800 font-medium">
                               Advance Paid ({advancePercent}%) transferred via Business Roznamcha to Supplier Payable Account
                             </td>
                           </tr>
 
                           <tr className="border-b border-slate-100">
-                            <td className="px-2 py-1 text-slate-400">Total Quantity:</td>
+                            <td className="px-2 py-1 text-slate-400">{tr("Total Quantity:")}</td>
                             <td className="px-2 py-1 text-slate-800 font-bold">{totalQty.toLocaleString()} {goodsEntries[0]?.qtyName || "Units"}</td>
                           </tr>
                           <tr className="border-b border-slate-100">
-                            <td className="px-2 py-1 text-slate-400">Net Weight:</td>
+                            <td className="px-2 py-1 text-slate-400">{tr("Net Weight:")}</td>
                             <td className="px-2 py-1 text-slate-800 font-mono">{totalNet.toLocaleString()} kg</td>
                           </tr>
                           <tr>
-                            <td className="px-2 py-1 text-slate-400">Gross Weight:</td>
+                            <td className="px-2 py-1 text-slate-400">{tr("Gross Weight:")}</td>
                             <td className="px-2 py-1 text-slate-800 font-mono">{totalGross.toLocaleString()} kg</td>
                           </tr>
                         </tbody>
@@ -3311,7 +3311,7 @@ export function PurchaseOrderManagementDashboard() {
                   {selected.form_data?.form?.showRemarksOnA4 !== false && (
                     <div className="border border-slate-200 rounded overflow-hidden mt-1.5">
                       <div className="bg-slate-50 border-b border-slate-200 px-2 py-0.5 text-[7px] font-black uppercase text-blue-900 flex items-center gap-1">
-                        <span>Remarks / Narration</span>
+                        <span>{tr("Remarks / Narration")}</span>
                       </div>
                       <div className="p-1.5 bg-white text-[7.5px] font-semibold text-slate-800 italic leading-normal min-h-[20px] max-h-[35px] overflow-hidden whitespace-pre-wrap break-words">
                         {remarksText}
@@ -3343,7 +3343,7 @@ export function PurchaseOrderManagementDashboard() {
                       <div className="font-bold text-slate-400 text-[6.5px] mt-1">PREPARED BY</div>
                     </div>
                     <div className="w-[18%] text-center border-t border-slate-300 pt-1">
-                      <div className="font-bold text-slate-800 text-[8px] italic leading-none">Branch Manager</div>
+                      <div className="font-bold text-slate-800 text-[8px] italic leading-none">{tr("Branch Manager")}</div>
                       <div className="font-bold text-slate-400 text-[6.5px] mt-1">AUTHORIZED BY</div>
                     </div>
                   </div>
@@ -3372,7 +3372,7 @@ export function PurchaseOrderManagementDashboard() {
                         <div className="grid grid-cols-2 gap-2 text-xs">
                           <div><span className="text-slate-400 block text-[9px] uppercase">{tr("User ID")}</span><span className="font-bold font-mono">USR-{selected.audit?.userId?.slice(-4) || "101"}</span></div>
                           <div><span className="text-slate-400 block text-[9px] uppercase">{tr("User Name")}</span><span className="font-bold truncate">{selected.audit?.userName || "Admin"}</span></div>
-                          <div><span className="text-slate-400 block text-[9px] uppercase">{tr("Team Name")}</span><span className="font-bold">Logistics</span></div>
+                          <div><span className="text-slate-400 block text-[9px] uppercase">{tr("Team Name")}</span><span className="font-bold">{tr("Logistics")}</span></div>
                           <div><span className="text-slate-400 block text-[9px] uppercase">{tr("Team Code")}</span><span className="font-bold font-mono">TM-LOG</span></div>
                         </div>
                       </div>
