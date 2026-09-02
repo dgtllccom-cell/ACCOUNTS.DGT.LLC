@@ -3,6 +3,7 @@
 import { Suspense } from "react";
 import { PurchaseOrderWizard } from "@/features/purchases/components/purchase-order-wizard.jsx";
 import { EntryMethodSelector } from "@/features/document-intelligence/components/entry-method-selector";
+import { t } from "@/lib/i18n/ui";
 
 /**
  * New Purchase Booking — Entry Method gate (Manual / Scan-Upload / Continue
@@ -13,7 +14,7 @@ import { EntryMethodSelector } from "@/features/document-intelligence/components
 export function NewPurchaseBookingEntry({ session, lang }: { session: any; lang?: string }) {
   return (
     <EntryMethodSelector targetModule="purchase_orders" domain="business" lang={lang}>
-      <Suspense fallback={<div className="p-6 text-xs font-semibold text-slate-500">Loading Purchase Booking Order Form...</div>}>
+      <Suspense fallback={<div className="p-6 text-xs font-semibold text-slate-500">{t(lang, "npbe.loading_form", "Loading Purchase Booking Order Form…")}</div>}>
         <PurchaseOrderWizard session={session} />
       </Suspense>
     </EntryMethodSelector>

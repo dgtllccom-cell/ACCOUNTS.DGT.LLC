@@ -103,7 +103,7 @@ export function GoodsEntryCard({
       setGoodsRows(res.goods ?? []);
     } catch (e: any) {
       setGoodsRows([]);
-      setGoodsError(e?.message ?? "Failed to load goods");
+      setGoodsError(e?.message ?? tt("gec.err_load_goods", "Failed to load goods"));
     } finally {
       setLoadingGoods(false);
     }
@@ -214,9 +214,10 @@ export function GoodsEntryCard({
 
   const handleBrandChange = (brand: string) => {
     if (brand === "__ADD_NEW_BRAND__") {
-      const message = `You are adding a new Brand for '${value.goodsName || "selected Good"}'.\n\nDo you want to proceed?`;
+      const g = value.goodsName || tt("gec.selected_good", "selected Good");
+      const message = tt("gec.add_brand_confirm", "You are adding a new Brand for {goods}. Do you want to proceed?").replace("{goods}", g);
       if (confirm(message)) {
-        const name = prompt(`Enter custom Brand name for ${value.goodsName || "selected Good"}:`);
+        const name = prompt(tt("gec.add_brand_prompt", "Enter custom Brand name for {goods}:").replace("{goods}", g));
         if (name && name.trim()) {
           onChange({
             ...value,
@@ -349,7 +350,7 @@ export function GoodsEntryCard({
                       {b}
                     </option>
                   ))}
-                  <option value="__ADD_NEW_BRAND__" className="text-primary font-semibold">+ Add Custom Brand...</option>
+                  <option value="__ADD_NEW_BRAND__" className="text-primary font-semibold">{tt("gec.add_custom_brand", "+ Add Custom Brand…")}</option>
                 </select>
               </label>
 
@@ -367,7 +368,7 @@ export function GoodsEntryCard({
                       {s}
                     </option>
                   ))}
-                  <option value="__ADD_NEW_SIZE__" className="text-primary font-semibold">+ Add Custom Size...</option>
+                  <option value="__ADD_NEW_SIZE__" className="text-primary font-semibold">{tt("gec.add_custom_size", "+ Add Custom Size…")}</option>
                 </select>
               </label>
 

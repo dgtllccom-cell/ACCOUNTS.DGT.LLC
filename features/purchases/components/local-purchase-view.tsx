@@ -113,7 +113,7 @@ function MasterSelectPopover({
   onEditItem,
   canEdit = false,
   addNewLabel,
-  placeholder = "Select..."
+  placeholder = ""
 }: MasterSelectPopoverProps) {
   const msLang = useActiveLanguage();
   const [isOpen, setIsOpen] = useState(false);
@@ -144,7 +144,7 @@ function MasterSelectPopover({
         onClick={() => setIsOpen(!isOpen)}
         className="w-full h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 flex items-center justify-between outline-none focus:border-blue-500 transition-all hover:bg-slate-50 shadow-2xs"
       >
-        <span className="truncate">{displayValue || placeholder}</span>
+        <span className="truncate">{displayValue || placeholder || t(msLang, "lp.select_ph", "Select…")}</span>
         <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
       </button>
 
@@ -166,7 +166,7 @@ function MasterSelectPopover({
 
           <div className="max-h-48 overflow-y-auto space-y-0.5 custom-scrollbar">
             {filtered.length === 0 ? (
-              <div className="p-2 text-[10px] text-slate-400 text-center font-medium">No matches found</div>
+              <div className="p-2 text-[10px] text-slate-400 text-center font-medium">{t(msLang, "lp.no_matches_found", "No matches found")}</div>
             ) : (
               filtered.map(opt => {
                 const isSelected = opt.id === value || opt.name === value;
@@ -1035,7 +1035,7 @@ export function LocalPurchaseView({
         size: primarySize || null,
         chassisCode: chassisCode.trim() || null,
         lotNo: lotNo.trim() || null,
-        supplierName: supplierName.trim() || "Local Market Vendor",
+        supplierName: supplierName.trim(),
         supplierPersonId: supplierPersonId || null,
         paymentMode: resolvedPaymentMode,
         shippingMode: resolvedShippingMode,
@@ -1362,15 +1362,15 @@ export function LocalPurchaseView({
         <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-3.5 space-y-1.5">
           <div className="flex items-center gap-2 border-b border-slate-100 pb-1.5 font-bold">
             <Building2 className="h-3.5 w-3.5 text-blue-600" />
-            <h4 className="text-[9px] uppercase tracking-wider text-slate-500">Branch Details</h4>
+            <h4 className="text-[9px] uppercase tracking-wider text-slate-500">{t(lang, "lp.hdr_branch_details", "Branch Details")}</h4>
           </div>
           <div className="space-y-1 text-[9px]">
             <div className="border-b border-slate-100 pb-1">
-              <span className="font-black text-blue-600 block truncate text-[11px]">{activeBranch?.name || "Global System"}</span>
+              <span className="font-black text-blue-600 block truncate text-[11px]">{activeBranch?.name || ""}</span>
             </div>
-            <div className="flex justify-between"><span className="text-slate-400">Code:</span> <span className="font-bold text-slate-800 font-mono">{activeBranch?.code || "GLOBAL-00"}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">User:</span> <span className="font-black text-emerald-600 uppercase truncate">{session.fullName || session.email || "ADMIN"}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">Country:</span> <span className="font-semibold text-slate-700 truncate">{activeBranch?.countryName || "All"}</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_code", "Code:")}</span> <span className="font-bold text-slate-800 font-mono">{activeBranch?.code || "—"}</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_user", "User:")}</span> <span className="font-black text-emerald-600 uppercase truncate">{session.fullName || session.email || "—"}</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_country", "Country:")}</span> <span className="font-semibold text-slate-700 truncate">{activeBranch?.countryName || "—"}</span></div>
           </div>
         </div>
 
@@ -1378,13 +1378,13 @@ export function LocalPurchaseView({
         <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-3.5 space-y-1.5">
           <div className="flex items-center gap-2 border-b border-slate-100 pb-1.5 font-bold">
             <FileText className="h-3.5 w-3.5 text-blue-600" />
-            <h4 className="text-[9px] uppercase tracking-wider text-slate-500">Bill Details</h4>
+            <h4 className="text-[9px] uppercase tracking-wider text-slate-500">{t(lang, "lp.hdr_bill_details", "Bill Details")}</h4>
           </div>
           <div className="space-y-1 text-[9px]">
-            <div className="flex justify-between"><span className="text-slate-400">Booking Date:</span> <span suppressHydrationWarning className="font-bold text-slate-800 font-mono">{new Date().toISOString().slice(0, 10)}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">Fiscal Year:</span> <span className="font-bold text-slate-800 font-mono">2025-26</span></div>
-            <div className="flex justify-between items-center"><span className="text-slate-400">Status:</span> <span className="bg-amber-100 text-amber-800 font-bold px-1 py-0.2 rounded text-[7px] uppercase">DRAFT</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">Serial:</span> <span suppressHydrationWarning className="font-bold text-slate-800 font-mono">{serialNo}</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_booking_date", "Booking Date:")}</span> <span suppressHydrationWarning className="font-bold text-slate-800 font-mono">{new Date().toISOString().slice(0, 10)}</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_fiscal_year", "Fiscal Year:")}</span> <span className="font-bold text-slate-800 font-mono">{activeBranch?.fiscalYear || activeBranch?.fiscal_year || ""}</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-400">{t(lang, "lp.f_status", "Status:")}</span> <span className="bg-amber-100 text-amber-800 font-bold px-1 py-0.2 rounded text-[7px] uppercase">DRAFT</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_serial", "Serial:")}</span> <span suppressHydrationWarning className="font-bold text-slate-800 font-mono">{serialNo}</span></div>
           </div>
         </div>
 
@@ -1392,12 +1392,12 @@ export function LocalPurchaseView({
         <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-3.5 space-y-1.5">
           <div className="flex items-center gap-2 border-b border-slate-100 pb-1.5 font-bold">
             <ArrowDownLeft className="h-3.5 w-3.5 text-blue-600" />
-            <h4 className="text-[9px] uppercase tracking-wider text-slate-500">Purchase Acc (DR)</h4>
+            <h4 className="text-[9px] uppercase tracking-wider text-slate-500">{t(lang, "lp.hdr_purchase_acc_dr", "Purchase Acc (DR)")}</h4>
           </div>
           <div className="space-y-1 text-[9px]">
-            <div className="flex justify-between"><span className="text-slate-400">Code:</span> <span className="font-bold text-slate-800 font-mono truncate">{selectedPurchaseAccount?.code || "-"}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">Name:</span> <span className="font-bold text-blue-600 truncate">{selectedPurchaseAccount?.name || "-"}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">Currency:</span> <span className="font-bold text-slate-900 font-mono">{selectedPurchaseAccount?.currency || purchaseCurrency}</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_code", "Code:")}</span> <span className="font-bold text-slate-800 font-mono truncate">{selectedPurchaseAccount?.code || "-"}</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_name", "Name:")}</span> <span className="font-bold text-blue-600 truncate">{selectedPurchaseAccount?.name || "-"}</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_currency", "Currency:")}</span> <span className="font-bold text-slate-900 font-mono">{selectedPurchaseAccount?.currency || purchaseCurrency}</span></div>
           </div>
         </div>
 
@@ -1405,12 +1405,12 @@ export function LocalPurchaseView({
         <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-3.5 space-y-1.5">
           <div className="flex items-center gap-2 border-b border-slate-100 pb-1.5 font-bold">
             <ArrowUpRight className="h-3.5 w-3.5 text-blue-600" />
-            <h4 className="text-[9px] uppercase tracking-wider text-slate-500">Sales Acc (CR)</h4>
+            <h4 className="text-[9px] uppercase tracking-wider text-slate-500">{t(lang, "lp.hdr_sales_acc_cr", "Sales Acc (CR)")}</h4>
           </div>
           <div className="space-y-1 text-[9px]">
-            <div className="flex justify-between"><span className="text-slate-400">Code:</span> <span className="font-bold text-slate-800 font-mono truncate">{selectedSalesAccount?.code || "-"}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">Name:</span> <span className="font-bold text-blue-600 truncate">{selectedSalesAccount?.name || "-"}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">Currency:</span> <span className="font-bold text-slate-900 font-mono">{selectedSalesAccount?.currency || purchaseCurrency}</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_code", "Code:")}</span> <span className="font-bold text-slate-800 font-mono truncate">{selectedSalesAccount?.code || "-"}</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_name", "Name:")}</span> <span className="font-bold text-blue-600 truncate">{selectedSalesAccount?.name || "-"}</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_currency", "Currency:")}</span> <span className="font-bold text-slate-900 font-mono">{selectedSalesAccount?.currency || purchaseCurrency}</span></div>
           </div>
         </div>
 
@@ -1418,12 +1418,12 @@ export function LocalPurchaseView({
         <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-3.5 space-y-1.5">
           <div className="flex items-center gap-2 border-b border-slate-100 pb-1.5 font-bold">
             <UserCheck className="h-3.5 w-3.5 text-purple-600" />
-            <h4 className="text-[9px] uppercase tracking-wider text-slate-500">Broker / Agent Acc</h4>
+            <h4 className="text-[9px] uppercase tracking-wider text-slate-500">{t(lang, "lp.hdr_broker_agent_acc", "Broker / Agent Acc")}</h4>
           </div>
           <div className="space-y-1 text-[9px]">
-            <div className="flex justify-between"><span className="text-slate-400">Code:</span> <span className="font-bold text-slate-800 font-mono truncate">{selectedBrokerAccount?.code || "-"}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">Name:</span> <span className="font-bold text-purple-600 truncate">{selectedBrokerAccount?.name || "-"}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">Currency:</span> <span className="font-bold text-slate-900 font-mono">{selectedBrokerAccount?.currency || purchaseCurrency}</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_code", "Code:")}</span> <span className="font-bold text-slate-800 font-mono truncate">{selectedBrokerAccount?.code || "-"}</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_name", "Name:")}</span> <span className="font-bold text-purple-600 truncate">{selectedBrokerAccount?.name || "-"}</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{t(lang, "lp.f_currency", "Currency:")}</span> <span className="font-bold text-slate-900 font-mono">{selectedBrokerAccount?.currency || purchaseCurrency}</span></div>
           </div>
         </div>
       </div>
@@ -1512,16 +1512,16 @@ export function LocalPurchaseView({
                     <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-black text-blue-700">{country.branches.length} Branches</span>
                   </div>
                   <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] font-semibold">
-                    <div className="rounded-lg bg-slate-50 p-2"><span className="block text-slate-400">Bills</span><b>{country.bills}</b></div>
-                    <div className="rounded-lg bg-slate-50 p-2"><span className="block text-slate-400">Posted</span><b className="text-emerald-700">{country.postedBills}</b></div>
-                    <div className="rounded-lg bg-slate-50 p-2"><span className="block text-slate-400">Purchase</span><b>{money(country.totalPurchase, country.currency)}</b></div>
-                    <div className="rounded-lg bg-slate-50 p-2"><span className="block text-slate-400">Final</span><b className="text-blue-700">{money(country.totalFinal, country.currency)}</b></div>
+                    <div className="rounded-lg bg-slate-50 p-2"><span className="block text-slate-400">{t(lang, "lp.col_bills", "Bills")}</span><b>{country.bills}</b></div>
+                    <div className="rounded-lg bg-slate-50 p-2"><span className="block text-slate-400">{t(lang, "lp.col_posted", "Posted")}</span><b className="text-emerald-700">{country.postedBills}</b></div>
+                    <div className="rounded-lg bg-slate-50 p-2"><span className="block text-slate-400">{t(lang, "lp.col_purchase", "Purchase")}</span><b>{money(country.totalPurchase, country.currency)}</b></div>
+                    <div className="rounded-lg bg-slate-50 p-2"><span className="block text-slate-400">{t(lang, "lp.col_final", "Final")}</span><b className="text-blue-700">{money(country.totalFinal, country.currency)}</b></div>
                   </div>
                   <div className="mt-3 space-y-2">
                     {country.branches.map((branch: any) => (
                       <div key={branch.branchName} className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-[11px]">
                         <div className="flex justify-between gap-3 font-black text-slate-800"><span className="truncate">{branch.branchName}</span><span>{branch.bills} bills</span></div>
-                        <div className="mt-1 flex justify-between gap-3 font-semibold text-slate-500"><span>Final Amount</span><span>{money(branch.totalFinal, country.currency)}</span></div>
+                        <div className="mt-1 flex justify-between gap-3 font-semibold text-slate-500"><span>{t(lang, "lp.col_final_amount", "Final Amount")}</span><span>{money(branch.totalFinal, country.currency)}</span></div>
                       </div>
                     ))}
                   </div>
@@ -1593,7 +1593,7 @@ export function LocalPurchaseView({
                   type="button"
                   onClick={() => setIsFormOpen(false)}
                   className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded-lg transition"
-                  title="Close Form & Return to Registry"
+                  title={t(lang, "lp.close_form_return", "Close Form & Return to Registry")}
                 >
                   <X className="h-4 w-4" />
 </button>
@@ -2210,7 +2210,7 @@ export function LocalPurchaseView({
                                 value={selectedWarehouseId === "CUSTOM" ? "" : selectedWarehouseId}
                                 readOnly={selectedWarehouseId !== "CUSTOM"}
                                 onChange={e => selectedWarehouseId === "CUSTOM" && setSelectedWarehouseId(e.target.value)}
-                                placeholder="Code"
+                                placeholder={t(lang, "lp.code_word", "Code")}
                                 className="w-full h-9 rounded-lg border border-slate-200 bg-slate-100 px-3 text-xs font-mono outline-none text-slate-600 font-bold"
                               />
                             </div>
@@ -2448,9 +2448,9 @@ export function LocalPurchaseView({
                     <Button type="submit" disabled={saving}
                       className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-wider text-xs rounded-xl shadow-lg shadow-emerald-200 transition-all flex items-center justify-center gap-2">
                       {saving ? (
-                        <><Loader2 className="h-4 w-4 animate-spin" /> Booking & Posting Bill...</>
+                        <><Loader2 className="h-4 w-4 animate-spin" /> {t(lang, "lp.booking_posting_bill", "Booking & Posting Bill…")}</>
                       ) : (
-                        <><CheckCircle2 className="h-4 w-4" /> Book & Accept Bill</>
+                        <><CheckCircle2 className="h-4 w-4" /> {t(lang, "lp.book_accept_bill", "Book & Accept Bill")}</>
                       )}
                     </Button>
                   </div>
@@ -2477,16 +2477,16 @@ export function LocalPurchaseView({
                     <thead className="bg-slate-100 text-slate-700 text-[9px] font-extrabold uppercase tracking-wider border-b border-slate-200 sticky top-0">
                       <tr>
                         <Th className="p-2 border-b text-center">#</Th>
-                        <Th className="p-2 border-b">Goods Item</Th>
-                        <Th className="p-2 border-b">Brand / Size</Th>
-                        <Th className="p-2 border-b">Chassis / Lot</Th>
-                        <Th className="p-2 border-b text-right">Packages</Th>
-                        <Th className="p-2 border-b text-right">Gross Wt</Th>
-                        <Th className="p-2 border-b text-right">Net Wt</Th>
-                        <Th className="p-2 border-b text-right">Rate</Th>
-                        <Th className="p-2 border-b text-right">Tax Details</Th>
-                        <Th className="p-2 border-b text-right">Amount</Th>
-                        <Th className="p-2 border-b text-center">Action</Th>
+                        <Th className="p-2 border-b">{t(lang, "lp.col_goods_item", "Goods Item")}</Th>
+                        <Th className="p-2 border-b">{t(lang, "lp.col_brand_size", "Brand / Size")}</Th>
+                        <Th className="p-2 border-b">{t(lang, "lp.col_chassis_lot", "Chassis / Lot")}</Th>
+                        <Th className="p-2 border-b text-right">{t(lang, "lp.col_packages", "Packages")}</Th>
+                        <Th className="p-2 border-b text-right">{t(lang, "lp.col_gross_wt", "Gross Wt")}</Th>
+                        <Th className="p-2 border-b text-right">{t(lang, "lp.col_net_wt", "Net Wt")}</Th>
+                        <Th className="p-2 border-b text-right">{t(lang, "lp.col_rate", "Rate")}</Th>
+                        <Th className="p-2 border-b text-right">{t(lang, "lp.col_tax_details", "Tax Details")}</Th>
+                        <Th className="p-2 border-b text-right">{t(lang, "lp.col_amount", "Amount")}</Th>
+                        <Th className="p-2 border-b text-center">{t(lang, "lp.col_action", "Action")}</Th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-[10px]">
@@ -2532,7 +2532,7 @@ export function LocalPurchaseView({
                                   <div className="text-[8px] font-black text-amber-700">${item.taxAmount?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                                 </div>
                               ) : (
-                                <span className="text-slate-400">No Tax</span>
+                                <span className="text-slate-400">{t(lang, "lp.no_tax", "No Tax")}</span>
                               )}
                             </td>
                             <td className="p-2 text-right font-mono">
@@ -2546,7 +2546,7 @@ export function LocalPurchaseView({
                                 type="button"
                                 onClick={() => setDraftItems(prev => prev.filter(i => i.id !== item.id))}
                                 className="p-1 rounded text-red-500 hover:bg-red-50 transition"
-                                title="Remove item"
+                                title={t(lang, "lp.remove_item", "Remove item")}
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
                               </button>
@@ -2596,7 +2596,7 @@ export function LocalPurchaseView({
                                 <div className="text-[8px] font-black text-amber-700">${taxAmount?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                               </div>
                             ) : (
-                              <span className="text-slate-400">No Tax</span>
+                              <span className="text-slate-400">{t(lang, "lp.no_tax", "No Tax")}</span>
                             )}
                           </td>
                           <td className="p-2 text-right font-mono">
@@ -2605,7 +2605,7 @@ export function LocalPurchaseView({
                               <div className="text-[8px] text-slate-400">Sub: ${purchaseCost?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                             )}
                           </td>
-                          <td className="p-2 text-center text-slate-400 text-[9px] font-bold">Preview</td>
+                          <td className="p-2 text-center text-slate-400 text-[9px] font-bold">{t(lang, "lp.preview_word", "Preview")}</td>
                         </tr>
                       )}
                     </tbody>
@@ -2622,7 +2622,7 @@ export function LocalPurchaseView({
                     </p>
                     <div className="grid grid-cols-3 gap-2 text-[10px]">
                       <div>
-                        <span className="text-slate-500 block text-[8px] uppercase">Gross Weight</span>
+                        <span className="text-slate-500 block text-[8px] uppercase">{t(lang, "lp.gross_weight", "Gross Weight")}</span>
                         <span className="font-mono font-bold text-slate-800">
                           {draftItems.length > 0
                             ? draftItems.reduce((acc, i) => acc + i.totalGrossWeight, 0).toLocaleString()
@@ -2631,7 +2631,7 @@ export function LocalPurchaseView({
                         </span>
                       </div>
                       <div>
-                        <span className="text-slate-500 block text-[8px] uppercase">Empty Tare</span>
+                        <span className="text-slate-500 block text-[8px] uppercase">{t(lang, "lp.empty_tare", "Empty Tare")}</span>
                         <span className="font-mono font-bold text-red-600">
                           {draftItems.length > 0
                             ? draftItems.reduce((acc, i) => acc + i.emptyKgs, 0).toLocaleString()
@@ -2640,7 +2640,7 @@ export function LocalPurchaseView({
                         </span>
                       </div>
                       <div>
-                        <span className="text-slate-500 block text-[8px] uppercase">Net Weight</span>
+                        <span className="text-slate-500 block text-[8px] uppercase">{t(lang, "lp.net_weight", "Net Weight")}</span>
                         <span className="font-mono font-bold text-blue-700">
                           {draftItems.length > 0
                             ? draftItems.reduce((acc, i) => acc + i.netWeight, 0).toLocaleString()
@@ -2658,7 +2658,7 @@ export function LocalPurchaseView({
                     </p>
                     <div className="grid grid-cols-2 gap-3 text-[10px]">
                       <div>
-                        <span className="text-slate-500 block text-[8px] uppercase">Payment Mode</span>
+                        <span className="text-slate-500 block text-[8px] uppercase">{t(lang, "lp.payment_mode", "Payment Mode")}</span>
                         <span className="font-bold text-slate-800">{paymentMode}</span>
                       </div>
                       {paymentMode === "Advance" ? (
@@ -2670,20 +2670,20 @@ export function LocalPurchaseView({
                         </div>
                       ) : (
                         <div>
-                          <span className="text-slate-500 block text-[8px] uppercase">Payment Date</span>
+                          <span className="text-slate-500 block text-[8px] uppercase">{t(lang, "lp.payment_date", "Payment Date")}</span>
                           <span className="font-mono font-bold text-slate-700">{cashPaymentDate || "Today"}</span>
                         </div>
                       )}
                       {paymentMode === "Advance" && (
                         <>
                           <div>
-                            <span className="text-slate-500 block text-[8px] uppercase">Remaining Due</span>
+                            <span className="text-slate-500 block text-[8px] uppercase">{t(lang, "lp.remaining_due", "Remaining Due")}</span>
                             <span className="font-mono font-bold text-red-600">
                               {purchaseCurrency} {remainingBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
                           </div>
                           <div>
-                            <span className="text-slate-500 block text-[8px] uppercase">Due Date</span>
+                            <span className="text-slate-500 block text-[8px] uppercase">{t(lang, "lp.due_date", "Due Date")}</span>
                             <span className="font-mono font-bold text-slate-700">{remainingDueDate || "-"}</span>
                           </div>
                         </>
@@ -2698,18 +2698,18 @@ export function LocalPurchaseView({
                     </p>
                     <div className="grid grid-cols-2 gap-2 text-[10px]">
                       <div>
-                        <span className="text-slate-500 block text-[8px] uppercase">Shipment Mode</span>
+                        <span className="text-slate-500 block text-[8px] uppercase">{t(lang, "lp.shipment_mode", "Shipment Mode")}</span>
                         <span className="font-bold text-slate-800">{shipmentType}</span>
                       </div>
                       {shipmentType === "Loading by Truck" && truckNo && (
                         <div>
-                          <span className="text-slate-500 block text-[8px] uppercase">Truck & Driver</span>
+                          <span className="text-slate-500 block text-[8px] uppercase">{t(lang, "lp.truck_driver", "Truck & Driver")}</span>
                           <span className="font-bold text-indigo-700 font-mono text-[9px]">{truckNo} {driverName ? `(${driverName})` : ""}</span>
                         </div>
                       )}
                       {shipmentType === "Warehouse Transfer" && warehouseName && (
                         <div>
-                          <span className="text-slate-500 block text-[8px] uppercase">Warehouse Location</span>
+                          <span className="text-slate-500 block text-[8px] uppercase">{t(lang, "lp.warehouse_location", "Warehouse Location")}</span>
                           <span className="font-bold text-slate-800">{warehouseName}</span>
                         </div>
                       )}
@@ -2757,8 +2757,8 @@ export function LocalPurchaseView({
                   {filteredPurchases.length} {t(lang, "lp.records_label", "Record(s)")}
                 </span>
                 <JournalPrintButton
-                  title="LOCAL BRANCH PURCHASE REGISTER"
-                  subtitle="Official A4 ERP Journal Print Report - Local Purchase Register"
+                  title={t(lang, "lp.local_branch_purchase_register", "LOCAL BRANCH PURCHASE REGISTER")}
+                  subtitle={t(lang, "lp.a4_print_title", "Official A4 ERP Journal Print Report — Local Purchase Register")}
                   columns={[
                     { key: "voucherNo", label: "Voucher No", align: "left" },
                     { key: "date", label: "Date", align: "left" },
@@ -2791,28 +2791,28 @@ export function LocalPurchaseView({
                 <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
                   <thead className="bg-slate-900 text-white text-[9px] font-extrabold uppercase tracking-wider">
                     <tr>
-                      <Th className="px-2 py-2 border-r border-slate-700 text-center">Super S/N</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700 text-center">Cty S/N</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700 text-center">Br S/N</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700">Voucher No</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700">Date</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700">Purchase Acc (DR)</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700">Sales Acc (CR)</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700">Supplier Name</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700">Goods Name</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700">Brand</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700">Size</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700 text-right">Qty</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700">Unit</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700 text-right">Gross Wt</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700 text-right">Net Wt</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700 text-center">Divide Unit</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700 text-right">Rate</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700 text-right">Sub Total</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700 text-right">Tax Amt</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700 text-right font-black">Final Amount</Th>
-                      <Th className="px-2 py-2 border-r border-slate-700 text-center">Status</Th>
-                      <Th className="px-2 py-2 text-center">Actions</Th>
+                      <Th className="px-2 py-2 border-r border-slate-700 text-center">{t(lang, "lp.col_super_sn", "Super S/N")}</Th>
+                      <Th className="px-2 py-2 border-r border-slate-700 text-center">{t(lang, "lp.col_cty_sn", "Cty S/N")}</Th>
+                      <Th className="px-2 py-2 border-r border-slate-700 text-center">{t(lang, "lp.col_br_sn", "Br S/N")}</Th>
+                      <Th className="px-2 py-2 border-r border-slate-700">{t(lang, "lp.col_voucher_no", "Voucher No")}</Th>
+                      <Th className="px-2 py-2 border-r border-slate-700">{t(lang, "lp.col_date", "Date")}</Th>
+                      <Th className="px-2 py-2 border-r border-slate-700">{t(lang, "lp.hdr_purchase_acc_dr", "Purchase Acc (DR)")}</Th>
+                      <Th className="px-2 py-2 border-r border-slate-700">{t(lang, "lp.hdr_sales_acc_cr", "Sales Acc (CR)")}</Th>
+                      <Th className="px-2 py-2 border-r border-slate-700">{t(lang, "lp.col_supplier_name", "Supplier Name")}</Th>
+                      <Th className="px-2 py-2 border-r border-slate-700">{t(lang, "lp.col_goods_name", "Goods Name")}</Th>
+                      <Th className="px-2 py-2 border-r border-slate-700">{t(lang, "lp.col_brand", "Brand")}</Th>
+                      <Th className="px-2 py-2 border-r border-slate-700">{t(lang, "lp.col_size", "Size")}</Th>
+                      <Th className="px-2 py-2 border-r border-slate-700 text-right">{t(lang, "lp.col_qty", "Qty")}</Th>
+                      <Th className="px-2 py-2 border-r border-slate-700">{t(lang, "lp.col_unit", "Unit")}</Th>
+                      <Th className="px-2 py-2 border-r border-slate-700 text-right">{t(lang, "lp.col_gross_wt", "Gross Wt")}</Th>
+                      <Th className="px-2 py-2 border-r border-slate-700 text-right">{t(lang, "lp.col_net_wt", "Net Wt")}</Th>
+                      <Th className="px-2 py-2 border-r border-slate-700 text-center">{t(lang, "lp.divide_unit", "Divide Unit")}</Th>
+                      <Th className="px-2 py-2 border-r border-slate-700 text-right">{t(lang, "lp.col_rate", "Rate")}</Th>
+                      <Th className="px-2 py-2 border-r border-slate-700 text-right">{t(lang, "lp.sub_total", "Sub Total")}</Th>
+                      <Th className="px-2 py-2 border-r border-slate-700 text-right">{t(lang, "lp.col_tax_amt", "Tax Amt")}</Th>
+                      <Th className="px-2 py-2 border-r border-slate-700 text-right font-black">{t(lang, "lp.col_final_amount", "Final Amount")}</Th>
+                      <Th className="px-2 py-2 border-r border-slate-700 text-center">{t(lang, "lp.col_status", "Status")}</Th>
+                      <Th className="px-2 py-2 text-center">{t(lang, "lp.col_actions", "Actions")}</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-[10px]">
@@ -2827,7 +2827,7 @@ export function LocalPurchaseView({
                       <tr>
                         <td colSpan={22} className="px-5 py-12 text-center text-slate-400 font-sans">
                           <Package className="h-10 w-10 mx-auto text-slate-200 mb-3" />
-                          <p className="font-bold text-slate-700">No bills found</p>
+                          <p className="font-bold text-slate-700">{t(lang, "lp.no_bills_found", "No bills found")}</p>
                           <p className="text-[10px] text-slate-400 mt-0.5">Click &quot;+ Create Local Purchase&quot; to create a new bill.</p>
                         </td>
                       </tr>
@@ -2865,7 +2865,7 @@ export function LocalPurchaseView({
                             </td>
                             <td className="px-2 py-2 font-mono text-[9px] text-blue-600 font-bold border-r border-slate-150">{row.purchase_account_no || row.purchaseAccountNo || "PK-CHM-AC-0001"}</td>
                             <td className="px-2 py-2 font-mono text-[9px] text-purple-600 font-bold border-r border-slate-150">{row.sales_account_no || row.salesAccountNo || row.broker_account_no || row.brokerAccountNo || "PK-CHM-AC-0002"}</td>
-                            <td className="px-2 py-2 font-semibold text-slate-700 border-r border-slate-150">{row.supplier_name || row.supplierName || "Local Vendor"}</td>
+                            <td className="px-2 py-2 font-semibold text-slate-700 border-r border-slate-150">{row.supplier_name || row.supplierName || "—"}</td>
                             <td className="px-2 py-2 font-bold text-slate-900 border-r border-slate-150">{row.goods_name || row.goodsName || "-"}</td>
                             <td className="px-2 py-2 text-slate-500 border-r border-slate-150">{row.brand || "-"}</td>
                             <td className="px-2 py-2 text-slate-500 border-r border-slate-150">{row.size || "-"}</td>
@@ -2894,7 +2894,7 @@ export function LocalPurchaseView({
                                   type="button"
                                   onClick={() => setActiveActionMenuId(activeActionMenuId === row.id ? null : row.id)}
                                   className="p-1 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 transition-all flex items-center gap-1 font-bold text-[10px]"
-                                  title="Actions"
+                                  title={t(lang, "lp.col_actions", "Actions")}
                                 >
                                   <MoreVertical className="h-3.5 w-3.5 text-blue-600" />
                                 </button>
@@ -3049,7 +3049,7 @@ export function LocalPurchaseView({
 
             <div className="space-y-4">
               <div>
-                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Country *</label>
+                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">{t(lang, "lp.country_required", "Country *")}</label>
                 <select
                   value={scopeCountryId}
                   onChange={e => {
@@ -3065,7 +3065,7 @@ export function LocalPurchaseView({
                   }}
                   className="w-full h-10 rounded-xl border border-slate-200 px-3 text-xs font-bold outline-none focus:border-blue-500 bg-slate-50"
                 >
-                  <option value="">Select Country...</option>
+                  <option value="">{t(lang, "lp.select_country_ph", "Select Country…")}</option>
                   {countryOptions.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
@@ -3083,13 +3083,13 @@ export function LocalPurchaseView({
                   }}
                   className="w-full h-10 rounded-xl border border-slate-200 px-3 text-xs font-bold outline-none focus:border-blue-500 bg-slate-50"
                 >
-                  <option value="">Select Branch...</option>
+                  <option value="">{t(lang, "lp.select_branch_ph", "Select Branch…")}</option>
                   {scopeFilteredBranches.map(b => (
                     <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
                   ))}
                 </select>
                 {scopeFilteredBranches.length === 0 && scopeCountryId && (
-                  <p className="text-[9px] text-red-500 font-bold mt-1">No branches found for this country.</p>
+                  <p className="text-[9px] text-red-500 font-bold mt-1">{t(lang, "lp.no_branches_for_country", "No branches found for this country.")}</p>
                 )}
               </div>
 
@@ -3104,7 +3104,7 @@ export function LocalPurchaseView({
                   {scopeCityBranches.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
                 {scopeCityBranches.length === 0 && scopeBranchId && (
-                  <p className="text-[9px] text-slate-400 font-bold mt-1">No city branches for this branch.</p>
+                  <p className="text-[9px] text-slate-400 font-bold mt-1">{t(lang, "lp.no_city_branches", "No city branches for this branch.")}</p>
                 )}
               </div>
             </div>
@@ -3164,7 +3164,7 @@ export function LocalPurchaseView({
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Chassis / HS Code</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.col_chassis_hs", "Chassis / HS Code")}</label>
                 <input
                   value={newChsCodeInput}
                   onChange={e => setNewChsCodeInput(e.target.value)}
@@ -3221,7 +3221,7 @@ export function LocalPurchaseView({
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Chassis / HS Code</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.col_chassis_hs", "Chassis / HS Code")}</label>
                 <input
                   value={editChsCodeInput}
                   onChange={e => setEditChsCodeInput(e.target.value)}
@@ -3419,15 +3419,16 @@ export function LocalPurchaseView({
                 const rowUnitPrice = Number(selectedRowForVoucher.purchaseRate || selectedRowForVoucher.purchase_rate || 0);
                 const voucherRef = selectedRowForVoucher.invoiceNo || selectedRowForVoucher.invoice_no || selectedRowForVoucher.journal_serial_no || selectedRowForVoucher.serial_no || selectedRowForVoucher.serialNo || `LP-${selectedRowForVoucher.id?.slice(0,5).toUpperCase()}`;
                 const companyName = selectedRowForVoucher.companyName || selectedRowForVoucher.company_name || activeBranch?.companyName || activeBranch?.company_name || activeBranch?.branding_company_name || "";
-                const branchName = selectedRowForVoucher.branchName || selectedRowForVoucher.branch_name || activeBranch?.name || "UAE Branch";
-                const officeAddress = selectedRowForVoucher.officeAddress || selectedRowForVoucher.office_address || activeBranch?.fullAddress || activeBranch?.full_address || activeBranch?.address || "United Arab Emirates";
-                const officePhone = activeBranch?.phone || activeBranch?.phoneNumber || activeBranch?.phone_number || activeBranch?.mobile || activeBranch?.mobileNumber || activeBranch?.mobile_number || "N/A";
-                const officeEmail = activeBranch?.email || activeBranch?.emailAddress || activeBranch?.email_address || "N/A";
-                const trnNumber = activeBranch?.trnNumber || activeBranch?.trn_number || activeBranch?.vatNumber || activeBranch?.vat_number || "N/A";
-                const supplierName = selectedRowForVoucher.supplierName || selectedRowForVoucher.supplier_name || "Local Vendor";
-                const paymentMethod = selectedRowForVoucher.paymentMode || selectedRowForVoucher.payment_mode || "Cash";
-                const shippingMode = selectedRowForVoucher.shippingMode || selectedRowForVoucher.shipping_mode || "Local Purchase";
-                const goodsName = selectedRowForVoucher.goodsName || selectedRowForVoucher.goods_name || "Local Purchase Goods";
+                const branchName = selectedRowForVoucher.branchName || selectedRowForVoucher.branch_name || activeBranch?.name || "";
+                const officeAddress = selectedRowForVoucher.officeAddress || selectedRowForVoucher.office_address || activeBranch?.fullAddress || activeBranch?.full_address || activeBranch?.address || "";
+                const officePhone = activeBranch?.phone || activeBranch?.phoneNumber || activeBranch?.phone_number || activeBranch?.mobile || activeBranch?.mobileNumber || activeBranch?.mobile_number || "—";
+                const officeEmail = activeBranch?.email || activeBranch?.emailAddress || activeBranch?.email_address || "—";
+                const trnNumber = activeBranch?.trnNumber || activeBranch?.trn_number || activeBranch?.vatNumber || activeBranch?.vat_number || "—";
+                const supplierName = selectedRowForVoucher.supplierName || selectedRowForVoucher.supplier_name || "—";
+                const supplierCountryName = selectedRowForVoucher.originCountryName || selectedRowForVoucher.origin_country_name || activeBranch?.countryName || "";
+                const paymentMethod = selectedRowForVoucher.paymentMode || selectedRowForVoucher.payment_mode || "—";
+                const shippingMode = selectedRowForVoucher.shippingMode || selectedRowForVoucher.shipping_mode || "—";
+                const goodsName = selectedRowForVoucher.goodsName || selectedRowForVoucher.goods_name || "—";
                 const hsCode = selectedRowForVoucher.hsCode || selectedRowForVoucher.hs_code || selectedRowForVoucher.chassisCode || selectedRowForVoucher.chassis_code || "-";
                 const brandName = selectedRowForVoucher.brand || "-";
                 const sizeName = selectedRowForVoucher.size || selectedRowForVoucher.sizeName || selectedRowForVoucher.size_name || "-";
@@ -3438,39 +3439,39 @@ export function LocalPurchaseView({
                         <div className="grid grid-cols-[88px_1fr_210px] gap-4 bg-slate-950 p-5 text-white">
                           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-xl font-black text-slate-950">LOGO</div>
                           <div className="space-y-1">
-                            <h2 className="text-xl font-black uppercase tracking-[0.18em]">Tax Invoice</h2>
+                            <h2 className="text-xl font-black uppercase tracking-[0.18em]">{t(lang, "lp.tax_invoice", "Tax Invoice")}</h2>
                             <p className="text-sm font-extrabold uppercase tracking-wide">{companyName}</p>
                             <p className="text-[10px] text-slate-300">{branchName}</p>
                             <p className="max-w-lg text-[10px] leading-4 text-slate-300">{officeAddress}</p>
                           </div>
                           <div className="space-y-1 text-right text-[10px]">
-                            <p>Invoice No: <span className="font-mono font-black text-white">{voucherRef}</span></p>
-                            <p>Invoice Date: <span className="font-mono font-bold">{rowDate}</span></p>
-                            <p>Payment Method: <span className="font-bold">{paymentMethod}</span></p>
-                            <p>Phone: <span className="font-bold">{officePhone}</span></p>
-                            <p>Email: <span className="font-bold">{officeEmail}</span></p>
+                            <p>{t(lang, "lp.f_invoice_no", "Invoice No:")} <span className="font-mono font-black text-white">{voucherRef}</span></p>
+                            <p>{t(lang, "lp.f_invoice_date", "Invoice Date:")} <span className="font-mono font-bold">{rowDate}</span></p>
+                            <p>{t(lang, "lp.f_payment_method", "Payment Method:")} <span className="font-bold">{paymentMethod}</span></p>
+                            <p>{t(lang, "lp.f_phone", "Phone:")} <span className="font-bold">{officePhone}</span></p>
+                            <p>{t(lang, "lp.f_email", "Email:")} <span className="font-bold">{officeEmail}</span></p>
                             <p className="rounded-lg bg-white/10 px-2 py-1 font-bold text-blue-100">TRN / VAT: {trnNumber}</p>
                           </div>
                         </div>
 
                         <div className="grid grid-cols-3 gap-3 border-b border-slate-200 bg-slate-50 p-4">
                           <div className="rounded-xl border border-slate-200 bg-white p-3">
-                            <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">Supplier Details</p>
+                            <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">{t(lang, "lp.hdr_supplier_details", "Supplier Details")}</p>
                             <p className="text-sm font-black text-slate-900">{supplierName}</p>
-                            <p className="mt-1 text-slate-500">Country: United Arab Emirates</p>
-                            <p className="text-slate-500">Invoice Currency: <span className="font-bold text-slate-800">{rowCurrency}</span></p>
+                            <p className="mt-1 text-slate-500">{t(lang, "lp.f_country", "Country:")} {supplierCountryName || ""}</p>
+                            <p className="text-slate-500">{t(lang, "lp.f_invoice_currency", "Invoice Currency:")} <span className="font-bold text-slate-800">{rowCurrency}</span></p>
                           </div>
                           <div className="rounded-xl border border-slate-200 bg-white p-3">
-                            <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">Delivery / Warehouse</p>
-                            <p>Transaction Type: <span className="font-bold">{shippingMode}</span></p>
-                            <p>Warehouse: <span className="font-bold">{selectedRowForVoucher.warehouseName || selectedRowForVoucher.warehouse_name || "-"}</span></p>
-                            <p>Truck No: <span className="font-mono font-bold text-indigo-700">{selectedRowForVoucher.truckNo || selectedRowForVoucher.truck_no || "-"}</span></p>
+                            <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">{t(lang, "lp.delivery_warehouse", "Delivery / Warehouse")}</p>
+                            <p>{t(lang, "lp.f_transaction_type", "Transaction Type:")} <span className="font-bold">{shippingMode}</span></p>
+                            <p>{t(lang, "lp.f_warehouse", "Warehouse:")} <span className="font-bold">{selectedRowForVoucher.warehouseName || selectedRowForVoucher.warehouse_name || "-"}</span></p>
+                            <p>{t(lang, "lp.f_truck_no", "Truck No:")} <span className="font-mono font-bold text-indigo-700">{selectedRowForVoucher.truckNo || selectedRowForVoucher.truck_no || "-"}</span></p>
                           </div>
                           <div className="rounded-xl border border-slate-200 bg-white p-3">
-                            <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">Invoice Control</p>
-                            <p>Branch: <span className="font-bold">{branchName}</span></p>
-                            <p>Document Ref: <span className="font-mono font-bold">{voucherRef}</span></p>
-                            <p>Status: <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-bold text-emerald-700">Posted</span></p>
+                            <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">{t(lang, "lp.invoice_control", "Invoice Control")}</p>
+                            <p>{t(lang, "lp.f_branch", "Branch:")} <span className="font-bold">{branchName}</span></p>
+                            <p>{t(lang, "lp.f_document_ref", "Document Ref:")} <span className="font-mono font-bold">{voucherRef}</span></p>
+                            <p>{t(lang, "lp.f_status", "Status:")} <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-bold text-emerald-700">{t(lang, "lp.col_posted", "Posted")}</span></p>
                           </div>
                         </div>
 
@@ -3478,18 +3479,18 @@ export function LocalPurchaseView({
                           <table className="w-full border-collapse overflow-hidden rounded-xl border border-slate-200 text-[9px]">
                             <thead className="bg-slate-900 text-white">
                               <tr>
-                                <Th className="border border-slate-800 p-2 text-left">Sr.</Th>
-                                <Th className="border border-slate-800 p-2 text-left">Goods Name</Th>
-                                <Th className="border border-slate-800 p-2 text-left">HS Code</Th>
-                                <Th className="border border-slate-800 p-2 text-left">Brand</Th>
-                                <Th className="border border-slate-800 p-2 text-left">Size</Th>
-                                <Th className="border border-slate-800 p-2 text-right">Quantity</Th>
-                                <Th className="border border-slate-800 p-2 text-left">Unit</Th>
-                                <Th className="border border-slate-800 p-2 text-right">Unit Price</Th>
-                                <Th className="border border-slate-800 p-2 text-right">Taxable Amount</Th>
+                                <Th className="border border-slate-800 p-2 text-left">{t(lang, "lp.col_sr", "Sr.")}</Th>
+                                <Th className="border border-slate-800 p-2 text-left">{t(lang, "lp.col_goods_name", "Goods Name")}</Th>
+                                <Th className="border border-slate-800 p-2 text-left">{t(lang, "lp.col_hs_code", "HS Code")}</Th>
+                                <Th className="border border-slate-800 p-2 text-left">{t(lang, "lp.col_brand", "Brand")}</Th>
+                                <Th className="border border-slate-800 p-2 text-left">{t(lang, "lp.col_size", "Size")}</Th>
+                                <Th className="border border-slate-800 p-2 text-right">{t(lang, "lp.col_quantity", "Quantity")}</Th>
+                                <Th className="border border-slate-800 p-2 text-left">{t(lang, "lp.col_unit", "Unit")}</Th>
+                                <Th className="border border-slate-800 p-2 text-right">{t(lang, "lp.col_unit_price", "Unit Price")}</Th>
+                                <Th className="border border-slate-800 p-2 text-right">{t(lang, "lp.taxable_amount", "Taxable Amount")}</Th>
                                 <Th className="border border-slate-800 p-2 text-right">VAT %</Th>
-                                <Th className="border border-slate-800 p-2 text-right">VAT Amount</Th>
-                                <Th className="border border-slate-800 p-2 text-right">Total Amount</Th>
+                                <Th className="border border-slate-800 p-2 text-right">{t(lang, "lp.vat_amount", "VAT Amount")}</Th>
+                                <Th className="border border-slate-800 p-2 text-right">{t(lang, "lp.total_amount", "Total Amount")}</Th>
                               </tr>
                             </thead>
                             <tbody>
@@ -3519,24 +3520,24 @@ export function LocalPurchaseView({
                               <p className="text-sm font-black capitalize text-slate-900">{amountToWordsEn(rowGrandTotal, rowCurrency)}</p>
                               <div className="mt-4 grid grid-cols-2 gap-3 text-[9px]">
                                 <div className="rounded-lg border border-dashed border-slate-300 bg-white p-3">
-                                  <p className="font-black uppercase text-slate-500">QR Code</p>
-                                  <p className="mt-2 text-slate-400">QR placeholder for UAE e-invoice reference.</p>
+                                  <p className="font-black uppercase text-slate-500">{t(lang, "lp.qr_code", "QR Code")}</p>
+                                  <p className="mt-2 text-slate-400">{t(lang, "lp.qr_placeholder_note", "QR placeholder for e-invoice reference.")}</p>
                                 </div>
                                 <div className="rounded-lg border border-dashed border-slate-300 bg-white p-3">
-                                  <p className="font-black uppercase text-slate-500">Company Stamp</p>
-                                  <p className="mt-2 text-slate-400">Stamp area</p>
+                                  <p className="font-black uppercase text-slate-500">{t(lang, "lp.company_stamp", "Company Stamp")}</p>
+                                  <p className="mt-2 text-slate-400">{t(lang, "lp.stamp_area", "Stamp area")}</p>
                                 </div>
                               </div>
                             </div>
 
                             <div className="overflow-hidden rounded-xl border border-slate-300 text-[10px]">
-                              <div className="bg-slate-100 px-3 py-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-700">Summary</div>
+                              <div className="bg-slate-100 px-3 py-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-700">{t(lang, "lp.summary_word", "Summary")}</div>
                               <div className="space-y-2 p-3">
-                                <div className="flex justify-between"><span>Sub Total</span><span className="font-mono font-bold">{rowCurrency} {rowSubtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
-                                <div className="flex justify-between text-red-600"><span>VAT Total</span><span className="font-mono font-bold">{rowCurrency} {rowTaxAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
-                                <div className="flex justify-between"><span>Freight / Loading</span><span className="font-mono font-bold">{rowCurrency} {rowFreight.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
-                                <div className="flex justify-between"><span>Round Off</span><span className="font-mono font-bold">{rowCurrency} {rowRoundOff.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
-                                <div className="flex justify-between border-t border-slate-300 pt-2 text-sm font-black text-emerald-700"><span>Grand Total</span><span className="font-mono">{rowCurrency} {rowGrandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+                                <div className="flex justify-between"><span>{t(lang, "lp.sub_total", "Sub Total")}</span><span className="font-mono font-bold">{rowCurrency} {rowSubtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+                                <div className="flex justify-between text-red-600"><span>{t(lang, "lp.vat_total", "VAT Total")}</span><span className="font-mono font-bold">{rowCurrency} {rowTaxAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+                                <div className="flex justify-between"><span>{t(lang, "lp.freight_loading", "Freight / Loading")}</span><span className="font-mono font-bold">{rowCurrency} {rowFreight.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+                                <div className="flex justify-between"><span>{t(lang, "lp.round_off", "Round Off")}</span><span className="font-mono font-bold">{rowCurrency} {rowRoundOff.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+                                <div className="flex justify-between border-t border-slate-300 pt-2 text-sm font-black text-emerald-700"><span>{t(lang, "lp.grand_total", "Grand Total")}</span><span className="font-mono">{rowCurrency} {rowGrandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
                               </div>
                             </div>
                           </div>
@@ -3544,23 +3545,23 @@ export function LocalPurchaseView({
 
                         <div className="grid grid-cols-2 gap-4 border-t border-slate-200 bg-slate-50 p-4 text-[9px]">
                           <div className="space-y-1">
-                            <p className="font-black uppercase tracking-[0.14em] text-blue-800">Bank Details</p>
-                            <p>Bank Name: <span className="font-bold">{activeBranch?.bankName || activeBranch?.bank_name || "-"}</span></p>
-                            <p>Account Name: <span className="font-bold">{activeBranch?.bankAccountName || activeBranch?.bank_account_name || companyName}</span></p>
+                            <p className="font-black uppercase tracking-[0.14em] text-blue-800">{t(lang, "lp.bank_details", "Bank Details")}</p>
+                            <p>{t(lang, "lp.f_bank_name", "Bank Name:")} <span className="font-bold">{activeBranch?.bankName || activeBranch?.bank_name || "-"}</span></p>
+                            <p>{t(lang, "lp.f_account_name", "Account Name:")} <span className="font-bold">{activeBranch?.bankAccountName || activeBranch?.bank_account_name || companyName}</span></p>
                             <p>IBAN: <span className="font-mono font-bold">{activeBranch?.iban || activeBranch?.bankIban || "-"}</span></p>
                           </div>
                           <div className="space-y-1">
-                            <p className="font-black uppercase tracking-[0.14em] text-slate-700">Terms & Conditions</p>
-                            <p>1. Goods received in good condition are subject to company purchase policy.</p>
-                            <p>2. VAT and taxable amounts are calculated according to UAE tax invoice requirements.</p>
-                            <p>3. This invoice is generated from the ERP local purchase module.</p>
+                            <p className="font-black uppercase tracking-[0.14em] text-slate-700">{t(lang, "lp.terms_conditions", "Terms & Conditions")}</p>
+                            <p>1. {t(lang, "lp.term_goods_condition", "Goods received in good condition are subject to company purchase policy.")}</p>
+                            <p>2. {t(lang, "lp.term_vat_calc", "VAT and taxable amounts are calculated according to the applicable tax-invoice requirements.")}</p>
+                            <p>3. {t(lang, "lp.term_invoice_from_erp", "This invoice is generated from the ERP local purchase module.")}</p>
                           </div>
                         </div>
 
                         <div className="grid grid-cols-3 gap-6 p-5 text-center text-[9px] font-bold text-slate-600">
-                          <div className="border-t border-slate-700 pt-2">Prepared By</div>
-                          <div className="border-t border-slate-700 pt-2">Checked By</div>
-                          <div className="border-t border-slate-700 pt-2">Authorized Signature</div>
+                          <div className="border-t border-slate-700 pt-2">{t(lang, "lp.prepared_by", "Prepared By")}</div>
+                          <div className="border-t border-slate-700 pt-2">{t(lang, "lp.checked_by", "Checked By")}</div>
+                          <div className="border-t border-slate-700 pt-2">{t(lang, "lp.authorized_signature", "Authorized Signature")}</div>
                         </div>
                       </div>
                     </div>
@@ -3585,17 +3586,17 @@ export function LocalPurchaseView({
 
               <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
                 <div>
-                  <span className="text-[9px] font-bold text-slate-400 uppercase block">Supplier / Vendor:</span>
+                  <span className="text-[9px] font-bold text-slate-400 uppercase block">{t(lang, "lp.f_supplier_vendor", "Supplier / Vendor:")}</span>
                   <span className="font-bold text-slate-800 text-xs">{selectedRowForVoucher.supplierName || selectedRowForVoucher.supplier_name || "-"}</span>
                   <span className="text-[9px] text-emerald-600 block font-bold mt-1 uppercase">
                     Payment Mode: {selectedRowForVoucher.paymentMode || selectedRowForVoucher.payment_mode || "Cash"}
                   </span>
                 </div>
                 <div className="text-right text-[10px] space-y-0.5">
-                  <span className="text-[9px] font-bold text-slate-400 uppercase block">Shipping & Logistics:</span>
-                  <div className="font-semibold text-slate-700">Mode: <span className="font-bold">{selectedRowForVoucher.shippingMode || selectedRowForVoucher.shipping_mode || "Loading"}</span></div>
-                  <div className="font-semibold text-slate-700">Warehouse: <span className="font-bold">{selectedRowForVoucher.warehouseName || selectedRowForVoucher.warehouse_name || "-"}</span></div>
-                  <div className="font-semibold text-slate-700">Truck No: <span className="font-bold font-mono text-indigo-600">{selectedRowForVoucher.truckNo || selectedRowForVoucher.truck_no || "-"}</span></div>
+                  <span className="text-[9px] font-bold text-slate-400 uppercase block">{t(lang, "lp.f_shipping_logistics", "Shipping & Logistics:")}</span>
+                  <div className="font-semibold text-slate-700">{t(lang, "lp.f_mode", "Mode:")} <span className="font-bold">{selectedRowForVoucher.shippingMode || selectedRowForVoucher.shipping_mode || "Loading"}</span></div>
+                  <div className="font-semibold text-slate-700">{t(lang, "lp.f_warehouse", "Warehouse:")} <span className="font-bold">{selectedRowForVoucher.warehouseName || selectedRowForVoucher.warehouse_name || "-"}</span></div>
+                  <div className="font-semibold text-slate-700">{t(lang, "lp.f_truck_no", "Truck No:")} <span className="font-bold font-mono text-indigo-600">{selectedRowForVoucher.truckNo || selectedRowForVoucher.truck_no || "-"}</span></div>
                 </div>
               </div>
 
@@ -3603,12 +3604,12 @@ export function LocalPurchaseView({
                 <table className="w-full text-left text-xs border border-slate-200">
                   <thead className="bg-slate-100 text-slate-700 text-[9px] font-bold uppercase">
                     <tr>
-                      <Th className="p-2 border-b">Goods Item</Th>
-                      <Th className="p-2 border-b">Brand/Origin</Th>
-                      <Th className="p-2 border-b text-right">Qty</Th>
-                      <Th className="p-2 border-b text-right">Net Weight</Th>
-                      <Th className="p-2 border-b text-right">Rate</Th>
-                      <Th className="p-2 border-b text-right">Final Amount</Th>
+                      <Th className="p-2 border-b">{t(lang, "lp.col_goods_item", "Goods Item")}</Th>
+                      <Th className="p-2 border-b">{t(lang, "lp.col_brand_origin", "Brand/Origin")}</Th>
+                      <Th className="p-2 border-b text-right">{t(lang, "lp.col_qty", "Qty")}</Th>
+                      <Th className="p-2 border-b text-right">{t(lang, "lp.net_weight", "Net Weight")}</Th>
+                      <Th className="p-2 border-b text-right">{t(lang, "lp.col_rate", "Rate")}</Th>
+                      <Th className="p-2 border-b text-right">{t(lang, "lp.col_final_amount", "Final Amount")}</Th>
                     </tr>
                   </thead>
                   <tbody className="text-[10px]">

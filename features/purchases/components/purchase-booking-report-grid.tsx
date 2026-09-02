@@ -312,7 +312,7 @@ export function PurchaseBookingReportGrid({
                 </span>
               </div>
               <div>
-                <span className="text-[9px] font-semibold text-slate-500 block">Business Name</span>
+                <span className="text-[9px] font-semibold text-slate-500 block">{t(lang, "pbr.business_name", "Business Name")}</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 leading-snug block text-right">
                   {purchaseBusinessName}
                 </span>
@@ -340,7 +340,7 @@ export function PurchaseBookingReportGrid({
               className="w-full flex items-center justify-center gap-1.5 h-7.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[10px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
             >
               <Eye className="h-3.5 w-3.5 text-slate-500" />
-              <span>View Account Details</span>
+              <span>{t(lang, "pbr.view_account_details", "View Account Details")}</span>
             </button>
           </div>
         </div>
@@ -379,7 +379,7 @@ export function PurchaseBookingReportGrid({
                 </span>
               </div>
               <div>
-                <span className="text-[9px] font-semibold text-slate-500 block">Business Name</span>
+                <span className="text-[9px] font-semibold text-slate-500 block">{t(lang, "pbr.business_name", "Business Name")}</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 leading-snug block text-right">
                   {salesBusinessName}
                 </span>
@@ -407,7 +407,7 @@ export function PurchaseBookingReportGrid({
               className="w-full flex items-center justify-center gap-1.5 h-7.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[10px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
             >
               <Eye className="h-3.5 w-3.5 text-slate-500" />
-              <span>View Account Details</span>
+              <span>{t(lang, "pbr.view_account_details", "View Account Details")}</span>
             </button>
           </div>
         </div>
