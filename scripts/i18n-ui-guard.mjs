@@ -29,6 +29,12 @@ const CHANGED_ARG = ARGS.find((a) => a === "--changed" || a.startsWith("--change
 const UI_FILE = "lib/i18n/ui.ts";
 const LANGS = ["en", "ur", "ar", "fa", "ps"];
 const CODE_GLOBS = ['"features/**/*.tsx"', '"features/**/*.ts"', '"app/**/*.tsx"', '"app/**/*.ts"', '"components/**/*.tsx"', '"lib/reports/**/*.ts"', '"lib/reports/**/*.tsx"'];
+// The referenced-key ("MISSING") + parallel-dict scans also cover *.jsx — the Purchase /
+// Sales order wizards are large .jsx files that were previously invisible to this guard,
+// so a t(lang,"key",…) call with no matching ui.ts entry silently rendered English.
+// The hardcoded-English (--changed) scan deliberately stays on CODE_GLOBS only: those
+// wizards still carry pre-existing hard-coded strings tracked as separate tech-debt.
+const REF_GLOBS = [...CODE_GLOBS, '"features/**/*.jsx"', '"app/**/*.jsx"', '"components/**/*.jsx"'];
 
 const log = (...a) => { if (!QUIET) console.log(...a); };
 const fail = [];
@@ -88,7 +94,7 @@ dupes.slice(0, 25).forEach((d) => log(`      ${d}`));
 // ---------------------------------------------------------------------------
 let codeFiles = [];
 try {
-  codeFiles = execSync(`git ls-files ${CODE_GLOBS.join(" ")}`, { encoding: "utf8" }).trim().split("\n").filter(Boolean);
+  codeFiles = execSync(`git ls-files ${REF_GLOBS.join(" ")}`, { encoding: "utf8" }).trim().split("\n").filter(Boolean);
 } catch { /* not a git repo */ }
 const have = new Set(Object.keys(dict.en).concat(...LANGS.map((l) => Object.keys(dict[l]))));
 // Only count references that unambiguously target the CENTRAL dictionary:
@@ -218,7 +224,7 @@ const parallelNew = [];
 const parallelKnown = [];
 let searchFiles = [];
 try {
-  searchFiles = execSync('git ls-files "features/**/*.ts" "features/**/*.tsx" "components/**/*.ts" "components/**/*.tsx" "app/**/*.ts" "app/**/*.tsx" "lib/**/*.ts"', { encoding: "utf8" })
+  searchFiles = execSync('git ls-files "features/**/*.ts" "features/**/*.tsx" "features/**/*.jsx" "components/**/*.ts" "components/**/*.tsx" "app/**/*.ts" "app/**/*.tsx" "app/**/*.jsx" "lib/**/*.ts"', { encoding: "utf8" })
     .trim().split("\n").filter(Boolean)
     .filter((f) => !f.startsWith("lib/i18n/") && !PARALLEL_ALLOW.has(f));
 } catch { /* ignore */ }

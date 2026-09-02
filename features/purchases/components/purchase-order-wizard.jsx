@@ -4163,8 +4163,8 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                           <tr>
                             <Th className="p-2 text-center w-8">#</Th>
                             <Th className="p-2">Goods Name</Th>
-                            <Th className="p-2 text-center">Size</Th>
-                            <Th className="p-2 text-center">Brand</Th>
+                            <Th className="p-2 text-center">{t(lang, "purchase.size_label", "Size")}</Th>
+                            <Th className="p-2 text-center">{t(lang, "purchase.brand_label", "Brand")}</Th>
                             <Th className="p-2 text-center">HS Code</Th>
                             <Th className="p-2 text-center">Origin Country</Th>
                             <Th className="p-2 text-right">Qty</Th>
@@ -4894,7 +4894,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                               onClick={() => setActiveTab("booking")}
                               className="text-[10.5px] font-bold text-slate-500 hover:text-slate-800 underline"
                             >
-                              ← Back to Booking
+                              {t(lang, "purchase.back_to_booking", "← Back to Booking")}
                             </button>
                           </div>
 
@@ -5457,7 +5457,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                 onClick={() => setActiveTab("shipping")}
                                 className="flex-1 h-9 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1 shadow-md shadow-orange-500/20 transition-all cursor-pointer"
                               >
-                                Next: Other Details →
+                                {t(lang, "purchase.next_other_details", "Next: Other Details →")}
                               </button>
                             </div>
                           </div>
@@ -5756,11 +5756,11 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                             </div>
 
                             <select className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-[11px] font-medium text-slate-700 dark:text-slate-300 outline-none">
-                              <option>Branch: All Branches</option>
+                              <option>{t(lang, "purchase.filter_all_branches", "Branch: All Branches")}</option>
                             </select>
 
                             <select className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-[11px] font-medium text-slate-700 dark:text-slate-300 outline-none">
-                              <option>Status: All Status</option>
+                              <option>{t(lang, "purchase.filter_all_status", "Status: All Status")}</option>
                             </select>
 
                             <div className="relative">
@@ -5777,7 +5777,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                               className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1 text-[11px] font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                             >
                               <SlidersHorizontal className="h-3.5 w-3.5 text-slate-500" />
-                              <span>Filters</span>
+                              <span>{t(lang, "common.filters", "Filters")}</span>
                             </button>
                           </div>
                         </div>
@@ -5795,10 +5795,10 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                 <Th className="px-3 py-2 text-center">ORIGIN</Th>
                                 <Th className="px-3 py-2 text-right">QTY</Th>
                                 <Th className="px-3 py-2 text-center">UNIT</Th>
-                                <Th className="px-3 py-2 text-right">PRICE ({form.currencyType || "USD"})</Th>
-                                <Th className="px-3 py-2 text-right">AMOUNT ({form.currencyType || "USD"})</Th>
+                                <Th className="px-3 py-2 text-right">{t(lang, "purchase.col_price_ccy", "PRICE")} ({form.currencyType || "USD"})</Th>
+                                <Th className="px-3 py-2 text-right">{t(lang, "purchase.col_amount_ccy", "AMOUNT")} ({form.currencyType || "USD"})</Th>
                                 <Th className="px-3 py-2 text-center">EX. RATE</Th>
-                                <Th className="px-3 py-2 text-right text-emerald-700 dark:text-emerald-400 font-black bg-emerald-500/5">FINAL ({form.secondaryCurrency || "AED"})</Th>
+                                <Th className="px-3 py-2 text-right text-emerald-700 dark:text-emerald-400 font-black bg-emerald-500/5">{t(lang, "purchase.col_final_ccy", "FINAL")} ({form.secondaryCurrency || "AED"})</Th>
                                 <Th className="px-3 py-2 text-center w-10">ACTION</Th>
                               </tr>
                             </thead>
@@ -5811,7 +5811,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                         <ShoppingCart className="h-6 w-6" />
                                       </div>
                                       <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                                        No goods added yet. Add an item above to see it here.
+                                        {t(lang, "purchase.no_goods_added", "No goods added yet. Add an item above to see it here.")}
                                       </span>
                                     </div>
                                   </td>
@@ -5877,7 +5877,7 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
 
                         {/* Pagination Footer */}
                         <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400 pt-2">
-                          <span>Showing 0 to {goodsEntries.length} of {goodsEntries.length} entries</span>
+                          <span>{t(lang, "purchase.showing_entries", "Showing {from} to {to} of {total} entries").replace("{from}", "0").replace("{to}", String(goodsEntries.length)).replace("{total}", String(goodsEntries.length))}</span>
                           <div className="flex items-center gap-2">
                             <select className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-0.5 text-xs text-slate-700 dark:text-slate-300">
                               <option>10</option>
