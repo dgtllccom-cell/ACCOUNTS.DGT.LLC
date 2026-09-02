@@ -4,6 +4,7 @@ import { apiOk, handleApiError } from "@/lib/api/response";
 import { uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { resolveReportScope } from "@/lib/permissions/middleware";
 import { ledgerReportService } from "@/lib/services/ledger-report-service";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { withLocalPg } from "@/lib/db/local-postgres";
@@ -19,6 +20,8 @@ const querySchema = z.object({
   ledgerId: z.string().min(1).optional(),
   fromDate: z.string().trim().min(8).optional(),
   toDate: z.string().trim().min(8).optional(),
+  /** The single day whose Daily Credit/Debit/Balance the summary reports (defaults to toDate). */
+  dailyDate: z.string().trim().min(8).optional(),
   limit: z.coerce.number().int().min(1).max(500).default(250)
 });
 
@@ -60,6 +63,7 @@ export async function GET(request: NextRequest) {
       ledgerId: request.nextUrl.searchParams.get("ledgerId") ?? undefined,
       fromDate: request.nextUrl.searchParams.get("fromDate") ?? undefined,
       toDate: request.nextUrl.searchParams.get("toDate") ?? undefined,
+      dailyDate: request.nextUrl.searchParams.get("dailyDate") ?? undefined,
       limit: request.nextUrl.searchParams.get("limit") ?? undefined
     });
 
@@ -71,8 +75,16 @@ export async function GET(request: NextRequest) {
       cityBranchId: query.cityBranchId ?? null
     });
 
+    // Clamp the requested reportScope to what the session is actually entitled to —
+    // the global (USD-consolidated) view is Super Admin only. resolveReportScope() is
+    // the same helper every report handler uses. listLedgers still gates rows by the
+    // session's own IDs regardless; this only affects presentation currency.
+    const allowed = resolveReportScope(session).level; // "global" | "country" | "branch"
+    query.reportScope = allowed === "global" ? query.reportScope : allowed === "country" ? "country" : "branch";
+
     const fromDate = query.fromDate ?? monthStartIso();
     const toDate = query.toDate ?? todayIso();
+    const dailyDate = query.dailyDate && query.dailyDate >= fromDate && query.dailyDate <= toDate ? query.dailyDate : toDate;
     const admin = createSupabaseAdminClient() as any;
 
     const ledgerIdsParam = query.ledgerId ? query.ledgerId.split(",") : null;
@@ -304,6 +316,24 @@ export async function GET(request: NextRequest) {
       return 0;
     }
 
+    // Daily totals for the single day `dailyDate` — same historical per-line rate.
+    // A separate local-currency bucket per currency keeps the branch/country view honest
+    // (only the USD bucket is safe to sum across currencies).
+    const daily = { entries: 0, debit: 0, credit: 0, usdDebit: 0, usdCredit: 0 };
+    const dailyLocalByCcy = new Map<string, { debit: number; credit: number }>();
+    function addDaily(entryDate: string | null, deb: number, cre: number, usdDeb: number, usdCre: number, ccy: string) {
+      if (!entryDate || String(entryDate).slice(0, 10) !== dailyDate) return;
+      daily.entries += 1;
+      daily.debit += deb;
+      daily.credit += cre;
+      daily.usdDebit += usdDeb;
+      daily.usdCredit += usdCre;
+      const b = dailyLocalByCcy.get(ccy) ?? { debit: 0, credit: 0 };
+      b.debit += deb;
+      b.credit += cre;
+      dailyLocalByCcy.set(ccy, b);
+    }
+
     for (const row of batchLinesData) {
       const ledgerId = String(row.ledger_id);
       const entry = ensure(ledgerId);
@@ -312,8 +342,11 @@ export async function GET(request: NextRequest) {
       const cre = toNumber(row.credit);
       entry.debit += deb;
       entry.credit += cre;
-      if (deb > 0) entry.usdDebit += calcUsd(deb, row.usd_rate, row.usd_amount);
-      if (cre > 0) entry.usdCredit += calcUsd(cre, row.usd_rate, row.usd_amount);
+      const usdDeb = deb > 0 ? calcUsd(deb, row.usd_rate, row.usd_amount) : 0;
+      const usdCre = cre > 0 ? calcUsd(cre, row.usd_rate, row.usd_amount) : 0;
+      entry.usdDebit += usdDeb;
+      entry.usdCredit += usdCre;
+      addDaily(row.ledger_posting_batches?.entry_date ?? null, deb, cre, usdDeb, usdCre, String(row.currency || ""));
 
       const header = row.ledger_posting_batches ?? {};
       const activityAt = String(header.created_at ?? row.created_at ?? header.entry_date ?? "");
@@ -340,8 +373,11 @@ export async function GET(request: NextRequest) {
       const cre = toNumber(row.credit);
       entry.debit += deb;
       entry.credit += cre;
-      if (deb > 0) entry.usdDebit += calcUsd(deb, row.usd_rate, row.usd_amount);
-      if (cre > 0) entry.usdCredit += calcUsd(cre, row.usd_rate, row.usd_amount);
+      const usdDeb = deb > 0 ? calcUsd(deb, row.usd_rate, row.usd_amount) : 0;
+      const usdCre = cre > 0 ? calcUsd(cre, row.usd_rate, row.usd_amount) : 0;
+      entry.usdDebit += usdDeb;
+      entry.usdCredit += usdCre;
+      addDaily(row.roznamcha_entries?.entry_date ?? null, deb, cre, usdDeb, usdCre, String(row.currency || ""));
 
       const header = row.roznamcha_entries ?? {};
       const activityAt = String(header.created_at ?? row.created_at ?? header.entry_date ?? "");
@@ -455,10 +491,52 @@ export async function GET(request: NextRequest) {
         acc.debit += row.debit;
         acc.credit += row.credit;
         acc.balance += row.balance;
+        acc.usdDebit += row.usdDebit || 0;
+        acc.usdCredit += row.usdCredit || 0;
+        acc.usdBalance += row.usdBalance || 0;
         return acc;
       },
-      { totalLedgers: 0, activeLedgers: 0, inactiveLedgers: 0, entries: 0, debit: 0, credit: 0, balance: 0 }
+      { totalLedgers: 0, activeLedgers: 0, inactiveLedgers: 0, entries: 0, debit: 0, credit: 0, balance: 0, usdDebit: 0, usdCredit: 0, usdBalance: 0 }
     );
+
+    // ── Scope-aware presentation currency ───────────────────────────────────
+    // super_admin consolidates in USD; country / branch stay in the dominant
+    // local currency of the returned ledgers (never invented — read off the rows).
+    const ccyCount = new Map<string, number>();
+    for (const r of finalRows) {
+      const c = String((r as any).ledgerCurrency || "").toUpperCase();
+      if (c) ccyCount.set(c, (ccyCount.get(c) || 0) + 1);
+    }
+    const dominantCurrency =
+      [...ccyCount.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ||
+      (finalRows[0] as any)?.ledgerCurrency ||
+      "USD";
+    const displayCurrency = query.reportScope === "super_admin" ? "USD" : dominantCurrency;
+    const mixedLocalCurrency = ccyCount.size > 1;
+
+    // Daily local total is only meaningful when the day's entries are single-currency.
+    const dailyCurrencies = [...dailyLocalByCcy.keys()].filter(Boolean);
+    const dailyLocal =
+      dailyCurrencies.length === 1
+        ? dailyLocalByCcy.get(dailyCurrencies[0])!
+        : { debit: daily.debit, credit: daily.credit };
+
+    Object.assign(summary, {
+      // daily (single day = dailyDate)
+      dailyDate,
+      dailyEntries: daily.entries,
+      dailyDebit: dailyLocal.debit,
+      dailyCredit: dailyLocal.credit,
+      dailyBalance: dailyLocal.credit - dailyLocal.debit,
+      dailyUsdDebit: daily.usdDebit,
+      dailyUsdCredit: daily.usdCredit,
+      dailyUsdBalance: daily.usdCredit - daily.usdDebit,
+      // presentation
+      displayCurrency,
+      dominantCurrency,
+      mixedLocalCurrency,
+      reportScope: query.reportScope,
+    });
 
     const selectedLedger = query.ledgerId ? finalRows.find((row) => row.ledgerId === query.ledgerId) ?? null : null;
 

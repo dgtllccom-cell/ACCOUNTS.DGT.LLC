@@ -68,6 +68,21 @@ type GeneralReportResponse = {
     debit: number;
     credit: number;
     balance: number;
+    usdDebit?: number;
+    usdCredit?: number;
+    usdBalance?: number;
+    dailyDate?: string;
+    dailyEntries?: number;
+    dailyDebit?: number;
+    dailyCredit?: number;
+    dailyBalance?: number;
+    dailyUsdDebit?: number;
+    dailyUsdCredit?: number;
+    dailyUsdBalance?: number;
+    displayCurrency?: string;
+    dominantCurrency?: string;
+    mixedLocalCurrency?: boolean;
+    reportScope?: LedgerReportScope;
   };
   rows: GeneralReportRow[];
   selectedLedger: GeneralReportRow | null;
@@ -624,27 +639,43 @@ export function LedgerReportView({
         country: (sessionInfo as any)?.scopes?.summary?.countryName || "",
         branch: (sessionInfo as any)?.scopes?.summary?.branchDisplayName || (sessionInfo as any)?.scopes?.summary?.branchName || "",
       },
-      kpis: [
-        { label: tt("jrn.entry_count", "Total Entries"), value: summary?.entries ?? 0, color: "blue" },
-        { label: tt("bankroz.total_debit", "Total Debit"), value: summary?.debit ?? 0, color: "amber" },
-        { label: tt("bankroz.total_credit", "Total Credit"), value: summary?.credit ?? 0, color: "emerald" },
-        { label: tt("acct.current_balance", "Balance"), value: summary?.balance ?? 0, color: "purple" },
-      ],
+      kpis: (() => {
+        const g = reportScope === "super_admin";
+        const c = g ? "USD" : (summary?.displayCurrency || "");
+        const sfx = c ? ` (${c})` : "";
+        return [
+          { label: tt("jrn.entry_count", "Total Entries"), value: summary?.entries ?? 0, color: "blue" as const },
+          { label: tt("lgr.total_debit", "Total Debit") + sfx, value: g ? (summary?.usdDebit ?? 0) : (summary?.debit ?? 0), color: "amber" as const },
+          { label: tt("lgr.total_credit", "Total Credit") + sfx, value: g ? (summary?.usdCredit ?? 0) : (summary?.credit ?? 0), color: "emerald" as const },
+          { label: tt("lgr.balance", "Balance") + sfx, value: g ? (summary?.usdBalance ?? 0) : (summary?.balance ?? 0), color: "purple" as const },
+          { label: tt("lgr.daily_credit", "Daily Credit") + sfx, value: g ? (summary?.dailyUsdCredit ?? 0) : (summary?.dailyCredit ?? 0), color: "emerald" as const },
+          { label: tt("lgr.daily_debit", "Daily Debit") + sfx, value: g ? (summary?.dailyUsdDebit ?? 0) : (summary?.dailyDebit ?? 0), color: "amber" as const },
+          { label: tt("lgr.daily_balance", "Daily Balance") + sfx, value: g ? (summary?.dailyUsdBalance ?? 0) : (summary?.dailyBalance ?? 0), color: "purple" as const },
+        ];
+      })(),
       filters: [
-        { label: tr("Report Scope"), value: String(reportScope || "all") },
+        { label: tr("Report Scope"), value: reportScope === "super_admin" ? tt("report.scope_global", "Global") : reportScope === "country" ? tt("report.scope_country", "Country") : tt("report.scope_branch", "Branch") },
         { label: tr("Date Range"), value: `${fromDate} → ${toDate}` },
+        { label: tt("lgr.daily_for", "Daily · for"), value: summary?.dailyDate || toDate },
       ],
       columns: [
-        { key: "sno", label: tt("rozrep.sno", "S.No"), width: "5%" },
-        { key: "country", label: tt("rozrep.country", "Country"), width: "10%" },
-        { key: "branch", label: tt("rozrep.branch", "Branch"), width: "12%" },
-        { key: "accountNo", label: tt("rozrep.account_no", "Account No"), width: "12%" },
-        { key: "accountName", label: tt("rozrep.account_name", "Account Name"), width: "18%" },
-        { key: "entries", label: tt("jrn.entry_count", "Entries"), align: "right", format: "number", width: "7%" },
-        { key: "opening", label: tt("acct.opening_balance", "Opening"), align: "right", format: "currency", width: "10%" },
-        { key: "debit", label: tt("rozrep.debit", "Debit"), align: "right", format: "currency", width: "10%" },
-        { key: "credit", label: tt("rozrep.credit", "Credit"), align: "right", format: "currency", width: "10%" },
-        { key: "balance", label: tt("rozrep.balance", "Balance"), align: "right", format: "currency", width: "10%" },
+        { key: "sno", label: tt("rozrep.sno", "S.No"), width: "4%" },
+        { key: "country", label: tt("rozrep.country", "Country"), width: "9%" },
+        { key: "branch", label: tt("rozrep.branch", "Branch"), width: "11%" },
+        { key: "accountNo", label: tt("rozrep.account_no", "Account No"), width: "10%" },
+        { key: "accountName", label: tt("rozrep.account_name", "Account Name"), width: "15%" },
+        { key: "currency", label: tt("lgr.orig_currency", "Original Currency"), align: "center", width: "7%" },
+        { key: "entries", label: tt("jrn.entry_count", "Entries"), align: "right", format: "number", width: "6%" },
+        { key: "debit", label: tt("rozrep.debit", "Debit"), align: "right", format: "currency", width: "9%" },
+        { key: "credit", label: tt("rozrep.credit", "Credit"), align: "right", format: "currency", width: "9%" },
+        { key: "balance", label: tt("rozrep.balance", "Balance"), align: "right", format: "currency", width: "9%" },
+        ...(reportScope === "super_admin"
+          ? [
+              { key: "usdDebit", label: tt("lgr.debit_usd", "Debit (USD)"), align: "right" as const, format: "currency" as const, width: "9%" },
+              { key: "usdCredit", label: tt("lgr.credit_usd", "Credit (USD)"), align: "right" as const, format: "currency" as const, width: "9%" },
+              { key: "usdBalance", label: tt("lgr.balance_usd", "Balance (USD)"), align: "right" as const, format: "currency" as const, width: "9%" },
+            ]
+          : []),
       ],
       rows: (displayRows as any[]).map((row, index) => ({
         sno: index + 1,
@@ -652,17 +683,19 @@ export function LedgerReportView({
         branch: buildBranchLabel(row),
         accountNo: row.accountCode || row.ledgerCode || "-",
         accountName: row.accountName || row.ledgerName || "-",
+        currency: row.ledgerCurrency || "-",
         entries: row.entries ?? 0,
-        opening: row.openingBalance ?? 0,
         debit: row.debit ?? 0,
         credit: row.credit ?? 0,
         balance: row.balance ?? 0,
+        usdDebit: row.usdDebit ?? 0,
+        usdCredit: row.usdCredit ?? 0,
+        usdBalance: row.usdBalance ?? 0,
       })),
-      totals: {
-        debit: summary?.debit ?? 0,
-        credit: summary?.credit ?? 0,
-        balance: summary?.balance ?? 0,
-      },
+      totals:
+        reportScope === "super_admin"
+          ? { debit: summary?.usdDebit ?? 0, credit: summary?.usdCredit ?? 0, balance: summary?.usdBalance ?? 0 }
+          : { debit: summary?.debit ?? 0, credit: summary?.credit ?? 0, balance: summary?.balance ?? 0 },
       showSignatures: false,
     });
   }
@@ -1068,32 +1101,63 @@ export function LedgerReportView({
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
             </div>
             <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
-              {th("2. GLOBAL FINANCIAL SUMMARY")}
+              {"2. " + (reportScope === "super_admin"
+                ? t(effectiveLang, "lgr.global_summary", "Global Financial Summary")
+                : reportScope === "country"
+                  ? t(effectiveLang, "lgr.country_summary", "Country Financial Summary")
+                  : t(effectiveLang, "lgr.branch_summary", "Branch Financial Summary"))}
             </h4>
           </div>
-          <div className="p-4 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
-            <div className="flex justify-between items-center">
-              <span>{th("TOTAL GLOBAL ENTRIES:")}</span>
-              <span className="font-black text-slate-800 dark:text-slate-200">{summary?.entries || displayRows.reduce((acc, r) => acc + (r.entries || 0), 0)}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span>{th("TOTAL CREDIT (AED):")}</span>
-              <span className="font-black text-emerald-600 dark:text-emerald-400 font-mono">{fmtNumber(summary?.credit || displayRows.reduce((acc, r) => acc + (r.credit || 0), 0))}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-rose-600 dark:text-rose-400">{th("TOTAL DEBIT (AED):")}</span>
-              <span className="font-black text-rose-600 dark:text-rose-400 font-mono">{fmtNumber(summary?.debit || displayRows.reduce((acc, r) => acc + (r.debit || 0), 0))}</span>
-            </div>
-            <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800">
-              <span className="text-slate-700 dark:text-slate-300 font-bold">{th("BALANCE (AED):")}</span>
-              <span className="font-black text-blue-600 dark:text-blue-400 font-mono text-sm">{fmtNumber(summary?.balance || displayRows.reduce((acc, r) => acc + (r.balance || 0), 0))}</span>
-            </div>
-            {displayRows.length === 0 && !loading && (
-              <div className="mt-1 rounded bg-emerald-50/60 dark:bg-emerald-950/30 p-1.5 text-[10px] text-emerald-800 dark:text-emerald-300 font-medium text-center">
-                {th("NO FINANCIAL ENTRIES AVAILABLE FOR THE SELECTED DATE RANGE.")}
+          {(() => {
+            const isGlobal = reportScope === "super_admin";
+            const ccy = isGlobal ? "USD" : (summary?.displayCurrency || summary?.dominantCurrency || "");
+            const totEntries = summary?.entries ?? displayRows.reduce((a, r) => a + (r.entries || 0), 0);
+            const totCredit = isGlobal ? (summary?.usdCredit ?? 0) : (summary?.credit ?? displayRows.reduce((a, r) => a + (r.credit || 0), 0));
+            const totDebit = isGlobal ? (summary?.usdDebit ?? 0) : (summary?.debit ?? displayRows.reduce((a, r) => a + (r.debit || 0), 0));
+            const totBalance = isGlobal ? (summary?.usdBalance ?? 0) : (summary?.balance ?? displayRows.reduce((a, r) => a + (r.balance || 0), 0));
+            const dCredit = isGlobal ? (summary?.dailyUsdCredit ?? 0) : (summary?.dailyCredit ?? 0);
+            const dDebit = isGlobal ? (summary?.dailyUsdDebit ?? 0) : (summary?.dailyDebit ?? 0);
+            const dBalance = isGlobal ? (summary?.dailyUsdBalance ?? 0) : (summary?.dailyBalance ?? 0);
+            const cLabel = (base: string) => `${base}${ccy ? ` (${ccy})` : ""}`;
+            return (
+              <div className="p-4 flex flex-col gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+                <div className="flex justify-between items-center">
+                  <span>{isGlobal ? cLabel(t(effectiveLang, "lgr.total_entries", "Total Entries")).replace(` (${ccy})`, "") : t(effectiveLang, "lgr.total_entries", "Total Entries")}</span>
+                  <span className="font-black text-slate-800 dark:text-slate-200">{totEntries}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>{cLabel(t(effectiveLang, "lgr.total_credit", "Total Credit"))}</span>
+                  <span className="font-black text-emerald-600 dark:text-emerald-400 font-mono">{fmtNumber(totCredit)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-rose-600 dark:text-rose-400">{cLabel(t(effectiveLang, "lgr.total_debit", "Total Debit"))}</span>
+                  <span className="font-black text-rose-600 dark:text-rose-400 font-mono">{fmtNumber(totDebit)}</span>
+                </div>
+                <div className="flex justify-between items-center pt-1.5 border-t border-slate-100 dark:border-slate-800">
+                  <span className="text-slate-700 dark:text-slate-300 font-bold">{cLabel(t(effectiveLang, "lgr.balance", "Balance"))}</span>
+                  <span className="font-black text-blue-600 dark:text-blue-400 font-mono text-sm">{fmtNumber(totBalance)}</span>
+                </div>
+                <div className="mt-1.5 pt-1.5 border-t border-dashed border-slate-200 dark:border-slate-700 text-[10px]">
+                  <div className="mb-0.5 font-bold uppercase tracking-wide text-slate-400">
+                    {t(effectiveLang, "lgr.daily_for", "Daily · for")} {summary?.dailyDate || toDate}
+                  </div>
+                  <div className="flex justify-between"><span>{cLabel(t(effectiveLang, "lgr.daily_credit", "Daily Credit"))}</span><span className="font-black text-emerald-600 dark:text-emerald-400 font-mono">{fmtNumber(dCredit)}</span></div>
+                  <div className="flex justify-between"><span>{cLabel(t(effectiveLang, "lgr.daily_debit", "Daily Debit"))}</span><span className="font-black text-rose-600 dark:text-rose-400 font-mono">{fmtNumber(dDebit)}</span></div>
+                  <div className="flex justify-between"><span className="font-bold text-slate-600 dark:text-slate-300">{cLabel(t(effectiveLang, "lgr.daily_balance", "Daily Balance"))}</span><span className="font-black text-blue-600 dark:text-blue-400 font-mono">{fmtNumber(dBalance)}</span></div>
+                </div>
+                {!isGlobal && summary?.mixedLocalCurrency ? (
+                  <div className="mt-1 rounded bg-amber-50/70 dark:bg-amber-950/30 p-1.5 text-[10px] text-amber-800 dark:text-amber-300 text-center">
+                    {t(effectiveLang, "lgr.mixed_ccy", "Mixed local currencies — USD is the reliable consolidation.")}
+                  </div>
+                ) : null}
+                {displayRows.length === 0 && !loading && (
+                  <div className="mt-1 rounded bg-emerald-50/60 dark:bg-emerald-950/30 p-1.5 text-[10px] text-emerald-800 dark:text-emerald-300 font-medium text-center">
+                    {t(effectiveLang, "lgr.no_entries_range", "No financial entries available for the selected date range.")}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            );
+          })()}
         </div>
 
         {/* Panel 3: Bill Entries Summary */}
@@ -1449,13 +1513,27 @@ export function LedgerReportView({
                           "Date From": fromDate,
                           "Date To": toDate,
                         }}
-                        summary={{
-                          totalLedgers: summary?.totalLedgers || 0,
-                          entries: summary?.entries || 0,
-                          debit: summary?.debit || 0,
-                          credit: summary?.credit || 0,
-                          balance: summary?.balance || 0,
-                        }}
+                        summary={
+                          reportScope === "super_admin"
+                            ? {
+                                [t(effectiveLang, "lgr.total_entries", "Total Entries")]: summary?.entries || 0,
+                                [`${t(effectiveLang, "lgr.total_credit", "Total Credit")} (USD)`]: summary?.usdCredit || 0,
+                                [`${t(effectiveLang, "lgr.total_debit", "Total Debit")} (USD)`]: summary?.usdDebit || 0,
+                                [`${t(effectiveLang, "lgr.balance", "Balance")} (USD)`]: summary?.usdBalance || 0,
+                                [`${t(effectiveLang, "lgr.daily_credit", "Daily Credit")} (USD)`]: summary?.dailyUsdCredit || 0,
+                                [`${t(effectiveLang, "lgr.daily_debit", "Daily Debit")} (USD)`]: summary?.dailyUsdDebit || 0,
+                                [`${t(effectiveLang, "lgr.daily_balance", "Daily Balance")} (USD)`]: summary?.dailyUsdBalance || 0,
+                              }
+                            : {
+                                [t(effectiveLang, "lgr.total_entries", "Total Entries")]: summary?.entries || 0,
+                                [`${t(effectiveLang, "lgr.total_credit", "Total Credit")}${summary?.displayCurrency ? ` (${summary.displayCurrency})` : ""}`]: summary?.credit || 0,
+                                [`${t(effectiveLang, "lgr.total_debit", "Total Debit")}${summary?.displayCurrency ? ` (${summary.displayCurrency})` : ""}`]: summary?.debit || 0,
+                                [`${t(effectiveLang, "lgr.balance", "Balance")}${summary?.displayCurrency ? ` (${summary.displayCurrency})` : ""}`]: summary?.balance || 0,
+                                [`${t(effectiveLang, "lgr.daily_credit", "Daily Credit")}`]: summary?.dailyCredit || 0,
+                                [`${t(effectiveLang, "lgr.daily_debit", "Daily Debit")}`]: summary?.dailyDebit || 0,
+                                [`${t(effectiveLang, "lgr.daily_balance", "Daily Balance")}`]: summary?.dailyBalance || 0,
+                              }
+                        }
                         rowsPerPage={pageSize}
                         onClose={() => setPrintMode(false)}
                       />
@@ -1516,34 +1594,38 @@ export function LedgerReportView({
                       <th className="px-3 py-2">{t(lang, "bdash.col_date", "Date")}</th>
                       <th className="px-3 py-2">{t(lang, "ledger.lgrv_voucher_ref", "Voucher / Ref")}</th>
                       <th className="px-3 py-2">{t(lang, "common.description", "Description")}</th>
+                      {canViewConversionColumns ? <th className="px-3 py-2 text-center">{t(effectiveLang, "lgr.orig_currency", "Original Currency")}</th> : null}
                       <th className="px-3 py-2 text-right">{t(lang, "cdash.col_debit", "Debit")}</th>
                       <th className="px-3 py-2 text-right">{t(lang, "cdash.col_credit", "Credit")}</th>
+                      {canViewConversionColumns ? <th className="px-3 py-2 text-right">{t(effectiveLang, "lgr.exchange_rate", "Exchange Rate")}</th> : null}
+                      {canViewConversionColumns ? <th className="px-3 py-2 text-right">{t(effectiveLang, "lgr.debit_usd", "Debit (USD)")}</th> : null}
+                      {canViewConversionColumns ? <th className="px-3 py-2 text-right">{t(effectiveLang, "lgr.credit_usd", "Credit (USD)")}</th> : null}
                       <th className="px-3 py-2 text-right">{t(lang, "cdash.col_balance", "Balance")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y dark:divide-slate-800">
                     {displayedLines.map((line, idx) => {
                       const lineBal = fmtBalance(line.runningBalance, selectedLedger?.normalBalance);
+                      const lineRate = line.usdRate && line.usdRate > 0 ? line.usdRate : null;
+                      const lineUsd = (v: number) => (line.usdAmount && line.usdAmount > 0 && v > 0 ? line.usdAmount : lineRate && v > 0 ? v * lineRate : 0);
                       return (
                         <tr key={idx} className={cn("hover:bg-slate-50/50 dark:hover:bg-slate-900/40", lineBal.color)}>
                           <td className="px-3 py-2 whitespace-nowrap">{line.entryDate}</td>
                           <td className="px-3 py-2 font-mono whitespace-nowrap">{line.referenceNo || line.sourceId.slice(0, 8)}</td>
                           <td className="px-3 py-2 max-w-[200px] truncate" title={line.description ?? undefined}>{line.description || "-"}</td>
-                          <td className="px-3 py-2 text-right font-mono">
-                            {line.debit ? fmtNumber(line.debit) : "-"}
-                          </td>
-                          <td className="px-3 py-2 text-right font-mono">
-                            {line.credit ? fmtNumber(line.credit) : "-"}
-                          </td>
-                          <td className="px-3 py-2 text-right font-mono font-bold">
-                            {lineBal.text}
-                          </td>
+                          {canViewConversionColumns ? <td className="px-3 py-2 text-center font-mono">{line.currency || selectedLedger?.ledgerCurrency || "-"}</td> : null}
+                          <td className="px-3 py-2 text-right font-mono">{line.debit ? fmtNumber(line.debit) : "-"}</td>
+                          <td className="px-3 py-2 text-right font-mono">{line.credit ? fmtNumber(line.credit) : "-"}</td>
+                          {canViewConversionColumns ? <td className="px-3 py-2 text-right font-mono">{lineRate ? fmtRate(lineRate) : "-"}</td> : null}
+                          {canViewConversionColumns ? <td className="px-3 py-2 text-right font-mono">{line.debit > 0 ? fmtNumber(lineUsd(line.debit)) : "-"}</td> : null}
+                          {canViewConversionColumns ? <td className="px-3 py-2 text-right font-mono">{line.credit > 0 ? fmtNumber(lineUsd(line.credit)) : "-"}</td> : null}
+                          <td className="px-3 py-2 text-right font-mono font-bold">{lineBal.text}</td>
                         </tr>
                       );
                     })}
                     {displayedLines.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="px-3 py-4 text-center text-muted-foreground italic">{t(lang, "ledger.lgrv_no_entries_period", "No entries for this period.")}</td>
+                        <td colSpan={canViewConversionColumns ? 10 : 6} className="px-3 py-4 text-center text-muted-foreground italic">{t(lang, "ledger.lgrv_no_entries_period", "No entries for this period.")}</td>
                       </tr>
                     )}
                   </tbody>
