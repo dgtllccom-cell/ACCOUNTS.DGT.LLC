@@ -21,8 +21,30 @@ function messageFromBody(body: unknown) {
   return null;
 }
 
+/**
+ * The live ERP UI language (localStorage `erp_lang` → <html lang> → "en"). Sent as the
+ * `x-erp-lang` header on every API call so server routes localise master data / labels to
+ * exactly what the user is looking at, even before the `erp_lang` cookie has round-tripped
+ * (see lib/i18n/server.ts getRequestLanguage). Browser-only; no-ops on the server.
+ */
+function clientErpLang(): string | null {
+  if (typeof document === "undefined") return null;
+  try {
+    const raw = (localStorage.getItem("erp_lang") || document.documentElement.lang || "").trim();
+    const base = raw.split("-")[0].toLowerCase();
+    return ["en", "ur", "ar", "fa", "ps"].includes(base) ? base : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function apiFetch<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
-  const res = await fetch(input, { credentials: "include", ...init });
+  const lang = clientErpLang();
+  const mergedInit: RequestInit = { credentials: "include", ...init };
+  if (lang) {
+    mergedInit.headers = { ...(init?.headers as Record<string, string> | undefined), "x-erp-lang": lang };
+  }
+  const res = await fetch(input, mergedInit);
   const body = (await parseJsonSafe(res)) as ApiOk<T> | ApiErr | unknown;
 
   if (!res.ok) {

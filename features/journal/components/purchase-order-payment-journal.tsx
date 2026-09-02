@@ -254,7 +254,7 @@ function handlePrintReceipt(payment: any, orderRow: any, ledgers: any[], localCu
           </tr>
           <tr>
             <Th>${rt("payment_date")}</Th><td>${paymentDate}</td>
-            <Th>${rt("receipt_posted_by")}</Th><td>${re.profiles?.full_name ? re.profiles.full_name.toUpperCase() : "—"}</td>
+            <Th>${rt("receipt_posted_by")}</Th><td>${re.profiles?.full_name ? re.profiles.full_name.toUpperCase() : "â"}</td>
           </tr>
           <tr>
             <Th>${rt("reference_no")}</Th><td>${payment.reference_no || "-"}</td>
@@ -483,7 +483,7 @@ function getUsdExchangeRate(cur: string, row: any, liveRates: any[] = []) {
   const match = liveRates.find((r) => r.currency_code === cur);
   if (match && Number(match.exchange_rate || 0) > 0) return Number(match.exchange_rate);
 
-  // No live rate: fall back only to the transaction's own frozen exchange rate —
+  // No live rate: fall back only to the transaction's own frozen exchange rate â
   // never a hard-coded placeholder rate.
   const form = row?.form_data?.form || {};
   const rowRate = row?.exchange_rate || form.exchangeRate || 1;
@@ -636,8 +636,8 @@ function getDashboardSummaryData(rows: PurchaseOrderRow[], session: any, mode: s
   if (!rows || rows.length === 0) return null;
 
   const firstRow = rows[0];
-  const country = rowCountryName(firstRow) || session?.countryName || "—";
-  const branchName = rowBranchName(firstRow) || session?.branchName || "—";
+  const country = rowCountryName(firstRow) || session?.countryName || "â";
+  const branchName = rowBranchName(firstRow) || session?.branchName || "â";
   
   const localCur = (country.toUpperCase().includes("PAKISTAN")) ? "PKR" : 
                    (country.toUpperCase().includes("EMIRATES") || country.toUpperCase().includes("UAE") || country.toUpperCase().includes("DUBAI")) ? "AED" : 
@@ -651,7 +651,7 @@ function getDashboardSummaryData(rows: PurchaseOrderRow[], session: any, mode: s
     branchName,
     userName: session?.name || session?.username || session?.user?.fullName || "SUPER ADMIN",
     userId: session?.userId || session?.user?.id || "SA001",
-    role: session?.role || "—",
+    role: session?.role || "â",
     
     totalTransactions: rows.length,
     localCurrency: localCur,
@@ -1519,7 +1519,7 @@ function DashboardSummaryHeader({
     const cur = currency.toUpperCase();
     const base = baseCurrency.toUpperCase();
     if (cur === base || cur === "USD") return 1.0;
-    // Use only the transaction's own frozen exchange rate — never a hard-coded placeholder.
+    // Use only the transaction's own frozen exchange rate â never a hard-coded placeholder.
     const r = Number(rowRate || 0);
     if (r > 1) return 1 / r;
     if (r > 0) return r;
@@ -2182,10 +2182,10 @@ function DashboardSummaryHeader({
     return '';
   };
   
-  const adminCountry = selectedCountryForSummary || summary.country || session?.countryName || "—";
-  const adminBranch = (summary.branchName && summary.branchName !== "All Branches") ? summary.branchName : (session?.branchName || "—");
-  const adminUserName = summary.userName || session?.name || session?.username || "—";
-  const adminRole = session?.role || summary.role || "—";
+  const adminCountry = selectedCountryForSummary || summary.country || session?.countryName || "â";
+  const adminBranch = (summary.branchName && summary.branchName !== "All Branches") ? summary.branchName : (session?.branchName || "â");
+  const adminUserName = summary.userName || session?.name || session?.username || "â";
+  const adminRole = session?.role || summary.role || "â";
 
   // Calculate Date Range from actual rows
   const dates = (rows || [])
@@ -2197,10 +2197,10 @@ function DashboardSummaryHeader({
 
   const minDateStr = dates.length > 0
     ? dates[0].toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
-    : "—";
+    : "â";
   const maxDateStr = dates.length > 0
     ? dates[dates.length - 1].toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
-    : "—";
+    : "â";
 
   // Currency breakdown for 6 columns in Row 2 Left Panel
   const currencyTotals: Record<string, number> = {
@@ -2228,9 +2228,9 @@ function DashboardSummaryHeader({
     const map: Record<string, { branchCode: string; countryCode: string; finalCurrency: string; totalEntries: number; finalAmount: number; finalAdvanceAmount: number }> = {};
 
     (rows || []).forEach((r) => {
-      const bName = rowBranchName(r) || "—";
-      const cName = rowCountryName(r) || "—";
-      const bCode = (r.audit?.branchCode || r.form_data?.form?.branchCode || (bName || "—")).toUpperCase();
+      const bName = rowBranchName(r) || "â";
+      const cName = rowCountryName(r) || "â";
+      const bCode = (r.audit?.branchCode || r.form_data?.form?.branchCode || (bName || "â")).toUpperCase();
       const cCode = getCountryCode(cName) || cName.toUpperCase();
       const fCur = rowOfficeCurrency(r) || "";
       const calcs = resolvePurchaseCalculations(r);
@@ -2262,7 +2262,7 @@ function DashboardSummaryHeader({
 
   return (
     <div className="flex flex-col mb-4 space-y-3">
-      {/* ── ROW 1: 4 HEADER STATS CARDS ── */}
+      {/* ââ ROW 1: 4 HEADER STATS CARDS ââ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
         
         {/* Card 1: Branch & User Details */}
@@ -2281,7 +2281,7 @@ function DashboardSummaryHeader({
               <div className="flex justify-between items-center">
                 <span className="text-slate-500 dark:text-slate-400">{th("Country Code")}</span>
                 <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                  <span className="text-sm">🇦🇪</span> {tData(adminCountry, lang)}
+                  <span className="text-sm">ð¦ðª</span> {tData(adminCountry, lang)}
                 </span>
               </div>
               <div className="flex justify-between items-center">
@@ -2430,7 +2430,7 @@ function DashboardSummaryHeader({
         </div>
       </div>
 
-      {/* ── ROW 2: 2 WIDE CARDS (50% / 50%) ── */}
+      {/* ââ ROW 2: 2 WIDE CARDS (50% / 50%) ââ */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
         {/* Left Card: Currency Wise Purchase Total (Original Currency) - 6 cols */}
         <div className="lg:col-span-6 flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-[#0c1427]">
@@ -2566,15 +2566,15 @@ function DashboardSummaryHeader({
 // of webpack code-splitting (previously an in-component const that could be
 // dropped/undefined in a shared server chunk -> "getTableHeader is not defined").
 const PURCHASE_ORDER_TABLE_HEADERS: Record<string, Record<LanguageCode, string>> = {
-  "PO No.": { en: "PO Number", ur: "آرڈر نمبر", ar: "رقم طلب الشراء", fa: "شماره سفارش", ps: "د امر شمیره" },
-  "Bill / Date": { en: "Bill & Date", ur: "بل اور تاریخ", ar: "الفاتورة والتاريخ", fa: "صورتحساب و تاریخ", ps: "بل او نیټه" },
-  "Branch / Country": { en: "Branch & Country", ur: "برانچ اور ملک", ar: "الفرع والبلد", fa: "شعبه و کشور", ps: "څانګه او هیواد" },
-  "Exchange Rate": { en: "Exchange Rate", ur: "شرح تبادلہ", ar: "سعر الصرف", fa: "نرخ ارز", ps: "د تبادلې نرخ" },
-  "Local Currency Amount": { en: "Local Currency Amount", ur: "مقامی کرنسی رقم", ar: "المبلغ بالعملة المحلية", fa: "مبلغ ارز محلی", ps: "د ځایی اسعارو مقدار" },
-  "Local Currency Advance": { en: "Local Currency Advance", ur: "مقامی کرنسی ایڈوانس", ar: "الدفعة المقدمة بالعملة المحلية", fa: "پیش پرداخت ارز محلی", ps: "د ځایی اسعارو پرمختګ" },
-  "Remaining Local Currency": { en: "Remaining Local Currency", ur: "بقایا مقامی کرنسی", ar: "المتبقي بالعملة المحلية", fa: "باقیمانده ارز محلی", ps: "پاتې ځایی اسعار" },
-  "Payment Status": { en: "Payment Status", ur: "ادائیگی کی صورتحال", ar: "حالة الدفع", fa: "وضعیت پرداخت", ps: "د تادیې حالت" },
-  "Action": { en: "Action", ur: "عمل", ar: "إجراء", fa: "عمل", ps: "عمل" }
+  "PO No.": { en: "PO Number", ur: "Ø¢Ø±ÚØ± ÙÙØ¨Ø±", ar: "Ø±ÙÙ Ø·ÙØ¨ Ø§ÙØ´Ø±Ø§Ø¡", fa: "Ø´ÙØ§Ø±Ù Ø³ÙØ§Ø±Ø´", ps: "Ø¯ Ø§ÙØ± Ø´ÙÛØ±Ù" },
+  "Bill / Date": { en: "Bill & Date", ur: "Ø¨Ù Ø§ÙØ± ØªØ§Ø±ÛØ®", ar: "Ø§ÙÙØ§ØªÙØ±Ø© ÙØ§ÙØªØ§Ø±ÙØ®", fa: "ØµÙØ±ØªØ­Ø³Ø§Ø¨ Ù ØªØ§Ø±ÛØ®", ps: "Ø¨Ù Ø§Ù ÙÛÙ¼Ù" },
+  "Branch / Country": { en: "Branch & Country", ur: "Ø¨Ø±Ø§ÙÚ Ø§ÙØ± ÙÙÚ©", ar: "Ø§ÙÙØ±Ø¹ ÙØ§ÙØ¨ÙØ¯", fa: "Ø´Ø¹Ø¨Ù Ù Ú©Ø´ÙØ±", ps: "ÚØ§ÙÚ«Ù Ø§Ù ÙÛÙØ§Ø¯" },
+  "Exchange Rate": { en: "Exchange Rate", ur: "Ø´Ø±Ø­ ØªØ¨Ø§Ø¯ÙÛ", ar: "Ø³Ø¹Ø± Ø§ÙØµØ±Ù", fa: "ÙØ±Ø® Ø§Ø±Ø²", ps: "Ø¯ ØªØ¨Ø§Ø¯ÙÛ ÙØ±Ø®" },
+  "Local Currency Amount": { en: "Local Currency Amount", ur: "ÙÙØ§ÙÛ Ú©Ø±ÙØ³Û Ø±ÙÙ", ar: "Ø§ÙÙØ¨ÙØº Ø¨Ø§ÙØ¹ÙÙØ© Ø§ÙÙØ­ÙÙØ©", fa: "ÙØ¨ÙØº Ø§Ø±Ø² ÙØ­ÙÛ", ps: "Ø¯ ÚØ§ÛÛ Ø§Ø³Ø¹Ø§Ø±Ù ÙÙØ¯Ø§Ø±" },
+  "Local Currency Advance": { en: "Local Currency Advance", ur: "ÙÙØ§ÙÛ Ú©Ø±ÙØ³Û Ø§ÛÚÙØ§ÙØ³", ar: "Ø§ÙØ¯ÙØ¹Ø© Ø§ÙÙÙØ¯ÙØ© Ø¨Ø§ÙØ¹ÙÙØ© Ø§ÙÙØ­ÙÙØ©", fa: "Ù¾ÛØ´ Ù¾Ø±Ø¯Ø§Ø®Øª Ø§Ø±Ø² ÙØ­ÙÛ", ps: "Ø¯ ÚØ§ÛÛ Ø§Ø³Ø¹Ø§Ø±Ù Ù¾Ø±ÙØ®ØªÚ«" },
+  "Remaining Local Currency": { en: "Remaining Local Currency", ur: "Ø¨ÙØ§ÛØ§ ÙÙØ§ÙÛ Ú©Ø±ÙØ³Û", ar: "Ø§ÙÙØªØ¨ÙÙ Ø¨Ø§ÙØ¹ÙÙØ© Ø§ÙÙØ­ÙÙØ©", fa: "Ø¨Ø§ÙÛÙØ§ÙØ¯Ù Ø§Ø±Ø² ÙØ­ÙÛ", ps: "Ù¾Ø§ØªÛ ÚØ§ÛÛ Ø§Ø³Ø¹Ø§Ø±" },
+  "Payment Status": { en: "Payment Status", ur: "Ø§Ø¯Ø§Ø¦ÛÚ¯Û Ú©Û ØµÙØ±ØªØ­Ø§Ù", ar: "Ø­Ø§ÙØ© Ø§ÙØ¯ÙØ¹", fa: "ÙØ¶Ø¹ÛØª Ù¾Ø±Ø¯Ø§Ø®Øª", ps: "Ø¯ ØªØ§Ø¯ÛÛ Ø­Ø§ÙØª" },
+  "Action": { en: "Action", ur: "Ø¹ÙÙ", ar: "Ø¥Ø¬Ø±Ø§Ø¡", fa: "Ø¹ÙÙ", ps: "Ø¹ÙÙ" }
 };
 function getPurchaseOrderTableHeader(h: string, currentLanguage: LanguageCode): string {
   return PURCHASE_ORDER_TABLE_HEADERS[h]?.[currentLanguage] || h;
@@ -2620,17 +2620,17 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
   };
   const recordsTextMap: Record<LanguageCode, string> = {
     en: "records",
-    ur: "ریکارڈز",
-    ar: "سجلات",
-    fa: "رکوردها",
-    ps: "ریکارډونه"
+    ur: "Ø±ÛÚ©Ø§Ø±ÚØ²",
+    ar: "Ø³Ø¬ÙØ§Øª",
+    fa: "Ø±Ú©ÙØ±Ø¯ÙØ§",
+    ps: "Ø±ÛÚ©Ø§Ø±ÚÙÙÙ"
   };
   const refreshTextMap: Record<LanguageCode, string> = {
     en: "Refresh",
-    ur: "تازہ کریں",
-    ar: "تحديث",
-    fa: "بروزرسانی",
-    ps: "تازه کول"
+    ur: "ØªØ§Ø²Û Ú©Ø±ÛÚº",
+    ar: "ØªØ­Ø¯ÙØ«",
+    fa: "Ø¨Ø±ÙØ²Ø±Ø³Ø§ÙÛ",
+    ps: "ØªØ§Ø²Ù Ú©ÙÙ"
   };
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -2707,9 +2707,9 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
       purchaseBookingOrderNumber: row.purchase_order_no,
       purchaseDate: form.purchaseDate || row.created_at || "",
       bookingDate: form.bookingDate || form.purchaseDate || row.created_at || "",
-      purchaseAccountName: form.purchaseAccountName || "—",
+      purchaseAccountName: form.purchaseAccountName || "â",
       purchaseAccountNumber: form.purchaseAccountNo || "",
-      salesAccountName: form.salesAccountName || "—",
+      salesAccountName: form.salesAccountName || "â",
       salesAccountNumber: form.salesAccountNo || "",
       supplierName: form.salesAccountName || "N/A",
       buyerName: form.purchaseAccountName || "N/A",
@@ -2724,8 +2724,8 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
       currency: row.currency_code || "USD",
       status: row.payment_status || "Pending",
       paymentStatus: row.payment_status || "Pending",
-      branchName: rowBranchName(row) || form.purchaseAccountBranch || "—",
-      countryName: rowCountryName(row) || form.loadingCountry || "—",
+      branchName: rowBranchName(row) || form.purchaseAccountBranch || "â",
+      countryName: rowCountryName(row) || form.loadingCountry || "â",
       createdAt: row.created_at || "",
       form_data: row.form_data || {},
       paymentHistory,
@@ -2776,7 +2776,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
   const [titleSlot, setTitleSlot] = useState<Element | null>(null);
   const [actionsSlot, setActionsSlot] = useState<Element | null>(null);
   // Follows the single, app-wide active language (top toolbar selector) instead of its
-  // own disconnected state — this page previously had its own separate, broken language
+  // own disconnected state â this page previously had its own separate, broken language
   // dropdown (corrupted-encoding option labels) that never reflected the real selection.
   const currentLanguage = useActiveLanguage() as LanguageCode;
   const isRtl = ["ur", "ar", "fa", "ps"].includes(currentLanguage);
@@ -2820,7 +2820,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
   const paymentIdempotencyKeyRef = React.useRef<string>("");
 
   useEffect(() => {
-    // A new order was opened for payment (or the modal was closed) — the next submission is a
+    // A new order was opened for payment (or the modal was closed) â the next submission is a
     // genuinely new attempt, not a retry of whatever was being entered before.
     paymentIdempotencyKeyRef.current = "";
     if (!selectedId) {
@@ -3377,7 +3377,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
     if (activeMode !== "remaining") return filtered;
 
     // remainingLoadingRecords is only ever populated when arriving from the Loading Records
-    // module with real loading-record data attached; on direct navigation (the normal case —
+    // module with real loading-record data attached; on direct navigation (the normal case â
     // clicking the "Remaining" tab/menu item) it's empty, and there is nothing to enrich rows
     // with. Fall back to the already-correctly-filtered order list rather than silently
     // rendering zero rows.
@@ -4048,18 +4048,18 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
 
     const billNo = row.purchase_order_no ? `P#${row.purchase_order_no}` : (form.billNo || form.contractNo || `P#${index + 1}`);
     const type = form.orderType || form.type || "B";
-    const branchName = rowBranchName(row) || "—";
-    const branchCode = (row.audit?.branchCode || form.branchCode || (branchName || "—")).toUpperCase();
-    const countryName = rowCountryName(row) || "—";
+    const branchName = rowBranchName(row) || "â";
+    const branchCode = (row.audit?.branchCode || form.branchCode || (branchName || "â")).toUpperCase();
+    const countryName = rowCountryName(row) || "â";
     const countryCode = (getCountryCode(countryName) || countryName || "").toUpperCase();
 
     const rawDate = form.purchaseDate || form.bookingDate || row.created_at;
     const dateStr = rawDate
       ? new Date(rawDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" })
-      : "—";
+      : "â";
 
-    const partyName = form.supplierName || form.salesAccountName || form.salesCompanyName || form.partyName || "—";
-    const goodsName = goods.map((g: any) => g.goodsName || g.name).filter(Boolean).join(", ") || form.goodsName || "—";
+    const partyName = form.supplierName || form.salesAccountName || form.salesCompanyName || form.partyName || "â";
+    const goodsName = goods.map((g: any) => g.goodsName || g.name).filter(Boolean).join(", ") || form.goodsName || "â";
 
     const totalQty = goods.length > 0
       ? goods.reduce((sum: number, g: any) => sum + Number(g.qtyNo || g.quantity || g.qty || 0), 0)
@@ -4076,17 +4076,17 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
     const rawDueDate = form.advancePaymentDate || form.paymentDueDate || form.loadingDate;
     const dueDateStr = rawDueDate
       ? new Date(rawDueDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" })
-      : "23-May-25";
+      : "—";
 
-    const pCode = form.purchaseAccountNo || form.pCode || form.purchaseCode || "PC-25050918";
-    const sCode = form.salesAccountNo || form.sCode || form.salesCode || "SC-25050918";
-    const route = transport.shippingLine || transport.route || form.route || "Sea";
-    const loadingCountry = transport.loadingCountry || form.loadingCountry || "China";
-    const loadingPort = transport.loadingPort || form.loadingPort || "Jebel Ali Port";
-    const loadingDate = transport.loadingDate || form.loadingDate || "2025-05-09";
+    const pCode = form.purchaseAccountNo || form.pCode || form.purchaseCode || "";
+    const sCode = form.salesAccountNo || form.sCode || form.salesCode || "";
+    const route = transport.shippingLine || transport.route || form.route || "";
+    const loadingCountry = transport.loadingCountry || form.loadingCountry || "";
+    const loadingPort = transport.loadingPort || form.loadingPort || "";
+    const loadingDate = transport.loadingDate || form.loadingDate || "";
     const receivingCountry = transport.receivingCountry || form.receivingCountry || countryName;
-    const receivingPort = transport.receivingPort || form.receivingPort || "Jebel Ali Port";
-    const receivingDate = transport.receivedDate || form.receivedDate || transport.arrivalDate || "2025-06-20";
+    const receivingPort = transport.receivingPort || form.receivingPort || "";
+    const receivingDate = transport.receivedDate || form.receivedDate || transport.arrivalDate || "";
 
     const rowBgClass = isSelected
       ? "bg-blue-50/90 dark:bg-blue-950/40"
@@ -4551,7 +4551,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                             {tGlobal(currentLanguage, "pay.remaining_workflow_warning", "Warning: Workflow Rule: Remaining Payment requires Transfer to Loading first.")}
                           </span>
                           <span className="text-[10px] text-slate-400 block mt-1">
-                            {tGlobal(currentLanguage, "pay.remaining_workflow_steps", "Orders only appear here after: Booking → Advance Payment → Transfer to Loading → Loading Confirmation. Ensure the order has been transferred to loading before making a remaining payment.")}
+                            {tGlobal(currentLanguage, "pay.remaining_workflow_steps", "Orders only appear here after: Booking â Advance Payment â Transfer to Loading â Loading Confirmation. Ensure the order has been transferred to loading before making a remaining payment.")}
                           </span>
                         </div>
                       ) : (
@@ -4660,21 +4660,21 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
             const statementPurchaseForeign = purchaseTotalHeader;
             const statementPurchaseLocal = statementPurchaseForeign * exRate;
 
-            // Form data mappings — real transaction/master values only, else empty/—
-            const countryName = rowCountryName(selected) || form.countryName || "—";
-            const branchName = rowBranchName(selected) || form.branchName || "—";
+            // Form data mappings â real transaction/master values only, else empty/â
+            const countryName = rowCountryName(selected) || form.countryName || "â";
+            const branchName = rowBranchName(selected) || form.branchName || "â";
             const _sel = selected as any;
-            const userName = selected.audit?.userName || _sel.created_by_name || "—";
-            const userRoleLabel = String((selected.audit as any)?.userRole || _sel.created_by_role || "").replace(/_/g, " ") || "—";
-            const supplierHeader = form.salesAccountName || form.supplierName || form.salesCompanyName || "—";
+            const userName = selected.audit?.userName || _sel.created_by_name || "â";
+            const userRoleLabel = String((selected.audit as any)?.userRole || _sel.created_by_role || "").replace(/_/g, " ") || "â";
+            const supplierHeader = form.salesAccountName || form.supplierName || form.salesCompanyName || "â";
             const supplierCompany = form.salesCompanyName || "";
             const purchaseCompany = form.purchaseCompanyName || form.companyName || form.purchaseAccountName || "";
-            const debitAccountName = form.purchaseAccountName || form.purchaseAccountId || "—";
-            const creditAccountName = form.salesAccountName || form.salesAccountId || "—";
+            const debitAccountName = form.purchaseAccountName || form.purchaseAccountId || "â";
+            const creditAccountName = form.salesAccountName || form.salesAccountId || "â";
             const salesCurrency = String(form.salesCurrency || form.currencyType || baseCurrency || "").toUpperCase();
             const totalQtyDisplay = form.totalQuantity || (goods.length ? goods.reduce((acc: number, g: any) => acc + Number(g.qtyNo || g.quantity || 0), 0) : 0);
 
-            // Transport details — from the record, else empty
+            // Transport details â from the record, else empty
             const loadingCountry = transport.loadingCountry || form.loadingCountry || "";
             const loadingDate = transport.loadingDate || form.loadingDate || "";
             const receivingCountry = transport.receivingCountry || form.receivingCountry || "";
@@ -4729,17 +4729,17 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
 
             const paymentMethodDisplay = typeDetails.method || typeDetails.bankName || paymentType?.toUpperCase() || "Bank";
 
-            // Real goods lines only — no demo row.
+            // Real goods lines only â no demo row.
             const displayGoods = goods;
 
-            // Real advance / endorsement (payment history) entries only — no demo rows.
+            // Real advance / endorsement (payment history) entries only â no demo rows.
             const displayAdvanceTx = historyWithBalance.filter(p => p.kind === "advance");
             const displayEndorsement = historyWithBalance;
 
             return (
               <div className="flex flex-col h-full overflow-y-auto bg-slate-100 dark:bg-[#070e20] text-slate-900 dark:text-slate-100 p-4 space-y-3 font-sans transition-colors">
                 
-                {/* ── TOP HEADER BAR (Light & Dark Theme Synced) ── */}
+                {/* ââ TOP HEADER BAR (Light & Dark Theme Synced) ââ */}
                 <div className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-[#0c1427] border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 shadow-sm">
                   <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs">
                     <div>
@@ -4797,7 +4797,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                   </div>
                 </div>
 
-                {/* ── ROW 1: 5 TOP SUMMARY CARDS (1, 2, 3, 4, 17) ── */}
+                {/* ââ ROW 1: 5 TOP SUMMARY CARDS (1, 2, 3, 4, 17) ââ */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
                   {/* Card 1: 1 Branch & User Details */}
                   <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] p-3 shadow-sm flex flex-col justify-between">
@@ -4873,7 +4873,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                   </div>
                 </div>
 
-                {/* ── ROW 2: 4 SUMMARY & CONVERSION CARDS (5, 6, 7, 8) ── */}
+                {/* ââ ROW 2: 4 SUMMARY & CONVERSION CARDS (5, 6, 7, 8) ââ */}
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2.5">
                   {/* Card 5: 5 Purchase, Sales & Payment Summary */}
                   <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] p-3 shadow-sm flex flex-col justify-between">
@@ -4990,7 +4990,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                   </div>
                 </div>
 
-                {/* ── TABLE 1: GOODS / ITEMS DETAILS ── */}
+                {/* ââ TABLE 1: GOODS / ITEMS DETAILS ââ */}
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] overflow-hidden shadow-sm">
                   <div className="px-4 py-2 bg-slate-50 dark:bg-[#091022] border-b border-slate-200 dark:border-slate-800 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                     Goods / Items Details
@@ -5026,7 +5026,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                             <tr key={g.id || idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
                               <td className="px-3 py-2 text-center font-mono text-slate-500 dark:text-slate-400">{idx + 1}</td>
                               <td className="px-3 py-2 text-blue-600 dark:text-blue-400 font-bold">
-                                {[g.goodsName || g.name, g.size, g.brand, g.origin].filter(Boolean).join(" / ") || "—"}
+                                {[g.goodsName || g.name, g.size, g.brand, g.origin].filter(Boolean).join(" / ") || "â"}
                               </td>
                               <td className="px-3 py-2 text-center font-mono">{itemQty.toLocaleString()} {g.unit || ""}</td>
                               <td className="px-3 py-2 text-right font-mono">{itemGross.toLocaleString()}</td>
@@ -5043,7 +5043,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                   </div>
                 </div>
 
-                {/* ── TABLE 2: PURCHASE ROZNAMCHA DETAILS ── */}
+                {/* ââ TABLE 2: PURCHASE ROZNAMCHA DETAILS ââ */}
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] overflow-hidden shadow-sm">
                   <div className="px-4 py-2 bg-slate-50 dark:bg-[#091022] border-b border-slate-200 dark:border-slate-800 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                     Purchase Roznamcha Details
@@ -5074,12 +5074,12 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                           return (
                             <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
                               <td className="px-3 py-2 text-center font-mono text-slate-500 dark:text-slate-400">1</td>
-                              <td className="px-3 py-2 whitespace-nowrap font-medium text-slate-700 dark:text-slate-300">{date(_sel.order_date || selected.created_at) || "—"}</td>
+                              <td className="px-3 py-2 whitespace-nowrap font-medium text-slate-700 dark:text-slate-300">{date(_sel.order_date || selected.created_at) || "â"}</td>
                               <td className="px-3 py-2 text-slate-800 dark:text-slate-200">{userName}</td>
                               <td className="px-3 py-2 text-slate-700 dark:text-slate-300">{branchName}</td>
-                              <td className="px-3 py-2 font-mono font-bold text-purple-600 dark:text-purple-400">{_sel.journal_no || selected.purchase_order_no || "—"}</td>
+                              <td className="px-3 py-2 font-mono font-bold text-purple-600 dark:text-purple-400">{_sel.journal_no || selected.purchase_order_no || "â"}</td>
                               <td className="px-3 py-2 text-right font-mono font-bold">{statementPurchaseLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                              <td className="px-3 py-2 text-center font-mono text-amber-600 dark:text-amber-400 font-bold">{advPct > 0 ? `${advPct}%` : "—"}</td>
+                              <td className="px-3 py-2 text-center font-mono text-amber-600 dark:text-amber-400 font-bold">{advPct > 0 ? `${advPct}%` : "â"}</td>
                               <td className="px-3 py-2 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">{advAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                               <td className="px-3 py-2 text-right font-mono font-bold text-rose-600 dark:text-rose-400">{balAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                               <td className="px-3 py-2 text-right font-mono font-black text-slate-900 dark:text-white">{statementPurchaseLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
@@ -5094,7 +5094,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                   </div>
                 </div>
 
-                {/* ── TABLE 3: ADVANCE TRANSACTIONS ── */}
+                {/* ââ TABLE 3: ADVANCE TRANSACTIONS ââ */}
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] overflow-hidden shadow-sm">
                   <div className="px-4 py-2 bg-slate-50 dark:bg-[#091022] border-b border-slate-200 dark:border-slate-800 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                     Advance Transactions ({displayAdvanceTx.length} Entries)
@@ -5123,13 +5123,13 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                         {displayAdvanceTx.map((tx: any, idx: number) => (
                           <tr key={tx.id || idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
                             <td className="px-3 py-2 text-center font-mono text-slate-500 dark:text-slate-400">{idx + 1}</td>
-                            <td className="px-3 py-2 whitespace-nowrap text-slate-700 dark:text-slate-300 font-medium">{tx.date || date(tx.entry_date || tx.created_at) || "—"}</td>
-                            <td className="px-3 py-2 text-center font-mono">{tx.journal_no || tx.rozNo || "—"}</td>
-                            <td className="px-3 py-2 text-center font-mono">{tx.voucher_no || tx.rName || "—"}</td>
-                            <td className="px-3 py-2 text-center font-mono">{tx.payment_method || tx.method || "—"}</td>
-                            <td className="px-3 py-2 text-emerald-600 dark:text-emerald-400 font-bold">{tx.debit_account_name || tx.dr || "—"}</td>
-                            <td className="px-3 py-2 text-blue-600 dark:text-blue-400 font-bold">{tx.credit_account_name || tx.cr || "—"}</td>
-                            <td className="px-3 py-2 text-slate-600 dark:text-slate-300 font-normal">{tx.details || tx.narration || "—"}</td>
+                            <td className="px-3 py-2 whitespace-nowrap text-slate-700 dark:text-slate-300 font-medium">{tx.date || date(tx.entry_date || tx.created_at) || "â"}</td>
+                            <td className="px-3 py-2 text-center font-mono">{tx.journal_no || tx.rozNo || "â"}</td>
+                            <td className="px-3 py-2 text-center font-mono">{tx.voucher_no || tx.rName || "â"}</td>
+                            <td className="px-3 py-2 text-center font-mono">{tx.payment_method || tx.method || "â"}</td>
+                            <td className="px-3 py-2 text-emerald-600 dark:text-emerald-400 font-bold">{tx.debit_account_name || tx.dr || "â"}</td>
+                            <td className="px-3 py-2 text-blue-600 dark:text-blue-400 font-bold">{tx.credit_account_name || tx.cr || "â"}</td>
+                            <td className="px-3 py-2 text-slate-600 dark:text-slate-300 font-normal">{tx.details || tx.narration || "â"}</td>
                             <td className="px-3 py-2 text-right font-mono font-black text-slate-900 dark:text-white">{Number(tx.amountAED ?? tx.amtAED ?? tx.amount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                             <td className="px-3 py-2 text-center whitespace-nowrap">
                               <button
@@ -5152,7 +5152,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                   </div>
                 </div>
 
-                {/* ── TABLE 4: ENDORSEMENT PAYMENT HISTORY ── */}
+                {/* ââ TABLE 4: ENDORSEMENT PAYMENT HISTORY ââ */}
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] overflow-hidden shadow-sm">
                   <div className="px-4 py-2 bg-slate-50 dark:bg-[#091022] border-b border-slate-200 dark:border-slate-800 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                     Endorsement Payment History ({displayEndorsement.length} Entries)
@@ -5181,13 +5181,13 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                         {displayEndorsement.map((tx: any, idx: number) => (
                           <tr key={tx.id || idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
                             <td className="px-3 py-2 text-center font-mono text-slate-500 dark:text-slate-400">{idx + 1}</td>
-                            <td className="px-3 py-2 whitespace-nowrap text-slate-700 dark:text-slate-300 font-medium">{tx.date || date(tx.entry_date || tx.created_at) || "—"}</td>
-                            <td className="px-3 py-2 text-center font-mono">{tx.journal_no || tx.rozNo || "—"}</td>
-                            <td className="px-3 py-2 text-center font-mono">{tx.voucher_no || tx.rName || "—"}</td>
-                            <td className="px-3 py-2 text-center font-mono text-emerald-600 dark:text-emerald-400 font-bold">{tx.payment_method || tx.method || "—"}</td>
-                            <td className="px-3 py-2 text-rose-600 dark:text-rose-400 font-bold">{tx.debit_account_name || tx.dr || "—"}</td>
-                            <td className="px-3 py-2 text-blue-600 dark:text-blue-400 font-bold">{tx.credit_account_name || tx.cr || "—"}</td>
-                            <td className="px-3 py-2 text-slate-600 dark:text-slate-300 font-normal">{tx.details || tx.narration || "—"}</td>
+                            <td className="px-3 py-2 whitespace-nowrap text-slate-700 dark:text-slate-300 font-medium">{tx.date || date(tx.entry_date || tx.created_at) || "â"}</td>
+                            <td className="px-3 py-2 text-center font-mono">{tx.journal_no || tx.rozNo || "â"}</td>
+                            <td className="px-3 py-2 text-center font-mono">{tx.voucher_no || tx.rName || "â"}</td>
+                            <td className="px-3 py-2 text-center font-mono text-emerald-600 dark:text-emerald-400 font-bold">{tx.payment_method || tx.method || "â"}</td>
+                            <td className="px-3 py-2 text-rose-600 dark:text-rose-400 font-bold">{tx.debit_account_name || tx.dr || "â"}</td>
+                            <td className="px-3 py-2 text-blue-600 dark:text-blue-400 font-bold">{tx.credit_account_name || tx.cr || "â"}</td>
+                            <td className="px-3 py-2 text-slate-600 dark:text-slate-300 font-normal">{tx.details || tx.narration || "â"}</td>
                             <td className="px-3 py-2 text-right font-mono font-black text-slate-900 dark:text-white">{Number(tx.amountAED ?? tx.amtAED ?? tx.amount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                             <td className="px-3 py-2 text-center whitespace-nowrap">
                               <button
@@ -5210,11 +5210,11 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                   </div>
                 </div>
 
-                {/* ── PAYMENT ENTRY ACTION / DOUBLE-ENTRY POSTING PANEL ── */}
+                {/* ââ PAYMENT ENTRY ACTION / DOUBLE-ENTRY POSTING PANEL ââ */}
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] overflow-hidden shadow-sm p-4 space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
                     <div className="flex items-center gap-2">
-                      <span className="h-6 w-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-black text-xs">✍</span>
+                      <span className="h-6 w-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-black text-xs">â</span>
                       <h3 className="text-sm font-black uppercase tracking-wider text-blue-700 dark:text-blue-400">
                         Record New Payment Voucher / Roznamcha Settlement
                       </h3>
@@ -5567,11 +5567,11 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                           {/* Balanced Live Status Pill */}
                           <div className="rounded-xl border border-indigo-200 dark:border-indigo-900/40 bg-indigo-50/60 dark:bg-indigo-950/30 p-3 text-indigo-900 dark:text-indigo-200 text-xs">
                             <div className="font-bold flex items-center justify-between">
-                              <span>⚖️ Double-Entry Live Status</span>
+                              <span>âï¸ Double-Entry Live Status</span>
                               <span className="font-black text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded-full">{translateHeader(currentLanguage, "BALANCED")}</span>
                             </div>
                             <div className="text-[10.5px] mt-1 font-semibold text-indigo-700 dark:text-indigo-300 truncate">
-                              DR: {doubleEntry.debitCode} ➔ CR: {doubleEntry.creditCode}
+                              DR: {doubleEntry.debitCode} â CR: {doubleEntry.creditCode}
                             </div>
                           </div>
                         </div>
@@ -5589,7 +5589,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                         return (
                           <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4">
                             <div className="text-xs text-slate-600 dark:text-slate-400">
-                              Posting: <span className="text-blue-600 dark:text-blue-400 font-bold">DR {doubleEntry.debitName} ({doubleEntry.debitCode})</span> ➔ <span className="text-rose-600 dark:text-rose-400 font-bold">CR {doubleEntry.creditName} ({doubleEntry.creditCode})</span>
+                              Posting: <span className="text-blue-600 dark:text-blue-400 font-bold">DR {doubleEntry.debitName} ({doubleEntry.debitCode})</span> â <span className="text-rose-600 dark:text-rose-400 font-bold">CR {doubleEntry.creditName} ({doubleEntry.creditCode})</span>
                             </div>
                             <Button
                               type="button"
@@ -5616,7 +5616,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                   )}
                   {paymentError && (
                     <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
-                      ❌ {paymentError}
+                      â {paymentError}
                     </div>
                   )}
                 </div>

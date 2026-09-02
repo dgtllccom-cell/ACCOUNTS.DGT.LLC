@@ -1,5 +1,5 @@
 "use client";
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -70,34 +70,9 @@ const SALE_SOURCE_OPTIONS = [
   { value: "endorse", label: "Endorse Stock", description: "Sell endorsed stock with traceable stock journal.", icon: ListChecks }
 ];
 
-const MOCK_SALE_LOTS = [
-  { lotNo: "BOOK-LOT-0001", source: "booking", goodsName: "CASHEW NUTS (W320)", brand: "Organic", size: "STANDARD", origin: "Pakistan", hsCode: "0801.32", qtyName: "BAGS", availableQty: 100, qtyKgs: 50, emptyKgs: 0.1, netWeight: 4990, location: "New Booking", stockRef: "SO-DRAFT", currencyType: "USD", exchangeRate: 1, coursePrice: 12.5, status: "Ready for booking" },
-  { lotNo: "TRN-LOT-2401", source: "in_transit", goodsName: "PISTACHIOS KERNEL", brand: "Premium", size: "Large", origin: "Iran", hsCode: "0802.51", qtyName: "BAGS", availableQty: 2000, qtyKgs: 50, emptyKgs: 0.1, netWeight: 99800, location: "In Transit - Karachi Port", stockRef: "LOAD-000241", currencyType: "USD", exchangeRate: 278, coursePrice: 8.75, status: "Loaded / On route" },
-  { lotNo: "LOC-LOT-1022", source: "local", goodsName: "ALMONDS", brand: "Choice", size: "Medium", origin: "Pakistan", hsCode: "0802.12", qtyName: "BAGS", availableQty: 500, qtyKgs: 25, emptyKgs: 0.05, netWeight: 12475, location: "Local Purchase Stock", stockRef: "LP-001022", currencyType: "PKR", exchangeRate: 1, coursePrice: 950, status: "Local stock" },
-  { lotNo: "WH-LOT-7788", source: "warehouse", goodsName: "WALNUTS INSHELL", brand: "Standard", size: "Large", origin: "Afghanistan", hsCode: "0802.31", qtyName: "BAGS", availableQty: 1250, qtyKgs: 40, emptyKgs: 0.08, netWeight: 49900, location: "Main Warehouse", stockRef: "WH-007788", currencyType: "USD", exchangeRate: 278, coursePrice: 6.2, status: "Warehouse available" },
-  { lotNo: "END-LOT-4500", source: "endorse", goodsName: "HAZELNUTS", brand: "Choice", size: "Standard", origin: "Turkey", hsCode: "0802.22", qtyName: "BAGS", availableQty: 750, qtyKgs: 30, emptyKgs: 0.05, netWeight: 22462.5, location: "Endorse Stock", stockRef: "END-004500", currencyType: "USD", exchangeRate: 278, coursePrice: 7.4, status: "Endorsed / sellable" }
-];
-
-const MOCK_LOT_DEDUCTIONS = {
-  "BOOK-LOT-0001": [
-    { customer: "Kharadar Customer A/C", date: "2026-07-10", quantity: 20, weight: 1000, reference: "SO-2026-1102" },
-    { customer: "Sharjah Supply A/C", date: "2026-07-12", quantity: 10, weight: 500, reference: "SO-2026-1215" }
-  ],
-  "TRN-LOT-2401": [
-    { customer: "Dubai Customer A/C", date: "2026-07-05", quantity: 300, weight: 15000, reference: "SO-2026-0504" },
-    { customer: "Mumbai Import A/C", date: "2026-07-15", quantity: 150, weight: 7500, reference: "SO-2026-0881" }
-  ],
-  "LOC-LOT-1022": [
-    { customer: "Kharadar Customer A/C", date: "2026-07-01", quantity: 50, weight: 1250, reference: "SO-2026-0331" }
-  ],
-  "WH-LOT-7788": [
-    { customer: "Dubai Customer A/C", date: "2026-06-20", quantity: 100, weight: 4000, reference: "SO-2026-0045" },
-    { customer: "Kabul Trading A/C", date: "2026-07-18", quantity: 50, weight: 2000, reference: "SO-2026-0922" }
-  ],
-  "END-LOT-4500": [
-    { customer: "Sharjah Supply A/C", date: "2026-07-14", quantity: 80, weight: 2400, reference: "SO-2026-1044" }
-  ]
-};
+// Sellable stock (lots) + prior-sales deduction history now come from the real database via
+// GET /api/erp/sales/available-lots (lib/sales/available-lots.ts) — see saleLots / lotDeductions
+// state in the component. The former hard-coded MOCK_SALE_LOTS / MOCK_LOT_DEDUCTIONS were removed.
 // NOTE: COUNTRY_OPTIONS and ORIGIN_OPTIONS removed — countries now come from Location Master.
 
 // API Helpers
@@ -407,28 +382,47 @@ export function SalesOrderWizard({ session }) {
   const [showTransferScreen, setShowTransferScreen] = useState(false);
   const [isVerificationSidebarOpen, setIsVerificationSidebarOpen] = useState(false);
   const [previewType, setPreviewType] = useState("booking_report"); // "booking_report" | "contract" | "invoice"
-  const [form, setForm] = useState(() => {
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-    return {
-      ...DEFAULT_FORM,
-      salesOrderNo: `PO-2026-${randomSuffix}`,
-      salesOrderNo: `SO-2026-${randomSuffix}`,
-      salesContractNo: `PC-2026-${randomSuffix}`,
-      billNo: `BILL-${randomSuffix}`,
-    };
-  });
+  // Serial numbers (SO / Contract / Bill) are assigned by the server on save via
+  // nextTransactionSerial — never a random client value. Form starts blank.
+  const [form, setForm] = useState(() => ({ ...DEFAULT_FORM }));
   const [goodsEntries, setGoodsEntries] = useState([]);
   const [lotPanelOpen, setLotPanelOpen] = useState(false);
   const [lotSearch, setLotSearch] = useState("");
   const [checkedLotNo, setCheckedLotNo] = useState(null);
 
+  // Real sellable stock — loaded from /api/erp/sales/available-lots per source (was MOCK_SALE_LOTS).
+  const [saleLots, setSaleLots] = useState([]);
+  const [saleLotsLoading, setSaleLotsLoading] = useState(false);
+  const [lotDeductions, setLotDeductions] = useState({}); // { [lotNo]: LotDeduction[] }
+
   const selectedSaleSource = useMemo(() => {
     return SALE_SOURCE_OPTIONS.find((option) => option.value === (form.saleSource || "booking")) || SALE_SOURCE_OPTIONS[0];
   }, [form.saleSource]);
 
+  useEffect(() => {
+    const src = form.saleSource || "booking";
+    let cancelled = false;
+    setSaleLotsLoading(true);
+    fetch(`/api/erp/sales/available-lots?source=${encodeURIComponent(src)}&lang=${lang}`, { credentials: "same-origin" })
+      .then((r) => r.json())
+      .then((j) => {
+        if (cancelled) return;
+        setSaleLots(Array.isArray(j?.data?.lots) ? j.data.lots : []);
+      })
+      .catch(() => {
+        if (!cancelled) setSaleLots([]);
+      })
+      .finally(() => {
+        if (!cancelled) setSaleLotsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [form.saleSource, lang]);
+
   const availableSaleLots = useMemo(() => {
-    return MOCK_SALE_LOTS.filter((lot) => lot.source === (form.saleSource || "booking"));
-  }, [form.saleSource]);
+    return saleLots.filter((lot) => lot.source === (form.saleSource || "booking"));
+  }, [saleLots, form.saleSource]);
 
   const filteredSaleLots = useMemo(() => {
     const needle = lotSearch.trim().toLowerCase();
@@ -437,8 +431,20 @@ export function SalesOrderWizard({ session }) {
   }, [availableSaleLots, lotSearch]);
 
   const selectedSaleLot = useMemo(() => {
-    return MOCK_SALE_LOTS.find((lot) => lot.lotNo === form.stockLotNo) || null;
-  }, [form.stockLotNo]);
+    return saleLots.find((lot) => lot.lotNo === form.stockLotNo) || null;
+  }, [saleLots, form.stockLotNo]);
+
+  // Real prior-sales deduction history for a lot (was MOCK_LOT_DEDUCTIONS) — fetched on demand.
+  const loadLotDeductions = useCallback((lot) => {
+    const ref = lot?.stockRef || lot?.lotNo;
+    if (!ref || lotDeductions[lot.lotNo]) return;
+    fetch(`/api/erp/sales/available-lots?deductionsFor=${encodeURIComponent(ref)}`, { credentials: "same-origin" })
+      .then((r) => r.json())
+      .then((j) => {
+        setLotDeductions((prev) => ({ ...prev, [lot.lotNo]: Array.isArray(j?.data?.deductions) ? j.data.deductions : [] }));
+      })
+      .catch(() => setLotDeductions((prev) => ({ ...prev, [lot.lotNo]: [] })));
+  }, [lotDeductions]);
 
   const openSaleSource = (sourceValue) => {
     setForm((prev) => ({ ...prev, saleSource: sourceValue, stockLotNo: "" }));
@@ -452,6 +458,7 @@ export function SalesOrderWizard({ session }) {
       saleSource: lot.source,
       stockLotNo: lot.lotNo,
       allotName: lot.lotNo,
+      sourceStockRef: lot.stockRef || lot.lotNo,
       goodsName: lot.goodsName,
       brand: lot.brand,
       size: lot.size,
@@ -603,7 +610,7 @@ export function SalesOrderWizard({ session }) {
   // Load Countries
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/erp/locations/countries")
+    fetch(`/api/erp/locations/countries?lang=${lang}`)
       .then((r) => r.json())
       .then((res) => {
         if (cancelled) return;
@@ -632,7 +639,7 @@ export function SalesOrderWizard({ session }) {
       return;
     }
     let cancelled = false;
-    fetch(`/api/erp/locations/branches/main?countryId=${encodeURIComponent(form.countryId)}`)
+    fetch(`/api/erp/locations/branches/main?countryId=${encodeURIComponent(form.countryId)}&lang=${lang}`)
       .then((r) => r.json())
       .then((res) => {
         if (cancelled) return;
@@ -655,7 +662,7 @@ export function SalesOrderWizard({ session }) {
     let cancelled = false;
     const qp = new URLSearchParams({ countryId: form.countryId });
     if (form.countryBranchId) qp.set("countryBranchId", form.countryBranchId);
-    fetch(`/api/erp/locations/branches/city?${qp.toString()}`)
+    fetch(`/api/erp/locations/branches/city?${qp.toString()}&lang=${lang}`)
       .then((r) => r.json())
       .then((res) => {
         if (cancelled) return;
@@ -1025,7 +1032,7 @@ export function SalesOrderWizard({ session }) {
     }
     async function initCountries() {
       try {
-        const response = await fetch("/api/erp/locations/countries");
+        const response = await fetch(`/api/erp/locations/countries?lang=${lang}`);
         const res = await response.json();
         const countriesData = res?.data?.countries || res?.countries;
         if (!cancelled && countriesData) {
@@ -1040,7 +1047,7 @@ export function SalesOrderWizard({ session }) {
     }
     async function initAllCountries() {
       try {
-        const response = await fetch("/api/erp/locations/countries?all=true&limit=500");
+        const response = await fetch(`/api/erp/locations/countries?all=true&limit=500&lang=${lang}`);
         const res = await response.json();
         const countriesData = res?.data?.countries || res?.countries;
         if (!cancelled && countriesData) {
@@ -1379,8 +1386,9 @@ export function SalesOrderWizard({ session }) {
       cityBranchId: form.cityBranchId || null,
       customerAccountId: form.salesAccountLedgerId || null,
       customerLedgerId: form.customerAccountLedgerId || null,
-      salesOrderNo: customOrderNo || form.salesOrderNo,
-      salesContractNo: form.salesContractNo || form.salesOrderNo,
+      // undefined ⇒ server assigns the real sequence (nextTransactionSerial); never a random client value
+      salesOrderNo: (customOrderNo || form.salesOrderNo || undefined),
+      salesContractNo: form.salesContractNo || undefined,
       orderDate: form.salesDate || new Date().toISOString().slice(0, 10),
       customerName: form.customerAccountName || null,
       accountNumber: form.customerAccountNo || null,
@@ -1421,7 +1429,7 @@ export function SalesOrderWizard({ session }) {
     setSavingOrder(true);
     setSaveMessage("");
     try {
-      const nextOrderNo = (form.salesOrderNo || "").trim();
+      const nextOrderNo = savedOrderId ? String(form.salesOrderNo || "").trim() : "";
       const response = await fetch(savedOrderId ? `/api/erp/sales/orders/${savedOrderId}` : "/api/erp/sales/orders", {
         method: savedOrderId ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
@@ -1460,7 +1468,7 @@ export function SalesOrderWizard({ session }) {
     setSavingOrder(true);
     setSaveMessage("");
     try {
-      const nextOrderNo = (form.salesOrderNo || "").trim();
+      const nextOrderNo = savedOrderId ? String(form.salesOrderNo || "").trim() : "";
       const paymentRoute = resolveSalesBookingPaymentRoute(form.paymentType || "Advance Payment");
       const transferPayload = buildSalesOrderPayload("Pending", nextOrderNo);
       const response = await fetch(savedOrderId ? `/api/erp/sales/orders/${savedOrderId}` : "/api/erp/sales/orders", {
@@ -1535,8 +1543,8 @@ export function SalesOrderWizard({ session }) {
       currency: form.currencyType,
       status: isTransferred ? "Posted" : "Pending",
       paymentStatus: isTransferred ? "completed" : "pending",
-      branchName: form.branchName || "Main Branch",
-      countryName: form.branchCountry || "Country",
+      branchName: form.branchName || "",
+      countryName: form.branchCountry || "",
       createdAt: new Date().toISOString(),
       totalGrossWeight: reportTotals.totalGross,
       totalNetWeight: reportTotals.totalNet,
@@ -1544,9 +1552,9 @@ export function SalesOrderWizard({ session }) {
       finalAmount: reportTotals.grandFinal,
       form_data: { form, goodsEntries },
       audit: {
-        userName: form.userName || "Admin User",
-        userId: form.userId || "USR-1001",
-        branchCode: form.branchCode || "BR-KBL-001"
+        userName: form.userName || "",
+        userId: form.userId || "",
+        branchCode: form.branchCode || ""
       }
     };
 
@@ -1559,13 +1567,7 @@ export function SalesOrderWizard({ session }) {
   };
 
   const handleReset = () => {
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-    setForm({
-      ...DEFAULT_FORM,
-      salesOrderNo: `SO-2026-${randomSuffix}`,
-      salesContractNo: `SC-2026-${randomSuffix}`,
-      billNo: `BILL-${randomSuffix}`,
-    });
+    setForm({ ...DEFAULT_FORM });
     setGoodsEntries([]);
     setReportsList([]);
     setSavedOrderId("");
@@ -1795,7 +1797,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
           setValue("origin", created.name);
         }
       }
-      const reloadRes = await fetch("/api/erp/locations/countries?all=true&limit=500").then(r => r.json()).catch(() => ({}));
+      const reloadRes = await fetch(`/api/erp/locations/countries?all=true&limit=500&lang=${lang}`).then(r => r.json()).catch(() => ({}));
       const countriesData = reloadRes?.data?.countries || reloadRes?.countries;
       if (countriesData) setAllCountries(countriesData);
       setNewCountryModal(false);
@@ -2225,7 +2227,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
         const payload = await response.json().catch(() => ({}));
         if (!response.ok || !payload.ok) throw new Error(payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_create_country", "Failed to create country."));
         
-        const reloadRes = await fetch("/api/erp/locations/countries?all=true&limit=500").then(r => r.json()).catch(() => ({}));
+        const reloadRes = await fetch(`/api/erp/locations/countries?all=true&limit=500&lang=${lang}`).then(r => r.json()).catch(() => ({}));
         const countriesData = reloadRes?.data?.countries || reloadRes?.countries;
         if (countriesData) setAllCountries(countriesData);
         
@@ -2370,7 +2372,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
     let loginCountryName = "N/A";
 
     if (isSuperAdmin) {
-      loginBranchName = "Global System";
+      loginBranchName = "";
       loginBranchCode = "GLOBAL-00";
       loginCountryName = "All";
       loginCityName = "Global HQ";
@@ -2391,7 +2393,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
       } else if (uBid && mb) {
         loginBranchName = mb.name;
         loginBranchCode = mb.code;
-        loginCityName = "Main Branch";
+        loginCityName = "";
         loginCountryName = c?.name || "N/A";
       } else if (uCid && c) {
         loginBranchName = `${c.name} Region`;
@@ -2670,11 +2672,11 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               {createPortal(
                 <div className="flex items-center gap-1.5 shrink-0 relative" ref={dropdownRef}>
                   <div className="flex items-center gap-0.5 bg-muted/40 p-0.5 rounded border border-border/50 mr-2">
-                    <button type="button" onClick={() => setActiveTab("booking")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "booking" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>1 Booking</button>
-                    <button type="button" onClick={() => setActiveTab("goods")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "goods" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>2 Goods</button>
-                    <button type="button" onClick={() => setActiveTab("others")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "others" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>3 Others</button>
-                    <button type="button" onClick={() => setActiveTab("reports_tab")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "reports_tab" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>4 Reports</button>
-                    <button type="button" onClick={() => setActiveTab("report")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "report" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>5 Verify</button>
+                    <button type="button" onClick={() => setActiveTab("booking")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "booking" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_booking", "1 Booking")}</button>
+                    <button type="button" onClick={() => setActiveTab("goods")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "goods" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_goods", "2 Goods")}</button>
+                    <button type="button" onClick={() => setActiveTab("others")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "others" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_others", "3 Others")}</button>
+                    <button type="button" onClick={() => setActiveTab("reports_tab")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "reports_tab" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_reports", "4 Reports")}</button>
+                    <button type="button" onClick={() => setActiveTab("report")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "report" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_verify", "5 Verify")}</button>
                   </div>
                   <div className="flex items-center gap-2 bg-muted/50 rounded-md p-1 border border-border/50 mr-1">
                     <span className="relative flex h-2 w-2 ml-1">
@@ -2844,11 +2846,11 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               </div>
               <div className="flex items-center gap-1.5 shrink-0 relative" ref={dropdownRef}>
                 <div className="flex items-center gap-0.5 bg-muted/40 p-0.5 rounded border border-border/50 mr-2">
-                  <button type="button" onClick={() => setActiveTab("booking")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "booking" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>1 Booking</button>
-                  <button type="button" onClick={() => setActiveTab("goods")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "goods" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>2 Goods</button>
-                  <button type="button" onClick={() => setActiveTab("others")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "others" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>3 Others</button>
-                  <button type="button" onClick={() => setActiveTab("reports_tab")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "reports_tab" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>4 Reports</button>
-                  <button type="button" onClick={() => setActiveTab("report")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "report" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>5 Verify</button>
+                  <button type="button" onClick={() => setActiveTab("booking")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "booking" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_booking", "1 Booking")}</button>
+                  <button type="button" onClick={() => setActiveTab("goods")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "goods" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_goods", "2 Goods")}</button>
+                  <button type="button" onClick={() => setActiveTab("others")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "others" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_others", "3 Others")}</button>
+                  <button type="button" onClick={() => setActiveTab("reports_tab")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "reports_tab" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_reports", "4 Reports")}</button>
+                  <button type="button" onClick={() => setActiveTab("report")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "report" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_verify", "5 Verify")}</button>
                 </div>
                 <div className="flex items-center gap-2 bg-muted/50 rounded-md p-1 border border-border/50 mr-1">
                   <span className="relative flex h-2 w-2 ml-1">
@@ -3366,7 +3368,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         <tbody>
                           {filteredSaleLots.map((lot) => {
                             const isChecked = checkedLotNo === lot.lotNo;
-                            const deductions = MOCK_LOT_DEDUCTIONS[lot.lotNo] || [];
+                            const deductions = lotDeductions[lot.lotNo] || [];
                             const totalDeductedQty = deductions.reduce((sum, d) => sum + d.quantity, 0);
                             const totalDeductedWeight = deductions.reduce((sum, d) => sum + d.weight, 0);
                             const originalQty = lot.availableQty + totalDeductedQty;
@@ -3401,7 +3403,9 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                       <button
                                         type="button"
                                         onClick={() => {
-                                          setCheckedLotNo(checkedLotNo === lot.lotNo ? null : lot.lotNo);
+                                          const next = checkedLotNo === lot.lotNo ? null : lot.lotNo;
+                                          setCheckedLotNo(next);
+                                          if (next) loadLotDeductions(lot);
                                         }}
                                         className="rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider transition shrink-0"
                                       >
@@ -3825,7 +3829,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         rows={2}
                         value={form.remarks}
                         onChange={(e) => setValue("remarks", e.target.value)}
-                        placeholder="Write booking terms, payment notes, invoice note, or shipping instruction..."
+                        placeholder={t(lang, "sales.remarks_ph", "Write booking terms, payment notes, invoice note, or shipping instruction…")}
                         className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] resize-none"
                       />
                     </div>
@@ -4016,7 +4020,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             onChange={(e) => {
                               const selectedLotNo = e.target.value;
                               setValue("allotName", selectedLotNo);
-                              const lotObj = MOCK_SALE_LOTS.find(l => l.lotNo === selectedLotNo);
+                              const lotObj = saleLots.find(l => l.lotNo === selectedLotNo);
                               if (lotObj) {
                                 applySaleLot(lotObj);
                               } else {
@@ -4038,8 +4042,8 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             }}
                             className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-bold"
                           >
-                            <option value="">-- Choose Lot --</option>
-                            {MOCK_SALE_LOTS.filter(l => l.source === form.saleSource).map((lot) => (
+                            <option value="">{saleLotsLoading ? t(lang, "cns.loading", "Loading…") : t(lang, "sales.choose_lot_opt", "-- Choose Lot --")}</option>
+                            {saleLots.filter(l => l.source === form.saleSource).map((lot) => (
                               <option key={lot.lotNo} value={lot.lotNo}>
                                 {lot.lotNo} - {lot.goodsName}
                               </option>
@@ -4284,7 +4288,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">1 Qty KGS</label>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.qty_kgs_1", "1 Qty KGS")}</label>
                         <input
                           type="number"
                           value={form.qtyKgs || ""}
@@ -4301,7 +4305,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">1 Empty KGS</label>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.empty_kgs_1", "1 Empty KGS")}</label>
                         <input
                           type="number"
                           value={form.emptyKgs || ""}
@@ -4327,8 +4331,8 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                           onChange={(e) => setValue("divideType", e.target.value)}
                           className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
                         >
-                          <option value="D/KGs">D/KGs</option>
-                          <option value="D/LBs">D/LBs</option>
+                          <option value="D/KGs">{t(lang, "purchase.opt_divide_per_kg", "Divide / Kg")}</option>
+                          <option value="D/LBs">{t(lang, "purchase.opt_divide_per_lb", "Divide / Lb")}</option>
                         </select>
                       </div>
                       <div>
@@ -4354,8 +4358,8 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                           onChange={(e) => setValue("priceType", e.target.value)}
                           className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
                         >
-                          <option value="P/KGs">P/KGs</option>
-                          <option value="P/LBs">P/LBs</option>
+                          <option value="P/KGs">{t(lang, "purchase.opt_price_per_kg", "Price / Kg")}</option>
+                          <option value="P/LBs">{t(lang, "purchase.opt_price_per_lb", "Price / Lb")}</option>
                         </select>
                       </div>
                       <div>
@@ -4478,7 +4482,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
           {/* Top Review Header Banner */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
             <div>
-              <h2 className="text-base font-black text-slate-900 uppercase tracking-wider">Sales Booking Order – Final Review & Approval</h2>
+              <h2 className="text-base font-black text-slate-900 uppercase tracking-wider">{t(lang, "sales.final_review_title", "Sales Booking Order – Final Review & Approval")}</h2>
               <p className="text-[10px] text-slate-500 font-semibold mt-0.5">Please review all information carefully before final approval. You can approve, send back for edit, or request changes.</p>
             </div>
             <div className="flex gap-2.5">
@@ -4632,7 +4636,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 <span className="text-slate-400 font-semibold">{t(lang, "purchase.general_serial_no", "General Serial No:")}</span><span className="font-bold text-slate-800 font-mono">{form.generalSerialNumber || "N/A"}</span>
                 <span className="text-slate-400 font-semibold">{t(lang, "purchase.roznamcha_journal_no", "Roznamcha (Journal) No:")}</span><span className="font-bold text-slate-800 font-mono">{form.journalNumber || "N/A"}</span>
                 <span className="text-slate-400 font-semibold">{t(lang, "purchase.cash_entry_serial", "Cash Entry Serial:")}</span><span className="font-bold text-slate-800 font-mono">{form.cashEntrySerial || "N/A"}</span>
-                <span className="text-slate-400 font-semibold">{t(lang, "sales.current_year_start_colon", "Current Year Start:")}</span><span className="font-bold text-slate-800">01 Jul 2025</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.current_year_start_colon", "Current Year Start:")}</span><span className="font-bold text-slate-800">{form.currentYearStart || form.fiscalYearStart || "—"}</span>
                 <span className="text-slate-400 font-semibold">{t(lang, "sales.accounting_method_colon", "Accounting Method:")}</span><span className="font-bold text-slate-800">{t(lang, "sales.accrual_basis_value", "Accrual Basis")}</span>
               </div>
             </div>
@@ -4644,8 +4648,8 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 {t(lang, "cbs.communication_setup_label", "Communication Setup")}
               </h3>
               <div className="grid grid-cols-[140px_1fr] gap-x-2 gap-y-1.5">
-                <span className="text-slate-400 font-semibold">{t(lang, "sales.email_documents_colon", "Email (For Documents):")}</span><span className="font-bold text-slate-850 truncate">{form.branchEmail || "info@damaanbusiness.com"}</span>
-                <span className="text-slate-400 font-semibold">{t(lang, "sales.email_notifications_colon", "Email (Notifications):")}</span><span className="font-bold text-slate-850 truncate">{form.notificationsEmail || "notify@damaanbusiness.com"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.email_documents_colon", "Email (For Documents):")}</span><span className="font-bold text-slate-850 truncate">{form.branchEmail || "—"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.email_notifications_colon", "Email (Notifications):")}</span><span className="font-bold text-slate-850 truncate">{form.notificationsEmail || "—"}</span>
                 <span className="text-slate-400 font-semibold">{t(lang, "sales.whatsapp_number_colon", "WhatsApp Number:")}</span><span className="font-bold text-slate-800">+92 333 1234567</span>
                 <span className="text-slate-400 font-semibold">{t(lang, "sales.sms_notifications_colon", "SMS Notifications:")}</span><span className="inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[8px] font-black uppercase w-max">{t(lang, "cbs.enabled_word", "Enabled")}</span>
                 <span className="text-slate-400 font-semibold">{t(lang, "sales.email_notifications_row_colon", "Email Notifications:")}</span><span className="inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[8px] font-black uppercase w-max">{t(lang, "cbs.enabled_word", "Enabled")}</span>
@@ -4868,7 +4872,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 <div className="mb-6 overflow-hidden rounded-xl border border-slate-200 text-left">
                   <div className="flex flex-col gap-4 bg-slate-950 px-5 py-4 text-white md:flex-row md:items-center md:justify-between">
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">{t(lang, "purchase.damaan_business_group", "Damaan Business Group")}</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">{form.branchCompanyName || form.salesCompanyName || form.branchName || form.branchCountry || ""}</p>
                       <h1 className="mt-1 text-xl font-black uppercase tracking-[0.22em]">{t(lang, "sales.booking_order_title", "Sales Booking Order")}</h1>
                       <p className="mt-1 text-[10px] font-semibold text-slate-300">{t(lang, "sales.professional_verification_subtitle", "Professional verification, account routing, goods, payment and audit template")}</p>
                     </div>
@@ -5642,7 +5646,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             
             <div className="p-5 space-y-4 text-xs">
               {(() => {
-                const lot = MOCK_SALE_LOTS.find((l) => l.lotNo === selectedLotId);
+                const lot = saleLots.find((l) => l.lotNo === selectedLotId);
                 if (!lot) return <p className="text-muted-foreground italic">{t(lang, "sales.no_lot_selected", "No lot selected.")}</p>;
                 return (
                   <>

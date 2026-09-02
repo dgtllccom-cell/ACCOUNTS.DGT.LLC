@@ -1,4 +1,5 @@
 import { t } from "@/lib/i18n/ui";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { printStore } from "@/lib/store/print-store";
 
@@ -211,12 +212,12 @@ export function openPurchaseA4ReportWindow(input: {
     <div class="border-box">
       <div class="box-header">🏢 Branch Details & User Session</div>
       <div class="session-grid">
-        <div class="session-item"><span>User ID:</span><span>${escapeHtml(b.audit?.userId || "USR-1001")}</span></div>
-        <div class="session-item"><span>Branch Name:</span><span>${escapeHtml(b.branchName || "—")}</span></div>
-        <div class="session-item"><span>Date:</span><span>${formatDate(b.bookingDate || b.purchaseDate)}</span></div>
-        <div class="session-item"><span>User Name:</span><span>${escapeHtml(b.audit?.userName || "SUPER ADMIN")}</span></div>
-        <div class="session-item"><span>Branch Code:</span><span>${escapeHtml(b.audit?.branchCode || "QTA-01")}</span></div>
-        <div class="session-item"><span>Time:</span><span>10:30 AM</span></div>
+        <div class="session-item"><span>${translateHeader(lang, "User ID")}:</span><span>${escapeHtml(b.audit?.userId || "USR-1001")}</span></div>
+        <div class="session-item"><span>${translateHeader(lang, "Branch Name")}:</span><span>${escapeHtml(b.branchName || "—")}</span></div>
+        <div class="session-item"><span>${translateHeader(lang, "Date")}:</span><span>${formatDate(b.bookingDate || b.purchaseDate)}</span></div>
+        <div class="session-item"><span>${translateHeader(lang, "User Name")}:</span><span>${escapeHtml(b.audit?.userName || "SUPER ADMIN")}</span></div>
+        <div class="session-item"><span>${translateHeader(lang, "Branch Code")}:</span><span>${escapeHtml(b.audit?.branchCode || "QTA-01")}</span></div>
+        <div class="session-item"><span>${translateHeader(lang, "Time")}:</span><span>10:30 AM</span></div>
       </div>
     </div>
   `;
@@ -229,16 +230,16 @@ export function openPurchaseA4ReportWindow(input: {
       </div>
       <div class="stamp-box">
         <div class="stamp-circle">
-          STAMP<br/><span style="font-size: 4px; color: #cbd5e1;">VERIFIED</span>
+          STAMP<br/><span style="font-size: 4px; color: #cbd5e1;">${translateHeader(lang, "VERIFIED")}</span>
         </div>
       </div>
       <div class="sign-box">
         <div class="sign-line">${escapeHtml(b.audit?.userName || "Admin User")}</div>
-        <div class="sign-lbl">PREPARED BY</div>
+        <div class="sign-lbl">${translateHeader(lang, "PREPARED BY")}</div>
       </div>
       <div class="sign-box">
-        <div class="sign-line">ERP Registrar</div>
-        <div class="sign-lbl">AUTHORIZED BY</div>
+        <div class="sign-line">${translateHeader(lang, "ERP Registrar")}</div>
+        <div class="sign-lbl">${translateHeader(lang, "AUTHORIZED BY")}</div>
       </div>
     </div>
   `;
@@ -249,7 +250,7 @@ export function openPurchaseA4ReportWindow(input: {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Purchase Master Verification Report</title>
+    <title>${translateHeader(lang, "Purchase Master Verification Report")}</title>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
       @page { size: A4; margin: 8mm; }
@@ -499,11 +500,11 @@ export function openPurchaseA4ReportWindow(input: {
             </div>
             <div>
               ${(b.companyName || b.purchaseCompanyName || b.countryName) ? `<div class="brand-name">${escapeHtml(b.companyName || b.purchaseCompanyName || b.countryName)}</div>` : ""}
-              <div class="brand-tagline">Enterprise ERP / Logistics Platform</div>
+              <div class="brand-tagline">${translateHeader(lang, "Enterprise ERP / Logistics Platform")}</div>
             </div>
           </div>
           <div class="doc-title-sec">
-            <h2 class="doc-title">BRANCH LOGISTICS REPORT</h2>
+            <h2 class="doc-title">${translateHeader(lang, "BRANCH LOGISTICS REPORT")}</h2>
             <div class="doc-serial">Serial: PO-${escapeHtml(b.purchaseBookingOrderNumber)}</div>
           </div>
         </div>
@@ -517,13 +518,13 @@ export function openPurchaseA4ReportWindow(input: {
             <div class="box-header">👤 Booking Information</div>
             <table class="info-table">
               <tbody>
-                <tr><td class="lbl">Reference (Order ID):</td><td class="val font-mono">${escapeHtml(b.purchaseBookingOrderNumber)}</td></tr>
-                <tr><td class="lbl">Super S/N:</td><td class="val font-mono text-blue-700">${escapeHtml((b as any).super_admin_serial_number || (b as any).superAdminSerialNo || (b as any).form_data?.form?.superAdminSerialNo || "-")}</td></tr>
-                <tr><td class="lbl">Cty S/N:</td><td class="val font-mono text-emerald-700">${escapeHtml((b as any).country_transaction_serial_number || (b as any).countrySerialNo || (b as any).form_data?.form?.countrySerialNo || "-")}</td></tr>
-                <tr><td class="lbl">Br. S/N:</td><td class="val font-mono text-amber-700">${escapeHtml((b as any).branch_transaction_serial_number || (b as any).branchSerialNo || (b as any).form_data?.form?.branchSerialNo || "-")}</td></tr>
-                <tr><td class="lbl">Purchase Date:</td><td class="val">${formatDate(b.purchaseDate)}</td></tr>
-                <tr><td class="lbl">Booking Date:</td><td class="val">${formatDate(b.bookingDate)}</td></tr>
-                <tr><td class="lbl">Exchange Rate:</td><td class="val font-mono">${exRateVal} ${escapeHtml(items[0]?.finalCurr || "PKR")}</td></tr>
+                <tr><td class="lbl">${translateHeader(lang, "Reference (Order ID)")}:</td><td class="val font-mono">${escapeHtml(b.purchaseBookingOrderNumber)}</td></tr>
+                <tr><td class="lbl">${translateHeader(lang, "Super S/N")}:</td><td class="val font-mono text-blue-700">${escapeHtml((b as any).super_admin_serial_number || (b as any).superAdminSerialNo || (b as any).form_data?.form?.superAdminSerialNo || "-")}</td></tr>
+                <tr><td class="lbl">${translateHeader(lang, "Cty S/N")}:</td><td class="val font-mono text-emerald-700">${escapeHtml((b as any).country_transaction_serial_number || (b as any).countrySerialNo || (b as any).form_data?.form?.countrySerialNo || "-")}</td></tr>
+                <tr><td class="lbl">${translateHeader(lang, "Br. S/N")}:</td><td class="val font-mono text-amber-700">${escapeHtml((b as any).branch_transaction_serial_number || (b as any).branchSerialNo || (b as any).form_data?.form?.branchSerialNo || "-")}</td></tr>
+                <tr><td class="lbl">${translateHeader(lang, "Purchase Date")}:</td><td class="val">${formatDate(b.purchaseDate)}</td></tr>
+                <tr><td class="lbl">${translateHeader(lang, "Booking Date")}:</td><td class="val">${formatDate(b.bookingDate)}</td></tr>
+                <tr><td class="lbl">${translateHeader(lang, "Exchange Rate")}:</td><td class="val font-mono">${exRateVal} ${escapeHtml(items[0]?.finalCurr || "PKR")}</td></tr>
               </tbody>
             </table>
           </div>
@@ -533,8 +534,8 @@ export function openPurchaseA4ReportWindow(input: {
             <div class="box-header">🏢 Supplier Information</div>
             <table class="info-table">
               <tbody>
-                <tr><td class="lbl">Name:</td><td class="val">${escapeHtml(b.supplierName || "N/A")}</td></tr>
-                <tr><td class="lbl">Contact Person:</td><td class="val">${escapeHtml(form.supplierContact || "-")}</td></tr>
+                <tr><td class="lbl">${translateHeader(lang, "Name")}:</td><td class="val">${escapeHtml(b.supplierName || "N/A")}</td></tr>
+                <tr><td class="lbl">${translateHeader(lang, "Contact Person")}:</td><td class="val">${escapeHtml(form.supplierContact || "-")}</td></tr>
               </tbody>
             </table>
           </div>
@@ -544,8 +545,8 @@ export function openPurchaseA4ReportWindow(input: {
             <div class="box-header">👤 Buyer Information</div>
             <table class="info-table">
               <tbody>
-                <tr><td class="lbl">Name:</td><td class="val">${escapeHtml(b.buyerName || "N/A")}</td></tr>
-                <tr><td class="lbl">Contact Person:</td><td class="val">${escapeHtml(form.customerContact || "-")}</td></tr>
+                <tr><td class="lbl">${translateHeader(lang, "Name")}:</td><td class="val">${escapeHtml(b.buyerName || "N/A")}</td></tr>
+                <tr><td class="lbl">${translateHeader(lang, "Contact Person")}:</td><td class="val">${escapeHtml(form.customerContact || "-")}</td></tr>
               </tbody>
             </table>
           </div>
@@ -558,10 +559,10 @@ export function openPurchaseA4ReportWindow(input: {
             <div class="box-header">🚢 Shipment & Logistics</div>
             <table class="info-table">
               <tbody>
-                <tr><td class="lbl">Containers Count:</td><td class="val">${b.containerCount || 1} FCL</td></tr>
-                <tr><td class="lbl">Container Numbers:</td><td class="val font-mono truncate">${escapeHtml(form.containerNumbers || "N/A")}</td></tr>
-                <tr><td class="lbl">Vessel / Carrier:</td><td class="val">${escapeHtml(form.vesselName || "N/A")}</td></tr>
-                <tr><td class="lbl">Remarks / Sea Seal:</td><td class="val font-mono">${escapeHtml(form.sealNumber || "N/A")}</td></tr>
+                <tr><td class="lbl">${translateHeader(lang, "Containers Count")}:</td><td class="val">${b.containerCount || 1} FCL</td></tr>
+                <tr><td class="lbl">${translateHeader(lang, "Container Numbers")}:</td><td class="val font-mono truncate">${escapeHtml(form.containerNumbers || "N/A")}</td></tr>
+                <tr><td class="lbl">${translateHeader(lang, "Vessel / Carrier")}:</td><td class="val">${escapeHtml(form.vesselName || "N/A")}</td></tr>
+                <tr><td class="lbl">${translateHeader(lang, "Remarks / Sea Seal")}:</td><td class="val font-mono">${escapeHtml(form.sealNumber || "N/A")}</td></tr>
               </tbody>
             </table>
           </div>
@@ -571,11 +572,11 @@ export function openPurchaseA4ReportWindow(input: {
             <div class="box-header">📅 Loading & Transit Details</div>
             <table class="info-table">
               <tbody>
-                <tr><td class="lbl">Shipping Mode / Mode:</td><td class="val font-bold">${escapeHtml(form.shippingMode || "By Sea")}</td></tr>
-                <tr><td class="lbl">Expected Loading Date:</td><td class="val">${formatDate(form.expectedLoadingDate || form.loadingDate)}</td></tr>
-                <tr><td class="lbl">Loading Country/Port:</td><td class="val">${escapeHtml(form.loadingCountry || "N/A")} / ${escapeHtml(form.loadingPort || form.loadingBorder || "N/A")}</td></tr>
-                <tr><td class="lbl">Received Date at Port:</td><td class="val font-bold text-blue-600 font-mono">${formatDate(form.receivedDate)}</td></tr>
-                <tr><td class="lbl">Received Country/Port:</td><td class="val">${escapeHtml(form.receivedCountry || "N/A")} / ${escapeHtml(form.receivedPort || form.receivedBorder || "N/A")}</td></tr>
+                <tr><td class="lbl">${translateHeader(lang, "Shipping Mode / Mode")}:</td><td class="val font-bold">${escapeHtml(form.shippingMode || "By Sea")}</td></tr>
+                <tr><td class="lbl">${translateHeader(lang, "Expected Loading Date")}:</td><td class="val">${formatDate(form.expectedLoadingDate || form.loadingDate)}</td></tr>
+                <tr><td class="lbl">${translateHeader(lang, "Loading Country/Port")}:</td><td class="val">${escapeHtml(form.loadingCountry || "N/A")} / ${escapeHtml(form.loadingPort || form.loadingBorder || "N/A")}</td></tr>
+                <tr><td class="lbl">${translateHeader(lang, "Received Date at Port")}:</td><td class="val font-bold text-blue-600 font-mono">${formatDate(form.receivedDate)}</td></tr>
+                <tr><td class="lbl">${translateHeader(lang, "Received Country/Port")}:</td><td class="val">${escapeHtml(form.receivedCountry || "N/A")} / ${escapeHtml(form.receivedPort || form.receivedBorder || "N/A")}</td></tr>
               </tbody>
             </table>
           </div>
@@ -598,16 +599,16 @@ export function openPurchaseA4ReportWindow(input: {
             <thead>
               <tr>
                 <th style="width: 4%; text-align: center;">SR</th>
-                <th style="width: 14%;">Goods Specification</th>
-                <th style="width: 8%; text-align: center;">Origin</th>
-                <th style="width: 8%; text-align: right;">Quantity</th>
-                <th style="width: 8%; text-align: right;">Net Wt</th>
-                <th style="width: 8%; text-align: center;">Purch Curr</th>
-                <th style="width: 8%; text-align: right;">Rate</th>
-                <th style="width: 10%; text-align: right;">Amount</th>
-                <th style="width: 8%; text-align: center;">Ex. Rate</th>
-                <th style="width: 8%; text-align: center;">Final Curr</th>
-                <th style="width: 10%; text-align: right;">Final Amount</th>
+                <th style="width: 14%;">${translateHeader(lang, "Goods Specification")}</th>
+                <th style="width: 8%; text-align: center;">${translateHeader(lang, "Origin")}</th>
+                <th style="width: 8%; text-align: right;">${translateHeader(lang, "Quantity")}</th>
+                <th style="width: 8%; text-align: right;">${translateHeader(lang, "Net Wt")}</th>
+                <th style="width: 8%; text-align: center;">${translateHeader(lang, "Purch Curr")}</th>
+                <th style="width: 8%; text-align: right;">${translateHeader(lang, "Rate")}</th>
+                <th style="width: 10%; text-align: right;">${translateHeader(lang, "Amount")}</th>
+                <th style="width: 8%; text-align: center;">${translateHeader(lang, "Ex. Rate")}</th>
+                <th style="width: 8%; text-align: center;">${translateHeader(lang, "Final Curr")}</th>
+                <th style="width: 10%; text-align: right;">${translateHeader(lang, "Final Amount")}</th>
               </tr>
             </thead>
             <tbody>
@@ -633,27 +634,27 @@ export function openPurchaseA4ReportWindow(input: {
         <!-- Totaling Aggregates Panel -->
         <div class="aggregates-grid">
           <div class="aggregate-box">
-            <div class="aggregate-lbl">Total Quantity</div>
+            <div class="aggregate-lbl">${translateHeader(lang, "Total Quantity")}</div>
             <div class="aggregate-val">${formatNumber(totalQuantity)} Units</div>
           </div>
           <div class="aggregate-box">
-            <div class="aggregate-lbl">Total Gross Weight</div>
+            <div class="aggregate-lbl">${translateHeader(lang, "Total Gross Weight")}</div>
             <div class="aggregate-val">${formatNumber(totalGrossWeight)} kg</div>
           </div>
           <div class="aggregate-box">
-            <div class="aggregate-lbl">Total Net Weight</div>
+            <div class="aggregate-lbl">${translateHeader(lang, "Total Net Weight")}</div>
             <div class="aggregate-val">${formatNumber(totalNetWeight)} kg</div>
           </div>
           <div class="aggregate-box">
-            <div class="aggregate-lbl" style="color: #ef4444;">Total Deductions</div>
+            <div class="aggregate-lbl" style="color: #ef4444;">${translateHeader(lang, "Total Deductions")}</div>
             <div class="aggregate-val" style="color: #ef4444;">${formatNumber(totalDeductions)} kg</div>
           </div>
           <div class="aggregate-box">
-            <div class="aggregate-lbl">Average Rate/KG</div>
+            <div class="aggregate-lbl">${translateHeader(lang, "Average Rate/KG")}</div>
             <div class="aggregate-val">${getCurrencySymbol(items[0]?.purchCurr || "USD")}${avgRateKg.toFixed(2)}</div>
           </div>
           <div class="aggregate-box">
-            <div class="aggregate-lbl">Average Rate/Ton</div>
+            <div class="aggregate-lbl">${translateHeader(lang, "Average Rate/Ton")}</div>
             <div class="aggregate-val">${getCurrencySymbol(items[0]?.purchCurr || "USD")}${avgRateTon.toFixed(2)}</div>
           </div>
           <div class="aggregate-box">
@@ -672,17 +673,17 @@ export function openPurchaseA4ReportWindow(input: {
           <table class="data-table">
             <thead>
               <tr style="background: #f1f5f9; color: #475569; font-size: 7px; font-weight: 700; border-bottom: 1px solid #cbd5e1;">
-                <th style="padding: 5px 8px; color: #475569; background: #f8fafc;">Debit / Credit</th>
-                <th style="padding: 5px 8px; color: #475569; background: #f8fafc;">Account Code</th>
-                <th style="padding: 5px 8px; color: #475569; background: #f8fafc;">Account Name / Branch Location</th>
-                <th style="padding: 5px 8px; color: #475569; background: #f8fafc; text-align: right;">Debit (Dr)</th>
-                <th style="padding: 5px 8px; color: #475569; background: #f8fafc; text-align: right;">Credit (Cr)</th>
-                <th style="padding: 5px 8px; color: #475569; background: #f8fafc; text-align: center;">Currency</th>
+                <th style="padding: 5px 8px; color: #475569; background: #f8fafc;">${translateHeader(lang, "Debit / Credit")}</th>
+                <th style="padding: 5px 8px; color: #475569; background: #f8fafc;">${translateHeader(lang, "Account Code")}</th>
+                <th style="padding: 5px 8px; color: #475569; background: #f8fafc;">${translateHeader(lang, "Account Name / Branch Location")}</th>
+                <th style="padding: 5px 8px; color: #475569; background: #f8fafc; text-align: right;">${translateHeader(lang, "Debit (Dr)")}</th>
+                <th style="padding: 5px 8px; color: #475569; background: #f8fafc; text-align: right;">${translateHeader(lang, "Credit (Cr)")}</th>
+                <th style="padding: 5px 8px; color: #475569; background: #f8fafc; text-align: center;">${translateHeader(lang, "Currency")}</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td style="font-weight: bold; color: #2563eb;">DEBIT (DR)</td>
+                <td style="font-weight: bold; color: #2563eb;">${translateHeader(lang, "DEBIT (DR)")}</td>
                 <td style="font-family: monospace; font-weight: bold;">${escapeHtml(b.purchaseAccountNumber || "AE-AC-0001")}</td>
                 <td>
                   <strong>${escapeHtml(b.purchaseAccountName || "—")} (DR)</strong>
@@ -693,7 +694,7 @@ export function openPurchaseA4ReportWindow(input: {
                 <td style="text-align: center; font-weight: bold;">${escapeHtml(items[0]?.finalCurr || "PKR")}</td>
               </tr>
               <tr>
-                <td style="font-weight: bold; color: #059669;">CREDIT (CR)</td>
+                <td style="font-weight: bold; color: #059669;">${translateHeader(lang, "CREDIT (CR)")}</td>
                 <td style="font-family: monospace; font-weight: bold;">${escapeHtml(b.salesAccountNumber || "SA-2001")}</td>
                 <td>
                   <strong>${escapeHtml(b.salesAccountName || "—")} (CR)</strong>
@@ -713,16 +714,16 @@ export function openPurchaseA4ReportWindow(input: {
             <thead>
               <tr>
                 <th style="width: 4%; text-align: center;">SR</th>
-                <th style="width: 14%;">Goods Specification</th>
-                <th style="width: 8%; text-align: center;">Origin</th>
-                <th style="width: 8%; text-align: right;">Quantity</th>
-                <th style="width: 8%; text-align: right;">Net Wt</th>
-                <th style="width: 8%; text-align: center;">Purch Curr</th>
-                <th style="width: 8%; text-align: right;">Rate</th>
-                <th style="width: 10%; text-align: right;">Amount</th>
-                <th style="width: 8%; text-align: center;">Ex. Rate</th>
-                <th style="width: 8%; text-align: center;">Final Curr</th>
-                <th style="width: 10%; text-align: right;">Final Amount</th>
+                <th style="width: 14%;">${translateHeader(lang, "Goods Specification")}</th>
+                <th style="width: 8%; text-align: center;">${translateHeader(lang, "Origin")}</th>
+                <th style="width: 8%; text-align: right;">${translateHeader(lang, "Quantity")}</th>
+                <th style="width: 8%; text-align: right;">${translateHeader(lang, "Net Wt")}</th>
+                <th style="width: 8%; text-align: center;">${translateHeader(lang, "Purch Curr")}</th>
+                <th style="width: 8%; text-align: right;">${translateHeader(lang, "Rate")}</th>
+                <th style="width: 10%; text-align: right;">${translateHeader(lang, "Amount")}</th>
+                <th style="width: 8%; text-align: center;">${translateHeader(lang, "Ex. Rate")}</th>
+                <th style="width: 8%; text-align: center;">${translateHeader(lang, "Final Curr")}</th>
+                <th style="width: 10%; text-align: right;">${translateHeader(lang, "Final Amount")}</th>
               </tr>
             </thead>
             <tbody>
@@ -748,27 +749,27 @@ export function openPurchaseA4ReportWindow(input: {
         <!-- Totaling Aggregates Panel -->
         <div class="aggregates-grid">
           <div class="aggregate-box">
-            <div class="aggregate-lbl">Total Quantity</div>
+            <div class="aggregate-lbl">${translateHeader(lang, "Total Quantity")}</div>
             <div class="aggregate-val">${formatNumber(totalQuantity)} Units</div>
           </div>
           <div class="aggregate-box">
-            <div class="aggregate-lbl">Total Gross Weight</div>
+            <div class="aggregate-lbl">${translateHeader(lang, "Total Gross Weight")}</div>
             <div class="aggregate-val">${formatNumber(totalGrossWeight)} kg</div>
           </div>
           <div class="aggregate-box">
-            <div class="aggregate-lbl">Total Net Weight</div>
+            <div class="aggregate-lbl">${translateHeader(lang, "Total Net Weight")}</div>
             <div class="aggregate-val">${formatNumber(totalNetWeight)} kg</div>
           </div>
           <div class="aggregate-box">
-            <div class="aggregate-lbl" style="color: #ef4444;">Total Deductions</div>
+            <div class="aggregate-lbl" style="color: #ef4444;">${translateHeader(lang, "Total Deductions")}</div>
             <div class="aggregate-val" style="color: #ef4444;">${formatNumber(totalDeductions)} kg</div>
           </div>
           <div class="aggregate-box">
-            <div class="aggregate-lbl">Average Rate/KG</div>
+            <div class="aggregate-lbl">${translateHeader(lang, "Average Rate/KG")}</div>
             <div class="aggregate-val">${getCurrencySymbol(items[0]?.purchCurr || "USD")}${avgRateKg.toFixed(2)}</div>
           </div>
           <div class="aggregate-box">
-            <div class="aggregate-lbl">Average Rate/Ton</div>
+            <div class="aggregate-lbl">${translateHeader(lang, "Average Rate/Ton")}</div>
             <div class="aggregate-val">${getCurrencySymbol(items[0]?.purchCurr || "USD")}${avgRateTon.toFixed(2)}</div>
           </div>
           <div class="aggregate-box">
@@ -787,17 +788,17 @@ export function openPurchaseA4ReportWindow(input: {
           <table class="data-table">
             <thead>
               <tr style="background: #f1f5f9; color: #475569; font-size: 7px; font-weight: 700; border-bottom: 1px solid #cbd5e1;">
-                <th style="padding: 5px 8px; color: #475569; background: #f8fafc;">Debit / Credit</th>
-                <th style="padding: 5px 8px; color: #475569; background: #f8fafc;">Account Code</th>
-                <th style="padding: 5px 8px; color: #475569; background: #f8fafc;">Account Name / Branch Location</th>
-                <th style="padding: 5px 8px; color: #475569; background: #f8fafc; text-align: right;">Debit (Dr)</th>
-                <th style="padding: 5px 8px; color: #475569; background: #f8fafc; text-align: right;">Credit (Cr)</th>
-                <th style="padding: 5px 8px; color: #475569; background: #f8fafc; text-align: center;">Currency</th>
+                <th style="padding: 5px 8px; color: #475569; background: #f8fafc;">${translateHeader(lang, "Debit / Credit")}</th>
+                <th style="padding: 5px 8px; color: #475569; background: #f8fafc;">${translateHeader(lang, "Account Code")}</th>
+                <th style="padding: 5px 8px; color: #475569; background: #f8fafc;">${translateHeader(lang, "Account Name / Branch Location")}</th>
+                <th style="padding: 5px 8px; color: #475569; background: #f8fafc; text-align: right;">${translateHeader(lang, "Debit (Dr)")}</th>
+                <th style="padding: 5px 8px; color: #475569; background: #f8fafc; text-align: right;">${translateHeader(lang, "Credit (Cr)")}</th>
+                <th style="padding: 5px 8px; color: #475569; background: #f8fafc; text-align: center;">${translateHeader(lang, "Currency")}</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td style="font-weight: bold; color: #2563eb;">DEBIT (DR)</td>
+                <td style="font-weight: bold; color: #2563eb;">${translateHeader(lang, "DEBIT (DR)")}</td>
                 <td style="font-family: monospace; font-weight: bold;">${escapeHtml(b.purchaseAccountNumber || "AE-AC-0001")}</td>
                 <td>
                   <strong>${escapeHtml(b.purchaseAccountName || "—")} (DR)</strong>
@@ -808,7 +809,7 @@ export function openPurchaseA4ReportWindow(input: {
                 <td style="text-align: center; font-weight: bold;">${escapeHtml(items[0]?.finalCurr || "PKR")}</td>
               </tr>
               <tr>
-                <td style="font-weight: bold; color: #059669;">CREDIT (CR)</td>
+                <td style="font-weight: bold; color: #059669;">${translateHeader(lang, "CREDIT (CR)")}</td>
                 <td style="font-family: monospace; font-weight: bold;">${escapeHtml(b.salesAccountNumber || "SA-2001")}</td>
                 <td>
                   <strong>${escapeHtml(b.salesAccountName || "—")} (CR)</strong>
@@ -828,10 +829,10 @@ export function openPurchaseA4ReportWindow(input: {
           <div style="padding: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 7.5px; color: #64748b; font-weight: 500;">
             <div style="display: flex; flex-direction: column; gap: 4px;">
               <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 2px;">
-                <span>Payment Condition / Type:</span><strong style="color: #0f172a;">${escapeHtml(form.paymentType || b.paymentStatus || "Advance Payment")}</strong>
+                <span>${translateHeader(lang, "Payment Condition / Type")}:</span><strong style="color: #0f172a;">${escapeHtml(form.paymentType || b.paymentStatus || "Advance Payment")}</strong>
               </div>
               <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 2px;">
-                <span>Exchange Rate:</span><strong style="color: #0f172a; font-family: monospace;">${exRateVal}</strong>
+                <span>${translateHeader(lang, "Exchange Rate")}:</span><strong style="color: #0f172a; font-family: monospace;">${exRateVal}</strong>
               </div>
               <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 2px;">
                 <span>Total Invoice Amount (${escapeHtml(items[0]?.purchCurr || "USD")}):</span><strong style="color: #1e3a8a; font-family: monospace;">${formatMoney(totalAmountUsd)}</strong>
@@ -840,25 +841,25 @@ export function openPurchaseA4ReportWindow(input: {
                 <span>Total Invoice Amount (${escapeHtml(items[0]?.finalCurr || "PKR")}):</span><strong style="color: #059669; font-family: monospace;">${formatMoney(totalAmountPkr)}</strong>
               </div>
               <div style="display: flex; justify-content: space-between; padding-top: 1px;">
-                <span>Payment Method Details:</span><strong style="color: #0f172a; max-w: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(form.paymentDaysAndMethodDetails || "N/A")}</strong>
+                <span>${translateHeader(lang, "Payment Method Details")}:</span><strong style="color: #0f172a; max-w: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(form.paymentDaysAndMethodDetails || "N/A")}</strong>
               </div>
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 4px; border-left: 1px solid #cbd5e1; padding-left: 16px;">
               <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 2px;">
-                <span>Advance % / Ratio:</span><strong style="color: #0f172a;">${advancePercentVal}%</strong>
+                <span>${translateHeader(lang, "Advance % / Ratio")}:</span><strong style="color: #0f172a;">${advancePercentVal}%</strong>
               </div>
               <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 2px;">
-                <span>Advance Amount:</span><strong style="color: #0f172a; font-family: monospace;">${formatMoney(advanceUsd)} ${escapeHtml(items[0]?.purchCurr || "USD")} / ${formatMoney(advancePkr)} ${escapeHtml(items[0]?.finalCurr || "PKR")}</strong>
+                <span>${translateHeader(lang, "Advance Amount")}:</span><strong style="color: #0f172a; font-family: monospace;">${formatMoney(advanceUsd)} ${escapeHtml(items[0]?.purchCurr || "USD")} / ${formatMoney(advancePkr)} ${escapeHtml(items[0]?.finalCurr || "PKR")}</strong>
               </div>
               <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 2px;">
-                <span>Advance Payment Date:</span><strong style="color: #2563eb; font-family: monospace;">${formatDate(form.advancePaymentDate)}</strong>
+                <span>${translateHeader(lang, "Advance Payment Date")}:</span><strong style="color: #2563eb; font-family: monospace;">${formatDate(form.advancePaymentDate)}</strong>
               </div>
               <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 2px;">
-                <span>Remaining Balance:</span><strong style="color: #ef4444; font-family: monospace;">${formatMoney(remainingUsd)} ${escapeHtml(items[0]?.purchCurr || "USD")} / ${formatMoney(remainingPkr)} ${escapeHtml(items[0]?.finalCurr || "PKR")}</strong>
+                <span>${translateHeader(lang, "Remaining Balance")}:</span><strong style="color: #ef4444; font-family: monospace;">${formatMoney(remainingUsd)} ${escapeHtml(items[0]?.purchCurr || "USD")} / ${formatMoney(remainingPkr)} ${escapeHtml(items[0]?.finalCurr || "PKR")}</strong>
               </div>
               <div style="display: flex; justify-content: space-between; padding-top: 1px;">
-                <span>Remaining Due Date:</span><strong style="color: #ef4444; font-family: monospace;">${formatDate(form.paymentDate)}</strong>
+                <span>${translateHeader(lang, "Remaining Due Date")}:</span><strong style="color: #ef4444; font-family: monospace;">${formatDate(form.paymentDate)}</strong>
               </div>
             </div>
           </div>
@@ -871,12 +872,12 @@ export function openPurchaseA4ReportWindow(input: {
           <table class="data-table">
             <thead>
               <tr style="background: #f1f5f9; color: #475569; font-size: 7px; font-weight: 700; border-bottom: 1px solid #cbd5e1;">
-                <th style="padding: 5px 8px; color: #475569; background: #f8fafc;">Journal Serials</th>
-                <th style="padding: 5px 8px; color: #475569; background: #f8fafc;">User & Date</th>
-                <th style="padding: 5px 8px; color: #475569; background: #f8fafc; text-align: right;">Paid (Foreign)</th>
-                <th style="padding: 5px 8px; color: #475569; background: #f8fafc; text-align: center;">Ex. Rate</th>
-                <th style="padding: 5px 8px; color: #475569; background: #f8fafc; text-align: right;">Paid (Local)</th>
-                <th style="padding: 5px 8px; color: #475569; background: #f8fafc;">Remarks / Narration</th>
+                <th style="padding: 5px 8px; color: #475569; background: #f8fafc;">${translateHeader(lang, "Journal Serials")}</th>
+                <th style="padding: 5px 8px; color: #475569; background: #f8fafc;">${translateHeader(lang, "User & Date")}</th>
+                <th style="padding: 5px 8px; color: #475569; background: #f8fafc; text-align: right;">${translateHeader(lang, "Paid (Foreign)")}</th>
+                <th style="padding: 5px 8px; color: #475569; background: #f8fafc; text-align: center;">${translateHeader(lang, "Ex. Rate")}</th>
+                <th style="padding: 5px 8px; color: #475569; background: #f8fafc; text-align: right;">${translateHeader(lang, "Paid (Local)")}</th>
+                <th style="padding: 5px 8px; color: #475569; background: #f8fafc;">${translateHeader(lang, "Remarks / Narration")}</th>
               </tr>
             </thead>
             <tbody>
@@ -893,8 +894,8 @@ export function openPurchaseA4ReportWindow(input: {
                 return `
                 <tr>
                   <td style="font-family: monospace; font-weight: bold;">
-                    <div>Admin: <span style="color: #2563eb;">${escapeHtml(adminSn)}</span></div>
-                    <div>Country: <span style="color: #059669;">${escapeHtml(ctySn)}</span></div>
+                    <div>${translateHeader(lang, "Admin")}: <span style="color: #2563eb;">${escapeHtml(adminSn)}</span></div>
+                    <div>${translateHeader(lang, "Country")}: <span style="color: #059669;">${escapeHtml(ctySn)}</span></div>
                   </td>
                   <td>
                     <strong>${escapeHtml(user)}</strong><br/>

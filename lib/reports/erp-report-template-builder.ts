@@ -1,3 +1,5 @@
+import { qrCodeSvgMarkup } from "@/components/ui/qr-code";
+
 export type ERPCompanyInfo = {
   name?: string;
   tagline?: string;
@@ -103,8 +105,10 @@ export function generateReportHtml(input: {
   const reportPeriod = companyInfo.reportPeriod || formatDate(new Date().toISOString());
   const compLogo = companyInfo.logoUrl || "";
   // QR verification payload: company + report + date, so a printed sheet is verifiable.
+  // Rendered as an inline pure-SVG QR (components/ui/qr-code) — no external network call,
+  // so Print / Save-as-PDF works offline and can never show a broken image.
   const qrPayload = `ERP|${compName}|${title}|${printedDate}|${reportPeriod}`;
-  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(qrPayload)}`;
+  const qrSvg = qrCodeSvgMarkup(qrPayload, { size: 120 });
 
   // Table density from the real column count so a normal report reads at a comfortable
   // size and only genuinely wide tables (>12 cols) get squeezed. (Was hard-coded
@@ -920,7 +924,7 @@ export function generateReportHtml(input: {
 
           <div class="title-col">
             <h1 class="report-title-text">${escapeHtml(title)}</h1>
-            <div style="margin-top:6px;"><img src="${qrSrc}" alt="QR verify" style="width:48px;height:48px;display:block;" /><div style="font-size:6px;color:#64748b;margin-top:3px;">Scan to verify</div></div>
+            <div style="margin-top:6px;"><div style="width:48px;height:48px;display:block;">${qrSvg}</div><div style="font-size:6px;color:#64748b;margin-top:3px;">Scan to verify</div></div>
           </div>
 
           <div class="meta-col">

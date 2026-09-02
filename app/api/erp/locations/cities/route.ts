@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       query: q,
       limit: 500
     });
-    const lang = await getRequestLanguage();
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang") || request.nextUrl.searchParams.get("language"));
     cities = await localizeRecordNames(cities, "cities", "name", lang);
 
     return apiOk({ cities });

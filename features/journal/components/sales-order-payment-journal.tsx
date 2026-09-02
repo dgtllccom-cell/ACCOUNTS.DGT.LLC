@@ -102,7 +102,7 @@ type PurchaseOrderRow = {
   paid_amount?: number | null;
   remaining_amount?: number | null;
   // The four fields below are NOT real sales_orders columns (they only exist on
-  // purchase_orders) — kept here only because older code in this file still reads them via
+  // purchase_orders) â kept here only because older code in this file still reads them via
   // fallback chains; every live call site now reads paid_amount/remaining_amount instead.
   advance_paid: number | null;
   remaining_paid: number | null;
@@ -265,7 +265,7 @@ function handlePrintReceipt(payment: any, orderRow: any, ledgers: any[], localCu
           </tr>
           <tr>
             <th>${th("Payment Date")}</th><td>${paymentDate}</td>
-            <th>${th("Posted By")}</th><td>${re.profiles?.full_name ? re.profiles.full_name.toUpperCase() : "—"}</td>
+            <th>${th("Posted By")}</th><td>${re.profiles?.full_name ? re.profiles.full_name.toUpperCase() : "â"}</td>
           </tr>
           <tr>
             <th>${th("Reference No")}</th><td>${payment.reference_no || "-"}</td>
@@ -657,7 +657,7 @@ function getDashboardSummaryData(rows: PurchaseOrderRow[], session: any, mode: s
     branchName,
     userName: session?.name || session?.username || session?.user?.fullName || "SUPER ADMIN",
     userId: session?.userId || session?.user?.id || "SA001",
-    role: session?.role || "—",
+    role: session?.role || "â",
     
     totalTransactions: rows.length,
     localCurrency: localCur,
@@ -1476,7 +1476,7 @@ function DashboardSummaryHeader({
     const cur = currency.toUpperCase();
     const base = baseCurrency.toUpperCase();
     if (cur === base || cur === "USD") return 1.0;
-    // Use only the transaction's own frozen exchange rate — never a hard-coded placeholder.
+    // Use only the transaction's own frozen exchange rate â never a hard-coded placeholder.
     const r = Number(rowRate || 0);
     if (r > 1) return 1 / r;
     if (r > 0) return r;
@@ -1536,7 +1536,7 @@ function DashboardSummaryHeader({
       const advancePercent = Number(form.advancePercent || 0);
       const requiredAdvance = finalTotal * advancePercent / 100;
       // sales_orders only has paid_amount/remaining_amount (running totals across every payment
-      // kind combined) — no advance_paid/remaining_due/remaining_paid columns exist on this
+      // kind combined) â no advance_paid/remaining_due/remaining_paid columns exist on this
       // table (those are purchase_orders fields this block was copy-pasted from).
       const totalPaidLocal = Number((row as any).paid_amount || 0) * conversionRate;
       const paidAdvance = Math.min(requiredAdvance, totalPaidLocal);
@@ -2144,10 +2144,10 @@ function DashboardSummaryHeader({
   };
   const th = (label: string) => translateHeader(lang, label);
 
-  const adminCountry = selectedCountryForSummary || summary.country || session?.countryName || "—";
-  const adminBranch = (summary.branchName && summary.branchName !== "All Branches") ? summary.branchName : (session?.branchName || "—");
-  const adminUserName = summary.userName || session?.name || session?.username || "—";
-  const adminRole = session?.role || summary.role || "—";
+  const adminCountry = selectedCountryForSummary || summary.country || session?.countryName || "â";
+  const adminBranch = (summary.branchName && summary.branchName !== "All Branches") ? summary.branchName : (session?.branchName || "â");
+  const adminUserName = summary.userName || session?.name || session?.username || "â";
+  const adminRole = session?.role || summary.role || "â";
 
   // Calculate Date Range from actual rows
   const dates = (rows || [])
@@ -2159,10 +2159,10 @@ function DashboardSummaryHeader({
 
   const minDateStr = dates.length > 0
     ? dates[0].toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
-    : "—";
+    : "â";
   const maxDateStr = dates.length > 0
     ? dates[dates.length - 1].toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
-    : "—";
+    : "â";
 
   // Currency breakdown for 6 columns in Row 2 Left Panel
   const currencyTotals: Record<string, number> = {
@@ -2190,9 +2190,9 @@ function DashboardSummaryHeader({
     const map: Record<string, { branchCode: string; countryCode: string; finalCurrency: string; totalEntries: number; finalAmount: number; finalAdvanceAmount: number }> = {};
 
     (rows || []).forEach((r) => {
-      const bName = rowBranchName(r) || "—";
-      const cName = rowCountryName(r) || "—";
-      const bCode = (r.audit?.branchCode || r.form_data?.form?.branchCode || (bName || "—")).toUpperCase();
+      const bName = rowBranchName(r) || "â";
+      const cName = rowCountryName(r) || "â";
+      const bCode = (r.audit?.branchCode || r.form_data?.form?.branchCode || (bName || "â")).toUpperCase();
       const cCode = getCountryCode(cName) || cName.toUpperCase();
       const fCur = rowOfficeCurrency(r) || "AED";
       const calcs = resolvePurchaseCalculations(r);
@@ -2222,7 +2222,7 @@ function DashboardSummaryHeader({
 
   return (
     <div className="flex flex-col mb-4 space-y-3">
-      {/* ── ROW 1: 4 HEADER STATS CARDS ── */}
+      {/* ââ ROW 1: 4 HEADER STATS CARDS ââ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
         
         {/* Card 1: Branch & User Details */}
@@ -2241,7 +2241,7 @@ function DashboardSummaryHeader({
               <div className="flex justify-between items-center">
                 <span className="text-slate-500 dark:text-slate-400">{th("Country Code")}</span>
                 <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                  <span className="text-sm">🇦🇪</span> {tData(adminCountry, lang)}
+                  <span className="text-sm">ð¦ðª</span> {tData(adminCountry, lang)}
                 </span>
               </div>
               <div className="flex justify-between items-center">
@@ -2390,7 +2390,7 @@ function DashboardSummaryHeader({
         </div>
       </div>
 
-      {/* ── ROW 2: 2 WIDE CARDS (50% / 50%) ── */}
+      {/* ââ ROW 2: 2 WIDE CARDS (50% / 50%) ââ */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
         {/* Left Card: Currency Wise Sales Total (Original Currency) - 6 cols */}
         <div className="lg:col-span-6 flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-[#0c1427]">
@@ -2523,19 +2523,19 @@ function DashboardSummaryHeader({
 }
 
 const SALES_ORDER_TABLE_HEADERS: Record<string, Record<LanguageCode, string>> = {
-  "PO Number": { en: "PO Number", ur: "آرڈر نمبر", ar: "رقم طلب الشراء", fa: "شماره سفارش", ps: "د امر شمیره" },
-  "Bill / Date": { en: "Bill & Date", ur: "بل اور تاریخ", ar: "الفاتورة والتاريخ", fa: "صورتحساب و تاریخ", ps: "بل او نیټه" },
-  "Branch / Country": { en: "Branch & Country", ur: "برانچ اور ملک", ar: "الفرع والبلد", fa: "شعبه و کشور", ps: "څانګه او هیواد" },
-  "Purchase Amount": { en: "Purchase Amount", ur: "کل خریداری", ar: "قيمة المشتريات", fa: "مبلغ خرید", ps: "د پیرودلو قیمت" },
-  "Invoice %": { en: "Invoice %", ur: "ایڈوانس فیصد", ar: "نسبة الدفعة المقدمة", fa: "درصد پیش پرداخت", ps: "د پرمختګ سلنه" },
-  "Invoice Amount": { en: "Invoice Amount", ur: "ایڈوانس رقم", ar: "مبلغ الدفعة المقدمة", fa: "مبلغ پیش پرداخت", ps: "د پرمختګ رقم" },
-  "Remaining Purchase": { en: "Remaining Purchase", ur: "بقایا رقم", ar: "المبلغ المتبقي", fa: "مبلغ باقیمانده", ps: "پاتې رقم" },
-  "Exchange Rate": { en: "Exchange Rate", ur: "شرح تبادلہ", ar: "سعر الصرف", fa: "نرخ ارز", ps: "د تبادلې نرخ" },
-  "Local Currency Amount": { en: "Local Currency Amount", ur: "مقامی کرنسی رقم", ar: "المبلغ بالعملة المحلية", fa: "مبلغ ارز محلی", ps: "د ځایی اسعارو مقدار" },
-  "Local Currency Advance": { en: "Local Currency Advance", ur: "مقامی کرنسی ایڈوانس", ar: "الدفعة المقدمة بالعملة المحلية", fa: "پیش پرداخت ارز محلی", ps: "د ځایی اسعارو پرمختګ" },
-  "Remaining Local Currency": { en: "Remaining Local Currency", ur: "بقایا مقامی کرنسی", ar: "المتبقي بالعملة المحلية", fa: "باقیمانده ارز محلی", ps: "پاتې ځایی اسعار" },
-  "Payment Status": { en: "Payment Status", ur: "ادائیگی کی صورتحال", ar: "حالة الدفع", fa: "وضعیت پرداخت", ps: "د تادیې حالت" },
-  "Action": { en: "Action", ur: "عمل", ar: "إجراء", fa: "عمل", ps: "عمل" }
+  "PO Number": { en: "PO Number", ur: "Ø¢Ø±ÚØ± ÙÙØ¨Ø±", ar: "Ø±ÙÙ Ø·ÙØ¨ Ø§ÙØ´Ø±Ø§Ø¡", fa: "Ø´ÙØ§Ø±Ù Ø³ÙØ§Ø±Ø´", ps: "Ø¯ Ø§ÙØ± Ø´ÙÛØ±Ù" },
+  "Bill / Date": { en: "Bill & Date", ur: "Ø¨Ù Ø§ÙØ± ØªØ§Ø±ÛØ®", ar: "Ø§ÙÙØ§ØªÙØ±Ø© ÙØ§ÙØªØ§Ø±ÙØ®", fa: "ØµÙØ±ØªØ­Ø³Ø§Ø¨ Ù ØªØ§Ø±ÛØ®", ps: "Ø¨Ù Ø§Ù ÙÛÙ¼Ù" },
+  "Branch / Country": { en: "Branch & Country", ur: "Ø¨Ø±Ø§ÙÚ Ø§ÙØ± ÙÙÚ©", ar: "Ø§ÙÙØ±Ø¹ ÙØ§ÙØ¨ÙØ¯", fa: "Ø´Ø¹Ø¨Ù Ù Ú©Ø´ÙØ±", ps: "ÚØ§ÙÚ«Ù Ø§Ù ÙÛÙØ§Ø¯" },
+  "Purchase Amount": { en: "Purchase Amount", ur: "Ú©Ù Ø®Ø±ÛØ¯Ø§Ø±Û", ar: "ÙÙÙØ© Ø§ÙÙØ´ØªØ±ÙØ§Øª", fa: "ÙØ¨ÙØº Ø®Ø±ÛØ¯", ps: "Ø¯ Ù¾ÛØ±ÙØ¯ÙÙ ÙÛÙØª" },
+  "Invoice %": { en: "Invoice %", ur: "Ø§ÛÚÙØ§ÙØ³ ÙÛØµØ¯", ar: "ÙØ³Ø¨Ø© Ø§ÙØ¯ÙØ¹Ø© Ø§ÙÙÙØ¯ÙØ©", fa: "Ø¯Ø±ØµØ¯ Ù¾ÛØ´ Ù¾Ø±Ø¯Ø§Ø®Øª", ps: "Ø¯ Ù¾Ø±ÙØ®ØªÚ« Ø³ÙÙÙ" },
+  "Invoice Amount": { en: "Invoice Amount", ur: "Ø§ÛÚÙØ§ÙØ³ Ø±ÙÙ", ar: "ÙØ¨ÙØº Ø§ÙØ¯ÙØ¹Ø© Ø§ÙÙÙØ¯ÙØ©", fa: "ÙØ¨ÙØº Ù¾ÛØ´ Ù¾Ø±Ø¯Ø§Ø®Øª", ps: "Ø¯ Ù¾Ø±ÙØ®ØªÚ« Ø±ÙÙ" },
+  "Remaining Purchase": { en: "Remaining Purchase", ur: "Ø¨ÙØ§ÛØ§ Ø±ÙÙ", ar: "Ø§ÙÙØ¨ÙØº Ø§ÙÙØªØ¨ÙÙ", fa: "ÙØ¨ÙØº Ø¨Ø§ÙÛÙØ§ÙØ¯Ù", ps: "Ù¾Ø§ØªÛ Ø±ÙÙ" },
+  "Exchange Rate": { en: "Exchange Rate", ur: "Ø´Ø±Ø­ ØªØ¨Ø§Ø¯ÙÛ", ar: "Ø³Ø¹Ø± Ø§ÙØµØ±Ù", fa: "ÙØ±Ø® Ø§Ø±Ø²", ps: "Ø¯ ØªØ¨Ø§Ø¯ÙÛ ÙØ±Ø®" },
+  "Local Currency Amount": { en: "Local Currency Amount", ur: "ÙÙØ§ÙÛ Ú©Ø±ÙØ³Û Ø±ÙÙ", ar: "Ø§ÙÙØ¨ÙØº Ø¨Ø§ÙØ¹ÙÙØ© Ø§ÙÙØ­ÙÙØ©", fa: "ÙØ¨ÙØº Ø§Ø±Ø² ÙØ­ÙÛ", ps: "Ø¯ ÚØ§ÛÛ Ø§Ø³Ø¹Ø§Ø±Ù ÙÙØ¯Ø§Ø±" },
+  "Local Currency Advance": { en: "Local Currency Advance", ur: "ÙÙØ§ÙÛ Ú©Ø±ÙØ³Û Ø§ÛÚÙØ§ÙØ³", ar: "Ø§ÙØ¯ÙØ¹Ø© Ø§ÙÙÙØ¯ÙØ© Ø¨Ø§ÙØ¹ÙÙØ© Ø§ÙÙØ­ÙÙØ©", fa: "Ù¾ÛØ´ Ù¾Ø±Ø¯Ø§Ø®Øª Ø§Ø±Ø² ÙØ­ÙÛ", ps: "Ø¯ ÚØ§ÛÛ Ø§Ø³Ø¹Ø§Ø±Ù Ù¾Ø±ÙØ®ØªÚ«" },
+  "Remaining Local Currency": { en: "Remaining Local Currency", ur: "Ø¨ÙØ§ÛØ§ ÙÙØ§ÙÛ Ú©Ø±ÙØ³Û", ar: "Ø§ÙÙØªØ¨ÙÙ Ø¨Ø§ÙØ¹ÙÙØ© Ø§ÙÙØ­ÙÙØ©", fa: "Ø¨Ø§ÙÛÙØ§ÙØ¯Ù Ø§Ø±Ø² ÙØ­ÙÛ", ps: "Ù¾Ø§ØªÛ ÚØ§ÛÛ Ø§Ø³Ø¹Ø§Ø±" },
+  "Payment Status": { en: "Payment Status", ur: "Ø§Ø¯Ø§Ø¦ÛÚ¯Û Ú©Û ØµÙØ±ØªØ­Ø§Ù", ar: "Ø­Ø§ÙØ© Ø§ÙØ¯ÙØ¹", fa: "ÙØ¶Ø¹ÛØª Ù¾Ø±Ø¯Ø§Ø®Øª", ps: "Ø¯ ØªØ§Ø¯ÛÛ Ø­Ø§ÙØª" },
+  "Action": { en: "Action", ur: "Ø¹ÙÙ", ar: "Ø¥Ø¬Ø±Ø§Ø¡", fa: "Ø¹ÙÙ", ps: "Ø¹ÙÙ" }
 };
 function getSalesOrderTableHeader(h: string, currentLanguage: LanguageCode): string {
   return SALES_ORDER_TABLE_HEADERS[h]?.[currentLanguage] || h;
@@ -2644,9 +2644,9 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       purchaseBookingOrderNumber: row.sales_order_no,
       purchaseDate: form.purchaseDate || row.created_at || "",
       bookingDate: form.bookingDate || form.purchaseDate || row.created_at || "",
-      purchaseAccountName: form.purchaseAccountName || "—",
+      purchaseAccountName: form.purchaseAccountName || "â",
       purchaseAccountNumber: form.purchaseAccountNo || "",
-      salesAccountName: form.salesAccountName || "—",
+      salesAccountName: form.salesAccountName || "â",
       salesAccountNumber: form.salesAccountNo || "",
       supplierName: form.salesAccountName || "N/A",
       buyerName: form.purchaseAccountName || "N/A",
@@ -2661,7 +2661,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       currency: row.currency_code || "USD",
       status: row.payment_status || "Pending",
       paymentStatus: row.payment_status || "Pending",
-      branchName: rowBranchName(row) || form.purchaseAccountBranch || "—",
+      branchName: rowBranchName(row) || form.purchaseAccountBranch || "â",
       countryName: rowCountryName(row) || form.loadingCountry || "N/A",
       createdAt: row.created_at || "",
       form_data: row.form_data || {},
@@ -2711,7 +2711,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
   const [titleSlot, setTitleSlot] = useState<Element | null>(null);
   const [actionsSlot, setActionsSlot] = useState<Element | null>(null);
   // Follows the single, app-wide active language (top toolbar selector) instead of its
-  // own disconnected state — this page previously had its own separate, broken language
+  // own disconnected state â this page previously had its own separate, broken language
   // dropdown (corrupted-encoding option labels) that never reflected the real selection.
   const currentLanguage = useActiveLanguage() as LanguageCode;
   const isRtl = ["ur", "ar", "fa", "ps"].includes(currentLanguage);
@@ -2890,7 +2890,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       if (!response.ok || body?.ok === false) throw new Error(body?.error?.message ?? body?.message ?? "Unable to load sales orders.");
       const payload = (body?.data ?? body) as OrdersPayload | PurchaseOrderRow[];
       // The API actually returns { data: { salesOrders: [...] } } (see app/api/erp/sales/orders
-      // route.ts) — this previously read payload.orders, a key that has never existed on the
+      // route.ts) â this previously read payload.orders, a key that has never existed on the
       // sales response, so `rows` silently resolved to [] on every load and every mode
       // (Advance/Remaining/Credit/History) always rendered "0 records" regardless of real data.
       const rows: PurchaseOrderRow[] = Array.isArray(payload)
@@ -2969,7 +2969,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
 
       // Extract form values for clearance calculation.
       // sales_orders has no advance_paid/remaining_due/remaining_paid columns (those are
-      // purchase_orders-only field names — this whole block was copy-pasted from the purchase
+      // purchase_orders-only field names â this whole block was copy-pasted from the purchase
       // journal without adapting to the sales schema, so every eligibility check below always
       // read undefined/0 and treated every order as if nothing had ever been paid). The real,
       // always-populated columns are paid_amount (total across every payment kind) and
@@ -3005,7 +3005,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
         if (remainingDue <= 0.01) return false; // Already cleared
 
         // NOTE: sales orders have no loading/container-transfer stage (that's a Country
-        // Purchase concept — sales_loading_records doesn't exist in this schema), so unlike
+        // Purchase concept â sales_loading_records doesn't exist in this schema), so unlike
         // the purchase side there is no "must be transferred to loading first" gate here. The
         // advance-cleared + remaining-due checks above are the correct, sufficient eligibility
         // rule for a domestic sales order's remaining payment.
@@ -3720,7 +3720,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
         if (valid) creditLedgerId = ledgerId(valid) || "";
       }
 
-      // Do NOT guess a ledger here — picking an arbitrary ledger could silently post this
+      // Do NOT guess a ledger here â picking an arbitrary ledger could silently post this
       // payment against the wrong account. If the customer/payment-source ledger genuinely
       // couldn't be resolved, fail loudly so the order's account link can be corrected.
       if (!isUuid(debitLedgerId) || !isUuid(creditLedgerId)) {
@@ -3808,18 +3808,18 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
 
     const billNo = row.sales_order_no ? `S#${row.sales_order_no}` : (form.billNo || form.contractNo || `S#${index + 1}`);
     const type = form.orderType || form.type || "B";
-    const branchName = rowBranchName(row) || "—";
-    const branchCode = (row.audit?.branchCode || form.branchCode || (branchName || "—")).toUpperCase();
-    const countryName = rowCountryName(row) || "—";
+    const branchName = rowBranchName(row) || "â";
+    const branchCode = (row.audit?.branchCode || form.branchCode || (branchName || "â")).toUpperCase();
+    const countryName = rowCountryName(row) || "â";
     const countryCode = (getCountryCode(countryName) || countryName || "").toUpperCase();
 
     const rawDate = form.saleDate || form.purchaseDate || form.bookingDate || row.created_at;
     const dateStr = rawDate
       ? new Date(rawDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" })
-      : "—";
+      : "â";
 
-    const partyName = form.customerName || form.salesAccountName || form.salesCompanyName || form.partyName || "—";
-    const goodsName = goods.map((g: any) => g.goodsName || g.name).filter(Boolean).join(", ") || form.goodsName || "—";
+    const partyName = form.customerName || form.salesAccountName || form.salesCompanyName || form.partyName || "â";
+    const goodsName = goods.map((g: any) => g.goodsName || g.name).filter(Boolean).join(", ") || form.goodsName || "â";
 
     const totalQty = goods.length > 0
       ? goods.reduce((sum: number, g: any) => sum + Number(g.qtyNo || g.quantity || g.qty || 0), 0)
@@ -3836,17 +3836,17 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
     const rawDueDate = form.advancePaymentDate || form.paymentDueDate || form.loadingDate;
     const dueDateStr = rawDueDate
       ? new Date(rawDueDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" })
-      : "23-May-25";
+      : "—";
 
-    const pCode = form.purchaseAccountNo || form.pCode || form.purchaseCode || "PC-25050918";
-    const sCode = form.salesAccountNo || form.sCode || form.salesCode || "SC-25050918";
-    const route = transport.shippingLine || transport.route || form.route || "Sea";
-    const loadingCountry = transport.loadingCountry || form.loadingCountry || "China";
-    const loadingPort = transport.loadingPort || form.loadingPort || "Jebel Ali Port";
-    const loadingDate = transport.loadingDate || form.loadingDate || "2025-05-09";
+    const pCode = form.purchaseAccountNo || form.pCode || form.purchaseCode || "";
+    const sCode = form.salesAccountNo || form.sCode || form.salesCode || "";
+    const route = transport.shippingLine || transport.route || form.route || "";
+    const loadingCountry = transport.loadingCountry || form.loadingCountry || "";
+    const loadingPort = transport.loadingPort || form.loadingPort || "";
+    const loadingDate = transport.loadingDate || form.loadingDate || "";
     const receivingCountry = transport.receivingCountry || form.receivingCountry || countryName;
-    const receivingPort = transport.receivingPort || form.receivingPort || "Jebel Ali Port";
-    const receivingDate = transport.receivedDate || form.receivedDate || transport.arrivalDate || "2025-06-20";
+    const receivingPort = transport.receivingPort || form.receivingPort || "";
+    const receivingDate = transport.receivedDate || form.receivedDate || transport.arrivalDate || "";
 
     const rowBgClass = isSelected
       ? "bg-blue-50/90 dark:bg-blue-950/40"
@@ -4067,18 +4067,18 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
 
   const recordsTextMap: Record<LanguageCode, string> = {
     en: "records",
-    ur: "ریکارڈز",
-    ar: "سجلات",
-    fa: "رکوردها",
-    ps: "ریکارډونه"
+    ur: "Ø±ÛÚ©Ø§Ø±ÚØ²",
+    ar: "Ø³Ø¬ÙØ§Øª",
+    fa: "Ø±Ú©ÙØ±Ø¯ÙØ§",
+    ps: "Ø±ÛÚ©Ø§Ø±ÚÙÙÙ"
   };
 
   const refreshTextMap: Record<LanguageCode, string> = {
     en: "Refresh",
-    ur: "تازہ کریں",
-    ar: "تحديث",
-    fa: "بروزرسانی",
-    ps: "تازه کول"
+    ur: "ØªØ§Ø²Û Ú©Ø±ÛÚº",
+    ar: "ØªØ­Ø¯ÙØ«",
+    fa: "Ø¨Ø±ÙØ²Ø±Ø³Ø§ÙÛ",
+    ps: "ØªØ§Ø²Ù Ú©ÙÙ"
   };
 
   // getTableHeader hoisted to module scope (getSalesOrderTableHeader) to avoid a
@@ -4326,7 +4326,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                             {tGlobal(currentLanguage, "pay.remaining_workflow_warning", "Warning: Workflow Rule: Remaining Payment requires Transfer to Loading first.")}
                           </span>
                           <span className="text-[10px] text-slate-400 block mt-1">
-                            {tGlobal(currentLanguage, "pay.remaining_workflow_steps", "Orders only appear here after: Booking → Advance Payment → Transfer to Loading → Loading Confirmation. Ensure the order has been transferred to loading before making a remaining payment.")}
+                            {tGlobal(currentLanguage, "pay.remaining_workflow_steps", "Orders only appear here after: Booking â Advance Payment â Transfer to Loading â Loading Confirmation. Ensure the order has been transferred to loading before making a remaining payment.")}
                           </span>
                         </div>
                       ) : (
@@ -5189,7 +5189,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                     
                     displayPayments = [advanceSynthetic, ...loadingRemainingPayments];
                   } else {
-                    // Exclude "booking" entries — the initial sales posting, not a payment
+                    // Exclude "booking" entries â the initial sales posting, not a payment
                     // against the balance. Matches the same fix on the purchase-side screen.
                     displayPayments = selectedOrderPayments.filter((p: any) => p.kind !== "booking");
                   }
@@ -5846,7 +5846,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                 {currency && showCalcPanel && (
                   <div className="rounded-lg border bg-slate-50/50 p-3 dark:bg-slate-900/20">
                     <div className="mb-2 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                      {t("transaction_conversion_details", currentLanguage)} ({selected?.currency_code || "USD"} ➔ {baseCurrency})
+                      {t("transaction_conversion_details", currentLanguage)} ({selected?.currency_code || "USD"} â {baseCurrency})
                     </div>
                     <div className="grid gap-3 md:grid-cols-3">
                       <FieldBlock label={`${t("purchase_currency_amount", currentLanguage)} (${selected?.currency_code || "USD"})`} required>
@@ -5986,7 +5986,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                   <div className="rounded-xl border border-indigo-200 bg-indigo-50/60 p-2.5 dark:border-indigo-900/40 dark:bg-indigo-950/30 text-indigo-900 dark:text-indigo-200 text-xs flex items-center justify-between">
                     <div className="font-bold flex items-center gap-2">
                       <span className="font-black text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded-full">{translateHeader(currentLanguage, "BALANCED")}</span>
-                      <span className="text-[11px] truncate">DR: {doubleEntry.debitCode} ({doubleEntry.debitName}) ➔ CR: {doubleEntry.creditCode} ({doubleEntry.creditName})</span>
+                      <span className="text-[11px] truncate">DR: {doubleEntry.debitCode} ({doubleEntry.debitName}) â CR: {doubleEntry.creditCode} ({doubleEntry.creditName})</span>
                     </div>
                   </div>
 
@@ -6022,7 +6022,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                       <span className="font-bold text-foreground">{t("posting_colon", currentLanguage)}</span>
                       <><span className="font-bold text-indigo-600">{translateHeader(currentLanguage, "DR")}</span> {doubleEntry.debitName} ({doubleEntry.debitCode}) / <span className="font-bold text-violet-600">{translateHeader(currentLanguage, "CR")}</span> {doubleEntry.creditName} ({doubleEntry.creditCode})</>
                     </div>
-                    <div><span className="font-bold text-foreground">{t("amount_colon", currentLanguage)}</span>{amount ? money(amount, baseCurrency) : "—"}</div>
+                    <div><span className="font-bold text-foreground">{t("amount_colon", currentLanguage)}</span>{amount ? money(amount, baseCurrency) : "â"}</div>
                     {selected && (
                       <div className="mt-1">
                         {(() => {
@@ -6044,7 +6044,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                                   <span className="font-bold text-foreground">
                                     {currentLanguage === "en"
                                       ? (remainingAdvanceBC > 0 ? "Remaining Advance to Pay: " : "Remaining Balance for Advance/Endorsement: ")
-                                      : (remainingAdvanceBC > 0 ? "باقی ایڈوانس ادائیگی: " : "باقی بل رقم (ایڈوانس/انڈورسمنٹ): ")}
+                                      : (remainingAdvanceBC > 0 ? "Ø¨Ø§ÙÛ Ø§ÛÚÙØ§ÙØ³ Ø§Ø¯Ø§Ø¦ÛÚ¯Û: " : "Ø¨Ø§ÙÛ Ø¨Ù Ø±ÙÙ (Ø§ÛÚÙØ§ÙØ³/Ø§ÙÚÙØ±Ø³ÙÙÙ¹): ")}
                                   </span>
                                   <span className="font-extrabold text-rose-600">
                                     {money(displayAdvance, selected.currency_code ?? "USD")} ({money(displayAdvance * (selected.exchange_rate || 1), baseCurrency)})
@@ -6074,7 +6074,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                   </div>
 
                   {(() => {
-                    // Every reason Save could be disabled, named plainly — a disabled button
+                    // Every reason Save could be disabled, named plainly â a disabled button
                     // must never be silent about why.
                     const missing: string[] = [];
                     if (!paymentSourceLedgerId) missing.push(t("payment_source_account", currentLanguage));
@@ -6116,7 +6116,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                 )}
                 {paymentError && (
                   <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
-                    ❌ {paymentError}
+                    â {paymentError}
                   </div>
                 )}
               </div>
@@ -6239,7 +6239,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                         <Th className="px-3 py-2.5 text-left">{t("account_label", currentLanguage)}</Th>
                         <Th className="px-3 py-2.5 text-right">{t("amount_label", currentLanguage)} ({poCurrency})</Th>
                         <Th className="px-3 py-2.5 text-right">{t("amount_label", currentLanguage)} ({baseCurrency})</Th>
-                        <Th className="px-2 py-2.5 text-center">✓</Th>
+                        <Th className="px-2 py-2.5 text-center">â</Th>
                       </tr>
                     </thead>
                     <tbody>
@@ -6260,10 +6260,10 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                                 </div>
                               </td>
                               <td className="px-3 py-3 text-right font-mono font-bold text-indigo-600 whitespace-nowrap">
-                                {previewUsd > 0 ? money(previewUsd, poCurrency) : "—"}
+                                {previewUsd > 0 ? money(previewUsd, poCurrency) : "â"}
                               </td>
                               <td className="px-3 py-3 text-right font-mono font-bold text-indigo-600 whitespace-nowrap">
-                                {previewAed > 0 ? money(previewAed, baseCurrency) : "—"}
+                                {previewAed > 0 ? money(previewAed, baseCurrency) : "â"}
                               </td>
                               <td className="px-2 py-3 text-center">
                                 <input
@@ -6283,10 +6283,10 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                                 </div>
                               </td>
                               <td className="px-3 py-3 text-right font-mono font-bold text-violet-600 whitespace-nowrap">
-                                {previewUsd > 0 ? money(previewUsd, poCurrency) : "—"}
+                                {previewUsd > 0 ? money(previewUsd, poCurrency) : "â"}
                               </td>
                               <td className="px-3 py-3 text-right font-mono font-bold text-violet-600 whitespace-nowrap">
-                                {previewAed > 0 ? money(previewAed, baseCurrency) : "—"}
+                                {previewAed > 0 ? money(previewAed, baseCurrency) : "â"}
                               </td>
                               <td className="px-2 py-3 text-center">
                                 <input

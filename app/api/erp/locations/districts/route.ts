@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
       }).catch(() => []);
     }
 
-    const lang = await getRequestLanguage();
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang") || request.nextUrl.searchParams.get("language"));
     districts = await localizeRecordNames(districts, "districts", "name", lang);
 
     return apiOk({ districts });

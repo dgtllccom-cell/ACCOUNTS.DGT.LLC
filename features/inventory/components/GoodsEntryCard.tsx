@@ -236,9 +236,12 @@ export function GoodsEntryCard({
 
   const handleSizeChange = (size: string) => {
     if (size === "__ADD_NEW_SIZE__") {
-      const message = `You are adding a new Size for '${value.goodsName || "selected Good"}' under Brand '${value.brand || "selected Brand"}'.\n\nDo you want to proceed?`;
+      const g = value.goodsName || tt("gec.selected_good", "selected Good");
+      const b = value.brand || tt("gec.selected_brand", "selected Brand");
+      const message = tt("gec.add_size_confirm", "You are adding a new Size for {goods} under Brand {brand}. Do you want to proceed?")
+        .replace("{goods}", g).replace("{brand}", b);
       if (confirm(message)) {
-        const spec = prompt(`Enter custom Size specification for ${value.goodsName || "selected Good"} (${value.brand || "selected Brand"}):`);
+        const spec = prompt(tt("gec.add_size_prompt", "Enter custom Size specification for {goods} ({brand}):").replace("{goods}", g).replace("{brand}", b));
         if (spec && spec.trim()) {
           onChange({
             ...value,

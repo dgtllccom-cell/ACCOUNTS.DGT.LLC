@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 
     const q = request.nextUrl.searchParams.get("q");
     let states = await locationsRepository.listStates({ countryId, query: q, limit: 500 });
-    const lang = await getRequestLanguage();
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang") || request.nextUrl.searchParams.get("language"));
     states = await localizeRecordNames(states, "states_provinces", "name", lang);
     return apiOk({ states });
   } catch (error) {

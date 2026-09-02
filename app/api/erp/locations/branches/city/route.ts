@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { ErpAuthError, requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields } from "@/lib/i18n/localize-records";
 
 const selectColumns =
   "id,country_id,country_branch_id,city_name,name,code,local_currency,status,is_business_branch,state_province_id,district_id,city_id,area_location_id,address,phone,email,whatsapp_number,company_id,owner_name,contacts,documents,created_at,updated_at";
@@ -49,7 +51,17 @@ export async function GET(request: Request) {
       return NextResponse.json({ ok: false, error: { message: error.message } }, { status: 500 });
     }
 
-    const cityBranches = (data ?? []).map((branch: any) => ({
+    // City-branch name / city_name / owner_name / address follow the active language
+    // (city_branches is a registered translatable table); codes / ids stay canonical.
+    const lang = await getRequestLanguage(url.searchParams.get("lang") || url.searchParams.get("language"));
+    const localized = await localizeRecordFields<any>(
+      (data ?? []) as any[],
+      "city_branches",
+      ["name", "city_name", "owner_name", "address"],
+      lang,
+    ).catch(() => data ?? []);
+
+    const cityBranches = (localized as any[]).map((branch: any) => ({
       ...branch,
       countryId: branch.country_id,
       countryBranchId: branch.country_branch_id,

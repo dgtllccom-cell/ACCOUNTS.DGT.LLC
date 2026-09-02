@@ -16,7 +16,6 @@ import {
   Building,
   Building2,
   Globe,
-  QrCode,
   ShieldCheck,
   Search,
   Eye,
@@ -37,6 +36,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { QrCode as QrCodeGraphic } from "@/components/ui/qr-code";
 
 export interface TransitDocument {
   id: string;
@@ -292,9 +292,8 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
     }
   };
 
-  const qrUrl = useMemo(() => {
-    const payload = `TRANSIT-ENTRY|${formData.entry_serial}|${formData.invoice_no}|${formData.goods_name}|QTY:${formData.quantity} ${formData.unit}|${formData.country}|${formData.branch}`;
-    return `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(payload)}`;
+  const qrPayload = useMemo(() => {
+    return `TRANSIT-ENTRY|${formData.entry_serial}|${formData.invoice_no}|${formData.goods_name}|QTY:${formData.quantity} ${formData.unit}|${formData.country}|${formData.branch}`;
   }, [formData]);
 
   const filteredEntries = useMemo(() => {
@@ -928,10 +927,10 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
               {/* Live QR Code with verify link */}
               <div className="text-center shrink-0">
                 <div className="p-1 border border-slate-200 rounded-lg bg-white inline-block shadow-xs">
-                  <img
-                    src={qrUrl}
-                    alt={tt("transit.qr_alt", "Transit QR Code")}
-                    className="h-16 w-16 sm:h-20 sm:w-20 object-contain"
+                  <QrCodeGraphic
+                    value={qrPayload}
+                    size={80}
+                    className="h-16 w-16 sm:h-20 sm:w-20"
                   />
                 </div>
                 <p className="text-[8px] font-bold text-slate-500 uppercase tracking-wider mt-1">{tt("transit.scan_to_verify", "Scan to Verify")}</p>

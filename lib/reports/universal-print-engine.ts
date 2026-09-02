@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { escapeHtml, formatMoney, formatNumber, formatDate, type ERPCompanyInfo } from "./erp-report-template-builder";
+import { qrCodeSvgMarkup } from "@/components/ui/qr-code";
 import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
 import { printStore } from "@/lib/store/print-store";
 
@@ -260,7 +261,8 @@ export function buildUniversalPrintHtml(input: UniversalPrintInput): string {
   const closeDc = ledgerSummary?.closingDcType || (closeBal >= 0 ? "Dr" : "Cr");
 
   const qrPayload = `ERP|${entityName}|${title}|${documentNo || "LEDGER"}|${fullDateTime}`;
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(qrPayload)}`;
+  // Inline pure-SVG QR — no external network call, so Print / PDF is offline-safe.
+  const qrSvg = qrCodeSvgMarkup(qrPayload, { size: 100 });
 
   const html = `<!DOCTYPE html>
 <html lang="${escapeHtml(targetLang)}" dir="${isRtl ? "rtl" : "ltr"}">
@@ -438,6 +440,8 @@ export function buildUniversalPrintHtml(input: UniversalPrintInput): string {
       background: #ffffff;
       display: inline-block;
       vertical-align: middle;
+    }
+    .qr-badge svg { display: block; width: 100%; height: 100%;
       margin-inline-start: 6px;
     }
 
@@ -678,7 +682,7 @@ export function buildUniversalPrintHtml(input: UniversalPrintInput): string {
               <div class="doc-title">${escapeHtml(title)}</div>
               <div class="doc-subtitle">${escapeHtml(ledgerSummary?.accountName || partyDetails?.name || subtitle || (isFinancial ? "Account Statement" : ""))}</div>
             </div>
-            <img class="qr-badge" src="${qrUrl}" alt="QR Verification" />
+            <span class="qr-badge">${qrSvg}</span>
           </div>
           <div class="doc-meta">
             ${(ledgerSummary?.accountCode || partyDetails?.code || documentNo)

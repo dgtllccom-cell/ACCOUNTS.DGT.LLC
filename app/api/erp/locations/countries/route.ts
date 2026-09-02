@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 
     // Dropdown/report labels follow the active language; iso codes/emails/technical
     // fields are left untouched (only `name` is a registered translatable field).
-    const lang = await getRequestLanguage();
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang") || request.nextUrl.searchParams.get("language"));
     countries = await localizeRecordNames(countries, "countries", "name", lang);
 
     return apiOk({ countries });

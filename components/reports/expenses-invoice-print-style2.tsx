@@ -10,6 +10,27 @@ export function ExpensesInvoicePrintStyle2({ bill }: { bill: any }) {
   const grandTotal = bill.expenses_bill_lines?.reduce((sum: number, l: any) => sum + Number(l.grand_amount), 0) || 0;
   const currency = bill.city_branches?.countries?.currency_code || "";
 
+  // Dynamic branding from the bill's own company / branch — NEVER a hard-coded "Damaan".
+  const cb = bill.city_branches || {};
+  const brandName: string =
+    bill.company_name ||
+    bill.companies?.name ||
+    cb.company_name ||
+    cb.companies?.name ||
+    cb.branding_company_name ||
+    cb.name ||
+    "";
+  const brandPhone: string = cb.phone || cb.contact_number || bill.companies?.phone || "";
+  const brandEmail: string = cb.email || bill.companies?.email || "";
+  const brandCountry: string = cb.countries?.name || "";
+  // Bank / beneficiary details — only the branch's own real values; the whole block is
+  // omitted when none are configured (was hard-coded "Damaan Central Bank / 123456789").
+  const bankName: string = cb.bank_name || bill.companies?.bank_name || "";
+  const bankAccountNo: string = cb.bank_account_no || bill.companies?.bank_account_no || "";
+  const bankIfsc: string = cb.bank_ifsc || cb.bank_swift || bill.companies?.bank_ifsc || "";
+  const bankBranch: string = cb.bank_branch || "";
+  const hasBank = Boolean(bankName || bankAccountNo || bankIfsc || bankBranch);
+
   // Convert number to words (simple implementation)
   const numberToWords = (num: number) => {
     const ones = ['', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE'];
@@ -61,10 +82,16 @@ export function ExpensesInvoicePrintStyle2({ bill }: { bill: any }) {
             </div>
           </div>
           <div className="w-5/6 text-center py-2 flex flex-col justify-center">
-            <h1 className="font-black text-xl tracking-wide uppercase">DAMAAN GROUP ERP</h1>
+            <h1 className="font-black text-xl tracking-wide uppercase">{brandName || t(lang, "pdfui.eip2_expenses_bill_heading", "Expenses Bill")}</h1>
             <p className="text-xs mt-1">{t(lang, "pdfui.eip2_head_office_corporate_mgmt", "Head Office / Corporate Management")}</p>
-            <p className="text-[10px] mt-1">Mobile: +971-50-0000000 | Email: info@damaan.com</p>
-            <p className="text-[10px]">Country: {bill.city_branches?.countries?.name} | Currency: {currency}</p>
+            {(brandPhone || brandEmail) && (
+              <p className="text-[10px] mt-1">
+                {brandPhone && <>{t(lang, "roz.cef_mobile_label", "Mobile")}: {brandPhone}</>}
+                {brandPhone && brandEmail && " | "}
+                {brandEmail && <>{t(lang, "acct.apv_email", "Email")}: {brandEmail}</>}
+              </p>
+            )}
+            <p className="text-[10px]">{t(lang, "purchase.country", "Country")}: {brandCountry || "—"} | {t(lang, "lpjr.col_cur", "Cur")}: {currency}</p>
           </div>
         </div>
 
@@ -156,25 +183,28 @@ export function ExpensesInvoicePrintStyle2({ bill }: { bill: any }) {
             <p className="text-[9px] mt-1">{t(lang, "pdfui.eip2_eoe", "E. & O.E.")}</p>
             <ol className="list-decimal pl-3 mt-1 text-[8px] text-slate-600 leading-tight">
               <li>{t(lang, "pdfui.eip2_goods_sold_not_taken_back", "Goods once sold will not be taken back.")}</li>
-              <li>Interest @ 18% p.a. will be charged if payment is not made within the stipulated time.</li>
+              <li>{t(lang, "pdfui.eip2_late_payment_interest", "Late payment may attract interest as per the agreed terms.")}</li>
               <li>{t(lang, "pdfui.eip2_subject_local_jurisdiction", "Subject to local jurisdiction only.")}</li>
             </ol>
           </div>
           
-          {/* Bank / QR */}
+          {/* Bank / beneficiary — only rendered when the branch has real bank details */}
           <div className="w-1/3 border-r border-slate-800 p-2 flex flex-col justify-center items-center">
-            <div className="w-12 h-12 bg-slate-200 mb-2 border border-slate-300"></div>
-            <div className="text-[9px] w-full pl-2">
-              <p><strong>{t(lang, "acct.apv_account_number_colon", "Account Number:")}</strong> 123456789</p>
-              <p><strong>{t(lang, "purchase.f_bank", "Bank:")}</strong> Damaan Central Bank</p>
-              <p><strong>{t(lang, "pdfui.eip2_ifsc_colon", "IFSC:")}</strong> DAMN000123</p>
-              <p><strong>{t(lang, "purchase.branch_colon_label", "Branch:")}</strong> Head Office</p>
-            </div>
+            {hasBank ? (
+              <div className="text-[9px] w-full pl-2">
+                {bankAccountNo && <p><strong>{t(lang, "acct.apv_account_number_colon", "Account Number:")}</strong> {bankAccountNo}</p>}
+                {bankName && <p><strong>{t(lang, "purchase.f_bank", "Bank:")}</strong> {bankName}</p>}
+                {bankIfsc && <p><strong>{t(lang, "pdfui.eip2_ifsc_colon", "IFSC:")}</strong> {bankIfsc}</p>}
+                {bankBranch && <p><strong>{t(lang, "purchase.branch_colon_label", "Branch:")}</strong> {bankBranch}</p>}
+              </div>
+            ) : (
+              <p className="text-[9px] text-slate-400 italic">{t(lang, "pdfui.eip2_no_bank_configured", "Bank details not configured")}</p>
+            )}
           </div>
 
           {/* Signature */}
           <div className="w-1/3 p-2 flex flex-col relative">
-            <p className="font-bold text-[10px] text-right">For DAMAAN GROUP ERP</p>
+            <p className="font-bold text-[10px] text-right">{t(lang, "pdfui.eip2_for_prefix", "For")} {brandName || t(lang, "pdfui.eip2_expenses_bill_heading", "Expenses Bill")}</p>
             <div className="mt-auto text-[10px] text-right font-bold">
               {t(lang, "pdfui.eip2_signature", "Signature")}
             </div>
@@ -183,7 +213,7 @@ export function ExpensesInvoicePrintStyle2({ bill }: { bill: any }) {
 
       </div>
       <div className="text-center mt-2 text-[9px] text-blue-600">
-        Invoice Created by Damaan ERP System
+        {t(lang, "pdfui.eip2_created_by_system", "Generated by the ERP system")}
       </div>
     </div>
   );

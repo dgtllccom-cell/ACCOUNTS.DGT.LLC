@@ -1,4 +1,5 @@
 import { t } from "@/lib/i18n/ui";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { printStore } from "@/lib/store/print-store";
 
@@ -277,22 +278,22 @@ export function openSalesA4ReportWindow(input: {
 
       <div class="meta-grid">
         <div class="meta-card">
-          <div class="meta-title">Customer Account (DR)</div>
-          <div class="meta-row"><span class="meta-label">Buyer Name:</span><span class="meta-value">${escapeHtml(b.customerName)}</span></div>
-          <div class="meta-row"><span class="meta-label">Account No:</span><span class="meta-value">${escapeHtml(b.purchaseAccountNumber || form.customerAccountNo || "-")}</span></div>
-          <div class="meta-row"><span class="meta-label">Ledger Acc:</span><span class="meta-value">${escapeHtml(b.purchaseAccountName || form.customerAccountName || "-")}</span></div>
+          <div class="meta-title">${translateHeader(lang, "Customer Account (DR)")}</div>
+          <div class="meta-row"><span class="meta-label">${translateHeader(lang, "Buyer Name")}:</span><span class="meta-value">${escapeHtml(b.customerName)}</span></div>
+          <div class="meta-row"><span class="meta-label">${translateHeader(lang, "Account No")}:</span><span class="meta-value">${escapeHtml(b.purchaseAccountNumber || form.customerAccountNo || "-")}</span></div>
+          <div class="meta-row"><span class="meta-label">${translateHeader(lang, "Ledger Acc")}:</span><span class="meta-value">${escapeHtml(b.purchaseAccountName || form.customerAccountName || "-")}</span></div>
         </div>
         <div class="meta-card">
-          <div class="meta-title">Sales Account (CR)</div>
-          <div class="meta-row"><span class="meta-label">Account No:</span><span class="meta-value">${escapeHtml(b.salesAccountNumber || form.salesAccountNo || "-")}</span></div>
-          <div class="meta-row"><span class="meta-label">Ledger Acc:</span><span class="meta-value">${escapeHtml(b.salesAccountName || form.salesAccountName || "-")}</span></div>
-          <div class="meta-row"><span class="meta-label">Company:</span><span class="meta-value">${escapeHtml(form.salesCompanyName || "-")}</span></div>
+          <div class="meta-title">${translateHeader(lang, "Sales Account (CR)")}</div>
+          <div class="meta-row"><span class="meta-label">${translateHeader(lang, "Account No")}:</span><span class="meta-value">${escapeHtml(b.salesAccountNumber || form.salesAccountNo || "-")}</span></div>
+          <div class="meta-row"><span class="meta-label">${translateHeader(lang, "Ledger Acc")}:</span><span class="meta-value">${escapeHtml(b.salesAccountName || form.salesAccountName || "-")}</span></div>
+          <div class="meta-row"><span class="meta-label">${translateHeader(lang, "Company")}:</span><span class="meta-value">${escapeHtml(form.salesCompanyName || "-")}</span></div>
         </div>
         <div class="meta-card">
-          <div class="meta-title">Logistics & Scope</div>
-          <div class="meta-row"><span class="meta-label">Country:</span><span class="meta-value">${escapeHtml(b.countryName || form.branchCountry || "-")}</span></div>
-          <div class="meta-row"><span class="meta-label">Branch Scope:</span><span class="meta-value">${escapeHtml(b.branchName || form.branchName || "-")}</span></div>
-          <div class="meta-row"><span class="meta-label">Contract / SO:</span><span class="meta-value">${escapeHtml(b.sales_contract_no || form.salesContractNo || "-")}</span></div>
+          <div class="meta-title">${translateHeader(lang, "Logistics & Scope")}</div>
+          <div class="meta-row"><span class="meta-label">${translateHeader(lang, "Country")}:</span><span class="meta-value">${escapeHtml(b.countryName || form.branchCountry || "-")}</span></div>
+          <div class="meta-row"><span class="meta-label">${translateHeader(lang, "Branch Scope")}:</span><span class="meta-value">${escapeHtml(b.branchName || form.branchName || "-")}</span></div>
+          <div class="meta-row"><span class="meta-label">${translateHeader(lang, "Contract / SO")}:</span><span class="meta-value">${escapeHtml(b.sales_contract_no || form.salesContractNo || "-")}</span></div>
         </div>
       </div>
 
@@ -300,18 +301,18 @@ export function openSalesA4ReportWindow(input: {
         <thead>
           <tr>
             <th style="width: 5%;">#</th>
-            <th style="width: 35%;">Goods Description</th>
-            <th style="width: 10%;">Origin</th>
-            <th style="width: 10%;">Brand</th>
-            <th style="width: 10%;" class="text-right">Qty</th>
-            <th style="width: 15%;" class="text-right">Rate</th>
-            <th style="width: 15%;" class="text-right">Total Amount</th>
+            <th style="width: 35%;">${translateHeader(lang, "Goods Description")}</th>
+            <th style="width: 10%;">${translateHeader(lang, "Origin")}</th>
+            <th style="width: 10%;">${translateHeader(lang, "Brand")}</th>
+            <th style="width: 10%;" class="text-right">${translateHeader(lang, "Qty")}</th>
+            <th style="width: 15%;" class="text-right">${translateHeader(lang, "Rate")}</th>
+            <th style="width: 15%;" class="text-right">${translateHeader(lang, "Total Amount")}</th>
           </tr>
         </thead>
         <tbody>
           ${items.length === 0 ? `
             <tr>
-              <td colspan="7" style="text-align: center; color: #94a3b8; padding: 20px;">No items entered.</td>
+              <td colspan="7" style="text-align: center; color: #94a3b8; padding: 20px;">${translateHeader(lang, "No items entered.")}</td>
             </tr>
           ` : items.map(item => `
             <tr>
@@ -329,10 +330,10 @@ export function openSalesA4ReportWindow(input: {
 
       <div class="totals-card">
         <div class="totals-box">
-          <div class="meta-row"><span class="meta-label">Total Qty:</span><span class="meta-value">${formatNumber(b.quantity)} ${escapeHtml(b.unit)}</span></div>
-          <div class="meta-row"><span class="meta-label">Exchange Rate:</span><span class="meta-value">${formatNumber(b.exchange_rate)}</span></div>
+          <div class="meta-row"><span class="meta-label">${translateHeader(lang, "Total Qty")}:</span><span class="meta-value">${formatNumber(b.quantity)} ${escapeHtml(b.unit)}</span></div>
+          <div class="meta-row"><span class="meta-label">${translateHeader(lang, "Exchange Rate")}:</span><span class="meta-value">${formatNumber(b.exchange_rate)}</span></div>
           <div class="grand-total meta-row">
-            <span>Sales Total:</span>
+            <span>${translateHeader(lang, "Sales Total")}:</span>
             <span>${formatMoney(b.totalSalesAmount)} ${escapeHtml(b.currency)}</span>
           </div>
         </div>
