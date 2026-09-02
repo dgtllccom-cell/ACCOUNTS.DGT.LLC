@@ -877,13 +877,13 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
         <div className="flex flex-1 flex-wrap items-center gap-2 max-w-2xl">
           {/* 1. Spacious Search Input */}
           <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t("search_placeholder", "Search documents by title, party, code...")}
-              className="h-8.5 pl-8 pr-2 text-xs bg-slate-50/70 dark:bg-slate-950 border-slate-200 dark:border-slate-700 rounded-xl w-full"
+              className="h-8.5 pl-9 pr-3 text-xs bg-slate-50/70 dark:bg-slate-950 border-slate-200 dark:border-slate-700 rounded-xl w-full"
             />
           </div>
 
@@ -1226,20 +1226,20 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
       {/* ── Collapsible Scope & Hierarchy Filters Curtain ("Chhota Sa Parda") ── */}
       {isFilterDrawerOpen && (
         <div className="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-indigo-200/80 dark:border-indigo-900/60 shadow-md font-sans space-y-3 animate-in fade-in slide-in-from-top-2 duration-200 relative z-10">
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-            <div className="flex items-center gap-2">
-              <SlidersHorizontal className="h-4 w-4 text-indigo-600" />
-              <span className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">
+          <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+            <div className="flex min-w-0 items-center gap-2">
+              <SlidersHorizontal className="h-4 w-4 shrink-0 text-indigo-600" />
+              <span className="truncate text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">
                 {t("hierarchy_selectors", "Directory Scope & Hierarchy Dropdowns")}
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
               {activeFiltersCount > 0 && (
                 <button
                   type="button"
                   onClick={handleResetFilters}
-                  className="text-[11px] font-bold text-red-600 hover:underline flex items-center gap-1"
+                  className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[11px] font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
                 >
                   <RotateCcw className="h-3 w-3" />
                   {t("reset_filters", "Reset All")}
@@ -1386,20 +1386,20 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
             <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">1. {t("card_1_title", "BRANCH & USER DETAILS")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
-            <div className="flex justify-between">
-              <span>{t("country", "Country")}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">{activeCountry?.name || sessionCtx?.countryName || "United Arab Emirates"}</span>
+            <div className="flex justify-between gap-2">
+              <span className="shrink-0">{t("country", "Country")}:</span>
+              <span className="min-w-0 truncate text-right font-bold text-slate-900 dark:text-slate-100">{activeCountry?.name || sessionCtx?.countryName || "—"}</span>
             </div>
-            <div className="flex justify-between">
-              <span>{t("branch_name", "Branch Name")}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100 uppercase truncate max-w-[130px]">{activeCityBranch?.name || activeMainBranch?.name || sessionCtx?.branchName || "DUBAI HEAD OFFICE"}</span>
+            <div className="flex justify-between gap-2">
+              <span className="shrink-0">{t("branch_name", "Branch Name")}:</span>
+              <span className="min-w-0 truncate text-right font-bold text-slate-900 dark:text-slate-100 uppercase">{activeCityBranch?.name || activeMainBranch?.name || sessionCtx?.branchName || "—"}</span>
             </div>
-            <div className="flex justify-between">
-              <span>{t("user_id_name", "User ID / Name")}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[120px]">{sessionCtx?.userName || "—"}</span>
+            <div className="flex justify-between gap-2">
+              <span className="shrink-0">{t("user_id_name", "User ID / Name")}:</span>
+              <span className="min-w-0 truncate text-right font-bold text-slate-900 dark:text-slate-100">{sessionCtx?.userName || "—"}</span>
             </div>
-            <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
-              <span>{t("status", "Status")}:</span>
+            <div className="flex justify-between gap-2 text-emerald-600 dark:text-emerald-400 font-bold">
+              <span className="shrink-0">{t("status", "Status")}:</span>
               <span className="bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded text-[10px] flex items-center gap-1">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                 {t("active_session", "Active Session")}
@@ -1672,14 +1672,14 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
                                                   )}
                                                   title={`${acc.manualReferenceNumber || acc.accountCode} • ${acc.accountName}`}
                                                 >
-                                                  <span className="flex items-center gap-1 truncate">
+                                                  <span className="flex min-w-0 items-center gap-1">
                                                     <CreditCard className="h-2.5 w-2.5 text-amber-600 shrink-0" />
-                                                    <span className="font-mono font-bold text-[9px] text-blue-600 dark:text-blue-400">
+                                                    <span className="max-w-[84px] shrink-0 truncate font-mono font-bold text-[9px] text-blue-600 dark:text-blue-400">
                                                       {acc.manualReferenceNumber || acc.accountCode}
                                                     </span>
-                                                    <span className="truncate">{acc.accountName}</span>
+                                                    <span className="min-w-0 truncate">{acc.accountName}</span>
                                                   </span>
-                                                  <span className="text-[8.5px] font-mono text-slate-400 shrink-0">
+                                                  <span className="ms-1 text-[8.5px] font-mono text-slate-400 shrink-0">
                                                     {accDocCount}
                                                   </span>
                                                 </div>
@@ -1926,27 +1926,27 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
                           </span>
                         </div>
 
-                        <div className="mt-2.5 flex flex-wrap gap-1">
-                          <span className="text-[9.5px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                        <div className="mt-2.5 flex max-w-full flex-wrap gap-1 overflow-hidden">
+                          <span className="max-w-full truncate text-[9.5px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
                             {doc.module_type}
                           </span>
                           {doc.country_name && (
-                            <span className="text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                            <span className="max-w-full truncate text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                               🌍 {doc.country_name}
                             </span>
                           )}
                           {doc.main_branch_name && (
-                            <span className="text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                            <span className="max-w-full truncate text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                               🏢 {doc.main_branch_name}
                             </span>
                           )}
                           {doc.company_name && (
-                            <span className="text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 truncate max-w-[130px]">
+                            <span className="max-w-full truncate text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300" title={doc.company_name}>
                               {doc.company_name}
                             </span>
                           )}
                           {doc.person_account_name && (
-                            <span className="text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 truncate max-w-[130px]">
+                            <span className="max-w-full truncate text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" title={doc.person_account_name}>
                               👤 {doc.person_account_name}
                             </span>
                           )}
