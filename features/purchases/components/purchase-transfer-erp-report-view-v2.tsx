@@ -715,8 +715,8 @@ function PurchaseTransferErpReportViewContent({
                   <span>{tt("pterv2.logistics_section","🚢 LOADING & LOGISTICS REGISTER")}</span>
                   <span className="font-mono text-slate-600">BY SEA</span>
                 </div>
-                <div className="flex justify-between"><span className="text-slate-500">{tt("pterv2.loading_origin","Loading Origin Port:")}</span><b>USA / Port of Oakland</b></div>
-                <div className="flex justify-between"><span className="text-slate-500">{tt("pterv2.receiving_dest","Receiving Destination Port:")}</span><b>UAE / Jebel Ali Port</b></div>
+                <div className="flex justify-between"><span className="text-slate-500">{tt("pterv2.loading_origin","Loading Origin Port:")}</span><b>{form.loadingPort || form.loading_origin_port || form.loadingOriginPort || "—"}</b></div>
+                <div className="flex justify-between"><span className="text-slate-500">{tt("pterv2.receiving_dest","Receiving Destination Port:")}</span><b>{form.receivingPort || form.receiving_destination_port || form.receivingDestinationPort || "—"}</b></div>
                 <div className="flex justify-between"><span className="text-slate-500">{tt("pterv2.vessel_voyage","Vessel & Voyage:")}</span><b className="font-mono">MSC BARCELONA V.204</b></div>
                 <div className="flex justify-between"><span className="text-slate-500">{tt("pterv2.container_bl","Container Numbers & BL:")}</span><b className="font-mono">TCLU-492019-2 / MSCU-881920-1</b></div>
                 <div className="flex justify-between"><span className="text-slate-500">{tt("pterv2.loading_arrival","Loading Date / Arrival Date:")}</span><span>2026-07-20 / 2026-07-25</span></div>
@@ -737,7 +737,7 @@ function PurchaseTransferErpReportViewContent({
                 </div>
                 <div className="flex justify-between text-[7px] text-slate-600 border-t border-amber-200 pt-1 mt-1 font-mono">
                   <span>{tt("pterv2.remaining_bal_lbl","Remaining Balance")} ({(100 - advancePercent)}%): ${money(remainingAmountFc)} FC</span>
-                  <span className="font-bold text-rose-700">Due: 2026-08-01</span>
+                  <span className="font-bold text-rose-700">{tt("pterv2.due_colon", "Due:")} {form.paymentDate || form.paymentDueDate || form.dueDate || "—"}</span>
                 </div>
               </div>
 
@@ -788,8 +788,9 @@ function PurchaseTransferErpReportViewContent({
 }
 
 export function PurchaseTransferErpReportView(props: { purchaseData?: any }) {
+  const activeLang = useActiveLanguage();
   return (
-    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">Loading Purchase Verification...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">{t(activeLang, "pterv2.loading_verification", "Loading Purchase Verification…")}</div>}>
       <PurchaseTransferErpReportViewContent {...props} />
     </Suspense>
   );

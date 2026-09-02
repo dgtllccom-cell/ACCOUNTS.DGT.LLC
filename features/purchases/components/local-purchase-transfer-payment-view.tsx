@@ -570,7 +570,7 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
                           <div className="rounded-xl border border-slate-200 bg-white p-3">
                             <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">{tt("lpjr.inv_supplier_details","Supplier Details")}</p>
                             <p className="text-sm font-black text-slate-900">{supplierName}</p>
-                            <p className="mt-1 text-slate-500">Country: United Arab Emirates</p>
+                            <p className="mt-1 text-slate-500">{tt("lptp.f_country", "Country:")} {selectedRowForVoucher.originCountryName || selectedRowForVoucher.origin_country_name || "—"}</p>
                             <p className="text-slate-500">{tt("lpjr.inv_invoice_currency","Invoice Currency")}: <span className="font-bold text-slate-800">{rowCurrency}</span></p>
                           </div>
                           <div className="rounded-xl border border-slate-200 bg-white p-3">
@@ -583,7 +583,7 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
                             <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">{tt("lpjr.inv_invoice_control","Invoice Control")}</p>
                             <p>{tt("common.branch","Branch")}: <span className="font-bold">{branchName}</span></p>
                             <p>{tt("lpjr.inv_doc_ref","Document Ref")}: <span className="font-mono font-bold">{voucherRef}</span></p>
-                            <p>Status: <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-bold text-emerald-700">{selectedRowForVoucher.status === "posted" ? tt("lpjr.inv_posted","Posted") : tt("lpjr.inv_accepted","Accepted")}</span></p>
+                            <p>{tt("lp.f_status", "Status:")} <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-bold text-emerald-700">{selectedRowForVoucher.status === "posted" ? tt("lpjr.inv_posted","Posted") : tt("lpjr.inv_accepted","Accepted")}</span></p>
                           </div>
                         </div>
 
@@ -763,7 +763,7 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
                     </div>
 
                     <div className="bg-slate-900 text-white rounded-lg p-3 flex justify-between items-center text-xs">
-                      <span className="font-bold text-slate-350 uppercase">Total Bill Amount:</span>
+                      <span className="font-bold text-slate-350 uppercase">{t(activeLang, "lptp.total_bill_amount", "Total Bill Amount:")}</span>
                       <span className="font-mono text-base font-black text-emerald-400">
                         {rowCurrency} {rowFinalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>

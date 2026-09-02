@@ -997,7 +997,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                     </div>
 
                     <div className="bg-slate-900 text-white rounded-lg p-3 flex justify-between items-center text-xs">
-                      <span className="font-bold text-slate-350 uppercase">Total Bill Amount:</span>
+                      <span className="font-bold text-slate-350 uppercase">{tt("lptp.total_bill_amount", "Total Bill Amount:")}</span>
                       <span className="font-mono text-base font-black text-emerald-400">
                         {rowCurrency} {rowFinalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>

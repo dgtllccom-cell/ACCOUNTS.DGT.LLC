@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
 import { t } from "@/lib/i18n/ui";
+import { translateOptionLabel } from "@/lib/i18n/option-labels";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { CompanyPicker } from "@/features/companies/components/company-picker";
 import { ShippingLinePicker } from "@/features/shipping/components/shipping-line-picker";
@@ -1010,7 +1011,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
             type="button"
             onClick={onClose}
             className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200 transition"
-            aria-label="Close"
+            aria-label={tt("plr.a_close", "Close")}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
               <path d="M18 6 6 18" />
@@ -1325,13 +1326,13 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
 
                         <div className="grid grid-cols-3 gap-1.5 text-center">
                           <div className="bg-white p-1.5 rounded border border-slate-100 dark:border-slate-800 dark:bg-slate-950">
-                            <div className="text-[8px] font-extrabold uppercase text-slate-400">Total</div>
+                            <div className="text-[8px] font-extrabold uppercase text-slate-400">{tt("plr.word_total", "Total")}</div>
                             <div className="font-mono font-black text-slate-800 dark:text-slate-200 text-[10px] leading-tight">
                               {totalQuantity.toLocaleString()} <span className="text-[8px] font-medium text-slate-400">{unitLabel}</span>
                             </div>
                             <div className="text-[8px] text-slate-500 mt-0.5 font-mono leading-tight">
-                              <div><span className="text-slate-400">Net:</span> {contractNetWeight.toLocaleString()} kg</div>
-                              <div><span className="text-slate-400">Gross:</span> {contractGrossWeight.toLocaleString()} kg</div>
+                              <div><span className="text-slate-400">{tt("plr.f_net", "Net:")}</span> {contractNetWeight.toLocaleString()} kg</div>
+                              <div><span className="text-slate-400">{tt("plr.f_gross", "Gross:")}</span> {contractGrossWeight.toLocaleString()} kg</div>
                             </div>
                           </div>
 
@@ -1341,19 +1342,19 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                               {totalLoadedQuantity.toLocaleString()} <span className="text-[8px] font-medium text-emerald-600/70">{unitLabel}</span>
                             </div>
                             <div className="text-[8px] text-emerald-700/80 dark:text-emerald-400 mt-0.5 font-mono leading-tight">
-                              <div><span className="text-emerald-600/60">Net:</span> {loadedNetWeight.toLocaleString()} kg</div>
-                              <div><span className="text-emerald-600/60">Gross:</span> {loadedGrossWeight.toLocaleString()} kg</div>
+                              <div><span className="text-emerald-600/60">{tt("plr.f_net", "Net:")}</span> {loadedNetWeight.toLocaleString()} kg</div>
+                              <div><span className="text-emerald-600/60">{tt("plr.f_gross", "Gross:")}</span> {loadedGrossWeight.toLocaleString()} kg</div>
                             </div>
                           </div>
 
                           <div className="bg-rose-50/70 p-1.5 rounded border border-rose-200/60 dark:border-rose-900/50 dark:bg-rose-950/30">
-                            <div className="text-[8px] font-extrabold uppercase text-rose-600 dark:text-rose-400">Remaining</div>
+                            <div className="text-[8px] font-extrabold uppercase text-rose-600 dark:text-rose-400">{tt("plr.word_remaining", "Remaining")}</div>
                             <div className="font-mono font-black text-rose-600 dark:text-rose-400 text-[10px] leading-tight">
                               {remainingToLoadQuantity.toLocaleString()} <span className="text-[8px] font-medium text-rose-500/70">{unitLabel}</span>
                             </div>
                             <div className="text-[8px] text-rose-600/80 dark:text-rose-400 mt-0.5 font-mono leading-tight">
-                              <div><span className="text-rose-500/60">Net:</span> {remainingNetWeight.toLocaleString()} kg</div>
-                              <div><span className="text-rose-500/60">Gross:</span> {remainingGrossWeight.toLocaleString()} kg</div>
+                              <div><span className="text-rose-500/60">{tt("plr.f_net", "Net:")}</span> {remainingNetWeight.toLocaleString()} kg</div>
+                              <div><span className="text-rose-500/60">{tt("plr.f_gross", "Gross:")}</span> {remainingGrossWeight.toLocaleString()} kg</div>
                             </div>
                           </div>
                         </div>
@@ -1609,7 +1610,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
                     <span className="text-slate-500">{tt("plr.loading_mode", "Loading Mode")}:</span>
-                    <span className="font-semibold text-slate-700 dark:text-slate-300">By Sea</span>
+                    <span className="font-semibold text-slate-700 dark:text-slate-300">{translateOptionLabel(activeLang, record.transportMode || record.transport_mode || record.shippingMode || "")}</span>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
                     <span className="text-slate-500">{tt("plr.origin_country", "Origin Country")}:</span>
@@ -1655,7 +1656,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                     </div>
                     <div>
                        <div className="text-[9px] uppercase tracking-widest text-slate-400">TYPE</div>
-                       <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">Sub-Acct</div>
+                       <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">{tt("plr.col_sub_acct", "Sub-Acct")}</div>
                     </div>
                   </div>
 
@@ -1663,19 +1664,19 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                      <h4 className="mb-2 text-[9px] font-bold uppercase tracking-widest text-blue-500">SERIALS & REF</h4>
                      <div className="grid grid-cols-2 gap-y-2 gap-x-2 text-[10px]">
                        <div>
-                         <div className="text-slate-400">Acct S/N</div>
+                         <div className="text-slate-400">{tt("plr.col_acct_sn", "Acct S/N")}</div>
                          <div className="font-bold text-slate-700 dark:text-slate-300">6</div>
                        </div>
                        <div>
-                         <div className="text-slate-400">Country S/N</div>
+                         <div className="text-slate-400">{tt("plr.col_country_sn", "Country S/N")}</div>
                          <div className="font-bold text-slate-700 dark:text-slate-300">PAK-000006</div>
                        </div>
                        <div>
-                         <div className="text-slate-400">Branch S/N</div>
+                         <div className="text-slate-400">{tt("plr.col_branch_sn", "Branch S/N")}</div>
                          <div className="font-bold text-slate-700 dark:text-slate-300">PAK-CHM-000002</div>
                        </div>
                        <div>
-                         <div className="text-slate-400">Manual Ref</div>
+                         <div className="text-slate-400">{tt("plr.col_manual_ref", "Manual Ref")}</div>
                          <div className="font-bold text-slate-700 dark:text-slate-300">00124</div>
                        </div>
                      </div>
@@ -1735,7 +1736,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                     </div>
                     <div>
                        <div className="text-[9px] uppercase tracking-widest text-slate-400">TYPE</div>
-                       <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">Sub-Acct</div>
+                       <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">{tt("plr.col_sub_acct", "Sub-Acct")}</div>
                     </div>
                   </div>
 
@@ -1743,19 +1744,19 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                      <h4 className="mb-2 text-[9px] font-bold uppercase tracking-widest text-blue-500">SERIALS & REF</h4>
                      <div className="grid grid-cols-2 gap-y-2 gap-x-2 text-[10px]">
                        <div>
-                         <div className="text-slate-400">Acct S/N</div>
+                         <div className="text-slate-400">{tt("plr.col_acct_sn", "Acct S/N")}</div>
                          <div className="font-bold text-slate-700 dark:text-slate-300">11</div>
                        </div>
                        <div>
-                         <div className="text-slate-400">Country S/N</div>
+                         <div className="text-slate-400">{tt("plr.col_country_sn", "Country S/N")}</div>
                          <div className="font-bold text-slate-700 dark:text-slate-300">PAK-000011</div>
                        </div>
                        <div>
-                         <div className="text-slate-400">Branch S/N</div>
+                         <div className="text-slate-400">{tt("plr.col_branch_sn", "Branch S/N")}</div>
                          <div className="font-bold text-slate-700 dark:text-slate-300">PAK-CHM-000005</div>
                        </div>
                        <div>
-                         <div className="text-slate-400">Manual Ref</div>
+                         <div className="text-slate-400">{tt("plr.col_manual_ref", "Manual Ref")}</div>
                          <div className="font-bold text-slate-700 dark:text-slate-300">C450</div>
                        </div>
                      </div>
@@ -1828,7 +1829,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                     className="w-full h-10 mt-2 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-2 shadow-sm transition active:scale-[0.98]"
                   >
                     <Link2 className="h-4 w-4" />
-                    Transfer Remaining to Journal
+                    {tt("plr.btn_transfer_remaining_journal", "Transfer Remaining to Journal")}
                   </Button>
                 )}
               </div>
@@ -1844,31 +1845,31 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                   <Link2 className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black uppercase text-slate-800 dark:text-slate-100">Transfer Remaining to Journal</h3>
-                  <p className="text-[10px] text-slate-500 font-semibold">Confirmation summary for loaded goods remaining balance</p>
+                  <h3 className="text-sm font-black uppercase text-slate-800 dark:text-slate-100">{tt("plr.btn_transfer_remaining_journal", "Transfer Remaining to Journal")}</h3>
+                  <p className="text-[10px] text-slate-500 font-semibold">{tt("plr.transfer_confirm_summary", "Confirmation summary for loaded goods remaining balance")}</p>
                 </div>
               </div>
-              <button onClick={() => setTransferConfirmData(null)} className="text-slate-400 hover:text-slate-600 text-sm font-bold" aria-label="Close">X</button>
+              <button onClick={() => setTransferConfirmData(null)} className="text-slate-400 hover:text-slate-600 text-sm font-bold" aria-label={tt("plr.a_close", "Close")}>X</button>
             </div>
 
             <div className="space-y-3 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl text-xs font-semibold border border-slate-100 dark:border-slate-800">
-              <div className="flex justify-between items-center"><span className="text-slate-500">PO Number:</span><span className="font-mono font-bold text-blue-600">{transferConfirmData.purchaseOrderNo}</span></div>
-              <div className="flex justify-between items-center"><span className="text-slate-500">Loaded Quantity:</span><span className="font-mono font-black text-slate-800 dark:text-slate-100">{transferConfirmData.loadedQty.toLocaleString()} Bags</span></div>
-              <div className="flex justify-between items-center"><span className="text-slate-500">Loaded Purchase Amount:</span><span className="font-mono font-black text-slate-800 dark:text-slate-100">{transferConfirmData.loadedPurchaseAmountFC.toLocaleString(undefined, {minimumFractionDigits: 2})} {transferConfirmData.purchaseCurrency}</span></div>
-              <div className="flex justify-between items-center"><span className="text-slate-500">Advance Paid Applied:</span><span className="font-mono font-bold text-emerald-600">{transferConfirmData.advancePaidLC.toLocaleString(undefined, {minimumFractionDigits: 2})} {transferConfirmData.finalCurrency}</span></div>
-              <div className="flex justify-between items-center pt-2 border-t border-slate-200 dark:border-slate-800"><span className="text-rose-600 font-bold uppercase">Remaining Amount to Journal:</span><span className="font-mono font-black text-rose-600 text-sm">{transferConfirmData.remainingLC.toLocaleString(undefined, {minimumFractionDigits: 2})} {transferConfirmData.finalCurrency}</span></div>
+              <div className="flex justify-between items-center"><span className="text-slate-500">{tt("plr.f_po_number", "PO Number:")}</span><span className="font-mono font-bold text-blue-600">{transferConfirmData.purchaseOrderNo}</span></div>
+              <div className="flex justify-between items-center"><span className="text-slate-500">{tt("plr.f_loaded_quantity", "Loaded Quantity:")}</span><span className="font-mono font-black text-slate-800 dark:text-slate-100">{transferConfirmData.loadedQty.toLocaleString()} Bags</span></div>
+              <div className="flex justify-between items-center"><span className="text-slate-500">{tt("plr.f_loaded_purchase_amount", "Loaded Purchase Amount:")}</span><span className="font-mono font-black text-slate-800 dark:text-slate-100">{transferConfirmData.loadedPurchaseAmountFC.toLocaleString(undefined, {minimumFractionDigits: 2})} {transferConfirmData.purchaseCurrency}</span></div>
+              <div className="flex justify-between items-center"><span className="text-slate-500">{tt("plr.f_advance_paid_applied", "Advance Paid Applied:")}</span><span className="font-mono font-bold text-emerald-600">{transferConfirmData.advancePaidLC.toLocaleString(undefined, {minimumFractionDigits: 2})} {transferConfirmData.finalCurrency}</span></div>
+              <div className="flex justify-between items-center pt-2 border-t border-slate-200 dark:border-slate-800"><span className="text-rose-600 font-bold uppercase">{tt("plr.f_remaining_amount_to_journal", "Remaining Amount to Journal:")}</span><span className="font-mono font-black text-rose-600 text-sm">{transferConfirmData.remainingLC.toLocaleString(undefined, {minimumFractionDigits: 2})} {transferConfirmData.finalCurrency}</span></div>
               <div className="pt-2 border-t border-slate-200 dark:border-slate-800 grid grid-cols-2 gap-2 text-[10px]">
-                <div><span className="text-slate-400 block">Debit Account (DR)</span><span className="font-bold text-blue-700 dark:text-blue-300">{transferConfirmData.debitAccountName} ({transferConfirmData.debitAccountCode})</span></div>
-                <div><span className="text-slate-400 block">Credit Account (CR)</span><span className="font-bold text-rose-700 dark:text-rose-300">{transferConfirmData.creditAccountName} ({transferConfirmData.creditAccountCode})</span></div>
+                <div><span className="text-slate-400 block">{tt("plr.debit_account_dr", "Debit Account (DR)")}</span><span className="font-bold text-blue-700 dark:text-blue-300">{transferConfirmData.debitAccountName} ({transferConfirmData.debitAccountCode})</span></div>
+                <div><span className="text-slate-400 block">{tt("plr.credit_account_cr", "Credit Account (CR)")}</span><span className="font-bold text-rose-700 dark:text-rose-300">{transferConfirmData.creditAccountName} ({transferConfirmData.creditAccountCode})</span></div>
               </div>
               <div className="flex justify-between items-center text-[10px] text-slate-500 pt-1">
-                <span>Exchange Rate: <strong className="font-mono text-slate-700 dark:text-slate-200">{transferConfirmData.exchangeRate}</strong></span>
-                <span>Final Currency: <strong className="font-mono text-slate-700 dark:text-slate-200">{transferConfirmData.finalCurrency}</strong></span>
+                <span>{tt("plr.f_exchange_rate", "Exchange Rate:")} <strong className="font-mono text-slate-700 dark:text-slate-200">{transferConfirmData.exchangeRate}</strong></span>
+                <span>{tt("plr.f_final_currency", "Final Currency:")} <strong className="font-mono text-slate-700 dark:text-slate-200">{transferConfirmData.finalCurrency}</strong></span>
               </div>
             </div>
 
             <div className="flex justify-end gap-3 pt-2">
-              <Button type="button" variant="outline" size="sm" onClick={() => setTransferConfirmData(null)} className="rounded-lg font-bold text-xs">Cancel</Button>
+              <Button type="button" variant="outline" size="sm" onClick={() => setTransferConfirmData(null)} className="rounded-lg font-bold text-xs">{tt("plr.word_cancel", "Cancel")}</Button>
               <Button type="button" size="sm" onClick={() => {
                 const queryParams = new URLSearchParams({
                   purchaseOrderNo: transferConfirmData.purchaseOrderNo,
@@ -1896,7 +1897,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
               <div className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-white px-5 py-4 dark:border-slate-800 dark:bg-slate-900">
                   <div>
-                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-slate-100">Current Bill Loading Report</h3>
+                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-slate-100">{tt("plr.title_current_bill_loading", "Current Bill Loading Report")}</h3>
                     <p className="mt-1 text-[10px] font-semibold text-slate-500">Consolidated bill quantity, loaded progress, payment conversion and remaining balance.</p>
                   </div>
                   <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-blue-700 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300">
@@ -1993,7 +1994,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                                   <Link2 className="h-3 w-3" /> Transfer
                                 </button>
                               ) : (
-                                <span className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[9px] font-bold text-emerald-700">Settled</span>
+                                <span className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[9px] font-bold text-emerald-700">{tt("plr.word_settled", "Settled")}</span>
                               )}
                             </td>
                           </tr>
@@ -2006,7 +2007,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
 
               <div className="hidden">
             <div className="border-b border-slate-100 bg-slate-50/80 px-6 py-4 dark:border-slate-800 dark:bg-slate-900/40">
-              <h3 className="text-xs font-black uppercase tracking-widest text-slate-700 dark:text-slate-300">Goods & Container Report</h3>
+              <h3 className="text-xs font-black uppercase tracking-widest text-slate-700 dark:text-slate-300">{tt("plr.title_goods_container", "Goods & Container Report")}</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs whitespace-nowrap">
@@ -2222,14 +2223,14 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                                 window.open(`/dashboard/journal/purchase-order-payment/remaining?${queryParams}`, "_self");
                               }}
                               className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1 text-[10px] font-black uppercase text-blue-700 hover:bg-blue-100 hover:border-blue-300 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 transition shadow-sm"
-                              title="Transfer Remaining Loading Balance to Journal"
+                              title={tt("plr.a_transfer_remaining_journal", "Transfer Remaining Loading Balance to Journal")}
                             >
                               <Link2 className="h-3 w-3 text-blue-600" />
                               {tt("plr.transfer_remaining", "Transfer Remaining")}
                             </button>
-                            <button onClick={() => handleEditHistory(h)} className="rounded-md border border-slate-200 p-1.5 text-blue-600 hover:border-blue-300 hover:bg-blue-50" title="Edit Entry"><Pencil className="h-3.5 w-3.5" /></button>
-                            <button onClick={() => handleDeleteHistory(h)} disabled={savingNewLoading} className="rounded-md border border-slate-200 p-1.5 text-rose-600 hover:border-rose-300 hover:bg-rose-50 disabled:opacity-50" title="Delete Entry"><Trash2 className="h-3.5 w-3.5" /></button>
-                            <button onClick={() => window.open(`/dashboard/purchase/purchase-loading-records/${h.id}?print=true`, "_blank")} className="rounded-md border border-slate-200 p-1.5 text-slate-600 hover:border-slate-300 hover:bg-slate-50" title="Print"><Printer className="h-3.5 w-3.5" /></button>
+                            <button onClick={() => handleEditHistory(h)} className="rounded-md border border-slate-200 p-1.5 text-blue-600 hover:border-blue-300 hover:bg-blue-50" title={tt("plr.a_edit_entry", "Edit Entry")}><Pencil className="h-3.5 w-3.5" /></button>
+                            <button onClick={() => handleDeleteHistory(h)} disabled={savingNewLoading} className="rounded-md border border-slate-200 p-1.5 text-rose-600 hover:border-rose-300 hover:bg-rose-50 disabled:opacity-50" title={tt("plr.a_delete_entry", "Delete Entry")}><Trash2 className="h-3.5 w-3.5" /></button>
+                            <button onClick={() => window.open(`/dashboard/purchase/purchase-loading-records/${h.id}?print=true`, "_blank")} className="rounded-md border border-slate-200 p-1.5 text-slate-600 hover:border-slate-300 hover:bg-slate-50" title={tt("plr.a_print", "Print")}><Printer className="h-3.5 w-3.5" /></button>
                           </div>
                         </td>
                       </tr>
@@ -2246,7 +2247,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
 
           <div className="hidden">
             <div className="border-b border-slate-100 bg-slate-50/80 px-6 py-4 dark:border-slate-800 dark:bg-slate-900/40">
-              <h3 className="text-xs font-black uppercase tracking-widest text-slate-700 dark:text-slate-300">Loading History</h3>
+              <h3 className="text-xs font-black uppercase tracking-widest text-slate-700 dark:text-slate-300">{tt("plr.title_loading_history", "Loading History")}</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs whitespace-nowrap">
@@ -2284,23 +2285,23 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                       return (
                         <tr key={h.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
                           <td className="px-6 py-3 text-center flex items-center justify-center gap-1">
-                            <button onClick={() => handleEditHistory(h)} className="text-blue-500 hover:text-blue-700 p-1 rounded hover:bg-blue-50 transition" title="Edit Entry">
+                            <button onClick={() => handleEditHistory(h)} className="text-blue-500 hover:text-blue-700 p-1 rounded hover:bg-blue-50 transition" title={tt("plr.a_edit_entry", "Edit Entry")}>
                               <Pencil className="w-4 h-4" />
                             </button>
-                            <button onClick={() => handleDeleteHistory(h)} disabled={savingNewLoading} className="text-rose-500 hover:text-rose-700 p-1 rounded hover:bg-rose-50 transition disabled:opacity-50" title="Delete Entry">
+                            <button onClick={() => handleDeleteHistory(h)} disabled={savingNewLoading} className="text-rose-500 hover:text-rose-700 p-1 rounded hover:bg-rose-50 transition disabled:opacity-50" title={tt("plr.a_delete_entry", "Delete Entry")}>
                               <Trash2 className="w-4 h-4" />
                             </button>
                             <button 
                               onClick={() => window.open(`/dashboard/purchase/purchase-loading-records/${h.id}?print=true`, "_blank")} 
                               className="text-slate-500 hover:text-slate-700 p-1 rounded hover:bg-slate-50 transition" 
-                              title="Print Loading Slip"
+                              title={tt("plr.a_print_loading_slip", "Print Loading Slip")}
                             >
                               <Printer className="w-4 h-4" />
                             </button>
                             <button 
                               onClick={() => window.open(`/dashboard/purchase/purchase-loading-records/${h.id}?print=true`, "_blank")} 
                               className="text-indigo-500 hover:text-indigo-700 p-1 rounded hover:bg-indigo-50 transition" 
-                              title="Export PDF"
+                              title={tt("plr.a_export_pdf", "Export PDF")}
                             >
                               <FileText className="w-4 h-4" />
                             </button>
@@ -2342,7 +2343,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                                   window.open(`/dashboard/journal/purchase-order-payment/remaining?${queryParams}`, "_self");
                                 }}
                                 className="text-emerald-600 hover:text-emerald-800 p-1 rounded hover:bg-emerald-50 transition"
-                                title="Transfer Remaining Balance to Payment Journal"
+                                title={tt("plr.a_transfer_remaining_payment", "Transfer Remaining Balance to Payment Journal")}
                               >
                                 <Link2 className="w-4 h-4" />
                               </button>
@@ -3284,34 +3285,34 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                 </div>
                 <div className="p-4 flex flex-col gap-2.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
                   <div className="flex justify-between items-center">
-                    <span>Country:</span>
+                    <span>{tt("plr.f_country", "Country:")}</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                       {countryDisplay}{countryIso ? ` (${countryIso})` : ""}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span>Branch Name:</span>
+                    <span>{tt("plr.f_branch_name", "Branch Name:")}</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{branchDisplay}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span>User ID:</span>
+                    <span>{tt("plr.f_user_id", "User ID:")}</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{userIdDisplay}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span>User Name:</span>
+                    <span>{tt("plr.f_user_name", "User Name:")}</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{userNameDisplay}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span>Role:</span>
+                    <span>{tt("plr.f_role", "Role:")}</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{roleDisplay}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span>Date & Time:</span>
+                    <span>{tt("plr.f_date_time", "Date & Time:")}</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200">{dateStr}, {timeStr}</span>
                   </div>
                   <div className="flex justify-between items-center mt-auto">
-                    <span>Status:</span>
-                    <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">Active</span>
+                    <span>{tt("plr.f_status", "Status:")}</span>
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">{tt("plr.word_active", "Active")}</span>
                   </div>
                 </div>
               </div>
@@ -3326,15 +3327,15 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                 </div>
                 <div className="p-4 flex flex-col gap-3 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
                   <div className="flex justify-between items-center">
-                    <span>Total Purchase Value:</span>
+                    <span>{tt("plr.f_total_purchase_value", "Total Purchase Value:")}</span>
                     <span className="font-black text-slate-800 dark:text-slate-200 font-mono">{formatMoney(totalPurchaseValue)}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span>Total Loaded Value:</span>
+                    <span>{tt("plr.f_total_loaded_value", "Total Loaded Value:")}</span>
                     <span className="font-black text-emerald-700 dark:text-emerald-400 font-mono">{formatMoney(totalLoadedValue)}</span>
                   </div>
                   <div className="flex justify-between items-center mt-1 pt-2 border-t border-slate-100 dark:border-slate-800">
-                    <span className="text-rose-600 dark:text-rose-500 font-bold uppercase">Remaining Value:</span>
+                    <span className="text-rose-600 dark:text-rose-500 font-bold uppercase">{tt("plr.f_remaining_value", "Remaining Value:")}</span>
                     <span className="font-black text-rose-700 dark:text-rose-400 font-mono text-sm">{formatMoney(totalRemainingValue)}</span>
                   </div>
                 </div>
@@ -3358,8 +3359,8 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                     <span className="font-black text-purple-700 dark:text-purple-400 font-mono">{activeBranchesCount}</span>
                   </div>
                   <div className="flex justify-between items-center mt-auto pt-2 border-t border-dashed border-slate-200 dark:border-slate-700">
-                    <span>System Status:</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">Online</span>
+                    <span>{tt("plr.f_system_status", "System Status:")}</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{tt("plr.word_online", "Online")}</span>
                   </div>
                 </div>
               </div>
@@ -3374,24 +3375,24 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                 </div>
                 <div className="p-4 flex flex-col gap-2.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
                   <div className="flex justify-between items-center">
-                    <span>Total Loaded Qty:</span>
+                    <span>{tt("plr.f_total_loaded_qty", "Total Loaded Qty:")}</span>
                     <span className="font-bold text-emerald-600 font-mono">{totalLoadedQty.toLocaleString()} Bags</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span>Gross Weight:</span>
+                    <span>{tt("plr.f_gross_weight", "Gross Weight:")}</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">{totalGrossWeight.toLocaleString()} KG</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span>Net Weight:</span>
+                    <span>{tt("plr.f_net_weight", "Net Weight:")}</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">{totalNetWeight.toLocaleString()} KG</span>
                   </div>
                   <div className="flex justify-between items-center mt-1 pt-2 border-t border-slate-100 dark:border-slate-800">
-                    <span className="text-rose-600 dark:text-rose-500 font-bold uppercase">Total Remaining Qty:</span>
+                    <span className="text-rose-600 dark:text-rose-500 font-bold uppercase">{tt("plr.f_total_remaining_qty", "Total Remaining Qty:")}</span>
                     <span className="font-black text-rose-700 dark:text-rose-400 font-mono">{totalRemainingQty.toLocaleString()} Bags</span>
                   </div>
                   
                   <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800">
-                    <span>Last Updated:</span>
+                    <span>{tt("plr.f_last_updated", "Last Updated:")}</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200">{dateStr}</span>
                   </div>
                 </div>
@@ -3437,11 +3438,11 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                         <div className="p-4">
                           <div className="mb-4 flex flex-col gap-2 rounded-xl bg-slate-50 p-3 dark:bg-slate-950">
                             <div className="flex justify-between items-center">
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Currency</span>
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("lpjr.col_cur", "Currency")}</span>
                               <span className="font-black text-slate-800 dark:text-slate-200 text-xs">{r.currency}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Qty</span>
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("plr.col_total_qty", "Total Qty")}</span>
                               <span className="font-black text-slate-800 dark:text-slate-200 font-mono text-[11px]">{totalQty.toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between items-center">
@@ -3449,7 +3450,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                               <span className="font-black text-emerald-600 font-mono text-[11px]">{loadedQty.toLocaleString()}</span>
                             </div>
                             <div className="mt-1 flex justify-between items-center border-t border-slate-200 pt-2 dark:border-slate-800">
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Remaining Bal. Qty</span>
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("plr.col_remaining_bal_qty", "Remaining Bal. Qty")}</span>
                               <span className="font-black text-rose-600 dark:text-rose-400 font-mono text-sm">{balQty.toLocaleString()}</span>
                             </div>
                           </div>
@@ -3468,7 +3469,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                                   </div>
                                   <div className="grid grid-cols-2 gap-1 text-[9px]">
                                     <div className="flex justify-between items-center">
-                                      <span className="text-slate-400">Total Qty</span>
+                                      <span className="text-slate-400">{tt("plr.col_total_qty", "Total Qty")}</span>
                                       <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">{b.totalQuantity.toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between items-center">
@@ -3476,7 +3477,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                                       <span className="font-bold text-emerald-500 font-mono">{b.loadedQuantity.toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between items-center col-span-2">
-                                      <span className="text-slate-400">Bal. Qty</span>
+                                      <span className="text-slate-400">{tt("plr.col_bal_qty", "Bal. Qty")}</span>
                                       <span className="font-bold text-rose-500 font-mono">{bBalQty.toLocaleString()}</span>
                                     </div>
                                   </div>
@@ -3519,7 +3520,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
             <div className="flex items-center gap-2">
               <Ship className="h-4 w-4 text-blue-600" />
               <div>
-                <h2 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">Loading Records Report</h2>
+                <h2 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{tt("plr.title_loading_records", "Loading Records Report")}</h2>
                 <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 tracking-wide mt-0.5">Independent from Purchase Booking Order unless explicitly linked.</p>
               </div>
             </div>

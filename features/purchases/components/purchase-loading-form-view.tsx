@@ -345,7 +345,7 @@ export function PurchaseLoadingFormView() {
                       <td className="px-4 py-3 text-right font-mono font-black text-emerald-600 dark:text-emerald-400">{loadedQty.toLocaleString()} {unitLabel}</td>
                       <td className="px-4 py-3 text-right font-mono font-bold text-rose-600 dark:text-rose-400">{balanceQty.toLocaleString()} {unitLabel}</td>
                       <td className="px-4 py-3 text-right font-mono text-[11px] text-slate-600 dark:text-slate-300">
-                        <div><span className="text-slate-400">Gross:</span> {grossWt.toLocaleString()} kg</div>
+                        <div><span className="text-slate-400">{tt("plrf.f_gross", "Gross:")}</span> {grossWt.toLocaleString()} kg</div>
                         <div><span className="text-slate-400">Net:</span> {netWt.toLocaleString()} kg</div>
                       </td>
                       <td className="px-4 py-3 text-right font-mono font-black text-slate-800 dark:text-slate-100">
@@ -636,10 +636,10 @@ export function PurchaseLoadingFormView() {
                         </span>
                       </div>
                       <div className="mt-2 grid grid-cols-2 gap-2 text-[10px] font-semibold uppercase tracking-normal text-slate-500 sm:grid-cols-4">
-                        <div className="rounded-md bg-white px-2 py-1">Loaded: <b className="text-slate-900">{stockLifecycle.totalLoadedQuantity.toLocaleString()}</b></div>
-                        <div className="rounded-md bg-white px-2 py-1">Remaining: <b className="text-slate-900">{stockLifecycle.remainingQuantity.toLocaleString()}</b></div>
-                        <div className="rounded-md bg-white px-2 py-1">Payment: <b className="text-slate-900">{stockLifecycle.paymentProofComplete ? "Complete" : "Pending"}</b></div>
-                        <div className="rounded-md bg-white px-2 py-1">Next: <b className="text-slate-900">{purchaseStockDestinationLabel(nextDestination)}</b></div>
+                        <div className="rounded-md bg-white px-2 py-1">{tt("plrf.f_loaded", "Loaded:")} <b className="text-slate-900">{stockLifecycle.totalLoadedQuantity.toLocaleString()}</b></div>
+                        <div className="rounded-md bg-white px-2 py-1">{tt("plrf.f_remaining", "Remaining:")} <b className="text-slate-900">{stockLifecycle.remainingQuantity.toLocaleString()}</b></div>
+                        <div className="rounded-md bg-white px-2 py-1">{tt("plrf.f_payment", "Payment:")} <b className="text-slate-900">{stockLifecycle.paymentProofComplete ? tt("plrf.v_complete", "Complete") : tt("plrf.v_pending", "Pending")}</b></div>
+                        <div className="rounded-md bg-white px-2 py-1">{tt("plrf.f_next", "Next:")} <b className="text-slate-900">{purchaseStockDestinationLabel(nextDestination)}</b></div>
                       </div>
                       <div className="mt-3 flex flex-wrap items-center gap-2">
                         <Button
