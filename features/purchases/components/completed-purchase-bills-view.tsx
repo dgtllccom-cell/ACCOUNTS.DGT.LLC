@@ -15,9 +15,12 @@ import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
-export function CompletedPurchaseBillsView() {
+export function CompletedPurchaseBillsView({ sessionInfo }: { sessionInfo?: { userId: string; userName: string; role: string } } = {}) {
   const lang = useActiveLanguage();
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+  const sessionUserId = sessionInfo?.userId || "";
+  const sessionUserName = sessionInfo?.userName || "";
+  const sessionRole = sessionInfo?.role || "";
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const [orders, setOrders] = useState<any[]>([]);
   const [loadingRecords, setLoadingRecords] = useState<any[]>([]);
@@ -145,7 +148,7 @@ export function CompletedPurchaseBillsView() {
       <body>
         <div class="header">
           <div>
-            <h1 class="title">Completed Purchase Bill</h1>
+            <h1 class="title">${t(lang, "cpb.completed_purchase_bill", "Completed Purchase Bill")}</h1>
             <p style="margin: 4px 0 0 0; color: #64748b; font-weight: bold;">System Serial: ${row.purchase_order_no} | Manual Bill: ${details.manualBillNo}</p>
           </div>
           <div>
@@ -155,20 +158,20 @@ export function CompletedPurchaseBillsView() {
 
         <table>
           <tr>
-            <Th>Supplier Name</Th><td>${details.supplierName}</td>
-            <Th>Country & Branch</Th><td>${details.countryName} (${details.branchName})</td>
+            <Th>${t(lang, "cpb.th_supplier_name", "Supplier Name")}</Th><td>${details.supplierName}</td>
+            <Th>${t(lang, "cpb.th_country_branch", "Country & Branch")}</Th><td>${details.countryName} (${details.branchName})</td>
           </tr>
           <tr>
-            <Th>B/L Number(s)</Th><td>${details.blNumbers}</td>
-            <Th>Exchange Rate</Th><td>1 USD = ${details.exRate.toFixed(2)} AED/PKR</td>
+            <Th>${t(lang, "cpb.th_bl_numbers", "B/L Number(s)")}</Th><td>${details.blNumbers}</td>
+            <Th>${t(lang, "cpb.th_exchange_rate", "Exchange Rate")}</Th><td>1 USD = ${details.exRate.toFixed(2)} AED/PKR</td>
           </tr>
           <tr>
-            <Th>Contract Quantity</Th><td>${details.contractQty.toLocaleString()} ${details.unitLabel}</td>
-            <Th>Loaded Quantity</Th><td>${details.loadedQty.toLocaleString()} ${details.unitLabel}</td>
+            <Th>${t(lang, "cpb.th_contract_quantity", "Contract Quantity")}</Th><td>${details.contractQty.toLocaleString()} ${details.unitLabel}</td>
+            <Th>${t(lang, "cpb.th_loaded_quantity", "Loaded Quantity")}</Th><td>${details.loadedQty.toLocaleString()} ${details.unitLabel}</td>
           </tr>
           <tr>
-            <Th>Completion Date</Th><td>${details.completedAt}</td>
-            <Th>Completed By</Th><td>${details.completedBy}</td>
+            <Th>${t(lang, "cpb.th_completion_date", "Completion Date")}</Th><td>${details.completedAt}</td>
+            <Th>${t(lang, "cpb.th_completed_by", "Completed By")}</Th><td>${details.completedBy}</td>
           </tr>
         </table>
 
@@ -335,33 +338,33 @@ export function CompletedPurchaseBillsView() {
             <div className="h-7 w-7 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">
               1
             </div>
-            <h3 className="text-xs font-black uppercase text-blue-900 dark:text-blue-300 tracking-wider">1. BRANCH & USER DETAILS</h3>
+            <h3 className="text-xs font-black uppercase text-blue-900 dark:text-blue-300 tracking-wider">{t(lang, "cpb.card1_title", "1. Branch & User Details")}</h3>
           </div>
 
           <div className="space-y-1.5 text-[11px]">
             <div className="flex justify-between">
-              <span className="text-slate-500">Country:</span>
-              <span className="font-bold text-slate-700 dark:text-slate-300">United Arab Emirates / Pakistan</span>
+              <span className="text-slate-500">{t(lang, "cpb.f_country", "Country:")}</span>
+              <span className="font-bold text-slate-700 dark:text-slate-300">{orders[0]?.countryName || orders[0]?.country_name || "—"}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500">Branch Name:</span>
-              <span className="font-extrabold text-slate-800 dark:text-slate-200">MAIN BRANCH</span>
+              <span className="text-slate-500">{t(lang, "cpb.f_branch_name", "Branch Name:")}</span>
+              <span className="font-extrabold text-slate-800 dark:text-slate-200">{orders[0]?.branchName || orders[0]?.branch_name || "—"}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500">User ID:</span>
-              <span className="font-mono text-[10px] text-slate-600 dark:text-slate-400 truncate max-w-[140px]">7719341B-BFCB-4A31-B852</span>
+              <span className="text-slate-500">{t(lang, "cpb.f_user_id", "User ID:")}</span>
+              <span className="font-mono text-[10px] text-slate-600 dark:text-slate-400 truncate max-w-[140px]">{sessionUserId || "—"}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500">User Name:</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200">SUPER ADMIN</span>
+              <span className="text-slate-500">{t(lang, "cpb.f_user_name", "User Name:")}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">{sessionUserName || "—"}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500">Role:</span>
-              <span className="font-bold text-slate-700 dark:text-slate-300">SUPER_ADMIN</span>
+              <span className="text-slate-500">{t(lang, "cpb.f_role", "Role:")}</span>
+              <span className="font-bold text-slate-700 dark:text-slate-300">{sessionRole || "—"}</span>
             </div>
             <div className="flex justify-between items-center pt-1 border-t border-slate-100 dark:border-slate-800">
-              <span className="text-slate-500">Status:</span>
-              <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase">Active</span>
+              <span className="text-slate-500">{t(lang, "cpb.f_status", "Status:")}</span>
+              <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase">{t(lang, "god.active", "Active")}</span>
             </div>
           </div>
         </div>
@@ -372,17 +375,17 @@ export function CompletedPurchaseBillsView() {
             <div className="h-7 w-7 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
               2
             </div>
-            <h3 className="text-xs font-black uppercase text-emerald-900 dark:text-emerald-300 tracking-wider">2. GLOBAL FINANCIAL SUMMARY (USD)</h3>
+            <h3 className="text-xs font-black uppercase text-emerald-900 dark:text-emerald-300 tracking-wider">{t(lang, "cpb.card2_title", "2. Global Financial Summary (USD)")}</h3>
           </div>
 
           <div className="space-y-1.5 text-[11px]">
             <div className="flex justify-between">
-              <span className="text-slate-500">Total Completed Bills:</span>
+              <span className="text-slate-500">{t(lang, "cpb.f_total_completed_bills", "Total Completed Bills:")}</span>
               <span className="font-black text-slate-800 dark:text-slate-100">{summaryMetrics.totalCount}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500">Contract / Loaded Qty:</span>
-              <span className="font-bold text-slate-700 dark:text-slate-300">{summaryMetrics.totalContractQty.toLocaleString()} Bags</span>
+              <span className="text-slate-500">{t(lang, "cpb.f_contract_loaded_qty", "Contract / Loaded Qty:")}</span>
+              <span className="font-bold text-slate-700 dark:text-slate-300">{summaryMetrics.totalContractQty.toLocaleString()} {orders[0]?.unitLabel || orders[0]?.quantity_name || ""}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500">Total Credit (Paid):</span>
@@ -405,24 +408,24 @@ export function CompletedPurchaseBillsView() {
             <div className="h-7 w-7 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold text-xs">
               3
             </div>
-            <h3 className="text-xs font-black uppercase text-purple-900 dark:text-purple-300 tracking-wider">3. COMPLETED OPERATIONS SUMMARY</h3>
+            <h3 className="text-xs font-black uppercase text-purple-900 dark:text-purple-300 tracking-wider">{t(lang, "cpb.card3_title", "3. Completed Operations Summary")}</h3>
           </div>
 
           <div className="space-y-2 text-[11px]">
             <div className="flex items-center justify-between">
-              <span className="text-slate-500">Purchase Booking:</span>
-              <span className="font-bold text-emerald-600">✓ Completed</span>
+              <span className="text-slate-500">{t(lang, "cpb.f_purchase_booking", "Purchase Booking:")}</span>
+              <span className="font-bold text-emerald-600">✓ {t(lang, "cpb.completed_check", "Completed")}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-slate-500">Loading Module:</span>
-              <span className="font-bold text-emerald-600">✓ Completed</span>
+              <span className="text-slate-500">{t(lang, "cpb.f_loading_module", "Loading Module:")}</span>
+              <span className="font-bold text-emerald-600">✓ {t(lang, "cpb.completed_check", "Completed")}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-slate-500">Payments & Balance:</span>
+              <span className="text-slate-500">{t(lang, "cpb.f_payments_balance", "Payments & Balance:")}</span>
               <span className="font-bold text-emerald-600">✓ 0.00 AED / USD (100% Paid)</span>
             </div>
             <div className="mt-2 text-[10px] text-center py-1.5 bg-slate-50 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 text-slate-500">
-              Archived for permanent record audit
+              {t(lang, "cpb.archived_note", "Archived for permanent record audit")}
             </div>
           </div>
         </div>
