@@ -188,7 +188,7 @@ export default async function SuperAdminDashboardPage() {
     [tr("dash.total_purchase", "Total Purchase"), data.totals.purchases, tr("dash.purchase_order_total", "Purchase order total")],
     [tr("dash.total_receivables", "Total Receivables"), data.totals.debit, tr("dash.ledger_debit_total", "Ledger debit total")],
     [tr("dash.total_payables", "Total Payables"), data.totals.credit, tr("dash.ledger_credit_total", "Ledger credit total")],
-    [tr("dash.cash_balance", "Cash Balance"), data.totals.debit - data.totals.credit, tr("dash.debit_less_credit", "Debit less credit")],
+    [tr("dash.cash_balance", "Net Ledger Position"), data.totals.debit - data.totals.credit, tr("dash.debit_less_credit", "Total debit minus total credit")],
     [tr("dash.ledger_balance", "Ledger Balance"), data.totals.balance, tr("dash.current_ledger_balance", "Current ledger balance")]
   ] as const;
 

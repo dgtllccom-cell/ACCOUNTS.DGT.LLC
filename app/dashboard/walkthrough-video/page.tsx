@@ -17,8 +17,10 @@ export default function WalkthroughVideoPage() {
             <Video className="h-4 w-4" />
             <span>Digital Dock ERP • System Walkthrough Video</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
-            System Walkthrough & Operating Guide / ویڈیو واک تھرو
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-balance">
+            <span>System Walkthrough &amp; Operating Guide</span>
+            <span className="mx-1 text-slate-400">/</span>
+            <span dir="rtl" className="inline-block whitespace-nowrap align-middle">ویڈیو واک تھرو</span>
           </h1>
           <p className="mt-1 text-sm text-slate-300 max-w-3xl">
             Interactive recording of ERP workflows, navigation, multi-language switching, master setup, Roznamcha, sales, purchases, and accounting reports.

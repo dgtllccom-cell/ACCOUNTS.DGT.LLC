@@ -52,7 +52,7 @@ export function ReturnSmsReplyContainer({ lang, scopeLevel }: Props) {
               onClick={() => setActiveTab("inbox")}
               className={cn(
                 "flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all",
-                activeTab === "inbox" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                activeTab === "inbox" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-700 dark:text-slate-300 hover:bg-white/70 hover:text-slate-900 dark:hover:bg-slate-700"
               )}
             >
               <MessageSquare className="h-3.5 w-3.5" />
@@ -63,7 +63,7 @@ export function ReturnSmsReplyContainer({ lang, scopeLevel }: Props) {
               onClick={() => setActiveTab("reminders")}
               className={cn(
                 "flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all",
-                activeTab === "reminders" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                activeTab === "reminders" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-700 dark:text-slate-300 hover:bg-white/70 hover:text-slate-900 dark:hover:bg-slate-700"
               )}
             >
               <Bell className="h-3.5 w-3.5" />
@@ -74,7 +74,7 @@ export function ReturnSmsReplyContainer({ lang, scopeLevel }: Props) {
               onClick={() => setActiveTab("templates")}
               className={cn(
                 "flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all",
-                activeTab === "templates" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                activeTab === "templates" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-700 dark:text-slate-300 hover:bg-white/70 hover:text-slate-900 dark:hover:bg-slate-700"
               )}
             >
               <FileText className="h-3.5 w-3.5" />
@@ -85,7 +85,7 @@ export function ReturnSmsReplyContainer({ lang, scopeLevel }: Props) {
               onClick={() => setActiveTab("reports")}
               className={cn(
                 "flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all",
-                activeTab === "reports" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                activeTab === "reports" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-700 dark:text-slate-300 hover:bg-white/70 hover:text-slate-900 dark:hover:bg-slate-700"
               )}
             >
               <BarChart3 className="h-3.5 w-3.5" />
