@@ -1,6 +1,7 @@
 "use client";
 
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { t } from "@/lib/i18n/ui";
 import { SuperAdminRoznamchaReportView } from "@/features/roznamcha/components/super-admin-roznamcha-report-view";
 
 export function AllRoznamchaReportView({
@@ -11,7 +12,7 @@ export function AllRoznamchaReportView({
   return (
     <SuperAdminRoznamchaReportView
       lang={lang}
-      pageTitle="Roznamcha Management"
+      pageTitle={t(lang, "roz.mgmt_title", "Roznamcha Management")}
       typeFilter="super_admin"
     />
   );

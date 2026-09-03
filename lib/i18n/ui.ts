@@ -849,7 +849,7 @@ export type UiKey =
   | "nav.general_roznamcha_reports"
   | "nav.expenses_bill"
   | "nav.all_roznamcha"
-  | "nav.roznamcha_all_report"
+  | "nav.roznamcha_all_report" | "roz.mgmt_title"
   | "nav.super_admin_roznamcha"
   | "nav.country_roznamcha"
   | "nav.branch_roznamcha"
@@ -16763,6 +16763,7 @@ const en: Dict = {
   "eaud.col_user": "User",
   "eaud.col_role": "Role",
   "eaud.col_country_branch": "Country / Branch",
+  "roz.mgmt_title": "Roznamcha Management",
 };
 
 const ur: Dict = {
@@ -28581,6 +28582,7 @@ const ur: Dict = {
   "eaud.col_user": "صارف",
   "eaud.col_role": "کردار",
   "eaud.col_country_branch": "ملک / برانچ",
+  "roz.mgmt_title": "روزنامچہ مینیجمنٹ",
 };
 
 const ar: Dict = {
@@ -40401,6 +40403,7 @@ const ar: Dict = {
   "eaud.col_user": "المستخدم",
   "eaud.col_role": "الدور",
   "eaud.col_country_branch": "البلد / الفرع",
+  "roz.mgmt_title": "إدارة روزنامتشه",
 };
 
 const fa: Dict = {
@@ -52220,6 +52223,7 @@ const fa: Dict = {
   "eaud.col_user": "کاربر",
   "eaud.col_role": "نقش",
   "eaud.col_country_branch": "کشور / شعبه",
+  "roz.mgmt_title": "مدیریت روزنامچه",
 };
 
 const ps: Dict = {
@@ -64045,6 +64049,7 @@ const ps: Dict = {
   "eaud.col_user": "کاروونکی",
   "eaud.col_role": "رول",
   "eaud.col_country_branch": "هېواد / څانګه",
+  "roz.mgmt_title": "د روزنامچې مدیریت",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
