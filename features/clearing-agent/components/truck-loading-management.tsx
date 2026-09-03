@@ -379,7 +379,11 @@ export function TruckLoadingManagementView({ lang: langProp }: { lang: Supported
                   </span>
                 </div>
                 <div className="text-slate-900 dark:text-white font-medium truncate">{ord.customer_name}</div>
-                <div className="text-[11px] text-slate-400 truncate">{ord.route_name || `${ord.loading_country_name || "-"} → ${ord.receiving_country_name || "-"}`}</div>
+                <div className="text-[11px] text-slate-400 truncate">
+                  {ord.route_name
+                    || ([ord.loading_country_name, ord.receiving_country_name].filter(Boolean).join(" → "))
+                    || t(lang, "tl.route_unavailable", "Route not available")}
+                </div>
               </button>
             ))}
           </div>

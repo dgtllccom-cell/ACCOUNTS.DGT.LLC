@@ -927,6 +927,7 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "tl.route_unavailable"
   | "dintake.em_subtitle"
   | "dintake.em_cancel_footer"
   | "bgr.enterprise_wide"
@@ -17807,6 +17808,9 @@ const en: Dict = {
 
 
 
+
+
+  "tl.route_unavailable": "Route not available",
   "dintake.em_subtitle": "Choose how you want to start. Both paths end in the same form, validation and approval.",
 
 
@@ -31435,6 +31439,9 @@ const ur: Dict = {
 
 
 
+
+
+  "tl.route_unavailable": "راستہ دستیاب نہیں",
   "dintake.em_subtitle": "منتخب کریں کہ آپ کیسے شروع کرنا چاہتے ہیں۔ دونوں راستے ایک ہی فارم، توثیق اور منظوری پر ختم ہوتے ہیں۔",
 
 
@@ -45065,6 +45072,9 @@ const ar: Dict = {
 
 
 
+
+
+  "tl.route_unavailable": "المسار غير متاح",
   "dintake.em_subtitle": "اختر كيف تريد البدء. كلا المسارين ينتهيان بنفس النموذج والتحقق والموافقة.",
 
 
@@ -58694,6 +58704,9 @@ const fa: Dict = {
 
 
 
+
+
+  "tl.route_unavailable": "مسیر در دسترس نیست",
   "dintake.em_subtitle": "انتخاب کنید که چگونه می‌خواهید شروع کنید. هر دو مسیر به همان فرم، اعتبارسنجی و تأیید ختم می‌شوند.",
 
 
@@ -72329,6 +72342,9 @@ const ps: Dict = {
 
 
 
+
+
+  "tl.route_unavailable": "لار شتون نلري",
   "dintake.em_subtitle": "غوره کړئ چې څنګه غواړئ پیل وکړئ. دواړه لارې په ورته فورم، تصدیق او تصویب پای ته رسیږي.",
 
 

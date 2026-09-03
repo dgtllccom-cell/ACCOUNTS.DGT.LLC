@@ -897,7 +897,7 @@ export function CustomerOrderManagementView() {
       const payload = {
         ...formData,
         customer_id: supplier.customerId || formData.customer_id || null,
-        customer_name: supplier.customerName || formData.customer_name || "Shipping Party",
+        customer_name: supplier.customerName || formData.customer_name || null,
         goods_id: formData.goods_id || null,
         goods_variation_id: formData.goods_variation_id || null,
         goods_name: formData.goods_name || null,
