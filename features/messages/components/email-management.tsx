@@ -1295,11 +1295,11 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                         className="h-10 w-full rounded-lg border bg-background px-3 text-sm shadow-sm outline-none focus:border-primary"
                       >
                         <option value="">-- {tt("email_mgmt.apply_template", "Apply Template")} --</option>
-                        <option value="quotation">Quotation Request</option>
-                        <option value="invoice">Sales Invoice</option>
-                        <option value="purchase_order">Purchase Order Request</option>
-                        <option value="payment_reminder">Friendly Payment Reminder</option>
-                        <option value="shipment_update">Shipment Dispatched Update</option>
+                        <option value="quotation">{tt("email_mgmt.tpl_quotation", "Quotation Request")}</option>
+                        <option value="invoice">{tt("email_mgmt.tpl_invoice", "Sales Invoice")}</option>
+                        <option value="purchase_order">{tt("email_mgmt.tpl_purchase_order", "Purchase Order Request")}</option>
+                        <option value="payment_reminder">{tt("email_mgmt.tpl_payment_reminder", "Friendly Payment Reminder")}</option>
+                        <option value="shipment_update">{tt("email_mgmt.tpl_shipment_update", "Shipment Dispatched Update")}</option>
                       </select>
                     </div>
                   </div>
@@ -1509,19 +1509,19 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                     onChange={(e) => setComposeModule(e.target.value)}
                   >
                     <option value="">-- {tt("email_mgmt.no_linking", "No Linking")} --</option>
-                    <option value="Purchase Order">Purchase Order</option>
-                    <option value="Sales Invoice">Sales Invoice</option>
-                    <option value="Customer">Customer</option>
-                    <option value="Supplier">Supplier</option>
-                    <option value="Payment">Payment</option>
-                    <option value="Shipment">Shipment</option>
+                    <option value="Purchase Order">{tt("email_mgmt.mod_purchase_order", "Purchase Order")}</option>
+                    <option value="Sales Invoice">{tt("email_mgmt.mod_sales_invoice", "Sales Invoice")}</option>
+                    <option value="Customer">{tt("email_mgmt.mod_customer", "Customer")}</option>
+                    <option value="Supplier">{tt("email_mgmt.mod_supplier", "Supplier")}</option>
+                    <option value="Payment">{tt("email_mgmt.mod_payment", "Payment")}</option>
+                    <option value="Shipment">{tt("email_mgmt.mod_shipment", "Shipment")}</option>
                   </select>
                 </div>
                 <Field
                   label={tt("email_mgmt.document_no", "Document No.")}
                   value={composeDocumentNo}
                   onChange={setComposeDocumentNo}
-                  placeholder="PO-2026-0012"
+                  placeholder={tt("email_mgmt.document_no_ph", "e.g. PO-2026-0012")}
                   className="h-9 text-xs"
                 />
               </div>

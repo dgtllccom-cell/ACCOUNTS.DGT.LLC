@@ -927,6 +927,18 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "email_mgmt.tpl_quotation"
+  | "email_mgmt.tpl_invoice"
+  | "email_mgmt.tpl_purchase_order"
+  | "email_mgmt.tpl_payment_reminder"
+  | "email_mgmt.tpl_shipment_update"
+  | "email_mgmt.mod_purchase_order"
+  | "email_mgmt.mod_sales_invoice"
+  | "email_mgmt.mod_customer"
+  | "email_mgmt.mod_supplier"
+  | "email_mgmt.mod_payment"
+  | "email_mgmt.mod_shipment"
+  | "email_mgmt.document_no_ph"
   | "taxmgmt.empty"
   | "taxmgmt.add_new"
   | "taxmgmt.tax_name"
@@ -17665,6 +17677,30 @@ const en: Dict = {
 
 
 
+
+  "email_mgmt.tpl_quotation": "Quotation Request",
+
+  "email_mgmt.tpl_invoice": "Sales Invoice",
+
+  "email_mgmt.tpl_purchase_order": "Purchase Order Request",
+
+  "email_mgmt.tpl_payment_reminder": "Friendly Payment Reminder",
+
+  "email_mgmt.tpl_shipment_update": "Shipment Dispatched Update",
+
+  "email_mgmt.mod_purchase_order": "Purchase Order",
+
+  "email_mgmt.mod_sales_invoice": "Sales Invoice",
+
+  "email_mgmt.mod_customer": "Customer",
+
+  "email_mgmt.mod_supplier": "Supplier",
+
+  "email_mgmt.mod_payment": "Payment",
+
+  "email_mgmt.mod_shipment": "Shipment",
+
+  "email_mgmt.document_no_ph": "e.g. PO-2026-0012",
   "taxmgmt.empty": "No tax codes defined yet.",
 
   "taxmgmt.add_new": "Add New Tax Code",
@@ -30930,6 +30966,30 @@ const ur: Dict = {
 
 
 
+
+  "email_mgmt.tpl_quotation": "کوٹیشن کی درخواست",
+
+  "email_mgmt.tpl_invoice": "سیلز انوائس",
+
+  "email_mgmt.tpl_purchase_order": "پرچیز آرڈر کی درخواست",
+
+  "email_mgmt.tpl_payment_reminder": "دوستانہ ادائیگی یاد دہانی",
+
+  "email_mgmt.tpl_shipment_update": "کھیپ روانگی کی اپ ڈیٹ",
+
+  "email_mgmt.mod_purchase_order": "پرچیز آرڈر",
+
+  "email_mgmt.mod_sales_invoice": "سیلز انوائس",
+
+  "email_mgmt.mod_customer": "کسٹمر",
+
+  "email_mgmt.mod_supplier": "سپلائر",
+
+  "email_mgmt.mod_payment": "ادائیگی",
+
+  "email_mgmt.mod_shipment": "کھیپ",
+
+  "email_mgmt.document_no_ph": "مثلاً PO-2026-0012",
   "taxmgmt.empty": "ابھی تک کوئی ٹیکس کوڈ متعین نہیں کیا گیا۔",
 
   "taxmgmt.add_new": "نیا ٹیکس کوڈ شامل کریں",
@@ -44197,6 +44257,30 @@ const ar: Dict = {
 
 
 
+
+  "email_mgmt.tpl_quotation": "طلب عرض سعر",
+
+  "email_mgmt.tpl_invoice": "فاتورة مبيعات",
+
+  "email_mgmt.tpl_purchase_order": "طلب أمر شراء",
+
+  "email_mgmt.tpl_payment_reminder": "تذكير ودّي بالدفع",
+
+  "email_mgmt.tpl_shipment_update": "تحديث إرسال الشحنة",
+
+  "email_mgmt.mod_purchase_order": "أمر شراء",
+
+  "email_mgmt.mod_sales_invoice": "فاتورة مبيعات",
+
+  "email_mgmt.mod_customer": "عميل",
+
+  "email_mgmt.mod_supplier": "مورّد",
+
+  "email_mgmt.mod_payment": "دفع",
+
+  "email_mgmt.mod_shipment": "شحنة",
+
+  "email_mgmt.document_no_ph": "مثال: PO-2026-0012",
   "taxmgmt.empty": "لم يتم تعريف أي رموز ضريبية بعد.",
 
   "taxmgmt.add_new": "إضافة رمز ضريبي جديد",
@@ -57463,6 +57547,30 @@ const fa: Dict = {
 
 
 
+
+  "email_mgmt.tpl_quotation": "درخواست پیش‌فاکتور",
+
+  "email_mgmt.tpl_invoice": "فاکتور فروش",
+
+  "email_mgmt.tpl_purchase_order": "درخواست سفارش خرید",
+
+  "email_mgmt.tpl_payment_reminder": "یادآوری دوستانه پرداخت",
+
+  "email_mgmt.tpl_shipment_update": "به‌روزرسانی ارسال محموله",
+
+  "email_mgmt.mod_purchase_order": "سفارش خرید",
+
+  "email_mgmt.mod_sales_invoice": "فاکتور فروش",
+
+  "email_mgmt.mod_customer": "مشتری",
+
+  "email_mgmt.mod_supplier": "تأمین‌کننده",
+
+  "email_mgmt.mod_payment": "پرداخت",
+
+  "email_mgmt.mod_shipment": "محموله",
+
+  "email_mgmt.document_no_ph": "مثلاً PO-2026-0012",
   "taxmgmt.empty": "هنوز هیچ کد مالیاتی تعریف نشده است.",
 
   "taxmgmt.add_new": "افزودن کد مالیاتی جدید",
@@ -70735,6 +70843,30 @@ const ps: Dict = {
 
 
 
+
+  "email_mgmt.tpl_quotation": "د نرخ غوښتنه",
+
+  "email_mgmt.tpl_invoice": "د پلور بیله",
+
+  "email_mgmt.tpl_purchase_order": "د پیرود د امر غوښتنه",
+
+  "email_mgmt.tpl_payment_reminder": "د تادیې دوستانه یادونه",
+
+  "email_mgmt.tpl_shipment_update": "د بار د لېږلو تازه معلومات",
+
+  "email_mgmt.mod_purchase_order": "د پیرود امر",
+
+  "email_mgmt.mod_sales_invoice": "د پلور بیله",
+
+  "email_mgmt.mod_customer": "پیرودونکی",
+
+  "email_mgmt.mod_supplier": "عرضه کوونکی",
+
+  "email_mgmt.mod_payment": "تادیه",
+
+  "email_mgmt.mod_shipment": "بار",
+
+  "email_mgmt.document_no_ph": "لکه PO-2026-0012",
   "taxmgmt.empty": "تر اوسه هیڅ مالیاتي کوډ نه دی ټاکل شوی.",
 
   "taxmgmt.add_new": "نوی مالیاتي کوډ اضافه کړئ",
