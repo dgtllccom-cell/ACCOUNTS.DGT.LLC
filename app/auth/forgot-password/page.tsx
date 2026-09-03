@@ -3,6 +3,8 @@ import { ArrowLeft, Mail } from "lucide-react";
 import { requestPasswordReset } from "@/features/auth/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { t } from "@/lib/i18n/ui";
 
 export const metadata = { title: "Auth — Forgot Password" };
 
@@ -13,6 +15,7 @@ export default async function ForgotPasswordPage({
   searchParams?: Promise<{ error?: string }>;
 }) {
   const params = searchParams ? await searchParams : {};
+  const lang = await getRequestLanguage();
 
   return (
     <main className="min-h-screen bg-[#160a3a] text-white">
@@ -20,13 +23,13 @@ export default async function ForgotPasswordPage({
         <div className="w-full rounded-[28px] border border-white/10 bg-white/95 p-7 text-slate-950 shadow-2xl shadow-black/25 dark:bg-slate-950/60 dark:text-white">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-extrabold tracking-tight">Forgot Password</h1>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-200">Request a reset link to your email.</p>
+              <h1 className="text-2xl font-extrabold tracking-tight">{t(lang, "fpw.title", "Forgot Password")}</h1>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-200">{t(lang, "fpw.subtitle", "Request a reset link to your email.")}</p>
             </div>
             <Button asChild variant="outline" className="rounded-xl">
               <Link href="/auth/login">
                 <ArrowLeft className="h-4 w-4" aria-hidden />
-                Back
+                {t(lang, "common.back", "Back")}
               </Link>
             </Button>
           </div>
@@ -40,7 +43,7 @@ export default async function ForgotPasswordPage({
           <form action={requestPasswordReset} className="mt-6 space-y-4">
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                Email
+                {t(lang, "common.email", "Email")}
               </label>
               <div className="relative">
                 <Mail className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-slate-400" aria-hidden />
@@ -49,7 +52,7 @@ export default async function ForgotPasswordPage({
                   name="email"
                   type="email"
                   className="h-12 rounded-xl border-slate-200 bg-slate-50 pl-11 shadow-none focus-visible:ring-primary"
-                  placeholder="Enter your email"
+                  placeholder={t(lang, "fpw.email_ph", "Enter your email")}
                   autoComplete="email"
                   required
                 />
@@ -60,7 +63,7 @@ export default async function ForgotPasswordPage({
               type="submit"
               className="h-12 w-full rounded-xl bg-primary text-base font-semibold text-primary-foreground hover:bg-primary/90"
             >
-              Send Reset Link
+              {t(lang, "fpw.send_reset", "Send Reset Link")}
             </Button>
           </form>
         </div>

@@ -222,11 +222,12 @@ export function decodeQrByteMode(matrix: boolean[][], size: number): string | nu
 // ── renderers ──────────────────────────────────────────────────────────────
 export type QrCodeProps = { value: string; size?: number; className?: string; quietZone?: number };
 
-export function QrCode({ value, size = 132, className, quietZone = 4 }: QrCodeProps) {
+export function QrCode({ value, size: sizeProp = 132, className, quietZone = 4 }: QrCodeProps) {
+  const size = Number.isFinite(sizeProp) && sizeProp > 0 ? sizeProp : 132;
   const enc = encodeByteMode((value ?? "").trim());
   if (!enc) return null;
   const total = enc.size + quietZone * 2;
-  const cell = size / total;
+  const cell = total > 0 && Number.isFinite(size / total) ? size / total : 4;
   const rects: React.ReactNode[] = [];
   for (let r = 0; r < enc.size; r++) for (let c = 0; c < enc.size; c++) {
     if (enc.matrix[r][c]) {

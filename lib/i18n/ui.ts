@@ -927,6 +927,34 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "fpw.title"
+  | "fpw.subtitle"
+  | "fpw.email_ph"
+  | "fpw.send_reset"
+  | "settr.title"
+  | "settr.subtitle"
+  | "settr.report_scope"
+  | "settr.opt_consolidated"
+  | "settr.opt_unsettled"
+  | "settr.opt_party"
+  | "settr.opt_fx"
+  | "settr.from_date"
+  | "settr.to_date"
+  | "settr.generating"
+  | "settr.generate"
+  | "settr.print_title"
+  | "settr.report_period"
+  | "settr.all_time"
+  | "settr.present"
+  | "settr.col_date"
+  | "settr.col_reference"
+  | "settr.col_module"
+  | "settr.col_party"
+  | "settr.col_dir"
+  | "settr.col_local_amount"
+  | "settr.col_usd_amount"
+  | "settr.col_remaining"
+  | "settr.col_status"
   | "ble.clear_all_confirm"
   | "tl.route_unavailable"
   | "dintake.em_subtitle"
@@ -17813,6 +17841,90 @@ const en: Dict = {
 
 
 
+
+
+  "fpw.title": "Forgot Password",
+
+
+  "fpw.subtitle": "Request a reset link to your email.",
+
+
+  "fpw.email_ph": "Enter your email",
+
+
+  "fpw.send_reset": "Send Reset Link",
+
+
+  "settr.title": "Settlement & Reconciliation Reports",
+
+
+  "settr.subtitle": "Universal printable reports, aging analyses, and ledger reconciliation sheets",
+
+
+  "settr.report_scope": "Report Scope",
+
+
+  "settr.opt_consolidated": "Consolidated Settlement Ledger",
+
+
+  "settr.opt_unsettled": "Unsettled / Discrepancy Aging",
+
+
+  "settr.opt_party": "Party-Wise Reconciliation",
+
+
+  "settr.opt_fx": "FX Realization Breakdown",
+
+
+  "settr.from_date": "From Date",
+
+
+  "settr.to_date": "To Date",
+
+
+  "settr.generating": "Generating...",
+
+
+  "settr.generate": "Generate",
+
+
+  "settr.print_title": "Settlement & Reconciliation Consolidated Report",
+
+
+  "settr.report_period": "Report Period",
+
+
+  "settr.all_time": "All Time",
+
+
+  "settr.present": "Present",
+
+
+  "settr.col_date": "Date",
+
+
+  "settr.col_reference": "Reference / Serial",
+
+
+  "settr.col_module": "Module",
+
+
+  "settr.col_party": "Party",
+
+
+  "settr.col_dir": "Dir",
+
+
+  "settr.col_local_amount": "Local Amount",
+
+
+  "settr.col_usd_amount": "USD Amount",
+
+
+  "settr.col_remaining": "Remaining",
+
+
+  "settr.col_status": "Status",
   "ble.clear_all_confirm": "Clear all entered B/L data on this form? This cannot be undone.",
   "tl.route_unavailable": "Route not available",
   "dintake.em_subtitle": "Choose how you want to start. Both paths end in the same form, validation and approval.",
@@ -31447,6 +31559,90 @@ const ur: Dict = {
 
 
 
+
+
+  "fpw.title": "پاسورڈ بھول گئے",
+
+
+  "fpw.subtitle": "اپنے ای میل پر ری سیٹ لنک کی درخواست کریں۔",
+
+
+  "fpw.email_ph": "اپنا ای میل درج کریں",
+
+
+  "fpw.send_reset": "ری سیٹ لنک بھیجیں",
+
+
+  "settr.title": "سیٹلمنٹ اور مصالحت رپورٹس",
+
+
+  "settr.subtitle": "یونیورسل قابل پرنٹ رپورٹس، ایجنگ تجزیے اور لیجر مصالحت شیٹس",
+
+
+  "settr.report_scope": "رپورٹ کا دائرہ",
+
+
+  "settr.opt_consolidated": "مجموعی سیٹلمنٹ لیجر",
+
+
+  "settr.opt_unsettled": "غیر طے شدہ / تضاد ایجنگ",
+
+
+  "settr.opt_party": "فریق کے لحاظ سے مصالحت",
+
+
+  "settr.opt_fx": "FX ریلائزیشن بریک ڈاؤن",
+
+
+  "settr.from_date": "تاریخ سے",
+
+
+  "settr.to_date": "تاریخ تک",
+
+
+  "settr.generating": "تیار ہو رہا ہے...",
+
+
+  "settr.generate": "تیار کریں",
+
+
+  "settr.print_title": "سیٹلمنٹ اور مصالحت مجموعی رپورٹ",
+
+
+  "settr.report_period": "رپورٹ کی مدت",
+
+
+  "settr.all_time": "تمام وقت",
+
+
+  "settr.present": "موجودہ",
+
+
+  "settr.col_date": "تاریخ",
+
+
+  "settr.col_reference": "حوالہ / سیریل",
+
+
+  "settr.col_module": "ماڈیول",
+
+
+  "settr.col_party": "فریق",
+
+
+  "settr.col_dir": "سمت",
+
+
+  "settr.col_local_amount": "مقامی رقم",
+
+
+  "settr.col_usd_amount": "USD رقم",
+
+
+  "settr.col_remaining": "باقی",
+
+
+  "settr.col_status": "حیثیت",
   "ble.clear_all_confirm": "اس فارم پر درج تمام B/L ڈیٹا صاف کریں؟ یہ واپس نہیں ہو سکتا۔",
   "tl.route_unavailable": "راستہ دستیاب نہیں",
   "dintake.em_subtitle": "منتخب کریں کہ آپ کیسے شروع کرنا چاہتے ہیں۔ دونوں راستے ایک ہی فارم، توثیق اور منظوری پر ختم ہوتے ہیں۔",
@@ -45083,6 +45279,90 @@ const ar: Dict = {
 
 
 
+
+
+  "fpw.title": "نسيت كلمة المرور",
+
+
+  "fpw.subtitle": "اطلب رابط إعادة التعيين إلى بريدك الإلكتروني.",
+
+
+  "fpw.email_ph": "أدخل بريدك الإلكتروني",
+
+
+  "fpw.send_reset": "إرسال رابط إعادة التعيين",
+
+
+  "settr.title": "تقارير التسوية والمطابقة",
+
+
+  "settr.subtitle": "تقارير قابلة للطباعة عالميًا وتحليلات التقادم وأوراق مطابقة دفتر الأستاذ",
+
+
+  "settr.report_scope": "نطاق التقرير",
+
+
+  "settr.opt_consolidated": "دفتر تسوية موحد",
+
+
+  "settr.opt_unsettled": "غير مسوّى / تقادم التناقضات",
+
+
+  "settr.opt_party": "المطابقة حسب الطرف",
+
+
+  "settr.opt_fx": "تفصيل تحقيق الصرف الأجنبي",
+
+
+  "settr.from_date": "من تاريخ",
+
+
+  "settr.to_date": "إلى تاريخ",
+
+
+  "settr.generating": "جارٍ الإنشاء...",
+
+
+  "settr.generate": "إنشاء",
+
+
+  "settr.print_title": "تقرير التسوية والمطابقة الموحد",
+
+
+  "settr.report_period": "فترة التقرير",
+
+
+  "settr.all_time": "كل الوقت",
+
+
+  "settr.present": "الحاضر",
+
+
+  "settr.col_date": "التاريخ",
+
+
+  "settr.col_reference": "المرجع / التسلسل",
+
+
+  "settr.col_module": "الوحدة",
+
+
+  "settr.col_party": "الطرف",
+
+
+  "settr.col_dir": "الاتجاه",
+
+
+  "settr.col_local_amount": "المبلغ المحلي",
+
+
+  "settr.col_usd_amount": "المبلغ بالدولار",
+
+
+  "settr.col_remaining": "المتبقي",
+
+
+  "settr.col_status": "الحالة",
   "ble.clear_all_confirm": "مسح جميع بيانات بوليصة الشحن المُدخلة في هذا النموذج؟ لا يمكن التراجع عن ذلك.",
   "tl.route_unavailable": "المسار غير متاح",
   "dintake.em_subtitle": "اختر كيف تريد البدء. كلا المسارين ينتهيان بنفس النموذج والتحقق والموافقة.",
@@ -58718,6 +58998,90 @@ const fa: Dict = {
 
 
 
+
+
+  "fpw.title": "فراموشی گذرواژه",
+
+
+  "fpw.subtitle": "درخواست لینک بازنشانی به ایمیل خود را ارسال کنید.",
+
+
+  "fpw.email_ph": "ایمیل خود را وارد کنید",
+
+
+  "fpw.send_reset": "ارسال لینک بازنشانی",
+
+
+  "settr.title": "گزارش‌های تسویه و مغایرت‌گیری",
+
+
+  "settr.subtitle": "گزارش‌های قابل چاپ جهانی، تحلیل کهنگی و برگه‌های مغایرت‌گیری دفتر کل",
+
+
+  "settr.report_scope": "محدوده گزارش",
+
+
+  "settr.opt_consolidated": "دفتر کل تسویه تجمیعی",
+
+
+  "settr.opt_unsettled": "تسویه‌نشده / کهنگی مغایرت",
+
+
+  "settr.opt_party": "مغایرت‌گیری بر اساس طرف",
+
+
+  "settr.opt_fx": "تفکیک تحقق ارز",
+
+
+  "settr.from_date": "از تاریخ",
+
+
+  "settr.to_date": "تا تاریخ",
+
+
+  "settr.generating": "در حال ایجاد...",
+
+
+  "settr.generate": "ایجاد",
+
+
+  "settr.print_title": "گزارش تجمیعی تسویه و مغایرت‌گیری",
+
+
+  "settr.report_period": "دوره گزارش",
+
+
+  "settr.all_time": "همه زمان‌ها",
+
+
+  "settr.present": "کنون",
+
+
+  "settr.col_date": "تاریخ",
+
+
+  "settr.col_reference": "مرجع / سریال",
+
+
+  "settr.col_module": "ماژول",
+
+
+  "settr.col_party": "طرف",
+
+
+  "settr.col_dir": "جهت",
+
+
+  "settr.col_local_amount": "مبلغ محلی",
+
+
+  "settr.col_usd_amount": "مبلغ دلاری",
+
+
+  "settr.col_remaining": "باقیمانده",
+
+
+  "settr.col_status": "وضعیت",
   "ble.clear_all_confirm": "همه داده‌های بارنامه واردشده در این فرم پاک شود؟ این عمل قابل بازگشت نیست.",
   "tl.route_unavailable": "مسیر در دسترس نیست",
   "dintake.em_subtitle": "انتخاب کنید که چگونه می‌خواهید شروع کنید. هر دو مسیر به همان فرم، اعتبارسنجی و تأیید ختم می‌شوند.",
@@ -72359,6 +72723,90 @@ const ps: Dict = {
 
 
 
+
+
+  "fpw.title": "پاسورډ مو هیر شو",
+
+
+  "fpw.subtitle": "خپل بریښنالیک ته د بیا تنظیم لینک وغواړئ.",
+
+
+  "fpw.email_ph": "خپل بریښنالیک ولیکئ",
+
+
+  "fpw.send_reset": "د بیا تنظیم لینک واستوئ",
+
+
+  "settr.title": "د تصفیې او پخلاینې راپورونه",
+
+
+  "settr.subtitle": "نړیوال د چاپ وړ راپورونه، د زړښت تحلیلونه او د لیجر د پخلاینې پاڼې",
+
+
+  "settr.report_scope": "د راپور ساحه",
+
+
+  "settr.opt_consolidated": "ګډ د تصفیې لیجر",
+
+
+  "settr.opt_unsettled": "نه تصفیه شوی / د توپیر زړښت",
+
+
+  "settr.opt_party": "د اړخ له مخې پخلاینه",
+
+
+  "settr.opt_fx": "د اسعارو د تحقق تفصیل",
+
+
+  "settr.from_date": "له نېټې",
+
+
+  "settr.to_date": "تر نېټې",
+
+
+  "settr.generating": "جوړیږي...",
+
+
+  "settr.generate": "جوړ کړئ",
+
+
+  "settr.print_title": "د تصفیې او پخلاینې ګډ راپور",
+
+
+  "settr.report_period": "د راپور موده",
+
+
+  "settr.all_time": "ټول وخت",
+
+
+  "settr.present": "اوس",
+
+
+  "settr.col_date": "نېټه",
+
+
+  "settr.col_reference": "حواله / سیریل",
+
+
+  "settr.col_module": "ماډیول",
+
+
+  "settr.col_party": "اړخ",
+
+
+  "settr.col_dir": "لوري",
+
+
+  "settr.col_local_amount": "سیمه ییزه اندازه",
+
+
+  "settr.col_usd_amount": "د USD اندازه",
+
+
+  "settr.col_remaining": "پاتې",
+
+
+  "settr.col_status": "حالت",
   "ble.clear_all_confirm": "په دې فورم کې ټول داخل شوي B/L معلومات پاک کړئ؟ دا بیرته نشي کیدی.",
   "tl.route_unavailable": "لار شتون نلري",
   "dintake.em_subtitle": "غوره کړئ چې څنګه غواړئ پیل وکړئ. دواړه لارې په ورته فورم، تصدیق او تصویب پای ته رسیږي.",

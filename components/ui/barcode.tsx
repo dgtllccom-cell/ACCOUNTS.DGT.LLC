@@ -59,12 +59,15 @@ export type BarcodeProps = {
 
 export function Barcode({
   value,
-  moduleWidth = 1.6,
-  height = 56,
+  moduleWidth: moduleWidthProp = 1.6,
+  height: heightProp = 56,
   showText = true,
   className,
   background = "#ffffff"
 }: BarcodeProps) {
+  // Never let a NaN/Infinite prop reach an SVG numeric attribute (React warns + broken render).
+  const moduleWidth = Number.isFinite(moduleWidthProp) && moduleWidthProp > 0 ? moduleWidthProp : 1.6;
+  const height = Number.isFinite(heightProp) && heightProp > 0 ? heightProp : 56;
   const patterns = encode((value ?? "").trim());
   if (!patterns) return null;
 
