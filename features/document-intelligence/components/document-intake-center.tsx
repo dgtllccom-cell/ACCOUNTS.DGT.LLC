@@ -311,6 +311,7 @@ const DOC_PURPOSES: Array<{ target: string; labelKey: string; fallback: string; 
   { target: "purchase_loading_records", labelKey: "purpose_loading", fallback: "Purchase Loading / Receiving", group: "Trade" },
   { target: "roznamcha_entries", labelKey: "purpose_payment", fallback: "Payment / Cash / Bank Roznamcha", group: "Finance" },
   { target: "expenses", labelKey: "purpose_expense", fallback: "Expense Bill", group: "Finance" },
+  { target: "bill_expense_line", labelKey: "purpose_bill_expense_line", fallback: "Bill Expense Line (Freight / Customs / Clearing)", group: "Finance" },
   { target: "shipping_bl_records", labelKey: "purpose_shipping", fallback: "Shipping / Bill of Lading", group: "Logistics" },
   { target: "clearing_agent_custom_entries", labelKey: "purpose_clearing", fallback: "Clearing / Customs Entry", group: "Logistics" },
   { target: "companies", labelKey: "purpose_company", fallback: "Company / Entity", group: "Masters" },

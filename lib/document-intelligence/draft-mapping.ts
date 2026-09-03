@@ -192,6 +192,24 @@ const MODULE_MAP: Record<string, Record<string, string>> = {
     supplier_name: "details",
     payment_terms: "details",
   },
+  // BILL COST, EXPENSES & PROFIT — one freight / customs / clearing invoice
+  // prefills a single expense LINE on a bill's register row. The human verifies
+  // currency / amount / rate, picks the expense + counter ledgers, and posts the
+  // DR/CR via /api/erp/bill-expenses/[id]/lines/[lineId]/post. The AI never posts.
+  bill_expense_line: {
+    invoice_number: "reference",
+    document_date: "reference",
+    currency: "currency",
+    exchange_rate: "exchangeRate",
+    grand_total: "amount",
+    subtotal: "amount",
+    freight_amount: "amount",
+    insurance_amount: "amount",
+    tax_amount: "taxAmt",
+    supplier_name: "party",
+    contract_parties: "party",
+    container_numbers: "containerNo",
+  },
   // Cash / Bank Roznamcha — a reviewed draft + pre-post preview only. The AI
   // never posts; the human posts through the existing Roznamcha screen.
   roznamcha_entries: {

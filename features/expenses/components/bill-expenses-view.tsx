@@ -5,13 +5,14 @@ import Link from "next/link";
 import { createPortal } from "react-dom";
 import {
   FileText, Receipt, RefreshCw, Printer, Plus, Eye, Trash2, MoreHorizontal,
-  Link2, Building2, Calculator, BadgePercent, Search, CheckCircle2, Undo2, BookCheck, Loader2
+  Link2, Building2, Calculator, BadgePercent, Search, CheckCircle2, Undo2, BookCheck, Loader2, ScanLine
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { useErpScope } from "@/lib/hooks/use-erp-scope";
+import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
 import { openScopedGenericReport, type GenericReportColumn } from "@/lib/reports/open-scoped-report";
 import { printStore } from "@/lib/store/print-store";
 
@@ -564,6 +565,24 @@ function BillExpenseDetailModal({
   const [form, setForm] = useState({ expenseType: "shipping", details: "", currency: "", amount: "", exchangeRate: "1", taxPct: "0" });
   const formRef = useRef<HTMLDivElement>(null);
 
+  // Phase 7 — AI receipt intake (reuses the existing AI Document Intake engine).
+  // A reviewed freight/customs/clearing invoice prefills ONE expense line; the
+  // user verifies every value and then posts. The AI never posts.
+  const intake = useIntakeDraft("bill_expense_line");
+  const [aiPrefilled, setAiPrefilled] = useState(false);
+  useEffect(() => {
+    const p = intake.payload;
+    if (!intake.draft || !p) return;
+    setForm((f) => ({
+      ...f,
+      currency: (p.currency ? String(p.currency) : f.currency).toUpperCase().slice(0, 3) || f.currency,
+      amount: p.amount != null && Number(p.amount) > 0 ? String(p.amount) : f.amount,
+      exchangeRate: p.exchangeRate != null && Number(p.exchangeRate) > 0 ? String(p.exchangeRate) : f.exchangeRate,
+      details: [p.party, p.reference, p.containerNo].filter(Boolean).join(" · ") || f.details
+    }));
+    setAiPrefilled(true);
+  }, [intake.draft]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Phase 2 — DR/CR posting
   const [ledgers, setLedgers] = useState<Array<{ id: string; code: string | null; name: string; currency: string | null }>>([]);
   const [postLine, setPostLine] = useState<Line | null>(null);
@@ -677,6 +696,12 @@ function BillExpenseDetailModal({
         })
       });
       if (!res.ok) throw new Error();
+      const created = await res.json().catch(() => null);
+      const newLineId = created?.data?.id ?? created?.id;
+      if (aiPrefilled && newLineId) {
+        await intake.consume(newLineId);
+        setAiPrefilled(false);
+      }
       setForm((f) => ({ ...f, details: "", amount: "", taxPct: "0" }));
       await reload();
       onChanged();
@@ -895,11 +920,25 @@ function BillExpenseDetailModal({
                 <div ref={formRef}>
                 <Card className="border-t-4 border-t-amber-400 shadow-sm">
                   <CardHeader className="border-b border-slate-100 bg-slate-50 px-3 py-2 dark:border-slate-800 dark:bg-slate-900/60">
-                    <CardTitle className="flex items-center gap-1.5 text-[11px] font-bold uppercase text-slate-600 dark:text-slate-300">
-                      <Plus className="h-3.5 w-3.5" /> {s.t("add_expense", "Add Expense")}
-                    </CardTitle>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <CardTitle className="flex items-center gap-1.5 text-[11px] font-bold uppercase text-slate-600 dark:text-slate-300">
+                        <Plus className="h-3.5 w-3.5" /> {s.t("add_expense", "Add Expense")}
+                      </CardTitle>
+                      <Link
+                        href="/dashboard/document-intelligence"
+                        className="inline-flex items-center gap-1 rounded-md border border-indigo-200 bg-indigo-50 px-2 py-1 text-[10px] font-bold text-indigo-700 hover:bg-indigo-100 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300"
+                      >
+                        <ScanLine className="h-3.5 w-3.5" /> {s.t("ai_scan_receipt", "Scan / upload receipt")}
+                      </Link>
+                    </div>
                   </CardHeader>
                   <CardContent className="p-3">
+                    {aiPrefilled && (
+                      <p className="mb-2 flex items-center gap-1.5 rounded-md border border-amber-300 bg-amber-50 px-3 py-1.5 text-[11px] font-semibold text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+                        <ScanLine className="h-3.5 w-3.5 shrink-0" />
+                        {s.t("ai_verify_first", "Prefilled from a scanned receipt — verify every value before saving. The AI never posts.")}
+                      </p>
+                    )}
                     <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
                       <label className="text-xs">
                         <span className="mb-1 block font-semibold text-slate-500">{s.t("expense_type", "Expense Type")}</span>

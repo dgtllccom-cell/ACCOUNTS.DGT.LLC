@@ -927,6 +927,9 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "dintake.purpose_bill_expense_line"
+  | "bexp.ai_scan_receipt"
+  | "bexp.ai_verify_first"
   | "bexp.aeb_label"
   | "bexp.aeb_not_ready"
   | "bexp.aeb_failed"
@@ -18071,6 +18074,15 @@ const en: Dict = {
 
 
 
+
+
+  "dintake.purpose_bill_expense_line": "Bill Expense Line (Freight / Customs / Clearing)",
+
+
+  "bexp.ai_scan_receipt": "Scan / upload receipt",
+
+
+  "bexp.ai_verify_first": "Prefilled from a scanned receipt — verify every value before saving. The AI never posts.",
   "bexp.aeb_label": "Add Expense Bill",
 
 
@@ -32419,6 +32431,15 @@ const ur: Dict = {
 
 
 
+
+
+  "dintake.purpose_bill_expense_line": "بل اخراجات لائن (فریٹ / کسٹمز / کلیئرنگ)",
+
+
+  "bexp.ai_scan_receipt": "رسید اسکین / اپلوڈ کریں",
+
+
+  "bexp.ai_verify_first": "اسکین شدہ رسید سے پہلے سے بھرا گیا — محفوظ کرنے سے پہلے ہر قدر کی تصدیق کریں۔ AI کبھی پوسٹ نہیں کرتا۔",
   "bexp.aeb_label": "اخراجات بل شامل کریں",
 
 
@@ -46769,6 +46790,15 @@ const ar: Dict = {
 
 
 
+
+
+  "dintake.purpose_bill_expense_line": "بند مصروفات الفاتورة (شحن / جمارك / تخليص)",
+
+
+  "bexp.ai_scan_receipt": "مسح / رفع الإيصال",
+
+
+  "bexp.ai_verify_first": "معبأة مسبقًا من إيصال ممسوح — تحقق من كل قيمة قبل الحفظ. الذكاء الاصطناعي لا يُرحّل أبدًا.",
   "bexp.aeb_label": "إضافة فاتورة مصروفات",
 
 
@@ -61118,6 +61148,15 @@ const fa: Dict = {
 
 
 
+
+
+  "dintake.purpose_bill_expense_line": "ردیف هزینه فاکتور (کرایه / گمرک / ترخیص)",
+
+
+  "bexp.ai_scan_receipt": "اسکن / بارگذاری رسید",
+
+
+  "bexp.ai_verify_first": "از روی رسید اسکن‌شده پیش‌پر شده — پیش از ذخیره هر مقدار را بررسی کنید. هوش مصنوعی هرگز ثبت نمی‌کند.",
   "bexp.aeb_label": "افزودن فاکتور مخارج",
 
 
@@ -75473,6 +75512,15 @@ const ps: Dict = {
 
 
 
+
+
+  "dintake.purpose_bill_expense_line": "د بل لګښت کرښه (وړل / ګمرک / پاکول)",
+
+
+  "bexp.ai_scan_receipt": "رسید سکن / پورته کول",
+
+
+  "bexp.ai_verify_first": "د سکن شوي رسید څخه دمخه ډک شوی — د خوندي کولو دمخه هره ارزښت تایید کړئ. AI هیڅکله پوسټ نه کوي.",
   "bexp.aeb_label": "د لګښت بل اضافه کړئ",
 
 
