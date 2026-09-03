@@ -346,10 +346,10 @@ export default function SearchPage() {
                 className="flex h-9 w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-900 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20"
               >
                 <option value="">{th("All Currencies")}</option>
-                <option value="USD">USD - US Dollar</option>
-                <option value="PKR">PKR - Pakistan Rupee</option>
-                <option value="AED">AED - UAE Dirham</option>
-                <option value="AFN">AFN - Afghan Afghani</option>
+                <option value="USD">USD - {th("US Dollar")}</option>
+                <option value="PKR">PKR - {th("Pakistan Rupee")}</option>
+                <option value="AED">AED - {th("UAE Dirham")}</option>
+                <option value="AFN">AFN - {th("Afghan Afghani")}</option>
               </select>
             </div>
 
@@ -453,7 +453,7 @@ export default function SearchPage() {
       {loading ? (
         <div className="h-[250px] flex items-center justify-center text-xs text-slate-400 font-bold uppercase tracking-widest gap-2">
           <RefreshCw className="animate-spin h-5 w-5 text-teal-600" />
-          Performing Global Query scan...
+          {th("Performing Global Query scan...")}
         </div>
       ) : (
         <div className="space-y-6">
@@ -626,12 +626,12 @@ export default function SearchPage() {
             <Card className="rounded-xl border border-dashed border-slate-200 p-12 text-center bg-white dark:bg-slate-950 dark:border-slate-800">
               <CardContent className="space-y-3">
                 <SlidersHorizontal className="h-10 w-10 text-slate-400 mx-auto" />
-                <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">No Query Results Found</h3>
+                <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">{th("No Query Results Found")}</h3>
                 <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                  Try typing a different name, manual reference, NTN number, or clear advanced search filters.
+                  {th("Try typing a different name, manual reference, NTN number, or clear advanced search filters.")}
                 </p>
                 <Button size="sm" variant="outline" className="mt-2 text-xs font-semibold h-8" onClick={resetFilters}>
-                  Clear All Filters
+                  {th("Clear All Filters")}
                 </Button>
               </CardContent>
             </Card>
