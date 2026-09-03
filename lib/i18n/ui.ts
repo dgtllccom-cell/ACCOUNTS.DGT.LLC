@@ -927,6 +927,19 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "taxmgmt.empty"
+  | "taxmgmt.add_new"
+  | "taxmgmt.tax_name"
+  | "taxmgmt.tax_name_ph"
+  | "taxmgmt.percentage"
+  | "taxmgmt.percentage_ph"
+  | "taxmgmt.save"
+  | "taxmgmt.all_required"
+  | "taxmgmt.breadcrumb"
+  | "taxmgmt.title"
+  | "taxmgmt.subtitle"
+  | "taxmgmt.add_short"
+  | "taxmgmt.delete_failed"
   | "cdash.col_purchase"
   | "dash.profit"
   | "setmenu.workspace"
@@ -17651,6 +17664,32 @@ const en: Dict = {
 
 
 
+
+  "taxmgmt.empty": "No tax codes defined yet.",
+
+  "taxmgmt.add_new": "Add New Tax Code",
+
+  "taxmgmt.tax_name": "Tax Name",
+
+  "taxmgmt.tax_name_ph": "e.g. VAT, GST, BRT",
+
+  "taxmgmt.percentage": "Percentage (%)",
+
+  "taxmgmt.percentage_ph": "e.g. 5.0",
+
+  "taxmgmt.save": "Save Tax Code",
+
+  "taxmgmt.all_required": "All fields are required",
+
+  "taxmgmt.breadcrumb": "Settings / Management",
+
+  "taxmgmt.title": "Tax Codes",
+
+  "taxmgmt.subtitle": "Define global tax codes by country. These will appear in dropdowns across the ERP (e.g. Expenses Bill).",
+
+  "taxmgmt.add_short": "Add Tax Code",
+
+  "taxmgmt.delete_failed": "Failed to delete",
   "cdash.col_purchase": "Purchase",
 
   "dash.profit": "Profit",
@@ -30890,6 +30929,32 @@ const ur: Dict = {
 
 
 
+
+  "taxmgmt.empty": "ابھی تک کوئی ٹیکس کوڈ متعین نہیں کیا گیا۔",
+
+  "taxmgmt.add_new": "نیا ٹیکس کوڈ شامل کریں",
+
+  "taxmgmt.tax_name": "ٹیکس کا نام",
+
+  "taxmgmt.tax_name_ph": "مثلاً VAT، GST، BRT",
+
+  "taxmgmt.percentage": "فیصد (%)",
+
+  "taxmgmt.percentage_ph": "مثلاً 5.0",
+
+  "taxmgmt.save": "ٹیکس کوڈ محفوظ کریں",
+
+  "taxmgmt.all_required": "تمام فیلڈز درکار ہیں",
+
+  "taxmgmt.breadcrumb": "ترتیبات / انتظام",
+
+  "taxmgmt.title": "ٹیکس کوڈز",
+
+  "taxmgmt.subtitle": "ملک کے لحاظ سے عالمی ٹیکس کوڈز متعین کریں۔ یہ پورے ERP میں ڈراپ ڈاؤنز میں ظاہر ہوں گے (مثلاً اخراجات بل)۔",
+
+  "taxmgmt.add_short": "ٹیکس کوڈ شامل کریں",
+
+  "taxmgmt.delete_failed": "حذف کرنے میں ناکام",
   "cdash.col_purchase": "خریداری",
 
   "dash.profit": "منافع",
@@ -44131,6 +44196,32 @@ const ar: Dict = {
 
 
 
+
+  "taxmgmt.empty": "لم يتم تعريف أي رموز ضريبية بعد.",
+
+  "taxmgmt.add_new": "إضافة رمز ضريبي جديد",
+
+  "taxmgmt.tax_name": "اسم الضريبة",
+
+  "taxmgmt.tax_name_ph": "مثال: VAT، GST، BRT",
+
+  "taxmgmt.percentage": "النسبة المئوية (%)",
+
+  "taxmgmt.percentage_ph": "مثال: 5.0",
+
+  "taxmgmt.save": "حفظ الرمز الضريبي",
+
+  "taxmgmt.all_required": "جميع الحقول مطلوبة",
+
+  "taxmgmt.breadcrumb": "الإعدادات / الإدارة",
+
+  "taxmgmt.title": "الرموز الضريبية",
+
+  "taxmgmt.subtitle": "حدد رموز الضرائب العالمية حسب الدولة. ستظهر هذه في القوائم المنسدلة عبر نظام ERP (مثل فاتورة المصروفات).",
+
+  "taxmgmt.add_short": "إضافة رمز ضريبي",
+
+  "taxmgmt.delete_failed": "فشل الحذف",
   "cdash.col_purchase": "المشتريات",
 
   "dash.profit": "الربح",
@@ -57371,6 +57462,32 @@ const fa: Dict = {
 
 
 
+
+  "taxmgmt.empty": "هنوز هیچ کد مالیاتی تعریف نشده است.",
+
+  "taxmgmt.add_new": "افزودن کد مالیاتی جدید",
+
+  "taxmgmt.tax_name": "نام مالیات",
+
+  "taxmgmt.tax_name_ph": "مثلاً VAT، GST، BRT",
+
+  "taxmgmt.percentage": "درصد (%)",
+
+  "taxmgmt.percentage_ph": "مثلاً 5.0",
+
+  "taxmgmt.save": "ذخیره کد مالیاتی",
+
+  "taxmgmt.all_required": "همه فیلدها الزامی هستند",
+
+  "taxmgmt.breadcrumb": "تنظیمات / مدیریت",
+
+  "taxmgmt.title": "کدهای مالیاتی",
+
+  "taxmgmt.subtitle": "کدهای مالیاتی جهانی را بر اساس کشور تعریف کنید. اینها در فهرست‌های کشویی سراسر ERP ظاهر می‌شوند (مثلاً صورتحساب هزینه‌ها).",
+
+  "taxmgmt.add_short": "افزودن کد مالیاتی",
+
+  "taxmgmt.delete_failed": "حذف ناموفق بود",
   "cdash.col_purchase": "خرید",
 
   "dash.profit": "سود",
@@ -70617,6 +70734,32 @@ const ps: Dict = {
 
 
 
+
+  "taxmgmt.empty": "تر اوسه هیڅ مالیاتي کوډ نه دی ټاکل شوی.",
+
+  "taxmgmt.add_new": "نوی مالیاتي کوډ اضافه کړئ",
+
+  "taxmgmt.tax_name": "د مالیې نوم",
+
+  "taxmgmt.tax_name_ph": "لکه VAT، GST، BRT",
+
+  "taxmgmt.percentage": "سلنه (%)",
+
+  "taxmgmt.percentage_ph": "لکه 5.0",
+
+  "taxmgmt.save": "مالیاتي کوډ خوندي کړئ",
+
+  "taxmgmt.all_required": "ټول ساحې اړینې دي",
+
+  "taxmgmt.breadcrumb": "تنظیمات / مدیریت",
+
+  "taxmgmt.title": "مالیاتي کوډونه",
+
+  "taxmgmt.subtitle": "د هیواد له مخې نړیوال مالیاتي کوډونه وټاکئ. دا به د ERP په ټولو ډراپ‌ډاون کې ښکاره شي (لکه د لګښتونو بل).",
+
+  "taxmgmt.add_short": "مالیاتي کوډ اضافه کړئ",
+
+  "taxmgmt.delete_failed": "له منځه وړل ناکام شول",
   "cdash.col_purchase": "پیرود",
 
   "dash.profit": "ګټه",

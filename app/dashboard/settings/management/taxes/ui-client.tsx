@@ -18,8 +18,12 @@ export type TaxCodeRow = {
 
 import { apiGet, apiPost, apiDelete } from "@/lib/api/client";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 export default function TaxesManagementClient({ session }: { session: any }) {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const [taxes, setTaxes] = useState<TaxCodeRow[]>([]);
   const [countries, setCountries] = useState<Array<{ id: string; name: string }>>([]);
   
@@ -46,7 +50,7 @@ export default function TaxesManagementClient({ session }: { session: any }) {
 
   const handleAddTax = async () => {
     if (!form.taxName || !form.taxPct || !form.countryName) {
-      alert("All fields are required");
+      alert(tt("taxmgmt.all_required", "All fields are required"));
       return;
     }
     
@@ -70,7 +74,7 @@ export default function TaxesManagementClient({ session }: { session: any }) {
       await apiDelete(`/api/erp/master-data/taxes/${id}`);
       await fetchTaxes();
     } catch (err: any) {
-      alert(err.message || "Failed to delete");
+      alert(err.message || tt("taxmgmt.delete_failed", "Failed to delete"));
     }
   };
 
@@ -78,14 +82,14 @@ export default function TaxesManagementClient({ session }: { session: any }) {
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">Settings / Management</div>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Tax Codes</h1>
+          <div className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">{tt("taxmgmt.breadcrumb", "Settings / Management")}</div>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">{tt("taxmgmt.title", "Tax Codes")}</h1>
           <p className="mt-2 text-sm text-slate-500">
-            Define global tax codes by country. These will appear in dropdowns across the ERP (e.g. Expenses Bill).
+            {tt("taxmgmt.subtitle", "Define global tax codes by country. These will appear in dropdowns across the ERP (e.g. Expenses Bill).")}
           </p>
         </div>
         <Button onClick={() => setIsModalOpen(true)} className="gap-2 shadow-sm font-semibold">
-          <Plus className="h-4 w-4" /> Add Tax Code
+          <Plus className="h-4 w-4" /> {tt("taxmgmt.add_short", "Add Tax Code")}
         </Button>
       </div>
 
@@ -104,7 +108,7 @@ export default function TaxesManagementClient({ session }: { session: any }) {
               {taxes.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="p-8 text-center text-slate-400">
-                    No tax codes defined yet.
+                    {tt("taxmgmt.empty", "No tax codes defined yet.")}
                   </td>
                 </tr>
               ) : (
@@ -127,34 +131,31 @@ export default function TaxesManagementClient({ session }: { session: any }) {
       </Card>
 
       {isModalOpen && (
-      <SimpleModal onClose={() => setIsModalOpen(false)} title="Add New Tax Code">
+      <SimpleModal onClose={() => setIsModalOpen(false)} title={tt("taxmgmt.add_new", "Add New Tax Code")}>
         <div className="space-y-4 pt-4">
           <div className="space-y-1.5">
-            <Label className="text-xs text-slate-500 font-bold">Country</Label>
+            <Label className="text-xs text-slate-500 font-bold">{tt("common.country", "Country")}</Label>
             <select 
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
               value={form.countryName}
               onChange={e => setForm({...form, countryName: e.target.value})}
             >
-              <option value="">Select Country...</option>
+              <option value="">{tt("common.select_country", "Select Country...")}</option>
               {countries.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-              <option value="United Arab Emirates">United Arab Emirates</option>
-              <option value="Pakistan">Pakistan</option>
-              <option value="Afghanistan">Afghanistan</option>
             </select>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs text-slate-500 font-bold">Tax Name</Label>
-            <Input placeholder="e.g. VAT, GST, BRT" value={form.taxName} onChange={e => setForm({...form, taxName: e.target.value})} />
+            <Label className="text-xs text-slate-500 font-bold">{tt("taxmgmt.tax_name", "Tax Name")}</Label>
+            <Input placeholder={tt("taxmgmt.tax_name_ph", "e.g. VAT, GST, BRT")} value={form.taxName} onChange={e => setForm({...form, taxName: e.target.value})} />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs text-slate-500 font-bold">Percentage (%)</Label>
-            <Input type="number" step="0.01" placeholder="e.g. 5.0" value={form.taxPct} onChange={e => setForm({...form, taxPct: e.target.value})} />
+            <Label className="text-xs text-slate-500 font-bold">{tt("taxmgmt.percentage", "Percentage (%)")}</Label>
+            <Input type="number" step="0.01" placeholder={tt("taxmgmt.percentage_ph", "e.g. 5.0")} value={form.taxPct} onChange={e => setForm({...form, taxPct: e.target.value})} />
           </div>
           
           <div className="pt-4 flex justify-end gap-2 border-t mt-6">
-            <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleAddTax} className="font-bold">Save Tax Code</Button>
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>{tt("common.cancel", "Cancel")}</Button>
+            <Button onClick={handleAddTax} className="font-bold">{tt("taxmgmt.save", "Save Tax Code")}</Button>
           </div>
         </div>
       </SimpleModal>
