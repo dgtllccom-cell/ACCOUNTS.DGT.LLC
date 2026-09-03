@@ -848,12 +848,13 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                     key={folder.key}
                     type="button"
                     onClick={() => onSelectedFolder(folder.key)}
+                    title={typeof folder.label === "string" ? folder.label : undefined}
                     className={cn(
-                      "flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 text-left text-sm transition",
+                      "flex w-full items-center justify-between gap-3 rounded-lg border px-3 py-2 text-left text-sm transition",
                       active ? "border-primary bg-primary/10 text-primary" : "border-transparent hover:bg-muted/60"
                     )}
                   >
-                    <span className="flex min-w-0 items-center gap-2">
+                    <span className="flex min-w-0 flex-1 items-center gap-2">
                       <Icon className="h-4 w-4 shrink-0" aria-hidden />
                       <span className="truncate">{folder.label}</span>
                     </span>
@@ -865,16 +866,17 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
               <button
                 type="button"
                 onClick={() => onSelectedFolder("dashboard")}
+                title={tt("email_mgmt.branch_settings", "Branch Settings")}
                 className={cn(
-                  "flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 text-left text-sm transition",
+                  "flex w-full items-center justify-between gap-3 rounded-lg border px-3 py-2 text-left text-sm transition",
                   selectedFolder === "dashboard" ? "border-primary bg-primary/10 text-primary" : "border-transparent hover:bg-muted/60"
                 )}
               >
-                <span className="flex min-w-0 items-center gap-2">
+                <span className="flex min-w-0 flex-1 items-center gap-2">
                   <Globe2 className="h-4 w-4 shrink-0" aria-hidden />
                   <span className="truncate">{tt("email_mgmt.branch_settings", "Branch Settings")}</span>
                 </span>
-                <span className="shrink-0 rounded bg-muted px-2 py-0.5 text-[10px] font-bold text-foreground uppercase tracking-wider">{tt("email_mgmt.dashboard_label", "Dashboard")}</span>
+                <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[9px] font-bold text-foreground uppercase tracking-wider">{tt("email_mgmt.dashboard_label", "Dashboard")}</span>
               </button>
             </div>
 

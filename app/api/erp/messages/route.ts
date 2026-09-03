@@ -259,11 +259,36 @@ function deriveLinkedModule(entityTable: string, sourceTable: string) {
   return "ERP";
 }
 
-function deriveSubject(action: string, entityTable: string, after: any, before: any, fallbackNo?: string | null) {
+// A raw UUID / long hex id must never be shown as a human-readable subject or document number.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function isOpaqueId(v: string | null | undefined) {
+  const s = String(v ?? "").trim();
+  return !s || UUID_RE.test(s) || /^[0-9a-f]{16,}$/i.test(s);
+}
+
+function actionVerb(action: string) {
+  const a = (action || "").toLowerCase();
+  if (a.includes("create") || a.includes("insert") || a.includes("add")) return "created";
+  if (a.includes("update") || a.includes("edit") || a.includes("patch")) return "updated";
+  if (a.includes("delete") || a.includes("remove")) return "removed";
+  if (a.includes("approve")) return "approved";
+  if (a.includes("post")) return "posted";
+  return "activity";
+}
+
+function deriveSubject(
+  action: string,
+  entityTable: string,
+  after: any,
+  before: any,
+  fallbackNo?: string | null,
+  scope?: string | null,
+) {
   const subject = safeText(after?.subject || after?.title || after?.name || after?.message || before?.subject || before?.title || before?.name);
   if (subject) return subject;
 
-  const docNo = safeText(
+  // Real business document numbers only — never a UUID / opaque row id.
+  const docNoRaw = safeText(
     after?.documentNo ||
       after?.document_no ||
       after?.purchase_order_no ||
@@ -271,16 +296,25 @@ function deriveSubject(action: string, entityTable: string, after: any, before: 
       after?.voucher_no ||
       after?.entry_no ||
       after?.transaction_no ||
-      fallbackNo
+      (isOpaqueId(fallbackNo) ? null : fallbackNo)
   );
-  if (docNo) return `${titleCase(entityTable || action)} ${docNo}`.trim();
-  return titleCase(action.replace(/^message\./, "").replace(/^erp\.notification\./, "")) || titleCase(entityTable || "Message");
+  const entityLabel = titleCase(entityTable || action) || "Record";
+  if (docNoRaw && !isOpaqueId(docNoRaw)) return `${entityLabel} ${docNoRaw}`.trim();
+
+  // Human-readable fallback: "Profiles updated — Quetta / Quetta City Branch"
+  const verb = actionVerb(action);
+  const scopeSuffix = scope && scope !== "Global" ? ` — ${scope}` : "";
+  return `${entityLabel} ${verb}${scopeSuffix}`.trim();
 }
 
-function derivePreview(action: string, entityTable: string, after: any, before: any) {
+function derivePreview(action: string, entityTable: string, after: any, before: any, whenIso?: string | null) {
   const preview = safeText(after?.preview || after?.body || after?.description || after?.narration || after?.memo || before?.preview || before?.body || before?.description || before?.narration || before?.memo);
   if (preview) return preview.slice(0, 220);
-  return `ERP ${titleCase(entityTable || action)} activity recorded at ${new Date().toLocaleString()}`;
+  // Use the actual event timestamp from the source record — never `new Date()`, which
+  // made every generated body claim it happened "just now" and mismatch the record time.
+  const when = whenIso ? new Date(whenIso) : null;
+  const whenText = when && !Number.isNaN(when.getTime()) ? when.toLocaleString() : "an earlier time";
+  return `ERP ${titleCase(entityTable || action)} activity recorded at ${whenText}`;
 }
 
 function scopeLabel(countryId: string | null, countryName: string | null, branchType: string, branchName: string) {
@@ -511,14 +545,17 @@ export async function GET(request: NextRequest) {
           : actor?.full_name ?? (row.actor_id ? `User ${row.actor_id.slice(0, 8)}` : "ERP System");
       const recipients = normalizeStringArray(after?.to).concat(normalizeStringArray(after?.recipients));
       const cc = normalizeStringArray(after?.cc);
-      const subject = deriveSubject(row.action, row.entity_table, after, before, row.entity_id);
-      const preview = derivePreview(row.action, row.entity_table, after, before);
+      const auditScopeLabel = scopeLabel(countryId, countryName, branchType, branchName);
+      const subject = deriveSubject(row.action, row.entity_table, after, before, row.entity_id, auditScopeLabel);
+      const preview = derivePreview(row.action, row.entity_table, after, before, row.created_at);
       const body = safeText(after?.body || after?.message || after?.description || after?.narration || after?.memo || preview);
       const linkedModule = deriveLinkedModule(row.entity_table, row.entity_table);
       const linkedRoute = after?.linkedRoute ? String(after.linkedRoute) : deriveLinkedRoute(row.entity_table, row.entity_table);
-      const linkedDocumentNo = safeText(
+      const linkedDocumentNoRaw = safeText(
         after?.documentNo || after?.document_no || after?.purchase_order_no || after?.entry_no || after?.transaction_no || after?.voucher_no || after?.journal_no || row.entity_id
       ) || null;
+      // Keep a real business document number; a raw UUID stays available as recordId, not as the doc no.
+      const linkedDocumentNo = isOpaqueId(linkedDocumentNoRaw) ? null : linkedDocumentNoRaw;
       const labels = uniqueStrings([
         ...(Array.isArray(after?.labels) ? after.labels.map((label: unknown) => (typeof label === "string" ? label : "")).filter(Boolean) : []),
         titleCase(row.entity_table),
