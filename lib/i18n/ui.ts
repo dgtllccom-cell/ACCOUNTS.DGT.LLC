@@ -927,6 +927,8 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "dintake.em_subtitle"
+  | "dintake.em_cancel_footer"
   | "bgr.enterprise_wide"
   | "bgr.currencies"
   | "bgr.main_branch"
@@ -17803,6 +17805,12 @@ const en: Dict = {
 
 
 
+
+
+  "dintake.em_subtitle": "Choose how you want to start. Both paths end in the same form, validation and approval.",
+
+
+  "dintake.em_cancel_footer": "Cancel and go back",
   "bgr.enterprise_wide": "Enterprise-wide",
 
 
@@ -31425,6 +31433,12 @@ const ur: Dict = {
 
 
 
+
+
+  "dintake.em_subtitle": "منتخب کریں کہ آپ کیسے شروع کرنا چاہتے ہیں۔ دونوں راستے ایک ہی فارم، توثیق اور منظوری پر ختم ہوتے ہیں۔",
+
+
+  "dintake.em_cancel_footer": "منسوخ کریں اور واپس جائیں",
   "bgr.enterprise_wide": "پورے انٹرپرائز میں",
 
 
@@ -45049,6 +45063,12 @@ const ar: Dict = {
 
 
 
+
+
+  "dintake.em_subtitle": "اختر كيف تريد البدء. كلا المسارين ينتهيان بنفس النموذج والتحقق والموافقة.",
+
+
+  "dintake.em_cancel_footer": "إلغاء والعودة",
   "bgr.enterprise_wide": "على مستوى المؤسسة",
 
 
@@ -58672,6 +58692,12 @@ const fa: Dict = {
 
 
 
+
+
+  "dintake.em_subtitle": "انتخاب کنید که چگونه می‌خواهید شروع کنید. هر دو مسیر به همان فرم، اعتبارسنجی و تأیید ختم می‌شوند.",
+
+
+  "dintake.em_cancel_footer": "لغو و بازگشت",
   "bgr.enterprise_wide": "در سطح سازمان",
 
 
@@ -72301,6 +72327,12 @@ const ps: Dict = {
 
 
 
+
+
+  "dintake.em_subtitle": "غوره کړئ چې څنګه غواړئ پیل وکړئ. دواړه لارې په ورته فورم، تصدیق او تصویب پای ته رسیږي.",
+
+
+  "dintake.em_cancel_footer": "لغوه کړئ او بیرته لاړ شئ",
   "bgr.enterprise_wide": "د ټول تصدۍ په کچه",
 
 

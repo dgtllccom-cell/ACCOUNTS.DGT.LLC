@@ -133,29 +133,54 @@ export function EntryMethodSelector({
   }
 
   return (
-    <section dir={s.dir} className="mx-auto max-w-2xl p-4 sm:p-8">
-      <div className="mb-5 flex items-center justify-between">
-        <h1 className="text-base font-black text-slate-900 dark:text-slate-50">{title || s.t("em_title", "Select Entry Method")}</h1>
-        <button type="button" onClick={() => router.back()} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"><X className="h-4 w-4" /></button>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Choice icon={FilePlus2} label={s.t("em_manual", "Manual Entry")} desc={s.t("em_manual_desc", "Fill the form yourself. Always available.")} tone="emerald" onClick={() => setMode("manual")} />
-        <Choice icon={ScanLine} label={s.t("em_scan", "Scan / Upload Document")} desc={s.t("em_scan_desc", "Upload a PDF or photo — local OCR extracts the fields for your review.")} tone="blue" onClick={() => router.push(`/dashboard/document-intelligence?domain=${domain}&module=${encodeURIComponent(targetModule)}`)} />
-        <Choice icon={FileClock} label={s.t("em_draft", "Continue Saved Draft")} desc={s.t("em_draft_desc", "A reviewed draft prepared by the Document Intake Center pre-fills this form.")} tone="slate" onClick={() => { setMode("drafts"); void loadDrafts(); }} />
-        <Choice icon={X} label={s.t("cancel", "Cancel")} desc={s.t("em_cancel_desc", "Go back without creating anything.")} tone="slate" onClick={() => router.back()} />
+    <section dir={s.dir} className="mx-auto flex min-h-[60vh] w-full max-w-3xl flex-col justify-center p-4 sm:p-8">
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-8">
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-lg font-black text-slate-900 dark:text-slate-50">{title || s.t("em_title", "Select Entry Method")}</h1>
+            <p className="mt-1 text-xs text-slate-500">{s.t("em_subtitle", "Choose how you want to start. Both paths end in the same form, validation and approval.")}</p>
+          </div>
+          <button type="button" onClick={() => router.back()} aria-label={s.t("cancel", "Cancel")} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"><X className="h-4 w-4" /></button>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Choice icon={FilePlus2} label={s.t("em_manual", "Manual Entry")} desc={s.t("em_manual_desc", "Fill the form yourself. Always available.")} tone="emerald" onClick={() => setMode("manual")} />
+          <Choice icon={ScanLine} label={s.t("em_scan", "Scan / Upload Document")} desc={s.t("em_scan_desc", "Upload a PDF or photo — local OCR extracts the fields for your review.")} tone="blue" onClick={() => router.push(`/dashboard/document-intelligence?domain=${domain}&module=${encodeURIComponent(targetModule)}`)} />
+          <Choice icon={FileClock} label={s.t("em_draft", "Continue Saved Draft")} desc={s.t("em_draft_desc", "A reviewed draft prepared by the Document Intake Center pre-fills this form.")} tone="slate" onClick={() => { setMode("drafts"); void loadDrafts(); }} />
+        </div>
+        <div className="mt-6 flex justify-end border-t border-slate-100 pt-4 dark:border-slate-800">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="rounded-lg px-3 py-1.5 text-xs font-bold text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          >
+            {s.t("em_cancel_footer", "Cancel and go back")}
+          </button>
+        </div>
       </div>
     </section>
   );
 }
 
 function Choice({ icon: Icon, label, desc, tone, onClick }: { icon: any; label: string; desc: string; tone: "emerald" | "blue" | "slate"; onClick: () => void }) {
-  const ring = tone === "emerald" ? "hover:border-emerald-400" : tone === "blue" ? "hover:border-blue-400" : "hover:border-slate-400";
-  const ic = tone === "emerald" ? "text-emerald-600" : tone === "blue" ? "text-blue-600" : "text-slate-500";
+  const ring =
+    tone === "emerald" ? "hover:border-emerald-400 hover:shadow-md focus-visible:border-emerald-500" :
+    tone === "blue" ? "hover:border-blue-400 hover:shadow-md focus-visible:border-blue-500" :
+    "hover:border-slate-400 hover:shadow-md focus-visible:border-slate-500";
+  const iconWrap =
+    tone === "emerald" ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300" :
+    tone === "blue" ? "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300" :
+    "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300";
   return (
-    <button type="button" onClick={onClick} className={`rounded-2xl border border-slate-200 bg-white p-4 text-start transition-colors dark:border-slate-700 dark:bg-slate-900 ${ring}`}>
-      <Icon className={`h-5 w-5 ${ic}`} />
-      <span className="mt-2 block text-sm font-bold text-slate-800 dark:text-slate-100">{label}</span>
-      <span className="mt-0.5 block text-[11px] text-slate-500">{desc}</span>
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-4 text-start outline-none transition-all dark:border-slate-700 dark:bg-slate-900 ${ring}`}
+    >
+      <span className={`mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl ${iconWrap}`}>
+        <Icon className="h-5 w-5" />
+      </span>
+      <span className="block text-sm font-bold text-slate-800 dark:text-slate-100">{label}</span>
+      <span className="mt-1 block text-[11px] leading-relaxed text-slate-500">{desc}</span>
     </button>
   );
 }
