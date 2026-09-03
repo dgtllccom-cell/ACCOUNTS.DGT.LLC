@@ -14,7 +14,13 @@ import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { openScopedGenericReport, type GenericReportColumn } from "@/lib/reports/open-scoped-report";
 import { printStore } from "@/lib/store/print-store";
 
-type SourceModule = "purchase_booking" | "local_purchase" | "sales_booking" | "local_sales";
+type SourceModule =
+  | "purchase_booking"
+  | "local_purchase"
+  | "sales_booking"
+  | "local_sales"
+  | "shipping_bl"
+  | "clearing_bill";
 
 type BillRow = {
   id: string;
@@ -107,7 +113,9 @@ export function BillExpensesView({ lang: langProp }: { lang?: string }) {
       m === "purchase_booking" ? s.t("tab_purchase_booking", "Purchase Booking")
       : m === "local_purchase" ? s.t("tab_local_purchase", "Local Purchase")
       : m === "sales_booking" ? s.t("tab_sales_booking", "Sales Booking")
-      : s.t("tab_local_sales", "Local Sales"),
+      : m === "local_sales" ? s.t("tab_local_sales", "Local Sales")
+      : m === "shipping_bl" ? s.t("tab_shipping_bl", "Shipping / BL")
+      : s.t("tab_clearing_bill", "Clearing Bill"),
     [s]
   );
 
@@ -236,7 +244,7 @@ export function BillExpensesView({ lang: langProp }: { lang?: string }) {
         <Card className="shadow-sm">
           <CardContent className="flex flex-col gap-3 p-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-wrap gap-1.5">
-              {(["all", "purchase_booking", "local_purchase", "sales_booking", "local_sales"] as const).map((m) => (
+              {(["all", "purchase_booking", "local_purchase", "sales_booking", "local_sales", "shipping_bl", "clearing_bill"] as const).map((m) => (
                 <button
                   key={m}
                   onClick={() => setModuleTab(m)}

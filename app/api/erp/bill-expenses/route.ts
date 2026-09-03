@@ -6,11 +6,11 @@ import { withLocalPg } from "@/lib/db/local-postgres";
 
 export const dynamic = "force-dynamic";
 
-const MODULES = ["purchase_booking", "local_purchase", "sales_booking", "local_sales"] as const;
+const MODULES = ["purchase_booking", "local_purchase", "sales_booking", "local_sales", "shipping_bl", "clearing_bill"] as const;
 
 /**
  * GET /api/erp/bill-expenses
- *   ?module=purchase_booking|local_purchase|sales_booking|local_sales
+ *   ?module=purchase_booking|local_purchase|sales_booking|local_sales|shipping_bl|clearing_bill
  *   ?countryId= &branchId= &status=open|in_progress|closed|all
  *   ?eligibility=active|withdrawn|all   (default active)
  *   ?q= &limit=

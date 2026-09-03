@@ -76,6 +76,20 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
                  sales_status, ledger_posting_status
           from public.sales_orders where id = ${be.source_id}::uuid limit 1`;
         sourceBill = so ?? null;
+      } else if (be.source_table === "shipping_bl_records") {
+        const [bl] = await sql`
+          select bl_number, container_number, vessel_name, voyage_number, shipping_line_name,
+                 loading_port, discharge_port, etd, eta, account_number, debit, credit,
+                 currency_code, shipment_status
+          from public.shipping_bl_records where id = ${be.source_id}::uuid limit 1`;
+        sourceBill = bl ?? null;
+      } else if (be.source_table === "clearing_payment_bills") {
+        const [cp] = await sql`
+          select bill_no, gd_number, bl_number, order_no, agent_name, port_name,
+                 customs_duty, port_charges, demurrage_charges, clearance_fee, freight_charges,
+                 other_charges, total_amount, currency_code, payment_status, payment_method, status
+          from public.clearing_payment_bills where id = ${be.source_id}::uuid limit 1`;
+        sourceBill = cp ?? null;
       }
 
       return {

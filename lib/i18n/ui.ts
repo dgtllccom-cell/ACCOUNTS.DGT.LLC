@@ -927,6 +927,8 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "bexp.tab_shipping_bl"
+  | "bexp.tab_clearing_bill"
   | "hr.step_configured"
   | "hr.step_calculated"
   | "aump.manage_country"
@@ -17872,6 +17874,12 @@ const en: Dict = {
 
 
 
+
+
+  "bexp.tab_shipping_bl": "Shipping / BL",
+
+
+  "bexp.tab_clearing_bill": "Clearing Bill",
   "hr.step_configured": "Configured",
 
 
@@ -31659,6 +31667,12 @@ const ur: Dict = {
 
 
 
+
+
+  "bexp.tab_shipping_bl": "شپنگ / BL",
+
+
+  "bexp.tab_clearing_bill": "کلیئرنگ بل",
   "hr.step_configured": "ترتیب دیا گیا",
 
 
@@ -45448,6 +45462,12 @@ const ar: Dict = {
 
 
 
+
+
+  "bexp.tab_shipping_bl": "الشحن / بوليصة الشحن",
+
+
+  "bexp.tab_clearing_bill": "فاتورة التخليص",
   "hr.step_configured": "تم التكوين",
 
 
@@ -59236,6 +59256,12 @@ const fa: Dict = {
 
 
 
+
+
+  "bexp.tab_shipping_bl": "حمل و نقل / بارنامه",
+
+
+  "bexp.tab_clearing_bill": "صورتحساب ترخیص",
   "hr.step_configured": "پیکربندی شد",
 
 
@@ -73030,6 +73056,12 @@ const ps: Dict = {
 
 
 
+
+
+  "bexp.tab_shipping_bl": "بار وړل / BL",
+
+
+  "bexp.tab_clearing_bill": "د کلیرنس بل",
   "hr.step_configured": "تنظیم شو",
 
 
