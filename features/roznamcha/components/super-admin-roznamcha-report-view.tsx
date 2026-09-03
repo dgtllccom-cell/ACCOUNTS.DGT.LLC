@@ -1078,7 +1078,7 @@ function SuperAdminRoznamchaSummary({
             </p>
             <div className="mt-2 flex items-center gap-2">
               <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400">Live Updating</span>
+              <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400">{th("Live Updating")}</span>
             </div>
           </div>
         </button>
@@ -1097,37 +1097,37 @@ function SuperAdminRoznamchaSummary({
                         <span className="transition-transform group-open/card:rotate-90">
                           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                         </span>
-                        {getFlag(item.name)} {item.name === 'Pakistan' ? 'Pakistani' : item.name}
+                        {getFlag(item.name)} {item.name}
                       </span>
-                      <span className="bg-white/20 text-[10px] font-bold px-2 py-0.5 rounded-full">{item.entries} Trx</span>
+                      <span className="bg-white/20 text-[10px] font-bold px-2 py-0.5 rounded-full">{item.entries} {th("Trx")}</span>
                     </div>
                     <div className="p-4 space-y-3 bg-white dark:bg-slate-950">
                       <div className="flex justify-between items-end border-b border-slate-100 dark:border-slate-800 pb-2">
-                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Currency</span>
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{th("Currency")}</span>
                         <span className="text-base font-black text-slate-800 dark:text-slate-200">{item.currency}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-xs font-bold text-slate-500">Total Debit</span>
+                        <span className="text-xs font-bold text-slate-500">{th("Total Debit")}</span>
                         <span className="font-black text-rose-600">{formatMoney(item.debit)}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-xs font-bold text-slate-500">Total Credit</span>
+                        <span className="text-xs font-bold text-slate-500">{th("Total Credit")}</span>
                         <span className="font-black text-emerald-600">{formatMoney(item.credit)}</span>
                       </div>
                       <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800">
-                        <span className="text-xs font-bold text-slate-500 uppercase">Balance</span>
+                        <span className="text-xs font-bold text-slate-500 uppercase">{th("Balance")}</span>
                         <span className="text-lg font-black text-slate-900 dark:text-slate-100">{formatMoney(Math.abs(item.balance))}</span>
                       </div>
                       <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px]">
-                        <span className="font-semibold text-slate-500">{item.users.size} Users Login</span>
-                        <span className="font-semibold text-slate-500">{item.branches.size} Branches Login</span>
+                        <span className="font-semibold text-slate-500">{item.users.size} {th("Users Login")}</span>
+                        <span className="font-semibold text-slate-500">{item.branches.size} {th("Branches Login")}</span>
                       </div>
                     </div>
                   </summary>
 
                   {/* Branch Details Expanded Content */}
                   <div className="bg-slate-50 dark:bg-slate-900/50 p-3 border-t border-slate-100 dark:border-slate-800 max-h-[300px] overflow-y-auto space-y-2">
-                    <div className="text-[10px] font-bold uppercase text-slate-500 mb-1 pl-1">Branch Breakdown</div>
+                    <div className="text-[10px] font-bold uppercase text-slate-500 mb-1 pl-1">{th("Branch Breakdown")}</div>
                     {Array.from(item.branchData.values()).map((b: any) => (
                       <div key={b.name} className="bg-white dark:bg-slate-950 rounded-lg p-2.5 border border-slate-200 dark:border-slate-800 shadow-sm">
                         <div className="flex justify-between items-center mb-2 pb-1.5 border-b border-slate-100 dark:border-slate-800">
@@ -1815,7 +1815,7 @@ function SuperAdminRoznamchaReportViewContent({
                   ))}
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[10px] text-slate-500 font-bold">From Date</Label>
+                  <Label className="text-[10px] text-slate-500 font-bold">{th("From Date")}</Label>
                   <Input
                     type="date"
                     className="h-8 text-xs rounded-lg border-slate-200"
@@ -1824,7 +1824,7 @@ function SuperAdminRoznamchaReportViewContent({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[10px] text-slate-500 font-bold">To Date</Label>
+                  <Label className="text-[10px] text-slate-500 font-bold">{th("To Date")}</Label>
                   <Input
                     type="date"
                     className="h-8 text-xs rounded-lg border-slate-200"
@@ -1873,7 +1873,7 @@ function SuperAdminRoznamchaReportViewContent({
             {filtersOpen && (
               <div className="absolute right-0 mt-1 w-64 rounded-xl bg-white border border-slate-200 shadow-2xl z-[80] p-4 space-y-3 text-left">
                 <div className="space-y-1">
-                  <Label className="text-[10px] text-slate-500 font-bold">Country</Label>
+                  <Label className="text-[10px] text-slate-500 font-bold">{th("Country")}</Label>
                   <SearchSelect
                     label=""
                     value={draftFilters.countryId}
@@ -1888,7 +1888,7 @@ function SuperAdminRoznamchaReportViewContent({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[10px] text-slate-500 font-bold">Branch</Label>
+                  <Label className="text-[10px] text-slate-500 font-bold">{th("Branch")}</Label>
                   <SearchSelect
                     label=""
                     value={draftFilters.branchId}
@@ -1903,7 +1903,7 @@ function SuperAdminRoznamchaReportViewContent({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[10px] text-slate-500 font-bold">Voucher Type</Label>
+                  <Label className="text-[10px] text-slate-500 font-bold">{th("Voucher Type")}</Label>
                   <SearchSelect
                     label=""
                     value={draftFilters.voucherType}
@@ -1918,7 +1918,7 @@ function SuperAdminRoznamchaReportViewContent({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[10px] text-slate-500 font-bold">Account / Party</Label>
+                  <Label className="text-[10px] text-slate-500 font-bold">{th("Account / Party")}</Label>
                   <div className="relative">
                     <Search className="pointer-events-none absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-slate-400" />
                     <Input
@@ -2006,7 +2006,7 @@ function SuperAdminRoznamchaReportViewContent({
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-[10px] text-slate-500 font-bold">Show USD Columns</Label>
+                  <Label className="text-[10px] text-slate-500 font-bold">{th("Show USD Columns")}</Label>
                   <select
                     value={ratesDraft.showUsd}
                     onChange={(e) => setRatesDraft((cur) => ({ ...cur, showUsd: e.target.value }))}
@@ -2309,48 +2309,48 @@ function SuperAdminRoznamchaReportViewContent({
           <div className="space-y-6">
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Voucher No</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{th("Voucher No")}</span>
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">{activeDrawerEntry.voucherNo || "-"}</span>
               </div>
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Journal No</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{th("Journal No")}</span>
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">{activeDrawerEntry.journalNo || "-"}</span>
               </div>
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Voucher Type</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{th("Voucher Type")}</span>
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">{activeDrawerEntry.typeLabel || "-"}</span>
               </div>
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Entry Date</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{th("Entry Date")}</span>
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">{activeDrawerEntry.entryDate || "-"}</span>
               </div>
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Country</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{th("Country")}</span>
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">{activeDrawerEntry.countryName || "-"}</span>
               </div>
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Branch Office</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{th("Branch Office")}</span>
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
                   {activeDrawerEntry.cityBranchId ? activeDrawerEntry.cityBranchName : activeDrawerEntry.countryBranchName}
                 </span>
               </div>
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Status</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{th("Status")}</span>
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">{activeDrawerEntry.status || "-"}</span>
               </div>
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Created By</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{th("Created By")}</span>
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">{activeDrawerEntry.createdBy || "-"}</span>
               </div>
             </div>
 
             <div className="rounded-lg border p-4 bg-muted/20 space-y-1 dark:bg-slate-900/50 dark:border-slate-800">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Narration / Details</span>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{th("Narration / Details")}</span>
               <p className="text-xs text-foreground font-medium leading-relaxed">{activeDrawerEntry.narration || "No narration provided."}</p>
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Transaction Ledger Postings</h3>
+              <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">{th("Transaction Ledger Postings")}</h3>
               <div className="overflow-x-auto rounded-lg border dark:border-slate-800">
                 <table className="w-full text-xs text-left">
                   <thead className="bg-slate-900 text-white dark:bg-slate-800">
