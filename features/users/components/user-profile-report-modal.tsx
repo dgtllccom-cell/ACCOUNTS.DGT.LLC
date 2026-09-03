@@ -33,6 +33,7 @@ import type { EnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { buildRbacRoleSummary, buildAllModulesCapabilities, ModulePermissionCapability } from "@/lib/permissions/rbac-matrix-builder";
 import { openUserA4ReportWindow, UserReportData } from "@/lib/reports/open-user-a4-report-window";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 export interface UserProfileData {
   userId: string;
@@ -89,6 +90,7 @@ export function UserProfileReportModal({
 }: UserProfileReportModalProps) {
   const activeLang = useActiveLanguage();
   const isRtl = ["ur", "ar", "fa", "ps"].includes(activeLang);
+  const th = (s: string) => translateHeader(activeLang, s);
 
   const rbacSummary = useMemo(() => {
     return buildRbacRoleSummary(user.role, user.permissions);
@@ -143,8 +145,8 @@ export function UserProfileReportModal({
     };
 
     openUserA4ReportWindow({
-      title: "Comprehensive User Profile & Authorization Report",
-      subtitle: "Official Centralized ERP User Registry & RBAC Permissions Record",
+      title: th("Comprehensive User Profile & Authorization Report"),
+      subtitle: th("Official Centralized ERP User Registry & RBAC Permissions Record"),
       userData: reportData,
       lang: activeLang
     });
@@ -189,7 +191,7 @@ export function UserProfileReportModal({
                 className="bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700 text-xs h-8 gap-1.5 font-medium"
               >
                 <Edit className="h-3.5 w-3.5" />
-                <span>Edit User Profile</span>
+                <span>{th("Edit User Profile")}</span>
               </Button>
             )}
             <Button
@@ -198,7 +200,7 @@ export function UserProfileReportModal({
               className="bg-blue-600 hover:bg-blue-500 text-white text-xs h-8 gap-1.5 font-semibold shadow-sm"
             >
               <Printer className="h-3.5 w-3.5" />
-              <span>Print A4 Profile Report</span>
+              <span>{th("Print A4 Profile Report")}</span>
             </Button>
             <button
               onClick={onClose}
@@ -294,7 +296,7 @@ export function UserProfileReportModal({
               <div>
                 <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm flex items-center gap-2">
                   <ShieldCheck className="h-4 w-4 text-blue-600" />
-                  <span>Detailed Form / Module Permission Matrix (Database RBAC)</span>
+                  <span>{th("Detailed Form / Module Permission Matrix (Database RBAC)")}</span>
                 </h3>
                 <p className="text-[11px] text-slate-500 mt-0.5">
                   Granular functional authorizations for <strong>{rbacSummary.roleTitle}</strong> across all core ERP modules.
@@ -379,7 +381,7 @@ export function UserProfileReportModal({
                 <div className="p-4 bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 rounded-xl space-y-2">
                   <div className="font-bold text-emerald-900 dark:text-emerald-200 flex items-center gap-2 text-xs">
                     <BadgeCheck className="h-4 w-4 text-emerald-600" />
-                    <span>Special Supervisor & Approval Authorizations</span>
+                    <span>{th("Special Supervisor & Approval Authorizations")}</span>
                   </div>
                   <ul className="list-disc pl-4 space-y-1 text-slate-700 dark:text-slate-300 text-[11px]">
                     {rbacSummary.supervisorPrivileges.map((p, i) => (
@@ -393,7 +395,7 @@ export function UserProfileReportModal({
                 <div className="p-4 bg-red-50/60 dark:bg-red-950/30 border border-red-200 dark:border-red-800/60 rounded-xl space-y-2">
                   <div className="font-bold text-red-900 dark:text-red-200 flex items-center gap-2 text-xs">
                     <XCircle className="h-4 w-4 text-red-600" />
-                    <span>Restricted Modules (No System Access)</span>
+                    <span>{th("Restricted Modules (No System Access)")}</span>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {rbacSummary.restrictedModules.map((m, i) => (
@@ -419,7 +421,7 @@ export function UserProfileReportModal({
             </div>
             <div className="flex items-center gap-1.5 text-emerald-600 font-bold">
               <CheckCircle2 className="h-4 w-4" />
-              <span>Database RBAC Synchronized</span>
+              <span>{th("Database RBAC Synchronized")}</span>
             </div>
           </div>
 

@@ -2138,6 +2138,14 @@ export const HEADER_TRANSLATIONS: Record<string, Row> = {
   "PRINT EMPLOYEE CERTIFICATE": { ur: "ملازم سرٹیفکیٹ پرنٹ کریں", ar: "طباعة شهادة الموظف", fa: "چاپ گواهی کارمند", ps: "د کارمند سند چاپ کړئ" },
   "MORE OPTIONS": { ur: "مزید اختیارات", ar: "خيارات أكثر", fa: "گزینه‌های بیشتر", ps: "نور اختیارونه" },
   "VIEW FULL DOSSIER": { ur: "مکمل ڈوزیئر دیکھیں", ar: "عرض الملف الكامل", fa: "مشاهده پرونده کامل", ps: "بشپړه دوسیه وګورئ" },
+  "EDIT USER PROFILE": { ur: "یوزر پروفائل میں ترمیم کریں", ar: "تعديل ملف المستخدم", fa: "ویرایش نمایه کاربر", ps: "د کاروونکي پروفایل سمون" },
+  "PRINT A4 PROFILE REPORT": { ur: "A4 پروفائل رپورٹ پرنٹ کریں", ar: "طباعة تقرير الملف A4", fa: "چاپ گزارش نمایه A4", ps: "د A4 پروفایل راپور چاپ کړئ" },
+  "DETAILED FORM / MODULE PERMISSION MATRIX (DATABASE RBAC)": { ur: "تفصیلی فارم / ماڈیول اجازت میٹرکس (ڈیٹابیس RBAC)", ar: "مصفوفة أذونات النماذج / الوحدات التفصيلية (RBAC لقاعدة البيانات)", fa: "ماتریس مجوز فرم / ماژول تفصیلی (RBAC پایگاه داده)", ps: "د فورم / ماډیول تفصيلي د اجازې جدول (ډیټابیس RBAC)" },
+  "SPECIAL SUPERVISOR & APPROVAL AUTHORIZATIONS": { ur: "خصوصی سپروائزر اور منظوری کے اختیارات", ar: "تفويضات المشرف الخاص والموافقة", fa: "مجوزهای ویژه سرپرست و تأیید", ps: "ځانګړي څارونکي او د تصویب واکونه" },
+  "RESTRICTED MODULES (NO SYSTEM ACCESS)": { ur: "محدود ماڈیولز (سسٹم تک رسائی نہیں)", ar: "الوحدات المقيدة (لا يوجد وصول للنظام)", fa: "ماژول‌های محدود (بدون دسترسی سیستم)", ps: "محدود ماډیولونه (سیسټم ته لاسرسی نشته)" },
+  "DATABASE RBAC SYNCHRONIZED": { ur: "ڈیٹابیس RBAC ہم آہنگ", ar: "تمت مزامنة RBAC لقاعدة البيانات", fa: "RBAC پایگاه داده همگام‌سازی شد", ps: "ډیټابیس RBAC همغږی شو" },
+  "COMPREHENSIVE USER PROFILE & AUTHORIZATION REPORT": { ur: "جامع یوزر پروفائل اور اجازت رپورٹ", ar: "تقرير شامل لملف المستخدم والتفويض", fa: "گزارش جامع نمایه کاربر و مجوز", ps: "د کاروونکي پروفایل او واک جامع راپور" },
+  "OFFICIAL CENTRALIZED ERP USER REGISTRY & RBAC PERMISSIONS RECORD": { ur: "آفیشل مرکزی ERP یوزر رجسٹری اور RBAC اجازت ریکارڈ", ar: "سجل مستخدمي ERP المركزي الرسمي وسجل أذونات RBAC", fa: "دفتر ثبت رسمی کاربران ERP متمرکز و سابقه مجوزهای RBAC", ps: "رسمي مرکزي ERP د کاروونکي راجستر او د RBAC اجازو ریکارډ" },
 };
 
 /** Normalize an English header for lookup: trim, collapse whitespace, uppercase. */

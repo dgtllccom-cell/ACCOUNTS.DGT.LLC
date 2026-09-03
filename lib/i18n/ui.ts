@@ -927,6 +927,26 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "common.email"
+  | "common.whatsapp"
+  | "acct.apv_rpt_certificate"
+  | "acct.apv_rpt_all"
+  | "acct.apv_rpt_01"
+  | "acct.apv_rpt_02"
+  | "acct.apv_rpt_03"
+  | "acct.apv_rpt_04"
+  | "acct.apv_export_pdf"
+  | "com.order_details"
+  | "com.shipment"
+  | "com.goods"
+  | "com.chs_code"
+  | "com.route"
+  | "com.loading_date"
+  | "com.linked_parties"
+  | "com.edit_resume_order"
+  | "com.export_csv"
+  | "com.edit_resume_step"
+  | "com.view_details"
   | "bgr.close_user_details"
   | "bgr.close_login_list"
   | "bgr.all_erp_users"
@@ -17611,6 +17631,46 @@ const en: Dict = {
 
 
 
+
+
+  "common.email": "Email",
+
+  "common.whatsapp": "WhatsApp",
+
+  "acct.apv_rpt_certificate": "Select Report: Official Certificate",
+
+  "acct.apv_rpt_all": "View Complete Full Certificate (All Sections)",
+
+  "acct.apv_rpt_01": "Personal & Account Info",
+
+  "acct.apv_rpt_02": "Location & Branch Info",
+
+  "acct.apv_rpt_03": "Contact & Company Info",
+
+  "acct.apv_rpt_04": "Document & Ledger Info",
+
+  "acct.apv_export_pdf": "Export PDF",
+  "com.order_details": "Order Details",
+
+  "com.shipment": "Shipment",
+
+  "com.goods": "Goods",
+
+  "com.chs_code": "CHS Code",
+
+  "com.route": "Route",
+
+  "com.loading_date": "Loading Date",
+
+  "com.linked_parties": "Linked Parties",
+
+  "com.edit_resume_order": "Edit / Resume Order",
+
+  "com.export_csv": "Export to CSV",
+
+  "com.edit_resume_step": "Edit / Resume Step",
+
+  "com.view_details": "View Details",
   "bgr.close_user_details": "Close user details",
 
   "bgr.close_login_list": "Close login list",
@@ -30780,6 +30840,46 @@ const ur: Dict = {
 
 
 
+
+
+  "common.email": "ای میل",
+
+  "common.whatsapp": "واٹس ایپ",
+
+  "acct.apv_rpt_certificate": "رپورٹ منتخب کریں: آفیشل سرٹیفکیٹ",
+
+  "acct.apv_rpt_all": "مکمل مکمل سرٹیفکیٹ دیکھیں (تمام حصے)",
+
+  "acct.apv_rpt_01": "ذاتی اور اکاؤنٹ معلومات",
+
+  "acct.apv_rpt_02": "مقام اور برانچ معلومات",
+
+  "acct.apv_rpt_03": "رابطہ اور کمپنی معلومات",
+
+  "acct.apv_rpt_04": "دستاویز اور لیجر معلومات",
+
+  "acct.apv_export_pdf": "PDF ایکسپورٹ کریں",
+  "com.order_details": "آرڈر کی تفصیلات",
+
+  "com.shipment": "کھیپ",
+
+  "com.goods": "سامان",
+
+  "com.chs_code": "CHS کوڈ",
+
+  "com.route": "راستہ",
+
+  "com.loading_date": "لوڈنگ کی تاریخ",
+
+  "com.linked_parties": "منسلک فریق",
+
+  "com.edit_resume_order": "آرڈر میں ترمیم / دوبارہ شروع کریں",
+
+  "com.export_csv": "CSV میں ایکسپورٹ کریں",
+
+  "com.edit_resume_step": "مرحلہ ترمیم / دوبارہ شروع کریں",
+
+  "com.view_details": "تفصیلات دیکھیں",
   "bgr.close_user_details": "یوزر تفصیلات بند کریں",
 
   "bgr.close_login_list": "لاگ اِن فہرست بند کریں",
@@ -43951,6 +44051,46 @@ const ar: Dict = {
 
 
 
+
+
+  "common.email": "بريد إلكتروني",
+
+  "common.whatsapp": "واتساب",
+
+  "acct.apv_rpt_certificate": "اختر التقرير: الشهادة الرسمية",
+
+  "acct.apv_rpt_all": "عرض الشهادة الكاملة (جميع الأقسام)",
+
+  "acct.apv_rpt_01": "معلومات شخصية والحساب",
+
+  "acct.apv_rpt_02": "معلومات الموقع والفرع",
+
+  "acct.apv_rpt_03": "معلومات الاتصال والشركة",
+
+  "acct.apv_rpt_04": "معلومات المستند ودفتر الأستاذ",
+
+  "acct.apv_export_pdf": "تصدير PDF",
+  "com.order_details": "تفاصيل الطلب",
+
+  "com.shipment": "الشحنة",
+
+  "com.goods": "البضائع",
+
+  "com.chs_code": "رمز CHS",
+
+  "com.route": "المسار",
+
+  "com.loading_date": "تاريخ التحميل",
+
+  "com.linked_parties": "الأطراف المرتبطة",
+
+  "com.edit_resume_order": "تعديل / استئناف الطلب",
+
+  "com.export_csv": "تصدير إلى CSV",
+
+  "com.edit_resume_step": "تعديل / استئناف الخطوة",
+
+  "com.view_details": "عرض التفاصيل",
   "bgr.close_user_details": "إغلاق تفاصيل المستخدم",
 
   "bgr.close_login_list": "إغلاق قائمة تسجيل الدخول",
@@ -57121,6 +57261,46 @@ const fa: Dict = {
 
 
 
+
+
+  "common.email": "ایمیل",
+
+  "common.whatsapp": "واتساپ",
+
+  "acct.apv_rpt_certificate": "انتخاب گزارش: گواهی رسمی",
+
+  "acct.apv_rpt_all": "مشاهده گواهی کامل (همه بخش‌ها)",
+
+  "acct.apv_rpt_01": "اطلاعات شخصی و حساب",
+
+  "acct.apv_rpt_02": "اطلاعات موقعیت و شعبه",
+
+  "acct.apv_rpt_03": "اطلاعات تماس و شرکت",
+
+  "acct.apv_rpt_04": "اطلاعات سند و دفتر کل",
+
+  "acct.apv_export_pdf": "خروجی PDF",
+  "com.order_details": "جزئیات سفارش",
+
+  "com.shipment": "محموله",
+
+  "com.goods": "کالا",
+
+  "com.chs_code": "کد CHS",
+
+  "com.route": "مسیر",
+
+  "com.loading_date": "تاریخ بارگیری",
+
+  "com.linked_parties": "طرف‌های مرتبط",
+
+  "com.edit_resume_order": "ویرایش / ادامه سفارش",
+
+  "com.export_csv": "خروجی CSV",
+
+  "com.edit_resume_step": "ویرایش / ادامه مرحله",
+
+  "com.view_details": "مشاهده جزئیات",
   "bgr.close_user_details": "بستن جزئیات کاربر",
 
   "bgr.close_login_list": "بستن فهرست ورود",
@@ -70297,6 +70477,46 @@ const ps: Dict = {
 
 
 
+
+
+  "common.email": "بریښنالیک",
+
+  "common.whatsapp": "واټساپ",
+
+  "acct.apv_rpt_certificate": "راپور وټاکئ: رسمي سند",
+
+  "acct.apv_rpt_all": "بشپړ سند وګورئ (ټولې برخې)",
+
+  "acct.apv_rpt_01": "شخصي او د حساب معلومات",
+
+  "acct.apv_rpt_02": "موقعیت او د څانګې معلومات",
+
+  "acct.apv_rpt_03": "اړیکه او د شرکت معلومات",
+
+  "acct.apv_rpt_04": "سند او د لیجر معلومات",
+
+  "acct.apv_export_pdf": "PDF صادرول",
+  "com.order_details": "د امر جزئیات",
+
+  "com.shipment": "بار",
+
+  "com.goods": "توکي",
+
+  "com.chs_code": "د CHS کوډ",
+
+  "com.route": "لار",
+
+  "com.loading_date": "د بارولو نېټه",
+
+  "com.linked_parties": "تړل شوي اړخونه",
+
+  "com.edit_resume_order": "امر سمول / بیا پیل",
+
+  "com.export_csv": "CSV ته صادرول",
+
+  "com.edit_resume_step": "پړاو سمول / بیا پیل",
+
+  "com.view_details": "جزئیات وګورئ",
   "bgr.close_user_details": "د کاروونکي جزئیات وتړئ",
 
   "bgr.close_login_list": "د ننوتلو لیست وتړئ",

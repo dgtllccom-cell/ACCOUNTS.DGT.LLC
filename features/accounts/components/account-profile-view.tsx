@@ -506,12 +506,12 @@ export function AccountProfileView({
                 }}
                 className="h-8 px-3 pr-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs outline-none focus:border-blue-500 cursor-pointer"
               >
-                <option value="certificate">Select Report: Official Certificate</option>
-                <option value="all">View Complete Full Certificate (All Sections)</option>
-                <option value="01">01 Personal &amp; Account Info</option>
-                <option value="02">02 Location &amp; Branch Info</option>
-                <option value="03">03 Contact &amp; Company Info</option>
-                <option value="04">04 Document &amp; Ledger Info</option>
+                <option value="certificate">{t(lang, "acct.apv_rpt_certificate", "Select Report: Official Certificate")}</option>
+                <option value="all">{t(lang, "acct.apv_rpt_all", "View Complete Full Certificate (All Sections)")}</option>
+                <option value="01">01 {t(lang, "acct.apv_rpt_01", "Personal & Account Info")}</option>
+                <option value="02">02 {t(lang, "acct.apv_rpt_02", "Location & Branch Info")}</option>
+                <option value="03">03 {t(lang, "acct.apv_rpt_03", "Contact & Company Info")}</option>
+                <option value="04">04 {t(lang, "acct.apv_rpt_04", "Document & Ledger Info")}</option>
               </select>
             </div>
 
@@ -523,7 +523,7 @@ export function AccountProfileView({
               className="h-8 px-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               <Printer className="h-3.5 w-3.5 mr-1" />
-              Print
+              {t(lang, "common.print", "Print")}
             </Button>
 
             <Button
@@ -534,7 +534,7 @@ export function AccountProfileView({
               className="h-8 px-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               <Download className="h-3.5 w-3.5 mr-1" />
-              Download
+              {t(lang, "common.download", "Download")}
             </Button>
 
             <Button
@@ -545,7 +545,7 @@ export function AccountProfileView({
               className="h-8 px-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               <Mail className="h-3.5 w-3.5 mr-1 text-amber-500" />
-              Email
+              {t(lang, "common.email", "Email")}
             </Button>
 
             <Button
@@ -556,7 +556,7 @@ export function AccountProfileView({
               className="h-8 px-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               <MessageCircle className="h-3.5 w-3.5 mr-1 text-emerald-500" />
-              WhatsApp
+              {t(lang, "common.whatsapp", "WhatsApp")}
             </Button>
 
             <Button
@@ -566,7 +566,7 @@ export function AccountProfileView({
               className="h-8 px-3 text-xs font-black bg-blue-600 hover:bg-blue-700 text-white shadow-xs rounded-lg uppercase tracking-wider"
             >
               <FileSpreadsheet className="h-3.5 w-3.5 mr-1.5" />
-              Export PDF
+              {t(lang, "acct.apv_export_pdf", "Export PDF")}
             </Button>
           </div>
         </div>

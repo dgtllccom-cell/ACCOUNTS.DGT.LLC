@@ -1700,7 +1700,7 @@ export function CustomerOrderManagementView() {
                   type="button"
                   onClick={handleExportCsv}
                   className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                  title="Export to CSV"
+                  title={tt("export_csv","Export to CSV")}
                 >
                   <Download className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline">CSV</span>
@@ -1787,7 +1787,7 @@ export function CustomerOrderManagementView() {
                                 type="button"
                                 onClick={() => loadEditOrder(order)}
                                 className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:text-slate-300"
-                                title="Edit / Resume Step"
+                                title={tt("edit_resume_step","Edit / Resume Step")}
                               >
                                 <Pencil className="h-3.5 w-3.5 text-blue-600" />
                               </button>
@@ -1795,7 +1795,7 @@ export function CustomerOrderManagementView() {
                                 type="button"
                                 onClick={() => setViewOrder(order)}
                                 className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:text-slate-300"
-                                title="View Details"
+                                title={tt("view_details","View Details")}
                               >
                                 <Eye className="h-3.5 w-3.5 text-emerald-600" />
                               </button>
@@ -1803,7 +1803,7 @@ export function CustomerOrderManagementView() {
                                 type="button"
                                 onClick={() => handlePrintOrder(order)}
                                 className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:text-slate-300"
-                                title="Print"
+                                title={tt("print","Print")}
                               >
                                 <Printer className="h-3.5 w-3.5 text-amber-600" />
                               </button>
@@ -1825,23 +1825,23 @@ export function CustomerOrderManagementView() {
         <SimpleModal
           isOpen={Boolean(viewOrder)}
           onClose={() => setViewOrder(null)}
-          title={`Order Details: ${viewOrder.order_no || viewOrder.id}`}
+          title={`${tt("order_details", "Order Details")}: ${viewOrder.order_no || viewOrder.id}`}
           maxWidth="2xl"
         >
           <div className="space-y-4 text-xs">
             <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
-              <div><strong>Movement:</strong> {viewOrder.movement_type}</div>
-              <div><strong>Transport:</strong> {viewOrder.transport_mode}</div>
-              <div><strong>Shipment:</strong> {viewOrder.shipment_type}</div>
-              <div><strong>Loading Source:</strong> {viewOrder.loading_source_name || viewOrder.loading_source || "-"}</div>
-              <div><strong>Goods:</strong> {viewOrder.goods_name || "-"}</div>
-              <div><strong>CHS Code:</strong> {viewOrder.goods_chs_code || "-"}</div>
-              <div><strong>Route:</strong> {viewOrder.route_name || "-"}</div>
-              <div><strong>Loading Date:</strong> {viewOrder.expected_loading_date ? new Date(viewOrder.expected_loading_date).toLocaleDateString() : "-"}</div>
+              <div><strong>{tt("movement", "Movement")}:</strong> {viewOrder.movement_type}</div>
+              <div><strong>{tt("transport", "Transport")}:</strong> {viewOrder.transport_mode}</div>
+              <div><strong>{tt("shipment", "Shipment")}:</strong> {viewOrder.shipment_type}</div>
+              <div><strong>{tt("loading_source", "Loading Source")}:</strong> {viewOrder.loading_source_name || viewOrder.loading_source || "-"}</div>
+              <div><strong>{tt("goods", "Goods")}:</strong> {viewOrder.goods_name || "-"}</div>
+              <div><strong>{tt("chs_code", "CHS Code")}:</strong> {viewOrder.goods_chs_code || "-"}</div>
+              <div><strong>{tt("route", "Route")}:</strong> {viewOrder.route_name || "-"}</div>
+              <div><strong>{tt("loading_date", "Loading Date")}:</strong> {viewOrder.expected_loading_date ? new Date(viewOrder.expected_loading_date).toLocaleDateString() : "-"}</div>
             </div>
 
             <div className="space-y-2">
-              <h4 className="font-bold text-slate-700 uppercase tracking-wider">Linked Parties</h4>
+              <h4 className="font-bold text-slate-700 uppercase tracking-wider">{tt("linked_parties", "Linked Parties")}</h4>
               <div className="divide-y border rounded-xl overflow-hidden">
                 {(viewOrder.party_links ?? []).map((link, idx) => (
                   <div key={idx} className="p-2.5 flex justify-between items-center bg-white dark:bg-slate-900">
@@ -1865,7 +1865,7 @@ export function CustomerOrderManagementView() {
                 }}
                 className="px-4 py-1.5 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700"
               >
-                Edit / Resume Order
+                {tt("edit_resume_order", "Edit / Resume Order")}
               </button>
             </div>
           </div>
