@@ -314,8 +314,8 @@ function BranchUsersPanel({
           {onClose ? (
             <button
               type="button"
-              title="Close user details"
-              aria-label="Close user details"
+              title={tt("bgr.close_user_details","Close user details")}
+              aria-label={tt("bgr.close_user_details","Close user details")}
               onClick={onClose}
               className="rounded-lg border border-slate-200 bg-white p-1.5 text-slate-500 shadow-sm hover:bg-rose-50 hover:text-rose-600"
             >
@@ -446,8 +446,8 @@ function LoginListPanel({ users, onClose }: { users: BranchUserDetail[]; onClose
         <div className="flex items-center gap-2">
           <button
             type="button"
-            title="Open Login Page"
-            aria-label="Open Login Page"
+            title={tt("bgr.open_login","Open Login Page")}
+            aria-label={tt("bgr.open_login","Open Login Page")}
             onClick={() => {
               window.location.href = "/auth/login";
             }}
@@ -458,8 +458,8 @@ function LoginListPanel({ users, onClose }: { users: BranchUserDetail[]; onClose
           {onClose ? (
             <button
               type="button"
-              title="Close login list"
-              aria-label="Close login list"
+              title={tt("bgr.close_login_list","Close login list")}
+              aria-label={tt("bgr.close_login_list","Close login list")}
               onClick={onClose}
               className="rounded-lg border border-slate-200 bg-white p-1.5 text-slate-500 shadow-sm hover:bg-rose-50 hover:text-rose-600"
             >
@@ -507,8 +507,8 @@ function LoginListPanel({ users, onClose }: { users: BranchUserDetail[]; onClose
                   <td className="p-2">
                     <button
                       type="button"
-                      title="Open Login"
-                      aria-label="Open Login"
+                      title={tt("bgr.open_login","Open Login Page")}
+                      aria-label={tt("bgr.open_login","Open Login Page")}
                       onClick={() => {
                         window.location.href = `/auth/login?username=${encodeURIComponent(user.username || "")}`;
                       }}
@@ -1302,7 +1302,7 @@ export function BranchGeneralReportView({
 
       {expandedUserScope === "all-users" ? (
         <BranchUsersPanel
-          title="All ERP Users"
+          title={tt("bgr.all_erp_users","All ERP Users")}
           hierarchy={["Super Admin", "All Countries", "All Branches", "All Users"]}
           users={data?.summary?.users ?? []}
           onClose={() => setExpandedUserScope(null)}

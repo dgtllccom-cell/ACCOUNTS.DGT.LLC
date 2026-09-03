@@ -1440,7 +1440,7 @@ export function GeneralOfficeDashboardView() {
                             variant="ghost"
                             onClick={() => setViewingEmployeeId(emp.id)}
                             className="h-7 w-7 p-0 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/50 rounded-lg"
-                            title="View Employee Dossier"
+                            title={tr("View Employee Dossier")}
                           >
                             <Eye className="h-3.5 w-3.5" />
                           </Button>
@@ -1453,7 +1453,7 @@ export function GeneralOfficeDashboardView() {
                               setShowFormModal(true);
                             }}
                             className="h-7 w-7 p-0 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 rounded-lg"
-                            title="Edit Employee Profile"
+                            title={tr("Edit Employee Profile")}
                           >
                             <Edit3 className="h-3.5 w-3.5" />
                           </Button>
@@ -1463,7 +1463,7 @@ export function GeneralOfficeDashboardView() {
                             variant="ghost"
                             onClick={() => handlePrintCertificate(emp)}
                             className="h-7 w-7 p-0 text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
-                            title="Print Employee Certificate"
+                            title={tr("Print Employee Certificate")}
                           >
                             <Printer className="h-3.5 w-3.5" />
                           </Button>
@@ -1475,7 +1475,7 @@ export function GeneralOfficeDashboardView() {
                               variant="ghost"
                               onClick={() => setActionMenuOpenId(isMenuOpen ? null : emp.id)}
                               className="h-7 w-7 p-0 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
-                              title="More Options"
+                              title={tr("More Options")}
                             >
                               <MoreVertical className="h-3.5 w-3.5" />
                             </Button>
@@ -1491,7 +1491,7 @@ export function GeneralOfficeDashboardView() {
                                   className="flex w-full items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-blue-600"
                                 >
                                   <Eye className="h-3.5 w-3.5" />
-                                  <span>View Full Dossier</span>
+                                  <span>{tr("View Full Dossier")}</span>
                                 </button>
                                 <button
                                   type="button"

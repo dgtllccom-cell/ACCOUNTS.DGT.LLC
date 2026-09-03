@@ -927,6 +927,9 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "bgr.close_user_details"
+  | "bgr.close_login_list"
+  | "bgr.all_erp_users"
   | "extform.issued"
   | "extform.expires"
   | "extform.optional"
@@ -17607,6 +17610,12 @@ const en: Dict = {
 
 
 
+
+  "bgr.close_user_details": "Close user details",
+
+  "bgr.close_login_list": "Close login list",
+
+  "bgr.all_erp_users": "All ERP Users",
   "extform.issued": "Issued",
 
   "extform.expires": "Expires",
@@ -30770,6 +30779,12 @@ const ur: Dict = {
 
 
 
+
+  "bgr.close_user_details": "یوزر تفصیلات بند کریں",
+
+  "bgr.close_login_list": "لاگ اِن فہرست بند کریں",
+
+  "bgr.all_erp_users": "تمام ERP یوزرز",
   "extform.issued": "جاری",
 
   "extform.expires": "میعاد ختم",
@@ -43935,6 +43950,12 @@ const ar: Dict = {
 
 
 
+
+  "bgr.close_user_details": "إغلاق تفاصيل المستخدم",
+
+  "bgr.close_login_list": "إغلاق قائمة تسجيل الدخول",
+
+  "bgr.all_erp_users": "جميع مستخدمي ERP",
   "extform.issued": "تاريخ الإصدار",
 
   "extform.expires": "تاريخ الانتهاء",
@@ -57099,6 +57120,12 @@ const fa: Dict = {
 
 
 
+
+  "bgr.close_user_details": "بستن جزئیات کاربر",
+
+  "bgr.close_login_list": "بستن فهرست ورود",
+
+  "bgr.all_erp_users": "همه کاربران ERP",
   "extform.issued": "صادر شده",
 
   "extform.expires": "انقضا",
@@ -70269,6 +70296,12 @@ const ps: Dict = {
 
 
 
+
+  "bgr.close_user_details": "د کاروونکي جزئیات وتړئ",
+
+  "bgr.close_login_list": "د ننوتلو لیست وتړئ",
+
+  "bgr.all_erp_users": "ټول ERP کاروونکي",
   "extform.issued": "صادر شوی",
 
   "extform.expires": "پای ته رسیږي",

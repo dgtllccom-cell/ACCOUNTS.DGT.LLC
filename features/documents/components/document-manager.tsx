@@ -2059,14 +2059,14 @@ Verification:      Digitally verified and sealed in Digital Dock ERP cloud stora
                           <button
                             onClick={() => handleOpenEdit(doc)}
                             className="p-1 text-purple-600 hover:bg-purple-50 rounded"
-                            title="Edit / Move"
+                            title={th("Edit / Move")}
                           >
                             <Move className="h-3.5 w-3.5 inline" />
                           </button>
                           <button
                             onClick={() => handleDelete(doc.id)}
                             className="p-1 text-red-600 hover:bg-red-50 rounded"
-                            title="Delete"
+                            title={th("Delete")}
                           >
                             <Trash2 className="h-3.5 w-3.5 inline" />
                           </button>

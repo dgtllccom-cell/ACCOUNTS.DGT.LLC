@@ -2132,6 +2132,12 @@ export const HEADER_TRANSLATIONS: Record<string, Row> = {
   "SEARCH QUERY": { ur: "تلاش کی کوئری", ar: "استعلام البحث", fa: "عبارت جستجو", ps: "د لټون پوښتنه" },
   "WAREHOUSE FILTER": { ur: "گودام فلٹر", ar: "مرشح المستودع", fa: "فیلتر انبار", ps: "د ګدام فلټر" },
   "MOVEMENT TYPE": { ur: "نقل و حرکت کی قسم", ar: "نوع الحركة", fa: "نوع حرکت", ps: "د حرکت ډول" },
+  "EDIT / MOVE": { ur: "ترمیم / منتقل کریں", ar: "تعديل / نقل", fa: "ویرایش / انتقال", ps: "سمون / لېږدول" },
+  "VIEW EMPLOYEE DOSSIER": { ur: "ملازم ڈوزیئر دیکھیں", ar: "عرض ملف الموظف", fa: "مشاهده پرونده کارمند", ps: "د کارمند دوسیه وګورئ" },
+  "EDIT EMPLOYEE PROFILE": { ur: "ملازم پروفائل میں ترمیم کریں", ar: "تعديل ملف الموظف", fa: "ویرایش نمایه کارمند", ps: "د کارمند پروفایل سمون" },
+  "PRINT EMPLOYEE CERTIFICATE": { ur: "ملازم سرٹیفکیٹ پرنٹ کریں", ar: "طباعة شهادة الموظف", fa: "چاپ گواهی کارمند", ps: "د کارمند سند چاپ کړئ" },
+  "MORE OPTIONS": { ur: "مزید اختیارات", ar: "خيارات أكثر", fa: "گزینه‌های بیشتر", ps: "نور اختیارونه" },
+  "VIEW FULL DOSSIER": { ur: "مکمل ڈوزیئر دیکھیں", ar: "عرض الملف الكامل", fa: "مشاهده پرونده کامل", ps: "بشپړه دوسیه وګورئ" },
 };
 
 /** Normalize an English header for lookup: trim, collapse whitespace, uppercase. */
