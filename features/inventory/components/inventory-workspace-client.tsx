@@ -292,7 +292,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">{tt("inv.title", "Stock & Inventory Management")}</h1>
           <p className="text-sm text-muted-foreground">
-            Track stock balances, record Stock In/Out movements, and monitor warehouse inventory across all branches.
+            {tt("inv.subtitle", "Track stock balances, record Stock In/Out movements, and monitor warehouse inventory across all branches.")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">

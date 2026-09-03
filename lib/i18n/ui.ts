@@ -927,6 +927,7 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "inv.subtitle"
   | "dash.live_financial_summary"
   | "dash.live_financial_summary_sub"
   | "dash.ledger_debit"
@@ -17795,6 +17796,9 @@ const en: Dict = {
 
 
 
+
+
+  "inv.subtitle": "Track stock balances, record Stock In/Out movements, and monitor warehouse inventory across all branches.",
   "dash.live_financial_summary": "Live Financial Summary",
 
 
@@ -31405,6 +31409,9 @@ const ur: Dict = {
 
 
 
+
+
+  "inv.subtitle": "اسٹاک بیلنس ٹریک کریں، اسٹاک اِن/آؤٹ حرکات ریکارڈ کریں، اور تمام برانچوں میں گودام انوینٹری کی نگرانی کریں۔",
   "dash.live_financial_summary": "لائیو مالیاتی خلاصہ",
 
 
@@ -45017,6 +45024,9 @@ const ar: Dict = {
 
 
 
+
+
+  "inv.subtitle": "تتبع أرصدة المخزون، وسجّل حركات إدخال/إخراج المخزون، وراقب مخزون المستودعات عبر جميع الفروع.",
   "dash.live_financial_summary": "الملخص المالي المباشر",
 
 
@@ -58628,6 +58638,9 @@ const fa: Dict = {
 
 
 
+
+
+  "inv.subtitle": "مانده‌های موجودی را ردیابی کنید، حرکات ورود/خروج موجودی را ثبت کنید و موجودی انبار را در همه شعب نظارت کنید.",
   "dash.live_financial_summary": "خلاصه مالی زنده",
 
 
@@ -72245,6 +72258,9 @@ const ps: Dict = {
 
 
 
+
+
+  "inv.subtitle": "د سټاک بیلانسونه تعقیب کړئ، د سټاک د ننوتلو/وتلو حرکتونه ثبت کړئ، او په ټولو څانګو کې د ګدام انوینټري وڅارئ.",
   "dash.live_financial_summary": "ژوندی مالي لنډیز",
 
 
