@@ -120,14 +120,14 @@ function getAvatarColor(str: string): string {
   return AVATAR_COLORS[index];
 }
 
-// Sources list with badge colors
-const SOURCE_MAP: Record<string, { label: string; bg: string }> = {
-  Website: { label: "Website", bg: "bg-blue-50 text-blue-600 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800" },
-  Facebook: { label: "Facebook", bg: "bg-indigo-50 text-indigo-600 border border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800" },
-  WhatsApp: { label: "WhatsApp", bg: "bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800" },
-  Instagram: { label: "Instagram", bg: "bg-pink-50 text-pink-600 border border-pink-200 dark:bg-pink-950/40 dark:text-pink-300 dark:border-pink-800" },
-  Referral: { label: "Referral", bg: "bg-rose-50 text-rose-600 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800" },
-  Other: { label: "Other", bg: "bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700" }
+// Source badge colors (visible label comes from the i18n dictionary — cl.src_*)
+const SOURCE_MAP: Record<string, { bg: string }> = {
+  Website: { bg: "bg-blue-50 text-blue-600 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800" },
+  Facebook: { bg: "bg-indigo-50 text-indigo-600 border border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800" },
+  WhatsApp: { bg: "bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800" },
+  Instagram: { bg: "bg-pink-50 text-pink-600 border border-pink-200 dark:bg-pink-950/40 dark:text-pink-300 dark:border-pink-800" },
+  Referral: { bg: "bg-rose-50 text-rose-600 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800" },
+  Other: { bg: "bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700" }
 };
 
 // Status pill badge colors matching screenshot
@@ -144,14 +144,14 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 const STATUS_TABS = [
-  { id: "all", label: "All Leads" },
-  { id: "New", label: "New" },
-  { id: "Contacted", label: "Contacted" },
-  { id: "Qualified", label: "Qualified" },
-  { id: "Proposal", label: "Proposal" },
-  { id: "Negotiation", label: "Negotiation" },
-  { id: "Closed", label: "Closed" },
-  { id: "Lost", label: "Lost" }
+  { id: "all", en: "All Leads" },
+  { id: "New", en: "New" },
+  { id: "Contacted", en: "Contacted" },
+  { id: "Qualified", en: "Qualified" },
+  { id: "Proposal", en: "Proposal" },
+  { id: "Negotiation", en: "Negotiation" },
+  { id: "Closed", en: "Closed" },
+  { id: "Lost", en: "Lost" }
 ];
 
 export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
@@ -563,7 +563,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                     : "bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60"
                 )}
               >
-                <span>{t(lang, `cl.tab_${tab.id.toLowerCase()}`, tab.label)}</span>
+                <span>{t(lang, `cl.tab_${tab.id.toLowerCase()}`, tab.en)}</span>
                 <span
                   className={cn(
                     "text-[10px] font-black px-1.5 py-0.2 rounded-md",
@@ -601,7 +601,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                       paginatedCustomers.every((c) => selectedRows.has(c.id))
                     }
                     onChange={(e) => handleSelectAll(e.target.checked)}
-                    aria-label="Select all leads on current page"
+                    aria-label={t(lang, "cl.aria_select_all", "Select all leads on current page")}
                     className="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                   />
                 </th>
@@ -886,7 +886,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                   setPageSize(Number(e.target.value));
                   setCurrentPage(1);
                 }}
-                aria-label="Leads per page"
+                aria-label={t(lang, "cl.aria_per_page", "Leads per page")}
                 className="h-7 px-2.5 text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer appearance-none pr-6 shadow-2xs"
               >
                 <option value={10}>10 per page</option>
@@ -904,7 +904,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
               type="button"
               disabled={currentPage <= 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              aria-label="Previous page"
+              aria-label={t(lang, "common.previous_page", "Previous page")}
               className="grid h-7 w-7 place-items-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-2xs"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
@@ -952,7 +952,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
               type="button"
               disabled={currentPage >= totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              aria-label="Next page"
+              aria-label={t(lang, "common.next_page", "Next page")}
               className="grid h-7 w-7 place-items-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-2xs"
             >
               <ChevronRight className="h-3.5 w-3.5" />

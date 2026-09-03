@@ -927,6 +927,84 @@ export type UiKey =
   | "mgmt.err_create_country"
   | "mgmt.err_add_country"
   | "mgmt.country_added"
+  | "common.previous_page"
+  | "common.next_page"
+  | "cl.aria_select_all"
+  | "cl.aria_per_page"
+  | "prep.reports_hub"
+  | "prep.hub_crumb"
+  | "prep.hub_title"
+  | "prep.hub_desc_1"
+  | "prep.hub_desc_2"
+  | "prep.scope_super_admin"
+  | "prep.scope_country_admin"
+  | "prep.scope_branch_admin"
+  | "prep.kpi_purchases"
+  | "prep.kpi_sales"
+  | "prep.kpi_journal"
+  | "prep.kpi_cash"
+  | "prep.kpi_payments"
+  | "prep.kpi_ledgers"
+  | "prep.kpi_accounts"
+  | "prep.kpi_active"
+  | "prep.report_actions"
+  | "prep.active_branches"
+  | "prep.no_branch_activity"
+  | "prep.staff_users"
+  | "prep.open_form_report"
+  | "prep.no_ledger_data"
+  | "prep.customer_ledger_title"
+  | "prep.customer_ledger_sub"
+  | "prep.customer_ledger_desc"
+  | "prep.loading_records_title"
+  | "prep.loading_records_sub"
+  | "prep.loading_records_desc"
+  | "prep.finalized_po_title"
+  | "prep.finalized_po_sub"
+  | "prep.finalized_po_desc"
+  | "prep.transfer_payment_title"
+  | "prep.transfer_payment_sub"
+  | "prep.transfer_payment_desc"
+  | "prep.cash_entries_title"
+  | "prep.cash_entries_sub"
+  | "prep.cash_entries_desc"
+  | "prep.bank_entries_title"
+  | "prep.bank_entries_sub"
+  | "prep.bank_entries_desc"
+  | "prep.roznamcha_voucher_title"
+  | "prep.roznamcha_voucher_sub"
+  | "prep.roznamcha_voucher_desc"
+  | "prep.sales_order_title"
+  | "prep.sales_order_sub"
+  | "prep.sales_order_desc"
+  | "prep.account_statement_title"
+  | "prep.account_statement_sub"
+  | "prep.account_statement_desc"
+  | "prep.proforma_invoice_title"
+  | "prep.proforma_invoice_sub"
+  | "prep.proforma_invoice_desc"
+  | "prep.expenses_bill_title"
+  | "prep.expenses_bill_sub"
+  | "prep.expenses_bill_desc"
+  | "prep.trade_document_title"
+  | "prep.trade_document_sub"
+  | "prep.trade_document_desc"
+  | "prep.purchase_a4_title"
+  | "prep.purchase_a4_sub"
+  | "prep.purchase_a4_desc"
+  | "prep.user_activity_title"
+  | "prep.user_activity_sub"
+  | "prep.user_activity_desc"
+  | "prep.daily_roznamcha_title"
+  | "prep.daily_roznamcha_sub"
+  | "prep.daily_roznamcha_desc"
+  | "prep.ledger_balance_title"
+  | "prep.ledger_balance_sub"
+  | "prep.ledger_balance_sub2"
+  | "prep.ledger_balance_desc"
+  | "prep.transfer_verification_title"
+  | "prep.transfer_verification_sub"
+  | "prep.transfer_verification_desc"
   | "locsetup.eg_country"
   | "locsetup.eg_state"
   | "locsetup.eg_city"
@@ -17214,6 +17292,162 @@ const en: Dict = {
 
 
 
+
+
+  "common.previous_page": "Previous page",
+
+  "common.next_page": "Next page",
+
+  "cl.aria_select_all": "Select all leads on current page",
+
+  "cl.aria_per_page": "Leads per page",
+  "prep.reports_hub": "Reports Hub",
+
+  "prep.hub_crumb": "All Super Admin Journal Reporting",
+
+  "prep.hub_title": "All Super Admin Journal Reporting & Print Hub",
+
+  "prep.hub_desc_1": "Control ERP reporting hub with",
+
+  "prep.hub_desc_2": "reports connected to live database • Auto-refresh every 60s",
+
+  "prep.scope_super_admin": "Super Admin Scope",
+
+  "prep.scope_country_admin": "Country Admin Scope",
+
+  "prep.scope_branch_admin": "Branch Admin Scope",
+
+  "prep.kpi_purchases": "Purchases",
+
+  "prep.kpi_sales": "Sales",
+
+  "prep.kpi_journal": "Journal",
+
+  "prep.kpi_cash": "Cash",
+
+  "prep.kpi_payments": "Payments",
+
+  "prep.kpi_ledgers": "Ledgers",
+
+  "prep.kpi_accounts": "Accounts",
+
+  "prep.kpi_active": "Active",
+
+  "prep.report_actions": "Report Actions",
+
+  "prep.active_branches": "Active Branches",
+
+  "prep.no_branch_activity": "No active branch activity in the current scope.",
+
+  "prep.staff_users": "Staff Users",
+
+  "prep.open_form_report": "Open Form / Report",
+
+  "prep.no_ledger_data": "No ledger data available.",
+
+  "prep.customer_ledger_title": "Customer Ledger Report & Account Statement",
+
+  "prep.customer_ledger_sub": "Roznamacha / Account Statement",
+
+  "prep.customer_ledger_desc": "Complete customer financial statement with opening balance, debit/credit transactions, closing balance, and Dr/Cr status.",
+
+  "prep.loading_records_title": "Purchase Loading Records Report",
+
+  "prep.loading_records_sub": "Container Loading & Status Register",
+
+  "prep.loading_records_desc": "23-column landscape report for tracking loading status, contract qty, gross/tare/net weights, rates, FC & LC amounts.",
+
+  "prep.finalized_po_title": "Finalized Purchase Orders Report",
+
+  "prep.finalized_po_sub": "Completed Purchase Contracts",
+
+  "prep.finalized_po_desc": "Comprehensive summary of finalized purchase orders with DR/CR account breakdown, currency conversions, and completion status.",
+
+  "prep.transfer_payment_title": "Purchase Transfer Payment Voucher",
+
+  "prep.transfer_payment_sub": "Official GL Settlement Voucher",
+
+  "prep.transfer_payment_desc": "Official voucher document with amount in digits and words, GL posting double-entry table, and cashier/manager signatures.",
+
+  "prep.cash_entries_title": "Recent Cash Entries (Roznamacha) Report",
+
+  "prep.cash_entries_sub": "Daily Cash Journal Sheet",
+
+  "prep.cash_entries_desc": "Daily cash debit & credit transactions sheet featuring balanced status check, branch code postings, and narration log.",
+
+  "prep.bank_entries_title": "Bank Entry Print",
+
+  "prep.bank_entries_sub": "Bank Transactions Only",
+
+  "prep.bank_entries_desc": "Bank debit & credit transactions with bank name, instrument/cheque number, balanced status, branded letterhead and QR verification.",
+
+  "prep.roznamcha_voucher_title": "Roznamcha Payment / Receipt Voucher",
+
+  "prep.roznamcha_voucher_sub": "Cash Payment & Receipt Voucher",
+
+  "prep.roznamcha_voucher_desc": "Dual-copy (Office + Customer) voucher for cash payments and receipts with letterhead, amount in words, and signatures.",
+
+  "prep.sales_order_title": "Sales Order Report",
+
+  "prep.sales_order_sub": "Sales Booking Confirmation",
+
+  "prep.sales_order_desc": "Full sales order report with customer details, goods specification, pricing, payment status, and delivery tracking.",
+
+  "prep.account_statement_title": "Account Statement Report",
+
+  "prep.account_statement_sub": "Enterprise Account Detail Sheet",
+
+  "prep.account_statement_desc": "Detailed account master report showing account code, category, sub-type, currency, and connected customer/company/bank details.",
+
+  "prep.proforma_invoice_title": "Proforma Invoice",
+
+  "prep.proforma_invoice_sub": "Pre-Shipment Commercial Invoice",
+
+  "prep.proforma_invoice_desc": "Proforma invoice for international trade with goods breakdown, HS codes, shipping terms, and payment schedule.",
+
+  "prep.expenses_bill_title": "Expenses Bill Report",
+
+  "prep.expenses_bill_sub": "Expense Voucher & Breakdown",
+
+  "prep.expenses_bill_desc": "Detailed expense bill report with line items, tax calculations, exchange rates, and GL double-entry postings.",
+
+  "prep.trade_document_title": "Trade Contract Document",
+
+  "prep.trade_document_sub": "International Trade Agreement",
+
+  "prep.trade_document_desc": "Official trade contract document with shipping details, container numbers, port information, and terms of delivery.",
+
+  "prep.purchase_a4_title": "Purchase A4 Full Report",
+
+  "prep.purchase_a4_sub": "Complete Purchase Detail Sheet",
+
+  "prep.purchase_a4_desc": "Full A4 portrait purchase report with all booking details, goods specification, payment history, and workflow journey.",
+
+  "prep.user_activity_title": "User Activity Report",
+
+  "prep.user_activity_sub": "ERP User Audit Trail",
+
+  "prep.user_activity_desc": "User activity summary showing login count, transaction count, and module usage statistics.",
+
+  "prep.daily_roznamcha_title": "Daily Roznamcha Summary",
+
+  "prep.daily_roznamcha_sub": "Day-End Cash Journal Report",
+
+  "prep.daily_roznamcha_desc": "End-of-day summary of all cash entries, receipts, and payments for a specific branch.",
+
+  "prep.ledger_balance_title": "Ledger Balance Report",
+
+  "prep.ledger_balance_sub": "GL Ledger Balance Sheet",
+
+  "prep.ledger_balance_sub2": "Complete Ledger Balance Summary",
+
+  "prep.ledger_balance_desc": "Complete ledger balance report showing debit totals, credit totals, and current balance for each ledger account.",
+
+  "prep.transfer_verification_title": "Purchase Transfer Verification Sheet",
+
+  "prep.transfer_verification_sub": "SAP/Oracle Grade Audit Sheet",
+
+  "prep.transfer_verification_desc": "Enterprise-grade transfer verification with workflow pipeline, KPI cards, GL double-entry matrix, and 5-language support.",
   "locsetup.eg_country": "e.g. Pakistan",
 
   "locsetup.eg_state": "e.g. Balochistan",
@@ -29623,6 +29857,162 @@ const ur: Dict = {
 
 
 
+
+
+  "common.previous_page": "پچھلا صفحہ",
+
+  "common.next_page": "اگلا صفحہ",
+
+  "cl.aria_select_all": "موجودہ صفحے کے تمام لیڈز منتخب کریں",
+
+  "cl.aria_per_page": "فی صفحہ لیڈز",
+  "prep.reports_hub": "رپورٹس حب",
+
+  "prep.hub_crumb": "تمام سپر ایڈمن جرنل رپورٹنگ",
+
+  "prep.hub_title": "تمام سپر ایڈمن جرنل رپورٹنگ اور پرنٹ حب",
+
+  "prep.hub_desc_1": "ERP رپورٹنگ حب کنٹرول کریں",
+
+  "prep.hub_desc_2": "رپورٹس لائیو ڈیٹابیس سے منسلک • ہر 60 سیکنڈ میں خودکار ریفریش",
+
+  "prep.scope_super_admin": "سپر ایڈمن دائرہ",
+
+  "prep.scope_country_admin": "ملک ایڈمن دائرہ",
+
+  "prep.scope_branch_admin": "برانچ ایڈمن دائرہ",
+
+  "prep.kpi_purchases": "خریداری",
+
+  "prep.kpi_sales": "فروخت",
+
+  "prep.kpi_journal": "جرنل",
+
+  "prep.kpi_cash": "نقد",
+
+  "prep.kpi_payments": "ادائیگیاں",
+
+  "prep.kpi_ledgers": "لیجرز",
+
+  "prep.kpi_accounts": "اکاؤنٹس",
+
+  "prep.kpi_active": "فعال",
+
+  "prep.report_actions": "رپورٹ اعمال",
+
+  "prep.active_branches": "فعال برانچز",
+
+  "prep.no_branch_activity": "موجودہ دائرے میں کوئی فعال برانچ سرگرمی نہیں۔",
+
+  "prep.staff_users": "اسٹاف صارفین",
+
+  "prep.open_form_report": "فارم / رپورٹ کھولیں",
+
+  "prep.no_ledger_data": "کوئی لیجر ڈیٹا دستیاب نہیں۔",
+
+  "prep.customer_ledger_title": "کسٹمر لیجر رپورٹ اور اکاؤنٹ اسٹیٹمنٹ",
+
+  "prep.customer_ledger_sub": "روزنامچہ / اکاؤنٹ اسٹیٹمنٹ",
+
+  "prep.customer_ledger_desc": "مکمل کسٹمر مالیاتی اسٹیٹمنٹ: اوپننگ بیلنس، ڈیبٹ/کریڈٹ لین دین، کلوزنگ بیلنس اور Dr/Cr حیثیت۔",
+
+  "prep.loading_records_title": "پرچیز لوڈنگ ریکارڈز رپورٹ",
+
+  "prep.loading_records_sub": "کنٹینر لوڈنگ اور اسٹیٹس رجسٹر",
+
+  "prep.loading_records_desc": "لوڈنگ اسٹیٹس، کنٹریکٹ مقدار، گراس/ٹیئر/نیٹ وزن، ریٹ، FC اور LC رقوم ٹریک کرنے کے لیے 23-کالم لینڈ اسکیپ رپورٹ۔",
+
+  "prep.finalized_po_title": "فائنلائزڈ پرچیز آرڈرز رپورٹ",
+
+  "prep.finalized_po_sub": "مکمل شدہ پرچیز کنٹریکٹس",
+
+  "prep.finalized_po_desc": "فائنلائزڈ پرچیز آرڈرز کا جامع خلاصہ: DR/CR اکاؤنٹ بریک ڈاؤن، کرنسی تبادلے اور تکمیل کی حیثیت۔",
+
+  "prep.transfer_payment_title": "پرچیز ٹرانسفر پیمنٹ واؤچر",
+
+  "prep.transfer_payment_sub": "آفیشل GL سیٹلمنٹ واؤچر",
+
+  "prep.transfer_payment_desc": "آفیشل واؤچر دستاویز: رقم ہندسوں اور الفاظ میں، GL پوسٹنگ ڈبل انٹری ٹیبل اور کیشیئر/مینیجر دستخط۔",
+
+  "prep.cash_entries_title": "حالیہ کیش انٹریز (روزنامچہ) رپورٹ",
+
+  "prep.cash_entries_sub": "روزانہ کیش جرنل شیٹ",
+
+  "prep.cash_entries_desc": "روزانہ کیش ڈیبٹ اور کریڈٹ لین دین شیٹ: بیلنسڈ اسٹیٹس چیک، برانچ کوڈ پوسٹنگ اور نیریشن لاگ۔",
+
+  "prep.bank_entries_title": "بینک انٹری پرنٹ",
+
+  "prep.bank_entries_sub": "صرف بینک لین دین",
+
+  "prep.bank_entries_desc": "بینک ڈیبٹ اور کریڈٹ لین دین: بینک کا نام، انسٹرومنٹ/چیک نمبر، بیلنسڈ اسٹیٹس، برانڈڈ لیٹر ہیڈ اور QR تصدیق۔",
+
+  "prep.roznamcha_voucher_title": "روزنامچہ پیمنٹ / رسید واؤچر",
+
+  "prep.roznamcha_voucher_sub": "کیش پیمنٹ اور رسید واؤچر",
+
+  "prep.roznamcha_voucher_desc": "کیش ادائیگیوں اور رسیدوں کے لیے دوہری کاپی (آفس + کسٹمر) واؤچر: لیٹر ہیڈ، رقم الفاظ میں اور دستخط۔",
+
+  "prep.sales_order_title": "سیلز آرڈر رپورٹ",
+
+  "prep.sales_order_sub": "سیلز بکنگ تصدیق",
+
+  "prep.sales_order_desc": "مکمل سیلز آرڈر رپورٹ: کسٹمر تفصیلات، اشیاء کی تفصیل، قیمت، ادائیگی کی حیثیت اور ڈیلیوری ٹریکنگ۔",
+
+  "prep.account_statement_title": "اکاؤنٹ اسٹیٹمنٹ رپورٹ",
+
+  "prep.account_statement_sub": "انٹرپرائز اکاؤنٹ ڈیٹیل شیٹ",
+
+  "prep.account_statement_desc": "تفصیلی اکاؤنٹ ماسٹر رپورٹ: اکاؤنٹ کوڈ، کیٹگری، سب ٹائپ، کرنسی اور منسلک کسٹمر/کمپنی/بینک تفصیلات۔",
+
+  "prep.proforma_invoice_title": "پروفارما انوائس",
+
+  "prep.proforma_invoice_sub": "پری شپمنٹ کمرشل انوائس",
+
+  "prep.proforma_invoice_desc": "بین الاقوامی تجارت کے لیے پروفارما انوائس: اشیاء کی تفصیل، HS کوڈز، شپنگ شرائط اور ادائیگی شیڈول۔",
+
+  "prep.expenses_bill_title": "اخراجات بل رپورٹ",
+
+  "prep.expenses_bill_sub": "اخراجات واؤچر اور بریک ڈاؤن",
+
+  "prep.expenses_bill_desc": "تفصیلی اخراجات بل رپورٹ: لائن آئٹمز، ٹیکس حساب، ایکسچینج ریٹ اور GL ڈبل انٹری پوسٹنگ۔",
+
+  "prep.trade_document_title": "ٹریڈ کنٹریکٹ دستاویز",
+
+  "prep.trade_document_sub": "بین الاقوامی تجارتی معاہدہ",
+
+  "prep.trade_document_desc": "آفیشل ٹریڈ کنٹریکٹ دستاویز: شپنگ تفصیلات، کنٹینر نمبرز، پورٹ معلومات اور ڈیلیوری کی شرائط۔",
+
+  "prep.purchase_a4_title": "پرچیز A4 مکمل رپورٹ",
+
+  "prep.purchase_a4_sub": "مکمل پرچیز ڈیٹیل شیٹ",
+
+  "prep.purchase_a4_desc": "مکمل A4 پورٹریٹ پرچیز رپورٹ: تمام بکنگ تفصیلات، اشیاء کی تفصیل، ادائیگی کی تاریخ اور ورک فلو جرنی۔",
+
+  "prep.user_activity_title": "صارف سرگرمی رپورٹ",
+
+  "prep.user_activity_sub": "ERP صارف آڈٹ ٹریل",
+
+  "prep.user_activity_desc": "صارف سرگرمی خلاصہ: لاگ ان شمار، لین دین شمار اور ماڈیول استعمال کے اعدادوشمار۔",
+
+  "prep.daily_roznamcha_title": "روزانہ روزنامچہ خلاصہ",
+
+  "prep.daily_roznamcha_sub": "دن کے اختتام کیش جرنل رپورٹ",
+
+  "prep.daily_roznamcha_desc": "کسی خاص برانچ کے لیے تمام کیش انٹریز، رسیدوں اور ادائیگیوں کا دن کے اختتام کا خلاصہ۔",
+
+  "prep.ledger_balance_title": "لیجر بیلنس رپورٹ",
+
+  "prep.ledger_balance_sub": "GL لیجر بیلنس شیٹ",
+
+  "prep.ledger_balance_sub2": "مکمل لیجر بیلنس خلاصہ",
+
+  "prep.ledger_balance_desc": "مکمل لیجر بیلنس رپورٹ: ہر لیجر اکاؤنٹ کے لیے ڈیبٹ ٹوٹل، کریڈٹ ٹوٹل اور موجودہ بیلنس۔",
+
+  "prep.transfer_verification_title": "پرچیز ٹرانسفر تصدیق شیٹ",
+
+  "prep.transfer_verification_sub": "SAP/Oracle گریڈ آڈٹ شیٹ",
+
+  "prep.transfer_verification_desc": "انٹرپرائز گریڈ ٹرانسفر تصدیق: ورک فلو پائپ لائن، KPI کارڈز، GL ڈبل انٹری میٹرکس اور 5 زبانوں کی سپورٹ۔",
   "locsetup.eg_country": "مثلاً پاکستان",
 
   "locsetup.eg_state": "مثلاً بلوچستان",
@@ -42034,6 +42424,162 @@ const ar: Dict = {
 
 
 
+
+
+  "common.previous_page": "الصفحة السابقة",
+
+  "common.next_page": "الصفحة التالية",
+
+  "cl.aria_select_all": "تحديد كل العملاء المحتملين في الصفحة الحالية",
+
+  "cl.aria_per_page": "عدد العملاء المحتملين لكل صفحة",
+  "prep.reports_hub": "مركز التقارير",
+
+  "prep.hub_crumb": "جميع تقارير يومية المشرف العام",
+
+  "prep.hub_title": "مركز جميع تقارير وطباعة يومية المشرف العام",
+
+  "prep.hub_desc_1": "مركز تحكم تقارير ERP يضم",
+
+  "prep.hub_desc_2": "تقارير متصلة بقاعدة بيانات مباشرة • تحديث تلقائي كل 60 ثانية",
+
+  "prep.scope_super_admin": "نطاق المشرف العام",
+
+  "prep.scope_country_admin": "نطاق مدير الدولة",
+
+  "prep.scope_branch_admin": "نطاق مدير الفرع",
+
+  "prep.kpi_purchases": "المشتريات",
+
+  "prep.kpi_sales": "المبيعات",
+
+  "prep.kpi_journal": "اليومية",
+
+  "prep.kpi_cash": "النقد",
+
+  "prep.kpi_payments": "المدفوعات",
+
+  "prep.kpi_ledgers": "دفاتر الأستاذ",
+
+  "prep.kpi_accounts": "الحسابات",
+
+  "prep.kpi_active": "نشط",
+
+  "prep.report_actions": "إجراءات التقرير",
+
+  "prep.active_branches": "الفروع النشطة",
+
+  "prep.no_branch_activity": "لا يوجد نشاط فرع نشط في النطاق الحالي.",
+
+  "prep.staff_users": "مستخدمو الطاقم",
+
+  "prep.open_form_report": "فتح النموذج / التقرير",
+
+  "prep.no_ledger_data": "لا توجد بيانات دفتر الأستاذ متاحة.",
+
+  "prep.customer_ledger_title": "تقرير دفتر أستاذ العميل وكشف الحساب",
+
+  "prep.customer_ledger_sub": "اليومية / كشف الحساب",
+
+  "prep.customer_ledger_desc": "كشف مالي كامل للعميل مع الرصيد الافتتاحي ومعاملات المدين/الدائن والرصيد الختامي وحالة مدين/دائن.",
+
+  "prep.loading_records_title": "تقرير سجلات تحميل المشتريات",
+
+  "prep.loading_records_sub": "سجل تحميل الحاويات والحالة",
+
+  "prep.loading_records_desc": "تقرير أفقي من 23 عمودًا لتتبع حالة التحميل وكمية العقد والأوزان القائم/الفارغ/الصافي والأسعار ومبالغ العملة الأجنبية والمحلية.",
+
+  "prep.finalized_po_title": "تقرير أوامر الشراء النهائية",
+
+  "prep.finalized_po_sub": "عقود الشراء المكتملة",
+
+  "prep.finalized_po_desc": "ملخص شامل لأوامر الشراء النهائية مع تفصيل حسابات المدين/الدائن وتحويلات العملة وحالة الإكمال.",
+
+  "prep.transfer_payment_title": "سند دفع تحويل المشتريات",
+
+  "prep.transfer_payment_sub": "سند تسوية دفتر الأستاذ الرسمي",
+
+  "prep.transfer_payment_desc": "وثيقة سند رسمية بالمبلغ بالأرقام والكلمات وجدول القيد المزدوج لدفتر الأستاذ وتواقيع أمين الصندوق/المدير.",
+
+  "prep.cash_entries_title": "تقرير القيود النقدية الأخيرة (اليومية)",
+
+  "prep.cash_entries_sub": "ورقة يومية النقد",
+
+  "prep.cash_entries_desc": "ورقة معاملات النقد المدينة والدائنة اليومية مع فحص حالة التوازن وقيود رمز الفرع وسجل الشرح.",
+
+  "prep.bank_entries_title": "طباعة قيد البنك",
+
+  "prep.bank_entries_sub": "معاملات البنك فقط",
+
+  "prep.bank_entries_desc": "معاملات البنك المدينة والدائنة مع اسم البنك ورقم الأداة/الشيك وحالة التوازن والترويسة والتحقق بـ QR.",
+
+  "prep.roznamcha_voucher_title": "سند دفع / إيصال اليومية",
+
+  "prep.roznamcha_voucher_sub": "سند دفع وإيصال نقدي",
+
+  "prep.roznamcha_voucher_desc": "سند بنسختين (المكتب + العميل) للمدفوعات والإيصالات النقدية مع الترويسة والمبلغ بالكلمات والتواقيع.",
+
+  "prep.sales_order_title": "تقرير أمر البيع",
+
+  "prep.sales_order_sub": "تأكيد حجز المبيعات",
+
+  "prep.sales_order_desc": "تقرير أمر بيع كامل مع تفاصيل العميل ومواصفات البضائع والتسعير وحالة الدفع وتتبع التسليم.",
+
+  "prep.account_statement_title": "تقرير كشف الحساب",
+
+  "prep.account_statement_sub": "ورقة تفاصيل حساب المؤسسة",
+
+  "prep.account_statement_desc": "تقرير حساب رئيسي مفصل يوضح رمز الحساب والفئة والنوع الفرعي والعملة وتفاصيل العميل/الشركة/البنك المرتبطة.",
+
+  "prep.proforma_invoice_title": "فاتورة أولية",
+
+  "prep.proforma_invoice_sub": "فاتورة تجارية قبل الشحن",
+
+  "prep.proforma_invoice_desc": "فاتورة أولية للتجارة الدولية مع تفصيل البضائع ورموز HS وشروط الشحن وجدول الدفع.",
+
+  "prep.expenses_bill_title": "تقرير فاتورة المصروفات",
+
+  "prep.expenses_bill_sub": "سند المصروفات والتفصيل",
+
+  "prep.expenses_bill_desc": "تقرير فاتورة مصروفات مفصل مع بنود السطر وحسابات الضريبة وأسعار الصرف وقيود دفتر الأستاذ المزدوجة.",
+
+  "prep.trade_document_title": "وثيقة عقد التجارة",
+
+  "prep.trade_document_sub": "اتفاقية التجارة الدولية",
+
+  "prep.trade_document_desc": "وثيقة عقد تجارة رسمية مع تفاصيل الشحن وأرقام الحاويات ومعلومات الميناء وشروط التسليم.",
+
+  "prep.purchase_a4_title": "تقرير الشراء الكامل A4",
+
+  "prep.purchase_a4_sub": "ورقة تفاصيل الشراء الكاملة",
+
+  "prep.purchase_a4_desc": "تقرير شراء كامل A4 عمودي مع جميع تفاصيل الحجز ومواصفات البضائع وسجل الدفع ومسار سير العمل.",
+
+  "prep.user_activity_title": "تقرير نشاط المستخدم",
+
+  "prep.user_activity_sub": "سجل تدقيق مستخدم ERP",
+
+  "prep.user_activity_desc": "ملخص نشاط المستخدم يوضح عدد تسجيلات الدخول وعدد المعاملات وإحصاءات استخدام الوحدات.",
+
+  "prep.daily_roznamcha_title": "ملخص اليومية اليومي",
+
+  "prep.daily_roznamcha_sub": "تقرير يومية النقد لنهاية اليوم",
+
+  "prep.daily_roznamcha_desc": "ملخص نهاية اليوم لجميع القيود النقدية والإيصالات والمدفوعات لفرع محدد.",
+
+  "prep.ledger_balance_title": "تقرير رصيد دفتر الأستاذ",
+
+  "prep.ledger_balance_sub": "ورقة رصيد دفتر الأستاذ العام",
+
+  "prep.ledger_balance_sub2": "ملخص رصيد دفتر الأستاذ الكامل",
+
+  "prep.ledger_balance_desc": "تقرير رصيد دفتر الأستاذ الكامل يوضح إجماليات المدين وإجماليات الدائن والرصيد الحالي لكل حساب.",
+
+  "prep.transfer_verification_title": "ورقة التحقق من تحويل المشتريات",
+
+  "prep.transfer_verification_sub": "ورقة تدقيق بمستوى SAP/Oracle",
+
+  "prep.transfer_verification_desc": "التحقق من التحويل بمستوى المؤسسة مع مسار سير العمل وبطاقات مؤشرات الأداء ومصفوفة القيد المزدوج ودعم 5 لغات.",
   "locsetup.eg_country": "مثال: باكستان",
 
   "locsetup.eg_state": "مثال: بلوشستان",
@@ -54444,6 +54990,162 @@ const fa: Dict = {
 
 
 
+
+
+  "common.previous_page": "صفحه قبلی",
+
+  "common.next_page": "صفحه بعدی",
+
+  "cl.aria_select_all": "انتخاب همه سرنخ‌ها در صفحه فعلی",
+
+  "cl.aria_per_page": "سرنخ در هر صفحه",
+  "prep.reports_hub": "مرکز گزارش‌ها",
+
+  "prep.hub_crumb": "همه گزارش‌گیری روزنامه سوپر ادمین",
+
+  "prep.hub_title": "همه گزارش‌گیری روزنامه و مرکز چاپ سوپر ادمین",
+
+  "prep.hub_desc_1": "مرکز کنترل گزارش‌گیری ERP با",
+
+  "prep.hub_desc_2": "گزارش‌های متصل به پایگاه‌داده زنده • بازآوری خودکار هر ۶۰ ثانیه",
+
+  "prep.scope_super_admin": "محدوده سوپر ادمین",
+
+  "prep.scope_country_admin": "محدوده مدیر کشور",
+
+  "prep.scope_branch_admin": "محدوده مدیر شعبه",
+
+  "prep.kpi_purchases": "خریدها",
+
+  "prep.kpi_sales": "فروش",
+
+  "prep.kpi_journal": "روزنامه",
+
+  "prep.kpi_cash": "نقدی",
+
+  "prep.kpi_payments": "پرداخت‌ها",
+
+  "prep.kpi_ledgers": "دفاتر کل",
+
+  "prep.kpi_accounts": "حساب‌ها",
+
+  "prep.kpi_active": "فعال",
+
+  "prep.report_actions": "اقدامات گزارش",
+
+  "prep.active_branches": "شعب فعال",
+
+  "prep.no_branch_activity": "هیچ فعالیت شعبه فعالی در محدوده فعلی نیست.",
+
+  "prep.staff_users": "کاربران کارکنان",
+
+  "prep.open_form_report": "باز کردن فرم / گزارش",
+
+  "prep.no_ledger_data": "هیچ داده دفتر کلی در دسترس نیست.",
+
+  "prep.customer_ledger_title": "گزارش دفتر کل مشتری و صورت‌حساب",
+
+  "prep.customer_ledger_sub": "روزنامچه / صورت‌حساب",
+
+  "prep.customer_ledger_desc": "صورت مالی کامل مشتری با مانده اول دوره، تراکنش‌های بدهکار/بستانکار، مانده پایان دوره و وضعیت بدهکار/بستانکار.",
+
+  "prep.loading_records_title": "گزارش سوابق بارگیری خرید",
+
+  "prep.loading_records_sub": "دفتر بارگیری کانتینر و وضعیت",
+
+  "prep.loading_records_desc": "گزارش افقی ۲۳ ستونی برای پیگیری وضعیت بارگیری، مقدار قرارداد، وزن ناخالص/ظرف/خالص، نرخ‌ها و مبالغ ارز خارجی و محلی.",
+
+  "prep.finalized_po_title": "گزارش سفارش‌های خرید نهایی‌شده",
+
+  "prep.finalized_po_sub": "قراردادهای خرید تکمیل‌شده",
+
+  "prep.finalized_po_desc": "خلاصه جامع سفارش‌های خرید نهایی‌شده با تفکیک حساب بدهکار/بستانکار، تبدیل ارز و وضعیت تکمیل.",
+
+  "prep.transfer_payment_title": "رسید پرداخت انتقال خرید",
+
+  "prep.transfer_payment_sub": "رسید رسمی تسویه دفتر کل",
+
+  "prep.transfer_payment_desc": "سند رسمی با مبلغ به عدد و حروف، جدول ثبت دوطرفه دفتر کل و امضای صندوق‌دار/مدیر.",
+
+  "prep.cash_entries_title": "گزارش ثبت‌های نقدی اخیر (روزنامچه)",
+
+  "prep.cash_entries_sub": "برگه روزنامه نقدی روزانه",
+
+  "prep.cash_entries_desc": "برگه تراکنش‌های بدهکار و بستانکار نقدی روزانه با بررسی وضعیت تراز، ثبت کد شعبه و گزارش شرح.",
+
+  "prep.bank_entries_title": "چاپ ثبت بانک",
+
+  "prep.bank_entries_sub": "فقط تراکنش‌های بانکی",
+
+  "prep.bank_entries_desc": "تراکنش‌های بدهکار و بستانکار بانک با نام بانک، شماره سند/چک، وضعیت تراز، سربرگ و تأیید QR.",
+
+  "prep.roznamcha_voucher_title": "رسید پرداخت / دریافت روزنامچه",
+
+  "prep.roznamcha_voucher_sub": "رسید پرداخت و دریافت نقدی",
+
+  "prep.roznamcha_voucher_desc": "رسید دو نسخه‌ای (دفتر + مشتری) برای پرداخت‌ها و دریافت‌های نقدی با سربرگ، مبلغ به حروف و امضاها.",
+
+  "prep.sales_order_title": "گزارش سفارش فروش",
+
+  "prep.sales_order_sub": "تأیید رزرو فروش",
+
+  "prep.sales_order_desc": "گزارش کامل سفارش فروش با جزئیات مشتری، مشخصات کالا، قیمت‌گذاری، وضعیت پرداخت و پیگیری تحویل.",
+
+  "prep.account_statement_title": "گزارش صورت‌حساب",
+
+  "prep.account_statement_sub": "برگه جزئیات حساب سازمانی",
+
+  "prep.account_statement_desc": "گزارش تفصیلی مستر حساب شامل کد حساب، دسته، زیرنوع، ارز و جزئیات مشتری/شرکت/بانک متصل.",
+
+  "prep.proforma_invoice_title": "فاکتور پیش‌بها",
+
+  "prep.proforma_invoice_sub": "فاکتور تجاری پیش از حمل",
+
+  "prep.proforma_invoice_desc": "فاکتور پیش‌بها برای تجارت بین‌المللی با تفکیک کالا، کدهای HS، شرایط حمل و برنامه پرداخت.",
+
+  "prep.expenses_bill_title": "گزارش صورت‌حساب هزینه‌ها",
+
+  "prep.expenses_bill_sub": "رسید هزینه و تفکیک",
+
+  "prep.expenses_bill_desc": "گزارش تفصیلی صورت‌حساب هزینه با اقلام، محاسبات مالیات، نرخ ارز و ثبت دوطرفه دفتر کل.",
+
+  "prep.trade_document_title": "سند قرارداد تجاری",
+
+  "prep.trade_document_sub": "توافق‌نامه تجارت بین‌المللی",
+
+  "prep.trade_document_desc": "سند رسمی قرارداد تجاری با جزئیات حمل، شماره کانتینر، اطلاعات بندر و شرایط تحویل.",
+
+  "prep.purchase_a4_title": "گزارش کامل خرید A4",
+
+  "prep.purchase_a4_sub": "برگه کامل جزئیات خرید",
+
+  "prep.purchase_a4_desc": "گزارش کامل خرید A4 عمودی با تمام جزئیات رزرو، مشخصات کالا، تاریخچه پرداخت و مسیر گردش کار.",
+
+  "prep.user_activity_title": "گزارش فعالیت کاربر",
+
+  "prep.user_activity_sub": "رد حسابرسی کاربر ERP",
+
+  "prep.user_activity_desc": "خلاصه فعالیت کاربر شامل تعداد ورود، تعداد تراکنش و آمار استفاده از ماژول.",
+
+  "prep.daily_roznamcha_title": "خلاصه روزانه روزنامچه",
+
+  "prep.daily_roznamcha_sub": "گزارش روزنامه نقدی پایان روز",
+
+  "prep.daily_roznamcha_desc": "خلاصه پایان روز همه ثبت‌های نقدی، دریافت‌ها و پرداخت‌ها برای یک شعبه خاص.",
+
+  "prep.ledger_balance_title": "گزارش مانده دفتر کل",
+
+  "prep.ledger_balance_sub": "ترازنامه دفتر کل",
+
+  "prep.ledger_balance_sub2": "خلاصه کامل مانده دفتر کل",
+
+  "prep.ledger_balance_desc": "گزارش کامل مانده دفتر کل شامل مجموع بدهکار، مجموع بستانکار و مانده جاری برای هر حساب.",
+
+  "prep.transfer_verification_title": "برگه تأیید انتقال خرید",
+
+  "prep.transfer_verification_sub": "برگه حسابرسی سطح SAP/Oracle",
+
+  "prep.transfer_verification_desc": "تأیید انتقال در سطح سازمانی با خط لوله گردش کار، کارت‌های KPI، ماتریس ثبت دوطرفه دفتر کل و پشتیبانی ۵ زبانه.",
   "locsetup.eg_country": "مثال: پاکستان",
 
   "locsetup.eg_state": "مثال: بلوچستان",
@@ -66860,6 +67562,162 @@ const ps: Dict = {
 
 
 
+
+
+  "common.previous_page": "مخکینی مخ",
+
+  "common.next_page": "راتلونکی مخ",
+
+  "cl.aria_select_all": "په اوسني مخ کې ټول لیدونه وټاکئ",
+
+  "cl.aria_per_page": "په هر مخ کې لیدونه",
+  "prep.reports_hub": "د راپورونو مرکز",
+
+  "prep.hub_crumb": "د سوپر اډمین ټول ژورنال راپورونه",
+
+  "prep.hub_title": "د سوپر اډمین د ټولو ژورنال راپورونو او چاپ مرکز",
+
+  "prep.hub_desc_1": "د ERP د راپورونو کنټرول مرکز چې لري",
+
+  "prep.hub_desc_2": "له ژوندۍ ډیټابیس سره وصل راپورونه • هرې ۶۰ ثانیو اتومات تازه کول",
+
+  "prep.scope_super_admin": "د سوپر اډمین ساحه",
+
+  "prep.scope_country_admin": "د هېواد اډمین ساحه",
+
+  "prep.scope_branch_admin": "د څانګې اډمین ساحه",
+
+  "prep.kpi_purchases": "پیرودونه",
+
+  "prep.kpi_sales": "پلور",
+
+  "prep.kpi_journal": "ژورنال",
+
+  "prep.kpi_cash": "نغدي",
+
+  "prep.kpi_payments": "تادیات",
+
+  "prep.kpi_ledgers": "لېجرونه",
+
+  "prep.kpi_accounts": "حسابونه",
+
+  "prep.kpi_active": "فعال",
+
+  "prep.report_actions": "د راپور کړنې",
+
+  "prep.active_branches": "فعالې څانګې",
+
+  "prep.no_branch_activity": "په اوسنۍ ساحه کې د فعالې څانګې هیڅ فعالیت نشته.",
+
+  "prep.staff_users": "د کارکونکو کاروونکي",
+
+  "prep.open_form_report": "فورمه / راپور پرانیزئ",
+
+  "prep.no_ledger_data": "د لېجر هیڅ معلومات شتون نلري.",
+
+  "prep.customer_ledger_title": "د پیرودونکي لېجر راپور او د حساب بیان",
+
+  "prep.customer_ledger_sub": "روزنامچه / د حساب بیان",
+
+  "prep.customer_ledger_desc": "د پیرودونکي بشپړ مالي بیان د پرانیستې بیلانس، ډیبیټ/کریډیټ راکړو ورکړو، د تړلو بیلانس او د Dr/Cr حالت سره.",
+
+  "prep.loading_records_title": "د پیرود د بار اخیستلو ریکارډونو راپور",
+
+  "prep.loading_records_sub": "د کنټینر د بار اخیستلو او حالت راجستر",
+
+  "prep.loading_records_desc": "د بار اخیستلو حالت، د قرارداد اندازه، ناخالص/ټیر/خالص وزنونه، نرخونه، د FC او LC مقدارونو تعقیب لپاره ۲۳-کالمه افقي راپور.",
+
+  "prep.finalized_po_title": "د پای ته رسیدلو پیرود آرډرونو راپور",
+
+  "prep.finalized_po_sub": "بشپړ شوي پیرود قراردادونه",
+
+  "prep.finalized_po_desc": "د پای ته رسیدلو پیرود آرډرونو هراړخیز لنډیز د DR/CR حساب ویش، د اسعارو بدلون او د بشپړتیا حالت سره.",
+
+  "prep.transfer_payment_title": "د پیرود د لیږد د تادیې واوچر",
+
+  "prep.transfer_payment_sub": "رسمي د GL تصفیې واوچر",
+
+  "prep.transfer_payment_desc": "رسمي د واوچر سند د اندازې سره په عددونو او کلماتو کې، د GL د دوه اړخیز ثبت جدول او د خزانه دار/مدیر لاسلیکونه.",
+
+  "prep.cash_entries_title": "وروستي نغدي ننوتنې (روزنامچه) راپور",
+
+  "prep.cash_entries_sub": "ورځنۍ نغدي ژورنال پاڼه",
+
+  "prep.cash_entries_desc": "د ورځنیو نغدو ډیبیټ او کریډیټ راکړو ورکړو پاڼه د متوازن حالت چک، د څانګې کوډ ثبت او د تشریح لاگ سره.",
+
+  "prep.bank_entries_title": "د بانک ننوتنې چاپ",
+
+  "prep.bank_entries_sub": "یوازې د بانک راکړې ورکړې",
+
+  "prep.bank_entries_desc": "د بانک ډیبیټ او کریډیټ راکړې ورکړې د بانک نوم، د وسیلې/چک شمېره، متوازن حالت، سرلیک او د QR تصدیق سره.",
+
+  "prep.roznamcha_voucher_title": "د روزنامچې د تادیې / رسید واوچر",
+
+  "prep.roznamcha_voucher_sub": "د نغدو تادیې او رسید واوچر",
+
+  "prep.roznamcha_voucher_desc": "دوه کاپي (دفتر + پیرودونکی) واوچر د نغدو تادیاتو او رسیدونو لپاره د سرلیک، د اندازې په کلماتو او لاسلیکونو سره.",
+
+  "prep.sales_order_title": "د پلور آرډر راپور",
+
+  "prep.sales_order_sub": "د پلور د بکنګ تصدیق",
+
+  "prep.sales_order_desc": "د بشپړ پلور آرډر راپور د پیرودونکي جزئیاتو، د توکو مشخصاتو، بیو، د تادیې حالت او د سپارلو تعقیب سره.",
+
+  "prep.account_statement_title": "د حساب بیان راپور",
+
+  "prep.account_statement_sub": "د تصدۍ د حساب جزئیاتو پاڼه",
+
+  "prep.account_statement_desc": "د تفصيلي حساب ماسټر راپور چې د حساب کوډ، کټګوري، فرعي ډول، اسعار او د تړل شوي پیرودونکي/شرکت/بانک جزئیات ښیي.",
+
+  "prep.proforma_invoice_title": "پروفارما انوائس",
+
+  "prep.proforma_invoice_sub": "د لیږد نه مخکې سوداګریزه انوائس",
+
+  "prep.proforma_invoice_desc": "د نړیوالې سوداګرۍ لپاره پروفارما انوائس د توکو ویش، د HS کوډونو، د لیږد شرطونو او د تادیې مهال ویش سره.",
+
+  "prep.expenses_bill_title": "د لګښتونو بیل راپور",
+
+  "prep.expenses_bill_sub": "د لګښت واوچر او ویش",
+
+  "prep.expenses_bill_desc": "د تفصيلي لګښت بیل راپور د کرښې توکو، د مالیې محاسبو، د اسعارو نرخونو او د GL دوه اړخیز ثبت سره.",
+
+  "prep.trade_document_title": "د سوداګرۍ قرارداد سند",
+
+  "prep.trade_document_sub": "د نړیوالې سوداګرۍ تړون",
+
+  "prep.trade_document_desc": "رسمي د سوداګرۍ قرارداد سند د لیږد جزئیاتو، د کنټینر شمېرو، د بندر معلوماتو او د سپارلو شرطونو سره.",
+
+  "prep.purchase_a4_title": "د پیرود A4 بشپړ راپور",
+
+  "prep.purchase_a4_sub": "د پیرود د جزئیاتو بشپړه پاڼه",
+
+  "prep.purchase_a4_desc": "د بشپړ A4 عمودي پیرود راپور د ټولو بکنګ جزئیاتو، د توکو مشخصاتو، د تادیې تاریخ او د کار د بهیر سفر سره.",
+
+  "prep.user_activity_title": "د کارونکي د فعالیت راپور",
+
+  "prep.user_activity_sub": "د ERP د کارونکي د پلټنې مزی",
+
+  "prep.user_activity_desc": "د کارونکي د فعالیت لنډیز چې د ننوتلو شمېر، د راکړې ورکړې شمېر او د ماډیول کارونې احصایې ښیي.",
+
+  "prep.daily_roznamcha_title": "ورځنی د روزنامچې لنډیز",
+
+  "prep.daily_roznamcha_sub": "د ورځې پای د نغدو ژورنال راپور",
+
+  "prep.daily_roznamcha_desc": "د یوې ځانګړې څانګې لپاره د ټولو نغدو ننوتنو، رسیدونو او تادیاتو د ورځې پای لنډیز.",
+
+  "prep.ledger_balance_title": "د لېجر بیلانس راپور",
+
+  "prep.ledger_balance_sub": "د GL لېجر بیلانس پاڼه",
+
+  "prep.ledger_balance_sub2": "د لېجر بیلانس بشپړ لنډیز",
+
+  "prep.ledger_balance_desc": "د بشپړ لېجر بیلانس راپور چې د هر لېجر حساب لپاره د ډیبیټ مجموعې، د کریډیټ مجموعې او اوسنی بیلانس ښیي.",
+
+  "prep.transfer_verification_title": "د پیرود د لیږد تصدیق پاڼه",
+
+  "prep.transfer_verification_sub": "د SAP/Oracle کچې د پلټنې پاڼه",
+
+  "prep.transfer_verification_desc": "د تصدۍ کچې د لیږد تصدیق د کار د بهیر پایپ لاین، د KPI کارتونو، د GL دوه اړخیز میټریکس او د ۵ ژبو ملاتړ سره.",
   "locsetup.eg_country": "لکه پاکستان",
 
   "locsetup.eg_state": "لکه بلوچستان",

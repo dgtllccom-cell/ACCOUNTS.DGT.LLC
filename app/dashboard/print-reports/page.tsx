@@ -33,6 +33,8 @@ import type { TradeDocType } from "@/lib/reports/trade-documents/types";
 import { openPurchaseA4ReportWindow } from "@/lib/reports/open-purchase-a4-report-window";
 import { openUserA4ReportWindow } from "@/lib/reports/open-user-a4-report-window";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 /* ──────────────────────────────────────────────────────────────
    TYPES
@@ -121,6 +123,8 @@ function fmtDateTime(d: string | null) {
    MAIN COMPONENT
    ────────────────────────────────────────────────────────────── */
 export default function PrintReportsHubPage() {
+  const lang = useActiveLanguage();
+  const tp = useCallback((key: string, fallback: string) => t(lang, key as never, fallback), [lang]);
   const [roleScope, setRoleScope] = useState<RoleScope>("super_admin");
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -541,7 +545,7 @@ export default function PrintReportsHubPage() {
     if (!so) return noData("sales order");
     const form = so.form_data?.form || {};
     openSalesA4ReportWindow({
-      title: "Sales Order Report",
+      title: tp("prep.sales_order_title", "Sales Order Report"),
       salesData: {
         id: so.id,
         salesBookingOrderNumber: so.sales_order_no || so.purchase_order_no || "—",
@@ -578,7 +582,7 @@ export default function PrintReportsHubPage() {
     const acc = accountsList[0];
     if (!acc) return noData("account");
     openAccountA4ReportWindow({
-      title: "Account Statement Report",
+      title: tp("prep.account_statement_title", "Account Statement Report"),
       accountData: {
         accountName: acc.contacts?.accountTitle || acc.account_number || "—",
         accountCode: acc.account_number || "—",
@@ -605,10 +609,10 @@ export default function PrintReportsHubPage() {
       countryName: o.countryName || null,
       branchName: o.branchName || null,
     };
-    const branding = await resolveDocumentBranding(scope, "en");
-    const input = purchaseOrderToTradeInput(o, { docType, lang: "en", branding });
+    const branding = await resolveDocumentBranding(scope, lang);
+    const input = purchaseOrderToTradeInput(o, { docType, lang, branding });
     openTradeDocument(input);
-  }, [orders]);
+  }, [orders, lang]);
   const handlePrintProformaInvoice = useCallback(() => { void openTradeDoc("proforma_invoice"); }, [openTradeDoc]);
 
   // 11. Expenses Bill
@@ -625,7 +629,7 @@ export default function PrintReportsHubPage() {
     if (!o) return noData("purchase");
     const form = o.form_data?.form || {};
     openPurchaseA4ReportWindow({
-      title: "Purchase Booking Order Report",
+      title: tp("prep.purchase_booking_title", "Purchase Booking Order Report"),
       purchaseData: {
         id: o.id,
         purchaseBookingOrderNumber: o.purchase_order_no || "—",
@@ -662,8 +666,8 @@ export default function PrintReportsHubPage() {
     const u = sessionInfo?.user;
     if (!u?.id) return noData("user session");
     openUserA4ReportWindow({
-      title: "User Activity Report",
-      subtitle: "ERP User Audit Trail",
+      title: tp("prep.user_activity_title", "User Activity Report"),
+      subtitle: tp("prep.user_activity_sub", "ERP User Audit Trail"),
       userData: {
         userId: u.id,
         userCode: u.userCode || u.user_code || "—",
@@ -697,13 +701,13 @@ export default function PrintReportsHubPage() {
   // 16. Ledger Balance Report
   const handlePrintLedgerBalance = useCallback(() => {
     if (ledgersList.length === 0 && accountsList.length === 0) {
-      alert("No ledger data available.");
+      alert(tp("prep.no_ledger_data", "No ledger data available."));
       return;
     }
     const acc = accountsList[0] || { account_number: "—", contacts: {} };
     openAccountA4ReportWindow({
-      title: "Ledger Balance Report",
-      subtitle: "Complete Ledger Balance Summary",
+      title: tp("prep.ledger_balance_title", "Ledger Balance Report"),
+      subtitle: tp("prep.ledger_balance_sub2", "Complete Ledger Balance Summary"),
       accountData: {
         accountName: acc.contacts?.accountTitle || acc.account_number || "—",
         accountCode: acc.account_number || "—",
@@ -755,9 +759,9 @@ export default function PrintReportsHubPage() {
   const reportCards = useMemo(() => [
     {
       id: "customer-ledger",
-      title: "Customer Ledger Report & Account Statement",
-      subtitle: "Roznamacha / Account Statement",
-      description: "Complete customer financial statement with opening balance, debit/credit transactions, closing balance, and Dr/Cr status.",
+      title: tp("prep.customer_ledger_title", "Customer Ledger Report & Account Statement"),
+      subtitle: tp("prep.customer_ledger_sub", "Roznamacha / Account Statement"),
+      description: tp("prep.customer_ledger_desc", "Complete customer financial statement with opening balance, debit/credit transactions, closing balance, and Dr/Cr status."),
       format: "A4 Landscape",
       icon: BookOpen,
       color: "from-blue-600 to-indigo-700",
@@ -769,9 +773,9 @@ export default function PrintReportsHubPage() {
     },
     {
       id: "loading-records",
-      title: "Purchase Loading Records Report",
-      subtitle: "Container Loading & Status Register",
-      description: "23-column landscape report for tracking loading status, contract qty, gross/tare/net weights, rates, FC & LC amounts.",
+      title: tp("prep.loading_records_title", "Purchase Loading Records Report"),
+      subtitle: tp("prep.loading_records_sub", "Container Loading & Status Register"),
+      description: tp("prep.loading_records_desc", "23-column landscape report for tracking loading status, contract qty, gross/tare/net weights, rates, FC & LC amounts."),
       format: "A4 Landscape",
       icon: Ship,
       color: "from-emerald-600 to-teal-700",
@@ -783,9 +787,9 @@ export default function PrintReportsHubPage() {
     },
     {
       id: "finalized-po",
-      title: "Finalized Purchase Orders Report",
-      subtitle: "Completed Purchase Contracts",
-      description: "Comprehensive summary of finalized purchase orders with DR/CR account breakdown, currency conversions, and completion status.",
+      title: tp("prep.finalized_po_title", "Finalized Purchase Orders Report"),
+      subtitle: tp("prep.finalized_po_sub", "Completed Purchase Contracts"),
+      description: tp("prep.finalized_po_desc", "Comprehensive summary of finalized purchase orders with DR/CR account breakdown, currency conversions, and completion status."),
       format: "A4 Landscape",
       icon: ClipboardList,
       color: "from-purple-600 to-violet-700",
@@ -797,9 +801,9 @@ export default function PrintReportsHubPage() {
     },
     {
       id: "transfer-payment",
-      title: "Purchase Transfer Payment Voucher",
-      subtitle: "Official GL Settlement Voucher",
-      description: "Official voucher document with amount in digits and words, GL posting double-entry table, and cashier/manager signatures.",
+      title: tp("prep.transfer_payment_title", "Purchase Transfer Payment Voucher"),
+      subtitle: tp("prep.transfer_payment_sub", "Official GL Settlement Voucher"),
+      description: tp("prep.transfer_payment_desc", "Official voucher document with amount in digits and words, GL posting double-entry table, and cashier/manager signatures."),
       format: "A4 Portrait",
       icon: Coins,
       color: "from-amber-600 to-orange-700",
@@ -811,9 +815,9 @@ export default function PrintReportsHubPage() {
     },
     {
       id: "cash-entries",
-      title: "Recent Cash Entries (Roznamacha) Report",
-      subtitle: "Daily Cash Journal Sheet",
-      description: "Daily cash debit & credit transactions sheet featuring balanced status check, branch code postings, and narration log.",
+      title: tp("prep.cash_entries_title", "Recent Cash Entries (Roznamacha) Report"),
+      subtitle: tp("prep.cash_entries_sub", "Daily Cash Journal Sheet"),
+      description: tp("prep.cash_entries_desc", "Daily cash debit & credit transactions sheet featuring balanced status check, branch code postings, and narration log."),
       format: "A4 Portrait",
       icon: Wallet,
       color: "from-cyan-600 to-blue-700",
@@ -825,9 +829,9 @@ export default function PrintReportsHubPage() {
     },
     {
       id: "bank-entries",
-      title: "Bank Entry Print",
-      subtitle: "Bank Transactions Only",
-      description: "Bank debit & credit transactions with bank name, instrument/cheque number, balanced status, branded letterhead and QR verification.",
+      title: tp("prep.bank_entries_title", "Bank Entry Print"),
+      subtitle: tp("prep.bank_entries_sub", "Bank Transactions Only"),
+      description: tp("prep.bank_entries_desc", "Bank debit & credit transactions with bank name, instrument/cheque number, balanced status, branded letterhead and QR verification."),
       format: "A4 Landscape",
       icon: Wallet,
       color: "from-indigo-600 to-blue-700",
@@ -839,9 +843,9 @@ export default function PrintReportsHubPage() {
     },
     {
       id: "roznamcha-voucher",
-      title: "Roznamcha Payment / Receipt Voucher",
-      subtitle: "Cash Payment & Receipt Voucher",
-      description: "Dual-copy (Office + Customer) voucher for cash payments and receipts with letterhead, amount in words, and signatures.",
+      title: tp("prep.roznamcha_voucher_title", "Roznamcha Payment / Receipt Voucher"),
+      subtitle: tp("prep.roznamcha_voucher_sub", "Cash Payment & Receipt Voucher"),
+      description: tp("prep.roznamcha_voucher_desc", "Dual-copy (Office + Customer) voucher for cash payments and receipts with letterhead, amount in words, and signatures."),
       format: "A4 Portrait",
       icon: Receipt,
       color: "from-teal-600 to-cyan-700",
@@ -853,9 +857,9 @@ export default function PrintReportsHubPage() {
     },
     {
       id: "sales-order",
-      title: "Sales Order Report",
-      subtitle: "Sales Booking Confirmation",
-      description: "Full sales order report with customer details, goods specification, pricing, payment status, and delivery tracking.",
+      title: tp("prep.sales_order_title", "Sales Order Report"),
+      subtitle: tp("prep.sales_order_sub", "Sales Booking Confirmation"),
+      description: tp("prep.sales_order_desc", "Full sales order report with customer details, goods specification, pricing, payment status, and delivery tracking."),
       format: "A4 Portrait",
       icon: CreditCard,
       color: "from-indigo-600 to-blue-700",
@@ -867,9 +871,9 @@ export default function PrintReportsHubPage() {
     },
     {
       id: "account-statement",
-      title: "Account Statement Report",
-      subtitle: "Enterprise Account Detail Sheet",
-      description: "Detailed account master report showing account code, category, sub-type, currency, and connected customer/company/bank details.",
+      title: tp("prep.account_statement_title", "Account Statement Report"),
+      subtitle: tp("prep.account_statement_sub", "Enterprise Account Detail Sheet"),
+      description: tp("prep.account_statement_desc", "Detailed account master report showing account code, category, sub-type, currency, and connected customer/company/bank details."),
       format: "A4 Portrait",
       icon: Landmark,
       color: "from-sky-600 to-blue-700",
@@ -881,9 +885,9 @@ export default function PrintReportsHubPage() {
     },
     {
       id: "proforma-invoice",
-      title: "Proforma Invoice",
-      subtitle: "Pre-Shipment Commercial Invoice",
-      description: "Proforma invoice for international trade with goods breakdown, HS codes, shipping terms, and payment schedule.",
+      title: tp("prep.proforma_invoice_title", "Proforma Invoice"),
+      subtitle: tp("prep.proforma_invoice_sub", "Pre-Shipment Commercial Invoice"),
+      description: tp("prep.proforma_invoice_desc", "Proforma invoice for international trade with goods breakdown, HS codes, shipping terms, and payment schedule."),
       format: "A4 Portrait",
       icon: FileBadge,
       color: "from-orange-500 to-amber-700",
@@ -895,9 +899,9 @@ export default function PrintReportsHubPage() {
     },
     {
       id: "expenses-bill",
-      title: "Expenses Bill Report",
-      subtitle: "Expense Voucher & Breakdown",
-      description: "Detailed expense bill report with line items, tax calculations, exchange rates, and GL double-entry postings.",
+      title: tp("prep.expenses_bill_title", "Expenses Bill Report"),
+      subtitle: tp("prep.expenses_bill_sub", "Expense Voucher & Breakdown"),
+      description: tp("prep.expenses_bill_desc", "Detailed expense bill report with line items, tax calculations, exchange rates, and GL double-entry postings."),
       format: "A4 Portrait",
       icon: ScrollText,
       color: "from-red-500 to-rose-700",
@@ -909,9 +913,9 @@ export default function PrintReportsHubPage() {
     },
     {
       id: "trade-document",
-      title: "Trade Contract Document",
-      subtitle: "International Trade Agreement",
-      description: "Official trade contract document with shipping details, container numbers, port information, and terms of delivery.",
+      title: tp("prep.trade_document_title", "Trade Contract Document"),
+      subtitle: tp("prep.trade_document_sub", "International Trade Agreement"),
+      description: tp("prep.trade_document_desc", "Official trade contract document with shipping details, container numbers, port information, and terms of delivery."),
       format: "A4 Portrait",
       icon: FileBarChart,
       color: "from-violet-600 to-purple-700",
@@ -923,9 +927,9 @@ export default function PrintReportsHubPage() {
     },
     {
       id: "purchase-a4",
-      title: "Purchase A4 Full Report",
-      subtitle: "Complete Purchase Detail Sheet",
-      description: "Full A4 portrait purchase report with all booking details, goods specification, payment history, and workflow journey.",
+      title: tp("prep.purchase_a4_title", "Purchase A4 Full Report"),
+      subtitle: tp("prep.purchase_a4_sub", "Complete Purchase Detail Sheet"),
+      description: tp("prep.purchase_a4_desc", "Full A4 portrait purchase report with all booking details, goods specification, payment history, and workflow journey."),
       format: "A4 Portrait",
       icon: FileCheck,
       color: "from-green-600 to-emerald-700",
@@ -937,9 +941,9 @@ export default function PrintReportsHubPage() {
     },
     {
       id: "user-activity",
-      title: "User Activity Report",
-      subtitle: "ERP User Audit Trail",
-      description: "User activity summary showing login count, transaction count, and module usage statistics.",
+      title: tp("prep.user_activity_title", "User Activity Report"),
+      subtitle: tp("prep.user_activity_sub", "ERP User Audit Trail"),
+      description: tp("prep.user_activity_desc", "User activity summary showing login count, transaction count, and module usage statistics."),
       format: "A4 Portrait",
       icon: Users,
       color: "from-slate-600 to-gray-700",
@@ -951,9 +955,9 @@ export default function PrintReportsHubPage() {
     },
     {
       id: "daily-roznamcha",
-      title: "Daily Roznamcha Summary",
-      subtitle: "Day-End Cash Journal Report",
-      description: "End-of-day summary of all cash entries, receipts, and payments for a specific branch.",
+      title: tp("prep.daily_roznamcha_title", "Daily Roznamcha Summary"),
+      subtitle: tp("prep.daily_roznamcha_sub", "Day-End Cash Journal Report"),
+      description: tp("prep.daily_roznamcha_desc", "End-of-day summary of all cash entries, receipts, and payments for a specific branch."),
       format: "A4 Portrait",
       icon: Scale,
       color: "from-yellow-600 to-amber-700",
@@ -965,9 +969,9 @@ export default function PrintReportsHubPage() {
     },
     {
       id: "ledger-balance",
-      title: "Ledger Balance Report",
-      subtitle: "GL Ledger Balance Sheet",
-      description: "Complete ledger balance report showing debit totals, credit totals, and current balance for each ledger account.",
+      title: tp("prep.ledger_balance_title", "Ledger Balance Report"),
+      subtitle: tp("prep.ledger_balance_sub", "GL Ledger Balance Sheet"),
+      description: tp("prep.ledger_balance_desc", "Complete ledger balance report showing debit totals, credit totals, and current balance for each ledger account."),
       format: "A4 Portrait",
       icon: BarChart3,
       color: "from-fuchsia-600 to-pink-700",
@@ -979,9 +983,9 @@ export default function PrintReportsHubPage() {
     },
     {
       id: "transfer-verification",
-      title: "Purchase Transfer Verification Sheet",
-      subtitle: "SAP/Oracle Grade Audit Sheet",
-      description: "Enterprise-grade transfer verification with workflow pipeline, KPI cards, GL double-entry matrix, and 5-language support.",
+      title: tp("prep.transfer_verification_title", "Purchase Transfer Verification Sheet"),
+      subtitle: tp("prep.transfer_verification_sub", "SAP/Oracle Grade Audit Sheet"),
+      description: tp("prep.transfer_verification_desc", "Enterprise-grade transfer verification with workflow pipeline, KPI cards, GL double-entry matrix, and 5-language support."),
       format: "A4 Portrait",
       icon: ArrowRightLeft,
       color: "from-emerald-700 to-green-800",
@@ -991,7 +995,8 @@ export default function PrintReportsHubPage() {
       dataCount: orders.length,
       ...cardMeta
     },
-  ], [handlePrintCustomerLedger, handlePrintLoadingRecords, handlePrintFinalizedPO, handlePrintTransferPayment, handlePrintCashEntries, handlePrintPurchaseBooking, handlePrintRoznamchaVoucher, handlePrintSalesOrder, handlePrintAccountStatement, handlePrintProformaInvoice, handlePrintExpenses, handlePrintTradeDocument, handlePrintPurchaseA4, handlePrintUserActivity, handlePrintDailyRoznamcha, handlePrintLedgerBalance, handlePrintTransferVerification, roznamchaEntries, loadingRecords, orders, salesOrders, accountsList, ledgersList, selectedCountry, selectedBranch]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [lang, handlePrintCustomerLedger, handlePrintLoadingRecords, handlePrintFinalizedPO, handlePrintTransferPayment, handlePrintCashEntries, handlePrintPurchaseBooking, handlePrintRoznamchaVoucher, handlePrintSalesOrder, handlePrintAccountStatement, handlePrintProformaInvoice, handlePrintExpenses, handlePrintTradeDocument, handlePrintPurchaseA4, handlePrintUserActivity, handlePrintDailyRoznamcha, handlePrintLedgerBalance, handlePrintTransferVerification, roznamchaEntries, loadingRecords, orders, salesOrders, accountsList, ledgersList, selectedCountry, selectedBranch]);
 
   const filteredCards = useMemo(() => {
     if (!searchQuery.trim()) return reportCards;
@@ -1025,15 +1030,15 @@ export default function PrintReportsHubPage() {
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div>
           <div className="flex items-center gap-2 text-xs font-bold text-blue-600 dark:text-blue-400">
-            <span>Dashboard</span><span>›</span><span>Reports Hub</span><span>›</span>
-            <span className="font-extrabold text-slate-800 dark:text-slate-200">All Super Admin Journal Reporting</span>
+            <span>{tp("nav.dashboard", "Dashboard")}</span><span>›</span><span>{tp("prep.reports_hub", "Reports Hub")}</span><span>›</span>
+            <span className="font-extrabold text-slate-800 dark:text-slate-200">{tp("prep.hub_crumb", "All Super Admin Journal Reporting")}</span>
           </div>
           <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
             <Printer className="h-7 w-7 text-blue-600" />
-            All Super Admin Journal Reporting & Print Hub
+            {tp("prep.hub_title", "All Super Admin Journal Reporting & Print Hub")}
           </h1>
           <p className="text-xs text-slate-500 font-medium mt-1">
-            Control ERP reporting hub with {reportCards.length} reports connected to live database • Auto-refresh every 60s
+            {tp("prep.hub_desc_1", "Control ERP reporting hub with")} {reportCards.length} {tp("prep.hub_desc_2", "reports connected to live database • Auto-refresh every 60s")}
           </p>
         </div>
 
@@ -1050,7 +1055,7 @@ export default function PrintReportsHubPage() {
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
               }`}
             >
-              Super Admin Scope
+              {tp("prep.scope_super_admin", "Super Admin Scope")}
             </button>
             <button
               type="button"
@@ -1061,7 +1066,7 @@ export default function PrintReportsHubPage() {
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
               }`}
             >
-              Country Admin Scope
+              {tp("prep.scope_country_admin", "Country Admin Scope")}
             </button>
             <button
               type="button"
@@ -1072,7 +1077,7 @@ export default function PrintReportsHubPage() {
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
               }`}
             >
-              Branch Admin Scope
+              {tp("prep.scope_branch_admin", "Branch Admin Scope")}
             </button>
           </div>
 
@@ -1099,14 +1104,14 @@ export default function PrintReportsHubPage() {
           {activityData && (
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
               {[
-                { label: "Purchases", value: activityData.grandTotal.purchases, icon: ClipboardList, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-950/40" },
-                { label: "Sales", value: activityData.grandTotal.sales, icon: CreditCard, color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-50 dark:bg-indigo-950/40" },
-                { label: "Journal", value: activityData.grandTotal.journalEntries, icon: BookOpen, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950/40" },
-                { label: "Cash", value: activityData.grandTotal.cashEntries, icon: Wallet, color: "text-cyan-600 dark:text-cyan-400", bg: "bg-cyan-50 dark:bg-cyan-950/40" },
-                { label: "Payments", value: activityData.grandTotal.payments, icon: Coins, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-950/40" },
-                { label: "Ledgers", value: activityData.grandTotal.ledgerEntries, icon: BarChart3, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/40" },
-                { label: "Accounts", value: activityData.grandTotal.accounts, icon: Landmark, color: "text-sky-600 dark:text-sky-400", bg: "bg-sky-50 dark:bg-sky-950/40" },
-                { label: "Active", value: `${activityData.grandTotal.activeBranches}/${activityData.grandTotal.totalBranches}`, icon: Building2, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/40" },
+                { label: tp("prep.kpi_purchases", "Purchases"), value: activityData.grandTotal.purchases, icon: ClipboardList, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-950/40" },
+                { label: tp("prep.kpi_sales", "Sales"), value: activityData.grandTotal.sales, icon: CreditCard, color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-50 dark:bg-indigo-950/40" },
+                { label: tp("prep.kpi_journal", "Journal"), value: activityData.grandTotal.journalEntries, icon: BookOpen, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950/40" },
+                { label: tp("prep.kpi_cash", "Cash"), value: activityData.grandTotal.cashEntries, icon: Wallet, color: "text-cyan-600 dark:text-cyan-400", bg: "bg-cyan-50 dark:bg-cyan-950/40" },
+                { label: tp("prep.kpi_payments", "Payments"), value: activityData.grandTotal.payments, icon: Coins, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-950/40" },
+                { label: tp("prep.kpi_ledgers", "Ledgers"), value: activityData.grandTotal.ledgerEntries, icon: BarChart3, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/40" },
+                { label: tp("prep.kpi_accounts", "Accounts"), value: activityData.grandTotal.accounts, icon: Landmark, color: "text-sky-600 dark:text-sky-400", bg: "bg-sky-50 dark:bg-sky-950/40" },
+                { label: tp("prep.kpi_active", "Active"), value: `${activityData.grandTotal.activeBranches}/${activityData.grandTotal.totalBranches}`, icon: Building2, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/40" },
               ].map((kpi) => {
                 const KpiIcon = kpi.icon;
                 return (
@@ -1252,9 +1257,7 @@ export default function PrintReportsHubPage() {
                           </Button>
                           {isMenuOpen && (
                             <div className="absolute right-4 top-12 z-[120] w-56 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-1.5 text-left animate-in fade-in zoom-in-95 duration-100">
-                              <div className="px-2.5 py-1 text-[9px] font-black uppercase text-slate-400 border-b border-slate-100 dark:border-slate-800 mb-1">
-                                REPORT ACTIONS
-                              </div>
+                              <div className="px-2.5 py-1 text-[9px] font-black uppercase text-slate-400 border-b border-slate-100 dark:border-slate-800 mb-1">{tp("prep.report_actions", "Report Actions")}</div>
                               <button
                                 type="button"
                                 onClick={() => { card.onPrint(); setActiveMenuId(null); }}
@@ -1310,11 +1313,11 @@ export default function PrintReportsHubPage() {
                               {/* Active branches in scope (from the live activity summary) */}
                               <div>
                                 <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1">
-                                  <Building2 className="h-3 w-3 text-blue-500" /> Active Branches {card.countryName !== "—" ? `— ${card.countryName}` : ""}
+                                  <Building2 className="h-3 w-3 text-blue-500" /> {tp("prep.active_branches", "Active Branches")} {card.countryName !== "—" ? `— ${card.countryName}` : ""}
                                 </div>
                                 {card.subBranches.length === 0 && (
                                   <div className="rounded-lg border border-dashed border-slate-200 dark:border-slate-800 px-3 py-4 text-center text-[11px] text-slate-400">
-                                    No active branch activity in the current scope.
+                                    {tp("prep.no_branch_activity", "No active branch activity in the current scope.")}
                                   </div>
                                 )}
                                 {card.subBranches.length > 0 && (
@@ -1341,7 +1344,7 @@ export default function PrintReportsHubPage() {
                                               {sub.status}
                                             </span>
                                           </td>
-                                          <td className="px-3 py-2 text-center font-bold text-slate-700 dark:text-slate-300">{sub.users} Staff Users</td>
+                                          <td className="px-3 py-2 text-center font-bold text-slate-700 dark:text-slate-300">{sub.users} {tp("prep.staff_users", "Staff Users")}</td>
                                           <td className="px-3 py-2 text-center font-mono text-slate-500">{sub.lastTime}</td>
                                           <td className="px-3 py-2 text-center font-bold text-indigo-600 dark:text-indigo-400">{sub.progress}%</td>
                                           <td className="px-3 py-2 text-center">
@@ -1350,7 +1353,7 @@ export default function PrintReportsHubPage() {
                                               onClick={card.onPrint}
                                               className="px-2.5 py-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] transition-all shadow-xs"
                                             >
-                                              Open Form / Report
+                                              {tp("prep.open_form_report", "Open Form / Report")}
                                             </button>
                                           </td>
                                         </tr>

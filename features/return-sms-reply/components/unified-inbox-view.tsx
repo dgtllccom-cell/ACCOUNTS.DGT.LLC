@@ -26,6 +26,8 @@ import {
   QrCode
 } from "lucide-react";
 import { t, type UiKey } from "@/lib/i18n/ui";
+import { translateHeader } from "@/lib/i18n/table-headers";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { cn } from "@/lib/utils";
 import { WhatsAppWizardModal } from "@/features/whatsapp/components/whatsapp-wizard-modal";
@@ -84,8 +86,11 @@ const INBOX_TABS = [
   { key: "failed", label: "Failed" }
 ] as const;
 
-export function UnifiedInboxView({ lang }: Props) {
+export function UnifiedInboxView({ lang: langProp }: Props) {
+  const activeLang = useActiveLanguage();
+  const lang = (activeLang !== "en" ? activeLang : langProp) as SupportedLanguage;
   const _ = (key: UiKey, fallback?: string) => t(lang, key, fallback);
+  const th = (s: string) => translateHeader(lang, s);
   const isRTL = ["ar", "ur", "fa", "ps"].includes(lang);
 
   const [activeTab, setActiveTab] = useState<string>("all");
@@ -342,14 +347,14 @@ export function UnifiedInboxView({ lang }: Props) {
                 ) : (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-0.5 text-[10.5px] font-mono font-bold text-amber-300 shadow-xs">
                     <span className="h-2 w-2 rounded-full bg-amber-400"></span>
-                    NOT CONNECTED — Click Connect Official WhatsApp
+                    {th("NOT CONNECTED — Click Connect Official WhatsApp")}
                   </span>
                 )}
               </div>
               <p className="text-xs font-medium text-slate-300/80 mt-1 flex items-center gap-1.5 flex-wrap">
                 {whatsappConfig.isConnected ? (
                   <>
-                    <span>Live Webhook:</span>
+                    <span>{th("Live Webhook")}:</span>
                     <code className="bg-slate-950/80 border border-emerald-500/20 px-2 py-0.5 rounded-lg text-[10.5px] font-mono text-emerald-300">
                       http://72.60.209.121/api/erp/return-sms-reply/webhooks/whatsapp
                     </code>
@@ -401,7 +406,7 @@ export function UnifiedInboxView({ lang }: Props) {
             {tab.key === "whatsapp" && <MessageSquare className="h-3.5 w-3.5 text-emerald-400" />}
             {tab.key === "email" && <Mail className="h-3.5 w-3.5 text-blue-400" />}
             {tab.key === "ai_ready" && <Sparkles className="h-3.5 w-3.5 text-amber-400" />}
-            {tab.label}
+            {th(tab.label)}
           </button>
         ))}
       </div>
@@ -418,7 +423,7 @@ export function UnifiedInboxView({ lang }: Props) {
               <Search className={cn("absolute top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400", isRTL ? "right-3" : "left-3")} />
               <input
                 type="text"
-                placeholder="Search sender, number, or text..."
+                placeholder={th("Search sender, number, or text...")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className={cn(
@@ -434,12 +439,12 @@ export function UnifiedInboxView({ lang }: Props) {
             {loadingConv ? (
               <div className="py-12 text-center text-xs text-slate-400">
                 <RefreshCw className="h-5 w-5 animate-spin mx-auto mb-2 text-emerald-500" />
-                Loading conversations...
+                {th("Loading conversations...")}
               </div>
             ) : conversations.length === 0 ? (
               <div className="py-16 text-center text-xs text-slate-400">
                 <MessageSquare className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-                No messages found
+                {th("No messages found")}
               </div>
             ) : (
               conversations.map((c) => (
@@ -539,7 +544,7 @@ export function UnifiedInboxView({ lang }: Props) {
                     className="flex items-center gap-1.5 rounded-xl bg-indigo-50 border border-indigo-200 px-3 py-1.5 text-xs font-bold text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:border-indigo-900 dark:text-indigo-300 shadow-sm"
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
-                    Open Related ERP Record
+                    {th("Open Related ERP Record")}
                   </a>
                 )}
               </div>
@@ -638,7 +643,7 @@ export function UnifiedInboxView({ lang }: Props) {
                 <div className="relative">
                   <textarea
                     rows={3}
-                    placeholder="Type a reply or click 'Generate AI Reply' to draft automatically..."
+                    placeholder={th("Type a reply or click Generate AI Reply to draft automatically...")}
                     value={replyInput}
                     onChange={(e) => setReplyInput(e.target.value)}
                     className="w-full text-xs rounded-2xl border border-slate-200 bg-slate-50 dark:bg-slate-950 dark:border-slate-800 p-3 outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 dark:text-slate-200"
@@ -657,7 +662,7 @@ export function UnifiedInboxView({ lang }: Props) {
                         className="flex items-center gap-1.5 rounded-xl bg-amber-600 text-white px-4 py-2 text-xs font-bold hover:bg-amber-700 disabled:opacity-40"
                       >
                         <UserCheck className="h-3.5 w-3.5" />
-                        Approve & Send
+                        {th("Approve & Send")}
                       </button>
 
                       <button
@@ -688,9 +693,9 @@ export function UnifiedInboxView({ lang }: Props) {
                 </div>
                 <div>
                   <h3 className="font-black text-base text-slate-900 dark:text-white">
-                    WhatsApp Business API Account & Admin Config
+                    {th("WhatsApp Business API Account & Admin Config")}
                   </h3>
-                  <p className="text-xs text-slate-500">Official ERP WhatsApp Channel & Admin Mobile Numbers</p>
+                  <p className="text-xs text-slate-500">{th("Official ERP WhatsApp Channel & Admin Mobile Numbers")}</p>
                 </div>
               </div>
               <button
@@ -725,11 +730,11 @@ export function UnifiedInboxView({ lang }: Props) {
 
               <div className="rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 p-4 border border-emerald-200 dark:border-emerald-900/60 flex items-center justify-between">
                 <div>
-                  <p className="font-extrabold text-emerald-800 dark:text-emerald-300">Live Status: Active & Connected</p>
+                  <p className="font-extrabold text-emerald-800 dark:text-emerald-300">{th("Live Status: Active & Connected")}</p>
                   <p className="text-[11px] text-emerald-700 dark:text-emerald-400 mt-0.5">{whatsappConfig.accountName}</p>
                 </div>
                 <span className="bg-emerald-600 text-white font-black px-3 py-1 rounded-full text-[10px] tracking-wider uppercase">
-                  ONLINE
+                  {th("ONLINE")}
                 </span>
               </div>
 
@@ -807,7 +812,7 @@ export function UnifiedInboxView({ lang }: Props) {
                 }}
                 className="px-5 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm"
               >
-                Save Configuration
+                {th("Save Configuration")}
               </button>
             </div>
           </div>
